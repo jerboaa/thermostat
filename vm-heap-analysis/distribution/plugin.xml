@@ -36,47 +36,25 @@
  to do so, delete this exception statement from your version.
 
 -->
-<plugin>
+<plugin xmlns="http://icedtea.classpath.org/thermostat/plugins/v1.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://icedtea.classpath.org/thermostat/plugins/v1.0">
   <commands>
-    <command type="extends">
-      <name>gui</name>
-      <bundles>
-        <bundle>thermostat-vm-heap-analysis-common-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-heap-analysis-command-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-heap-analysis-client-core-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-heap-analysis-client-swing-${project.version}.jar</bundle>
-      </bundles>
-    </command>
-    <command type="extends">
-      <name>agent</name>
-      <bundles>
-        <bundle>thermostat-vm-heap-analysis-common-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-heap-analysis-agent-${project.version}.jar</bundle>
-      </bundles>
-    </command>
-    <!-- Requires all storage entity classes to be loaded -->
-    <command type="extends">
-      <name>webservice</name>
-      <bundles>
-        <bundle>thermostat-vm-heap-analysis-common-${project.version}.jar</bundle>
-      </bundles>
-    </command>
-    <command type="provides">
+    <command>
       <name>dump-heap</name>
       <description>trigger a heap dump on the VM</description>
-      <usage>dump-heap --hostId &lt;host&gt; --vmId &lt;vm&gt; [-d &lt;url&gt; [-u &lt;user&gt; -p &lt;password&gt;]] [-l &lt;level&gt;]</usage>
       <options>
         <option>
-          <short>a</short>
           <long>hostId</long>
-          <hasArg>true</hasArg>
+          <short>a</short>
+          <argument>true</argument>
           <required>true</required>
           <description>the ID of the host to monitor</description>
         </option>
         <option>
-          <short>v</short>
           <long>vmId</long>
-          <hasArg>true</hasArg>
+          <short>v</short>
+          <argument>true</argument>
           <required>true</required>
           <description>the ID of the VM to monitor</description>
         </option>
@@ -116,22 +94,21 @@
         <dependency>netty.jar</dependency>
       </dependencies>
     </command>
-    <command type="provides">
+    <command>
       <name>find-objects</name>
       <description>finds objects in a heapdump</description>
-      <usage>find-objects [-d &lt;url&gt; [-u &lt;user&gt; -p &lt;password&gt;]] [-l &lt;level&gt;] --heapId &lt;id&gt; --limit &lt;limit&gt; &lt;pattern&gt;</usage>
       <options>
         <option>
-          <short>h</short>
           <long>heapId</long>
-          <hasArg>true</hasArg>
+          <short>h</short>
+          <argument>true</argument>
           <required>true</required>
           <description>the ID of the heapdump to analyze</description>
         </option>
         <option>
-          <short>L</short>
           <long>limit</long>
-          <hasArg>true</hasArg>
+          <short>L</short>          
+          <argument>true</argument>
           <required>false</required>
           <description>limit search to top N results, defaults to 10</description>
         </option>
@@ -171,29 +148,28 @@
         <dependency>netty.jar</dependency>
       </dependencies>
     </command>
-    <command type="provides">
+    <command>
       <name>find-root</name>
       <description>finds the shortest path from an object to a GC root</description>
-      <usage>find-root --heapId &lt;heap&gt; --objectId &lt;object&gt; [-a] [-d &lt;url&gt; [-u &lt;user&gt; -p &lt;password&gt;]] [-l &lt;level&gt;]</usage>
       <options>
         <option>
-          <short>h</short>
           <long>heapId</long>
-          <hasArg>true</hasArg>
+          <short>h</short>          
+          <argument>true</argument>
           <required>true</required>
           <description>the ID of the heapdump to analyze</description>
         </option>
         <option>
-          <short>o</short>
           <long>objectId</long>
-          <hasArg>true</hasArg>
+          <short>o</short>          
+          <argument>true</argument>
           <required>true</required>
           <description>the ID of the object to query</description>
         </option>
         <option>
-          <short>a</short>
           <long>all</long>
-          <hasArg>false</hasArg>
+          <short>a</short>          
+          <argument>false</argument>
           <required>false</required>
           <description>finds all paths to GC roots</description>
         </option>
@@ -233,22 +209,21 @@
         <dependency>netty.jar</dependency>
       </dependencies>
     </command>
-    <command type="provides">
+    <command>
       <name>list-heap-dumps</name>
       <description>list all heap dumps</description>
-      <usage>list-heap-dumps [--hostId &lt;host&gt;] [--vmId &lt;vm&gt;] [-d &lt;url&gt; [-u &lt;user&gt; -p &lt;password&gt;]] [-l &lt;level&gt;]</usage>
       <options>
         <option>
-          <short>a</short>
           <long>hostId</long>
-          <hasArg>true</hasArg>
+          <short>a</short>          
+          <argument>true</argument>
           <required>false</required>
           <description>the ID of the host to monitor</description>
         </option>
         <option>
-          <short>v</short>
           <long>vmId</long>
-          <hasArg>true</hasArg>
+          <short>v</short>          
+          <argument>true</argument>
           <required>false</required>
           <description>the ID of the VM to monitor</description>
         </option>
@@ -288,22 +263,21 @@
         <dependency>netty.jar</dependency>
       </dependencies>
     </command>
-    <command type="provides">
+    <command>
       <name>object-info</name>
       <description>prints information about an object in a heap dump</description>
-      <usage>object-info --heapId &lt;heap&gt; --objectId &lt;object&gt; [-d &lt;url&gt; [-u &lt;user&gt; -p &lt;password&gt;]] [-l &lt;level&gt;]</usage>
       <options>
         <option>
-          <short>h</short>
           <long>heapId</long>
-          <hasArg>true</hasArg>
+          <short>h</short>         
+          <argument>true</argument>
           <required>true</required>
           <description>the ID of the heapdump to analyze</description>
         </option>
         <option>
-          <short>o</short>
           <long>objectId</long>
-          <hasArg>true</hasArg>
+          <short>o</short>          
+          <argument>true</argument>
           <required>true</required>
           <description>the ID of the object to query</description>
         </option>
@@ -343,22 +317,21 @@
         <dependency>netty.jar</dependency>
       </dependencies>
     </command>
-    <command type="provides">
+    <command>
       <name>save-heap-dump-to-file</name>
       <description>saves a heap dump to a local file</description>
-      <usage>save-heap-dump-to-file --heapId &lt;heap&gt; --file &lt;filename&gt; [-d &lt;url&gt; [-u &lt;user&gt; -p &lt;password&gt;]] [-l &lt;level&gt;]</usage>
       <options>
         <option>
-          <short>h</short>
           <long>heapId</long>
-          <hasArg>true</hasArg>
+          <short>h</short>          
+          <argument>true</argument>
           <required>true</required>
           <description>the ID of the heapdump to analyze</description>
         </option>
         <option>
-          <short>f</short>
           <long>file</long>
-          <hasArg>true</hasArg>
+          <short>f</short>          
+          <argument>true</argument>
           <required>true</required>
           <description>the file name to save to</description>
         </option>
@@ -398,15 +371,14 @@
         <dependency>netty.jar</dependency>
       </dependencies>
     </command>
-    <command type="provides">
+    <command>
       <name>show-heap-histogram</name>
       <description>show the heap histogram</description>
-      <usage>show-heap-histogram --heapId &lt;heap&gt; [-d &lt;url&gt; [-u &lt;user&gt; -p &lt;password&gt;]] [-l &lt;level&gt;]</usage>
       <options>
         <option>
-          <short>h</short>
           <long>heapId</long>
-          <hasArg>true</hasArg>
+          <short>h</short>          
+          <argument>true</argument>
           <required>true</required>
           <description>the ID of the heapdump to analyze</description>
         </option>
@@ -447,4 +419,29 @@
       </dependencies>
     </command>
   </commands>
+  <extensions>
+    <extension>
+      <name>gui</name>
+      <bundles>
+        <bundle>thermostat-vm-heap-analysis-common-${project.version}.jar</bundle>
+        <bundle>thermostat-vm-heap-analysis-command-${project.version}.jar</bundle>
+        <bundle>thermostat-vm-heap-analysis-client-core-${project.version}.jar</bundle>
+        <bundle>thermostat-vm-heap-analysis-client-swing-${project.version}.jar</bundle>
+      </bundles>
+    </extension>
+    <extension>
+      <name>agent</name>
+      <bundles>
+        <bundle>thermostat-vm-heap-analysis-common-${project.version}.jar</bundle>
+        <bundle>thermostat-vm-heap-analysis-agent-${project.version}.jar</bundle>
+      </bundles>
+    </extension>
+    <!-- Requires all storage entity classes to be loaded -->
+    <extension>
+      <name>webservice</name>
+      <bundles>
+        <bundle>thermostat-vm-heap-analysis-common-${project.version}.jar</bundle>
+      </bundles>
+    </extension>
+  </extensions>
 </plugin>

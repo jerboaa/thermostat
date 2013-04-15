@@ -36,14 +36,16 @@
  to do so, delete this exception statement from your version.
 
 -->
-<plugin>
-  <commands>
-    <command type="extends">
+<plugin xmlns="http://icedtea.classpath.org/thermostat/plugins/v1.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://icedtea.classpath.org/thermostat/plugins/v1.0">
+  <extensions>
+    <extension>
       <name>gui</name>
       <bundles>
         <bundle>thermostat-vm-overview-client-core-${project.version}.jar</bundle>
         <bundle>thermostat-vm-overview-client-swing-${project.version}.jar</bundle>
       </bundles>
-    </command>
-  </commands>
+    </extension>
+  </extensions>
 </plugin>

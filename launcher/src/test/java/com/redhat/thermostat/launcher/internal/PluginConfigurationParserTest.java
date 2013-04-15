@@ -85,8 +85,8 @@ public class PluginConfigurationParserTest {
     public void testConfigurationThatExtendsExistingCommand() throws UnsupportedEncodingException {
         String config = "<?xml version=\"1.0\"?>\n" +
                 "<plugin>\n" +
-                "  <commands>\n" +
-                "    <command type='extends'>\n" +
+                "  <extensions>\n" +
+                "    <extension>\n" +
                 "      <name>test</name>\n" +
                 "      <bundles>\n" +
                 "        <bundle>foo</bundle>\n" +
@@ -96,8 +96,8 @@ public class PluginConfigurationParserTest {
                 "      <dependencies>\n" +
                 "        <dependency>thermostat-foo</dependency>\n" +
                 "      </dependencies>\n" +
-                "    </command>\n" +
-                "  </commands>\n" +
+                "    </extension>\n" +
+                "  </extensions>\n" +
                 "</plugin>";
 
         PluginConfiguration result = new PluginConfigurationParser()
@@ -119,9 +119,8 @@ public class PluginConfigurationParserTest {
         String config = "<?xml version=\"1.0\"?>\n" +
                 "<plugin>\n" +
                 "  <commands>\n" +
-                "    <command type='provides'>\n" +
+                "    <command>\n" +
                 "      <name>test</name>\n" +
-                "      <usage>usage: test</usage>\n" +
                 "      <description>description</description>\n" +
                 "      <bundles>\n" +
                 "        <bundle>foo</bundle>\n" +
@@ -146,7 +145,6 @@ public class PluginConfigurationParserTest {
 
         NewCommand newCommand = newCommands.get(0);
         assertEquals("test", newCommand.getCommandName());
-        assertEquals("usage: test", newCommand.getUsage());
         assertEquals("description", newCommand.getDescription());
         Options opts = newCommand.getOptions();
         assertTrue(opts.getOptions().isEmpty());
@@ -159,8 +157,8 @@ public class PluginConfigurationParserTest {
     public void testSpacesAtStartAndEndAreTrimmed() throws UnsupportedEncodingException {
         String config = "<?xml version=\"1.0\"?>\n" +
                 "<plugin>\n" +
-                "  <commands>\n" +
-                "    <command type='extends'>\n" +
+                "  <extensions>" +
+                "    <extension>\n" +
                 "      <name>\ntest   \n</name>\n" +
                 "      <bundles>\n" +
                 "        <bundle>\n \t  \nfoo\t \n \n</bundle>\n" +
@@ -170,8 +168,8 @@ public class PluginConfigurationParserTest {
                 "      <dependencies>\n\t\n\t \t\t\n" +
                 "        <dependency>\t\t\t  thermostat-foo\n\t\t\n</dependency>\n" +
                 "      </dependencies>\n" +
-                "    </command>\n" +
-                "  </commands>\n" +
+                "    </extension>\n" +
+                "  </extensions>\n" +
                 "</plugin>";
 
         PluginConfiguration result = new PluginConfigurationParser()
@@ -193,24 +191,23 @@ public class PluginConfigurationParserTest {
         String config = "<?xml version=\"1.0\"?>\n" +
                 "<plugin>\n" +
                 "  <commands>\n" +
-                "    <command type='provides'>\n" +
+                "    <command>\n" +
                 "      <name>test</name>\n" +
                 "      <description>just a test</description>\n" +
-                "      <usage>test [ -a | -b ] -l &lt;foo&gt;</usage>\n" +
                 "      <options>\n" +
                 "        <group>\n" +
                 "          <required>true</required>\n" +
                 "          <option>\n" +
                 "            <long>exclusive-a</long>\n" +
                 "            <short>a</short>\n" +
-                "            <hasArg>false</hasArg>\n" +
+                "            <argument>false</argument>\n" +
                 "            <required>false</required>\n" +
                 "            <description>exclusive option a</description>\n" +
                 "          </option>\n" +
                 "          <option>\n" +
                 "            <long>exclusive-b</long>\n" +
                 "            <short>b</short>\n" +
-                "            <hasArg>false</hasArg>\n" +
+                "            <argument>false</argument>\n" +
                 "            <required>false</required>\n" +
                 "            <description>exclusive option b</description>\n" +
                 "          </option>\n" +
@@ -218,7 +215,7 @@ public class PluginConfigurationParserTest {
                 "        <option>\n" +
                 "          <long>long</long>\n" +
                 "          <short>l</short>\n" +
-                "          <hasArg>true</hasArg>\n" +
+                "          <argument>true</argument>\n" +
                 "          <required>true</required>\n" +
                 "          <description>some required and long option</description>\n" +
                 "        </option>\n" +
@@ -238,7 +235,6 @@ public class PluginConfigurationParserTest {
         NewCommand command = newCommands.get(0);
         assertEquals("test", command.getCommandName());
         assertEquals("just a test", command.getDescription());
-        assertEquals("test [ -a | -b ] -l <foo>", command.getUsage());
         Options opts = command.getOptions();
         assertNull(opts.getOption("foobarbaz"));
 
@@ -268,10 +264,9 @@ public class PluginConfigurationParserTest {
         String config = "<?xml version=\"1.0\"?>\n" +
                 "<plugin>\n" +
                 "  <commands>\n" +
-                "    <command type='provides'>\n" +
+                "    <command>\n" +
                 "      <name>test</name>\n" +
                 "      <description>just a test</description>\n" +
-                "      <usage>test [ -a | -b ] -l &lt;foo&gt;</usage>\n" +
                 "      <options>\n" +
                 "        <option common=\"true\">\n" +
                 "          <long>dbUrl</long>\n" +
@@ -313,10 +308,9 @@ public class PluginConfigurationParserTest {
         String config = "<?xml version=\"1.0\"?>\n" +
                 "<plugin>\n" +
                 "  <commands>\n" +
-                "    <command type='provides'>\n" +
+                "    <command>\n" +
                 "      <name>test</name>\n" +
                 "      <description>just a test</description>\n" +
-                "      <usage>test [ -a | -b ] -l &lt;foo&gt;</usage>\n" +
                 "      <options>\n" +
                 "        <option common=\"true\">\n" +
                 "          <long>foobarbaz</long>\n" +

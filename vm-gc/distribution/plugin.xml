@@ -36,9 +36,11 @@
  to do so, delete this exception statement from your version.
 
 -->
-<plugin>
-  <commands>
-    <command type="extends">
+<plugin xmlns="http://icedtea.classpath.org/thermostat/plugins/v1.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://icedtea.classpath.org/thermostat/plugins/v1.0">
+  <extensions>
+    <extension>
       <name>gui</name>
       <bundles>
         <bundle>thermostat-vm-gc-common-${project.version}.jar</bundle>
@@ -48,8 +50,8 @@
         <bundle>thermostat-gc-remote-collector-client-common-${project.version}.jar</bundle>
         <bundle>thermostat-gc-remote-collector-client-swing-${project.version}.jar</bundle>
       </bundles>
-    </command>
-    <command type="extends">
+    </extension>
+    <extension>
       <name>agent</name>
       <bundles>
         <bundle>thermostat-vm-gc-common-${project.version}.jar</bundle>
@@ -57,14 +59,14 @@
         <bundle>thermostat-gc-remote-collector-common-${project.version}.jar</bundle>
         <bundle>thermostat-gc-remote-collector-command-${project.version}.jar</bundle>
       </bundles>
-    </command>
+    </extension>
     <!-- Requires all storage entity classes to be loaded -->
-    <command type="extends">
+    <extension>
       <name>webservice</name>
       <bundles>
         <bundle>thermostat-vm-gc-common-${project.version}.jar</bundle>
       </bundles>
-    </command>
-  </commands>
+    </extension>
+  </extensions>
   <!-- TODO: Need to express dependency on vm-memory-common -->
 </plugin>

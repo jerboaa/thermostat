@@ -88,16 +88,15 @@ public class PluginConfiguration {
 
         private final String commandName;
         private final String description;
-        private final String usage;
+        private String usage;
         private final Options options;
         private final List<String> additionalResources;
         private final List<String> coreDeps;
 
-        public NewCommand(String name, String usage, String description,
+        public NewCommand(String name, String description,
                 Options options, List<String> additionalResources, List<String> coreDeps) {
             this.commandName = name;
             this.description = description;
-            this.usage = usage;
             this.options = options;
             this.additionalResources = additionalResources;
             this.coreDeps = coreDeps;

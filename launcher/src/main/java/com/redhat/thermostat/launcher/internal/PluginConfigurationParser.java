@@ -74,44 +74,115 @@ import com.redhat.thermostat.launcher.internal.PluginConfiguration.NewCommand;
  * A example configuration looks like the following:
  *
  * <pre>
- * &lt;?xml version="1.0"?&gt;
- * &lt;plugin&gt;
- *   &lt;commands&gt;
- *     &lt;command type="extends"&gt;
- *       &lt;name&gt;gui&lt;/name&gt;
- *       &lt;bundles&gt;
- *         &lt;bundle&gt;hello-world-plugin-0.1-SNAPSHOT.jar&lt;/bundle&gt;
- *       &lt;/bundles&gt;
- *       &lt;dependencies&gt;
- *         &lt;dependency&gt;thermostat-client-core-0.6.0-SNAPSHOT.jar&lt;/dependency&gt;
- *       &lt;/dependencies&gt;
- *     &lt;/command&gt;
- *     &lt;command type="provides"&gt;
- *       &lt;name&gt;hello&lt;/name&gt;
- *       &lt;description&gt;print hello&lt;/description&gt;
- *       &lt;usage&gt;hello&lt;/usage&gt;
- *       &lt;options&gt;
- *         &lt;options&gt;
- *           &lt;long&gt;long&lt;/long&gt;
- *           &lt;short&gt;l&lt;/short&gt;
- *           &lt;hasArg&gt;true&lt;/hasArg&gt;
- *           &lt;required&gt;true&lt;/required&gt;
- *           &lt;description&gt;some required and long option&lt;/description&gt;
- *         &lt;/option&gt;
- *         &lt;options common="true"&gt;
- *           &lt;long&gt;dbUrl&lt;/long&gt;
- *           &lt;required&gt;true&lt;/required&gt;
- *         &lt;/option&gt;
- *       &lt;/options&gt;
- *       &lt;bundles&gt;
- *         &lt;bundle&gt;hello-world-plugin-0.1-SNAPSHOT.jar&lt;/bundle&gt;
- *       &lt;/bundles&gt;
- *       &lt;dependencies&gt;
- *         &lt;dependency&gt;thermostat-client-core-0.6.0-SNAPSHOT.jar&lt;/dependency&gt;
- *       &lt;/dependencies&gt;
- *     &lt;/command&gt;
- *   &lt;/commands&gt;
- * &lt;/plugin&gt;
+ * 
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;plugin xmlns="http://icedtea.classpath.org/thermostat/plugins/v1.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://icedtea.classpath.org/thermostat/plugins/v1.0"&gt;
+  &lt;commands&gt;  
+    &lt;command&gt;
+      &lt;name&gt;platform&lt;/name&gt;
+      &lt;description&gt;launches a bare bone Platform Client&lt;/description&gt;
+      &lt;options&gt; 
+	&lt;group&gt;
+	  &lt;required&gt;true&lt;/required&gt;
+	  &lt;option&gt;
+	    &lt;long&gt;optA&lt;/long&gt;
+	    &lt;short&gt;a&lt;/short&gt;
+	    &lt;required&gt;true&lt;/required&gt;
+	  &lt;/option&gt;
+	  &lt;option&gt;
+	    &lt;long&gt;optB&lt;/long&gt;
+	    &lt;short&gt;b&lt;/short&gt;
+	    &lt;required&gt;true&lt;/required&gt;
+          &lt;/option&gt;
+	  &lt;option&gt;
+	    &lt;long&gt;optC&lt;/long&gt;
+	    &lt;short&gt;b&lt;/short&gt;	    
+	    &lt;required&gt;false&lt;/required&gt;
+	  &lt;/option&gt;
+	  &lt;option common="true"&gt;
+            &lt;long&gt;dbUrl&lt;/long&gt;
+          &lt;/option&gt;
+          &lt;option common="true"&gt;
+            &lt;long&gt;username&lt;/long&gt;
+          &lt;/option&gt;
+          &lt;option common="true"&gt;
+            &lt;long&gt;password&lt;/long&gt;
+          &lt;/option&gt;
+          &lt;option common="true"&gt;
+            &lt;long&gt;logLevel&lt;/long&gt;
+          &lt;/option&gt;
+	&lt;/group&gt;   
+	&lt;option&gt;
+	  &lt;long&gt;heapId&lt;/long&gt;
+	  &lt;short&gt;h&lt;/short&gt;
+	  &lt;argument&gt;heapArgument&lt;/argument&gt;
+	  &lt;required&gt;true&lt;/required&gt;
+	  &lt;description&gt;the ID of the heapdump to analyze&lt;/description&gt;
+	&lt;/option&gt;
+	&lt;option&gt;
+	  &lt;long&gt;limit&lt;/long&gt;
+	  &lt;short&gt;L&lt;/short&gt;
+	  &lt;argument&gt;limitArgument&lt;/argument&gt;
+	  &lt;required&gt;false&lt;/required&gt;
+	  &lt;description&gt;limit search to top N results, defaults to 10&lt;/description&gt;
+	&lt;/option&gt;
+      &lt;/options&gt;
+      &lt;bundles&gt;
+	&lt;bundle&gt;thermostat-platform-common-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
+	&lt;bundle&gt;thermostat-platform-swing-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
+      &lt;/bundles&gt;
+      &lt;dependencies&gt;
+	&lt;dependency&gt;thermostat-client-core-0.6.0-SNAPSHOT.jar&lt;/dependency&gt;
+      &lt;/dependencies&gt;
+    &lt;/command&gt;
+    &lt;command&gt;
+      &lt;name&gt;platform2&lt;/name&gt;
+      &lt;description&gt;launches a bare bone Platform Client&lt;/description&gt;
+       &lt;options&gt; 
+	&lt;option&gt;
+	  &lt;long&gt;heapId2&lt;/long&gt;
+	  &lt;short&gt;h&lt;/short&gt;
+	  &lt;argument&gt;heapId2Argument&lt;/argument&gt;
+	  &lt;required&gt;true&lt;/required&gt;
+	  &lt;description&gt;the ID of the heapdump to analyze&lt;/description&gt;
+	&lt;/option&gt;
+	&lt;option&gt;
+	  &lt;long&gt;limit2&lt;/long&gt;
+	  &lt;short&gt;L&lt;/short&gt;
+	  &lt;argument&gt;limit2Argument&lt;/argument&gt;
+	  &lt;required&gt;false&lt;/required&gt;
+	  &lt;description&gt;limit search to top N results, defaults to 10&lt;/description&gt;
+	&lt;/option&gt;
+      &lt;/options&gt;
+      &lt;bundles&gt;
+	&lt;bundle&gt;thermostat-platform-common-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
+	&lt;bundle&gt;thermostat-platform-controllers-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
+      &lt;/bundles&gt;
+      &lt;dependencies&gt;
+	&lt;dependency&gt;thermostat-common-core-0.6.0-SNAPSHOT.jar&lt;/dependency&gt;
+      &lt;/dependencies&gt;
+    &lt;/command&gt;
+  &lt;/commands&gt;
+  &lt;extensions&gt;
+    &lt;extension&gt;
+      &lt;name&gt;platform3&lt;/name&gt;
+      &lt;bundles&gt;
+        &lt;bundle&gt;thermostat-platform-common-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
+	&lt;bundle&gt;thermostat-platform-controllers-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
+	&lt;bundle&gt;thermostat-platform-command-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
+	&lt;bundle&gt;thermostat-platform-common-export-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
+	&lt;bundle&gt;thermostat-platform-swing-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
+      &lt;/bundles&gt;
+      &lt;dependencies&gt;
+	&lt;dependency&gt;thermostat-common-core-0.6.0-SNAPSHOT.jar&lt;/dependency&gt;
+	&lt;dependency&gt;thermostat-client-core-0.6.0-SNAPSHOT.jar&lt;/dependency&gt;
+      &lt;/dependencies&gt;
+    &lt;/extension&gt;
+  &lt;/extensions&gt;
+&lt;/plugin&gt;
+
  * </pre>
  * <p>
  * This class is thread-safe
@@ -144,49 +215,56 @@ public class PluginConfigurationParser {
     }
 
     private PluginConfiguration parseRootElement(String pluginName, Node root) {
-        List<NewCommand> newCommands = Collections.emptyList();
+        List<NewCommand> commands = Collections.emptyList();
         List<CommandExtensions> extensions = Collections.emptyList();
 
-        Pair<List<NewCommand>, List<CommandExtensions>> commands = new Pair<>(newCommands, extensions);
         if (root.getNodeName().equals("plugin")) {
             NodeList nodes = root.getChildNodes();
             for (int i = 0; i < nodes.getLength(); i++) {
                 Node node = nodes.item(i);
                 if (node.getNodeName().equals("commands")) {
                     commands = parseCommands(pluginName, node);
+                } else if (node.getNodeName().equals("extensions")) {
+                	extensions = parseExtensions(pluginName, node);
                 }
             }
         }
 
-        if (commands.getFirst().isEmpty() && commands.getSecond().isEmpty()) {
+        if (commands.isEmpty() && extensions.isEmpty()) {
             logger.warning("plugin " + pluginName + " does not extend any command or provide any new commands");
         }
 
-        return new PluginConfiguration(commands.getFirst(), commands.getSecond());
+        return new PluginConfiguration(commands, extensions);
     }
 
-    private Pair<List<NewCommand>, List<CommandExtensions>> parseCommands(String pluginName, Node commandsNode) {
+    private List<NewCommand> parseCommands(String pluginName, Node commandsNode) {
         List<NewCommand> newCommands = new ArrayList<NewCommand>();
-        List<CommandExtensions> extendedCommands = new ArrayList<CommandExtensions>();
         NodeList childNodes = commandsNode.getChildNodes();
         for (int i = 0; i < childNodes.getLength(); i++) {
             Node node = childNodes.item(i);
             if (node.getNodeName().equals("command")) {
-                String type = node.getAttributes().getNamedItem("type").getNodeValue();
-                if (type.equals("extends")) {
-                    CommandExtensions additions = parseAdditionsToExistingCommand(pluginName, node);
-                    if (additions != null) {
-                        extendedCommands.add(additions);
-                    }
-                } else if (type.equals("provides")) {
-                    NewCommand newCmd = parseNewCommand(pluginName, node);
-                    if (newCmd != null) {
-                        newCommands.add(newCmd);
-                    }
+                NewCommand newCmd = parseNewCommand(pluginName, node);
+                if (newCmd != null) {
+                    newCommands.add(newCmd);
                 }
             }
         }
-        return new Pair<>(newCommands, extendedCommands);
+        return newCommands;
+    }
+    
+    private List<CommandExtensions> parseExtensions(String pluginName, Node extensionsNode) {
+        List<CommandExtensions> commandExtensions = new ArrayList<CommandExtensions>();
+        NodeList childNodes = extensionsNode.getChildNodes();
+        for (int i = 0; i < childNodes.getLength(); i++) {
+            Node node = childNodes.item(i);
+            if (node.getNodeName().equals("extension")) {
+                CommandExtensions additions = parseAdditionsToExistingCommand(pluginName, node);
+                if (additions != null) {
+                    commandExtensions.add(additions);
+                }
+            }
+        }
+        return commandExtensions;
     }
 
     private CommandExtensions parseAdditionsToExistingCommand(String pluginName, Node commandNode) {
@@ -219,7 +297,6 @@ public class PluginConfigurationParser {
 
     private NewCommand parseNewCommand(String pluginName, Node commandNode) {
         String name = null;
-        String usage = null;
         String description = null;
         Options options = new Options();
         List<String> bundles = new ArrayList<>();
@@ -230,8 +307,6 @@ public class PluginConfigurationParser {
             Node node = nodes.item(i);
             if (node.getNodeName().equals("name")) {
                 name = node.getTextContent().trim();
-            } else if (node.getNodeName().equals("usage")) {
-                usage = node.getTextContent().trim();
             } else if (node.getNodeName().equals("description")) {
                 description = node.getTextContent().trim();
             } else if (node.getNodeName().equals("options")) {
@@ -250,12 +325,12 @@ public class PluginConfigurationParser {
             logger.warning("plugin " + pluginName  + " provides a new command " + name + " but lists no dependencies on thermostat");
         }
 
-        if (name == null || usage == null || description == null) {
+        if (name == null || description == null) {
             logger.warning("plugin " + pluginName + " provides an incomplete new command: " +
-                    "name='" + name + "', usage='" + usage + "', description='" + description + "', options='" + options + "'");
+                    "name='" + name + "', description='" + description + "', options='" + options + "'");
             return null;
         } else {
-            return new NewCommand(name, usage, description, options, bundles, dependencies);
+            return new NewCommand(name, description, options, bundles, dependencies);
         }
     }
 
@@ -376,7 +451,7 @@ public class PluginConfigurationParser {
             }
         }
 
-        logger.warning("The option " + longName != null ? longName : shortName + " claims to be a common option but isnt");
+        logger.warning("The option " + longName != null ? longName : shortName + " claims to be a common option but it isn't");
 
         return null;
     }
@@ -384,9 +459,9 @@ public class PluginConfigurationParser {
     private Option parseNormalOption(Node optionNode) {
         String longName = null;
         String shortName = null;
+        String argument = null;
         String description = null;
         boolean required = false;
-        boolean hasArg = false;
 
         NodeList nodes = optionNode.getChildNodes();
         for (int i = 0; i < nodes.getLength(); i++) {
@@ -395,16 +470,16 @@ public class PluginConfigurationParser {
                 longName = node.getTextContent().trim();
             } else if (node.getNodeName().equals("short")) {
                 shortName = node.getTextContent().trim();
+            } else if (node.getNodeName().equals("argument")) {
+                argument = node.getTextContent().trim();
             } else if (node.getNodeName().equals("description")) {
                 description = node.getTextContent().trim();
-            } else if (node.getNodeName().equals("hasArg")) {
-                hasArg = Boolean.valueOf(node.getTextContent().trim());
             } else if (node.getNodeName().equals("required")) {
                 required = Boolean.valueOf(node.getTextContent().trim());
             }
         }
 
-        Option opt = new Option(shortName, longName, hasArg, description);
+        Option opt = new Option(shortName, longName, Boolean.parseBoolean(argument), description);
         opt.setArgName(longName != null? longName : shortName);
         opt.setRequired(required);
         return opt;
