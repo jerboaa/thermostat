@@ -34,27 +34,42 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common;
+package com.redhat.thermostat.testutils;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.management.ManagementFactory;
 import java.util.Properties;
 import java.util.Random;
 
+// FIXME the methods in this class can probably be split more sanely
 public class TestUtils {
 
+    /**
+     * @return the process id of the current process
+     */
     public static int getProcessId() {
         String name = ManagementFactory.getRuntimeMXBean().getName();
         String pidPart = name.split("@")[0];
         return Integer.parseInt(pidPart);
     }
 
+    /**
+     * @return true if the current os is linux
+     */
     public static boolean isLinux() {
         return (System.getProperty("os.name").toLowerCase().contains("linux"));
     }
-        
+
+    /**
+     * Creates and initializes a directory suitable for use as the agent's
+     * configuration directory
+     *
+     * @return a String containing the path to the temporary configuration directory
+     * @throws IOException
+     */
     public static String setupAgentConfigs() throws IOException {
         // need to create dummy config files for the tests
         Random random = new Random();
@@ -80,8 +95,10 @@ public class TestUtils {
         props.setProperty("SAVE_ON_EXIT", "true");
         props.setProperty("CONFIG_LISTEN_ADDRESS", "42.42.42.42:42");
         
-        props.store(new FileOutputStream(tmpConfigs), "thermostat agent test properties");
-        
+        try (OutputStream propsOutputStream = new FileOutputStream(tmpConfigs)) {
+            props.store(propsOutputStream, "thermostat agent test properties");
+        }
+
         return tmpDir;
     }
 }

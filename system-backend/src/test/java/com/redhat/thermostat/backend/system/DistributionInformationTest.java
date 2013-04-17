@@ -40,7 +40,7 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.common.TestUtils;
+import com.redhat.thermostat.testutils.TestUtils;
 
 public class DistributionInformationTest {
 
