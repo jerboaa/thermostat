@@ -263,50 +263,6 @@ public class VmStatCommandTest {
     }
 
     @Test
-    public void testName() {
-        StubBundleContext context = new StubBundleContext();
-        VMStatCommand cmd = new VMStatCommand(context);
-        assertEquals("vm-stat", cmd.getName());
-    }
-
-    @Test
-    public void testDescAndUsage() {
-        StubBundleContext context = new StubBundleContext();
-        VMStatCommand cmd = new VMStatCommand(context);
-        assertNotNull(cmd.getDescription());
-        assertNotNull(cmd.getUsage());
-    }
-
-    @Ignore
-    @Test
-    public void testOptions() {
-        StubBundleContext context = new StubBundleContext();
-        VMStatCommand cmd = new VMStatCommand(context);
-        Options options = cmd.getOptions();
-        assertNotNull(options);
-        assertEquals(3, options.getOptions().size());
-
-        assertTrue(options.hasOption("vmId"));
-        Option vm = options.getOption("vmId");
-        assertEquals("the ID of the VM to monitor", vm.getDescription());
-        assertTrue(vm.isRequired());
-        assertTrue(vm.hasArg());
-
-        assertTrue(options.hasOption("hostId"));
-        Option host = options.getOption("hostId");
-        assertEquals("the ID of the host to monitor", host.getDescription());
-        assertTrue(host.isRequired());
-        assertTrue(host.hasArg());
-
-        assertTrue(options.hasOption("continuous"));
-        Option cont = options.getOption("continuous");
-        assertEquals("c", cont.getOpt());
-        assertEquals("print data continuously", cont.getDescription());
-        assertFalse(cont.isRequired());
-        assertFalse(cont.hasArg());
-    }
-    
-    @Test
     public void testNoStats() throws CommandException {
         // Fail stats != null check
         VMStatPrintDelegate badDelegate = mock(VMStatPrintDelegate.class);

@@ -38,7 +38,6 @@ package com.redhat.thermostat.launcher.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -52,9 +51,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.cli.Arguments;
-import com.redhat.thermostat.common.cli.CommandInfo;
-import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
-import com.redhat.thermostat.common.cli.CommandInfoSource;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 
@@ -68,19 +64,6 @@ public class HelpCommandTest {
         ctxFactory = new TestCommandContextFactory();
 
         infos = mock(CommandInfoSource.class);
-    }
-
-    @Test
-    public void verifyName() {
-        HelpCommand cmd = new HelpCommand();
-        assertEquals("help", cmd.getName());
-    }
-
-    @Test
-    public void verifyDescAndUsage() {
-        HelpCommand cmd = new HelpCommand();
-        assertNotNull(cmd.getDescription());
-        assertNotNull(cmd.getUsage());
     }
 
     @Test

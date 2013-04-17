@@ -63,7 +63,6 @@ import com.redhat.thermostat.storage.core.VmRef;
 public class VMStatCommand extends AbstractCommand {
 
     private static final Logger log = LoggingUtils.getLogger(VMStatCommand.class);
-    private static final String CMD_NAME = "vm-stat";
     
     private List<VMStatPrintDelegate> delegates;
     private BundleContext context;
@@ -145,9 +144,5 @@ public class VMStatCommand extends AbstractCommand {
         context.ungetService(ref);
     }
 
-    @Override
-    public String getName() {
-        return CMD_NAME;
-    }
 }
 

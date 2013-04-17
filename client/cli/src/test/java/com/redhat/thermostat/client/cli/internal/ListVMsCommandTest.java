@@ -37,7 +37,6 @@
 package com.redhat.thermostat.client.cli.internal;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
@@ -46,7 +45,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 
-import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -184,22 +182,5 @@ public class ListVMsCommandTest {
         }
     }
 
-    @Test
-    public void testName() {
-        assertEquals("list-vms", cmd.getName());
-    }
-
-    @Test
-    public void testDescAndUsage() {
-        assertNotNull(cmd.getDescription());
-        assertNotNull(cmd.getUsage());
-    }
-
-    @Test
-    public void testOptions() {
-        Options options = cmd.getOptions();
-        assertNotNull(options);
-        assertEquals(0, options.getOptions().size());
-    }
 }
 

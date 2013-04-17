@@ -49,9 +49,6 @@ import org.apache.commons.cli.Options;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.cli.CommandInfo;
-import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
-import com.redhat.thermostat.common.cli.CommandInfoSource;
 
 public class CompoundCommandInfoSourceTest {
 
@@ -149,6 +146,6 @@ public class CompoundCommandInfoSourceTest {
         when(source2.getCommandInfos()).thenReturn(Arrays.asList(cmdInfo21, cmdInfo22));
 
         Collection<CommandInfo> results = compoundSource.getCommandInfos();
-
+        assertEquals(3, results.size());
     }
 }

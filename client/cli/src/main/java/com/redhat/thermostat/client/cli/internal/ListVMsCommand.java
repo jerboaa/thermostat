@@ -56,8 +56,6 @@ public class ListVMsCommand extends AbstractCommand {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private static final String NAME = "list-vms";
-
     private final BundleContext context;
 
     public ListVMsCommand() {
@@ -96,10 +94,6 @@ public class ListVMsCommand extends AbstractCommand {
         context.ungetService(vmsDAORef);
     }
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
 
 }
 

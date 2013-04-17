@@ -64,8 +64,6 @@ public class ServiceCommand extends AbstractCommand implements ActionListener<Ap
     
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private static final String NAME = "service";
-
     private List<ActionListener<ApplicationState>> listeners;
     private Semaphore agentBarrier = new Semaphore(0);
     private BundleContext context;
@@ -119,11 +117,6 @@ public class ServiceCommand extends AbstractCommand implements ActionListener<Ap
                 break;
             }
         }
-    }
-
-    @Override
-    public String getName() {
-        return NAME;
     }
 
     @Override

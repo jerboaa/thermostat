@@ -50,14 +50,11 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.launch.Framework;
 
-import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
-import com.redhat.thermostat.common.cli.CommandInfoSource;
 import com.redhat.thermostat.common.config.Configuration;
 import com.redhat.thermostat.launcher.BundleManager;
 
 public class BundleManagerImpl extends BundleManager {
 
-    private CommandInfoSource commandInfos;
     private Map<String, Bundle> loaded;
     private Configuration configuration;
     private BundleLoader loader;
@@ -83,16 +80,7 @@ public class BundleManagerImpl extends BundleManager {
     }
 
     @Override
-    public void setCommandInfoSource(CommandInfoSource source) {
-        this.commandInfos = source;
-    }
-
-    @Override
-    public void addBundlesFor(String commandName) throws BundleException, IOException, CommandInfoNotFoundException {
-        if (configuration.getPrintOSGiInfo()) {
-            System.out.println("Loading additional bundles for: " + commandName);
-        }
-        List<String> requiredBundles = commandInfos.getCommandInfo(commandName).getDependencyResourceNames();
+    public void addBundles(List<String> requiredBundles) throws BundleException, IOException {
         List<String> bundlesToLoad = new ArrayList<>();
         if (requiredBundles != null) {
             for (String resource : requiredBundles) {

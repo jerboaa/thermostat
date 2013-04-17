@@ -36,14 +36,11 @@
 
 package com.redhat.thermostat.client.swing.internal;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -83,26 +80,9 @@ public class GUIClientCommandTest {
     }
 
     @Test
-    public void testName() {
-        assertEquals("gui", cmd.getName());
-    }
-
-    @Test
-    public void testDescAndUsage() {
-        assertNotNull(cmd.getDescription());
-        assertNotNull(cmd.getUsage());
-    }
-
-    @Test
     public void testRequiresStorage() {
         assertFalse(cmd.isStorageRequired());
     }
 
-    @Test
-    public void testOptions() {
-        Options options = cmd.getOptions();
-        assertNotNull(options);
-        assertEquals(0, options.getOptions().size());
-    }
 }
 

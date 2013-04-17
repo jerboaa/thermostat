@@ -38,7 +38,6 @@ package com.redhat.thermostat.common.cli;
 
 import static org.junit.Assert.assertNotNull;
 
-import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -58,26 +57,6 @@ public class AbstractStateNotifyingCommandTest {
             @Override
             public void run(CommandContext ctx) throws CommandException {
                 // Nothing to do here.
-            }
-
-            @Override
-            public String getName() {
-                return null;
-            }
-
-            @Override
-            public String getDescription() {
-                return null;
-            }
-
-            @Override
-            public String getUsage() {
-                return null;
-            }
-
-            @Override
-            public Options getOptions() {
-                return new Options();
             }
 
             @Override

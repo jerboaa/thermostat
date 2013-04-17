@@ -34,42 +34,67 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common;
+package com.redhat.thermostat.launcher.internal;
 
-import java.util.ServiceLoader;
-
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.common.cli.Command;
-import com.redhat.thermostat.common.cli.CommandRegistry;
-import com.redhat.thermostat.common.cli.CommandRegistryImpl;
+import com.redhat.thermostat.common.cli.CommandContext;
+import com.redhat.thermostat.common.cli.CommandException;
 
-/**
- * Superclass for activators that need to register commands.  The bundle for this
- * activator should contain a META-INF/services/com.redhat.thermostat.common.cli.Command
- * file containing the class names that should be loaded as commands.  If this activator
- * also needs to create/destroy other resources during start() and stop(), be sure to
- * call super()
- */
-public abstract class CommandLoadingBundleActivator implements BundleActivator {
 
-    private CommandRegistry registry;
-    private ServiceLoader<Command> commands;
+public class TestCommand implements Command {
 
-    @Override
-    public void start(BundleContext context) throws Exception {
-        registry = new CommandRegistryImpl(context);
-        commands = ServiceLoader.load(Command.class, getClass().getClassLoader());
-        registry.registerCommands(commands);
+    private Handle handle;
+
+    private boolean storageRequired;
+    private boolean availableInShell = true;
+    private boolean availableOutsideShell = true;
+
+
+    public static interface Handle {
+        public void run(CommandContext ctx) throws CommandException;
+    }
+
+    public TestCommand() {
+        this(null);
+    }
+
+    public TestCommand(Handle r) {
+        this.handle = r;
     }
 
     @Override
-    public void stop(BundleContext context) throws Exception {
-        if (registry != null && commands != null) {
-            registry.unregisterCommands();
+    public void run(CommandContext ctx) throws CommandException {
+        if (handle != null) {
+            handle.run(ctx);
         }
     }
 
+    @Override
+    public boolean isStorageRequired() {
+        return storageRequired;
+    }
+
+    public void setStorageRequired(boolean storageRequired) {
+        this.storageRequired = storageRequired;
+    }
+
+    @Override
+    public boolean isAvailableInShell() {
+        return availableInShell;
+    }
+
+    void setAvailableInShell(boolean available) {
+        this.availableInShell = available;
+    }
+
+    @Override
+    public boolean isAvailableOutsideShell() {
+        return availableOutsideShell;
+    }
+
+    void setAvailableOutsideShell(boolean available) {
+        this.availableOutsideShell = available;
+    }
 }
 

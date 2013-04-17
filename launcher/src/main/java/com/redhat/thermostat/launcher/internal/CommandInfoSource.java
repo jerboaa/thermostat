@@ -34,9 +34,10 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.cli;
+package com.redhat.thermostat.launcher.internal;
 
 import java.util.Collection;
+
 
 public interface CommandInfoSource {
 

@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
-import java.util.ServiceLoader;
-
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
@@ -52,9 +50,18 @@ public class Activator implements BundleActivator {
     @Override
     public void start(final BundleContext context) throws Exception {
         reg = new CommandRegistryImpl(context);
-        ServiceLoader<Command> cmds = ServiceLoader.load(Command.class,
-                getClass().getClassLoader());
-        reg.registerCommands(cmds);
+
+        registerCommand("dump-heap", new DumpHeapCommand());
+        registerCommand("list-heap-dumps", new ListHeapDumpsCommand());
+        registerCommand("save-heap-dump-to-file", new SaveHeapDumpToFileCommand());
+        registerCommand("show-heap-histogram", new ShowHeapHistogramCommand());
+        registerCommand("find-objects", new FindObjectsCommand());
+        registerCommand("object-info", new ObjectInfoCommand());
+        registerCommand("find-root", new FindRootCommand());
+    }
+
+    private void registerCommand(String name, Command command) {
+        reg.registerCommand(name, command);
     }
 
     @Override

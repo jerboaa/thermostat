@@ -36,47 +36,27 @@
 
 package com.redhat.thermostat.common.cli;
 
+import static com.redhat.thermostat.testutils.Asserts.assertCommandIsRegistered;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Hashtable;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.common.utils.ServiceRegistry;
+import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class CommandRegistryImplTest {
 
     private CommandRegistryImpl commandRegistry;
 
-    private BundleContext bundleContext;
+    private StubBundleContext bundleContext;
 
     @Before
     public void setUp() {
-        bundleContext = mock(BundleContext.class);
+        bundleContext = new StubBundleContext();
         commandRegistry = new CommandRegistryImpl(bundleContext);
-        ServiceReference infoSourceReference = mock(ServiceReference.class);
-        CommandInfoSource infoSource = mock(CommandInfoSource.class);
-        CommandInfo info = mock(CommandInfo.class);
-        when(infoSource.getCommandInfo(any(String.class))).thenReturn(info);
-        when(bundleContext.getServiceReference(eq(CommandInfoSource.class))).thenReturn(infoSourceReference);
-        when(bundleContext.getService(infoSourceReference)).thenReturn(infoSource);
     }
 
     @After
@@ -87,150 +67,35 @@ public class CommandRegistryImplTest {
     @Test
     public void testRegisterCommands() {
         Command cmd1 = mock(Command.class);
-        when(cmd1.getName()).thenReturn("test1");
+        String name1 = "test1";
         Command cmd2 = mock(Command.class);
-        when(cmd2.getName()).thenReturn("test2");
+        String name2 = "test2";
 
-        commandRegistry.registerCommands(Arrays.asList(cmd1, cmd2));
+        commandRegistry.registerCommand(name1, cmd1);
+        commandRegistry.registerCommand(name2, cmd2);
 
-        Hashtable<String,Object> props1 = new Hashtable<>();
-        props1.put(ServiceRegistry.SERVICE_NAME, "test1");
-        Hashtable<String,Object> props2 = new Hashtable<>();
-        props2.put(ServiceRegistry.SERVICE_NAME, "test2");
-        verify(bundleContext).registerService(Command.class.getName(), cmd1, props1);
-        verify(bundleContext).registerService(Command.class.getName(), cmd2, props2);
+        assertCommandIsRegistered(bundleContext, "test1", cmd1.getClass());
+        assertCommandIsRegistered(bundleContext, name2, cmd2.getClass());
 
-        verifyNoMoreInteractions(bundleContext);
-
+        assertEquals(2, bundleContext.getAllServices().size());
     }
 
     @Test
     public void testUnregisterCommand() throws InvalidSyntaxException {
         Command cmd1 = mock(Command.class);
-        when(cmd1.getName()).thenReturn("test1");
+        String name1 = "test1";
         Command cmd2 = mock(Command.class);
-        when(cmd2.getName()).thenReturn("test2");
+        String name2 = "test2";
 
-        ServiceReference cmd1Reference = mock(ServiceReference.class);
-        ServiceReference cmd2Reference = mock(ServiceReference.class);
+        commandRegistry.registerCommand(name1, cmd1);
+        commandRegistry.registerCommand(name2, cmd2);
 
-        ServiceRegistration cmd1Reg = mock(ServiceRegistration.class);
-        when(cmd1Reg.getReference()).thenReturn(cmd1Reference);
-        ServiceRegistration cmd2Reg = mock(ServiceRegistration.class);
-        when(cmd2Reg.getReference()).thenReturn(cmd2Reference);
-
-        Hashtable<String,String> props1 = new Hashtable<>();
-        props1.put(ServiceRegistry.SERVICE_NAME, cmd1.getName());
-        Hashtable<String,String> props2 = new Hashtable<>();
-        props2.put(ServiceRegistry.SERVICE_NAME, cmd2.getName());
-
-        when(bundleContext.registerService(Command.class.getName(), cmd1, props1)).thenReturn(cmd1Reg);
-        when(bundleContext.registerService(Command.class.getName(), cmd2, props2)).thenReturn(cmd2Reg);
-
-        commandRegistry.registerCommands(Arrays.asList(cmd1, cmd2));
-
-        verify(bundleContext).registerService(Command.class.getName(), cmd1, props1);
-        verify(bundleContext).registerService(Command.class.getName(), cmd2, props2);
-
-        when(bundleContext.getService(eq(cmd1Reference))).thenReturn(cmd1);
-        when(bundleContext.getService(eq(cmd2Reference))).thenReturn(cmd2);
-        when(bundleContext.getServiceReferences(Command.class.getName(), (String) null)).thenReturn(new ServiceReference[] {cmd1Reference, cmd2Reference});
+        assertEquals(2, bundleContext.getAllServices().size());
 
         commandRegistry.unregisterCommands();
 
-        verify(cmd1Reg).unregister();
-        verify(cmd2Reg).unregister();
-
-        verifyNoMoreInteractions(bundleContext);
+        assertEquals(0, bundleContext.getAllServices().size());
     }
 
-    @Test
-    public void testGetCommand() throws InvalidSyntaxException {
-        ServiceReference ref1 = mock(ServiceReference.class);
-        when(bundleContext.getServiceReferences(Command.class.getName(), "(&(objectclass=*)(servicename=test1))")).thenReturn(new ServiceReference[] { ref1 });
-        Command cmd1 = mock(Command.class);
-        when(bundleContext.getService(ref1)).thenReturn(cmd1);
-
-        Command cmd = commandRegistry.getCommand("test1");
-
-        assertSame(cmd1, cmd);
-    }
-
-    @Test
-    public void testNotRegisteredCommand() throws InvalidSyntaxException {
-        ServiceReference ref1 = mock(ServiceReference.class);
-        Command cmd1 = mock(Command.class);
-        when(bundleContext.getService(ref1)).thenReturn(cmd1);
-
-        Command cmd = commandRegistry.getCommand("test1");
-
-        assertNull(cmd);
-    }
-
-    @Test
-    public void testNotRegisteredCommandEmptyList() throws InvalidSyntaxException {
-        when(bundleContext.getServiceReferences(Command.class.getName(), "(&(objectclass=*)(servicename=test1))")).thenReturn(new ServiceReference[0]);
-
-        Command cmd = commandRegistry.getCommand("test1");
-
-        assertNull(cmd);
-    }
-
-    @Test
-    public void testDoubleRegisteredCommand() throws InvalidSyntaxException {
-        ServiceReference ref1 = mock(ServiceReference.class);
-        ServiceReference ref2 = mock(ServiceReference.class);
-        Command cmd1 = mock(Command.class);
-        Command cmd2 = mock(Command.class);
-        when(bundleContext.getServiceReferences(Command.class.getName(), "(&(objectclass=*)(servicename=test1))")).thenReturn(new ServiceReference[] { ref1, ref2 });
-        when(bundleContext.getService(ref1)).thenReturn(cmd1);
-        when(bundleContext.getService(ref2)).thenReturn(cmd2);
-
-        Command cmd = commandRegistry.getCommand("test1");
-
-        assertSame(cmd1, cmd);
-    }
-
-    @Test(expected=InternalError.class)
-    public void testGetCommandInvalidSyntax() throws InvalidSyntaxException {
-        when(bundleContext.getServiceReferences(Command.class.getName(), "(&(objectclass=*)(servicename=test1))")).thenThrow(new InvalidSyntaxException("test", "test"));
-
-        commandRegistry.getCommand("test1");
-    }
-
-    @Test
-    public void testRegisteredCommands() throws InvalidSyntaxException {
-        ServiceReference ref1 = mock(ServiceReference.class);
-        ServiceReference ref2 = mock(ServiceReference.class);
-        Command cmd1 = mock(Command.class);
-        Command cmd2 = mock(Command.class);
-        when(bundleContext.getServiceReferences(Command.class.getName(), null)).thenReturn(new ServiceReference[] { ref1, ref2 });
-        when(bundleContext.getService(ref1)).thenReturn(cmd1);
-        when(bundleContext.getService(ref2)).thenReturn(cmd2);
-
-        Collection<Command> cmds = commandRegistry.getRegisteredCommands();
-
-        assertEquals(2, cmds.size());
-        assertTrue(cmds.contains(cmd1));
-        assertTrue(cmds.contains(cmd2));
-    }
-
-    @Test
-    public void testInitializeCommandInfo() {
-        CommandInfoSource infos = mock(CommandInfoSource.class);
-        ServiceReference infosRef = mock(ServiceReference.class);
-        CommandInfo info = mock(CommandInfo.class);
-        when(infos.getCommandInfo("name")).thenReturn(info);
-        AbstractCommand command = mock(AbstractCommand.class);
-        when(command.getName()).thenReturn("name");
-        when(command.hasCommandInfo()).thenReturn(false);
-
-        when(bundleContext.getServiceReference(CommandInfoSource.class)).thenReturn(infosRef);
-        when(bundleContext.getService(infosRef)).thenReturn(infos);
-
-        commandRegistry.initializeCommandInfo(command);
-        verify(command).setCommandInfo(info);
-        verify(bundleContext).ungetService(infosRef);
-    }
 }
 

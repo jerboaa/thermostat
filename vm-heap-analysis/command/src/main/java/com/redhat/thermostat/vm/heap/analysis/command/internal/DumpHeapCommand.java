@@ -55,7 +55,6 @@ import com.redhat.thermostat.vm.heap.analysis.command.locale.LocaleResources;
 public class DumpHeapCommand extends AbstractCommand {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
-    private static final String NAME = "dump-heap";
 
     private BundleContext context;
     private final DumpHeapHelper implementation;
@@ -67,11 +66,6 @@ public class DumpHeapCommand extends AbstractCommand {
     DumpHeapCommand(BundleContext context, DumpHeapHelper impl) {
         this.context = context;
         this.implementation = impl;
-    }
-
-    @Override
-    public String getName() {
-        return NAME;
     }
 
     @Override

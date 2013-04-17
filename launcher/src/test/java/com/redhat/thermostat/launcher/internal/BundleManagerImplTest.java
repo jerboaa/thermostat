@@ -58,8 +58,6 @@ import org.osgi.framework.launch.Framework;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.redhat.thermostat.common.cli.CommandInfo;
-import com.redhat.thermostat.common.cli.CommandInfoSource;
 import com.redhat.thermostat.common.config.Configuration;
 
 @RunWith(PowerMockRunner.class)
@@ -123,12 +121,7 @@ public class BundleManagerImplTest {
         when(FrameworkUtil.getBundle(any(Class.class))).thenReturn(theBundle);
 
         BundleManagerImpl registry = new BundleManagerImpl(conf);
-        CommandInfoSource infos = mock(CommandInfoSource.class);
-        CommandInfo info = mock(CommandInfo.class);
-        when (info.getDependencyResourceNames()).thenReturn(bundleLocs);
-        when (infos.getCommandInfo(cmdName)).thenReturn(info);
-        registry.setCommandInfoSource(infos);
-        registry.addBundlesFor(cmdName);
+        registry.addBundles(bundleLocs);
         verify(loader).installAndStartBundles(any(Framework.class), eq(locationsNeeded));
     }
 
@@ -147,7 +140,7 @@ public class BundleManagerImplTest {
         when(FrameworkUtil.getBundle(any(Class.class))).thenReturn(theBundle);
 
         Object registry = new BundleManagerImpl(conf);
-        Class clazz = registry.getClass();
+        Class<?> clazz = registry.getClass();
         Method m = clazz.getMethod("setPrintOSGiInfo", Boolean.TYPE);
         m.invoke(registry, true); // If this fails, then API has changed in ways that break FrameworkProvider.
     }

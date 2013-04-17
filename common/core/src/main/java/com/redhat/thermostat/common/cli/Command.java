@@ -36,21 +36,13 @@
 
 package com.redhat.thermostat.common.cli;
 
-import org.apache.commons.cli.Options;
-
 import com.redhat.thermostat.annotations.ExtensionPoint;
 
 /**
  * Represents a command on the command line.
  * <p>
  * In order to be runnable, a command must be registered as an OSGi service
- * with the {@link #NAME} set to the value of {@link #getName()}. If this is
- * done directly, the developer is then responsible for enabling and disabling
- * it at the appropriate times.
- * <p>
- * Bundles which provide {@link Command}s may choose to have their BundleActivator
- * extend from {@link CommandLoadingBundleActivator} and in so doing avoid needing to
- * explicitly register their {@link Command} implementations as services.
+ * with the {@link #NAME} set to the name of the command.
  * <p>
  * It is also possible to use an instance of {@link CommandRegistry}, registering the
  * {@link Command}s when the bundle starts and and unregistering them when the
@@ -60,7 +52,6 @@ import com.redhat.thermostat.annotations.ExtensionPoint;
  * or {@link AbstractStateNotifyingCommand} classes to descend from, as they provide
  * sensible default implementations of most methods and/or provide some other functionality.
  * <p>
- * @see CommandLoadingBundleActivator
  * @see CommandRegistry
  * @see AbstractCommand
  * @see AbstractStateNotifyingCommand
@@ -74,29 +65,6 @@ public interface Command {
      * Execute the command
      */
     public void run(CommandContext ctx) throws CommandException;
-
-    /**
-     * Returns a name for this command. This will be used by the user to select
-     * this command.
-     */
-    public String getName();
-
-    /**
-     * A short description for the command indicating what it does.
-     */
-    public String getDescription();
-
-    /**
-     * How the user should invoke this command
-     */
-    public String getUsage();
-
-    /**
-     * Returns the Options that the command is prepared to handle.
-     * If the user provides unknown or malformed arguments, this command will
-     * not be invoked.
-     */
-    public Options getOptions();
 
     /**
      * Whether the command depends on {@link Storage}

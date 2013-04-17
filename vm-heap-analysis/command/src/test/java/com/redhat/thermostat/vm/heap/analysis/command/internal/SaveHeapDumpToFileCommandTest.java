@@ -38,7 +38,6 @@ package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -71,14 +70,6 @@ public class SaveHeapDumpToFileCommandTest {
     @Before
     public void setup() {
         context = new StubBundleContext();
-    }
-
-    @Test
-    public void verifyBasicInformation() {
-        Command command = new SaveHeapDumpToFileCommand(context, mock(FileStreamCreator.class));
-        assertEquals("save-heap-dump-to-file", command.getName());
-        assertNotNull(command.getDescription());
-        assertNotNull(command.getUsage());
     }
 
     @Test (expected=CommandException.class)

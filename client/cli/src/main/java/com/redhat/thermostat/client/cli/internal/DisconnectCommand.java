@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.client.cli.internal;
 
-import org.apache.commons.cli.Options;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
@@ -51,8 +50,6 @@ import com.redhat.thermostat.storage.core.DbService;
 public class DisconnectCommand extends AbstractCommand {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
-
-    private static final String NAME = "disconnect";
 
     private BundleContext context;
     
@@ -82,16 +79,6 @@ public class DisconnectCommand extends AbstractCommand {
         }
     }
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
-
-    @Override
-    public Options getOptions() {
-        return new Options();
-    }
-    
     @Override
     public boolean isAvailableOutsideShell() {
         return false;

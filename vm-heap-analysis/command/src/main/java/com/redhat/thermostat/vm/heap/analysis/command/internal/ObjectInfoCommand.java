@@ -61,8 +61,6 @@ public class ObjectInfoCommand extends AbstractCommand {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private static final String NAME = "object-info";
-
     private final BundleContext context;
     private Snapshot snapshot;
 
@@ -140,11 +138,6 @@ public class ObjectInfoCommand extends AbstractCommand {
 
     private String describeReference(JavaHeapObject from, JavaHeapObject to) {
         return "[" + from.describeReferenceTo(to, snapshot) + "]";
-    }
-
-    @Override
-    public String getName() {
-        return NAME;
     }
 
 }

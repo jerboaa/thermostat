@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.client.swing.internal.osgi;
 
-import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
@@ -115,7 +114,7 @@ public class ThermostatActivator implements BundleActivator {
                 main = new Main(context, keyring, appSvc, new String[0]);
                 
                 GUIClientCommand cmd = new GUIClientCommand(main);
-                cmdReg.registerCommands(Arrays.asList(cmd));
+                cmdReg.registerCommand("gui", cmd);
             }
 
             @Override

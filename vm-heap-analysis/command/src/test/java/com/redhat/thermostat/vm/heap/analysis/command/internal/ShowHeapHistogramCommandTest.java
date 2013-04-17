@@ -37,7 +37,6 @@
 package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -61,16 +60,6 @@ import com.sun.tools.hat.internal.model.JavaHeapObject;
 public class ShowHeapHistogramCommandTest {
     
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
-
-    @Test
-    public void verifyBasics() {
-        StubBundleContext context = new StubBundleContext();
-        Command command = new ShowHeapHistogramCommand(context);
-
-        assertEquals("show-heap-histogram", command.getName());
-        assertNotNull(command.getDescription());
-        assertNotNull(command.getUsage());
-    }
 
     @Test
     public void verifyWorks() throws CommandException {

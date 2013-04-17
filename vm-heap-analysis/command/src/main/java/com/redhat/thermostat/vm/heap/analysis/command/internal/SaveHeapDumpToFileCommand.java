@@ -62,8 +62,6 @@ public class SaveHeapDumpToFileCommand extends AbstractCommand {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private static final String NAME = "save-heap-dump-to-file";
-
     private static final String HEAP_ID_ARGUMENT = "heapId";
     private static final String FILE_NAME_ARGUMENT = "file";
 
@@ -80,12 +78,6 @@ public class SaveHeapDumpToFileCommand extends AbstractCommand {
     }
 
     @Override
-    public String getName() {
-        return NAME;
-    }
-
-    @Override
-
     public void run(CommandContext ctx) throws CommandException {
         ServiceReference ref = context.getServiceReference(HeapDAO.class.getName());
         if (ref == null) {

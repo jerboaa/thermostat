@@ -37,7 +37,6 @@
 package com.redhat.thermostat.agent.cli.impl;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -132,20 +131,6 @@ public class AgentApplicationTest {
         configCreator = null;
         dbServiceFactory = null;
         exitStatus = null;
-    }
-
-    @Test
-    public void testName() {
-        AgentApplication agent = new AgentApplication(context, exitStatus, configCreator, dbServiceFactory);
-        String name = agent.getName();
-        assertEquals("agent", name);
-    }
-
-    @Test
-    public void testDescAndUsage() {
-        AgentApplication agent = new AgentApplication(context, exitStatus, configCreator, dbServiceFactory);
-        assertNotNull(agent.getDescription());
-        assertNotNull(agent.getUsage());
     }
 
     @Test

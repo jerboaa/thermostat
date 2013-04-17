@@ -60,7 +60,6 @@ public class FindObjectsCommand extends AbstractCommand {
 
     private static final String HEAP_ID_ARG = "heapId";
     private static final String LIMIT_ARG = "limit";
-    private static final String NAME = "find-objects";
     private static final String HEADER_OBJECT_ID = translator.localize(LocaleResources.HEADER_OBJECT_ID);
     private static final String HEADER_TYPE = translator.localize(LocaleResources.HEADER_OBJECT_TYPE);
     private static final int DEFAULT_LIMIT = 10;
@@ -138,11 +137,6 @@ public class FindObjectsCommand extends AbstractCommand {
             }
         }
         return limit;
-    }
-
-    @Override
-    public String getName() {
-        return NAME;
     }
 }
 

@@ -46,8 +46,9 @@ import com.redhat.thermostat.common.tools.ApplicationState;
  * to their runtime status to other components.
  * <p>
  * Concrete implementations must be registered as OSGi services with {@link Command} as the
- * class.  This may be done through the use of a BundleActivator which descends from
- * {@link CommandLoadingBundleActivator}
+ * class.
+ *
+ * @see Command
  */
 public abstract class AbstractStateNotifyingCommand extends AbstractCommand {
 

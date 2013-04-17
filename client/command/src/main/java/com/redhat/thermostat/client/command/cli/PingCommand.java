@@ -64,8 +64,6 @@ public class PingCommand extends AbstractCommand {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private static final String NAME = "ping";
-
     private class PongListener implements RequestResponseListener {
 
         private PrintStream out;
@@ -180,13 +178,8 @@ public class PingCommand extends AbstractCommand {
 
     private void printCustomMessageWithUsage(PrintStream out, String message) {
         out.println(message);
-        out.println(getUsage());
+        // FIXME add usage back out.println(getUsage());
         return;
-    }
-
-    @Override
-    public String getName() {
-        return NAME;
     }
 
 }

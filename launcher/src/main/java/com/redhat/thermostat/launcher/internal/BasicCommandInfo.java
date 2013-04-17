@@ -40,7 +40,6 @@ import java.util.List;
 
 import org.apache.commons.cli.Options;
 
-import com.redhat.thermostat.common.cli.CommandInfo;
 
 public class BasicCommandInfo implements CommandInfo {
 

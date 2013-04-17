@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.launcher.internal;
 
+import static com.redhat.thermostat.testutils.Asserts.assertCommandIsRegistered;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -43,7 +44,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
-import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -53,11 +53,9 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -66,7 +64,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.launch.Framework;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
@@ -79,10 +76,7 @@ import com.redhat.thermostat.common.Launcher;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.cli.Command;
-import com.redhat.thermostat.common.cli.CommandInfo;
-import com.redhat.thermostat.common.cli.CommandInfoSource;
 import com.redhat.thermostat.common.config.Configuration;
-import com.redhat.thermostat.common.utils.ServiceRegistry;
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.internal.Activator.RegisterLauncherCustomizer;
 import com.redhat.thermostat.testutils.StubBundleContext;
@@ -92,10 +86,8 @@ import com.redhat.thermostat.utils.keyring.Keyring;
 @PrepareForTest({Activator.class, Activator.RegisterLauncherCustomizer.class, FrameworkUtil.class})
 public class ActivatorTest {
 
-    private BundleContext context;
+    private StubBundleContext context;
     private MultipleServiceTracker tracker;
-    private ServiceReference registryServiceReference, helpCommandReference;
-    private ServiceRegistration launcherServiceRegistration, helpCommandRegistration;
     private BundleManager registryService;
     private Command helpCommand;
 
@@ -104,25 +96,16 @@ public class ActivatorTest {
         Path tempDir = createStubThermostatHome();
         System.setProperty("THERMOSTAT_HOME", tempDir.toString());
         
-        context = mock(BundleContext.class);
+        context = new StubBundleContext();
         setupOsgiRegistryImplMock();
 
-        registryServiceReference = mock(ServiceReference.class);
-        launcherServiceRegistration = mock(ServiceRegistration.class);
         registryService = mock(BundleManager.class);
-        when(context.getServiceReference(eq(BundleManager.class))).thenReturn(registryServiceReference);
-        when(context.getService(eq(registryServiceReference))).thenReturn(registryService);
-        when(context.registerService(eq(Launcher.class.getName()), any(), (Dictionary) isNull())).
-                thenReturn(launcherServiceRegistration);
+        context.registerService(BundleManager.class, registryService, null);
 
-        helpCommandRegistration = mock(ServiceRegistration.class);
-        helpCommandReference = mock(ServiceReference.class);
         helpCommand = mock(Command.class);
-        when(helpCommandRegistration.getReference()).thenReturn(helpCommandReference);
-        when(context.registerService(eq(Command.class.getName()), any(), isA(Dictionary.class))).
-                thenReturn(helpCommandRegistration);
-        when(context.getService(helpCommandReference)).thenReturn(helpCommand);
-        when(context.getServiceReferences(Command.class.getName(), null)).thenReturn(new ServiceReference[] {helpCommandReference});
+        Hashtable<String,String> props = new Hashtable<>();
+        props.put(Command.NAME, "help");
+        context.registerService(Command.class, helpCommand, props);
 
         Configuration config = mock(Configuration.class);
         when(config.getThermostatHome()).thenReturn("");
@@ -164,9 +147,7 @@ public class ActivatorTest {
         Activator activator = new Activator();
         activator.start(context);
 
-        Hashtable<String, Object> props = new Hashtable<>();
-        props.put(ServiceRegistry.SERVICE_NAME, "help");
-        verify(context).registerService(eq(Command.class.getName()), isA(HelpCommand.class), eq(props));
+        assertCommandIsRegistered(context, "help", HelpCommand.class);
 
         verify(mockTracker).open();
         
@@ -239,9 +220,8 @@ public class ActivatorTest {
         when(FrameworkUtil.getBundle(BundleManagerImpl.class)).thenReturn(mockBundle);
         when(mockBundle.getBundleContext()).thenReturn(context);
         Bundle mockFramework = mock(Framework.class);
-        when(context.getBundle(0)).thenReturn(mockFramework);
+        context.setBundle(0, mockFramework);
         when(mockFramework.getBundleContext()).thenReturn(context);
-        when(context.getBundles()).thenReturn(new Bundle[0]);
     }
 }
 

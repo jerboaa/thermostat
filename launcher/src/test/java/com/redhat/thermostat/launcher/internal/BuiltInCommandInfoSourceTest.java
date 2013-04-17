@@ -50,7 +50,6 @@ import java.util.Properties;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.cli.CommandInfo;
 import com.redhat.thermostat.launcher.internal.BuiltInCommandInfoSource;
 
 public class BuiltInCommandInfoSourceTest {

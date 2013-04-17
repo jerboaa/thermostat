@@ -34,13 +34,20 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.cli;
+package com.redhat.thermostat.launcher.internal;
 
-public interface CommandRegistry {
+public class CommandInfoNotFoundException extends RuntimeException {
 
-    public void registerCommand(String name, Command cmd);
+    private String commandName = null;
 
-    public void unregisterCommands();
+    public CommandInfoNotFoundException(String commandName) {
+        super("data for command '" + commandName + "' not found");
 
+        this.commandName = commandName;
+    }
+
+    public String getCommandName() {
+        return commandName;
+    }
 }
 

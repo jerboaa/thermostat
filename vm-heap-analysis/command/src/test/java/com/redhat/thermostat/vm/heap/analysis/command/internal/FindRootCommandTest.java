@@ -37,8 +37,6 @@
 package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
@@ -46,14 +44,10 @@ import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.Collection;
 import java.util.Enumeration;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.stubbing.OngoingStubbing;
 
@@ -180,47 +174,6 @@ public class FindRootCommandTest {
         }
         nextElement.thenReturn(null);
         return refs;
-    }
-
-    @Test
-    public void testName() {
-        assertEquals("find-root", cmd.getName());
-    }
-
-    @Test
-    public void testDescAndUsage() {
-        assertNotNull(cmd.getDescription());
-        assertNotNull(cmd.getUsage());
-    }
-
-    @Ignore
-    @Test
-    public void testOptions() {
-        String heapIdOption = "heapId";
-        String objectIdOption = "objectId";
-        String allOption = "all";
-        Options options = cmd.getOptions();
-        @SuppressWarnings("unchecked")
-        Collection<Options> theOptions = options.getOptions();
-        assertEquals(3, theOptions.size());
-
-        assertTrue(options.hasOption(heapIdOption));
-        Option heapOption = options.getOption(heapIdOption);
-        assertEquals("the ID of the heapdump to analyze", heapOption.getDescription());
-        assertTrue(heapOption.isRequired());
-        assertTrue(heapOption.hasArg());
-
-        assertTrue(options.hasOption(objectIdOption));
-        Option objectOption = options.getOption(objectIdOption);
-        assertEquals("the ID of the object to query", objectOption.getDescription());
-        assertTrue(heapOption.isRequired());
-        assertTrue(heapOption.hasArg());
-
-        assertTrue(options.hasOption(allOption));
-        Option all = options.getOption(allOption);
-        assertEquals("finds all paths to GC roots", all.getDescription());
-        assertFalse(all.isRequired());
-        assertFalse(all.hasArg());
     }
 
     @Test

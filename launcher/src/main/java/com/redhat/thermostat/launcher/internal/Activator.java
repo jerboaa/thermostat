@@ -48,7 +48,6 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.Launcher;
 import com.redhat.thermostat.common.cli.CommandContextFactory;
-import com.redhat.thermostat.common.cli.CommandInfoSource;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 import com.redhat.thermostat.common.config.Configuration;
@@ -85,12 +84,11 @@ public class Activator implements BundleActivator {
                             config.getLibRoot(), config.getPluginRoot());
             CommandInfoSource commands = new CompoundCommandInfoSource(builtInCommandSource, pluginCommandSource);
 
-
             cmdInfoReg = context.registerService(CommandInfoSource.class, commands, null);
-            bundleService.setCommandInfoSource(commands);
+
             // Register Launcher service since FrameworkProvider is waiting for it blockingly.
             LauncherImpl launcher = new LauncherImpl(context,
-                    new CommandContextFactory(context), bundleService);
+                    new CommandContextFactory(context), bundleService, commands);
             launcherReg = context.registerService(Launcher.class.getName(), launcher, null);
             bundleManReg = context.registerService(BundleManager.class, bundleService, null);
             ExitStatus exitStatus = new ExitStatusImpl(ExitStatus.EXIT_SUCCESS);
@@ -149,7 +147,7 @@ public class Activator implements BundleActivator {
         commandInfoSourceTracker.open();
 
         registry = new CommandRegistryImpl(context);
-        registry.registerCommand(helpCommand);
+        registry.registerCommand("help", helpCommand);
     }
 
     @Override

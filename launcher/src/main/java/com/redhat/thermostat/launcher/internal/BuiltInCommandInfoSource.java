@@ -46,9 +46,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.common.cli.CommandInfo;
-import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
-import com.redhat.thermostat.common.cli.CommandInfoSource;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class BuiltInCommandInfoSource implements CommandInfoSource {

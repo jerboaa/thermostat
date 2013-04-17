@@ -34,20 +34,63 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.cli;
+package com.redhat.thermostat.launcher.internal;
 
-public class CommandInfoNotFoundException extends RuntimeException {
+import java.util.Collections;
+import java.util.List;
 
-    private String commandName = null;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 
-    public CommandInfoNotFoundException(String commandName) {
-        super("data for command '" + commandName + "' not found");
+public class TestCommandInfo implements CommandInfo {
 
-        this.commandName = commandName;
+    private String name;
+    private String description;
+    private String usage;
+
+    private Options options = new Options();
+
+    public TestCommandInfo(String name) {
+        this.name = name;
     }
 
-    public String getCommandName() {
-        return commandName;
+    @Override
+    public String getName() {
+        return name;
     }
+
+    @Override
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String desc) {
+        description = desc;
+    }
+
+    @Override
+    public String getUsage() {
+        return usage;
+    }
+
+    public void setUsage(String usage) {
+        this.usage = usage;
+    }
+
+    @Override
+    public Options getOptions() {
+        return options;
+    }
+
+    public void addOptions(Option... options) {
+        for (Option option : options) {
+            this.options.addOption(option);
+        }
+    }
+
+    @Override
+    public List<String> getDependencyResourceNames() {
+        return Collections.emptyList();
+    }
+
 }
-

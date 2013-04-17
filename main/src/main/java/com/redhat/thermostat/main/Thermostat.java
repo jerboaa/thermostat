@@ -36,33 +36,22 @@
 
 package com.redhat.thermostat.main;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleException;
-import org.osgi.util.tracker.ServiceTracker;
-
-import com.redhat.thermostat.common.Launcher;
 import com.redhat.thermostat.common.config.Configuration;
 import com.redhat.thermostat.main.impl.FrameworkProvider;
 
 public class Thermostat {
 
-    private static Configuration config;
-
     /**
-     * @param args
-     * @throws Exception
+     * @param args the arguments to the program
      */
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
 
-        config = new Configuration();
+        Configuration config = new Configuration();
 
         List<String> toProcess = new ArrayList<>(Arrays.asList(args));
         Iterator<String> iter = toProcess.iterator();
@@ -76,10 +65,7 @@ public class Thermostat {
 
         FrameworkProvider frameworkProvider = new FrameworkProvider(config);
         frameworkProvider.start(toProcess.toArray(new String[0]));
-
     }
-
-    
 
 }
 

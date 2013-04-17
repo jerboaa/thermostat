@@ -45,9 +45,6 @@ import java.util.Objects;
 
 import org.apache.commons.cli.Options;
 
-import com.redhat.thermostat.common.cli.CommandInfo;
-import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
-import com.redhat.thermostat.common.cli.CommandInfoSource;
 
 /**
  * Presents multiple {@link CommandInfoSource}s as one

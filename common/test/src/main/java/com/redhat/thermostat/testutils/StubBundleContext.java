@@ -48,6 +48,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -358,6 +359,33 @@ public class StubBundleContext implements BundleContext {
                 if (serviceInterface.equals(serviceName)
                         && info.implementation.getClass().equals(implementationClass)) {
                     return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @returns true if an instance of implementationClass is registered as
+     * service serviceName with properties that is a superset of props
+     */
+    public boolean isServiceRegistered(String serviceName, Class<?> implementationClass, Dictionary<String,?> props) {
+        for (ServiceInformation info : registeredServices) {
+            for (String serviceInterface : (String[]) info.properties.get(Constants.OBJECTCLASS)) {
+                if (serviceInterface.equals(serviceName)
+                        && info.implementation.getClass().equals(implementationClass)) {
+                    boolean propsMatch = true;
+                    Enumeration<String> keys = props.keys();
+                    while (keys.hasMoreElements()) {
+                        String key = keys.nextElement();
+                        if (!Objects.equals(props.get(key), info.properties.get(key))) {
+                            propsMatch = false;
+                            break;
+                        }
+                    }
+                    if (propsMatch) {
+                        return true;
+                    }
                 }
             }
         }

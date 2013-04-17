@@ -61,8 +61,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.common.cli.CommandInfo;
-import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandExtensions;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.NewCommand;
 

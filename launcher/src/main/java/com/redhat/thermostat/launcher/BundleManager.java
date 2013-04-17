@@ -43,8 +43,6 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.launch.Framework;
 
 import com.redhat.thermostat.annotations.Service;
-import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
-import com.redhat.thermostat.common.cli.CommandInfoSource;
 import com.redhat.thermostat.common.config.Configuration;
 import com.redhat.thermostat.launcher.internal.BundleLoader;
 
@@ -56,9 +54,7 @@ public abstract class BundleManager {
 
     public abstract void setPrintOSGiInfo(boolean printOSGiInfo);
 
-    public abstract void setCommandInfoSource(CommandInfoSource source);
-
-    public abstract void addBundlesFor(String commandName) throws BundleException, CommandInfoNotFoundException, IOException;
+    public abstract void addBundles(List<String> dependencies) throws BundleException, IOException;
 
     public static void preLoadBundles(Framework framework, List<String> bundleLocations,
             boolean printOSGiInfo) throws BundleException {

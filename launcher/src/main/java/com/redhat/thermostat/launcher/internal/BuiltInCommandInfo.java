@@ -49,7 +49,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 
-import com.redhat.thermostat.common.cli.CommandInfo;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class BuiltInCommandInfo implements CommandInfo {

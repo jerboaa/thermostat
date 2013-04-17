@@ -1,1 +1,0 @@
-com.redhat.thermostat.client.command.cli.PingCommand

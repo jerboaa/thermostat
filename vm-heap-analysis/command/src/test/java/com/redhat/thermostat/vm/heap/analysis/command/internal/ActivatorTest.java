@@ -1,5 +1,5 @@
 /*
- * Copyright 2012, 2013 Red Hat, Inc.
+ * Copyright 201trin2, 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -36,23 +36,21 @@
 
 package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
+import static com.redhat.thermostat.testutils.Asserts.assertCommandIsRegistered;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
 @RunWith(PowerMockRunner.class)
@@ -63,42 +61,39 @@ public class ActivatorTest {
     public void testCommandsRegistered() throws Exception {
         StubBundleContext ctx = new StubBundleContext();
         
-        makeServiceLoaderHappy(ctx);
+        makeConstructorsHappy(ctx);
         
         Activator activator = new Activator();
         
         activator.start(ctx);
-        
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), DumpHeapCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), FindObjectsCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), FindRootCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), ListHeapDumpsCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), ObjectInfoCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), SaveHeapDumpToFileCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), ShowHeapHistogramCommand.class));
+
+        assertCommandIsRegistered(ctx, "dump-heap", DumpHeapCommand.class);
+        assertCommandIsRegistered(ctx, "find-objects", FindObjectsCommand.class);
+        assertCommandIsRegistered(ctx, "find-root", FindRootCommand.class);
+        assertCommandIsRegistered(ctx, "list-heap-dumps", ListHeapDumpsCommand.class);
+        assertCommandIsRegistered(ctx, "object-info", ObjectInfoCommand.class);
+        assertCommandIsRegistered(ctx, "save-heap-dump-to-file", SaveHeapDumpToFileCommand.class);
+        assertCommandIsRegistered(ctx, "show-heap-histogram", ShowHeapHistogramCommand.class);
         
         activator.stop(ctx);
         
         assertEquals(0, ctx.getAllServices().size());
     }
 
-    private void makeServiceLoaderHappy(StubBundleContext ctx) {
+    private void makeConstructorsHappy(StubBundleContext ctx) {
         // Commands' no-arg constructors use FrameworkUtil to get
-        // the bundle context. This results in NPEs when ServiceLoader
-        // attempts to load Command classes. Note that client-cli is
-        // a dep of this bundle and hence ServiceLoader wants to instantiate
-        // Command classes from there too.
+        // the bundle context. This results in NPEs when those Command classes
+        // are created
         PowerMockito.mockStatic(FrameworkUtil.class);
         Bundle mockBundle = mock(Bundle.class);
         when(FrameworkUtil.getBundle(any(Class.class))).thenReturn(mockBundle);
         when(mockBundle.getBundleContext()).thenReturn(ctx);
-        Filter mockFilter = mock(Filter.class);
-        // StubBundleContext.createFilter() returns null if FrameworkUtil is
-        // mocked, so mock the offending static call too.
+        // StubBundleContext.createFilter() needs if FrameworkUtil.createFilter
+        // to work, so fix that.
         try {
-            when(FrameworkUtil.createFilter(any(String.class))).thenReturn(mockFilter);
+            when(FrameworkUtil.createFilter(any(String.class))).thenCallRealMethod();
         } catch (InvalidSyntaxException e) {
-            // ignored
+            throw new AssertionError("mocked method threw invalid syntax exception");
         }
     }
 }

@@ -62,8 +62,6 @@ public class ListHeapDumpsCommand extends AbstractCommand {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private static final String NAME = "list-heap-dumps";
-
     private static final String[] COLUMN_NAMES = {
         translator.localize(LocaleResources.HEADER_HOST_ID),
         translator.localize(LocaleResources.HEADER_VM_ID),
@@ -80,11 +78,6 @@ public class ListHeapDumpsCommand extends AbstractCommand {
     /** For tests only */
     ListHeapDumpsCommand(BundleContext context) {
         this.context = context;
-    }
-
-    @Override
-    public String getName() {
-        return NAME;
     }
 
     @Override

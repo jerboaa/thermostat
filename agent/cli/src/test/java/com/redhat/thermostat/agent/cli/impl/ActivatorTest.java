@@ -36,17 +36,14 @@
 
 package com.redhat.thermostat.agent.cli.impl;
 
+import static com.redhat.thermostat.testutils.Asserts.assertCommandIsRegistered;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.mock;
 
 import org.junit.Test;
 
 import com.redhat.thermostat.agent.cli.impl.db.StorageCommand;
 import com.redhat.thermostat.common.ExitStatus;
-import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class ActivatorTest {
@@ -61,9 +58,11 @@ public class ActivatorTest {
 
         activator.start(bundleContext);
 
-        assertTrue(bundleContext.isServiceRegistered(Command.class.getName(), AgentApplication.class));
-        assertTrue(bundleContext.isServiceRegistered(Command.class.getName(), ServiceCommand.class));
-        assertTrue(bundleContext.isServiceRegistered(Command.class.getName(), StorageCommand.class));
+        assertCommandIsRegistered(bundleContext, "agent", AgentApplication.class);
+
+        assertCommandIsRegistered(bundleContext, "service", ServiceCommand.class);
+
+        assertCommandIsRegistered(bundleContext, "storage", StorageCommand.class);
 
         activator.stop(bundleContext);
 

@@ -38,7 +38,6 @@ package com.redhat.thermostat.client.cli.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.eq;
@@ -169,17 +168,6 @@ public class ConnectCommandTest {
     @Test
     public void testIsAvailableInShell() {
         assertTrue(cmd.isAvailableInShell());
-    }
-
-    @Test
-    public void testName() {
-        assertEquals("connect", cmd.getName());
-    }
-
-    @Test
-    public void testDescAndUsage() {
-        assertNotNull(cmd.getDescription());
-        assertNotNull(cmd.getUsage());
     }
 
 }

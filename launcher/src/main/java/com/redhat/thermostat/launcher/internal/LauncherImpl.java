@@ -60,8 +60,6 @@ import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandContextFactory;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
-import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.locale.Translate;
@@ -88,21 +86,28 @@ public class LauncherImpl implements Launcher {
     private final CommandContextFactory cmdCtxFactory;
     private final DbServiceFactory dbServiceFactory;
     private final Version coreVersion;
+    private final CommandSource commandSource;
+    private final CommandInfoSource commandInfoSource;
 
     /** MUST be mutated in a 'synchronized (this)' block */
     private ClientPreferences prefs;
 
-    public LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory, BundleManager registry) {
-        this(context, cmdCtxFactory, registry, new LoggingInitializer(), new DbServiceFactory(), new Version());
+
+    public LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory, BundleManager registry, CommandInfoSource infoSource) {
+        this(context, cmdCtxFactory, registry, infoSource, new CommandSource(context), new LoggingInitializer(), new DbServiceFactory(), new Version());
     }
 
     LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory, BundleManager registry,
+            CommandInfoSource commandInfoSource, CommandSource commandSource,
             LoggingInitializer loggingInitializer, DbServiceFactory dbServiceFactory, Version version) {
         this.context = context;
         this.cmdCtxFactory = cmdCtxFactory;
         this.registry = registry;
         this.dbServiceFactory = dbServiceFactory;
         this.coreVersion = version;
+        this.commandSource = commandSource;
+        this.commandInfoSource = commandInfoSource;
+
         loggingInitializer.initialize();
     }
 
@@ -201,24 +206,32 @@ public class LauncherImpl implements Launcher {
 
         PrintStream out = cmdCtxFactory.getConsole().getOutput();
         PrintStream err = cmdCtxFactory.getConsole().getError();
+
+        CommandInfo cmdInfo;
         try {
-            registry.addBundlesFor(cmdName);
+            cmdInfo = commandInfoSource.getCommandInfo(cmdName);
+        } catch (CommandInfoNotFoundException commandNotFound) {
+            runHelpCommandFor(cmdName);
+            return;
+        }
+
+        try {
+            registry.addBundles(cmdInfo.getDependencyResourceNames());
         } catch (BundleException | IOException e) {
             // If this happens we definitely need to do something about it, and the
             // trace will be immeasurably helpful in figuring out what is wrong.
             out.println(t.localize(LocaleResources.COMMAND_COULD_NOT_LOAD_BUNDLES, cmdName));
             e.printStackTrace(out);
             return;
-        } catch (CommandInfoNotFoundException commandNotFound) {
-            runHelpCommandFor(cmdName);
-            return;
         }
 
-        Command cmd = getCommand(cmdName);
+        Command cmd = commandSource.getCommand(cmdName);
+
         if (cmd == null) {
             err.println(t.localize(LocaleResources.COMMAND_DESCRIBED_BUT_NOT_AVAILALBE, cmdName));
             return;
         }
+
         if ((inShell && !cmd.isAvailableInShell()) || (!inShell && !cmd.isAvailableOutsideShell())) {
         	outputBadShellContext(inShell, out, cmdName);
         	return;
@@ -230,7 +243,7 @@ public class LauncherImpl implements Launcher {
                 notifier.addActionListener(listener);
             }
         }
-        Options options = cmd.getOptions();
+        Options options = cmdInfo.getOptions();
         Arguments args = null;
         try {
             args = parseCommandArguments(cmdArgs, options);
@@ -268,13 +281,6 @@ public class LauncherImpl implements Launcher {
         } catch (IllegalArgumentException ex) {
             // Ignore this, use default loglevel.
         }
-    }
-
-    private Command getCommand(String cmdName) {
-
-        CommandRegistry registry = cmdCtxFactory.getCommandRegistry();
-        Command cmd = registry.getCommand(cmdName);
-        return cmd;
     }
 
     private Arguments parseCommandArguments(String[] cmdArgs, Options options)

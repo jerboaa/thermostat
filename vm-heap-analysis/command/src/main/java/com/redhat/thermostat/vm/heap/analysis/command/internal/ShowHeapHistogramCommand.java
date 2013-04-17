@@ -58,8 +58,6 @@ public class ShowHeapHistogramCommand extends AbstractCommand {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private static final String NAME = "show-heap-histogram";
-
     private final BundleContext context;
     
     public ShowHeapHistogramCommand() {
@@ -68,11 +66,6 @@ public class ShowHeapHistogramCommand extends AbstractCommand {
 
     ShowHeapHistogramCommand(BundleContext context) {
         this.context = context;
-    }
-
-    @Override
-    public String getName() {
-        return NAME;
     }
 
     @Override

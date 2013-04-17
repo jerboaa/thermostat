@@ -37,7 +37,6 @@
 package com.redhat.thermostat.agent.cli.impl.db;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -322,18 +321,5 @@ public class StorageCommandTest {
         return ctx;
     }
 
-    @Test
-    public void testName() {
-        StorageCommand dbService = new StorageCommand(exitStatus);
-        String name = dbService.getName();
-        assertEquals("storage", name);
-    }
-
-    @Test
-    public void testDescAndUsage() {
-        StorageCommand dbService = new StorageCommand(exitStatus);
-        assertNotNull(dbService.getDescription());
-        assertNotNull(dbService.getUsage());
-    }
 }
 

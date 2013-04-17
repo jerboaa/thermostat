@@ -85,11 +85,6 @@ public class WebServiceCommand extends AbstractCommand {
     }
 
     @Override
-    public String getName() {
-        return "webservice";
-    }
-
-    @Override
     public boolean isStorageRequired() {
         return false;
     }

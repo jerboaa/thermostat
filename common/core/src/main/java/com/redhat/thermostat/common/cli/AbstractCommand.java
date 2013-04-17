@@ -36,74 +36,16 @@
 
 package com.redhat.thermostat.common.cli;
 
-import java.util.logging.Logger;
-
-import org.apache.commons.cli.Options;
-
-import com.redhat.thermostat.common.utils.LoggingUtils;
-
 /**
- * A partial implementation of {@link Command} that most implementations should extend.  Includes
- * sane behaviour regarding {@link CommandInfo} methods and those getters that return data that
- * is included in a {@link CommandInfo object}.  By default, any extension of this class will
- * require {@link Storage}, and be available both in and out of the Thermostat shell; override
- * the appropriate method to return false if other behaviour is needed for a particular {@link Command}.
- * The only methods not provided as default implementation are {@link Command#getName()} and
- * {@link Command#run(CommandContext)}.
+ * A partial implementation of {@link Command} that most implementations should
+ * extend. By default, any extension of this class will require {@link Storage},
+ * and be available both in and out of the Thermostat shell.
  * <p>
- * Concrete implementations must be registered as OSGi services with {@link Command} as the
- * class.  This may be done through the use of a BundleActivator which descends from
- * {@link CommandLoadingBundleActivator}
- *
+ * Concrete implementations must be registered as OSGi services with
+ * {@link Command} as the class. This may be done through a
+ * {@link CommandRegistry}.
  */
 public abstract class AbstractCommand implements Command {
-
-    private static final Logger logger = LoggingUtils.getLogger(AbstractCommand.class);
-    private CommandInfo info;
-    private static final String noDesc = "Description not available.";
-    private static final String noUsage = "Usage not available.";
-
-    public void setCommandInfo(CommandInfo info) {
-        this.info = info; 
-    }
-
-    public boolean hasCommandInfo() {
-        return info != null;
-    }
-
-    @Override
-    public String getDescription() {
-        String desc = null;
-        if (hasCommandInfo()) {
-            desc = info.getDescription();
-        }
-        if (desc == null) {
-            desc = noDesc;
-        }
-        return desc;
-    }
-
-    @Override
-    public String getUsage() {
-        String usage = null;
-        if (hasCommandInfo()) { 
-            usage = info.getUsage();
-        }
-        if (usage == null) {
-            usage = noUsage;
-        }
-        return usage;
-    }
-
-    @Override
-    public Options getOptions() {
-        try {
-            return info.getOptions();
-        } catch (NullPointerException e) {
-            logger.warning("CommandInfo not yet set, returning empty Options.");
-            return new Options();
-        }
-    }
 
     @Override
     public boolean isStorageRequired() {

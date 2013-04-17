@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.common.cli;
 
-
 public interface CommandContext {
 
     Console getConsole();

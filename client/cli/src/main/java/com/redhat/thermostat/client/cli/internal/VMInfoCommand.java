@@ -60,7 +60,6 @@ public class VMInfoCommand extends AbstractCommand {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private static final String NAME = "vm-info";
     private static final String STILL_ALIVE = translator.localize(LocaleResources.VM_STOP_TIME_RUNNING);
 
     private final BundleContext context;
@@ -126,11 +125,6 @@ public class VMInfoCommand extends AbstractCommand {
 
         PrintStream out = ctx.getConsole().getOutput();
         table.render(out);
-    }
-
-    @Override
-    public String getName() {
-        return NAME;
     }
 
 }

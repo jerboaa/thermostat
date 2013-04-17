@@ -36,17 +36,20 @@
 
 package com.redhat.thermostat.client.command.internal;
 
+import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.client.command.RequestQueue;
-import com.redhat.thermostat.common.CommandLoadingBundleActivator;
+import com.redhat.thermostat.client.command.cli.PingCommand;
+import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 
-public class Activator extends CommandLoadingBundleActivator {
+public class Activator implements BundleActivator {
 
     private RequestQueueImpl queue;
     private ServiceRegistration queueRegistration;
     private ConfigurationRequestContext configContext;
+    private CommandRegistryImpl reg;
 
     public Activator() {
         configContext = new ConfigurationRequestContext();
@@ -57,7 +60,9 @@ public class Activator extends CommandLoadingBundleActivator {
     public void start(BundleContext context) throws Exception {
         queueRegistration = context.registerService(RequestQueue.class.getName(), queue, null);
         queue.startProcessingRequests();
-        super.start(context);
+
+        reg = new CommandRegistryImpl(context);
+        reg.registerCommand("ping", new PingCommand());
     }
 
     @Override
@@ -67,7 +72,8 @@ public class Activator extends CommandLoadingBundleActivator {
             queueRegistration.unregister();
         }
         configContext.getBootstrap().releaseExternalResources();
-        super.stop(context);
+
+        reg.unregisterCommands();
     }
 
 }

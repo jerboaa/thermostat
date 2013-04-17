@@ -47,8 +47,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.cli.SimpleArguments;
-
 public class SimpleArgumentsTest {
 
     private SimpleArguments args;

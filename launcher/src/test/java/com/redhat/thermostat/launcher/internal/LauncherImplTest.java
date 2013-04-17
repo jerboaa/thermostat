@@ -40,16 +40,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
-import java.security.Permission;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Level;
@@ -62,8 +58,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 
@@ -77,13 +71,10 @@ import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.CommandInfo;
-import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
-import com.redhat.thermostat.common.cli.CommandInfoSource;
+import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.launcher.BundleManager;
-import com.redhat.thermostat.launcher.TestCommand;
 import com.redhat.thermostat.launcher.internal.DisallowSystemExitSecurityManager.ExitException;
 import com.redhat.thermostat.launcher.internal.HelpCommand;
 import com.redhat.thermostat.launcher.internal.LauncherImpl;
@@ -157,7 +148,7 @@ public class LauncherImplTest {
     public void setUp() throws CommandInfoNotFoundException, BundleException, IOException {
         setupCommandContextFactory();
 
-        TestCommand cmd1 = new TestCommand(name1, new TestCmd1());
+        TestCommand cmd1 = new TestCommand(new TestCmd1());
         CommandInfo info1 = mock(CommandInfo.class);
         when(info1.getName()).thenReturn(name1);
         when(info1.getUsage()).thenReturn(name1 + " <--arg1 <arg>> [--arg2 <arg>]");
@@ -171,11 +162,10 @@ public class LauncherImplTest {
         // option is properly set up
         Option logLevel = new Option("l", "logLevel", true, null);
         options1.addOption(logLevel);
-        cmd1.addOptions(opt1, opt2, logLevel);
-        cmd1.setDescription("description 1");
         when(info1.getDescription()).thenReturn("description 1");
         when(info1.getOptions()).thenReturn(options1);
-        TestCommand cmd2 = new TestCommand("test2", new TestCmd2());
+
+        TestCommand cmd2 = new TestCommand(new TestCmd2());
         CommandInfo info2 = mock(CommandInfo.class);
         when(info2.getName()).thenReturn(name2);
         Options options2 = new Options();
@@ -183,33 +173,28 @@ public class LauncherImplTest {
         options2.addOption(opt3);
         Option opt4 = new Option(null, "arg4", true, null);
         options2.addOption(opt4);
-        cmd2.addOptions(opt3, opt4);
-        cmd2.setDescription("description 2");
         when(info2.getDescription()).thenReturn("description 2");
         when(info2.getOptions()).thenReturn(options2);
 
-        TestCommand cmd3 = new TestCommand(name3);
+        TestCommand cmd3 = new TestCommand();
         CommandInfo info3 = mock(CommandInfo.class);
         when(info3.getName()).thenReturn(name3);
         cmd3.setStorageRequired(true);
-        cmd3.setDescription("description 3");
         when(info3.getDescription()).thenReturn("description 3");
         when(info3.getOptions()).thenReturn(new Options());
 
         AbstractStateNotifyingCommand basicCmd = mock(AbstractStateNotifyingCommand.class);
         CommandInfo basicInfo = mock(CommandInfo.class);
-        when(basicCmd.getName()).thenReturn("basic");
         when(basicInfo.getName()).thenReturn("basic");
-        when(basicCmd.getDescription()).thenReturn("nothing that means anything");
         when(basicInfo.getDescription()).thenReturn("nothing that means anything");
         when(basicCmd.isStorageRequired()).thenReturn(false);
         when(basicCmd.isAvailableInShell()).thenReturn(true);
         when(basicCmd.isAvailableOutsideShell()).thenReturn(true);
         Options options = new Options();
-        when(basicCmd.getOptions()).thenReturn(options);
         when(basicInfo.getOptions()).thenReturn(options);
         notifier = mock(ActionNotifier.class);
         when(basicCmd.getNotifier()).thenReturn(notifier);
+
         CommandInfo helpCommandInfo = mock(CommandInfo.class);
         when(helpCommandInfo.getName()).thenReturn("help");
         when(helpCommandInfo.getDescription()).thenReturn("print help information");
@@ -219,9 +204,15 @@ public class LauncherImplTest {
 
         HelpCommand helpCommand = new HelpCommand();
 
-        ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(helpCommand, cmd1, cmd2, cmd3, basicCmd));
+        CommandRegistry reg = ctxFactory.getCommandRegistry();
+        reg.registerCommand("help", helpCommand);
+        reg.registerCommand(name1, cmd1);
+        reg.registerCommand(name2, cmd2);
+        reg.registerCommand(name3, cmd3);
+        reg.registerCommand("basic", basicCmd);
 
         infos = mock(CommandInfoSource.class);
+        bundleContext.registerService(CommandInfoSource.class, infos, null);
         when(infos.getCommandInfo(name1)).thenReturn(info1);
         when(infos.getCommandInfo(name2)).thenReturn(info2);
         when(infos.getCommandInfo(name3)).thenReturn(info3);
@@ -239,15 +230,6 @@ public class LauncherImplTest {
         helpCommand.setCommandInfoSource(infos);
 
         registry = mock(BundleManager.class);
-        doAnswer(new Answer<Void>() {
-            @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
-                // simulate the real BundleManager which tries to find a CommandInfo
-                // needed to propagate/handle exceptions properly
-                infos.getCommandInfo((String) invocation.getArguments()[0]);
-                return null;
-            }
-        }).when(registry).addBundlesFor(anyString());
 
         timerFactory = new TestTimerFactory();
         ExecutorService exec = mock(ExecutorService.class);
@@ -260,7 +242,7 @@ public class LauncherImplTest {
         dbServiceFactory = mock(DbServiceFactory.class);
         version = mock(Version.class);
 
-        launcher = new LauncherImpl(bundleContext, ctxFactory, registry, loggingInitializer, dbServiceFactory, version);
+        launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext), loggingInitializer, dbServiceFactory, version);
 
         Keyring keyring = mock(Keyring.class);
         launcher.setPreferences(new ClientPreferences(keyring));
@@ -395,7 +377,6 @@ public class LauncherImplTest {
     @Test
     public void testCommandInfoNotFound() throws CommandInfoNotFoundException, BundleException, IOException {
         when(infos.getCommandInfo("foo")).thenThrow(new CommandInfoNotFoundException("foo"));
-        doThrow(new CommandInfoNotFoundException("foo")).when(registry).addBundlesFor("foo");
 
         String expected = "unknown command 'foo'\n"
                 + "list of commands:\n\n"
@@ -409,7 +390,7 @@ public class LauncherImplTest {
 
     @Test
     public void testMainExceptionInCommand() {
-        TestCommand errorCmd = new TestCommand("error", new TestCommand.Handle() {
+        TestCommand errorCmd = new TestCommand(new TestCommand.Handle() {
 
             @Override
             public void run(CommandContext ctx) throws CommandException {
@@ -417,7 +398,11 @@ public class LauncherImplTest {
             }
 
         });
-        ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(errorCmd));
+        ctxFactory.getCommandRegistry().registerCommand("error", errorCmd);
+        CommandInfo cmdInfo = mock(CommandInfo.class);
+        when(cmdInfo.getName()).thenReturn("error");
+        when(cmdInfo.getOptions()).thenReturn(new Options());
+        when(infos.getCommandInfo("error")).thenReturn(cmdInfo);
 
         wrappedRun(launcher, new String[] { "error" }, false);
         assertEquals("test error\n", ctxFactory.getError());
@@ -461,15 +446,17 @@ public class LauncherImplTest {
     @Test
     public void verifyDbServiceConnectIsCalledForStorageCommand() throws Exception {
         Command mockCmd = mock(Command.class);
-        when(mockCmd.getName()).thenReturn("dummy");
         when(mockCmd.isStorageRequired()).thenReturn(true);
-        Options options = mock(Options.class);
-        when(mockCmd.getOptions()).thenReturn(options);
         when(mockCmd.isAvailableInShell()).thenReturn(true);
         when(mockCmd.isAvailableOutsideShell()).thenReturn(true);
         
-        ctxFactory.getCommandRegistry().registerCommand(mockCmd);
+        ctxFactory.getCommandRegistry().registerCommand("dummy", mockCmd);
         
+        CommandInfo cmdInfo = mock(CommandInfo.class);
+        when(cmdInfo.getName()).thenReturn("dummy");
+        when(cmdInfo.getOptions()).thenReturn(new Options());
+        when(infos.getCommandInfo("dummy")).thenReturn(cmdInfo);
+
         DbService dbService = mock(DbService.class);
         when(dbServiceFactory.createDbService(anyString(), anyString(), anyString())).thenReturn(dbService);
 
@@ -551,14 +538,16 @@ public class LauncherImplTest {
     private void runWithShellStatus(boolean isInShell, String cmdName, boolean isAvailableInShell,
     		boolean isAvailableOutsideShell, String expected) {
     	Command mockCmd = mock(Command.class);
-        when(mockCmd.getName()).thenReturn(cmdName);
         when(mockCmd.isStorageRequired()).thenReturn(false);
-        Options options = mock(Options.class);
-        when(mockCmd.getOptions()).thenReturn(options);
         when(mockCmd.isAvailableInShell()).thenReturn(isAvailableInShell);
         when(mockCmd.isAvailableOutsideShell()).thenReturn(isAvailableOutsideShell);
 
-        ctxFactory.getCommandRegistry().registerCommand(mockCmd);
+        CommandInfo cmdInfo = mock(CommandInfo.class);
+        when(cmdInfo.getName()).thenReturn(cmdName);
+        when(cmdInfo.getOptions()).thenReturn(new Options());
+        when(infos.getCommandInfo(cmdName)).thenReturn(cmdInfo);
+
+        ctxFactory.getCommandRegistry().registerCommand(cmdName, mockCmd);
         runAndVerifyCommand(new String[] { cmdName }, expected, isInShell);
     }   
 }

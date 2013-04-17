@@ -65,8 +65,6 @@ public class TestCommandContextFactory extends CommandContextFactory {
         reset();
     }
 
-    private CommandRegistry commandRegistry = new TestCommandRegistry();
-
     private TestConsole console;
     private PipedOutputStream inOut;
 
@@ -105,7 +103,7 @@ public class TestCommandContextFactory extends CommandContextFactory {
 
             @Override
             public CommandRegistry getCommandRegistry() {
-                return commandRegistry;
+                return TestCommandContextFactory.this.getCommandRegistry();
             }
 
             @Override
@@ -114,11 +112,6 @@ public class TestCommandContextFactory extends CommandContextFactory {
             }
             
         };
-    }
-
-    @Override
-    public CommandRegistry getCommandRegistry() {
-        return commandRegistry;
     }
 
     public String getOutput() {

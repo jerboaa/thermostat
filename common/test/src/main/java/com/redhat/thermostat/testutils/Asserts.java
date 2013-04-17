@@ -1,5 +1,5 @@
 /*
- * Copyright 2012, 2013 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,24 +34,19 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.cli;
+package com.redhat.thermostat.testutils;
 
-import java.util.List;
+import java.util.Hashtable;
 
-import org.apache.commons.cli.Options;
+public class Asserts {
 
-public interface CommandInfo {
-
-    public String getName();
-
-    public String getDescription();
-
-    public String getUsage();
-
-    public Options getOptions();
-
-    /** Returns a list of jar that this command depends on */
-    public List<String> getDependencyResourceNames();
-
+    public static void assertCommandIsRegistered(StubBundleContext context, String name, Class<?> klass) {
+        // The Command class is not visible to this module, so we have to live
+        // with hardcoding some details here
+        Hashtable<String,String> props = new Hashtable<>();
+        props.put("COMMAND_NAME", name);
+        if (!context.isServiceRegistered("com.redhat.thermostat.common.cli.Command", klass, props)) {
+            throw new AssertionError("Command " + name + " is not registered");
+        }
+    }
 }
-

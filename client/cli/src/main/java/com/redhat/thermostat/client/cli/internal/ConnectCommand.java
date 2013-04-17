@@ -67,8 +67,6 @@ public class ConnectCommand extends AbstractCommand {
     
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private static final String NAME = "connect";
-    
     private ClientPreferences prefs;
     private BundleContext context;
     private DbServiceFactory dbServiceFactory;
@@ -120,11 +118,6 @@ public class ConnectCommand extends AbstractCommand {
         }
     }
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
-    
     @Override
     public boolean isAvailableOutsideShell() {
         return false;

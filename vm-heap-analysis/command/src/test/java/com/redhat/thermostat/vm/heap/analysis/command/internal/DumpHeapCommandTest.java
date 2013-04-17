@@ -37,7 +37,6 @@
 package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
@@ -53,7 +52,6 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import com.redhat.thermostat.client.command.RequestQueue;
-import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.locale.Translate;
@@ -67,17 +65,6 @@ public class DumpHeapCommandTest {
 
     private static final Translate<LocaleResources> TRANSLATOR = LocaleResources
             .createLocalizer();
-
-    @Test
-    public void testBasics() {
-        StubBundleContext context = new StubBundleContext();
-        DumpHeapHelper impl = mock(DumpHeapHelper.class);
-        
-        Command command = new DumpHeapCommand(context, impl);
-        assertEquals("dump-heap", command.getName());
-        assertNotNull(command.getDescription());
-        assertNotNull(command.getUsage());
-    }
 
     @Test
     public void verifyAcuallyCallsWorker() throws CommandException {

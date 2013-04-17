@@ -37,8 +37,6 @@
 package com.redhat.thermostat.client.cli.internal;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
@@ -49,12 +47,9 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.TimeZone;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.cli.CommandException;
@@ -198,13 +193,6 @@ public class VMInfoCommandTest {
         }
     }
 
-    @Test
-    public void testName() {
-        context.registerService(VmInfoDAO.class, vmsDAO, null);
-        cmd = new VMInfoCommand(context);
-        assertEquals("vm-info", cmd.getName());
-    }
-
     @Bug(id="1046",
             summary="CLI vm-info display wrong stop time for living vms",
             url="http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=1046")
@@ -230,36 +218,6 @@ public class VMInfoCommandTest {
                           "Virtual machine: vmName\n" +
                           "VM arguments:    vmArguments\n";
         assertEquals(expected, cmdCtxFactory.getOutput());
-    }
-
-    @Test
-    public void testDescAndUsage() {
-        context.registerService(VmInfoDAO.class, vmsDAO, null);
-        cmd = new VMInfoCommand(context);
-        assertNotNull(cmd.getDescription());
-        assertNotNull(cmd.getUsage());
-    }
-
-    @Ignore
-    @Test
-    public void testOptions() {
-        context.registerService(VmInfoDAO.class, vmsDAO, null);
-        cmd = new VMInfoCommand(context);
-        Options options = cmd.getOptions();
-        assertNotNull(options);
-        assertEquals(2, options.getOptions().size());
-
-        assertTrue(options.hasOption("vmId"));
-        Option vm = options.getOption("vmId");
-        assertEquals("the ID of the VM to monitor", vm.getDescription());
-        assertFalse(vm.isRequired());
-        assertTrue(vm.hasArg());
-
-        assertTrue(options.hasOption("hostId"));
-        Option host = options.getOption("hostId");
-        assertEquals("the ID of the host to monitor", host.getDescription());
-        assertTrue(host.isRequired());
-        assertTrue(host.hasArg());
     }
 
     @Test

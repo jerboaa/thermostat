@@ -37,8 +37,6 @@
 
 package com.redhat.thermostat.web.cmd;
 
-import java.util.Arrays;
-
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
@@ -52,7 +50,7 @@ public class Activator implements BundleActivator {
     @Override
     public void start(BundleContext context) throws Exception {
         reg = new CommandRegistryImpl(context);
-        reg.registerCommands(Arrays.asList(new WebServiceCommand()));
+        reg.registerCommand("webservice", new WebServiceCommand());
     }
 
     @Override

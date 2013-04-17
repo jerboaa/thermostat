@@ -60,14 +60,6 @@ public class PingCommandTest {
     private static final String KNOWN_AGENT_ID = "some-agent-id";
 
     @Test
-    public void testCommandName() {
-        StubBundleContext context = new StubBundleContext();
-        PingCommand command = new PingCommand(context);
-
-        assertEquals("ping", command.getName());
-    }
-
-    @Test
     public void testCommandNeedsAgentId() throws CommandException {
         StubBundleContext context = new StubBundleContext();
 
@@ -80,7 +72,7 @@ public class PingCommandTest {
         command.run(factory.createContext(args));
 
         // TODO why doesn't ping throw an exception?
-        assertEquals("Ping command accepts one and only one argument.\nUsage not available.\n", factory.getOutput());
+        assertEquals("Ping command accepts one and only one argument.\n", factory.getOutput());
     }
 
     @Test

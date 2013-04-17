@@ -38,13 +38,11 @@ package com.redhat.thermostat.client.cli.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -114,22 +112,5 @@ public class DisconnectCommandTest {
         assertFalse(cmd.isStorageRequired());
     }
 
-    @Test
-    public void testName() {
-        assertEquals("disconnect", cmd.getName());
-    }
-
-    @Test
-    public void testDescAndUsage() {
-        assertNotNull(cmd.getDescription());
-        assertNotNull(cmd.getUsage());
-    }
-
-    @Test
-    public void testOptions() {
-        Options options = cmd.getOptions();
-        assertNotNull(options);
-        assertTrue(options.getOptions().size() == 0);
-    }
 }
 

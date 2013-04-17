@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.agent.cli.impl;
 
-import java.util.Arrays;
-
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -58,15 +56,17 @@ public class Activator implements BundleActivator {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public void start(final BundleContext context) throws Exception {
+        reg = new CommandRegistryImpl(context);
+
         exitStatusTracker = new ServiceTracker(context, ExitStatus.class, null) {
             
             @Override
             public Object addingService(ServiceReference reference) {
                 ExitStatus exitStatus = (ExitStatus)context.getService(reference);
-                reg = new CommandRegistryImpl(context);
                 agentApplication = new AgentApplication(context, exitStatus);
-                reg.registerCommands(Arrays.asList(new ServiceCommand(context),
-                        new StorageCommand(exitStatus), agentApplication));
+                reg.registerCommand("service", new ServiceCommand(context));
+                reg.registerCommand("storage", new StorageCommand(exitStatus));
+                reg.registerCommand("agent", agentApplication);
                 return exitStatus;
             }
             

@@ -38,7 +38,6 @@ package com.redhat.thermostat.client.cli.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -51,7 +50,6 @@ import jline.TerminalFactory.Type;
 import jline.UnixTerminal;
 import jline.console.history.PersistentHistory;
 
-import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -223,24 +221,6 @@ public class ShellCommandTest {
         Arguments args = new SimpleArguments();
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
-    }
-
-    @Test
-    public void testName() {
-        assertEquals("shell", cmd.getName());
-    }
-
-    @Test
-    public void testDescAndUsage() {
-        assertNotNull(cmd.getDescription());
-        assertNotNull(cmd.getUsage());
-    }
-
-    @Test
-    public void testOptions() {
-        Options options = cmd.getOptions();
-        assertNotNull(options);
-        assertEquals(0, options.getOptions().size());
     }
 
     @Test

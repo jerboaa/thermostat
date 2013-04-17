@@ -37,8 +37,6 @@
 package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
@@ -46,10 +44,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.cli.CommandException;
@@ -116,36 +111,6 @@ public class FindObjectsCommandTest {
         dao = mock(HeapDAO.class);
         when(dao.getHeapInfo(HEAP_ID)).thenReturn(heapInfo);
         when(dao.getHeapDump(heapInfo)).thenReturn(heapDump);
-    }
-
-    @Test
-    public void testName() {
-        assertEquals("find-objects", cmd.getName());
-    }
-
-    @Test
-    public void testDescAndUsage() {
-        assertNotNull(cmd.getDescription());
-        assertNotNull(cmd.getUsage());
-    }
-
-    @Ignore
-    @Test
-    public void testOptions() {
-        Options options = cmd.getOptions();
-        assertEquals(2, options.getOptions().size());
-
-        assertTrue(options.hasOption("heapId"));
-        Option heapOption = options.getOption("heapId");
-        assertEquals("the ID of the heapdump to analyze", heapOption.getDescription());
-        assertTrue(heapOption.isRequired());
-        assertTrue(heapOption.hasArg());
-
-        assertTrue(options.hasOption("limit"));
-        Option limitOption = options.getOption("limit");
-        assertEquals("limit search to top N results, defaults to 10", limitOption.getDescription());
-        assertFalse(limitOption.isRequired());
-        assertTrue(limitOption.hasArg());
     }
 
     @Test

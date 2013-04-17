@@ -36,12 +36,9 @@
 
 package com.redhat.thermostat.client.cli.internal;
 
-import java.util.ServiceLoader;
-
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
-import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 
@@ -52,8 +49,13 @@ public class Activator implements BundleActivator {
     @Override
     public void start(BundleContext context) throws Exception {
         reg = new CommandRegistryImpl(context);
-        ServiceLoader<Command> cmds = ServiceLoader.load(Command.class, getClass().getClassLoader());
-        reg.registerCommands(cmds);
+
+        reg.registerCommand("list-vms", new ListVMsCommand());
+        reg.registerCommand("shell", new ShellCommand());
+        reg.registerCommand("vm-info", new VMInfoCommand());
+        reg.registerCommand("vm-stat", new VMStatCommand());
+        reg.registerCommand("disconnect", new DisconnectCommand());
+        reg.registerCommand("connect", new ConnectCommand());
     }
 
     @Override

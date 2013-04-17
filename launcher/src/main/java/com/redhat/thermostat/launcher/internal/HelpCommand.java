@@ -48,9 +48,6 @@ import org.apache.commons.cli.Options;
 
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
-import com.redhat.thermostat.common.cli.CommandInfo;
-import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
-import com.redhat.thermostat.common.cli.CommandInfoSource;
 import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.locale.Translate;
@@ -60,7 +57,6 @@ public class HelpCommand extends AbstractCommand {
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private static final int COMMANDS_COLUMNS_WIDTH = 14;
-    private static final String NAME = "help";
     private static final String APP_NAME = "thermostat";
 
     private static final CommandInfoComparator comparator = new CommandInfoComparator();
@@ -129,11 +125,6 @@ public class HelpCommand extends AbstractCommand {
     }
 
     @Override
-    public String getName() {
-        return NAME;
-    }
-
-    @Override
     public boolean isStorageRequired() {
         return false;
     }
@@ -146,10 +137,10 @@ public class HelpCommand extends AbstractCommand {
             if (o1.getName().equals(o2.getName())) {
                 return 0;
             }
-            if (o1.getName().equals(NAME)) {
+            if (o1.getName().equals("help")) {
                 return -1;
             }
-            if (o2.getName().equals(NAME)) {
+            if (o2.getName().equals("help")) {
                 return 1;
             }
 

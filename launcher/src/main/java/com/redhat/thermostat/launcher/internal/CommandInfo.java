@@ -34,13 +34,38 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.cli;
+package com.redhat.thermostat.launcher.internal;
 
-public interface CommandRegistry {
+import java.util.List;
 
-    public void registerCommand(String name, Command cmd);
+import org.apache.commons.cli.Options;
 
-    public void unregisterCommands();
+public interface CommandInfo {
+    /**
+     * Returns a name for this command. This will be used by the user to select
+     * this command.
+     */
+    public String getName();
+
+    /**
+     * A short description for the command indicating what it does.
+     */
+    public String getDescription();
+
+    /**
+     * How the user should invoke this command
+     */
+    public String getUsage();
+
+    /**
+     * Returns the Options that the command is prepared to handle.
+     * If the user provides unknown or malformed arguments, this command will
+     * not be invoked.
+     */
+    public Options getOptions();
+
+    /** Returns a list of jar that this command depends on */
+    public List<String> getDependencyResourceNames();
 
 }
 

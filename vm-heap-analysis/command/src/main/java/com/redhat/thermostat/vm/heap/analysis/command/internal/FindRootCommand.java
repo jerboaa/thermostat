@@ -62,7 +62,6 @@ public class FindRootCommand extends AbstractCommand {
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private static final String ALL_ARG = "all";
-    private static final String NAME = "find-root";
 
     private BundleContext context;
 
@@ -138,11 +137,6 @@ public class FindRootCommand extends AbstractCommand {
         for (int i = 0; i < indentation; i++) {
             out.print(" ");
         }
-    }
-
-    @Override
-    public String getName() {
-        return NAME;
     }
 
 }

@@ -37,7 +37,6 @@
 package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
@@ -47,10 +46,8 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.TimeZone;
 
-import org.apache.commons.cli.Options;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.cli.Command;
@@ -78,25 +75,6 @@ public class ListHeapDumpsCommandTest {
     @AfterClass
     public static void tearDownClass() {
         TimeZone.setDefault(defaultTimezone);
-    }
-
-    @Test
-    public void verifyBasics() {
-        StubBundleContext context = new StubBundleContext();
-        Command command = new ListHeapDumpsCommand(context);
-        assertEquals("list-heap-dumps", command.getName());
-        assertNotNull(command.getDescription());
-        assertNotNull(command.getUsage());
-    }
-
-    @Ignore
-    @Test
-    public void verifyOptions() {
-        StubBundleContext context = new StubBundleContext();
-        Command command = new ListHeapDumpsCommand(context);
-        Options options = command.getOptions();
-        assertNotNull(options);
-        assertEquals(2, options.getOptions().size());
     }
 
     @Test

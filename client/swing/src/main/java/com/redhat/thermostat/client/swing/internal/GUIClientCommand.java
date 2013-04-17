@@ -55,11 +55,6 @@ public class GUIClientCommand extends AbstractCommand {
     }
 
     @Override
-    public String getName() {
-        return "gui";
-    }
-
-    @Override
     public boolean isStorageRequired() {
         return false;
     }

@@ -76,8 +76,6 @@ import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 @SuppressWarnings("restriction")
 public final class AgentApplication extends AbstractStateNotifyingCommand {
 
-    private static final String NAME = "agent";
-
     private final BundleContext bundleContext;
     private final ConfigurationCreator configurationCreator;
 
@@ -188,11 +186,6 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
         } catch (InvalidConfigurationException ex) {
             throw new CommandException(ex);
         }
-    }
-
-    @Override
-    public String getName() {
-        return NAME;
     }
     
     public void shutdown() {

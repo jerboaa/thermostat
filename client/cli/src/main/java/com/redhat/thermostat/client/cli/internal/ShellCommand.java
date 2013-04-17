@@ -68,8 +68,6 @@ public class ShellCommand extends AbstractCommand {
 
     private static final String[] exitKeywords = { "exit", "quit", "q" };
 
-    private static final String NAME = "shell";
-
     private static final String PROMPT = "Thermostat > ";
 
     private HistoryProvider historyProvider;
@@ -174,11 +172,6 @@ public class ShellCommand extends AbstractCommand {
         } else {
             throw new CommandException("Severe: Could not locate launcher");
         }
-    }
-
-    @Override
-    public String getName() {
-        return NAME;
     }
 
     @Override

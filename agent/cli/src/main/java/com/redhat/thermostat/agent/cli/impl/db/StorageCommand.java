@@ -51,8 +51,6 @@ import com.redhat.thermostat.common.tools.ApplicationState;
 
 public class StorageCommand extends AbstractStateNotifyingCommand {
 
-    private static final String NAME = "storage";
-
     private DBStartupConfiguration configuration;
     private DBOptionParser parser;
     private final ExitStatus exitStatus;
@@ -160,11 +158,6 @@ public class StorageCommand extends AbstractStateNotifyingCommand {
 
     public DBStartupConfiguration getConfiguration() {
         return configuration;
-    }
-
-    @Override
-    public String getName() {
-        return NAME;
     }
 
     @Override

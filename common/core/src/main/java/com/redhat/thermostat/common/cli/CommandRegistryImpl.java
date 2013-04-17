@@ -38,70 +38,41 @@ package com.redhat.thermostat.common.cli;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Hashtable;
+import java.util.Objects;
 
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-
-import com.redhat.thermostat.common.utils.ServiceRegistry;
+import org.osgi.framework.ServiceRegistration;
 
 /**
- * This class mainly wraps around a ServiceRegistry object, handling the additional
- * non-osgi-specific task of enable/disable of Command objects as they are registered
- * or unregistered.
+ * Handles registration and un-registration of {@link Command}s.
  */
 public class CommandRegistryImpl implements CommandRegistry {
 
     private BundleContext context;
-    private ServiceRegistry<Command> proxy;
-    private Collection<Command> myRegisteredCommands;
+    private Collection<ServiceRegistration> myRegisteredCommands;
 
     public CommandRegistryImpl(BundleContext ctx) {
         context = ctx;
-        proxy = new ServiceRegistry<Command>(ctx, Command.class.getName());
         myRegisteredCommands = new ArrayList<>();
     }
 
     @Override
-    public void registerCommand(Command cmd) {
-        proxy.registerService(cmd, cmd.getName());
-        myRegisteredCommands.add(cmd);
-    }
+    public void registerCommand(String name, Command cmd) {
+        Objects.requireNonNull(name);
+        Objects.requireNonNull(cmd);
 
-    @Override
-    public void registerCommands(Iterable<? extends Command> cmds) {
-        for (Command cmd : cmds) {
-            registerCommand(cmd);
-        }
+        Hashtable<String,String> props = new Hashtable<>();
+        props.put(Command.NAME, name);
+        ServiceRegistration registration = context.registerService(Command.class.getName(), cmd, props);
+        myRegisteredCommands.add(registration);
     }
 
     @Override
     public void unregisterCommands() {
-        proxy.unregisterAll();
-    }
-
-    @Override
-    public Command getCommand(String name) {
-        Command command = proxy.getService(name);
-        if (command != null && command instanceof AbstractCommand) {
-        	initializeCommandInfo((AbstractCommand) command);
+        for (ServiceRegistration reg : myRegisteredCommands) {
+            reg.unregister();
         }
-        return command;
-    }
-
-    void initializeCommandInfo(AbstractCommand command) {
-        if (!command.hasCommandInfo()) {
-            @SuppressWarnings("rawtypes")
-            ServiceReference infosRef = context.getServiceReference(CommandInfoSource.class);
-            @SuppressWarnings("unchecked")
-            CommandInfoSource infos = (CommandInfoSource) context.getService(infosRef);
-            command.setCommandInfo(infos.getCommandInfo(command.getName()));
-            context.ungetService(infosRef);
-        }
-    }
-
-    @Override
-    public Collection<Command> getRegisteredCommands() {
-        return proxy.getRegisteredServices();
     }
 
 }

@@ -55,8 +55,8 @@ class TestCommandRegistry implements CommandRegistry {
         return commands.values();
     }
 
-    public void registerCommand(Command cmd) {
-        commands.put(cmd.getName(), cmd);
+    public void registerCommand(String name, Command cmd) {
+        commands.put(name, cmd);
     }
 
     @Override
@@ -64,11 +64,5 @@ class TestCommandRegistry implements CommandRegistry {
         commands.clear();
     }
 
-    @Override
-    public void registerCommands(Iterable<? extends Command> cmds) {
-        for (Command cmd : cmds) {
-            registerCommand(cmd);
-        }
-    }
 }
 

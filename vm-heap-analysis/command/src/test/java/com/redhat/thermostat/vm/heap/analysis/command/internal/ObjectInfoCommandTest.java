@@ -37,7 +37,6 @@
 package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
@@ -48,11 +47,8 @@ import static org.mockito.Mockito.when;
 
 import java.util.Enumeration;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -144,42 +140,6 @@ public class ObjectInfoCommandTest {
         dao = mock(HeapDAO.class);
         when(dao.getHeapInfo(HEAP_ID)).thenReturn(heapInfo);
         when(dao.getHeapDump(heapInfo)).thenReturn(heapDump);
-    }
-
-    @Test
-    public void testName() {
-        StubBundleContext context = new StubBundleContext();
-        cmd = new ObjectInfoCommand(context);
-        assertEquals("object-info", cmd.getName());
-    }
-
-    @Test
-    public void testDescAndUsage() {
-        StubBundleContext context = new StubBundleContext();
-        cmd = new ObjectInfoCommand(context);
-        assertNotNull(cmd.getDescription());
-        assertNotNull(cmd.getUsage());
-    }
-
-    @Ignore
-    @Test
-    public void testOptions() {
-        StubBundleContext context = new StubBundleContext();
-        cmd = new ObjectInfoCommand(context);
-        Options options = cmd.getOptions();
-        assertEquals(2, options.getOptions().size());
-
-        assertTrue(options.hasOption("heapId"));
-        Option heapOption = options.getOption("heapId");
-        assertEquals("the ID of the heapdump to analyze", heapOption.getDescription());
-        assertTrue(heapOption.isRequired());
-        assertTrue(heapOption.hasArg());
-
-        assertTrue(options.hasOption("objectId"));
-        Option objOption = options.getOption("objectId");
-        assertEquals("the ID of the object to query", objOption.getDescription());
-        assertTrue(objOption.isRequired());
-        assertTrue(objOption.hasArg());
     }
 
     @Test

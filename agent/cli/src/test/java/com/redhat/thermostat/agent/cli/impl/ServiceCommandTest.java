@@ -36,13 +36,8 @@
 
 package com.redhat.thermostat.agent.cli.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
 
 import com.redhat.thermostat.testutils.StubBundleContext;
 
@@ -61,23 +56,6 @@ public class ServiceCommandTest {
         thermostatService = null;
     }
 
-    @Test
-    public void testName() {
-        String name = thermostatService.getName();
-        assertEquals("service", name);
-    }
-
-    @Test
-    public void testDescAndUsage() {
-        assertNotNull(thermostatService.getDescription());
-        assertNotNull(thermostatService.getUsage());
-    }
-
-    @Test
-    public void testOptions() {
-        Options options = thermostatService.getOptions();
-        assertNotNull(options);
-        assertEquals(0, options.getOptions().size());
-    }
+    // TODO really need to add more tests for service
 }
 

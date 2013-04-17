@@ -36,8 +36,8 @@
 
 package com.redhat.thermostat.client.cli.internal;
 
+import static com.redhat.thermostat.testutils.Asserts.assertCommandIsRegistered;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -51,7 +51,6 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
 @RunWith(PowerMockRunner.class)
@@ -74,16 +73,17 @@ public class ActivatorTest {
         
         activator.start(ctx);
         
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), ConnectCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), DisconnectCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), ListVMsCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), ShellCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), VMInfoCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), VMStatCommand.class));
+        assertCommandIsRegistered(ctx, "connect", ConnectCommand.class);
+        assertCommandIsRegistered(ctx, "disconnect", DisconnectCommand.class);
+        assertCommandIsRegistered(ctx, "list-vms", ListVMsCommand.class);
+        assertCommandIsRegistered(ctx, "shell", ShellCommand.class);
+        assertCommandIsRegistered(ctx, "vm-info", VMInfoCommand.class);
+        assertCommandIsRegistered(ctx, "vm-stat", VMStatCommand.class);
         
         activator.stop(ctx);
         
         assertEquals(0, ctx.getAllServices().size());
     }
+
 }
 
