@@ -57,6 +57,7 @@ import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.utils.HostPortPair;
 import com.redhat.thermostat.storage.mongodb.MongoStorageProvider;
 import com.redhat.thermostat.web.server.WebStorageEndPoint;
+import com.redhat.thermostat.web.server.auth.Roles;
 
 class WebServiceLauncher {
 
@@ -111,7 +112,7 @@ class WebServiceLauncher {
         ConstraintMapping constraintMap = new ConstraintMapping();
         Constraint constraint = new Constraint();
         constraint.setAuthenticate(true);
-        constraint.setRoles(new String[] { "thermostat-client", "thermostat-agent", "thermostat-cmd-channel" });
+        constraint.setRoles(new String[] { Roles.ACCESS_REALM });
         constraint.setName("Entire Application");
         constraintMap.setPathSpec("/*");
         constraintMap.setConstraint(constraint);
@@ -119,18 +120,34 @@ class WebServiceLauncher {
         secHandler.setRealmName("Thermostat Realm");
         secHandler.setAuthMethod("BASIC");
         secHandler.addConstraintMapping(constraintMap);
-        secHandler.addRole("thermostat-agent");
-        secHandler.addRole("thermostat-client");
+        // inform security handler about all roles
+        for (String role : Roles.ALL_ROLES) {
+            secHandler.addRole(role);
+        }
         secHandler.setLoginService(new MappedLoginService() {
             
             @Override
             protected void loadUsers() throws IOException {
-                putUser("thermostat", new Password("thermostat"), new String[] { "thermostat-agent", "thermostat-client", "thermostat-cmd-channel" });
+                // Register a thermostat agent user
+                putUser("thermostat-agent", new Password("agent-tester"), Roles.AGENT_ROLES);
+                // Same for a client
+                putUser("thermostat-client", new Password("client-tester"), Roles.CLIENT_ROLES);
+                // A realm access test user
+                putUser("thermostat-realm-user", new Password("realm-tester"), new String[] { Roles.ACCESS_REALM });
             }
 
             @Override
             protected UserIdentity loadUser(String username) {
-                return new DefaultUserIdentity(null, null, new String[] { "thermostat-agent", "thermostat-client", "thermostat-cmd-channel" });
+                if (username.equals("thermostat-agent")) {
+                    return new DefaultUserIdentity(null, null, Roles.AGENT_ROLES);
+                } else if (username.equals("thermostat-client")) {
+                    return new DefaultUserIdentity(null, null, Roles.CLIENT_ROLES);
+                } else if (username.equals("thermostat-realm-user")) {
+                    return new DefaultUserIdentity(null, null, new String[] { Roles.ACCESS_REALM } );
+                } else {
+                    // return empty identity
+                    return new DefaultUserIdentity(null, null, new String[0]);
+                }
             }
         });
         ctx.setSecurityHandler(secHandler);

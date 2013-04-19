@@ -39,6 +39,8 @@ package com.redhat.thermostat.web.cmd;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -109,9 +111,10 @@ public class WebServiceLauncherTest {
     }
     
     @Test
-    @Ignore("server.start() throws NPE for some reason")
+    @Ignore("server.start() throws NPE since it's a final method declared in class AbstractLifeCycle and Mockito doesn't do final method mocking.")
     public void verifyStartDoesStartServer() throws Exception {
         Server server = mock(Server.class);
+        doNothing().when(server).start();
         WebServiceLauncher launcher = new WebServiceLauncher(server);
         launcher.setIpAddresses(dummyIp);
         launcher.setStorageURL("mongodb://test.example.org/db");

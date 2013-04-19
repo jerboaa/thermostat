@@ -60,6 +60,7 @@ import java.util.Map;
 
 import org.apache.commons.codec.binary.Base64;
 import org.eclipse.jetty.security.DefaultUserIdentity;
+import org.eclipse.jetty.security.LoginService;
 import org.eclipse.jetty.security.MappedLoginService;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.UserIdentity;
@@ -94,6 +95,7 @@ import com.redhat.thermostat.web.common.WebInsert;
 import com.redhat.thermostat.web.common.WebQuery;
 import com.redhat.thermostat.web.common.WebRemove;
 import com.redhat.thermostat.web.common.WebUpdate;
+import com.redhat.thermostat.web.server.auth.Roles;
 
 public class WebStorageEndpointTest {
 
@@ -160,37 +162,13 @@ public class WebStorageEndpointTest {
         mockStorage = mock(Storage.class);
         StorageWrapper.setStorage(mockStorage);
 
-        port = FreePortFinder.findFreePort(new TryPort() {
-            
-            @Override
-            public void tryPort(int port) throws Exception {
-                startServer(port);
-            }
-        });
-        registerCategory();
     }
 
-    private void startServer(int port) throws Exception {
+    private void startServer(int port, LoginService loginService) throws Exception {
         server = new Server(port);
         WebAppContext ctx = new WebAppContext("src/main/webapp", "/");
         ctx.getSecurityHandler().setAuthMethod("BASIC");
-        ctx.getSecurityHandler().setLoginService(new MappedLoginService() {
-            
-            @Override
-            protected void loadUsers() throws IOException {
-                putUser("testname", new Password("testpasswd"), new String[] { "thermostat-agent" });
-                putUser("test-no-role", new Password("testpasswd"), new String[] { "fluff" });
-                putUser("test-cmd-channel", new Password("testpasswd"), new String[] { "thermostat-cmd-channel" });
-            }
-            
-            @Override
-            protected UserIdentity loadUser(String username) {
-                if (username.equals("test-cmd-channel")) {
-                    return new DefaultUserIdentity(null, null, new String[] { "thermostat-cmd-channel" });
-                }
-                return new DefaultUserIdentity(null, null, new String[] { "thermostat-agent" });
-            }
-        });
+        ctx.getSecurityHandler().setLoginService(loginService);
         server.setHandler(ctx);
         server.start();
     }
@@ -202,7 +180,23 @@ public class WebStorageEndpointTest {
     }
 
     @Test
-    public void testFindAllPojos() throws IOException {
+    public void authorizedFindAllPojos() throws Exception {
+        String[] roleNames = new String[] {
+                Roles.REGISTER_CATEGORY,
+                Roles.READ
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        final LoginService loginService = new TestLoginService(testuser, password, roleNames); 
+        port = FreePortFinder.findFreePort(new TryPort() {
+            
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port, loginService);
+            }
+        });
+        registerCategory(testuser, password);
+        
         TestClass expected1 = new TestClass();
         expected1.setKey1("fluff1");
         expected1.setKey2(42);
@@ -222,6 +216,7 @@ public class WebStorageEndpointTest {
         URL url = new URL(endpoint + "/find-all");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
+        sendAuthorization(conn, testuser, password);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
         conn.setDoInput(true);
         conn.setDoOutput(true);
@@ -255,8 +250,23 @@ public class WebStorageEndpointTest {
     }
 
     @Test
-    public void testPutPojo() throws IOException {
-
+    public void authorizedReplacePutPojo() throws Exception {
+        String[] roleNames = new String[] {
+                Roles.REPLACE,
+                Roles.REGISTER_CATEGORY
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        final LoginService loginService = new TestLoginService(testuser, password, roleNames); 
+        port = FreePortFinder.findFreePort(new TryPort() {
+            
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port, loginService);
+            }
+        });
+        registerCategory(testuser, password);
+        
         Replace replace = mock(Replace.class);
         when(mockStorage.createReplace(any(Category.class))).thenReturn(replace);
 
@@ -269,7 +279,7 @@ public class WebStorageEndpointTest {
         URL url = new URL(endpoint + "/put-pojo");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
-        sendAuthorization(conn, "testname", "testpasswd");
+        sendAuthorization(conn, testuser, password);
 
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
@@ -296,8 +306,24 @@ public class WebStorageEndpointTest {
     }
 
     @Test
-    public void testRemovePojo() throws IOException {
-
+    public void authorizedRemovePojo() throws Exception {
+        String[] roleNames = new String[] {
+                Roles.DELETE,
+                Roles.REGISTER_CATEGORY
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        final LoginService loginService = new TestLoginService(testuser, password, roleNames); 
+        port = FreePortFinder.findFreePort(new TryPort() {
+            
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port, loginService);
+            }
+        });
+        registerCategory(testuser, password);
+        
+        
         Remove mockRemove = mock(Remove.class);
         when(mockRemove.from(any(Category.class))).thenReturn(mockRemove);
         when(mockRemove.where(any(Key.class), any())).thenReturn(mockRemove);
@@ -308,6 +334,8 @@ public class WebStorageEndpointTest {
 
         URL url = new URL(endpoint + "/remove-pojo");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        sendAuthorization(conn, testuser, password);
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
         Map<Category<?>,Integer> categoryIds = new HashMap<>();
@@ -328,8 +356,23 @@ public class WebStorageEndpointTest {
     }
 
     @Test
-    public void testUpdatePojo() throws IOException {
-
+    public void authorizedUpdatePojo() throws Exception {
+        String[] roleNames = new String[] {
+                Roles.UPDATE,
+                Roles.REGISTER_CATEGORY
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        final LoginService loginService = new TestLoginService(testuser, password, roleNames); 
+        port = FreePortFinder.findFreePort(new TryPort() {
+            
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port, loginService);
+            }
+        });
+        registerCategory(testuser, password);
+        
         Update mockUpdate = mock(Update.class);
         when(mockStorage.createUpdate(any(Category.class))).thenReturn(mockUpdate);
 
@@ -337,6 +380,8 @@ public class WebStorageEndpointTest {
 
         URL url = new URL(endpoint + "/update-pojo");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        sendAuthorization(conn, testuser, password);
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
@@ -366,13 +411,30 @@ public class WebStorageEndpointTest {
 
 
     @Test
-    public void testGetCount() throws IOException {
-
+    public void authorizedGetCount() throws Exception {
+        String[] roleNames = new String[] {
+                Roles.GET_COUNT,
+                Roles.REGISTER_CATEGORY
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        final LoginService loginService = new TestLoginService(testuser, password, roleNames); 
+        port = FreePortFinder.findFreePort(new TryPort() {
+            
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port, loginService);
+            }
+        });
+        registerCategory(testuser, password);
+        
         when(mockStorage.getCount(category)).thenReturn(12345L);
         String endpoint = getEndpoint();
 
         URL url = new URL(endpoint + "/get-count");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        sendAuthorization(conn, testuser, password);
         conn.setDoOutput(true);
         conn.setDoInput(true);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
@@ -391,11 +453,26 @@ public class WebStorageEndpointTest {
     }
 
     @Test
-    public void testSaveFile() throws IOException {
+    public void authorizedSaveFile() throws Exception {
+        String[] roleNames = new String[] {
+                Roles.SAVE_FILE,
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        final LoginService loginService = new TestLoginService(testuser, password, roleNames); 
+        port = FreePortFinder.findFreePort(new TryPort() {
+            
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port, loginService);
+            }
+        });
         String endpoint = getEndpoint();
 
         URL url = new URL(endpoint + "/save-file");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        sendAuthorization(conn, testuser, password);
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=fluff");
         conn.setRequestProperty("Transfer-Encoding", "chunked");
@@ -425,8 +502,21 @@ public class WebStorageEndpointTest {
     }
 
     @Test
-    public void testLoadFile() throws IOException {
-
+    public void authorizedLoadFile() throws Exception {
+        String[] roleNames = new String[] {
+                Roles.LOAD_FILE,
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        final LoginService loginService = new TestLoginService(testuser, password, roleNames); 
+        port = FreePortFinder.findFreePort(new TryPort() {
+            
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port, loginService);
+            }
+        });
+        
         byte[] data = "Hello World".getBytes();
         InputStream in = new ByteArrayInputStream(data);
         when(mockStorage.loadFile("fluff")).thenReturn(in);
@@ -435,6 +525,8 @@ public class WebStorageEndpointTest {
         URL url = new URL(endpoint + "/load-file");
 
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        sendAuthorization(conn, testuser, password);
         conn.setDoOutput(true);
         conn.setDoInput(true);
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
@@ -455,19 +547,33 @@ public class WebStorageEndpointTest {
     }
 
     @Test
-    public void testPurge() throws IOException {
+    public void authorizedPurge() throws Exception {
+        String[] roleNames = new String[] {
+                Roles.PURGE,
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        final LoginService loginService = new TestLoginService(testuser, password, roleNames); 
+        port = FreePortFinder.findFreePort(new TryPort() {
+            
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port, loginService);
+            }
+        });
         String endpoint = getEndpoint();
         URL url = new URL(endpoint + "/purge");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setDoOutput(true);
         conn.setRequestMethod("POST");
+        sendAuthorization(conn, testuser, password);
         conn.getOutputStream().write("agentId=fluff".getBytes());
         int status = conn.getResponseCode();
         assertEquals(200, status);
         verify(mockStorage).purge("fluff");
     }
 
-    private void registerCategory() {
+    private void registerCategory(String username, String password) {
         try {
             String endpoint = getEndpoint();
             URL url = new URL(endpoint + "/register-category");
@@ -477,6 +583,7 @@ public class WebStorageEndpointTest {
             conn.setDoOutput(true);
             conn.setDoInput(true);
             conn.setRequestMethod("POST");
+            sendAuthorization(conn, username, password);
             OutputStream out = conn.getOutputStream();
             Gson gson = new Gson();
             OutputStreamWriter writer = new OutputStreamWriter(out);
@@ -500,32 +607,69 @@ public class WebStorageEndpointTest {
     }
 
     @Test
-    public void testBasicGenerateToken() throws IOException {
-        
-        verifyGenerateToken();
+    public void authorizedGenerateToken() throws Exception {
+        String[] roleNames = new String[] {
+                Roles.CMD_CHANNEL_GENERATE
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        final LoginService loginService = new TestLoginService(testuser, password, roleNames); 
+        port = FreePortFinder.findFreePort(new TryPort() {
+            
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port, loginService);
+            }
+        });
+        verifyAuthorizedGenerateToken(testuser, password);
     }
 
     @Test
-    public void testGenerateTokenWithoutAuth() throws IOException {
+    public void unauthorizedGenerateToken() throws Exception {
+        String[] noRoles = new String[0];
+        String testuser = "testuser";
+        String password = "testpassword";
+        final LoginService loginService = new TestLoginService(testuser, password, noRoles); 
+        
+        port = FreePortFinder.findFreePort(new TryPort() {
+            
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port, loginService);
+            }
+        });
         
         String endpoint = getEndpoint();
         URL url = new URL(endpoint + "/generate-token");
 
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
-        sendAuthorization(conn, "test-no-role", "testpasswd");
+        sendAuthorization(conn, testuser, password);
         conn.setDoOutput(true);
         conn.setDoInput(true);
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
         out.write("client-token=fluff");
         out.flush();
-        assertEquals(401, conn.getResponseCode());
+        assertEquals(403, conn.getResponseCode());
     }
 
     @Test
-    public void testBasicGenerateVerifyToken() throws IOException {
-        
-        byte[] token = verifyGenerateToken();
+    public void authorizedGenerateVerifyToken() throws Exception {
+        String[] roleNames = new String[] {
+                Roles.CMD_CHANNEL_GENERATE,
+                Roles.CMD_CHANNEL_VERIFY
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        final LoginService loginService = new TestLoginService(testuser, password, roleNames); 
+        port = FreePortFinder.findFreePort(new TryPort() {
+            
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port, loginService);
+            }
+        });
+        byte[] token = verifyAuthorizedGenerateToken(testuser, password);
 
         String endpoint = getEndpoint();
         URL url = new URL(endpoint + "/verify-token");
@@ -533,7 +677,7 @@ public class WebStorageEndpointTest {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
         conn.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
-        sendAuthorization(conn, "test-cmd-channel", "testpasswd");
+        sendAuthorization(conn, testuser, password);
         conn.setDoOutput(true);
         conn.setDoInput(true);
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
@@ -543,9 +687,22 @@ public class WebStorageEndpointTest {
     }
 
     @Test
-    public void testTokenTimeout() throws IOException, InterruptedException {
-        
-        byte[] token = verifyGenerateToken();
+    public void authorizedTokenTimeout() throws Exception {
+        String[] roleNames = new String[] {
+                Roles.CMD_CHANNEL_GENERATE,
+                Roles.CMD_CHANNEL_VERIFY
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        final LoginService loginService = new TestLoginService(testuser, password, roleNames); 
+        port = FreePortFinder.findFreePort(new TryPort() {
+            
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port, loginService);
+            }
+        });
+        byte[] token = verifyAuthorizedGenerateToken(testuser, password);
 
         Thread.sleep(700); // Timeout is set to 500ms for tests, 700ms should be enough for everybody. ;-)
 
@@ -555,17 +712,30 @@ public class WebStorageEndpointTest {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
         conn.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
-        sendAuthorization(conn, "test-cmd-channel", "testpasswd");
+        sendAuthorization(conn, testuser, password);
         conn.setDoOutput(true);
         conn.setDoInput(true);
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
         out.write("client-token=fluff&token=" + URLEncoder.encode(Base64.encodeBase64String(token), "UTF-8"));
         out.flush();
-        assertEquals(401, conn.getResponseCode());
+        assertEquals(403, conn.getResponseCode());
     }
 
     @Test
-    public void testVerifyNonExistentToken() throws IOException {
+    public void authorizedVerifyNonExistentToken() throws Exception {
+        String[] roleNames = new String[] {
+                Roles.CMD_CHANNEL_VERIFY
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        final LoginService loginService = new TestLoginService(testuser, password, roleNames); 
+        port = FreePortFinder.findFreePort(new TryPort() {
+            
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port, loginService);
+            }
+        });
         
         byte[] token = "fluff".getBytes();
 
@@ -575,22 +745,22 @@ public class WebStorageEndpointTest {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
         conn.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
-        sendAuthorization(conn, "test-cmd-channel", "testpasswd");
+        sendAuthorization(conn, testuser, password);
         conn.setDoOutput(true);
         conn.setDoInput(true);
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
         out.write("client-token=fluff&token=" + URLEncoder.encode(Base64.encodeBase64String(token), "UTF-8"));
         out.flush();
-        assertEquals(401, conn.getResponseCode());
+        assertEquals(403, conn.getResponseCode());
     }
 
-    private byte[] verifyGenerateToken() throws IOException {
+    private byte[] verifyAuthorizedGenerateToken(String username, String password) throws IOException {
         String endpoint = getEndpoint();
         URL url = new URL(endpoint + "/generate-token");
 
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
-        sendAuthorization(conn, "test-cmd-channel", "testpasswd");
+        sendAuthorization(conn, username, password);
         conn.setDoOutput(true);
         conn.setDoInput(true);
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
@@ -609,6 +779,32 @@ public class WebStorageEndpointTest {
             totalRead += read;
         }
         return token;
+    }
+    
+    private static class TestLoginService extends MappedLoginService {
+
+        private final String[] roleNames;
+        private final String username;
+        private final String password;
+
+        private TestLoginService(String username, String password,
+                String[] roleNames) {
+            this.username = username;
+            this.password = password;
+            this.roleNames = roleNames;
+        }
+
+        @Override
+        protected void loadUsers() throws IOException {
+            putUser(username, new Password(password),
+                    roleNames);
+        }
+
+        @Override
+        protected UserIdentity loadUser(String username) {
+            return new DefaultUserIdentity(null, null,
+                    roleNames);
+        }
     }
 }
 

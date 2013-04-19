@@ -136,7 +136,8 @@
             <Bundle-SymbolicName>com.redhat.thermostat.web.server</Bundle-SymbolicName>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Export-Package>
-              com.redhat.thermostat.web.server
+              com.redhat.thermostat.web.server,
+              com.redhat.thermostat.web.server.auth
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.web.server.internal

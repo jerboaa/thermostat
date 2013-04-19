@@ -60,9 +60,7 @@
       <url-pattern>/*</url-pattern>
     </web-resource-collection>
     <auth-constraint>
-      <role-name>thermostat-agent</role-name>
-      <role-name>thermostat-client</role-name>
-      <role-name>thermostat-cmd-channel</role-name>
+      <role-name>thermostat-realm</role-name>
     </auth-constraint>
   </security-constraint>
 
@@ -72,13 +70,7 @@
   </login-config>
 
   <security-role>
-    <role-name>thermostat-agent</role-name>
-  </security-role>
-  <security-role>
-    <role-name>thermostat-client</role-name>
-  </security-role>
-  <security-role>
-    <role-name>thermostat-cmd-channel</role-name>
+    <role-name>thermostat-realm</role-name>
   </security-role>
 
 </web-app>

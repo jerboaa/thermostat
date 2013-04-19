@@ -87,15 +87,13 @@ import com.redhat.thermostat.web.common.WebInsert;
 import com.redhat.thermostat.web.common.WebQuery;
 import com.redhat.thermostat.web.common.WebRemove;
 import com.redhat.thermostat.web.common.WebUpdate;
+import com.redhat.thermostat.web.server.auth.Roles;
 
 @SuppressWarnings("serial")
 public class WebStorageEndPoint extends HttpServlet {
 
     private static final String TOKEN_MANAGER_TIMEOUT_PARAM = "token-manager-timeout";
     private static final String TOKEN_MANAGER_KEY = "token-manager";
-    private static final String ROLE_THERMOSTAT_AGENT = "thermostat-agent";
-    private static final String ROLE_THERMOSTAT_CLIENT = "thermostat-client";
-    private static final String ROLE_CMD_CHANNEL = "thermostat-cmd-channel";
 
     // our strings can contain non-ASCII characters. Use UTF-8
     // see also PR 1344
@@ -156,7 +154,10 @@ public class WebStorageEndPoint extends HttpServlet {
             // to avoid further memory leaks.
             Connection connection = storage.getConnection();
             try {
-                connection.disconnect();
+                // Tests have null connections
+                if (connection != null) {
+                    connection.disconnect();
+                }
             } finally {
                 storage.shutdown();
             }
@@ -215,16 +216,28 @@ public class WebStorageEndPoint extends HttpServlet {
     }
 
     private void ping(HttpServletRequest req, HttpServletResponse resp) {
+        if (! isAuthorized(req, resp, Roles.LOGIN)) {
+            return;
+        }
+        
         resp.setStatus(HttpServletResponse.SC_OK);
     }
 
     private void purge(HttpServletRequest req, HttpServletResponse resp) {
+        if (! isAuthorized(req, resp, Roles.PURGE)) {
+            return;
+        }
+        
         String agentId = req.getParameter("agentId");
         storage.purge(agentId);
         resp.setStatus(HttpServletResponse.SC_OK);
     }
 
     private void loadFile(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        if (! isAuthorized(req, resp, Roles.LOAD_FILE)) {
+            return;
+        }
+        
         String name = req.getParameter("file");
         try (InputStream data = storage.loadFile(name)) {
             OutputStream out = resp.getOutputStream();
@@ -240,6 +253,10 @@ public class WebStorageEndPoint extends HttpServlet {
     }
 
     private void saveFile(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        if (! isAuthorized(req, resp, Roles.SAVE_FILE)) {
+            return;
+        }
+        
         boolean isMultipart = ServletFileUpload.isMultipartContent(req);
         if (! isMultipart) {
             throw new ServletException("expected multipart message");
@@ -264,6 +281,9 @@ public class WebStorageEndPoint extends HttpServlet {
     }
 
     private void getCount(HttpServletRequest req, HttpServletResponse resp) {
+        if (! isAuthorized(req, resp, Roles.GET_COUNT)) {
+            return;
+        }
         try {
             String categoryParam = req.getParameter("category");
             int categoryId = gson.fromJson(categoryParam, Integer.class);
@@ -280,6 +300,10 @@ public class WebStorageEndPoint extends HttpServlet {
     }
 
     private synchronized void registerCategory(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        if (! isAuthorized(req, resp, Roles.REGISTER_CATEGORY)) {
+            return;
+        }
+        
         String categoryName = req.getParameter("name");
         String categoryParam = req.getParameter("category");
         int id;
@@ -303,19 +327,25 @@ public class WebStorageEndPoint extends HttpServlet {
     }
 
     private void putPojo(HttpServletRequest req, HttpServletResponse resp) {
-        if (! req.isUserInRole(ROLE_THERMOSTAT_AGENT)) {
-            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            return;
-        }
-
         String insertParam = req.getParameter("insert");
         WebInsert insert = gson.fromJson(insertParam, WebInsert.class);
         int categoryId = insert.getCategoryId();
         Category<?> category = getCategoryFromId(categoryId);
+        Put targetPut = null;
+        if (insert.isReplace()) {
+            if (! isAuthorized(req, resp, Roles.REPLACE)) {
+                return;
+            }
+            targetPut = storage.createReplace(category);
+        } else {
+            if (! isAuthorized(req, resp, Roles.APPEND)) {
+                return;
+            }
+            targetPut = storage.createAdd(category);
+        }
         Class<? extends Pojo> pojoCls = category.getDataClass();
         String pojoParam = req.getParameter("pojo");
         Pojo pojo = gson.fromJson(pojoParam, pojoCls);
-        Put targetPut = insert.isReplace() ? storage.createReplace(category) : storage.createAdd(category);
         targetPut.setPojo(pojo);
         targetPut.apply();
         resp.setStatus(HttpServletResponse.SC_OK);
@@ -323,6 +353,10 @@ public class WebStorageEndPoint extends HttpServlet {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private void removePojo(HttpServletRequest req, HttpServletResponse resp) {
+        if (! isAuthorized(req, resp, Roles.DELETE)) {
+            return;
+        }
+        
         String removeParam = req.getParameter("remove");
         WebRemove remove = gson.fromJson(removeParam, WebRemove.class);
         Remove targetRemove = storage.createRemove();
@@ -338,6 +372,10 @@ public class WebStorageEndPoint extends HttpServlet {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private void updatePojo(HttpServletRequest req, HttpServletResponse resp) {
+        if (! isAuthorized(req, resp, Roles.UPDATE)) {
+            return;
+        }
+        
         try {
             String updateParam = req.getParameter("update");
             WebUpdate update = gson.fromJson(updateParam, WebUpdate.class);
@@ -374,6 +412,9 @@ public class WebStorageEndPoint extends HttpServlet {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private void findAll(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        if (! isAuthorized(req, resp, Roles.READ)) {
+            return;
+        }
         String queryParam = req.getParameter("query");
         WebQuery query = gson.fromJson(queryParam, WebQuery.class);
         Query targetQuery = constructTargetQuery(query);
@@ -385,6 +426,7 @@ public class WebStorageEndPoint extends HttpServlet {
         writeResponse(resp, resultList.toArray());
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     private Query<?> constructTargetQuery(WebQuery<? extends Pojo> query) {
         int categoryId = query.getCategoryId();
         Category<?> category = getCategoryFromId(categoryId);
@@ -414,8 +456,7 @@ public class WebStorageEndPoint extends HttpServlet {
     }
 
     private void generateToken(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        if (! req.isUserInRole(ROLE_CMD_CHANNEL)) {
-            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        if (! isAuthorized(req, resp, Roles.CMD_CHANNEL_GENERATE) ) {
             return;
         }
         TokenManager tokenManager = (TokenManager) getServletContext().getAttribute(TOKEN_MANAGER_KEY);
@@ -428,8 +469,7 @@ public class WebStorageEndPoint extends HttpServlet {
     }
 
     private void verifyToken(HttpServletRequest req, HttpServletResponse resp) {
-        if (! req.isUserInRole(ROLE_CMD_CHANNEL)) {
-            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        if (! isAuthorized(req, resp, Roles.CMD_CHANNEL_VERIFY) ) {
             return;
         }
         TokenManager tokenManager = (TokenManager) getServletContext().getAttribute(TOKEN_MANAGER_KEY);
@@ -438,9 +478,18 @@ public class WebStorageEndPoint extends HttpServlet {
         byte[] token = Base64.decodeBase64(req.getParameter("token"));
         boolean verified = tokenManager.verifyToken(clientToken, token);
         if (! verified) {
-            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
         } else {
             resp.setStatus(HttpServletResponse.SC_OK);
+        }
+    }
+    
+    private boolean isAuthorized(HttpServletRequest req, HttpServletResponse resp, String role) {
+        if (req.isUserInRole(role)) {
+            return true;
+        } else {
+            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            return false;
         }
     }
 

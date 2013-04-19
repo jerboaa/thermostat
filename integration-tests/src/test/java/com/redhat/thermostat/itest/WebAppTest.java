@@ -50,11 +50,13 @@ import java.io.InputStream;
 import java.util.UUID;
 
 import org.eclipse.jetty.security.DefaultUserIdentity;
+import org.eclipse.jetty.security.LoginService;
 import org.eclipse.jetty.security.MappedLoginService;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.UserIdentity;
 import org.eclipse.jetty.util.security.Password;
 import org.eclipse.jetty.webapp.WebAppContext;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -70,6 +72,7 @@ import com.redhat.thermostat.test.FreePortFinder.TryPort;
 import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
 import com.redhat.thermostat.vm.classstat.common.model.VmClassStat;
 import com.redhat.thermostat.web.client.internal.WebStorage;
+import com.redhat.thermostat.web.server.auth.Roles;
 
 import expectj.Spawn;
 
@@ -89,21 +92,16 @@ public class WebAppTest {
         storage.expectClose();
 
         assertNoExceptions(storage.getCurrentStandardOutContents(), storage.getCurrentStandardErrContents());
-
-        port = FreePortFinder.findFreePort(new TryPort() {
-            
-            @Override
-            public void tryPort(int port) throws Exception {
-                startServer(port);
-            }
-        });
-        registerCategory();
+    }
+    
+    @After
+    public void tearDown() throws Exception {
+        server.stop();
+        server.join();
     }
 
     @AfterClass
     public static void tearDownOnce() throws Exception {
-        server.stop();
-        server.join();
 
         Spawn storage = spawnThermostat("storage", "--stop");
         storage.expect("server shutdown complete");
@@ -112,45 +110,47 @@ public class WebAppTest {
         assertNoExceptions(storage.getCurrentStandardOutContents(), storage.getCurrentStandardErrContents());
     }
 
-    private static void startServer(int port) throws Exception {
+    private static void startServer(int port, LoginService loginService) throws Exception {
         server = new Server(port);
         ApplicationInfo appInfo = new ApplicationInfo();
         String version = appInfo.getMavenVersion();
         String warfile = "target/libs/thermostat-web-war-" + version + ".war";
         WebAppContext ctx = new WebAppContext(warfile, "/thermostat");
         ctx.getSecurityHandler().setAuthMethod("BASIC");
-        ctx.getSecurityHandler().setLoginService(new MappedLoginService() {
-            
-            @Override
-            protected void loadUsers() throws IOException {
-                putUser("testname", new Password("testpasswd"), new String[] { "thermostat-agent" });
-                putUser("test-no-role", new Password("testpasswd"), new String[] { "fluff" });
-                putUser("test-cmd-channel", new Password("testpasswd"), new String[] { "thermostat-cmd-channel" });
-            }
-            
-            @Override
-            protected UserIdentity loadUser(String username) {
-                if (username.equals("test-cmd-channel")) {
-                    return new DefaultUserIdentity(null, null, new String[] { "thermostat-cmd-channel" });
-                }
-                return new DefaultUserIdentity(null, null, new String[] { "thermostat-agent" });
-            }
-        });
+        ctx.getSecurityHandler().setLoginService(loginService);
         server.setHandler(ctx);
         server.start();
     }
 
-    private static void registerCategory() {
+    private static void connectStorage(String username, String password) {
         String url = "http://localhost:" + port + "/thermostat/storage";
-        StartupConfiguration config = new ConnectionConfiguration(url, "testname", "testpasswd");
+        StartupConfiguration config = new ConnectionConfiguration(url, username, password);
         webStorage = new WebStorage(config);
         webStorage.setAgentId(new UUID(42, 24));
         webStorage.getConnection().connect();
-        webStorage.registerCategory(VmClassStatDAO.vmClassStatsCategory);
     }
 
     @Test
-    public void testPutFind() {
+    public void authorizedAdd() throws Exception {
+        String[] roleNames = new String[] {
+                Roles.REGISTER_CATEGORY,
+                Roles.ACCESS_REALM,
+                Roles.LOGIN,
+                Roles.APPEND
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        final LoginService loginService = new TestLoginService(testuser, password, roleNames);
+        port = FreePortFinder.findFreePort(new TryPort() {
+            
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port, loginService);
+            }
+        });
+        connectStorage(testuser, password);
+        webStorage.registerCategory(VmClassStatDAO.vmClassStatsCategory);
+        
         Add add = webStorage.createAdd(VmClassStatDAO.vmClassStatsCategory);
         VmClassStat pojo = new VmClassStat();
         pojo.setAgentId("fluff");
@@ -159,7 +159,29 @@ public class WebAppTest {
         pojo.setVmId(987);
         add.setPojo(pojo);
         add.apply();
-
+    }
+    
+    @Test
+    public void authorizedQuery() throws Exception {
+        String[] roleNames = new String[] {
+                Roles.REGISTER_CATEGORY,
+                Roles.READ,
+                Roles.LOGIN,
+                Roles.ACCESS_REALM
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        final LoginService loginService = new TestLoginService(testuser, password, roleNames);
+        port = FreePortFinder.findFreePort(new TryPort() {
+            
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port, loginService);
+            }
+        });
+        connectStorage(testuser, password);
+        webStorage.registerCategory(VmClassStatDAO.vmClassStatsCategory);
+        
         Query<VmClassStat> query = webStorage.createQuery(VmClassStatDAO.vmClassStatsCategory);
         Cursor<VmClassStat> cursor = query.execute();
         assertTrue(cursor.hasNext());
@@ -172,7 +194,25 @@ public class WebAppTest {
     }
 
     @Test
-    public void testLoadSave() throws IOException, InterruptedException {
+    public void authorizedLoadSave() throws Exception {
+        String[] roleNames = new String[] {
+                Roles.LOAD_FILE,
+                Roles.SAVE_FILE,
+                Roles.ACCESS_REALM,
+                Roles.LOGIN
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        final LoginService loginService = new TestLoginService(testuser, password, roleNames);
+        port = FreePortFinder.findFreePort(new TryPort() {
+            
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port, loginService);
+            }
+        });
+        connectStorage(testuser, password);
+        
         byte[] data = "Hello World".getBytes();
         webStorage.saveFile("test", new ByteArrayInputStream(data));
         // Note: Apparently, saving the file takes a bit. Without this
@@ -187,5 +227,31 @@ public class WebAppTest {
             i = loadStream.read();
         }
         assertEquals("Hello World", str.toString());
+    }
+    
+    private static class TestLoginService extends MappedLoginService {
+
+        private final String[] roleNames;
+        private final String username;
+        private final String password;
+
+        private TestLoginService(String username, String password,
+                String[] roleNames) {
+            this.username = username;
+            this.password = password;
+            this.roleNames = roleNames;
+        }
+
+        @Override
+        protected void loadUsers() throws IOException {
+            putUser(username, new Password(password),
+                    roleNames);
+        }
+
+        @Override
+        protected UserIdentity loadUser(String username) {
+            return new DefaultUserIdentity(null, null,
+                    roleNames);
+        }
     }
 }
