@@ -57,9 +57,12 @@ import javax.swing.event.ChangeListener;
 import com.redhat.thermostat.client.swing.GraphicsUtils;
 import com.redhat.thermostat.client.swing.components.GradientPanel;
 import com.redhat.thermostat.client.swing.components.timeline.TimelineUtils;
+
 import com.redhat.thermostat.client.ui.Palette;
+
 import com.redhat.thermostat.common.model.LongRange;
 import com.redhat.thermostat.common.model.LongRangeNormalizer;
+
 import com.redhat.thermostat.thread.client.common.Timeline;
 import com.redhat.thermostat.thread.client.common.TimelineInfo;
 
@@ -246,7 +249,7 @@ public class TimelineComponent extends GradientPanel {
                 scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
                 scrollPane.getHorizontalScrollBar().setUnitIncrement(TimelineUtils.INC);
                 
-                final TimelineRulerHeader header = new TimelineRulerHeader(range, scrollPane);
+                final ThreadTimelineHeader header = new ThreadTimelineHeader(range, scrollPane);
                 
                 scrollPane.setColumnHeaderView(header);
                 scrollPane.setViewportView(stuff);

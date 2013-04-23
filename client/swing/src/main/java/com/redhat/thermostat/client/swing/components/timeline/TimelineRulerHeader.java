@@ -48,8 +48,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import javax.swing.JScrollPane;
-
 import com.redhat.thermostat.client.swing.GraphicsUtils;
 import com.redhat.thermostat.client.swing.components.GradientPanel;
 import com.redhat.thermostat.client.ui.Palette;
