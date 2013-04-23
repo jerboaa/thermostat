@@ -37,6 +37,7 @@
 package com.redhat.thermostat.web.server;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -52,11 +53,16 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
 import org.eclipse.jetty.security.DefaultUserIdentity;
@@ -74,6 +80,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.google.gson.Gson;
+import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Categories;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
@@ -96,6 +103,7 @@ import com.redhat.thermostat.web.common.WebQuery;
 import com.redhat.thermostat.web.common.WebRemove;
 import com.redhat.thermostat.web.common.WebUpdate;
 import com.redhat.thermostat.web.server.auth.Roles;
+import com.redhat.thermostat.web.server.auth.WebStoragePathHandler;
 
 public class WebStorageEndpointTest {
 
@@ -175,10 +183,69 @@ public class WebStorageEndpointTest {
 
     @After
     public void tearDown() throws Exception {
-        server.stop();
-        server.join();
+        // some tests don't use server
+        if (server != null) {
+            server.stop();
+            server.join();
+        }
     }
 
+    /**
+     * Makes sure that all paths we dispatch to, dispatch to
+     * {@link WebStoragePathHandler} annotated methods.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void ensureAuthorizationCovered() throws Exception {
+        // manually maintained list of path handlers which should include
+        // authorization checks
+        final String[] authPaths = new String[] {
+                "find-all", "put-pojo", "register-category", "remove-pojo",
+                "update-pojo", "get-count", "save-file", "load-file",
+                "purge", "ping", "generate-token", "verify-token"
+        };
+        Map<String, Boolean> checkedAutPaths = new HashMap<>();
+        for (String path: authPaths) {
+            checkedAutPaths.put(path, false);
+        }
+        int methodsReqAuthorization = 0;
+        for (Method method: WebStorageEndPoint.class.getDeclaredMethods()) {
+            if (method.isAnnotationPresent(WebStoragePathHandler.class)) {
+                methodsReqAuthorization++;
+                WebStoragePathHandler annot = method.getAnnotation(WebStoragePathHandler.class);
+                try {
+                    // this may NPE if there is something funny going on in
+                    // WebStorageEndPoint (e.g. one method annotated but this
+                    // reference list has not been updated).
+                    if (!checkedAutPaths.get(annot.path())) {
+                        // mark path as covered
+                        checkedAutPaths.put(annot.path(), true);
+                    } else {
+                        throw new AssertionError(
+                                "method "
+                                        + method
+                                        + " annotated as web storage path handler (path '"
+                                        + annot.path()
+                                        + "'), but not in reference list we know about!");
+                    }
+                } catch (NullPointerException e) {
+                    throw new AssertionError("Don't know about path '"
+                            + annot.path() + "'");
+                }
+            }
+        }
+        // at this point we should have all dispatched paths covered
+        for (String path: authPaths) {
+            assertTrue(
+                    "Is " + path
+                          + " marked with @WebStoragePathHandler and have proper authorization checks been included?",
+                    checkedAutPaths.get(path));
+        }
+        assertEquals(authPaths.length, methodsReqAuthorization);
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
     public void authorizedFindAllPojos() throws Exception {
         String[] roleNames = new String[] {
@@ -203,7 +270,6 @@ public class WebStorageEndpointTest {
         TestClass expected2 = new TestClass();
         expected2.setKey1("fluff2");
         expected2.setKey2(43);
-        @SuppressWarnings("unchecked")
         Cursor<TestClass> cursor = mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(expected1).thenReturn(expected2);
@@ -216,7 +282,7 @@ public class WebStorageEndpointTest {
         URL url = new URL(endpoint + "/find-all");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
-        sendAuthorization(conn, testuser, password);
+        sendAuthentication(conn, testuser, password);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
         conn.setDoInput(true);
         conn.setDoOutput(true);
@@ -247,6 +313,46 @@ public class WebStorageEndpointTest {
         verify(mockQuery).limit(42);
         verify(mockQuery).execute();
         verifyNoMoreInteractions(mockQuery);
+    }
+    
+    @Test
+    public void unauthorizedFindAllPojos() throws Exception {
+        String failMsg = "thermostat-read role missing, expected Forbidden!";
+        doUnauthorizedTest("find-all", failMsg);
+    }
+    
+    private void doUnauthorizedTest(String pathForEndPoint, String failMessage) throws Exception {
+        String[] insufficientRoleNames = new String[] {
+                Roles.REGISTER_CATEGORY,
+        };
+        doUnauthorizedTest(pathForEndPoint, failMessage, insufficientRoleNames, true);
+    }
+
+    private void doUnauthorizedTest(String pathForEndPoint, String failMessage,
+            String[] insufficientRoles, boolean doRegisterCategory) throws Exception,
+            MalformedURLException, IOException, ProtocolException {
+        String testuser = "testuser";
+        String password = "testpassword";
+        final LoginService loginService = new TestLoginService(testuser, password, insufficientRoles); 
+        port = FreePortFinder.findFreePort(new TryPort() {
+            
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port, loginService);
+            }
+        });
+        if (doRegisterCategory) {
+            registerCategory(testuser, password);
+        }
+        
+        String endpoint = getEndpoint();
+        URL url = new URL(endpoint + "/" + pathForEndPoint);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        sendAuthentication(conn, testuser, password);
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        
+        assertEquals(failMessage, HttpServletResponse.SC_FORBIDDEN, conn.getResponseCode());
     }
 
     @Test
@@ -279,7 +385,7 @@ public class WebStorageEndpointTest {
         URL url = new URL(endpoint + "/put-pojo");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
-        sendAuthorization(conn, testuser, password);
+        sendAuthentication(conn, testuser, password);
 
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
@@ -297,14 +403,147 @@ public class WebStorageEndpointTest {
         verify(mockStorage).createReplace(category);
         verify(replace).setPojo(expected1);
         verify(replace).apply();
+    }    
+    
+    @Test
+    public void unauthorizedReplacePutPojo() throws Exception {
+        String[] insufficientRoleNames = new String[] {
+                Roles.REGISTER_CATEGORY,
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        final LoginService loginService = new TestLoginService(testuser, password, insufficientRoleNames); 
+        port = FreePortFinder.findFreePort(new TryPort() {
+            
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port, loginService);
+            }
+        });
+        registerCategory(testuser, password);
+        
+        String endpoint = getEndpoint();
+        URL url = new URL(endpoint + "/put-pojo");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        sendAuthentication(conn, testuser, password);
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        conn.setDoOutput(true);
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        // replace
+        WebInsert insert = new WebInsert(categoryId, true);
+        Gson gson = new Gson();
+        OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
+        out.write("insert=");
+        gson.toJson(insert, out);
+        out.flush();
+        out.write("&pojo=");
+        TestClass expected1 = new TestClass();
+        gson.toJson(expected1, out);
+        out.write("\n");
+        out.flush();
+        
+        assertEquals("thermostat-replace role missing", HttpServletResponse.SC_FORBIDDEN, conn.getResponseCode());
     }
 
-    private void sendAuthorization(HttpURLConnection conn, String username, String passwd) {
+    @Test
+    public void authorizedInsertPutPojo() throws Exception {
+        String[] roleNames = new String[] {
+                Roles.APPEND,
+                Roles.REGISTER_CATEGORY
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        final LoginService loginService = new TestLoginService(testuser, password, roleNames); 
+        port = FreePortFinder.findFreePort(new TryPort() {
+            
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port, loginService);
+            }
+        });
+        registerCategory(testuser, password);
+        
+        Add insert = mock(Add.class);
+        when(mockStorage.createAdd(any(Category.class))).thenReturn(insert);
+
+        TestClass expected1 = new TestClass();
+        expected1.setKey1("fluff1");
+        expected1.setKey2(42);
+
+        String endpoint = getEndpoint();
+
+        URL url = new URL(endpoint + "/put-pojo");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        sendAuthentication(conn, testuser, password);
+
+        conn.setDoOutput(true);
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        WebInsert ins = new WebInsert(categoryId, false);
+        Gson gson = new Gson();
+        OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
+        out.write("insert=");
+        gson.toJson(ins, out);
+        out.flush();
+        out.write("&pojo=");
+        gson.toJson(expected1, out);
+        out.write("\n");
+        out.flush();
+        assertEquals(200, conn.getResponseCode());
+        verify(mockStorage).createAdd(category);
+        verify(insert).setPojo(expected1);
+        verify(insert).apply();
+    }
+    
+    @Test
+    public void unauthorizedInsertPutPojo() throws Exception {
+        String[] insufficientRoleNames = new String[] {
+                Roles.REGISTER_CATEGORY,
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        final LoginService loginService = new TestLoginService(testuser, password, insufficientRoleNames); 
+        port = FreePortFinder.findFreePort(new TryPort() {
+            
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port, loginService);
+            }
+        });
+        registerCategory(testuser, password);
+        
+        String endpoint = getEndpoint();
+        URL url = new URL(endpoint + "/put-pojo");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        sendAuthentication(conn, testuser, password);
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        conn.setDoOutput(true);
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        // replace
+        WebInsert insert = new WebInsert(categoryId, false);
+        Gson gson = new Gson();
+        OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
+        out.write("insert=");
+        gson.toJson(insert, out);
+        out.flush();
+        out.write("&pojo=");
+        TestClass expected1 = new TestClass();
+        gson.toJson(expected1, out);
+        out.write("\n");
+        out.flush();
+        
+        assertEquals("thermostat-add role missing", HttpServletResponse.SC_FORBIDDEN, conn.getResponseCode());
+    }
+    
+    private void sendAuthentication(HttpURLConnection conn, String username, String passwd) {
         String userpassword = username + ":" + passwd;
         String encodedAuthorization = Base64.encodeBase64String(userpassword.getBytes());
         conn.setRequestProperty("Authorization", "Basic "+ encodedAuthorization);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void authorizedRemovePojo() throws Exception {
         String[] roleNames = new String[] {
@@ -335,7 +574,7 @@ public class WebStorageEndpointTest {
         URL url = new URL(endpoint + "/remove-pojo");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
-        sendAuthorization(conn, testuser, password);
+        sendAuthentication(conn, testuser, password);
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
         Map<Category<?>,Integer> categoryIds = new HashMap<>();
@@ -353,6 +592,12 @@ public class WebStorageEndpointTest {
         verify(mockRemove).from(category);
         verify(mockRemove).where(key1, "test");
         verify(mockStorage).removePojo(mockRemove);
+    }
+    
+    @Test
+    public void unauthorizedRemovePojo() throws Exception {
+        String failMsg = "thermostat-remove role missing, expected Forbidden!";
+        doUnauthorizedTest("remove-pojo", failMsg);
     }
 
     @Test
@@ -381,7 +626,7 @@ public class WebStorageEndpointTest {
         URL url = new URL(endpoint + "/update-pojo");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
-        sendAuthorization(conn, testuser, password);
+        sendAuthentication(conn, testuser, password);
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
@@ -407,6 +652,12 @@ public class WebStorageEndpointTest {
         verify(mockUpdate).set(key2, 42);
         verify(mockUpdate).apply();
         verifyNoMoreInteractions(mockUpdate);
+    }
+    
+    @Test
+    public void unauthorizedUpdatePojo() throws Exception {
+        String failMsg = "thermostat-update role missing, expected Forbidden!";
+        doUnauthorizedTest("update-pojo", failMsg);
     }
 
 
@@ -434,7 +685,7 @@ public class WebStorageEndpointTest {
         URL url = new URL(endpoint + "/get-count");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
-        sendAuthorization(conn, testuser, password);
+        sendAuthentication(conn, testuser, password);
         conn.setDoOutput(true);
         conn.setDoInput(true);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
@@ -450,6 +701,12 @@ public class WebStorageEndpointTest {
         assertEquals(12345, result);
         verify(mockStorage).getCount(category);
         
+    }
+    
+    @Test
+    public void unauthorizedGetCount() throws Exception {
+        String failMsg = "thermostat-get-count role missing, expected Forbidden!";
+        doUnauthorizedTest("get-count", failMsg);
     }
 
     @Test
@@ -472,7 +729,7 @@ public class WebStorageEndpointTest {
         URL url = new URL(endpoint + "/save-file");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
-        sendAuthorization(conn, testuser, password);
+        sendAuthentication(conn, testuser, password);
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=fluff");
         conn.setRequestProperty("Transfer-Encoding", "chunked");
@@ -485,7 +742,8 @@ public class WebStorageEndpointTest {
         out.write("Hello World\r\n");
         out.write("--fluff--\r\n");
         out.flush();
-        int status = conn.getResponseCode();
+        // needed in order to trigger inCaptor interaction with mock
+        conn.getResponseCode();
         ArgumentCaptor<InputStream> inCaptor = ArgumentCaptor.forClass(InputStream.class);
         verify(mockStorage).saveFile(eq("fluff"), inCaptor.capture());
         InputStream in = inCaptor.getValue();
@@ -499,6 +757,13 @@ public class WebStorageEndpointTest {
             totalRead += read;
         }
         assertEquals("Hello World", new String(data));
+    }
+    
+    @Test
+    public void unauthorizedSaveFile() throws Exception {
+        String failMsg = "thermostat-save-file role missing, expected Forbidden!";
+        String[] insufficientRoles = new String[0];
+        doUnauthorizedTest("save-file", failMsg, insufficientRoles, false);
     }
 
     @Test
@@ -526,7 +791,7 @@ public class WebStorageEndpointTest {
 
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
-        sendAuthorization(conn, testuser, password);
+        sendAuthentication(conn, testuser, password);
         conn.setDoOutput(true);
         conn.setDoInput(true);
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
@@ -544,6 +809,13 @@ public class WebStorageEndpointTest {
         }
         assertEquals("Hello World", new String(data));
         verify(mockStorage).loadFile("fluff");
+    }
+    
+    @Test
+    public void unauthorizedLoadFile() throws Exception {
+        String failMsg = "thermostat-load-file role missing, expected Forbidden!";
+        String[] insufficientRoles = new String[0];
+        doUnauthorizedTest("load-file", failMsg, insufficientRoles, false);
     }
 
     @Test
@@ -566,11 +838,18 @@ public class WebStorageEndpointTest {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setDoOutput(true);
         conn.setRequestMethod("POST");
-        sendAuthorization(conn, testuser, password);
+        sendAuthentication(conn, testuser, password);
         conn.getOutputStream().write("agentId=fluff".getBytes());
         int status = conn.getResponseCode();
         assertEquals(200, status);
         verify(mockStorage).purge("fluff");
+    }
+    
+    @Test
+    public void unauthorizedPurge() throws Exception {
+        String failMsg = "thermostat-purge role missing, expected Forbidden!";
+        String[] insufficientRoles = new String[0];
+        doUnauthorizedTest("purge", failMsg, insufficientRoles, false);
     }
 
     private void registerCategory(String username, String password) {
@@ -583,7 +862,7 @@ public class WebStorageEndpointTest {
             conn.setDoOutput(true);
             conn.setDoInput(true);
             conn.setRequestMethod("POST");
-            sendAuthorization(conn, username, password);
+            sendAuthentication(conn, username, password);
             OutputStream out = conn.getOutputStream();
             Gson gson = new Gson();
             OutputStreamWriter writer = new OutputStreamWriter(out);
@@ -626,31 +905,9 @@ public class WebStorageEndpointTest {
 
     @Test
     public void unauthorizedGenerateToken() throws Exception {
-        String[] noRoles = new String[0];
-        String testuser = "testuser";
-        String password = "testpassword";
-        final LoginService loginService = new TestLoginService(testuser, password, noRoles); 
-        
-        port = FreePortFinder.findFreePort(new TryPort() {
-            
-            @Override
-            public void tryPort(int port) throws Exception {
-                startServer(port, loginService);
-            }
-        });
-        
-        String endpoint = getEndpoint();
-        URL url = new URL(endpoint + "/generate-token");
-
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("POST");
-        sendAuthorization(conn, testuser, password);
-        conn.setDoOutput(true);
-        conn.setDoInput(true);
-        OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-        out.write("client-token=fluff");
-        out.flush();
-        assertEquals(403, conn.getResponseCode());
+        String failMsg = "thermostat-cmdc-generate role missing, expected Forbidden!";
+        String[] insufficientRoles = new String[0];
+        doUnauthorizedTest("generate-token", failMsg, insufficientRoles, false);
     }
 
     @Test
@@ -677,7 +934,7 @@ public class WebStorageEndpointTest {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
         conn.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
-        sendAuthorization(conn, testuser, password);
+        sendAuthentication(conn, testuser, password);
         conn.setDoOutput(true);
         conn.setDoInput(true);
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
@@ -712,7 +969,7 @@ public class WebStorageEndpointTest {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
         conn.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
-        sendAuthorization(conn, testuser, password);
+        sendAuthentication(conn, testuser, password);
         conn.setDoOutput(true);
         conn.setDoInput(true);
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
@@ -745,13 +1002,20 @@ public class WebStorageEndpointTest {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
         conn.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
-        sendAuthorization(conn, testuser, password);
+        sendAuthentication(conn, testuser, password);
         conn.setDoOutput(true);
         conn.setDoInput(true);
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
         out.write("client-token=fluff&token=" + URLEncoder.encode(Base64.encodeBase64String(token), "UTF-8"));
         out.flush();
         assertEquals(403, conn.getResponseCode());
+    }
+    
+    @Test
+    public void unauthorizedVerifyToken() throws Exception {
+        String failMsg = "thermostat-cmdc-verify role missing, expected Forbidden!";
+        String[] insufficientRoles = new String[0];
+        doUnauthorizedTest("verify-token", failMsg, insufficientRoles, false);
     }
 
     private byte[] verifyAuthorizedGenerateToken(String username, String password) throws IOException {
@@ -760,7 +1024,7 @@ public class WebStorageEndpointTest {
 
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
-        sendAuthorization(conn, username, password);
+        sendAuthentication(conn, username, password);
         conn.setDoOutput(true);
         conn.setDoInput(true);
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());

@@ -88,6 +88,7 @@ import com.redhat.thermostat.web.common.WebQuery;
 import com.redhat.thermostat.web.common.WebRemove;
 import com.redhat.thermostat.web.common.WebUpdate;
 import com.redhat.thermostat.web.server.auth.Roles;
+import com.redhat.thermostat.web.server.auth.WebStoragePathHandler;
 
 @SuppressWarnings("serial")
 public class WebStorageEndPoint extends HttpServlet {
@@ -215,6 +216,7 @@ public class WebStorageEndPoint extends HttpServlet {
         }
     }
 
+    @WebStoragePathHandler( path = "ping" )
     private void ping(HttpServletRequest req, HttpServletResponse resp) {
         if (! isAuthorized(req, resp, Roles.LOGIN)) {
             return;
@@ -223,6 +225,7 @@ public class WebStorageEndPoint extends HttpServlet {
         resp.setStatus(HttpServletResponse.SC_OK);
     }
 
+    @WebStoragePathHandler( path = "purge" )
     private void purge(HttpServletRequest req, HttpServletResponse resp) {
         if (! isAuthorized(req, resp, Roles.PURGE)) {
             return;
@@ -233,6 +236,7 @@ public class WebStorageEndPoint extends HttpServlet {
         resp.setStatus(HttpServletResponse.SC_OK);
     }
 
+    @WebStoragePathHandler( path = "load-file" )
     private void loadFile(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         if (! isAuthorized(req, resp, Roles.LOAD_FILE)) {
             return;
@@ -252,6 +256,7 @@ public class WebStorageEndPoint extends HttpServlet {
         }
     }
 
+    @WebStoragePathHandler( path = "save-file" )
     private void saveFile(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         if (! isAuthorized(req, resp, Roles.SAVE_FILE)) {
             return;
@@ -280,6 +285,7 @@ public class WebStorageEndPoint extends HttpServlet {
         
     }
 
+    @WebStoragePathHandler( path = "get-count" )
     private void getCount(HttpServletRequest req, HttpServletResponse resp) {
         if (! isAuthorized(req, resp, Roles.GET_COUNT)) {
             return;
@@ -299,6 +305,7 @@ public class WebStorageEndPoint extends HttpServlet {
         }
     }
 
+    @WebStoragePathHandler( path = "register-category" )
     private synchronized void registerCategory(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         if (! isAuthorized(req, resp, Roles.REGISTER_CATEGORY)) {
             return;
@@ -326,6 +333,7 @@ public class WebStorageEndPoint extends HttpServlet {
         writer.flush();
     }
 
+    @WebStoragePathHandler( path = "put-pojo" )
     private void putPojo(HttpServletRequest req, HttpServletResponse resp) {
         String insertParam = req.getParameter("insert");
         WebInsert insert = gson.fromJson(insertParam, WebInsert.class);
@@ -351,6 +359,7 @@ public class WebStorageEndPoint extends HttpServlet {
         resp.setStatus(HttpServletResponse.SC_OK);
     }
 
+    @WebStoragePathHandler( path = "remove-pojo" )
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private void removePojo(HttpServletRequest req, HttpServletResponse resp) {
         if (! isAuthorized(req, resp, Roles.DELETE)) {
@@ -370,6 +379,7 @@ public class WebStorageEndPoint extends HttpServlet {
         resp.setStatus(HttpServletResponse.SC_OK);
     }
 
+    @WebStoragePathHandler( path = "update-pojo" )
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private void updatePojo(HttpServletRequest req, HttpServletResponse resp) {
         if (! isAuthorized(req, resp, Roles.UPDATE)) {
@@ -410,6 +420,7 @@ public class WebStorageEndPoint extends HttpServlet {
         }
     }
 
+    @WebStoragePathHandler( path = "find-all" )
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private void findAll(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         if (! isAuthorized(req, resp, Roles.READ)) {
@@ -455,6 +466,7 @@ public class WebStorageEndPoint extends HttpServlet {
         resp.flushBuffer();
     }
 
+    @WebStoragePathHandler( path = "generate-token" )
     private void generateToken(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         if (! isAuthorized(req, resp, Roles.CMD_CHANNEL_GENERATE) ) {
             return;
@@ -468,6 +480,7 @@ public class WebStorageEndPoint extends HttpServlet {
         resp.getOutputStream().write(token);
     }
 
+    @WebStoragePathHandler( path = "verify-token" )
     private void verifyToken(HttpServletRequest req, HttpServletResponse resp) {
         if (! isAuthorized(req, resp, Roles.CMD_CHANNEL_VERIFY) ) {
             return;
@@ -488,6 +501,7 @@ public class WebStorageEndPoint extends HttpServlet {
         if (req.isUserInRole(role)) {
             return true;
         } else {
+            logger.log(Level.FINEST, "Not permitting access to " + req.getPathInfo() + ". User '" + req.getRemoteUser() + "' not in role " + role);
             resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
             return false;
         }
