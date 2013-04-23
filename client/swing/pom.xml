@@ -160,6 +160,7 @@
               com.redhat.thermostat.client.swing,
               com.redhat.thermostat.client.swing.components,
               com.redhat.thermostat.client.swing.components.models,
+              com.redhat.thermostat.client.swing.components.timeline,
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.client.swing.internal,

@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.swing.impl.timeline;
+package com.redhat.thermostat.client.swing.components.timeline;
 
 import java.awt.Font;
 import java.awt.Graphics2D;
@@ -43,7 +43,6 @@ import java.awt.Rectangle;
 import com.redhat.thermostat.client.ui.Palette;
 import com.redhat.thermostat.common.model.LongRange;
 import com.redhat.thermostat.common.model.LongRangeNormalizer;
-
 
 public class TimelineUtils {
     public static final int INC = 50;
@@ -60,7 +59,9 @@ public class TimelineUtils {
         return drawMarks(range, graphics, bounds, currentValue, width, height, false);
     }
     
-    public static int drawMarks(LongRange range, Graphics2D graphics, Rectangle bounds, int currentValue, int width, int height, boolean darkerTop) {
+    public static int drawMarks(LongRange range, Graphics2D graphics, Rectangle bounds,
+                                int currentValue, int width, int height, boolean darkerTop)
+    {
         LongRangeNormalizer normalizer = new LongRangeNormalizer(range, 0, width);
         normalizer.setValue(range.getMin() + TimelineUtils.STEP);
         int totalInc = (int) normalizer.getValueNormalized();

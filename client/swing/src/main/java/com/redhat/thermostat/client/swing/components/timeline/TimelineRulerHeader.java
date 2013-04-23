@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.swing.impl.timeline;
+package com.redhat.thermostat.client.swing.components.timeline;
 
 import java.awt.Dimension;
 import java.awt.Font;
@@ -56,17 +56,15 @@ import com.redhat.thermostat.client.ui.Palette;
 import com.redhat.thermostat.common.model.LongRange;
 
 @SuppressWarnings("serial")
-public class TimelineRulerHeader extends GradientPanel {
+public abstract class TimelineRulerHeader extends GradientPanel {
 
     private LongRange range;
-    private JScrollPane scrollPane;
     
-    public TimelineRulerHeader(LongRange range, JScrollPane scrollPane) {
+    public TimelineRulerHeader(LongRange range) {
         
         super(Palette.LIGHT_GRAY.getColor(), Palette.WHITE.getColor());
         
         this.range = range;
-        this.scrollPane = scrollPane;
     }
     
     public LongRange getRange() {
@@ -91,6 +89,8 @@ public class TimelineRulerHeader extends GradientPanel {
         return getPreferredSize();
     }
     
+    protected abstract int getCurrentDisplayValue();
+    
     @Override
     protected void paintComponent(Graphics g) {
         
@@ -98,7 +98,7 @@ public class TimelineRulerHeader extends GradientPanel {
 
         Graphics2D graphics = GraphicsUtils.getInstance().createAAGraphics(g);
 
-        int currentValue = scrollPane.getHorizontalScrollBar().getValue();
+        int currentValue = getCurrentDisplayValue();
 
         Rectangle bounds = g.getClipBounds();
         int totalInc = TimelineUtils.drawMarks(range, graphics, bounds, currentValue,

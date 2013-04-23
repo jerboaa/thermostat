@@ -56,6 +56,7 @@ import javax.swing.event.ChangeListener;
 
 import com.redhat.thermostat.client.swing.GraphicsUtils;
 import com.redhat.thermostat.client.swing.components.GradientPanel;
+import com.redhat.thermostat.client.swing.components.timeline.TimelineUtils;
 import com.redhat.thermostat.client.ui.Palette;
 import com.redhat.thermostat.common.model.LongRange;
 import com.redhat.thermostat.common.model.LongRangeNormalizer;
