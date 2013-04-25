@@ -36,12 +36,12 @@ core-install: create-repo-dir
 
 copy-core-natives: core-install
 	if [ "_$(ARCH)" = "_x86_64" ]; then \
-        	cp keyring/target/libGnomeKeyringWrapper.so eclipse/com.redhat.thermostat.client.feature/linux_x86-64; \
+        	cp keyring/target/libGnomeKeyringWrapper.so eclipse/com.redhat.thermostat.client.feature/linux_x86_64; \
 	else \
 		cp keyring/target/libGnomeKeyringWrapper.so eclipse/com.redhat.thermostat.client.feature/linux_x86; \
 	fi
 
-eclipse-test: eclipse eclipse-test-p2
+eclipse-test: eclipse
 ifeq ($(USE_VNC),true)
 	$(VNC) $(VNC_DISPLAY) $(VNC_FLAGS)
 endif
@@ -54,16 +54,10 @@ endif
 eclipse-test-deps: copy-core-natives
 	$(MAVEN) -f eclipse/test-deps-bundle-wrapping/pom.xml $(MAVEN_FLAGS) $(REPO_FLAG) $(MAVEN_SKIP_TEST) clean install
 
-eclipse-test-p2: eclipse-test-deps
-	$(MAVEN) -f eclipse/test-deps-p2-repository/pom.xml $(MAVEN_FLAGS) $(REPO_FLAG) $(MAVEN_SKIP_TEST) clean $(GOAL)
-
 jfreechart-deps: copy-core-natives
 	$(MAVEN) -f eclipse/jfreechart-bundle-wrapping/pom.xml $(MAVEN_FLAGS) $(REPO_FLAG) $(MAVEN_SKIP_TEST) clean install
 
-jfreechart-p2: jfreechart-deps
-	$(MAVEN) -f eclipse/jfreechart-p2-repository/pom.xml $(MAVEN_FLAGS) $(REPO_FLAG) $(MAVEN_SKIP_TEST) clean $(GOAL)
-
-eclipse: jfreechart-p2
+eclipse: jfreechart-deps eclipse-test-deps 
 	$(MAVEN) -f eclipse/pom.xml $(MAVEN_FLAGS) $(REPO_FLAG) $(MAVEN_SKIP_TEST) clean $(GOAL)
 
 create-repo-dir:

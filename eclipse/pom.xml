@@ -56,6 +56,7 @@
     <platform-version-name>juno</platform-version-name>
     <eclipse-site>http://download.eclipse.org/releases/${platform-version-name}</eclipse-site>
     <orbit-site>http://download.eclipse.org/tools/orbit/downloads/drops/R20120526062928/repository/</orbit-site>
+    <eclipse-root>${basedir}</eclipse-root>
   </properties>
 
   <profiles>
@@ -95,8 +96,12 @@
     <module>com.redhat.thermostat.eclipse.chart.vmclassstat</module>
     <module>com.redhat.thermostat.client.feature</module>
     <module>com.redhat.thermostat.eclipse.feature</module>
+    <module>com.redhat.thermostat.eclipse.test.deps.feature</module>
+    <module>com.redhat.thermostat.eclipse.target_platform</module>
     <module>com.redhat.thermostat.eclipse.p2-repo</module>
     <module>core-p2-repository</module>
+    <module>test-deps-p2-repository</module>
+    <module>jfreechart-p2-repository</module>
     <module>composite-repo</module>
   </modules>
 
@@ -114,7 +119,7 @@
     <repository>
       <id>local_jfreechart</id>
       <layout>p2</layout>
-      <url>file://${basedir}/../jfreechart-p2-repository/target/repository/</url>
+      <url>file://${eclipse-root}/jfreechart-p2-repository/target/repository/</url>
     </repository>
     <repository>
       <id>maven.eclipse.org</id>

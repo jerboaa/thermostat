@@ -14,21 +14,25 @@
 
   <name>Thermostat Eclipse Client Tests</name>
 
+  <properties>
+    <eclipse-root>${basedir}/..</eclipse-root>
+  </properties>
+
   <repositories>
     <repository>
       <id>local_client</id>
       <layout>p2</layout>
-      <url>file://${basedir}/../core-p2-repository/target/repository/</url>
+      <url>file://${eclipse-root}/core-p2-repository/target/repository/</url>
     </repository>
     <repository>
       <id>local_eclipse</id>
       <layout>p2</layout>
-      <url>file://${basedir}/../com.redhat.thermostat.eclipse.p2-repo/target/repository/</url>
+      <url>file://${eclipse-root}/com.redhat.thermostat.eclipse.p2-repo/target/repository/</url>
     </repository>
     <repository>
       <id>local_eclipse_test_deps</id>
       <layout>p2</layout>
-      <url>file://${basedir}/../test-deps-p2-repository/target/repository/</url>
+      <url>file://${eclipse-root}/test-deps-p2-repository/target/repository/</url>
     </repository>
   </repositories>
 
@@ -51,12 +55,17 @@
             <dependency>
               <type>p2-installable-unit</type>
               <artifactId>com.redhat.thermostat.client.feature.feature.group</artifactId>
-              <version>0.6.999</version>
+              <version>0.8.0</version>
             </dependency>
             <dependency>
               <type>p2-installable-unit</type>
               <artifactId>com.redhat.thermostat.eclipse.feature.feature.group</artifactId>
-              <version>0.6.999</version>
+              <version>0.8.0</version>
+            </dependency>
+            <dependency>
+              <type>p2-installable-unit</type>
+              <artifactId>com.redhat.thermostat.eclipse.test.deps.feature.feature.group</artifactId>
+              <version>0.8.0</version>
             </dependency>
           </dependencies>
           <bundleStartLevel>

@@ -14,6 +14,10 @@
 
   <name>Thermostat Eclipse VmClassStat Plug-in</name>
 
+  <properties>
+    <eclipse-root>${basedir}/..</eclipse-root>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>com.redhat.thermostat.eclipse.parent</groupId>

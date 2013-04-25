@@ -13,6 +13,10 @@
 
   <name>Thermostat Client p2 Repository</name>
 
+  <properties>
+    <eclipse-root>${basedir}/..</eclipse-root>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>com.redhat.thermostat.eclipse.parent</groupId>

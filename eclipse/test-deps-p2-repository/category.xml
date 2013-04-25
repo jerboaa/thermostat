@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature url="features/com.redhat.thermostat.eclipse.test.deps.feature_0.8.0.qualifier.jar" id="com.redhat.thermostat.eclipse.test.deps.feature" version="0.8.0.qualifier">
+      <category name="thermostat-eclipse-test-deps"/>
+   </feature>
+   <category-def name="thermostat-eclipse-test-deps" label="Thermostat Eclipse Test Dependencies"/>
+</site>

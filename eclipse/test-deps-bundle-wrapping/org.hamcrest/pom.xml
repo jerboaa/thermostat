@@ -59,6 +59,7 @@
         <pkgGroupId>org.hamcrest</pkgGroupId>
         <pkgArtifactId>hamcrest-core</pkgArtifactId>
         <pkgVersion>1.3</pkgVersion>
+        <eclipse-root>${basedir}/../..</eclipse-root>
     </properties>
 
     <dependencies>

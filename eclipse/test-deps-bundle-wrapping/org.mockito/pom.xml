@@ -59,6 +59,7 @@
         <pkgGroupId>org.mockito</pkgGroupId>
         <pkgArtifactId>mockito-core</pkgArtifactId>
         <pkgVersion>1.9.0</pkgVersion>
+        <eclipse-root>${basedir}/../..</eclipse-root>
     </properties>
 
     <dependencies>

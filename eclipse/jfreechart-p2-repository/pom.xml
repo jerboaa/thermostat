@@ -50,6 +50,10 @@
 
   <name>Thermostat Eclipse :: p2 repository for JFreeChart</name>
 
+  <properties>
+    <eclipse-root>${basedir}/..</eclipse-root>
+  </properties>
+
   <build>
     <plugins>
       <!-- Configuration for the PublishFeaturesAndBundlesMojoTest -->

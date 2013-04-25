@@ -59,6 +59,7 @@
         <pkgGroupId>org.objenesis</pkgGroupId>
         <pkgArtifactId>objenesis</pkgArtifactId>
         <pkgVersion>1.0</pkgVersion>
+        <eclipse-root>${basedir}/../..</eclipse-root>
     </properties>
 
     <dependencies>

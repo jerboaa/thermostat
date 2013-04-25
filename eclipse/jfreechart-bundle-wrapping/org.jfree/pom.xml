@@ -59,6 +59,7 @@
         <pkgGroupId>org.jfree</pkgGroupId>
         <pkgArtifactId>jcommon</pkgArtifactId>
         <pkgVersion>1.0.17</pkgVersion>
+        <eclipse-root>${basedir}/../..</eclipse-root>
     </properties>
 
     <dependencies>

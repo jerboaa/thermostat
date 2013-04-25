@@ -14,6 +14,10 @@
 
   <name>Thermostat Eclipse Client Boot Package</name>
 
+  <properties>
+    <eclipse-root>${basedir}/..</eclipse-root>
+  </properties>
+
   <build>
      <!-- workaround for https://issues.sonatype.org/browse/TYCHO-168 -->
      <resources>

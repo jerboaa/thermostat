@@ -50,7 +50,7 @@
   <packaging>pom</packaging>
  
   <properties>
-    <main.basedir>${project.basedir}/..</main.basedir>  
+    <eclipse-root>${basedir}/..</eclipse-root>
   </properties>
 
   <name>Thermostat Eclipse :: Composite p2 Repo</name>
@@ -70,10 +70,10 @@
                 <mkdir dir="${project.build.directory}/composite-repo" />
                 
                 <!-- Copy Thermostat Eclipse plug-ins -->
-                <copydir src="${main.basedir}/com.redhat.thermostat.eclipse.p2-repo/target/repository"
+                <copydir src="${eclipse-root}/com.redhat.thermostat.eclipse.p2-repo/target/repository"
                          dest="${project.build.directory}/composite-repo/thermostat-eclipse" />
                 <!-- Copy Thermostat core bundles p2 repo -->
-                <copydir src="${main.basedir}/core-p2-repository/target/repository"
+                <copydir src="${eclipse-root}/core-p2-repository/target/repository"
                       dest="${project.build.directory}/composite-repo/thermostat-core-p2" />
                 <copy file="compositeArtifacts.xml"
                       todir="${project.build.directory}/composite-repo/" />
