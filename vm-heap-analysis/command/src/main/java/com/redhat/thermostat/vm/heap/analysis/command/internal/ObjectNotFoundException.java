@@ -37,14 +37,16 @@
 package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.vm.heap.analysis.command.locale.LocaleResources;
 
 @SuppressWarnings("serial")
 public class ObjectNotFoundException extends CommandException {
 
-    private static final String MESSAGE_TEMPLATE = "Object not found: ";
+    private static final Translate<LocaleResources> tr = LocaleResources.createLocalizer();
 
     ObjectNotFoundException(String objectId) {
-        super(MESSAGE_TEMPLATE + objectId);
+        super(tr.localize(LocaleResources.OBJECT_NOT_FOUND_MESSAGE, objectId));
     }
 
 }

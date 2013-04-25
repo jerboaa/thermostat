@@ -42,6 +42,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.commons.cli.Options;
 import org.osgi.framework.BundleContext;
@@ -81,6 +82,7 @@ import com.redhat.thermostat.utils.keyring.Keyring;
 public class LauncherImpl implements Launcher {
 
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
+    private Logger logger;
 
     private final AtomicInteger usageCount = new AtomicInteger(0);
     private final BundleContext context;
@@ -111,6 +113,7 @@ public class LauncherImpl implements Launcher {
         this.commandInfoSource = commandInfoSource;
 
         loggingInitializer.initialize();
+        logger = LoggingUtils.getLogger(LauncherImpl.class);
     }
 
     @Override
@@ -331,7 +334,7 @@ public class LauncherImpl implements Launcher {
                         username = getUserPass.getUserName(dbUrl);
                         password = new String(getUserPass.getPassword(dbUrl));
                     } catch (IOException ex) {
-                        throw new CommandException("Could not get username or password from user.", ex);
+                        throw new CommandException(t.localize(LocaleResources.LAUNCHER_USER_AUTH_PROMPT_ERROR), ex);
                     }
                 }
                 try {
@@ -340,11 +343,12 @@ public class LauncherImpl implements Launcher {
                     // This registers the DbService if all goes well
                     service.connect();
                 } catch (StorageException ex) {
-                    throw new CommandException("Unsupported storage URL: " + dbUrl);
+                    throw new CommandException(t.localize(LocaleResources.LAUNCHER_MALFORMED_URL, dbUrl));
                 } catch (ConnectionException ex) {
                     String error = ex.getMessage();
                     String message = ( error == null ? "" : " Error: " + error );
-                    throw new CommandException("Could not connect to: " + dbUrl + message, ex);
+                    logger.log(Level.SEVERE, "Could not connect to: " + dbUrl + message, ex);
+                    throw new CommandException(t.localize(LocaleResources.LAUNCHER_CONNECTION_ERROR, dbUrl), ex);
                 }
             }
         }

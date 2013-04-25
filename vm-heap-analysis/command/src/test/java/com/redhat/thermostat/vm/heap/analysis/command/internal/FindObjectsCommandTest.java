@@ -38,6 +38,7 @@ package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -182,9 +183,12 @@ public class FindObjectsCommandTest {
         SimpleArguments args = new SimpleArguments();
         args.addArgument("heapId", INVALID_HEAP_ID);
 
-        cmd.run(factory.createContext(args));
-
-        assertEquals("Heap ID not found: " + INVALID_HEAP_ID + "\n", factory.getOutput());
+        try {
+            cmd.run(factory.createContext(args));
+            fail();
+        } catch (CommandException e) {
+            assertEquals("Heap ID not found: " + INVALID_HEAP_ID, e.getMessage());
+        }
     }
 }
 

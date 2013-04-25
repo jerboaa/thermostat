@@ -37,14 +37,16 @@
 package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.vm.heap.analysis.command.locale.LocaleResources;
 
 @SuppressWarnings("serial")
 public class HeapNotFoundException extends CommandException {
 
-    private static final String MESSAGE_TEMPLATE = "Heap ID not found: ";
+    private static final Translate<LocaleResources> tr = LocaleResources.createLocalizer();
 
     HeapNotFoundException(String heapId) {
-        super(MESSAGE_TEMPLATE + heapId);
+        super(tr.localize(LocaleResources.HEAP_ID_NOT_FOUND, heapId));
     }
 
 }

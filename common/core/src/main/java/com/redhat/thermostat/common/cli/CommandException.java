@@ -36,6 +36,10 @@
 
 package com.redhat.thermostat.common.cli;
 
+/**
+ * An exception to be thrown by a {@link Command} upon implementation-defined
+ * failure conditions.
+ */
 public class CommandException extends Exception {
 
     private static final long serialVersionUID = 3730368617641245016L;

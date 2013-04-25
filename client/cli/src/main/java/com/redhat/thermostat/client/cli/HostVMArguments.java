@@ -36,8 +36,10 @@
 
 package com.redhat.thermostat.client.cli;
 
+import com.redhat.thermostat.client.cli.internal.LocaleResources;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 
@@ -45,6 +47,8 @@ public class HostVMArguments {
 
     static final String HOST_ID_ARGUMENT = "hostId";
     static final String VM_ID_ARGUMENT = "vmId";
+
+    private static final Translate<LocaleResources> tr = LocaleResources.createLocalizer();
 
     private HostRef host;
     private VmRef vm;
@@ -57,7 +61,7 @@ public class HostVMArguments {
         String hostId = args.getArgument(HOST_ID_ARGUMENT);
         String vmId = args.getArgument(VM_ID_ARGUMENT);
         if (hostRequired && hostId == null) {
-            throw new CommandException("a " + HOST_ID_ARGUMENT + " is required");
+            throw new CommandException(tr.localize(LocaleResources.HOSTID_REQUIRED_MESSAGE));
         } else if (hostId == null) {
             host = null;
         } else {
@@ -78,7 +82,7 @@ public class HostVMArguments {
         try {
             return Integer.parseInt(vmId);
         } catch (NumberFormatException ex) {
-            throw new CommandException("Invalid VM ID: " + vmId, ex);
+            throw new CommandException(tr.localize(LocaleResources.INVALID_VMID_MESSAGE, vmId), ex);
         }
     }
 

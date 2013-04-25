@@ -49,8 +49,11 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import com.redhat.thermostat.common.cli.Arguments;
+import com.redhat.thermostat.common.locale.Translate;
 
 public class CommandLineArgumentsParser {
+
+    private static Translate<LocaleResources> tr = LocaleResources.createLocalizer();
 
     private Options options = new Options();
 
@@ -80,9 +83,9 @@ public class CommandLineArgumentsParser {
         List<String> missingOptions = mae.getMissingOptions();
         StringBuilder msg = new StringBuilder();
         if (missingOptions.size() == 1) {
-            msg.append("Missing required option: ");
+            msg.append(tr.localize(LocaleResources.MISSING_OPTION));
         } else {
-            msg.append("Missing required options: ");
+            msg.append(tr.localize(LocaleResources.MISSING_OPTIONS));
         }
         for (Iterator<String> i = missingOptions.iterator(); i.hasNext();) {
             String missingOption = i.next();

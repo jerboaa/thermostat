@@ -113,7 +113,7 @@ public class SaveHeapDumpToFileCommand extends AbstractCommand {
                     ctx.getConsole().getOutput().println(translator.localize(LocaleResources.COMMAND_SAVE_HEAP_DUMP_ERROR_SAVING, e.getMessage()));
                 }
             } else {
-                ctx.getConsole().getOutput().println(translator.localize(LocaleResources.HEAP_ID_NOT_FOUND, heapId));
+                throw new HeapNotFoundException(heapId);
             }
         } catch (IOException e) {
             throw new CommandException(translator.localize(LocaleResources.COMMAND_SAVE_HEAP_DUMP_ERROR_CLOSING_STREAM, e.getMessage()));

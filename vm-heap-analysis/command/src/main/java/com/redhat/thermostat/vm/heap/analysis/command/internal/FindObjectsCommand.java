@@ -93,13 +93,11 @@ public class FindObjectsCommand extends AbstractCommand {
         String heapId = ctx.getArguments().getArgument(HEAP_ID_ARG);
         HeapInfo heapInfo = heapDAO.getHeapInfo(heapId);
         if (heapInfo == null) {
-            ctx.getConsole().getOutput().println(translator.localize(LocaleResources.HEAP_ID_NOT_FOUND, heapId));
-            return;
+            throw new HeapNotFoundException(heapId);
         }
         HeapDump heapDump = heapDAO.getHeapDump(heapInfo);
         if (heapDump == null) {
-            ctx.getConsole().getOutput().println(translator.localize(LocaleResources.HEAP_ID_NOT_FOUND, heapId));
-            return;
+            throw new HeapNotFoundException(heapId);
         }
 
         List<String> terms = ctx.getArguments().getNonOptionArguments();

@@ -124,9 +124,12 @@ public class ShowHeapHistogramCommandTest {
         SimpleArguments args = new SimpleArguments();
         args.addArgument("heapId", BAD_HEAP_ID);
 
-        command.run(factory.createContext(args));
-
-        assertEquals("Heap ID not found: " + BAD_HEAP_ID + "\n", factory.getOutput());
+        try {
+            command.run(factory.createContext(args));
+            fail();
+        } catch (CommandException e) {
+            assertEquals("Heap ID not found: " + BAD_HEAP_ID, e.getMessage());
+        }
     }
     
     @Test

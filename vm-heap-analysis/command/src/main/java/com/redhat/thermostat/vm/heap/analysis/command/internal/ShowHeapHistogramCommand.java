@@ -89,13 +89,12 @@ public class ShowHeapHistogramCommand extends AbstractCommand {
 
         HeapInfo heapInfo = heapDAO.getHeapInfo(heapId);
         if (heapInfo == null) {
-            ctx.getConsole().getOutput().println(translator.localize(LocaleResources.HEAP_ID_NOT_FOUND, heapId));
-            return;
+            throw new HeapNotFoundException(heapId);
         }
 
         ObjectHistogram histogram = heapDAO.getHistogram(heapInfo);
         if (histogram == null) {
-            ctx.getConsole().getOutput().println(translator.localize(LocaleResources.HEAP_ID_NOT_FOUND, heapId));
+            ctx.getConsole().getOutput().println(translator.localize(LocaleResources.ERROR_READING_HISTOGRAM_MESSAGE, heapId));
             return;
         } else {
             printHeapHistogram(histogram, ctx.getConsole().getOutput());

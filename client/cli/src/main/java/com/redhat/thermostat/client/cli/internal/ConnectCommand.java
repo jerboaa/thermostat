@@ -118,7 +118,7 @@ public class ConnectCommand extends AbstractCommand {
                 username = getUserPass.getUserName(dbUrl);
                 password = new String(getUserPass.getPassword(dbUrl));
             } catch (IOException e) {
-                throw new CommandException("Could not get username or password from user.", e);
+                throw new CommandException(translator.localize(LocaleResources.COMMAND_CONNECT_USER_PROMPT_ERROR), e);
             }
         }
         try {

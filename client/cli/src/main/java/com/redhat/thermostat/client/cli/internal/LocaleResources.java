@@ -52,6 +52,7 @@ public enum LocaleResources {
     COMMAND_CONNECT_INVALID_STORAGE,
     COMMAND_CONNECT_NO_KEYRING,
     COMMAND_CONNECT_ERROR,
+    COMMAND_CONNECT_USER_PROMPT_ERROR,
 
     COMMAND_DISCONNECT_NOT_CONNECTED,
     COMMAND_DISCONNECT_ERROR,
@@ -75,6 +76,9 @@ public enum LocaleResources {
     VM_STOP_TIME_RUNNING,
     VM_STATUS_ALIVE,
     VM_STATUS_DEAD,
+
+    HOSTID_REQUIRED_MESSAGE,
+    INVALID_VMID_MESSAGE,
     ;
 
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.client.cli.strings";
