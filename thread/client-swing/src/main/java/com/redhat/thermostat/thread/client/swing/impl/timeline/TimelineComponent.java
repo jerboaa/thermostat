@@ -56,6 +56,7 @@ import javax.swing.event.ChangeListener;
 
 import com.redhat.thermostat.client.swing.GraphicsUtils;
 import com.redhat.thermostat.client.swing.components.GradientPanel;
+
 import com.redhat.thermostat.client.swing.components.timeline.TimelineUtils;
 
 import com.redhat.thermostat.client.ui.Palette;
@@ -74,13 +75,29 @@ public class TimelineComponent extends GradientPanel {
     private Timeline timeline;
     private JScrollPane scrollPane;
     private LongRange range;
-    public TimelineComponent(LongRange range, Timeline timeline, JScrollPane scrollPane) {
+    
+    private long millsUnitIncrement;
+    private int pixelUnitIncrement;
+    
+    public TimelineComponent(LongRange range, Timeline timeline, JScrollPane scrollPane)
+    {
         super(Palette.LIGHT_GRAY.getColor(), Palette.WHITE.getColor());
         this.range = range;
         this.scrollPane = scrollPane;
         this.timeline = timeline;
+        
+        millsUnitIncrement = 1_000;
+        pixelUnitIncrement = 20;
     }
 
+    public void setUnitIncrementInPixels(int increment) {
+        this.pixelUnitIncrement = increment;
+    }
+    
+    public void setUnitIncrementInMillis(long increment) {
+        this.millsUnitIncrement = increment;
+    }
+    
     public void setSelected(boolean selected) {
         this.selected = selected;
     }
@@ -98,10 +115,10 @@ public class TimelineComponent extends GradientPanel {
             graphics.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
         }
         
-        int height = getHeight();
         int currentValue = scrollPane.getHorizontalScrollBar().getValue();
-        int totalInc = TimelineUtils.drawMarks(range, graphics, bounds, currentValue, getWidth(), height);
-        
+        int totalInc = pixelUnitIncrement;
+        TimelineUtils.drawMarks(range, graphics, bounds, currentValue, false, totalInc);
+
         drawBoldMarks(graphics, currentValue, bounds, totalInc);
         Color lastColor = drawTimeline(graphics, currentValue, bounds);
         
@@ -174,8 +191,8 @@ public class TimelineComponent extends GradientPanel {
     
     private void drawBoldMarks(Graphics2D graphics, int currentValue, Rectangle bounds, int totalInc) {
 
-        long round = range.getMin() % 10000;
-        int shift = (int) (round / TimelineUtils.STEP) * totalInc;
+        long round = range.getMin() % (10 * millsUnitIncrement);
+        int shift = (int) (round / millsUnitIncrement) * totalInc;
         
         int lowerBound = bounds.x - (4 * totalInc);
         int x = ((bounds.x - currentValue) - shift);
@@ -204,7 +221,12 @@ public class TimelineComponent extends GradientPanel {
     
     @Override
     public int getWidth() {
-        return TimelineUtils.calculateWidth(range);
+         
+        long divisor = millsUnitIncrement / pixelUnitIncrement;
+        
+        long span = range.getMax() - range.getMin();
+        int width = (int) (span / divisor);
+        return width;
     }
     
     @Override
@@ -217,62 +239,5 @@ public class TimelineComponent extends GradientPanel {
     public Dimension getPreferredSize() {
         return new Dimension(getWidth(), getHeight());
     }
-        
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                
-                LongRange range = new LongRange(50000, 2000000); // 31558464000L
-                Timeline timeline = new Timeline("Test", 1000);
-                timeline.add(new TimelineInfo(Palette.THERMOSTAT_BLU, range.getMax() - 1000));
-                timeline.add(new TimelineInfo(Palette.TUNDRA_GREEN, 152000));
-                timeline.add(new TimelineInfo(Palette.DIRTY_CYAN, 63000));
-                timeline.add(new TimelineInfo(Palette.THERMOSTAT_BLU, 62000));
-                timeline.add(new TimelineInfo(Palette.THERMOSTAT_RED, 60210));
-                timeline.add(new TimelineInfo(Palette.THERMOSTAT_BLU, 51299));
-
-                final JFrame frame = new JFrame();
-                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                
-                
-                final JScrollPane scrollPane = new JScrollPane();
-                DefaultListModel<TimelineComponent> chartModel = new DefaultListModel<>();
-                for (int i = 0; i < 100; i++) {
-                    chartModel.addElement(new TimelineComponent(range, timeline, scrollPane));
-                }
-                
-                final JList<TimelineComponent> stuff = new JList<>(chartModel);
-                stuff.setCellRenderer(new TimelineCellRenderer());
-                
-                scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-                scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-                scrollPane.getHorizontalScrollBar().setUnitIncrement(TimelineUtils.INC);
-                
-                final ThreadTimelineHeader header = new ThreadTimelineHeader(range, scrollPane);
-                
-                scrollPane.setColumnHeaderView(header);
-                scrollPane.setViewportView(stuff);
-                scrollPane.getVerticalScrollBar().getModel().addChangeListener(new ChangeListener() {
-                    @Override
-                    public void stateChanged(ChangeEvent e) {
-                        scrollPane.repaint();
-                    }
-                });
-                
-                scrollPane.getHorizontalScrollBar().getModel().addChangeListener(new ChangeListener() {
-                    
-                    @Override
-                    public void stateChanged(ChangeEvent e) {
-                        scrollPane.repaint();
-                    }
-                });
-                
-                frame.add(scrollPane);
-                frame.setSize(300, 300);
-                frame.setVisible(true);
-            }
-        });
-    }     
 }
 

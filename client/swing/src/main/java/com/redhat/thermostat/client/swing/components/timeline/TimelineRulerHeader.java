@@ -56,11 +56,31 @@ import com.redhat.thermostat.common.model.LongRange;
 @SuppressWarnings("serial")
 public abstract class TimelineRulerHeader extends GradientPanel {
 
+    /** Default height of this component. Subclasses may use different values */
+    public static final int DEFAULT_HEIGHT = 25;
+    
+    /**
+     * Default increment is 20 pixels per units.
+     * Subclasses may use different values.
+     * 
+     * @see #DEFAULT_INCREMENT_IN_MILLIS
+     */
+    public static final int DEFAULT_INCREMENT_IN_PIXELS = 20;
+
+    /**
+     * Default increments is 1 second (1000 ms) per pixel unit.
+     * Subclasses may use different values.
+     * 
+     * @see #DEFAULT_INCREMENT_IN_PIXELS
+     */
+    public static final long DEFAULT_INCREMENT_IN_MILLIS = 1_000;
+    
     private LongRange range;
     
     public TimelineRulerHeader(LongRange range) {
         
         super(Palette.LIGHT_GRAY.getColor(), Palette.WHITE.getColor());
+        setFont(TimelineUtils.FONT);
         
         this.range = range;
     }
@@ -71,7 +91,7 @@ public abstract class TimelineRulerHeader extends GradientPanel {
     
     @Override
     public int getHeight() {
-        return 25;
+        return DEFAULT_HEIGHT;
     }
     
     @Override
@@ -87,6 +107,20 @@ public abstract class TimelineRulerHeader extends GradientPanel {
         return getPreferredSize();
     }
     
+    /**
+     * Defines the distance, in pixels, between one tick mark and the other.
+     */
+    public int getUnitIncrementInPixels() {
+        return DEFAULT_INCREMENT_IN_PIXELS;
+    }
+    
+    /**
+     * Defines how many milliseconds pass between two tick marks.
+     */
+    public long getUnitIncrementInMillis() {
+        return DEFAULT_INCREMENT_IN_MILLIS;
+    }
+    
     protected abstract int getCurrentDisplayValue();
     
     @Override
@@ -99,11 +133,11 @@ public abstract class TimelineRulerHeader extends GradientPanel {
         int currentValue = getCurrentDisplayValue();
 
         Rectangle bounds = g.getClipBounds();
-        int totalInc = TimelineUtils.drawMarks(range, graphics, bounds, currentValue,
-                                               TimelineUtils.calculateWidth(range),
-                                               getHeight(), true);
         
-        drawTimelineStrings(graphics, currentValue, bounds, totalInc);
+        int unitIncrement = getUnitIncrementInPixels();
+        
+        TimelineUtils.drawMarks(range, graphics, bounds, currentValue, false, unitIncrement);
+        drawTimelineStrings(graphics, currentValue, bounds, unitIncrement);
         
         graphics.setColor(Palette.THERMOSTAT_BLU.getColor());
         graphics.drawLine(bounds.x, bounds.height - 1, bounds.width, bounds.height - 1);
@@ -113,18 +147,19 @@ public abstract class TimelineRulerHeader extends GradientPanel {
     
     private void drawTimelineStrings(Graphics2D graphics, int currentValue, Rectangle bounds, int totalInc) {
         
-        Font font = TimelineUtils.FONT;
-        
-        graphics.setFont(font);
-        
+        Font font = graphics.getFont();
+                
         DateFormat df = new SimpleDateFormat("HH:mm:ss");
         
         Paint gradient = new GradientPaint(0, 0, Palette.WHITE.getColor(), 0, getHeight(), Palette.GRAY.getColor());
         
         graphics.setColor(Palette.EARL_GRAY.getColor());
+
+        long incrementInMillis = getUnitIncrementInMillis();
         
-        long round = range.getMin() % (TimelineUtils.STEP * 10);
-        int shift = (int) (round / TimelineUtils.STEP) * totalInc;
+        long round = range.getMin() % (10 * incrementInMillis);
+        
+        int shift = (int) (round / incrementInMillis) * totalInc;
         long currentTime = range.getMin() - round;
         
         int lowerBound = bounds.x - (4 * totalInc);
@@ -148,7 +183,7 @@ public abstract class TimelineRulerHeader extends GradientPanel {
                 graphics.setColor(Palette.THERMOSTAT_BLU.getColor());                
                 graphics.drawString(value, i + 1, bounds.y + stringHeight + 5);
             }
-            currentTime += TimelineUtils.STEP;
+            currentTime += incrementInMillis;
             increment++;
         }
     }

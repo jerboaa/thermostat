@@ -52,9 +52,11 @@ import javax.swing.event.ChangeListener;
 
 import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.SwingComponent;
+
 import com.redhat.thermostat.client.swing.components.timeline.TimelineRulerHeader;
-import com.redhat.thermostat.client.swing.components.timeline.TimelineUtils;
+
 import com.redhat.thermostat.common.model.LongRange;
+
 import com.redhat.thermostat.thread.client.common.Timeline;
 import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
 
@@ -113,7 +115,8 @@ public class SwingThreadTimelineView extends ThreadTimelineView implements Swing
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 
         long now = System.currentTimeMillis();
-        header = new ThreadTimelineHeader(new LongRange(now, now + TimelineUtils.STEP), scrollPane);
+        header = new ThreadTimelineHeader(new LongRange(now, now + TimelineRulerHeader.DEFAULT_INCREMENT_IN_MILLIS),
+                                          scrollPane);
         scrollPane.setColumnHeaderView(header);
 
         ScrollChangeListener listener = new ScrollChangeListener();
@@ -134,7 +137,7 @@ public class SwingThreadTimelineView extends ThreadTimelineView implements Swing
 
                     int extent = scrollBar.getVisibleAmount();
                     int min = scrollBar.getMinimum();
-                    int max = component.getWidth() + (2 * TimelineUtils.INC);
+                    int max = component.getWidth() + (int) (2 * header.getUnitIncrementInMillis());
 
                     scrollBar.setValues(max - extent, extent, min, max);
                 }
@@ -148,10 +151,15 @@ public class SwingThreadTimelineView extends ThreadTimelineView implements Swing
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                range.setMax(range.getMax() + (2 * TimelineUtils.STEP));
+                range.setMax(range.getMax() + (int) (2 * header.getUnitIncrementInMillis()));
                 chartModel.removeAllElements();
                 for (Timeline timeline : timelines) {
-                    chartModel.addElement(new TimelineComponent(range, timeline, scrollPane));
+                    
+                    TimelineComponent timelineComp = new TimelineComponent(range, timeline, scrollPane);
+                    timelineComp.setUnitIncrementInMillis(header.getUnitIncrementInMillis());
+                    timelineComp.setUnitIncrementInPixels(header.getUnitIncrementInPixels());
+                    
+                    chartModel.addElement(timelineComp);
                 }
                 header.getRange().setMin(range.getMin());
                 header.getRange().setMax(range.getMax());

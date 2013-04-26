@@ -42,46 +42,28 @@ import java.awt.Rectangle;
 
 import com.redhat.thermostat.client.ui.Palette;
 import com.redhat.thermostat.common.model.LongRange;
-import com.redhat.thermostat.common.model.LongRangeNormalizer;
 
 public class TimelineUtils {
-    public static final int INC = 50;
-    public static final int STEP = 1000;
     public static final Font FONT = new Font("SansSerif", Font.PLAIN, 10);
-
-    public static int calculateWidth(LongRange range) {
-        long span = range.getMax() - range.getMin();
-        int width = (int) (span / TimelineUtils.INC);
-        return width;
-    }
-    
-    public static int drawMarks(LongRange range, Graphics2D graphics, Rectangle bounds, int currentValue, int width, int height) {
-        return drawMarks(range, graphics, bounds, currentValue, width, height, false);
-    }
-    
-    public static int drawMarks(LongRange range, Graphics2D graphics, Rectangle bounds,
-                                int currentValue, int width, int height, boolean darkerTop)
+ 
+    public static void drawMarks(LongRange range, Graphics2D graphics, Rectangle bounds,
+                                 int currentValue, boolean darkerTop, int increment)
     {
-        LongRangeNormalizer normalizer = new LongRangeNormalizer(range, 0, width);
-        normalizer.setValue(range.getMin() + TimelineUtils.STEP);
-        int totalInc = (int) normalizer.getValueNormalized();
-
-        int inc = currentValue % totalInc;
+        int inc = currentValue % increment;
         int x = (bounds.x - inc);
         
         graphics.setColor(Palette.GRAY.getColor());
         int upperBound = (bounds.x + bounds.width);
 
-        for (int i = x; i < upperBound; i += totalInc) {
-            graphics.drawLine(i, 0, i, height);
+        for (int i = x; i < upperBound; i += increment) {
+            graphics.drawLine(i, 0, i, bounds.height);
             if (darkerTop) {
                 graphics.setColor(Palette.DARK_GRAY.getColor());
                 graphics.drawLine(i, 0, i, 5);
                 graphics.setColor(Palette.GRAY.getColor());
             }
         }
-        
-        return totalInc;
     }
+
 }
 
