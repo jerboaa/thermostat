@@ -187,6 +187,41 @@ public class PluginConfigurationParserTest {
     }
 
     @Test
+    public void testArgumentParsing() throws UnsupportedEncodingException {
+        String config = "<?xml version=\"1.0\"?>\n" +
+                "<plugin>\n" +
+                "  <commands>\n" +
+                "    <command type='provides'>\n" +
+                "      <name>test</name>\n" +
+                "      <description>just a test</description>\n" +
+                "      <arguments>\n" +
+                "        <argument>file</argument>\n" +
+                "      </arguments>\n" +
+                "    </command>\n" +
+                "  </commands>\n" +
+                "</plugin>";
+
+        PluginConfiguration result = new PluginConfigurationParser()
+                .parse("test", new ByteArrayInputStream(config.getBytes("UTF-8")));
+
+        assertEquals(0, result.getExtendedCommands().size());
+
+        List<NewCommand> newCommands = result.getNewCommands();
+        assertEquals(1, newCommands.size());
+
+        NewCommand command = newCommands.get(0);
+        assertEquals("test", command.getCommandName());
+        assertEquals("just a test", command.getDescription());
+        assertEquals(null, command.getUsage());
+        Options opts = command.getOptions();
+        assertTrue(opts.getOptions().isEmpty());
+
+        List<String> args = command.getPositionalArguments();
+        assertEquals(1, args.size());
+        assertEquals("file", args.get(0));
+    }
+
+    @Test
     public void testOptionParsing() throws UnsupportedEncodingException {
         String config = "<?xml version=\"1.0\"?>\n" +
                 "<plugin>\n" +
@@ -200,14 +235,12 @@ public class PluginConfigurationParserTest {
                 "          <option>\n" +
                 "            <long>exclusive-a</long>\n" +
                 "            <short>a</short>\n" +
-                "            <argument>false</argument>\n" +
                 "            <required>false</required>\n" +
                 "            <description>exclusive option a</description>\n" +
                 "          </option>\n" +
                 "          <option>\n" +
                 "            <long>exclusive-b</long>\n" +
                 "            <short>b</short>\n" +
-                "            <argument>false</argument>\n" +
                 "            <required>false</required>\n" +
                 "            <description>exclusive option b</description>\n" +
                 "          </option>\n" +
@@ -215,7 +248,7 @@ public class PluginConfigurationParserTest {
                 "        <option>\n" +
                 "          <long>long</long>\n" +
                 "          <short>l</short>\n" +
-                "          <argument>true</argument>\n" +
+                "          <argument>name</argument>\n" +
                 "          <required>true</required>\n" +
                 "          <description>some required and long option</description>\n" +
                 "        </option>\n" +

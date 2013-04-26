@@ -69,14 +69,18 @@ public class PluginCommandInfoSource implements CommandInfoSource {
 
     private static final Logger logger = LoggingUtils.getLogger(PluginCommandInfoSource.class);
 
+    private final UsageStringBuilder usageBuilder;
+
     private Map<String, BasicCommandInfo> allNewCommands = new HashMap<>();
     private Map<String, List<String>> additionalBundlesForExistingCommands = new HashMap<>();
 
     public PluginCommandInfoSource(String internalJarRoot, String pluginRootDir) {
-        this(new File(internalJarRoot), new File(pluginRootDir), new PluginConfigurationParser());
+        this(new File(internalJarRoot), new File(pluginRootDir), new PluginConfigurationParser(), new UsageStringBuilder());
     }
 
-    PluginCommandInfoSource(File internalJarRoot, File pluginRootDir, PluginConfigurationParser parser) {
+    PluginCommandInfoSource(File internalJarRoot, File pluginRootDir, PluginConfigurationParser parser, UsageStringBuilder usageBuilder) {
+        this.usageBuilder = usageBuilder;
+
         File[] pluginDirs = pluginRootDir.listFiles();
         if (pluginDirs == null) {
             logger.log(Level.SEVERE, "plugin root dir " + pluginRootDir + " does not exist");
@@ -132,9 +136,13 @@ public class PluginCommandInfoSource implements CommandInfoSource {
 
             addIfValidPath(bundlePaths, coreJarRoot, command.getDepenedencyBundles());
 
+            String usage = command.getUsage();
+            if (usage == null) {
+                usage = usageBuilder.getUsage(commandName, command.getOptions(), command.getPositionalArguments().toArray(new String[0]));
+            }
             BasicCommandInfo info = new BasicCommandInfo(commandName,
                     command.getDescription(),
-                    command.getUsage(),
+                    usage,
                     command.getOptions(),
                     bundlePaths);
 

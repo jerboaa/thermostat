@@ -47,14 +47,14 @@
         <option>
           <long>hostId</long>
           <short>a</short>
-          <argument>true</argument>
+          <argument>host</argument>
           <required>true</required>
           <description>the ID of the host to monitor</description>
         </option>
         <option>
           <long>vmId</long>
           <short>v</short>
-          <argument>true</argument>
+          <argument>vm</argument>
           <required>true</required>
           <description>the ID of the VM to monitor</description>
         </option>
@@ -91,18 +91,21 @@
     <command>
       <name>find-objects</name>
       <description>finds objects in a heapdump</description>
+      <arguments>
+        <argument>pattern</argument>
+      </arguments>
       <options>
         <option>
           <long>heapId</long>
           <short>h</short>
-          <argument>true</argument>
+          <argument>heap</argument>
           <required>true</required>
           <description>the ID of the heapdump to analyze</description>
         </option>
         <option>
           <long>limit</long>
           <short>L</short>
-          <argument>true</argument>
+          <argument>limit</argument>
           <required>false</required>
           <description>limit search to top N results, defaults to 10</description>
         </option>
@@ -143,21 +146,20 @@
         <option>
           <long>heapId</long>
           <short>h</short>
-          <argument>true</argument>
+          <argument>heap</argument>
           <required>true</required>
           <description>the ID of the heapdump to analyze</description>
         </option>
         <option>
           <long>objectId</long>
           <short>o</short>
-          <argument>true</argument>
+          <argument>heap</argument>
           <required>true</required>
           <description>the ID of the object to query</description>
         </option>
         <option>
           <long>all</long>
           <short>a</short>
-          <argument>false</argument>
           <required>false</required>
           <description>finds all paths to GC roots</description>
         </option>
@@ -198,14 +200,14 @@
         <option>
           <long>hostId</long>
           <short>a</short>
-          <argument>true</argument>
+          <argument>host</argument>
           <required>false</required>
           <description>the ID of the host to monitor</description>
         </option>
         <option>
           <long>vmId</long>
           <short>v</short>
-          <argument>true</argument>
+          <argument>vm</argument>
           <required>false</required>
           <description>the ID of the VM to monitor</description>
         </option>
@@ -246,14 +248,14 @@
         <option>
           <long>heapId</long>
           <short>h</short>
-          <argument>true</argument>
+          <argument>heap</argument>
           <required>true</required>
           <description>the ID of the heapdump to analyze</description>
         </option>
         <option>
           <long>objectId</long>
           <short>o</short>
-          <argument>true</argument>
+          <argument>object</argument>
           <required>true</required>
           <description>the ID of the object to query</description>
         </option>
@@ -294,14 +296,14 @@
         <option>
           <long>heapId</long>
           <short>h</short>
-          <argument>true</argument>
+          <argument>heap</argument>
           <required>true</required>
           <description>the ID of the heapdump to analyze</description>
         </option>
         <option>
           <long>file</long>
           <short>f</short>
-          <argument>true</argument>
+          <argument>filename</argument>
           <required>true</required>
           <description>the file name to save to</description>
         </option>
@@ -342,7 +344,7 @@
         <option>
           <long>heapId</long>
           <short>h</short>
-          <argument>true</argument>
+          <argument>heap</argument>
           <required>true</required>
           <description>the ID of the heapdump to analyze</description>
         </option>

@@ -285,7 +285,7 @@ public class PluginConfigurationParser {
         }
 
         if (bundles.isEmpty()) {
-            logger.warning("plugin " + pluginName  + " extends the command " + name + " but supplies no bundles");
+            logger.warning("plugin " + pluginName + " extends the command " + name + " but supplies no bundles");
         }
 
         if (name == null) {
@@ -297,7 +297,9 @@ public class PluginConfigurationParser {
 
     private NewCommand parseNewCommand(String pluginName, Node commandNode) {
         String name = null;
+        String usage = null;
         String description = null;
+        List<String> arguments = new ArrayList<>();
         Options options = new Options();
         List<String> bundles = new ArrayList<>();
         List<String> dependencies = new ArrayList<>();
@@ -307,8 +309,12 @@ public class PluginConfigurationParser {
             Node node = nodes.item(i);
             if (node.getNodeName().equals("name")) {
                 name = node.getTextContent().trim();
+            } else if (node.getNodeName().equals("usage")) {
+                usage = node.getTextContent().trim();
             } else if (node.getNodeName().equals("description")) {
                 description = node.getTextContent().trim();
+            } else if (node.getNodeName().equals("arguments")) {
+                arguments = parseArguments(pluginName, name, node);
             } else if (node.getNodeName().equals("options")) {
                 options = parseOptions(node);
             } else if (node.getNodeName().equals("bundles")) {
@@ -330,44 +336,39 @@ public class PluginConfigurationParser {
                     "name='" + name + "', description='" + description + "', options='" + options + "'");
             return null;
         } else {
-            return new NewCommand(name, description, options, bundles, dependencies);
+            return new NewCommand(name, usage, description, arguments, options, bundles, dependencies);
         }
     }
 
     private Collection<String> parseBundles(String pluginName, String commandName, Node bundlesNode) {
-        List<String> bundles = new ArrayList<>();
-        NodeList nodes = bundlesNode.getChildNodes();
-        for (int i = 0; i < nodes.getLength(); i++) {
-            Node node = nodes.item(i);
-            if (node.getNodeName().equals("bundle")) {
-                String bundleName = node.getTextContent().trim();
-                bundles.add(bundleName);
-            }
-        }
-
-        if (bundles.isEmpty()) {
-            logger.warning("plugin " + pluginName + " has an empty bundles element for command " + commandName);
-        }
-
-        return bundles;
+        return parseNodeAsList(pluginName, commandName, bundlesNode, "bundle");
     }
 
     private Collection<String> parseDependencies(String pluginName, String commandName, Node dependenciesNode) {
-        List<String> dependencies = new ArrayList<>();
-        NodeList nodes = dependenciesNode.getChildNodes();
+        return parseNodeAsList(pluginName, commandName, dependenciesNode, "dependency");
+    }
+
+    private List<String> parseArguments(String pluginName, String commandName, Node argumentsNode) {
+        return parseNodeAsList(pluginName, commandName, argumentsNode, "argument");
+    }
+
+    private List<String> parseNodeAsList(String pluginName, String commandName, Node parentNode, String childElementName) {
+        List<String> result = new ArrayList<>();
+        NodeList nodes = parentNode.getChildNodes();
         for (int i = 0; i < nodes.getLength(); i++) {
             Node node = nodes.item(i);
-            if (node.getNodeName().equals("dependency")) {
-                String bundleName = node.getTextContent().trim();
-                dependencies.add(bundleName);
+            if (node.getNodeName().equals(childElementName)) {
+                String data = node.getTextContent().trim();
+                result.add(data);
             }
         }
 
-        if (dependencies.isEmpty()) {
-            logger.warning("plugin " + pluginName + " has an empty dependencies element for command " + commandName);
+        if (result.isEmpty()) {
+            logger.warning("plugin " + pluginName + " has an empty " + parentNode.getNodeName()
+                + " element for command " + commandName);
         }
 
-        return dependencies;
+        return result;
     }
 
     private Options parseOptions(Node optionsNode) {
@@ -479,8 +480,10 @@ public class PluginConfigurationParser {
             }
         }
 
-        Option opt = new Option(shortName, longName, Boolean.parseBoolean(argument), description);
-        opt.setArgName(longName != null? longName : shortName);
+        Option opt = new Option(shortName, longName, (argument != null), description);
+        if (argument != null) {
+            opt.setArgName(argument);
+        }
         opt.setRequired(required);
         return opt;
     }
