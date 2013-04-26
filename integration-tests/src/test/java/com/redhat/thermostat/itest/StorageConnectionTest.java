@@ -40,6 +40,7 @@ import java.io.IOException;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import expectj.ExpectJException;
@@ -66,6 +67,7 @@ public class StorageConnectionTest extends IntegrationTest {
         assertNoExceptions(storage.getCurrentStandardOutContents(), storage.getCurrentStandardErrContents());
     }
 
+    @Ignore //FIXME when keyring/preferences improvements have been made, un-Ignore
     @Test
     public void testConnect() throws ExpectJException, TimeoutException, IOException {
         Spawn shell = spawnThermostat(true, "shell");
@@ -95,6 +97,7 @@ public class StorageConnectionTest extends IntegrationTest {
         assertNoExceptions(shell.getCurrentStandardOutContents(), shell.getCurrentStandardErrContents());
     }
 
+    @Ignore //FIXME when keyring/preferences improvements have been made, un-Ignore
     @Test
     public void testConnectAndDisconnectInShell() throws IOException, TimeoutException, ExpectJException {
         Spawn shell = spawnThermostat(true, "shell");
