@@ -9,6 +9,7 @@
 <xs:element name="name" type="xs:string"/>
 <xs:element name="bundle" type="xs:string"/>
 <xs:element name="dependency" type="xs:string"/>
+<xs:element name="usage" type="xs:string"/>
 <xs:element name="description" type="xs:string"/>
 <xs:element name="short" type="xs:string"/>
 <xs:element name="long" type="xs:string"/>
@@ -62,7 +63,9 @@
   <xs:complexType>
     <xs:sequence>
       <xs:element ref="name"/>
+      <xs:element ref="usage" minOccurs="0" maxOccurs="1"/>
       <xs:element ref="description"/>
+      <xs:element ref="arguments" minOccurs="0" maxOccurs="1"/>
       <xs:element ref="options"/>
       <xs:element ref="bundles"/>
       <xs:element ref="dependencies"/>
@@ -70,6 +73,14 @@
   </xs:complexType>
 </xs:element> 
 
+
+<xs:element name="arguments">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="argument" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
 
 <xs:element name="options">
   <xs:complexType>

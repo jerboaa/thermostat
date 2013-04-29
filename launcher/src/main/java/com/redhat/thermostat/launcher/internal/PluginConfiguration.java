@@ -87,16 +87,20 @@ public class PluginConfiguration {
     public static class NewCommand {
 
         private final String commandName;
+        private final String usage;
         private final String description;
-        private String usage;
+        private final List<String> positionalArguments;
         private final Options options;
         private final List<String> additionalResources;
         private final List<String> coreDeps;
 
-        public NewCommand(String name, String description,
-                Options options, List<String> additionalResources, List<String> coreDeps) {
+        public NewCommand(String name, String usage, String description,
+                List<String> positionalArguments, Options options,
+                List<String> additionalResources, List<String> coreDeps) {
             this.commandName = name;
+            this.usage = usage;
             this.description = description;
+            this.positionalArguments = positionalArguments;
             this.options = options;
             this.additionalResources = additionalResources;
             this.coreDeps = coreDeps;
@@ -106,14 +110,25 @@ public class PluginConfiguration {
             return commandName;
         }
 
-        public String getDescription() {
-            return description;
-        }
-
+        /**
+         * The usage string may be null if no usage string was explicitly
+         * provided. In that case, usage should be "computed" using options and
+         * arguments
+         */
         public String getUsage() {
             return usage;
         }
 
+        public String getDescription() {
+            return description;
+        }
+
+        /** Returns a list of strings indicating positional arguments */
+        public List<String> getPositionalArguments() {
+            return positionalArguments;
+        }
+
+        /** Returns options (both optional and required) */
         public Options getOptions() {
             return options;
         }

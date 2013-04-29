@@ -71,12 +71,14 @@ public class PluginCommandInfoSourceTest {
     private Path pluginRootDir;
     private PluginConfigurationParser parser;
     private PluginConfiguration parserResult;
+    private UsageStringBuilder usageBuilder;
 
     @Before
     public void setUp() throws IOException {
         parser = mock(PluginConfigurationParser.class);
         parserResult = mock(PluginConfiguration.class);
         when(parser.parse(isA(File.class))).thenReturn(parserResult);
+        usageBuilder = mock(UsageStringBuilder.class);
 
         testRoot = Files.createTempDirectory("thermostat");
         pluginRootDir = testRoot.resolve("plugins");
@@ -115,7 +117,7 @@ public class PluginCommandInfoSourceTest {
             Files.createDirectory(pluginDir);
         }
 
-        new PluginCommandInfoSource(jarRootDir.toFile(), pluginRootDir.toFile(), parser);
+        new PluginCommandInfoSource(jarRootDir.toFile(), pluginRootDir.toFile(), parser, usageBuilder);
 
         ArgumentCaptor<File> configFilesCaptor = ArgumentCaptor.forClass(File.class);
         verify(parser, times(pluginDirs.length)).parse(configFilesCaptor.capture());
@@ -131,12 +133,12 @@ public class PluginCommandInfoSourceTest {
     public void verifyMissingConfigurationFileIsHandledCorrectly() throws FileNotFoundException {
         when(parser.parse(isA(File.class))).thenThrow(new FileNotFoundException("test"));
 
-        new PluginCommandInfoSource(jarRootDir.toFile(), pluginRootDir.toFile(), parser);
+        new PluginCommandInfoSource(jarRootDir.toFile(), pluginRootDir.toFile(), parser, usageBuilder);
     }
 
     @Test(expected = CommandInfoNotFoundException.class)
     public void verifyMissingCommandInfo() {
-        PluginCommandInfoSource source = new PluginCommandInfoSource(jarRootDir.toFile(), pluginRootDir.toFile(), parser);
+        PluginCommandInfoSource source = new PluginCommandInfoSource(jarRootDir.toFile(), pluginRootDir.toFile(), parser, usageBuilder);
 
         source.getCommandInfo("TEST");
     }
@@ -161,7 +163,7 @@ public class PluginCommandInfoSourceTest {
 
         when(parserResult.getExtendedCommands()).thenReturn(Arrays.asList(extensions));
 
-        PluginCommandInfoSource source = new PluginCommandInfoSource(jarRootDir.toFile(), pluginRootDir.toFile(), parser);
+        PluginCommandInfoSource source = new PluginCommandInfoSource(jarRootDir.toFile(), pluginRootDir.toFile(), parser, usageBuilder);
 
         CommandInfo info = source.getCommandInfo("command-name");
         assertEquals("command-name", info.getName());
@@ -193,14 +195,14 @@ public class PluginCommandInfoSourceTest {
         NewCommand cmd = mock(NewCommand.class);
         when(cmd.getCommandName()).thenReturn(NAME);
         when(cmd.getDescription()).thenReturn(DESCRIPTION);
-        when(cmd.getUsage()).thenReturn(USAGE);
+        when(usageBuilder.getUsage(NAME, OPTIONS)).thenReturn(USAGE);
         when(cmd.getOptions()).thenReturn(OPTIONS);
         when(cmd.getPluginBundles()).thenReturn(Arrays.asList(PLUGIN_BUNDLE));
         when(cmd.getDepenedencyBundles()).thenReturn(Arrays.asList(DEPENDENCY_BUNDLE));
 
         when(parserResult.getNewCommands()).thenReturn(Arrays.asList(cmd));
 
-        PluginCommandInfoSource source = new PluginCommandInfoSource(jarRootDir.toFile(), pluginRootDir.toFile(), parser);
+        PluginCommandInfoSource source = new PluginCommandInfoSource(jarRootDir.toFile(), pluginRootDir.toFile(), parser, usageBuilder);
 
         CommandInfo result = source.getCommandInfo(NAME);
 
