@@ -53,6 +53,7 @@ import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.gc.remote.client.common.RequestGCAction;
 import com.redhat.thermostat.gc.remote.client.swing.ToolbarGCButton;
 import com.redhat.thermostat.gc.remote.common.command.GCCommand;
@@ -163,8 +164,8 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
     }
 
     @Override
-    public void displayWarning(String string) {
-        JOptionPane.showMessageDialog(visiblePanel, string, "Warning", JOptionPane.WARNING_MESSAGE);
+    public void displayWarning(LocalizedString string) {
+        JOptionPane.showMessageDialog(visiblePanel, string.getContents(), "Warning", JOptionPane.WARNING_MESSAGE);
     }
 
     @Override

@@ -38,11 +38,12 @@ package com.redhat.thermostat.vm.heap.analysis.client.core;
 
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.common.locale.LocalizedString;
 
 public abstract class HeapDumpDetailsView extends BasicView implements UIComponent {
 
-    public abstract void addSubView(String title, HeapHistogramView child);
-    public abstract void addSubView(String title, ObjectDetailsView child);
-    public abstract void removeSubView(String title);
+    public abstract void addSubView(LocalizedString title, HeapHistogramView child);
+    public abstract void addSubView(LocalizedString title, ObjectDetailsView child);
+    public abstract void removeSubView(LocalizedString title);
 }
 

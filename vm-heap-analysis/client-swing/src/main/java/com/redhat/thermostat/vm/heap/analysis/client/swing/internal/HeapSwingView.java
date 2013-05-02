@@ -59,6 +59,7 @@ import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.chart.OverviewChart;
@@ -100,7 +101,7 @@ public class HeapSwingView extends HeapView implements SwingComponent {
         
         heapDetailPanel = new HeapPanel();
         
-        overview = new HeaderPanel(translator.localize(LocaleResources.HEAP_OVERVIEW_TITLE));
+        overview = new HeaderPanel(translator.localize(LocaleResources.HEAP_OVERVIEW_TITLE).getContents());
         overview.setContent(stats);
         overview.addHierarchyListener(new ViewVisibleListener());
 
@@ -273,8 +274,8 @@ public class HeapSwingView extends HeapView implements SwingComponent {
     }
 
     @Override
-    public void displayWarning(String string) {
-        JOptionPane.showMessageDialog(visiblePane, string, "Warning", JOptionPane.WARNING_MESSAGE);
+    public void displayWarning(LocalizedString string) {
+        JOptionPane.showMessageDialog(visiblePane, string.getContents(), "Warning", JOptionPane.WARNING_MESSAGE);
     }
 }
 

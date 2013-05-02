@@ -39,6 +39,8 @@ package com.redhat.thermostat.client.swing.components;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 
+import com.redhat.thermostat.common.locale.LocalizedString;
+
 /**
  * A {@link JLabel} that is appropriate to use as a label for grouping
  * the following information together.
@@ -46,8 +48,8 @@ import javax.swing.SwingConstants;
 @SuppressWarnings("serial")
 public class SectionHeader extends JLabel {
 
-    public SectionHeader(String text) {
-        super("<html><b>" + text + " </b><html>");
+    public SectionHeader(LocalizedString text) {
+        super("<html><b>" + text.getContents() + " </b><html>");
         setHorizontalAlignment(SwingConstants.LEADING);
     }
 }

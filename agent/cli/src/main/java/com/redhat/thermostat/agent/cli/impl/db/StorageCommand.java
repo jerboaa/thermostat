@@ -39,6 +39,7 @@ package com.redhat.thermostat.agent.cli.impl.db;
 import java.io.File;
 import java.io.IOException;
 
+import com.redhat.thermostat.agent.cli.impl.locale.LocaleResources;
 import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.cli.Arguments;
@@ -46,10 +47,13 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.config.Configuration;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.common.tools.ApplicationState;
 
 public class StorageCommand extends AbstractStateNotifyingCommand {
+
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
     private DBStartupConfiguration configuration;
     private DBOptionParser parser;
@@ -69,8 +73,7 @@ public class StorageCommand extends AbstractStateNotifyingCommand {
         File pidFile = thermostatConfiguration.getStoragePidFile();
         File propertyFile = thermostatConfiguration.getStorageConfigurationFile();
         if (!propertyFile.exists()) {
-            throw new InvalidConfigurationException("can't access database configuration file " +
-                                                    propertyFile);
+            throw new InvalidConfigurationException(t.localize(LocaleResources.MISSING_DB_CONFIG, propertyFile.toString()));
         }
         // read everything that is in the configs
         this.configuration = new DBStartupConfiguration(propertyFile, dbPath, logFile, pidFile);
@@ -152,7 +155,7 @@ public class StorageCommand extends AbstractStateNotifyingCommand {
             !configuration.getLogFile().getParentFile().exists() || 
             !configuration.getPidFile().getParentFile().exists())
         {
-            throw new InvalidConfigurationException("database directories do not exist...");
+            throw new InvalidConfigurationException(t.localize(LocaleResources.MISSING_DB_DIR));
         }
     }
 

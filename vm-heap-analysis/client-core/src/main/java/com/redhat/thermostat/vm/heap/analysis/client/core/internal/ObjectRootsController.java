@@ -102,15 +102,31 @@ public class ObjectRootsController {
 
     private void showObjectDetails(HeapObjectUI uiObject) {
         JavaHeapObject obj = heapDump.findObject(uiObject.objectId);
-        String text = translator.localize(LocaleResources.COMMAND_OBJECT_INFO_OBJECT_ID) + " " + obj.getIdString() + "\n" +
-                translator.localize(LocaleResources.COMMAND_OBJECT_INFO_TYPE) + " " + obj.getClazz().getName() + "\n" +
-                translator.localize(LocaleResources.COMMAND_OBJECT_INFO_SIZE) + " " + String.valueOf(obj.getSize()) + " bytes" + "\n" +
-                translator.localize(LocaleResources.COMMAND_OBJECT_INFO_HEAP_ALLOCATED) + " " + String.valueOf(obj.isHeapAllocated()) + "\n";
+        String space = " ";
+        String newline = "\n";
+        StringBuilder builder = new StringBuilder();
+        builder.append(translator.localize(LocaleResources.COMMAND_OBJECT_INFO_OBJECT_ID).getContents())
+                .append(space)
+                .append(obj.getIdString())
+                .append(newline)
+                .append(translator.localize(LocaleResources.COMMAND_OBJECT_INFO_TYPE).getContents())
+                .append(space)
+                .append(obj.getClazz().getName())
+                .append(newline)
+                .append(translator.localize(LocaleResources.COMMAND_OBJECT_INFO_SIZE).getContents())
+                .append(space)
+                .append(String.valueOf(obj.getSize()))
+                .append(" bytes")
+                .append(newline)
+                .append(translator.localize(LocaleResources.COMMAND_OBJECT_INFO_HEAP_ALLOCATED).getContents())
+                .append(space)
+                .append(String.valueOf(obj.isHeapAllocated()))
+                .append(newline);
 
         if (obj.getRoot() != null) {
-            text = text + obj.getRoot().getDescription();
+            builder.append(obj.getRoot().getDescription());
         }
-        view.setObjectDetails(text);
+        view.setObjectDetails(builder.toString());
     }
 
 

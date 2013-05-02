@@ -94,7 +94,7 @@ public class ShowHeapHistogramCommand extends AbstractCommand {
 
         ObjectHistogram histogram = heapDAO.getHistogram(heapInfo);
         if (histogram == null) {
-            ctx.getConsole().getOutput().println(translator.localize(LocaleResources.ERROR_READING_HISTOGRAM_MESSAGE, heapId));
+            ctx.getConsole().getOutput().println(translator.localize(LocaleResources.ERROR_READING_HISTOGRAM_MESSAGE, heapId).getContents());
             return;
         } else {
             printHeapHistogram(histogram, ctx.getConsole().getOutput());

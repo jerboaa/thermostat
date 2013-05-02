@@ -49,6 +49,8 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.common.LogFormatter;
 import com.redhat.thermostat.common.config.Configuration;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
+import com.redhat.thermostat.common.locale.LocaleResources;
+import com.redhat.thermostat.common.locale.Translate;
 
 /**
  * A few helper functions to facilitate using loggers
@@ -61,6 +63,7 @@ public final class LoggingUtils {
     // package private for testing
     static final String ROOTNAME = "com.redhat.thermostat";
 
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     private static final Logger root;
 
     private static final ConsoleHandler handler;
@@ -149,14 +152,14 @@ public final class LoggingUtils {
             // for the root logger.
             LogManager.getLogManager().readConfiguration(fis);
         } catch (SecurityException | IOException e) {
-            throw new InvalidConfigurationException("Could not read logging.properties", e);
+            throw new InvalidConfigurationException(t.localize(LocaleResources.LOGGING_PROPERTIES_ISSUE), e);
         }
         try (FileInputStream fis = new FileInputStream(loggingPropertiesFile)) {
             // Finally add handlers as specified in the property file, with
             // ConsoleHandler and level INFO as default
             configureLogging(getDefaultProps(), fis);
         } catch (SecurityException | IOException e) {
-            throw new InvalidConfigurationException("Could not read logging.properties", e);
+            throw new InvalidConfigurationException(t.localize(LocaleResources.LOGGING_PROPERTIES_ISSUE), e);
         }
     }
 

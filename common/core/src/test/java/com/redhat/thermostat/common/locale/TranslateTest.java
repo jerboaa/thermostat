@@ -72,7 +72,7 @@ public class TranslateTest {
 
         Translate<TestStrings> translate = new Translate<>(resources, TestStrings.class);
 
-        assertEquals("Localized String", translate.localize(TestStrings.SIMPLE_STRING));
+        assertEquals("Localized String", translate.localize(TestStrings.SIMPLE_STRING).getContents());
     }
 
     @Test
@@ -81,7 +81,7 @@ public class TranslateTest {
 
         Translate<TestStrings> translate = new Translate<>(resources, TestStrings.class);
 
-        assertEquals("Parameter: FOO", translate.localize(TestStrings.STRING_WITH_PARAMETER, "FOO"));
+        assertEquals("Parameter: FOO", translate.localize(TestStrings.STRING_WITH_PARAMETER, "FOO").getContents());
 
     }
 }

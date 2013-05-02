@@ -46,7 +46,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.client.command.RequestQueue;
-import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.RequestResponseListener;
@@ -126,7 +125,7 @@ public class ThreadMXBeanCollector implements ThreadCollector {
         try {
             enqueueRequest(harvester);
             latch.await();
-        } catch (CommandException e) {
+        } catch (CommandChannelException e) {
             logger.log(Level.WARNING, "Failed to enqueue request", e);
         } catch (InterruptedException ignore) {}
         
@@ -160,7 +159,7 @@ public class ThreadMXBeanCollector implements ThreadCollector {
         try {
             enqueueRequest(harvester);
             latch.await();
-        } catch (CommandException e) {
+        } catch (CommandChannelException e) {
             logger.log(Level.WARNING, "Failed to enqueue request", e);
         } catch (InterruptedException ignore) {}
         return result[0];
@@ -212,15 +211,23 @@ public class ThreadMXBeanCollector implements ThreadCollector {
         return caps;
     }
     
-    private void enqueueRequest(Request req) throws CommandException {
+    private void enqueueRequest(Request req) throws CommandChannelException {
         ServiceReference ref = context.getServiceReference(RequestQueue.class.getName());
         if (ref == null) {
-            throw new CommandException("Cannot access command channel");
+            throw new CommandChannelException("Cannot access command channel");
         }
         RequestQueue queue = (RequestQueue) context.getService(ref);
         queue.putRequest(req);
         context.ungetService(ref);
     }
-    
+
+    @SuppressWarnings("serial")
+    private class CommandChannelException extends Exception {
+
+        public CommandChannelException(String message) {
+            super(message);
+        }
+
+    }
 }
 

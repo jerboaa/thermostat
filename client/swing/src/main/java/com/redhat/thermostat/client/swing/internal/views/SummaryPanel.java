@@ -77,11 +77,11 @@ public class SummaryPanel extends SummaryView implements SwingComponent {
         visiblePanel = new JPanel();
         JLabel lblHomepanel = new SectionHeader(translator.localize(LocaleResources.HOME_PANEL_SECTION_SUMMARY));
 
-        JLabel lblTotalHosts = new JLabel(translator.localize(LocaleResources.HOME_PANEL_TOTAL_MACHINES));
+        JLabel lblTotalHosts = new JLabel(translator.localize(LocaleResources.HOME_PANEL_TOTAL_MACHINES).getContents());
 
         totalMonitoredHosts = new ValueField("");
 
-        JLabel lblTotal = new JLabel(translator.localize(LocaleResources.HOME_PANEL_TOTAL_JVMS));
+        JLabel lblTotal = new JLabel(translator.localize(LocaleResources.HOME_PANEL_TOTAL_JVMS).getContents());
 
         totalMonitoredVms = new ValueField("");
 
@@ -194,7 +194,7 @@ public class SummaryPanel extends SummaryView implements SwingComponent {
 
         private List<? extends Object> delegate;
 
-        private String emptyElement = translator.localize(LocaleResources.HOME_PANEL_NO_ISSUES);
+        private String emptyElement = translator.localize(LocaleResources.HOME_PANEL_NO_ISSUES).getContents();
 
         public IssuesListModel(List<? extends Object> actualList) {
             this.delegate = actualList;

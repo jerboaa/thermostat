@@ -41,8 +41,8 @@ import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
-import com.redhat.thermostat.thread.client.common.chart.LivingDaemonThreadDifferenceChart;
 
 public abstract class ThreadView extends BasicView implements UIComponent {
 
@@ -75,7 +75,7 @@ public abstract class ThreadView extends BasicView implements UIComponent {
     public abstract ThreadTimelineView createThreadTimelineView();
     public abstract ThreadCountView createThreadCountView();
     
-    public abstract void displayWarning(String warning);
+    public abstract void displayWarning(LocalizedString warning);
 
     public void setApplicationService(ApplicationService appService, String uniqueId) {
         this.appService = appService;

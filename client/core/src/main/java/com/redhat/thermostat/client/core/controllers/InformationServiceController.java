@@ -37,6 +37,7 @@
 package com.redhat.thermostat.client.core.controllers;
 
 import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.storage.core.Ref;
 
 /**
@@ -45,6 +46,6 @@ import com.redhat.thermostat.storage.core.Ref;
 public interface InformationServiceController<T extends Ref> {
 
     UIComponent getView();
-    String getLocalizedName();
+    LocalizedString getLocalizedName();
 }
 

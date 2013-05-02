@@ -71,6 +71,7 @@ import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
 import com.redhat.thermostat.eclipse.chart.common.SWTHostMemoryView;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryView.GraphVisibilityChangeListener;
@@ -514,7 +515,7 @@ public class SWTHostMemoryViewTest implements GraphVisibilityChangeListener {
     }
 
     private void addSeries(final String tag, String humanReadableName) {
-        view.addMemoryChart(tag, humanReadableName);
+        view.addMemoryChart(tag, new LocalizedString(humanReadableName));
 
         // Wait until series added
         bot.waitUntil(new DefaultCondition() {

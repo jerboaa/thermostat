@@ -107,7 +107,7 @@ public class JmxNotificationsViewControllerTest {
 
     @Test
     public void verifyGetLocalizedName() {
-        assertEquals("Notifications", controller.getLocalizedName());
+        assertEquals("Notifications", controller.getLocalizedName().getContents());
     }
 
     @Test

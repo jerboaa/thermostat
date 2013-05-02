@@ -49,6 +49,7 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
@@ -130,7 +131,7 @@ public class VmCpuController implements InformationServiceController<VmRef> {
     }
 
     @Override
-    public String getLocalizedName() {
+    public LocalizedString getLocalizedName() {
         return translator.localize(LocaleResources.VM_INFO_TAB_CPU);
     }
 }

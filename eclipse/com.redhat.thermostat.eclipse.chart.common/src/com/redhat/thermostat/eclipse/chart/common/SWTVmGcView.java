@@ -64,6 +64,7 @@ import org.jfree.data.RangeType;
 import org.jfree.data.xy.IntervalXYDataset;
 
 import com.redhat.thermostat.client.ui.SampledDataset;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.eclipse.SWTComponent;
 import com.redhat.thermostat.storage.model.IntervalTimeData;
@@ -88,13 +89,13 @@ public class SWTVmGcView extends VmGcView implements SWTComponent {
     }
 
     @Override
-    public void addChart(final String tag, final String title, final String units) {
+    public void addChart(final String tag, final LocalizedString title, final String units) {
         EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
                 SampledDataset newData = new SampledDataset();
                 dataset.put(tag, newData);
-                Composite subPanel = createCollectorDetailsPanel(tag, newData, title, units);
+                Composite subPanel = createCollectorDetailsPanel(tag, newData, title.getContents(), units);
                 subPanels.put(tag, subPanel);
             }
         });
@@ -143,8 +144,8 @@ public class SWTVmGcView extends VmGcView implements SWTComponent {
         // Create chart
         final JFreeChart chart = ChartFactory.createHistogram(
             null,
-            translator.localize(LocaleResources.VM_GC_COLLECTOR_CHART_REAL_TIME_LABEL),
-            translator.localize(LocaleResources.VM_GC_COLLECTOR_CHART_GC_TIME_LABEL, units),
+            translator.localize(LocaleResources.VM_GC_COLLECTOR_CHART_REAL_TIME_LABEL).getContents(),
+            translator.localize(LocaleResources.VM_GC_COLLECTOR_CHART_GC_TIME_LABEL, units).getContents(),
             collectorData,
             PlotOrientation.VERTICAL,
             false,

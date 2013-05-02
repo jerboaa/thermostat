@@ -71,6 +71,7 @@ import com.redhat.thermostat.host.memory.client.core.HostMemoryView;
 import com.redhat.thermostat.host.memory.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.ChartColors;
 import com.redhat.thermostat.common.Size;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.eclipse.SWTComponent;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
@@ -112,14 +113,14 @@ public class SWTHostMemoryView extends HostMemoryView implements SWTComponent {
                 stdFont.getFontData()[0].getName(),
                 stdFont.getFontData()[0].getHeight(), SWT.BOLD);
         
-        summaryLabel.setText(translator.localize(LocaleResources.HOST_MEMORY_SECTION_OVERVIEW));
+        summaryLabel.setText(translator.localize(LocaleResources.HOST_MEMORY_SECTION_OVERVIEW).getContents());
         summaryLabel.setFont(boldFont);
         
         Composite detailsTop = new Composite(parent, SWT.NONE);
         detailsTop.setLayout(new GridLayout(3, false));
         
         Label cpuModelLabel = new Label(detailsTop, SWT.TRAIL);
-        cpuModelLabel.setText(translator.localize(LocaleResources.HOST_INFO_MEMORY_TOTAL));
+        cpuModelLabel.setText(translator.localize(LocaleResources.HOST_INFO_MEMORY_TOTAL).getContents());
         GridData hIndentLayoutData = new GridData();
         hIndentLayoutData.horizontalIndent = H_INDENT;
         cpuModelLabel.setLayoutData(hIndentLayoutData);
@@ -160,8 +161,8 @@ public class SWTHostMemoryView extends HostMemoryView implements SWTComponent {
 
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 null, // Title
-                translator.localize(LocaleResources.HOST_MEMORY_CHART_TIME_LABEL), // x-axis Label
-                translator.localize(LocaleResources.HOST_MEMORY_CHART_SIZE_LABEL, Size.Unit.MiB.name()), // y-axis Label
+                translator.localize(LocaleResources.HOST_MEMORY_CHART_TIME_LABEL).getContents(), // x-axis Label
+                translator.localize(LocaleResources.HOST_MEMORY_CHART_SIZE_LABEL, Size.Unit.MiB.name()).getContents(), // y-axis Label
                 memoryCollection, // Dataset
                 false, // Show Legend
                 false, // Use tooltips
@@ -189,7 +190,7 @@ public class SWTHostMemoryView extends HostMemoryView implements SWTComponent {
     }
     
     @Override
-    public void addMemoryChart(final String tag, final String humanReadableName) {
+    public void addMemoryChart(final String tag, final LocalizedString name) {
         EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -198,7 +199,7 @@ public class SWTHostMemoryView extends HostMemoryView implements SWTComponent {
                 TimeSeries series = new TimeSeries(tag);
                 dataset.put(tag, series);
 
-                addLegendItem(tag, humanReadableName);
+                addLegendItem(tag, name.getContents());
                 
                 updateColors();
             }

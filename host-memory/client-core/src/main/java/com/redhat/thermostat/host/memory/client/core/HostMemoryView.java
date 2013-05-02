@@ -40,6 +40,7 @@ import java.util.List;
 
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
 
 public abstract class HostMemoryView extends BasicView implements UIComponent {
@@ -52,7 +53,7 @@ public abstract class HostMemoryView extends BasicView implements UIComponent {
 
     public abstract void setTotalMemory(String totalMemory);
 
-    public abstract void addMemoryChart(String tag, String humanReadableName);
+    public abstract void addMemoryChart(String tag, LocalizedString name);
 
     public abstract void removeMemoryChart(String tag);
 

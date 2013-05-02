@@ -57,7 +57,13 @@ public enum LocaleResources {
     CANNOT_EXECUTE_PROCESS,
     SERVER_LISTENING_ON,
     PID_IS,
-    LAUNCHER_UNAVAILABLE;
+    LAUNCHER_UNAVAILABLE,
+    MISSING_PROPERTY,
+    MISSING_PEM,
+    MISSING_PASSPHRASE,
+    MISSING_DB_CONFIG,
+    MISSING_DB_DIR,
+    ;
 
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.agent.cli.impl.strings";
 

@@ -94,7 +94,7 @@ public class ClientConfigurationSwing implements ClientConfigurationView {
             }
         });
 
-        dialog = new JDialog((Frame) null, translator.localize(LocaleResources.CLIENT_PREFS_WINDOW_TITLE));
+        dialog = new JDialog((Frame) null, translator.localize(LocaleResources.CLIENT_PREFS_WINDOW_TITLE).getContents());
         dialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         dialog.setContentPane(optionPane);
         dialog.addWindowListener(windowClosingListener);

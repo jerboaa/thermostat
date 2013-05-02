@@ -42,6 +42,7 @@ import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.vm.heap.analysis.client.core.chart.OverviewChart;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
 
@@ -87,7 +88,7 @@ public abstract class HeapView extends BasicView implements UIComponent {
     public abstract void setActiveDump(HeapDump dump);
     public abstract void notifyHeapDumpComplete();
 
-    public abstract void displayWarning(String string);
+    public abstract void displayWarning(LocalizedString string);
 
 }
 

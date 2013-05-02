@@ -52,12 +52,12 @@ public class Translate<T extends Enum<T>> {
         this.resourceBundle = resourceBundle;
     }
 
-    public String localize(T toTranslate) {
-        return resourceBundle.getString(toTranslate.name());
+    public LocalizedString localize(T toTranslate) {
+        return new LocalizedString(resourceBundle.getString(toTranslate.name()));
     }
 
-    public String localize(T toTranslate, String... params) {
-        return MessageFormat.format(localize(toTranslate), (Object[]) params);
+    public LocalizedString localize(T toTranslate, String... params) {
+        return new LocalizedString(MessageFormat.format(localize(toTranslate).getContents(), (Object[]) params));
     }
 }
 

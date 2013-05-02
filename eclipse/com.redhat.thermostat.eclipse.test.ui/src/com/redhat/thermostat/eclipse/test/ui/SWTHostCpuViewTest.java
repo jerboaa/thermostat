@@ -65,6 +65,7 @@ import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
 import com.redhat.thermostat.eclipse.chart.common.SWTHostCpuView;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
@@ -172,7 +173,7 @@ public class SWTHostCpuViewTest {
 
     private void addSeries(int seriesIndex, String humanReadableName,
             final int numSeries) {
-        view.addCpuUsageChart(seriesIndex, humanReadableName);
+        view.addCpuUsageChart(seriesIndex, new LocalizedString(humanReadableName));
 
         bot.waitUntil(new DefaultCondition() {
 

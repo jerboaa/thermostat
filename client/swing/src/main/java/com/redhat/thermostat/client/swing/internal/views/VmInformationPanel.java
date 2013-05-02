@@ -45,6 +45,7 @@ import javax.swing.JTabbedPane;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.core.views.VmInformationView;
 import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.common.locale.LocalizedString;
 
 public class VmInformationPanel extends VmInformationView implements SwingComponent {
 
@@ -62,10 +63,10 @@ public class VmInformationPanel extends VmInformationView implements SwingCompon
     }
 
     @Override
-    public void addChildView(String title, UIComponent view) {
+    public void addChildView(LocalizedString title, UIComponent view) {
         if (view instanceof SwingComponent) {
             SwingComponent panel = (SwingComponent)view;
-            tabPane.insertTab(title, null, panel.getUiComponent(), null, tabCount);
+            tabPane.insertTab(title.getContents(), null, panel.getUiComponent(), null, tabCount);
             tabCount++;
         }
     }

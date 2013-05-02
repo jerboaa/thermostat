@@ -60,8 +60,8 @@ public class FindObjectsCommand extends AbstractCommand {
 
     private static final String HEAP_ID_ARG = "heapId";
     private static final String LIMIT_ARG = "limit";
-    private static final String HEADER_OBJECT_ID = translator.localize(LocaleResources.HEADER_OBJECT_ID);
-    private static final String HEADER_TYPE = translator.localize(LocaleResources.HEADER_OBJECT_TYPE);
+    private static final String HEADER_OBJECT_ID = translator.localize(LocaleResources.HEADER_OBJECT_ID).getContents();
+    private static final String HEADER_TYPE = translator.localize(LocaleResources.HEADER_OBJECT_TYPE).getContents();
     private static final int DEFAULT_LIMIT = 10;
 
     private BundleContext context;
@@ -102,12 +102,12 @@ public class FindObjectsCommand extends AbstractCommand {
 
         List<String> terms = ctx.getArguments().getNonOptionArguments();
         if (terms.size() == 0) {
-            ctx.getConsole().getOutput().println(translator.localize(LocaleResources.SEARCH_TERM_REQUIRED));
+            ctx.getConsole().getOutput().println(translator.localize(LocaleResources.SEARCH_TERM_REQUIRED).getContents());
             return;
         }
         String searchTerm = terms.get(0);
         if (searchTerm.trim().length() == 0) {
-            ctx.getConsole().getOutput().println(translator.localize(LocaleResources.SEARCH_TERM_REQUIRED));
+            ctx.getConsole().getOutput().println(translator.localize(LocaleResources.SEARCH_TERM_REQUIRED).getContents());
             return;
         }
 

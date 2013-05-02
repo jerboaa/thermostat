@@ -61,7 +61,7 @@ class VMStatPrinter {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private static final String TIME = translator.localize(LocaleResources.COLUMN_HEADER_TIME);
+    private static final String TIME = translator.localize(LocaleResources.COLUMN_HEADER_TIME).getContents();
 
     private VmRef vm;
     private List<VMStatPrintDelegate> delegates;

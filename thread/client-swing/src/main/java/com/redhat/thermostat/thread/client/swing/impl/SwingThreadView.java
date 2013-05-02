@@ -43,7 +43,6 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
@@ -51,11 +50,10 @@ import javax.swing.SwingWorker;
 
 import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.SwingComponent;
-import com.redhat.thermostat.client.swing.components.ChartPanel;
 import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
-import com.redhat.thermostat.thread.client.common.chart.LivingDaemonThreadDifferenceChart;
 import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
 import com.redhat.thermostat.thread.client.common.view.ThreadCountView;
 import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
@@ -111,8 +109,8 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
             }
         });
         
-        panel.getToggleButton().setToolTipText(t.localize(LocaleResources.START_RECORDING));
-        panel.getToggleButton().setText(t.localize(LocaleResources.THREAD_MONITOR_SWITCH));
+        panel.getToggleButton().setToolTipText(t.localize(LocaleResources.START_RECORDING).getContents());
+        panel.getToggleButton().setText(t.localize(LocaleResources.THREAD_MONITOR_SWITCH).getContents());
         panel.getToggleButton().addItemListener(new ItemListener()
         {
             @Override
@@ -121,10 +119,10 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
                 ThreadAction action = null;                
                 if (e.getStateChange() == ItemEvent.SELECTED) {
                     action = ThreadAction.START_LIVE_RECORDING;
-                    panel.getToggleButton().setToolTipText(t.localize(LocaleResources.STOP_RECORDING));
+                    panel.getToggleButton().setToolTipText(t.localize(LocaleResources.STOP_RECORDING).getContents());
                 } else {
                     action = ThreadAction.STOP_LIVE_RECORDING;
-                    panel.getToggleButton().setToolTipText(t.localize(LocaleResources.START_RECORDING));
+                    panel.getToggleButton().setToolTipText(t.localize(LocaleResources.START_RECORDING).getContents());
                 }
                 
                 if (skipNotification) return;
@@ -150,10 +148,10 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
         topPane.setName("topTabbedPane");
         
         threadTimelineView = new SwingThreadTimelineView();
-        topPane.addTab(t.localize(LocaleResources.TIMELINE), threadTimelineView.getUiComponent());
+        topPane.addTab(t.localize(LocaleResources.TIMELINE).getContents(), threadTimelineView.getUiComponent());
         
         threadCountView = new SwingThreadCountView();
-        topPane.addTab(t.localize(LocaleResources.THREAD_COUNT), threadCountView.getUiComponent());
+        topPane.addTab(t.localize(LocaleResources.THREAD_COUNT).getContents(), threadCountView.getUiComponent());
         
         panel.getSplitPane().setTopComponent(topPane);
     }
@@ -163,14 +161,14 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
         bottomPane.setName("bottomTabbedPane");
         
         threadTableView = new SwingThreadTableView();
-        bottomPane.addTab(t.localize(LocaleResources.TABLE), threadTableView.getUiComponent());
+        bottomPane.addTab(t.localize(LocaleResources.TABLE).getContents(), threadTableView.getUiComponent());
         
         threadDetailsView = new SwingThreadDetailsView();
-        bottomPane.addTab(t.localize(LocaleResources.DETAILS), threadDetailsView.getUiComponent());
+        bottomPane.addTab(t.localize(LocaleResources.DETAILS).getContents(), threadDetailsView.getUiComponent());
         threadDetailsPaneID = 1;
 
         vmCapsView = new SwingVMThreadCapabilitiesView();
-        bottomPane.addTab(t.localize(LocaleResources.VM_CAPABILITIES), vmCapsView.getUiComponent());
+        bottomPane.addTab(t.localize(LocaleResources.VM_CAPABILITIES).getContents(), vmCapsView.getUiComponent());
 
         panel.getSplitPane().setBottomComponent(bottomPane);
     }
@@ -219,11 +217,11 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
     }
     
     @Override
-    public void displayWarning(final String warning) {
+    public void displayWarning(final LocalizedString warning) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                JOptionPane.showMessageDialog(panel.getParent(), warning, "", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(panel.getParent(), warning.getContents(), "", JOptionPane.WARNING_MESSAGE);
             }
         });
     }

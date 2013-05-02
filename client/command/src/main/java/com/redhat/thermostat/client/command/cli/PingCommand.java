@@ -55,6 +55,7 @@ import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
@@ -78,17 +79,17 @@ public class PingCommand extends AbstractCommand {
         public void fireComplete(Request request, Response response) {
             switch (response.getType()) {
             case ERROR:
-                out.println(translator.localize(LocaleResources.COMMAND_PING_RESPONSE_ERROR, request.getTarget().toString()));
+                out.println(translator.localize(LocaleResources.COMMAND_PING_RESPONSE_ERROR, request.getTarget().toString()).getContents());
                 break;
             case OK:
             case NOOP:
-                out.println(translator.localize(LocaleResources.COMMAND_PING_RESPONSE_OK, request.getTarget().toString()));
+                out.println(translator.localize(LocaleResources.COMMAND_PING_RESPONSE_OK, request.getTarget().toString()).getContents());
                 break;
             case NOK:
-                out.println(translator.localize(LocaleResources.COMMAND_PING_RESPONSE_REFUSED));
+                out.println(translator.localize(LocaleResources.COMMAND_PING_RESPONSE_REFUSED).getContents());
                 break;
             default:
-                out.println(translator.localize(LocaleResources.COMMAND_PING_RESPONSE_UNKNOWN));
+                out.println(translator.localize(LocaleResources.COMMAND_PING_RESPONSE_UNKNOWN).getContents());
                 break;
             }
             responseBarrier.release();
@@ -147,7 +148,7 @@ public class PingCommand extends AbstractCommand {
             throw new CommandException(translator.localize(LocaleResources.COMMAND_PING_NO_REQUEST_QUEUE));
         }
         RequestQueue queue = (RequestQueue) context.getService(queueRef);
-        out.println(translator.localize(LocaleResources.COMMAND_PING_QUEUING_REQUEST, target.toString()));
+        out.println(translator.localize(LocaleResources.COMMAND_PING_QUEUING_REQUEST, target.toString()).getContents());
         queue.putRequest(ping);
         context.ungetService(queueRef);
         try {
@@ -176,8 +177,8 @@ public class PingCommand extends AbstractCommand {
         return targetHostRef;
     }
 
-    private void printCustomMessageWithUsage(PrintStream out, String message) {
-        out.println(message);
+    private void printCustomMessageWithUsage(PrintStream out, LocalizedString message) {
+        out.println(message.getContents());
         // FIXME add usage back out.println(getUsage());
         return;
     }

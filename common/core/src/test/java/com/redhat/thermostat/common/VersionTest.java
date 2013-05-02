@@ -165,7 +165,7 @@ public class VersionTest {
     private String createFormat() {
         ApplicationInfo appInfo = new ApplicationInfo();
         String format = MessageFormat.format(
-                LocaleResources.createLocalizer().localize(LocaleResources.APPLICATION_VERSION_INFO),
+                LocaleResources.createLocalizer().localize(LocaleResources.APPLICATION_VERSION_INFO).getContents(),
                 appInfo.getName())
                 + " " + Version.VERSION_NUMBER_FORMAT;
         return format;

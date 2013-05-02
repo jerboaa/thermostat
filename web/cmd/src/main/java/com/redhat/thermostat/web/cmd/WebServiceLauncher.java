@@ -50,6 +50,7 @@ import org.eclipse.jetty.util.security.Constraint;
 import org.eclipse.jetty.webapp.WebAppContext;
 
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.HostPortPair;
 import com.redhat.thermostat.storage.mongodb.MongoStorageProvider;
 import com.redhat.thermostat.web.server.WebStorageEndPoint;
@@ -60,6 +61,7 @@ import com.redhat.thermostat.web.server.auth.WrappedRolePrincipal;
 
 class WebServiceLauncher {
 
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     private Server server;
     private String storageURL;
     private String storageUsername;
@@ -156,14 +158,14 @@ class WebServiceLauncher {
      */
     private void checkConfig() throws InvalidConfigurationException {
         if (storageURL == null) {
-            throw new InvalidConfigurationException("Storage URL must be set");
+            throw new InvalidConfigurationException(t.localize(LocaleResources.NEED_URL));
         }
         if (ipsPorts == null) {
-            throw new InvalidConfigurationException("IP adresses to bind to must be set");
+            throw new InvalidConfigurationException(t.localize(LocaleResources.NEED_IP));
         }
         for (HostPortPair pair: ipsPorts) {
             if (pair.getPort() <= 0) {
-                throw new InvalidConfigurationException("Invalid port number " + pair.getPort());
+                throw new InvalidConfigurationException(t.localize(LocaleResources.INVALID_PORT, Integer.toString(pair.getPort())));
             }
         }
     }

@@ -59,6 +59,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import com.redhat.thermostat.common.locale.LocalizedString;
+
 @RunWith(CacioFESTRunner.class)
 public class ActionButtonTest {
 
@@ -119,7 +121,7 @@ public class ActionButtonTest {
                     }
                 };
 
-                ActionButton button = new ActionButton(icon, "Fluff");
+                ActionButton button = new ActionButton(icon, new LocalizedString("Fluff"));
                 button.setName("button");
                 header.addToolBarButton(button);
 

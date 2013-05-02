@@ -144,7 +144,7 @@ public class DumpHeapCommandTest {
             command.run(factory.createContext(args));
             assertTrue("should not reach here", false);
         } catch (CommandException ce) {
-            assertEquals(TRANSLATOR.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE), ce.getMessage());
+            assertEquals(TRANSLATOR.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE).getContents(), ce.getMessage());
         }
     }
     
@@ -167,7 +167,7 @@ public class DumpHeapCommandTest {
             command.run(factory.createContext(args));
             fail();
         } catch (CommandException ce) {
-            assertEquals(TRANSLATOR.localize(LocaleResources.REQUEST_QUEUE_UNAVAILABLE), ce.getMessage());
+            assertEquals(TRANSLATOR.localize(LocaleResources.REQUEST_QUEUE_UNAVAILABLE).getContents(), ce.getMessage());
         }
     }
 
@@ -205,7 +205,7 @@ public class DumpHeapCommandTest {
             fail("CommandException expected");
         } catch (CommandException e) {
             assertEquals(TRANSLATOR.localize(LocaleResources.HEAP_DUMP_ERROR,
-                    HOST_ID, String.valueOf(VM_ID)), e.getMessage());
+                    HOST_ID, String.valueOf(VM_ID)).getContents(), e.getMessage());
         }
     }
 

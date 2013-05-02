@@ -42,8 +42,6 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
-import java.lang.reflect.InvocationTargetException;
-import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -51,14 +49,12 @@ import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.swing.EdtHelper;
 import com.redhat.thermostat.client.swing.IconResource;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
@@ -86,7 +82,7 @@ public class SearchField extends JPanel {
     private final JTextField searchField = new JTextField();
 
     private final AtomicReference<String> searchText = new AtomicReference<String>("");
-    private final AtomicReference<String> label = new AtomicReference<>(translator.localize(LocaleResources.SEARCH_HINT));
+    private final AtomicReference<String> label = new AtomicReference<>(translator.localize(LocaleResources.SEARCH_HINT).getContents());
     private final AtomicBoolean labelDisplayed = new AtomicBoolean(true);
 
     public SearchField() {

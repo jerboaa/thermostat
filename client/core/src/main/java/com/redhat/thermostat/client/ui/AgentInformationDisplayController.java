@@ -47,6 +47,7 @@ import com.redhat.thermostat.client.core.views.AgentInformationDisplayView.Confi
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.BackendInformation;
@@ -134,16 +135,16 @@ public class AgentInformationDisplayController implements ActionListener<Configu
         if (stopTime >= startTime) {
             view.setSelectedAgentStopTime(dateTimeFormat.format(new Date(stopTime)));
         } else {
-            view.setSelectedAgentStopTime(translator.localize(LocaleResources.AGENT_INFO_AGENT_RUNNING));
+            view.setSelectedAgentStopTime(translator.localize(LocaleResources.AGENT_INFO_AGENT_RUNNING).getContents());
         }
 
         // Linked to enforce order
         Map<String, String> map = new LinkedHashMap<>();
         for (BackendInformation backendInfo : model.getBackends(agentId)) {
-            String status = backendInfo.isActive() ?
+            LocalizedString status = backendInfo.isActive() ?
                     translator.localize(LocaleResources.AGENT_INFO_BACKEND_STATUS_ACTIVE)
                     : translator.localize(LocaleResources.AGENT_INFO_BACKEND_STATUS_INACTIVE);
-            map.put(backendInfo.getName(), status);
+            map.put(backendInfo.getName(), status.getContents());
         }
         view.setSelectedAgentBackendStatus(map);
     }

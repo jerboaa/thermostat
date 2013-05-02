@@ -55,6 +55,8 @@ public class ApplicationInfo {
     private Properties appInfo;
 
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
+
+    private static final String MISSING_INFO = t.localize(LocaleResources.MISSING_INFO).getContents();
     
     public ApplicationInfo() {
         appInfo = new Properties();
@@ -70,7 +72,7 @@ public class ApplicationInfo {
     }
 
     public String getName() {
-        return appInfo.getProperty("APP_NAME", t.localize(LocaleResources.MISSING_INFO));
+        return appInfo.getProperty("APP_NAME", MISSING_INFO);
     }
 
     public Version getVersion() {
@@ -82,27 +84,27 @@ public class ApplicationInfo {
     }
 
     public String getDescription() {
-        return t.localize(LocaleResources.APPLICATION_INFO_DESCRIPTION);
+        return t.localize(LocaleResources.APPLICATION_INFO_DESCRIPTION).getContents();
     }
 
     public String getReleaseDate() {
-        return appInfo.getProperty("APP_RELEASE_DATE", t.localize(LocaleResources.MISSING_INFO));
+        return appInfo.getProperty("APP_RELEASE_DATE", MISSING_INFO);
     }
 
     public String getCopyright() {
-        return appInfo.getProperty("APP_COPYRIGHT", t.localize(LocaleResources.MISSING_INFO));
+        return appInfo.getProperty("APP_COPYRIGHT", MISSING_INFO);
     }
 
     public String getLicenseSummary() {
-        return t.localize(LocaleResources.APPLICATION_INFO_LICENSE);
+        return t.localize(LocaleResources.APPLICATION_INFO_LICENSE).getContents();
     }
 
     public String getEmail() {
-        return appInfo.getProperty("APP_EMAIL", t.localize(LocaleResources.MISSING_INFO));
+        return appInfo.getProperty("APP_EMAIL", MISSING_INFO);
     }
 
     public String getWebsite() {
-        return appInfo.getProperty("APP_WEBSITE", t.localize(LocaleResources.MISSING_INFO));
+        return appInfo.getProperty("APP_WEBSITE", MISSING_INFO);
     }
 
 }

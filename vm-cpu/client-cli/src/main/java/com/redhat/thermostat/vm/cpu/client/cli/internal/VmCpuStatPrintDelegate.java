@@ -51,7 +51,7 @@ public class VmCpuStatPrintDelegate implements VMStatPrintDelegate {
     
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     
-    private static final String CPU_PERCENT = translator.localize(LocaleResources.COLUMN_HEADER_CPU_PERCENT);
+    private static final String CPU_PERCENT = translator.localize(LocaleResources.COLUMN_HEADER_CPU_PERCENT).getContents();
     
     private VmCpuStatDAO cpuStatDAO;
 

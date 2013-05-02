@@ -104,10 +104,8 @@ import com.redhat.thermostat.client.swing.internal.components.DecoratedDefaultMu
 import com.redhat.thermostat.client.ui.ContextAction;
 import com.redhat.thermostat.client.ui.Decorator;
 import com.redhat.thermostat.client.ui.DecoratorProvider;
-import com.redhat.thermostat.client.ui.HostContextAction;
 import com.redhat.thermostat.client.ui.IconDescriptor;
 import com.redhat.thermostat.client.ui.MenuAction;
-import com.redhat.thermostat.client.ui.VMContextAction;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
@@ -411,19 +409,19 @@ public class MainWindow extends JFrame implements MainView {
 
     private void setupMenus() {
 
-        JMenu fileMenu = new JMenu(translator.localize(LocaleResources.MENU_FILE));
+        JMenu fileMenu = new JMenu(translator.localize(LocaleResources.MENU_FILE).getContents());
         fileMenu.getPopupMenu().setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
         mainMenuBar.add(fileMenu);
 
-        JMenuItem fileExitMenu = new JMenuItem(translator.localize(LocaleResources.MENU_FILE_EXIT));
+        JMenuItem fileExitMenu = new JMenuItem(translator.localize(LocaleResources.MENU_FILE_EXIT).getContents());
         fileExitMenu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_DOWN_MASK));
         fileExitMenu.addActionListener(shutdownAction);
         fileMenu.add(fileExitMenu);
 
-        JMenu editMenu = new JMenu(translator.localize(LocaleResources.MENU_EDIT));
+        JMenu editMenu = new JMenu(translator.localize(LocaleResources.MENU_EDIT).getContents());
         mainMenuBar.add(editMenu);
 
-        JMenuItem configureClientMenuItem = new JMenuItem(translator.localize(LocaleResources.MENU_EDIT_CONFIGURE_CLIENT));
+        JMenuItem configureClientMenuItem = new JMenuItem(translator.localize(LocaleResources.MENU_EDIT_CONFIGURE_CLIENT).getContents());
         configureClientMenuItem.setName("showClientConfig");
         configureClientMenuItem.addActionListener(new java.awt.event.ActionListener() {
             @Override
@@ -434,7 +432,7 @@ public class MainWindow extends JFrame implements MainView {
         editMenu.add(configureClientMenuItem);
 
         editMenu.addSeparator();
-        JMenuItem historyModeMenuItem = new JCheckBoxMenuItem(translator.localize(LocaleResources.MENU_EDIT_ENABLE_HISTORY_MODE));
+        JMenuItem historyModeMenuItem = new JCheckBoxMenuItem(translator.localize(LocaleResources.MENU_EDIT_ENABLE_HISTORY_MODE).getContents());
         historyModeMenuItem.setName("historyModeSwitch");
         historyModeMenuItem.setSelected(false);
         historyModeMenuItem.addActionListener(new java.awt.event.ActionListener() {
@@ -445,9 +443,9 @@ public class MainWindow extends JFrame implements MainView {
         });
         editMenu.add(historyModeMenuItem);
 
-        JMenu viewMenu = new JMenu(translator.localize(LocaleResources.MENU_VIEW));
+        JMenu viewMenu = new JMenu(translator.localize(LocaleResources.MENU_VIEW).getContents());
         mainMenuBar.add(viewMenu);
-        JMenuItem configureAgentMenuItem = new JMenuItem(translator.localize(LocaleResources.MENU_VIEW_AGENTS));
+        JMenuItem configureAgentMenuItem = new JMenuItem(translator.localize(LocaleResources.MENU_VIEW_AGENTS).getContents());
         configureAgentMenuItem.setName("showAgentConfig");
         configureAgentMenuItem.addActionListener(new java.awt.event.ActionListener() {
             @Override
@@ -457,11 +455,11 @@ public class MainWindow extends JFrame implements MainView {
         });
         viewMenu.add(configureAgentMenuItem);
 
-        JMenu helpMenu = new JMenu(translator.localize(LocaleResources.MENU_HELP));
+        JMenu helpMenu = new JMenu(translator.localize(LocaleResources.MENU_HELP).getContents());
         helpMenu.getPopupMenu().setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
         mainMenuBar.add(helpMenu);
 
-        JMenuItem helpAboutMenu = new JMenuItem(translator.localize(LocaleResources.MENU_HELP_ABOUT));
+        JMenuItem helpAboutMenu = new JMenuItem(translator.localize(LocaleResources.MENU_HELP_ABOUT).getContents());
         helpAboutMenu.addActionListener(new java.awt.event.ActionListener() {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
@@ -659,12 +657,12 @@ public class MainWindow extends JFrame implements MainView {
                 HostRef hostRef = (HostRef) value;
                 String hostName = hostRef.getHostName();
                 String agentId = hostRef.getAgentId();
-                return translator.localize(LocaleResources.HOST_TOOLTIP, hostName, agentId);
+                return translator.localize(LocaleResources.HOST_TOOLTIP, hostName, agentId).getContents();
             } else if (value instanceof VmRef) {
                 VmRef vmRef = (VmRef) value;
                 String vmName = vmRef.getName();
                 String vmId = vmRef.getIdString();
-                return translator.localize(LocaleResources.VM_TOOLTIP, vmName, vmId);
+                return translator.localize(LocaleResources.VM_TOOLTIP, vmName, vmId).getContents();
             } else {
                 return null;
             }

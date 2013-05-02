@@ -147,7 +147,7 @@ public class VmOverviewControllerTest {
         verify(view).setJavaCommandLine(eq(COMMAND_LINE));
         
         verify(view).setVmNameAndVersion(eq(translator.localize(LocaleResources.VM_INFO_VM_NAME_AND_VERSION,
-                        VM_NAME, VM_VERSION, VM_INFO)));
+                        VM_NAME, VM_VERSION, VM_INFO).getContents()));
         verify(view).setVmArguments(eq(VM_ARGS));
     }
 

@@ -133,7 +133,7 @@ public class RecentTimeSeriesChartPanel extends JPanel {
         durationSelector.setText(String.valueOf(defaultValue));
         unitSelector.setSelectedItem(defaultUnit);
 
-        container.add(new JLabel(translator.localize(LocaleResources.CHART_DURATION_SELECTOR_LABEL)));
+        container.add(new JLabel(translator.localize(LocaleResources.CHART_DURATION_SELECTOR_LABEL).getContents()));
         container.add(durationSelector);
         container.add(unitSelector);
 

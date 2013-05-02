@@ -49,6 +49,8 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
+import com.redhat.thermostat.common.locale.LocalizedString;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.vm.jmx.client.core.JmxNotificationsView;
@@ -65,6 +67,7 @@ public class JmxNotificationsViewController implements InformationServiceControl
     private final JmxNotificationDAO dao;
     private final AgentInfoDAO agentDAO;
     private final VmRef vm;
+    private final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
     private final AtomicBoolean notificationsEnabled = new AtomicBoolean(false);
 
@@ -149,8 +152,8 @@ public class JmxNotificationsViewController implements InformationServiceControl
     }
 
     @Override
-    public String getLocalizedName() {
-        return "Notifications";
+    public LocalizedString getLocalizedName() {
+        return t.localize(LocaleResources.NOTIFICATIONS);
     }
 
 }

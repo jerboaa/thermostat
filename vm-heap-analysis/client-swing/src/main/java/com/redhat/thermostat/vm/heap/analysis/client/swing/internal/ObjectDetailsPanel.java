@@ -122,19 +122,19 @@ public class ObjectDetailsPanel extends ObjectDetailsView implements SwingCompon
 
         panel = new JPanel();
 
-        JLabel searchLabel = new JLabel(translator.localize(LocaleResources.HEAP_DUMP_OBJECT_BROWSE_SEARCH_LABEL));
+        JLabel searchLabel = new JLabel(translator.localize(LocaleResources.HEAP_DUMP_OBJECT_BROWSE_SEARCH_LABEL).getContents());
 
         searchField = new SearchField();
-        searchField.setTooltip(translator.localize(LocaleResources.HEAP_DUMP_OBJECT_BROWSE_SEARCH_PATTERN_HELP));
+        searchField.setTooltip(translator.localize(LocaleResources.HEAP_DUMP_OBJECT_BROWSE_SEARCH_PATTERN_HELP).getContents());
 
         JSplitPane splitPane = new JSplitPane();
         splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
         splitPane.setDividerLocation(0.8 /* 80% */);
 
-        toggleReferrersButton = new JToggleButton(translator.localize(LocaleResources.HEAP_DUMP_OBJECT_BROWSE_REFERRERS));
+        toggleReferrersButton = new JToggleButton(translator.localize(LocaleResources.HEAP_DUMP_OBJECT_BROWSE_REFERRERS).getContents());
         refGroup.add(toggleReferrersButton);
 
-        toggleReferencesButton = new JToggleButton(translator.localize(LocaleResources.HEAP_DUMP_OBJECT_BROWSE_REFERENCES));
+        toggleReferencesButton = new JToggleButton(translator.localize(LocaleResources.HEAP_DUMP_OBJECT_BROWSE_REFERENCES).getContents());
         refGroup.add(toggleReferencesButton);
 
         toggleReferrersButton.setSelected(true);
@@ -185,7 +185,7 @@ public class ObjectDetailsPanel extends ObjectDetailsView implements SwingCompon
                 }
             }
         });
-        searchField.setLabel(translator.localize(LocaleResources.HEAP_DUMP_OBJECT_BROWSE_SEARCH_HINT));
+        searchField.setLabel(translator.localize(LocaleResources.HEAP_DUMP_OBJECT_BROWSE_SEARCH_HINT).getContents());
 
         java.awt.event.ActionListener treeToggleListener = new java.awt.event.ActionListener() {
             @Override
@@ -273,7 +273,7 @@ public class ObjectDetailsPanel extends ObjectDetailsView implements SwingCompon
                     TreePath path = objectTree.getPathForRow(row);
                     final HeapObjectUI heapObject = (HeapObjectUI) ((LazyMutableTreeNode)path.getLastPathComponent()).getUserObject();
                     JPopupMenu popup = new JPopupMenu();
-                    JMenuItem findRootItem = new JMenuItem(translator.localize(LocaleResources.HEAP_DUMP_OBJECT_FIND_ROOT));
+                    JMenuItem findRootItem = new JMenuItem(translator.localize(LocaleResources.HEAP_DUMP_OBJECT_FIND_ROOT).getContents());
                     findRootItem.addActionListener(new java.awt.event.ActionListener() {
                         @Override
                         public void actionPerformed(java.awt.event.ActionEvent e) {
@@ -403,10 +403,10 @@ public class ObjectDetailsPanel extends ObjectDetailsView implements SwingCompon
             @Override
             public void run() {
                 // TODO use some other gui control for this rather than a plain text box
-                String text = translator.localize(LocaleResources.COMMAND_OBJECT_INFO_OBJECT_ID) + obj.getIdString() + "\n" +
-                              translator.localize(LocaleResources.COMMAND_OBJECT_INFO_TYPE) + obj.getClazz().getName() + "\n" +
-                              translator.localize(LocaleResources.COMMAND_OBJECT_INFO_SIZE) + String.valueOf(obj.getSize()) + " bytes" + "\n" +
-                              translator.localize(LocaleResources.COMMAND_OBJECT_INFO_HEAP_ALLOCATED) + String.valueOf(obj.isHeapAllocated()) + "\n";
+                String text = translator.localize(LocaleResources.COMMAND_OBJECT_INFO_OBJECT_ID).getContents() + obj.getIdString() + "\n" +
+                              translator.localize(LocaleResources.COMMAND_OBJECT_INFO_TYPE).getContents() + obj.getClazz().getName() + "\n" +
+                              translator.localize(LocaleResources.COMMAND_OBJECT_INFO_SIZE).getContents() + String.valueOf(obj.getSize()) + " bytes" + "\n" +
+                              translator.localize(LocaleResources.COMMAND_OBJECT_INFO_HEAP_ALLOCATED).getContents() + String.valueOf(obj.isHeapAllocated()) + "\n";
                 objectDetailsPane.setText(text);
             }
         });

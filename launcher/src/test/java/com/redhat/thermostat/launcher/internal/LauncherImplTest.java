@@ -74,6 +74,7 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.config.ClientPreferences;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.internal.DisallowSystemExitSecurityManager.ExitException;
@@ -341,7 +342,7 @@ public class LauncherImplTest {
 
     @Test
     public void testBadOption() {
-        String expected = "Unrecognized option: --argNotAccepted\n"
+        String expected = "Could not parse options: Unrecognized option: --argNotAccepted\n"
                 + "usage: thermostat test1 <--arg1 <arg>> [--arg2 <arg>]\n"
                 + "                  description 1\n"
                 + "thermostat test1\n"
@@ -365,7 +366,7 @@ public class LauncherImplTest {
 
     @Test
     public void testOptionMissingRequiredArgument() {
-        String expected = "Missing argument for option: arg1\n"
+        String expected = "Could not parse options: Missing argument for option: arg1\n"
                 + "usage: thermostat test1 <--arg1 <arg>> [--arg2 <arg>]\n"
                 + "                  description 1\n"
                 + "thermostat test1\n"
@@ -395,7 +396,7 @@ public class LauncherImplTest {
 
             @Override
             public void run(CommandContext ctx) throws CommandException {
-                throw new CommandException("test error");
+                throw new CommandException(new LocalizedString("test error"));
             }
 
         });

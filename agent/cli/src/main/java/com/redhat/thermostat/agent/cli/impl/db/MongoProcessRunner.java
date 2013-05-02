@@ -51,6 +51,7 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.cli.impl.locale.LocaleResources;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.common.utils.LoggedExternalProcess;
@@ -122,11 +123,11 @@ public class MongoProcessRunner {
             }
         } else {
             
-            String message = translator.localize(LocaleResources.CANNOT_SHUTDOWN_SERVER,
+            LocalizedString message = translator.localize(LocaleResources.CANNOT_SHUTDOWN_SERVER,
                     configuration.getDBPath().toString(),
                     String.valueOf(status));
             display(message);
-            throw new StorageStopException(configuration.getDBPath(), status, message);
+            throw new StorageStopException(configuration.getDBPath(), status, message.getContents());
         }
     }
     
@@ -145,12 +146,12 @@ public class MongoProcessRunner {
 
         String pid = getPid();
         if (pid != null) {
-            String message = null;
+            LocalizedString message = null;
             if (!checkExistingProcess()) {
                 message = translator.localize(LocaleResources.STALE_PID_FILE_NO_MATCHING_PROCESS, configuration.getPidFile().toString(), MONGO_PROCESS);
                 // Mongo didn't remove its PID file? Work around the issue. Log
                 // the event, remove the stale pid file and continue.
-                logger.log(Level.WARNING, message);
+                logger.log(Level.WARNING, message.getContents());
                 try {
                     Files.delete(configuration.getPidFile().toPath());
                 } catch (IOException benign) {
@@ -159,7 +160,7 @@ public class MongoProcessRunner {
             } else {
                 message = translator.localize(LocaleResources.STORAGE_ALREADY_RUNNING_WITH_PID, String.valueOf(pid));
                 display(message);
-                throw new StorageAlreadyRunningException(Integer.valueOf(pid), message);
+                throw new StorageAlreadyRunningException(Integer.valueOf(pid), message.getContents());
             }
         }
         
@@ -174,7 +175,7 @@ public class MongoProcessRunner {
         try {
             status = process.runAndReturnResult();
         } catch (ApplicationException ae) {
-            String message = translator.localize(LocaleResources.CANNOT_EXECUTE_PROCESS, MONGO_PROCESS);
+            LocalizedString message = translator.localize(LocaleResources.CANNOT_EXECUTE_PROCESS, MONGO_PROCESS);
             display(message);
             throw ae;
         }
@@ -193,11 +194,11 @@ public class MongoProcessRunner {
             
         } else {
             
-            String message = translator.localize(LocaleResources.CANNOT_START_SERVER,
+            LocalizedString message = translator.localize(LocaleResources.CANNOT_START_SERVER,
                              configuration.getDBPath().toString(),
                              String.valueOf(status));
             display(message);
-            throw new StorageStartException(configuration.getDBPath(), status, message);
+            throw new StorageStartException(configuration.getDBPath(), status, message.getContents());
         }
     }
     
@@ -224,9 +225,9 @@ public class MongoProcessRunner {
         if (configuration.isSslEnabled()) {
             // check for configuration which has a chance of working :)
             if (configuration.getSslPemFile() == null) {
-                throw new InvalidConfigurationException("No SSL PEM file specified!");
+                throw new InvalidConfigurationException(translator.localize(LocaleResources.MISSING_PEM));
             } else if (configuration.getSslKeyPassphrase() == null) {
-                throw new InvalidConfigurationException("No SSL key passphrase set!");
+                throw new InvalidConfigurationException(translator.localize(LocaleResources.MISSING_PASSPHRASE));
             }
             commands.add("--sslOnNormalPorts");
             commands.add("--sslPEMKeyFile");
@@ -244,7 +245,7 @@ public class MongoProcessRunner {
             process = new ProcessBuilder(Arrays.asList("mongod", "--version"))
                     .start();
         } catch (IOException e) {
-            String message = translator.localize(
+            LocalizedString message = translator.localize(
                     LocaleResources.CANNOT_EXECUTE_PROCESS, MONGO_PROCESS);
             display(message);
             throw e;
@@ -258,9 +259,9 @@ public class MongoProcessRunner {
         return versionString;
     }
 
-    private void display(String message) {
+    private void display(LocalizedString message) {
         if (!isQuiet) {
-            System.out.println(message);
+            System.out.println(message.getContents());
         }
     }
 }

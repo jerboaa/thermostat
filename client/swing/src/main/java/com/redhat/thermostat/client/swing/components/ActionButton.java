@@ -36,16 +36,11 @@
 
 package com.redhat.thermostat.client.swing.components;
 
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Graphics;
-import java.lang.reflect.InvocationTargetException;
-
 import javax.swing.AbstractButton;
 import javax.swing.Icon;
 import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
+
+import com.redhat.thermostat.common.locale.LocalizedString;
 
 /**
  * A swing implementation of {@link ToolbarButton}.
@@ -57,14 +52,14 @@ public class ActionButton extends JButton implements ToolbarButton {
     private boolean showText;
     
     public ActionButton(final Icon icon) {
-        this(icon, "");
+        this(icon, null);
     }
     
-    public ActionButton(final Icon icon, String text) {
+    public ActionButton(final Icon icon, LocalizedString text) {
         super(icon);
                 
         showText = true;
-        setText(text);
+        setText(text == null ? "" : text.getContents());
         
         setUI(new ActionButtonUI());
         setOpaque(false);

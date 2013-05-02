@@ -45,6 +45,8 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.TimerFactory;
+import com.redhat.thermostat.common.locale.LocalizedString;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
@@ -60,6 +62,7 @@ import com.redhat.thermostat.thread.client.common.view.ThreadView.ThreadAction;
 public class ThreadInformationController implements InformationServiceController<VmRef> {
 
     private static final Logger logger = LoggingUtils.getLogger(ThreadInformationController.class);
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     
     private ThreadView view;
     private ThreadCollector collector;
@@ -93,8 +96,8 @@ public class ThreadInformationController implements InformationServiceController
     }
     
     @Override
-    public String getLocalizedName() {
-        return "Threads";
+    public LocalizedString getLocalizedName() {
+        return t.localize(LocaleResources.CONTROLLER_NAME);
     }
 
     @Override
@@ -113,7 +116,7 @@ public class ThreadInformationController implements InformationServiceController
             case START_LIVE_RECORDING:
                 result = collector.startHarvester();
                 if (!result) {
-                    view.displayWarning("Cannot enable Thread recording");
+                    view.displayWarning(t.localize(LocaleResources.WARNING_CANNOT_ENABLE));
                     view.setRecording(false, false);
                 }
                 break;
@@ -121,7 +124,7 @@ public class ThreadInformationController implements InformationServiceController
             case STOP_LIVE_RECORDING:
                 result = collector.stopHarvester();
                 if (!result) {
-                    view.displayWarning("Cannot disable Thread recording");
+                    view.displayWarning(t.localize(LocaleResources.WARNING_CANNOT_DISABLE));
                     view.setRecording(true, false);
                 }
                 break;

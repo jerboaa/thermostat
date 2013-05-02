@@ -60,7 +60,7 @@ public class SwingThreadDetailsView extends ThreadDetailsView implements SwingCo
         details = new JPanel();
         details.setLayout(new BorderLayout(0, 0));
         
-        JLabel lblNewLabel = new JLabel(t.localize(LocaleResources.THREAD_DETAILS_EMTPY));
+        JLabel lblNewLabel = new JLabel(t.localize(LocaleResources.THREAD_DETAILS_EMTPY).getContents());
         lblNewLabel.setIcon(new ImageIcon(getEmptyDetailsIcon().getData().array()));
         details.add(lblNewLabel);
     }

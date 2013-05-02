@@ -188,7 +188,7 @@ public class CliTest extends IntegrationTest {
         Spawn shell = spawnThermostat("shell", "--foo");
         shell.expectClose();
         String stdOut = shell.getCurrentStandardOutContents();
-        String expectedOut = "Unrecognized option: --foo\n"
+        String expectedOut = "Could not parse options: Unrecognized option: --foo\n"
                            + "usage: thermostat shell\n"
                            + "                  launches the Thermostat interactive shell\n"
                            + "thermostat shell\n\n";

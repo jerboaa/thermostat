@@ -42,6 +42,7 @@ import java.awt.event.ActionListener;
 import javax.swing.ImageIcon;
 
 import com.redhat.thermostat.client.swing.components.ActionButton;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.common.locale.Translate;
 
 import com.redhat.thermostat.gc.remote.client.common.IconResources;
@@ -58,10 +59,10 @@ public class ToolbarGCButton extends ActionButton {
         this(action, translator.localize(LocaleResources.PERFORM_GC));
     }
     
-    private ToolbarGCButton(RequestGCAction action, String text) {
+    private ToolbarGCButton(RequestGCAction action, LocalizedString text) {
         super(new ImageIcon(IconResources.getGCIconSmall().getData().array()), text);
         
-        setToolTipText(text);
+        setToolTipText(text.getContents());
         this.action = action;
         
         addActionListener(new ToolbarGCButtonActionlistener());

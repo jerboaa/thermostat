@@ -129,7 +129,7 @@ public class ConnectCommand extends AbstractCommand {
             throw new CommandException(translator.localize(LocaleResources.COMMAND_CONNECT_INVALID_STORAGE, dbUrl));
         } catch (ConnectionException ex) {
             String error = ex.getMessage();
-            String message = ( error == null ? "" : " " + translator.localize(LocaleResources.COMMAND_CONNECT_ERROR, error) );
+            String message = ( error == null ? "" : " " + translator.localize(LocaleResources.COMMAND_CONNECT_ERROR, error).getContents() );
             throw new CommandException(translator.localize(LocaleResources.COMMAND_CONNECT_FAILED_TO_CONNECT, dbUrl + message), ex);
         }
     }

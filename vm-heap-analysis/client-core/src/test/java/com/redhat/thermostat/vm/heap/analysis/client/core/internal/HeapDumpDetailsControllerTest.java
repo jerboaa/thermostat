@@ -49,6 +49,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramView;
@@ -111,9 +112,9 @@ public class HeapDumpDetailsControllerTest {
 
         verify(dump).searchObjects(isA(String.class), anyInt());
         verify(view)
-                .addSubView(isA(String.class), isA(HeapHistogramView.class));
+                .addSubView(isA(LocalizedString.class), isA(HeapHistogramView.class));
         verify(view)
-                .addSubView(isA(String.class), isA(ObjectDetailsView.class));
+                .addSubView(isA(LocalizedString.class), isA(ObjectDetailsView.class));
     }
 
 }

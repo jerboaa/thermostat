@@ -60,11 +60,13 @@ import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Console;
 import com.redhat.thermostat.common.config.Configuration;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class ShellCommand extends AbstractCommand {
 
     private static final Logger logger = LoggingUtils.getLogger(ShellCommand.class);
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
     private static final String[] exitKeywords = { "exit", "quit", "q" };
 
@@ -170,7 +172,7 @@ public class ShellCommand extends AbstractCommand {
             Launcher launcher = (Launcher) bundleContext.getService(launcherRef);
             launcher.run(parsed, true);
         } else {
-            throw new CommandException("Severe: Could not locate launcher");
+            throw new CommandException(t.localize(LocaleResources.MISSING_LAUNCHER));
         }
     }
 

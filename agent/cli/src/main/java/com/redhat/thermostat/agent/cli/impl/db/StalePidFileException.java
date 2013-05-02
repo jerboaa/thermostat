@@ -49,7 +49,7 @@ public class StalePidFileException extends ApplicationException {
     private final File pidFile;
 
     public StalePidFileException(File pidFile) {
-        super(translator.localize(LocaleResources.STALE_PID_FILE, pidFile.toString()));
+        super(translator.localize(LocaleResources.STALE_PID_FILE, pidFile.toString()).getContents());
         this.pidFile = pidFile;
     }
 

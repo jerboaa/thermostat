@@ -49,6 +49,7 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
@@ -107,7 +108,7 @@ public class VmOverviewController implements InformationServiceController<VmRef>
                     // Only show a stop time if we have actually stopped.
                     view.setVmStopTimeStamp(vmRunningTimeFormat.format(new Date(actualStopTime)));
                 } else {
-                    view.setVmStopTimeStamp(translator.localize(LocaleResources.VM_INFO_RUNNING));
+                    view.setVmStopTimeStamp(translator.localize(LocaleResources.VM_INFO_RUNNING).getContents());
                 }
                 view.setJavaVersion(info.getJavaVersion());
                 view.setJavaHome(info.getJavaHome());
@@ -117,7 +118,7 @@ public class VmOverviewController implements InformationServiceController<VmRef>
                 String actualVmVersion = info.getVmVersion();
                 String actualVmInfo = info.getVmInfo();
                 view.setVmNameAndVersion(translator.localize(LocaleResources.VM_INFO_VM_NAME_AND_VERSION,
-                        actualVmName, actualVmVersion, actualVmInfo));
+                        actualVmName, actualVmVersion, actualVmInfo).getContents());
                 view.setVmArguments(info.getVmArguments());
             }
         });
@@ -140,7 +141,7 @@ public class VmOverviewController implements InformationServiceController<VmRef>
     }
 
     @Override
-    public String getLocalizedName() {
+    public LocalizedString getLocalizedName() {
         return translator.localize(LocaleResources.VM_INFO_TAB_OVERVIEW);
     }
     

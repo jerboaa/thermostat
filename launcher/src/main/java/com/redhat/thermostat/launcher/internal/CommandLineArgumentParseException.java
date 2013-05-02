@@ -37,14 +37,11 @@
 package com.redhat.thermostat.launcher.internal;
 
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.locale.LocalizedString;
 
 public class CommandLineArgumentParseException extends CommandException {
 
-    public CommandLineArgumentParseException() {
-        super();
-    }
-
-    public CommandLineArgumentParseException(String message) {
+    public CommandLineArgumentParseException(LocalizedString message) {
         super(message);
     }
 
@@ -52,7 +49,7 @@ public class CommandLineArgumentParseException extends CommandException {
         super(cause);
     }
 
-    public CommandLineArgumentParseException(String message, Throwable cause) {
+    public CommandLineArgumentParseException(LocalizedString message, Throwable cause) {
         super(message, cause);
     }
 

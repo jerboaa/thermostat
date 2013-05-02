@@ -131,7 +131,7 @@ public class RecentTimeSeriesChartComposite extends Composite {
         container.setLayout(topLayout);
         
         Label prompt = new Label(container, SWT.NONE);
-        prompt.setText(translator.localize(LocaleResources.CHART_DURATION_SELECTOR_LABEL));
+        prompt.setText(translator.localize(LocaleResources.CHART_DURATION_SELECTOR_LABEL).getContents());
 
         durationSelector = new Text(container, SWT.BORDER);
         durationSelector.setData(ThermostatConstants.TEST_TAG, TEST_ID_DURATION_TEXT);

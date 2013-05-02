@@ -93,13 +93,13 @@ public class ObjectInfoCommand extends AbstractCommand {
         snapshot = heapDump.getSnapshot();
         JavaHeapObject obj = objCmdHelper.getJavaHeapObject();
         TableRenderer table = new TableRenderer(2);
-        table.printLine(translator.localize(LocaleResources.COMMAND_OBJECT_INFO_OBJECT_ID), obj.getIdString());
-        table.printLine(translator.localize(LocaleResources.COMMAND_OBJECT_INFO_TYPE), obj.getClazz().getName());
-        table.printLine(translator.localize(LocaleResources.COMMAND_OBJECT_INFO_SIZE), String.valueOf(obj.getSize()) + " bytes");
-        table.printLine(translator.localize(LocaleResources.COMMAND_OBJECT_INFO_HEAP_ALLOCATED), String.valueOf(obj.isHeapAllocated()));
-        table.printLine(translator.localize(LocaleResources.COMMAND_OBJECT_INFO_REFERENCES), "");
+        table.printLine(translator.localize(LocaleResources.COMMAND_OBJECT_INFO_OBJECT_ID).getContents(), obj.getIdString());
+        table.printLine(translator.localize(LocaleResources.COMMAND_OBJECT_INFO_TYPE).getContents(), obj.getClazz().getName());
+        table.printLine(translator.localize(LocaleResources.COMMAND_OBJECT_INFO_SIZE).getContents(), String.valueOf(obj.getSize()) + " bytes");
+        table.printLine(translator.localize(LocaleResources.COMMAND_OBJECT_INFO_HEAP_ALLOCATED).getContents(), String.valueOf(obj.isHeapAllocated()));
+        table.printLine(translator.localize(LocaleResources.COMMAND_OBJECT_INFO_REFERENCES).getContents(), "");
         printReferences(table, obj);
-        table.printLine(translator.localize(LocaleResources.COMMAND_OBJECT_INFO_REFERRERS), "");
+        table.printLine(translator.localize(LocaleResources.COMMAND_OBJECT_INFO_REFERRERS).getContents(), "");
         printReferrers(table, obj);
 
         PrintStream out = ctx.getConsole().getOutput();

@@ -75,8 +75,8 @@ public class AgentInformationDisplayFrame extends AgentInformationDisplayView {
     private static final Translate<LocaleResources> translate = LocaleResources.createLocalizer();
 
     private static final String[] BACKEND_TABLE_COLUMN_NAMES = new String[] {
-        translate.localize(LocaleResources.AGENT_INFO_BACKEND_NAME_COLUMN),
-        translate.localize(LocaleResources.AGENT_INFO_BACKEND_STATUS_COLUMN),
+        translate.localize(LocaleResources.AGENT_INFO_BACKEND_NAME_COLUMN).getContents(),
+        translate.localize(LocaleResources.AGENT_INFO_BACKEND_STATUS_COLUMN).getContents(),
     };
 
     private final CopyOnWriteArrayList<ActionListener<ConfigurationAction>> listeners = new CopyOnWriteArrayList<>();
@@ -110,10 +110,10 @@ public class AgentInformationDisplayFrame extends AgentInformationDisplayView {
         windowListener = new WindowClosingListener();
 
         frame = new JFrame();
-        frame.setTitle(translate.localize(LocaleResources.AGENT_INFO_WINDOW_TITLE));
+        frame.setTitle(translate.localize(LocaleResources.AGENT_INFO_WINDOW_TITLE).getContents());
         frame.addWindowListener(windowListener);
 
-        closeButton = new JButton(translate.localize(LocaleResources.BUTTON_CLOSE));
+        closeButton = new JButton(translate.localize(LocaleResources.BUTTON_CLOSE).getContents());
         closeButton.addActionListener(configurationComplete);
         closeButton.setName("close");
 
@@ -142,7 +142,7 @@ public class AgentInformationDisplayFrame extends AgentInformationDisplayView {
         JPanel agentListPanel = new JPanel();
         splitPane.setLeftComponent(agentListPanel);
 
-        JLabel agentLabel = new JLabel(translate.localize(LocaleResources.AGENT_INFO_AGENTS_LIST));
+        JLabel agentLabel = new JLabel(translate.localize(LocaleResources.AGENT_INFO_AGENTS_LIST).getContents());
 
         JScrollPane scrollPane = new JScrollPane();
 
@@ -167,7 +167,7 @@ public class AgentInformationDisplayFrame extends AgentInformationDisplayView {
         LabelField agentStartTimeLabel = new LabelField(translate.localize(LocaleResources.AGENT_INFO_AGENT_START_TIME_LABEL));
         LabelField agentStopTimeLabel = new LabelField(translate.localize(LocaleResources.AGENT_INFO_AGENT_STOP_TIME_LABEL));
 
-        String notAvailable = translate.localize(LocaleResources.INFORMATION_NOT_AVAILABLE);
+        String notAvailable = translate.localize(LocaleResources.INFORMATION_NOT_AVAILABLE).getContents();
 
         currentAgentName = new ValueField(notAvailable);
         currentAgentName.setName("agentName");
@@ -195,7 +195,7 @@ public class AgentInformationDisplayFrame extends AgentInformationDisplayView {
 
         JScrollPane backendsTableScollPane = new JScrollPane(backendsTable);
 
-        JLabel backendDescriptionLabel = new JLabel(translate.localize(LocaleResources.AGENT_INFO_BACKEND_DESCRIPTION_LABEL));
+        JLabel backendDescriptionLabel = new JLabel(translate.localize(LocaleResources.AGENT_INFO_BACKEND_DESCRIPTION_LABEL).getContents());
         backendDescription = new ValueField(notAvailable);
         backendDescription.setName("backendDescription");
 

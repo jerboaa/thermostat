@@ -55,6 +55,7 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.IntervalTimeData;
@@ -136,7 +137,7 @@ public class VmGcController implements InformationServiceController<VmRef> {
     }
 
     // FIXME
-    private String chartName(String collectorName, String generationName) {
+    private LocalizedString chartName(String collectorName, String generationName) {
         return translator.localize(LocaleResources.VM_GC_COLLECTOR_OVER_GENERATION,
                 collectorName, generationName);
     }
@@ -188,7 +189,7 @@ public class VmGcController implements InformationServiceController<VmRef> {
                 return g.getName();
             }
         }
-        return translator.localize(LocaleResources.UNKNOWN_GEN);
+        return translator.localize(LocaleResources.UNKNOWN_GEN).getContents();
     }
 
     public UIComponent getView() {
@@ -196,7 +197,7 @@ public class VmGcController implements InformationServiceController<VmRef> {
     }
 
     @Override
-    public String getLocalizedName() {
+    public LocalizedString getLocalizedName() {
         return translator.localize(LocaleResources.VM_INFO_TAB_GC);
     }
 

@@ -78,7 +78,7 @@
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-SymbolicName>com.redhat.thermostat.common.test</Bundle-SymbolicName>
             <Export-Package>
-              com.redhat.thermostat.testutils
+              com.redhat.thermostat.testutils,
             </Export-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>

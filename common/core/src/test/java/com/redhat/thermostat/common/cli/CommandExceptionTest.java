@@ -41,18 +41,13 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.locale.LocalizedString;
 
 public class CommandExceptionTest {
 
     @Test
-    public void testDefaultConstructor() {
-        CommandException ce = new CommandException();
-        verifyMessageAndCause(ce, null, null);
-    }
-
-    @Test
     public void testMessageConstructor() {
-        CommandException ce = new CommandException("test");
+        CommandException ce = new CommandException(new LocalizedString("test"));
         verifyMessageAndCause(ce, "test", null);
     }
 
@@ -66,7 +61,7 @@ public class CommandExceptionTest {
     @Test
     public void testCombinedConstructor() {
         Exception cause = new Exception("test fluff");
-        CommandException ce = new CommandException("test", cause);
+        CommandException ce = new CommandException(new LocalizedString("test"), cause);
         verifyMessageAndCause(ce, "test", cause);
     }
 

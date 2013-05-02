@@ -43,6 +43,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectDetailsView;
@@ -65,36 +66,36 @@ public class HeapDetailsSwing extends HeapDumpDetailsView implements SwingCompon
     }
 
     @Override
-    public void addSubView(final String title, final HeapHistogramView view) {
+    public void addSubView(final LocalizedString title, final HeapHistogramView view) {
         verifyIsSwingComponent(view);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                tabPane.insertTab(title, null, ((SwingComponent)view).getUiComponent(), null, 0);
+                tabPane.insertTab(title.getContents(), null, ((SwingComponent)view).getUiComponent(), null, 0);
             }
         });
     }
 
     @Override
-    public void addSubView(final String title, final ObjectDetailsView view) {
+    public void addSubView(final LocalizedString title, final ObjectDetailsView view) {
         verifyIsSwingComponent(view);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                tabPane.insertTab(title, null, ((SwingComponent)view).getUiComponent(), null, 1);
+                tabPane.insertTab(title.getContents(), null, ((SwingComponent)view).getUiComponent(), null, 1);
             }
         });
     }
 
     @Override
-    public void removeSubView(final String title) {
+    public void removeSubView(final LocalizedString title) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 int tabCount = tabPane.getTabCount();
                 for (int i = 0; i < tabCount; i++) {
                     String tabTitle = tabPane.getTitleAt(i);
-                    if (tabTitle.equals(title)) {
+                    if (tabTitle.equals(title.getContents())) {
                         tabPane.removeTabAt(i);
                         return;
                     }

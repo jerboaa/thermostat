@@ -63,10 +63,10 @@ public class ListHeapDumpsCommand extends AbstractCommand {
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private static final String[] COLUMN_NAMES = {
-        translator.localize(LocaleResources.HEADER_HOST_ID),
-        translator.localize(LocaleResources.HEADER_VM_ID),
-        translator.localize(LocaleResources.HEADER_HEAP_ID),
-        translator.localize(LocaleResources.HEADER_TIMESTAMP),
+        translator.localize(LocaleResources.HEADER_HOST_ID).getContents(),
+        translator.localize(LocaleResources.HEADER_VM_ID).getContents(),
+        translator.localize(LocaleResources.HEADER_HEAP_ID).getContents(),
+        translator.localize(LocaleResources.HEADER_TIMESTAMP).getContents(),
     };
 
     private final BundleContext context;

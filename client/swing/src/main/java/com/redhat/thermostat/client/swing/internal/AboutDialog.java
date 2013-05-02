@@ -59,7 +59,6 @@ import javax.swing.SwingWorker;
 import javax.swing.border.TitledBorder;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.swing.IconResource;
 import com.redhat.thermostat.client.swing.UIResources;
 import com.redhat.thermostat.common.ApplicationInfo;
 import com.redhat.thermostat.common.locale.Translate;
@@ -108,7 +107,7 @@ public class AboutDialog extends JDialog {
         JPanel panel = new JPanel();
         panel.setBorder(new TitledBorder(""));
         
-        JButton closeButton = new JButton(translator.localize(LocaleResources.BUTTON_CLOSE));
+        JButton closeButton = new JButton(translator.localize(LocaleResources.BUTTON_CLOSE).getContents());
         closeButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 AboutDialog.this.setVisible(false);

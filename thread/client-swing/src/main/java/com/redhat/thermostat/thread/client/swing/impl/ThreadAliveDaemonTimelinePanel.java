@@ -82,9 +82,9 @@ class ThreadAliveDaemonTimelinePanel extends JPanel {
                     .addComponent(timelinePanel, GroupLayout.DEFAULT_SIZE, 254, Short.MAX_VALUE))
         );
         
-        JLabel liveThreadsLabel = new JLabel(t.localize(LocaleResources.LIVE_THREADS) + ":");
+        JLabel liveThreadsLabel = new JLabel(t.localize(LocaleResources.LIVE_THREADS).getContents() + ":");
         
-        JLabel daemonThreadsLabel = new JLabel(t.localize(LocaleResources.DAEMON_THREADS) + ":");
+        JLabel daemonThreadsLabel = new JLabel(t.localize(LocaleResources.DAEMON_THREADS).getContents() + ":");
         
         liveThreads = new JLabel("-");
         liveThreads.setHorizontalAlignment(SwingConstants.RIGHT);

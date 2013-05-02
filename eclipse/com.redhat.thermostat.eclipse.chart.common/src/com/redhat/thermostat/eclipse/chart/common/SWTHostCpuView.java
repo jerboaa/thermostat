@@ -65,6 +65,7 @@ import org.jfree.data.time.TimeSeriesCollection;
 import com.redhat.thermostat.host.cpu.client.core.HostCpuView;
 import com.redhat.thermostat.host.cpu.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.ChartColors;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.eclipse.SWTComponent;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
@@ -104,14 +105,14 @@ public class SWTHostCpuView extends HostCpuView implements SWTComponent {
                 stdFont.getFontData()[0].getName(),
                 stdFont.getFontData()[0].getHeight(), SWT.BOLD);
         
-        summaryLabel.setText(translator.localize(LocaleResources.HOST_CPU_SECTION_OVERVIEW));
+        summaryLabel.setText(translator.localize(LocaleResources.HOST_CPU_SECTION_OVERVIEW).getContents());
         summaryLabel.setFont(boldFont);
         
         Composite detailsTop = new Composite(parent, SWT.NONE);
         detailsTop.setLayout(new GridLayout(3, false));
         
         Label cpuModelLabel = new Label(detailsTop, SWT.TRAIL);
-        cpuModelLabel.setText(translator.localize(LocaleResources.HOST_INFO_CPU_MODEL));
+        cpuModelLabel.setText(translator.localize(LocaleResources.HOST_INFO_CPU_MODEL).getContents());
         GridData hIndentLayoutData = new GridData();
         hIndentLayoutData.horizontalIndent = H_INDENT;
         cpuModelLabel.setLayoutData(hIndentLayoutData);
@@ -124,7 +125,7 @@ public class SWTHostCpuView extends HostCpuView implements SWTComponent {
         cpuModel.setText("Unknown");
         
         Label cpuCountLabel = new Label(detailsTop, SWT.TRAIL);
-        cpuCountLabel.setText(translator.localize(LocaleResources.HOST_INFO_CPU_COUNT));
+        cpuCountLabel.setText(translator.localize(LocaleResources.HOST_INFO_CPU_COUNT).getContents());
         cpuCountLabel.setLayoutData(hIndentLayoutData);
         
         Label cpuCountSpacer = new Label(detailsTop, SWT.NONE);
@@ -148,8 +149,8 @@ public class SWTHostCpuView extends HostCpuView implements SWTComponent {
     
     private JFreeChart createCpuChart() {
         JFreeChart chart = ChartFactory.createTimeSeriesChart(null,
-                translator.localize(LocaleResources.HOST_CPU_USAGE_CHART_TIME_LABEL),
-                translator.localize(LocaleResources.HOST_CPU_USAGE_CHART_VALUE_LABEL),
+                translator.localize(LocaleResources.HOST_CPU_USAGE_CHART_TIME_LABEL).getContents(),
+                translator.localize(LocaleResources.HOST_CPU_USAGE_CHART_VALUE_LABEL).getContents(),
                 datasetCollection, false, false, false);
 
         chart.getPlot().setBackgroundPaint(new Color(255, 255, 255, 0));
@@ -182,21 +183,22 @@ public class SWTHostCpuView extends HostCpuView implements SWTComponent {
     }
 
     @Override
-    public void addCpuUsageChart(final int cpuIndex, final String humanReadableName) {
+    public void addCpuUsageChart(final int cpuIndex, final LocalizedString name) {
         EventQueue.invokeLater(new Runnable() {
 
             @Override
             public void run() {
-                TimeSeries series = new TimeSeries(humanReadableName);
+                String theName = name.getContents();
+                TimeSeries series = new TimeSeries(theName);
                 Color color = ChartColors.getColor(colors.size());
-                colors.put(humanReadableName, color);
+                colors.put(theName, color);
 
                 datasets.put(cpuIndex, series);
                 datasetCollection.addSeries(series);
 
                 updateColors();
 
-                addLegendItem(humanReadableName, color);
+                addLegendItem(theName, color);
             }
         });
     }

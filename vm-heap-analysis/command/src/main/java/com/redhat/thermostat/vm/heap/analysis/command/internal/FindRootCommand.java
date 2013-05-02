@@ -98,7 +98,7 @@ public class FindRootCommand extends AbstractCommand {
         Collection<HeapPath<JavaHeapObject>> pathsToRoot = findRoot.findShortestPathsToRoot(obj, findAll);
         PrintStream out = ctx.getConsole().getOutput();
         if (pathsToRoot.isEmpty()) {
-            out.println(translator.localize(LocaleResources.COMMAND_FIND_ROOT_NO_ROOT_FOUND, PrintObjectUtils.objectToString(obj)));
+            out.println(translator.localize(LocaleResources.COMMAND_FIND_ROOT_NO_ROOT_FOUND, PrintObjectUtils.objectToString(obj)).getContents());
         } else {
             printPathsToRoot(snapshot, pathsToRoot, out);
         }

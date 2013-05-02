@@ -42,6 +42,7 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsView;
@@ -81,7 +82,7 @@ public class HeapDumpDetailsController {
         try {
             HeapHistogramView heapHistogramView = histogramViewProvider.createView();
             heapHistogramView.display(heapDump.getHistogram());
-            String title = translator.localize(LocaleResources.HEAP_DUMP_SECTION_HISTOGRAM);
+            LocalizedString title = translator.localize(LocaleResources.HEAP_DUMP_SECTION_HISTOGRAM);
             view.addSubView(title, heapHistogramView);
         } catch (IOException e) {
             log.log(Level.SEVERE, "unexpected error while reading heap dump", e);

@@ -122,6 +122,7 @@
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.agent.internal,
+              com.redhat.thermostat.agent.locale,
               com.redhat.thermostat.backend.internal,
               com.redhat.thermostat.utils.management.internal,
             </Private-Package>

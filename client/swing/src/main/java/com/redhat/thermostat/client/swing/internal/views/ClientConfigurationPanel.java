@@ -62,16 +62,16 @@ class ClientConfigurationPanel extends JPanel {
     
     public ClientConfigurationPanel() {
         setBorder(new TitledBorder(null,
-                  translator.localize(LocaleResources.CLIENT_PREFS_CONNECTION),
+                  translator.localize(LocaleResources.CLIENT_PREFS_CONNECTION).getContents(),
                   TitledBorder.LEFT, TitledBorder.TOP, null, null));
 
-        JLabel storageURLText = new JLabel(translator.localize(LocaleResources.CLIENT_PREFS_STORAGE_URL));
+        JLabel storageURLText = new JLabel(translator.localize(LocaleResources.CLIENT_PREFS_STORAGE_URL).getContents());
         storageURLText.setName("");
         
         storageUrl.setColumns(10);
         storageUrl.setName("connectionUrl");
         
-        JLabel userNameText = new JLabel(translator.localize(LocaleResources.CLIENT_PREFS_STORAGE_USERNAME));
+        JLabel userNameText = new JLabel(translator.localize(LocaleResources.CLIENT_PREFS_STORAGE_USERNAME).getContents());
         userNameText.setName("userNameText");
         
         userName.setName("username");
@@ -83,7 +83,7 @@ class ClientConfigurationPanel extends JPanel {
         password.setName("password");
         password.setColumns(10);
         
-        saveEntitlements = new JCheckBox(translator.localize(LocaleResources.CLIENT_PREFS_STORAGE_SAVE_ENTITLEMENTS));
+        saveEntitlements = new JCheckBox(translator.localize(LocaleResources.CLIENT_PREFS_STORAGE_SAVE_ENTITLEMENTS).getContents());
         saveEntitlements.setName("saveEntitlements");
         saveEntitlements.setSelected(false);
 

@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.common.cli;
 
+import com.redhat.thermostat.common.locale.LocalizedString;
+
 /**
  * An exception to be thrown by a {@link Command} upon implementation-defined
  * failure conditions.
@@ -44,21 +46,25 @@ public class CommandException extends Exception {
 
     private static final long serialVersionUID = 3730368617641245016L;
 
-    public CommandException() {
-        super();
-    }
+    private LocalizedString localizedMessage;
 
-    public CommandException(String message) {
-        super(message);
+    public CommandException(LocalizedString message) {
+        super(message.getContents());
+        localizedMessage = message;
     }
 
     public CommandException(Throwable cause) {
         super(cause);
+        localizedMessage = new LocalizedString(cause.getLocalizedMessage());
     }
 
-    public CommandException(String message, Throwable cause) {
-        super(message, cause);
+    public CommandException(LocalizedString message, Throwable cause) {
+        super(message.getContents(), cause);
+        localizedMessage = message;
     }
 
+    public LocalizedString getTranslatedMessage() {
+        return localizedMessage;
+    }
 }
 

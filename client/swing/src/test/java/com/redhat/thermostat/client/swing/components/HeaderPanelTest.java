@@ -59,6 +59,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import com.redhat.thermostat.common.locale.LocalizedString;
+
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertEquals;
@@ -103,10 +105,10 @@ public class HeaderPanelTest {
                 someIcon2 = new EmptyIcon(16, 16);
                 someIcon3 = new EmptyIcon(16, 16);
                 
-                ActionButton button1 = new ActionButton(someIcon1, "button1");
+                ActionButton button1 = new ActionButton(someIcon1, new LocalizedString("button1"));
                 button1.setName("button1");
                 
-                ActionButton button2 = new ActionButton(someIcon2, "button2");
+                ActionButton button2 = new ActionButton(someIcon2, new LocalizedString("button2"));
                 button2.setName("button2");
                 
                 ActionToggleButton toggle1 = new ActionToggleButton(someIcon3, "toggle1");

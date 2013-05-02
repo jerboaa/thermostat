@@ -73,6 +73,7 @@ import com.redhat.thermostat.client.ui.ChartColors;
 import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Size;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryView;
 import com.redhat.thermostat.host.memory.client.locale.LocaleResources;
@@ -130,7 +131,7 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
     }
 
     @Override
-    public void addMemoryChart(final String tag, final String humanReadableName) {
+    public void addMemoryChart(final String tag, final LocalizedString name) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -138,7 +139,7 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
                 colors.put(tag, ChartColors.getColor(colorIndex));
                 TimeSeries series = new TimeSeries(tag);
                 dataset.put(tag, series);
-                JCheckBox newCheckBox = new JCheckBox(createLabelWithLegend(humanReadableName, colors.get(tag)));
+                JCheckBox newCheckBox = new JCheckBox(createLabelWithLegend(name, colors.get(tag)));
                 newCheckBox.setActionCommand(tag);
                 newCheckBox.setSelected(true);
                 newCheckBox.addActionListener(memoryCheckboxListener);
@@ -152,9 +153,9 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
 
     }
 
-    private String createLabelWithLegend(String text, Color color) {
+    private String createLabelWithLegend(LocalizedString text, Color color) {
         String hexColor = "#" + Integer.toHexString(color.getRGB() & 0x00ffffff);
-        return "<html> <font color='" + hexColor + "'>\u2588</font> " + text + "</html>";
+        return "<html> <font color='" + hexColor + "'>\u2588</font> " + text.getContents() + "</html>";
     }
 
     @Override
@@ -301,8 +302,8 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
     private JFreeChart createMemoryChart() {
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 null, // Title
-                translator.localize(LocaleResources.HOST_MEMORY_CHART_TIME_LABEL), // x-axis Label
-                translator.localize(LocaleResources.HOST_MEMORY_CHART_SIZE_LABEL, Size.Unit.MiB.name()), // y-axis Label
+                translator.localize(LocaleResources.HOST_MEMORY_CHART_TIME_LABEL).getContents(), // x-axis Label
+                translator.localize(LocaleResources.HOST_MEMORY_CHART_SIZE_LABEL, Size.Unit.MiB.name()).getContents(), // y-axis Label
                 memoryCollection, // Dataset
                 false, // Show Legend
                 false, // Use tooltips

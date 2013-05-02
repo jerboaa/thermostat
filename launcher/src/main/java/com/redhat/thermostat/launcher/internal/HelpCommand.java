@@ -73,7 +73,7 @@ public class HelpCommand extends AbstractCommand {
         List<String> nonParsed = args.getNonOptionArguments();
 
         if (commandInfoSource == null) {
-            ctx.getConsole().getError().print(translator.localize(LocaleResources.CANNOT_GET_COMMAND_INFO));
+            ctx.getConsole().getError().print(translator.localize(LocaleResources.CANNOT_GET_COMMAND_INFO).getContents());
             return;
         }
 
@@ -85,7 +85,7 @@ public class HelpCommand extends AbstractCommand {
     }
 
     private void printCommandSummaries(CommandContext ctx) {
-        ctx.getConsole().getOutput().print(translator.localize(LocaleResources.COMMAND_HELP_COMMAND_LIST_HEADER));
+        ctx.getConsole().getOutput().print(translator.localize(LocaleResources.COMMAND_HELP_COMMAND_LIST_HEADER).getContents());
 
         TableRenderer renderer = new TableRenderer(2, COMMANDS_COLUMNS_WIDTH);
 
@@ -108,7 +108,7 @@ public class HelpCommand extends AbstractCommand {
             CommandInfo info = commandInfoSource.getCommandInfo(cmdName);
             printHelp(ctx, info);
         } catch (CommandInfoNotFoundException notFound) {
-            ctx.getConsole().getOutput().print(translator.localize(LocaleResources.UNKNOWN_COMMAND, cmdName));
+            ctx.getConsole().getOutput().print(translator.localize(LocaleResources.UNKNOWN_COMMAND, cmdName).getContents());
             printCommandSummaries(ctx);
         }
     }

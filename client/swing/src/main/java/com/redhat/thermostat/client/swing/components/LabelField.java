@@ -39,14 +39,16 @@ package com.redhat.thermostat.client.swing.components;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 
+import com.redhat.thermostat.common.locale.LocalizedString;
+
 /**
  * A {@link JLabel} appropriate for labelling other components.
  */
 @SuppressWarnings("serial")
 public class LabelField extends JLabel {
 
-    public LabelField(String text) {
-        super(text);
+    public LabelField(LocalizedString text) {
+        super(text.getContents());
         setHorizontalAlignment(SwingConstants.TRAILING);
     }
 }

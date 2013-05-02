@@ -503,7 +503,7 @@ public class PluginConfigurationParserTest {
 
         assertEquals("dbUrl", dbUrlOption.getArgName());
         assertEquals(1, dbUrlOption.getArgs());
-        assertEquals(t.localize(LocaleResources.OPTION_DB_URL_DESC), dbUrlOption.getDescription());
+        assertEquals(t.localize(LocaleResources.OPTION_DB_URL_DESC).getContents(), dbUrlOption.getDescription());
         assertFalse(dbUrlOption.isRequired());
     }
 

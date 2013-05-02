@@ -40,6 +40,7 @@ import java.util.List;
 
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
 
 public abstract class HostCpuView extends BasicView implements UIComponent {
@@ -50,7 +51,7 @@ public abstract class HostCpuView extends BasicView implements UIComponent {
 
     public abstract void clearCpuUsageData();
 
-    public abstract void addCpuUsageChart(int cpuIndex, String humanReadableName);
+    public abstract void addCpuUsageChart(int cpuIndex, LocalizedString name);
 
     public abstract void addCpuUsageData(int cpuIndex, List<DiscreteTimeData<Double>> data);
 

@@ -208,7 +208,7 @@ public class BuiltInCommandInfoTest {
         assertFalse(options.getOption(CommonOptions.DB_URL_ARG).isRequired());
         Option dbUrlOption = options.getOption(CommonOptions.DB_URL_ARG);
         Translate<LocaleResources> t = LocaleResources.createLocalizer();
-        assertEquals(t.localize(LocaleResources.OPTION_DB_URL_DESC), dbUrlOption.getDescription());
+        assertEquals(t.localize(LocaleResources.OPTION_DB_URL_DESC).getContents(), dbUrlOption.getDescription());
         assertEquals("d", dbUrlOption.getOpt());
         assertEquals("dbUrl", dbUrlOption.getLongOpt());
     }

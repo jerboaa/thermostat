@@ -48,6 +48,10 @@ public enum LocaleResources {
 
     USERNAME_PROMPT,
     PASSWORD_PROMPT,
+
+    LOGGING_PROPERTIES_ISSUE,
+
+    ENV_NO_HOME,
     ;
 
     public static final String RESOURCE_BUNDLE =

@@ -49,6 +49,7 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.host.cpu.client.core.HostCpuView;
 import com.redhat.thermostat.host.cpu.client.core.HostCpuViewProvider;
@@ -159,7 +160,7 @@ public class HostCpuController implements InformationServiceController<HostRef> 
     }
 
     @Override
-    public String getLocalizedName() {
+    public LocalizedString getLocalizedName() {
         return translator.localize(LocaleResources.HOST_INFO_TAB_CPU);
     }
 

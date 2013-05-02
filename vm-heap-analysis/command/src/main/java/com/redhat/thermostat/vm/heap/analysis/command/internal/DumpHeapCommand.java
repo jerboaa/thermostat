@@ -77,7 +77,7 @@ public class DumpHeapCommand extends AbstractCommand {
         Runnable successHandler = new Runnable() {
             @Override
             public void run() {
-                ctx.getConsole().getOutput().println(translator.localize(LocaleResources.COMMAND_HEAP_DUMP_DONE));
+                ctx.getConsole().getOutput().println(translator.localize(LocaleResources.COMMAND_HEAP_DUMP_DONE).getContents());
                 s.release();
             }
         };

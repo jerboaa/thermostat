@@ -81,8 +81,8 @@ public class SWTVmCpuView extends VmCpuView implements SWTComponent {
     private JFreeChart createCpuChart() {
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 null,
-                translator.localize(LocaleResources.VM_CPU_CHART_TIME_LABEL),
-                translator.localize(LocaleResources.VM_CPU_CHART_LOAD_LABEL),
+                translator.localize(LocaleResources.VM_CPU_CHART_TIME_LABEL).getContents(),
+                translator.localize(LocaleResources.VM_CPU_CHART_LOAD_LABEL).getContents(),
                 data,
                 false, false, false);
 

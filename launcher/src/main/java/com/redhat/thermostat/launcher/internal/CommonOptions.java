@@ -70,7 +70,7 @@ final class CommonOptions {
     static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     
     static List<Option> getDbOptions() {
-        String dbUrlDesc = t.localize(LocaleResources.OPTION_DB_URL_DESC);
+        String dbUrlDesc = t.localize(LocaleResources.OPTION_DB_URL_DESC).getContents();
         Option dbUrlOption = new Option("d", DB_URL_ARG, true, dbUrlDesc);
         dbUrlOption.setRequired(false);
         dbUrlOption.setArgName(DB_URL_ARG);
@@ -80,7 +80,7 @@ final class CommonOptions {
     }
     
     static Option getLogOption() {
-        String desc = t.localize(LocaleResources.OPTION_LOG_LEVEL_DESC);
+        String desc = t.localize(LocaleResources.OPTION_LOG_LEVEL_DESC).getContents();
         Option logOption = new Option("l", LOG_LEVEL_ARG, true, desc);
         logOption.setRequired(false);
         logOption.setArgName(LOG_LEVEL_ARG);

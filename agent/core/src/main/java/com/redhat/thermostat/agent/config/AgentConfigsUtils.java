@@ -45,8 +45,12 @@ import java.util.Properties;
 
 import com.redhat.thermostat.common.config.Configuration;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
+import com.redhat.thermostat.agent.locale.LocaleResources;
+import com.redhat.thermostat.common.locale.Translate;
 
 public class AgentConfigsUtils {
+
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
     private static char[] pw = {'p', 'a', 's', 's', 'w', 'o', 'r', 'd'};
     private static char[] user = {'u', 's', 'e', 'r', 'n', 'a', 'm', 'e'};
@@ -103,22 +107,25 @@ public class AgentConfigsUtils {
         config.setPassword("");
         if (authFile.canRead() && authFile.isFile()) {
             long length = authFile.length();
-            if (length > Integer.MAX_VALUE || length < 0L) {
-                throw new InvalidConfigurationException("agent.auth file not valid");
-            }
-            int len = (int) length; // A reasonable file will be within int range.
-            // file size in bytes >= # of chars so this size should be sufficient.
-            char[] authData = new char[len];
-            // This is probably the most sensitive time for password-in-heap exposure.
-            // The reader here may contain buffers containing the password.  It will,
-            // of course, be garbage collected in due time.
+            char[] authData = null;
             try (FileReader reader = new FileReader(authFile)) {
+                if (length > Integer.MAX_VALUE || length < 0L) {
+                    throw new InvalidConfigurationException(t.localize(LocaleResources.FILE_NOT_VALID, authFile.getCanonicalPath()));
+                }
+                int len = (int) length; // A reasonable file will be within int range.
+                // file size in bytes >= # of chars so this size should be sufficient.
+                authData = new char[len];
+                // This is probably the most sensitive time for password-in-heap exposure.
+                // The reader here may contain buffers containing the password.  It will,
+                // of course, be garbage collected in due time.
                 int chars = reader.read(authData, 0, len);
                 parseAuthConfigFromData(authData, chars, config);
             } catch (IOException e) {
                 throw new InvalidConfigurationException(e);
             } finally {
-                Arrays.fill(authData, '\0');
+                if (authData != null) {
+                    Arrays.fill(authData, '\0');
+                }
             }
         }
     }
@@ -153,7 +160,7 @@ public class AgentConfigsUtils {
                 value = null;
                 continue;
             }
-            throw new InvalidConfigurationException("Unrecognized content in agent auth file.");
+            throw new InvalidConfigurationException(t.localize(LocaleResources.BAD_AGENT_AUTH_CONTENTS));
         }
     }
 

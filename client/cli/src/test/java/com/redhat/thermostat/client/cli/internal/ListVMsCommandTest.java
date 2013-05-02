@@ -162,7 +162,7 @@ public class ListVMsCommandTest {
             cmd.run(ctx);
             fail();
         } catch (CommandException e) {
-            assertEquals(translator.localize(LocaleResources.HOST_SERVICE_UNAVAILABLE), e.getMessage());
+            assertEquals(translator.localize(LocaleResources.HOST_SERVICE_UNAVAILABLE).getContents(), e.getMessage());
         }
     }
     
@@ -178,7 +178,7 @@ public class ListVMsCommandTest {
             cmd.run(ctx);
             fail();
         } catch (CommandException e) {
-            assertEquals(translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE), e.getMessage());
+            assertEquals(translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE).getContents(), e.getMessage());
         }
     }
 

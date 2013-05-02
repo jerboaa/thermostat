@@ -48,6 +48,7 @@ import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.numa.client.core.NumaView;
 import com.redhat.thermostat.numa.client.core.NumaView.GraphVisibilityChangeListener;
@@ -164,7 +165,7 @@ public class NumaController implements InformationServiceController<HostRef> {
     }
 
     @Override
-    public String getLocalizedName() {
+    public LocalizedString getLocalizedName() {
         return translator.localize(LocaleResources.NUMA_TAB);
     }
 }

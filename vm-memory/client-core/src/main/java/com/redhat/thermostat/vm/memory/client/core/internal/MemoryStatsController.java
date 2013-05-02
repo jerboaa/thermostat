@@ -56,6 +56,7 @@ import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.gc.remote.common.GCRequest;
 import com.redhat.thermostat.gc.remote.common.command.GCCommand;
@@ -256,9 +257,8 @@ public class MemoryStatsController implements InformationServiceController<VmRef
     }
 
     @Override
-    public String getLocalizedName() {
-        Translate<LocaleResources> t = LocaleResources.createLocalizer();
-        return t.localize(LocaleResources.VM_INFO_TAB_MEMORY);
+    public LocalizedString getLocalizedName() {
+        return translate.localize(LocaleResources.VM_INFO_TAB_MEMORY);
     }
 
     @Override

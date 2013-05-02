@@ -39,8 +39,8 @@ package com.redhat.thermostat.host.cpu.client.core.internal;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Matchers.isNotNull;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
@@ -62,6 +62,7 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.host.cpu.client.core.HostCpuView;
 import com.redhat.thermostat.host.cpu.client.core.HostCpuViewProvider;
 import com.redhat.thermostat.host.cpu.client.core.internal.HostCpuController;
@@ -153,7 +154,7 @@ public class HostCpuControllerTest {
         verify(view).setCpuCount("12345");
         @SuppressWarnings("rawtypes")
         ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
-        verify(view).addCpuUsageChart(eq(0), anyString());
+        verify(view).addCpuUsageChart(eq(0), isA(LocalizedString.class));
         verify(view).addCpuUsageData(eq(0), captor.capture());
         List<DiscreteTimeData<Double>> cpuLoadData = captor.getValue();
         assertEquals(1, cpuLoadData.get(0).getTimeInMillis());

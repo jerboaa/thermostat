@@ -40,6 +40,7 @@ import java.util.List;
 
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
 
 public abstract class NumaView extends BasicView implements UIComponent {
@@ -50,7 +51,7 @@ public abstract class NumaView extends BasicView implements UIComponent {
         public void hide(String tag);
     }
 
-    public abstract void addNumaChart(String tag, String humanReadableName);
+    public abstract void addNumaChart(String tag, LocalizedString name);
 
     public abstract void removeNumaChart(String tag);
 

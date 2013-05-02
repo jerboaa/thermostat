@@ -60,7 +60,7 @@ public class VMInfoCommand extends AbstractCommand {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private static final String STILL_ALIVE = translator.localize(LocaleResources.VM_STOP_TIME_RUNNING);
+    private static final String STILL_ALIVE = translator.localize(LocaleResources.VM_STOP_TIME_RUNNING).getContents();
 
     private final BundleContext context;
 
@@ -110,18 +110,18 @@ public class VMInfoCommand extends AbstractCommand {
         VmInfo vmInfo = vmsDAO.getVmInfo(vm);
 
         TableRenderer table = new TableRenderer(2);
-        table.printLine(translator.localize(LocaleResources.VM_INFO_PROCESS_ID), String.valueOf(vmInfo.getVmPid()));
-        table.printLine(translator.localize(LocaleResources.VM_INFO_START_TIME), new Date(vmInfo.getStartTimeStamp()).toString());
+        table.printLine(translator.localize(LocaleResources.VM_INFO_PROCESS_ID).getContents(), String.valueOf(vmInfo.getVmPid()));
+        table.printLine(translator.localize(LocaleResources.VM_INFO_START_TIME).getContents(), new Date(vmInfo.getStartTimeStamp()).toString());
         if (vmInfo.isAlive()) {
-            table.printLine(translator.localize(LocaleResources.VM_INFO_STOP_TIME), STILL_ALIVE);
+            table.printLine(translator.localize(LocaleResources.VM_INFO_STOP_TIME).getContents(), STILL_ALIVE);
         } else {
-            table.printLine(translator.localize(LocaleResources.VM_INFO_STOP_TIME), new Date(vmInfo.getStopTimeStamp()).toString());
+            table.printLine(translator.localize(LocaleResources.VM_INFO_STOP_TIME).getContents(), new Date(vmInfo.getStopTimeStamp()).toString());
         }
-        table.printLine(translator.localize(LocaleResources.VM_INFO_MAIN_CLASS), vmInfo.getMainClass());
-        table.printLine(translator.localize(LocaleResources.VM_INFO_COMMAND_LINE), vmInfo.getJavaCommandLine());
-        table.printLine(translator.localize(LocaleResources.VM_INFO_JAVA_VERSION), vmInfo.getJavaVersion());
-        table.printLine(translator.localize(LocaleResources.VM_INFO_VIRTUAL_MACHINE), vmInfo.getVmName());
-        table.printLine(translator.localize(LocaleResources.VM_INFO_VM_ARGUMENTS), vmInfo.getVmArguments());
+        table.printLine(translator.localize(LocaleResources.VM_INFO_MAIN_CLASS).getContents(), vmInfo.getMainClass());
+        table.printLine(translator.localize(LocaleResources.VM_INFO_COMMAND_LINE).getContents(), vmInfo.getJavaCommandLine());
+        table.printLine(translator.localize(LocaleResources.VM_INFO_JAVA_VERSION).getContents(), vmInfo.getJavaVersion());
+        table.printLine(translator.localize(LocaleResources.VM_INFO_VIRTUAL_MACHINE).getContents(), vmInfo.getVmName());
+        table.printLine(translator.localize(LocaleResources.VM_INFO_VM_ARGUMENTS).getContents(), vmInfo.getVmArguments());
 
         PrintStream out = ctx.getConsole().getOutput();
         table.render(out);

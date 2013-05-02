@@ -45,6 +45,7 @@ import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.VmInformationView;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
 import com.redhat.thermostat.common.OrderedComparator;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.storage.core.VmRef;
 
 public class VmInformationController {
@@ -59,7 +60,7 @@ public class VmInformationController {
         for (InformationService<VmRef> vmInfoService : vmInfoServices) {
             if (vmInfoService.getFilter().matches(vmRef)) {
                 InformationServiceController<VmRef> ctrl = vmInfoService.getInformationServiceController(vmRef);
-                String name = ctrl.getLocalizedName();
+                LocalizedString name = ctrl.getLocalizedName();
                 view.addChildView(name, ctrl.getView());
             }
         }

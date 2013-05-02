@@ -116,29 +116,29 @@ public class SwingThreadViewTest {
         });
         frameFixture = new FrameFixture(frame);
     }
-    
+
     @GUITest
     @Test
     public void verifyMonitorLabelChange() throws InvocationTargetException, InterruptedException {
         frameFixture.show();
-        
+
         JToggleButtonFixture togglefixture = frameFixture.toggleButton("recordButton");
         
-        togglefixture.requireToolTip(t.localize(LocaleResources.START_RECORDING));
-        
+        togglefixture.requireToolTip(t.localize(LocaleResources.START_RECORDING).getContents());
+
         togglefixture.click();
 
-        togglefixture.requireToolTip(t.localize(LocaleResources.STOP_RECORDING));
+        togglefixture.requireToolTip(t.localize(LocaleResources.STOP_RECORDING).getContents());
         
         // now try "programmatically"
         
         view.setRecording(true, true);
         
-        togglefixture.requireToolTip(t.localize(LocaleResources.STOP_RECORDING));
+        togglefixture.requireToolTip(t.localize(LocaleResources.STOP_RECORDING).getContents());
     
         view.setRecording(false, false);
         
-        togglefixture.requireToolTip(t.localize(LocaleResources.START_RECORDING));
+        togglefixture.requireToolTip(t.localize(LocaleResources.START_RECORDING).getContents());
     }
 
     @Category(GUITest.class)

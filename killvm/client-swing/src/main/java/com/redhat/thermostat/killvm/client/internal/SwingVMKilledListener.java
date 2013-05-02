@@ -67,7 +67,7 @@ public class SwingVMKilledListener implements RequestResponseListener {
             logger.log(Level.SEVERE,
                     "Kill request error for VM ID "
                             + vmId);
-            showErrorMessage(t.localize(LocaleResources.KILL_ACTION_ERROR_RESPONSE_MSG, vmId));
+            showErrorMessage(t.localize(LocaleResources.KILL_ACTION_ERROR_RESPONSE_MSG, vmId).getContents());
             break;
         case OK:
             logger.log(Level.INFO,

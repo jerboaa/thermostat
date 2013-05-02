@@ -91,7 +91,7 @@ public class SWTHostOverviewView extends HostOverviewView implements
         // Basics
         Label lblBasics = new Label(top, SWT.NONE);
         lblBasics.setText(translator
-                .localize(LocaleResources.HOST_OVERVIEW_SECTION_BASICS));
+                .localize(LocaleResources.HOST_OVERVIEW_SECTION_BASICS).getContents());
         Font stdFont = lblBasics.getFont();
         Font boldFont = new Font(stdFont.getDevice(),
                 stdFont.getFontData()[0].getName(),
@@ -104,7 +104,7 @@ public class SWTHostOverviewView extends HostOverviewView implements
                 false));
         Label lblHostName = new Label(basicsComps, SWT.NONE);
         lblHostName.setText(translator
-                .localize(LocaleResources.HOST_INFO_HOSTNAME));
+                .localize(LocaleResources.HOST_INFO_HOSTNAME).getContents());
         GridData hostNameGridData = new GridData(SWT.FILL, SWT.CENTER, false,
                 false);
         hostNameGridData.widthHint = FIRST_COLUMN_WIDTH;
@@ -117,7 +117,7 @@ public class SWTHostOverviewView extends HostOverviewView implements
         // Hardware
         Label lblHardware = new Label(top, SWT.NONE);
         lblHardware.setText(translator
-                .localize(LocaleResources.HOST_OVERVIEW_SECTION_HARDWARE));
+                .localize(LocaleResources.HOST_OVERVIEW_SECTION_HARDWARE).getContents());
         lblHardware.setFont(boldFont);
         Composite hardwareComps = new Composite(top, SWT.NONE);
         hardwareComps.setLayout(gridlayout);
@@ -125,7 +125,7 @@ public class SWTHostOverviewView extends HostOverviewView implements
                 false));
         Label lblProcModel = new Label(hardwareComps, SWT.NONE);
         lblProcModel.setText(translator
-                .localize(LocaleResources.HOST_INFO_CPU_MODEL));
+                .localize(LocaleResources.HOST_INFO_CPU_MODEL).getContents());
         GridData procModelGridData = new GridData(SWT.FILL, SWT.CENTER, false,
                 false);
         procModelGridData.widthHint = FIRST_COLUMN_WIDTH;
@@ -137,7 +137,7 @@ public class SWTHostOverviewView extends HostOverviewView implements
                 .setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
         Label lblProcCount = new Label(hardwareComps, SWT.NONE);
         lblProcCount.setText(translator
-                .localize(LocaleResources.HOST_INFO_CPU_COUNT));
+                .localize(LocaleResources.HOST_INFO_CPU_COUNT).getContents());
         GridData procCountGridData = new GridData(SWT.FILL, SWT.CENTER, false,
                 false);
         procCountGridData.widthHint = FIRST_COLUMN_WIDTH;
@@ -149,7 +149,7 @@ public class SWTHostOverviewView extends HostOverviewView implements
                 false));
         Label lblTotalMemory = new Label(hardwareComps, SWT.NONE);
         lblTotalMemory.setText(translator
-                .localize(LocaleResources.HOST_INFO_MEMORY_TOTAL));
+                .localize(LocaleResources.HOST_INFO_MEMORY_TOTAL).getContents());
         GridData totalMemGridData = new GridData(SWT.FILL, SWT.CENTER, false,
                 false);
         totalMemGridData.widthHint = FIRST_COLUMN_WIDTH;
@@ -161,7 +161,7 @@ public class SWTHostOverviewView extends HostOverviewView implements
                 false));
         Label lblNetwork = new Label(hardwareComps, SWT.NONE);
         lblNetwork.setText(translator
-                .localize(LocaleResources.HOST_INFO_NETWORK));
+                .localize(LocaleResources.HOST_INFO_NETWORK).getContents());
         GridData networkLayout = new GridData(SWT.FILL, SWT.TOP, false, false);
         networkLayout.widthHint = FIRST_COLUMN_WIDTH;
         lblNetwork.setLayoutData(networkLayout);
@@ -172,7 +172,7 @@ public class SWTHostOverviewView extends HostOverviewView implements
         // Software
         Label lblSoftware = new Label(top, SWT.NONE);
         lblSoftware.setText(translator
-                .localize(LocaleResources.HOST_OVERVIEW_SECTION_SOFTWARE));
+                .localize(LocaleResources.HOST_OVERVIEW_SECTION_SOFTWARE).getContents());
         lblSoftware.setFont(boldFont);
         Composite softwareComps = new Composite(top, SWT.NONE);
         softwareComps.setLayout(gridlayout);
@@ -180,7 +180,7 @@ public class SWTHostOverviewView extends HostOverviewView implements
                 false));
         Label lblOsName = new Label(softwareComps, SWT.NONE);
         lblOsName.setText(translator
-                .localize(LocaleResources.HOST_INFO_OS_NAME));
+                .localize(LocaleResources.HOST_INFO_OS_NAME).getContents());
         GridData osNameGridData = new GridData(SWT.FILL, SWT.CENTER, false,
                 false);
         osNameGridData.widthHint = FIRST_COLUMN_WIDTH;
@@ -191,7 +191,7 @@ public class SWTHostOverviewView extends HostOverviewView implements
         osName.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
         Label lblKernel = new Label(softwareComps, SWT.NONE);
         lblKernel.setText(translator
-                .localize(LocaleResources.HOST_INFO_OS_KERNEL));
+                .localize(LocaleResources.HOST_INFO_OS_KERNEL).getContents());
         GridData osKernelGridData = new GridData(SWT.FILL, SWT.CENTER, false,
                 false);
         osKernelGridData.widthHint = FIRST_COLUMN_WIDTH;

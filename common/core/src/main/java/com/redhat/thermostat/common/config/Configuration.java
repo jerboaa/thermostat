@@ -38,9 +38,13 @@ package com.redhat.thermostat.common.config;
 
 import java.io.File;
 
+import com.redhat.thermostat.common.locale.LocaleResources;
+import com.redhat.thermostat.common.locale.Translate;
+
 public class Configuration {
 
     private static final String THERMOSTAT_USER_DIR = ".thermostat";
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
     private String home;
     private boolean printOsgiInfo = false;
@@ -54,7 +58,7 @@ public class Configuration {
         }
         
         if (home == null) {
-            throw new InvalidConfigurationException("THERMOSTAT_HOME not defined...");
+            throw new InvalidConfigurationException(t.localize(LocaleResources.ENV_NO_HOME));
         }
         this.home = home;
     }

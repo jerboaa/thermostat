@@ -50,7 +50,7 @@ public class HeapDumperPopup extends ThermostatPopupMenu {
     private JMenuItem dumper;
     
     public HeapDumperPopup() {
-        dumper = new JMenuItem(translator.localize(LocaleResources.TRIGGER_HEAP_DUMP));
+        dumper = new JMenuItem(translator.localize(LocaleResources.TRIGGER_HEAP_DUMP).getContents());
         add(dumper);
     }
     

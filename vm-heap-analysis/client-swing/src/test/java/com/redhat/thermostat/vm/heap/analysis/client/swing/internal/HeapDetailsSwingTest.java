@@ -61,6 +61,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import com.redhat.thermostat.client.swing.EdtHelper;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.HeapDetailsSwing;
 import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.HistogramPanel;
 import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.ObjectDetailsPanel;
@@ -120,8 +121,8 @@ public class HeapDetailsSwingTest {
                 return new JPanel();
             }
         }));
-        view.addSubView("test1", histogramView);
-        view.addSubView("test2", objectDetailsView);
+        view.addSubView(new LocalizedString("test1"), histogramView);
+        view.addSubView(new LocalizedString("test2"), objectDetailsView);
 
         tabPane.requireTabTitles("test1", "test2");
     }
@@ -143,11 +144,11 @@ public class HeapDetailsSwingTest {
             }
         }));
 
-        view.addSubView("test1", histogramView);
+        view.addSubView(new LocalizedString("test1"), histogramView);
 
         tabPane.requireTabTitles("test1");
 
-        view.removeSubView("test1");
+        view.removeSubView(new LocalizedString("test1"));
 
         tabPane.requireTabTitles();
     }

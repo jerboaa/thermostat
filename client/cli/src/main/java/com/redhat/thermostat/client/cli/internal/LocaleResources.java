@@ -41,6 +41,7 @@ import com.redhat.thermostat.common.locale.Translate;
 public enum LocaleResources {
 
     MISSING_INFO,
+    MISSING_LAUNCHER,
 
     HOST_SERVICE_UNAVAILABLE,
     VM_SERVICE_UNAVAILABLE,

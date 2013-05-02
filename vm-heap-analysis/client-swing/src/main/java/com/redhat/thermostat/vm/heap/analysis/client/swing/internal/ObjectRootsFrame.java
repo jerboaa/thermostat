@@ -85,13 +85,13 @@ public class ObjectRootsFrame extends JFrame implements ObjectRootsView {
     private final JTextPane objectDetails;
 
     public ObjectRootsFrame() {
-        setTitle(translator.localize(LocaleResources.OBJECT_ROOTS_VIEW_TITLE));
+        setTitle(translator.localize(LocaleResources.OBJECT_ROOTS_VIEW_TITLE).getContents());
 
         dataModel = new DefaultTreeModel(ROOT);
         pathToRootTree = new JTree(dataModel);
         pathToRootTree.setName(TREE_NAME);
 
-        JLabel lblNewLabel = new JLabel(translator.localize(LocaleResources.OBJECT_ROOTS_VIEW_TITLE));
+        JLabel lblNewLabel = new JLabel(translator.localize(LocaleResources.OBJECT_ROOTS_VIEW_TITLE).getContents());
 
         JScrollPane scrollPane = new JScrollPane(pathToRootTree);
 

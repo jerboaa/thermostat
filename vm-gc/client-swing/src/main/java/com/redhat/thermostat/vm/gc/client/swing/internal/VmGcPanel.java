@@ -70,6 +70,7 @@ import com.redhat.thermostat.client.swing.components.SectionHeader;
 import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
 import com.redhat.thermostat.client.ui.SampledDataset;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.storage.model.IntervalTimeData;
 import com.redhat.thermostat.vm.gc.client.core.VmGcView;
@@ -128,11 +129,11 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
 
     private void initializePanel() {
         visiblePanel.setContent(realPanel);
-        visiblePanel.setHeader(translator.localize(LocaleResources.VM_GC_TITLE));
+        visiblePanel.setHeader(translator.localize(LocaleResources.VM_GC_TITLE).getContents());
         realPanel.setLayout(new GridBagLayout());
     }
 
-    private JPanel createCollectorDetailsPanel(IntervalXYDataset collectorData, String title, String units) {
+    private JPanel createCollectorDetailsPanel(IntervalXYDataset collectorData, LocalizedString title, String units) {
         JPanel detailsPanel = new JPanel();
         detailsPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         detailsPanel.setLayout(new BorderLayout());
@@ -141,8 +142,8 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
 
         JFreeChart chart = ChartFactory.createHistogram(
             null,
-            translator.localize(LocaleResources.VM_GC_COLLECTOR_CHART_REAL_TIME_LABEL),
-            translator.localize(LocaleResources.VM_GC_COLLECTOR_CHART_GC_TIME_LABEL, units),
+            translator.localize(LocaleResources.VM_GC_COLLECTOR_CHART_REAL_TIME_LABEL).getContents(),
+            translator.localize(LocaleResources.VM_GC_COLLECTOR_CHART_GC_TIME_LABEL, units).getContents(),
             collectorData,
             PlotOrientation.VERTICAL,
             false,
@@ -194,7 +195,7 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
     }
 
     @Override
-    public void addChart(final String tag, final String title, final String units) {
+    public void addChart(final String tag, final LocalizedString title, final String units) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {

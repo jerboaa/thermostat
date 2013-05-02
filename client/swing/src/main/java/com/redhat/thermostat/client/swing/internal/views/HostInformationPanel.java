@@ -46,6 +46,7 @@ import javax.swing.SwingUtilities;
 import com.redhat.thermostat.client.core.views.HostInformationView;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.common.locale.LocalizedString;
 
 public class HostInformationPanel extends HostInformationView implements SwingComponent {
 
@@ -63,13 +64,13 @@ public class HostInformationPanel extends HostInformationView implements SwingCo
     }
 
     @Override
-    public void addChildView(final String title, final UIComponent view) {
+    public void addChildView(final LocalizedString title, final UIComponent view) {
         if (view instanceof SwingComponent) {
             final SwingComponent component = (SwingComponent)view;
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    tabPane.insertTab(title, null, component.getUiComponent(), null, viewCount);
+                    tabPane.insertTab(title.getContents(), null, component.getUiComponent(), null, viewCount);
                     viewCount++;
                 }
                 
@@ -78,12 +79,12 @@ public class HostInformationPanel extends HostInformationView implements SwingCo
     }
 
     @Override
-    public void removeChildView(final String title) {
+    public void removeChildView(final LocalizedString title) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 for (int i = 0; i < viewCount; i++) {
-                    if (tabPane.getTitleAt(i).equals(title)) {
+                    if (tabPane.getTitleAt(i).equals(title.getContents())) {
                         tabPane.remove(i);
                         return;
                     }

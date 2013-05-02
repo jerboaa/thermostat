@@ -52,6 +52,7 @@ import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
@@ -129,10 +130,10 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
         
         model = new OverviewChart(
                     null,
-                    translator.localize(LocaleResources.HEAP_CHART_TIME_AXIS),
-                    translator.localize(LocaleResources.HEAP_CHART_HEAP_AXIS),
-                    translator.localize(LocaleResources.HEAP_CHART_CAPACITY),
-                    translator.localize(LocaleResources.HEAP_CHART_USED));
+                    translator.localize(LocaleResources.HEAP_CHART_TIME_AXIS).getContents(),
+                    translator.localize(LocaleResources.HEAP_CHART_HEAP_AXIS).getContents(),
+                    translator.localize(LocaleResources.HEAP_CHART_CAPACITY).getContents(),
+                    translator.localize(LocaleResources.HEAP_CHART_USED).getContents());
         
         timer = appService.getTimerFactory().createTimer();
         timer.setAction(new HeapOverviewDataCollector());
@@ -213,7 +214,7 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
                     view.enableHeapDumping();
                     view.notifyHeapDumpComplete();
                 } catch (CommandException e) {
-                    view.displayWarning(e.getMessage());
+                    view.displayWarning(e.getTranslatedMessage());
                 }
             }
         });
@@ -248,7 +249,7 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
     }
 
     @Override
-    public String getLocalizedName() {
+    public LocalizedString getLocalizedName() {
         return translator.localize(LocaleResources.HEAP_SECTION_TITLE);
     }
 

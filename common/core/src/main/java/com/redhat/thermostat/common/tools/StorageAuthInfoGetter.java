@@ -69,7 +69,7 @@ public class StorageAuthInfoGetter {
      * @throws IOException 
      */
     public String getUserName(String url) throws IOException {
-        String prompt = t.localize(LocaleResources.USERNAME_PROMPT, url);
+        String prompt = t.localize(LocaleResources.USERNAME_PROMPT, url).getContents();
         String name = reader.readLine(prompt);
         return name;
     }
@@ -85,7 +85,7 @@ public class StorageAuthInfoGetter {
     public char[] getPassword(String url) throws IOException {
         char[] password = new char[PW_SIZE_INCREMENT];
         reader.setHistoryEnabled(false);
-        reader.print(t.localize(LocaleResources.PASSWORD_PROMPT, url));
+        reader.print(t.localize(LocaleResources.PASSWORD_PROMPT, url).getContents());
         reader.flush();
         Character oldEcho = reader.getEchoCharacter();
         reader.setEchoCharacter('\0');

@@ -70,7 +70,7 @@ public class HistogramPanel extends HeapHistogramView implements SwingComponent 
         panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
 
-        headerPanel = new HeaderPanel(translator.localize(LocaleResources.HEAP_DUMP_CLASS_USAGE));
+        headerPanel = new HeaderPanel(translator.localize(LocaleResources.HEAP_DUMP_CLASS_USAGE).getContents());
         panel.add(headerPanel);
     }
 
@@ -99,9 +99,9 @@ public class HistogramPanel extends HeapHistogramView implements SwingComponent 
     private class HistogramTableModel extends DefaultTableModel {
 
         private final String[] columnNames = new String[] {
-            translator.localize(LocaleResources.HEAP_DUMP_HISTOGRAM_COLUMN_CLASS),
-            translator.localize(LocaleResources.HEAP_DUMP_HISTOGRAM_COLUMN_INSTANCES),
-            translator.localize(LocaleResources.HEAP_DUMP_HISTOGRAM_COLUMN_SIZE),
+            translator.localize(LocaleResources.HEAP_DUMP_HISTOGRAM_COLUMN_CLASS).getContents(),
+            translator.localize(LocaleResources.HEAP_DUMP_HISTOGRAM_COLUMN_INSTANCES).getContents(),
+            translator.localize(LocaleResources.HEAP_DUMP_HISTOGRAM_COLUMN_SIZE).getContents(),
         };
 
         private List<HistogramRecord> histogram;

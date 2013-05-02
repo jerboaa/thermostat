@@ -40,11 +40,12 @@ import java.util.List;
 
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.storage.model.IntervalTimeData;
 
 public abstract class VmGcView extends BasicView implements UIComponent {
 
-    public abstract void addChart(String tag, String title, String valueUnit);
+    public abstract void addChart(String tag, LocalizedString title, String valueUnit);
 
     public abstract void removeChart(String tag);
 

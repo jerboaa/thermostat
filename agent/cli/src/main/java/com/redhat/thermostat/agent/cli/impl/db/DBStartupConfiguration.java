@@ -41,11 +41,15 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
+import com.redhat.thermostat.agent.cli.impl.locale.LocaleResources;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 
 public class DBStartupConfiguration implements StartupConfiguration {
-    
+
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
+
     private File dbPath;
     private File logFile;
     private File pidFile;
@@ -153,14 +157,14 @@ public class DBStartupConfiguration implements StartupConfiguration {
             int localPort = Integer.parseInt(port);
             setPort(localPort);
         } else {
-            throw new InvalidConfigurationException(DBConfig.PORT + " property missing");
+            throw new InvalidConfigurationException(t.localize(LocaleResources.MISSING_PROPERTY, DBConfig.PORT.toString()));
         }
         
         if (properties.containsKey(DBConfig.BIND.name())) {
             String ip = (String) properties.get(DBConfig.BIND.name());
             setBindIP(ip);
         } else {
-            throw new InvalidConfigurationException(DBConfig.BIND + " property missing");
+            throw new InvalidConfigurationException(t.localize(LocaleResources.MISSING_PROPERTY, DBConfig.BIND.toString()));
         }
         
         // optional config

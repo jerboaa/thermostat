@@ -150,7 +150,7 @@ public class SaveHeapDumpToFileCommandTest {
             command.run(factory.createContext(args));
             fail();
         } catch (CommandException e) {
-            assertEquals(translator.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE), e.getMessage());
+            assertEquals(translator.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE).getContents(), e.getMessage());
         }
     }
 

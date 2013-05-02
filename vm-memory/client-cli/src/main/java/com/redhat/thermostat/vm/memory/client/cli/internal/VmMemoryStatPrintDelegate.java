@@ -77,7 +77,7 @@ public class VmMemoryStatPrintDelegate implements VMStatPrintDelegate {
         VmMemoryStat memStat = (VmMemoryStat) stat;
         for (VmMemoryStat.Generation gen : memStat.getGenerations()) {
             for (VmMemoryStat.Space space : gen.getSpaces()) {
-                spacesNames.add(translator.localize(LocaleResources.COLUMN_HEADER_MEMORY_PATTERN, space.getName()));
+                spacesNames.add(translator.localize(LocaleResources.COLUMN_HEADER_MEMORY_PATTERN, space.getName()).getContents());
             }
         }
         return spacesNames;

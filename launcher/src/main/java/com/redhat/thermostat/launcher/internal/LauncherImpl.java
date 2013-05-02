@@ -64,6 +64,7 @@ import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Console;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.tools.StorageAuthInfoGetter;
@@ -232,7 +233,7 @@ public class LauncherImpl implements Launcher {
         } catch (BundleException | IOException e) {
             // If this happens we definitely need to do something about it, and the
             // trace will be immeasurably helpful in figuring out what is wrong.
-            out.println(t.localize(LocaleResources.COMMAND_COULD_NOT_LOAD_BUNDLES, cmdName));
+            out.println(t.localize(LocaleResources.COMMAND_COULD_NOT_LOAD_BUNDLES, cmdName).getContents());
             e.printStackTrace(out);
             return;
         }
@@ -240,7 +241,7 @@ public class LauncherImpl implements Launcher {
         Command cmd = commandSource.getCommand(cmdName);
 
         if (cmd == null) {
-            err.println(t.localize(LocaleResources.COMMAND_DESCRIBED_BUT_NOT_AVAILALBE, cmdName));
+            err.println(t.localize(LocaleResources.COMMAND_DESCRIBED_BUT_NOT_AVAILALBE, cmdName).getContents());
             return;
         }
 
@@ -270,13 +271,13 @@ public class LauncherImpl implements Launcher {
     }
 
     private void outputBadShellContext(boolean inShell, PrintStream out, String cmd) {
-    	String message = null;
+    	LocalizedString message = null;
     	if (inShell) {
-    		message = t.localize(LocaleResources.COMMAND_AVAILABLE_OUTSIDE_SHELL_ONLY, cmd);
+            message = t.localize(LocaleResources.COMMAND_AVAILABLE_OUTSIDE_SHELL_ONLY, cmd);
     	} else {
-    		message = t.localize(LocaleResources.COMMAND_AVAILABLE_INSIDE_SHELL_ONLY, cmd);
+            message = t.localize(LocaleResources.COMMAND_AVAILABLE_INSIDE_SHELL_ONLY, cmd);
     	}
-    	out.println(message);
+    	out.println(message.getContents());
     }
 
     private void setupLogLevel(Arguments args) {

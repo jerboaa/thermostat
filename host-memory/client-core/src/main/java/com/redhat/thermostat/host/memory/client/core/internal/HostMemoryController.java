@@ -50,6 +50,7 @@ import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryView;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryViewProvider;
@@ -181,7 +182,7 @@ public class HostMemoryController implements InformationServiceController<HostRe
     }
 
     @Override
-    public String getLocalizedName() {
+    public LocalizedString getLocalizedName() {
         return translator.localize(LocaleResources.HOST_INFO_TAB_MEMORY);
     }
 }

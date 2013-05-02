@@ -62,6 +62,7 @@ import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.eclipse.chart.common.SWTVmGcView;
 import com.redhat.thermostat.storage.model.IntervalTimeData;
 
@@ -110,7 +111,7 @@ public class SWTVmGcViewTest {
     }
 
     private void addChart(final String tag, String name) {
-        view.addChart(tag, name, "ms");
+        view.addChart(tag, new LocalizedString(name), "ms");
         
         bot.waitUntil(new DefaultCondition() {
             

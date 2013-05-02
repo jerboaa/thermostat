@@ -178,16 +178,16 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
     private class ThreadViewTableModel extends DefaultTableModel {
 
         private String [] columns = {
-                t.localize(LocaleResources.NAME),
-                t.localize(LocaleResources.ID),
-                t.localize(LocaleResources.START),
-                t.localize(LocaleResources.STOP),
-                t.localize(LocaleResources.WAIT_COUNT),
-                t.localize(LocaleResources.BLOCK_COUNT),
-                t.localize(LocaleResources.RUNNING),
-                t.localize(LocaleResources.WAITING),
-                t.localize(LocaleResources.SLEEPING),
-                t.localize(LocaleResources.MONITOR), //, "Heap", "CPU Time", "User CPU Time"
+                t.localize(LocaleResources.NAME).getContents(),
+                t.localize(LocaleResources.ID).getContents(),
+                t.localize(LocaleResources.START).getContents(),
+                t.localize(LocaleResources.STOP).getContents(),
+                t.localize(LocaleResources.WAIT_COUNT).getContents(),
+                t.localize(LocaleResources.BLOCK_COUNT).getContents(),
+                t.localize(LocaleResources.RUNNING).getContents(),
+                t.localize(LocaleResources.WAITING).getContents(),
+                t.localize(LocaleResources.SLEEPING).getContents(),
+                t.localize(LocaleResources.MONITOR).getContents(), //, "Heap", "CPU Time", "User CPU Time"
         };
         
         private List<ThreadTableBean> infos;

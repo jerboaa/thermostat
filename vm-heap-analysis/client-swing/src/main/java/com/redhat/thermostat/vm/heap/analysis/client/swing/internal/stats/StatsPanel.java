@@ -37,7 +37,6 @@
 package com.redhat.thermostat.vm.heap.analysis.client.swing.internal.stats;
 
 import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -46,15 +45,11 @@ import java.util.List;
 
 import javax.swing.JPanel;
 
-import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapView.DumpDisabledReason;
-import com.redhat.thermostat.vm.heap.analysis.client.locale.LocaleResources;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
 
 @SuppressWarnings("serial")
 public class StatsPanel extends JPanel {
-    
-    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private HeapChartPanel heapPanel;
     private HeapDumperPopup popup;
@@ -72,7 +67,7 @@ public class StatsPanel extends JPanel {
         overlays = new ArrayList<>();
         
         popup = new HeapDumperPopup();
-        
+
         setLayout(new BorderLayout());
     }
     

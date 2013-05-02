@@ -49,6 +49,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import com.redhat.thermostat.common.cli.Arguments;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.common.locale.Translate;
 
 public class CommandLineArgumentsParser {
@@ -71,21 +72,21 @@ public class CommandLineArgumentsParser {
             commandLine = parser.parse(options, args);
             return new CommandLineArguments(commandLine);
         } catch (MissingOptionException mae) {
-            String msg = createMissingOptionsMessage(mae);
-            throw new CommandLineArgumentParseException(msg.toString(), mae);
+            LocalizedString msg = createMissingOptionsMessage(mae);
+            throw new CommandLineArgumentParseException(msg, mae);
         } catch (ParseException e) {
-            throw new CommandLineArgumentParseException(e.getMessage(), e);
+            throw new CommandLineArgumentParseException(tr.localize(LocaleResources.PARSE_EXCEPTION_MESSAGE, e.getMessage()), e);
         }
     }
 
-    private String createMissingOptionsMessage(MissingOptionException mae) {
+    private LocalizedString createMissingOptionsMessage(MissingOptionException mae) {
         @SuppressWarnings("unchecked")
         List<String> missingOptions = mae.getMissingOptions();
         StringBuilder msg = new StringBuilder();
         if (missingOptions.size() == 1) {
-            msg.append(tr.localize(LocaleResources.MISSING_OPTION));
+            msg.append(tr.localize(LocaleResources.MISSING_OPTION).getContents());
         } else {
-            msg.append(tr.localize(LocaleResources.MISSING_OPTIONS));
+            msg.append(tr.localize(LocaleResources.MISSING_OPTIONS).getContents());
         }
         for (Iterator<String> i = missingOptions.iterator(); i.hasNext();) {
             String missingOption = i.next();
@@ -99,7 +100,8 @@ public class CommandLineArgumentsParser {
                 msg.append(", ");
             }
         }
-        return msg.toString();
+        // Workaround to create this (complex) localized string.
+        return new LocalizedString(msg.toString());
     }
 }
 

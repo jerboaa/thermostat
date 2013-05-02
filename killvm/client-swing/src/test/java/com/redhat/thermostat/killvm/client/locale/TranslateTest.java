@@ -69,7 +69,7 @@ public class TranslateTest {
     
     @Test
     public void testLocalizeWithoutArguments() {
-        String testString = t.localize(LocaleResources.MISSING_INFO);
+        String testString = t.localize(LocaleResources.MISSING_INFO).getContents();
         Assert.assertEquals("Missing Information", testString);
     }
     

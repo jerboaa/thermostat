@@ -104,15 +104,15 @@ public class ServiceCommand extends AbstractCommand implements ActionListener<Ap
             case START:
                 String dbUrl = storage.getConfiguration().getDBConnectionString();
                 String[] agentArgs =  new String[] {"agent", "-d", dbUrl};
-                System.err.println(translator.localize(LocaleResources.STARTING_AGENT));
+                System.err.println(translator.localize(LocaleResources.STARTING_AGENT).getContents());
                 launcher.run(agentArgs, false);
                 agentBarrier.release();
                 break;
             case FAIL:
-                System.err.println(translator.localize(LocaleResources.ERROR_STARTING_DB));
+                System.err.println(translator.localize(LocaleResources.ERROR_STARTING_DB).getContents());
                 Object payload = actionEvent.getPayload();
                 if (payload instanceof StorageAlreadyRunningException) {
-                    System.err.println(translator.localize(LocaleResources.STORAGE_ALREADY_RUNNING));
+                    System.err.println(translator.localize(LocaleResources.STORAGE_ALREADY_RUNNING).getContents());
                 }
                 break;
             }

@@ -37,8 +37,6 @@
 package com.redhat.thermostat.thread.client.swing.impl;
 
 import java.awt.Component;
-import java.awt.event.HierarchyEvent;
-import java.awt.event.HierarchyListener;
 
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;

@@ -77,8 +77,8 @@ public class SWTVmClassStatView extends VmClassStatView implements SWTComponent 
         
         chart = ChartFactory.createTimeSeriesChart(
                 null,
-                translator.localize(LocaleResources.VM_CLASSES_CHART_REAL_TIME_LABEL),
-                translator.localize(LocaleResources.VM_CLASSES_CHART_LOADED_CLASSES_LABEL),
+                translator.localize(LocaleResources.VM_CLASSES_CHART_REAL_TIME_LABEL).getContents(),
+                translator.localize(LocaleResources.VM_CLASSES_CHART_LOADED_CLASSES_LABEL).getContents(),
                 dataset,
                 false, false, false);
         

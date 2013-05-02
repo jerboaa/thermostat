@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.common.config;
 
+import com.redhat.thermostat.common.locale.LocalizedString;
+
 
 public class InvalidConfigurationException extends RuntimeException {
 
@@ -44,13 +46,17 @@ public class InvalidConfigurationException extends RuntimeException {
     public InvalidConfigurationException() {
         super();
     }
-    
+
     public InvalidConfigurationException(String message) {
         super(message);
     }
     
-    public InvalidConfigurationException(String message, Throwable cause) {
-        super(message, cause);
+    public InvalidConfigurationException(LocalizedString message) {
+        this(message.getContents());
+    }
+    
+    public InvalidConfigurationException(LocalizedString message, Throwable cause) {
+        super(message.getContents(), cause);
     }
     
     public InvalidConfigurationException(Throwable cause) {

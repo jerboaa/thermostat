@@ -109,7 +109,7 @@ public class ConnectCommandTest {
         try {
             cmd.run(cmdCtxFactory.createContext(args));
         } catch (CommandException e) {
-            assertEquals(translator.localize(LocaleResources.COMMAND_CONNECT_ALREADY_CONNECTED, dbUrl), e.getMessage());
+            assertEquals(translator.localize(LocaleResources.COMMAND_CONNECT_ALREADY_CONNECTED, dbUrl).getContents(), e.getMessage());
         }
     }
     
@@ -144,7 +144,7 @@ public class ConnectCommandTest {
             cmd.run(ctx);
             fail();
         } catch (CommandException e) {
-            assertEquals(translator.localize(LocaleResources.COMMAND_CONNECT_NO_KEYRING), e.getMessage());
+            assertEquals(translator.localize(LocaleResources.COMMAND_CONNECT_NO_KEYRING).getContents(), e.getMessage());
         }
         
         verify(dbService, never()).connect();

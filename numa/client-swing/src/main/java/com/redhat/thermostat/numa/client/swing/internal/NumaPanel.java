@@ -71,6 +71,7 @@ import com.redhat.thermostat.client.swing.components.SectionHeader;
 import com.redhat.thermostat.client.ui.ChartColors;
 import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.numa.client.core.NumaView;
 import com.redhat.thermostat.numa.client.locale.LocaleResources;
@@ -116,7 +117,7 @@ public class NumaPanel extends NumaView implements SwingComponent {
     }
 
     @Override
-    public void addNumaChart(final String tag, final String humanReadableName) {
+    public void addNumaChart(final String tag, final LocalizedString name) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -124,7 +125,7 @@ public class NumaPanel extends NumaView implements SwingComponent {
                 colors.put(tag, ChartColors.getColor(colorIndex));
                 TimeSeries series = new TimeSeries(tag);
                 dataset.put(tag, series);
-                JCheckBox newCheckBox = new JCheckBox(createLabelWithLegend(humanReadableName, colors.get(tag)));
+                JCheckBox newCheckBox = new JCheckBox(createLabelWithLegend(name, colors.get(tag)));
                 newCheckBox.setActionCommand(tag);
                 newCheckBox.setSelected(true);
                 newCheckBox.addActionListener(numaCheckboxListener);
@@ -138,9 +139,9 @@ public class NumaPanel extends NumaView implements SwingComponent {
 
     }
 
-    private String createLabelWithLegend(String text, Color color) {
+    private String createLabelWithLegend(LocalizedString text, Color color) {
         String hexColor = "#" + Integer.toHexString(color.getRGB() & 0x00ffffff);
-        return "<html> <font color='" + hexColor + "'>\u2588</font> " + text + "</html>";
+        return "<html> <font color='" + hexColor + "'>\u2588</font> " + text.getContents() + "</html>";
     }
 
     @Override
@@ -276,8 +277,8 @@ public class NumaPanel extends NumaView implements SwingComponent {
     private JFreeChart createNumaChart() {
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 null, // Title
-                translator.localize(LocaleResources.NUMA_CHART_TIME_LABEL), // x-axis Label
-                translator.localize(LocaleResources.NUMA_CHART_NUM_HITS_LABEL), // y-axis Label
+                translator.localize(LocaleResources.NUMA_CHART_TIME_LABEL).getContents(), // x-axis Label
+                translator.localize(LocaleResources.NUMA_CHART_NUM_HITS_LABEL).getContents(), // y-axis Label
                 numaCollection, // Dataset
                 false, // Show Legend
                 false, // Use tooltips

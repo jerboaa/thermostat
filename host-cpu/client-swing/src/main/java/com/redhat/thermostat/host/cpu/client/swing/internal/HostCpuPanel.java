@@ -70,6 +70,7 @@ import com.redhat.thermostat.client.swing.components.ValueField;
 import com.redhat.thermostat.client.ui.ChartColors;
 import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.host.cpu.client.core.HostCpuView;
 import com.redhat.thermostat.host.cpu.client.locale.LocaleResources;
@@ -141,21 +142,22 @@ public class HostCpuPanel extends HostCpuView implements SwingComponent {
     }
 
     @Override
-    public void addCpuUsageChart(final int cpuIndex, final String humanReadableName) {
+    public void addCpuUsageChart(final int cpuIndex, final LocalizedString name) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                TimeSeries series = new TimeSeries(humanReadableName);
+                String theName = name.getContents();
+                TimeSeries series = new TimeSeries(theName);
                 Color color = ChartColors.getColor(colors.size());
-                colors.put(humanReadableName, color);
+                colors.put(theName, color);
 
                 datasets.put(cpuIndex, series);
                 datasetCollection.addSeries(series);
 
                 updateColors();
 
-                JLabel label = createLabelWithLegend(humanReadableName, color);
-                labels.put(humanReadableName, label);
+                JLabel label = createLabelWithLegend(theName, color);
+                labels.put(theName, label);
 
                 legendPanel.add(label);
                 legendPanel.revalidate();
@@ -216,8 +218,8 @@ public class HostCpuPanel extends HostCpuView implements SwingComponent {
 
         chart = ChartFactory.createTimeSeriesChart(
                 null,
-                translator.localize(LocaleResources.HOST_CPU_USAGE_CHART_TIME_LABEL),
-                translator.localize(LocaleResources.HOST_CPU_USAGE_CHART_VALUE_LABEL),
+                translator.localize(LocaleResources.HOST_CPU_USAGE_CHART_TIME_LABEL).getContents(),
+                translator.localize(LocaleResources.HOST_CPU_USAGE_CHART_VALUE_LABEL).getContents(),
                 datasetCollection,
                 false, false, false);
 

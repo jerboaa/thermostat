@@ -148,7 +148,7 @@ public class Size {
     @Override
     public String toString() {
         String[] parts = toStringParts();
-        return translator.localize(LocaleResources.VALUE_AND_UNIT, parts[0], parts[1]);
+        return translator.localize(LocaleResources.VALUE_AND_UNIT, parts[0], parts[1]).getContents();
     }
 
     /**

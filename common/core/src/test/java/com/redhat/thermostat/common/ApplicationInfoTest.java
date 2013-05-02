@@ -60,7 +60,7 @@ public class ApplicationInfoTest {
     @Test
     public void testProperties() {
         ApplicationInfo appInfo = new ApplicationInfo();
-        assertFalse(appInfo.getName().compareTo(LocaleResources.createLocalizer().localize(LocaleResources.MISSING_INFO)) == 0);
+        assertFalse(appInfo.getName().compareTo(LocaleResources.createLocalizer().localize(LocaleResources.MISSING_INFO).getContents()) == 0);
     }
 
     @After

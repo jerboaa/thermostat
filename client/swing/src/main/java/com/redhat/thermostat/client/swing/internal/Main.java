@@ -209,14 +209,14 @@ public class Main {
         @Override
         public void run() {
             Object[] options = {
-                    translator.localize(LocaleResources.CONNECTION_WIZARD),
-                    translator.localize(LocaleResources.CONNECTION_QUIT),
+                    translator.localize(LocaleResources.CONNECTION_WIZARD).getContents(),
+                    translator.localize(LocaleResources.CONNECTION_QUIT).getContents(),
             };
             int n = JOptionPane
                     .showOptionDialog(
                             null,
-                            translator.localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_DESCRIPTION),
-                            translator.localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_TITLE),
+                            translator.localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_DESCRIPTION).getContents(),
+                            translator.localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_TITLE).getContents(),
                             JOptionPane.OK_CANCEL_OPTION,
                             JOptionPane.ERROR_MESSAGE, null, options,
                             options[0]);
@@ -313,8 +313,8 @@ public class Main {
                 } else {
                     JOptionPane.showMessageDialog(
                             null,
-                            translator.localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_DESCRIPTION),
-                            translator.localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_TITLE),
+                            translator.localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_DESCRIPTION).getContents(),
+                            translator.localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_TITLE).getContents(),
                             JOptionPane.ERROR_MESSAGE);
                     shutdown.countDown();
                 }

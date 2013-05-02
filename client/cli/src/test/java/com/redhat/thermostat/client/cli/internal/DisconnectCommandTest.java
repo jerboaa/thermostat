@@ -83,7 +83,7 @@ public class DisconnectCommandTest {
             cmd.run(cmdCtxFactory.createContext(new SimpleArguments()));
             fail("cmd.run() should have thrown exception.");
         } catch (CommandException e) {
-            assertEquals(translator.localize(LocaleResources.COMMAND_DISCONNECT_NOT_CONNECTED), e.getMessage());
+            assertEquals(translator.localize(LocaleResources.COMMAND_DISCONNECT_NOT_CONNECTED).getContents(), e.getMessage());
         }
     }
     

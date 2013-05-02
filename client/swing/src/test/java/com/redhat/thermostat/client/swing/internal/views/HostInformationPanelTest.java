@@ -51,10 +51,10 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.swing.TabbedPaneMatcher;
 import com.redhat.thermostat.client.swing.internal.views.HostInformationPanel;
+import com.redhat.thermostat.common.locale.LocalizedString;
 
 public class HostInformationPanelTest {
 
@@ -109,14 +109,14 @@ public class HostInformationPanelTest {
     public void testAddTwice() throws InvocationTargetException, InterruptedException {
         UIComponent mock1 = createHostInfoPanel();
 
-        panel.addChildView("foo1", mock1);
+        panel.addChildView(new LocalizedString("foo1"), mock1);
 
         // The panel in test has no views added so the matcher with a tab count > 0 works
         // in order to select the right panel.
         window.panel("panel").tabbedPane(new TabbedPaneMatcher(JTabbedPane.class)).requireTabTitles("foo1");
 
         UIComponent mock2 = createHostInfoPanel();
-        panel.addChildView("foo2", mock2);
+        panel.addChildView(new LocalizedString("foo2"), mock2);
 
         window.panel("panel").tabbedPane(new TabbedPaneMatcher(JTabbedPane.class)).requireTabTitles("foo1", "foo2");
     }
@@ -126,14 +126,14 @@ public class HostInformationPanelTest {
         UIComponent test1 = createHostInfoPanel();
         UIComponent test2 = createHostInfoPanel();
 
-        panel.addChildView("test1", test1);
-        panel.addChildView("test2", test2);
+        panel.addChildView(new LocalizedString("test1"), test1);
+        panel.addChildView(new LocalizedString("test2"), test2);
 
         // The panel in test has no views added so the matcher with a tab count > 0 works
         // in order to select the right panel.
         window.panel("panel").tabbedPane(new TabbedPaneMatcher(JTabbedPane.class)).requireTabTitles("test1", "test2");
 
-        panel.removeChildView("test1");
+        panel.removeChildView(new LocalizedString("test1"));
 
         window.panel("panel").tabbedPane(new TabbedPaneMatcher(JTabbedPane.class)).requireTabTitles("test2");
     }

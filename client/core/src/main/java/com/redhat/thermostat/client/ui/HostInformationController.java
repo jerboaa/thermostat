@@ -45,6 +45,7 @@ import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.HostInformationView;
 import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
 import com.redhat.thermostat.common.OrderedComparator;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.storage.core.HostRef;
 
 public class HostInformationController {
@@ -59,7 +60,7 @@ public class HostInformationController {
         for (InformationService<HostRef> hostInfoService : hostInfoServices) {
             if (hostInfoService.getFilter().matches(ref)) {
                 InformationServiceController<HostRef> ctrl = hostInfoService.getInformationServiceController(ref);
-                String name = ctrl.getLocalizedName();
+                LocalizedString name = ctrl.getLocalizedName();
                 view.addChildView(name, ctrl.getView());
             }
         }

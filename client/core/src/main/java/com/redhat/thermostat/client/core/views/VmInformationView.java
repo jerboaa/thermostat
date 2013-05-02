@@ -36,13 +36,15 @@
 
 package com.redhat.thermostat.client.core.views;
 
+import com.redhat.thermostat.common.locale.LocalizedString;
+
 
 public abstract class VmInformationView extends BasicView implements UIComponent {
 
     /**
      * @param view the view.
      */
-    public abstract void addChildView(String title, UIComponent view);
+    public abstract void addChildView(LocalizedString title, UIComponent view);
 
     public abstract int getNumChildren();
     public abstract boolean selectChildID(int id);

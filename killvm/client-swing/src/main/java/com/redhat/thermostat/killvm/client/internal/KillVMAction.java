@@ -76,12 +76,12 @@ public class KillVMAction implements VMContextAction {
 
     @Override
     public String getName() {
-        return t.localize(LocaleResources.ACTION_NAME);
+        return t.localize(LocaleResources.ACTION_NAME).getContents();
     }
 
     @Override
     public String getDescription() {
-        return t.localize(LocaleResources.ACTION_DESCRIPTION);
+        return t.localize(LocaleResources.ACTION_DESCRIPTION).getContents();
     }
 
     @Override

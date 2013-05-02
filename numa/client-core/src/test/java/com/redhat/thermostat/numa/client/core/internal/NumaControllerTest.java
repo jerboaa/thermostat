@@ -42,6 +42,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -64,6 +65,7 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
+import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.numa.client.core.NumaView;
 import com.redhat.thermostat.numa.client.core.NumaView.GraphVisibilityChangeListener;
 import com.redhat.thermostat.numa.client.core.NumaViewProvider;
@@ -160,9 +162,9 @@ public class NumaControllerTest {
 
     @Test
     public void verifyNumCharts() {
-        verify(view).addNumaChart(eq("node0"), anyString());
-        verify(view).addNumaChart(eq("node1"), anyString());
-        verify(view).addNumaChart(eq("node2"), anyString());
+        verify(view).addNumaChart(eq("node0"), isA(LocalizedString.class));
+        verify(view).addNumaChart(eq("node1"), isA(LocalizedString.class));
+        verify(view).addNumaChart(eq("node2"), isA(LocalizedString.class));
     }
 
     @Test
@@ -229,7 +231,7 @@ public class NumaControllerTest {
         Locale defaultLocale = Locale.getDefault();
         try {
             Locale.setDefault(Locale.US);
-            assertEquals("NUMA", numaController.getLocalizedName());
+            assertEquals("NUMA", numaController.getLocalizedName().getContents());
         } finally {
             Locale.setDefault(defaultLocale);
         }
