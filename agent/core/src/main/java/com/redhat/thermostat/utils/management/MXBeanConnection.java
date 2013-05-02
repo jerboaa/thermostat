@@ -36,33 +36,10 @@
 
 package com.redhat.thermostat.utils.management;
 
-import java.io.Closeable;
-import java.io.IOException;
-
-import javax.management.JMX;
-import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-import javax.management.remote.JMXConnector;
 
-public class MXBeanConnection implements Closeable {
+public interface MXBeanConnection {
 
-    private JMXConnector connection;
-    private MBeanServerConnection mbsc;
-    
-    MXBeanConnection(JMXConnector connection, MBeanServerConnection mbsc) {
-        this.connection = connection;
-        this.mbsc = mbsc;
-    }
-    
-    public synchronized <E> E createProxy(String name, Class<? extends E> proxyClass) throws MalformedObjectNameException {
-        ObjectName objectName = new ObjectName(name);
-        return JMX.newMXBeanProxy(mbsc, objectName, proxyClass);
-    }
-    
-    @Override
-    public void close() throws IOException {
-        connection.close();
-    }
+    <E> E createProxy(String name, Class<? extends E> proxyClass) throws MalformedObjectNameException;
+
 }
-

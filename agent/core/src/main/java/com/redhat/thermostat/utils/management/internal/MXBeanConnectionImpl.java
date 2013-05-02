@@ -34,51 +34,35 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.gc.remote.command.internal;
+package com.redhat.thermostat.utils.management.internal;
 
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryMXBean;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.io.IOException;
 
-import com.redhat.thermostat.common.utils.LoggingUtils;
+import javax.management.JMX;
+import javax.management.MBeanServerConnection;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+import javax.management.remote.JMXConnector;
+
 import com.redhat.thermostat.utils.management.MXBeanConnection;
-import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 
-public class GC {
+class MXBeanConnectionImpl implements MXBeanConnection {
 
-    private static final Logger logger = LoggingUtils.getLogger(GC.class);
-
-    private MXBeanConnectionPool pool;
-    private int vmId;
-
-    public GC(MXBeanConnectionPool pool, String vmId) {
-        this.pool = pool;
-        this.vmId = Integer.valueOf(vmId);
+    private JMXConnector connection;
+    private MBeanServerConnection mbsc;
+    
+    MXBeanConnectionImpl(JMXConnector connection, MBeanServerConnection mbsc) {
+        this.connection = connection;
+        this.mbsc = mbsc;
     }
-
-    public void gc() throws GCException {
-
-        Exception exceptionInGc = null;
-
-        try {
-            MXBeanConnection connection = pool.acquire(vmId);
-            try {
-                MemoryMXBean bean = connection.createProxy(ManagementFactory.MEMORY_MXBEAN_NAME, MemoryMXBean.class);
-                bean.gc();
-
-            } catch (Exception ex) {
-                exceptionInGc = ex;
-                logger.log(Level.SEVERE, "can't get MXBeanConnection connection", ex);
-            } finally {
-                pool.release(vmId, connection);
-            }
-        } catch (Exception ioe) {
-            exceptionInGc = ioe;
-        }
-
-        if (exceptionInGc != null) {
-            throw new GCException("error performing gc", exceptionInGc);
-        }
+    
+    public synchronized <E> E createProxy(String name, Class<? extends E> proxyClass) throws MalformedObjectNameException {
+        ObjectName objectName = new ObjectName(name);
+        return JMX.newMXBeanProxy(mbsc, objectName, proxyClass);
+    }
+    
+    void close() throws IOException {
+        connection.close();
     }
 }
+

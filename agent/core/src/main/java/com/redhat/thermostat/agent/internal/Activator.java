@@ -34,51 +34,27 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.gc.remote.command.internal;
+package com.redhat.thermostat.agent.internal;
 
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryMXBean;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.utils.management.MXBeanConnection;
 import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
+import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl;
 
-public class GC {
+public class Activator implements BundleActivator {
 
-    private static final Logger logger = LoggingUtils.getLogger(GC.class);
+    private ServiceRegistration registration;
 
-    private MXBeanConnectionPool pool;
-    private int vmId;
-
-    public GC(MXBeanConnectionPool pool, String vmId) {
-        this.pool = pool;
-        this.vmId = Integer.valueOf(vmId);
+    @Override
+    public void start(BundleContext context) throws Exception {
+        registration = context.registerService(MXBeanConnectionPool.class, new MXBeanConnectionPoolImpl(), null);
     }
 
-    public void gc() throws GCException {
-
-        Exception exceptionInGc = null;
-
-        try {
-            MXBeanConnection connection = pool.acquire(vmId);
-            try {
-                MemoryMXBean bean = connection.createProxy(ManagementFactory.MEMORY_MXBEAN_NAME, MemoryMXBean.class);
-                bean.gc();
-
-            } catch (Exception ex) {
-                exceptionInGc = ex;
-                logger.log(Level.SEVERE, "can't get MXBeanConnection connection", ex);
-            } finally {
-                pool.release(vmId, connection);
-            }
-        } catch (Exception ioe) {
-            exceptionInGc = ioe;
-        }
-
-        if (exceptionInGc != null) {
-            throw new GCException("error performing gc", exceptionInGc);
-        }
+    @Override
+    public void stop(BundleContext context) throws Exception {
+        registration.unregister();
     }
+
 }

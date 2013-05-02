@@ -52,11 +52,13 @@ import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.harvester.ThreadBackend;
 import com.redhat.thermostat.thread.harvester.ThreadHarvester;
+import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 
 public class Activator implements BundleActivator {
     
     private ScheduledExecutorService executor = Executors.newScheduledThreadPool(24);
 
+    private ServiceTracker connectionPoolTracker;
     private ServiceTracker threadDaoTracker;
     private ServiceRegistration backendRegistration;
 
@@ -67,7 +69,21 @@ public class Activator implements BundleActivator {
     @Override
     public void start(final BundleContext context) throws Exception {
 
-        harvester = new ThreadHarvester(executor);
+        connectionPoolTracker = new ServiceTracker(context, MXBeanConnectionPool.class, null) {
+            @Override
+            public Object addingService(ServiceReference reference) {
+                MXBeanConnectionPool pool =  (MXBeanConnectionPool) super.addingService(reference);
+                harvester = new ThreadHarvester(executor, pool);
+                return pool;
+            }
+            @Override
+            public void removedService(ServiceReference reference, Object service) {
+                super.removedService(reference, service);
+                harvester = null;
+            }
+        };
+        connectionPoolTracker.open();
+
         registry = new ReceiverRegistry(context);
         VmStatusListenerRegistrar vmListener = new VmStatusListenerRegistrar(context);
 
@@ -89,7 +105,9 @@ public class Activator implements BundleActivator {
 
             @Override
             public void removedService(ServiceReference reference, Object service) {
-                harvester.setThreadDao(null);
+                if (harvester != null) {
+                    harvester.setThreadDao(null);
+                }
                 context.ungetService(reference);
                 super.removedService(reference, service);
             }
@@ -105,6 +123,7 @@ public class Activator implements BundleActivator {
 
         backendRegistration.unregister();
 
+        connectionPoolTracker.close();
         threadDaoTracker.close();
 
         if (executor != null) {

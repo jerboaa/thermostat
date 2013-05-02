@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.utils.management;
+package com.redhat.thermostat.utils.management.internal;
 
 import java.io.Closeable;
 import java.io.File;
@@ -49,7 +49,7 @@ import javax.management.remote.JMXServiceURL;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.sun.tools.attach.VirtualMachine;
 
-public class MXBeanConnector implements Closeable {
+class MXBeanConnector implements Closeable {
 
     private static final String CONNECTOR_ADDRESS_PROPERTY = "com.sun.management.jmxremote.localConnectorAddress";
     private String connectorAddress;
@@ -88,7 +88,7 @@ public class MXBeanConnector implements Closeable {
         }
     }
     
-    public synchronized MXBeanConnection connect() throws Exception {
+    public synchronized MXBeanConnectionImpl connect() throws IOException {
         
         if (!attached)
             throw new IOException("Agent not attached to target VM");
@@ -104,7 +104,7 @@ public class MXBeanConnector implements Closeable {
             throw e;
         }
         
-        return new MXBeanConnection(connection, mbsc);
+        return new MXBeanConnectionImpl(connection, mbsc);
     }
     
     public boolean isAttached() {

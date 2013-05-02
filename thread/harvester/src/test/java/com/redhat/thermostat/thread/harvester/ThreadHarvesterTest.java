@@ -45,6 +45,7 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -55,12 +56,21 @@ import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.thread.collector.HarvesterCommand;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
+import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 
 public class ThreadHarvesterTest {
 
+    private MXBeanConnectionPool pool;
+    private ScheduledExecutorService executor;
+
+    @Before
+    public void setUp() {
+        pool = mock(MXBeanConnectionPool.class);
+        executor = mock(ScheduledExecutorService.class);
+    }
+
     @Test
     public void testStart() {
-        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         ThreadDao dao = mock(ThreadDao.class);
         Request request = mock(Request.class);
         
@@ -75,7 +85,7 @@ public class ThreadHarvesterTest {
             thenReturn("42").
             thenReturn("0xcafe");
         
-        ThreadHarvester threadHarvester = new ThreadHarvester(executor) {
+        ThreadHarvester threadHarvester = new ThreadHarvester(executor, pool) {
             @Override
             Harvester createHarvester(String vmId) {
                 
@@ -101,7 +111,6 @@ public class ThreadHarvesterTest {
 
     @Test
     public void testStop() {
-        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         ThreadDao dao = mock(ThreadDao.class);
         Request request = mock(Request.class);
         
@@ -113,7 +122,7 @@ public class ThreadHarvesterTest {
             thenReturn(HarvesterCommand.STOP.name()).
             thenReturn("42");
         
-        ThreadHarvester threadHarvester = new ThreadHarvester(executor) {
+        ThreadHarvester threadHarvester = new ThreadHarvester(executor, pool) {
             { connectors.put("42", harverster); }
         };
         threadHarvester.setThreadDao(dao);
@@ -130,13 +139,12 @@ public class ThreadHarvesterTest {
     
     @Test
     public void testSaveVmCaps() {
-        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         ThreadDao dao = mock(ThreadDao.class);
         
         final boolean[] createHarvesterCalled = new boolean[1];
         final Harvester harverster = mock(Harvester.class);
         
-        ThreadHarvester threadHarvester = new ThreadHarvester(executor) {
+        ThreadHarvester threadHarvester = new ThreadHarvester(executor, pool) {
             @Override
             Harvester createHarvester(String vmId) {
                 
@@ -156,9 +164,7 @@ public class ThreadHarvesterTest {
 
     @Test
     public void testRecieveWithoutDaosFails() {
-        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
-
-        ThreadHarvester harvester = new ThreadHarvester(executor);
+        ThreadHarvester harvester = new ThreadHarvester(executor, pool);
         Response response = harvester.receive(mock(Request.class));
 
         assertEquals(ResponseType.ERROR, response.getType());
@@ -166,12 +172,11 @@ public class ThreadHarvesterTest {
 
     @Test
     public void testHarvestingStatus() {
-        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         Clock clock = mock(Clock.class);
         when(clock.getRealTimeMillis()).thenReturn(1l);
         ThreadDao dao = mock(ThreadDao.class);
 
-        ThreadHarvester harvester = new ThreadHarvester(executor, clock);
+        ThreadHarvester harvester = new ThreadHarvester(executor, clock, pool);
         harvester.setThreadDao(dao);
 
         harvester.addThreadHarvestingStatus("10");
@@ -187,12 +192,11 @@ public class ThreadHarvesterTest {
 
     @Test
     public void testHarvestingStatusAfterSavingVmCaps() {
-        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         Clock clock = mock(Clock.class);
         when(clock.getRealTimeMillis()).thenReturn(1l);
         ThreadDao dao = mock(ThreadDao.class);
 
-        ThreadHarvester harvester = new ThreadHarvester(executor, clock);
+        ThreadHarvester harvester = new ThreadHarvester(executor, clock, pool);
         harvester.setThreadDao(dao);
 
         harvester.saveVmCaps("10");
@@ -209,7 +213,6 @@ public class ThreadHarvesterTest {
 
     @Test
     public void testStopAndRemoveAll() {
-        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         Clock clock = mock(Clock.class);
         when(clock.getRealTimeMillis()).thenReturn(1l);
         ThreadDao dao = mock(ThreadDao.class);
@@ -219,7 +222,7 @@ public class ThreadHarvesterTest {
         when(javaHarvester.start()).thenReturn(true);
         when(javaHarvester.stop()).thenReturn(true);
 
-        ThreadHarvester harvester = new ThreadHarvester(executor, clock) {
+        ThreadHarvester harvester = new ThreadHarvester(executor, clock, pool) {
             @Override
             Harvester createHarvester(String vmId) {
 

@@ -34,51 +34,31 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.gc.remote.command.internal;
+package com.redhat.thermostat.agent.internal;
 
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryMXBean;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.utils.management.MXBeanConnection;
+import org.junit.Test;
+
+import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
+import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl;
 
-public class GC {
+public class ActivatorTest {
+    @Test
+    public void verifyServiceIsRegistered() throws Exception {
 
-    private static final Logger logger = LoggingUtils.getLogger(GC.class);
+        StubBundleContext context = new StubBundleContext();
 
-    private MXBeanConnectionPool pool;
-    private int vmId;
+        Activator activator = new Activator();
 
-    public GC(MXBeanConnectionPool pool, String vmId) {
-        this.pool = pool;
-        this.vmId = Integer.valueOf(vmId);
-    }
+        activator.start(context);
 
-    public void gc() throws GCException {
+        assertTrue(context.isServiceRegistered(MXBeanConnectionPool.class.getName(), MXBeanConnectionPoolImpl.class));
 
-        Exception exceptionInGc = null;
+        activator.stop(context);
 
-        try {
-            MXBeanConnection connection = pool.acquire(vmId);
-            try {
-                MemoryMXBean bean = connection.createProxy(ManagementFactory.MEMORY_MXBEAN_NAME, MemoryMXBean.class);
-                bean.gc();
-
-            } catch (Exception ex) {
-                exceptionInGc = ex;
-                logger.log(Level.SEVERE, "can't get MXBeanConnection connection", ex);
-            } finally {
-                pool.release(vmId, connection);
-            }
-        } catch (Exception ioe) {
-            exceptionInGc = ioe;
-        }
-
-        if (exceptionInGc != null) {
-            throw new GCException("error performing gc", exceptionInGc);
-        }
+        assertFalse(context.isServiceRegistered(MXBeanConnectionPool.class.getName(), MXBeanConnectionPoolImpl.class));
     }
 }

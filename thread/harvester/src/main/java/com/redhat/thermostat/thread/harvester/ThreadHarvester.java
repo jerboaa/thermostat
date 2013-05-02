@@ -54,6 +54,7 @@ import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.thread.collector.HarvesterCommand;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
+import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 
 public class ThreadHarvester implements RequestReceiver {
 
@@ -62,15 +63,17 @@ public class ThreadHarvester implements RequestReceiver {
 
     private ThreadDao dao;
     private Clock clock;
+    private MXBeanConnectionPool connectionPool;
 
-    public ThreadHarvester(ScheduledExecutorService executor) {
-        this(executor, new SystemClock());
+    public ThreadHarvester(ScheduledExecutorService executor, MXBeanConnectionPool pool) {
+        this(executor, new SystemClock(), pool);
     }
     
-    public ThreadHarvester(ScheduledExecutorService executor, Clock clock) {
+    public ThreadHarvester(ScheduledExecutorService executor, Clock clock, MXBeanConnectionPool connectionPool) {
         this.executor = executor;
         this.connectors = new HashMap<>();
         this.clock = clock;
+        this.connectionPool = connectionPool;
     }
 
     /**
@@ -186,7 +189,7 @@ public class ThreadHarvester implements RequestReceiver {
     }
 
     Harvester createHarvester(String vmId) {
-        return new Harvester(dao, executor, vmId);
+        return new Harvester(dao, executor, vmId, connectionPool);
     }
 
     /**

@@ -38,20 +38,38 @@ package com.redhat.thermostat.gc.remote.command.osgi;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.gc.remote.command.GCCommandReceiver;
+import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 
 public class GCCommandReceiverActivator implements BundleActivator {
 
+    ServiceTracker tracker;
+
     @Override
     public void start(BundleContext context) throws Exception {
-        ReceiverRegistry registry = new ReceiverRegistry(context);
-        registry.registerReceiver(new GCCommandReceiver());
+        final ReceiverRegistry registry = new ReceiverRegistry(context);
+
+        tracker = new ServiceTracker(context, MXBeanConnectionPool.class, null) {
+            public MXBeanConnectionPool addingService(ServiceReference reference) {
+                MXBeanConnectionPool pool = (MXBeanConnectionPool) super.addingService(reference);
+                registry.registerReceiver(new GCCommandReceiver(pool));
+                return pool;
+            };
+
+            public void removedService(org.osgi.framework.ServiceReference reference, Object service) {
+                registry.unregisterReceivers();
+                super.removedService(reference, service);
+            };
+        };
+        tracker.open();
     }
-    
+
     @Override
     public void stop(BundleContext context) throws Exception {
+        tracker.close();
     }
 }
-

@@ -61,12 +61,11 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.thread.dao.ThreadDao;
-
 import com.redhat.thermostat.thread.model.ThreadInfoData;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 import com.redhat.thermostat.utils.management.MXBeanConnection;
-import com.redhat.thermostat.utils.management.MXBeanConnector;
+import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 
 public class HarvesterTest {
 
@@ -74,9 +73,8 @@ public class HarvesterTest {
     public void testStart() {
         ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         ThreadDao dao = mock(ThreadDao.class);
-        final MXBeanConnector mockedConnector = mock(MXBeanConnector.class);
-        when(mockedConnector.isAttached()).thenReturn(false);
-        
+        MXBeanConnectionPool pool = mock(MXBeanConnectionPool.class);
+
         ArgumentCaptor<Runnable> arg0 = ArgumentCaptor.forClass(Runnable.class);
         ArgumentCaptor<Long> arg1 = ArgumentCaptor.forClass(Long.class);
         ArgumentCaptor<Long> arg2 = ArgumentCaptor.forClass(Long.class);
@@ -86,8 +84,7 @@ public class HarvesterTest {
         
         when(executor.scheduleAtFixedRate(arg0.capture(), arg1.capture(), arg2.capture(), arg3.capture())).thenReturn(null);
         
-        Harvester harvester = new Harvester(dao, executor, "42") {
-            { connector = mockedConnector; }
+        Harvester harvester = new Harvester(dao, executor, "42", pool) {
             @Override
             synchronized void harvestData() {
                 harvestDataCalled[0] = true;
@@ -120,8 +117,7 @@ public class HarvesterTest {
 
         ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         ThreadDao dao = mock(ThreadDao.class);
-        final MXBeanConnector mockedConnector = mock(MXBeanConnector.class);
-        when(mockedConnector.isAttached()).thenReturn(false);
+        MXBeanConnectionPool pool = mock(MXBeanConnectionPool.class);
         
         ArgumentCaptor<Runnable> arg0 = ArgumentCaptor.forClass(Runnable.class);
         ArgumentCaptor<Long> arg1 = ArgumentCaptor.forClass(Long.class);
@@ -132,8 +128,7 @@ public class HarvesterTest {
         
         when(executor.scheduleAtFixedRate(arg0.capture(), arg1.capture(), arg2.capture(), arg3.capture())).thenReturn(null);
         
-        Harvester harvester = new Harvester(dao, executor, "42") {
-            { connector = mockedConnector; }
+        Harvester harvester = new Harvester(dao, executor, "42", pool) {
             @Override
             synchronized void harvestData() {
                 harvestDataCalled[0] = true;
@@ -143,8 +138,6 @@ public class HarvesterTest {
         harvester.start();
         harvester.start();
 
-        verify(mockedConnector, times(1)).isAttached();
-        verify(mockedConnector, times(1)).attach();
         verify(executor, times(1)).scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class));
         
         assertTrue(arg1.getValue() == 0);
@@ -169,18 +162,13 @@ public class HarvesterTest {
         
         ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         ThreadDao dao = mock(ThreadDao.class);
-        final MXBeanConnector mockedConnector = mock(MXBeanConnector.class);
-        
+        MXBeanConnectionPool pool = mock(MXBeanConnectionPool.class);
         MXBeanConnection connection = mock(MXBeanConnection.class);
-        
-        when(mockedConnector.connect()).thenReturn(connection);
-        
-        when(mockedConnector.isAttached()).thenReturn(true);
+        when(pool.acquire(42)).thenReturn(connection);
         
         when(executor.scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class))).thenReturn(future);
         
-        Harvester harvester = new Harvester(dao, executor, "42")
-        {{ connector = mockedConnector; }};
+        Harvester harvester = new Harvester(dao, executor, "42", pool);
         
         harvester.start();
         
@@ -189,11 +177,9 @@ public class HarvesterTest {
         harvester.stop();
         
         verify(future).cancel(false);
-        verify(connection).close();
         
-        // needs to be 2 times, since is called once in start
-        verify(mockedConnector, times(2)).isAttached();
-        verify(mockedConnector).close();
+        verify(pool).acquire(42);
+        verify(pool).release(42, connection);
         
         assertFalse(harvester.isConnected());
     }
@@ -210,18 +196,13 @@ public class HarvesterTest {
         
         ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         ThreadDao dao = mock(ThreadDao.class);
-        final MXBeanConnector mockedConnector = mock(MXBeanConnector.class);
-        
+        MXBeanConnectionPool pool = mock(MXBeanConnectionPool.class);
         MXBeanConnection connection = mock(MXBeanConnection.class);
-        
-        when(mockedConnector.connect()).thenReturn(connection);
-        
-        when(mockedConnector.isAttached()).thenReturn(true);
+        when(pool.acquire(42)).thenReturn(connection);
         
         when(executor.scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class))).thenReturn(future);
         
-        Harvester harvester = new Harvester(dao, executor, "42")
-        {{ connector = mockedConnector; }};
+        Harvester harvester = new Harvester(dao, executor, "42", pool);
         
         harvester.start();
         
@@ -231,12 +212,9 @@ public class HarvesterTest {
         harvester.stop();
 
         verify(future, times(1)).cancel(false);
-        verify(connection, times(1)).close();
         
-        // needs to be 2 times, since is called once in start
-        verify(mockedConnector, times(2)).isAttached();
-        
-        verify(mockedConnector, times(1)).close();
+        verify(pool).acquire(42);
+        verify(pool).release(42, connection);
         
         assertFalse(harvester.isConnected());
     }
@@ -250,13 +228,9 @@ public class HarvesterTest {
         ScheduledFuture future = mock(ScheduledFuture.class);
         when(executor.scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class))).thenReturn(future);
         
-        final MXBeanConnector mockedConnector = mock(MXBeanConnector.class);
-        MXBeanConnection connection = mock(MXBeanConnection.class);
-        when(mockedConnector.connect()).thenReturn(connection);
-        when(mockedConnector.isAttached()).thenReturn(true);
-        
-        Harvester harvester = new Harvester(dao, executor, "42")
-        {{ connector = mockedConnector; }};
+        MXBeanConnectionPool pool = mock(MXBeanConnectionPool.class);
+
+        Harvester harvester = new Harvester(dao, executor, "42", pool);
         
         verify(executor, times(0)).scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class));
         
@@ -265,7 +239,6 @@ public class HarvesterTest {
         harvester.stop();
 
         assertFalse(harvester.isConnected());
-        verify(mockedConnector, times(0)).isAttached();
         
         verify(future, times(0)).cancel(false);
     }
@@ -291,7 +264,8 @@ public class HarvesterTest {
             info1,
             info2
         };
-                
+
+        MXBeanConnectionPool pool = mock(MXBeanConnectionPool.class);
         ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
 
         ArgumentCaptor<ThreadSummary> summaryCapture = ArgumentCaptor.forClass(ThreadSummary.class);
@@ -310,7 +284,7 @@ public class HarvesterTest {
 
         final boolean [] getDataCollectorBeanCalled = new boolean[1];
         
-        Harvester harvester = new Harvester(dao, executor, "42") {
+        Harvester harvester = new Harvester(dao, executor, "42", pool) {
             @Override
             ThreadMXBean getDataCollectorBean(MXBeanConnection connection)
                     throws MalformedObjectNameException {
@@ -354,8 +328,7 @@ public class HarvesterTest {
     @Test
     public void testSaveVmCaps() {
 
-        final MXBeanConnector mockedConnector = mock(MXBeanConnector.class);
-        when(mockedConnector.isAttached()).thenReturn(true);
+        MXBeanConnectionPool pool = mock(MXBeanConnectionPool.class);
         
         ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
 
@@ -370,8 +343,7 @@ public class HarvesterTest {
 
         final boolean [] getDataCollectorBeanCalled = new boolean[1];
         
-        Harvester harvester = new Harvester(dao, executor, "42") {
-            { connector = mockedConnector; }
+        Harvester harvester = new Harvester(dao, executor, "42", pool) {
             @Override
             ThreadMXBean getDataCollectorBean(MXBeanConnection connection)
                     throws MalformedObjectNameException {

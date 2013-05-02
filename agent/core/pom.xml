@@ -111,6 +111,7 @@
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-SymbolicName>com.redhat.thermostat.agent.core</Bundle-SymbolicName>
+            <Bundle-Activator>com.redhat.thermostat.agent.internal.Activator</Bundle-Activator>
             <Export-Package>
               com.redhat.thermostat.agent,
               com.redhat.thermostat.agent.config,
@@ -120,7 +121,9 @@
               com.redhat.thermostat.utils.management,
             </Export-Package>
             <Private-Package>
+              com.redhat.thermostat.agent.internal,
               com.redhat.thermostat.backend.internal,
+              com.redhat.thermostat.utils.management.internal,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>

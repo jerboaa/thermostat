@@ -57,7 +57,7 @@ import com.redhat.thermostat.thread.model.ThreadInfoData;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 import com.redhat.thermostat.utils.management.MXBeanConnection;
-import com.redhat.thermostat.utils.management.MXBeanConnector;
+import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 
 @SuppressWarnings("restriction")
 class Harvester {
@@ -68,18 +68,17 @@ class Harvester {
     private ScheduledExecutorService threadPool;
     private ScheduledFuture<?> harvester;
     
-    MXBeanConnector connector;
-    
+    private MXBeanConnectionPool connectionPool;
     private MXBeanConnection connection;
     private ThreadMXBean collectorBean;
     private ThreadDao threadDao;
-    private String vmId;
+    private int vmId;
     
-    Harvester(ThreadDao threadDao, ScheduledExecutorService threadPool, String vmId) {
-        this.connector = new MXBeanConnector(vmId);
+    Harvester(ThreadDao threadDao, ScheduledExecutorService threadPool, String vmId, MXBeanConnectionPool connectionPool) {
         this.threadDao = threadDao;
-        this.vmId = vmId;
+        this.vmId = Integer.valueOf(vmId);
         this.threadPool = threadPool;
+        this.connectionPool = connectionPool;
     }
     
     synchronized boolean start() {
@@ -87,17 +86,8 @@ class Harvester {
             return true;
         }
 
-        if (!connector.isAttached()) {
-            try {
-                connector.attach();
-            } catch (Exception ex) {
-                logger.log(Level.SEVERE, "can't attach", ex);
-                return false;
-            }
-        }
-      
         try {
-            connection = connector.connect();
+            connection = connectionPool.acquire(vmId);
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "can't connect", ex);
             return false;
@@ -126,24 +116,11 @@ class Harvester {
         
         isConnected = false;
 
-        boolean stillConnected = false;
         try {
-            connection.close();
-        } catch (IOException ex) {
-            logger.log(Level.SEVERE, "can't close connection", ex);
-            stillConnected = true;
-        }
-
-        if (connector.isAttached()) {
-            try {
-                connector.close();
-            } catch (Exception ex) {
-                logger.log(Level.SEVERE, "can't detach", ex);
-                if (stillConnected) {
-                    isConnected = true;
-                }
-                return false;
-            }
+            connectionPool.release(vmId, connection);
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, "can't disconnect", ex);
+            return false;
         }
 
         return true;
@@ -178,7 +155,7 @@ class Harvester {
           summary.setCurrentLiveThreads(collectorBean.getThreadCount());
           summary.setCurrentDaemonThreads(collectorBean.getDaemonThreadCount());
           summary.setTimeStamp(timestamp);
-          summary.setVmId(Integer.parseInt(vmId));
+          summary.setVmId(vmId);
           threadDao.saveSummary(summary);
           
           long [] ids = collectorBean.getAllThreadIds();
@@ -221,7 +198,7 @@ class Harvester {
                   info.setAllocatedBytes(allocatedBytes[i]);
               }
 
-              info.setVmId(Integer.parseInt(vmId));
+              info.setVmId(vmId);
               threadDao.saveThreadInfo(info);
           }
           
@@ -238,63 +215,47 @@ class Harvester {
     }
     
     synchronized boolean saveVmCaps() {
-        
-        boolean closeAfter = false;
-        if (!connector.isAttached()) {
-            closeAfter = true; 
-            try {
-                connector.attach();
-            } catch (Exception ex) {
-                logger.log(Level.SEVERE, "can't attach", ex);
-                if (closeAfter) {
-                    closeConnection();
-                }
-                return false;
-            }
-        }
+        boolean success = false;
 
-        try (MXBeanConnection connection = connector.connect()) {
-
-            ThreadMXBean bean = getDataCollectorBean(connection);
-            VMThreadCapabilities caps = new VMThreadCapabilities();
-
-            List<String> features = new ArrayList<>(3);
-            if (bean.isThreadCpuTimeSupported())
-                features.add(ThreadDao.CPU_TIME);
-            if (bean.isThreadContentionMonitoringSupported())
-                features.add(ThreadDao.CONTENTION_MONITOR);
-
-            if (bean instanceof com.sun.management.ThreadMXBean) {
-                com.sun.management.ThreadMXBean sunBean = (com.sun.management.ThreadMXBean) bean;
-                
-                try {
-                    if (sunBean.isThreadAllocatedMemorySupported()) {
-                        features.add(ThreadDao.THREAD_ALLOCATED_MEMORY);
-                    }
-                } catch (Exception ignore) {};
-            }
-            caps.setSupportedFeaturesList(features.toArray(new String[features.size()]));
-            caps.setVmId(Integer.parseInt(vmId));
-            threadDao.saveCapabilities(caps);
-
-        } catch (Exception ex) {
-            logger.log(Level.SEVERE, "can't get MXBeanConnection connection", ex);
-            return false;
-        }
-
-        if (closeAfter) {
-            closeConnection();
-        }
-        
-        return true;
-    }
-    
-    private void closeConnection() {
         try {
-            connector.close();
-        } catch (Exception ex) {
-            logger.log(Level.SEVERE, "can't close connection to vm", ex);
+            MXBeanConnection connection = connectionPool.acquire(vmId);
+            try {
+
+                ThreadMXBean bean = getDataCollectorBean(connection);
+                VMThreadCapabilities caps = new VMThreadCapabilities();
+
+                List<String> features = new ArrayList<>(3);
+                if (bean.isThreadCpuTimeSupported())
+                    features.add(ThreadDao.CPU_TIME);
+                if (bean.isThreadContentionMonitoringSupported())
+                    features.add(ThreadDao.CONTENTION_MONITOR);
+
+                if (bean instanceof com.sun.management.ThreadMXBean) {
+                    com.sun.management.ThreadMXBean sunBean = (com.sun.management.ThreadMXBean) bean;
+
+                    try {
+                        if (sunBean.isThreadAllocatedMemorySupported()) {
+                            features.add(ThreadDao.THREAD_ALLOCATED_MEMORY);
+                        }
+                    } catch (Exception ignore) {
+                    }
+                    ;
+                }
+                caps.setSupportedFeaturesList(features.toArray(new String[features.size()]));
+                caps.setVmId(vmId);
+                threadDao.saveCapabilities(caps);
+
+            } catch (Exception ex) {
+                logger.log(Level.SEVERE, "can't get MXBeanConnection connection", ex);
+                success = false;
+            }
+            connectionPool.release(vmId, connection);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "can't get MXBeanConnection connection", e);
+            success = false;
         }
+
+        return success;
     }
 }
 

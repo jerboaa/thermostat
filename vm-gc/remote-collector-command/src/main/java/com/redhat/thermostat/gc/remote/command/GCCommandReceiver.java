@@ -43,9 +43,16 @@ import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.gc.remote.command.internal.GC;
 import com.redhat.thermostat.gc.remote.command.internal.GCException;
 import com.redhat.thermostat.gc.remote.common.command.GCCommand;
-import com.redhat.thermostat.utils.management.MXBeanConnector;
+import com.redhat.thermostat.utils.management.MXBeanConnection;
+import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 
 public class GCCommandReceiver implements RequestReceiver {
+
+    private MXBeanConnectionPool pool;
+
+    public GCCommandReceiver(MXBeanConnectionPool pool) {
+        this.pool = pool;
+    }
 
     @Override
     public Response receive(Request request) {
@@ -54,10 +61,9 @@ public class GCCommandReceiver implements RequestReceiver {
         String command = request.getParameter(GCCommand.class.getName());
         switch (GCCommand.valueOf(command)) {
         case REQUEST_GC:
+            String vmId = request.getParameter(GCCommand.VM_ID);
             try {
-                String vmId = request.getParameter(GCCommand.VM_ID);
-                MXBeanConnector connector = new MXBeanConnector(vmId);
-                new GC(connector).gc();
+                new GC(pool, vmId).gc();
             } catch (GCException gce) {
                 response = new Response(ResponseType.ERROR);
             }
