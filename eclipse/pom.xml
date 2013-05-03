@@ -96,12 +96,9 @@
     <module>com.redhat.thermostat.eclipse.chart.vmclassstat</module>
     <module>com.redhat.thermostat.client.feature</module>
     <module>com.redhat.thermostat.eclipse.feature</module>
-    <module>com.redhat.thermostat.eclipse.test.deps.feature</module>
     <module>com.redhat.thermostat.eclipse.target_platform</module>
     <module>com.redhat.thermostat.eclipse.p2-repo</module>
     <module>core-p2-repository</module>
-    <module>test-deps-p2-repository</module>
-    <module>jfreechart-p2-repository</module>
     <module>composite-repo</module>
   </modules>
 
