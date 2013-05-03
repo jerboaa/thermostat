@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -124,13 +125,20 @@ public class WebStorageEndPoint extends HttpServlet {
             // service. The launcher did not run and hence THERMOSTAT_HOME is
             // not set and we need to do this ourselves.
             String thermostatHome = config.getInitParameter("THERMOSTAT_HOME");
+            if (thermostatHome == null) {
+                String msg = "THERMOSTAT_HOME config parameter not set!";
+                logger.log(Level.SEVERE, msg);
+                throw new RuntimeException(msg);
+            }
             File thermostatHomeFile = new File(thermostatHome);
             if (!thermostatHomeFile.canRead()) {
                 // This is bad news. If we can't at least read THERMOSTAT_HOME
                 // we are bound to fail in some weird ways at some later point.
-                throw new RuntimeException("THERMOSTAT_HOME = "
+                String msg = "THERMOSTAT_HOME = "
                         + thermostatHome
-                        + " is not readable or does not exist!");
+                        + " is not readable or does not exist!";
+                logger.log(Level.SEVERE, msg);
+                throw new RuntimeException(msg);
             }
             logger.log(Level.INFO, "Setting THERMOSTAT_HOME for webapp to "
                     + thermostatHome);

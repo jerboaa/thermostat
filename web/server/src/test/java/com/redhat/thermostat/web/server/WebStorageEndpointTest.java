@@ -62,6 +62,8 @@ import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
@@ -1018,6 +1020,34 @@ public class WebStorageEndpointTest {
         String failMsg = "thermostat-cmdc-verify role missing, expected Forbidden!";
         String[] insufficientRoles = new String[0];
         doUnauthorizedTest("verify-token", failMsg, insufficientRoles, false);
+    }
+    
+    @Test
+    public void initThrowsRuntimeExceptionIfThermostatHomeNotSet() {
+        // setup sets this, but we don't want to have it set for this test
+        System.clearProperty("THERMOSTAT_HOME");
+        WebStorageEndPoint endpoint = new WebStorageEndPoint();
+        ServletConfig config = mock(ServletConfig.class);
+        try {
+            endpoint.init(config);
+            fail("Thermostat home was not set in config, should not get here!");
+        } catch (RuntimeException e) {
+            // pass
+            assertTrue(e.getMessage().contains("THERMOSTAT_HOME"));
+        } catch (ServletException e) {
+            fail(e.getMessage());
+        }
+        // set config with non-existing dir
+        when(config.getInitParameter("THERMOSTAT_HOME")).thenReturn("not-existing");
+        try {
+            endpoint.init(config);
+            fail("Thermostat home was set in config but file does not exist, should have died!");
+        } catch (RuntimeException e) {
+            // pass
+            assertTrue(e.getMessage().contains("THERMOSTAT_HOME"));
+        } catch (ServletException e) {
+            fail(e.getMessage());
+        }
     }
 
     private byte[] verifyAuthorizedGenerateToken(String username, String password) throws IOException {

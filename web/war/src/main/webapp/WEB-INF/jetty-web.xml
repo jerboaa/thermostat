@@ -1,0 +1,30 @@
+<?xml version="1.0"  encoding="UTF-8"?>
+<!DOCTYPE Configure PUBLIC "-//Mort Bay Consulting//DTD Configure//EN" "http://www.eclipse.org/jetty/configure.dtd">
+
+<!-- ==================================================================
+Thermostat JAAS configuration for jetty. This tells jetty that
+it should use JAAS for the "Thermostat Realm". It is imperative that
+the realm name matches. It also tells jetty which classes map to
+role principals and set the name of the JAAS config entry to use.
+
+This should work with Jetty 8.
+
+===================================================================== -->
+
+<Configure class="org.eclipse.jetty.webapp.WebAppContext">
+  <Set name="contextPath">/thermostat</Set>
+  <Get name="securityHandler">
+    <Set name="loginService">
+      <New class="org.eclipse.jetty.plus.jaas.JAASLoginService">
+            <Set name="name">Thermostat Realm</Set>
+            <Set name="loginModuleName">ThermostatJAASLogin</Set>
+            <Set name="roleClassNames">
+              <Array type="java.lang.String">
+                <Item>com.redhat.thermostat.web.server.auth.RolePrincipal</Item>
+                <Item>com.redhat.thermostat.web.server.auth.WrappedRolePrincipal</Item>
+              </Array>
+            </Set>
+      </New>
+    </Set>
+  </Get>
+</Configure>

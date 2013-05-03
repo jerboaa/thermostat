@@ -340,7 +340,6 @@ public class WebStorage implements Storage, SecureStorage {
     public WebStorage(StartupConfiguration config) throws StorageException {
         ClientConnectionManager connManager = new ThreadSafeClientConnManager();
         DefaultHttpClient client = new DefaultHttpClient(connManager);
-        client.getParams().setParameter("http.protocol.expect-continue", Boolean.TRUE);
         init(config, client, connManager);
     }
     
@@ -579,7 +578,17 @@ public class WebStorage implements Storage, SecureStorage {
         InputStreamBody body = new InputStreamBody(in, name);
         MultipartEntity mpEntity = new MultipartEntity();
         mpEntity.addPart("file", body);
-        post(endpoint + "/save-file", mpEntity).close();
+        // See IcedTea bug #1314. For safe-file we need to do this. However,
+        // doing this for other actions messes up authentication when using
+        // jetty (and possibly others). Hence, do this expect-continue thingy
+        // only for save-file.
+        httpClient.getParams().setParameter("http.protocol.expect-continue", Boolean.TRUE);
+        try {
+            post(endpoint + "/save-file", mpEntity).close();
+        } finally {
+            // FIXME: Not sure if we need this :/
+            httpClient.getParams().removeParameter("http.protocol.expect-continue");
+        }
     }
 
     @Override

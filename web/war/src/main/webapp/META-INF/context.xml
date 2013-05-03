@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- allow symlinks to /usr/share/java deps in WEB-INF/lib -->
+<Context path="/thermostat" allowLinking="true">
+       <!-- Configures JAAS for Tomcat -->
+       <Realm className="org.apache.catalina.realm.JAASRealm"                 
+               appName="ThermostatJAASLogin"       
+               userClassNames="com.redhat.thermostat.web.server.auth.UserPrincipal"       
+               roleClassNames="com.redhat.thermostat.web.server.auth.WrappedRolePrincipal,
+                               com.redhat.thermostat.web.server.auth.RolePrincipal"/>
+</Context>

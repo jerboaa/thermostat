@@ -137,11 +137,9 @@
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Export-Package>
               com.redhat.thermostat.web.server,
-              com.redhat.thermostat.web.server.auth
+              com.redhat.thermostat.web.server.auth,
+              com.redhat.thermostat.web.server.auth.spi
             </Export-Package>
-            <Private-Package>
-              com.redhat.thermostat.web.server.internal
-            </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
           </instructions>

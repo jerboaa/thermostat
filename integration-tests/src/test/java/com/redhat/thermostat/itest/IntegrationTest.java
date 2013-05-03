@@ -64,6 +64,10 @@ public class IntegrationTest {
     public static String getThermostatExecutable() {
         return "../distribution/target/bin/thermostat";
     }
+    
+    public static String getThermostatHome() {
+        return "../distribution/target";
+    }
 
     public static String getStorageDataDirectory() {
         return "../distribution/target/storage/db";
