@@ -183,6 +183,8 @@ public class WebStorageEndpointTest {
 
     @After
     public void tearDown() throws Exception {
+        System.clearProperty("THERMOSTAT_HOME");
+        
         // some tests don't use server
         if (server != null) {
             server.stop();
