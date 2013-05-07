@@ -36,12 +36,30 @@
 
 package com.redhat.thermostat.agent.command;
 
-// FIXME document this class
+import com.redhat.thermostat.annotations.Service;
+import com.redhat.thermostat.common.command.Request;
+
+/**
+ * An agent-side service that allows starting and stopping the command-channel
+ * server.
+ *
+ * The command-channel server allows the agent to receive and process
+ * {@link Request}s.
+ */
+@Service
 public interface ConfigurationServer {
 
-    void startListening(String address);
+    /**
+     * Starts the configuration server so it listens at the interface specified
+     * by the {@code host} and {@code port}.
+     */
+    void startListening(String host, int port);
 
+    /**
+     * Shuts down the configuration server. No additional {@link Request}s will
+     * be accepted after this is called, but existing ones may be processed to
+     * completion.
+     */
     void stopListening();
 
 }
-

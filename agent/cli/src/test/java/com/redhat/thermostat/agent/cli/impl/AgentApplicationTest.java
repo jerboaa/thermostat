@@ -39,6 +39,7 @@ package com.redhat.thermostat.agent.cli.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
@@ -87,6 +88,8 @@ import com.redhat.thermostat.testutils.StubBundleContext;
 @RunWith(PowerMockRunner.class)
 public class AgentApplicationTest {
 
+    private static final String COMMAND_CHANNLE_BIND_HOST = "test";
+    private static final int COMMAND_CHANNEL_BIND_PORT = 10101;
     // TODO: Test i18nized versions when they come.
 
     private StubBundleContext context;
@@ -104,6 +107,7 @@ public class AgentApplicationTest {
         
         AgentStartupConfiguration config = mock(AgentStartupConfiguration.class);
         when(config.getDBConnectionString()).thenReturn("test string; please ignore");
+        when(config.getConfigListenAddress()).thenReturn(COMMAND_CHANNLE_BIND_HOST + ":" + COMMAND_CHANNEL_BIND_PORT);
 
         configCreator = mock(ConfigurationCreator.class);
         when(configCreator.create()).thenReturn(config);
@@ -238,7 +242,7 @@ public class AgentApplicationTest {
                         latch.countDown();
                         return null;
                     }
-                }).when(configServer).startListening(anyString());
+                }).when(configServer).startListening(COMMAND_CHANNLE_BIND_HOST, COMMAND_CHANNEL_BIND_PORT);
                 
                 try {
                     agent.run(commandContext);

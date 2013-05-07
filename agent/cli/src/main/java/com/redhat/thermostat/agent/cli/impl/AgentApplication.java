@@ -122,7 +122,8 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
             @Override
             public Object addingService(ServiceReference reference) {
                 final ConfigurationServer configServer = (ConfigurationServer) super.addingService(reference);
-                configServer.startListening(configuration.getConfigListenAddress());
+                String [] host = configuration.getConfigListenAddress().split(":");
+                configServer.startListening(host[0], Integer.valueOf(host[1]));
                 
                 ConnectionListener connectionListener = new ConnectionListener() {
                     @Override

@@ -73,7 +73,7 @@ public class ConfigurationServerImplTest {
     @Test
     public void testStartListening() {
         ConfigurationServerImpl server = new ConfigurationServerImpl(ctx);
-        server.startListening("127.0.0.1:123");
+        server.startListening("127.0.0.1", 123);
 
         ArgumentCaptor<InetSocketAddress> argument = ArgumentCaptor.forClass(InetSocketAddress.class);
         verify(bootstrap).bind(argument.capture());
@@ -90,7 +90,7 @@ public class ConfigurationServerImplTest {
         when(bootstrap.bind(any(InetSocketAddress.class))).thenThrow(ChannelException.class);
         
         try {
-            server.startListening("does-not-resolve.example.com:123");
+            server.startListening("does-not-resolve.example.com", 123);
             fail("Should have thrown exception");
         } catch (ChannelException e) {
             // pass

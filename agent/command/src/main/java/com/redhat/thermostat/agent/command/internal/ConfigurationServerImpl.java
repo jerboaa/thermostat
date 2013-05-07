@@ -56,11 +56,10 @@ class ConfigurationServerImpl implements ConfigurationServer {
     }
 
     @Override
-    public void startListening(String address) {
+    public void startListening(String hostname, int port) {
         ServerBootstrap bootstrap = (ServerBootstrap) ctx.getBootstrap();
 
-        String [] host = address.split(":");
-        InetSocketAddress addr = new InetSocketAddress(host[0], Integer.parseInt(host[1]));
+        InetSocketAddress addr = new InetSocketAddress(hostname, port);
         
         logger.log(Level.FINE, "Starting command channel server on " + addr.toString());
         try {
