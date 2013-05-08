@@ -36,11 +36,15 @@
 
 package com.redhat.thermostat.launcher.internal;
 
+
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -50,6 +54,11 @@ import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
+import javax.xml.XMLConstants;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
@@ -61,7 +70,6 @@ import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
-import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandExtensions;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.NewCommand;
@@ -188,16 +196,32 @@ import com.redhat.thermostat.launcher.internal.PluginConfiguration.NewCommand;
  * This class is thread-safe
  */
 public class PluginConfigurationParser {
-
+    
     private static final Logger logger = LoggingUtils.getLogger(PluginConfigurationParser.class);
-
     // thread safe because there is no state :)
-
-    public PluginConfiguration parse(File configurationFile) throws FileNotFoundException {
+    
+    public PluginConfiguration parse(File configurationFile) throws FileNotFoundException, PluginConfigurationValidatorException {
+        validate(new StreamSource(configurationFile));
         return parse(configurationFile.getParentFile().getName(), new FileInputStream(configurationFile));
     }
-
-    public PluginConfiguration parse(String pluginName, InputStream configurationStream) {
+           
+    void validate(StreamSource plugin) throws PluginConfigurationValidatorException {
+        URL schemaUrl = getClass().getResource("/plugin.xsd");
+        SchemaFactory schemaFactory = 
+                SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+        
+        try {
+            Schema schema = schemaFactory.newSchema(schemaUrl);
+            Validator validator = schema.newValidator();
+            validator.setErrorHandler(new ConfigurationValidatorErrorHandler());
+            validator.validate(plugin);
+        } catch (IOException | SAXException exception) {
+            throw new PluginConfigurationValidatorException
+                (plugin.getSystemId(), exception.getLocalizedMessage(), exception);
+        }
+    }
+    
+    PluginConfiguration parse(String pluginName, InputStream configurationStream) {
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setIgnoringComments(true);
@@ -208,12 +232,12 @@ public class PluginConfigurationParser {
             if (rootNode == null) {
                 throw new PluginConfigurationParseException("no configuration found");
             }
-            return parseRootElement(pluginName, rootNode);
+            return parseRootElement(pluginName, rootNode); 
         } catch (ParserConfigurationException | SAXException | IOException exception) {
             throw new PluginConfigurationParseException("failed to parse plugin configuration", exception);
         }
     }
-
+    
     private PluginConfiguration parseRootElement(String pluginName, Node root) {
         List<NewCommand> commands = Collections.emptyList();
         List<CommandExtensions> extensions = Collections.emptyList();
@@ -505,4 +529,85 @@ public class PluginConfigurationParser {
             throw exception;
         }
     }
+    
+    private static class ConfigurationValidatorErrorHandler implements ErrorHandler {
+        
+        private int warningsErrorsCounter = 0;
+
+        @Override
+        public void warning(SAXParseException exception) throws SAXException {
+            warningsErrorsCounter++;
+            printInfo(exception, "Warning");
+        }
+
+        @Override
+        public void error(SAXParseException exception) throws SAXParseException {
+            warningsErrorsCounter++;
+            printInfo(exception, "Error");
+        }
+        
+        @Override
+        public void fatalError(SAXParseException exception) throws SAXParseException {
+            if (warningsErrorsCounter == 0) {
+                printInfo(exception, "Fatal error");
+                logger.warning("XML not well formed");
+            }
+        }
+
+        private static void printInfo(SAXParseException e, String errorType) {
+            int columnNumber = e.getColumnNumber();
+            int lineNumber = e.getLineNumber();
+            
+            StringBuffer buffer = new StringBuffer();
+            
+            String firstLine = null;
+            String secondLine = null;
+            String thirdLine = null;
+            String errorLine = null;
+            String pointer = "";
+            String absolutePath = e.getSystemId();
+            absolutePath = absolutePath.substring(5);
+            
+            try {
+                BufferedReader br = new BufferedReader(new FileReader(absolutePath));
+                for (int i = 1; i < lineNumber-3; i++) {
+                    br.readLine();
+                }
+                firstLine = br.readLine();
+                secondLine = br.readLine();
+                thirdLine = br.readLine();
+                errorLine = br.readLine();
+                
+                for (int j = 1; j < columnNumber-1; j++) {
+                    pointer = pointer.concat(" ");
+                }
+                pointer = pointer.concat("^");
+                br.close();
+            } catch (IOException exception) {
+                System.out.println("File not found!");;
+            }
+            
+            buffer.append(errorType + " in file " + absolutePath + ":" + lineNumber + "." + columnNumber + "\n");
+            buffer.append(formatMessage(e.getLocalizedMessage()) + "\n\n");
+            buffer.append(firstLine + "\n");
+            buffer.append(secondLine + "\n");
+            buffer.append(thirdLine + "\n");
+            buffer.append(errorLine + "\n");
+            buffer.append(pointer  + "\n");
+            
+            logger.warning("\n" + buffer.toString());
+            
+        }
+        
+        private static String formatMessage(String message) {
+            String[] arguments = message.split("\"http://icedtea.classpath.org/thermostat/plugins/v1.0\":");
+            int size = arguments.length;
+            String output = "";
+            for (int i = 0; i < size; i++) {
+                output=output.concat(arguments[i]);
+            }
+            return output;
+        }
+    }
+    
 }

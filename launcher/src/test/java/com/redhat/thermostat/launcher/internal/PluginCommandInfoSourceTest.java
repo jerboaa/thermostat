@@ -74,7 +74,7 @@ public class PluginCommandInfoSourceTest {
     private UsageStringBuilder usageBuilder;
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws IOException, PluginConfigurationValidatorException {
         parser = mock(PluginConfigurationParser.class);
         parserResult = mock(PluginConfiguration.class);
         when(parser.parse(isA(File.class))).thenReturn(parserResult);
@@ -108,7 +108,7 @@ public class PluginCommandInfoSourceTest {
     }
 
     @Test
-    public void verifyParserIsInvokedOnAllConfigurationFiles() throws IOException {
+    public void verifyParserIsInvokedOnAllConfigurationFiles() throws IOException, PluginConfigurationValidatorException {
         Path[] pluginDirs = new Path[] {
                 pluginRootDir.resolve("plugin1"),
                 pluginRootDir.resolve("plugin2"),
@@ -130,7 +130,7 @@ public class PluginCommandInfoSourceTest {
     }
 
     @Test
-    public void verifyMissingConfigurationFileIsHandledCorrectly() throws FileNotFoundException {
+    public void verifyMissingConfigurationFileIsHandledCorrectly() throws FileNotFoundException, PluginConfigurationValidatorException {
         when(parser.parse(isA(File.class))).thenThrow(new FileNotFoundException("test"));
 
         new PluginCommandInfoSource(jarRootDir.toFile(), pluginRootDir.toFile(), parser, usageBuilder);
