@@ -53,11 +53,6 @@ public class CommandException extends Exception {
         localizedMessage = message;
     }
 
-    public CommandException(Throwable cause) {
-        super(cause);
-        localizedMessage = new LocalizedString(cause.getLocalizedMessage());
-    }
-
     public CommandException(LocalizedString message, Throwable cause) {
         super(message.getContents(), cause);
         localizedMessage = message;

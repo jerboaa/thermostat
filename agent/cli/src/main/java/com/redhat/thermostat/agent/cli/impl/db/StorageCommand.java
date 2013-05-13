@@ -83,12 +83,7 @@ public class StorageCommand extends AbstractStateNotifyingCommand {
     
     @Override
     public void run(CommandContext ctx) throws CommandException {
-
-        try {
-            parseArgsAndRun(ctx);
-        } catch (InvalidConfigurationException e) {
-            throw new CommandException(e);
-        }
+        parseArgsAndRun(ctx);
     }
 
     private void parseArgsAndRun(CommandContext ctx)

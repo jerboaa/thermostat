@@ -52,6 +52,8 @@ public enum LocaleResources {
     LOGGING_PROPERTIES_ISSUE,
 
     ENV_NO_HOME,
+
+    INVALID_IPPORT,
     ;
 
     public static final String RESOURCE_BUNDLE =

@@ -59,5 +59,36 @@ public class Translate<T extends Enum<T>> {
     public LocalizedString localize(T toTranslate, String... params) {
         return new LocalizedString(MessageFormat.format(localize(toTranslate).getContents(), (Object[]) params));
     }
+
+    /**
+     * Creates a {@link LocalizedString} that can contain one list of unknown length
+     * that gets inserted as a single String, with separator as specified, into
+     * the regular translate parameters at a given position.
+     * @param toTranslate The translation key
+     * @param specialParams The list to be inserted into the parameters
+     * @param separator The separator to use between each element in the list
+     * @param position The position within the regular parameters at which to insert the list-string (zero indexed)
+     * @param params The parameters to apply to the translation
+     * @return The {@link LocalizedString}
+     */
+    public LocalizedString localize(T toTranslate, String[] specialParams, String separator, int position, String... params) {
+        StringBuilder builder = new StringBuilder(specialParams[0]);
+        for (int i = 1; i < specialParams.length; i++) {
+            builder.append(separator).append(specialParams[i]);
+        }
+        String replacedList = builder.toString();
+
+
+        
+        String[] newParams = new String[params.length + 1];
+        for (int i = 0; i < position; i++) {
+            newParams[i] = params[i];
+        }
+        newParams[position] = replacedList;
+        for (int i = position + 1, j = position; j < params.length; i++, j++) {
+            newParams[i] = params[j];
+        }
+        return new LocalizedString(MessageFormat.format(localize(toTranslate).getContents(), (Object[]) newParams));
+    }
 }
 

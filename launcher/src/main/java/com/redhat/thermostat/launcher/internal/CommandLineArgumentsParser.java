@@ -82,26 +82,26 @@ public class CommandLineArgumentsParser {
     private LocalizedString createMissingOptionsMessage(MissingOptionException mae) {
         @SuppressWarnings("unchecked")
         List<String> missingOptions = mae.getMissingOptions();
-        StringBuilder msg = new StringBuilder();
-        if (missingOptions.size() == 1) {
-            msg.append(tr.localize(LocaleResources.MISSING_OPTION).getContents());
-        } else {
-            msg.append(tr.localize(LocaleResources.MISSING_OPTIONS).getContents());
-        }
+        String[] presentableMissingOptions = new String[missingOptions.size()];
+        int optIndex = 0;
         for (Iterator<String> i = missingOptions.iterator(); i.hasNext();) {
+            StringBuilder missingOptionBuilder = new StringBuilder();
             String missingOption = i.next();
             if (missingOption.length() > 1) {
-                msg.append("--");
+                missingOptionBuilder.append("--");
             } else {
-                msg.append("-");
+                missingOptionBuilder.append("-");
             }
-            msg.append(missingOption);
-            if (i.hasNext()) {
-                msg.append(", ");
-            }
+            missingOptionBuilder.append(missingOption);
+
+            presentableMissingOptions[optIndex] = missingOptionBuilder.toString();
+            optIndex++;
         }
-        // Workaround to create this (complex) localized string.
-        return new LocalizedString(msg.toString());
+        if (missingOptions.size() == 1) {
+            return tr.localize(LocaleResources.MISSING_OPTION, presentableMissingOptions, ", ", 0, new String[]{});
+        } else {
+            return tr.localize(LocaleResources.MISSING_OPTIONS, presentableMissingOptions, ", ", 0, new String[]{});
+        }
     }
 }
 

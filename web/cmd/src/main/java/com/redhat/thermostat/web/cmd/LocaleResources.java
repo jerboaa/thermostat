@@ -43,6 +43,8 @@ public enum LocaleResources {
     NEED_URL,
     NEED_IP,
     INVALID_PORT,
+    ERROR_STARTING_SERVICE,
+    ERROR_STOPPING_SERVICE,
     ;
 
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.web.cmd.strings";

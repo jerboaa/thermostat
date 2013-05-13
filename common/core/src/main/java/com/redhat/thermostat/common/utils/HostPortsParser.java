@@ -39,6 +39,10 @@ package com.redhat.thermostat.common.utils;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.redhat.thermostat.common.config.InvalidConfigurationException;
+import com.redhat.thermostat.common.locale.LocaleResources;
+import com.redhat.thermostat.common.locale.Translate;
+
 /**
  * Parses Host/Port pairs from a raw string.
  * 
@@ -68,14 +72,15 @@ public class HostPortsParser {
 
     private final String rawString;
     private List<HostPortPair> ipPorts;
-    private final IllegalArgumentException formatException; 
+    private final InvalidConfigurationException formatException; 
+    private final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     
     public HostPortsParser(String parseString) {
         this.rawString = parseString;
-        this.formatException = new IllegalArgumentException("Invalid format of IP/port argument " + rawString);
+        this.formatException = new InvalidConfigurationException(t.localize(LocaleResources.INVALID_IPPORT, rawString));
     }
     
-    public void parse() throws IllegalArgumentException {
+    public void parse() throws InvalidConfigurationException {
         ipPorts = new ArrayList<>();
         for (String ipPortPair: rawString.split(",")) {
             // if we have a '[' in the ip:port pair string we likely have an IPv6

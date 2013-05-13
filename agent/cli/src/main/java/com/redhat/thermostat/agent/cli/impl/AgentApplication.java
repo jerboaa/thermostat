@@ -184,15 +184,11 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
-        try {
-            configuration = configurationCreator.create();
+        configuration = configurationCreator.create();
 
-            parseArguments(ctx.getArguments());
-            if (!parser.isHelp()) {
-                runAgent(ctx);
-            }
-        } catch (InvalidConfigurationException ex) {
-            throw new CommandException(ex);
+        parseArguments(ctx.getArguments());
+        if (!parser.isHelp()) {
+            runAgent(ctx);
         }
     }
     

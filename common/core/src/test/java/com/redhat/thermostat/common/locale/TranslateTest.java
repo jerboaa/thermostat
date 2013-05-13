@@ -46,8 +46,8 @@ import org.junit.Test;
 public class TranslateTest {
 
     enum TestStrings {
-        SIMPLE_STRING,
-        STRING_WITH_PARAMETER,
+        THE_STRING,
+        ;
     }
 
     // Mockito can't mock the final method getMessage() which is what Translate
@@ -68,21 +68,36 @@ public class TranslateTest {
 
     @Test
     public void testLocalizeWithoutArguments() {
-        ResourceBundle resources = new LocalizedResourceBundle(TestStrings.SIMPLE_STRING.name(), "Localized String");
+        Translate<TestStrings> translate = getTranslator(TestStrings.THE_STRING.name(), "Localized String");
 
-        Translate<TestStrings> translate = new Translate<>(resources, TestStrings.class);
-
-        assertEquals("Localized String", translate.localize(TestStrings.SIMPLE_STRING).getContents());
+        assertEquals("Localized String", translate.localize(TestStrings.THE_STRING).getContents());
     }
 
     @Test
     public void testLocalizeWithArguments() {
-        ResourceBundle resources = new LocalizedResourceBundle(TestStrings.STRING_WITH_PARAMETER.name(), "Parameter: {0}");
+        Translate<TestStrings> translate = getTranslator(TestStrings.THE_STRING.name(), "Parameter: {0}");
 
-        Translate<TestStrings> translate = new Translate<>(resources, TestStrings.class);
+        assertEquals("Parameter: FOO", translate.localize(TestStrings.THE_STRING, "FOO").getContents());
+    }
 
-        assertEquals("Parameter: FOO", translate.localize(TestStrings.STRING_WITH_PARAMETER, "FOO").getContents());
+    @Test
+    public void testLocalizeWithSeveralArguments() {
+        Translate<TestStrings> translate = getTranslator(TestStrings.THE_STRING.name(), "Parameter1: {0}  Parameter2: {1}  Parameter3: {2}");
 
+        assertEquals("Parameter1: ONE  Parameter2: TWO  Parameter3: THREE", translate.localize(TestStrings.THE_STRING, "ONE", "TWO", "THREE").getContents());
+    }
+
+    @Test
+    public void testLocalizeWithSpecialList() {
+        Translate<TestStrings> translate = getTranslator(TestStrings.THE_STRING.name(), "Parameter1: {0}  ParameterList: {1}  Parameter2: {2}");
+
+        assertEquals("Parameter1: ONE  ParameterList: FOO, BAR, BAZ  Parameter2: TWO", translate.localize(TestStrings.THE_STRING, new String[]{"FOO", "BAR", "BAZ"}, ", ", 1, "ONE", "TWO").getContents());
+       
+    }
+
+    private Translate<TestStrings> getTranslator(String key, String localizedString) {
+        ResourceBundle resources = new LocalizedResourceBundle(key, localizedString);
+        return new Translate<>(resources, TestStrings.class);
     }
 }
 

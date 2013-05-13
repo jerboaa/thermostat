@@ -42,12 +42,14 @@ import java.util.List;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.AbstractCommand;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.HostPortPair;
 import com.redhat.thermostat.common.utils.HostPortsParser;
 
 public class WebServiceCommand extends AbstractCommand {
 
     private WebServiceLauncher serviceLauncher;
+    private final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     
     public WebServiceCommand() {
         this.serviceLauncher = new WebServiceLauncher();
@@ -76,11 +78,11 @@ public class WebServiceCommand extends AbstractCommand {
                 serviceLauncher.stop();
             } catch (Exception ex) {
                 ex.printStackTrace(ctx.getConsole().getError());
-                throw new CommandException(ex);
+                throw new CommandException(t.localize(LocaleResources.ERROR_STOPPING_SERVICE), ex);
             }
         } catch (Exception ex) {
             ex.printStackTrace(ctx.getConsole().getError());
-            throw new CommandException(ex);
+            throw new CommandException(t.localize(LocaleResources.ERROR_STARTING_SERVICE), ex);
         }
     }
 
@@ -96,11 +98,7 @@ public class WebServiceCommand extends AbstractCommand {
 
     private List<HostPortPair> parseIPsPorts(String rawIpsPorts) throws CommandException {
         HostPortsParser parser = new HostPortsParser(rawIpsPorts);
-        try {
-           parser.parse(); 
-        } catch (IllegalArgumentException e) {
-            throw new CommandException(e);
-        }
+        parser.parse();
         return parser.getHostsPorts();
     }
 

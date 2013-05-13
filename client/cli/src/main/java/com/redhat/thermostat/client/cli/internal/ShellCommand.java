@@ -108,7 +108,7 @@ public class ShellCommand extends AbstractCommand {
             ctx.getConsole().getOutput().println(version.getVersionInfo());
             shellMainLoop(ctx, history, term);
         } catch (IOException ex) {
-            throw new CommandException(ex);
+            throw new CommandException(t.localize(LocaleResources.COMMAND_SHELL_IO_EXCEPTION), ex);
         } finally {
             closeTerminal(term);
             if (history != null) {
@@ -125,7 +125,7 @@ public class ShellCommand extends AbstractCommand {
         try {
             term.restore();
         } catch (Exception e) {
-            throw new CommandException(e);
+            logger.log(Level.WARNING, "Error restoring terminal state.", e);
         }
     }
 

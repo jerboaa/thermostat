@@ -45,10 +45,6 @@ public class CommandLineArgumentParseException extends CommandException {
         super(message);
     }
 
-    public CommandLineArgumentParseException(Throwable cause) {
-        super(cause);
-    }
-
     public CommandLineArgumentParseException(LocalizedString message, Throwable cause) {
         super(message, cause);
     }

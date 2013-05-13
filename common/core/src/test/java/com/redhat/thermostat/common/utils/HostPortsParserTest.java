@@ -42,6 +42,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.utils.HostPortPair;
 import com.redhat.thermostat.common.utils.HostPortsParser;
 
@@ -100,19 +101,19 @@ public class HostPortsParserTest {
         int exptns = 0;
         try {
             parser.parse();
-        } catch (IllegalArgumentException e) {
+        } catch (InvalidConfigurationException e) {
             exptns++;
         }
         parser = new HostPortsParser("blah,test");
         try {
             parser.parse();
-        } catch (IllegalArgumentException e) {
+        } catch (InvalidConfigurationException e) {
             exptns++;
         }
         parser = new HostPortsParser("127.0.0.1:80,127.0.0.2:bad");
         try {
             parser.parse();
-        } catch (IllegalArgumentException e) {
+        } catch (InvalidConfigurationException e) {
             exptns++;
         }
         assertEquals(expectedExcptns, exptns);

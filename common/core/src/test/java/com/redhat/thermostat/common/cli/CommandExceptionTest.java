@@ -52,13 +52,6 @@ public class CommandExceptionTest {
     }
 
     @Test
-    public void testCauseConstructor() {
-        Exception cause = new Exception("test fluff");
-        CommandException ce = new CommandException(cause);
-        verifyMessageAndCause(ce, "java.lang.Exception: test fluff", cause);
-    }
-
-    @Test
     public void testCombinedConstructor() {
         Exception cause = new Exception("test fluff");
         CommandException ce = new CommandException(new LocalizedString("test"), cause);
