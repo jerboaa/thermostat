@@ -264,6 +264,10 @@
                          resource="${project.build.directory}/libs/gson-2.2.2.jar" />
                 <symlink link="${project.build.directory}/libs/jetty-continuation.jar"
                          resource="${project.build.directory}/libs/jetty-continuation-8.1.5.v20120716.jar" />
+                <symlink link="${project.build.directory}/libs/jetty-plus.jar"
+                         resource="${project.build.directory}/libs/jetty-plus-8.1.5.v20120716.jar" />
+                <symlink link="${project.build.directory}/libs/jetty-jndi.jar"
+                         resource="${project.build.directory}/libs/jetty-jndi-8.1.5.v20120716.jar" />
                 <symlink link="${project.build.directory}/libs/jetty-http.jar"
                          resource="${project.build.directory}/libs/jetty-http-8.1.5.v20120716.jar" />
                 <symlink link="${project.build.directory}/libs/jetty-io.jar"

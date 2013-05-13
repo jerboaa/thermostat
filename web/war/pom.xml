@@ -95,6 +95,14 @@
           <groupId>org.eclipse.jetty</groupId>
           <artifactId>jetty-xml</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>org.eclipse.jetty</groupId>
+          <artifactId>jetty-plus</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.eclipse.jetty</groupId>
+          <artifactId>jetty-jndi</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
   </dependencies>

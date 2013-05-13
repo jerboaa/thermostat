@@ -37,27 +37,26 @@
 
 package com.redhat.thermostat.web.cmd;
 
-import java.io.IOException;
 import java.util.List;
 
+import org.eclipse.jetty.plus.jaas.JAASLoginService;
 import org.eclipse.jetty.security.ConstraintMapping;
 import org.eclipse.jetty.security.ConstraintSecurityHandler;
-import org.eclipse.jetty.security.DefaultUserIdentity;
-import org.eclipse.jetty.security.MappedLoginService;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.UserIdentity;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.security.Constraint;
-import org.eclipse.jetty.util.security.Password;
 import org.eclipse.jetty.webapp.WebAppContext;
 
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.utils.HostPortPair;
 import com.redhat.thermostat.storage.mongodb.MongoStorageProvider;
 import com.redhat.thermostat.web.server.WebStorageEndPoint;
+import com.redhat.thermostat.web.server.auth.RolePrincipal;
 import com.redhat.thermostat.web.server.auth.Roles;
+import com.redhat.thermostat.web.server.auth.UserPrincipal;
+import com.redhat.thermostat.web.server.auth.WrappedRolePrincipal;
 
 class WebServiceLauncher {
 
@@ -118,38 +117,16 @@ class WebServiceLauncher {
         constraintMap.setConstraint(constraint);
         
         secHandler.setRealmName("Thermostat Realm");
-        secHandler.setAuthMethod("BASIC");
         secHandler.addConstraintMapping(constraintMap);
-        // inform security handler about all roles
-        for (String role : Roles.ALL_ROLES) {
-            secHandler.addRole(role);
-        }
-        secHandler.setLoginService(new MappedLoginService() {
-            
-            @Override
-            protected void loadUsers() throws IOException {
-                // Register a thermostat agent user
-                putUser("thermostat-agent", new Password("agent-tester"), Roles.AGENT_ROLES);
-                // Same for a client
-                putUser("thermostat-client", new Password("client-tester"), Roles.CLIENT_ROLES);
-                // A realm access test user
-                putUser("thermostat-realm-user", new Password("realm-tester"), new String[] { Roles.ACCESS_REALM });
-            }
-
-            @Override
-            protected UserIdentity loadUser(String username) {
-                if (username.equals("thermostat-agent")) {
-                    return new DefaultUserIdentity(null, null, Roles.AGENT_ROLES);
-                } else if (username.equals("thermostat-client")) {
-                    return new DefaultUserIdentity(null, null, Roles.CLIENT_ROLES);
-                } else if (username.equals("thermostat-realm-user")) {
-                    return new DefaultUserIdentity(null, null, new String[] { Roles.ACCESS_REALM } );
-                } else {
-                    // return empty identity
-                    return new DefaultUserIdentity(null, null, new String[0]);
-                }
-            }
+        JAASLoginService loginS = new JAASLoginService();
+        loginS.setLoginModuleName("ThermostatJAASLogin");
+        loginS.setName("Thermostat Realm");
+        loginS.setRoleClassNames(new String[] {
+        WrappedRolePrincipal.class.getName(),
+              RolePrincipal.class.getName(),
+              UserPrincipal.class.getName()
         });
+        secHandler.setLoginService(loginS);
         ctx.setSecurityHandler(secHandler);
     }
 
