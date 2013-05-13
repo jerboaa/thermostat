@@ -38,7 +38,7 @@
 -->
 <plugin xmlns="http://icedtea.classpath.org/thermostat/plugins/v1.0"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://icedtea.classpath.org/thermostat/plugins/v1.0">
+  xsi:schemaLocation="http://icedtea.classpath.org/thermostat/plugins/v1.0 plugin.xsd">
   <extensions>
     <extension>
       <name>gui</name>

@@ -92,13 +92,18 @@ public class PluginCommandInfoSource implements CommandInfoSource {
                 File configurationFile = new File(pluginDir, PLUGIN_CONFIG_FILE);
                 PluginConfiguration pluginConfig = parser.parse(configurationFile);
                 loadNewAndExtendedCommands(internalJarRoot, pluginDir, pluginConfig);
-            } catch (PluginConfigurationParseException | FileNotFoundException exception) {
+            } catch (PluginConfigurationParseException exception) {
                 logger.log(Level.WARNING, "unable to parse plugin configuration", exception);
+            } catch (PluginConfigurationValidatorException exception) {
+                logger.log(Level.WARNING, "unable to validate " + exception.getFilePath() + " file\n");
+            } catch (FileNotFoundException exception) {
+                logger.log(Level.WARNING, "file not found", exception);
             }
         }
-
         combineCommands();
     }
+    
+   
 
     private void loadNewAndExtendedCommands(File coreJarRoot, File pluginDir,
             PluginConfiguration pluginConfig) {
@@ -203,5 +208,6 @@ public class PluginCommandInfoSource implements CommandInfoSource {
         }
         return result;
     }
+    
 
 }
