@@ -52,6 +52,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -623,26 +624,31 @@ public class WebStorage implements Storage, SecureStorage {
     }
 
     @Override
-    public AuthToken generateToken() throws StorageException {
-        byte[] token = new byte[256];
-        random.nextBytes(token);
-        NameValuePair clientTokenParam = new BasicNameValuePair("client-token", Base64.encodeBase64String(token));
-        List<NameValuePair> formparams = Arrays.asList(clientTokenParam);
+    public AuthToken generateToken(String actionName) throws StorageException {
+        byte[] clientToken = new byte[256];
+        random.nextBytes(clientToken);
+        NameValuePair clientTokenParam = new BasicNameValuePair("client-token", Base64.encodeBase64String(clientToken));
+        NameValuePair actionNameParam = new BasicNameValuePair("action-name",
+                Objects.requireNonNull(actionName));
+        List<NameValuePair> formparams = Arrays.asList(clientTokenParam, actionNameParam);
         try (CloseableHttpEntity entity = post(endpoint + "/generate-token", formparams)) {
             byte[] authToken = EntityUtils.toByteArray(entity);
-            return new AuthToken(authToken, token);
+            return new AuthToken(authToken, clientToken);
         } catch (IOException ex) {
             throw new StorageException(ex);
         }
     }
 
     @Override
-    public boolean verifyToken(AuthToken authToken) {
+    public boolean verifyToken(AuthToken authToken, String actionName) {
         byte[] clientToken = authToken.getClientToken();
         byte[] token = authToken.getToken();
         NameValuePair clientTokenParam = new BasicNameValuePair("client-token", Base64.encodeBase64String(clientToken));
         NameValuePair tokenParam = new BasicNameValuePair("token", Base64.encodeBase64String(token));
-        List<NameValuePair> formparams = Arrays.asList(clientTokenParam, tokenParam);
+        NameValuePair actionNameParam = new BasicNameValuePair("action-name",
+                Objects.requireNonNull(actionName));
+        List<NameValuePair> formparams = Arrays.asList(clientTokenParam,
+                tokenParam, actionNameParam);
         HttpResponse response = null;
         try {
             HttpEntity entity = new UrlEncodedFormEntity(formparams, "UTF-8");

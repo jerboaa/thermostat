@@ -37,11 +37,15 @@
 
 package com.redhat.thermostat.web.server;
 
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -62,11 +66,13 @@ class TokenManager {
         this.timeout = timeout;
     }
 
-    byte[] generateToken(String clientToken) {
+    byte[] generateToken(byte[] clientToken, String actionName) {
         byte[] token = new byte[TOKEN_LENGTH];
         random.nextBytes(token);
-        tokens.put(clientToken, token);
-        scheduleRemoval(clientToken);
+        final String clientKey = getKey(clientToken,
+                Objects.requireNonNull(actionName));
+        tokens.put(clientKey, token);
+        scheduleRemoval(clientKey);
         return token;
     }
 
@@ -80,17 +86,60 @@ class TokenManager {
         };
         timer.schedule(task, timeout);
     }
+    
+    private String getKey(byte[] clientToken, String actionName) {
+        try {
+            return getSha256HexString(clientToken, actionName.getBytes("UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            // If this happens, this is clearly a bug.
+            throw new RuntimeException(e);
+        }
+    }
 
-    boolean verifyToken(String clientToken, byte[] token) {
-        if (tokens.containsKey(clientToken)) {
-            byte[] storedToken = tokens.get(clientToken);
-            boolean verified = Arrays.equals(token, storedToken);
+    boolean verifyToken(byte[] clientToken, byte[] candidateToken, String actionName) {
+        final String clientKey = getKey(clientToken, Objects.requireNonNull(actionName));
+        if (tokens.containsKey(clientKey)) {
+            byte[] storedToken = tokens.get(clientKey);
+            boolean verified = Arrays.equals(candidateToken, storedToken);
             if (verified) {
                 tokens.remove(clientToken);
             }
             return verified;
         }
         return false;
+    }
+    
+    private String getSha256HexString(byte[] clientToken, byte[] actionName) {
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+        digest.update(clientToken);
+        digest.update(actionName);
+        byte[] result = digest.digest();
+        return convertBytesToHexString(result);
+    }
+    
+    // package private for testing
+    String convertBytesToHexString(byte[] shaBytes) {
+        StringBuffer hexString = new StringBuffer();
+
+        for (int i = 0; i < shaBytes.length; i++) {
+            String hex = Integer.toHexString(0xff & shaBytes[i]);
+            if (hex.length() == 1) {
+                hexString.append('0');
+            }
+            hexString.append(hex);
+        }
+        
+        return hexString.toString();
+    }
+
+    // Used for testing only
+    byte[] getStoredToken(String sha256) {
+        return tokens.get(sha256);
     }
 
 }

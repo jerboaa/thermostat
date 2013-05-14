@@ -93,6 +93,7 @@ import com.redhat.thermostat.web.server.auth.WebStoragePathHandler;
 @SuppressWarnings("serial")
 public class WebStorageEndPoint extends HttpServlet {
 
+    static final String CMDC_AUTHORIZATION_GRANT_ROLE_PREFIX = "thermostat-cmdc-grant-";
     private static final String TOKEN_MANAGER_TIMEOUT_PARAM = "token-manager-timeout";
     private static final String TOKEN_MANAGER_KEY = "token-manager";
 
@@ -491,8 +492,29 @@ public class WebStorageEndPoint extends HttpServlet {
         }
         TokenManager tokenManager = (TokenManager) getServletContext().getAttribute(TOKEN_MANAGER_KEY);
         assert tokenManager != null;
-        String clientToken = req.getParameter("client-token");
-        byte[] token = tokenManager.generateToken(clientToken);
+        String clientTokenParam = req.getParameter("client-token");
+        byte[] clientToken = Base64.decodeBase64(clientTokenParam);
+        String actionName = req.getParameter("action-name");
+        // Perform pre-authorization: Since it's the client user which issues
+        // generate-token we have the correct user for which we can check role
+        // membership - and, thus, determine if this action is allowed to be
+        // performed. If the action is not allowed to be performed for this user
+        // a 403 will get returned and further verify-token would also fail,
+        // since no token gets added into the map. Trustworthiness of the
+        // action name will be implicitly checked by verify-token.
+        //
+        // We authorize based on role membership of this user. I.e. in order
+        // for a ping request (action-name == "ping") to properly authorize
+        // the user needs to be a member of role 
+        // "thermostat-cmdc-grant-ping". More generally, membership of role
+        // "thermostat-cmdc-grant-<actionName>" grants the authenticated
+        // user the <actionName> command channel action.
+        String requiredRole = CMDC_AUTHORIZATION_GRANT_ROLE_PREFIX + actionName;
+        if (! isAuthorized(req, resp, requiredRole)) {
+            return;
+        }
+        // authorization succeeded at this point
+        byte[] token = tokenManager.generateToken(clientToken, actionName);
         resp.setContentType("application/octet-stream");
         resp.setContentLength(token.length);
         resp.getOutputStream().write(token);
@@ -505,12 +527,31 @@ public class WebStorageEndPoint extends HttpServlet {
         }
         TokenManager tokenManager = (TokenManager) getServletContext().getAttribute(TOKEN_MANAGER_KEY);
         assert tokenManager != null;
-        String clientToken = req.getParameter("client-token");
+        String clientTokenParam = req.getParameter("client-token");
+        byte[] clientToken = Base64.decodeBase64(clientTokenParam);
+        String actionName = req.getParameter("action-name");
         byte[] token = Base64.decodeBase64(req.getParameter("token"));
-        boolean verified = tokenManager.verifyToken(clientToken, token);
+        // Perform authentication of the request. We can't do authorization for
+        // the originating client request here, since the only user info we have
+        // in verify-token is the identity of the agent which the client asked
+        // to perform the action for. Hence looking up role membership is not
+        // what we want here in order to limit privileges of the client.
+        //
+        // Note that we achieve this by performing authorization checks during
+        // generate-token. This is something the client user initiates and hence
+        // there we have the required user information. The entire command
+        // channel interaction can only succeed if and only if generate-token
+        // AND verify-token succeeded for the same token. Thus it's OK to only
+        // verify the token here - which in would only verify successfully if
+        // generate-token worked properly as a first step.
+        boolean verified = tokenManager.verifyToken(clientToken, token, actionName);
         if (! verified) {
+            logger.log(Level.INFO, "Command channel action " + actionName + " from remote host " +
+                                   req.getRemoteAddr() + " FAILED to authenticate!");
             resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
         } else {
+            logger.log(Level.FINEST, "Command channel action " + actionName + " from remote host " +
+                    req.getRemoteAddr() + " PASSED authentication.");
             resp.setStatus(HttpServletResponse.SC_OK);
         }
     }
@@ -519,7 +560,7 @@ public class WebStorageEndPoint extends HttpServlet {
         if (req.isUserInRole(role)) {
             return true;
         } else {
-            logger.log(Level.FINEST, "Not permitting access to " + req.getPathInfo() + ". User '" + req.getRemoteUser() + "' not in role " + role);
+            logger.log(Level.INFO, "Not permitting access to " + req.getPathInfo() + ". User '" + req.getRemoteUser() + "' not in role " + role);
             resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
             return false;
         }

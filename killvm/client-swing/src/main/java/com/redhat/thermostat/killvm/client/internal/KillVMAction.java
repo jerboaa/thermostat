@@ -59,6 +59,7 @@ import com.redhat.thermostat.storage.model.VmInfo;
 public class KillVMAction implements VMContextAction {
 
     private static final String RECEIVER = "com.redhat.thermostat.killvm.agent.internal.KillVmReceiver";
+    private static final String CMD_CHANNEL_ACTION_NAME = "killvm";
     private final AgentInfoDAO agentDao;
     private final VmInfoDAO vmDao;
     private final Translate<LocaleResources> t;
@@ -91,6 +92,7 @@ public class KillVMAction implements VMContextAction {
         String [] host = address.split(":");
         InetSocketAddress target = new InetSocketAddress(host[0], Integer.parseInt(host[1]));
         Request murderer = getKillRequest(target);
+        murderer.setParameter(Request.ACTION, CMD_CHANNEL_ACTION_NAME);
         murderer.setParameter("vm-id", reference.getIdString());
         murderer.setReceiver(RECEIVER);
         murderer.addListener(listener);

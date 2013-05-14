@@ -40,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -104,6 +105,7 @@ public class KillVMActionTest {
 
         RequestQueue queue = mock(RequestQueue.class);
         final Request req = mock(Request.class);
+        when(req.getParameter(Request.ACTION)).thenReturn("killvm");
         KillVMAction action = new KillVMAction(agentDao, vmInfoDao, queue, agentResponseListener) {
             @Override
             Request getKillRequest(InetSocketAddress target) {
@@ -111,10 +113,8 @@ public class KillVMActionTest {
             }
         };
         action.execute(ref);
-        ArgumentCaptor<String> vmIdParamCaptor = ArgumentCaptor
-                .forClass(String.class);
-        verify(req).setParameter(vmIdParamCaptor.capture(), any(String.class));
-        assertEquals("vm-id", vmIdParamCaptor.getValue());
+        verify(req).setParameter(eq("vm-id"), any(String.class));
+        verify(req).setParameter(eq(Request.ACTION), any(String.class));
         verify(req).addListener(agentResponseListener);
         ArgumentCaptor<String> receiverCaptor = ArgumentCaptor
                 .forClass(String.class);

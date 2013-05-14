@@ -53,6 +53,7 @@ public enum LocaleResources {
     COMMAND_PING_RESPONSE_OK,
     COMMAND_PING_RESPONSE_REFUSED,
     COMMAND_PING_RESPONSE_UNKNOWN,
+    COMMAND_PING_RESPONSE_AUTH_FAILED,
     ;
 
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.client.command.internal.strings";

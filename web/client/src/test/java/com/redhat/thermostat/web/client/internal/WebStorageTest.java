@@ -53,6 +53,8 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -491,7 +493,8 @@ public class WebStorageTest {
     public void testGenerateToken() throws UnsupportedEncodingException {
         responseBody = "flufftoken";
 
-        AuthToken authToken = storage.generateToken();
+        final String actionName = "some action";
+        AuthToken authToken = storage.generateToken(actionName);
 
         assertTrue(requestURI.endsWith("/generate-token"));
         assertEquals("POST", method);
@@ -502,15 +505,13 @@ public class WebStorageTest {
         byte[] clientToken = Base64.decodeBase64(clientTokenParam);
         assertEquals(256, clientToken.length);
 
-        assertTrue(authToken instanceof AuthToken);
-        AuthToken token = (AuthToken) authToken;
-        byte[] tokenBytes = token.getToken();
+        byte[] tokenBytes = authToken.getToken();
         assertEquals("flufftoken", new String(tokenBytes));
 
-        assertTrue(Arrays.equals(clientToken, token.getClientToken()));
+        assertTrue(Arrays.equals(clientToken, authToken.getClientToken()));
 
         // Send another request and verify that we send a different client-token every time.
-        storage.generateToken();
+        storage.generateToken(actionName);
 
         requestParts = requestBody.split("=");
         assertEquals("client-token", requestParts[0]);
@@ -538,36 +539,50 @@ public class WebStorageTest {
     }
 
     @Test
-    public void testVerifyToken() throws UnsupportedEncodingException {
+    public void testVerifyToken() throws UnsupportedEncodingException, NoSuchAlgorithmException {
         byte[] token = "stuff".getBytes();
-        byte[] clientToken = "fluff".getBytes();
-        AuthToken authToken = new AuthToken(token, clientToken);
+        String clientToken = "fluff";
+        String someAction = "someAction";
+        byte[] tokenDigest = getShaBytes(clientToken, someAction);
+        
+        AuthToken authToken = new AuthToken(token, tokenDigest);
 
         responseStatus = 200;
-        boolean ok = storage.verifyToken(authToken);
+        boolean ok = storage.verifyToken(authToken, someAction);
         assertTrue(requestURI.endsWith("/verify-token"));
         assertEquals("POST", method);
         String[] requestParts = requestBody.split("&");
-        assertEquals(2, requestParts.length);
+        assertEquals(3, requestParts.length);
         String[] clientTokenParts = requestParts[0].split("=");
         assertEquals(2, clientTokenParts.length);
         assertEquals("client-token", clientTokenParts[0]);
         String urlDecoded = URLDecoder.decode(clientTokenParts[1], "UTF-8");
-        String base64decoded = new String(Base64.decodeBase64(urlDecoded));
-        assertEquals("fluff", base64decoded);
+        assertTrue(Arrays.equals(tokenDigest, Base64.decodeBase64(urlDecoded)));
         String[] authTokenParts = requestParts[1].split("=");
         assertEquals(2, authTokenParts.length);
         assertEquals("token", authTokenParts[0]);
+        String[] actionParts = requestParts[2].split("=");
+        assertEquals(2, actionParts.length);
+        assertEquals("action-name", actionParts[0]);
         urlDecoded = URLDecoder.decode(authTokenParts[1], "UTF-8");
-        base64decoded = new String(Base64.decodeBase64(urlDecoded));
+        String base64decoded = new String(Base64.decodeBase64(urlDecoded));
         assertEquals("stuff", base64decoded);
         assertTrue(ok);
 
         // Try another one in which verification fails.
         responseStatus = 401;
-        ok = storage.verifyToken(authToken);
+        ok = storage.verifyToken(authToken, someAction);
         assertFalse(ok);
         
+    }
+
+    private byte[] getShaBytes(String clientToken, String someAction)
+            throws NoSuchAlgorithmException, UnsupportedEncodingException {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        digest.update(clientToken.getBytes());
+        digest.update(someAction.getBytes("UTF-8"));
+        byte[] tokenDigest = digest.digest();
+        return tokenDigest;
     }
     
     @Test

@@ -64,6 +64,7 @@ import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 
 public class ThreadMXBeanCollector implements ThreadCollector {
     
+    private static final String CMD_CHANNEL_ACTION_NAME = "thread-harvester";
     private static final Logger logger = LoggingUtils.getLogger(ThreadMXBeanCollector.class);
 
     private AgentInfoDAO agentDao;
@@ -102,6 +103,7 @@ public class ThreadMXBeanCollector implements ThreadCollector {
     public boolean startHarvester() {
         
         Request harvester = createRequest();
+        harvester.setParameter(Request.ACTION, CMD_CHANNEL_ACTION_NAME);
         harvester.setParameter(HarvesterCommand.class.getName(), HarvesterCommand.START.name());
         harvester.setParameter(HarvesterCommand.VM_ID.name(), ref.getIdString());
         
@@ -136,6 +138,7 @@ public class ThreadMXBeanCollector implements ThreadCollector {
     public boolean stopHarvester() {
         
         Request harvester = createRequest();
+        harvester.setParameter(Request.ACTION, CMD_CHANNEL_ACTION_NAME);
         harvester.setParameter(HarvesterCommand.class.getName(), HarvesterCommand.STOP.name());
         harvester.setParameter(HarvesterCommand.VM_ID.name(), ref.getIdString());
 

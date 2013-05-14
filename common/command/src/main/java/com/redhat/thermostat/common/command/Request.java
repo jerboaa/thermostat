@@ -102,6 +102,7 @@ public class Request implements Message {
 
     public static final String CLIENT_TOKEN = "client-token";
     public static final String AUTH_TOKEN = "auth-token";
+    public static final String ACTION = "action-name";
 
     public Request(RequestType type, InetSocketAddress target) {
         this.type = type;

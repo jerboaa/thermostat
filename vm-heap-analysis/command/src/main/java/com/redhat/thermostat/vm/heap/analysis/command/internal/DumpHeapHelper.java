@@ -51,6 +51,7 @@ import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 public class DumpHeapHelper {
     
     private static final String RECEIVER_CLASS_NAME = "com.redhat.thermostat.vm.heap.analysis.agent.internal.HeapDumpReceiver";
+    private static final String CMD_CHANNEL_ACTION_NAME = "dump-heap";
     private static final String VM_ID_PARAM = "vmId";
 
     private class HeapDumpListener implements RequestResponseListener {
@@ -88,6 +89,7 @@ public class DumpHeapHelper {
         InetSocketAddress target = new InetSocketAddress(host[0], Integer.parseInt(host[1]));
         Request req = new Request(RequestType.RESPONSE_EXPECTED, target);
         req.setReceiver(RECEIVER_CLASS_NAME);
+        req.setParameter(Request.ACTION, CMD_CHANNEL_ACTION_NAME);
         req.setParameter(VM_ID_PARAM, reference.getIdString());
         req.addListener(new HeapDumpListener(heapDumpSuccessAction, heapDumpFailureAction));
 

@@ -95,7 +95,10 @@ class RequestQueueImpl implements RequestQueue {
 
     private void authenticateRequest(Request request, SecureStorage storage) {
         try {
-            AuthToken token = storage.generateToken();
+            String actionName = request.getParameter(Request.ACTION);
+            // actionName must not be null here.
+            // This is checked in generateToken.
+            AuthToken token = storage.generateToken(actionName);
             request.setParameter(Request.CLIENT_TOKEN, Base64.encodeBase64String(token.getClientToken()));
             request.setParameter(Request.AUTH_TOKEN, Base64.encodeBase64String(token.getToken()));
         } catch (StorageException ex) {

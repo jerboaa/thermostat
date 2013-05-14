@@ -62,6 +62,8 @@ import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 
 public class PingCommand extends AbstractCommand {
+    
+    private static final String PING_ACTION_NAME = "ping";
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
@@ -81,7 +83,11 @@ public class PingCommand extends AbstractCommand {
             case ERROR:
                 out.println(translator.localize(LocaleResources.COMMAND_PING_RESPONSE_ERROR, request.getTarget().toString()).getContents());
                 break;
+            case AUTH_FAILED:
+                out.println(translator.localize(LocaleResources.COMMAND_PING_RESPONSE_AUTH_FAILED, request.getTarget().toString()));
+                break;
             case OK:
+                // fallthrough
             case NOOP:
                 out.println(translator.localize(LocaleResources.COMMAND_PING_RESPONSE_OK, request.getTarget().toString()).getContents());
                 break;
@@ -139,6 +145,7 @@ public class PingCommand extends AbstractCommand {
         String [] host = address.split(":");
         InetSocketAddress target = new InetSocketAddress(host[0], Integer.parseInt(host[1]));
         Request ping = new Request(RequestType.RESPONSE_EXPECTED, target);
+        ping.setParameter(Request.ACTION, PING_ACTION_NAME);
         ping.setReceiver("com.redhat.thermostat.agent.command.internal.PingReceiver");
         final Semaphore responseBarrier = new Semaphore(0);
         ping.addListener(new PongListener(out, responseBarrier));

@@ -37,6 +37,7 @@
 package com.redhat.thermostat.web.server;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
@@ -895,8 +896,11 @@ public class WebStorageEndpointTest {
 
     @Test
     public void authorizedGenerateToken() throws Exception {
+        String actionName = "testing";
         String[] roleNames = new String[] {
-                Roles.CMD_CHANNEL_GENERATE
+                Roles.CMD_CHANNEL_GENERATE,
+                // grant the "testing" action
+                WebStorageEndPoint.CMDC_AUTHORIZATION_GRANT_ROLE_PREFIX + actionName
         };
         String testuser = "testuser";
         String password = "testpassword";
@@ -908,7 +912,7 @@ public class WebStorageEndpointTest {
                 startServer(port, loginService);
             }
         });
-        verifyAuthorizedGenerateToken(testuser, password);
+        verifyAuthorizedGenerateToken(testuser, password, actionName);
     }
 
     @Test
@@ -920,8 +924,70 @@ public class WebStorageEndpointTest {
 
     @Test
     public void authorizedGenerateVerifyToken() throws Exception {
+        String actionName = "someAction";
         String[] roleNames = new String[] {
                 Roles.CMD_CHANNEL_GENERATE,
+                Roles.CMD_CHANNEL_VERIFY,
+                // grant "someAction" to be performed
+                WebStorageEndPoint.CMDC_AUTHORIZATION_GRANT_ROLE_PREFIX + actionName,
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        final LoginService loginService = new TestLoginService(testuser, password, roleNames); 
+        port = FreePortFinder.findFreePort(new TryPort() {
+            
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port, loginService);
+            }
+        });
+        byte[] token = verifyAuthorizedGenerateToken(testuser, password, actionName);
+        
+        String endpoint = getEndpoint();
+        URL url = new URL(endpoint + "/verify-token");
+        
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+        sendAuthentication(conn, testuser, password);
+        conn.setDoOutput(true);
+        conn.setDoInput(true);
+        OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
+        out.write("client-token=fluff&action-name=" + actionName + "&token=" +
+                URLEncoder.encode(Base64.encodeBase64String(token), "UTF-8"));
+        out.flush();
+        assertEquals(200, conn.getResponseCode());
+    }
+    
+    @Test
+    public void unAuthorizedGenerateVerifyToken() throws Exception {
+        String testuser = "testuser";
+        String password = "testpassword";
+        String actionName = "someAction";
+        String[] roleNames = new String[] {
+                Roles.CMD_CHANNEL_GENERATE,
+                Roles.CMD_CHANNEL_VERIFY,
+                // missing the thermostat-cmdc-grant-someAction role
+        };
+        final LoginService loginService = new TestLoginService(testuser, password, roleNames); 
+        port = FreePortFinder.findFreePort(new TryPort() {
+            
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port, loginService);
+            }
+        });
+        
+        byte[] result = verifyAuthorizedGenerateToken(testuser, password, actionName, 403);
+        assertNull(result);
+    }
+    
+    @Test
+    public void authenticatedGenerateVerifyTokenWithActionNameMismatch() throws Exception {
+        String actionName = "someAction";
+        String[] roleNames = new String[] {
+                Roles.CMD_CHANNEL_GENERATE,
+                WebStorageEndPoint.CMDC_AUTHORIZATION_GRANT_ROLE_PREFIX + actionName,
                 Roles.CMD_CHANNEL_VERIFY
         };
         String testuser = "testuser";
@@ -934,7 +1000,7 @@ public class WebStorageEndpointTest {
                 startServer(port, loginService);
             }
         });
-        byte[] token = verifyAuthorizedGenerateToken(testuser, password);
+        byte[] token = verifyAuthorizedGenerateToken(testuser, password, actionName);
 
         String endpoint = getEndpoint();
         URL url = new URL(endpoint + "/verify-token");
@@ -946,16 +1012,22 @@ public class WebStorageEndpointTest {
         conn.setDoOutput(true);
         conn.setDoInput(true);
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-        out.write("client-token=fluff&token=" + URLEncoder.encode(Base64.encodeBase64String(token), "UTF-8"));
+        // expected action-name parameter is "someAction". This should not
+        // verify => 403.
+        out.write("client-token=fluff&action-name=wrongAction&token=" + URLEncoder.encode(Base64.encodeBase64String(token), "UTF-8"));
         out.flush();
-        assertEquals(200, conn.getResponseCode());
+        assertEquals(403, conn.getResponseCode());
     }
+    
 
     @Test
-    public void authorizedTokenTimeout() throws Exception {
+    public void authenticatedTokenTimeout() throws Exception {
+        String actionName = "someAction";
         String[] roleNames = new String[] {
                 Roles.CMD_CHANNEL_GENERATE,
-                Roles.CMD_CHANNEL_VERIFY
+                Roles.CMD_CHANNEL_VERIFY,
+                // Grant "someAction", this test tests the time-out
+                WebStorageEndPoint.CMDC_AUTHORIZATION_GRANT_ROLE_PREFIX + actionName
         };
         String testuser = "testuser";
         String password = "testpassword";
@@ -967,7 +1039,7 @@ public class WebStorageEndpointTest {
                 startServer(port, loginService);
             }
         });
-        byte[] token = verifyAuthorizedGenerateToken(testuser, password);
+        byte[] token = verifyAuthorizedGenerateToken(testuser, password, actionName);
 
         Thread.sleep(700); // Timeout is set to 500ms for tests, 700ms should be enough for everybody. ;-)
 
@@ -981,13 +1053,14 @@ public class WebStorageEndpointTest {
         conn.setDoOutput(true);
         conn.setDoInput(true);
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-        out.write("client-token=fluff&token=" + URLEncoder.encode(Base64.encodeBase64String(token), "UTF-8"));
+        out.write("client-token=fluff&action-name=" + actionName + "&token=" +
+                  URLEncoder.encode(Base64.encodeBase64String(token), "UTF-8"));
         out.flush();
         assertEquals(403, conn.getResponseCode());
     }
 
     @Test
-    public void authorizedVerifyNonExistentToken() throws Exception {
+    public void authenticatedVerifyNonExistentToken() throws Exception {
         String[] roleNames = new String[] {
                 Roles.CMD_CHANNEL_VERIFY
         };
@@ -1014,7 +1087,7 @@ public class WebStorageEndpointTest {
         conn.setDoOutput(true);
         conn.setDoInput(true);
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-        out.write("client-token=fluff&token=" + URLEncoder.encode(Base64.encodeBase64String(token), "UTF-8"));
+        out.write("client-token=fluff&action-name=someAction&token=" + URLEncoder.encode(Base64.encodeBase64String(token), "UTF-8"));
         out.flush();
         assertEquals(403, conn.getResponseCode());
     }
@@ -1054,7 +1127,17 @@ public class WebStorageEndpointTest {
         }
     }
 
-    private byte[] verifyAuthorizedGenerateToken(String username, String password) throws IOException {
+    private byte[] verifyAuthorizedGenerateToken(String username, String password, String actionName) throws IOException {
+        return verifyAuthorizedGenerateToken(username, password, actionName, 200);
+    }
+    
+    private byte[] verifyAuthorizedGenerateToken(String username, String password, String actionName, int expectedResponseCode) throws IOException {
+        return verifyAuthorizedGenerateToken(username, password, expectedResponseCode, actionName);
+    }
+    
+    private byte[] verifyAuthorizedGenerateToken(String username,
+            String password, int expectedResponseCode, String actionName)
+            throws IOException {
         String endpoint = getEndpoint();
         URL url = new URL(endpoint + "/generate-token");
 
@@ -1064,21 +1147,27 @@ public class WebStorageEndpointTest {
         conn.setDoOutput(true);
         conn.setDoInput(true);
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-        out.write("client-token=fluff");
+        out.write("client-token=fluff&action-name=" + actionName);
         out.flush();
-        InputStream in = conn.getInputStream();
-        int length = conn.getContentLength();
-        byte[] token  = new byte[length];
-        assertEquals(256, length);
-        int totalRead = 0;
-        while (totalRead < length) {
-            int read = in.read(token, totalRead, length - totalRead);
-            if (read < 0) {
-                fail();
+        int actualResponseCode = conn.getResponseCode();
+        assertEquals(expectedResponseCode, actualResponseCode);
+        if (actualResponseCode == 200) {
+            InputStream in = conn.getInputStream();
+            int length = conn.getContentLength();
+            byte[] token = new byte[length];
+            assertEquals(256, length);
+            int totalRead = 0;
+            while (totalRead < length) {
+                int read = in.read(token, totalRead, length - totalRead);
+                if (read < 0) {
+                    fail();
+                }
+                totalRead += read;
             }
-            totalRead += read;
+            return token;
+        } else {
+            return null;
         }
-        return token;
     }
     
     private static class TestLoginService extends MappedLoginService {

@@ -77,7 +77,7 @@ public class RequestQueueImplTest {
         when(mockContext.getServiceReference(Storage.class.getName())).thenReturn(mockServiceRef);
         SecureStorage mockStorage = mock(SecureStorage.class);
         AuthToken mockToken = mock(AuthToken.class);
-        when(mockStorage.generateToken()).thenReturn(mockToken);
+        when(mockStorage.generateToken(any(String.class))).thenReturn(mockToken);
         when(mockContext.getService(mockServiceRef)).thenReturn(mockStorage);
         when(mockBundle.getBundleContext()).thenReturn(mockContext);
         when(FrameworkUtil.getBundle(RequestQueueImpl.class)).thenReturn(mockBundle);

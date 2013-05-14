@@ -130,7 +130,13 @@ class ServerHandler extends SimpleChannelUpstreamHandler {
         ServiceReference storageRef = bCtx.getServiceReference(Storage.class.getName());
         Storage storage = (Storage) bCtx.getService(storageRef);
         if (storage instanceof SecureStorage) {
-            return authenticateRequest(request, (SecureStorage) storage);
+            boolean authenticatedRequest = authenticateRequest(request, (SecureStorage) storage);
+            if (authenticatedRequest) {
+                logger.finest("Authentication and authorization for request " + request + " succeeded!");
+            } else {
+                logger.finest("Request " + request + " failed to authenticate or authorize");
+            }
+            return authenticatedRequest;
         } else {
             return true;
         }
@@ -142,7 +148,15 @@ class ServerHandler extends SimpleChannelUpstreamHandler {
         String authTokenStr = request.getParameter(Request.AUTH_TOKEN);
         byte[] authToken = Base64.decodeBase64(authTokenStr);
         AuthToken token = new AuthToken(authToken, clientToken);
-        return storage.verifyToken(token);
+        String actionName = request.getParameter(Request.ACTION);
+        try {
+            // actionName must not be null here. If we somehow get a bogus request
+            // at this point where this does not exist, verifyToken will throw a
+            // NPE.
+            return storage.verifyToken(token, actionName);
+        } catch (NullPointerException e) {
+            return false; 
+        }
     }
 
     @Override

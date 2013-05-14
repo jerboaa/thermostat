@@ -49,13 +49,13 @@ public final class SecureQueuedStorage extends QueuedStorage implements SecureSt
         super(storage);
     }
     @Override
-    public AuthToken generateToken() throws StorageException {
-        return ((SecureStorage)delegate).generateToken();
+    public AuthToken generateToken(String actionName) throws StorageException {
+        return ((SecureStorage)delegate).generateToken(actionName);
     }
 
     @Override
-    public boolean verifyToken(AuthToken token) {
-        return ((SecureStorage)delegate).verifyToken(token);
+    public boolean verifyToken(AuthToken token, String actionName) {
+        return ((SecureStorage)delegate).verifyToken(token, actionName);
     }
 
 }

@@ -42,8 +42,8 @@ import java.util.Arrays;
 
 public class AuthToken {
 
-    private byte[] token;
-    private byte[] clientToken;
+    private final byte[] token;
+    private final byte[] clientToken;
 
     public AuthToken(byte[] token, byte[] clientToken) {
         this.token = token;
@@ -58,6 +58,7 @@ public class AuthToken {
         return clientToken;
     }
 
+    @Override
     public String toString() {
         return "AuthToken: client-token: " + Arrays.toString(clientToken) + ", token: " + Arrays.toString(token);
     }

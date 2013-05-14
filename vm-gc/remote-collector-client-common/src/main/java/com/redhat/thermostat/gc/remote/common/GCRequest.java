@@ -40,14 +40,16 @@ import java.net.InetSocketAddress;
 
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.command.Request;
-import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Request.RequestType;
+import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.gc.remote.common.command.GCCommand;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 
 public class GCRequest {
+    
+    private static final String CMD_CHANNEL_ACTION_NAME = "garbage-collect";
     
     private RequestQueue queue;
     public GCRequest(RequestQueue queue) {
@@ -66,6 +68,7 @@ public class GCRequest {
 
         gcRequest.setReceiver(GCCommand.RECEIVER);
 
+        gcRequest.setParameter(Request.ACTION, CMD_CHANNEL_ACTION_NAME);
         gcRequest.setParameter(GCCommand.class.getName(), GCCommand.REQUEST_GC.name());
         gcRequest.setParameter(GCCommand.VM_ID, vm.getIdString());
         
