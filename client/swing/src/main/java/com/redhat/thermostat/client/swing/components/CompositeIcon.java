@@ -36,37 +36,58 @@
 
 package com.redhat.thermostat.client.swing.components;
 
+import java.awt.AlphaComposite;
+import java.awt.Component;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+
+import com.redhat.thermostat.client.swing.GraphicsUtils;
 import com.redhat.thermostat.client.ui.IconDescriptor;
-import javax.swing.ImageIcon;
-import java.awt.Dimension;
-import java.awt.Image;
 
 /**
+ * 
  */
 @SuppressWarnings("serial")
-public class Icon extends ImageIcon {
+public class CompositeIcon extends Icon {
 
-    public Icon(IconDescriptor descriptor) {
-        super(descriptor.getData().array());
+    private Icon mask;
+    
+    public CompositeIcon(IconDescriptor mask, IconDescriptor thisIcon) {
+        this(mask, new Icon(thisIcon));
     }
 
-    public Icon() {
-        super();
+    public CompositeIcon(IconDescriptor mask, Icon thisIcon) {
+        this(new Icon(mask), thisIcon);
     }
     
-    public Icon(byte[] data) {
-        super(data);
+    public CompositeIcon(Icon mask, Icon thisIcon) {
+        super(thisIcon.getImage());
+        this.mask = mask;
     }
     
-    public Icon(Image image) {
-        super(image);
-    }
-    
-    /**
-     * Returns a {@link Dimension} object with this {@link Icon}
-     * {@code width} and {@code height}.
-     */
-    public Dimension getDimension() {
-        return new Dimension(getIconWidth(), getIconHeight());
+    @Override
+    public synchronized void paintIcon(Component c, Graphics g, int x, int y) {
+        GraphicsUtils utils = GraphicsUtils.getInstance();
+      
+        Graphics2D graphics = utils.createAAGraphics(g);
+        
+        int iconW = getIconWidth();
+        int iconH = getIconHeight();
+      
+        BufferedImage imageBuffer = new BufferedImage(iconW, iconH, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D buffer = imageBuffer.createGraphics();
+
+        mask.paintIcon(null, buffer, 0, 0);
+        
+        AlphaComposite ac = AlphaComposite.getInstance(AlphaComposite.SRC_IN);
+        buffer.setComposite(ac);
+
+        super.paintIcon(null, buffer, 0, 0);
+        
+        buffer.dispose();
+
+        graphics.drawImage(imageBuffer, x, y, null);
+        graphics.dispose();
     }
 }

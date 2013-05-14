@@ -58,7 +58,8 @@
             <Bundle-Activator>com.redhat.thermostat.vm.heap.analysis.client.swing.internal.Activator</Bundle-Activator>
             <Bundle-SymbolicName>com.redhat.thermostat.vm.heap.analysis.client.swing</Bundle-SymbolicName>
             <Private-Package>
-               com.redhat.thermostat.vm.heap.analysis.client.swing.internal
+               com.redhat.thermostat.vm.heap.analysis.client.swing.internal,
+               com.redhat.thermostat.vm.heap.analysis.client.swing.internal.stats,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>

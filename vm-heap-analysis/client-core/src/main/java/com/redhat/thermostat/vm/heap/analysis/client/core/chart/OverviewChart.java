@@ -69,6 +69,8 @@ public class OverviewChart {
     private String title;
     private String xAxis;
     private String yAxis;
+
+    private JFreeChart chart;
     
     public OverviewChart(String title, String xAxis, String yAxis, String mainSeries, String secondarySeries) {
         
@@ -83,7 +85,11 @@ public class OverviewChart {
         used.setDescription(secondarySeries);
     }
     
-    public JFreeChart createChart(int height, Color bgColor) {
+    public JFreeChart getChart() {
+        return chart;
+    }
+    
+    public void createChart(int height, Color bgColor) {
 
         TimeSeriesCollection dataset = new TimeSeriesCollection();
         
@@ -92,7 +98,7 @@ public class OverviewChart {
             dataset.addSeries(used);
         }
         
-        JFreeChart chart = ChartFactory.createTimeSeriesChart(
+        chart = ChartFactory.createTimeSeriesChart(
                 title,
                 xAxis,
                 yAxis,
@@ -139,7 +145,6 @@ public class OverviewChart {
         yAxis.setRangeType(RangeType.POSITIVE);
         yAxis.setAutoRangeMinimumSize(10);
         yAxis.setAutoRange(true);
-        return chart;
     }
 
     public void addData(long timeStamp, long used, long total) {

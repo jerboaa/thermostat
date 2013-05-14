@@ -46,7 +46,7 @@ import com.redhat.thermostat.vm.heap.analysis.client.core.chart.OverviewChart;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
 
 public abstract class HeapView extends BasicView implements UIComponent {
-    
+
     public enum HeapDumperAction {
         DUMP_REQUESTED,
         ANALYSE,
@@ -84,6 +84,7 @@ public abstract class HeapView extends BasicView implements UIComponent {
 
     public abstract void openDumpView();
     public abstract void setChildView(BasicView childView);
+    public abstract void setActiveDump(HeapDump dump);
     public abstract void notifyHeapDumpComplete();
 
     public abstract void displayWarning(String string);

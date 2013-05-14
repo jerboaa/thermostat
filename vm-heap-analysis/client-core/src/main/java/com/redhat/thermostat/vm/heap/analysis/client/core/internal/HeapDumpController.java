@@ -94,27 +94,30 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
 
 
     public HeapDumpController(final VmMemoryStatDAO vmMemoryStatDao,
-            final VmInfoDAO vmInfoDao,
-            final HeapDAO heapDao, final VmRef ref,
-            final ApplicationService appService, HeapViewProvider viewProvider,
-            HeapDumpDetailsViewProvider detailsViewProvider,
-            HeapHistogramViewProvider histogramProvider,
-            ObjectDetailsViewProvider objectDetailsProvider,
-            ObjectRootsViewProvider objectRootsProvider) {
+                              final VmInfoDAO vmInfoDao,
+                              final HeapDAO heapDao, final VmRef ref,
+                              final ApplicationService appService, HeapViewProvider viewProvider,
+                              HeapDumpDetailsViewProvider detailsViewProvider,
+                              HeapHistogramViewProvider histogramProvider,
+                              ObjectDetailsViewProvider objectDetailsProvider,
+                              ObjectRootsViewProvider objectRootsProvider)
+    {
         this(vmMemoryStatDao, vmInfoDao, heapDao, ref, appService, viewProvider,
-                detailsViewProvider, histogramProvider, objectDetailsProvider,
-                objectRootsProvider, new HeapDumper(ref));
+             detailsViewProvider, histogramProvider, objectDetailsProvider,
+             objectRootsProvider, new HeapDumper(ref));
     }
 
     HeapDumpController(final VmMemoryStatDAO vmMemoryStatDao,
-            final VmInfoDAO vmInfoDao,
-            final HeapDAO heapDao, final VmRef ref,
-            final ApplicationService appService, HeapViewProvider viewProvider,
-            HeapDumpDetailsViewProvider detailsViewProvider,
-            HeapHistogramViewProvider histogramProvider,
-            ObjectDetailsViewProvider objectDetailsProvider,
-            ObjectRootsViewProvider objectRootsProvider,
-            final HeapDumper heapDumper) {
+                       final VmInfoDAO vmInfoDao,
+                       final HeapDAO heapDao, final VmRef ref,
+                       final ApplicationService appService,
+                       HeapViewProvider viewProvider,
+                       HeapDumpDetailsViewProvider detailsViewProvider,
+                       HeapHistogramViewProvider histogramProvider,
+                       ObjectDetailsViewProvider objectDetailsProvider,
+                       ObjectRootsViewProvider objectRootsProvider,
+                       final HeapDumper heapDumper)
+    {
         this.objectDetailsViewProvider = objectDetailsProvider;
         this.objectRootsViewProvider = objectRootsProvider;
         this.histogramViewProvider = histogramProvider;
@@ -136,7 +139,7 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
         
         timer.setInitialDelay(0);
         timer.setDelay(1000);
-        model.setRange(3600);
+        model.setRange(1800);
         timer.setTimeUnit(TimeUnit.MILLISECONDS);
         timer.setSchedulingType(SchedulingType.FIXED_RATE);
         
@@ -228,17 +231,20 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
     }
 
     private void showHeapDumpDetails(HeapDump dump) {
-        HeapDumpDetailsController controller = new HeapDumpDetailsController(
-                appService, detailsViewProvider, histogramViewProvider,
-                objectDetailsViewProvider, objectRootsViewProvider);
+        HeapDumpDetailsController controller =
+                new HeapDumpDetailsController(appService, detailsViewProvider,
+                                              histogramViewProvider,
+                                              objectDetailsViewProvider,
+                                              objectRootsViewProvider);
         controller.setDump(dump);
+        view.setActiveDump(dump);
         view.setChildView(controller.getView());
         view.openDumpView();
     }
 
     @Override
     public UIComponent getView() {
-        return (UIComponent) view;
+        return view;
     }
 
     @Override
@@ -297,8 +303,6 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
 
             model.notifyListenersOfModelChange();
         }
-
     }
-    
 }
 

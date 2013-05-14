@@ -46,10 +46,14 @@ import javax.swing.BoxLayout;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 
-import org.jfree.chart.ChartPanel;
+import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.stats.HeapDumpListener;
+import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.stats.HeapSelectionEvent;
+
+import org.jfree.chart.axis.DateAxis;
+import org.jfree.chart.event.AxisChangeEvent;
+import org.jfree.chart.event.AxisChangeListener;
+import org.jfree.chart.plot.XYPlot;
 
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.swing.ComponentVisibleListener;
@@ -59,6 +63,8 @@ import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.chart.OverviewChart;
 import com.redhat.thermostat.vm.heap.analysis.client.locale.LocaleResources;
+import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.stats.HeapChartPanel;
+import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.stats.StatsPanel;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
 
 public class HeapSwingView extends HeapView implements SwingComponent {
@@ -80,11 +86,11 @@ public class HeapSwingView extends HeapView implements SwingComponent {
                 heapDumperNotifier.fireAction(HeapDumperAction.DUMP_REQUESTED);
             }
         });
-        
-        stats.addDumpListListener(new ListSelectionListener() {
+
+        stats.addDumpListListener(new HeapDumpListener() {
             @Override
-            public void valueChanged(ListSelectionEvent arg0) {
-                HeapDump dump = stats.getSelectedHeapDump();
+            public void actionPerformed(HeapSelectionEvent e) {
+                HeapDump dump = e.getSource().getHeapDump();
                 heapDumperNotifier.fireAction(HeapDumperAction.ANALYSE, dump);
             }
         });
@@ -119,10 +125,25 @@ public class HeapSwingView extends HeapView implements SwingComponent {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                ChartPanel charts = new ChartPanel(model.createChart(stats.getWidth(), stats.getBackground()));
+
+                // TODO, move to controller
+                model.createChart(stats.getWidth(), stats.getBackground());
+                
+                final HeapChartPanel charts = new HeapChartPanel(model.getChart());
+                
+                XYPlot plot = model.getChart().getXYPlot();
+                DateAxis domainAxis = (DateAxis) plot.getDomainAxis();
+                domainAxis.addChangeListener(new AxisChangeListener() {
+                    @Override
+                    public void axisChanged(AxisChangeEvent event) {
+                        // somehow the chart panel doesn't see this
+                        charts.revalidate();
+                    }
+                });
+                
                 /*
                  * By default, ChartPanel scales itself instead of redrawing things when
-                 * it's resized. To have it resize automatically, we need to set minimum
+                 * it's re-sized. To have it resize automatically, we need to set minimum
                  * and maximum sizes. Lets constrain the minimum, but not the maximum
                  * size.
                  */
@@ -220,7 +241,17 @@ public class HeapSwingView extends HeapView implements SwingComponent {
             });
         }
     }
-    
+
+    @Override
+    public void setActiveDump(final HeapDump dump) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                stats.selectOverlay(dump);
+            }
+        });
+    }
+
     @Override
     public Component getUiComponent() {
         return visiblePane;

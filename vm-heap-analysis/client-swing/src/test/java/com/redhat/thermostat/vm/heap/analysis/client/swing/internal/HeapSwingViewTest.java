@@ -36,23 +36,23 @@
 
 package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
 
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.awt.Container;
-import java.util.Arrays;
-import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
-import org.fest.swing.annotation.GUITest;
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
 import org.fest.swing.edt.GuiActionRunner;
 import org.fest.swing.edt.GuiTask;
 import org.fest.swing.fixture.Containers;
 import org.fest.swing.fixture.FrameFixture;
-import org.fest.swing.fixture.JButtonFixture;
-import org.fest.swing.fixture.JListFixture;
+import org.fest.swing.fixture.JLabelFixture;
+import org.fest.swing.fixture.JPanelFixture;
+import org.fest.swing.fixture.JPopupMenuFixture;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -62,8 +62,11 @@ import org.junit.runner.RunWith;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapView.HeapDumperAction;
-import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.HeapSwingView;
+import com.redhat.thermostat.vm.heap.analysis.client.core.chart.OverviewChart;
+import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.stats.HeapChartPanel;
+import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.stats.OverlayComponent;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
+import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 
 @RunWith(CacioFESTRunner.class)
 public class HeapSwingViewTest {
@@ -72,19 +75,30 @@ public class HeapSwingViewTest {
 
     private FrameFixture frame;
 
+    private OverviewChart model;
+    
+    private long now;
+    
     @BeforeClass
     public static void setUpOnce() {
         FailOnThreadViolationRepaintManager.install();
     }
 
-
     @Before
     public void setUp() throws Exception {
+        
+        now = 1000;
+        
         GuiActionRunner.execute(new GuiTask() {
             
             @Override
             protected void executeInEDT() throws Throwable {
                 view = new HeapSwingView();
+                
+                model = new OverviewChart("fluff", "fluff", "fluff", "fluff", "fluff");                
+                model.addData(now, 1, 1000);
+                model.addData(now + 10000, 1, 1000);
+                view.setModel(model);
             }
         });
         frame = Containers.showInFrame((Container) view.getUiComponent());
@@ -98,51 +112,113 @@ public class HeapSwingViewTest {
     }
 
     @Test
-    @GUITest
-    public void testActivateHeapDump() {
-        @SuppressWarnings("unchecked")
-        ActionListener<HeapDumperAction> l = mock(ActionListener.class);
-        view.addDumperListener(l);
-        JButtonFixture heapDumpButton = frame.button("heapDumpButton");
-        heapDumpButton.click();
-        verify(l).actionPerformed(new ActionEvent<HeapDumperAction>(view, HeapDumperAction.DUMP_REQUESTED));
-    }
-
-    @Test
-    @GUITest
-    public void testNotifyHeapDumpComplete() {
-        final JButtonFixture heapDumpButton = frame.button("heapDumpButton");
-        GuiActionRunner.execute(new GuiTask() {
-            
+    public void testAddHeapDump() {
+        final boolean [] result = new boolean[1];
+        final int [] resultTimes = new int[1];
+        view.addDumperListener(new ActionListener<HeapDumperAction>() {
             @Override
-            protected void executeInEDT() throws Throwable {
-                heapDumpButton.component().setEnabled(false);
+            public void actionPerformed(ActionEvent<HeapDumperAction> actionEvent) {
+                if (actionEvent.getActionId() == HeapDumperAction.DUMP_REQUESTED) {
+                    result[0] = true;
+                    resultTimes[0]++;
+                }
             }
         });
-
-        view.notifyHeapDumpComplete();
-        frame.robot.waitForIdle();
-
-        heapDumpButton.requireEnabled();
+        
+        frame.show();
+        
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                model.addData(now + 20000, 1, 1000);
+            }
+        });
+        
+        assertFalse(result[0]);
+        
+        JPanelFixture panel = frame.panel(HeapChartPanel.class.getName());
+        JPopupMenuFixture popup = panel.showPopupMenu();
+        popup.click();
+        
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                model.addData(now + 30000, 1, 1000);
+            }
+        });
+        
+        assertTrue(result[0]);
+        assertEquals(1, resultTimes[0]);
     }
-
+    
     @Test
-    @GUITest
-    public void testUpdateHeapDumpList() {
-        JListFixture heapDumpList = frame.list("heapDumpList");
-        heapDumpList.requireItemCount(0);
+    public void testActivateHeapDump() throws InterruptedException {
+        final boolean [] result = new boolean[1];
+        final int [] resultTimes = new int[1];
+        
+        final CountDownLatch latch = new CountDownLatch(1);
+        
+        HeapInfo info = mock(HeapInfo.class);
+        when(info.getTimeStamp()).thenReturn(now + 10000);
+        final HeapDump dump = new HeapDump(info, null);
+        
+        view.addDumperListener(new ActionListener<HeapDumperAction>() {
+            @Override
+            public void actionPerformed(ActionEvent<HeapDumperAction> actionEvent) {
+                if (actionEvent.getActionId() == HeapDumperAction.ANALYSE) {
+                    result[0] = true;
+                    resultTimes[0]++;
+                } else {
+                    view.addHeapDump(dump);
+                    latch.countDown();
+                }
+            }
+        });
+        
+        frame.show();
 
-        HeapDump heapDump = mock(HeapDump.class);
-        List<HeapDump> heapDumps = Arrays.asList(heapDump);
-
-        view.updateHeapDumpList(heapDumps);
-        frame.robot.waitForIdle();
-        heapDumpList.requireItemCount(1);
-
-        view.updateHeapDumpList(heapDumps);
-        frame.robot.waitForIdle();
-        heapDumpList.requireItemCount(1);
-
+        // really same as previous test, this time we get the overlay component
+        // though
+        
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                model.addData(now + 20000, 1, 1000);
+            }
+        });
+        
+        assertFalse(result[0]);
+        
+        final JPanelFixture panel = frame.panel(HeapChartPanel.class.getName());
+        JPopupMenuFixture popup = panel.showPopupMenu();
+        popup.click();
+        
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                // needs this because OverlayComponent and HeapChartPanel are
+                // bound by a special layout manager
+                panel.component().doLayout();
+            }
+        });
+        
+        latch.await();
+        
+        JLabelFixture overlay =  panel.label(OverlayComponent.class.getName());
+        overlay.doubleClick();
+        
+        OverlayComponent overlayComponent = (OverlayComponent) overlay.component();
+        assertEquals(dump, overlayComponent.getHeapDump());
+        
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                panel.component().doLayout();
+            }
+        });
+        
+        assertTrue(result[0]);
+        assertEquals(1, resultTimes[0]);
     }
 }
 
