@@ -36,37 +36,37 @@
 
 package com.redhat.thermostat.web.client.internal;
 
+import org.junit.Test;
+import org.mockito.Mockito;
+
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.redhat.thermostat.storage.config.AuthenticationConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
-import com.redhat.thermostat.storage.core.SecureQueuedStorage;
+import com.redhat.thermostat.storage.core.QueuedStorage;
+import com.redhat.thermostat.storage.core.SecureStorage;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.core.StorageProvider;
 
-public class WebStorageProvider implements StorageProvider {
+public class WebStorageProviderTest {
 
-    private StartupConfiguration config;
+    @Test
+    public void createStorageCreatesSecureStorage() {
+        WebStorageProvider provider = new WebStorageProvider();
+        MockConfiguration config = mock(MockConfiguration.class);
+        when(config.getDBConnectionString()).thenReturn("http://something");
+        provider.setConfig(config);
+        Storage storage = provider.createStorage();
+        assertTrue(storage instanceof SecureStorage);
+        assertTrue(storage instanceof QueuedStorage);
+        verify(config, Mockito.atLeastOnce()).getUsername();
+        verify(config, Mockito.atLeastOnce()).getPassword();
+    }
     
-    @Override
-    public Storage createStorage() {
-        WebStorage storage = new WebStorage(config);
-        storage.setEndpoint(config.getDBConnectionString());
-        if (config instanceof AuthenticationConfiguration) {
-            AuthenticationConfiguration authConf = (AuthenticationConfiguration) config;
-            storage.setAuthConfig(authConf.getUsername(), authConf.getPassword());
-        }
-        return new SecureQueuedStorage(storage);
+    private abstract static class MockConfiguration implements
+            AuthenticationConfiguration, StartupConfiguration {
+        // no-op
     }
-
-    @Override
-    public void setConfig(StartupConfiguration config) {
-        this.config = config;
-    }
-
-    @Override
-    public boolean canHandleProtocol() {
-        // use http since this might be https at some point
-        return config.getDBConnectionString().startsWith("http");
-    }
-
 }
-

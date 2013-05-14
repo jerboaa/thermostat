@@ -59,7 +59,7 @@ package com.redhat.thermostat.storage.core;
  *      the same token for an authenticated client before, and replies with true if it succeeds, and
  *      false otherwise.
  */
-public interface SecureStorage {
+public interface SecureStorage extends Storage {
 
     /**
      * Generates a token in the storage that can be used to authenticate cmd channel requests.

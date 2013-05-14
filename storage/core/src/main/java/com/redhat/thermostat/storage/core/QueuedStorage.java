@@ -45,7 +45,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.storage.model.Pojo;
 
-public final class QueuedStorage implements Storage {
+public class QueuedStorage implements Storage {
 
     private static final int SHUTDOWN_TIMEOUT_SECONDS = 3;
 
@@ -99,9 +99,9 @@ public final class QueuedStorage implements Storage {
 
     }
 
-    private Storage delegate;
-    private ExecutorService executor;
-    private ExecutorService fileExecutor;
+    protected final Storage delegate;
+    protected final ExecutorService executor;
+    protected final ExecutorService fileExecutor;
 
     /*
      * NOTE: We intentially use single-thread executor. All updates are put into a queue, from which
