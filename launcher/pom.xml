@@ -53,6 +53,23 @@
   
 
   <build>
+    <resources>
+      <!-- Instructions that include thermostat plugin schema into the launcher jar -->
+      <resource>
+        <directory>${basedir}/../distribution/docs/</directory>
+        <includes>
+          <include>plugin.xsd</include>
+        </includes>
+      </resource>
+      <!-- Instructions are not cumulative to default behaviour, 
+           so it's necessary to add default behaviour instructions after explicit previous ones -->
+      <resource>
+        <directory>src/main/resources/</directory>
+        <includes>
+          <include>**/*</include>
+        </includes>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>org.apache.felix</groupId>
