@@ -131,6 +131,13 @@ public class LauncherImpl implements Launcher {
             } else {
                 runCommandFromArguments(args, listeners, inShell);
             }
+        } catch (NoClassDefFoundError e) {
+            // This could mean pom is missing <Private-Package> or <Export-Package> lines.
+            // Should be resolved during development, but if we don't catch and print
+            // something the error is swallowed and the cause is non-obvious.
+            System.err.println("Caught NoClassDefFoundError! Check pom for the missing class: \""
+                    + e.getMessage() + "\".  Its package may not be listed.");
+            throw e;
         } finally {
             args = null;
             boolean isLastLaunch = (usageCount.decrementAndGet() == 0);
