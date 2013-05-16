@@ -48,7 +48,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -70,6 +72,7 @@ import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandExtensions;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.NewCommand;
@@ -533,28 +536,35 @@ public class PluginConfigurationParser {
     private static class ConfigurationValidatorErrorHandler implements ErrorHandler {
         
         private int warningsErrorsCounter = 0;
+        private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+        
+        private enum ErrorType {
+            WARNING,
+            ERROR,
+            FATAL_ERROR;
+        }
 
         @Override
         public void warning(SAXParseException exception) throws SAXException {
             warningsErrorsCounter++;
-            printInfo(exception, "Warning");
+            printInfo(exception, ErrorType.WARNING);
         }
 
         @Override
         public void error(SAXParseException exception) throws SAXParseException {
             warningsErrorsCounter++;
-            printInfo(exception, "Error");
+            printInfo(exception, ErrorType.ERROR);
         }
         
         @Override
         public void fatalError(SAXParseException exception) throws SAXParseException {
             if (warningsErrorsCounter == 0) {
-                printInfo(exception, "Fatal error");
+                printInfo(exception, ErrorType.FATAL_ERROR);
                 logger.warning("XML not well formed");
             }
         }
 
-        private static void printInfo(SAXParseException e, String errorType) {
+        private static void printInfo(SAXParseException e, ErrorType type) {
             int columnNumber = e.getColumnNumber();
             int lineNumber = e.getLineNumber();
             
@@ -567,6 +577,11 @@ public class PluginConfigurationParser {
             String pointer = "";
             String absolutePath = e.getSystemId();
             absolutePath = absolutePath.substring(5);
+            
+            Map<ErrorType,LocaleResources> translateKeys = new HashMap<>();
+            translateKeys.put(ErrorType.ERROR, LocaleResources.VALIDATION_ERROR);
+            translateKeys.put(ErrorType.WARNING, LocaleResources.VALIDATION_WARNING);
+            translateKeys.put(ErrorType.FATAL_ERROR, LocaleResources.VALIDATION_FATAL_ERROR);
             
             try {
                 BufferedReader br = new BufferedReader(new FileReader(absolutePath));
@@ -587,7 +602,12 @@ public class PluginConfigurationParser {
                 System.out.println("File not found!");;
             }
             
-            buffer.append(errorType + " in file " + absolutePath + ":" + lineNumber + "." + columnNumber + "\n");
+            buffer.append(translator.localize(
+                    translateKeys.get(type),
+                    absolutePath, 
+                    Integer.toString(lineNumber), 
+                    Integer.toString(columnNumber)));
+                        
             buffer.append(formatMessage(e.getLocalizedMessage()) + "\n\n");
             buffer.append(firstLine + "\n");
             buffer.append(secondLine + "\n");
@@ -596,7 +616,6 @@ public class PluginConfigurationParser {
             buffer.append(pointer  + "\n");
             
             logger.warning("\n" + buffer.toString());
-            
         }
         
         private static String formatMessage(String message) {

@@ -51,6 +51,10 @@ public enum LocaleResources {
 
     OPTION_DB_URL_DESC,
     OPTION_LOG_LEVEL_DESC,
+    
+    VALIDATION_WARNING,
+    VALIDATION_ERROR,
+    VALIDATION_FATAL_ERROR
     ;
 
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.launcher.internal.strings";
