@@ -125,7 +125,7 @@ public class PluginCommandInfoSourceTest {
         List<File> configurationFiles = configFilesCaptor.getAllValues();
         assertEquals(pluginDirs.length, configurationFiles.size());
         for (int i = 0; i < pluginDirs.length; i++) {
-            assertTrue(configurationFiles.contains(pluginDirs[i].resolve("plugin.xml").toFile()));
+            assertTrue(configurationFiles.contains(pluginDirs[i].resolve("thermostat-plugin.xml").toFile()));
         }
     }
 

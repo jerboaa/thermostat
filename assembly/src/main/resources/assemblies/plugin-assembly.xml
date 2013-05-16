@@ -56,7 +56,7 @@
   <fileSets>
     <fileSet>
       <includes>
-        <include>plugin.xml</include>
+        <include>thermostat-plugin.xml</include>
       </includes>
       <filtered>true</filtered>
     </fileSet>

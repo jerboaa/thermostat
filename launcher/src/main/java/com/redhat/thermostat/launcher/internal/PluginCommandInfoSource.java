@@ -65,7 +65,7 @@ import com.redhat.thermostat.launcher.internal.PluginConfiguration.NewCommand;
  */
 public class PluginCommandInfoSource implements CommandInfoSource {
 
-    private static final String PLUGIN_CONFIG_FILE = "plugin.xml";
+    private static final String PLUGIN_CONFIG_FILE = "thermostat-plugin.xml";
 
     private static final Logger logger = LoggingUtils.getLogger(PluginCommandInfoSource.class);
 

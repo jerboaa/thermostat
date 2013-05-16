@@ -38,28 +38,13 @@
 -->
 <plugin xmlns="http://icedtea.classpath.org/thermostat/plugins/v1.0"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://icedtea.classpath.org/thermostat/plugins/v1.0 plugin.xsd">
+  xsi:schemaLocation="http://icedtea.classpath.org/thermostat/plugins/v1.0 thermostat-plugin.xsd">
   <extensions>
     <extension>
       <name>gui</name>
       <bundles>
-        <bundle>thermostat-host-memory-common-${project.version}.jar</bundle>
-        <bundle>thermostat-host-memory-client-core-${project.version}.jar</bundle>
-        <bundle>thermostat-host-memory-client-swing-${project.version}.jar</bundle>
-      </bundles>
-    </extension>
-    <extension>
-      <name>agent</name>
-      <bundles>
-        <bundle>thermostat-host-memory-common-${project.version}.jar</bundle>
-        <bundle>thermostat-host-memory-agent-${project.version}.jar</bundle>
-      </bundles>
-    </extension>
-    <!-- Requires all storage entity classes to be loaded -->
-    <extension>
-      <name>webservice</name>
-      <bundles>
-        <bundle>thermostat-host-memory-common-${project.version}.jar</bundle>
+        <bundle>thermostat-vm-overview-client-core-${project.version}.jar</bundle>
+        <bundle>thermostat-vm-overview-client-swing-${project.version}.jar</bundle>
       </bundles>
     </extension>
   </extensions>

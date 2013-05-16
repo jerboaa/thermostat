@@ -38,37 +38,30 @@
 -->
 <plugin xmlns="http://icedtea.classpath.org/thermostat/plugins/v1.0"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://icedtea.classpath.org/thermostat/plugins/v1.0 plugin.xsd">
+  xsi:schemaLocation="http://icedtea.classpath.org/thermostat/plugins/v1.0 thermostat-plugin.xsd">
   <extensions>
     <extension>
       <name>gui</name>
       <bundles>
-        <bundle>thermostat-vm-memory-common-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-memory-client-core-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-memory-client-swing-${project.version}.jar</bundle>
+        <bundle>thermostat-thread-collector-${project.version}.jar</bundle>
+        <bundle>thermostat-thread-client-swing-${project.version}.jar</bundle>
+        <bundle>thermostat-thread-client-controllers-${project.version}.jar</bundle>
+        <bundle>thermostat-thread-client-common-${project.version}.jar</bundle>
       </bundles>
     </extension>
     <extension>
       <name>agent</name>
       <bundles>
-        <bundle>thermostat-vm-memory-common-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-memory-agent-${project.version}.jar</bundle>
+        <bundle>thermostat-thread-collector-${project.version}.jar</bundle>
+        <bundle>thermostat-thread-harvester-${project.version}.jar</bundle>
       </bundles>
     </extension>
     <!-- Requires all storage entity classes to be loaded -->
     <extension>
       <name>webservice</name>
       <bundles>
-        <bundle>thermostat-vm-memory-common-${project.version}.jar</bundle>
-      </bundles>
-    </extension>
-    <extension>
-      <name>vm-stat</name>
-      <bundles>
-        <bundle>thermostat-vm-memory-common-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-memory-client-cli-${project.version}.jar</bundle>
+        <bundle>thermostat-thread-collector-${project.version}.jar</bundle>
       </bundles>
     </extension>
   </extensions>
-  <!-- TODO: Express dependency on remote GC bundles -->
 </plugin>

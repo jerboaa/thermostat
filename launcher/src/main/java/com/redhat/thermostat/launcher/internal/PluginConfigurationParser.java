@@ -209,7 +209,7 @@ public class PluginConfigurationParser {
     }
            
     void validate(StreamSource plugin) throws PluginConfigurationValidatorException {
-        URL schemaUrl = getClass().getResource("/plugin.xsd");
+        URL schemaUrl = getClass().getResource("/thermostat-plugin.xsd");
         SchemaFactory schemaFactory = 
                 SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
         

@@ -138,7 +138,7 @@ public class PluginConfigurationParserTest {
             String config = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                     "<plugin xmlns=\"http://icedtea.classpath.org/thermostat/plugins/v1.0\"\n" +
                     " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
-                    " xsi:schemaLocation=\"http://icedtea.classpath.org/thermostat/plugins/v1.0 plugin.xsd\">\n" +
+                    " xsi:schemaLocation=\"http://icedtea.classpath.org/thermostat/plugins/v1.0 thermostat-plugin.xsd\">\n" +
                     "  <extensions>\n" +
                     "    <extension>\n" +
                     "      <name>test</name>\n" +
@@ -161,7 +161,7 @@ public class PluginConfigurationParserTest {
             config = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                     "<plugin xmlns=\"http://icedtea.classpath.org/thermostat/plugins/v1.0\"\n" +
                     " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
-                    " xsi:schemaLocation=\"http://icedtea.classpath.org/thermostat/plugins/v1.0 plugin.xsd\">\n" +
+                    " xsi:schemaLocation=\"http://icedtea.classpath.org/thermostat/plugins/v1.0 thermostat-plugin.xsd\">\n" +
                     "  <extensions>\n" +
                     "    <extension>\n" +
                     "      <name>test</name>\n" +
@@ -189,7 +189,7 @@ public class PluginConfigurationParserTest {
         String config = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                 "<plugin xmlns=\"http://icedtea.classpath.org/thermostat/plugins/v1.0\"\n" +
                 " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
-                " xsi:schemaLocation=\"http://icedtea.classpath.org/thermostat/plugins/v1.0 plugin.xsd\">\n" +
+                " xsi:schemaLocation=\"http://icedtea.classpath.org/thermostat/plugins/v1.0 thermostat-plugin.xsd\">\n" +
                 "  <extensions>\n" +
                 "    <something>\n" +
                 "    <extension>\n" +
@@ -334,7 +334,7 @@ public class PluginConfigurationParserTest {
         String config = "<?xml version=\"1.0\"?>\n" +
                 "<plugin xmlns=\"http://icedtea.classpath.org/thermostat/plugins/v1.0\"\n" +
                 " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
-                " xsi:schemaLocation=\"http://icedtea.classpath.org/thermostat/plugins/v1.0 plugin.xsd\">\n" +
+                " xsi:schemaLocation=\"http://icedtea.classpath.org/thermostat/plugins/v1.0 thermostat-plugin.xsd\">\n" +
                 "  <commands>\n" +
                 "    <command>\n" +
                 "      <name>test</name>\n" +

@@ -58,7 +58,7 @@
       <resource>
         <directory>${basedir}/../distribution/docs/</directory>
         <includes>
-          <include>plugin.xsd</include>
+          <include>thermostat-plugin.xsd</include>
         </includes>
       </resource>
       <!-- Instructions are not cumulative to default behaviour, 
