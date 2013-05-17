@@ -107,9 +107,6 @@ public class WebAppTest {
         storage.expectClose();
 
         assertNoExceptions(storage.getCurrentStandardOutContents(), storage.getCurrentStandardErrContents());
-        // Setup required for JAAS login module. FIXME: We should set this via
-        // a context listener.
-        System.setProperty("THERMOSTAT_HOME", getThermostatHome());
         backupUsers = Files.createTempFile("itest-backup-thermostat-users", "");
         backupRoles = Files.createTempFile("itest-backup-thermostat-roles", "");
         backupRoles.toFile().deleteOnExit();

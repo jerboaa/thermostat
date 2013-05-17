@@ -41,7 +41,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
-import java.security.Principal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -120,30 +119,10 @@ public class WebStorageEndPoint extends HttpServlet {
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
         logger.log(Level.INFO, "Initializing web service");
-        if (!isThermostatHomeSet()) {
-            // This is the webapp and our entry point into thermostat's web
-            // service. The launcher did not run and hence THERMOSTAT_HOME is
-            // not set and we need to do this ourselves.
-            String thermostatHome = config.getInitParameter("THERMOSTAT_HOME");
-            if (thermostatHome == null) {
-                String msg = "THERMOSTAT_HOME config parameter not set!";
-                logger.log(Level.SEVERE, msg);
-                throw new RuntimeException(msg);
-            }
-            File thermostatHomeFile = new File(thermostatHome);
-            if (!thermostatHomeFile.canRead()) {
-                // This is bad news. If we can't at least read THERMOSTAT_HOME
-                // we are bound to fail in some weird ways at some later point.
-                String msg = "THERMOSTAT_HOME = "
-                        + thermostatHome
-                        + " is not readable or does not exist!";
-                logger.log(Level.SEVERE, msg);
-                throw new RuntimeException(msg);
-            }
-            logger.log(Level.INFO, "Setting THERMOSTAT_HOME for webapp to "
-                    + thermostatHome);
-            System.setProperty("THERMOSTAT_HOME", thermostatHome);
-        }
+        
+        // check if thermostat home is set and readable
+        checkThermostatHome();
+        
         gson = new GsonBuilder().registerTypeHierarchyAdapter(Pojo.class, new ThermostatGSONConverter()).create();
         categoryIds = new HashMap<>();
         categories = new HashMap<>();
@@ -221,6 +200,37 @@ public class WebStorageEndPoint extends HttpServlet {
             return true;
         } catch (InvalidConfigurationException e) {
             return false;
+        }
+    }
+    
+    private void checkThermostatHome() {
+        if (!isThermostatHomeSet()) {
+            String msg = "THERMOSTAT_HOME context parameter not set!";
+            logger.log(Level.SEVERE, msg);
+            throw new RuntimeException(msg);
+        }
+        File thermostatHomeFile = getThermostatHome();
+        if (!thermostatHomeFile.canRead()) {
+            // This is bad news. If we can't at least read THERMOSTAT_HOME
+            // we are bound to fail in some weird ways at some later point.
+            String msg = "THERMOSTAT_HOME = "
+                    + thermostatHomeFile.getAbsolutePath()
+                    + " is not readable or does not exist!";
+            logger.log(Level.SEVERE, msg);
+            throw new RuntimeException(msg);
+        }
+        logger.log(Level.FINEST, "THERMOSTAT_HOME == "
+                + thermostatHomeFile.getAbsolutePath());
+    }
+
+    private File getThermostatHome() {
+        try {
+            Configuration config = new Configuration();
+            return new File(config.getThermostatHome());
+        } catch (InvalidConfigurationException e) {
+            // we should have just checked if this throws any exception
+            logger.log(Level.SEVERE, "Illegal configuration!", e);
+            return null;
         }
     }
 

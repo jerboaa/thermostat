@@ -47,6 +47,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -165,9 +166,12 @@ public class WebStorageEndpointTest {
     @Before
     public void setUp() throws Exception {
 
-        // Set thermostat home to something so we don't set
-        // it in WebStorageEndPoint.init()
-        System.setProperty("THERMOSTAT_HOME", "does not matter");
+        // Set thermostat home to something existing and readable
+        File fakeHome = new File(getClass().getResource("/broken_test_roles.properties").getFile());
+        // fakeHome does not need to be a real THERMOSTAT_HOME, but needs to
+        // be readable and must exist.
+        assertTrue(fakeHome.canRead());
+        System.setProperty("THERMOSTAT_HOME", fakeHome.getAbsolutePath());
         
         mockStorage = mock(Storage.class);
         StorageWrapper.setStorage(mockStorage);
