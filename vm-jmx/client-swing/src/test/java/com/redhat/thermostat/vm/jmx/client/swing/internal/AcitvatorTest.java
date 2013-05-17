@@ -34,40 +34,30 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.utils.management.internal;
+package com.redhat.thermostat.vm.jmx.client.swing.internal;
 
-import java.io.IOException;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-import javax.management.JMX;
-import javax.management.MBeanServerConnection;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-import javax.management.remote.JMXConnector;
+import org.junit.Test;
 
-import com.redhat.thermostat.utils.management.MXBeanConnection;
+import com.redhat.thermostat.testutils.StubBundleContext;
+import com.redhat.thermostat.vm.jmx.client.core.JmxNotificationsViewProvider;
 
-class MXBeanConnectionImpl implements MXBeanConnection {
+public class AcitvatorTest {
 
-    private JMXConnector connection;
-    private MBeanServerConnection mbsc;
-    
-    MXBeanConnectionImpl(JMXConnector connection, MBeanServerConnection mbsc) {
-        this.connection = connection;
-        this.mbsc = mbsc;
-    }
-    
-    public synchronized <E> E createProxy(String name, Class<? extends E> proxyClass) throws MalformedObjectNameException {
-        ObjectName objectName = new ObjectName(name);
-        return JMX.newMXBeanProxy(mbsc, objectName, proxyClass);
-    }
-    
-    @Override
-    public MBeanServerConnection get() {
-        return mbsc;
-    }
+    @Test
+    public void testActivator() throws Exception {
+        StubBundleContext bundleContext = new StubBundleContext();
+        Activator activator = new Activator();
 
-    void close() throws IOException {
-        connection.close();
+        activator.start(bundleContext);
+
+        assertTrue(bundleContext.isServiceRegistered(JmxNotificationsViewProvider.class.getName(), JmxNotificationsSwingViewProvider.class));
+
+        activator.stop(bundleContext);
+
+        assertFalse(bundleContext.isServiceRegistered(JmxNotificationsViewProvider.class.getName(), JmxNotificationsSwingViewProvider.class));
+
     }
 }
-

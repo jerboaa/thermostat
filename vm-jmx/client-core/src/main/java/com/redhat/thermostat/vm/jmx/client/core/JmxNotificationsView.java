@@ -34,40 +34,24 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.utils.management.internal;
+package com.redhat.thermostat.vm.jmx.client.core;
 
-import java.io.IOException;
+import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.vm.jmx.common.JmxNotification;
 
-import javax.management.JMX;
-import javax.management.MBeanServerConnection;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-import javax.management.remote.JMXConnector;
+public abstract class JmxNotificationsView extends BasicView implements UIComponent {
 
-import com.redhat.thermostat.utils.management.MXBeanConnection;
-
-class MXBeanConnectionImpl implements MXBeanConnection {
-
-    private JMXConnector connection;
-    private MBeanServerConnection mbsc;
-    
-    MXBeanConnectionImpl(JMXConnector connection, MBeanServerConnection mbsc) {
-        this.connection = connection;
-        this.mbsc = mbsc;
-    }
-    
-    public synchronized <E> E createProxy(String name, Class<? extends E> proxyClass) throws MalformedObjectNameException {
-        ObjectName objectName = new ObjectName(name);
-        return JMX.newMXBeanProxy(mbsc, objectName, proxyClass);
-    }
-    
-    @Override
-    public MBeanServerConnection get() {
-        return mbsc;
+    public enum NotificationAction {
+        TOGGLE_NOTIFICATIONS,
     }
 
-    void close() throws IOException {
-        connection.close();
-    }
+    public abstract void addNotificationActionListener(ActionListener<NotificationAction> listener);
+    public abstract void removeNotificationActionListener(ActionListener<NotificationAction> listener);
+
+    public abstract void setNotificationsEnabled(boolean enabled);
+    public abstract void clearNotifications();
+    public abstract void addNotification(JmxNotification data);
+
 }
-

@@ -34,40 +34,16 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.utils.management.internal;
+package com.redhat.thermostat.vm.jmx.client.swing.internal;
 
-import java.io.IOException;
+import com.redhat.thermostat.vm.jmx.client.core.JmxNotificationsView;
+import com.redhat.thermostat.vm.jmx.client.core.JmxNotificationsViewProvider;
 
-import javax.management.JMX;
-import javax.management.MBeanServerConnection;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-import javax.management.remote.JMXConnector;
+public class JmxNotificationsSwingViewProvider implements JmxNotificationsViewProvider {
 
-import com.redhat.thermostat.utils.management.MXBeanConnection;
-
-class MXBeanConnectionImpl implements MXBeanConnection {
-
-    private JMXConnector connection;
-    private MBeanServerConnection mbsc;
-    
-    MXBeanConnectionImpl(JMXConnector connection, MBeanServerConnection mbsc) {
-        this.connection = connection;
-        this.mbsc = mbsc;
-    }
-    
-    public synchronized <E> E createProxy(String name, Class<? extends E> proxyClass) throws MalformedObjectNameException {
-        ObjectName objectName = new ObjectName(name);
-        return JMX.newMXBeanProxy(mbsc, objectName, proxyClass);
-    }
-    
     @Override
-    public MBeanServerConnection get() {
-        return mbsc;
+    public JmxNotificationsView createView() {
+        return new JmxNotificationsSwingView();
     }
 
-    void close() throws IOException {
-        connection.close();
-    }
 }
-

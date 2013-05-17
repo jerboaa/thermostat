@@ -34,40 +34,82 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.utils.management.internal;
+package com.redhat.thermostat.vm.jmx.common;
 
-import java.io.IOException;
+import com.redhat.thermostat.storage.core.Entity;
+import com.redhat.thermostat.storage.core.Persist;
+import com.redhat.thermostat.storage.model.BasePojo;
+import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
-import javax.management.JMX;
-import javax.management.MBeanServerConnection;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-import javax.management.remote.JMXConnector;
+@Entity
+public class JmxNotification extends BasePojo implements TimeStampedPojo {
 
-import com.redhat.thermostat.utils.management.MXBeanConnection;
+    private long timeStamp;
+    private int vmId;
+    private String importance;
+    private String sourceBackend;
+    private String sourceDetails;
+    private String contents;
 
-class MXBeanConnectionImpl implements MXBeanConnection {
-
-    private JMXConnector connection;
-    private MBeanServerConnection mbsc;
-    
-    MXBeanConnectionImpl(JMXConnector connection, MBeanServerConnection mbsc) {
-        this.connection = connection;
-        this.mbsc = mbsc;
+    @Persist
+    public int getVmId() {
+        return vmId;
     }
-    
-    public synchronized <E> E createProxy(String name, Class<? extends E> proxyClass) throws MalformedObjectNameException {
-        ObjectName objectName = new ObjectName(name);
-        return JMX.newMXBeanProxy(mbsc, objectName, proxyClass);
+
+    @Persist
+    public void setVmId(int vmId) {
+        this.vmId = vmId;
     }
-    
+
+    @Persist
+    public String getImportance() {
+        return importance;
+    }
+
+    @Persist
+    public void setImportance(String importance) {
+        this.importance = importance;
+    }
+
+    @Persist
+    public String getSourceBackend() {
+        return sourceBackend;
+    }
+
+    @Persist
+    public void setSourceBackend(String sourceBackend) {
+        this.sourceBackend = sourceBackend;
+    }
+
+    @Persist
+    public String getSourceDetails() {
+        return sourceDetails;
+    }
+
+    @Persist
+    public void setSourceDetails(String sourceDetails) {
+        this.sourceDetails = sourceDetails;
+    }
+
+    @Persist
+    public String getContents() {
+        return contents;
+    }
+
+    @Persist
+    public void setContents(String contents) {
+        this.contents = contents;
+    }
+
+    @Persist
     @Override
-    public MBeanServerConnection get() {
-        return mbsc;
+    public long getTimeStamp() {
+        return timeStamp;
     }
 
-    void close() throws IOException {
-        connection.close();
+    @Persist
+    public void setTimeStamp(long timeStamp) {
+        this.timeStamp = timeStamp;
     }
+
 }
-

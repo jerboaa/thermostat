@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 
+<!--
 
  Copyright 2012, 2013 Red Hat, Inc.
 
@@ -36,33 +36,27 @@
  to do so, delete this exception statement from your version.
 
 -->
-<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
-  <id>plugin-assembly</id>
-  <formats>
-    <format>dir</format>
-  </formats>
-  <includeBaseDirectory>false</includeBaseDirectory>
-  
-  <dependencySets>
-    <dependencySet>
-      <useProjectArtifact>false</useProjectArtifact>
-      <unpack>true</unpack>
-      <includes>
-        <include>com.redhat.thermostat:thermostat-host-cpu-distribution</include>
-        <include>com.redhat.thermostat:thermostat-host-memory-distribution</include>
-        <include>com.redhat.thermostat:thermostat-host-overview-distribution</include>
-        <include>com.redhat.thermostat:thermostat-numa-distribution</include>
-        <include>com.redhat.thermostat:thermostat-thread-distribution</include>
-        <include>com.redhat.thermostat:thermostat-vm-classstat-distribution</include>
-        <include>com.redhat.thermostat:thermostat-vm-cpu-distribution</include>
-        <include>com.redhat.thermostat:thermostat-vm-gc-distribution</include>
-        <include>com.redhat.thermostat:thermostat-vm-heap-analysis-distribution</include>
-        <include>com.redhat.thermostat:thermostat-vm-jmx-distribution</include>
-        <include>com.redhat.thermostat:thermostat-vm-memory-distribution</include>
-        <include>com.redhat.thermostat:thermostat-vm-overview-distribution</include>
-      </includes>
-    </dependencySet>  
-  </dependencySets>
-  
-</assembly>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.redhat.thermostat</groupId>
+    <artifactId>thermostat</artifactId>
+    <version>0.8.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>thermostat-vm-jmx</artifactId>
+  <packaging>pom</packaging>
+
+  <name>Thermostat JMX plugin</name>
+
+  <modules>
+    <module>agent</module>
+    <module>common</module>
+    <module>client-core</module>
+    <module>client-swing</module>
+    <module>distribution</module>
+  </modules>
+
+</project>
+
