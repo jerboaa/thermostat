@@ -51,7 +51,6 @@ import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 
 import org.junit.After;
 import org.junit.Before;
@@ -178,7 +177,7 @@ public class AgentApplicationTest {
         final AgentApplication agent = new AgentApplication(context,
                 exitStatus, configCreator, dbServiceFactory);
         try {
-            agent.startAgent(mock(Logger.class), null, null, null);
+            agent.startAgent(null, null, null);
         } catch (RuntimeException e) {
             assertEquals(InvalidSyntaxException.class, e.getCause().getClass());
         }
@@ -202,7 +201,7 @@ public class AgentApplicationTest {
         final AgentApplication agent = new AgentApplication(context,
                 exitStatus, configCreator, dbServiceFactory);
         try {
-            agent.startAgent(mock(Logger.class), null, null, null);
+            agent.startAgent(null, null, null);
         } catch (RuntimeException e) {
             fail("Should not have thrown RuntimeException");
         }

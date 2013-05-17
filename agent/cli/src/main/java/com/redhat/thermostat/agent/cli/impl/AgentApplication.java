@@ -67,6 +67,7 @@ import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
+import com.redhat.thermostat.storage.core.ConnectionException;
 import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.storage.core.DbServiceFactory;
 import com.redhat.thermostat.storage.core.Storage;
@@ -76,6 +77,8 @@ import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 @SuppressWarnings("restriction")
 public final class AgentApplication extends AbstractStateNotifyingCommand {
 
+    private static final Logger logger = LoggingUtils.getLogger(AgentApplication.class);
+    
     private final BundleContext bundleContext;
     private final ConfigurationCreator configurationCreator;
 
@@ -86,7 +89,6 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
     private ServiceTracker configServerTracker;
     private MultipleServiceTracker daoTracker;
     private final ExitStatus exitStatus;
-
     private CountDownLatch shutdownLatch;
 
     public AgentApplication(BundleContext bundleContext, ExitStatus exitStatus) {
@@ -110,7 +112,6 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
         long startTime = System.currentTimeMillis();
         configuration.setStartTime(startTime);
         
-        final Logger logger = LoggingUtils.getLogger(AgentApplication.class);
 
         final DbService dbService = dbServiceFactory.createDbService(
                 configuration.getUsername(), configuration.getPassword(),
@@ -137,11 +138,10 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
                             break;
                         case CONNECTED:
                             logger.fine("Connected to storage");
-                            handleConnected(configServer, logger, shutdownLatch);
+                            handleConnected(configServer);
                             break;
                         case FAILED_TO_CONNECT:
-                            logger.warning("Could not connect to storage.");
-                            shutdown();
+                            // ConnectionException will be thrown
                             break;
                         default:
                             logger.warning("Unfamiliar ConnectionStatus value: " + newStatus.toString());
@@ -151,7 +151,13 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
 
                 dbService.addConnectionListener(connectionListener);
                 logger.fine("Connecting to storage...");
-                dbService.connect();
+                
+                try {
+                    dbService.connect();
+                } catch (ConnectionException e) {
+                    logger.log(Level.SEVERE, "Could not connect to storage.", e);
+                    shutdown();
+                }
                 
                 return configServer;
             }
@@ -204,20 +210,14 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
         }
     }
     
-    // Does not need a reference of the enclosing type so lets declare this class static
-    private static class CustomSignalHandler implements SignalHandler {
-
+    private class CustomSignalHandler implements SignalHandler {
+        
         private Agent agent;
         private ConfigurationServer configServer;
-        private Logger logger;
-        private CountDownLatch shutdownLatch;
-        
-        CustomSignalHandler(Agent agent, ConfigurationServer configServer,
-                Logger logger, CountDownLatch latch) {
+
+        public CustomSignalHandler(Agent agent, ConfigurationServer configServer) {
             this.agent = agent;
             this.configServer = configServer;
-            this.logger = logger;
-            this.shutdownLatch = latch;
         }
         
         @Override
@@ -231,13 +231,12 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
                 ex.printStackTrace();
             }
             logger.fine("Agent stopped.");       
-            shutdownLatch.countDown();
+            shutdown();
         }
         
     }
 
-    Agent startAgent(final Logger logger, final Storage storage,
-            AgentInfoDAO agentInfoDAO, BackendInfoDAO backendInfoDAO) {
+    Agent startAgent(final Storage storage, AgentInfoDAO agentInfoDAO, BackendInfoDAO backendInfoDAO) {
         BackendRegistry backendRegistry = null;
         try {
             backendRegistry = new BackendRegistry(bundleContext);
@@ -272,8 +271,7 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
         return agent;
     }
     
-    private void handleConnected(final ConfigurationServer configServer,
-            final Logger logger, final CountDownLatch shutdownLatch) {
+    private void handleConnected(final ConfigurationServer configServer) {
         Class<?>[] deps = new Class<?>[] {
                 Storage.class,
                 AgentInfoDAO.class,
@@ -289,11 +287,8 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
                 BackendInfoDAO backendInfoDAO = (BackendInfoDAO) services
                         .get(BackendInfoDAO.class.getName());
 
-                final Agent agent = startAgent(logger, storage,
-                        agentInfoDAO, backendInfoDAO);
-
-                SignalHandler handler = new CustomSignalHandler(agent,
-                        configServer, logger, shutdownLatch);
+                Agent agent = startAgent(storage, agentInfoDAO, backendInfoDAO);
+                SignalHandler handler = new CustomSignalHandler(agent, configServer);
                 Signal.handle(new Signal("INT"), handler);
                 Signal.handle(new Signal("TERM"), handler);
             }
