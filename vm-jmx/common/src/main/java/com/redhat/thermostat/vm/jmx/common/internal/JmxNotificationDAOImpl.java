@@ -45,12 +45,20 @@ import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.Criteria;
+import com.redhat.thermostat.storage.core.Query.SortDirection;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.vm.jmx.common.JmxNotificationDAO;
 import com.redhat.thermostat.vm.jmx.common.JmxNotification;
+import com.redhat.thermostat.vm.jmx.common.JmxNotificationDAO;
+import com.redhat.thermostat.vm.jmx.common.JmxNotificationStatus;
 
 public class JmxNotificationDAOImpl implements JmxNotificationDAO {
+
+    private static final Key<Boolean> NOTIFICATIONS_ENABLED = new Key<>("notififcationsEnabled", false);
+
+    static final Category<JmxNotificationStatus> NOTIFICATION_STATUS =
+            new Category<>("vm-jmx-notification-status", JmxNotificationStatus.class,
+                    Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, NOTIFICATIONS_ENABLED);
 
     // TODO: private static final Key IMPORTANCE = new Key<>("importance",
     // false);
@@ -68,7 +76,30 @@ public class JmxNotificationDAOImpl implements JmxNotificationDAO {
 
     public JmxNotificationDAOImpl(Storage storage) {
         this.storage = storage;
+        storage.registerCategory(NOTIFICATION_STATUS);
         storage.registerCategory(NOTIFICATIONS);
+    }
+
+    @Override
+    public void addNotifcationStatus(JmxNotificationStatus status) {
+        Add add = storage.createAdd(NOTIFICATION_STATUS);
+        add.setPojo(status);
+        add.apply();
+    }
+
+    @Override
+    public JmxNotificationStatus getLatestNotificationStatus(VmRef statusFor) {
+        Query<JmxNotificationStatus> query = storage.createQuery(NOTIFICATION_STATUS);
+        query.where(Key.AGENT_ID, Criteria.EQUALS, statusFor.getAgent().getAgentId());
+        query.where(Key.VM_ID, Criteria.EQUALS, statusFor.getId());
+
+        query.sort(Key.TIMESTAMP, SortDirection.DESCENDING);
+        Cursor<JmxNotificationStatus> results = query.execute();
+        if (results.hasNext()) {
+            return results.next();
+        }
+
+        return null;
     }
 
     @Override

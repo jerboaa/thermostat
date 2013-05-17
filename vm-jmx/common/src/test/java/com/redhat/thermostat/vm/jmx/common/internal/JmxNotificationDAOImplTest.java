@@ -38,12 +38,15 @@ package com.redhat.thermostat.vm.jmx.common.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+
+import javax.swing.SortOrder;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -54,21 +57,71 @@ import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.Criteria;
+import com.redhat.thermostat.storage.core.Query.SortDirection;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.vm.jmx.common.JmxNotification;
+import com.redhat.thermostat.vm.jmx.common.JmxNotificationStatus;
 
 public class JmxNotificationDAOImplTest {
+
+    private final String AGENT_ID = "an-agent's-id";
+    private final int VM_ID = -1;
 
     private Storage storage;
 
     private JmxNotificationDAOImpl dao;
+    private HostRef host;
+    private VmRef vm;
 
     @Before
     public void setUp() {
+        host = mock(HostRef.class);
+        when(host.getAgentId()).thenReturn(AGENT_ID);
+
+        vm = mock(VmRef.class);
+        when(vm.getAgent()).thenReturn(host);
+        when(vm.getId()).thenReturn(VM_ID);
+
         storage = mock(Storage.class);
 
         dao = new JmxNotificationDAOImpl(storage);
+    }
+
+    @Test
+    public void verifyAddNotificationStatus() {
+        Add add = mock(Add.class);
+        when(storage.createAdd(JmxNotificationDAOImpl.NOTIFICATION_STATUS)).thenReturn(add);
+
+        JmxNotificationStatus data = mock(JmxNotificationStatus.class);
+
+        dao.addNotifcationStatus(data);
+
+        verify(add).setPojo(data);
+        verify(add).apply();
+        verifyNoMoreInteractions(add);
+    }
+
+    @Test
+    public void verifyGetLatestNotificationStatus() {
+        JmxNotificationStatus data = new JmxNotificationStatus();
+
+        Query<JmxNotificationStatus> query = mock(Query.class);
+        when(storage.createQuery(JmxNotificationDAOImpl.NOTIFICATION_STATUS)).thenReturn(query);
+
+        Cursor<JmxNotificationStatus> cursor = mock(Cursor.class);
+        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
+        when(cursor.next()).thenReturn(data).thenThrow(new AssertionError("should not be called"));
+
+        when(query.execute()).thenReturn(cursor);
+
+        JmxNotificationStatus result = dao.getLatestNotificationStatus(vm);
+
+        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID);
+        verify(query).where(Key.VM_ID, Criteria.EQUALS, VM_ID);
+        verify(query).sort(Key.TIMESTAMP, SortDirection.DESCENDING);
+        
+        assertTrue(result == data);
     }
 
     @Test
@@ -86,23 +139,15 @@ public class JmxNotificationDAOImplTest {
     }
 
     @Test
-    public void testGetNotificationsForVmSince() {
-        final String AGENT_ID = "an-agent's-id";
-        HostRef host = mock(HostRef.class);
-        when(host.getAgentId()).thenReturn(AGENT_ID);
-
-        final int VM_ID = -1;
-        VmRef vm = mock(VmRef.class);
-        when(vm.getAgent()).thenReturn(host);
-        when(vm.getId()).thenReturn(VM_ID);
+    public void verifyGetNotificationsForVmSince() {
         long timeStamp = 10;
 
         JmxNotification data = mock(JmxNotification.class);
 
-        Query query = mock(Query.class);
+        Query<JmxNotification> query = mock(Query.class);
         when(storage.createQuery(JmxNotificationDAOImpl.NOTIFICATIONS)).thenReturn(query);
 
-        Cursor cursor = mock(Cursor.class);
+        Cursor<JmxNotification> cursor = mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(data).thenThrow(new AssertionError("not supposed to be called again"));
 

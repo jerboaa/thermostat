@@ -56,12 +56,15 @@ import javax.management.ReflectionException;
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.agent.command.RequestReceiver;
 import com.redhat.thermostat.backend.BaseBackend;
+import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.utils.management.MXBeanConnection;
 import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.vm.jmx.common.JmxNotification;
 import com.redhat.thermostat.vm.jmx.common.JmxNotificationDAO;
+import com.redhat.thermostat.vm.jmx.common.JmxNotificationStatus;
 
 public class JmxBackend extends BaseBackend {
 
@@ -71,6 +74,7 @@ public class JmxBackend extends BaseBackend {
     private final RequestReceiver receiver;
     private final JmxNotificationDAO dao;
     private final MXBeanConnectionPool pool;
+    private final Clock clock;
 
     private final NotificationListener registrationNotificationListener;
     private final NotificationListener notificationWriter;
@@ -80,11 +84,16 @@ public class JmxBackend extends BaseBackend {
     private boolean isActive = false;
 
     public JmxBackend(Version version, ReceiverRegistry registry, JmxNotificationDAO dao, MXBeanConnectionPool pool, RequestReceiver receiver) {
+        this(version, registry, dao, pool, receiver, new SystemClock());
+    }
+
+    public JmxBackend(Version version, ReceiverRegistry registry, JmxNotificationDAO dao, MXBeanConnectionPool pool, RequestReceiver receiver, Clock clock) {
         super("VM JMX Backend", "gathers JMX information using JMX", "Red Hat, Inc.", version.getVersionNumber());
 
         this.registry = registry;
         this.pool = pool;
         this.dao = dao;
+        this.clock = clock;
 
         this.registrationNotificationListener = new RegistrationNotificationListener();
         this.notificationWriter = new NotificationWriter();
@@ -140,6 +149,11 @@ public class JmxBackend extends BaseBackend {
                     addNotificationListenerToMBean(pid, server, name);
                 }
             }
+            JmxNotificationStatus update = new JmxNotificationStatus();
+            update.setVmId(pid);
+            update.setEnabled(true);
+            update.setTimeStamp(clock.getRealTimeMillis());
+            dao.addNotifcationStatus(update);
         } catch (Exception e) {
             logger.log(Level.WARNING, "Unable to connect to the mx bean connector", e);
         }
@@ -149,6 +163,13 @@ public class JmxBackend extends BaseBackend {
         int pid = Integer.valueOf(vmId);
 
         MXBeanConnection connection = connections.get(pid);
+
+        JmxNotificationStatus update = new JmxNotificationStatus();
+        update.setVmId(pid);
+        update.setEnabled(false);
+        update.setTimeStamp(clock.getRealTimeMillis());
+        dao.addNotifcationStatus(update);
+
         try {
             pool.release(pid, connection);
         } catch (Exception e) {

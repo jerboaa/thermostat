@@ -36,17 +36,47 @@
 
 package com.redhat.thermostat.vm.jmx.common;
 
-import java.util.List;
+import com.redhat.thermostat.storage.core.Entity;
+import com.redhat.thermostat.storage.core.Persist;
+import com.redhat.thermostat.storage.model.BasePojo;
+import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
-import com.redhat.thermostat.storage.core.VmRef;
+@Entity
+public class JmxNotificationStatus extends BasePojo implements TimeStampedPojo {
 
-public interface JmxNotificationDAO {
+    private long timeStamp = 0;
+    private int vmId = 0;
+    private boolean enabled = false;
 
-    void addNotifcationStatus(JmxNotificationStatus notificationsStatus);
+    @Persist
+    public int getVmId() {
+        return vmId;
+    }
 
-    JmxNotificationStatus getLatestNotificationStatus(VmRef statusFor);
+    @Persist
+    public void setVmId(int vmId) {
+        this.vmId = vmId;
+    }
 
-    void addNotification(JmxNotification notification);
+    @Persist
+    @Override
+    public long getTimeStamp() {
+        return timeStamp;
+    }
 
-    List<JmxNotification> getNotifications(VmRef notificationsFor, long timeStampSince);
+    @Persist
+    public void setTimeStamp(long timeStamp) {
+        this.timeStamp = timeStamp;
+    }
+
+    @Persist
+    public boolean isEnabled() {
+        return this.enabled;
+    }
+
+    @Persist
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
 }

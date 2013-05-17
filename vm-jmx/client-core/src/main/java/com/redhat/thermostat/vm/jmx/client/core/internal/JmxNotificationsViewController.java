@@ -49,17 +49,14 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.command.Request;
-import com.redhat.thermostat.common.command.RequestResponseListener;
-import com.redhat.thermostat.common.command.Response;
-import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.vm.jmx.client.core.JmxNotificationsView;
-import com.redhat.thermostat.vm.jmx.client.core.JmxNotificationsViewProvider;
 import com.redhat.thermostat.vm.jmx.client.core.JmxNotificationsView.NotificationAction;
-import com.redhat.thermostat.vm.jmx.common.JmxNotificationDAO;
+import com.redhat.thermostat.vm.jmx.client.core.JmxNotificationsViewProvider;
 import com.redhat.thermostat.vm.jmx.common.JmxNotification;
+import com.redhat.thermostat.vm.jmx.common.JmxNotificationDAO;
+import com.redhat.thermostat.vm.jmx.common.JmxNotificationStatus;
 
 public class JmxNotificationsViewController implements InformationServiceController<VmRef> {
 
@@ -69,7 +66,7 @@ public class JmxNotificationsViewController implements InformationServiceControl
     private final AgentInfoDAO agentDAO;
     private final VmRef vm;
 
-    private final AtomicBoolean toEnable = new AtomicBoolean(true);;
+    private final AtomicBoolean notificationsEnabled = new AtomicBoolean(false);
 
     public JmxNotificationsViewController(AgentInfoDAO agent, JmxNotificationDAO notification,
             TimerFactory timerFactory, final RequestQueue queue,
@@ -102,16 +99,11 @@ public class JmxNotificationsViewController implements InformationServiceControl
             @Override
             public void actionPerformed(ActionEvent<NotificationAction> actionEvent) {
                 if (actionEvent.getActionId() == NotificationAction.TOGGLE_NOTIFICATIONS) {
-                    new JmxToggleNotificationRequest(queue).sendEnableNotificationsRequestToAgent(vm, agentDAO, toEnable.get(),
-                            new RequestResponseListener() {
-                                @Override
-                                public void fireComplete(Request request, Response response) {
-                                    if (response.getType() == ResponseType.OK) {
-                                        view.setNotificationsEnabled(toEnable.get());
-                                        toEnable.set(!toEnable.get());
-                                    }
-                                }
-                            });
+                    notificationsEnabled.set(!notificationsEnabled.get());
+
+                    new JmxToggleNotificationRequest(queue).sendEnableNotificationsRequestToAgent(vm, agentDAO, notificationsEnabled.get(), null);
+
+                    view.setNotificationsEnabled(notificationsEnabled.get());
                 }
             }
         });
@@ -129,6 +121,10 @@ public class JmxNotificationsViewController implements InformationServiceControl
 
             @Override
             public void run() {
+                JmxNotificationStatus status = dao.getLatestNotificationStatus(vm);
+                notificationsEnabled.set(status.isEnabled());
+                view.setNotificationsEnabled(notificationsEnabled.get());
+
                 List<JmxNotification> notifications = dao.getNotifications(vm, lastTimeStamp);
                 for (JmxNotification notification : notifications) {
                     lastTimeStamp = Math.max(lastTimeStamp, notification.getTimeStamp());

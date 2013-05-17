@@ -66,6 +66,7 @@ import com.redhat.thermostat.vm.jmx.client.core.JmxNotificationsView.Notificatio
 import com.redhat.thermostat.vm.jmx.client.core.JmxNotificationsViewProvider;
 import com.redhat.thermostat.vm.jmx.common.JmxNotification;
 import com.redhat.thermostat.vm.jmx.common.JmxNotificationDAO;
+import com.redhat.thermostat.vm.jmx.common.JmxNotificationStatus;
 
 public class JmxNotificationsViewControllerTest {
 
@@ -124,6 +125,8 @@ public class JmxNotificationsViewControllerTest {
 
         JmxNotification data = mock(JmxNotification.class);
         when(notificationDao.getNotifications(vm, Long.MIN_VALUE)).thenReturn(Arrays.asList(data));
+        JmxNotificationStatus status = mock(JmxNotificationStatus.class);
+        when(notificationDao.getLatestNotificationStatus(vm)).thenReturn(status);
 
         timerAction.run();
 
