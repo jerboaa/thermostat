@@ -34,40 +34,14 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.utils.management.internal;
+package com.redhat.thermostat.vm.jmx.common;
 
-import java.io.IOException;
+public enum JmxCommand {
 
-import javax.management.JMX;
-import javax.management.MBeanServerConnection;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-import javax.management.remote.JMXConnector;
+    ENABLE_JMX_NOTIFICATIONS,
+    DISABLE_JMX_NOTIFICATIONS,
+    ;
 
-import com.redhat.thermostat.utils.management.MXBeanConnection;
-
-class MXBeanConnectionImpl implements MXBeanConnection {
-
-    private JMXConnector connection;
-    private MBeanServerConnection mbsc;
-    
-    MXBeanConnectionImpl(JMXConnector connection, MBeanServerConnection mbsc) {
-        this.connection = connection;
-        this.mbsc = mbsc;
-    }
-    
-    public synchronized <E> E createProxy(String name, Class<? extends E> proxyClass) throws MalformedObjectNameException {
-        ObjectName objectName = new ObjectName(name);
-        return JMX.newMXBeanProxy(mbsc, objectName, proxyClass);
-    }
-    
-    @Override
-    public MBeanServerConnection get() {
-        return mbsc;
-    }
-
-    void close() throws IOException {
-        connection.close();
-    }
+    public static final String VM_ID = "VM_ID";
+    public static final String RECEIVER = "com.redhat.thermostat.vm.jmx.agent.internal.JmxRequestListener";
 }
-

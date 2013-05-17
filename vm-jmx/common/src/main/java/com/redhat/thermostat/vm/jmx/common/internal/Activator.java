@@ -34,40 +34,45 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.utils.management.internal;
+package com.redhat.thermostat.vm.jmx.common.internal;
 
-import java.io.IOException;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.util.tracker.ServiceTracker;
 
-import javax.management.JMX;
-import javax.management.MBeanServerConnection;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-import javax.management.remote.JMXConnector;
+import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.vm.jmx.common.JmxNotificationDAO;
 
-import com.redhat.thermostat.utils.management.MXBeanConnection;
+public class Activator implements BundleActivator {
 
-class MXBeanConnectionImpl implements MXBeanConnection {
+    private ServiceTracker storageTracker;
+    private ServiceRegistration daoRegistration;
 
-    private JMXConnector connection;
-    private MBeanServerConnection mbsc;
-    
-    MXBeanConnectionImpl(JMXConnector connection, MBeanServerConnection mbsc) {
-        this.connection = connection;
-        this.mbsc = mbsc;
-    }
-    
-    public synchronized <E> E createProxy(String name, Class<? extends E> proxyClass) throws MalformedObjectNameException {
-        ObjectName objectName = new ObjectName(name);
-        return JMX.newMXBeanProxy(mbsc, objectName, proxyClass);
-    }
-    
     @Override
-    public MBeanServerConnection get() {
-        return mbsc;
+    public void start(final BundleContext context) throws Exception {
+        storageTracker = new ServiceTracker(context, Storage.class, null) {
+            @Override
+            public Object addingService(ServiceReference reference) {
+                Storage storage = (Storage) super.addingService(reference);
+                JmxNotificationDAOImpl dao = new JmxNotificationDAOImpl(storage);
+                daoRegistration = context.registerService(JmxNotificationDAO.class, dao, null);
+                return storage;
+            }
+
+            @Override
+            public void removedService(ServiceReference reference, Object service) {
+                daoRegistration.unregister();
+                super.removedService(reference, service);
+            }
+        };
+        storageTracker.open();
     }
 
-    void close() throws IOException {
-        connection.close();
+    @Override
+    public void stop(BundleContext context) throws Exception {
+        storageTracker.close();
     }
+
 }
-

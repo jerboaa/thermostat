@@ -34,40 +34,38 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.utils.management.internal;
+package com.redhat.thermostat.vm.jmx.agent.internal;
 
-import java.io.IOException;
+import com.redhat.thermostat.agent.command.RequestReceiver;
+import com.redhat.thermostat.common.command.Request;
+import com.redhat.thermostat.common.command.Response;
+import com.redhat.thermostat.common.command.Response.ResponseType;
+import com.redhat.thermostat.vm.jmx.common.JmxCommand;
 
-import javax.management.JMX;
-import javax.management.MBeanServerConnection;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-import javax.management.remote.JMXConnector;
+public class JmxRequestListener implements RequestReceiver {
 
-import com.redhat.thermostat.utils.management.MXBeanConnection;
+    private JmxBackend backend;
 
-class MXBeanConnectionImpl implements MXBeanConnection {
-
-    private JMXConnector connection;
-    private MBeanServerConnection mbsc;
-    
-    MXBeanConnectionImpl(JMXConnector connection, MBeanServerConnection mbsc) {
-        this.connection = connection;
-        this.mbsc = mbsc;
+    public void setBackend(JmxBackend backend) {
+        this.backend = backend;
     }
-    
-    public synchronized <E> E createProxy(String name, Class<? extends E> proxyClass) throws MalformedObjectNameException {
-        ObjectName objectName = new ObjectName(name);
-        return JMX.newMXBeanProxy(mbsc, objectName, proxyClass);
-    }
-    
+
     @Override
-    public MBeanServerConnection get() {
-        return mbsc;
+    public Response receive(Request request) {
+        Response response = new Response(ResponseType.OK);
+        String vmId = request.getParameter(JmxCommand.VM_ID);
+        String command = request.getParameter(JmxCommand.class.getName());
+
+        switch (JmxCommand.valueOf(command)) {
+        case DISABLE_JMX_NOTIFICATIONS:
+            backend.disableNotificationsFor(vmId);
+            break;
+        case ENABLE_JMX_NOTIFICATIONS:
+            backend.enableNotificationsFor(vmId);
+            break;
+        }
+
+        return response;
     }
 
-    void close() throws IOException {
-        connection.close();
-    }
 }
-

@@ -34,40 +34,26 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.utils.management.internal;
+package com.redhat.thermostat.vm.jmx.client.swing.internal;
 
-import java.io.IOException;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
-import javax.management.JMX;
-import javax.management.MBeanServerConnection;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-import javax.management.remote.JMXConnector;
+import com.redhat.thermostat.vm.jmx.client.core.JmxNotificationsViewProvider;
 
-import com.redhat.thermostat.utils.management.MXBeanConnection;
+public class Activator implements BundleActivator {
 
-class MXBeanConnectionImpl implements MXBeanConnection {
+    private ServiceRegistration viewProviderRegistration;
 
-    private JMXConnector connection;
-    private MBeanServerConnection mbsc;
-    
-    MXBeanConnectionImpl(JMXConnector connection, MBeanServerConnection mbsc) {
-        this.connection = connection;
-        this.mbsc = mbsc;
-    }
-    
-    public synchronized <E> E createProxy(String name, Class<? extends E> proxyClass) throws MalformedObjectNameException {
-        ObjectName objectName = new ObjectName(name);
-        return JMX.newMXBeanProxy(mbsc, objectName, proxyClass);
-    }
-    
     @Override
-    public MBeanServerConnection get() {
-        return mbsc;
+    public void start(BundleContext context) throws Exception {
+        viewProviderRegistration = context.registerService(JmxNotificationsViewProvider.class, new JmxNotificationsSwingViewProvider(), null);
     }
 
-    void close() throws IOException {
-        connection.close();
+    @Override
+    public void stop(BundleContext context) throws Exception {
+        viewProviderRegistration.unregister();
     }
+
 }
-

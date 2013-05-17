@@ -68,6 +68,8 @@ public class IconResource {
 
     public static final IconResource SEARCH = new IconResource(ICON_PREFIX + "16x16/actions/search.png");
 
+    public static final IconResource RECORD = new IconResource(ICON_PREFIX + "16x16/actions/media-record.png");
+
     private final String path;
 
     private IconResource(String descriptor) {

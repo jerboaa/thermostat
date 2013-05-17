@@ -34,40 +34,36 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.utils.management.internal;
+package com.redhat.thermostat.vm.jmx.common.internal;
 
-import java.io.IOException;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
-import javax.management.JMX;
-import javax.management.MBeanServerConnection;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-import javax.management.remote.JMXConnector;
+import org.junit.Test;
 
-import com.redhat.thermostat.utils.management.MXBeanConnection;
+import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.testutils.StubBundleContext;
+import com.redhat.thermostat.vm.jmx.common.JmxNotificationDAO;
 
-class MXBeanConnectionImpl implements MXBeanConnection {
+public class ActivatorTest {
 
-    private JMXConnector connection;
-    private MBeanServerConnection mbsc;
-    
-    MXBeanConnectionImpl(JMXConnector connection, MBeanServerConnection mbsc) {
-        this.connection = connection;
-        this.mbsc = mbsc;
-    }
-    
-    public synchronized <E> E createProxy(String name, Class<? extends E> proxyClass) throws MalformedObjectNameException {
-        ObjectName objectName = new ObjectName(name);
-        return JMX.newMXBeanProxy(mbsc, objectName, proxyClass);
-    }
-    
-    @Override
-    public MBeanServerConnection get() {
-        return mbsc;
-    }
+    @Test
+    public void testActivator() throws Exception {
+        StubBundleContext bundleContext = new StubBundleContext();
+        Storage storage = mock(Storage.class);
+        bundleContext.registerService(Storage.class, storage, null);
 
-    void close() throws IOException {
-        connection.close();
+        Activator activator = new Activator();
+
+        assertFalse(bundleContext.isServiceRegistered(JmxNotificationDAO.class.getName(), JmxNotificationDAOImpl.class));
+
+        activator.start(bundleContext);
+
+        assertTrue(bundleContext.isServiceRegistered(JmxNotificationDAO.class.getName(), JmxNotificationDAOImpl.class));
+
+        activator.stop(bundleContext);
+
+        assertFalse(bundleContext.isServiceRegistered(JmxNotificationDAO.class.getName(), JmxNotificationDAOImpl.class));
     }
 }
-

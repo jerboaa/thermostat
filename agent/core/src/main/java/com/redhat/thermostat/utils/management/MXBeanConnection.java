@@ -36,10 +36,13 @@
 
 package com.redhat.thermostat.utils.management;
 
+import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
 
 public interface MXBeanConnection {
 
     <E> E createProxy(String name, Class<? extends E> proxyClass) throws MalformedObjectNameException;
+
+    MBeanServerConnection get();
 
 }
