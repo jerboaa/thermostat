@@ -43,28 +43,30 @@ import java.io.File;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.common.ssl.SslInitException;
+
 public class KeyStoreProviderTest {
 
-    @Test
-    public void nonExistentFileReturnsNull() {
+    @Test(expected=SslInitException.class)
+    public void nonExistentFileThrowsException() throws SslInitException {
         File notThere = new File("/some/path/that/doesnt/exists");
         assertNull(KeyStoreProvider.getKeyStore(notThere, "ignored"));
     }
     
     @Test
-    public void nullFileReturnsNull() {
+    public void nullFileReturnsNull() throws SslInitException {
         assertNull(KeyStoreProvider.getKeyStore(null, "ignored"));
     }
     
-    @Test
-    public void existingFileWithWrongPwdReturnsNull() {
+    @Test(expected=SslInitException.class)
+    public void existingFileWithWrongPwdThrowsException() throws SslInitException {
         File keystore = new File(this.getClass()
                 .getResource("/test_ca.keystore").getFile());
-        assertNull(KeyStoreProvider.getKeyStore(keystore, "wrong password"));
+        KeyStoreProvider.getKeyStore(keystore, "wrong password");
     }
     
     @Test
-    public void existingFileWithCorrectPasswordWorks() {
+    public void existingFileWithCorrectPasswordWorks() throws SslInitException {
         File keystore = new File(this.getClass()
                 .getResource("/test_ca.keystore").getFile());
         assertNotNull("Should have been able to retrieve and load keystore", KeyStoreProvider.getKeyStore(keystore, "testpassword"));

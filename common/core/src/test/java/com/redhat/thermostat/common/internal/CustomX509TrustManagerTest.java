@@ -50,6 +50,7 @@ import javax.net.ssl.X509TrustManager;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.internal.CustomX509TrustManager;
+import com.redhat.thermostat.common.ssl.SslInitException;
 
 /**
  * This trust manager test uses files in src/test/resources. Files are as
@@ -88,7 +89,7 @@ public class CustomX509TrustManagerTest {
     }
 
     @Test
-    public void testLoadEmptyTrustStoreForOur() {
+    public void testLoadEmptyTrustStoreForOur() throws SslInitException {
         File emptyKeyStore = new File(this.getClass()
                 .getResource("/empty.keystore").getFile());
         X509TrustManager tm = new CustomX509TrustManager(null, emptyKeyStore,
@@ -123,7 +124,7 @@ public class CustomX509TrustManagerTest {
     }
     
     @Test
-    public void canGetCustomCaCertFromOurTrustManager() {
+    public void canGetCustomCaCertFromOurTrustManager() throws SslInitException {
         File ourKeyStore = new File(this.getClass()
                 .getResource("/test_ca.keystore").getFile());
         X509TrustManager tm = new CustomX509TrustManager((X509TrustManager)null, ourKeyStore, "testpassword");

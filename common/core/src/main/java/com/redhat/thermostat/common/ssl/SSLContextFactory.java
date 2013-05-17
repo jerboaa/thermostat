@@ -169,7 +169,7 @@ public class SSLContextFactory {
         serverContext = serverCtxt;
     }
     
-    private static TrustManager[] getTrustManagers() {
+    private static TrustManager[] getTrustManagers() throws SslInitException {
         TrustManager tm = TrustManagerFactory.getTrustManager();
         return new TrustManager[] { tm }; 
     }

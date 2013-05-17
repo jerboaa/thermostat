@@ -44,18 +44,14 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.common.ssl.SslInitException;
 
 public class KeyStoreProvider {
 
-    private static final Logger logger = LoggingUtils
-            .getLogger(KeyStoreProvider.class);
-
-    public static KeyStore getKeyStore(File trustStoreFile, String keyStorePassword) {
-        if (trustStoreFile != null && trustStoreFile.exists()) {
+    public static KeyStore getKeyStore(File trustStoreFile, String keyStorePassword)
+            throws SslInitException {
+        if (trustStoreFile != null) {
             try (InputStream is = new FileInputStream(trustStoreFile)) {
                 KeyStore trustStore = KeyStore.getInstance(KeyStore
                         .getDefaultType());
@@ -63,9 +59,7 @@ public class KeyStoreProvider {
                 return trustStore;
             } catch (IOException | CertificateException
                     | NoSuchAlgorithmException | KeyStoreException e) {
-                logger.log(Level.WARNING,
-                        "Could not load Thermostat trust manager", e);
-                return null;
+                throw new SslInitException("Could not load Thermostat trust manager", e);
             }
         }
         return null;

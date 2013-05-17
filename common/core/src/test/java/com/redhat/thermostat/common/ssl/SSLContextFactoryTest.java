@@ -63,9 +63,8 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.common.internal.TrustManagerFactory;
 
-
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ SSLConfiguration.class, SSLContext.class, KeyManagerFactory.class })
+@PrepareForTest({ SSLConfiguration.class, SSLContext.class, KeyManagerFactory.class, javax.net.ssl.TrustManagerFactory.class })
 public class SSLContextFactoryTest {
 
     /*
@@ -102,6 +101,11 @@ public class SSLContextFactoryTest {
         when(KeyManagerFactory.getInstance("SunX509", "SunJSSE")).thenReturn(mockFactory);
         KeyManager[] mockKms = new KeyManager[] { mock(X509KeyManager.class) };
         when(mockFactory.getKeyManagers()).thenReturn(mockKms);
+        PowerMockito.mockStatic(javax.net.ssl.TrustManagerFactory.class);
+        javax.net.ssl.TrustManagerFactory mockTrustFactory = PowerMockito.mock(javax.net.ssl.TrustManagerFactory.class);
+        when(mockTrustFactory.getTrustManagers()).thenReturn(new TrustManager[0]);
+        when(javax.net.ssl.TrustManagerFactory.getInstance("SunX509", "SunJSSE")).thenReturn(mockTrustFactory);
+        
         SSLContextFactory.getServerContext();
         verify(context).init(keymanagersCaptor.capture(),
                 tmsCaptor.capture(), any(SecureRandom.class));
@@ -133,6 +137,10 @@ public class SSLContextFactoryTest {
         PowerMockito.mockStatic(SSLContext.class);
         SSLContext context = PowerMockito.mock(SSLContext.class);
         when(SSLContext.getInstance("TLSv1.2", "SunJSSE")).thenReturn(context);
+        PowerMockito.mockStatic(javax.net.ssl.TrustManagerFactory.class);
+        javax.net.ssl.TrustManagerFactory mockTrustFactory = PowerMockito.mock(javax.net.ssl.TrustManagerFactory.class);
+        when(mockTrustFactory.getTrustManagers()).thenReturn(new TrustManager[0]);
+        when(javax.net.ssl.TrustManagerFactory.getInstance("SunX509", "SunJSSE")).thenReturn(mockTrustFactory);
 
         ArgumentCaptor<TrustManager[]> tmsCaptor = ArgumentCaptor
                 .forClass(TrustManager[].class);

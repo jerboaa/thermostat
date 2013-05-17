@@ -54,6 +54,7 @@ import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
 import com.redhat.thermostat.common.ssl.SSLConfiguration;
+import com.redhat.thermostat.common.ssl.SslInitException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 /**
@@ -84,13 +85,13 @@ class CustomX509TrustManager implements X509TrustManager {
     
     // For testing
     CustomX509TrustManager(X509TrustManager defaultTrustManager,
-            File keyStoreFile, String keyStorePassword) {
+            File keyStoreFile, String keyStorePassword) throws SslInitException {
         this.defaultX509TrustManager = defaultTrustManager;
         this.ourX509TrustManager = getOurTrustManager(keyStoreFile, keyStorePassword);
     }
 
     // For testing
-    CustomX509TrustManager(File keyStoreFile, String keyStorePassword) {
+    CustomX509TrustManager(File keyStoreFile, String keyStorePassword) throws SslInitException {
         this.defaultX509TrustManager = getDefaultTrustManager();
         this.ourX509TrustManager = getOurTrustManager(keyStoreFile, keyStorePassword);
     }
@@ -98,11 +99,11 @@ class CustomX509TrustManager implements X509TrustManager {
     /*
      * Main constructor, which uses ssl.properties as config if present.
      */
-    CustomX509TrustManager() {
+    CustomX509TrustManager() throws SslInitException {
         this(SSLConfiguration.getKeystoreFile(), SSLConfiguration.getKeyStorePassword());
     }
  
-    private X509TrustManager getDefaultTrustManager() {
+    private X509TrustManager getDefaultTrustManager() throws SslInitException {
         try {
             TrustManagerFactory tmf = TrustManagerFactory.getInstance(
                     "SunX509", "SunJSSE");
@@ -125,7 +126,7 @@ class CustomX509TrustManager implements X509TrustManager {
                 }
             }
         } catch (NoSuchAlgorithmException | NoSuchProviderException | KeyStoreException e) {
-            logger.log(Level.WARNING, "Could not retrieve system trust manager", e);
+            throw new SslInitException("Could not retrieve system trust manager", e);
         }
         return null;
     }
@@ -137,7 +138,7 @@ class CustomX509TrustManager implements X509TrustManager {
      * exist or no X509TrustManager was found in the backing trust store.
      */
     private X509TrustManager getOurTrustManager(File trustStoreFile,
-            String keyStorePassword) {
+            String keyStorePassword) throws SslInitException {
         KeyStore trustStore  = KeyStoreProvider.getKeyStore(trustStoreFile, keyStorePassword);
         if (trustStore != null) {
             // backing keystore file existed and initialization was successful.
@@ -155,9 +156,7 @@ class CustomX509TrustManager implements X509TrustManager {
                 }
             } catch (NoSuchAlgorithmException | NoSuchProviderException
                     | KeyStoreException e) {
-                logger.log(Level.WARNING,
-                        "Could not load Thermostat trust manager");
-                return null;
+                throw new SslInitException("Could not load Thermostat trust manager", e);
             }
         }
         logger.log(Level.FINE, "No Thermostat trust manager found");

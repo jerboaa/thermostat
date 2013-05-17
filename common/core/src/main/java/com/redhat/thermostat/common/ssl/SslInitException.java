@@ -45,5 +45,9 @@ public class SslInitException extends Exception {
     public SslInitException(String message) {
         super(message);
     }
+    
+    public SslInitException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }
 
