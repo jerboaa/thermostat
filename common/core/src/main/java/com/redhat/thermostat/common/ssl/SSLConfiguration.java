@@ -81,21 +81,17 @@ public class SSLConfiguration {
     /**
      * 
      * @return The keystore file as specified in $THERMOSTAT_HOME/etc/ssl.properties
-     *         if any. The empty string otherwise.
+     *         if any, null otherwise.
      */
     public static String getKeyStorePassword() {
         try {
             loadClientProperties();
         } catch (InvalidConfigurationException e) {
             // Thermostat home not set? Do something reasonable
-            return "";
+            return null;
         }
         String pwd = clientProps.getProperty(KEYSTORE_FILE_PWD_KEY);
-        if (pwd == null) {
-            return "";
-        } else {
-            return pwd;
-        }
+        return pwd;
     }
     
     /**

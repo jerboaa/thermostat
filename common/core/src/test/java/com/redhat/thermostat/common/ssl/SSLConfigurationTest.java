@@ -63,7 +63,7 @@ public class SSLConfigurationTest {
         File clientProps = new File("i/am/not/there/file.txt");
         SSLConfiguration.initClientProperties(clientProps);
         assertTrue(SSLConfiguration.getKeystoreFile() == null);
-        assertEquals("", SSLConfiguration.getKeyStorePassword());
+        assertEquals(null, SSLConfiguration.getKeyStorePassword());
     }
     
     @Test

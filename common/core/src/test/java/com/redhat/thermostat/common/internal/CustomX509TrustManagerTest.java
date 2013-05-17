@@ -93,7 +93,7 @@ public class CustomX509TrustManagerTest {
         File emptyKeyStore = new File(this.getClass()
                 .getResource("/empty.keystore").getFile());
         X509TrustManager tm = new CustomX509TrustManager(null, emptyKeyStore,
-                "");
+                null);
         assertEquals(0, tm.getAcceptedIssuers().length);
         try {
             tm.checkClientTrusted(null, null);
@@ -113,7 +113,7 @@ public class CustomX509TrustManagerTest {
     public void testLoadEmptyTrustStoreForOurDefaultAsUsual() throws Exception {
         File emptyKeyStore = new File(this.getClass()
                 .getResource("/empty.keystore").getFile());
-        X509TrustManager tm = new CustomX509TrustManager(emptyKeyStore, "");
+        X509TrustManager tm = new CustomX509TrustManager(emptyKeyStore, null);
         // Default list should not be empty
         assertTrue(tm.getAcceptedIssuers().length > 0);
         try {

@@ -55,7 +55,12 @@ public class KeyStoreProvider {
             try (InputStream is = new FileInputStream(trustStoreFile)) {
                 KeyStore trustStore = KeyStore.getInstance(KeyStore
                         .getDefaultType());
-                trustStore.load(is, keyStorePassword.toCharArray());
+                if (keyStorePassword == null) {
+                    trustStore.load(is, null);
+                }
+                else {
+                    trustStore.load(is, keyStorePassword.toCharArray());
+                }
                 return trustStore;
             } catch (IOException | CertificateException
                     | NoSuchAlgorithmException | KeyStoreException e) {
