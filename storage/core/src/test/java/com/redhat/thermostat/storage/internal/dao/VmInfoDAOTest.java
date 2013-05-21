@@ -82,6 +82,8 @@ public class VmInfoDAOTest {
     private Map<String, String> props;
     private Map<String, String> env;
     private String[] libs;
+    private long uid;
+    private String username;
 
     @Before
     public void setUp() {
@@ -99,6 +101,8 @@ public class VmInfoDAOTest {
         props = new HashMap<>();
         env = new HashMap<>();
         libs = new String[0];
+        uid = 2000;
+        username = "myUser";
     }
 
     @Test
@@ -121,7 +125,9 @@ public class VmInfoDAOTest {
         assertTrue(keys.contains(new Key<List<String>>("loadedNativeLibraries", false)));
         assertTrue(keys.contains(new Key<Long>("startTimeStamp", false)));
         assertTrue(keys.contains(new Key<Long>("stopTimeStamp", false)));
-        assertEquals(16, keys.size());
+        assertTrue(keys.contains(new Key<Long>("uid", false)));
+        assertTrue(keys.contains(new Key<Long>("username", false)));
+        assertEquals(18, keys.size());
     }
 
     @Test
@@ -130,7 +136,7 @@ public class VmInfoDAOTest {
         Storage storage = mock(Storage.class);
         Query query = mock(Query.class);
         when(storage.createQuery(any(Category.class))).thenReturn(query);
-        VmInfo expected = new VmInfo(vmId, startTime, stopTime, jVersion, jHome, mainClass, commandLine, vmName, vmInfo, vmVersion, vmArgs, props, env, libs);
+        VmInfo expected = new VmInfo(vmId, startTime, stopTime, jVersion, jHome, mainClass, commandLine, vmName, vmInfo, vmVersion, vmArgs, props, env, libs, uid, username);
         Cursor cursor = mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(expected).thenReturn(null);
@@ -262,7 +268,7 @@ public class VmInfoDAOTest {
 
         VmInfo info = new VmInfo(vmId, startTime, stopTime, jVersion, jHome,
                 mainClass, commandLine, vmName, vmInfo, vmVersion, vmArgs,
-                props, env, libs);
+                props, env, libs, uid, username);
         VmInfoDAO dao = new VmInfoDAOImpl(storage);
         dao.putVmInfo(info);
 

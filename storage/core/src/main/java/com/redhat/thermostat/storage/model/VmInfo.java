@@ -98,6 +98,8 @@ public class VmInfo extends BasePojo {
     private Map<String, String> properties = new HashMap<String, String>();
     private Map<String, String> environment = new HashMap<String, String>();
     private String[] loadedNativeLibraries;
+    private long uid;
+    private String username;
 
     public VmInfo() {
         /* use defaults */
@@ -107,7 +109,8 @@ public class VmInfo extends BasePojo {
             String javaVersion, String javaHome,
             String mainClass, String commandLine,
             String vmName, String vmInfo, String vmVersion, String vmArguments,
-            Map<String, String> properties, Map<String, String> environment, String[] loadedNativeLibraries) {
+            Map<String, String> properties, Map<String, String> environment, String[] loadedNativeLibraries,
+            long uid, String username) {
         this.vmPid = vmPid;
         this.startTime = startTime;
         this.stopTime = stopTime;
@@ -122,6 +125,8 @@ public class VmInfo extends BasePojo {
         this.properties = properties;
         this.environment = environment;
         this.loadedNativeLibraries = loadedNativeLibraries;
+        this.uid = uid;
+        this.username = username;
     }
 
     @Persist
@@ -317,6 +322,34 @@ public class VmInfo extends BasePojo {
     @Persist
     public void setLoadedNativeLibraries(String[] loadedNativeLibraries) {
         this.loadedNativeLibraries = loadedNativeLibraries;
+    }
+    
+    /**
+     * Returns the system user id for the owner of this JVM process,
+     * or -1 if an owner could not be found.
+     */
+    @Persist
+    public long getUid() {
+        return uid;
+    }
+    
+    @Persist
+    public void setUid(long uid) {
+        this.uid = uid;
+    }
+    
+    /**
+     * Returns the system user name for the owner of this JVM process,
+     * or null if an owner could not be found.
+     */
+    @Persist
+    public String getUsername() {
+        return username;
+    }
+    
+    @Persist
+    public void setUsername(String username) {
+        this.username = username;
     }
 }
 

@@ -101,7 +101,7 @@ public class ListVMsCommandTest {
 
         HostRef host1 = new HostRef("123", "h1");
         VmRef vm1 = new VmRef(host1, 1, "n");
-        VmInfo vm1Info = new VmInfo(1, 0, 1, "", "", "", "", "", "", "", "", null, null, null);
+        VmInfo vm1Info = new VmInfo(1, 0, 1, "", "", "", "", "", "", "", "", null, null, null, -1, null);
         when(hostsDAO.getHosts()).thenReturn(Arrays.asList(host1));
         when(vmsDAO.getVMs(host1)).thenReturn(Arrays.asList(vm1));
         when(vmsDAO.getVmInfo(eq(vm1))).thenReturn(vm1Info);
@@ -130,7 +130,7 @@ public class ListVMsCommandTest {
         VmRef vm2 = new VmRef(host1, 2, "n1");
         VmRef vm3 = new VmRef(host2, 123456, "longvmname");
 
-        VmInfo vmInfo = new VmInfo(1, 0, 1, "", "", "", "", "", "", "", "", null, null, null);
+        VmInfo vmInfo = new VmInfo(1, 0, 1, "", "", "", "", "", "", "", "", null, null, null, -1, null);
 
         when(vmsDAO.getVMs(host1)).thenReturn(Arrays.asList(vm1, vm2));
         when(vmsDAO.getVMs(host2)).thenReturn(Arrays.asList(vm3));

@@ -119,12 +119,14 @@
               com.redhat.thermostat.utils.hostname,
               com.redhat.thermostat.utils,
               com.redhat.thermostat.utils.management,
+              com.redhat.thermostat.utils.username,
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.agent.internal,
               com.redhat.thermostat.agent.locale,
               com.redhat.thermostat.backend.internal,
               com.redhat.thermostat.utils.management.internal,
+              com.redhat.thermostat.utils.username.internal,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>

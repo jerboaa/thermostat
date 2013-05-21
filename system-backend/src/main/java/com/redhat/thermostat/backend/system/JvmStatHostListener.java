@@ -40,7 +40,6 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -52,8 +51,8 @@ import sun.jvmstat.monitor.event.HostEvent;
 import sun.jvmstat.monitor.event.HostListener;
 import sun.jvmstat.monitor.event.VmStatusChangeEvent;
 
-import com.redhat.thermostat.agent.VmStatusListener;
 import com.redhat.thermostat.agent.VmStatusListener.Status;
+import com.redhat.thermostat.backend.system.ProcessUserInfoBuilder.ProcessUserInfo;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
@@ -69,9 +68,12 @@ public class JvmStatHostListener implements HostListener {
     
     private VmStatusChangeNotifier notifier;
 
-    JvmStatHostListener(VmInfoDAO vmInfoDAO, VmStatusChangeNotifier notifier) {
+    private ProcessUserInfoBuilder userInfoBuilder;
+
+    JvmStatHostListener(VmInfoDAO vmInfoDAO, VmStatusChangeNotifier notifier, ProcessUserInfoBuilder userInfoBuilder) {
         this.vmInfoDAO = vmInfoDAO;
         this.notifier = notifier;
+        this.userInfoBuilder = userInfoBuilder;
     }
 
     @Override
@@ -135,11 +137,12 @@ public class JvmStatHostListener implements HostListener {
         Map<String, String> environment = new ProcessEnvironmentBuilder(dataSource).build(vmId);
         // TODO actually figure out the loaded libraries.
         String[] loadedNativeLibraries = new String[0];
+        ProcessUserInfo userInfo = userInfoBuilder.build(vmId);
         VmInfo info = new VmInfo(vmId, startTime, stopTime,
                 extractor.getJavaVersion(), extractor.getJavaHome(),
                 extractor.getMainClass(), extractor.getCommandLine(),
                 extractor.getVmName(), extractor.getVmInfo(), extractor.getVmVersion(), extractor.getVmArguments(),
-                properties, environment, loadedNativeLibraries);
+                properties, environment, loadedNativeLibraries, userInfo.getUid(), userInfo.getUsername());
         vmInfoDAO.putVmInfo(info);
     }
 

@@ -34,33 +34,38 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.overview.client.core;
+package com.redhat.thermostat.utils.username.internal;
 
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.UIComponent;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.utils.username.UserNameUtil;
 
-public abstract class VmOverviewView extends BasicView implements UIComponent {
-
-    public abstract void setVmPid(String pid);
-
-    public abstract void setVmStartTimeStamp(String timestamp);
-
-    public abstract void setVmStopTimeStamp(String timeStamp);
-
-    public abstract void setMainClass(String mainClass);
-
-    public abstract void setJavaCommandLine(String javaCommandLine);
-
-    public abstract void setJavaHome(String string);
-
-    public abstract void setJavaVersion(String javaVersion);
-
-    public abstract void setVmNameAndVersion(String vmNameAndVersion);
-
-    public abstract void setVmArguments(String vmArguments);
+public class UserNameUtilImpl implements UserNameUtil {
+    private static final Logger logger = LoggingUtils.getLogger(UserNameUtilImpl.class);
     
-    public abstract void setUserID(String userID);
+    static {
+        /*
+         * TODO Change to System.load
+         * http://icedtea.classpath.org/pipermail/thermostat/2013-May/006657.html
+         */
+        System.loadLibrary("UserNameUtilWrapper");
+    }
+    
+    public String getUserName(long uid) {
+        String result = null;
+        if (uid >= 0) {
+            try {
+                result = getUserName0(uid);
+            } catch (IOException e) {
+                logger.log(Level.WARNING, "Unable to retrieve username for uid: " + uid, e);
+            }
+        }
+        return result;
+    }
+    
+    private native String getUserName0(long uid) throws IOException;
 
 }
-

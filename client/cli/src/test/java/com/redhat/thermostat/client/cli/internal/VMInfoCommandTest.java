@@ -106,7 +106,7 @@ public class VMInfoCommandTest {
         start.set(2012, 5, 7, 15, 32, 0);
         Calendar end = Calendar.getInstance();
         end.set(2013, 10, 1, 1, 22, 0);
-        VmInfo vmInfo = new VmInfo(234, start.getTimeInMillis(), end.getTimeInMillis(), "vmVersion", "javaHome", "mainClass", "commandLine", "vmName", "vmInfo", "vmVersion", "vmArguments", new HashMap<String,String>(), new HashMap<String,String>(), new String[0]);
+        VmInfo vmInfo = new VmInfo(234, start.getTimeInMillis(), end.getTimeInMillis(), "vmVersion", "javaHome", "mainClass", "commandLine", "vmName", "vmInfo", "vmVersion", "vmArguments", new HashMap<String,String>(), new HashMap<String,String>(), new String[0], 2000, "myUser");
         when(vmsDAO.getVmInfo(vm)).thenReturn(vmInfo);
         when(vmsDAO.getVmInfo(new VmRef(host, 9876, "dummy"))).thenThrow(new DAOException("Unknown VM ID: 9876"));
         when(vmsDAO.getVMs(host)).thenReturn(Arrays.asList(vm));
@@ -124,6 +124,55 @@ public class VMInfoCommandTest {
         String expected = "Process ID:      234\n" +
                           "Start time:      Thu Jun 07 15:32:00 UTC 2012\n" +
                           "Stop time:       Fri Nov 01 01:22:00 UTC 2013\n" +
+                          "User ID:         2000(myUser)\n" +
+                          "Main class:      mainClass\n" +
+                          "Command line:    commandLine\n" +
+                          "Java version:    vmVersion\n" +
+                          "Virtual machine: vmName\n" +
+                          "VM arguments:    vmArguments\n";
+        assertEquals(expected, cmdCtxFactory.getOutput());
+    }
+    
+    @Test
+    public void testVmInfoNoUid() throws CommandException {
+        VmInfo info = vmsDAO.getVmInfo(vm);
+        // Set parameters to those where user info cannot be obtained
+        info.setUid(-1);
+        info.setUsername(null);
+        context.registerService(VmInfoDAO.class, vmsDAO, null);
+        cmd = new VMInfoCommand(context);
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("vmId", "234");
+        args.addArgument("hostId", "123");
+        cmd.run(cmdCtxFactory.createContext(args));
+        String expected = "Process ID:      234\n" +
+                          "Start time:      Thu Jun 07 15:32:00 UTC 2012\n" +
+                          "Stop time:       Fri Nov 01 01:22:00 UTC 2013\n" +
+                          "User ID:         <Unknown>\n" +
+                          "Main class:      mainClass\n" +
+                          "Command line:    commandLine\n" +
+                          "Java version:    vmVersion\n" +
+                          "Virtual machine: vmName\n" +
+                          "VM arguments:    vmArguments\n";
+        assertEquals(expected, cmdCtxFactory.getOutput());
+    }
+    
+    @Test
+    public void testVmInfoNoUsername() throws CommandException {
+        VmInfo info = vmsDAO.getVmInfo(vm);
+        // Set parameters to those where user info cannot be obtained
+        info.setUid(2000);
+        info.setUsername(null);
+        context.registerService(VmInfoDAO.class, vmsDAO, null);
+        cmd = new VMInfoCommand(context);
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("vmId", "234");
+        args.addArgument("hostId", "123");
+        cmd.run(cmdCtxFactory.createContext(args));
+        String expected = "Process ID:      234\n" +
+                          "Start time:      Thu Jun 07 15:32:00 UTC 2012\n" +
+                          "Stop time:       Fri Nov 01 01:22:00 UTC 2013\n" +
+                          "User ID:         2000\n" +
                           "Main class:      mainClass\n" +
                           "Command line:    commandLine\n" +
                           "Java version:    vmVersion\n" +
@@ -157,6 +206,7 @@ public class VMInfoCommandTest {
         String expected = "Process ID:      234\n" +
                           "Start time:      Thu Jun 07 15:32:00 UTC 2012\n" +
                           "Stop time:       Fri Nov 01 01:22:00 UTC 2013\n" +
+                          "User ID:         2000(myUser)\n" +
                           "Main class:      mainClass\n" +
                           "Command line:    commandLine\n" +
                           "Java version:    vmVersion\n" +
@@ -202,7 +252,7 @@ public class VMInfoCommandTest {
         cmd = new VMInfoCommand(context);
         Calendar start = Calendar.getInstance();
         start.set(2012, 5, 7, 15, 32, 0);
-        VmInfo vmInfo = new VmInfo(234, start.getTimeInMillis(), Long.MIN_VALUE, "vmVersion", "javaHome", "mainClass", "commandLine", "vmName", "vmInfo", "vmVersion", "vmArguments", new HashMap<String,String>(), new HashMap<String,String>(), new String[0]);
+        VmInfo vmInfo = new VmInfo(234, start.getTimeInMillis(), Long.MIN_VALUE, "vmVersion", "javaHome", "mainClass", "commandLine", "vmName", "vmInfo", "vmVersion", "vmArguments", new HashMap<String,String>(), new HashMap<String,String>(), new String[0], 2000, "myUser");
         when(vmsDAO.getVmInfo(vm)).thenReturn(vmInfo);
 
         SimpleArguments args = new SimpleArguments();
@@ -212,6 +262,7 @@ public class VMInfoCommandTest {
         String expected = "Process ID:      234\n" +
                           "Start time:      Thu Jun 07 15:32:00 UTC 2012\n" +
                           "Stop time:       <Running>\n" +
+                          "User ID:         2000(myUser)\n" +
                           "Main class:      mainClass\n" +
                           "Command line:    commandLine\n" +
                           "Java version:    vmVersion\n" +

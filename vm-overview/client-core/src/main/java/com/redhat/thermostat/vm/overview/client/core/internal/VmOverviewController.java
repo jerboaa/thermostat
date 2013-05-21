@@ -120,6 +120,18 @@ public class VmOverviewController implements InformationServiceController<VmRef>
                 view.setVmNameAndVersion(translator.localize(LocaleResources.VM_INFO_VM_NAME_AND_VERSION,
                         actualVmName, actualVmVersion, actualVmInfo).getContents());
                 view.setVmArguments(info.getVmArguments());
+                long uid = info.getUid();
+                if (uid >= 0) {
+                    String user = String.valueOf(uid);
+                    String username = info.getUsername();
+                    if (username != null) {
+                        user += "(" + username + ")";
+                    }
+                    view.setUserID(user);
+                }
+                else {
+                    view.setUserID(translator.localize(LocaleResources.VM_INFO_USER_UNKNOWN).getContents());
+                }
             }
         });
         timer.setInitialDelay(0);

@@ -8,35 +8,48 @@ CLASSPATH  = target/classes/
 TARGET_DIR = target
 
 INCLUDE    = -I $(TARGET_DIR) -I $(JAVA_HOME)/include/ -I $(JAVA_HOME)/include/linux
-SOURCES    = src/main/native/HostName.c
-TARGET     = $(TARGET_DIR)/HostName.c
-OBJECTS    = $(TARGET:.c=.o)
+HOSTNAME_SOURCES    = src/main/native/HostName.c
+HOSTNAME_TARGET     = $(TARGET_DIR)/HostName.c
+HOSTNAME_OBJECTS    = $(HOSTNAME_TARGET:.c=.o)
 
-EXECUTABLE = libHostNameWrapper.so
+HOSTNAME_EXECUTABLE = libHostNameWrapper.so
+
+USERNAME_SOURCES    = src/main/native/UserNameUtilImpl.c
+USERNAME_TARGET     = $(TARGET_DIR)/UserNameUtilImpl.c
+USERNAME_OBJECTS    = $(USERNAME_TARGET:.c=.o)
+
+USERNAME_EXECUTABLE = libUserNameUtilWrapper.so
 
 .PHONY:
-JNI_LIST = com.redhat.thermostat.utils.hostname.HostName
+JNI_LIST = com.redhat.thermostat.utils.hostname.HostName\
+ com.redhat.thermostat.utils.username.internal.UserNameUtilImpl
 
 $(JNI_LIST):
 	$(JAVAH) -force -classpath $(CLASSPATH) -d $(TARGET_DIR) $(JNI_LIST)
 
-all: $(JNI_LIST) init $(SOURCES) $(EXECUTABLE)
+all: $(JNI_LIST) init $(HOSTNAME_SOURCES) $(HOSTNAME_EXECUTABLE) $(USERNAME_SOURCES) $(USERNAME_EXECUTABLE)
 
 .PHONY:
 init:
-	$(COPY) $(SOURCES) $(TARGET)
+	$(COPY) $(HOSTNAME_SOURCES) $(HOSTNAME_TARGET)
+	$(COPY) $(USERNAME_SOURCES) $(USERNAME_TARGET)
 
-$(EXECUTABLE): $(OBJECTS)
-	$(CC) $(OBJECTS) -o $(TARGET_DIR)/$@ $(MYLDFLAGS) $(LDFLAGS)
+$(HOSTNAME_EXECUTABLE): $(HOSTNAME_OBJECTS)
+	$(CC) $(HOSTNAME_OBJECTS) -o $(TARGET_DIR)/$@ $(MYLDFLAGS) $(LDFLAGS)
+	
+$(USERNAME_EXECUTABLE): $(USERNAME_OBJECTS)
+	$(CC) $(USERNAME_OBJECTS) -o $(TARGET_DIR)/$@ $(MYLDFLAGS) $(LDFLAGS)
 
 .c.o:
 	$(CC) $(MYCFLAGS) $(CFLAGS) $(INCLUDE) $< -o $@
 
 clean-lib:
-	rm $(TARGET_DIR)/$(EXECUTABLE)
+	rm $(TARGET_DIR)/$(HOSTNAME_EXECUTABLE)
+	rm $(TARGET_DIR)/$(USERNAME_EXECUTABLE)
 	
 clean-obj:
-	rm $(OBJECTS) $(TARGET)
+	rm $(HOSTNAME_OBJECTS) $(HOSTNAME_TARGET)
+	rm $(USERNAME_OBJECTS) $(USERNAME_TARGET)
 	
 clean: clean-obj clean-lib
 	

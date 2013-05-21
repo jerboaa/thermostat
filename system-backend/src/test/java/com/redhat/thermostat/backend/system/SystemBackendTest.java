@@ -49,6 +49,7 @@ import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.utils.username.UserNameUtil;
 
 public class SystemBackendTest {
 
@@ -65,8 +66,9 @@ public class SystemBackendTest {
         when(version.getVersionNumber()).thenReturn(VERSION);
         
         VmStatusChangeNotifier notifier = mock(VmStatusChangeNotifier.class);
+        UserNameUtil util = mock(UserNameUtil.class);
 
-        b = new SystemBackend(hDAO, nDAO, vmInfoDAO, version, notifier);
+        b = new SystemBackend(hDAO, nDAO, vmInfoDAO, version, notifier, util);
     }
 
     @Test

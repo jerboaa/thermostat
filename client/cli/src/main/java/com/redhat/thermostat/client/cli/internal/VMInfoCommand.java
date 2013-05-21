@@ -117,14 +117,32 @@ public class VMInfoCommand extends AbstractCommand {
         } else {
             table.printLine(translator.localize(LocaleResources.VM_INFO_STOP_TIME).getContents(), new Date(vmInfo.getStopTimeStamp()).toString());
         }
+        printUserInfo(vmInfo, table);
         table.printLine(translator.localize(LocaleResources.VM_INFO_MAIN_CLASS).getContents(), vmInfo.getMainClass());
         table.printLine(translator.localize(LocaleResources.VM_INFO_COMMAND_LINE).getContents(), vmInfo.getJavaCommandLine());
         table.printLine(translator.localize(LocaleResources.VM_INFO_JAVA_VERSION).getContents(), vmInfo.getJavaVersion());
         table.printLine(translator.localize(LocaleResources.VM_INFO_VIRTUAL_MACHINE).getContents(), vmInfo.getVmName());
         table.printLine(translator.localize(LocaleResources.VM_INFO_VM_ARGUMENTS).getContents(), vmInfo.getVmArguments());
-
+        
         PrintStream out = ctx.getConsole().getOutput();
         table.render(out);
+    }
+
+    private void printUserInfo(VmInfo vmInfo, TableRenderer table) {
+        // Check if we have valid user info
+        long uid = vmInfo.getUid();
+        String user;
+        if (uid >= 0) {
+            user = String.valueOf(uid);
+            String username = vmInfo.getUsername();
+            if (username != null) {
+                user += "(" + username + ")";
+            }
+        }
+        else {
+            user = translator.localize(LocaleResources.VM_INFO_USER_UNKNOWN).getContents();
+        }
+        table.printLine(translator.localize(LocaleResources.VM_INFO_USER).getContents(), user);
     }
 
 }

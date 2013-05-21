@@ -51,6 +51,7 @@ public class ProcDataSource {
     private static final String CPUINFO_FILE = "/proc/cpuinfo";
 
     private static final String PID_STAT_FILE = "/proc/${pid}/stat";
+    private static final String PID_STATUS_FILE = "/proc/${pid}/status";
     private static final String PID_ENVIRON_FILE = "/proc/${pid}/environ";
 
     /**
@@ -86,6 +87,13 @@ public class ProcDataSource {
      */
     public Reader getStatReader(int pid) throws IOException {
         return new FileReader(getPidFile(PID_STAT_FILE, pid));
+    }
+    
+    /**
+     * Returns a reader for /proc/$PID/status
+     */
+    public Reader getStatusReader(int pid) throws IOException {
+        return new FileReader(getPidFile(PID_STATUS_FILE, pid));
     }
 
     /**

@@ -54,6 +54,7 @@ import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
 import com.redhat.thermostat.utils.ProcDataSource;
+import com.redhat.thermostat.utils.username.UserNameUtil;
 
 public class SystemBackend extends BaseBackend {
 
@@ -74,7 +75,7 @@ public class SystemBackend extends BaseBackend {
 
 
     public SystemBackend(HostInfoDAO hostInfoDAO, NetworkInterfaceInfoDAO netInfoDAO, VmInfoDAO vmInfoDAO,
-            Version version, VmStatusChangeNotifier notifier) {
+            Version version, VmStatusChangeNotifier notifier, UserNameUtil userNameUtil) {
         super("System Backend",
                 "Gathers basic information from the system",
                 "Red Hat, Inc.",
@@ -84,7 +85,7 @@ public class SystemBackend extends BaseBackend {
 
         ProcDataSource source = new ProcDataSource();
         hostInfoBuilder = new HostInfoBuilder(source);
-        hostListener = new JvmStatHostListener(vmInfoDAO, notifier);
+        hostListener = new JvmStatHostListener(vmInfoDAO, notifier, new ProcessUserInfoBuilder(source, userNameUtil));
     }
 
     @Override

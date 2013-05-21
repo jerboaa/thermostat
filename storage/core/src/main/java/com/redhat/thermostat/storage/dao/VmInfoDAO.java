@@ -65,13 +65,16 @@ public interface VmInfoDAO extends Countable {
     static final Key<List<String>> librariesKey = new Key<>("loadedNativeLibraries", false);
     static final Key<Long> startTimeKey = new Key<>("startTimeStamp", false);
     static final Key<Long> stopTimeKey = new Key<>("stopTimeStamp", false);
+    static final Key<Long> uidKey = new Key<>("uid", false);
+    static final Key<String> usernameKey = new Key<>("username", false);
 
     static final Category<VmInfo> vmInfoCategory = new Category<>("vm-info", VmInfo.class,
             Key.AGENT_ID, Key.VM_ID, vmPidKey, runtimeVersionKey, javaHomeKey,
             mainClassKey, commandLineKey,
             vmArgumentsKey, vmNameKey, vmInfoKey, vmVersionKey,
             propertiesKey, environmentKey, librariesKey,
-            startTimeKey, stopTimeKey);
+            startTimeKey, stopTimeKey,
+            uidKey, usernameKey);
 
     public VmInfo getVmInfo(VmRef ref);
 

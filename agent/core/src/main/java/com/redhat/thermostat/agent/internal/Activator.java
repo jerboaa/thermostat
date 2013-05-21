@@ -38,23 +38,23 @@ package com.redhat.thermostat.agent.internal;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl;
+import com.redhat.thermostat.utils.username.UserNameUtil;
+import com.redhat.thermostat.utils.username.internal.UserNameUtilImpl;
 
 public class Activator implements BundleActivator {
 
-    private ServiceRegistration registration;
-
     @Override
     public void start(BundleContext context) throws Exception {
-        registration = context.registerService(MXBeanConnectionPool.class, new MXBeanConnectionPoolImpl(), null);
+        context.registerService(MXBeanConnectionPool.class, new MXBeanConnectionPoolImpl(), null);
+        context.registerService(UserNameUtil.class, new UserNameUtilImpl(), null);
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        registration.unregister();
+        // Services automatically unregistered by framework
     }
 
 }

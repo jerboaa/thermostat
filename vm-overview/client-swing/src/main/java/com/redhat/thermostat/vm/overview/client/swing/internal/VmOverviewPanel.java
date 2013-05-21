@@ -73,6 +73,7 @@ public class VmOverviewPanel extends VmOverviewView implements SwingComponent {
     private final ValueField javaVersion = new ValueField("");
     private final ValueField vmNameAndVersion = new ValueField("");
     private final ValueField vmArguments = new ValueField("");
+    private final ValueField user = new ValueField("");
 
     public VmOverviewPanel() {
         super();
@@ -192,6 +193,16 @@ public class VmOverviewPanel extends VmOverviewView implements SwingComponent {
     }
 
     @Override
+    public void setUserID(final String userID) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                user.setText(userID);
+            }
+        });
+    }
+
+    @Override
     public Component getUiComponent() {
         return visiblePanel;
     }
@@ -205,6 +216,7 @@ public class VmOverviewPanel extends VmOverviewView implements SwingComponent {
         LabelField pidLabel = new LabelField(translator.localize(LocaleResources.VM_INFO_PROCESS_ID));
         LabelField startTimeLabel = new LabelField(translator.localize(LocaleResources.VM_INFO_START_TIME));
         LabelField stopTimeLabel = new LabelField(translator.localize(LocaleResources.VM_INFO_STOP_TIME));
+        LabelField userLabel = new LabelField(translator.localize(LocaleResources.VM_INFO_USER));
 
         SectionHeader javaSection = new SectionHeader(translator.localize(LocaleResources.VM_INFO_SECTION_JAVA));
 
@@ -228,6 +240,7 @@ public class VmOverviewPanel extends VmOverviewView implements SwingComponent {
                                 .addComponent(pidLabel)
                                 .addComponent(startTimeLabel)
                                 .addComponent(stopTimeLabel)
+                                .addComponent(userLabel)
                                 .addComponent(mainClassLabel)
                                 .addComponent(javaCommandLineLabel)
                                 .addComponent(javaVersionLabel)
@@ -238,6 +251,7 @@ public class VmOverviewPanel extends VmOverviewView implements SwingComponent {
                                 .addComponent(pid)
                                 .addComponent(startTimeStamp)
                                 .addComponent(stopTimeStamp)
+                                .addComponent(user)
                                 .addComponent(mainClass)
                                 .addComponent(javaCommandLine)
                                 .addComponent(javaVersion)
@@ -260,6 +274,10 @@ public class VmOverviewPanel extends VmOverviewView implements SwingComponent {
                 .addGroup(gl.createParallelGroup(Alignment.LEADING, false)
                         .addComponent(stopTimeLabel)
                         .addComponent(stopTimeStamp))
+                .addPreferredGap(ComponentPlacement.RELATED)
+                .addGroup(gl.createParallelGroup(Alignment.LEADING, false)
+                        .addComponent(userLabel)
+                        .addComponent(user))
                 .addPreferredGap(ComponentPlacement.UNRELATED)
                 .addComponent(javaSection)
                 .addPreferredGap(ComponentPlacement.RELATED)

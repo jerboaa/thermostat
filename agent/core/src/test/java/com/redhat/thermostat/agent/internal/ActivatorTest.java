@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.agent.internal;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -44,6 +43,8 @@ import org.junit.Test;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl;
+import com.redhat.thermostat.utils.username.UserNameUtil;
+import com.redhat.thermostat.utils.username.internal.UserNameUtilImpl;
 
 public class ActivatorTest {
     @Test
@@ -56,9 +57,6 @@ public class ActivatorTest {
         activator.start(context);
 
         assertTrue(context.isServiceRegistered(MXBeanConnectionPool.class.getName(), MXBeanConnectionPoolImpl.class));
-
-        activator.stop(context);
-
-        assertFalse(context.isServiceRegistered(MXBeanConnectionPool.class.getName(), MXBeanConnectionPoolImpl.class));
+        assertTrue(context.isServiceRegistered(UserNameUtil.class.getName(), UserNameUtilImpl.class));
     }
 }

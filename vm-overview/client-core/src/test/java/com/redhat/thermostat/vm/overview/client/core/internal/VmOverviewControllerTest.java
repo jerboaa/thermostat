@@ -37,7 +37,6 @@
 package com.redhat.thermostat.vm.overview.client.core.internal;
 
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isNotNull;
 import static org.mockito.Mockito.doNothing;
@@ -51,7 +50,6 @@ import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -68,7 +66,6 @@ import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.vm.overview.client.core.VmOverviewView;
 import com.redhat.thermostat.vm.overview.client.core.VmOverviewViewProvider;
-import com.redhat.thermostat.vm.overview.client.core.internal.VmOverviewController;
 import com.redhat.thermostat.vm.overview.client.locale.LocaleResources;
 
 public class VmOverviewControllerTest {
@@ -88,6 +85,8 @@ public class VmOverviewControllerTest {
     private static final Map<String, String> PROPS = Collections.emptyMap();
     private static final Map<String, String> ENV = Collections.emptyMap();
     private static final String[] LIBS = new String[0];
+    private static final long UID = 2000;
+    private static final String USERNAME = "myUser";
 
     private Timer timer;
     private Runnable timerAction;
@@ -96,8 +95,7 @@ public class VmOverviewControllerTest {
     private VmOverviewController controller;
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    @Before
-    public void setUp() {
+    private void createController(VmInfo info) {
         // Setup timer
         timer = mock(Timer.class);
         ArgumentCaptor<Runnable> timerActionCaptor = ArgumentCaptor
@@ -110,14 +108,10 @@ public class VmOverviewControllerTest {
         when(appSvc.getTimerFactory()).thenReturn(timerFactory);
 
         // Setup DAOs
-        VmInfo vmInfo = new VmInfo(VM_PID, START_TIME, STOP_TIME, JAVA_VERSION,
-                JAVA_HOME, MAIN_CLASS, COMMAND_LINE, VM_NAME, VM_INFO,
-                VM_VERSION, VM_ARGS, PROPS, ENV, LIBS);
-
         VmRef ref = mock(VmRef.class);
 
         VmInfoDAO vmInfoDao = mock(VmInfoDAO.class);
-        when(vmInfoDao.getVmInfo(any(VmRef.class))).thenReturn(vmInfo);
+        when(vmInfoDao.getVmInfo(eq(ref))).thenReturn(info);
 
         // Setup View
         ArgumentCaptor<ActionListener> listenerCaptor = ArgumentCaptor
@@ -133,8 +127,16 @@ public class VmOverviewControllerTest {
         timerAction = timerActionCaptor.getValue();
     }
 
+    private VmInfo createVmInfo() {
+        VmInfo vmInfo = new VmInfo(VM_PID, START_TIME, STOP_TIME, JAVA_VERSION,
+                JAVA_HOME, MAIN_CLASS, COMMAND_LINE, VM_NAME, VM_INFO,
+                VM_VERSION, VM_ARGS, PROPS, ENV, LIBS, UID, USERNAME);
+        return vmInfo;
+    }
+
     @Test
     public void verifyViewIsUpdatedWithData() {
+        createController(createVmInfo());
         timerAction.run();
 
         DateFormat timestampFormat = controller.getDateFormat();
@@ -149,10 +151,65 @@ public class VmOverviewControllerTest {
         verify(view).setVmNameAndVersion(eq(translator.localize(LocaleResources.VM_INFO_VM_NAME_AND_VERSION,
                         VM_NAME, VM_VERSION, VM_INFO).getContents()));
         verify(view).setVmArguments(eq(VM_ARGS));
+        String userID = String.valueOf(UID) + "(" + USERNAME + ")";
+        verify(view).setUserID(eq(userID));
+    }
+    
+    @Test
+    public void verifyViewIsUpdatedWithDataNoUid() {
+        VmInfo vmInfo = new VmInfo(VM_PID, START_TIME, STOP_TIME, JAVA_VERSION,
+                JAVA_HOME, MAIN_CLASS, COMMAND_LINE, VM_NAME, VM_INFO,
+                VM_VERSION, VM_ARGS, PROPS, ENV, LIBS, -1, null);
+        createController(vmInfo);
+        
+        timerAction.run();
+
+        DateFormat timestampFormat = controller.getDateFormat();
+        verify(view).setVmPid(eq(String.valueOf(VM_PID)));
+        verify(view).setVmStartTimeStamp(eq(timestampFormat.format(new Date(START_TIME))));
+        verify(view).setVmStopTimeStamp(eq(timestampFormat.format(new Date(STOP_TIME))));
+        verify(view).setJavaVersion(eq(JAVA_VERSION));
+        verify(view).setJavaHome(eq(JAVA_HOME));
+        verify(view).setMainClass(eq(MAIN_CLASS));
+        verify(view).setJavaCommandLine(eq(COMMAND_LINE));
+        
+        verify(view).setVmNameAndVersion(eq(translator.localize(LocaleResources.VM_INFO_VM_NAME_AND_VERSION,
+                        VM_NAME, VM_VERSION, VM_INFO).getContents()));
+        verify(view).setVmArguments(eq(VM_ARGS));
+        
+        // Ensure user is unknown
+        verify(view).setUserID(eq(translator.localize(LocaleResources.VM_INFO_USER_UNKNOWN).getContents()));
+    }
+    
+    @Test
+    public void verifyViewIsUpdatedWithDataNoUsername() {
+        VmInfo vmInfo = new VmInfo(VM_PID, START_TIME, STOP_TIME, JAVA_VERSION,
+                JAVA_HOME, MAIN_CLASS, COMMAND_LINE, VM_NAME, VM_INFO,
+                VM_VERSION, VM_ARGS, PROPS, ENV, LIBS, UID, null);
+        createController(vmInfo);
+        
+        timerAction.run();
+
+        DateFormat timestampFormat = controller.getDateFormat();
+        verify(view).setVmPid(eq(String.valueOf(VM_PID)));
+        verify(view).setVmStartTimeStamp(eq(timestampFormat.format(new Date(START_TIME))));
+        verify(view).setVmStopTimeStamp(eq(timestampFormat.format(new Date(STOP_TIME))));
+        verify(view).setJavaVersion(eq(JAVA_VERSION));
+        verify(view).setJavaHome(eq(JAVA_HOME));
+        verify(view).setMainClass(eq(MAIN_CLASS));
+        verify(view).setJavaCommandLine(eq(COMMAND_LINE));
+        
+        verify(view).setVmNameAndVersion(eq(translator.localize(LocaleResources.VM_INFO_VM_NAME_AND_VERSION,
+                        VM_NAME, VM_VERSION, VM_INFO).getContents()));
+        verify(view).setVmArguments(eq(VM_ARGS));
+        
+        // Ensure only user ID is shown
+        verify(view).setUserID(eq(String.valueOf(UID)));
     }
 
     @Test
     public void verifyTimerIsSetUpCorrectly() {
+        createController(createVmInfo());
         assertNotNull(timer);
 
         verify(timer).setAction(isNotNull(Runnable.class));
@@ -164,6 +221,7 @@ public class VmOverviewControllerTest {
 
     @Test
     public void verifyTimerRunsWhenNeeded() {
+        createController(createVmInfo());
         listener.actionPerformed(new ActionEvent<>(view, Action.VISIBLE));
 
         verify(timer).start();

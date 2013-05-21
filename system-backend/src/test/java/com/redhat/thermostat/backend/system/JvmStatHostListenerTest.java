@@ -65,6 +65,7 @@ import sun.jvmstat.monitor.VmIdentifier;
 import sun.jvmstat.monitor.event.VmStatusChangeEvent;
 
 import com.redhat.thermostat.agent.VmStatusListener.Status;
+import com.redhat.thermostat.backend.system.ProcessUserInfoBuilder.ProcessUserInfo;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 
@@ -78,6 +79,8 @@ public class JvmStatHostListenerTest {
     private static String INFO_VMINFO = "Info";
     private static String INFO_VMNAME = "MyJVM";
     private static String INFO_VMVER = "90.01";
+    private static long INFO_VMUSERID = 2000;
+    private static String INFO_VMUSERNAME = "User";
 
     private JvmStatHostListener hostListener;
     private MonitoredHost host;
@@ -91,8 +94,12 @@ public class JvmStatHostListenerTest {
     public void setup() throws MonitorException, URISyntaxException {
         vmInfoDAO = mock(VmInfoDAO.class);
         notifier = mock(VmStatusChangeNotifier.class);
+        
+        ProcessUserInfoBuilder userInfoBuilder = mock(ProcessUserInfoBuilder.class);
+        ProcessUserInfo userInfo = new ProcessUserInfo(INFO_VMUSERID, INFO_VMUSERNAME);
+        when(userInfoBuilder.build(any(int.class))).thenReturn(userInfo);
 
-        hostListener = new JvmStatHostListener(vmInfoDAO, notifier);
+        hostListener = new JvmStatHostListener(vmInfoDAO, notifier, userInfoBuilder);
         
         host = mock(MonitoredHost.class);
         HostIdentifier hostId = mock(HostIdentifier.class);
@@ -195,5 +202,7 @@ public class JvmStatHostListenerTest {
         assertEquals(INFO_VMINFO, info.getVmInfo());
         assertEquals(INFO_VMNAME, info.getVmName());
         assertEquals(INFO_VMVER, info.getVmVersion());
+        assertEquals(INFO_VMUSERID, info.getUid());
+        assertEquals(INFO_VMUSERNAME, info.getUsername());
     }
 }

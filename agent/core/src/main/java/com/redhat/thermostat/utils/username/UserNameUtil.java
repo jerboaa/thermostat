@@ -34,33 +34,19 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.overview.client.core;
-
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.UIComponent;
+package com.redhat.thermostat.utils.username;
 
 
-public abstract class VmOverviewView extends BasicView implements UIComponent {
-
-    public abstract void setVmPid(String pid);
-
-    public abstract void setVmStartTimeStamp(String timestamp);
-
-    public abstract void setVmStopTimeStamp(String timeStamp);
-
-    public abstract void setMainClass(String mainClass);
-
-    public abstract void setJavaCommandLine(String javaCommandLine);
-
-    public abstract void setJavaHome(String string);
-
-    public abstract void setJavaVersion(String javaVersion);
-
-    public abstract void setVmNameAndVersion(String vmNameAndVersion);
-
-    public abstract void setVmArguments(String vmArguments);
+/**
+ * Utility to query the operating system for a user name.
+ */
+public interface UserNameUtil {
     
-    public abstract void setUserID(String userID);
+    /**
+     * Returns the user name corresponding to the provided UID.
+     * @param uid - the UID whose name to return
+     * @return the user name if found, or null otherwise
+     */
+    String getUserName(long uid);
 
 }
-
