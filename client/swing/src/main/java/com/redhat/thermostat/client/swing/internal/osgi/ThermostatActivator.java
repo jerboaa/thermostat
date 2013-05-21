@@ -99,7 +99,7 @@ public class ThermostatActivator implements BundleActivator {
         
         Class<?>[] deps = new Class<?>[] {
                 Keyring.class,
-                ApplicationService.class
+                ApplicationService.class,
         };
         dependencyTracker = new MultipleServiceTracker(context, deps, new Action() {
             
@@ -109,7 +109,6 @@ public class ThermostatActivator implements BundleActivator {
             public void dependenciesAvailable(Map<String, Object> services) {
                 Keyring keyring = (Keyring) services.get(Keyring.class.getName());
                 ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
-                
                 cmdReg = new CommandRegistryImpl(context);
                 main = new Main(context, keyring, appSvc, new String[0]);
                 

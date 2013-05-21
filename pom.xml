@@ -149,6 +149,7 @@
     <module>vm-heap-analysis</module>
     <module>vm-jmx</module>
     <module>numa</module>
+    <module>laf-utils</module>
     <!-- development related modules -->
     <module>integration-tests</module>
     <module>dev</module>

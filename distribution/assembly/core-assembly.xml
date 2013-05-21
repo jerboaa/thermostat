@@ -69,6 +69,7 @@
         <include>com.redhat.thermostat:thermostat-web-cmd</include>
         <include>com.redhat.thermostat:thermostat-web-server</include>
         <include>com.redhat.thermostat:thermostat-system-backend</include>
+        <include>com.redhat.thermostat:thermostat-laf-utils</include>
         <include>org.eclipse.jetty:jetty-server</include>
         <include>org.eclipse.jetty:jetty-webapp</include>
       </includes>

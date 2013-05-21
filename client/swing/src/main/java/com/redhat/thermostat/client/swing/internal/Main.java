@@ -44,12 +44,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JOptionPane;
-import javax.swing.JPopupMenu;
-import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
-import javax.swing.plaf.nimbus.NimbusLookAndFeel;
 
 import org.osgi.framework.BundleContext;
 
@@ -62,6 +57,7 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.internal.utils.laf.ThemeManager;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.core.DbService;
@@ -111,62 +107,14 @@ public class Main {
         this.shutdown = shutdown;
         this.mainWindowRunnable = mainWindowRunnable;
     }
-
-    private void setLAF() {
-        
-        boolean useDefault = false;
-        
-        // check if the user has other preferences...
-        String laf = System.getProperty("swing.defaultlaf");
-        if (laf == null) {
-            useDefault = true;
-            
-        } else if (laf.equalsIgnoreCase("dolphin")) {
-            try {
-                UIManager.setLookAndFeel("com.redhat.swing.laf.dolphin.DolphinLookAndFeel");
-            } catch (UnsupportedLookAndFeelException | ClassNotFoundException |
-                     InstantiationException | IllegalAccessException e) {
-                useDefault = true;
-                logger.log(Level.WARNING, "cannot set DolphinLookAndFeel");
-            }
-        } else if (laf.equalsIgnoreCase("system")) {
-            try {
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            } catch (UnsupportedLookAndFeelException | ClassNotFoundException |
-                     InstantiationException | IllegalAccessException e) {
-                useDefault = true;
-                logger.log(Level.WARNING, "cannot set System LookAndFeel");
-            }
-        }
-        
-        if (useDefault) {
-            try {
-                UIManager.setLookAndFeel(new NimbusLookAndFeel());
-            } catch (UnsupportedLookAndFeelException e) {
-                // well, whatever...
-                logger.log(Level.WARNING, "cannot set NimbusLookAndFeel");
-            }
-        }
-    }
     
     public void run() {
         EventQueue.invokeLater(new Runnable() {
 
             @Override
             public void run() {
-
-                setLAF();
-
-                // Thermostat JPopupMenu instances should all be
-                // ThermostatPopupmenu, so this is redundant, but done in case
-                // some client code doesn't use the internal popup
-                JPopupMenu.setDefaultLightWeightPopupEnabled(false);
-                
-                // TODO: move them in an appropriate place
-                UIManager.getDefaults().put("OptionPane.buttonOrientation", SwingConstants.RIGHT);
-                UIManager.getDefaults().put("OptionPane.isYesLast", true);
-                UIManager.getDefaults().put("OptionPane.sameSizeButtons", true);
-                
+                ThemeManager themeManager = ThemeManager.getInstance();
+                themeManager.setLAF();
             }
 
         });

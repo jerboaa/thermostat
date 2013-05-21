@@ -233,6 +233,8 @@
                       todir="${project.build.directory}/libs/native" />
                 <copy file="${main.basedir}/agent/core/target/libUserNameUtilWrapper.so"
                       todir="${project.build.directory}/libs/native" />
+                <copy file="${main.basedir}/laf-utils/target/libGTKThemeUtils.so"
+                      todir="${project.build.directory}/libs/native" />                      
               </target>
             </configuration>
             <goals>
@@ -423,6 +425,11 @@
     <dependency>
         <groupId>com.redhat.thermostat</groupId>
         <artifactId>thermostat-keyring</artifactId>
+        <version>${project.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>thermostat-laf-utils</artifactId>
         <version>${project.version}</version>
     </dependency>
     <dependency>

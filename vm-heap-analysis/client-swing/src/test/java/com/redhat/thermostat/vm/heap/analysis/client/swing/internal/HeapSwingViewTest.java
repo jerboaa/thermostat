@@ -187,8 +187,8 @@ public class HeapSwingViewTest {
             }
         });
         
-        assertFalse(result[0]);
-        
+        assertFalse(result[0]); 
+       
         final JPanelFixture panel = frame.panel(HeapChartPanel.class.getName());
         JPopupMenuFixture popup = panel.showPopupMenu();
         popup.click();

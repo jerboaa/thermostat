@@ -58,6 +58,11 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-laf-utils</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-swing-components</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -126,7 +131,6 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-
   <build>
 
     <resources>
