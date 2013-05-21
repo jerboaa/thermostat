@@ -70,9 +70,8 @@ import com.redhat.thermostat.web.server.auth.UserPrincipal;
  */
 public class PropertiesUsernameRolesLoginModule extends AbstractLoginModule {
     
-    private static Logger logger = LoggingUtils.getLogger(PropertiesUsernameRolesLoginModule.class);
+    private static final Logger logger = LoggingUtils.getLogger(PropertiesUsernameRolesLoginModule.class);
     
-    private Subject subject;
     // The validator to use for authentication
     private UserValidator validator;
     private RolesAmender amender;
@@ -83,8 +82,7 @@ public class PropertiesUsernameRolesLoginModule extends AbstractLoginModule {
     @Override
     public void initialize(Subject subject, CallbackHandler callbackHandler,
             Map<String, ?> sharedState, Map<String, ?> options) {
-        this.subject = subject;
-        this.callBackHandler = callbackHandler;
+        super.initialize(subject, callbackHandler, sharedState, options);
         this.validator = getValidator((String) options.get("users.properties"));
         this.amender = getRolesAmender((String) options.get("roles.properties"),
                 validator.getAllKnownUsers());
@@ -92,7 +90,9 @@ public class PropertiesUsernameRolesLoginModule extends AbstractLoginModule {
 
     @Override
     public boolean login() throws LoginException {
-        logger.log(Level.FINEST, "Logging in");
+        if (debug) {
+            logger.log(Level.FINEST, "Logging in ...");
+        }
         loginOK = false;
         char[] password = null;
         try {
@@ -100,10 +100,14 @@ public class PropertiesUsernameRolesLoginModule extends AbstractLoginModule {
             username = (String)creds[0];
             password = (char[])creds[1];
             validator.authenticate(username, password);
-            logger.log(Level.FINEST, "Logged in user '" + username + "'");
             loginOK = true;
+            if (debug) {
+                logger.log(Level.FINEST, "Logged in successfully: user == '" + username + "'");
+            }
         } catch (UserValidationException e) {
-            logger.log(Level.FINE, "Authentication failed for user '" + username + "'");
+            if (debug) {
+                logger.log(Level.INFO, "Authentication failed for user '" + username + "'");
+            }
             throw new LoginException(e.getMessage());
         } finally {
             clearPassword(password);
@@ -116,7 +120,9 @@ public class PropertiesUsernameRolesLoginModule extends AbstractLoginModule {
         if (loginOK == false) {
             return false;
         }
-        logger.log(Level.FINEST, "Committing principals for user '" + username + "'");
+        if (debug) {
+            logger.log(Level.FINEST, "Committing principals for user '" + username + "'");
+        }
         Set<Principal> principals = subject.getPrincipals();
         // Tomcat uses classes as specified by the LoginModule config
         // in order to distinguish between user principals and role principals
@@ -127,7 +133,9 @@ public class PropertiesUsernameRolesLoginModule extends AbstractLoginModule {
         try {
             roles = amender.getRoles(username);
         } catch (IllegalStateException e) {
-            logger.log(Level.FINE, "Failed to commit", e);
+            if (debug) {
+                logger.log(Level.INFO, "Failed to commit" + e.getMessage());
+            }
             throw new LoginException();
         }
         principals.addAll(roles);
@@ -145,15 +153,19 @@ public class PropertiesUsernameRolesLoginModule extends AbstractLoginModule {
 
     @Override
     public boolean abort() throws LoginException {
-        logger.log(Level.FINEST, "aborting");
         clearPrincipals();
+        if (debug) {
+            logger.log(Level.FINEST, "Login aborted!");
+        }
         return true;
     }
 
     @Override
     public boolean logout() throws LoginException {
-        logger.log(Level.FINEST, "logging out");
         clearPrincipals();
+        if (debug) {
+            logger.log(Level.FINEST, "Logged out!");
+        }
         return true;
     }
     
@@ -175,17 +187,21 @@ public class PropertiesUsernameRolesLoginModule extends AbstractLoginModule {
         UserValidator validator = null;
         try {
             if (usersProperties == null) {
+                if (debug) {
+                    logger.log(Level.FINEST, "Using default user database");
+                }
                 validator = new PropertiesUserValidator();
-                logger.log(Level.FINE, "Using default user database");
             } else {
-                logger.log(Level.FINE, "Using user database as defined in file '" + usersProperties + "'");
+                if (debug) {
+                    logger.log(Level.FINEST, "Using user database as defined in file '" + usersProperties + "'");
+                }
                 validator = new PropertiesUserValidator(usersProperties);
             }
         } catch (Throwable e) {
-            // Can't continue at this point, since we this for
+            // Can't continue at this point, since we need this for
             // authentication.
-            String msg = "Failed to initialize user database";
-            logger.log(Level.SEVERE, msg, e);
+            String msg = "Fatal: Failed to initialize user database";
+            logger.log(Level.SEVERE,  msg, e);
             throw new RuntimeException(msg);
         }
         return validator;
@@ -195,16 +211,20 @@ public class PropertiesUsernameRolesLoginModule extends AbstractLoginModule {
         RolesAmender roleAmender = null;
         try {
             if (rolesProperties == null) {
+                if (debug) {
+                    logger.log(Level.FINEST, "Using default roles database");
+                }
                 roleAmender = new RolesAmender(users);
-                logger.log(Level.FINE, "Using default roles database");
             } else {
-                logger.log(Level.FINE, "Using roles database as defined in file '" + rolesProperties + "'");
+                if (debug) {
+                    logger.log(Level.FINEST, "Using roles database as defined in file '" + rolesProperties + "'");
+                }
                 roleAmender = new RolesAmender(rolesProperties, users);
             }
         } catch (Throwable e) {
-            // Can't continue at this point, since we this for
+            // Can't continue at this point, since we need this for
             // authentication.
-            String msg = "Failed to initialize role/user mapping database";
+            String msg = "Fatal: Failed to initialize role/user mapping database";
             logger.log(Level.SEVERE, msg, e);
             throw new RuntimeException(msg, e);
         }

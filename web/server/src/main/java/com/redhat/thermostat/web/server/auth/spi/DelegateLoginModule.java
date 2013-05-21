@@ -71,7 +71,6 @@ public final class DelegateLoginModule extends AbstractLoginModule {
     private static final String JAAS_DELEGATE_CONFIG_NAME = "ThermostatJAASDelegate";
     // the delegate
     private LoginContext delegateContext;
-    private Subject subject;
     private String username;
     /**
      * The config name to use. Defaults to {@linkplain DelegateLoginModule#JAAS_DELEGATE_CONFIG_NAME}
@@ -94,19 +93,20 @@ public final class DelegateLoginModule extends AbstractLoginModule {
     @Override
     public void initialize(Subject subject, CallbackHandler callbackHandler,
             Map<String, ?> sharedState, Map<String, ?> options) {
-        this.subject = subject;
-        this.callBackHandler = callbackHandler;
+        super.initialize(subject, callbackHandler, sharedState, options);
         /*
          * Create and initialize the delegate 
          */
         try {
             this.delegateContext = new LoginContext(configName, subject, callbackHandler);
-            logger.log(Level.FINEST, "successfully created delegate login context");
+            if (debug) {
+                logger.log(Level.FINEST, "successfully created delegate login context");
+            }
         } catch (LoginException e) {
             // This only happens if there is no "ThermostatJAASDelegate" config
             // and also no configuration with the name "other", which is likely
             // always there for real application servers.
-            String message = "Could not initialize delegate. " +
+            String message = "Fatal: Could not initialize delegate. " +
                     "'ThermostatJAASDelegate' " +
                     "and 'other' login modules are both not configured!";
             logger.log(Level.SEVERE, message, e);
@@ -119,13 +119,17 @@ public final class DelegateLoginModule extends AbstractLoginModule {
         boolean loginOk = false;
         try {
             username = super.getUsernameFromCallBack();
-            logger.log(Level.FINEST, "Attempt to login as " + username + "(using delegate)");
             delegateContext.login();
             loginOk = true;
-            logger.log(Level.FINEST, "Login succeeded");
+            if (debug) {
+                logger.log(Level.FINEST, "Login succeeded for " + username + " using the delegate.");
+            }
         } catch (LoginException e) {
-            // This has a level of fine since it's just a plain login failure
-            logger.log(Level.FINEST, "Login failed", e);
+            if (debug) {
+                // This only shows up if debug is turned on
+                // since it's just a plain login failure.
+                logger.log(Level.FINEST, "Login failed", e);
+            }
             throw e;
         }
         return loginOk;
@@ -150,7 +154,7 @@ public final class DelegateLoginModule extends AbstractLoginModule {
             if (p.getName().equals(username)) {
                 // add our user principal
                 if (userPrincipal != null) {
-                    logger.log(Level.SEVERE, "> 1 user principals!");
+                    logger.log(Level.SEVERE, "Fatal: > 1 user principals!");
                     throw new IllegalStateException("> 1 user principals!");
                 }
                 userPrincipal = new UserPrincipal(username);
@@ -179,7 +183,9 @@ public final class DelegateLoginModule extends AbstractLoginModule {
         // with these roles from the web storage servlet.
         userPrincipal.setRoles(roles);
         
-        logger.log(Level.FINEST, "Committed changes for '" + username + "'");
+        if (debug) {
+            logger.log(Level.FINEST, "Committed changes for '" + username + "'");
+        }
         return true;
     }
 
@@ -190,7 +196,9 @@ public final class DelegateLoginModule extends AbstractLoginModule {
             Set<Principal> principals = subject.getPrincipals();
             principals.clear();
         }
-        logger.log(Level.FINEST, "Aborted login!");
+        if (debug) {
+            logger.log(Level.FINEST, "Login aborted!");
+        }
         return true;
     }
 
@@ -200,10 +208,14 @@ public final class DelegateLoginModule extends AbstractLoginModule {
             delegateContext.logout();
             Set<Principal> principals = subject.getPrincipals();
             principals.clear();
-            logger.log(Level.FINEST, "Logged out");
+            if (debug) {
+                logger.log(Level.FINEST, "Logged out successfully!");
+            }
             return true;
         } catch (LoginException e) {
-            logger.log(Level.FINEST, "Logout failed!", e);
+            if (debug) {
+                logger.log(Level.FINEST, "Logout failed!" + e.getMessage());
+            }
             return false;
         }
     }

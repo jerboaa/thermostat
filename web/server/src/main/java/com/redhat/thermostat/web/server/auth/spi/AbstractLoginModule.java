@@ -37,9 +37,11 @@
 package com.redhat.thermostat.web.server.auth.spi;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.callback.NameCallback;
@@ -58,6 +60,16 @@ public abstract class AbstractLoginModule implements LoginModule {
     
     private static final Logger logger = LoggingUtils.getLogger(AbstractLoginModule.class);
     protected CallbackHandler callBackHandler;
+    protected Subject subject;
+    protected boolean debug = false;
+    
+    @Override
+    public void initialize(Subject subject, CallbackHandler callbackHandler,
+            Map<String, ?> sharedState, Map<String, ?> options) {
+        this.subject = subject;
+        this.callBackHandler = callbackHandler;
+        this.debug = "true".equalsIgnoreCase((String)options.get("debug"));
+    }
 
     /**
      * Get username and password from the callback.
