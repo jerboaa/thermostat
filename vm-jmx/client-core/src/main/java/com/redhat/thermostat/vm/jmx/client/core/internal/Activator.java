@@ -86,7 +86,7 @@ public class Activator implements BundleActivator {
                 Dictionary props = new Hashtable();
                 props.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
 
-                registration = context.registerService(InformationService.class, notificationsView, props);
+                registration = context.registerService(InformationService.class.getName(), notificationsView, props);
             }
 
             @Override

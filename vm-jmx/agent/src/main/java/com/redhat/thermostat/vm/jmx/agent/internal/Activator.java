@@ -70,7 +70,7 @@ public class Activator implements BundleActivator {
                 JmxRequestListener receiver = new JmxRequestListener();
                 jmxBackend = new JmxBackend(version, registry, dao, pool, receiver);
                 receiver.setBackend(jmxBackend);
-                registration = context.registerService(Backend.class, jmxBackend, null);
+                registration = context.registerService(Backend.class.getName(), jmxBackend, null);
             }
 
             @Override

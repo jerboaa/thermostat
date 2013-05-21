@@ -48,7 +48,7 @@ public class Activator implements BundleActivator {
 
     @Override
     public void start(BundleContext context) throws Exception {
-        viewProviderRegistration = context.registerService(JmxNotificationsViewProvider.class, new JmxNotificationsSwingViewProvider(), null);
+        viewProviderRegistration = context.registerService(JmxNotificationsViewProvider.class.getName(), new JmxNotificationsSwingViewProvider(), null);
     }
 
     @Override

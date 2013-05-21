@@ -52,12 +52,12 @@ public class Activator implements BundleActivator {
 
     @Override
     public void start(final BundleContext context) throws Exception {
-        storageTracker = new ServiceTracker(context, Storage.class, null) {
+        storageTracker = new ServiceTracker(context, Storage.class.getName(), null) {
             @Override
             public Object addingService(ServiceReference reference) {
                 Storage storage = (Storage) super.addingService(reference);
                 JmxNotificationDAOImpl dao = new JmxNotificationDAOImpl(storage);
-                daoRegistration = context.registerService(JmxNotificationDAO.class, dao, null);
+                daoRegistration = context.registerService(JmxNotificationDAO.class.getName(), dao, null);
                 return storage;
             }
 
