@@ -34,16 +34,18 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.jmx.client.core.internal;
+package com.redhat.thermostat.vm.jmx.client.core;
 
 import com.redhat.thermostat.common.locale.Translate;
 
 public enum LocaleResources {
 
-    NOTIFICATIONS,
+    NOTIFICATIONS_TITLE,
+
+    NOTIFICATIONS_HEADER,
     ;
 
-    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.vm.jmx.client.core.internal.strings";
+    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.vm.jmx.client.core.strings";
 
     public static Translate<LocaleResources> createLocalizer() {
         return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);

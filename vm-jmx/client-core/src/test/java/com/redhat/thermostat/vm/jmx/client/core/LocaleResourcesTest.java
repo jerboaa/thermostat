@@ -34,9 +34,10 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.jmx.client.core.internal;
+package com.redhat.thermostat.vm.jmx.client.core;
 
 import com.redhat.thermostat.testutils.AbstractLocaleResourcesTest;
+import com.redhat.thermostat.vm.jmx.client.core.LocaleResources;
 
 public class LocaleResourcesTest extends AbstractLocaleResourcesTest<LocaleResources> {
 

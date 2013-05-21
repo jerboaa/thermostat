@@ -55,11 +55,14 @@ import com.redhat.thermostat.client.swing.components.ActionToggleButton;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.vm.jmx.client.core.JmxNotificationsView;
+import com.redhat.thermostat.vm.jmx.client.core.LocaleResources;
 import com.redhat.thermostat.vm.jmx.common.JmxNotification;
 
 public class JmxNotificationsSwingView extends JmxNotificationsView implements SwingComponent {
 
+    private static final Translate<LocaleResources> translate = LocaleResources.createLocalizer();
     private List<ActionListener<NotificationAction>> listeners = new CopyOnWriteArrayList<>();
 
     private final HeaderPanel visiblePanel;
@@ -103,7 +106,7 @@ public class JmxNotificationsSwingView extends JmxNotificationsView implements S
             }
         });
 
-        visiblePanel = new HeaderPanel("JMX Notifications");
+        visiblePanel = new HeaderPanel(translate.localize(LocaleResources.NOTIFICATIONS_HEADER).getContents());
         visiblePanel.addToolBarButton(toolbarButton);
         visiblePanel.setContent(contents);
     }
