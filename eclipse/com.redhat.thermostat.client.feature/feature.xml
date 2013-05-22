@@ -2,7 +2,7 @@
 <feature
       id="com.redhat.thermostat.client.feature"
       label="Thermostat Client Feature"
-      version="0.8.0.qualifier"
+      version="0.10.0.qualifier"
       provider-name="Red Hat Inc.">
 
    <description url="http://icedtea.classpath.org/thermostat">

@@ -4,7 +4,7 @@
   <parent>
     <artifactId>thermostat-host-memory</artifactId>
     <groupId>com.redhat.thermostat</groupId>
-    <version>0.8.0-SNAPSHOT</version>
+    <version>0.10.0-SNAPSHOT</version>
   </parent>
   <artifactId>thermostat-host-memory-client-swing</artifactId>
   <packaging>bundle</packaging>
