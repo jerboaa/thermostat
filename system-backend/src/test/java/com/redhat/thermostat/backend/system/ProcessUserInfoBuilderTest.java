@@ -49,12 +49,13 @@ import org.junit.Test;
 import com.redhat.thermostat.backend.system.ProcessUserInfoBuilder.ProcessUserInfo;
 import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.utils.ProcDataSource;
+import com.redhat.thermostat.utils.username.UserNameLookupException;
 import com.redhat.thermostat.utils.username.UserNameUtil;
 
 public class ProcessUserInfoBuilderTest {
     
     @Test
-    public void testBuild() throws IOException, ApplicationException {
+    public void testBuild() throws UserNameLookupException, IOException, ApplicationException {
         StringReader reader = new StringReader("Uid:   2000  2000  2000  2000");
         ProcDataSource source = mock(ProcDataSource.class);
         UserNameUtil util = mock(UserNameUtil.class);
@@ -81,7 +82,7 @@ public class ProcessUserInfoBuilderTest {
     }
     
     @Test
-    public void testBuildErrorUsername() throws IOException, ApplicationException {
+    public void testBuildErrorUsername() throws IOException, UserNameLookupException, ApplicationException {
         StringReader reader = new StringReader("Uid:   2000  2000  2000  2000");
         ProcDataSource source = mock(ProcDataSource.class);
         UserNameUtil util = mock(UserNameUtil.class);

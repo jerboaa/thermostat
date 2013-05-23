@@ -44,6 +44,7 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.utils.ProcDataSource;
+import com.redhat.thermostat.utils.username.UserNameLookupException;
 import com.redhat.thermostat.utils.username.UserNameUtil;
 
 class ProcessUserInfoBuilder {
@@ -88,7 +89,12 @@ class ProcessUserInfoBuilder {
         try {
             Reader reader = source.getStatusReader(pid);
             long uid = getUidFromProcfs(new BufferedReader(reader));
-            String name = userNameUtil.getUserName(uid);
+            String name = null;
+            try {
+                name = userNameUtil.getUserName(uid);
+            } catch (UserNameLookupException e) {
+                logger.log(Level.WARNING, "Unable to retrieve username for uid: " + uid, e);
+            }
             info = new ProcessUserInfo(uid, name);
         } catch (IOException e) {
             logger.log(Level.WARNING, "Unable to read user info for " + pid, e);

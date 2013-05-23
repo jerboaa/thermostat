@@ -36,17 +36,20 @@
 
 package com.redhat.thermostat.utils.username;
 
-
 /**
  * Utility to query the operating system for a user name.
  */
 public interface UserNameUtil {
-    
+
     /**
-     * Returns the user name corresponding to the provided UID.
-     * @param uid - the UID whose name to return
-     * @return the user name if found, or null otherwise
+     * Gets the user name corresponding to the provided UID.
+     * 
+     * @param uid
+     *            The UID whose name to return.
+     * @throws UserNameLookupException
+     *            If an error occurred during retrieval of the user name.
+     * @return The user name if found. null if no such UID exists.
      */
-    String getUserName(long uid);
+    String getUserName(long uid) throws UserNameLookupException;
 
 }

@@ -34,40 +34,18 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.utils.username.internal;
+package com.redhat.thermostat.utils.username;
 
-import java.io.IOException;
+/**
+ * 
+ * Thrown on user name lookup error.
+ *
+ * @see UserNameUtil
+ */
+@SuppressWarnings("serial")
+public class UserNameLookupException extends Exception {
 
-import com.redhat.thermostat.utils.username.UserNameLookupException;
-import com.redhat.thermostat.utils.username.UserNameUtil;
-
-public class UserNameUtilImpl implements UserNameUtil {
-    
-    static {
-        /*
-         * TODO Change to System.load
-         * http://icedtea.classpath.org/pipermail/thermostat/2013-May/006657.html
-         */
-        System.loadLibrary("UserNameUtilWrapper");
+    public UserNameLookupException(Throwable cause) {
+        super(cause);
     }
-    
-    public String getUserName(long uid) throws UserNameLookupException {
-        String username = null;
-        if (uid >= 0) {
-            try {
-                // getUserName0 may throw IOException. We catch it here and
-                // throw a more specific exception in order to avoid API 
-                // leakage. This exception is then dealt with in the caller of
-                // this method rather than here. This free's us from using the
-                // logger in a JNI class.
-                username = getUserName0(uid);
-            } catch (IOException e) {
-                throw new UserNameLookupException(e);
-            }
-        }
-        return username;
-    }
-    
-    private native String getUserName0(long uid) throws IOException;
-
 }
