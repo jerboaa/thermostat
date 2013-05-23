@@ -606,7 +606,7 @@ public class PluginConfigurationParser {
                     translateKeys.get(type),
                     absolutePath, 
                     Integer.toString(lineNumber), 
-                    Integer.toString(columnNumber)));
+                    Integer.toString(columnNumber)).getContents());
                         
             buffer.append(formatMessage(e.getLocalizedMessage()) + "\n\n");
             buffer.append(firstLine + "\n");
