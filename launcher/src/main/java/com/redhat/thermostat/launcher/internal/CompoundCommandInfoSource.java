@@ -96,20 +96,28 @@ public class CompoundCommandInfoSource implements CommandInfoSource {
     }
 
     private Collection<CommandInfo> mergeAll(Collection<CommandInfo> commandInfos1, Collection<CommandInfo> commandInfos2) {
-        Map<String, CommandInfo> result = new HashMap<>();
+        Map<String, CommandInfo> merged = new HashMap<>();
         for (CommandInfo info : commandInfos1) {
-            result.put(info.getName(), info);
+            merged.put(info.getName(), info);
         }
         for (CommandInfo info : commandInfos2) {
             String cmdName = info.getName();
-            if (!result.containsKey(cmdName)) {
-                result.put(cmdName, info);
+            if (!merged.containsKey(cmdName)) {
+                merged.put(cmdName, info);
             } else {
-                result.put(cmdName, merge(result.get(cmdName), info));
+                CommandInfo mergedCommand = merge(merged.get(cmdName), info);
+                merged.put(cmdName, mergedCommand);
             }
         }
 
-        return result.values();
+        List<CommandInfo> result = new ArrayList<>();
+        for (CommandInfo mergedCommand : merged.values()) {
+            if (isComplete(mergedCommand)) {
+                result.add(mergedCommand);
+            }
+        }
+
+        return result;
     }
 
     private CommandInfo merge(CommandInfo info1, CommandInfo info2) {
@@ -140,6 +148,15 @@ public class CompoundCommandInfoSource implements CommandInfoSource {
             throw new IllegalArgumentException("two conflicting values!");
         }
         return result;
+    }
+
+    private boolean isComplete(CommandInfo merged) {
+        if ((merged.getDescription() == null)
+                || (merged.getOptions() == null)) {
+            return false;
+        }
+
+        return true;
     }
 
 }

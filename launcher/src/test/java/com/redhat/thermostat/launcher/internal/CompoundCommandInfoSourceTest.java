@@ -133,6 +133,33 @@ public class CompoundCommandInfoSourceTest {
     public void verifyGetCommandInfosMergesResultsFromBothSources() {
         CommandInfo cmdInfo11 = mock(CommandInfo.class);
         when(cmdInfo11.getName()).thenReturn("cmd1");
+        when(cmdInfo11.getDescription()).thenReturn("cmd1");
+        when(cmdInfo11.getOptions()).thenReturn(new Options());
+
+        CommandInfo cmdInfo12 = mock(CommandInfo.class);
+        when(cmdInfo12.getName()).thenReturn("cmd2");
+        when(cmdInfo12.getDescription()).thenReturn("cmd2");
+        when(cmdInfo12.getOptions()).thenReturn(new Options());
+
+        when(source1.getCommandInfos()).thenReturn(Arrays.asList(cmdInfo11, cmdInfo12));
+
+        CommandInfo cmdInfo21 = mock(CommandInfo.class);
+        when(cmdInfo21.getName()).thenReturn("cmd3");
+        when(cmdInfo21.getDescription()).thenReturn("cmd3");
+        when(cmdInfo21.getOptions()).thenReturn(new Options());
+        CommandInfo cmdInfo22 = mock(CommandInfo.class);
+        when(cmdInfo22.getName()).thenReturn("cmd2");
+
+        when(source2.getCommandInfos()).thenReturn(Arrays.asList(cmdInfo21, cmdInfo22));
+
+        Collection<CommandInfo> results = compoundSource.getCommandInfos();
+        assertEquals(3, results.size());
+    }
+
+    @Test
+    public void verifyGetCommandInfosIgnoresIncompleteCommands() {
+        CommandInfo cmdInfo11 = mock(CommandInfo.class);
+        when(cmdInfo11.getName()).thenReturn("cmd1");
         CommandInfo cmdInfo12 = mock(CommandInfo.class);
         when(cmdInfo12.getName()).thenReturn("cmd2");
 
@@ -146,6 +173,6 @@ public class CompoundCommandInfoSourceTest {
         when(source2.getCommandInfos()).thenReturn(Arrays.asList(cmdInfo21, cmdInfo22));
 
         Collection<CommandInfo> results = compoundSource.getCommandInfos();
-        assertEquals(3, results.size());
+        assertEquals(0, results.size());
     }
 }
