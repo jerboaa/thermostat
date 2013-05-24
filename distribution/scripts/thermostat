@@ -40,9 +40,12 @@
 JAVA_DIR="@java.dir@"
 JAVA="@java.home@/bin/java"
 
-if [ x"$THERMOSTAT_HOME" = x ] ; then
-  THERMOSTAT_HOME="@thermostat.home@"
+if [ x"$THERMOSTAT_INSTALL_DIR" = x ] ; then
+  THERMOSTAT_INSTALL_DIR="@thermostat.home@"
 fi
+# Not always are installation directory and thermostat home one and
+# the same location.
+THERMOSTAT_HOME=${THERMOSTAT_INSTALL_DIR}
 export THERMOSTAT_HOME
 THERMOSTAT_LIBS="${THERMOSTAT_HOME}/libs"
 

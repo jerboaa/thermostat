@@ -37,25 +37,39 @@
 #####################################################################
 #
 # Some necessary variables.
-if [ "$THERMOSTAT_HOME" = "" ]; then
-    echo "THERMOSTAT_HOME not set!"
+if [ x"${THERMOSTAT_INSTALL_DIR}" = "x" ]; then
+    echo "THERMOSTAT_INSTALL_DIR not set!" 1>&2
+    exit 1
+fi
 
-else
+# If run as unprivilged user, copy/symlink files from system install
+if [ x"${THERMOSTAT_HOME}" = "x" ]; then
+    # Thermostat run as regular user (no systemd)
+    THERMOSTAT_HOME="${HOME}/.thermostat"
+
+    # Set up structure for users
     THERMOSTAT_STORAGE="${THERMOSTAT_HOME}/storage/db"
     THERMOSTAT_LOG="${THERMOSTAT_HOME}/storage/logs"
     THERMOSTAT_PID="${THERMOSTAT_HOME}/storage/run"
     THERMOSTAT_BIN="${THERMOSTAT_HOME}/bin"
     THERMOSTAT_AGENT_LOG="${THERMOSTAT_HOME}/agent/logs"
     THERMOSTAT_AGENT_RUN="${THERMOSTAT_HOME}/agent/run"
-    THEMROSTAT_CLIENT="${THERMOSTAT_HOME}/client"
-    THERMOSTAT_LIBS="${THERMOSTAT_HOME}/libs/native"
+    THERMOSTAT_CLIENT="${THERMOSTAT_HOME}/client"
+    THERMOSTAT_LIBS="${THERMOSTAT_HOME}/libs"
+    THERMOSTAT_PLUGINS="${THERMOSTAT_HOME}/plugins"
+    THERMOSTAT_ETC="${THERMOSTAT_HOME}/etc"
     THERMOSTAT_OSGI_CACHE="${THERMOSTAT_HOME}/osgi-cache"
 
     if [ ! -d "${THERMOSTAT_STORAGE}" ] ; then
         echo "creating ${THERMOSTAT_STORAGE}"
         mkdir -p ${THERMOSTAT_STORAGE}
     fi
-    
+
+    if [ ! -e  "${THERMOSTAT_HOME}/storage/db.properties" ] ; then
+        echo "copying over ${THERMOSTAT_HOME}/storage/db.properties"
+        cp "${THERMOSTAT_INSTALL_DIR}/storage/db.properties" "${THERMOSTAT_HOME}/storage"
+    fi
+
     if [ ! -d "${THERMOSTAT_LOG}" ] ; then
         echo "creating ${THERMOSTAT_LOG}"
         mkdir -p ${THERMOSTAT_LOG}
@@ -81,6 +95,10 @@ else
         mkdir -p ${THERMOSTAT_AGENT_RUN}
     fi
 
+    if [ ! -e "${THERMOSTAT_HOME}/agent/agent.properties" ] ; then
+        cp "${THERMOSTAT_INSTALL_DIR}"/agent/agent.properties "${THERMOSTAT_HOME}"/agent/agent.properties
+    fi
+
     if [ ! -d "${THERMOSTAT_CLIENT}" ] ; then
         echo "creating ${THERMOSTAT_CLIENT}"
         mkdir -p "${THERMOSTAT_CLIENT}"
@@ -88,7 +106,17 @@ else
 
     if [ ! -d "${THERMOSTAT_LIBS}" ] ; then
         echo "creating ${THERMOSTAT_LIBS}"
-        mkdir -p ${THERMOSTAT_LIBS}
+        ln -s "${THERMOSTAT_INSTALL_DIR}"/libs "${THERMOSTAT_LIBS}"
+    fi
+
+    if [ ! -d "${THERMOSTAT_PLUGINS}" ] ; then
+        echo "creating ${THERMOSTAT_PLUGINS}"
+        ln -s "${THERMOSTAT_INSTALL_DIR}"/plugins "${THERMOSTAT_PLUGINS}"
+    fi
+
+    if [ ! -d "${THERMOSTAT_ETC}" ] ; then
+        echo "creating ${THERMOSTAT_ETC}"
+        cp -r "${THERMOSTAT_INSTALL_DIR}"/etc "${THERMOSTAT_ETC}"
     fi
 
     if [ ! -d "${THERMOSTAT_OSGI_CACHE}" ] ; then
@@ -96,4 +124,3 @@ else
         mkdir -p ${THERMOSTAT_OSGI_CACHE}
     fi
 fi
-
