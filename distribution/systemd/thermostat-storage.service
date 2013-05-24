@@ -45,6 +45,7 @@ Documentation=http://icedtea.classpath.org/wiki/Thermostat/Packaging/SystemdServ
 
 [Service]
 Type=forking
+EnvironmentFile=-/etc/sysconfig/thermostat
 ExecStart=@thermostat.home@/bin/thermostat storage --start
 ExecStop=@thermostat.home@/bin/thermostat storage --stop
 PIDFile=@thermostat.home@/storage/run/db.pid
