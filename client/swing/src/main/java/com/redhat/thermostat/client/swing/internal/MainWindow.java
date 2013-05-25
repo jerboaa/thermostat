@@ -331,7 +331,7 @@ public class MainWindow extends JFrame implements MainView {
     private StatusBar statusBar;
     
     private final DefaultMutableTreeNode publishedRoot =
-            new DefaultMutableTreeNode(translator.localize(LocaleResources.MAIN_WINDOW_TREE_ROOT_NAME));
+            new DefaultMutableTreeNode(translator.localize(LocaleResources.MAIN_WINDOW_TREE_ROOT_NAME).getContents());
     private final DefaultTreeModel publishedTreeModel = new DefaultTreeModel(publishedRoot);
 
     @SuppressWarnings("restriction")
