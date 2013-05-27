@@ -122,9 +122,9 @@ public class MemoryStatsController implements InformationServiceController<VmRef
                         payload.setMaxCapacity(maxCapacity);
                         payload.setCapacityUnit(maxScale);
                         
-                        String tooltip = space.getName() + ": used: " + used + " " + usedScale +
-                                ", capacity: " + capacity + " " + maxScale +
-                                ", max capacity: " + maxCapacity + " " + maxScale;
+                        String tooltip = space.getName() + ": used: " + String.format("%.2f", used) + " " + usedScale +
+                                ", capacity: " + String.format("%.2f", capacity) + " " + maxScale +
+                                ", max capacity: " + String.format("%.2f", maxCapacity) + " " + maxScale;
                         
                         payload.setTooltip(tooltip);
                         

@@ -209,7 +209,7 @@ public class MemoryMeter extends JComponent {
                                            bounds.height, 6, 6);
         graphics.fill(frame);
         
-        String value = String.valueOf(getPrimaryModel().getValue()) + " " + primaryUnit;
+        String value = String.format("%.2f", getPrimaryModel().getValue()) + " " + primaryUnit;
         Rectangle2D fontBounds = font.getStringBounds(value, graphics.getFontRenderContext());
         int width = (int) (bounds.width/2 - fontBounds.getWidth()/2) - 1;
         
@@ -298,28 +298,28 @@ public class MemoryMeter extends JComponent {
       // top bar min value
       FontMetrics fm = SwingUtilities2.getFontMetrics(this, font);
       
-      String value = String.valueOf(getPrimaryModel().getMinimum()) + " " + primaryUnit;
+      String value = String.format("%.2f", getPrimaryModel().getMinimum()) + " " + primaryUnit;
       int height = top + fm.getAscent()/2;
       SwingUtilities2.drawString(this, graphics, value, 1, height);
       
-      value = String.valueOf(getSecondaryModel().getMinimum()) + " " + secondaryUnit;
+      value = String.format("%.2f", getSecondaryModel().getMinimum()) + " " + secondaryUnit;
       height = bottom;
       SwingUtilities2.drawString(this, graphics, value, 1, height);
       
-      value = String.valueOf(getPrimaryModel().getMaximum()) + " " + primaryUnit;
+      value = String.format("%.2f", getPrimaryModel().getMaximum()) + " " + primaryUnit;
       height = top + fm.getAscent()/2;
 
       int width = (int) (right - font.getStringBounds(value, graphics.getFontRenderContext()).getWidth()) - 1;
       SwingUtilities2.drawString(this, graphics, value, width, height);
       
-      value = String.valueOf(getSecondaryModel().getMaximum()) + " " + secondaryUnit;
+      value = String.format("%.2f", getSecondaryModel().getMaximum()) + " " + secondaryUnit;
       height = bottom;
       width = (int) (right - font.getStringBounds(value, graphics.getFontRenderContext()).getWidth()) - 1;
       SwingUtilities2.drawString(this, graphics, value, width, height);
       
       // now draw the actual value for the bottom bar, the top bar is drawn in
       // its fill method
-      value = String.valueOf(getSecondaryModel().getValue()) + " " + secondaryUnit;
+      value = String.format("%.2f", getSecondaryModel().getValue()) + " " + secondaryUnit;
       width = right/2;
       Rectangle2D bounds = font.getStringBounds(value, graphics.getFontRenderContext());
       width = (int) (width - bounds.getWidth()/2) - 1;

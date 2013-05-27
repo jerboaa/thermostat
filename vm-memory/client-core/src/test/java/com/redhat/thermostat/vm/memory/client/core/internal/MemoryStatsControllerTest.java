@@ -244,10 +244,10 @@ public class MemoryStatsControllerTest {
         assertEquals(1, payload.getUsed(), 0);
         
         // the value above all ensure the same scale is used
-        String tooltip = payload.getName() + ": used: " + payload.getUsed() + " " +
+        String tooltip = payload.getName() + ": used: " + String.format("%.2f", payload.getUsed()) + " " +
                          payload.getUsedUnit() + ", capacity: " +
-                         payload.getCapacity() + " " + payload.getUsedUnit() +
-                         ", max capacity: " + payload.getMaxCapacity() + " " +
+                         String.format("%.2f", payload.getCapacity()) + " " + payload.getUsedUnit() +
+                         ", max capacity: " + String.format("%.2f", payload.getMaxCapacity()) + " " +
                          payload.getUsedUnit();
         
         assertEquals(tooltip, payload.getTooltip());
