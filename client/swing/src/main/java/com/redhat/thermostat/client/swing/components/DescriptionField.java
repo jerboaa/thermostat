@@ -34,26 +34,16 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.jmx.client.core;
+package com.redhat.thermostat.client.swing.components;
 
-import com.redhat.thermostat.common.locale.Translate;
+import javax.swing.JLabel;
 
-public enum LocaleResources {
+import com.redhat.thermostat.common.locale.LocalizedString;
 
-    NOTIFICATIONS_TITLE,
+public class DescriptionField extends JLabel {
 
-    NOTIFICATIONS_HEADER,
-    NOTIFICATIONS_DESCRIPTION,
-
-    NOTIFICATIONS_ENABLE,
-    NOTIFICATIONS_ENABLE_DESCRIPTION,
-    NOTIFICATIONS_DISABLE,
-    NOTIFICATIONS_DISABLE_DESCRIPTION,
-    ;
-
-    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.vm.jmx.client.core.strings";
-
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+    public DescriptionField(LocalizedString text) {
+        super(text.getContents());
     }
+
 }

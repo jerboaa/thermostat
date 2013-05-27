@@ -42,16 +42,22 @@ import java.awt.GridBagLayout;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import javax.swing.AbstractButton;
+import javax.swing.BorderFactory;
+import javax.swing.ButtonModel;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.IconResource;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.ActionToggleButton;
+import com.redhat.thermostat.client.swing.components.DescriptionField;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
@@ -72,16 +78,24 @@ public class JmxNotificationsSwingView extends JmxNotificationsView implements S
 
     public JmxNotificationsSwingView() {
 
+        DescriptionField description = new DescriptionField(translate.localize(LocaleResources.NOTIFICATIONS_DESCRIPTION));
+        description.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        JList<String> issuesList = new JList<>(listModel);
+
         JPanel contents = new JPanel();
         contents.setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 0;
+        c.anchor = GridBagConstraints.FIRST_LINE_START;
+
+        contents.add(description, c);
+
+        c.gridy++;
         c.weightx = 1;
         c.weighty = 1;
         c.fill = GridBagConstraints.BOTH;
-        c.anchor = GridBagConstraints.PAGE_START;
-
-        JList<String> issuesList = new JList<>(listModel);
-
+        c.anchor = GridBagConstraints.FIRST_LINE_START;
         contents.add(new JScrollPane(issuesList), c);
 
         contents.addHierarchyListener(new ComponentVisibleListener() {
@@ -96,13 +110,27 @@ public class JmxNotificationsSwingView extends JmxNotificationsView implements S
             }
         });
 
-        toolbarButton = new ActionToggleButton(IconResource.RECORD.getIcon(), "");
+        toolbarButton = new ActionToggleButton(IconResource.RECORD.getIcon(), translate.localize(LocaleResources.NOTIFICATIONS_ENABLE).getContents());
         toolbarButton.setName("toggleNotifications");
+        toolbarButton.setToolTipText(translate.localize(LocaleResources.NOTIFICATIONS_ENABLE_DESCRIPTION).getContents());
         toolbarButton.addActionListener(new java.awt.event.ActionListener() {
 
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
                 fireNotificationAction(NotificationAction.TOGGLE_NOTIFICATIONS);
+            }
+        });
+        toolbarButton.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                ButtonModel model = ((AbstractButton) e.getSource()).getModel();
+                if (model.isSelected()) {
+                    toolbarButton.setText(translate.localize(LocaleResources.NOTIFICATIONS_DISABLE).getContents());
+                    toolbarButton.setToolTipText(translate.localize(LocaleResources.NOTIFICATIONS_DISABLE_DESCRIPTION).getContents());
+                } else {
+                    toolbarButton.setText(translate.localize(LocaleResources.NOTIFICATIONS_ENABLE).getContents());
+                    toolbarButton.setToolTipText(translate.localize(LocaleResources.NOTIFICATIONS_ENABLE_DESCRIPTION).getContents());
+                }
             }
         });
 
