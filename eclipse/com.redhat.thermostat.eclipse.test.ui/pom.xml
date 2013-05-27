@@ -61,17 +61,17 @@
             <dependency>
               <type>p2-installable-unit</type>
               <artifactId>com.redhat.thermostat.client.feature.feature.group</artifactId>
-              <version>0.8.0</version>
+              <version>0.10.0</version>
             </dependency>
             <dependency>
               <type>p2-installable-unit</type>
               <artifactId>com.redhat.thermostat.eclipse.feature.feature.group</artifactId>
-              <version>0.8.0</version>
+              <version>0.10.0</version>
             </dependency>
             <dependency>
               <type>p2-installable-unit</type>
               <artifactId>com.redhat.thermostat.eclipse.test.deps.feature.feature.group</artifactId>
-              <version>0.8.0</version>
+              <version>0.10.0</version>
             </dependency>
           </dependencies>
           <bundleStartLevel>
