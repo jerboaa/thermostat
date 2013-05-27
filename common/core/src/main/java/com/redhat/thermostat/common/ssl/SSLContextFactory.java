@@ -58,12 +58,12 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509KeyManager;
 
-import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.internal.JSSEKeyManager;
 import com.redhat.thermostat.common.internal.KeyStoreProvider;
 import com.redhat.thermostat.common.internal.TrustManagerFactory;
 import com.redhat.thermostat.common.internal.DelegateSSLSocketFactory;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 
 public class SSLContextFactory {
 

@@ -37,7 +37,7 @@
 package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.heap.analysis.command.locale.LocaleResources;
 
 @SuppressWarnings("serial")

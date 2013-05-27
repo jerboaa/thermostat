@@ -42,9 +42,9 @@ import java.util.List;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.AbstractCommand;
-import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.HostPortPair;
 import com.redhat.thermostat.common.utils.HostPortsParser;
+import com.redhat.thermostat.shared.locale.Translate;
 
 public class WebServiceCommand extends AbstractCommand {
 

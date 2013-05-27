@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.vm.overview.client.locale;
 
-import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.shared.locale.Translate;
 
 public enum LocaleResources {
     VM_INFO_TAB_OVERVIEW,

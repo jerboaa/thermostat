@@ -138,7 +138,9 @@
         <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
           <configuration>
-            <argLine>-Djava.library.path=${project.build.directory}/ ${coverageAgent}</argLine>
+            <systemPropertyVariables>
+              <com.redhat.thermostat.shared.loader.testNativesHome>${project.build.directory}</com.redhat.thermostat.shared.loader.testNativesHome>
+            </systemPropertyVariables>
           </configuration>
       </plugin>
       

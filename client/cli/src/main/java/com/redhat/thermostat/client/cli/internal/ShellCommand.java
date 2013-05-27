@@ -58,10 +58,10 @@ import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Console;
-import com.redhat.thermostat.common.config.Configuration;
-import com.redhat.thermostat.common.config.InvalidConfigurationException;
-import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.config.Configuration;
+import com.redhat.thermostat.shared.config.InvalidConfigurationException;
+import com.redhat.thermostat.shared.locale.Translate;
 
 public class ShellCommand extends AbstractCommand {
 

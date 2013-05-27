@@ -38,10 +38,10 @@ package com.redhat.thermostat.agent.cli.impl.db;
 
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.agent.cli.impl.locale.LocaleResources;
-import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.config.ThermostatOptionParser;
-import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.tools.ApplicationState;
+import com.redhat.thermostat.shared.config.InvalidConfigurationException;
+import com.redhat.thermostat.shared.locale.Translate;
 
 public class DBOptionParser implements ThermostatOptionParser {
     

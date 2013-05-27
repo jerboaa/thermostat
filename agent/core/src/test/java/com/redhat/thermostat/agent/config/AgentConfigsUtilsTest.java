@@ -45,7 +45,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.config.InvalidConfigurationException;
+import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.testutils.TestUtils;
 
 public class AgentConfigsUtilsTest {

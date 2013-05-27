@@ -56,11 +56,11 @@ import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.common.command.ConfigurationCommandContext;
-import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.ssl.SSLContextFactory;
 import com.redhat.thermostat.common.ssl.SSLConfiguration;
 import com.redhat.thermostat.common.ssl.SslInitException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 
 class ConfigurationServerContext implements ConfigurationCommandContext {
 

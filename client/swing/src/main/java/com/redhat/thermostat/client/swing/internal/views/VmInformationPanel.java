@@ -45,7 +45,7 @@ import javax.swing.JTabbedPane;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.core.views.VmInformationView;
 import com.redhat.thermostat.client.swing.SwingComponent;
-import com.redhat.thermostat.common.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 
 public class VmInformationPanel extends VmInformationView implements SwingComponent {
 

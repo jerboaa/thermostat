@@ -43,10 +43,10 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Properties;
 
-import com.redhat.thermostat.common.config.Configuration;
-import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.agent.locale.LocaleResources;
-import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.shared.config.Configuration;
+import com.redhat.thermostat.shared.config.InvalidConfigurationException;
+import com.redhat.thermostat.shared.locale.Translate;
 
 public class AgentConfigsUtils {
 

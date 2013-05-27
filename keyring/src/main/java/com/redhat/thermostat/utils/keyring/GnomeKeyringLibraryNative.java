@@ -36,16 +36,19 @@
 
 package com.redhat.thermostat.utils.keyring;
 
+import com.redhat.thermostat.shared.config.NativeLibraryResolver;
+
 class GnomeKeyringLibraryNative implements Keyring {
     
     static {
-        System.loadLibrary("GnomeKeyringWrapper");
+        String lib = NativeLibraryResolver.getAbsoluteLibraryPath("GnomeKeyringWrapper");
+        System.load(lib);
     }
     
     public GnomeKeyringLibraryNative() {
-        
+        // nothing
     }
-    
+
     @Override
     public synchronized void loadPassword(Credentials credentials) {
         if (credentials == null) {

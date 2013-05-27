@@ -43,12 +43,15 @@ import java.lang.reflect.Method;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
+import com.redhat.thermostat.shared.config.NativeLibraryResolver;
+
 public class GTKThemeUtils {
 
     private static boolean initialized;
     static {
         try {
-            System.loadLibrary("GTKThemeUtils");
+            String lib = NativeLibraryResolver.getAbsoluteLibraryPath("GTKThemeUtils");
+            System.load(lib);
             initialized = init();
         } catch (UnsatisfiedLinkError ignore) {}
     }

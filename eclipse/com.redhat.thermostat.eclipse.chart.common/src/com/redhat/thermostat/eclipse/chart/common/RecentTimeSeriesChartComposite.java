@@ -62,7 +62,7 @@ import org.jfree.chart.JFreeChart;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
-import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
 
 public class RecentTimeSeriesChartComposite extends Composite {

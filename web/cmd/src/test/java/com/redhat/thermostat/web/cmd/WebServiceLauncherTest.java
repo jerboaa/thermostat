@@ -50,8 +50,8 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.utils.HostPortPair;
+import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 
 public class WebServiceLauncherTest {
     

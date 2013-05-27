@@ -69,6 +69,13 @@ to do so, delete this exception statement from your version.
          install-size="0"
          version="0.0.0"
          unpack="false"/>
+         
+   <plugin
+         id="com.redhat.thermostat.configuration"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
 
    <plugin
          id="com.redhat.thermostat.keyring"

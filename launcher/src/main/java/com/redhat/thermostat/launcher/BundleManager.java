@@ -43,8 +43,8 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.launch.Framework;
 
 import com.redhat.thermostat.annotations.Service;
-import com.redhat.thermostat.common.config.Configuration;
 import com.redhat.thermostat.launcher.internal.BundleLoader;
+import com.redhat.thermostat.shared.config.Configuration;
 
 /**
  * A Service that provides features to load bundles for given command names.

@@ -51,7 +51,7 @@ import java.util.NoSuchElementException;
 import com.redhat.thermostat.client.cli.VMStatPrintDelegate;
 import com.redhat.thermostat.common.OrderedComparator;
 import com.redhat.thermostat.common.cli.TableRenderer;
-import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 import com.redhat.thermostat.storage.model.TimeStampedPojoComparator;

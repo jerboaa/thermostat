@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.config;
+package com.redhat.thermostat.shared.config;
 
 import static org.junit.Assert.fail;
 
@@ -46,6 +46,9 @@ import junit.framework.Assert;
 
 import org.junit.After;
 import org.junit.Test;
+
+import com.redhat.thermostat.shared.config.Configuration;
+import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 
 public class ConfigurationTest {
     
@@ -64,7 +67,7 @@ public class ConfigurationTest {
 
     @Test
     public void testLocations() throws InvalidConfigurationException, IOException {
-        String thermostatHome = "/tmp/";
+        String thermostatHome = "/tmp";
         System.setProperty("THERMOSTAT_HOME", thermostatHome);
         
         char s = File.separatorChar;
@@ -73,20 +76,23 @@ public class ConfigurationTest {
 
         Assert.assertEquals(thermostatHome, config.getThermostatHome());
 
-        Assert.assertEquals(thermostatHome + "agent" + s + "agent.properties",
+        Assert.assertEquals(thermostatHome + s + "agent" + s + "agent.properties",
                             config.getAgentConfigurationFile().getCanonicalPath());
-        Assert.assertEquals(thermostatHome + "agent" + s + "agent.auth",
+        Assert.assertEquals(thermostatHome + s + "agent" + s + "agent.auth",
                                     config.getAgentAuthConfigFile().getCanonicalPath());
-        Assert.assertEquals(thermostatHome + "storage", config.getStorageBaseDirectory().getCanonicalPath());
-        Assert.assertEquals(thermostatHome + "storage" + s + "db.properties",
+        Assert.assertEquals(thermostatHome + s + "storage", config.getStorageBaseDirectory().getCanonicalPath());
+        Assert.assertEquals(thermostatHome + s + "storage" + s + "db.properties",
                             config.getStorageConfigurationFile().getCanonicalPath());
-        Assert.assertEquals(thermostatHome + "storage" + s + "db",
+        Assert.assertEquals(thermostatHome + s + "storage" + s + "db",
                 config.getStorageDirectory().getCanonicalPath());
-        Assert.assertEquals(thermostatHome + "storage" + s + "logs" + s + "db.log",
+        Assert.assertEquals(thermostatHome + s + "storage" + s + "logs" + s + "db.log",
                 config.getStorageLogFile().getCanonicalPath());
-        Assert.assertEquals(thermostatHome + "storage" + s + "run" + s + "db.pid",
+        Assert.assertEquals(thermostatHome + s + "storage" + s + "run" + s + "db.pid",
                 config.getStoragePidFile().getCanonicalPath());
-
+        Assert.assertEquals(thermostatHome + s + "libs" + s + "native",
+                config.getNativeLibsRoot());
+        Assert.assertEquals(thermostatHome + s + "libs", config.getLibRoot());
+        Assert.assertEquals(thermostatHome + s + "plugins", config.getPluginRoot());
     }
     
     @Test

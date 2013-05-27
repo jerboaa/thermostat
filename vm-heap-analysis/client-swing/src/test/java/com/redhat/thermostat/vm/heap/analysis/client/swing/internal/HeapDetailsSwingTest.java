@@ -61,7 +61,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import com.redhat.thermostat.client.swing.EdtHelper;
-import com.redhat.thermostat.common.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.HeapDetailsSwing;
 import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.HistogramPanel;
 import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.ObjectDetailsPanel;

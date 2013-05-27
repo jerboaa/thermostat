@@ -40,7 +40,7 @@ import javax.swing.AbstractButton;
 import javax.swing.Icon;
 import javax.swing.JButton;
 
-import com.redhat.thermostat.common.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 
 /**
  * A swing implementation of {@link ToolbarButton}.

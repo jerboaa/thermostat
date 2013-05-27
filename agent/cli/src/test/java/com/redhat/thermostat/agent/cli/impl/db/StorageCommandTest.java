@@ -61,9 +61,9 @@ import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
-import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.common.tools.ApplicationState;
+import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 
 public class StorageCommandTest {
     

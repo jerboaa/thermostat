@@ -42,8 +42,8 @@ import java.io.IOException;
 import java.util.Properties;
 
 import com.redhat.thermostat.agent.cli.impl.locale.LocaleResources;
-import com.redhat.thermostat.common.config.InvalidConfigurationException;
-import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.shared.config.InvalidConfigurationException;
+import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 
 public class DBStartupConfiguration implements StartupConfiguration {

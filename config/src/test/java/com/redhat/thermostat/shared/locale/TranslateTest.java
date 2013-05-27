@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.locale;
+package com.redhat.thermostat.shared.locale;
 
 import static org.junit.Assert.assertEquals;
 
@@ -42,6 +42,8 @@ import java.util.ListResourceBundle;
 import java.util.ResourceBundle;
 
 import org.junit.Test;
+
+import com.redhat.thermostat.shared.locale.Translate;
 
 public class TranslateTest {
 

@@ -42,12 +42,12 @@ import java.awt.event.ActionListener;
 import javax.swing.ImageIcon;
 
 import com.redhat.thermostat.client.swing.components.ActionButton;
-import com.redhat.thermostat.common.locale.LocalizedString;
-import com.redhat.thermostat.common.locale.Translate;
 
 import com.redhat.thermostat.gc.remote.client.common.IconResources;
 import com.redhat.thermostat.gc.remote.client.common.LocaleResources;
 import com.redhat.thermostat.gc.remote.client.common.RequestGCAction;
+import com.redhat.thermostat.shared.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.Translate;
 
 @SuppressWarnings("serial")
 public class ToolbarGCButton extends ActionButton {

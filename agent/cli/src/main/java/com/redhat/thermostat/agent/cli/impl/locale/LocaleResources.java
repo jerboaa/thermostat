@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.agent.cli.impl.locale;
 
-import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.shared.locale.Translate;
 
 public enum LocaleResources {
 

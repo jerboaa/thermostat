@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.host.cpu.client.locale;
 
-import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.shared.locale.Translate;
 
 public enum LocaleResources {
     HOST_INFO_TAB_CPU,

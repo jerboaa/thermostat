@@ -60,7 +60,7 @@ import org.jfree.chart.ChartPanel;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
-import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.shared.locale.Translate;
 
 public class RecentTimeSeriesChartPanel extends JPanel {
 

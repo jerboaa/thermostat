@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.common.cli;
 
-import com.redhat.thermostat.common.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 
 /**
  * An exception to be thrown by a {@link Command} upon implementation-defined

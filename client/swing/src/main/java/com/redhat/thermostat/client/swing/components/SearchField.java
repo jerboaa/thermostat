@@ -58,7 +58,7 @@ import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.swing.IconResource;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.shared.locale.Translate;
 
 /**
  * A swing component meant for entering search terms.

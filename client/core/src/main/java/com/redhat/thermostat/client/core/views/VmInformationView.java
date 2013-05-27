@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.client.core.views;
 
-import com.redhat.thermostat.common.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 
 
 public abstract class VmInformationView extends BasicView implements UIComponent {

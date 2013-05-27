@@ -45,7 +45,7 @@ import javax.swing.JPanel;
 
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.ChartPanel;
-import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 import com.redhat.thermostat.thread.client.common.chart.ThreadDeatailsPieChart;
 import com.redhat.thermostat.thread.client.common.locale.LocaleResources;

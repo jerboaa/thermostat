@@ -46,8 +46,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.killvm.client.locale.LocaleResources;
+import com.redhat.thermostat.shared.locale.Translate;
 
 public class TranslateTest {
 

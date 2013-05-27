@@ -49,8 +49,8 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import com.redhat.thermostat.common.cli.Arguments;
-import com.redhat.thermostat.common.locale.LocalizedString;
-import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.shared.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.Translate;
 
 public class CommandLineArgumentsParser {
 

@@ -60,8 +60,8 @@ import org.osgi.framework.launch.FrameworkFactory;
 import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.common.Launcher;
-import com.redhat.thermostat.common.config.Configuration;
 import com.redhat.thermostat.launcher.BundleManager;
+import com.redhat.thermostat.shared.config.Configuration;
 
 public class FrameworkProvider {
 

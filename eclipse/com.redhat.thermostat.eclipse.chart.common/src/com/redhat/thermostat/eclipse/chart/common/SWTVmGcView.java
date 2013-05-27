@@ -64,8 +64,8 @@ import org.jfree.data.RangeType;
 import org.jfree.data.xy.IntervalXYDataset;
 
 import com.redhat.thermostat.client.ui.SampledDataset;
-import com.redhat.thermostat.common.locale.LocalizedString;
-import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.shared.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.eclipse.SWTComponent;
 import com.redhat.thermostat.storage.model.IntervalTimeData;
 import com.redhat.thermostat.vm.gc.client.core.VmGcView;

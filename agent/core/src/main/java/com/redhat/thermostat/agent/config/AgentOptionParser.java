@@ -37,8 +37,8 @@
 package com.redhat.thermostat.agent.config;
 
 import com.redhat.thermostat.common.cli.Arguments;
-import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.config.ThermostatOptionParser;
+import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 
 public class AgentOptionParser implements ThermostatOptionParser {
 

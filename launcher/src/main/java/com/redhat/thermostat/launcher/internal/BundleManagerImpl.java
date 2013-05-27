@@ -50,8 +50,8 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.launch.Framework;
 
-import com.redhat.thermostat.common.config.Configuration;
 import com.redhat.thermostat.launcher.BundleManager;
+import com.redhat.thermostat.shared.config.Configuration;
 
 public class BundleManagerImpl extends BundleManager {
 

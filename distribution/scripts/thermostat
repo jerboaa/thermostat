@@ -51,7 +51,6 @@ TOOLS_JAR="@java.home@/../lib/tools.jar"
 
 # plus the main services we use and export
 SERVICE_CLASSPATH="${THERMOSTAT_LIBS}/*"
-SERVICE_NATIVE="${THERMOSTAT_LIBS}/native"
 
 SERVICE_CLASSPATH="${TOOLS_JAR}:${SERVICE_CLASSPATH}"
 THERMOSTAT_MAIN="com.redhat.thermostat.main.Thermostat"
@@ -100,13 +99,13 @@ if [ $RUN_IN_BG -eq 1 ]; then
     if [ x"$PID_FILE" = "x" ]; then
         usage 
     else
-        ${JAVA} "${JAVA_ARGS[@]}" -Djava.library.path=${SERVICE_NATIVE} -cp ${SERVICE_CLASSPATH} ${THERMOSTAT_MAIN} "${ARGS[@]}" &
+        ${JAVA} "${JAVA_ARGS[@]}" -cp ${SERVICE_CLASSPATH} ${THERMOSTAT_MAIN} "${ARGS[@]}" &
         retval=$?
         echo $! > $PID_FILE
         retval=$(( $retval + $? ))
     fi
 else
-    ${JAVA} "${JAVA_ARGS[@]}" -Djava.library.path=${SERVICE_NATIVE} -cp ${SERVICE_CLASSPATH} ${THERMOSTAT_MAIN} "${ARGS[@]}"
+    ${JAVA} "${JAVA_ARGS[@]}" -cp ${SERVICE_CLASSPATH} ${THERMOSTAT_MAIN} "${ARGS[@]}"
     retval=$?
 fi
 exit $retval

@@ -34,12 +34,12 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.config;
+package com.redhat.thermostat.shared.config;
 
 import java.io.File;
 
-import com.redhat.thermostat.common.locale.LocaleResources;
-import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.shared.locale.LocaleResources;
+import com.redhat.thermostat.shared.locale.Translate;
 
 public class Configuration {
 
@@ -84,6 +84,10 @@ public class Configuration {
 
     public String getLibRoot() throws InvalidConfigurationException {
         return home + File.separator + "libs";
+    }
+    
+    public String getNativeLibsRoot() throws InvalidConfigurationException {
+        return getLibRoot() + File.separator + "native";
     }
 
     public String getConfigurationDir() throws InvalidConfigurationException {

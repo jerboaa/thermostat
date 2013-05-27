@@ -42,9 +42,9 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.locale.LocalizedString;
-import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramView;

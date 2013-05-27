@@ -46,7 +46,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.config.InvalidConfigurationException;
+import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 
 public class DBStartupConfigurationTest {
     

@@ -61,7 +61,7 @@ import com.redhat.thermostat.client.swing.components.DescriptionField;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.jmx.client.core.JmxNotificationsView;
 import com.redhat.thermostat.vm.jmx.client.core.LocaleResources;
 import com.redhat.thermostat.vm.jmx.common.JmxNotification;

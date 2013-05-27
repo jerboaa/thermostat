@@ -49,9 +49,9 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.security.Constraint;
 import org.eclipse.jetty.webapp.WebAppContext;
 
-import com.redhat.thermostat.common.config.InvalidConfigurationException;
-import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.HostPortPair;
+import com.redhat.thermostat.shared.config.InvalidConfigurationException;
+import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.mongodb.MongoStorageProvider;
 import com.redhat.thermostat.web.server.WebStorageEndPoint;
 import com.redhat.thermostat.web.server.auth.RolePrincipal;

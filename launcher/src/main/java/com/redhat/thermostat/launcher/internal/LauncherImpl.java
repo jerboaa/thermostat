@@ -63,13 +63,13 @@ import com.redhat.thermostat.common.cli.CommandContextFactory;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Console;
 import com.redhat.thermostat.common.config.ClientPreferences;
-import com.redhat.thermostat.common.config.InvalidConfigurationException;
-import com.redhat.thermostat.common.locale.LocalizedString;
-import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.tools.StorageAuthInfoGetter;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.BundleManager;
+import com.redhat.thermostat.shared.config.InvalidConfigurationException;
+import com.redhat.thermostat.shared.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.ConnectionException;
 import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.storage.core.DbServiceFactory;
@@ -142,7 +142,13 @@ public class LauncherImpl implements Launcher {
             System.err.println("Caught NoClassDefFoundError! Check pom for the missing class: \""
                     + e.getMessage() + "\".  Its package may not be listed.");
             throw e;
-        } finally {
+        } catch (Throwable e) {
+            // Sometimes get exceptions, which get seemingly swallowed, which
+            // they really aren't, but the finally block make it seem so.
+            e.printStackTrace(System.err);
+            throw e;
+        }
+        finally {
             args = null;
             boolean isLastLaunch = (usageCount.decrementAndGet() == 0);
             if (isLastLaunch) {

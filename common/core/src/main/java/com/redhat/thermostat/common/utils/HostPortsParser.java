@@ -39,9 +39,9 @@ package com.redhat.thermostat.common.utils;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.locale.LocaleResources;
-import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.shared.config.InvalidConfigurationException;
+import com.redhat.thermostat.shared.locale.Translate;
 
 /**
  * Parses Host/Port pairs from a raw string.

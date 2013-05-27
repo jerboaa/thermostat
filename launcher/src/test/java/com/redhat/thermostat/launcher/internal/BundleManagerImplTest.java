@@ -58,7 +58,7 @@ import org.osgi.framework.launch.Framework;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.redhat.thermostat.common.config.Configuration;
+import com.redhat.thermostat.shared.config.Configuration;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({BundleManagerImpl.class, FrameworkUtil.class})

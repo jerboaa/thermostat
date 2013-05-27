@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.common.locale;
 
+import com.redhat.thermostat.shared.locale.Translate;
+
 public enum LocaleResources {
 
     MISSING_INFO,
@@ -50,8 +52,6 @@ public enum LocaleResources {
     PASSWORD_PROMPT,
 
     LOGGING_PROPERTIES_ISSUE,
-
-    ENV_NO_HOME,
 
     INVALID_IPPORT,
     ;

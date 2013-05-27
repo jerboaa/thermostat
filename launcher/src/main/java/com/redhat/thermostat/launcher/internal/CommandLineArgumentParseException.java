@@ -37,7 +37,7 @@
 package com.redhat.thermostat.launcher.internal;
 
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 
 public class CommandLineArgumentParseException extends CommandException {
 

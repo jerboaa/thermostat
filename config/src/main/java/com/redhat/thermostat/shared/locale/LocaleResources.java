@@ -34,24 +34,20 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.locale;
+package com.redhat.thermostat.shared.locale;
 
-public final class LocalizedString {
+import com.redhat.thermostat.shared.locale.Translate;
 
-    private final String contents;
+public enum LocaleResources {
 
-    /**
-     * Create a {@link LocalizedString} with pre-translated contents.  This
-     * constructor is public for testing purposes, production code should use
-     * {@link Translate#localize(? extends Enum)} instead.
-     *
-     * @param contents The pre-translated contents for the new {@link LocalizedString}
-     */
-    public LocalizedString(String contents) {
-        this.contents = contents;
-    }
+    ENV_NO_HOME,
+    ;
 
-    public String getContents() {
-        return contents;
+    public static final String RESOURCE_BUNDLE =
+            "com.redhat.thermostat.shared.locale.strings";
+    
+    public static Translate<LocaleResources> createLocalizer() {
+        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
     }
 }
+

@@ -46,7 +46,7 @@ import javax.swing.SwingUtilities;
 import com.redhat.thermostat.client.core.views.HostInformationView;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.swing.SwingComponent;
-import com.redhat.thermostat.common.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 
 public class HostInformationPanel extends HostInformationView implements SwingComponent {
 

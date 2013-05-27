@@ -41,8 +41,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import com.redhat.thermostat.common.config.Configuration;
 import com.redhat.thermostat.main.impl.FrameworkProvider;
+import com.redhat.thermostat.shared.config.Configuration;
 
 public class Thermostat {
 

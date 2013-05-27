@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.vm.heap.analysis.client.locale;
 
-import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.shared.locale.Translate;
 
 public enum LocaleResources {
     COMMAND_OBJECT_INFO_OBJECT_ID,

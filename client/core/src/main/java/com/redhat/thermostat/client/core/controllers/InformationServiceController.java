@@ -37,7 +37,7 @@
 package com.redhat.thermostat.client.core.controllers;
 
 import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.common.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.core.Ref;
 
 /**

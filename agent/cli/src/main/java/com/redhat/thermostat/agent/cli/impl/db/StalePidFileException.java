@@ -38,8 +38,8 @@ package com.redhat.thermostat.agent.cli.impl.db;
 import java.io.File;
 
 import com.redhat.thermostat.agent.cli.impl.locale.LocaleResources;
-import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.tools.ApplicationException;
+import com.redhat.thermostat.shared.locale.Translate;
 
 @SuppressWarnings("serial")
 public class StalePidFileException extends ApplicationException {

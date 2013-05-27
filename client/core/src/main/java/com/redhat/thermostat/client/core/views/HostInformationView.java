@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.client.core.views;
 
-import com.redhat.thermostat.common.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 
 /**
  * A {@link View} that shows host information. It does not display

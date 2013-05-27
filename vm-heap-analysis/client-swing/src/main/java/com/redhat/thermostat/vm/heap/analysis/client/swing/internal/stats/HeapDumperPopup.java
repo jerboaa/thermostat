@@ -41,7 +41,7 @@ import java.awt.event.ActionListener;
 import javax.swing.JMenuItem;
 
 import com.redhat.thermostat.client.swing.components.ThermostatPopupMenu;
-import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.heap.analysis.client.locale.LocaleResources;
 
 @SuppressWarnings("serial")

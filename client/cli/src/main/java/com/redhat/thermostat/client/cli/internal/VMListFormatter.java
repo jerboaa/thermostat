@@ -39,7 +39,7 @@ package com.redhat.thermostat.client.cli.internal;
 import java.io.PrintStream;
 
 import com.redhat.thermostat.common.cli.TableRenderer;
-import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.VmInfo;
 

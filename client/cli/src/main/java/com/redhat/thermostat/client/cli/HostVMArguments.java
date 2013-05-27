@@ -39,7 +39,7 @@ package com.redhat.thermostat.client.cli;
 import com.redhat.thermostat.client.cli.internal.LocaleResources;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 

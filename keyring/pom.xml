@@ -36,8 +36,8 @@
           <configuration>
             <systemPropertyVariables>
               <com.redhat.thermostat.utils.keyring.provider>com.redhat.thermostat.utils.keyring.MemoryKeyring</com.redhat.thermostat.utils.keyring.provider>
+              <com.redhat.thermostat.shared.loader.testNativesHome>${project.build.directory}</com.redhat.thermostat.shared.loader.testNativesHome>
             </systemPropertyVariables>
-            <argLine>-Djava.library.path=${project.build.directory}/ ${coverageAgent}</argLine>
           </configuration>
       </plugin>
       
@@ -122,5 +122,13 @@
       <version>${project.version}</version>
       <scope>compile</scope>
     </dependency>
+    
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-shared-config</artifactId>
+      <version>${project.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    
   </dependencies>
 </project>

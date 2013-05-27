@@ -39,8 +39,8 @@ package com.redhat.thermostat.vm.memory.client.core;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.locale.LocalizedString;
 import com.redhat.thermostat.gc.remote.common.command.GCCommand;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 
 public abstract class MemoryStatsView extends BasicView implements UIComponent {
     

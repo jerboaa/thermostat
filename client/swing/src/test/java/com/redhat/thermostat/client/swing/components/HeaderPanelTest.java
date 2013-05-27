@@ -59,7 +59,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import com.redhat.thermostat.common.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;

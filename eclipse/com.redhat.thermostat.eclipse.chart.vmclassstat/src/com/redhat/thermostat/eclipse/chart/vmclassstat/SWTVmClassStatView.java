@@ -57,7 +57,7 @@ import org.jfree.data.time.TimeSeriesCollection;
 
 import com.redhat.thermostat.vm.classstat.client.core.VmClassStatView;
 import com.redhat.thermostat.vm.classstat.client.locale.LocaleResources;
-import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.eclipse.SWTComponent;
 import com.redhat.thermostat.eclipse.chart.common.RecentTimeSeriesChartComposite;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;

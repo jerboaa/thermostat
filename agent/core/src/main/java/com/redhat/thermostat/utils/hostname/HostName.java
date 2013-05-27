@@ -36,13 +36,16 @@
 
 package com.redhat.thermostat.utils.hostname;
 
+import com.redhat.thermostat.shared.config.NativeLibraryResolver;
+
 /**
  * Finds the current host name without doing a DNS lookup
  */
 public class HostName {
 
     static {
-        System.loadLibrary("HostNameWrapper");
+        String lib = NativeLibraryResolver.getAbsoluteLibraryPath("HostNameWrapper");
+        System.load(lib);
     }
     
     public static String getLocalHostName() {

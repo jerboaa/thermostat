@@ -43,7 +43,7 @@ import java.util.Set;
 
 import org.apache.commons.cli.Option;
 
-import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.shared.locale.Translate;
 
 /*
  * Container class for launcher-added options, such as dbUrl.

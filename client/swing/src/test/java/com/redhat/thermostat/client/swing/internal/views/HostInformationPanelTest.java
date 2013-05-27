@@ -54,7 +54,7 @@ import org.junit.Test;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.swing.TabbedPaneMatcher;
 import com.redhat.thermostat.client.swing.internal.views.HostInformationPanel;
-import com.redhat.thermostat.common.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 
 public class HostInformationPanelTest {
 

@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.host.overview.client.locale;
 
-import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.shared.locale.Translate;
 
 public enum LocaleResources {
     NUMBER_AND_UNIT,

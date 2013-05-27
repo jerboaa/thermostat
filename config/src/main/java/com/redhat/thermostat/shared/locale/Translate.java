@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.locale;
+package com.redhat.thermostat.shared.locale;
 
 import java.text.MessageFormat;
 import java.util.Locale;

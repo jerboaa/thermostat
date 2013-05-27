@@ -41,7 +41,7 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 
 public class CommandExceptionTest {
 

@@ -34,9 +34,9 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.config;
+package com.redhat.thermostat.shared.config;
 
-import com.redhat.thermostat.common.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 
 
 public class InvalidConfigurationException extends RuntimeException {

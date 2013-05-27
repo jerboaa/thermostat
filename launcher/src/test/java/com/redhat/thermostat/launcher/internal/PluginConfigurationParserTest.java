@@ -52,9 +52,9 @@ import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandExtensions;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.NewCommand;
+import com.redhat.thermostat.shared.locale.Translate;
 
 public class PluginConfigurationParserTest {
 

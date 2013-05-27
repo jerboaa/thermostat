@@ -39,16 +39,14 @@ package com.redhat.thermostat.utils.username.internal;
 import java.io.IOException;
 
 import com.redhat.thermostat.utils.username.UserNameLookupException;
+import com.redhat.thermostat.shared.config.NativeLibraryResolver;
 import com.redhat.thermostat.utils.username.UserNameUtil;
 
 public class UserNameUtilImpl implements UserNameUtil {
     
     static {
-        /*
-         * TODO Change to System.load
-         * http://icedtea.classpath.org/pipermail/thermostat/2013-May/006657.html
-         */
-        System.loadLibrary("UserNameUtilWrapper");
+        String lib = NativeLibraryResolver.getAbsoluteLibraryPath("UserNameUtilWrapper");
+        System.load(lib);
     }
     
     public String getUserName(long uid) throws UserNameLookupException {

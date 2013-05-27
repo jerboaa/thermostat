@@ -38,7 +38,7 @@ package com.redhat.thermostat.client.swing.components;
 
 import javax.swing.JLabel;
 
-import com.redhat.thermostat.common.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 
 public class DescriptionField extends JLabel {
 

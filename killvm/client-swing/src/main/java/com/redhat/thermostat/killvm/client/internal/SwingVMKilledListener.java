@@ -45,9 +45,9 @@ import javax.swing.SwingUtilities;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
-import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.killvm.client.locale.LocaleResources;
+import com.redhat.thermostat.shared.locale.Translate;
 
 public class SwingVMKilledListener implements RequestResponseListener {
 
