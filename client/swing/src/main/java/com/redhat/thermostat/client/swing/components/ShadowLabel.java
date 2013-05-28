@@ -44,6 +44,7 @@ import javax.swing.JLabel;
 import javax.swing.plaf.metal.MetalLabelUI;
 
 import com.redhat.thermostat.client.swing.GraphicsUtils;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 
 /**
  * A {@link JLabel} that has a shadow.
@@ -51,13 +52,13 @@ import com.redhat.thermostat.client.swing.GraphicsUtils;
 @SuppressWarnings("serial")
 public class ShadowLabel extends JLabel {
 
-    public ShadowLabel(String text, Icon icon) {
-        super(text);
+    public ShadowLabel(LocalizedString text, Icon icon) {
+        super(text.getContents());
         this.setIcon(icon);
         setUI(new ShadowLabelUI());
     }
     
-    public ShadowLabel(String text) {
+    public ShadowLabel(LocalizedString text) {
         this(text, null);
     }
 

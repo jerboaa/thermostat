@@ -110,12 +110,12 @@ public class HeapSwingView extends HeapView implements SwingComponent {
         
         heapDetailPanel = new HeapPanel();
         
-        overview = new HeaderPanel(translator.localize(LocaleResources.HEAP_OVERVIEW_TITLE).getContents());
+        overview = new HeaderPanel(translator.localize(LocaleResources.HEAP_OVERVIEW_TITLE));
 
         stack = new JPanel();
         stack.setLayout(new OverlayLayout(stack));
         
-        overlay = new OverlayPanel(translator.localize(LocaleResources.DUMPS_LIST).getContents());
+        overlay = new OverlayPanel(translator.localize(LocaleResources.DUMPS_LIST));
         stack.add(overlay);
         stack.add(stats);
         stats.setOpaque(false);
@@ -139,7 +139,7 @@ public class HeapSwingView extends HeapView implements SwingComponent {
         overview.addToolBarButton(takeDumpIconButton);
         
         Icon listDumpIcon = IconResource.HISTORY.getIcon();
-        showHeapListButton = new ActionToggleButton(listDumpIcon, translator.localize(LocaleResources.LIST_DUMPS_ACTION).getContents());
+        showHeapListButton = new ActionToggleButton(listDumpIcon, translator.localize(LocaleResources.LIST_DUMPS_ACTION));
         showHeapListButton.setToolTipText(translator.localize(LocaleResources.LIST_DUMPS_ACTION).getContents());
         showHeapListButton.setName("LIST_DUMPS_ACTION");
 

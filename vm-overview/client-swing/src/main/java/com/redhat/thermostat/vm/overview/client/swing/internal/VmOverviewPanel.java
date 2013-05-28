@@ -210,7 +210,7 @@ public class VmOverviewPanel extends VmOverviewView implements SwingComponent {
     private void initializePanel() {
         visiblePanel = new HeaderPanel();
 
-        visiblePanel.setHeader(translator.localize(LocaleResources.VM_INFO_TITLE).getContents());
+        visiblePanel.setHeader(translator.localize(LocaleResources.VM_INFO_TITLE));
 
         SectionHeader processSection = new SectionHeader(translator.localize(LocaleResources.VM_INFO_SECTION_PROCESS));
         LabelField pidLabel = new LabelField(translator.localize(LocaleResources.VM_INFO_PROCESS_ID));

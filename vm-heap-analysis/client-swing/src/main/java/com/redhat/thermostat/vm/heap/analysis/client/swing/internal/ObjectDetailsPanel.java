@@ -125,7 +125,7 @@ public class ObjectDetailsPanel extends ObjectDetailsView implements SwingCompon
         JLabel searchLabel = new JLabel(translator.localize(LocaleResources.HEAP_DUMP_OBJECT_BROWSE_SEARCH_LABEL).getContents());
 
         searchField = new SearchField();
-        searchField.setTooltip(translator.localize(LocaleResources.HEAP_DUMP_OBJECT_BROWSE_SEARCH_PATTERN_HELP).getContents());
+        searchField.setTooltip(translator.localize(LocaleResources.HEAP_DUMP_OBJECT_BROWSE_SEARCH_PATTERN_HELP));
 
         JSplitPane splitPane = new JSplitPane();
         splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
@@ -185,7 +185,7 @@ public class ObjectDetailsPanel extends ObjectDetailsView implements SwingCompon
                 }
             }
         });
-        searchField.setLabel(translator.localize(LocaleResources.HEAP_DUMP_OBJECT_BROWSE_SEARCH_HINT).getContents());
+        searchField.setLabel(translator.localize(LocaleResources.HEAP_DUMP_OBJECT_BROWSE_SEARCH_HINT));
 
         java.awt.event.ActionListener treeToggleListener = new java.awt.event.ActionListener() {
             @Override

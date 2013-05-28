@@ -52,6 +52,7 @@ import javax.swing.MenuElement;
 import com.redhat.thermostat.client.ui.MenuAction;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.common.utils.StringUtils;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 
 /**
  * Helps adding or removing {@link MenuAction} from {@link JMenuBar}s.
@@ -76,7 +77,7 @@ public class MenuHelper {
             new EdtHelper().callAndWait(new Runnable() {
                 @Override
                 public void run() {
-                    String[] path = action.getPath();
+                    LocalizedString[] path = action.getPath();
                     Menu parent = findMenuParent(menuBar, path, true);
                     JMenuItem menu = null;
                     switch (action.getType()) {
@@ -93,7 +94,7 @@ public class MenuHelper {
                         break;
                     }
 
-                    menu.setText(action.getName());
+                    menu.setText(action.getName().getContents());
                     menu.addActionListener(new java.awt.event.ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
@@ -130,9 +131,9 @@ public class MenuHelper {
             new EdtHelper().callAndWait(new Runnable() {
                 @Override
                 public void run() {
-                    String[] path = action.getPath();
+                    LocalizedString[] path = action.getPath();
                     Menu parent = findMenuParent(menuBar, path, false);
-                    parent.remove(path[path.length - 1]);
+                    parent.remove(path[path.length - 1].getContents());
                     menuBar.revalidate();
                 }
             });
@@ -149,23 +150,23 @@ public class MenuHelper {
 
     }
 
-    private static Menu findMenuParent(JMenuBar menuBar, String[] path, boolean createIfNotFound) {
+    private static Menu findMenuParent(JMenuBar menuBar, LocalizedString[] path, boolean createIfNotFound) {
         Menu parent = null;
         int mainMenuCount = menuBar.getMenuCount();
         for (int i = 0; i < mainMenuCount; i++) {
             JMenu menu = menuBar.getMenu(i);
-            if (menu.getText().equals(path[0])) {
+            if (menu.getText().equals(path[0].getContents())) {
                 parent = new Menu(menuBar.getMenu(i));
                 break;
             }
         }
         if (parent == null) {
             if (createIfNotFound) {
-                JMenu delegate = new JMenu(path[0]);
+                JMenu delegate = new JMenu(path[0].getContents());
                 parent = new Menu(delegate);
                 menuBar.add(delegate);
             } else {
-                throw new IllegalArgumentException("top-level " + path[0] + " not found (using path" + Arrays.toString(path) + ")");
+                throw new IllegalArgumentException("top-level " + path[0].getContents() + " not found (using path" + Arrays.toString(path) + ")");
             }
         }
 
@@ -174,14 +175,14 @@ public class MenuHelper {
             boolean found = false;
             for (int j = 0; j < children.length; j++) {
                 Menu menu = children[j];
-                if (menu.getText().equals(path[i])) {
+                if (menu.getText().equals(path[i].getContents())) {
                     parent = menu;
                     found = true;
                 }
             }
             if (!found) {
                 if (createIfNotFound) {
-                    Menu newMenu = new Menu(new JMenu(path[i]));
+                    Menu newMenu = new Menu(new JMenu(path[i].getContents()));
                     parent.add(newMenu);
                     parent = newMenu;
                 } else {

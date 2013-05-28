@@ -84,6 +84,7 @@ import com.redhat.thermostat.client.ui.HostContextAction;
 import com.redhat.thermostat.client.ui.MenuAction;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.HostsVMsLoader;
 
@@ -260,11 +261,11 @@ public class MainWindowTest {
     @Category(GUITest.class)
     @Test
     public void addRemoveMenu() {
-    	final String PARENT_NAME = "File";
-        final String MENU_NAME = "Test2";
+        final LocalizedString PARENT_NAME = new LocalizedString("File");
+        final LocalizedString MENU_NAME = new LocalizedString("Test2");
         MenuAction action = mock(MenuAction.class);
         when(action.getName()).thenReturn(MENU_NAME);
-        when(action.getPath()).thenReturn(new String[] {PARENT_NAME, MENU_NAME});
+        when(action.getPath()).thenReturn(new LocalizedString[] {PARENT_NAME, MENU_NAME});
         when(action.getType()).thenReturn(MenuAction.Type.STANDARD);
 
         JMenuItemFixture menuItem;
@@ -273,7 +274,7 @@ public class MainWindowTest {
 
         window.addMenu(action);
 
-        menuItem = frameFixture.menuItemWithPath(PARENT_NAME, MENU_NAME);
+        menuItem = frameFixture.menuItemWithPath(PARENT_NAME.getContents(), MENU_NAME.getContents());
         assertNotNull(menuItem);
         menuItem.click();
 
@@ -282,7 +283,7 @@ public class MainWindowTest {
         window.removeMenu(action);
 
         try {
-            menuItem = frameFixture.menuItemWithPath(PARENT_NAME, MENU_NAME);
+            menuItem = frameFixture.menuItemWithPath(PARENT_NAME.getContents(), MENU_NAME.getContents());
             // should not reach here
             assertTrue(false);
         } catch (ComponentLookupException cle) {
@@ -293,11 +294,11 @@ public class MainWindowTest {
     @Category(GUITest.class)
     @Test
     public void addRadioMenu() {
-    	final String PARENT_NAME = "File";
-        final String MENU_NAME = "Test";
+        final LocalizedString PARENT_NAME = new LocalizedString("File");
+        final LocalizedString MENU_NAME = new LocalizedString("Test");
         MenuAction action = mock(MenuAction.class);
         when(action.getName()).thenReturn(MENU_NAME);
-        when(action.getPath()).thenReturn(new String[] {PARENT_NAME, MENU_NAME});
+        when(action.getPath()).thenReturn(new LocalizedString[] {PARENT_NAME, MENU_NAME});
 
 
         when(action.getType()).thenReturn(MenuAction.Type.RADIO);
@@ -308,7 +309,7 @@ public class MainWindowTest {
 
         window.addMenu(action);
 
-        menuItem = frameFixture.menuItemWithPath(PARENT_NAME, MENU_NAME);
+        menuItem = frameFixture.menuItemWithPath(PARENT_NAME.getContents(), MENU_NAME.getContents());
         assertNotNull(menuItem);
 
         assertTrue(menuItem.target instanceof JRadioButtonMenuItem);
@@ -317,12 +318,12 @@ public class MainWindowTest {
     @Category(GUITest.class)
     @Test
     public void addCheckBoxMenu() {
-    	final String PARENT_NAME = "File";
-        final String MENU_NAME = "Test";
+        final LocalizedString PARENT_NAME = new LocalizedString("File");
+        final LocalizedString MENU_NAME = new LocalizedString("Test");
         MenuAction action = mock(MenuAction.class);
         when(action.getName()).thenReturn(MENU_NAME);
         when(action.getType()).thenReturn(MenuAction.Type.CHECK);
-        when(action.getPath()).thenReturn(new String[] {PARENT_NAME, MENU_NAME});
+        when(action.getPath()).thenReturn(new LocalizedString[] {PARENT_NAME, MENU_NAME});
 
 
         JMenuItemFixture menuItem;
@@ -331,7 +332,7 @@ public class MainWindowTest {
 
         window.addMenu(action);
 
-        menuItem = frameFixture.menuItemWithPath(PARENT_NAME, MENU_NAME);
+        menuItem = frameFixture.menuItemWithPath(PARENT_NAME.getContents(), MENU_NAME.getContents());
         assertNotNull(menuItem);
 
         assertTrue(menuItem.target instanceof JCheckBoxMenuItem);
@@ -363,7 +364,8 @@ public class MainWindowTest {
         List<ContextAction> actions = new ArrayList<>();
 
         HostContextAction action = mock(HostContextAction.class);
-        when(action.getName()).thenReturn("action");
+        when(action.getName()).thenReturn(new LocalizedString("action"));
+        when(action.getDescription()).thenReturn(new LocalizedString("description of action"));
         Filter allMatchingFilter = mock(Filter.class);
         when(allMatchingFilter.matches(any(HostRef.class))).thenReturn(true);
 

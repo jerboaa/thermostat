@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.client.ui;
 
+import com.redhat.thermostat.shared.locale.LocalizedString;
+
 /**
  * Parent interface for all context-sensitive actions.
  * <p>
@@ -60,9 +62,9 @@ package com.redhat.thermostat.client.ui;
 public interface ContextAction {
     
     /** A user-visible name for this action */
-    String getName();
+    LocalizedString getName();
 
     /** A user-visible description for this action */
-    String getDescription();
+    LocalizedString getDescription();
 }
 

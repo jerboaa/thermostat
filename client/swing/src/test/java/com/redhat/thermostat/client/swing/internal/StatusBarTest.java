@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.components;
+package com.redhat.thermostat.client.swing.internal;
 
 import static org.junit.Assert.*;
 
@@ -59,6 +59,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import com.redhat.thermostat.shared.locale.LocalizedString;
 
 @RunWith(CacioFESTRunner.class)
 public class StatusBarTest {
@@ -109,7 +111,7 @@ public class StatusBarTest {
         GuiActionRunner.execute(new GuiTask() {
             @Override
             protected void executeInEDT() throws Throwable {
-                statusBar.setPrimaryStatus("test");
+                statusBar.setPrimaryStatus(new LocalizedString("test"));
                 sem.release();
             }
         });
@@ -142,7 +144,7 @@ public class StatusBarTest {
         GuiActionRunner.execute(new GuiTask() {
             @Override
             protected void executeInEDT() throws Throwable {
-                statusBar.setPrimaryStatus("test");
+                statusBar.setPrimaryStatus(new LocalizedString("test"));
                 sem.release();
             }
         });

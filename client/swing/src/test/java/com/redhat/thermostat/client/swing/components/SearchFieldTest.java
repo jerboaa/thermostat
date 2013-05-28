@@ -65,6 +65,7 @@ import org.junit.runner.RunWith;
 import com.redhat.thermostat.client.swing.components.SearchField;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 
 @RunWith(CacioFESTRunner.class)
 public class SearchFieldTest {
@@ -117,7 +118,7 @@ public class SearchFieldTest {
     @GUITest
     @Test
     public void verifyLabelShownByDefault() {
-        final String LABEL = "search label to help users";
+        final LocalizedString LABEL = new LocalizedString("search label to help users");
         GuiActionRunner.execute(new GuiTask() {
             @Override
             protected void executeInEDT() throws Throwable {
@@ -126,14 +127,14 @@ public class SearchFieldTest {
 
         frameFixture.show();
         JTextComponentFixture textBox = frameFixture.textBox(SearchField.VIEW_NAME);
-        assertEquals(LABEL, textBox.text());
+        assertEquals(LABEL.getContents(), textBox.text());
     }
 
     @Category(GUITest.class)
     @GUITest
     @Test
     public void verifyLabelHiddenAndShownProperly() {
-        final String LABEL = "search label to help users";
+        final LocalizedString LABEL = new LocalizedString("search label to help users");
         final String USER_TEXT = "java";
 
         GuiActionRunner.execute(new GuiTask() {
@@ -146,7 +147,7 @@ public class SearchFieldTest {
 
         frameFixture.show();
         JTextComponentFixture textBox = frameFixture.textBox(SearchField.VIEW_NAME);
-        assertEquals(LABEL, textBox.text());
+        assertEquals(LABEL.getContents(), textBox.text());
 
         textBox.enterText(USER_TEXT);
 
@@ -155,7 +156,7 @@ public class SearchFieldTest {
         JButtonFixture button = frameFixture.button(OTHER_COMPONENT_NAME);
         button.focus();
 
-        assertEquals(LABEL, textBox.text());
+        assertEquals(LABEL.getContents(), textBox.text());
     }
 
     @Category(GUITest.class)

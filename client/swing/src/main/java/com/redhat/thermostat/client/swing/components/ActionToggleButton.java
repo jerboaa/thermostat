@@ -36,16 +36,11 @@
 
 package com.redhat.thermostat.client.swing.components;
 
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Graphics;
-import java.lang.reflect.InvocationTargetException;
-
 import javax.swing.AbstractButton;
 import javax.swing.Icon;
-import javax.swing.JFrame;
 import javax.swing.JToggleButton;
-import javax.swing.SwingUtilities;
+
+import com.redhat.thermostat.shared.locale.LocalizedString;
 
 @SuppressWarnings("serial")
 public class ActionToggleButton extends JToggleButton implements ToolbarButton {
@@ -53,14 +48,14 @@ public class ActionToggleButton extends JToggleButton implements ToolbarButton {
     private String lastText;
     private boolean showText;
     public ActionToggleButton(final Icon icon) {
-        this(icon, "");
+        this(icon, LocalizedString.EMPTY_STRING);
     }
     
-    public ActionToggleButton(final Icon icon, String text) {
+    public ActionToggleButton(final Icon icon, LocalizedString text) {
         super(icon);
                 
         showText = true;
-        setText(text);
+        setText(text.getContents());
         
         setUI(new ActionButtonUI());
         setOpaque(false);
@@ -93,47 +88,6 @@ public class ActionToggleButton extends JToggleButton implements ToolbarButton {
         } else {
             setText_noClient("");
         }
-    }
-    
-    public static void main(String[] args) throws InvocationTargetException, InterruptedException {
-        SwingUtilities.invokeAndWait(new Runnable() {
-            
-            @Override
-            public void run() {
-               JFrame frame = new JFrame();
-               frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-               
-               HeaderPanel header = new HeaderPanel();
-               header.setHeader("Test");
-               
-               Icon icon = new Icon() {
-                   @Override
-                   public void paintIcon(Component c, Graphics g, int x, int y) {
-                       g.setColor(Color.CYAN);
-                       g.fillRect(x, y, 16, 16);
-                   }
-                
-                   @Override
-                   public int getIconWidth() {
-                       return 16;
-                   }
-                
-                   @Override
-                   public int getIconHeight() {
-                       return 16;
-                   }
-               }; 
-               
-               ActionToggleButton button = new ActionToggleButton(icon);
-               header.addToolBarButton(button);
-               
-               button.setText("fluff");
-               
-               frame.getContentPane().add(header);
-               frame.setSize(500, 500);
-               frame.setVisible(true);
-            }
-        });
-    }     
+    }    
 }
 

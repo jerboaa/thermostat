@@ -46,6 +46,7 @@ import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.killvm.client.locale.LocaleResources;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
@@ -76,13 +77,13 @@ public class KillVMAction implements VMContextAction {
     }
 
     @Override
-    public String getName() {
-        return t.localize(LocaleResources.ACTION_NAME).getContents();
+    public LocalizedString getName() {
+        return t.localize(LocaleResources.ACTION_NAME);
     }
 
     @Override
-    public String getDescription() {
-        return t.localize(LocaleResources.ACTION_DESCRIPTION).getContents();
+    public LocalizedString getDescription() {
+        return t.localize(LocaleResources.ACTION_DESCRIPTION);
     }
 
     @Override

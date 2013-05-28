@@ -34,17 +34,17 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.components;
+package com.redhat.thermostat.client.swing.internal;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.beans.Transient;
 
 import javax.swing.ImageIcon;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
+
+import com.redhat.thermostat.shared.locale.LocalizedString;
 
 /**
  * A status bar used to display relevant information and status.
@@ -65,7 +65,7 @@ public class StatusBar extends JPanel {
     
     private Dimension preferredSize;
     
-    private String primaryStatus = "";
+    private LocalizedString primaryStatus = LocalizedString.EMPTY_STRING;
     private JLabel primaryStatusLabel;
     private JLabel iconLabel;
     
@@ -73,7 +73,7 @@ public class StatusBar extends JPanel {
         super();
         setLayout(new BorderLayout(0, 0));
         
-        primaryStatusLabel = new JLabel(primaryStatus);
+        primaryStatusLabel = new JLabel(primaryStatus.getContents());
         primaryStatusLabel.setName("primaryStatusLabel");
         primaryStatusLabel.setFont(getFont().deriveFont(10.0f));
         primaryStatusLabel.setHorizontalAlignment(JLabel.LEADING);
@@ -111,18 +111,18 @@ public class StatusBar extends JPanel {
         return preferredSize;
     }
     
-    public void setPrimaryStatus(String primaryStatus) {
+    void setPrimaryStatus(LocalizedString primaryStatus) {
         if (primaryStatus == null) throw new NullPointerException();
         
-        String oldPrimaryStatus = this.primaryStatus;
+        String oldPrimaryStatus = this.primaryStatus.getContents();
         this.primaryStatus = primaryStatus;
-        primaryStatusLabel.setText(" " + primaryStatus);
+        primaryStatusLabel.setText(" " + primaryStatus.getContents());
         
-        firePropertyChange(PRIMARY_STATUS_PROPERTY, oldPrimaryStatus, this.primaryStatus);
+        firePropertyChange(PRIMARY_STATUS_PROPERTY, oldPrimaryStatus, this.primaryStatus.getContents());
         repaint();
     }
 
-    public String getPrimaryStatus() {
+    LocalizedString getPrimaryStatus() {
         return primaryStatus;
     }
 

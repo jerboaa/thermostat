@@ -36,6 +36,7 @@
 package com.redhat.thermostat.client.ui;
 
 import com.redhat.thermostat.annotations.ExtensionPoint;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 
 /**
  * {@code MenuAction}s are used to create top-level menu items in the main
@@ -65,11 +66,11 @@ public interface MenuAction extends ContextAction {
 
     /** The user-visible text displayed as the menu item. */
     @Override
-    public String getName();
+    public LocalizedString getName();
 
     /** A user-visible description of what this {@code MenuAction} does. */
     @Override
-    public String getDescription();
+    public LocalizedString getDescription();
 
     /** Invoked when the user selects this menu item */
     void execute();
@@ -78,7 +79,7 @@ public interface MenuAction extends ContextAction {
     Type getType();
 
     /** The path to the menu action. The last element must equal getName() */
-    String[] getPath();
+    LocalizedString[] getPath();
 
 }
 

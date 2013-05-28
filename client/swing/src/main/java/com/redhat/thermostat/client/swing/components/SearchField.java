@@ -58,6 +58,7 @@ import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.swing.IconResource;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 
 /**
@@ -82,7 +83,7 @@ public class SearchField extends JPanel {
     private final JTextField searchField = new JTextField();
 
     private final AtomicReference<String> searchText = new AtomicReference<String>("");
-    private final AtomicReference<String> label = new AtomicReference<>(translator.localize(LocaleResources.SEARCH_HINT).getContents());
+    private final AtomicReference<LocalizedString> label = new AtomicReference<>(translator.localize(LocaleResources.SEARCH_HINT));
     private final AtomicBoolean labelDisplayed = new AtomicBoolean(true);
 
     public SearchField() {
@@ -92,7 +93,7 @@ public class SearchField extends JPanel {
         JLabel searchIcon = new JLabel(IconResource.SEARCH.getIcon());
         searchIcon.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
-        searchField.setText(label.get());
+        searchField.setText(label.get().getContents());
         searchField.setName(VIEW_NAME);
         /* the insets are so we can place the actual icon inside the searchField */
         searchField.setMargin(new Insets(0, 0, 0, 30));
@@ -142,7 +143,7 @@ public class SearchField extends JPanel {
                 if (searchText.get().equals("")) {
                     labelDisplayed.set(true);
                     searchField.setForeground(Color.GRAY);
-                    searchField.setText(label.get());
+                    searchField.setText(label.get().getContents());
                 }
             }
 
@@ -180,15 +181,15 @@ public class SearchField extends JPanel {
         searchField.setText(text);
     }
 
-    public void setLabel(String label) {
+    public void setLabel(LocalizedString label) {
         this.label.set(label);
         if (labelDisplayed.get()) {
-            searchField.setText(this.label.get());
+            searchField.setText(this.label.get().getContents());
         }
     }
 
-    public void setTooltip(final String tooltip) {
-        searchField.setToolTipText(tooltip);
+    public void setTooltip(final LocalizedString tooltip) {
+        searchField.setToolTipText(tooltip.getContents());
     }
 
     public void addActionListener(ActionListener<SearchAction> listener) {

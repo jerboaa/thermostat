@@ -38,6 +38,8 @@ package com.redhat.thermostat.shared.locale;
 
 public final class LocalizedString {
 
+    public static final LocalizedString EMPTY_STRING = new LocalizedString("");
+
     private final String contents;
 
     /**

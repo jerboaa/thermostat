@@ -93,7 +93,5 @@ public class ActionButton extends JButton implements ToolbarButton {
             setText_noClient("");
         }
     }
-    
-
 }
 

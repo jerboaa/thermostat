@@ -42,6 +42,7 @@ import com.redhat.thermostat.client.swing.components.Icon;
 import com.redhat.thermostat.client.swing.components.ShadowLabel;
 import com.redhat.thermostat.client.swing.components.timeline.TimelineUtils;
 import com.redhat.thermostat.client.ui.Palette;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapIconResources;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
 
@@ -59,8 +60,6 @@ import java.awt.image.BufferedImage;
 import java.beans.Transient;
 import java.util.Date;
 import java.util.Objects;
-
-import javax.swing.ButtonModel;
 
 @SuppressWarnings("serial")
 public class OverlayComponent extends ShadowLabel {
@@ -114,7 +113,7 @@ public class OverlayComponent extends ShadowLabel {
     
     public OverlayComponent(HeapDump dump) {
         
-        super("");
+        super(LocalizedString.EMPTY_STRING);
         
         setOpaque(false);
         

@@ -70,7 +70,7 @@ public class HistogramPanel extends HeapHistogramView implements SwingComponent 
         panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
 
-        headerPanel = new HeaderPanel(translator.localize(LocaleResources.HEAP_DUMP_CLASS_USAGE).getContents());
+        headerPanel = new HeaderPanel(translator.localize(LocaleResources.HEAP_DUMP_CLASS_USAGE));
         panel.add(headerPanel);
     }
 

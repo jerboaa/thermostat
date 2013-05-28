@@ -106,7 +106,7 @@ public class VmCpuPanel extends VmCpuView implements SwingComponent {
 
     private void initializePanel() {
         visiblePanel = new HeaderPanel();
-        visiblePanel.setHeader(translator.localize(LocaleResources.VM_CPU_TITLE).getContents());
+        visiblePanel.setHeader(translator.localize(LocaleResources.VM_CPU_TITLE));
 
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 null,

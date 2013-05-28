@@ -46,7 +46,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.lang.reflect.InvocationTargetException;
 import java.util.prefs.PreferenceChangeEvent;
 import java.util.prefs.PreferenceChangeListener;
 import java.util.prefs.Preferences;
@@ -54,12 +53,12 @@ import java.util.prefs.Preferences;
 import javax.swing.AbstractButton;
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
+
+import com.redhat.thermostat.shared.locale.LocalizedString;
 
 /**
  * A component that host a panel with a nicely rendered header.
@@ -71,7 +70,7 @@ public class HeaderPanel extends JPanel {
     
     private boolean showText;
     
-    private String header;
+    private LocalizedString header;
     
     private JPanel contentPanel;
     private JLabel headerLabel;
@@ -83,14 +82,14 @@ public class HeaderPanel extends JPanel {
     private Preferences prefs;
     
     public HeaderPanel() {
-        this("");
+        this(LocalizedString.EMPTY_STRING);
     }
     
-    public HeaderPanel(String header) {
+    public HeaderPanel(LocalizedString header) {
         this(Preferences.userRoot().node(HeaderPanel.class.getName()), header);
     }
     
-    public HeaderPanel(Preferences prefs, String header) {
+    public HeaderPanel(Preferences prefs, LocalizedString header) {
                 
         this.prefs = prefs;
         
@@ -150,13 +149,13 @@ public class HeaderPanel extends JPanel {
         });
     }
     
-    public String getHeader() {
+    public LocalizedString getHeader() {
         return header;
     }
     
-    public void setHeader(String header) {
+    public void setHeader(LocalizedString header) {
         this.header = header;
-        headerLabel.setText(header);
+        headerLabel.setText(header.getContents());
     }
     
     public void setContent(JComponent content) {
@@ -217,23 +216,6 @@ public class HeaderPanel extends JPanel {
                 menu.show(e.getComponent(), e.getX(), e.getY());
             }
         }
-    }
-    
-    public static void main(String[] args) throws InvocationTargetException, InterruptedException {
-        SwingUtilities.invokeAndWait(new Runnable() {
-            
-            @Override
-            public void run() {
-               JFrame frame = new JFrame();
-               frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-               
-               HeaderPanel header = new HeaderPanel();
-               header.setHeader("Test");
-               frame.getContentPane().add(header);
-               frame.setSize(500, 500);
-               frame.setVisible(true);
-            }
-        });
     }
 }
 

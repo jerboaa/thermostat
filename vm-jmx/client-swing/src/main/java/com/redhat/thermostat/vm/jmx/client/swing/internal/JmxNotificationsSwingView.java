@@ -57,7 +57,7 @@ import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.IconResource;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.ActionToggleButton;
-import com.redhat.thermostat.client.swing.components.DescriptionField;
+import com.redhat.thermostat.client.swing.components.LocalizedLabel;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
@@ -78,7 +78,7 @@ public class JmxNotificationsSwingView extends JmxNotificationsView implements S
 
     public JmxNotificationsSwingView() {
 
-        DescriptionField description = new DescriptionField(translate.localize(LocaleResources.NOTIFICATIONS_DESCRIPTION));
+        LocalizedLabel description = new LocalizedLabel(translate.localize(LocaleResources.NOTIFICATIONS_DESCRIPTION));
         description.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         JList<String> issuesList = new JList<>(listModel);
 
@@ -110,7 +110,7 @@ public class JmxNotificationsSwingView extends JmxNotificationsView implements S
             }
         });
 
-        toolbarButton = new ActionToggleButton(IconResource.SAMPLE.getIcon(), translate.localize(LocaleResources.NOTIFICATIONS_ENABLE).getContents());
+        toolbarButton = new ActionToggleButton(IconResource.SAMPLE.getIcon(), translate.localize(LocaleResources.NOTIFICATIONS_ENABLE));
         toolbarButton.setName("toggleNotifications");
         toolbarButton.setToolTipText(translate.localize(LocaleResources.NOTIFICATIONS_ENABLE_DESCRIPTION).getContents());
         toolbarButton.addActionListener(new java.awt.event.ActionListener() {
@@ -134,7 +134,7 @@ public class JmxNotificationsSwingView extends JmxNotificationsView implements S
             }
         });
 
-        visiblePanel = new HeaderPanel(translate.localize(LocaleResources.NOTIFICATIONS_HEADER).getContents());
+        visiblePanel = new HeaderPanel(translate.localize(LocaleResources.NOTIFICATIONS_HEADER));
         visiblePanel.addToolBarButton(toolbarButton);
         visiblePanel.setContent(contents);
     }

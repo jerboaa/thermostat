@@ -88,6 +88,7 @@ import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.DefaultHostsVMsLoader;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.HostsVMsLoader;
@@ -102,6 +103,8 @@ import com.redhat.thermostat.utils.keyring.Keyring;
 public class MainWindowControllerImpl implements MainWindowController {
 
     private static final Logger logger = LoggingUtils.getLogger(MainWindowControllerImpl.class);
+
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
     private final CopyOnWriteArrayList<Filter<HostRef>> hostFilters = new CopyOnWriteArrayList<>();
     private final CopyOnWriteArrayList<Filter<VmRef>> vmFilters = new CopyOnWriteArrayList<>();
@@ -557,14 +560,15 @@ public class MainWindowControllerImpl implements MainWindowController {
             HostRef hostRef = (HostRef) ref;
             HostInformationController hostController = createHostInformationController(hostRef);
             view.setSubView(hostController.getView());
-            view.setStatusBarPrimaryStatus("host: " + hostRef.getHostName() + ", id: " + hostRef.getAgentId());
+            view.setStatusBarPrimaryStatus(t.localize(LocaleResources.HOST_PRIMARY_STATUS,
+                    hostRef.getHostName(), hostRef.getAgentId()));
         } else if (ref instanceof VmRef) {
             VmRef vmRef = (VmRef) ref;
             VmInformationController vmInformation =
                     vmInfoControllerProvider.getVmInfoController(vmRef);
             view.setSubView(vmInformation.getView());
-            view.setStatusBarPrimaryStatus("vm: " + vmRef.getName() + ", pid: " + vmRef.getStringID() +
-                                           ", host: " + vmRef.getAgent().getHostName());
+            view.setStatusBarPrimaryStatus(t.localize(LocaleResources.VM_PRIMARY_STATUS,
+                    vmRef.getName(), vmRef.getStringID(), vmRef.getAgent().getHostName()));
         } else {
             throw new IllegalArgumentException("unknown type of ref");
         }

@@ -96,8 +96,8 @@ public class ActionButtonTest {
                 JFrame frame = new JFrame();
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-                HeaderPanel header = new HeaderPanel(prefs, "wrong");
-                header.setHeader("Test");
+                HeaderPanel header = new HeaderPanel(prefs, new LocalizedString("wrong"));
+                header.setHeader(new LocalizedString("Test"));
 
                 Icon icon = new Icon() {
 

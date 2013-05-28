@@ -81,7 +81,7 @@ public class VmClassStatPanel extends VmClassStatView implements SwingComponent 
         // any name works
         dataset.addSeries(new TimeSeries("class-stat"));
 
-        visiblePanel.setHeader(t.localize(LocaleResources.VM_LOADED_CLASSES).getContents());
+        visiblePanel.setHeader(t.localize(LocaleResources.VM_LOADED_CLASSES));
 
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 null,

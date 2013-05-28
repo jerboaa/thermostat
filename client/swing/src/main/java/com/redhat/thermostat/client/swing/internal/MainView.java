@@ -48,6 +48,7 @@ import com.redhat.thermostat.client.ui.DecoratorProvider;
 import com.redhat.thermostat.client.ui.MenuAction;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.HostsVMsLoader;
 import com.redhat.thermostat.storage.core.Ref;
@@ -87,7 +88,7 @@ public interface MainView {
 
     void setSubView(BasicView view);
 
-    void setStatusBarPrimaryStatus(String primaryStatus);
+    void setStatusBarPrimaryStatus(LocalizedString primaryStatus);
     
     /**
      * Adds a menu item to the window. Assumes the menu path is valid (has a

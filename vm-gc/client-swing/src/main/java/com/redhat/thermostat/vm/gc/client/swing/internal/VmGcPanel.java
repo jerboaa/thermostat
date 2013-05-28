@@ -129,7 +129,7 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
 
     private void initializePanel() {
         visiblePanel.setContent(realPanel);
-        visiblePanel.setHeader(translator.localize(LocaleResources.VM_GC_TITLE).getContents());
+        visiblePanel.setHeader(translator.localize(LocaleResources.VM_GC_TITLE));
         realPanel.setLayout(new GridBagLayout());
     }
 

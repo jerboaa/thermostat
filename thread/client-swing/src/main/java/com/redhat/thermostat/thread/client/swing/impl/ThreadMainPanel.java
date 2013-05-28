@@ -59,7 +59,7 @@ class ThreadMainPanel extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
         
         HeaderPanel headerPanel = new HeaderPanel();
-        headerPanel.setHeader(t.localize(LocaleResources.THREAD_CONTROL_PANEL).getContents());
+        headerPanel.setHeader(t.localize(LocaleResources.THREAD_CONTROL_PANEL));
         
         JPanel content = new JPanel();
         headerPanel.setContent(content);

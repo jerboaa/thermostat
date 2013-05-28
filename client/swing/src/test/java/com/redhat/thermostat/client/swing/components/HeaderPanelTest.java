@@ -93,7 +93,7 @@ public class HeaderPanelTest {
             protected void executeInEDT() throws Throwable {
                 frame = new JFrame();
                 
-                header = new HeaderPanel(prefs, "Test Panel");
+                header = new HeaderPanel(prefs, new LocalizedString("Test Panel"));
                 header.setName("headerPanel");
                 
                 JPanel content = new JPanel();
@@ -111,7 +111,7 @@ public class HeaderPanelTest {
                 ActionButton button2 = new ActionButton(someIcon2, new LocalizedString("button2"));
                 button2.setName("button2");
                 
-                ActionToggleButton toggle1 = new ActionToggleButton(someIcon3, "toggle1");
+                ActionToggleButton toggle1 = new ActionToggleButton(someIcon3, new LocalizedString("toggle1"));
                 toggle1.setName("toggle1");
 
                 header.addToolBarButton(button1);
@@ -144,35 +144,35 @@ public class HeaderPanelTest {
     @Test
     public void testContentAdded() {
         frameFixture.show();
-        final String[] results = new String[2];
+        final LocalizedString[] results = new LocalizedString[2];
         
         GuiActionRunner.execute(new GuiTask() {
             @Override
             protected void executeInEDT() throws Throwable {
                 results[0] = header.getHeader();
-                header.setHeader("fluff");
+                header.setHeader(new LocalizedString("fluff"));
                 results[1] = header.getHeader();
             }
         });
         
-        assertEquals("Test Panel", results[0]);
-        assertEquals("fluff", results[1]);
+        assertEquals("Test Panel", results[0].getContents());
+        assertEquals("fluff", results[1].getContents());
         
         // do it again, with a new header
         GuiActionRunner.execute(new GuiTask() {
             @Override
             protected void executeInEDT() throws Throwable {
                 
-                HeaderPanel header = new HeaderPanel("Test");
+                HeaderPanel header = new HeaderPanel(new LocalizedString("Test"));
                 
                 results[0] = header.getHeader();
-                header.setHeader("fluff");
+                header.setHeader(new LocalizedString("fluff"));
                 results[1] = header.getHeader();
             }
         });
         
-        assertEquals("Test", results[0]);
-        assertEquals("fluff", results[1]);
+        assertEquals("Test", results[0].getContents());
+        assertEquals("fluff", results[1].getContents());
     }
     
     @Test

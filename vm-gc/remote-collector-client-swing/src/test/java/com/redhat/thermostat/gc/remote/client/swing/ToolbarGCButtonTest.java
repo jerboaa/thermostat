@@ -60,6 +60,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.gc.remote.client.common.RequestGCAction;
 
 @RunWith(CacioFESTRunner.class)
@@ -88,7 +89,7 @@ public class ToolbarGCButtonTest {
             protected void executeInEDT() throws Throwable {
                 frame = new JFrame();
                 
-                HeaderPanel header = new HeaderPanel(prefs, "Test Panel");
+                HeaderPanel header = new HeaderPanel(prefs, new LocalizedString("Test Panel"));
                 header.setName("headerPanel");
                 
                 JPanel content = new JPanel();

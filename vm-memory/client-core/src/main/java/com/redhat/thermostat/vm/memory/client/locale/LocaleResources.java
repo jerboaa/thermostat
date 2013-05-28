@@ -42,6 +42,7 @@ public enum LocaleResources {
 
     VM_INFO_TAB_MEMORY,
     ERROR_PERFORMING_GC,
+    MEMORY_REGIONS_HEADER,
 
     RESOURCE_MISSING;
     

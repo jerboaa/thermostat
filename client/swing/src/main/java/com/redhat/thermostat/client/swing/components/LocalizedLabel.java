@@ -34,45 +34,16 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.filter.vm.core.internal;
+package com.redhat.thermostat.client.swing.components;
 
-import com.redhat.thermostat.client.filter.vm.core.LivingVMFilter;
-import com.redhat.thermostat.client.ui.MenuAction;
+import javax.swing.JLabel;
+
 import com.redhat.thermostat.shared.locale.LocalizedString;
-import com.redhat.thermostat.shared.locale.Translate;
 
-class LivingVMFilterMenuAction implements MenuAction {
+public class LocalizedLabel extends JLabel {
 
-    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
-    private LivingVMFilter filter;
-    
-    public LivingVMFilterMenuAction(LivingVMFilter filter) {
-        this.filter = filter;
-    }
-    
-    @Override
-    public LocalizedString getName() {
-        return t.localize(LocaleResources.SHOW_DEAD_VM_NAME);
+    public LocalizedLabel(LocalizedString text) {
+        super(text.getContents());
     }
 
-    @Override
-    public LocalizedString getDescription() {
-        return t.localize(LocaleResources.SHOW_DEAD_VM_DESC);
-    }
-
-    @Override
-    public void execute() {
-        filter.setActive(!filter.isActive());
-    }
-
-    @Override
-    public Type getType() {
-        return Type.CHECK;
-    }
-
-    @Override
-    public LocalizedString[] getPath() {
-        return new LocalizedString[] { t.localize(LocaleResources.EDIT_MENU), getName() };
-    }
 }
-

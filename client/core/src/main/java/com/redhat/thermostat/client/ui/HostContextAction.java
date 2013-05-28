@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.ui;
 
 import com.redhat.thermostat.annotations.ExtensionPoint;
 import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.core.HostRef;
 
 /**
@@ -69,14 +70,14 @@ public interface HostContextAction extends ContextAction {
      * localized.
      */
     @Override
-    String getName();
+    LocalizedString getName();
 
     /**
      * A user-visible description for this {@code HostContextAction}. This
      * should be localized.
      */
     @Override
-    String getDescription();
+    LocalizedString getDescription();
 
     /**
      * Invoked when the user selects this {@code HostContextAction}.

@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.ui;
 
 import com.redhat.thermostat.annotations.ExtensionPoint;
 import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.core.VmRef;
 
 /**
@@ -70,14 +71,14 @@ public interface VMContextAction extends ContextAction {
      * localized.
      */
     @Override
-    public String getName();
+    public LocalizedString getName();
 
     /**
      * A user-visible description for {@code VMContextAction}. Should be
      * localized.
      */
     @Override
-    public String getDescription();
+    public LocalizedString getDescription();
 
     /**
      * Invoked when the user selects this {@code VMContextAction}.

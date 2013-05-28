@@ -64,6 +64,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import com.redhat.thermostat.client.ui.MenuAction;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 
 @RunWith(CacioFESTRunner.class)
 public class MenuHelperTest {
@@ -106,11 +107,11 @@ public class MenuHelperTest {
     @Category(GUITest.class)
     @Test
     public void addRemoveWithNewTopLevelMenu() {
-        final String PARENT_NAME = "Test1";
-        final String MENU_NAME = "Test2";
+        final LocalizedString PARENT_NAME = new LocalizedString("Test1");
+        final LocalizedString MENU_NAME = new LocalizedString("Test2");
         MenuAction action = mock(MenuAction.class);
         when(action.getName()).thenReturn(MENU_NAME);
-        when(action.getPath()).thenReturn(new String[] { PARENT_NAME, MENU_NAME });
+        when(action.getPath()).thenReturn(new LocalizedString[] { PARENT_NAME, MENU_NAME });
         when(action.getType()).thenReturn(MenuAction.Type.STANDARD);
 
         JMenuItemFixture menuItem;
@@ -119,13 +120,13 @@ public class MenuHelperTest {
 
         menu.addMenuAction(action);
 
-        menuItem = frameFixture.menuItemWithPath(PARENT_NAME, MENU_NAME);
+        menuItem = frameFixture.menuItemWithPath(PARENT_NAME.getContents(), MENU_NAME.getContents());
         assertNotNull(menuItem);
 
         menu.removeMenuAction(action);
 
         try {
-            menuItem = frameFixture.menuItemWithPath(PARENT_NAME, MENU_NAME);
+            menuItem = frameFixture.menuItemWithPath(PARENT_NAME.getContents(), MENU_NAME.getContents());
             // should not reach here
             assertTrue(false);
         } catch (ComponentLookupException cle) {
@@ -136,11 +137,11 @@ public class MenuHelperTest {
     @Category(GUITest.class)
     @Test
     public void addRemoveToExistingMenu() {
-        final String PARENT_NAME = "File";
-        final String MENU_NAME = "Test2";
+        final LocalizedString PARENT_NAME = new LocalizedString("File");
+        final LocalizedString MENU_NAME = new LocalizedString("Test2");
         MenuAction action = mock(MenuAction.class);
         when(action.getName()).thenReturn(MENU_NAME);
-        when(action.getPath()).thenReturn(new String[] { PARENT_NAME, MENU_NAME });
+        when(action.getPath()).thenReturn(new LocalizedString[] { PARENT_NAME, MENU_NAME });
         when(action.getType()).thenReturn(MenuAction.Type.STANDARD);
 
         JMenuItemFixture menuItem;
@@ -151,13 +152,13 @@ public class MenuHelperTest {
 
         menu.addMenuAction(action);
 
-        menuItem = frameFixture.menuItemWithPath(PARENT_NAME, MENU_NAME);
+        menuItem = frameFixture.menuItemWithPath(PARENT_NAME.getContents(), MENU_NAME.getContents());
         assertNotNull(menuItem);
 
         menu.removeMenuAction(action);
 
         try {
-            menuItem = frameFixture.menuItemWithPath(PARENT_NAME, MENU_NAME);
+            menuItem = frameFixture.menuItemWithPath(PARENT_NAME.getContents(), MENU_NAME.getContents());
             // should not reach here
             assertTrue(false);
         } catch (ComponentLookupException cle) {
@@ -168,7 +169,13 @@ public class MenuHelperTest {
     @Category(GUITest.class)
     @Test
     public void addRemoveHighlyNextedMenu() {
-        final String[] path = new String[] { "View", "Filter", "Virtual Machine", "Show Only Running" };
+        final LocalizedString[] path = new LocalizedString[] {
+                new LocalizedString("View"),
+                new LocalizedString("Filter"),
+                new LocalizedString("Virtual Machine"),
+                new LocalizedString("Show Only Running")
+                };
+        final String[] plainPath = fromLocalizedArray(path);
         MenuAction action = mock(MenuAction.class);
         when(action.getName()).thenReturn(path[path.length - 1]);
         when(action.getPath()).thenReturn(path);
@@ -180,13 +187,13 @@ public class MenuHelperTest {
 
         menu.addMenuAction(action);
 
-        menuItem = frameFixture.menuItemWithPath(path);
+        menuItem = frameFixture.menuItemWithPath(plainPath);
         assertNotNull(menuItem);
 
         menu.removeMenuAction(action);
 
         try {
-            menuItem = frameFixture.menuItemWithPath(path);
+            menuItem = frameFixture.menuItemWithPath(plainPath);
             // should not reach here
             assertTrue(false);
         } catch (ComponentLookupException cle) {
@@ -197,11 +204,11 @@ public class MenuHelperTest {
     @Category(GUITest.class)
     @Test
     public void addRadioMenu() {
-        final String PARENT_NAME = "File";
-        final String MENU_NAME = "Test";
+        final LocalizedString PARENT_NAME = new LocalizedString("File");
+        final LocalizedString MENU_NAME = new LocalizedString("Test");
         MenuAction action = mock(MenuAction.class);
         when(action.getName()).thenReturn(MENU_NAME);
-        when(action.getPath()).thenReturn(new String[] { PARENT_NAME, MENU_NAME });
+        when(action.getPath()).thenReturn(new LocalizedString[] { PARENT_NAME, MENU_NAME });
         when(action.getType()).thenReturn(MenuAction.Type.RADIO);
 
         JMenuItemFixture menuItem;
@@ -210,7 +217,7 @@ public class MenuHelperTest {
 
         menu.addMenuAction(action);
 
-        menuItem = frameFixture.menuItemWithPath(PARENT_NAME, MENU_NAME);
+        menuItem = frameFixture.menuItemWithPath(PARENT_NAME.getContents(), MENU_NAME.getContents());
         assertNotNull(menuItem);
 
         assertTrue(menuItem.target instanceof JRadioButtonMenuItem);
@@ -219,12 +226,12 @@ public class MenuHelperTest {
     @Category(GUITest.class)
     @Test
     public void addCheckBoxMenu() {
-        final String PARENT_NAME = "File";
-        final String MENU_NAME = "Test";
+        final LocalizedString PARENT_NAME = new LocalizedString("File");
+        final LocalizedString MENU_NAME = new LocalizedString("Test");
         MenuAction action = mock(MenuAction.class);
         when(action.getName()).thenReturn(MENU_NAME);
         when(action.getType()).thenReturn(MenuAction.Type.CHECK);
-        when(action.getPath()).thenReturn(new String[] { PARENT_NAME, MENU_NAME });
+        when(action.getPath()).thenReturn(new LocalizedString[] { PARENT_NAME, MENU_NAME });
 
         JMenuItemFixture menuItem;
 
@@ -232,11 +239,18 @@ public class MenuHelperTest {
 
         menu.addMenuAction(action);
 
-        menuItem = frameFixture.menuItemWithPath(PARENT_NAME, MENU_NAME);
+        menuItem = frameFixture.menuItemWithPath(PARENT_NAME.getContents(), MENU_NAME.getContents());
         assertNotNull(menuItem);
 
         assertTrue(menuItem.target instanceof JCheckBoxMenuItem);
     }
 
+    private String[] fromLocalizedArray(LocalizedString[] localized) {
+        String[] strings = new String[localized.length];
+        for (int i = 0; i < localized.length; i++) {
+            strings[i] = localized[i].getContents();
+        }
+        return strings;
+    }
 }
 

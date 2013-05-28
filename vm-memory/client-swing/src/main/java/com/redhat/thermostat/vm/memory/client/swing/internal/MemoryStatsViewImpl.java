@@ -57,10 +57,14 @@ import com.redhat.thermostat.gc.remote.client.common.RequestGCAction;
 import com.redhat.thermostat.gc.remote.client.swing.ToolbarGCButton;
 import com.redhat.thermostat.gc.remote.common.command.GCCommand;
 import com.redhat.thermostat.shared.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.memory.client.core.MemoryStatsView;
 import com.redhat.thermostat.vm.memory.client.core.Payload;
+import com.redhat.thermostat.vm.memory.client.locale.LocaleResources;
 
 public class MemoryStatsViewImpl extends MemoryStatsView implements SwingComponent {
+
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
     private static final long REPAINT_DELAY = 500;
     private long lastRepaint;
@@ -82,7 +86,7 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
  
         preferredSize = new Dimension(0, 0);
         
-        visiblePanel.setHeader("Memory Regions");
+        visiblePanel.setHeader(t.localize(LocaleResources.MEMORY_REGIONS_HEADER));
 
         visiblePanel.addHierarchyListener(new ComponentVisibleListener() {
             @Override

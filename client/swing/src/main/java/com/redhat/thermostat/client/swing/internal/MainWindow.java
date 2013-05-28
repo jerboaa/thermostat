@@ -98,7 +98,6 @@ import com.redhat.thermostat.client.swing.MenuHelper;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.SearchField;
 import com.redhat.thermostat.client.swing.components.SearchField.SearchAction;
-import com.redhat.thermostat.client.swing.components.StatusBar;
 import com.redhat.thermostat.client.swing.components.ThermostatPopupMenu;
 import com.redhat.thermostat.client.swing.internal.components.DecoratedDefaultMutableTreeNode;
 import com.redhat.thermostat.client.ui.ContextAction;
@@ -110,6 +109,7 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.utils.StringUtils;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.HostsVMsLoader;
@@ -526,8 +526,8 @@ public class MainWindow extends JFrame implements MainView {
 
                 for (final ContextAction action: actions) {
                     JMenuItem contextAction = new JMenuItem();
-                    contextAction.setText(action.getName());
-                    contextAction.setToolTipText(action.getDescription());
+                    contextAction.setText(action.getName().getContents());
+                    contextAction.setToolTipText(action.getDescription().getContents());
 
                     contextAction.addActionListener(new java.awt.event.ActionListener() {
                         @Override
@@ -537,7 +537,7 @@ public class MainWindow extends JFrame implements MainView {
                     });
 
                     // the component name is for unit tests only
-                    contextAction.setName(action.getName());
+                    contextAction.setName(action.getName().getContents());
 
                     contextMenu.add(contextAction);
                 }
@@ -743,7 +743,7 @@ public class MainWindow extends JFrame implements MainView {
     }
 
     @Override
-    public void setStatusBarPrimaryStatus(final String primaryStatus) {
+    public void setStatusBarPrimaryStatus(final LocalizedString primaryStatus) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {

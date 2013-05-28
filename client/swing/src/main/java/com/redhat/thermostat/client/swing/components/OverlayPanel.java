@@ -54,6 +54,7 @@ import javax.swing.JPanel;
 
 import com.redhat.thermostat.client.swing.GraphicsUtils;
 import com.redhat.thermostat.client.ui.Palette;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 
 /**
  * A panel meant to be stacked on top of existing components to display
@@ -81,7 +82,7 @@ public class OverlayPanel extends JPanel {
     /**
      * Creates a new {@link OverlayPanel}, with an arrow facing upward.
      */
-    public OverlayPanel(String title) {
+    public OverlayPanel(LocalizedString title) {
         this(title, true);
     }
     
@@ -89,7 +90,7 @@ public class OverlayPanel extends JPanel {
      * Creates a new {@link OverlayPanel}. The panel will display an up facing
      * arrow if {@code displayArrow} is {@code true}.
      */
-    public OverlayPanel(String title, boolean displayArrow) {
+    public OverlayPanel(LocalizedString title, boolean displayArrow) {
         
         this.displayArrow = displayArrow;
         

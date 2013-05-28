@@ -1,5 +1,5 @@
 /*
- * Copyright 2012, 2013 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,16 +34,20 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.components;
+package com.redhat.thermostat.client.swing.internal;
 
-import javax.swing.JLabel;
+import com.redhat.thermostat.shared.locale.Translate;
 
-import com.redhat.thermostat.shared.locale.LocalizedString;
+public enum LocaleResources {
 
-public class DescriptionField extends JLabel {
+    HOST_PRIMARY_STATUS,
+    VM_PRIMARY_STATUS,
+    ;
 
-    public DescriptionField(LocalizedString text) {
-        super(text.getContents());
+    static final String RESOURCE_BUNDLE =
+            "com.redhat.thermostat.client.swing.internal.strings";
+
+    public static Translate<LocaleResources> createLocalizer() {
+        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
     }
-
 }

@@ -90,6 +90,7 @@ import com.redhat.thermostat.common.ThermostatExtensionRegistry.Action;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.HostsVMsLoader;
 import com.redhat.thermostat.storage.core.VmRef;
@@ -239,8 +240,8 @@ public class MainWindowControllerImplTest {
         Filter<HostRef> hostFilter1 = mock(Filter.class);
         when(hostFilter1.matches(isA(HostRef.class))).thenReturn(true);
 
-        when(hostContextAction1.getName()).thenReturn("action1");
-        when(hostContextAction1.getDescription()).thenReturn("action1desc");
+        when(hostContextAction1.getName()).thenReturn(new LocalizedString("action1"));
+        when(hostContextAction1.getDescription()).thenReturn(new LocalizedString("action1desc"));
         when(hostContextAction1.getFilter()).thenReturn(hostFilter1);
 
         context.registerService(HostContextAction.class, hostContextAction1, null);
@@ -251,8 +252,8 @@ public class MainWindowControllerImplTest {
         Filter action1Filter = mock(Filter.class);
         when(action1Filter.matches(isA(VmRef.class))).thenReturn(true);
 
-        when(vmContextAction1.getName()).thenReturn("action1");
-        when(vmContextAction1.getDescription()).thenReturn("action1desc");
+        when(vmContextAction1.getName()).thenReturn(new LocalizedString("action1"));
+        when(vmContextAction1.getDescription()).thenReturn(new LocalizedString("action1desc"));
         when(vmContextAction1.getFilter()).thenReturn(action1Filter);
         
         context.registerService(VMContextAction.class, vmContextAction1, null);
@@ -261,8 +262,8 @@ public class MainWindowControllerImplTest {
         Filter action2Filter = mock(Filter.class);
         when(action2Filter.matches(isA(VmRef.class))).thenReturn(false);
 
-        when(vmContextAction2.getName()).thenReturn("action2");
-        when(vmContextAction2.getDescription()).thenReturn("action2desc");
+        when(vmContextAction2.getName()).thenReturn(new LocalizedString("action2"));
+        when(vmContextAction2.getDescription()).thenReturn(new LocalizedString("action2desc"));
         when(vmContextAction2.getFilter()).thenReturn(action2Filter);
         
         context.registerService(VMContextAction.class, vmContextAction2, null);
@@ -617,7 +618,7 @@ public class MainWindowControllerImplTest {
         ActionListener<ThermostatExtensionRegistry.Action> menuListener = controller.getMenuListener();
 
         MenuAction action = mock(MenuAction.class);
-        when(action.getName()).thenReturn("Test1");
+        when(action.getName()).thenReturn(new LocalizedString("Test1"));
 
         ActionEvent<Action> addEvent = new ActionEvent<ThermostatExtensionRegistry.Action>(
         		menus, ThermostatExtensionRegistry.Action.SERVICE_ADDED);

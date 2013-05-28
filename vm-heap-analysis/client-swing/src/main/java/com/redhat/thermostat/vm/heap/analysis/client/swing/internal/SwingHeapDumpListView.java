@@ -55,6 +55,7 @@ import javax.swing.SwingUtilities;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.ShadowLabel;
 import com.redhat.thermostat.client.ui.Palette;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListView;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
 
@@ -140,7 +141,7 @@ public class SwingHeapDumpListView extends HeapDumpListView implements SwingComp
         public Component getListCellRendererComponent(JList<? extends HeapDump> list, HeapDump value, int index,
                                                       boolean isSelected, boolean cellHasFocus) {
             
-            ShadowLabel label = new ShadowLabel(value.toString());
+            ShadowLabel label = new ShadowLabel(new LocalizedString(value.toString()));
             label.setForeground(Palette.ROYAL_BLUE.getColor());
 
             if (!isSelected) {

@@ -36,43 +36,18 @@
 
 package com.redhat.thermostat.client.filter.vm.core.internal;
 
-import com.redhat.thermostat.client.filter.vm.core.LivingVMFilter;
-import com.redhat.thermostat.client.ui.MenuAction;
-import com.redhat.thermostat.shared.locale.LocalizedString;
-import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.testutils.AbstractLocaleResourcesTest;
 
-class LivingVMFilterMenuAction implements MenuAction {
+public class LocaleResourcesTest extends AbstractLocaleResourcesTest<LocaleResources> {
 
-    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
-    private LivingVMFilter filter;
-    
-    public LivingVMFilterMenuAction(LivingVMFilter filter) {
-        this.filter = filter;
-    }
-    
     @Override
-    public LocalizedString getName() {
-        return t.localize(LocaleResources.SHOW_DEAD_VM_NAME);
+    protected Class<LocaleResources> getEnumClass() {
+        return LocaleResources.class;
     }
 
     @Override
-    public LocalizedString getDescription() {
-        return t.localize(LocaleResources.SHOW_DEAD_VM_DESC);
+    protected String getResourceBundle() {
+        return LocaleResources.RESOURCE_BUNDLE;
     }
 
-    @Override
-    public void execute() {
-        filter.setActive(!filter.isActive());
-    }
-
-    @Override
-    public Type getType() {
-        return Type.CHECK;
-    }
-
-    @Override
-    public LocalizedString[] getPath() {
-        return new LocalizedString[] { t.localize(LocaleResources.EDIT_MENU), getName() };
-    }
 }
-
