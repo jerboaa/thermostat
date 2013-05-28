@@ -96,6 +96,7 @@ public class Activator implements BundleActivator {
                 for (ServiceRegistration reg : regs) {
                     reg.unregister();
                 }
+                regs.clear();
                 super.removedService(reference, service);
             }
         };

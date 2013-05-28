@@ -37,6 +37,7 @@
 package com.redhat.thermostat.storage.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -95,5 +96,63 @@ public class ActivatorTest {
         assertEquals(1, context.getAllServices().size());
     }
 
+    @Test
+    public void verifyActivatorUnregistersServices() throws Exception {
+        StubBundleContext context = new StubBundleContext();
+        Storage storage = mock(Storage.class);
+
+        context.registerService(Storage.class, storage, null);
+
+        Activator activator = new Activator();
+
+        activator.start(context);
+
+        activator.stop(context);
+        
+        assertFalse(context.isServiceRegistered(HostInfoDAO.class.getName(), HostInfoDAOImpl.class));
+        assertFalse(context.isServiceRegistered(NetworkInterfaceInfoDAO.class.getName(), NetworkInterfaceInfoDAOImpl.class));
+        assertFalse(context.isServiceRegistered(VmInfoDAO.class.getName(), VmInfoDAOImpl.class));
+        assertFalse(context.isServiceRegistered(AgentInfoDAO.class.getName(), AgentInfoDAOImpl.class));
+        assertFalse(context.isServiceRegistered(BackendInfoDAO.class.getName(), BackendInfoDAOImpl.class));
+        
+        assertEquals(0, context.getServiceListeners().size());
+        assertEquals(1, context.getAllServices().size());
+    }
+    
+    @Test
+    public void verifyActivatorRegistersServicesMultipleTimes() throws Exception {
+        StubBundleContext context = new StubBundleContext();
+        Storage storage = mock(Storage.class);
+
+        context.registerService(Storage.class, storage, null);
+
+        Activator activator = new Activator();
+
+        activator.start(context);
+
+        assertTrue(context.isServiceRegistered(HostInfoDAO.class.getName(), HostInfoDAOImpl.class));
+        assertTrue(context.isServiceRegistered(NetworkInterfaceInfoDAO.class.getName(), NetworkInterfaceInfoDAOImpl.class));
+        assertTrue(context.isServiceRegistered(VmInfoDAO.class.getName(), VmInfoDAOImpl.class));
+        assertTrue(context.isServiceRegistered(AgentInfoDAO.class.getName(), AgentInfoDAOImpl.class));
+        assertTrue(context.isServiceRegistered(BackendInfoDAO.class.getName(), BackendInfoDAOImpl.class));
+
+        activator.stop(context);
+        
+        assertEquals(0, context.getServiceListeners().size());
+        assertEquals(1, context.getAllServices().size());
+        
+        activator.start(context);
+
+        assertTrue(context.isServiceRegistered(HostInfoDAO.class.getName(), HostInfoDAOImpl.class));
+        assertTrue(context.isServiceRegistered(NetworkInterfaceInfoDAO.class.getName(), NetworkInterfaceInfoDAOImpl.class));
+        assertTrue(context.isServiceRegistered(VmInfoDAO.class.getName(), VmInfoDAOImpl.class));
+        assertTrue(context.isServiceRegistered(AgentInfoDAO.class.getName(), AgentInfoDAOImpl.class));
+        assertTrue(context.isServiceRegistered(BackendInfoDAO.class.getName(), BackendInfoDAOImpl.class));
+
+        activator.stop(context);
+
+        assertEquals(0, context.getServiceListeners().size());
+        assertEquals(1, context.getAllServices().size());
+    }
 }
 
