@@ -109,6 +109,8 @@ public class MainWindowControllerImpl implements MainWindowController {
     private final CopyOnWriteArrayList<DecoratorProvider<HostRef>> hostTreeDecorators = new CopyOnWriteArrayList<>();
     private final CopyOnWriteArrayList<DecoratorProvider<VmRef>> vmTreeDecorators = new CopyOnWriteArrayList<>();
 
+    private final ApplicationInfo appInfo = new ApplicationInfo();
+
     private ApplicationService appSvc;
     private Timer backgroundUpdater;
 
@@ -125,8 +127,6 @@ public class MainWindowControllerImpl implements MainWindowController {
     private VmInformationViewProvider vmInfoViewProvider;
     private AgentInformationViewProvider agentInfoViewProvider;
     private ClientConfigViewProvider clientConfigViewProvider;
-    
-    private ApplicationInfo appInfo;
 
     private InformationServiceTracker infoServiceTracker;
     private HostContextActionServiceTracker hostContextActionTracker;
@@ -134,6 +134,7 @@ public class MainWindowControllerImpl implements MainWindowController {
     private MultipleServiceTracker depTracker;
     
     private CountDownLatch shutdown;
+    private CountDownLatch initViewLatch = new CountDownLatch(1);
 
     private MenuRegistry menuRegistry;
     private ActionListener<ThermostatExtensionRegistry.Action> menuListener =
@@ -200,6 +201,7 @@ public class MainWindowControllerImpl implements MainWindowController {
             RegistryFactory registryFactory,
             final CountDownLatch shutdown) {
         this.appSvc = appSvc;
+        this.view = view;
         try {
             vmFilterRegistry = registryFactory.createVmFilterRegistry();
             hostFilterRegistry = registryFactory.createHostFilterRegistry();
@@ -265,13 +267,11 @@ public class MainWindowControllerImpl implements MainWindowController {
                 Objects.requireNonNull(agentInfoViewProvider);
                 clientConfigViewProvider = (ClientConfigViewProvider) services.get(ClientConfigViewProvider.class.getName());
                 Objects.requireNonNull(clientConfigViewProvider);
-                
-                initView(view);
+
+                initView();
 
                 vmInfoControllerProvider = new VmInformationControllerProvider();
 
-                appInfo = new ApplicationInfo();
-                view.setWindowTitle(appInfo.getName());
                 initializeTimer();
 
                 updateView();
@@ -352,9 +352,9 @@ public class MainWindowControllerImpl implements MainWindowController {
         view.updateTree(hostFilters, vmFilters, hostTreeDecorators, vmTreeDecorators, loader);
     }
 
-    private void initView(MainView mainView) {
-        this.view = mainView;
-        mainView.addActionListener(new ActionListener<MainView.Action>() {
+    private void initView() {
+        view.setWindowTitle(appInfo.getName());
+        view.addActionListener(new ActionListener<MainView.Action>() {
 
             @Override
             public void actionPerformed(ActionEvent<MainView.Action> evt) {
@@ -401,6 +401,7 @@ public class MainWindowControllerImpl implements MainWindowController {
             }
 
         });
+        initViewLatch.countDown();
     }
 
     /*
@@ -510,6 +511,11 @@ public class MainWindowControllerImpl implements MainWindowController {
 
     @Override
     public void showMainMainWindow() {
+        try {
+            initViewLatch.await();
+        } catch (InterruptedException e) {
+            logger.warning("Interrupted while awaiting view initialization.");
+        }
         view.showMainWindow();
     }
 
