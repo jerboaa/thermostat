@@ -1,0 +1,178 @@
+#!/bin/sh
+#
+# Copyright 2013 Red Hat, Inc.
+#
+# This file is part of Thermostat.
+#
+# Thermostat is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published
+# by the Free Software Foundation; either version 2, or (at your
+# option) any later version.
+#
+# Thermostat is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Thermostat; see the file COPYING.  If not see
+# <http://www.gnu.org/licenses/>.
+#
+# Linking this code with other modules is making a combined work
+# based on this code.  Thus, the terms and conditions of the GNU
+# General Public License cover the whole combination.
+#
+# As a special exception, the copyright holders of this code give
+# you permission to link this code with independent modules to
+# produce an executable, regardless of the license terms of these
+# independent modules, and to copy and distribute the resulting
+# executable under terms of your choice, provided that you also
+# meet, for each linked independent module, the terms and conditions
+# of the license of that module.  An independent module is a module
+# which is not derived from or based on this code.  If you modify
+# this code, you may extend this exception to your version of the
+# library, but you are not obligated to do so.  If you do not wish
+# to do so, delete this exception statement from your version.
+#
+#####################################################################
+
+usage() {
+  echo "Usage:"
+  echo "   update-version <-h|-help|--help|help> | -<t|r|d> OLD_VERSION NEW_VERSION"
+  echo "Each version should be of the form \"x.y.z\""
+}
+
+bad_option() {
+  echo "Invalid option: $1"
+  usage
+  exit 1
+}
+
+bad_version() {
+  echo "Invalid version: $1"
+  usage
+  exit 1
+}
+
+valid_version="[[:digit:]]\+.[[:digit:]]\+.[[:digit:]]\+"
+check_version() {
+  if [ -z ${1} ]; then
+    bad_version ${1}
+  fi
+  stripped_version=`echo $1 | sed -E  's/[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+//'`
+  if [ ! -z ${stripped_version} ]; then
+    bad_version ${1}
+  fi
+}
+
+print_help() {
+  echo "update-version: a tool to help with bumping versions in Thermostat trunk and release branches"
+  echo ""
+  usage
+  echo ""
+  echo "Updates version across project from OLD_VERSION to NEW_VERSION"
+  echo ""
+  echo "Options:"
+  echo "  -t: Bump version on trunk."
+  echo "      SNAPSHOT qualifier is assumed to be present, and will remain."
+  echo "  -r: Bump version on release branch in preparation for release."
+  echo "      SNAPSHOT qualifier is assumed to be present, and will be removed."
+  echo "  -d: Bump version on release branch to prepare for devel/backports."
+  echo "      SNAPSHOT qualifier is assumed to be absent, and will be added."
+  
+}
+
+if [ $1 = "-help" -o $1 = "-h" -o $1 = "--help" -o $1 = "help" ]; then
+  print_help
+  exit 0
+fi
+
+if [ $# != 3 ]; then
+  echo "Invalid number of arguments"
+  usage
+  exit 1
+fi
+
+option=$1
+old=$2
+new=$3
+old_regex=`echo ${old} | sed -e 's/[.]/\\\\&/g'`
+
+check_version ${old}
+check_version ${new}
+
+find_and_warn_incomplete() {
+  echo "Check for possible missed version changes in the following files:"
+  echo ""
+  grep --binary-files=without-match --exclude-dir=target -l -R ${old_regex} ./*
+}
+
+find_pom_metadata() {
+  find ./ -name pom.xml -o -name archetype-metadata.xml | grep -v \/target\/
+}
+
+find_target() {
+  find ./ -name *.target | grep -v \/target\/
+}
+
+find_eclipse_manifest() {
+  find ./eclipse -name MANIFEST.MF | grep -v \/target\/
+}
+
+find_eclipse_category_feature() {
+  find ./eclipse -name category.xml -o -name feature.xml | grep -v \/target\/
+}
+
+find_build_properties() {
+  find ./eclipse -name build.properties | grep -v \/target\/
+}
+
+bump_keep_qualifier() {
+  echo "Keeping SNAPSHOT qualifier..."
+  sed -i s/${old_regex}-SNAPSHOT/${new}-SNAPSHOT/g `find_pom_metadata`
+  sed -i s/${old_regex}\.SNAPSHOT/${new}.SNAPSHOT/g `find_target`
+  sed -i "s/Bundle-Version: ${old_regex}.qualifier/Bundle-Version: ${new}.qualifier/g" `find_eclipse_manifest`
+  sed -i s/${old_regex}.qualifier/${new}.qualifier/g `find_eclipse_category_feature`
+}
+
+bump_drop_qualifier() {
+  echo "Dropping SNAPSHOT qualifier..."
+  sed -i s/${old_regex}-SNAPSHOT/${new}/g `find_pom_metadata`
+  sed -i s/${old_regex}\.SNAPSHOT/${new}/g `find_target`
+  sed -i "s/Bundle-Version: ${old_regex}.qualifier/Bundle-Version: ${new}/g" `find_eclipse_manifest`
+  sed -i s/${old_regex}.qualifier/${new}/g `find_eclipse_category_feature`
+  sed -i "s/forceContextQualifier = SNAPSHOT//" `find_build_properties`
+  sed -i '${/^$/d}' `find_build_properties`
+}
+
+bump_add_qualifier() {
+  echo "Adding SNAPSHOT qualifier..."
+  sed -i s/${old_regex}/${new}-SNAPSHOT/g `find_pom_metadata`
+  sed -i s/${old_regex}/${new}.SNAPSHOT/g `find_target`
+  sed -i "s/Bundle-Version: ${old_regex}/Bundle-Version: ${new}.qualifier/g" `find_eclipse_manifest`
+  sed -i s/${old_regex}/${new}.qualifier/g `find_eclipse_category_feature`
+  sed -i "$ a \forceContextQualifier = SNAPSHOT" `find_build_properties`
+}
+
+echo ""
+echo "Updating version across project..."
+if [ ${option} = "-t" ]; then
+  # trunk; bump version but keep SNAPSHOT qualifier
+  bump_keep_qualifier
+elif [ ${option} = "-r" ]; then
+  # release; bump version and drop SNAPSHOT qualifier
+  bump_drop_qualifier
+elif [ ${option} = "-d" ]; then
+  # devel; restore SNAPSHOT qualifier
+  bump_add_qualifier
+else
+  bad_option ${option}
+fi
+echo "Finished updating version."
+echo ""
+find_and_warn_incomplete
+echo ""
+echo "Before you commit, tag, or release, be sure to run a full build:"
+echo "   USE_VNC=true make"
+exit 0
+
