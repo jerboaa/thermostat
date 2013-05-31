@@ -40,9 +40,11 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import org.apache.commons.cli.Option;
@@ -50,6 +52,7 @@ import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 
 public class BuiltInCommandInfo implements CommandInfo {
 
@@ -58,6 +61,7 @@ public class BuiltInCommandInfo implements CommandInfo {
     private static final String PROPERTY_DESC = "description";
     private static final String PROPERTY_USAGE = "usage";
     private static final String PROPERTY_OPTIONS = "options";
+    private static final String PROPERTY_ENVIRONMENTS = "environments";
 
     private static final String PROP_SHORTOPT = ".short";
     private static final String PROP_LONGOPT = ".long";
@@ -67,6 +71,7 @@ public class BuiltInCommandInfo implements CommandInfo {
     
     private String name, description, usage;
     private Options options;
+    private EnumSet<Environment> environment;
     private List<String> dependencies;
 
     BuiltInCommandInfo(String commandName, Properties properties, String libRoot) {
@@ -82,6 +87,8 @@ public class BuiltInCommandInfo implements CommandInfo {
                 usage = properties.getProperty(key);
             } else if (key.equals(PROPERTY_OPTIONS)) {
                 learnOptions((String) entry.getValue(), properties);
+            } else if (key.equals(PROPERTY_ENVIRONMENTS)) {
+                environment = parseEnvironment(properties.getProperty(key));
             }
         }
     }
@@ -329,6 +336,27 @@ public class BuiltInCommandInfo implements CommandInfo {
                 option.getArgName());
     }
 
+    private EnumSet<Environment> parseEnvironment(String value) {
+        EnumSet<Environment> result = EnumSet.noneOf(Environment.class);
+        String[] terms = value.split(",");
+        for (String term : terms) {
+            term = term.trim();
+            if (term.equals("shell")) {
+                result.add(Environment.SHELL);
+            } else if (term.equals("cli")) {
+                result.add(Environment.CLI);
+            } else {
+                logger.info("Command " + this.name + " is available in unknown context: " + term);
+            }
+        }
+
+        if (result.isEmpty()) {
+            throw new InvalidConfigurationException("no value for environments");
+        }
+
+        return result;
+    }
+
     public String getName() {
         return name;
     }
@@ -343,6 +371,11 @@ public class BuiltInCommandInfo implements CommandInfo {
 
     public Options getOptions() {
         return options;
+    }
+
+    @Override
+    public Set<Environment> getEnvironments() {
+        return environment;
     }
 
     public List<String> getDependencyResourceNames() {

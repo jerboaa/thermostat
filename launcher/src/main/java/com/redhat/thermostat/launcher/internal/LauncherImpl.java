@@ -67,6 +67,7 @@ import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.tools.StorageAuthInfoGetter;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.BundleManager;
+import com.redhat.thermostat.launcher.internal.CommandInfo.Environment;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
@@ -251,7 +252,7 @@ public class LauncherImpl implements Launcher {
             return;
         }
 
-        if ((inShell && !cmd.isAvailableInShell()) || (!inShell && !cmd.isAvailableOutsideShell())) {
+        if ((inShell && !cmdInfo.getEnvironments().contains(Environment.SHELL)) || (!inShell && !cmdInfo.getEnvironments().contains(Environment.CLI))) {
         	outputBadShellContext(inShell, out, cmdName);
         	return;
         }

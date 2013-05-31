@@ -37,10 +37,17 @@
 package com.redhat.thermostat.launcher.internal;
 
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.cli.Options;
 
 public interface CommandInfo {
+
+    public enum Environment {
+        SHELL,
+        CLI,
+    }
+
     /**
      * Returns a name for this command. This will be used by the user to select
      * this command.
@@ -56,6 +63,11 @@ public interface CommandInfo {
      * How the user should invoke this command
      */
     public String getUsage();
+
+    /**
+     * Environments where this command is available
+     */
+    public Set<Environment> getEnvironments();
 
     /**
      * Returns the Options that the command is prepared to handle.

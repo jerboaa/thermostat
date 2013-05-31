@@ -59,10 +59,5 @@ public class GUIClientCommand extends AbstractCommand {
         return false;
     }
 
-    @Override
-    public boolean isAvailableInShell() {
-    	return false;
-    }
-
 }
 

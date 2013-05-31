@@ -98,16 +98,6 @@ public class DisconnectCommandTest {
     }
 
     @Test
-    public void testIsNotAvailableOutsideShell() {
-        assertFalse(cmd.isAvailableOutsideShell());
-    }
-    
-    @Test
-    public void testIsAvailableInShell() {
-        assertTrue(cmd.isAvailableInShell());
-    }
-    
-    @Test
     public void testIsStorageRequired() {
         assertFalse(cmd.isStorageRequired());
     }

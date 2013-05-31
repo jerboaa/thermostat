@@ -48,8 +48,6 @@ public class AbstractCommandTest {
         AbstractCommand command = createCommandForTest();
 
         assertTrue(command.isStorageRequired());
-        assertTrue(command.isAvailableInShell());
-        assertTrue(command.isAvailableOutsideShell());
     }
 
     private AbstractCommand createCommandForTest() {

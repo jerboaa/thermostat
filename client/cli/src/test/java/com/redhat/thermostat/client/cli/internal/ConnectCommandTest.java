@@ -155,15 +155,5 @@ public class ConnectCommandTest {
         assertFalse(cmd.isStorageRequired());
     }
 
-    @Test
-    public void testIsNotAvailableOutsideShell() {
-        assertFalse(cmd.isAvailableOutsideShell());
-    }
-    
-    @Test
-    public void testIsAvailableInShell() {
-        assertTrue(cmd.isAvailableInShell());
-    }
-
 }
 

@@ -47,9 +47,6 @@ public class TestCommand implements Command {
     private Handle handle;
 
     private boolean storageRequired;
-    private boolean availableInShell = true;
-    private boolean availableOutsideShell = true;
-
 
     public static interface Handle {
         public void run(CommandContext ctx) throws CommandException;
@@ -79,22 +76,5 @@ public class TestCommand implements Command {
         this.storageRequired = storageRequired;
     }
 
-    @Override
-    public boolean isAvailableInShell() {
-        return availableInShell;
-    }
-
-    void setAvailableInShell(boolean available) {
-        this.availableInShell = available;
-    }
-
-    @Override
-    public boolean isAvailableOutsideShell() {
-        return availableOutsideShell;
-    }
-
-    void setAvailableOutsideShell(boolean available) {
-        this.availableOutsideShell = available;
-    }
 }
 

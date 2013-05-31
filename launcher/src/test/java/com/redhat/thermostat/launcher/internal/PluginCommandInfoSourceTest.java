@@ -53,7 +53,9 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.cli.Options;
 import org.junit.After;
@@ -61,6 +63,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.launcher.internal.CommandInfo.Environment;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandExtensions;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.NewCommand;
 
@@ -181,6 +184,7 @@ public class PluginCommandInfoSourceTest {
         final String DESCRIPTION = "description of the command";
         final String USAGE = "usage";
         final Options OPTIONS = new Options();
+        final Set<Environment> ENVIRONMENTS = EnumSet.of(Environment.SHELL);
         final String PLUGIN_BUNDLE = "plugin-bundle.jar";
         final String DEPENDENCY_BUNDLE = "dependency-bundle.jar";
 
@@ -197,6 +201,7 @@ public class PluginCommandInfoSourceTest {
         when(cmd.getDescription()).thenReturn(DESCRIPTION);
         when(usageBuilder.getUsage(NAME, OPTIONS)).thenReturn(USAGE);
         when(cmd.getOptions()).thenReturn(OPTIONS);
+        when(cmd.getEnvironments()).thenReturn(ENVIRONMENTS);
         when(cmd.getPluginBundles()).thenReturn(Arrays.asList(PLUGIN_BUNDLE));
         when(cmd.getDepenedencyBundles()).thenReturn(Arrays.asList(DEPENDENCY_BUNDLE));
 

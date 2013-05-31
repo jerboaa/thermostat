@@ -74,18 +74,5 @@ public interface Command {
      */
     public boolean isStorageRequired();
 
-    /**
-     * Whether the command is available to be invoked from within the shell.
-     * @return true if the command can be invoked from within the shell
-     */
-    public boolean isAvailableInShell();
-
-    /**
-     * Indicates if the command is available to be invoked from outside the
-     * shell (as an argument to the main thermostat program).
-     * @return true if can command can be invoked from the command line
-     */
-    public boolean isAvailableOutsideShell();
-
 }
 

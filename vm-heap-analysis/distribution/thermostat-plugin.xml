@@ -65,6 +65,10 @@
           <long>logLevel</long>
         </option>
       </options>
+      <environments>
+        <environment>cli</environment>
+        <environment>shell</environment>
+      </environments>
       <bundles>
         <bundle>thermostat-vm-heap-analysis-common-${project.version}.jar</bundle>
         <bundle>thermostat-vm-heap-analysis-command-${project.version}.jar</bundle>
@@ -116,6 +120,10 @@
           <long>logLevel</long>
         </option>
       </options>
+      <environments>
+        <environment>cli</environment>
+        <environment>shell</environment>
+      </environments>
       <bundles>
         <bundle>thermostat-vm-heap-analysis-common-${project.version}.jar</bundle>
         <bundle>thermostat-vm-heap-analysis-command-${project.version}.jar</bundle>
@@ -170,6 +178,10 @@
           <long>logLevel</long>
         </option>
       </options>
+      <environments>
+        <environment>cli</environment>
+        <environment>shell</environment>
+      </environments>
       <bundles>
         <bundle>thermostat-vm-heap-analysis-common-${project.version}.jar</bundle>
         <bundle>thermostat-vm-heap-analysis-command-${project.version}.jar</bundle>
@@ -218,6 +230,10 @@
           <long>logLevel</long>
         </option>
       </options>
+      <environments>
+        <environment>cli</environment>
+        <environment>shell</environment>
+      </environments>
       <bundles>
         <bundle>thermostat-vm-heap-analysis-common-${project.version}.jar</bundle>
         <bundle>thermostat-vm-heap-analysis-command-${project.version}.jar</bundle>
@@ -266,6 +282,10 @@
           <long>logLevel</long>
         </option>
       </options>
+      <environments>
+        <environment>cli</environment>
+        <environment>shell</environment>
+      </environments>
       <bundles>
         <bundle>thermostat-vm-heap-analysis-common-${project.version}.jar</bundle>
         <bundle>thermostat-vm-heap-analysis-command-${project.version}.jar</bundle>
@@ -314,6 +334,10 @@
           <long>logLevel</long>
         </option>
       </options>
+      <environments>
+        <environment>cli</environment>
+        <environment>shell</environment>
+      </environments>
       <bundles>
         <bundle>thermostat-vm-heap-analysis-common-${project.version}.jar</bundle>
         <bundle>thermostat-vm-heap-analysis-command-${project.version}.jar</bundle>
@@ -355,6 +379,10 @@
           <long>logLevel</long>
         </option>
       </options>
+      <environments>
+        <environment>cli</environment>
+        <environment>shell</environment>
+      </environments>
       <bundles>
         <bundle>thermostat-vm-heap-analysis-common-${project.version}.jar</bundle>
         <bundle>thermostat-vm-heap-analysis-command-${project.version}.jar</bundle>

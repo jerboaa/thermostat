@@ -38,7 +38,6 @@ package com.redhat.thermostat.launcher.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -64,13 +63,6 @@ public class HelpCommandTest {
         ctxFactory = new TestCommandContextFactory();
 
         infos = mock(CommandInfoSource.class);
-    }
-
-    @Test
-    public void verifyCommandIsAvailableEverywhere() {
-        HelpCommand cmd = new HelpCommand();
-        assertTrue(cmd.isAvailableInShell());
-        assertTrue(cmd.isAvailableOutsideShell());
     }
 
     @Test

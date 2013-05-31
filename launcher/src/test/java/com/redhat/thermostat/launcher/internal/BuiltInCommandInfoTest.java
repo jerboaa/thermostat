@@ -49,6 +49,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
@@ -56,6 +57,7 @@ import org.apache.commons.cli.Options;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.launcher.internal.CommandInfo.Environment;
 import com.redhat.thermostat.shared.locale.Translate;
 
 public class BuiltInCommandInfoTest {
@@ -343,5 +345,18 @@ public class BuiltInCommandInfoTest {
         props.put("dbUrl.required", "true");
         @SuppressWarnings("unused")
         BuiltInCommandInfo info = new BuiltInCommandInfo(name, props, tempLibs.toString());
+    }
+
+    @Test
+    public void verifyEnviornment() {
+        Properties props = new Properties();
+        String name = "name";
+        String env = "cli, shell";
+        props.put("environments", env);
+        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props, tempLibs.toString());
+
+        Set<Environment> commandEnv = info.getEnvironments();
+        assertTrue(commandEnv.contains(Environment.CLI));
+        assertTrue(commandEnv.contains(Environment.SHELL));
     }
 }

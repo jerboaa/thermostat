@@ -67,6 +67,7 @@
       <xs:element ref="description"/>
       <xs:element ref="arguments" minOccurs="0" maxOccurs="1"/>
       <xs:element ref="options"/>
+      <xs:element ref="environments"/>
       <xs:element ref="bundles"/>
       <xs:element ref="dependencies"/>
     </xs:sequence>
@@ -120,6 +121,30 @@
   </xs:complexType>
 </xs:element>
 
+<xs:element name="environments">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="environment" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="environment">
+  <xs:simpleType>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="shell">
+        <xs:annotation>
+          <xs:documentation>Indicates that the command is available to be invoked from within the thermostat shell.</xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value="cli">
+        <xs:annotation>
+          <xs:documentation>Indicates that the command is available to be invoked as an argument to the main thermostat program.</xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+    </xs:restriction>
+  </xs:simpleType>
+</xs:element>
 
 <xs:element name="bundles">
   <xs:complexType>

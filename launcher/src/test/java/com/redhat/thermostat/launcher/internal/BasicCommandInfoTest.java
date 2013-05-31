@@ -39,10 +39,14 @@ package com.redhat.thermostat.launcher.internal;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.cli.Options;
 import org.junit.Test;
+
+import com.redhat.thermostat.launcher.internal.CommandInfo.Environment;
 
 public class BasicCommandInfoTest {
 
@@ -52,9 +56,10 @@ public class BasicCommandInfoTest {
         final String DESCRIPTION = "some-description";
         final String USAGE = "some-usage";
         final Options OPTIONS = new Options();
+        final Set<Environment> ENVIRONMENT = EnumSet.noneOf(Environment.class);
         final List<String> RESOURCES = Collections.emptyList();
 
-        BasicCommandInfo info = new BasicCommandInfo(NAME, DESCRIPTION, USAGE, OPTIONS, RESOURCES);
+        BasicCommandInfo info = new BasicCommandInfo(NAME, DESCRIPTION, USAGE, OPTIONS, ENVIRONMENT, RESOURCES);
 
         assertEquals(NAME, info.getName());
         assertEquals(DESCRIPTION, info.getDescription());

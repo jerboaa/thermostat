@@ -181,10 +181,5 @@ public class ShellCommand extends AbstractCommand {
         return false;
     }
 
-    @Override
-    public boolean isAvailableInShell() {
-        return false;
-    }
-
 }
 

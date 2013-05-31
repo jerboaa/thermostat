@@ -80,11 +80,6 @@ public class DisconnectCommand extends AbstractCommand {
     }
 
     @Override
-    public boolean isAvailableOutsideShell() {
-        return false;
-    }
-    
-    @Override
     public boolean isStorageRequired() {
         return false;
     }

@@ -122,6 +122,10 @@ public class PluginTest extends IntegrationTest {
                     "    <command>" +
                     "      <name>" + command + "</name>" +
                     "      <description>" + description + "</description>" +
+                    "      <environments>" +
+                    "        <environment>shell</environment>" +
+                    "        <environment>cli</environment>" +
+                    "      </environments>" +
                     "      <options>" +
                     "        <option>" +
                     "         <long>aaaaa</long>" +

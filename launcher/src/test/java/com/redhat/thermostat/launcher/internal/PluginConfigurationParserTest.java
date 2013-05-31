@@ -44,14 +44,23 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
+import java.util.List;
+
 import javax.xml.transform.stream.StreamSource;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.junit.Test;
 
+import com.redhat.thermostat.launcher.internal.CommandInfo.Environment;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandExtensions;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.NewCommand;
 import com.redhat.thermostat.shared.locale.Translate;
@@ -228,6 +237,10 @@ public class PluginConfigurationParserTest {
                 "    <command>\n" +
                 "      <name>test</name>\n" +
                 "      <description>description</description>\n" +
+                "      <environments>" +
+                "        <environment>shell</environment>" +
+                "        <environment>cli</environment>" +
+                "      </environments>" +
                 "      <bundles>\n" +
                 "        <bundle>foo</bundle>\n" +
                 "        <bundle>bar</bundle>\n" +
@@ -255,6 +268,8 @@ public class PluginConfigurationParserTest {
         Options opts = newCommand.getOptions();
         assertTrue(opts.getOptions().isEmpty());
         assertTrue(opts.getRequiredOptions().isEmpty());
+        assertTrue(newCommand.getEnvironments().contains(Environment.SHELL));
+        assertTrue(newCommand.getEnvironments().contains(Environment.CLI));
         assertEquals(Arrays.asList("foo", "bar", "baz"), newCommand.getPluginBundles());
         assertEquals(Arrays.asList("thermostat-foo"), newCommand.getDepenedencyBundles());
     }
@@ -305,6 +320,10 @@ public class PluginConfigurationParserTest {
                 "      <arguments>\n" +
                 "        <argument>file</argument>\n" +
                 "      </arguments>\n" +
+                "      <environments>" +
+                "        <environment>shell</environment>" +
+                "        <environment>cli</environment>" +
+                "      </environments>" +
                 "    </command>\n" +
                 "  </commands>\n" +
                 "</plugin>";
@@ -327,6 +346,9 @@ public class PluginConfigurationParserTest {
         List<String> args = command.getPositionalArguments();
         assertEquals(1, args.size());
         assertEquals("file", args.get(0));
+
+        assertTrue(command.getEnvironments().contains(Environment.SHELL));
+        assertTrue(command.getEnvironments().contains(Environment.CLI));
     }
 
     @Test
@@ -365,6 +387,10 @@ public class PluginConfigurationParserTest {
                 "          <description>some required and long option</description>\n" +
                 "        </option>\n" +
                 "      </options>\n" +
+                "      <environments>" +
+                "        <environment>shell</environment>" +
+                "        <environment>cli</environment>" +
+                "      </environments>" +
                 "      <bundles>\n" +
                 "        <bundle>\n \t  \nfoo\t \n \n</bundle>\n" +
                 "        <bundle>\tbar  baz\n</bundle>\n" +
@@ -422,6 +448,10 @@ public class PluginConfigurationParserTest {
                 "          <description>some required and long option</description>\n" +
                 "        </option>\n" +
                 "      </options>\n" +
+                "      <environments>" +
+                "        <environment>shell</environment>" +
+                "        <environment>cli</environment>" +
+                "      </environments>" +
                 "    </command>\n" +
                 "  </commands>\n" +
                 "</plugin>";
@@ -471,6 +501,10 @@ public class PluginConfigurationParserTest {
                 "    <command>\n" +
                 "      <name>test</name>\n" +
                 "      <description>just a test</description>\n" +
+                "      <environments>" +
+                "        <environment>shell</environment>" +
+                "        <environment>cli</environment>" +
+                "      </environments>" +
                 "      <options>\n" +
                 "        <option common=\"true\">\n" +
                 "          <long>dbUrl</long>\n" +
@@ -517,6 +551,10 @@ public class PluginConfigurationParserTest {
                 "    <command>\n" +
                 "      <name>test</name>\n" +
                 "      <description>just a test</description>\n" +
+                "      <environments>" +
+                "        <environment>shell</environment>" +
+                "        <environment>cli</environment>" +
+                "      </environments>" +
                 "      <options>\n" +
                 "        <option common=\"true\">\n" +
                 "          <long>foobarbaz</long>\n" +

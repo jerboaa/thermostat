@@ -38,8 +38,11 @@ package com.redhat.thermostat.launcher.internal;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.cli.Options;
+
+import com.redhat.thermostat.launcher.internal.CommandInfo.Environment;
 
 public class PluginConfiguration {
 
@@ -91,17 +94,20 @@ public class PluginConfiguration {
         private final String description;
         private final List<String> positionalArguments;
         private final Options options;
+        private final Set<Environment> environment;
         private final List<String> additionalResources;
         private final List<String> coreDeps;
 
         public NewCommand(String name, String usage, String description,
                 List<String> positionalArguments, Options options,
+                Set<Environment> environment,
                 List<String> additionalResources, List<String> coreDeps) {
             this.commandName = name;
             this.usage = usage;
             this.description = description;
             this.positionalArguments = positionalArguments;
             this.options = options;
+            this.environment = environment;
             this.additionalResources = additionalResources;
             this.coreDeps = coreDeps;
         }
@@ -133,6 +139,11 @@ public class PluginConfiguration {
             return options;
         }
 
+        /** Returns the environments where this command is available to be used */
+        public Set<Environment> getEnvironments() {
+            return Collections.unmodifiableSet(environment);
+        }
+
         public List<String> getPluginBundles() {
             return Collections.unmodifiableList(additionalResources);
         }
@@ -140,6 +151,8 @@ public class PluginConfiguration {
         public List<String> getDepenedencyBundles() {
             return Collections.unmodifiableList(coreDeps);
         }
+
+
     }
 
 }

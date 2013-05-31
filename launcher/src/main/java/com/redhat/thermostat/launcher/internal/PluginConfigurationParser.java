@@ -48,9 +48,11 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -73,6 +75,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.launcher.internal.CommandInfo.Environment;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandExtensions;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.NewCommand;
 import com.redhat.thermostat.shared.locale.Translate;
@@ -328,6 +331,7 @@ public class PluginConfigurationParser {
         String description = null;
         List<String> arguments = new ArrayList<>();
         Options options = new Options();
+        Set<Environment> availableInEnvironments = EnumSet.noneOf(Environment.class);
         List<String> bundles = new ArrayList<>();
         List<String> dependencies = new ArrayList<>();
 
@@ -344,6 +348,8 @@ public class PluginConfigurationParser {
                 arguments = parseArguments(pluginName, name, node);
             } else if (node.getNodeName().equals("options")) {
                 options = parseOptions(node);
+            } else if (node.getNodeName().equals("environments")) {
+                availableInEnvironments = parseEnvironment(pluginName, name, node);
             } else if (node.getNodeName().equals("bundles")) {
                 bundles.addAll(parseBundles(pluginName, name, node));
             } else if (node.getNodeName().equals("dependencies")) {
@@ -358,12 +364,12 @@ public class PluginConfigurationParser {
             logger.warning("plugin " + pluginName  + " provides a new command " + name + " but lists no dependencies on thermostat");
         }
 
-        if (name == null || description == null) {
+        if (name == null || description == null || availableInEnvironments.isEmpty()) {
             logger.warning("plugin " + pluginName + " provides an incomplete new command: " +
                     "name='" + name + "', description='" + description + "', options='" + options + "'");
             return null;
         } else {
-            return new NewCommand(name, usage, description, arguments, options, bundles, dependencies);
+            return new NewCommand(name, usage, description, arguments, options, availableInEnvironments, bundles, dependencies);
         }
     }
 
@@ -377,25 +383,6 @@ public class PluginConfigurationParser {
 
     private List<String> parseArguments(String pluginName, String commandName, Node argumentsNode) {
         return parseNodeAsList(pluginName, commandName, argumentsNode, "argument");
-    }
-
-    private List<String> parseNodeAsList(String pluginName, String commandName, Node parentNode, String childElementName) {
-        List<String> result = new ArrayList<>();
-        NodeList nodes = parentNode.getChildNodes();
-        for (int i = 0; i < nodes.getLength(); i++) {
-            Node node = nodes.item(i);
-            if (node.getNodeName().equals(childElementName)) {
-                String data = node.getTextContent().trim();
-                result.add(data);
-            }
-        }
-
-        if (result.isEmpty()) {
-            logger.warning("plugin " + pluginName + " has an empty " + parentNode.getNodeName()
-                + " element for command " + commandName);
-        }
-
-        return result;
     }
 
     private Options parseOptions(Node optionsNode) {
@@ -514,6 +501,39 @@ public class PluginConfigurationParser {
         opt.setRequired(required);
         return opt;
     }
+
+    private Set<Environment> parseEnvironment(String pluginName, String commandName, Node environmentNode) {
+        EnumSet<Environment> result = EnumSet.noneOf(Environment.class);
+        List<String> environments = parseNodeAsList(pluginName, commandName, environmentNode, "environment");
+        for (String environment : environments) {
+            if (environment.equals("shell")) {
+                result.add(Environment.SHELL);
+            } else if (environment.equals("cli")) {
+                result.add(Environment.CLI);
+            }
+        }
+        return result;
+    }
+
+    private List<String> parseNodeAsList(String pluginName, String commandName, Node parentNode, String childElementName) {
+        List<String> result = new ArrayList<>();
+        NodeList nodes = parentNode.getChildNodes();
+        for (int i = 0; i < nodes.getLength(); i++) {
+            Node node = nodes.item(i);
+            if (node.getNodeName().equals(childElementName)) {
+                String data = node.getTextContent().trim();
+                result.add(data);
+            }
+        }
+
+        if (result.isEmpty()) {
+            logger.warning("plugin " + pluginName + " has an empty " + parentNode.getNodeName()
+                + " element for command " + commandName);
+        }
+
+        return result;
+    }
+
 
     private static class ConfigurationParserErrorHandler implements ErrorHandler {
 

@@ -163,9 +163,5 @@ public class StorageCommand extends AbstractStateNotifyingCommand {
         return false;
     }
 
-    @Override
-    public boolean isAvailableInShell() {
-        return false;
-    }
 }
 

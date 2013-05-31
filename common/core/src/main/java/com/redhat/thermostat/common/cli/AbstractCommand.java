@@ -52,15 +52,5 @@ public abstract class AbstractCommand implements Command {
         return true;
     }
 
-    @Override
-    public boolean isAvailableInShell() {
-        return true;
-    }
-
-    @Override
-    public boolean isAvailableOutsideShell() {
-        return true;
-    }
-
 }
 

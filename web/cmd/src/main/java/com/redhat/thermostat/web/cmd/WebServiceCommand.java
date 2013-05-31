@@ -91,11 +91,6 @@ public class WebServiceCommand extends AbstractCommand {
         return false;
     }
 
-    @Override
-    public boolean isAvailableInShell() {
-    	return false;
-    }
-
     private List<HostPortPair> parseIPsPorts(String rawIpsPorts) throws CommandException {
         HostPortsParser parser = new HostPortsParser(rawIpsPorts);
         parser.parse();

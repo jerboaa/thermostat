@@ -120,11 +120,6 @@ public class ServiceCommand extends AbstractCommand implements ActionListener<Ap
     }
 
     @Override
-    public boolean isAvailableInShell() {
-        return false;
-    }
-
-    @Override
     public boolean isStorageRequired() {
         return false;
     }

@@ -48,6 +48,7 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -76,6 +77,7 @@ import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.launcher.BundleManager;
+import com.redhat.thermostat.launcher.internal.CommandInfo.Environment;
 import com.redhat.thermostat.launcher.internal.DisallowSystemExitSecurityManager.ExitException;
 import com.redhat.thermostat.launcher.internal.HelpCommand;
 import com.redhat.thermostat.launcher.internal.LauncherImpl;
@@ -166,6 +168,7 @@ public class LauncherImplTest {
         options1.addOption(logLevel);
         when(info1.getDescription()).thenReturn("description 1");
         when(info1.getOptions()).thenReturn(options1);
+        when(info1.getEnvironments()).thenReturn(EnumSet.of(Environment.SHELL, Environment.CLI));
 
         TestCommand cmd2 = new TestCommand(new TestCmd2());
         CommandInfo info2 = mock(CommandInfo.class);
@@ -177,6 +180,8 @@ public class LauncherImplTest {
         options2.addOption(opt4);
         when(info2.getDescription()).thenReturn("description 2");
         when(info2.getOptions()).thenReturn(options2);
+        when(info2.getEnvironments()).thenReturn(EnumSet.of(Environment.SHELL, Environment.CLI));
+
 
         TestCommand cmd3 = new TestCommand();
         CommandInfo info3 = mock(CommandInfo.class);
@@ -184,14 +189,14 @@ public class LauncherImplTest {
         cmd3.setStorageRequired(true);
         when(info3.getDescription()).thenReturn("description 3");
         when(info3.getOptions()).thenReturn(new Options());
+        when(info3.getEnvironments()).thenReturn(EnumSet.of(Environment.SHELL, Environment.CLI));
 
         AbstractStateNotifyingCommand basicCmd = mock(AbstractStateNotifyingCommand.class);
         CommandInfo basicInfo = mock(CommandInfo.class);
         when(basicInfo.getName()).thenReturn("basic");
         when(basicInfo.getDescription()).thenReturn("nothing that means anything");
+        when(basicInfo.getEnvironments()).thenReturn(EnumSet.of(Environment.SHELL, Environment.CLI));
         when(basicCmd.isStorageRequired()).thenReturn(false);
-        when(basicCmd.isAvailableInShell()).thenReturn(true);
-        when(basicCmd.isAvailableOutsideShell()).thenReturn(true);
         Options options = new Options();
         when(basicInfo.getOptions()).thenReturn(options);
         notifier = mock(ActionNotifier.class);
@@ -203,6 +208,8 @@ public class LauncherImplTest {
         when(helpCommandInfo.getDependencyResourceNames()).thenReturn(new ArrayList<String>());
         when(helpCommandInfo.getOptions()).thenReturn(new Options());
         when(helpCommandInfo.getUsage()).thenReturn("thermostat help");
+        when(helpCommandInfo.getEnvironments()).thenReturn(EnumSet.of(Environment.SHELL, Environment.CLI));
+
 
         HelpCommand helpCommand = new HelpCommand();
 
@@ -404,6 +411,7 @@ public class LauncherImplTest {
         CommandInfo cmdInfo = mock(CommandInfo.class);
         when(cmdInfo.getName()).thenReturn("error");
         when(cmdInfo.getOptions()).thenReturn(new Options());
+        when(cmdInfo.getEnvironments()).thenReturn(EnumSet.of(Environment.SHELL, Environment.CLI));
         when(infos.getCommandInfo("error")).thenReturn(cmdInfo);
 
         wrappedRun(launcher, new String[] { "error" }, false);
@@ -468,14 +476,13 @@ public class LauncherImplTest {
     public void verifyDbServiceConnectIsCalledForStorageCommand() throws Exception {
         Command mockCmd = mock(Command.class);
         when(mockCmd.isStorageRequired()).thenReturn(true);
-        when(mockCmd.isAvailableInShell()).thenReturn(true);
-        when(mockCmd.isAvailableOutsideShell()).thenReturn(true);
         
         ctxFactory.getCommandRegistry().registerCommand("dummy", mockCmd);
         
         CommandInfo cmdInfo = mock(CommandInfo.class);
         when(cmdInfo.getName()).thenReturn("dummy");
         when(cmdInfo.getOptions()).thenReturn(new Options());
+        when(cmdInfo.getEnvironments()).thenReturn(EnumSet.of(Environment.SHELL, Environment.CLI));
         when(infos.getCommandInfo("dummy")).thenReturn(cmdInfo);
 
         DbService dbService = mock(DbService.class);
@@ -560,12 +567,19 @@ public class LauncherImplTest {
     		boolean isAvailableOutsideShell, String expected) {
     	Command mockCmd = mock(Command.class);
         when(mockCmd.isStorageRequired()).thenReturn(false);
-        when(mockCmd.isAvailableInShell()).thenReturn(isAvailableInShell);
-        when(mockCmd.isAvailableOutsideShell()).thenReturn(isAvailableOutsideShell);
+
+        EnumSet<Environment> available = EnumSet.noneOf(Environment.class);
+        if (isAvailableInShell) {
+            available.add(Environment.SHELL);
+        }
+        if (isAvailableOutsideShell) {
+            available.add(Environment.CLI);
+        }
 
         CommandInfo cmdInfo = mock(CommandInfo.class);
         when(cmdInfo.getName()).thenReturn(cmdName);
         when(cmdInfo.getOptions()).thenReturn(new Options());
+        when(cmdInfo.getEnvironments()).thenReturn(available);
         when(infos.getCommandInfo(cmdName)).thenReturn(cmdInfo);
 
         ctxFactory.getCommandRegistry().registerCommand(cmdName, mockCmd);

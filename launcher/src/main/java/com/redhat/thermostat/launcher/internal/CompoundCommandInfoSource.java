@@ -42,8 +42,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import org.apache.commons.cli.Options;
+
+import com.redhat.thermostat.launcher.internal.CommandInfo.Environment;
 
 
 /**
@@ -129,11 +132,12 @@ public class CompoundCommandInfoSource implements CommandInfoSource {
         String description = selectBest(info1.getDescription(), info2.getDescription());
         String usage = selectBest(info1.getUsage(), info2.getUsage());
         Options options = selectBest(info1.getOptions(), info2.getOptions());
+        Set<Environment> environment = selectBest(info1.getEnvironments(), info2.getEnvironments());
         List<String> resources = new ArrayList<>();
         resources.addAll(info1.getDependencyResourceNames());
         resources.addAll(info2.getDependencyResourceNames());
 
-        return new BasicCommandInfo(name, description, usage, options, resources);
+        return new BasicCommandInfo(name, description, usage, options, environment, resources);
     }
 
     private <T> T selectBest(T first, T second) {

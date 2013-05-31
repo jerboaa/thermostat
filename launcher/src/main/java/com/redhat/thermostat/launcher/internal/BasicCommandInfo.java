@@ -37,9 +37,9 @@
 package com.redhat.thermostat.launcher.internal;
 
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.cli.Options;
-
 
 public class BasicCommandInfo implements CommandInfo {
 
@@ -47,13 +47,15 @@ public class BasicCommandInfo implements CommandInfo {
     private final String description;
     private final String usage;
     private final Options options;
+    private final Set<Environment> environments;
     private final List<String> resources;
 
-    public BasicCommandInfo(String name, String description, String usage, Options options, List<String> resources) {
+    public BasicCommandInfo(String name, String description, String usage, Options options, Set<Environment> environments, List<String> resources) {
         this.name = name;
         this.description = description;
         this.usage = usage;
         this.options = options;
+        this.environments = environments;
         this.resources = resources;
     }
 
@@ -75,6 +77,11 @@ public class BasicCommandInfo implements CommandInfo {
     @Override
     public Options getOptions() {
         return options;
+    }
+
+    @Override
+    public Set<Environment> getEnvironments() {
+        return environments;
     }
 
     @Override

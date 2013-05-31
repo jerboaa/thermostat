@@ -309,11 +309,6 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
     }
 
     @Override
-    public boolean isAvailableInShell() {
-        return false;
-    }
-    
-    @Override
     public boolean isStorageRequired() {
         return false;
     }
