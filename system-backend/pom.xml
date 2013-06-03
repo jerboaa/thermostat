@@ -126,13 +126,15 @@
           </instructions>
         </configuration>
       </plugin>
-      
+            
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
           <configuration>
             <!-- FIXME: the test need to link to agent-core native libraries -->
-            <argLine>-Djava.library.path=${project.build.directory}/../../agent/core/target/ ${coverageAgent}</argLine>
+            <systemPropertyVariables>
+              <com.redhat.thermostat.shared.loader.testNativesHome>${project.build.directory}/../../agent/core/target/</com.redhat.thermostat.shared.loader.testNativesHome>
+            </systemPropertyVariables>            
           </configuration>
       </plugin>      
       
