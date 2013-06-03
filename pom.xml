@@ -90,8 +90,8 @@
          felix 4.0 is compliant with osgi 4.3
          for osgi clients, 4.3 is backwards compatible with 4.2
     -->
-    <osgi.core.version>4.2.0</osgi.core.version>
-    <osgi.compendium.version>4.2.0</osgi.compendium.version>
+    <osgi.core.version>4.3.1</osgi.core.version>
+    <osgi.compendium.version>4.3.1</osgi.compendium.version>
     <felix.framework.version>4.0.2</felix.framework.version>
 
     <netty.version>3.2.4.Final</netty.version>
