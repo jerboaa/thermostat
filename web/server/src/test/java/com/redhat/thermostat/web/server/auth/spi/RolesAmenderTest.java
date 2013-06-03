@@ -73,6 +73,8 @@ public class RolesAmenderTest {
         Set<Object> users = new HashSet<>();
         users.add("user1");
         users.add("user2");
+        users.add("someuser");
+        users.add("someotheruser");
         validUsers = Collections.unmodifiableSet(users);
     }
     
@@ -129,10 +131,60 @@ public class RolesAmenderTest {
     }
     
     @Test
+    public void canParseRecursiveRolesWithMultipleMemberships() {
+        rolesAmender = new RolesAmender(validFile, validUsers);
+        Set<BasicRole> roles = rolesAmender.getRoles("user2");
+        // new-role, role1, other-role
+        assertEquals(3, roles.size());
+        Iterator<BasicRole> it = roles.iterator();
+        while (it.hasNext()) {
+            BasicRole role = it.next();
+            assertTrue(role instanceof RolePrincipal);
+            if (role.getName().equals("role1")) {
+                // nested role
+                int count = 0;
+                @SuppressWarnings("rawtypes")
+                Enumeration members = role.members();
+                while (members.hasMoreElements()) {
+                    count++;
+                    assertEquals("other-role", ((Principal)members.nextElement()).getName());
+                }
+                assertEquals(1, count);
+            }
+            if (role.getName().equals("new-role")) {
+                // not nested
+                assertFalse(role.members().hasMoreElements());
+            }
+        }
+        assertTrue(roles.contains(new RolePrincipal("other-role")));
+        // role1 is not a user
+        roles = rolesAmender.getRoles("role1");
+        // expect empty
+        assertEquals(0, roles.size());
+        // test another user which is member of the recursive role
+        roles = rolesAmender.getRoles("someuser");
+        assertEquals(
+                "Expected someuser to be a member of 'testing', 'role1' and 'other-role'",
+                3, roles.size());
+        assertTrue(roles.contains(new RolePrincipal("other-role")));
+        assertTrue(roles.contains(new RolePrincipal("testing")));
+        assertTrue(roles.contains(new RolePrincipal("role1")));
+        // and yet another user which is part of a recursive role
+        roles = rolesAmender.getRoles("someotheruser");
+        assertEquals(
+                "Expected someotheruser to be a member of 'role1' and 'other-role'",
+                2, roles.size());
+        assertTrue(roles.contains(new RolePrincipal("other-role")));
+        assertTrue(roles.contains(new RolePrincipal("role1")));
+    }
+    
+    @Test
     public void canParseRolesWithMoreUsersThanUsedInRoles() {
         Set<Object> users = new HashSet<>();
         users.add("user1");
         users.add("user2");
+        users.add("someuser");
+        users.add("someotheruser");
         users.add("user-with-no-roles");
         validUsers = Collections.unmodifiableSet(users);
         try {

@@ -211,6 +211,56 @@ public class PropertiesUsernameRolesLoginModuleTest {
     }
     
     @Test
+    public void testRecursiveRolesMultiple() throws LoginException {
+        LoginModule loginModule = new PropertiesUsernameRolesLoginModule();
+        mockCallBack = new SimpleCallBackHandler("user3", "password".toCharArray());
+        URL userFile = this.getClass().getResource("/properties_module_test_users.properties");
+        URL rolesFile = this.getClass().getResource("/properties_module_test_roles.properties");
+        mockOptions.put("users.properties", userFile.getFile());
+        mockOptions.put("roles.properties", rolesFile.getFile());
+        loginModule.initialize(subject, mockCallBack, mockSharedState, mockOptions);
+        assertTrue(loginModule.login());
+        try {
+            boolean retval = loginModule.commit();
+            // pass
+            assertTrue("Commit should have returned true", retval);
+        } catch (LoginException e) {
+            fail("'user3' should have been able to commit");
+        }
+        // assert principals are added to subject
+        Set<Principal> principals = subject.getPrincipals();
+        // other-role, role1, Roles, user3
+        assertEquals(4, principals.size());
+        assertTrue(principals.contains(new RolePrincipal("role1")));
+        assertTrue(principals.contains(new RolePrincipal("Roles")));
+        // via recursive role 'role1'
+        assertTrue(principals.contains(new RolePrincipal("other-role")));
+        assertTrue(principals.contains(new UserPrincipal("user3")));
+        loginModule = new PropertiesUsernameRolesLoginModule();
+        mockCallBack = new SimpleCallBackHandler("user2", "password".toCharArray());
+        subject = new Subject();
+        loginModule.initialize(subject, mockCallBack, mockSharedState, mockOptions);
+        assertTrue(loginModule.login());
+        try {
+            boolean retval = loginModule.commit();
+            // pass
+            assertTrue("Commit should have returned true", retval);
+        } catch (LoginException e) {
+            fail("'user2' should have been able to commit");
+        }
+        // assert principals are added to subject
+        principals = subject.getPrincipals();
+        // new-role, other-role, role1, Roles, user2
+        assertEquals(5, principals.size());
+        assertTrue(principals.contains(new RolePrincipal("role1")));
+        assertTrue(principals.contains(new RolePrincipal("Roles")));
+        // via recursive role 'role1'
+        assertTrue(principals.contains(new RolePrincipal("other-role")));
+        assertTrue(principals.contains(new UserPrincipal("user2")));
+        assertTrue(principals.contains(new RolePrincipal("new-role")));
+    }
+    
+    @Test
     public void cannotCommitWithoutLoggingIn() throws LoginException {
         LoginModule loginModule = new PropertiesUsernameRolesLoginModule();
         assertFalse(loginModule.commit());

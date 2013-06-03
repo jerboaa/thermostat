@@ -197,10 +197,10 @@ class RolesAmender {
      * Add roles to users which are member of a recursive role
      */
     private void expandRoles(RolesInfo recRole) {
-        @SuppressWarnings("unchecked") // we've added them so safe
-        Enumeration<BasicRole> members = (Enumeration<BasicRole>)recRole.getRole().members();
         Iterator<String> memberUsersIterator = recRole.getMemberUsers().iterator();
         while (memberUsersIterator.hasNext()) {
+            @SuppressWarnings("unchecked") // we've added them so safe
+            Enumeration<BasicRole> members = (Enumeration<BasicRole>)recRole.getRole().members();
             String username = memberUsersIterator.next();
             Set<BasicRole> userRoles = rolesMap.get(username);
             while (members.hasMoreElements()) {
