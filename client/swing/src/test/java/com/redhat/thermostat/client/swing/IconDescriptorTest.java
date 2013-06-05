@@ -54,7 +54,7 @@ public class IconDescriptorTest {
         IconDescriptor descriptor = IconDescriptor.loadIcon(classLoader, resource);
         ByteBuffer buffer = descriptor.getData();
         
-        assertEquals(3512, buffer.capacity());
+        assertEquals(841, buffer.capacity());
         
         byte[] data = buffer.array();
         

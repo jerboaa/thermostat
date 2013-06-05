@@ -110,7 +110,7 @@ public class JmxNotificationsSwingView extends JmxNotificationsView implements S
             }
         });
 
-        toolbarButton = new ActionToggleButton(IconResource.RECORD.getIcon(), translate.localize(LocaleResources.NOTIFICATIONS_ENABLE).getContents());
+        toolbarButton = new ActionToggleButton(IconResource.SAMPLE.getIcon(), translate.localize(LocaleResources.NOTIFICATIONS_ENABLE).getContents());
         toolbarButton.setName("toggleNotifications");
         toolbarButton.setToolTipText(translate.localize(LocaleResources.NOTIFICATIONS_ENABLE_DESCRIPTION).getContents());
         toolbarButton.addActionListener(new java.awt.event.ActionListener() {

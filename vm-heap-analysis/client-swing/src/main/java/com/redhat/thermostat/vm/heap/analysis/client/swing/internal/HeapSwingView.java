@@ -50,6 +50,7 @@ import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.swing.ComponentVisibleListener;
+import com.redhat.thermostat.client.swing.IconResource;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.ActionToggleButton;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
@@ -59,7 +60,6 @@ import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListView.ListAction;
-import com.redhat.thermostat.vm.heap.analysis.client.core.HeapIconResources;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.chart.OverviewChart;
 import com.redhat.thermostat.vm.heap.analysis.client.locale.LocaleResources;
@@ -123,8 +123,10 @@ public class HeapSwingView extends HeapView implements SwingComponent {
         overview.setContent(stack);
         overview.addHierarchyListener(new ViewVisibleListener());
 
-        Icon listDumpIcon = new Icon(HeapIconResources.getIcon(HeapIconResources.LIST_DUMPS));
+        // TODO
+        //Icon takeDumpIcon = new Icon(HeapIconResources.getIcon(HeapIconResources.LIST_DUMPS));
         
+        Icon listDumpIcon = IconResource.HISTORY.getIcon();
         showHeapListButton = new ActionToggleButton(listDumpIcon, translator.localize(LocaleResources.LIST_DUMPS_ACTION).getContents());
         showHeapListButton.setToolTipText(translator.localize(LocaleResources.LIST_DUMPS_ACTION).getContents());
         showHeapListButton.setName("LIST_DUMPS_ACTION");

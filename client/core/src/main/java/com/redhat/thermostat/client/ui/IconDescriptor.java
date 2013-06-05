@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.client.ui;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -44,6 +45,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.common.utils.StreamUtils;
+
+import java.io.FileInputStream;
 
 /**
  * Class that encapsulates an images raw data.
@@ -97,6 +101,22 @@ public class IconDescriptor {
     }
     
     /**
+     * Loads an icon from the given {@link InputStream}.
+     */
+    public static IconDescriptor loadIcon(InputStream stream) throws IOException {
+        byte[] bytes = StreamUtils.readAll(stream);
+        ByteBuffer data = ByteBuffer.wrap(bytes);
+        return new IconDescriptor(data);
+    }
+    
+    /**
+     * Loads an icon from a file.
+     */
+    public static IconDescriptor loadIcon(File resource) throws IOException {
+        return loadIcon(new FileInputStream(resource));
+    }
+    
+    /**
      * Loads an icon by calling from the given resource file and {@link ClassLoader}.
      */
     public static IconDescriptor loadIcon(ClassLoader classloader, String resource) throws IOException {
@@ -104,12 +124,7 @@ public class IconDescriptor {
         if (stream == null) {
             throw new IOException("no resource found");
         }
-
-        byte[] bytes = new byte[stream.available()];
-        stream.read(bytes, 0, bytes.length);
-
-        ByteBuffer data = ByteBuffer.wrap(bytes);
-        return new IconDescriptor(data);
+        return loadIcon(stream);
     }
 }
 

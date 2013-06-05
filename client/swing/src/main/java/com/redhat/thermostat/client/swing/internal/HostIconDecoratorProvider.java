@@ -71,8 +71,7 @@ public class HostIconDecoratorProvider implements DecoratorProvider<HostRef> {
         public IconDecorator() {
             IconDescriptor icon = null;
             try {
-                InputStream in = new FileInputStream(IconResource.HOST.getPath());
-                icon = new IconDescriptor(ByteBuffer.wrap(StreamUtils.readAll(in)));
+                icon = IconResource.HOST.toIconDescriptor();
             } catch (IOException ioe) {
                 ioe.printStackTrace();
             }

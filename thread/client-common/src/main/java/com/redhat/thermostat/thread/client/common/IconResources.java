@@ -44,7 +44,6 @@ import java.util.logging.Logger;
 public class IconResources {
 
     private static IconDescriptor monitor;
-    private static IconDescriptor record;
 
     public static IconDescriptor getMonitorIcon() {
         if (monitor == null) {
@@ -55,17 +54,6 @@ public class IconResources {
             }
         }
         return monitor;
-    }
-    
-    public static IconDescriptor getRecordIcon() {
-        if (record == null) {
-            try {
-                record = IconDescriptor.loadIcon(IconResources.class.getClassLoader(), "com/redhat/thermostat/thread/client/common/gtk-media-record.png");
-            } catch (IOException ex) {
-                Logger.getLogger(IconResources.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
-            }
-        }
-        return record;
     }
 }
 

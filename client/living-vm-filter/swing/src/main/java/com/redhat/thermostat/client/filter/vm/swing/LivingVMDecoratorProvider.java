@@ -54,13 +54,14 @@ public class LivingVMDecoratorProvider implements DecoratorProvider<VmRef> {
     private class LivingVMDecorator implements Decorator {
         @Override
         public IconDescriptor getIconDescriptor() {
+            IconDescriptor icon = null;
             try {
-                return IconDescriptor.loadIcon(IconResource.class.getClassLoader(), IconResource.JAVA_APPLICATION.getPath());
-            } catch (IOException e) {
-                Logger.getLogger(LivingVMDecoratorProvider.class.getName()).log(Level.SEVERE, e.getMessage(), e);
-
-                return null;
+                icon = IconResource.JAVA_APPLICATION.toIconDescriptor();
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+                Logger.getLogger(LivingVMDecoratorProvider.class.getName()).log(Level.SEVERE, ioe.getMessage(), ioe);
             }
+            return icon;
         }
         
         @Override

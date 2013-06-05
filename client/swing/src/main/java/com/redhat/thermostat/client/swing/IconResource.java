@@ -36,39 +36,36 @@
 
 package com.redhat.thermostat.client.swing;
 
-import java.io.File;
+import com.redhat.thermostat.client.swing.components.Icon;
+import com.redhat.thermostat.client.ui.IconDescriptor;
 
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
+import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Provides access to various icons.
  */
 public class IconResource {
-    /* FIXME we need to pick up the icons dynamically */
-
+    
+    private boolean fromFileSytem = false;
+    
     private static final String ICON_PREFIX = "/usr/share/icons/gnome/";
 
-    // an icon that should always be available and indicate that the actual icon
-    // is missing.
-    public static final IconResource MISSING_ICON = null;
-
-    public static final IconResource JAVA_APPLICATION = new IconResource("duke.png");
-    public static final IconResource HOST = new IconResource(ICON_PREFIX + "16x16/devices/computer.png");
+    public static final IconResource JAVA_APPLICATION = new IconResource("java_application_identifier.png");
+    public static final IconResource HOST = new IconResource("computer.png");
+    public static final IconResource SEARCH = new IconResource("search.png");
+    public static final IconResource RECORD = new IconResource("record.png");
+    public static final IconResource SAMPLE = new IconResource("sample.png");
+    public static final IconResource CLEAN = new IconResource("clean.png");
+    public static final IconResource TRASH = new IconResource("trash.png");
     
-    public static final IconResource ERROR = new IconResource(ICON_PREFIX + "48x48/status/dialog-error.png");
-    public static final IconResource QUESTION = new IconResource(ICON_PREFIX + "48x48/status/dialog-question.png");
-    public static final IconResource WARNING = new IconResource(ICON_PREFIX + "48x48/status/dialog-warning.png");
+    // TODO: add a proper one for this
+    public static final IconResource HISTORY = RECORD;
 
-    public static final IconResource COMPUTER = new IconResource(ICON_PREFIX + "48x48/devices/computer.png");
-    public static final IconResource NETWORK_SERVER = new IconResource(ICON_PREFIX + "48x48/places/network-server.png");
-    public static final IconResource NETWORK_GROUP = new IconResource(ICON_PREFIX + "48x48/places/network-workgroup.png");
-
-    public static final IconResource ARROW_RIGHT = new IconResource(ICON_PREFIX + "48x48/actions/go-next.png");
-
-    public static final IconResource SEARCH = new IconResource(ICON_PREFIX + "16x16/actions/search.png");
-
-    public static final IconResource RECORD = new IconResource(ICON_PREFIX + "16x16/actions/media-record.png");
+    // TODO: those should either go into appropriate modules or be converted into internal icons 
+    public static final IconResource ARROW_RIGHT = new IconResource(ICON_PREFIX + "48x48/actions/go-next.png", true);
 
     private final String path;
 
@@ -76,24 +73,34 @@ public class IconResource {
         this.path = descriptor;
     }
 
-    public static IconResource fromPath(String path) {
-        // TODO implement this
-        return null;
+    private IconResource(String descriptor, boolean fromFileSytem) {
+        this.path = descriptor;
+        this.fromFileSytem = fromFileSytem;
     }
 
     public Icon getIcon() {
-        if (new File(path).exists()) {
-            return new ImageIcon(path);
+        try {
+            IconDescriptor descriptor = toIconDescriptor();
+            return new Icon(descriptor);
+            
+        } catch (IOException ex) {
+            Logger.getLogger(IconResource.class.getName()).log(Level.WARNING, "can't load icon: " + getPath(), ex);
         }
         return null;
     }
 
-    public String getPath() {
+    String getPath() {
         return path;
     }
-
-    public String getUrl() {
-        return "file:" + getPath();
+    
+    public IconDescriptor toIconDescriptor() throws IOException {
+        IconDescriptor icon = null;
+        if (fromFileSytem) {
+            icon = IconDescriptor.loadIcon(new File(getPath()));
+        } else {
+            icon = IconDescriptor.loadIcon(IconResource.class.getClassLoader(), getPath());
+        }
+        return icon;
     }
 }
 
