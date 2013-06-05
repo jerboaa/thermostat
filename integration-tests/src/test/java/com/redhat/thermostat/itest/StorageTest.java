@@ -55,8 +55,20 @@ public class StorageTest extends IntegrationTest {
 
         assertNoExceptions(storage.getCurrentStandardOutContents(), storage.getCurrentStandardErrContents());
 
+        storage = spawnThermostat("storage", "--status");
+        storage.expect("Storage is running");
+        storage.expectClose();
+        
+        assertNoExceptions(storage.getCurrentStandardOutContents(), storage.getCurrentStandardErrContents());
+        
         storage = spawnThermostat("storage", "--stop");
         storage.expect("server shutdown complete");
+        storage.expectClose();
+        
+        assertNoExceptions(storage.getCurrentStandardOutContents(), storage.getCurrentStandardErrContents());
+        
+        storage = spawnThermostat("storage", "--status");
+        storage.expect("Storage is not running");
         storage.expectClose();
 
         assertNoExceptions(storage.getCurrentStandardOutContents(), storage.getCurrentStandardErrContents());

@@ -63,6 +63,8 @@ public enum LocaleResources {
     MISSING_PASSPHRASE,
     MISSING_DB_CONFIG,
     MISSING_DB_DIR,
+    STORAGE_RUNNING,
+    STORAGE_NOT_RUNNING
     ;
 
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.agent.cli.impl.strings";

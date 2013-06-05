@@ -39,7 +39,6 @@ package com.redhat.thermostat.agent.cli.impl.db;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.agent.cli.impl.locale.LocaleResources;
 import com.redhat.thermostat.common.config.ThermostatOptionParser;
-import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.locale.Translate;
 
@@ -69,6 +68,8 @@ public class DBOptionParser implements ThermostatOptionParser {
             serviceAction = DBArgs.START;
         } else if (args.hasArgument(DBArgs.STOP.option)) {
             serviceAction = DBArgs.STOP;
+        } else if (args.hasArgument(DBArgs.STATUS.option)) {
+            serviceAction = DBArgs.STATUS;
         } else {
             throw new InvalidConfigurationException(translator.localize(LocaleResources.COMMAND_STORAGE_ARGUMENT_REQUIRED));
         }
@@ -91,27 +92,27 @@ public class DBOptionParser implements ThermostatOptionParser {
         return dryRun;
     }
     
-    public ApplicationState getAction() {
-        return serviceAction.state;
+    public DBArgs getAction() {
+        return serviceAction;
     }
 
     static enum DBArgs {
                 
-        DRY("dryRun", ApplicationState.NONE),
+        DRY("dryRun"),
         
-        HELP("help", ApplicationState.HELP),
+        HELP("help"),
         
-        START("start", ApplicationState.START),
-        STOP("stop", ApplicationState.STOP),
+        START("start"),
+        STOP("stop"),
         
-        QUIET("quiet", ApplicationState.NONE);
+        QUIET("quiet"),
+        
+        STATUS("status");
         
         private String option;
-        private ApplicationState state;
         
-        DBArgs(String option, ApplicationState state) {
+        DBArgs(String option) {
             this.option = option;
-            this.state = state;
         }
     }
 

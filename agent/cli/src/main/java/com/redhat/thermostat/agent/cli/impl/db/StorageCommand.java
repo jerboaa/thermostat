@@ -102,6 +102,9 @@ public class StorageCommand extends AbstractStateNotifyingCommand {
             case STOP:
                 stopService();
                 break;
+            case STATUS:
+                printServiceStatus(ctx);
+                break;
              default:
                 break;
             }
@@ -139,6 +142,14 @@ public class StorageCommand extends AbstractStateNotifyingCommand {
             throw e;
         }
         getNotifier().fireAction(ApplicationState.STOP);
+    }
+    
+    private void printServiceStatus(CommandContext ctx) {
+        if (runner.isStorageRunning()) {
+            ctx.getConsole().getOutput().println(t.localize(LocaleResources.STORAGE_RUNNING).getContents());
+        } else {
+            ctx.getConsole().getOutput().println(t.localize(LocaleResources.STORAGE_NOT_RUNNING).getContents());
+        }
     }
     
     MongoProcessRunner createRunner() {

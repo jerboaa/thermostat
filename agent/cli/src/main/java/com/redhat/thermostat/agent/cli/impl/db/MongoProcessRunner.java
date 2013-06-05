@@ -141,6 +141,10 @@ public class MongoProcessRunner {
         return processName != null && processName.equalsIgnoreCase(MONGO_PROCESS);
     }
     
+    public boolean isStorageRunning() {
+        return getPid() != null;
+    }
+    
     public void startService() throws IOException, InterruptedException,
             ApplicationException, InvalidConfigurationException {
 
