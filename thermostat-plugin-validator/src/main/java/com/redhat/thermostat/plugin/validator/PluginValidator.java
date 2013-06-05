@@ -1,5 +1,5 @@
 /*
- * Copyright 2012, 2013 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,37 +34,38 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.launcher.internal;
+package com.redhat.thermostat.plugin.validator;
 
-import com.redhat.thermostat.shared.locale.Translate;
+import java.io.IOException;
+import java.net.URL;
 
-public enum LocaleResources {
+import javax.xml.XMLConstants;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
 
-    CANNOT_GET_COMMAND_INFO,
-    UNKNOWN_COMMAND,
-    COMMAND_COULD_NOT_LOAD_BUNDLES,
-    COMMAND_DESCRIBED_BUT_NOT_AVAILALBE,
-    COMMAND_AVAILABLE_INSIDE_SHELL_ONLY,
-    COMMAND_AVAILABLE_OUTSIDE_SHELL_ONLY,
+import org.xml.sax.SAXException;
 
-    COMMAND_HELP_COMMAND_LIST_HEADER,
+import com.redhat.thermostat.plugin.validator.internal.ConfigurationValidatorErrorHandler;
 
-    OPTION_DB_URL_DESC,
-    OPTION_LOG_LEVEL_DESC,
 
-    MISSING_OPTION,
-    MISSING_OPTIONS,
-    PARSE_EXCEPTION_MESSAGE,
-
-    LAUNCHER_USER_AUTH_PROMPT_ERROR,
-    LAUNCHER_MALFORMED_URL,
-    LAUNCHER_CONNECTION_ERROR,
-    ;
-
-    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.launcher.internal.strings";
-
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+public class PluginValidator {
+    
+    public void validate(StreamSource plugin) throws PluginConfigurationValidatorException {
+        URL schemaUrl = PluginValidator.class.getResource("/thermostat-plugin.xsd");
+        SchemaFactory schemaFactory = 
+                SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+        
+        try {
+            Schema schema = schemaFactory.newSchema(schemaUrl);
+            Validator validator = schema.newValidator();
+            validator.setErrorHandler(new ConfigurationValidatorErrorHandler());
+            validator.validate(plugin);
+        } catch (IOException | SAXException exception) {
+            throw new PluginConfigurationValidatorException
+                (plugin.getSystemId(), exception.getLocalizedMessage(), exception);
+        }
     }
-}
 
+}

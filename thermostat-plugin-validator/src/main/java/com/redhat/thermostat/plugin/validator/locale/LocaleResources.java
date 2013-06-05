@@ -34,46 +34,22 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.launcher.internal;
+package com.redhat.thermostat.plugin.validator.locale;
+
+import com.redhat.thermostat.shared.locale.Translate;
 
 
-public class PluginConfigurationValidatorException extends Exception {
+public enum LocaleResources {
     
-    private static final long serialVersionUID = 1L;
-    private String filePath;
-    
-    /**
-     * Constructor of PluginConfigurationValidatorException
-     * @param filePath must include the protocol 
-     * @param message the detailed message
-     */
-    public PluginConfigurationValidatorException(String filePath, String message) {
-        super(message);
-        this.filePath = computeFilePath(filePath);
-    }
-    
-    /**
-     * Constructor of PluginConfigurationValidatorException
-     * @param filePath must include the protocol 
-     * @param message the detailed message
-     */
-    public PluginConfigurationValidatorException(String filePath, String message, Throwable cause) {
-        super(message, cause);
-        this.filePath = computeFilePath(filePath);
-    }
-    
-    public String getFilePath() {
-        return filePath;
-    }
-    
-    /**
-     * Computes the file path removing the protocol scheme
-     * @param filePath must include the protocol
-     * @return the path without the protocol scheme
-     */
-    private String computeFilePath(String filePath) {
-        // the substring starts from position 5, skipping "file:" filePath content 
-        return filePath.substring(5);
+    VALIDATION_WARNING,
+    VALIDATION_ERROR,
+    VALIDATION_FATAL_ERROR,
+    ;
+
+    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.plugin.validator.strings";
+
+    public static Translate<LocaleResources> createLocalizer() {
+        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
     }
 
 }

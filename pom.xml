@@ -150,6 +150,7 @@
     <module>vm-jmx</module>
     <module>numa</module>
     <module>laf-utils</module>
+    <module>thermostat-plugin-validator</module>
     <module>config</module>
     <!-- development related modules -->
     <module>integration-tests</module>

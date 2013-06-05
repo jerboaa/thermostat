@@ -38,21 +38,35 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-
   <parent>
     <groupId>com.redhat.thermostat</groupId>
     <artifactId>thermostat</artifactId>
     <version>0.10.0-SNAPSHOT</version>
   </parent>
-
-  <artifactId>thermostat-launcher</artifactId>
-  <packaging>bundle</packaging>
-
-  <name>Thermostat Launcher</name>
-
   
-
+  <artifactId>thermostat-plugin-validator</artifactId>
+  <packaging>bundle</packaging>
+  
+  <name>Thermostat Plugin Validator</name>
+  
   <build>
+    <resources>
+      <!-- Instructions that include thermostat plugin schema into the launcher jar -->
+      <resource>
+        <directory>${basedir}/../distribution/docs/</directory>
+        <includes>
+          <include>thermostat-plugin.xsd</include>
+        </includes>
+      </resource>
+      <!-- Instructions are not cumulative to default behaviour, 
+           so it's necessary to add default behaviour instructions after explicit previous ones -->
+      <resource>
+        <directory>src/main/resources/</directory>
+        <includes>
+          <include>**/*</include>
+        </includes>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>org.apache.felix</groupId>
@@ -60,14 +74,14 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
+            <Bundle-SymbolicName>com.redhat.thermostat.plugin.validator</Bundle-SymbolicName>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-SymbolicName>com.redhat.thermostat.launcher</Bundle-SymbolicName>
-            <Bundle-Activator>com.redhat.thermostat.launcher.internal.Activator</Bundle-Activator>
             <Export-Package>
-              com.redhat.thermostat.launcher,
+              com.redhat.thermostat.plugin.validator,
             </Export-Package>
             <Private-Package>
-              com.redhat.thermostat.launcher.internal
+              com.redhat.thermostat.plugin.validator.internal,
+              com.redhat.thermostat.plugin.validator.locale,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
@@ -76,55 +90,26 @@
       </plugin>
     </plugins>
   </build>
-
+  
   <dependencies>
+  
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-api-mockito</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-module-junit4</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.felix</groupId>
-      <artifactId>org.apache.felix.framework</artifactId>
-    </dependency>
+    
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-common-core</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-storage-core</artifactId>
-      <version>${project.version}</version>
-    </dependency>
+    
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-common-test</artifactId>
       <version>${project.version}</version>
-      <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-plugin-validator</artifactId>
-      <version>${project.version}</version>
-    </dependency>
+    
   </dependencies>
-
 </project>
-

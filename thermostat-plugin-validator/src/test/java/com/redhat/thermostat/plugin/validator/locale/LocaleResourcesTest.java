@@ -34,37 +34,20 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.launcher.internal;
+package com.redhat.thermostat.plugin.validator.locale;
 
-import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.testutils.AbstractLocaleResourcesTest;
 
-public enum LocaleResources {
+public class LocaleResourcesTest extends AbstractLocaleResourcesTest<LocaleResources> {
 
-    CANNOT_GET_COMMAND_INFO,
-    UNKNOWN_COMMAND,
-    COMMAND_COULD_NOT_LOAD_BUNDLES,
-    COMMAND_DESCRIBED_BUT_NOT_AVAILALBE,
-    COMMAND_AVAILABLE_INSIDE_SHELL_ONLY,
-    COMMAND_AVAILABLE_OUTSIDE_SHELL_ONLY,
-
-    COMMAND_HELP_COMMAND_LIST_HEADER,
-
-    OPTION_DB_URL_DESC,
-    OPTION_LOG_LEVEL_DESC,
-
-    MISSING_OPTION,
-    MISSING_OPTIONS,
-    PARSE_EXCEPTION_MESSAGE,
-
-    LAUNCHER_USER_AUTH_PROMPT_ERROR,
-    LAUNCHER_MALFORMED_URL,
-    LAUNCHER_CONNECTION_ERROR,
-    ;
-
-    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.launcher.internal.strings";
-
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+    @Override
+    protected Class<LocaleResources> getEnumClass() {
+        return LocaleResources.class;
     }
-}
 
+    @Override
+    protected String getResourceBundle() {
+        return LocaleResources.RESOURCE_BUNDLE;
+    }
+
+}

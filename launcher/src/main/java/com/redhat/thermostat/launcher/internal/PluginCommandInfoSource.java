@@ -52,6 +52,7 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandExtensions;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.NewCommand;
+import com.redhat.thermostat.plugin.validator.PluginConfigurationValidatorException;
 
 /**
  * Searches for plugins under <code>$THERMOSTAT_HOME/plugins/</code> and

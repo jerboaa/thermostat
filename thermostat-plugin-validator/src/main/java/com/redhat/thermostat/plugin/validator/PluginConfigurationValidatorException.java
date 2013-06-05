@@ -1,5 +1,5 @@
 /*
- * Copyright 2012, 2013 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,37 +34,46 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.launcher.internal;
+package com.redhat.thermostat.plugin.validator;
 
-import com.redhat.thermostat.shared.locale.Translate;
 
-public enum LocaleResources {
-
-    CANNOT_GET_COMMAND_INFO,
-    UNKNOWN_COMMAND,
-    COMMAND_COULD_NOT_LOAD_BUNDLES,
-    COMMAND_DESCRIBED_BUT_NOT_AVAILALBE,
-    COMMAND_AVAILABLE_INSIDE_SHELL_ONLY,
-    COMMAND_AVAILABLE_OUTSIDE_SHELL_ONLY,
-
-    COMMAND_HELP_COMMAND_LIST_HEADER,
-
-    OPTION_DB_URL_DESC,
-    OPTION_LOG_LEVEL_DESC,
-
-    MISSING_OPTION,
-    MISSING_OPTIONS,
-    PARSE_EXCEPTION_MESSAGE,
-
-    LAUNCHER_USER_AUTH_PROMPT_ERROR,
-    LAUNCHER_MALFORMED_URL,
-    LAUNCHER_CONNECTION_ERROR,
-    ;
-
-    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.launcher.internal.strings";
-
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+public class PluginConfigurationValidatorException extends Exception {
+    
+    private static final long serialVersionUID = 1L;
+    private String filePath;
+    
+    /**
+     * Constructor of PluginConfigurationValidatorException
+     * @param filePath must include the protocol 
+     * @param message the detailed message
+     */
+    public PluginConfigurationValidatorException(String filePath, String message) {
+        super(message);
+        this.filePath = computeFilePath(filePath);
     }
-}
+    
+    /**
+     * Constructor of PluginConfigurationValidatorException
+     * @param filePath must include the protocol 
+     * @param message the detailed message
+     */
+    public PluginConfigurationValidatorException(String filePath, String message, Throwable cause) {
+        super(message, cause);
+        this.filePath = computeFilePath(filePath);
+    }
+    
+    public String getFilePath() {
+        return filePath;
+    }
+    
+    /**
+     * Computes the file path removing the protocol scheme
+     * @param filePath must include the protocol
+     * @return the path without the protocol scheme
+     */
+    private String computeFilePath(String filePath) {
+        // the substring starts from position 5, skipping "file:" filePath content 
+        return filePath.substring(5);
+    }
 
+}

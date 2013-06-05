@@ -76,21 +76,6 @@ public class PluginConfigurationParserTest {
     }
     
     @Test
-    public void validateEmptyConfiguration() throws IOException {
-        String config = "<?xml version=\"1.0\"?>\n";
-        PluginConfigurationParser parser = new PluginConfigurationParser();
-        File testFile = createFile("testSystemId", config);
-        try {
-            parser.validate(new StreamSource(testFile));
-            fail("should not come here");
-        } catch (PluginConfigurationValidatorException e) {
-            //pass
-        } finally {
-            testFile.delete();
-        }
-    }
-
-    @Test
     public void testMinimalConfiguration() throws UnsupportedEncodingException {
         PluginConfigurationParser parser = new PluginConfigurationParser();
         String config = "" +
@@ -140,93 +125,6 @@ public class PluginConfigurationParserTest {
         assertEquals(Arrays.asList("thermostat-foo"), first.getDepenedencyBundles());
     }
     
-    @Test
-    public void canValidatePluginXMLMultipleTimes() throws Exception {
-        
-        try {
-            String config = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                    "<plugin xmlns=\"http://icedtea.classpath.org/thermostat/plugins/v1.0\"\n" +
-                    " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
-                    " xsi:schemaLocation=\"http://icedtea.classpath.org/thermostat/plugins/v1.0 thermostat-plugin.xsd\">\n" +
-                    "  <extensions>\n" +
-                    "    <extension>\n" +
-                    "      <name>test</name>\n" +
-                    "      <bundles>\n" +
-                    "        <bundle>foo</bundle>\n" +
-                    "        <bundle>bar</bundle>\n" +
-                    "        <bundle>baz</bundle>\n" +
-                    "      </bundles>\n" +
-                    "      <dependencies>\n" +
-                    "        <dependency>thermostat-foo</dependency>\n" +
-                    "      </dependencies>\n" +
-                    "    </extension>\n" +
-                    "  </extensions>\n" +
-                    "</plugin>";
-            PluginConfigurationParser parser = new PluginConfigurationParser();
-            File testFile = createFile("testSystemId", config);
-            parser.validate(new StreamSource(testFile));
-            testFile.delete();
-        
-            config = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                    "<plugin xmlns=\"http://icedtea.classpath.org/thermostat/plugins/v1.0\"\n" +
-                    " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
-                    " xsi:schemaLocation=\"http://icedtea.classpath.org/thermostat/plugins/v1.0 thermostat-plugin.xsd\">\n" +
-                    "  <extensions>\n" +
-                    "    <extension>\n" +
-                    "      <name>test</name>\n" +
-                    "      <bundles>\n" +
-                    "        <bundle>foo</bundle>\n" +
-                    "        <bundle>bar</bundle>\n" +
-                    "        <bundle>baz</bundle>\n" +
-                    "      </bundles>\n" +
-                    "      <dependencies>\n" +
-                    "        <dependency>thermostat-foo</dependency>\n" +
-                    "      </dependencies>\n" +
-                    "    </extension>\n" +
-                    "  </extensions>\n" +
-                    "</plugin>";
-            File testFile2 = createFile("testSystemId", config);
-            parser.validate(new StreamSource(testFile));
-            testFile2.delete();
-        } catch (PluginConfigurationValidatorException e) {
-           fail("should not reach here, plugin.xml should be validated according to schema");
-        }
-    }
-    
-    @Test
-    public void validationFailsOnInvalidPluginFile() throws Exception {
-        String config = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                "<plugin xmlns=\"http://icedtea.classpath.org/thermostat/plugins/v1.0\"\n" +
-                " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
-                " xsi:schemaLocation=\"http://icedtea.classpath.org/thermostat/plugins/v1.0 thermostat-plugin.xsd\">\n" +
-                "  <extensions>\n" +
-                "    <something>\n" +
-                "    <extension>\n" +
-                "      <name>test</name>\n" +
-                "      <bundles>\n" +
-                "        <bundle>foo</bundle>\n" +
-                "        <bundle>bar</bundle>\n" +
-                "        <bundle>baz</bundle>\n" +
-                "      </bundles>\n" +
-                "      <dependencies>\n" +
-                "        <dependency>thermostat-foo</dependency>\n" +
-                "      </dependencies>\n" +
-                "    </extension>\n" +
-                "  </extensions>\n" +
-                "</plugin>";
-
-        PluginConfigurationParser parser = new PluginConfigurationParser();
-        File testFile = createFile("testSystemId", config);
-        try {
-            parser.validate(new StreamSource(testFile));
-            fail("plugin.xml should not validate according to schema");
-        } catch (PluginConfigurationValidatorException e) {
-            //pass
-        } finally {
-            testFile.delete();
-        }
-    }
-
     @Test
     public void testConfigurationThatAddsNewCommand() throws UnsupportedEncodingException {
         String config = "<?xml version=\"1.0\"?>\n" +
@@ -351,69 +249,6 @@ public class PluginConfigurationParserTest {
         assertTrue(command.getEnvironments().contains(Environment.CLI));
     }
 
-    @Test
-    public void canValidateCorrectFile() throws IOException {
-        String config = "<?xml version=\"1.0\"?>\n" +
-                "<plugin xmlns=\"http://icedtea.classpath.org/thermostat/plugins/v1.0\"\n" +
-                " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
-                " xsi:schemaLocation=\"http://icedtea.classpath.org/thermostat/plugins/v1.0 thermostat-plugin.xsd\">\n" +
-                "  <commands>\n" +
-                "    <command>\n" +
-                "      <name>test</name>\n" +
-                "      <description>just a test</description>\n" +
-                "      <options>\n" +
-                "        <group>\n" +
-                "          <required>true</required>\n" +
-                "          <option>\n" +
-                "            <long>exclusive-a</long>\n" +
-                "            <short>a</short>\n" +
-                "            <argument>false</argument>\n" +
-                "            <required>false</required>\n" +
-                "            <description>exclusive option a</description>\n" +
-                "          </option>\n" +
-                "          <option>\n" +
-                "            <long>exclusive-b</long>\n" +
-                "            <short>b</short>\n" +
-                "            <argument>false</argument>\n" +
-                "            <required>false</required>\n" +
-                "            <description>exclusive option b</description>\n" +
-                "          </option>\n" +
-                "        </group>\n" +
-                "        <option>\n" +
-                "          <long>long</long>\n" +
-                "          <short>l</short>\n" +
-                "          <argument>true</argument>\n" +
-                "          <required>true</required>\n" +
-                "          <description>some required and long option</description>\n" +
-                "        </option>\n" +
-                "      </options>\n" +
-                "      <environments>" +
-                "        <environment>shell</environment>" +
-                "        <environment>cli</environment>" +
-                "      </environments>" +
-                "      <bundles>\n" +
-                "        <bundle>\n \t  \nfoo\t \n \n</bundle>\n" +
-                "        <bundle>\tbar  baz\n</bundle>\n" +
-                "        <bundle>buzz</bundle>\n" +
-                "      </bundles>\n" +
-                "      <dependencies>\n\t\n\t \t\t\n" +
-                "        <dependency>\t\t\t  thermostat-foo\n\t\t\n</dependency>\n" +
-                "      </dependencies>\n" +
-                "    </command>\n" +
-                "  </commands>\n" +
-                "</plugin>";
-
-        PluginConfigurationParser parser = new PluginConfigurationParser();
-        File testFile = createFile("testSystemId", config);
-        try {
-            parser.validate(new StreamSource(testFile));
-        } catch (PluginConfigurationValidatorException e) {
-           fail("should not reach here, plugin.xml should be validated according to schema");
-        } finally {
-            testFile.delete();
-        }
-        
-    }
     @Test
     public void testOptionParsing() throws UnsupportedEncodingException {
         String config = "<?xml version=\"1.0\"?>\n" +
@@ -581,11 +416,4 @@ public class PluginConfigurationParserTest {
         assertNull(dbUrlOption);
     }
     
-    private File createFile(String fileName, String contents) throws IOException {
-        FileWriter fstream = new FileWriter(fileName);
-        BufferedWriter out = new BufferedWriter(fstream);
-        out.write(contents);
-        out.close();
-        return new File(fileName);
-    }
 }
