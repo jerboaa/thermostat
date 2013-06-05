@@ -51,6 +51,7 @@ import org.fest.swing.edt.GuiActionRunner;
 import org.fest.swing.edt.GuiTask;
 import org.fest.swing.fixture.Containers;
 import org.fest.swing.fixture.FrameFixture;
+import org.fest.swing.fixture.JButtonFixture;
 import org.fest.swing.fixture.JLabelFixture;
 import org.fest.swing.fixture.JPanelFixture;
 import org.fest.swing.fixture.JPopupMenuFixture;
@@ -234,13 +235,37 @@ public class HeapSwingViewTest {
         view.addDumperListener(new ActionListener<HeapView.HeapDumperAction>() {
             @Override
             public void actionPerformed(ActionEvent<HeapDumperAction> actionEvent) {
-                result[0] = true;
+                if (actionEvent.getActionId() == HeapDumperAction.REQUEST_DISPLAY_DUMP_LIST) {
+                    result[0] = true;
+                }
             }
         });
         
         frame.show();
         
         JToggleButtonFixture listDupms = frame.toggleButton("LIST_DUMPS_ACTION");
+        listDupms.click();
+
+        assertTrue(result[0]);
+    }
+    
+    @GUITest
+    @Test
+    public void testHeapDumperActionFired2() {
+        
+        final boolean [] result = new boolean[1];
+        view.addDumperListener(new ActionListener<HeapView.HeapDumperAction>() {
+            @Override
+            public void actionPerformed(ActionEvent<HeapDumperAction> actionEvent) {
+                if (actionEvent.getActionId() == HeapDumperAction.DUMP_REQUESTED) {
+                    result[0] = true;
+                }
+            }
+        });
+        
+        frame.show();
+        
+        JButtonFixture listDupms = frame.button("TRIGGER_HEAP_DUMP");
         listDupms.click();
 
         assertTrue(result[0]);

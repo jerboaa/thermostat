@@ -52,6 +52,7 @@ import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.IconResource;
 import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.client.swing.components.ActionButton;
 import com.redhat.thermostat.client.swing.components.ActionToggleButton;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.client.swing.components.Icon;
@@ -60,6 +61,7 @@ import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListView.ListAction;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapIconResources;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.chart.OverviewChart;
 import com.redhat.thermostat.vm.heap.analysis.client.locale.LocaleResources;
@@ -82,6 +84,7 @@ public class HeapSwingView extends HeapView implements SwingComponent {
     private OverlayPanel overlay;
     
     private ActionToggleButton showHeapListButton;
+    private ActionButton takeDumpIconButton;
     
     private JPanel stack;
     
@@ -123,8 +126,17 @@ public class HeapSwingView extends HeapView implements SwingComponent {
         overview.setContent(stack);
         overview.addHierarchyListener(new ViewVisibleListener());
 
-        // TODO
-        //Icon takeDumpIcon = new Icon(HeapIconResources.getIcon(HeapIconResources.LIST_DUMPS));
+        Icon takeDumpIcon = new Icon(HeapIconResources.getIcon(HeapIconResources.TRIGGER_HEAP_DUMP));
+        takeDumpIconButton = new ActionButton(takeDumpIcon, translator.localize(LocaleResources.TRIGGER_HEAP_DUMP));
+        takeDumpIconButton.setToolTipText(translator.localize(LocaleResources.TRIGGER_HEAP_DUMP).getContents());
+        takeDumpIconButton.setName("TRIGGER_HEAP_DUMP");
+        takeDumpIconButton.getToolbarButton().addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                heapDumperNotifier.fireAction(HeapDumperAction.DUMP_REQUESTED);
+            }
+        });
+        overview.addToolBarButton(takeDumpIconButton);
         
         Icon listDumpIcon = IconResource.HISTORY.getIcon();
         showHeapListButton = new ActionToggleButton(listDumpIcon, translator.localize(LocaleResources.LIST_DUMPS_ACTION).getContents());
