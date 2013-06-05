@@ -47,6 +47,7 @@ import java.util.logging.Logger;
 public class HeapIconResources {
 
     public static final String PIN_MASK = "com/redhat/thermostat/vm/heap/analysis/client/core/pin_mask.png";
+    public static final String LIST_DUMPS = "com/redhat/thermostat/vm/heap/analysis/client/core/list_dumps.png";
 
     private static Map<String, IconDescriptor> icons = new HashMap<>();
     

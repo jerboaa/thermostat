@@ -45,26 +45,27 @@ import java.util.List;
 import javax.swing.BoxLayout;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.OverlayLayout;
 import javax.swing.SwingUtilities;
-
-import com.redhat.thermostat.shared.locale.LocalizedString;
-import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.stats.HeapDumpListener;
-import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.stats.HeapSelectionEvent;
-
-import org.jfree.chart.axis.DateAxis;
-import org.jfree.chart.event.AxisChangeEvent;
-import org.jfree.chart.event.AxisChangeListener;
-import org.jfree.chart.plot.XYPlot;
 
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.client.swing.components.ActionToggleButton;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
+import com.redhat.thermostat.client.swing.components.Icon;
+import com.redhat.thermostat.client.swing.components.OverlayPanel;
+import com.redhat.thermostat.shared.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListView;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListView.ListAction;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapIconResources;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.chart.OverviewChart;
 import com.redhat.thermostat.vm.heap.analysis.client.locale.LocaleResources;
 import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.stats.HeapChartPanel;
+import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.stats.HeapDumpListener;
+import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.stats.HeapSelectionEvent;
 import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.stats.StatsPanel;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
 
@@ -78,6 +79,11 @@ public class HeapSwingView extends HeapView implements SwingComponent {
     private HeaderPanel overview;
     
     private JPanel visiblePane;
+    private OverlayPanel overlay;
+    
+    private ActionToggleButton showHeapListButton;
+    
+    private JPanel stack;
     
     public HeapSwingView() {
         stats = new StatsPanel();
@@ -102,9 +108,39 @@ public class HeapSwingView extends HeapView implements SwingComponent {
         heapDetailPanel = new HeapPanel();
         
         overview = new HeaderPanel(translator.localize(LocaleResources.HEAP_OVERVIEW_TITLE).getContents());
-        overview.setContent(stats);
+
+        stack = new JPanel();
+        stack.setLayout(new OverlayLayout(stack));
+        
+        overlay = new OverlayPanel(translator.localize(LocaleResources.DUMPS_LIST).getContents());
+        stack.add(overlay);
+        stack.add(stats);
+        stats.setOpaque(false);
+        
+        overlay.setAlignmentX(-1.f);
+        overlay.setAlignmentY(1.f);
+
+        overview.setContent(stack);
         overview.addHierarchyListener(new ViewVisibleListener());
 
+        Icon listDumpIcon = new Icon(HeapIconResources.getIcon(HeapIconResources.LIST_DUMPS));
+        
+        showHeapListButton = new ActionToggleButton(listDumpIcon, translator.localize(LocaleResources.LIST_DUMPS_ACTION).getContents());
+        showHeapListButton.setToolTipText(translator.localize(LocaleResources.LIST_DUMPS_ACTION).getContents());
+        showHeapListButton.setName("LIST_DUMPS_ACTION");
+
+        showHeapListButton.getToolbarButton().addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (overlay.isVisible()) {
+                    overlay.setOverlayVisible(false);
+                } else {
+                    heapDumperNotifier.fireAction(HeapDumperAction.REQUEST_DISPLAY_DUMP_LIST);
+                }
+            }
+        });
+        overview.addToolBarButton(showHeapListButton);
+        
         // at the beginning, only the overview is visible
         visiblePane.add(overview);
     }
@@ -132,16 +168,6 @@ public class HeapSwingView extends HeapView implements SwingComponent {
                 
                 final HeapChartPanel charts = new HeapChartPanel(model.getChart());
                 
-                XYPlot plot = model.getChart().getXYPlot();
-                DateAxis domainAxis = (DateAxis) plot.getDomainAxis();
-                domainAxis.addChangeListener(new AxisChangeListener() {
-                    @Override
-                    public void axisChanged(AxisChangeEvent event) {
-                        // somehow the chart panel doesn't see this
-                        charts.revalidate();
-                    }
-                });
-                
                 /*
                  * By default, ChartPanel scales itself instead of redrawing things when
                  * it's re-sized. To have it resize automatically, we need to set minimum
@@ -155,7 +181,9 @@ public class HeapSwingView extends HeapView implements SwingComponent {
 
                 charts.setMaximumDrawHeight(Integer.MAX_VALUE);
                 charts.setMaximumDrawWidth(Integer.MAX_VALUE);
-
+                
+                charts.setOpaque(false);
+                
                 stats.setChartPanel(charts);
             }
         });
@@ -277,5 +305,43 @@ public class HeapSwingView extends HeapView implements SwingComponent {
     public void displayWarning(LocalizedString string) {
         JOptionPane.showMessageDialog(visiblePane, string.getContents(), "Warning", JOptionPane.WARNING_MESSAGE);
     }
+    
+    private void closeDumpListView() {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                showHeapListButton.getToolbarButton().doClick();
+            }
+        });
+    }
+    
+    @Override
+    public void openDumpListView(HeapDumpListView view) {
+        if (view instanceof SwingHeapDumpListView) {
+            SwingHeapDumpListView swingView = (SwingHeapDumpListView) view;
+            view.addListListener(new com.redhat.thermostat.common.ActionListener<HeapDumpListView.ListAction>() {
+                @Override
+                public void actionPerformed(com.redhat.thermostat.common.ActionEvent<ListAction> actionEvent) {
+                    switch (actionEvent.getActionId()) {
+                    case DUMP_SELECTED:
+                        closeDumpListView();
+                        break;
+                        
+                    default:
+                        break;
+                    }
+                }
+            });
+            
+            final Component dumpListView = swingView.getUiComponent();
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    overlay.removeAll();
+                    overlay.add(dumpListView);                    
+                    overlay.setOverlayVisible(true);
+                }
+            });
+        }
+    }
 }
-

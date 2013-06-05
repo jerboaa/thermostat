@@ -48,6 +48,7 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsViewProvider;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectDetailsViewProvider;
@@ -86,6 +87,7 @@ public class ActivatorTest {
         HeapHistogramViewProvider histogramViewProvider = mock(HeapHistogramViewProvider.class);
         ObjectDetailsViewProvider objectDetailsViewProvider = mock(ObjectDetailsViewProvider.class);
         ObjectRootsViewProvider objectRootsViewProvider = mock(ObjectRootsViewProvider.class);
+        HeapDumpListViewProvider heapDumpListViewProvider = mock(HeapDumpListViewProvider.class);
 
         context.registerService(VmInfoDAO.class, vmInfoDao, null);
         context.registerService(VmMemoryStatDAO.class, vmMemoryStatDAO, null);
@@ -97,6 +99,7 @@ public class ActivatorTest {
         context.registerService(HeapHistogramViewProvider.class, histogramViewProvider, null);
         context.registerService(ObjectDetailsViewProvider.class, objectDetailsViewProvider, null);
         context.registerService(ObjectRootsViewProvider.class, objectRootsViewProvider, null);
+        context.registerService(HeapDumpListViewProvider.class, heapDumpListViewProvider, null);
 
         Activator activator = new Activator();
 
@@ -107,7 +110,7 @@ public class ActivatorTest {
         activator.stop(context);
 
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(9, context.getAllServices().size());
+        assertEquals(10, context.getAllServices().size());
     }
 
 }

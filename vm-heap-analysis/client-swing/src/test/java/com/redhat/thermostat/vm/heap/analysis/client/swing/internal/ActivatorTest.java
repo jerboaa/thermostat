@@ -43,6 +43,7 @@ import org.junit.Test;
 
 import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsViewProvider;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectDetailsViewProvider;
@@ -66,7 +67,9 @@ public class ActivatorTest {
         assertTrue(ctx.isServiceRegistered(HeapHistogramViewProvider.class.getName(), SwingHeapHistogramViewProvider.class));
         assertTrue(ctx.isServiceRegistered(ObjectDetailsViewProvider.class.getName(), SwingObjectDetailsViewProvider.class));
         assertTrue(ctx.isServiceRegistered(ObjectRootsViewProvider.class.getName(), SwingObjectRootsViewProvider.class));
-        assertEquals(5, ctx.getAllServices().size());
+        assertTrue(ctx.isServiceRegistered(HeapDumpListViewProvider.class.getName(), SwingHeapDumpListViewProvider.class));
+
+        assertEquals(6, ctx.getAllServices().size());
     }
 }
 

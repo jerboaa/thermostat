@@ -67,7 +67,7 @@ public class ShadowLabel extends JLabel {
         protected void paintEnabledText(JLabel l, Graphics g, String s, int textX, int textY) {
             GraphicsUtils graphicsUtils = GraphicsUtils.getInstance();
             Graphics2D graphics = graphicsUtils.createAAGraphics(g);
-            graphicsUtils.drawStringWithShadow(l, graphics, s, getForeground(), textX, textY);
+            graphicsUtils.drawStringWithShadow(l, graphics, s, ShadowLabel.this.getForeground(), textX, textY);
         }
     }
 }

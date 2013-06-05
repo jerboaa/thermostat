@@ -40,6 +40,7 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsViewProvider;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectDetailsViewProvider;
@@ -60,6 +61,8 @@ public class Activator implements BundleActivator {
         context.registerService(ObjectDetailsViewProvider.class.getName(), objectDetailsViewProvider, null);
         ObjectRootsViewProvider objectRootsViewProvider = new SwingObjectRootsViewProvider();
         context.registerService(ObjectRootsViewProvider.class.getName(), objectRootsViewProvider, null);
+        HeapDumpListViewProvider heapListViewProvider = new SwingHeapDumpListViewProvider();
+        context.registerService(HeapDumpListViewProvider.class.getName(), heapListViewProvider, null);
     }
 
     @Override

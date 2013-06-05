@@ -53,6 +53,7 @@ import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsViewProvider;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumperService;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapViewProvider;
@@ -77,7 +78,8 @@ public class Activator implements BundleActivator {
             HeapDumpDetailsViewProvider.class,
             HeapHistogramViewProvider.class,
             ObjectDetailsViewProvider.class,
-            ObjectRootsViewProvider.class
+            ObjectRootsViewProvider.class,
+            HeapDumpListViewProvider.class,
         };
 
         tracker = new MultipleServiceTracker(context, deps, new Action() {
@@ -106,10 +108,14 @@ public class Activator implements BundleActivator {
                         .get(ObjectRootsViewProvider.class.getName());
                 Objects.requireNonNull(objectRootsViewProvider);
 
+                HeapDumpListViewProvider heapDumpListViewProvider = (HeapDumpListViewProvider) services
+                        .get(HeapDumpListViewProvider.class.getName());
+                
                 HeapDumperService service = new HeapDumperServiceImpl(appSvc,
                         vmInfoDao, vmMemoryStatDao, heapDao, viewProvider,
                         detailsViewProvider, histogramViewProvider,
-                        objectDetailsViewProvider, objectRootsViewProvider);
+                        objectDetailsViewProvider, objectRootsViewProvider,
+                        heapDumpListViewProvider);
                 Dictionary<String, String> properties = new Hashtable<>();
                 properties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
                 properties.put(InformationService.KEY_SERVICE_ID, HeapDumperService.SERVICE_ID);

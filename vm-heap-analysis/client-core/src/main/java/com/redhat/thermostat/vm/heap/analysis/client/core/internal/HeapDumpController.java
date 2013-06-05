@@ -57,6 +57,7 @@ import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsViewProvider;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapView.DumpDisabledReason;
@@ -92,7 +93,7 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
     private HeapHistogramViewProvider histogramViewProvider;
     private ObjectDetailsViewProvider objectDetailsViewProvider;
     private ObjectRootsViewProvider objectRootsViewProvider;
-
+    private HeapDumpListViewProvider heapDumpListViewProvider;
 
     public HeapDumpController(final VmMemoryStatDAO vmMemoryStatDao,
                               final VmInfoDAO vmInfoDao,
@@ -101,11 +102,12 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
                               HeapDumpDetailsViewProvider detailsViewProvider,
                               HeapHistogramViewProvider histogramProvider,
                               ObjectDetailsViewProvider objectDetailsProvider,
-                              ObjectRootsViewProvider objectRootsProvider)
+                              ObjectRootsViewProvider objectRootsProvider,
+                              HeapDumpListViewProvider heapDumpListViewProvider)
     {
         this(vmMemoryStatDao, vmInfoDao, heapDao, ref, appService, viewProvider,
              detailsViewProvider, histogramProvider, objectDetailsProvider,
-             objectRootsProvider, new HeapDumper(ref));
+             objectRootsProvider, heapDumpListViewProvider, new HeapDumper(ref));
     }
 
     HeapDumpController(final VmMemoryStatDAO vmMemoryStatDao,
@@ -117,6 +119,7 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
                        HeapHistogramViewProvider histogramProvider,
                        ObjectDetailsViewProvider objectDetailsProvider,
                        ObjectRootsViewProvider objectRootsProvider,
+                       HeapDumpListViewProvider heapDumpListViewProvider,
                        final HeapDumper heapDumper)
     {
         this.objectDetailsViewProvider = objectDetailsProvider;
@@ -127,6 +130,7 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
         this.ref = ref;
         this.vmDao = vmMemoryStatDao;
         this.heapDAO = heapDao;
+        this.heapDumpListViewProvider = heapDumpListViewProvider;
         
         model = new OverviewChart(
                     null,
@@ -188,6 +192,11 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
                     view.disableHeapDumping(DumpDisabledReason.DUMP_IN_PROGRESS);
                     requestDump(heapDumper);
                     break;
+                    
+                case REQUEST_DISPLAY_DUMP_LIST:
+                    openDumpList();
+                    break;
+                    
                 case ANALYSE:
                     dump = (HeapDump) actionEvent.getPayload();
                     analyseDump(dump);
@@ -204,6 +213,21 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
         }
     }
 
+    private void openDumpList() {
+        
+        appService.getApplicationExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                List<HeapDump> dumps = getHeapDumps();
+                HeapDumpListController controller =
+                        new HeapDumpListController(heapDumpListViewProvider,
+                                                   HeapDumpController.this);
+                controller.setDumps(dumps);
+                view.openDumpListView(controller.getView());                
+            }
+        });
+    }
+    
     private void requestDump(final HeapDumper heapDumper) {
         appService.getApplicationExecutor().execute(new Runnable() {
             
@@ -220,9 +244,8 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
         });
     }
 
-    private void analyseDump(final HeapDump dump) {
+    void analyseDump(final HeapDump dump) {
         appService.getApplicationExecutor().execute(new Runnable() {
-            
             @Override
             public void run() {
                 showHeapDumpDetails(dump);
@@ -253,6 +276,15 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
         return translator.localize(LocaleResources.HEAP_SECTION_TITLE);
     }
 
+    private List<HeapDump> getHeapDumps() {
+        Collection<HeapInfo> heapInfos = heapDAO.getAllHeapInfo(ref);
+        List<HeapDump> heapDumps = new ArrayList<HeapDump>(heapInfos.size());
+        for (HeapInfo heapInfo : heapInfos) {
+            heapDumps.add(new HeapDump(heapInfo, heapDAO));
+        }
+        return heapDumps;
+    }
+    
     class HeapOverviewDataCollector implements Runnable {
 
         private long desiredUpdateTimeStamp = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1);
@@ -264,12 +296,7 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
         }
 
         private void checkForHeapDumps() {
-            Collection<HeapInfo> heapInfos = heapDAO.getAllHeapInfo(ref);
-            List<HeapDump> heapDumps = new ArrayList<HeapDump>(heapInfos.size());
-            for (HeapInfo heapInfo : heapInfos) {
-                heapDumps.add(new HeapDump(heapInfo, heapDAO));
-            }
-            view.updateHeapDumpList(heapDumps);
+            view.updateHeapDumpList(getHeapDumps());
         }
 
         private void updateMemoryChartAndDisplay() {

@@ -93,12 +93,8 @@ public class OverlayComponent extends ShadowLabel {
 
             GraphicsUtils utils = GraphicsUtils.getInstance();
             Graphics2D graphics = utils.createAAGraphics(g);
-            
-            Color up = utils.deriveWithAlpha(Palette.DARK_GRAY.getColor(), 200);
-            Color bottom = utils.deriveWithAlpha(Palette.BLACK.getColor(), 200);
 
-            Paint gradient = new GradientPaint(0, 0, up, 0, getIconHeight(), bottom);
-            graphics.setPaint(gradient);
+            graphics.setColor(utils.deriveWithAlpha(OverlayComponent.this.getForeground(), 200));
             
             graphics.fillRect(x, y, getIconWidth(), getIconHeight());
             
@@ -119,6 +115,10 @@ public class OverlayComponent extends ShadowLabel {
     public OverlayComponent(HeapDump dump) {
         
         super("");
+        
+        setOpaque(false);
+        
+        setForeground(Palette.ROYAL_BLUE.getColor());
         
         setName(OverlayComponent.class.getName());
         

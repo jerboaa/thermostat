@@ -45,6 +45,7 @@ import java.util.concurrent.CountDownLatch;
 
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
+import org.fest.swing.annotation.GUITest;
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
 import org.fest.swing.edt.GuiActionRunner;
 import org.fest.swing.edt.GuiTask;
@@ -53,6 +54,7 @@ import org.fest.swing.fixture.FrameFixture;
 import org.fest.swing.fixture.JLabelFixture;
 import org.fest.swing.fixture.JPanelFixture;
 import org.fest.swing.fixture.JPopupMenuFixture;
+import org.fest.swing.fixture.JToggleButtonFixture;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -61,6 +63,7 @@ import org.junit.runner.RunWith;
 
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapView.HeapDumperAction;
 import com.redhat.thermostat.vm.heap.analysis.client.core.chart.OverviewChart;
 import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.stats.HeapChartPanel;
@@ -111,6 +114,7 @@ public class HeapSwingViewTest {
         view = null;
     }
 
+    @GUITest
     @Test
     public void testAddHeapDump() {
         final boolean [] result = new boolean[1];
@@ -151,6 +155,7 @@ public class HeapSwingViewTest {
         assertEquals(1, resultTimes[0]);
     }
     
+    @GUITest
     @Test
     public void testActivateHeapDump() throws InterruptedException {
         final boolean [] result = new boolean[1];
@@ -219,6 +224,26 @@ public class HeapSwingViewTest {
         
         assertTrue(result[0]);
         assertEquals(1, resultTimes[0]);
+    }
+    
+    @GUITest
+    @Test
+    public void testHeapDumperActionFired() {
+        
+        final boolean [] result = new boolean[1];
+        view.addDumperListener(new ActionListener<HeapView.HeapDumperAction>() {
+            @Override
+            public void actionPerformed(ActionEvent<HeapDumperAction> actionEvent) {
+                result[0] = true;
+            }
+        });
+        
+        frame.show();
+        
+        JToggleButtonFixture listDupms = frame.toggleButton("LIST_DUMPS_ACTION");
+        listDupms.click();
+
+        assertTrue(result[0]);
     }
 }
 

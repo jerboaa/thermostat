@@ -34,59 +34,36 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.vm.heap.analysis.client.core.internal;
 
-import java.awt.Color;
+import java.util.List;
 
-/**
- * A set of preselected colors suitable for using to draw custom
- * painting of charts graphs and figures.
- */
-public enum Palette {
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListView;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListViewProvider;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListView.ListAction;
+import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
 
-    THERMOSTAT_BLU(new Color(74, 93, 117)),
-    THERMOSTAT_RED(new Color(226, 46, 42)),
-    
-    RED(new Color(192, 0, 0)),
-    PALE_RED(new Color(192, 80, 77)),
-    
-    SKY_BLUE(new Color(79, 129, 189)),
-    AZUREUS(new Color(0, 176, 190)),
-    EGYPTIAN_BLUE(new Color(74, 144, 217)),
-    DIRTY_CYAN(new Color(75, 172, 198)),
-    PRUSSIAN_BLUE(new Color(0, 49, 83)),
-    
-    GREEN(new Color(146, 208, 80)),
-    TUNDRA_GREEN(new Color(155, 187, 89)),
+public class HeapDumpListController {
 
-    POMP_AND_POWER_VIOLET(new Color(128, 100, 162)),
-    VIOLET(new Color(112, 48, 160)),
-
-    EARL_GRAY(new Color(128, 128, 128)),
+    private HeapDumpListView view;
     
-    PALE_GRAY(new Color(235, 235, 235)),
-    LIGHT_GRAY(new Color(242, 242, 242)),
-    GRAY(new Color(216, 216, 216)),
-    DARK_GRAY(new Color(168, 172, 168)),
-
-    GRANITA_ORANGE(new Color(247,150,70)),
-    
-    BLACK(Color.BLACK),
-    WHITE(Color.WHITE),
-
-    DARK_BLUE(new Color(0x030A0C)),
-    ROYAL_BLUE(new Color(0x0A242D)),
-    ELEGANT_CYAN(new Color(0x39CAFF)),
-    
-    /* END */ ;
-    
-    private Color color;
-    Palette(Color color) {
-        this.color = color;
+    public HeapDumpListController(HeapDumpListViewProvider viewProvider, final HeapDumpController mainController) {
+        view = viewProvider.createView();
+        view.addListListener(new ActionListener<HeapDumpListView.ListAction>() {
+            @Override
+            public void actionPerformed(ActionEvent<ListAction> actionEvent) {
+                mainController.analyseDump((HeapDump) actionEvent.getPayload());
+            }
+        });
     }
     
-    public Color getColor() {
-        return color;
+    public HeapDumpListView getView() {
+        return view;
+    }
+
+    public void setDumps(List<HeapDump> dumps) {
+        view.setDumps(dumps);
     }
 }
-

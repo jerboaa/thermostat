@@ -52,6 +52,7 @@ public abstract class HeapView extends BasicView implements UIComponent {
         DUMP_REQUESTED,
         ANALYSE,
         REQUEST_ABORTED,
+        REQUEST_DISPLAY_DUMP_LIST,
     }
 
     public enum DumpDisabledReason {
@@ -90,5 +91,6 @@ public abstract class HeapView extends BasicView implements UIComponent {
 
     public abstract void displayWarning(LocalizedString string);
 
+    public abstract void openDumpListView(HeapDumpListView childView);
 }
 

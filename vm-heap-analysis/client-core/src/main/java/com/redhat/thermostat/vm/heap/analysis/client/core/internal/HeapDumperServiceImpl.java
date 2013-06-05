@@ -43,6 +43,7 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsViewProvider;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumperService;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapViewProvider;
@@ -67,13 +68,16 @@ public class HeapDumperServiceImpl implements HeapDumperService {
     private ObjectDetailsViewProvider objectDetailsViewProvider;
     private ObjectRootsViewProvider objectRootsViewProvider;
 
+    private HeapDumpListViewProvider heapDumpListViewProvider;
+    
     public HeapDumperServiceImpl(ApplicationService appService,
             VmInfoDAO vmInfoDao, VmMemoryStatDAO vmMemoryStatDao,
             HeapDAO heapDao, HeapViewProvider viewProvider,
             HeapDumpDetailsViewProvider detailsViewProvider,
             HeapHistogramViewProvider histogramViewProvider,
             ObjectDetailsViewProvider objectDetailsViewProvider,
-            ObjectRootsViewProvider objectRootsViewProvider) {
+            ObjectRootsViewProvider objectRootsViewProvider,
+            HeapDumpListViewProvider heapDumpListViewProvider) {
         this.vmInfoDao = vmInfoDao;
         this.vmMemoryStatDao = vmMemoryStatDao;
         this.heapDao = heapDao;
@@ -83,12 +87,14 @@ public class HeapDumperServiceImpl implements HeapDumperService {
         this.histogramViewProvider = histogramViewProvider;
         this.objectDetailsViewProvider = objectDetailsViewProvider;
         this.objectRootsViewProvider = objectRootsViewProvider;
+        this.heapDumpListViewProvider = heapDumpListViewProvider;
     }
 
     @Override
     public InformationServiceController<VmRef> getInformationServiceController(VmRef ref) {
         return new HeapDumpController(vmMemoryStatDao, vmInfoDao, heapDao, ref, appService,
-                viewProvider, detailsViewProvider, histogramViewProvider, objectDetailsViewProvider, objectRootsViewProvider);
+                viewProvider, detailsViewProvider, histogramViewProvider, objectDetailsViewProvider,
+                objectRootsViewProvider, heapDumpListViewProvider);
     }
 
     @Override

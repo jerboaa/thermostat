@@ -51,8 +51,9 @@ public class HeapChartPanel extends ChartPanel {
     public HeapChartPanel(JFreeChart chart) {
    
         super(chart);
-        
         setName(HeapChartPanel.class.getName());
+        
+        setupChart();
         
         setLayout(new HeapChartPanelLayout());
         chart.addChangeListener(new ChartChangeListener() {
@@ -63,6 +64,11 @@ public class HeapChartPanel extends ChartPanel {
         });
     }
 
+    private void setupChart() {
+        JFreeChart chart = getChart();
+        chart.setBackgroundPaint(getBackground());
+    }
+    
     @Override
     protected void paintChildren(Graphics g) {
         Rectangle2D area = getScreenDataArea();

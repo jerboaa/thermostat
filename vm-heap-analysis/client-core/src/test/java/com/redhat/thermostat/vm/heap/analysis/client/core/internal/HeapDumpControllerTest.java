@@ -77,6 +77,7 @@ import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsViewProvider;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapView;
@@ -121,6 +122,8 @@ public class HeapDumpControllerTest {
     private ObjectDetailsViewProvider objectDetailsProvider;
     private ObjectRootsViewProvider objectRootsProvider;
 
+    private HeapDumpListViewProvider heapDumpListViewProvider;
+    
     @Before
     public void setUp() {
         heapDao = mock(HeapDAO.class);
@@ -132,6 +135,8 @@ public class HeapDumpControllerTest {
         appService = mock(ApplicationService.class);
         heapDumper = mock(HeapDumper.class);
 
+        heapDumpListViewProvider = mock(HeapDumpListViewProvider.class);
+        
         setUpView();
     }
 
@@ -195,7 +200,8 @@ public class HeapDumpControllerTest {
 
         controller = new HeapDumpController(vmDao, vmInfoDao, heapDao, ref, appService,
                 viewProvider, detailsViewProvider, histogramProvider,
-                objectDetailsProvider, objectRootsProvider, heapDumper);
+                objectDetailsProvider, objectRootsProvider, heapDumpListViewProvider,
+                heapDumper);
     }
     
     @After
@@ -279,7 +285,8 @@ public class HeapDumpControllerTest {
         VmRef ref = mock(VmRef.class);
         controller = new HeapDumpController(vmDao, vmInfoDao, heapDao, ref, appService,
                 viewProvider, detailsViewProvider, histogramProvider,
-                objectDetailsProvider, objectRootsProvider, heapDumper);
+                objectDetailsProvider, objectRootsProvider, heapDumpListViewProvider,
+                heapDumper);
         
         verify(view, times(1)).setChildView(any(HeapView.class));
         verify(view, times(1)).openDumpView();
@@ -304,7 +311,8 @@ public class HeapDumpControllerTest {
         VmRef ref = mock(VmRef.class);
         controller = new HeapDumpController(vmDao, vmInfoDao, heapDao, ref, appService,
                 viewProvider, detailsViewProvider, histogramProvider,
-                objectDetailsProvider, objectRootsProvider, heapDumper);
+                objectDetailsProvider, objectRootsProvider, heapDumpListViewProvider,
+                heapDumper);
         
         verify(view, times(0)).openDumpView();
     }
@@ -324,7 +332,8 @@ public class HeapDumpControllerTest {
 
         controller = new HeapDumpController(vmDao, vmInfoDao, heapDao, ref, appService,
                 viewProvider, detailsViewProvider, histogramProvider,
-                objectDetailsProvider, objectRootsProvider, heapDumper);
+                objectDetailsProvider, objectRootsProvider, heapDumpListViewProvider,
+                heapDumper);
 
         verify(view).disableHeapDumping(DumpDisabledReason.PROCESS_DEAD);
     }
