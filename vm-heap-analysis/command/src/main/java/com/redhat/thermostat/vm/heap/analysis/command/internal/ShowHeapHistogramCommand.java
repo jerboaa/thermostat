@@ -103,6 +103,9 @@ public class ShowHeapHistogramCommand extends AbstractCommand {
 
     private void printHeapHistogram(ObjectHistogram histogram, PrintStream out) {
         TableRenderer table = new TableRenderer(3);
+        table.printLine(translator.localize(LocaleResources.TABLE_CLASS_NAME).getContents(),
+                translator.localize(LocaleResources.TABLE_NUMBER_INSTANCES).getContents(),
+                translator.localize(LocaleResources.TABLE_TOTAL_SIZE).getContents());
         for (HistogramRecord rec : histogram.getHistogram()) {
             table.printLine(rec.getClassname(), String.valueOf(rec.getNumberOf()), String.valueOf(rec.getTotalSize()));
         }

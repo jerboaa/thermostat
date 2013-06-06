@@ -76,6 +76,10 @@ public enum LocaleResources {
     COMMAND_SAVE_HEAP_DUMP_SAVED_TO_FILE,
     COMMAND_SAVE_HEAP_DUMP_ERROR_SAVING,
     COMMAND_SAVE_HEAP_DUMP_ERROR_CLOSING_STREAM,
+    
+    TABLE_CLASS_NAME,
+    TABLE_NUMBER_INSTANCES,
+    TABLE_TOTAL_SIZE,
     ;
     
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.vm.heap.analysis.command.locale.strings";

@@ -102,8 +102,9 @@ public class ShowHeapHistogramCommandTest {
 
         command.run(factory.createContext(args));
 
-        assertEquals("class1                  2 8\n" +
-                     "verylongclassnameclass2 1 10\n", factory.getOutput());
+        assertEquals("Class Name              Instances Total Size\n" +
+                     "class1                  2         8\n" +
+                     "verylongclassnameclass2 1         10\n", factory.getOutput());
     }
 
     @Test
