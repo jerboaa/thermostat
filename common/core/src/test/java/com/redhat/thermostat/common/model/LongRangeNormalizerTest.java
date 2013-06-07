@@ -36,12 +36,11 @@
 
 package com.redhat.thermostat.common.model;
 
-import static org.junit.Assert.*;
 import junit.framework.Assert;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.common.model.LongRange;
+import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.common.model.LongRangeNormalizer;
 
 public class LongRangeNormalizerTest {
@@ -49,9 +48,7 @@ public class LongRangeNormalizerTest {
     @Test
     public void testSameRange() {
         
-        LongRange range = new LongRange();
-        range.setMax(10);
-        range.setMin(0);
+        Range<Long> range = new Range<>(0l, 10l);
         
         LongRangeNormalizer model = new LongRangeNormalizer(range);
         
@@ -67,9 +64,7 @@ public class LongRangeNormalizerTest {
     @Test
     public void testDoubleRange() {
         
-        LongRange range = new LongRange();
-        range.setMax(10);
-        range.setMin(0);
+        Range<Long> range = new Range<>(0l, 10l);
         
         LongRangeNormalizer model = new LongRangeNormalizer(range);
         
@@ -85,9 +80,7 @@ public class LongRangeNormalizerTest {
     @Test
     public void testRanges() {
         
-        LongRange range = new LongRange();
-        range.setMax(10);
-        range.setMin(0);
+        Range<Long> range = new Range<>(0l, 10l);
         
         LongRangeNormalizer model = new LongRangeNormalizer(range);
         
@@ -108,8 +101,8 @@ public class LongRangeNormalizerTest {
                 
         Assert.assertEquals(150, model.getValueNormalized());
         
-        range.setMax(100);
-        range.setMin(0);
+        range.setMax(100l);
+        range.setMin(0l);
         model.setValue(50);
         
         model.setMaxNormalized(1);

@@ -38,7 +38,6 @@ package com.redhat.thermostat.thread.client.swing.impl;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
-
 import java.util.List;
 
 import javax.swing.DefaultListModel;
@@ -52,14 +51,10 @@ import javax.swing.event.ChangeListener;
 
 import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.SwingComponent;
-
 import com.redhat.thermostat.client.swing.components.timeline.TimelineRulerHeader;
-
-import com.redhat.thermostat.common.model.LongRange;
-
+import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.thread.client.common.Timeline;
 import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
-
 import com.redhat.thermostat.thread.client.swing.impl.timeline.ThreadTimelineHeader;
 import com.redhat.thermostat.thread.client.swing.impl.timeline.TimelineCellRenderer;
 import com.redhat.thermostat.thread.client.swing.impl.timeline.TimelineComponent;
@@ -115,7 +110,7 @@ public class SwingThreadTimelineView extends ThreadTimelineView implements Swing
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 
         long now = System.currentTimeMillis();
-        header = new ThreadTimelineHeader(new LongRange(now, now + TimelineRulerHeader.DEFAULT_INCREMENT_IN_MILLIS),
+        header = new ThreadTimelineHeader(new Range<Long>(now, now + TimelineRulerHeader.DEFAULT_INCREMENT_IN_MILLIS),
                                           scrollPane);
         scrollPane.setColumnHeaderView(header);
 
@@ -146,7 +141,7 @@ public class SwingThreadTimelineView extends ThreadTimelineView implements Swing
     }
     
     @Override
-    public void displayStats(final List<Timeline> timelines, final LongRange range) {
+    public void displayStats(final List<Timeline> timelines, final Range<Long> range) {
                 
         SwingUtilities.invokeLater(new Runnable() {
             @Override

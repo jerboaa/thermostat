@@ -41,7 +41,7 @@ import java.util.List;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.common.model.LongRange;
+import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.thread.client.common.Timeline;
 
 public abstract class ThreadTimelineView extends BasicView {
@@ -63,6 +63,6 @@ public abstract class ThreadTimelineView extends BasicView {
         threadTimelineNotifier.removeActionListener(listener);
     }
     
-    public abstract void displayStats(List<Timeline> timelines, LongRange range);
+    public abstract void displayStats(List<Timeline> timelines, Range<Long> range);
 }
 

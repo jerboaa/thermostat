@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.common.model;
 
+import java.util.Objects;
 
 /**
  * A class representing a span of units from min to max. <br /><br />
@@ -43,44 +44,56 @@ package com.redhat.thermostat.common.model;
  * The units and the meaning of the range are left to the user, including the
  * fact that the range are inclusive or exclusive of the extremes.
  */
-public class LongRange {
+public class Range<T extends Number> {
 
-    long min;
-    long max;
-    
-    /**
-     * Creates a new LongRange with a span of 0 units.
-     */
-    public LongRange() {
-    }
+    T min;
+    T max;
     
     /**
      * Creates a new Range that span from min to max.
      */
-    public LongRange(long min, long max) {
+    public Range(T min, T max) {
         this.min = min;
         this.max = max;
     }
     
-    public void setMax(long max) {
+    public void setMax(T max) {
         this.max = max;
     }
     
-    public long getMax() {
+    public T getMax() {
         return max;
     }
     
-    public void setMin(long min) {
+    public void setMin(T min) {
         this.min = min;
     }
     
-    public long getMin() {
+    public T getMin() {
         return min;
     }
     
     @Override
     public String toString() {
-        return "[" + min + " ->" + max +  "("+ (max - min) + ")]";
+        return "[" + min + " -> " + max + "]";
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (!obj.getClass().equals(getClass())) {
+            return false;
+        }
+        Range<?> other = (Range<?>) obj;
+        return Objects.equals(this.min, other.min) && Objects.equals(this.max, other.max);
+    }
+
+    /** Note: It's not a good idea to use mutable values (like {@code Range}) as a hash */
+    @Override
+    public int hashCode() {
+        return Objects.hash(min, max);
     }
 }
 

@@ -51,7 +51,7 @@ import java.util.Date;
 import com.redhat.thermostat.client.swing.GraphicsUtils;
 import com.redhat.thermostat.client.swing.components.GradientPanel;
 import com.redhat.thermostat.client.ui.Palette;
-import com.redhat.thermostat.common.model.LongRange;
+import com.redhat.thermostat.common.model.Range;
 
 @SuppressWarnings("serial")
 public abstract class TimelineRulerHeader extends GradientPanel {
@@ -75,9 +75,9 @@ public abstract class TimelineRulerHeader extends GradientPanel {
      */
     public static final long DEFAULT_INCREMENT_IN_MILLIS = 1_000;
     
-    private LongRange range;
+    private Range<Long> range;
     
-    public TimelineRulerHeader(LongRange range) {
+    public TimelineRulerHeader(Range<Long> range) {
         
         super(Palette.LIGHT_GRAY.getColor(), Palette.WHITE.getColor());
         setFont(TimelineUtils.FONT);
@@ -85,7 +85,7 @@ public abstract class TimelineRulerHeader extends GradientPanel {
         this.range = range;
     }
     
-    public LongRange getRange() {
+    public Range<Long> getRange() {
         return range;
     }
     

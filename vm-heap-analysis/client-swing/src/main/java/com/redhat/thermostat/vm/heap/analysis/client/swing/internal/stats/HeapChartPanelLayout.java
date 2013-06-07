@@ -46,7 +46,7 @@ import java.awt.geom.Rectangle2D;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.plot.XYPlot;
 
-import com.redhat.thermostat.common.model.LongRange;
+import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.common.model.LongRangeNormalizer;
 
 /**
@@ -88,7 +88,7 @@ public class HeapChartPanelLayout implements LayoutManager2 {
             long max = domainAxis.getMaximumDate().getTime();
             long min = domainAxis.getMinimumDate().getTime();
 
-            LongRange offset = new LongRange(min, max); 
+            Range<Long> offset = new Range<Long>(min, max);
             
             LongRangeNormalizer normaliser = new LongRangeNormalizer(offset);
             chartPanel.getScreenDataArea();

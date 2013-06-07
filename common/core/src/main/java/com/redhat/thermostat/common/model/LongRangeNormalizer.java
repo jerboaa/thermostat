@@ -51,19 +51,19 @@ public class LongRangeNormalizer {
  
     private long value;
 
-    private LongRange range;
+    private Range<Long> range;
     
-    public LongRangeNormalizer(LongRange range) {
+    public LongRangeNormalizer(Range<Long> range) {
         this.range = range;
     }
 
-    public LongRangeNormalizer(LongRange range, long minNormalized, long maxNormalized) {
+    public LongRangeNormalizer(Range<Long> range, long minNormalized, long maxNormalized) {
         this.range = range;
         this.maxNormalized = maxNormalized;
         this.minNormalized = minNormalized;
     }
     
-    public LongRangeNormalizer(LongRange range, LongRange normilizedRange) {
+    public LongRangeNormalizer(Range<Long> range, Range<Long> normilizedRange) {
         this.range = range;
         maxNormalized = normilizedRange.max;
         minNormalized = normilizedRange.min;

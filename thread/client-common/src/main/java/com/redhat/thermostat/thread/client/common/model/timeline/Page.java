@@ -36,16 +36,16 @@
 
 package com.redhat.thermostat.thread.client.common.model.timeline;
 
-import com.redhat.thermostat.common.model.LongRange;
+import com.redhat.thermostat.common.model.Range;
 
 public class Page {
 
-    private LongRange range;
-    public Page(LongRange range) {
+    private Range<Long> range;
+    public Page(Range<Long> range) {
         this.range = range;
     }
     
-    public LongRange getSpan() {
+    public Range<Long> getSpan() {
         return range;
     }
 }

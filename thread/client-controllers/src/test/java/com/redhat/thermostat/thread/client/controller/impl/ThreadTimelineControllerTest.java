@@ -55,11 +55,10 @@ import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
-import com.redhat.thermostat.common.model.LongRange;
+import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.thread.client.common.Timeline;
 import com.redhat.thermostat.thread.client.common.TimelineInfo;
 import com.redhat.thermostat.thread.client.common.chart.ChartColors;
-//import com.redhat.thermostat.thread.client.common.ThreadTimelineBean;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
 import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
@@ -145,15 +144,15 @@ public class ThreadTimelineControllerTest {
         action.run();
         
         ArgumentCaptor<List> listCaptor = ArgumentCaptor.forClass(List.class);
-        ArgumentCaptor<LongRange> rangeCaptor = ArgumentCaptor.forClass(LongRange.class);
+        ArgumentCaptor<Range> rangeCaptor = ArgumentCaptor.forClass(Range.class);
 
         verify(view).displayStats(listCaptor.capture(), rangeCaptor.capture());
         
         List viewResult = listCaptor.getValue();
-        LongRange rangeResult = rangeCaptor.getValue();
+        Range<Long> rangeResult = rangeCaptor.getValue();
         assertEquals(2, viewResult.size());
-        assertEquals(100, rangeResult.getMin());
-        assertEquals(3000, rangeResult.getMax());
+        assertEquals(100l, (long) rangeResult.getMin());
+        assertEquals(3000l, (long) rangeResult.getMax());
 
         Timeline timeline = (Timeline) viewResult.get(0);
         assertEquals(2, timeline.getId());

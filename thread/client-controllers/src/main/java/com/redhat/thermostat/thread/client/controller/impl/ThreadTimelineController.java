@@ -37,17 +37,14 @@
 package com.redhat.thermostat.thread.client.controller.impl;
 
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 
 import com.redhat.thermostat.client.ui.Palette;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
-import com.redhat.thermostat.common.model.LongRange;
+import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.thread.client.common.Timeline;
 import com.redhat.thermostat.thread.client.common.TimelineInfo;
 import com.redhat.thermostat.thread.client.common.chart.ChartColors;
@@ -85,7 +82,7 @@ public class ThreadTimelineController extends CommonController {
             
             synchronized (lock) {
                 // FIXME: only load latest, not all the info all the time
-                LongRange range = new LongRange(Long.MAX_VALUE, Long.MIN_VALUE);
+                Range<Long> range = new Range<Long>(Long.MAX_VALUE, Long.MIN_VALUE);
                 List<ThreadInfoData> infos = collector.getThreadInfo();
                 if(infos.size() > 0) {
                     Map<ThreadInfoData, List<ThreadInfoData>> stats = ThreadInfoHelper.getThreadInfoDataMap(infos);

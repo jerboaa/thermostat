@@ -41,12 +41,12 @@ import java.awt.Graphics2D;
 import java.awt.Rectangle;
 
 import com.redhat.thermostat.client.ui.Palette;
-import com.redhat.thermostat.common.model.LongRange;
+import com.redhat.thermostat.common.model.Range;
 
 public class TimelineUtils {
     public static final Font FONT = new Font("SansSerif", Font.PLAIN, 10);
  
-    public static void drawMarks(LongRange range, Graphics2D graphics, Rectangle bounds,
+    public static void drawMarks(Range<Long> range, Graphics2D graphics, Rectangle bounds,
                                  int currentValue, boolean darkerTop, int increment)
     {
         int inc = currentValue % increment;

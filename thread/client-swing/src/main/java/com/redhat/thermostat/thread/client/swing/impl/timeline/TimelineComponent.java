@@ -46,24 +46,14 @@ import java.awt.Paint;
 import java.awt.Rectangle;
 import java.beans.Transient;
 
-import javax.swing.DefaultListModel;
-import javax.swing.JFrame;
-import javax.swing.JList;
 import javax.swing.JScrollPane;
-import javax.swing.SwingUtilities;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import com.redhat.thermostat.client.swing.GraphicsUtils;
 import com.redhat.thermostat.client.swing.components.GradientPanel;
-
 import com.redhat.thermostat.client.swing.components.timeline.TimelineUtils;
-
 import com.redhat.thermostat.client.ui.Palette;
-
-import com.redhat.thermostat.common.model.LongRange;
 import com.redhat.thermostat.common.model.LongRangeNormalizer;
-
+import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.thread.client.common.Timeline;
 import com.redhat.thermostat.thread.client.common.TimelineInfo;
 
@@ -74,12 +64,12 @@ public class TimelineComponent extends GradientPanel {
     
     private Timeline timeline;
     private JScrollPane scrollPane;
-    private LongRange range;
+    private Range<Long> range;
     
     private long millsUnitIncrement;
     private int pixelUnitIncrement;
     
-    public TimelineComponent(LongRange range, Timeline timeline, JScrollPane scrollPane)
+    public TimelineComponent(Range<Long> range, Timeline timeline, JScrollPane scrollPane)
     {
         super(Palette.LIGHT_GRAY.getColor(), Palette.WHITE.getColor());
         this.range = range;
@@ -210,7 +200,7 @@ public class TimelineComponent extends GradientPanel {
         }
     }
     
-    public LongRange getRange() {
+    public Range<Long> getRange() {
         return range;
     }
     

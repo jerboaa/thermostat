@@ -39,7 +39,7 @@ package com.redhat.thermostat.thread.client.swing.impl.timeline;
 import javax.swing.JScrollPane;
 
 import com.redhat.thermostat.client.swing.components.timeline.TimelineRulerHeader;
-import com.redhat.thermostat.common.model.LongRange;
+import com.redhat.thermostat.common.model.Range;
 
 /**
  *
@@ -49,7 +49,7 @@ public class ThreadTimelineHeader extends TimelineRulerHeader {
 
     private JScrollPane scrollpane;
     
-    public ThreadTimelineHeader(LongRange range, JScrollPane scrollpane) {
+    public ThreadTimelineHeader(Range<Long> range, JScrollPane scrollpane) {
         super(range);
         this.scrollpane = scrollpane;
     }
