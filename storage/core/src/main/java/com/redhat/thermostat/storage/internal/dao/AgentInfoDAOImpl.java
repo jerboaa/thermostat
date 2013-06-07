@@ -47,9 +47,10 @@ import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class AgentInfoDAOImpl implements AgentInfoDAO {
 
@@ -82,7 +83,9 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
     @Override
     public List<AgentInformation> getAliveAgents() {
         Query<AgentInformation> query = storage.createQuery(CATEGORY);
-        query.where(AgentInfoDAO.ALIVE_KEY, Criteria.EQUALS, true);
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.equalTo(ALIVE_KEY, Boolean.TRUE);
+        query.where(expr);
 
         Cursor<AgentInformation> agentCursor = query.execute();
 
@@ -98,7 +101,9 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
     @Override
     public AgentInformation getAgentInformation(HostRef agentRef) {
         Query<AgentInformation> query = storage.createQuery(CATEGORY);
-        query.where(Key.AGENT_ID, Criteria.EQUALS, agentRef.getAgentId());
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.equalTo(Key.AGENT_ID, agentRef.getAgentId());
+        query.where(expr);
         query.limit(1);
         return query.execute().next();
     }

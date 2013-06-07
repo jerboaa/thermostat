@@ -39,6 +39,7 @@ package com.redhat.thermostat.vm.memory.common.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -54,13 +55,14 @@ import org.junit.Test;
 
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Generation;
@@ -126,7 +128,11 @@ public class VmMemoryStatDAOTest {
         VmMemoryStatDAO impl = new VmMemoryStatDAOImpl(storage);
         impl.getLatestMemoryStat(vmRef);
 
-        verifyQuery();
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.and(factory.equalTo(Key.AGENT_ID, AGENT_ID),
+                factory.equalTo(Key.VM_ID, VM_ID));
+        verify(query).where(eq(expr));
+        verify(query).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
     }
 
     @Test
@@ -134,18 +140,15 @@ public class VmMemoryStatDAOTest {
         VmMemoryStatDAO impl = new VmMemoryStatDAOImpl(storage);
         impl.getLatestVmMemoryStats(vmRef, 123);
 
-        verifyQuery();
-
-        verify(query).where(Key.TIMESTAMP, Criteria.GREATER_THAN, 123l);
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.and(
+                factory.equalTo(Key.AGENT_ID, AGENT_ID),
+                factory.and(factory.equalTo(Key.VM_ID, VM_ID),
+                        factory.greaterThan(Key.TIMESTAMP, 123l)));
+        verify(query).where(eq(expr));
+        verify(query).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
         verify(query).execute();
         verifyNoMoreInteractions(query);
-    }
-
-    private void verifyQuery() {
-
-        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID);
-        verify(query).where(Key.VM_ID, Criteria.EQUALS, VM_ID);
-        verify(query).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
     }
 
     @Test
@@ -207,5 +210,6 @@ public class VmMemoryStatDAOTest {
         verify(add).setPojo(stat);
         verify(add).apply();
     }
+    
 }
 

@@ -44,10 +44,11 @@ import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
 
@@ -61,7 +62,9 @@ public class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
     @Override
     public List<NetworkInterfaceInfo> getNetworkInterfaces(HostRef ref) {
         Query<NetworkInterfaceInfo> allHostNetworkInterfaces = storage.createQuery(networkInfoCategory);
-        allHostNetworkInterfaces.where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgentId());
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.equalTo(Key.AGENT_ID, ref.getAgentId());
+        allHostNetworkInterfaces.where(expr);
 
         Cursor<NetworkInterfaceInfo> cursor = allHostNetworkInterfaces.execute();
         List<NetworkInterfaceInfo> result = new ArrayList<>();

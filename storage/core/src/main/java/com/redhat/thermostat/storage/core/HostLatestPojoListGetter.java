@@ -39,13 +39,9 @@ package com.redhat.thermostat.storage.core;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Query.Criteria;
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class HostLatestPojoListGetter<T extends TimeStampedPojo> {
 
@@ -74,8 +70,11 @@ public class HostLatestPojoListGetter<T extends TimeStampedPojo> {
 
     protected Query<T> buildQuery(HostRef hostRef, long since) {
         Query<T> query = storage.createQuery(cat);
-        query.where(Key.AGENT_ID, Criteria.EQUALS, hostRef.getAgentId());
-        query.where(Key.TIMESTAMP, Criteria.GREATER_THAN, since);
+        // AGENT_ID == hostRef.getAgentId() && TIMESTAMP > since
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.and(factory.equalTo(Key.AGENT_ID, hostRef.getAgentId()), 
+                factory.greaterThan(Key.TIMESTAMP, since));
+        query.where(expr);
         query.sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
         return query;
     }

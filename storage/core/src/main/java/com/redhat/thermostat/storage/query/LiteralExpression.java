@@ -34,52 +34,51 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.common;
+package com.redhat.thermostat.storage.query;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+/**
+ * An {@link Expression} that contains a value.
+ * @param <T> - the type of this expression's value
+ */
+public final class LiteralExpression<T> implements Expression {
 
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Query.Criteria;
-import com.redhat.thermostat.storage.core.Remove;
-
-public class WebRemove implements Remove {
-
-    private transient Map<Category<?>, Integer> categoryIds;
-    private int categoryId;
-    private List<Qualifier<?>> qualifiers;
-
-    // NOTE: This is needed for de-serialization!
-    public WebRemove() {
-        this(null);
+    private T value;
+    
+    /**
+     * Constructs a {@link LiteralExpression} given a value.
+     * <p>
+     * This constructor exists mainly for JSON serialization, use methods in
+     * {@link ExpressionFactory} instead of this constructor.
+     * @param value - the value for this expression
+     */
+    public LiteralExpression(T value) {
+        this.value = value;
     }
-
-    public WebRemove(Map<Category<?>, Integer> categoryIds) {
-        qualifiers = new ArrayList<>();
-        this.categoryIds = categoryIds;
+    
+    /**
+     * @return the value represented by this expression
+     */
+    public T getValue() {
+        return value;
     }
-
+    
     @Override
-    public WebRemove from(Category category) {
-        categoryId = categoryIds.get(category);
-        return this;
+    public boolean equals(Object obj) {
+        boolean result = false;
+        if (obj != null && obj instanceof LiteralExpression) {
+            LiteralExpression<?> otherExpr = (LiteralExpression<?>) obj;
+            result = value.equals(otherExpr.value);
+        }
+        return result;
     }
-
+    
     @Override
-    public <T> WebRemove where(Key<T> key, T value) {
-        qualifiers.add(new Qualifier<T>(key, Criteria.EQUALS, value));
-        return this;
+    public int hashCode() {
+        return value.hashCode();
     }
-
-    public int getCategoryId() {
-        return categoryId;
+    
+    @Override
+    public String toString() {
+        return value.toString();
     }
-
-    public List<Qualifier<?>> getQualifiers() {
-        return qualifiers;
-    }
-
 }
-

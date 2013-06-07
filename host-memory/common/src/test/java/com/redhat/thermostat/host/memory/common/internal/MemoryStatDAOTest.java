@@ -39,6 +39,7 @@ package com.redhat.thermostat.host.memory.common.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -49,16 +50,17 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
 import com.redhat.thermostat.host.memory.common.model.MemoryStat;
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class MemoryStatDAOTest {
 
@@ -109,8 +111,9 @@ public class MemoryStatDAOTest {
         List<MemoryStat> memoryStats = dao.getLatestMemoryStats(hostRef, Long.MIN_VALUE);
 
         verify(storage).createQuery(MemoryStatDAO.memoryStatCategory);
-        verify(query).where(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE);
-        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, "system");
+        
+        Expression expr = createWhereExpression();
+        verify(query).where(eq(expr));
         verify(query).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
         verify(query).execute();
         verifyNoMoreInteractions(query);
@@ -150,6 +153,12 @@ public class MemoryStatDAOTest {
         MemoryStatDAO dao = new MemoryStatDAOImpl(storage);
         Long count = dao.getCount();
         assertEquals((Long) 5L, count);
+    }
+    
+    private Expression createWhereExpression() {
+        ExpressionFactory factory = new ExpressionFactory();
+        return factory.and(factory.equalTo(Key.AGENT_ID, "system"),
+                factory.greaterThan(Key.TIMESTAMP, Long.MIN_VALUE));
     }
 }
 

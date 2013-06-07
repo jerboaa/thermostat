@@ -39,6 +39,7 @@ package com.redhat.thermostat.storage.internal.dao;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -54,11 +55,15 @@ import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
+import com.redhat.thermostat.storage.query.BinaryComparisonExpression;
+import com.redhat.thermostat.storage.query.BinaryComparisonOperator;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
+import com.redhat.thermostat.storage.query.LiteralExpression;
 
 public class NetworkInterfaceInfoDAOTest {
 
@@ -102,7 +107,9 @@ public class NetworkInterfaceInfoDAOTest {
         NetworkInterfaceInfoDAO dao = new NetworkInterfaceInfoDAOImpl(storage);
         List<NetworkInterfaceInfo> netInfo = dao.getNetworkInterfaces(hostRef);
 
-        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, "system");
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.equalTo(Key.AGENT_ID, "system");
+        verify(query).where(eq(expr));
         verify(query).execute();
         verifyNoMoreInteractions(query);
 

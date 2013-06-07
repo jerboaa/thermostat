@@ -45,13 +45,14 @@ import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.DAOException;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class VmInfoDAOImpl implements VmInfoDAO {
 
@@ -65,8 +66,12 @@ public class VmInfoDAOImpl implements VmInfoDAO {
     @Override
     public VmInfo getVmInfo(VmRef ref) {
         Query<VmInfo> findMatchingVm = storage.createQuery(vmInfoCategory);
-        findMatchingVm.where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgent().getAgentId());
-        findMatchingVm.where(Key.VM_ID, Criteria.EQUALS, ref.getId());
+        // AGENT_ID == getAgentId() && VM_ID == getId()
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.and(
+                factory.equalTo(Key.AGENT_ID, ref.getAgent().getAgentId()),
+                factory.equalTo(Key.VM_ID, ref.getId()));
+        findMatchingVm.where(expr);
         findMatchingVm.limit(1);
         VmInfo result = findMatchingVm.execute().next();
         if (result == null) {
@@ -85,7 +90,9 @@ public class VmInfoDAOImpl implements VmInfoDAO {
 
     private Query<VmInfo> buildQuery(HostRef host) {
         Query<VmInfo> query = storage.createQuery(vmInfoCategory);
-        query.where(Key.AGENT_ID, Criteria.EQUALS, host.getAgentId());
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.equalTo(Key.AGENT_ID, host.getAgentId());
+        query.where(expr);
         return query;
     }
 

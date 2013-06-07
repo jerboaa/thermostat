@@ -39,6 +39,7 @@ package com.redhat.thermostat.storage.internal.dao;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -59,11 +60,15 @@ import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.storage.model.BackendInformation;
+import com.redhat.thermostat.storage.query.BinaryComparisonExpression;
+import com.redhat.thermostat.storage.query.BinaryComparisonOperator;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
+import com.redhat.thermostat.storage.query.LiteralExpression;
 
 public class BackendInfoDAOTest {
 
@@ -147,7 +152,9 @@ public class BackendInfoDAOTest {
         List<BackendInformation> result = dao.getBackendInformation(agentref);
 
         verify(storage).createQuery(BackendInfoDAO.CATEGORY);
-        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID);
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.equalTo(Key.AGENT_ID, AGENT_ID);
+        verify(query).where(eq(expr));
         verify(query).execute();
         verifyNoMoreInteractions(query);
 

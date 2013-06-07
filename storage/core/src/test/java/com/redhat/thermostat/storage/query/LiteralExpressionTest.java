@@ -34,52 +34,56 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.common;
+package com.redhat.thermostat.storage.query;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Query.Criteria;
-import com.redhat.thermostat.storage.core.Remove;
+import org.junit.Before;
+import org.junit.Test;
 
-public class WebRemove implements Remove {
+public class LiteralExpressionTest {
 
-    private transient Map<Category<?>, Integer> categoryIds;
-    private int categoryId;
-    private List<Qualifier<?>> qualifiers;
+    private Object value;
+    private LiteralExpression<Object> expr;
 
-    // NOTE: This is needed for de-serialization!
-    public WebRemove() {
-        this(null);
+    @Before
+    public void setup() {
+        value = new Object();
+        expr = new LiteralExpression<Object>(value);
     }
-
-    public WebRemove(Map<Category<?>, Integer> categoryIds) {
-        qualifiers = new ArrayList<>();
-        this.categoryIds = categoryIds;
+    
+    @Test
+    public void testGetValue() {
+        assertEquals(value, expr.getValue());
     }
-
-    @Override
-    public WebRemove from(Category category) {
-        categoryId = categoryIds.get(category);
-        return this;
+    
+    @Test
+    public void testEquals() {
+        LiteralExpression<Object> otherExpr = new LiteralExpression<Object>(value);
+        assertEquals(expr, otherExpr);
     }
-
-    @Override
-    public <T> WebRemove where(Key<T> key, T value) {
-        qualifiers.add(new Qualifier<T>(key, Criteria.EQUALS, value));
-        return this;
+    
+    @Test
+    public void testNotEquals() {
+        Object otherValue = new Object();
+        LiteralExpression<Object> otherExpr = new LiteralExpression<Object>(otherValue);
+        
+        assertFalse(expr.equals(otherExpr));
     }
-
-    public int getCategoryId() {
-        return categoryId;
+    
+    @Test
+    public void testNotEqualsWrongClass() {
+        assertFalse(expr.equals(new Object()));
     }
-
-    public List<Qualifier<?>> getQualifiers() {
-        return qualifiers;
+    
+    @Test
+    public void testNotEqualsNull() {
+        assertFalse(expr.equals(null));
     }
-
+    
+    @Test
+    public void testHashCode() {
+        assertEquals(value.hashCode(), expr.hashCode());
+    }
 }
-

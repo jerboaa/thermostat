@@ -39,6 +39,7 @@ package com.redhat.thermostat.vm.gc.common.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -51,13 +52,14 @@ import org.junit.Test;
 
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
 
@@ -109,10 +111,12 @@ public class VmGcStatDAOTest {
         List<VmGcStat> vmGcStats = dao.getLatestVmGcStats(vmRef, Long.MIN_VALUE);
 
         verify(storage).createQuery(VmGcStatDAO.vmGcStatCategory);
-        verify(query).where(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE);
-        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, "system");
-        verify(query).where(Key.VM_ID, Criteria.EQUALS, 321);
-        verify(query).where(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE);
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.and(
+                factory.equalTo(Key.AGENT_ID, vmRef.getAgent().getAgentId()),
+                factory.and(factory.equalTo(Key.VM_ID, vmRef.getId()),
+                        factory.greaterThan(Key.TIMESTAMP, Long.MIN_VALUE)));
+        verify(query).where(eq(expr));
         verify(query).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
         verify(query).execute();
         verifyNoMoreInteractions(query);

@@ -42,10 +42,11 @@ import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;
 
@@ -63,8 +64,11 @@ class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
     @Override
     public VmMemoryStat getLatestMemoryStat(VmRef ref) {
         Query<VmMemoryStat> query = storage.createQuery(vmMemoryStatsCategory);
-        query.where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgent().getAgentId());
-        query.where(Key.VM_ID, Criteria.EQUALS, ref.getId());
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.and(
+                factory.equalTo(Key.AGENT_ID, ref.getAgent().getAgentId()),
+                factory.equalTo(Key.VM_ID, ref.getId()));
+        query.where(expr);
         query.sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
         query.limit(1);
         Cursor<VmMemoryStat> cursor = query.execute();

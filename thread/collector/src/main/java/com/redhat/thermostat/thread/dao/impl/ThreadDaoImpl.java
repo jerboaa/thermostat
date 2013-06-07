@@ -44,10 +44,11 @@ import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.VmDeadLockData;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
@@ -70,8 +71,11 @@ public class ThreadDaoImpl implements ThreadDao {
     @Override
     public VMThreadCapabilities loadCapabilities(VmRef vm) {
         Query<VMThreadCapabilities> query = storage.createQuery(THREAD_CAPABILITIES);
-        query.where(Key.VM_ID, Query.Criteria.EQUALS, vm.getId());
-        query.where(Key.AGENT_ID, Query.Criteria.EQUALS, vm.getAgent().getAgentId());
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.and(
+                factory.equalTo(Key.AGENT_ID, vm.getAgent().getAgentId()),
+                factory.equalTo(Key.VM_ID, vm.getId()));
+        query.where(expr);
         query.limit(1);
         Cursor<VMThreadCapabilities> cursor = query.execute();
         if (!cursor.hasNext()) {
@@ -115,9 +119,8 @@ public class ThreadDaoImpl implements ThreadDao {
         
         List<ThreadSummary> result = new ArrayList<>();
         
-        Query<ThreadSummary> query = prepareQuery(THREAD_SUMMARY, ref);
+        Query<ThreadSummary> query = prepareQuery(THREAD_SUMMARY, ref, since);
         query.sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
-        query.where(Key.TIMESTAMP, Criteria.GREATER_THAN, since);
 
         Cursor<ThreadSummary> cursor = query.execute();
         while (cursor.hasNext()) {
@@ -159,8 +162,7 @@ public class ThreadDaoImpl implements ThreadDao {
     public List<ThreadInfoData> loadThreadInfo(VmRef ref, long since) {
         List<ThreadInfoData> result = new ArrayList<>();
         
-        Query<ThreadInfoData> query = prepareQuery(THREAD_INFO, ref);
-        query.where(Key.TIMESTAMP, Criteria.GREATER_THAN, since);
+        Query<ThreadInfoData> query = prepareQuery(THREAD_INFO, ref, since);
         query.sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
         
         Cursor<ThreadInfoData> cursor = query.execute();
@@ -195,13 +197,21 @@ public class ThreadDaoImpl implements ThreadDao {
     }
     
     private <T extends Pojo> Query<T> prepareQuery(Category<T> category, VmRef vm) {
-        return prepareQuery(category, vm.getIdString(), vm.getAgent().getAgentId());
+        return prepareQuery(category, vm.getId(), vm.getAgent().getAgentId(), null);
+    }
+    
+    private <T extends Pojo> Query<T> prepareQuery(Category<T> category, VmRef vm, Long since) {
+        return prepareQuery(category, vm.getId(), vm.getAgent().getAgentId(), since);
     }
 
-    private <T extends Pojo> Query<T> prepareQuery(Category<T> category, String vmId, String agentId) {
+    private <T extends Pojo> Query<T> prepareQuery(Category<T> category, Integer vmId, String agentId, Long since) {
         Query<T> query = storage.createQuery(category);
-        query.where(Key.AGENT_ID, Query.Criteria.EQUALS, agentId);
-        query.where(Key.VM_ID, Query.Criteria.EQUALS, Integer.valueOf(vmId));
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.and(factory.equalTo(Key.AGENT_ID, agentId), factory.equalTo(Key.VM_ID, vmId));
+        if (since != null) {
+            expr = factory.and(expr, factory.greaterThan(Key.TIMESTAMP, since));
+        }
+        query.where(expr);
         return query;
     }
     

@@ -44,10 +44,11 @@ import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Query.SortDirection;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.vm.jmx.common.JmxNotification;
 import com.redhat.thermostat.vm.jmx.common.JmxNotificationDAO;
 import com.redhat.thermostat.vm.jmx.common.JmxNotificationStatus;
@@ -90,8 +91,12 @@ public class JmxNotificationDAOImpl implements JmxNotificationDAO {
     @Override
     public JmxNotificationStatus getLatestNotificationStatus(VmRef statusFor) {
         Query<JmxNotificationStatus> query = storage.createQuery(NOTIFICATION_STATUS);
-        query.where(Key.AGENT_ID, Criteria.EQUALS, statusFor.getAgent().getAgentId());
-        query.where(Key.VM_ID, Criteria.EQUALS, statusFor.getId());
+        
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.and(factory.equalTo(Key.AGENT_ID, statusFor
+                .getAgent().getAgentId()), factory.equalTo(Key.VM_ID,
+                statusFor.getId()));
+        query.where(expr);
 
         query.sort(Key.TIMESTAMP, SortDirection.DESCENDING);
         Cursor<JmxNotificationStatus> results = query.execute();
@@ -112,9 +117,12 @@ public class JmxNotificationDAOImpl implements JmxNotificationDAO {
     @Override
     public List<JmxNotification> getNotifications(VmRef notificationsFor, long timeStampSince) {
         Query<JmxNotification> query = storage.createQuery(NOTIFICATIONS);
-        query.where(Key.AGENT_ID, Criteria.EQUALS, notificationsFor.getAgent().getAgentId());
-        query.where(Key.VM_ID, Criteria.EQUALS, notificationsFor.getId());
-        query.where(Key.TIMESTAMP, Criteria.GREATER_THAN, timeStampSince);
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.and(factory.equalTo(Key.AGENT_ID,
+                notificationsFor.getAgent().getAgentId()), factory.and(
+                factory.equalTo(Key.VM_ID, notificationsFor.getId()),
+                factory.greaterThan(Key.TIMESTAMP, timeStampSince)));
+        query.where(expr);
 
         List<JmxNotification> results = new ArrayList<>();
         Cursor<JmxNotification> cursor = query.execute();

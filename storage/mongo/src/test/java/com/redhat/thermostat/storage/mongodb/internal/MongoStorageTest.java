@@ -84,9 +84,10 @@ import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Persist;
 import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.model.BasePojo;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 //There is a bug (resolved as wontfix) in powermock which results in
 //java.lang.LinkageError if javax.management.* classes aren't ignored by
@@ -223,7 +224,9 @@ public class MongoStorageTest {
     public void verifyFindAllCallsDBCollectionFind() throws Exception {
         MongoStorage storage = makeStorage();
         Query query = storage.createQuery(testCategory);
-        query.where(key1, Criteria.EQUALS, "fluff");
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.equalTo(key1, "fluff");
+        query.where(expr);
         query.execute();
         verify(testCollection).find(any(DBObject.class));
     }

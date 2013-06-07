@@ -39,13 +39,9 @@ package com.redhat.thermostat.storage.core;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Query.Criteria;
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class VmLatestPojoListGetter<T extends TimeStampedPojo> {
 
@@ -74,9 +70,12 @@ public class VmLatestPojoListGetter<T extends TimeStampedPojo> {
 
     protected Query<T> buildQuery(VmRef vmRef, long since) {
         Query<T> query = storage.createQuery(cat);
-        query.where(Key.AGENT_ID, Criteria.EQUALS, vmRef.getAgent().getAgentId());
-        query.where(Key.VM_ID, Criteria.EQUALS, vmRef.getId());
-        query.where(Key.TIMESTAMP, Criteria.GREATER_THAN, since);
+        // AGENT_ID == getAgentId() && VM_ID == getId() && TIMESTAMP > since
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.and(factory.equalTo(Key.AGENT_ID, vmRef.getAgent().getAgentId()),
+                factory.and(factory.equalTo(Key.VM_ID, vmRef.getId()),
+                        factory.greaterThan(Key.TIMESTAMP, since)));
+        query.where(expr);
         query.sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
         return query;
     }

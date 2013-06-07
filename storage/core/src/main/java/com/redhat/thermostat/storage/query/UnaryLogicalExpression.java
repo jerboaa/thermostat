@@ -34,52 +34,28 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.common;
+package com.redhat.thermostat.storage.query;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+/**
+ * A {@link UnaryExpression} which represents a boolean formula
+ * with one expression and a logical operator.
+ * @param <T> - type of {@link Expression} used for the operand
+ */
+public final class UnaryLogicalExpression<T extends Expression> extends
+        UnaryExpression<T, UnaryLogicalOperator> {
 
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Query.Criteria;
-import com.redhat.thermostat.storage.core.Remove;
-
-public class WebRemove implements Remove {
-
-    private transient Map<Category<?>, Integer> categoryIds;
-    private int categoryId;
-    private List<Qualifier<?>> qualifiers;
-
-    // NOTE: This is needed for de-serialization!
-    public WebRemove() {
-        this(null);
-    }
-
-    public WebRemove(Map<Category<?>, Integer> categoryIds) {
-        qualifiers = new ArrayList<>();
-        this.categoryIds = categoryIds;
-    }
-
-    @Override
-    public WebRemove from(Category category) {
-        categoryId = categoryIds.get(category);
-        return this;
-    }
-
-    @Override
-    public <T> WebRemove where(Key<T> key, T value) {
-        qualifiers.add(new Qualifier<T>(key, Criteria.EQUALS, value));
-        return this;
-    }
-
-    public int getCategoryId() {
-        return categoryId;
-    }
-
-    public List<Qualifier<?>> getQualifiers() {
-        return qualifiers;
+    /**
+     * Constructs a {@link UnaryLogicalExpression} given an operand
+     * and a {@link UnaryLogicalOperator}.
+     * <p>
+     * This constructor exists mainly for JSON serialization, use methods in
+     * {@link ExpressionFactory} instead of this constructor.
+     * @param leftOperand - left operand for this expression
+     * @param operator - the operator for this expression
+     * @param rightOperand - right operand for this expression
+     */
+    public UnaryLogicalExpression(T operand, UnaryLogicalOperator operator) {
+        super(operand, operator);
     }
 
 }
-

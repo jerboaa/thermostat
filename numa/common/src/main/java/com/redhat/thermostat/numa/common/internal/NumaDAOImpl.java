@@ -47,9 +47,10 @@ import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class NumaDAOImpl implements NumaDAO {
 
@@ -88,7 +89,9 @@ public class NumaDAOImpl implements NumaDAO {
     @Override
     public int getNumberOfNumaNodes(HostRef ref) {
         Query<NumaHostInfo> query = storage.createQuery(numaHostCategory);
-        query.where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgentId());
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.equalTo(Key.AGENT_ID, ref.getAgentId());
+        query.where(expr);
         query.limit(1);
         Cursor<NumaHostInfo> numaHostInfo = query.execute();
         if (numaHostInfo.hasNext()) {

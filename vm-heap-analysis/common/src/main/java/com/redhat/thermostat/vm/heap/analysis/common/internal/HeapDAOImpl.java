@@ -54,9 +54,10 @@ import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
 import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
@@ -111,8 +112,11 @@ public class HeapDAOImpl implements HeapDAO {
     @Override
     public Collection<HeapInfo> getAllHeapInfo(VmRef vm) {
         Query<HeapInfo> query = storage.createQuery(heapInfoCategory);
-        query.where(Key.AGENT_ID, Criteria.EQUALS, vm.getAgent().getAgentId());
-        query.where(Key.VM_ID, Criteria.EQUALS, vm.getId());
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.and(
+                factory.equalTo(Key.AGENT_ID, vm.getAgent().getAgentId()),
+                factory.equalTo(Key.VM_ID, vm.getId()));
+        query.where(expr);
         Cursor<HeapInfo> cursor = query.execute();
         Collection<HeapInfo> heapInfos = new ArrayList<>();
         while (cursor.hasNext()) {
@@ -141,7 +145,9 @@ public class HeapDAOImpl implements HeapDAO {
     @Override
     public HeapInfo getHeapInfo(String heapId) {
         Query<HeapInfo> query = storage.createQuery(heapInfoCategory);
-        query.where(heapIdKey, Criteria.EQUALS, heapId);
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.equalTo(heapIdKey, heapId);
+        query.where(expr);
         query.limit(1);
         HeapInfo found = null;
         try {

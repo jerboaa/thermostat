@@ -40,7 +40,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.same;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -53,16 +53,17 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
 import com.redhat.thermostat.host.cpu.common.model.CpuStat;
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class CpuStatDAOTest {
 
@@ -99,8 +100,8 @@ public class CpuStatDAOTest {
 
         List<CpuStat> cpuStats = dao.getLatestCpuStats(hostRef, Long.MIN_VALUE);
 
-        verify(query).where(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE);
-        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, "system");
+        Expression expr = createWhereExpression();
+        verify(query).where(eq(expr));
         verify(query).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
         verify(query).execute();
         verifyNoMoreInteractions(query);
@@ -110,6 +111,12 @@ public class CpuStatDAOTest {
         assertEquals(1234L, stat.getTimeStamp());
         assertArrayEquals(new double[] { LOAD }, stat.getPerProcessorUsage(), 0.001);
 
+    }
+
+    private Expression createWhereExpression() {
+        ExpressionFactory factory = new ExpressionFactory();
+        return factory.and(factory.equalTo(Key.AGENT_ID, "system"),
+                factory.greaterThan(Key.TIMESTAMP, Long.MIN_VALUE));
     }
 
     @Test
@@ -135,9 +142,9 @@ public class CpuStatDAOTest {
         dao.getLatestCpuStats(hostRef, Long.MIN_VALUE);
         dao.getLatestCpuStats(hostRef, Long.MIN_VALUE);
 
+        Expression expr = createWhereExpression();
         verify(query, times(2)).execute();
-        verify(query, atLeastOnce()).where(same(Key.AGENT_ID), same(Criteria.EQUALS), any());
-        verify(query, atLeastOnce()).where(same(Key.TIMESTAMP), any(Criteria.class), any());
+        verify(query, atLeastOnce()).where(eq(expr));
     }
 
     @Test

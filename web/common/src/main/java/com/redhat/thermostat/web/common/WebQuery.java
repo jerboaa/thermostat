@@ -37,18 +37,14 @@
 
 package com.redhat.thermostat.web.common;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.redhat.thermostat.storage.core.AbstractQuery;
 import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.storage.query.Expression;
 
 public class WebQuery<T extends Pojo> extends AbstractQuery<T> {
 
-    private List<Qualifier<?>> qualifiers;
-
+    private Expression expr;
     private int categoryId;
 
     public WebQuery() {
@@ -56,7 +52,6 @@ public class WebQuery<T extends Pojo> extends AbstractQuery<T> {
     }
 
     public WebQuery(int categoryId) {
-        qualifiers = new ArrayList<>();
         this.categoryId = categoryId;
     }
 
@@ -69,16 +64,12 @@ public class WebQuery<T extends Pojo> extends AbstractQuery<T> {
     }
 
     @Override
-    public <S> void where(Key<S> key, Criteria criteria, S value) {
-        qualifiers.add(new Qualifier<>(key, criteria, value));
+    public void where(Expression expr) {
+        this.expr = expr;
     }
-
-    public List<Qualifier<?>> getQualifiers() {
-        return qualifiers;
-    }
-
-    public void setQualifiers(List<Qualifier<?>> qualifiers) {
-        this.qualifiers = qualifiers;
+    
+    public Expression getExpression() {
+        return expr;
     }
 
     @Override

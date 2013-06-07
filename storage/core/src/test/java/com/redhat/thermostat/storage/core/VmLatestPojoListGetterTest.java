@@ -39,6 +39,7 @@ package com.redhat.thermostat.storage.core;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -50,13 +51,9 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Query.Criteria;
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class VmLatestPojoListGetterTest {
     private static final String AGENT_ID = "agentid";
@@ -109,11 +106,18 @@ public class VmLatestPojoListGetterTest {
 
         assertNotNull(query);
         verify(storage).createQuery(cat);
-        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID);
-        verify(query).where(Key.VM_ID, Criteria.EQUALS, VM_PID);
-        verify(query).where(Key.TIMESTAMP, Criteria.GREATER_THAN, 123l);
+        Expression expr = createWhereExpression(123l);
+        verify(query).where(eq(expr));
         verify(query).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
         verifyNoMoreInteractions(query);
+    }
+
+    private Expression createWhereExpression(long time) {
+        ExpressionFactory factory = new ExpressionFactory();
+        return factory.and(
+                factory.equalTo(Key.AGENT_ID, AGENT_ID),
+                factory.and(factory.equalTo(Key.VM_ID, VM_PID),
+                        factory.greaterThan(Key.TIMESTAMP, time)));
     }
 
     @Test
@@ -129,9 +133,8 @@ public class VmLatestPojoListGetterTest {
 
         assertNotNull(query);
         verify(storage, times(2)).createQuery(cat);
-        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID);
-        verify(query).where(Key.VM_ID, Criteria.EQUALS, VM_PID);
-        verify(query).where(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE);
+        Expression expr = createWhereExpression(Long.MIN_VALUE);
+        verify(query).where(eq(expr));
         verify(query).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
         verifyNoMoreInteractions(query);
     }
@@ -153,9 +156,8 @@ public class VmLatestPojoListGetterTest {
         List<TestPojo> stats = getter.getLatest(vmRef, t2);
 
         verify(storage).createQuery(cat);
-        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID);
-        verify(query).where(Key.VM_ID, Criteria.EQUALS, VM_PID);
-        verify(query).where(Key.TIMESTAMP, Criteria.GREATER_THAN, t2);
+        Expression expr = createWhereExpression(t2);
+        verify(query).where(eq(expr));
         verify(query).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
         verify(query).execute();
         verifyNoMoreInteractions(query);

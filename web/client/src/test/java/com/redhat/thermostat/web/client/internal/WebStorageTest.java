@@ -85,6 +85,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
@@ -101,8 +102,13 @@ import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Update;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
+import com.redhat.thermostat.storage.query.Operator;
 import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
+import com.redhat.thermostat.web.common.ExpressionSerializer;
+import com.redhat.thermostat.web.common.OperatorSerializer;
 import com.redhat.thermostat.web.common.Qualifier;
 import com.redhat.thermostat.web.common.WebInsert;
 import com.redhat.thermostat.web.common.WebQuery;
@@ -237,12 +243,15 @@ public class WebStorageTest {
         obj1.setProperty1("fluffor1");
         TestObj obj2 = new TestObj();
         obj2.setProperty1("fluffor2");
-        Gson gson = new Gson();
+        Gson gson = new GsonBuilder().registerTypeHierarchyAdapter(Expression.class, new ExpressionSerializer())
+                .registerTypeHierarchyAdapter(Operator.class, new OperatorSerializer()).create();
         responseBody = gson.toJson(Arrays.asList(obj1, obj2));
 
         Key<String> key1 = new Key<>("property1", true);
         Query<TestObj> query = storage.createQuery(category);
-        query.where(key1, Criteria.EQUALS, "fluff");
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.equalTo(key1, "fluff");
+        query.where(expr);
 
         Cursor<TestObj> results = query.execute();
         StringReader reader = new StringReader(requestBody);
@@ -253,12 +262,8 @@ public class WebStorageTest {
         WebQuery<?> restQuery = gson.fromJson(parts[1], WebQuery.class);
 
         assertEquals(42, restQuery.getCategoryId());
-        List<Qualifier<?>> qualifiers = restQuery.getQualifiers();
-        assertEquals(1, qualifiers.size());
-        Qualifier<?> qual = qualifiers.get(0);
-        assertEquals(new Key<String>("property1", true), qual.getKey());
-        assertEquals(Criteria.EQUALS, qual.getCriteria());
-        assertEquals("fluff", qual.getValue());
+        Expression restExpr = restQuery.getExpression();
+        assertEquals(expr, restExpr);
 
         assertTrue(results.hasNext());
         assertEquals("fluffor1", results.next().getProperty1());

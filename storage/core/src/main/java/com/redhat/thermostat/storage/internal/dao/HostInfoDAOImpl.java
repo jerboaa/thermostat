@@ -46,11 +46,12 @@ import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.HostInfo;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class HostInfoDAOImpl implements HostInfoDAO {
 
@@ -67,7 +68,9 @@ public class HostInfoDAOImpl implements HostInfoDAO {
     @Override
     public HostInfo getHostInfo(HostRef ref) {
         Query<HostInfo> query = storage.createQuery(hostInfoCategory);
-        query.where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgentId());
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.equalTo(Key.AGENT_ID, ref.getAgentId());
+        query.where(expr);
         query.limit(1);
         HostInfo result = query.execute().next();
         return result;
@@ -92,7 +95,9 @@ public class HostInfoDAOImpl implements HostInfoDAO {
         List<AgentInformation> agentInfos = agentInfoDao.getAliveAgents();
         for (AgentInformation agentInfo : agentInfos) {
             Query<HostInfo> filter = storage.createQuery(hostInfoCategory);
-            filter.where(Key.AGENT_ID, Criteria.EQUALS, agentInfo.getAgentId());
+            ExpressionFactory factory = new ExpressionFactory();
+            Expression expr = factory.equalTo(Key.AGENT_ID, agentInfo.getAgentId());
+            filter.where(expr);
             hosts.addAll(getHosts(filter));
         }
 

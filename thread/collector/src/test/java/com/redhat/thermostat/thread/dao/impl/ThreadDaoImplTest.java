@@ -41,6 +41,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -56,11 +57,12 @@ import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Query.SortDirection;
 import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
@@ -104,8 +106,8 @@ public class ThreadDaoImplTest {
         ThreadDaoImpl dao = new ThreadDaoImpl(storage);
         VMThreadCapabilities caps = dao.loadCapabilities(ref);
 
-        verify(query).where(Key.VM_ID, Criteria.EQUALS, 42);
-        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, "0xcafe");
+        Expression expr = createWhereExpression();
+        verify(query).where(eq(expr));
         verify(query).limit(1);
         verify(query).execute();
         verifyNoMoreInteractions(query);
@@ -113,6 +115,11 @@ public class ThreadDaoImplTest {
         assertFalse(caps.supportContentionMonitor());
         assertTrue(caps.supportCPUTime());
         assertTrue(caps.supportThreadAllocatedMemory());
+    }
+
+    private Expression createWhereExpression() {
+        ExpressionFactory factory = new ExpressionFactory();
+        return factory.and(factory.equalTo(Key.AGENT_ID, "0xcafe"), factory.equalTo(Key.VM_ID, 42));
     }
     
     @Test
@@ -138,8 +145,8 @@ public class ThreadDaoImplTest {
         ThreadDaoImpl dao = new ThreadDaoImpl(storage);
         VMThreadCapabilities caps = dao.loadCapabilities(ref);
 
-        verify(query).where(Key.VM_ID, Criteria.EQUALS, 42);
-        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, "0xcafe");
+        Expression expr = createWhereExpression();
+        verify(query).where(eq(expr));
         verify(query).limit(1);
         verify(query).execute();
         verifyNoMoreInteractions(query);
@@ -192,8 +199,8 @@ public class ThreadDaoImplTest {
 
         assertSame(data, result);
 
-        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, agent.getAgentId());
-        verify(query).where(Key.VM_ID, Criteria.EQUALS, vm.getId());
+        Expression expr = createWhereExpression();
+        verify(query).where(eq(expr));
         verify(query).sort(Key.TIMESTAMP, SortDirection.DESCENDING);
         verify(query).execute();
         verify(query).limit(1);
@@ -239,8 +246,8 @@ public class ThreadDaoImplTest {
         ThreadDaoImpl dao = new ThreadDaoImpl(storage);
         ThreadHarvestingStatus result = dao.getLatestHarvestingStatus(vm);
 
-        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, agent.getAgentId());
-        verify(query).where(Key.VM_ID, Criteria.EQUALS, vm.getId());
+        Expression expr = createWhereExpression();
+        verify(query).where(eq(expr));
         verify(query).sort(Key.TIMESTAMP, SortDirection.DESCENDING);
         verify(query).execute();
         verify(query).limit(1);

@@ -36,35 +36,35 @@
 
 package com.redhat.thermostat.storage.mongodb.internal;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
 import com.redhat.thermostat.storage.core.AbstractQuery;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.storage.query.Expression;
 
 public class MongoQuery<T extends Pojo> extends AbstractQuery<T> {
 
     private MongoStorage storage;
-    private BasicDBObject query = new BasicDBObject();
-    private Map<String, BasicDBObjectBuilder> builerMap;
+    private DBObject query = new BasicDBObject();
     
     private boolean hasClauses = false;
     private Category<T> category;
     private Class<T> resultClass;
+    private MongoExpressionParser parser;
 
     MongoQuery(MongoStorage storage, Category<T> category) {
+        this(storage, category, new MongoExpressionParser());
+    }
+    
+    MongoQuery(MongoStorage storage, Category<T> category, MongoExpressionParser parser) {
         this.storage = storage;
         this.category = category;
+        this.parser = parser;
         this.resultClass = category.getDataClass();
-        this.builerMap = new HashMap<String, BasicDBObjectBuilder>();
     }
 
     public Category<T> getCategory() {
@@ -76,51 +76,8 @@ public class MongoQuery<T extends Pojo> extends AbstractQuery<T> {
     }
 
     @Override
-    public <S> void where(Key<S> key, Criteria operator, S value) {
-        where(key.getName(), operator, value);
-    }
-
-    public void where(String key, Criteria operator, Object value) {
-
-        // strict equality is mutually exclusive on the key
-        if (operator.equals(Criteria.EQUALS)) {
-            query.put(key, value);
-        
-        } else {
-            BasicDBObjectBuilder queryParameters = null;
-            if (builerMap.containsKey(key)) {
-                queryParameters = (BasicDBObjectBuilder) builerMap.get(key);
-            } else {
-                queryParameters = BasicDBObjectBuilder.start();
-                builerMap.put(key, queryParameters);
-            }
-            
-            switch (operator) {
-    
-            case NOT_EQUAL_TO:
-                queryParameters.add("$ne", value);
-                break;
-    
-            case LESS_THAN:
-                queryParameters.add("$lt", value);
-                break;
-    
-            case LESS_THAN_OR_EQUAL_TO:
-                queryParameters.add("$lte", value);
-                break;
-            case GREATER_THAN:
-                queryParameters.add("$gt", value);
-                break;
-    
-            case GREATER_THAN_OR_EQUAL_TO:
-                queryParameters.add("$gte", value);
-                break;
-    
-            default:
-                throw new IllegalArgumentException("MongoQuery can not handle " + operator);
-            }
-            query.put(key, queryParameters.get());
-        }
+    public void where(Expression expr) {
+        query = parser.parse(expr);
         hasClauses = true;
     }
 
@@ -156,5 +113,6 @@ public class MongoQuery<T extends Pojo> extends AbstractQuery<T> {
     public Cursor<T> execute() {
         return storage.findAllPojos(this, resultClass);
     }
+
 }
 

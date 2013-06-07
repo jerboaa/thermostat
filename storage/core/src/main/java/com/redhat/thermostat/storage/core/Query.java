@@ -37,6 +37,7 @@
 package com.redhat.thermostat.storage.core;
 
 import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.storage.query.Expression;
 
 /**
  * Describes what data should be fetched.
@@ -67,7 +68,7 @@ public interface Query<T extends Pojo> {
         }
     }
 
-    <S> void where(Key<S> key, Criteria criteria, S value);
+    void where(Expression expr);
     
     void sort(Key<?> key, SortDirection direction);
 

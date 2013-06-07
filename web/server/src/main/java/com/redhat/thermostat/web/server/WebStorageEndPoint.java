@@ -80,6 +80,10 @@ import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.Operator;
+import com.redhat.thermostat.web.common.ExpressionSerializer;
+import com.redhat.thermostat.web.common.OperatorSerializer;
 import com.redhat.thermostat.web.common.Qualifier;
 import com.redhat.thermostat.web.common.StorageWrapper;
 import com.redhat.thermostat.web.common.ThermostatGSONConverter;
@@ -124,7 +128,13 @@ public class WebStorageEndPoint extends HttpServlet {
         // check if thermostat home is set and readable
         checkThermostatHome();
         
-        gson = new GsonBuilder().registerTypeHierarchyAdapter(Pojo.class, new ThermostatGSONConverter()).create();
+        gson = new GsonBuilder()
+                .registerTypeHierarchyAdapter(Pojo.class,
+                        new ThermostatGSONConverter())
+                .registerTypeHierarchyAdapter(Expression.class,
+                        new ExpressionSerializer())
+                .registerTypeHierarchyAdapter(Operator.class,
+                        new OperatorSerializer()).create();
         categoryIds = new HashMap<>();
         categories = new HashMap<>();
         TokenManager tokenManager = new TokenManager();
@@ -456,15 +466,14 @@ public class WebStorageEndPoint extends HttpServlet {
         writeResponse(resp, resultList.toArray());
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     private Query<?> constructTargetQuery(WebQuery<? extends Pojo> query) {
         int categoryId = query.getCategoryId();
         Category<?> category = getCategoryFromId(categoryId);
 
         Query<?> targetQuery = storage.createQuery(category);
-        List<Qualifier<?>> qualifiers = query.getQualifiers();
-        for (Qualifier q : qualifiers) {
-            targetQuery.where(q.getKey(), q.getCriteria(), q.getValue());
+        Expression whereExpr = query.getExpression();
+        if (whereExpr != null) {
+            targetQuery.where(whereExpr);
         }
         for (Sort s : query.getSorts()) {
             targetQuery.sort(s.getKey(), s.getDirection());

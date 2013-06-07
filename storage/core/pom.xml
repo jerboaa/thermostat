@@ -67,6 +67,7 @@
               com.redhat.thermostat.storage.config,
               com.redhat.thermostat.storage.model,
               com.redhat.thermostat.storage.dao,
+              com.redhat.thermostat.storage.query,
             </Export-Package>
             <!-- TODO: For the thread tab (i.e. thread plug-in) the web server
                  bundle requires model classes provided by said bundle. Since

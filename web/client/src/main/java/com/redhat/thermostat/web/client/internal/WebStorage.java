@@ -103,6 +103,10 @@ import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.Operator;
+import com.redhat.thermostat.web.common.ExpressionSerializer;
+import com.redhat.thermostat.web.common.OperatorSerializer;
 import com.redhat.thermostat.web.common.ThermostatGSONConverter;
 import com.redhat.thermostat.web.common.WebInsert;
 import com.redhat.thermostat.web.common.WebQuery;
@@ -347,7 +351,10 @@ public class WebStorage implements Storage, SecureStorage {
     private void init(StartupConfiguration config, DefaultHttpClient client, ClientConnectionManager connManager) {
         categoryIds = new HashMap<>();
         gson = new GsonBuilder().registerTypeHierarchyAdapter(Pojo.class,
-                new ThermostatGSONConverter()).create();
+                        new ThermostatGSONConverter())
+                .registerTypeHierarchyAdapter(Expression.class,
+                        new ExpressionSerializer())
+                .registerTypeHierarchyAdapter(Operator.class, new OperatorSerializer()).create();
         httpClient = client;
         random = new SecureRandom();
         conn = new WebConnection();

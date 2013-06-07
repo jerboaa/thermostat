@@ -46,11 +46,12 @@ import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.storage.model.BackendInformation;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class BackendInfoDAOImpl implements BackendInfoDAO {
 
@@ -65,7 +66,9 @@ public class BackendInfoDAOImpl implements BackendInfoDAO {
     public List<BackendInformation> getBackendInformation(HostRef host) {
         // Sort by order value
         Query<BackendInformation> query = storage.createQuery(CATEGORY);
-        query.where(Key.AGENT_ID, Criteria.EQUALS, host.getAgentId());
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.equalTo(Key.AGENT_ID, host.getAgentId());
+        query.where(expr);
 
         List<BackendInformation> results = new ArrayList<>();
         Cursor<BackendInformation> cursor = query.execute();

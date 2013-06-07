@@ -34,44 +34,73 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.common;
+package com.redhat.thermostat.storage.query;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertFalse;
+import static org.mockito.Mockito.mock;
 
-import java.util.HashMap;
-import java.util.Map;
-
+import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
 
-public class WebQueryTest {
+public class UnaryExpressionTest {
+    
+    private Expression operand;
+    private UnaryOperator operator;
+    private UnaryExpression<Expression, UnaryOperator> expr;
 
-    private static class TestObj implements Pojo {
-        
+    @Before
+    public void setup() {
+        operand = mock(Expression.class);
+        operator = mock(UnaryOperator.class);
+        expr = new UnaryExpression<Expression, UnaryOperator>(
+                operand, operator) {
+        };
     }
-
+    
     @Test
-    public void test() {
-        Key<String> key1 = new Key<>("testkey", true);
-        Category<TestObj> category = new Category<>("test", TestObj.class, key1);
-        Map<Category,Integer> categoryIdMap = new HashMap<>();
-        categoryIdMap.put(category, 42);
-        WebQuery query = new WebQuery(42);
-        ExpressionFactory factory = new ExpressionFactory();
-        Expression expr = factory.equalTo(key1, "fluff");
-        query.where(expr);
-
-        Expression retExpr = query.getExpression();
-        assertNotNull(retExpr);
-        assertEquals(expr, retExpr);
-
-        assertEquals(42, query.getCategoryId());
+    public void testGetOperand() {
+        assertEquals(operand, expr.getOperand());
     }
-}
+    
+    @Test
+    public void testGetOperator() {
+        assertEquals(operator, expr.getOperator());
+    }
+    
+    @Test
+    public void testEquals() {
+        UnaryExpression<Expression, UnaryOperator> otherExpr = new UnaryExpression<Expression, UnaryOperator>(
+                operand, operator) {
+        };
+        assertEquals(expr, otherExpr);
+    }
+    
+    @Test
+    public void testNotEquals() {
+        Expression otherOperand = mock(Expression.class);
+        UnaryExpression<Expression, UnaryOperator> otherExpr = new UnaryExpression<Expression, UnaryOperator>(
+                otherOperand, operator) {
+        };
+        
+        assertFalse(expr.equals(otherExpr));
+    }
+    
+    @Test
+    public void testNotEqualsWrongClass() {
+        assertFalse(expr.equals(new Object()));
+    }
+    
+    @Test
+    public void testNotEqualsNull() {
+        assertFalse(expr.equals(null));
+    }
+    
+    @Test
+    public void testHashCode() {
+        int hashCode = operator.hashCode() + operand.hashCode();
+        assertEquals(hashCode, expr.hashCode());
+    }
 
+}

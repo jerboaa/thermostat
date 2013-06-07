@@ -84,6 +84,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Categories;
 import com.redhat.thermostat.storage.core.Category;
@@ -92,15 +93,19 @@ import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Persist;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Query.SortDirection;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.model.BasePojo;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
+import com.redhat.thermostat.storage.query.Operator;
 import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
+import com.redhat.thermostat.web.common.ExpressionSerializer;
+import com.redhat.thermostat.web.common.OperatorSerializer;
 import com.redhat.thermostat.web.common.StorageWrapper;
 import com.redhat.thermostat.web.common.WebInsert;
 import com.redhat.thermostat.web.common.WebQuery;
@@ -298,10 +303,16 @@ public class WebStorageEndpointTest {
         Map<Category,Integer> categoryIdMap = new HashMap<>();
         categoryIdMap.put(category, categoryId);
         WebQuery query = new WebQuery(categoryId);
-        query.where(key1, Criteria.EQUALS, "fluff");
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.equalTo(key1, "fluff");
+        query.where(expr);
         query.sort(key1, SortDirection.DESCENDING);
         query.limit(42);
-        Gson gson = new Gson();
+        Gson gson = new GsonBuilder()
+                .registerTypeHierarchyAdapter(Expression.class,
+                        new ExpressionSerializer())
+                .registerTypeHierarchyAdapter(Operator.class,
+                        new OperatorSerializer()).create();
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
         String body = "query=" + URLEncoder.encode(gson.toJson(query), "UTF-8");
         out.write(body + "\n");
@@ -317,7 +328,7 @@ public class WebStorageEndpointTest {
 
         assertEquals("application/json; charset=UTF-8", conn.getContentType());
 
-        verify(mockQuery).where(key1, Criteria.EQUALS, "fluff");
+        verify(mockQuery).where(eq(expr));
         verify(mockQuery).sort(key1, SortDirection.DESCENDING);
         verify(mockQuery).limit(42);
         verify(mockQuery).execute();

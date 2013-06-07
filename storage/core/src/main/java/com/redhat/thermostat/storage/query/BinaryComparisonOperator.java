@@ -34,52 +34,22 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.common;
+package com.redhat.thermostat.storage.query;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Query.Criteria;
-import com.redhat.thermostat.storage.core.Remove;
-
-public class WebRemove implements Remove {
-
-    private transient Map<Category<?>, Integer> categoryIds;
-    private int categoryId;
-    private List<Qualifier<?>> qualifiers;
-
-    // NOTE: This is needed for de-serialization!
-    public WebRemove() {
-        this(null);
-    }
-
-    public WebRemove(Map<Category<?>, Integer> categoryIds) {
-        qualifiers = new ArrayList<>();
-        this.categoryIds = categoryIds;
-    }
-
-    @Override
-    public WebRemove from(Category category) {
-        categoryId = categoryIds.get(category);
-        return this;
-    }
-
-    @Override
-    public <T> WebRemove where(Key<T> key, T value) {
-        qualifiers.add(new Qualifier<T>(key, Criteria.EQUALS, value));
-        return this;
-    }
-
-    public int getCategoryId() {
-        return categoryId;
-    }
-
-    public List<Qualifier<?>> getQualifiers() {
-        return qualifiers;
-    }
-
+/**
+ * Operators to be used with {@link BinaryComparisonExpression}
+ */
+public enum BinaryComparisonOperator implements BinaryOperator {
+    /** Equality comparison */
+    EQUALS,
+    /** Inequality comparison */
+    NOT_EQUAL_TO,
+    /** Greater than comparison */
+    GREATER_THAN,
+    /** Greater than or equal comparison */
+    GREATER_THAN_OR_EQUAL_TO,
+    /** Less than comparison */
+    LESS_THAN,
+    /** Less than or equal comparison */
+    LESS_THAN_OR_EQUAL_TO,
 }
-

@@ -39,14 +39,13 @@ package com.redhat.thermostat.vm.jmx.common.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
-
-import javax.swing.SortOrder;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -56,10 +55,11 @@ import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Query.SortDirection;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.vm.jmx.common.JmxNotification;
 import com.redhat.thermostat.vm.jmx.common.JmxNotificationStatus;
 
@@ -117,8 +117,10 @@ public class JmxNotificationDAOImplTest {
 
         JmxNotificationStatus result = dao.getLatestNotificationStatus(vm);
 
-        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID);
-        verify(query).where(Key.VM_ID, Criteria.EQUALS, VM_ID);
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.and(factory.equalTo(Key.AGENT_ID, AGENT_ID),
+                factory.equalTo(Key.VM_ID, VM_ID));
+        verify(query).where(expr);
         verify(query).sort(Key.TIMESTAMP, SortDirection.DESCENDING);
         
         assertTrue(result == data);
@@ -155,9 +157,12 @@ public class JmxNotificationDAOImplTest {
 
         List<JmxNotification> result = dao.getNotifications(vm, timeStamp);
 
-        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID);
-        verify(query).where(Key.VM_ID, Criteria.EQUALS, VM_ID);
-        verify(query).where(Key.TIMESTAMP, Criteria.GREATER_THAN, timeStamp);
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.and(
+                factory.equalTo(Key.AGENT_ID, AGENT_ID),
+                factory.and(factory.equalTo(Key.VM_ID, VM_ID),
+                        factory.greaterThan(Key.TIMESTAMP, timeStamp)));
+        verify(query).where(eq(expr));
 
         assertEquals(1, result.size());
         assertSame(data, result.get(0));
