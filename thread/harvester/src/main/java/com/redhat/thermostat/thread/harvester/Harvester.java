@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.thread.harvester;
 
-import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
@@ -50,12 +49,14 @@ import java.util.logging.Logger;
 
 import javax.management.MalformedObjectNameException;
 
+import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.thread.dao.ThreadDao;
-
 import com.redhat.thermostat.thread.model.ThreadInfoData;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
+import com.redhat.thermostat.thread.model.VmDeadLockData;
 import com.redhat.thermostat.utils.management.MXBeanConnection;
 import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 
@@ -67,18 +68,25 @@ class Harvester {
     private boolean isConnected;
     private ScheduledExecutorService threadPool;
     private ScheduledFuture<?> harvester;
+    private Clock clock;
     
     private MXBeanConnectionPool connectionPool;
     private MXBeanConnection connection;
     private ThreadMXBean collectorBean;
     private ThreadDao threadDao;
     private int vmId;
+
     
     Harvester(ThreadDao threadDao, ScheduledExecutorService threadPool, String vmId, MXBeanConnectionPool connectionPool) {
+        this(threadDao, threadPool, new SystemClock(), vmId, connectionPool);
+    }
+
+    Harvester(ThreadDao threadDao, ScheduledExecutorService threadPool, Clock clock, String vmId, MXBeanConnectionPool connectionPool) {
         this.threadDao = threadDao;
         this.vmId = Integer.valueOf(vmId);
         this.threadPool = threadPool;
         this.connectionPool = connectionPool;
+        this.clock = clock;
     }
     
     synchronized boolean start() {
@@ -86,6 +94,16 @@ class Harvester {
             return true;
         }
 
+        if (!connect()) {
+            return false;
+        }
+
+        harvester = threadPool.scheduleAtFixedRate(new HarvesterAction(), 0, 250, TimeUnit.MILLISECONDS);
+
+        return isConnected;
+    }
+
+    private boolean connect() {
         try {
             connection = connectionPool.acquire(vmId);
         } catch (Exception ex) {
@@ -94,9 +112,7 @@ class Harvester {
         }
         
         isConnected = true;
-        harvester = threadPool.scheduleAtFixedRate(new HarvesterAction(), 0, 250, TimeUnit.MILLISECONDS);
-        
-        return isConnected;
+        return true;
     }
     
     boolean isConnected() {
@@ -110,6 +126,10 @@ class Harvester {
         
         harvester.cancel(false);
         
+        return disconnect();
+    }
+
+    private boolean disconnect() {
         if (collectorBean != null) {
             collectorBean = null;
         }
@@ -144,7 +164,7 @@ class Harvester {
     
     synchronized void harvestData() {
       try {
-          long timestamp = System.currentTimeMillis();
+          long timestamp = clock.getRealTimeMillis();
           
           ThreadSummary summary = new ThreadSummary();
           
@@ -256,6 +276,51 @@ class Harvester {
         }
 
         return success;
+    }
+
+    public boolean saveDeadLockData() {
+        boolean disconnectAtEnd = false;
+        if (!isConnected) {
+            disconnectAtEnd = true;
+
+            connect();
+        }
+
+        try {
+            if (collectorBean == null) {
+                collectorBean = getDataCollectorBean(connection);
+            }
+
+            String description = null;
+            long timeStamp = clock.getRealTimeMillis();
+            long[] ids = collectorBean.findDeadlockedThreads();
+            if (ids == null) {
+                description = VmDeadLockData.NO_DEADLOCK;
+            } else {
+                ThreadInfo[] infos = collectorBean.getThreadInfo(ids, true, true);
+                StringBuilder descriptionBuilder = new StringBuilder();
+                for (ThreadInfo info : infos) {
+                    descriptionBuilder.append(info.toString()).append("\n");
+                }
+                description = descriptionBuilder.toString();
+            }
+
+            VmDeadLockData data = new VmDeadLockData();
+            data.setTimeStamp(timeStamp);
+            data.setVmId(vmId);
+            data.setDeadLockDescription(description);
+
+            threadDao.saveDeadLockStatus(data);
+
+        } catch (MalformedObjectNameException e) {
+            e.printStackTrace();
+        }
+
+        if (disconnectAtEnd) {
+            disconnect();
+        }
+
+        return true;
     }
 }
 

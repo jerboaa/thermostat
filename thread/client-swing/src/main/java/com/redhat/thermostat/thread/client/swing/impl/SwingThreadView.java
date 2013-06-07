@@ -61,6 +61,7 @@ import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
 import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
 import com.redhat.thermostat.thread.client.common.view.ThreadView;
 import com.redhat.thermostat.thread.client.common.view.VMThreadCapabilitiesView;
+import com.redhat.thermostat.thread.client.common.view.VmDeadLockView;
 
 public class SwingThreadView extends ThreadView implements SwingComponent {
     
@@ -71,6 +72,7 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
     private SwingThreadCountView threadCountView;
     private SwingThreadTableView threadTableView;
     private SwingVMThreadCapabilitiesView vmCapsView;
+    private SwingVmDeadLockView vmDeadLockView;
     private SwingThreadTimelineView threadTimelineView;
     private SwingThreadDetailsView threadDetailsView;
 
@@ -171,6 +173,9 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
         vmCapsView = new SwingVMThreadCapabilitiesView();
         bottomPane.addTab(t.localize(LocaleResources.VM_CAPABILITIES).getContents(), vmCapsView.getUiComponent());
 
+        vmDeadLockView = new SwingVmDeadLockView();
+        bottomPane.addTab(t.localize(LocaleResources.VM_DEADLOCK).getContents(), vmDeadLockView.getUiComponent());
+
         panel.getSplitPane().setBottomComponent(bottomPane);
     }
     
@@ -210,6 +215,11 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
     @Override
     public VMThreadCapabilitiesView createVMThreadCapabilitiesView() {
         return vmCapsView;
+    }
+
+    @Override
+    public VmDeadLockView createDeadLockView() {
+        return vmDeadLockView;
     }
     
     @Override

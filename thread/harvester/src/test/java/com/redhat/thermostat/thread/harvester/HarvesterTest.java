@@ -60,10 +60,12 @@ import javax.management.MalformedObjectNameException;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.ThreadInfoData;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
+import com.redhat.thermostat.thread.model.VmDeadLockData;
 import com.redhat.thermostat.utils.management.MXBeanConnection;
 import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 
@@ -363,5 +365,47 @@ public class HarvesterTest {
         assertEquals(ThreadDao.CPU_TIME, features[0]);
         assertEquals(ThreadDao.CONTENTION_MONITOR, features[1]);
     }    
+
+    @Test
+    public void testCheckForDeadLocks() {
+        MXBeanConnectionPool pool = mock(MXBeanConnectionPool.class);
+
+        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
+
+        ArgumentCaptor<VmDeadLockData> deadLockCapture = ArgumentCaptor.forClass(VmDeadLockData.class);
+
+        ThreadDao dao = mock(ThreadDao.class);
+
+        ThreadInfo[] threadInfo = new ThreadInfo[0];
+
+        final ThreadMXBean collectorBean = mock(ThreadMXBean.class);
+        when(collectorBean.findDeadlockedThreads()).thenReturn(new long[] { -1, 0, 1 });
+        when(collectorBean.getThreadInfo(new long[] { -1, 0, 1 }, true, true)).thenReturn(threadInfo);
+
+        Clock clock = mock(Clock.class);
+        when(clock.getRealTimeMillis()).thenReturn(101010l);
+
+        final boolean[] getDataCollectorBeanCalled = new boolean[1];
+
+        Harvester harvester = new Harvester(dao, executor, clock, "42", pool) {
+            @Override
+            ThreadMXBean getDataCollectorBean(MXBeanConnection connection)
+                    throws MalformedObjectNameException {
+                getDataCollectorBeanCalled[0] = true;
+                return collectorBean;
+            }
+        };
+
+        harvester.saveDeadLockData();
+        assertTrue(getDataCollectorBeanCalled[0]);
+
+        verify(dao).saveDeadLockStatus(deadLockCapture.capture());
+
+        VmDeadLockData data = deadLockCapture.getValue();
+
+        assertEquals(42, data.getVmId());
+        assertEquals(101010l, data.getTimeStamp());
+        assertEquals("", data.getDeadLockDescription());
+    }
 }
 

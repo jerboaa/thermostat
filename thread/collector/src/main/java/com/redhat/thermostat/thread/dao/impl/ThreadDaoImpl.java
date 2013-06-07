@@ -49,6 +49,7 @@ import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.thread.dao.ThreadDao;
+import com.redhat.thermostat.thread.model.VmDeadLockData;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
 import com.redhat.thermostat.thread.model.ThreadInfoData;
 import com.redhat.thermostat.thread.model.ThreadSummary;
@@ -56,13 +57,14 @@ import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 
 public class ThreadDaoImpl implements ThreadDao {
 
-    private Storage storage; 
+    private Storage storage;
     public ThreadDaoImpl(Storage storage) {
         this.storage = storage;
         storage.registerCategory(THREAD_CAPABILITIES);
         storage.registerCategory(THREAD_SUMMARY);
         storage.registerCategory(THREAD_HARVESTING_STATUS);
         storage.registerCategory(THREAD_INFO);
+        storage.registerCategory(DEADLOCK_INFO);
     }
 
     @Override
@@ -168,6 +170,28 @@ public class ThreadDaoImpl implements ThreadDao {
         }
         
         return result;
+    }
+
+    @Override
+    public VmDeadLockData loadLatestDeadLockStatus(VmRef ref) {
+        Query<VmDeadLockData> query = prepareQuery(DEADLOCK_INFO, ref);
+        query.sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
+        query.limit(1);
+
+        Cursor<VmDeadLockData> cursor = query.execute();
+        if (cursor.hasNext()) {
+            VmDeadLockData data = cursor.next();
+            return data;
+        }
+
+        return null;
+    }
+
+    @Override
+    public void saveDeadLockStatus(VmDeadLockData deadLockInfo) {
+        Put add = storage.createAdd(DEADLOCK_INFO);
+        add.setPojo(deadLockInfo);
+        add.apply();
     }
     
     private <T extends Pojo> Query<T> prepareQuery(Category<T> category, VmRef vm) {

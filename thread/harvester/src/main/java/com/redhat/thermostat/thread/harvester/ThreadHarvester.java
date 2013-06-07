@@ -114,6 +114,10 @@ public class ThreadHarvester implements RequestReceiver {
             result = stopHarvester(vmId);
             break;
         }
+        case FIND_DEADLOCKS:
+            String vmId = request.getParameter(HarvesterCommand.VM_ID.name());
+            result = findAndSaveDeadLockInformation(vmId);
+            break;
         default:
             result = false;
             break;
@@ -213,5 +217,10 @@ public class ThreadHarvester implements RequestReceiver {
         return dao != null;
     }
 
+    public boolean findAndSaveDeadLockInformation(String vmId) {
+        Harvester harvester = getHarvester(vmId);
+        boolean result = harvester.saveDeadLockData();
+        return result;
+    }
 }
 

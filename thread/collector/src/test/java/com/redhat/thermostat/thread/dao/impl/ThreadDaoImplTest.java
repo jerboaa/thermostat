@@ -64,6 +64,7 @@ import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
+import com.redhat.thermostat.thread.model.VmDeadLockData;
 
 public class ThreadDaoImplTest {
 
@@ -163,6 +164,55 @@ public class ThreadDaoImplTest {
         verify(storage).createReplace(ThreadDao.THREAD_CAPABILITIES);
         verify(replace).setPojo(caps);
         verify(replace).apply();
+    }
+
+    @Test
+    public void testLoadLatestDeadLockStatus() {
+        VmRef vm = mock(VmRef.class);
+        when(vm.getId()).thenReturn(42);
+        when(vm.getIdString()).thenReturn("42");
+
+        HostRef agent = mock(HostRef.class);
+        when(agent.getAgentId()).thenReturn("0xcafe");
+        when(vm.getAgent()).thenReturn(agent);
+
+        Storage storage = mock(Storage.class);
+        Query<VmDeadLockData> query = mock(Query.class);
+        Cursor<VmDeadLockData> cursor = mock(Cursor.class);
+        VmDeadLockData data = mock(VmDeadLockData.class);
+
+        when(cursor.hasNext()).thenReturn(true);
+        when(cursor.next()).thenReturn(data);
+        when(query.execute()).thenReturn(cursor);
+
+        when(storage.createQuery(ThreadDaoImpl.DEADLOCK_INFO)).thenReturn(query);
+
+        ThreadDaoImpl dao = new ThreadDaoImpl(storage);
+        VmDeadLockData result = dao.loadLatestDeadLockStatus(vm);
+
+        assertSame(data, result);
+
+        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, agent.getAgentId());
+        verify(query).where(Key.VM_ID, Criteria.EQUALS, vm.getId());
+        verify(query).sort(Key.TIMESTAMP, SortDirection.DESCENDING);
+        verify(query).execute();
+        verify(query).limit(1);
+        verifyNoMoreInteractions(query);
+    }
+
+    @Test
+    public void testSaveDeadLockStatus() {
+        Storage storage = mock(Storage.class);
+        Add add = mock(Add.class);
+        when(storage.createAdd(ThreadDaoImpl.DEADLOCK_INFO)).thenReturn(add);
+
+        VmDeadLockData status = mock(VmDeadLockData.class);
+
+        ThreadDaoImpl dao = new ThreadDaoImpl(storage);
+        dao.saveDeadLockStatus(status);
+
+        verify(add).setPojo(status);
+        verify(add).apply();
     }
 
     @Test

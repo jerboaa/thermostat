@@ -83,5 +83,8 @@ public abstract class ThreadView extends BasicView implements UIComponent {
     }
 
     public abstract void displayThreadDetails(ThreadTableBean thread);
+
+    public abstract VmDeadLockView createDeadLockView();
+
 }
 

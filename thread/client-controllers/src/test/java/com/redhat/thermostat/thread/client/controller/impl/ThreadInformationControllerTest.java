@@ -69,6 +69,7 @@ import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
 import com.redhat.thermostat.thread.client.common.view.ThreadView;
 import com.redhat.thermostat.thread.client.common.view.VMThreadCapabilitiesView;
 import com.redhat.thermostat.thread.client.common.view.ThreadTableView.ThreadSelectionAction;
+import com.redhat.thermostat.thread.client.common.view.VmDeadLockView;
 
 public class ThreadInformationControllerTest {
 
@@ -85,6 +86,7 @@ public class ThreadInformationControllerTest {
 
     private ThreadTableView threadTableView;
     private VMThreadCapabilitiesView threadCapsView;
+    private VmDeadLockView deadLockView;
     private ThreadTimelineView threadTimelineView;
     private ThreadCountView threadCountView;
     
@@ -101,6 +103,7 @@ public class ThreadInformationControllerTest {
 
     private void setUpView() {
         threadCapsView = mock(VMThreadCapabilitiesView.class);
+        deadLockView = mock(VmDeadLockView.class);
         threadTableView = mock(ThreadTableView.class);
         threadTimelineView = mock(ThreadTimelineView.class);
         threadCountView = mock(ThreadCountView.class);
@@ -110,6 +113,7 @@ public class ThreadInformationControllerTest {
         when(viewFactory.createView()).thenReturn(view);
         
         when(view.createVMThreadCapabilitiesView()).thenReturn(threadCapsView);
+        when(view.createDeadLockView()).thenReturn(deadLockView);
         when(view.createThreadTableView()).thenReturn(threadTableView);
         when(view.createThreadTimelineView()).thenReturn(threadTimelineView);
         when(view.createThreadCountView()).thenReturn(threadCountView);
@@ -158,6 +162,7 @@ public class ThreadInformationControllerTest {
         
         verify(view).createThreadTableView();
         verify(view).createVMThreadCapabilitiesView();
+        verify(view).createDeadLockView();
         verify(view).createThreadTimelineView();
         verify(view).createThreadCountView();
     }

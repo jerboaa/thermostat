@@ -34,24 +34,32 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.controller.impl;
+package com.redhat.thermostat.thread.client.common.view;
 
-import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ActionNotifier;
 
-public enum LocaleResources {
+public abstract class VmDeadLockView extends BasicView {
 
-    CONTROLLER_NAME,
-
-    WARNING_CANNOT_DISABLE,
-    WARNING_CANNOT_ENABLE,
-
-    NO_DEADLOCK_DETECTED,
-    ;
-
-    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.thread.client.controller.impl.strings";
-
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+    public static enum VmDeadLockViewAction {
+        CHECK_FOR_DEADLOCK,
+        ;
     }
 
+    protected final ActionNotifier<VmDeadLockViewAction> deadLockNotifier;
+
+    public VmDeadLockView() {
+        deadLockNotifier = new ActionNotifier<>(this);
+    }
+
+    public void addVmDeadLockViewActionListener(ActionListener<VmDeadLockViewAction> listener) {
+        deadLockNotifier.addActionListener(listener);
+    }
+
+    public void removeVmDeadLockViewActionListener(ActionListener<VmDeadLockViewAction> listener) {
+        deadLockNotifier.removeActionListener(listener);
+    }
+
+    public abstract void setDeadLockInformation(String info);
 }

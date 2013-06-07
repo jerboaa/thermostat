@@ -56,6 +56,7 @@ public enum LocaleResources {
     THREAD_MONITOR_SWITCH,
     
     VM_CAPABILITIES,
+    VM_DEADLOCK,
     TABLE,
     DETAILS,
     TIMELINE,
@@ -68,7 +69,10 @@ public enum LocaleResources {
     THREAD_DUMP,
     
     MISSING_INFO,
-    THREAD_DETAILS_EMTPY;
+    THREAD_DETAILS_EMTPY,
+
+    CHECK_FOR_DEADLOCKS,
+    ;
 
     public static final String RESOURCE_BUNDLE =
             "com.redhat.thermostat.thread.client.common.locale.strings";

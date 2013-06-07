@@ -61,6 +61,7 @@ import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
 import com.redhat.thermostat.thread.model.ThreadInfoData;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
+import com.redhat.thermostat.thread.model.VmDeadLockData;
 
 public class ThreadMXBeanCollector implements ThreadCollector {
     
@@ -107,31 +108,8 @@ public class ThreadMXBeanCollector implements ThreadCollector {
         harvester.setParameter(HarvesterCommand.class.getName(), HarvesterCommand.START.name());
         harvester.setParameter(HarvesterCommand.VM_ID.name(), ref.getIdString());
         
-        final CountDownLatch latch = new CountDownLatch(1);
-        final boolean[] result = new boolean[1];
-        
-        harvester.addListener(new RequestResponseListener() {
-            @Override
-            public void fireComplete(Request request, Response response) {
-                switch (response.getType()) {
-                case OK:
-                    result[0] = true;
-                    break;
-                default:
-                    break;
-                }
-                latch.countDown();
-            }
-        });
-        
-        try {
-            enqueueRequest(harvester);
-            latch.await();
-        } catch (CommandChannelException e) {
-            logger.log(Level.WARNING, "Failed to enqueue request", e);
-        } catch (InterruptedException ignore) {}
-        
-        return result[0];
+        return postAndWait(harvester);
+
     }
 
     @Override
@@ -142,32 +120,10 @@ public class ThreadMXBeanCollector implements ThreadCollector {
         harvester.setParameter(HarvesterCommand.class.getName(), HarvesterCommand.STOP.name());
         harvester.setParameter(HarvesterCommand.VM_ID.name(), ref.getIdString());
 
-        final CountDownLatch latch = new CountDownLatch(1);
-        final boolean[] result = new boolean[1];
-
-        harvester.addListener(new RequestResponseListener() {
-            @Override
-            public void fireComplete(Request request, Response response) {
-                switch (response.getType()) {
-                case OK:
-                    result[0] = true;
-                    break;
-                default:
-                    break;
-                }
-                latch.countDown();
-            }
-        });
-        
-        try {
-            enqueueRequest(harvester);
-            latch.await();
-        } catch (CommandChannelException e) {
-            logger.log(Level.WARNING, "Failed to enqueue request", e);
-        } catch (InterruptedException ignore) {}
-        return result[0];
+        boolean result = postAndWait(harvester);
+        return result;
     }
-    
+
     @Override
     public boolean isHarvesterCollecting() {
         ThreadHarvestingStatus status = threadDao.getLatestHarvestingStatus(ref);
@@ -212,6 +168,48 @@ public class ThreadMXBeanCollector implements ThreadCollector {
     public VMThreadCapabilities getVMThreadCapabilities() {
         VMThreadCapabilities caps = threadDao.loadCapabilities(ref);
         return caps;
+    }
+
+    @Override
+    public VmDeadLockData getLatestDeadLockData() {
+        return threadDao.loadLatestDeadLockStatus(ref);
+    }
+
+    @Override
+    public void requestDeadLockCheck() {
+        Request harvester = createRequest();
+        harvester.setParameter(Request.ACTION, CMD_CHANNEL_ACTION_NAME);
+        harvester.setParameter(HarvesterCommand.class.getName(), HarvesterCommand.FIND_DEADLOCKS.name());
+        harvester.setParameter(HarvesterCommand.VM_ID.name(), ref.getIdString());
+
+        postAndWait(harvester);
+    }
+
+    private boolean postAndWait(Request harvester) {
+        final CountDownLatch latch = new CountDownLatch(1);
+        final boolean[] result = new boolean[1];
+
+        harvester.addListener(new RequestResponseListener() {
+            @Override
+            public void fireComplete(Request request, Response response) {
+                switch (response.getType()) {
+                case OK:
+                    result[0] = true;
+                    break;
+                default:
+                    break;
+                }
+                latch.countDown();
+            }
+        });
+
+        try {
+            enqueueRequest(harvester);
+            latch.await();
+        } catch (CommandChannelException e) {
+            logger.log(Level.WARNING, "Failed to enqueue request", e);
+        } catch (InterruptedException ignore) {}
+        return result[0];
     }
     
     private void enqueueRequest(Request req) throws CommandChannelException {

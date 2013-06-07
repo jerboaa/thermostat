@@ -34,24 +34,52 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.controller.impl;
+package com.redhat.thermostat.thread.model;
 
-import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.storage.core.Entity;
+import com.redhat.thermostat.storage.core.Persist;
+import com.redhat.thermostat.storage.model.BasePojo;
+import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
-public enum LocaleResources {
+@Entity
+public class VmDeadLockData extends BasePojo implements TimeStampedPojo {
 
-    CONTROLLER_NAME,
+    /** Used as the description when no deadlock could be detected */
+    public static final String NO_DEADLOCK = "no-deadlocks";
 
-    WARNING_CANNOT_DISABLE,
-    WARNING_CANNOT_ENABLE,
+    private long timeStamp;
+    private int vmId;
+    private String description;
 
-    NO_DEADLOCK_DETECTED,
-    ;
+    @Persist
+    @Override
+    public long getTimeStamp() {
+        return timeStamp;
+    }
 
-    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.thread.client.controller.impl.strings";
+    @Persist
+    public void setTimeStamp(long timeStamp) {
+        this.timeStamp = timeStamp;
+    }
 
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+    @Persist
+    public void setVmId(int vmId) {
+        this.vmId = vmId;
+    }
+
+    @Persist
+    public int getVmId() {
+        return vmId;
+    }
+
+    @Persist
+    public String getDeadLockDescription() {
+        return description;
+    }
+
+    @Persist
+    public void setDeadLockDescription(String description) {
+        this.description = description;
     }
 
 }

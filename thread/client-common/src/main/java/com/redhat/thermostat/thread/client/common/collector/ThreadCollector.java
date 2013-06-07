@@ -43,6 +43,7 @@ import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.ThreadInfoData;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
+import com.redhat.thermostat.thread.model.VmDeadLockData;
 
 public interface ThreadCollector {
     
@@ -71,5 +72,14 @@ public interface ThreadCollector {
      * descending order their by {@link ThreadInfoData#getTimeStamp()}.
      */
     List<ThreadInfoData> getThreadInfo();
+
+    /**
+     * Check for deadlocks. {@link #getLatestDeadLockData} needs to be called to
+     * obtain the data
+     */
+    void requestDeadLockCheck();
+
+    /** Return the latest deadlock data */
+    VmDeadLockData getLatestDeadLockData();
 }
 

@@ -138,6 +138,46 @@ public class ThreadHarvesterTest {
     }
     
     @Test
+    public void testFindDeadLocks() {
+        ThreadDao dao = mock(ThreadDao.class);
+        Request request = mock(Request.class);
+
+        final boolean[] createHarvesterCalled = new boolean[1];
+        final Harvester harverster = mock(Harvester.class);
+        when(harverster.start()).thenReturn(true);
+
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+
+        when(request.getParameter(captor.capture())).
+                thenReturn(HarvesterCommand.FIND_DEADLOCKS.name()).
+                thenReturn("42").
+                thenReturn("0xcafe");
+
+        ThreadHarvester threadHarvester = new ThreadHarvester(executor, pool) {
+            @Override
+            Harvester createHarvester(String vmId) {
+
+                createHarvesterCalled[0] = true;
+                assertEquals("42", vmId);
+
+                return harverster;
+            }
+        };
+        threadHarvester.setThreadDao(dao);
+        threadHarvester.receive(request);
+
+        List<String> values = captor.getAllValues();
+        assertEquals(2, values.size());
+
+        assertEquals(HarvesterCommand.class.getName(), values.get(0));
+        assertEquals(HarvesterCommand.VM_ID.name(), values.get(1));
+
+        assertTrue(createHarvesterCalled[0]);
+
+        verify(harverster).saveDeadLockData();
+    }
+
+    @Test
     public void testSaveVmCaps() {
         ThreadDao dao = mock(ThreadDao.class);
         

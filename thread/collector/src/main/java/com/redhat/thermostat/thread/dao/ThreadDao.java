@@ -42,6 +42,7 @@ import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.thread.model.VmDeadLockData;
 import com.redhat.thermostat.thread.model.ThreadInfoData;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
 import com.redhat.thermostat.thread.model.ThreadSummary;
@@ -118,6 +119,15 @@ public interface ThreadDao {
     
     void saveThreadInfo(ThreadInfoData info);
     List<ThreadInfoData> loadThreadInfo(VmRef ref, long since);
+
+    static final String DEADLOCK_DESCRIPTION = "description";
+    static final Key<String> DEADLOCK_DESCRIPTION_KEY = new Key<>(DEADLOCK_DESCRIPTION, false);
+    static final Category<VmDeadLockData> DEADLOCK_INFO = new Category<>("vm-deadlock-data", VmDeadLockData.class,
+            Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP,
+            DEADLOCK_DESCRIPTION_KEY);
+
+    void saveDeadLockStatus(VmDeadLockData deadLockInfo);
+    VmDeadLockData loadLatestDeadLockStatus(VmRef ref);
     
     Storage getStorage();
 }

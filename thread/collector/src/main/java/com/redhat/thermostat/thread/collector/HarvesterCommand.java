@@ -40,6 +40,7 @@ public enum HarvesterCommand {
 
     START,
     STOP,
+    FIND_DEADLOCKS,
     
     VM_ID;
 
