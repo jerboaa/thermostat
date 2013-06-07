@@ -43,6 +43,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.client.swing.components.ThermostatTabbedPane;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramView;
@@ -55,7 +56,7 @@ public class HeapDetailsSwing extends HeapDumpDetailsView implements SwingCompon
 
     private JPanel visiblePane;
 
-    private JTabbedPane tabPane = new JTabbedPane();
+    private JTabbedPane tabPane = new ThermostatTabbedPane();
 
     public HeapDetailsSwing() {
         visiblePane = new JPanel();

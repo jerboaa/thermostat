@@ -50,6 +50,7 @@ import javax.swing.SwingWorker;
 
 import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.client.swing.components.ThermostatTabbedPane;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
@@ -144,7 +145,7 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
     }
     
     private void setupTopPane() {
-        topPane = new JTabbedPane();
+        topPane = new ThermostatTabbedPane();
         topPane.setName("topTabbedPane");
         
         threadTimelineView = new SwingThreadTimelineView();
@@ -157,7 +158,7 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
     }
     
     private void setupBottomPane() {
-        bottomPane = new JTabbedPane();
+        bottomPane = new ThermostatTabbedPane();
         bottomPane.setName("bottomTabbedPane");
         
         threadTableView = new SwingThreadTableView();
