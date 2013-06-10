@@ -37,16 +37,24 @@
 
 package com.redhat.thermostat.storage.mongodb.internal;
 
-import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Remove;
+import com.redhat.thermostat.storage.query.Expression;
 
 class MongoRemove implements Remove {
 
     private Category category;
     private DBObject query;
+    private MongoExpressionParser parser;
+    
+    public MongoRemove() {
+        this(new MongoExpressionParser());
+    }
+    
+    MongoRemove(MongoExpressionParser parser) {
+        this.parser = parser;
+    }
 
     @Override
     public Remove from(Category category) {
@@ -62,11 +70,8 @@ class MongoRemove implements Remove {
     }
 
     @Override
-    public <T> Remove where(Key<T> key, T value) {
-        if (query == null) {
-            query = new BasicDBObject();
-        }
-        query.put(key.getName(), value);
+    public Remove where(Expression expr) {
+        query = parser.parse(expr);
         return this;
     }
 

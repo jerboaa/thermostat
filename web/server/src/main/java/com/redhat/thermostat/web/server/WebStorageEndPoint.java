@@ -75,7 +75,6 @@ import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
@@ -84,7 +83,6 @@ import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.storage.query.Operator;
 import com.redhat.thermostat.web.common.ExpressionSerializer;
 import com.redhat.thermostat.web.common.OperatorSerializer;
-import com.redhat.thermostat.web.common.Qualifier;
 import com.redhat.thermostat.web.common.StorageWrapper;
 import com.redhat.thermostat.web.common.ThermostatGSONConverter;
 import com.redhat.thermostat.web.common.WebInsert;
@@ -389,7 +387,6 @@ public class WebStorageEndPoint extends HttpServlet {
     }
 
     @WebStoragePathHandler( path = "remove-pojo" )
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     private void removePojo(HttpServletRequest req, HttpServletResponse resp) {
         if (! isAuthorized(req, resp, Roles.DELETE)) {
             return;
@@ -399,10 +396,9 @@ public class WebStorageEndPoint extends HttpServlet {
         WebRemove remove = gson.fromJson(removeParam, WebRemove.class);
         Remove targetRemove = storage.createRemove();
         targetRemove = targetRemove.from(getCategoryFromId(remove.getCategoryId()));
-        List<Qualifier<?>> qualifiers = remove.getQualifiers();
-        for (Qualifier qualifier : qualifiers) {
-            assert (qualifier.getCriteria() == Criteria.EQUALS);
-            targetRemove = targetRemove.where(qualifier.getKey(), qualifier.getValue());
+        Expression expr = remove.getWhereExpression();
+        if (expr != null) {
+            targetRemove.where(expr);
         }
         storage.removePojo(targetRemove);
         resp.setStatus(HttpServletResponse.SC_OK);
@@ -419,10 +415,9 @@ public class WebStorageEndPoint extends HttpServlet {
             String updateParam = req.getParameter("update");
             WebUpdate update = gson.fromJson(updateParam, WebUpdate.class);
             Update targetUpdate = storage.createUpdate(getCategoryFromId(update.getCategoryId()));
-            List<Qualifier<?>> qualifiers = update.getQualifiers();
-            for (Qualifier qualifier : qualifiers) {
-                assert (qualifier.getCriteria() == Criteria.EQUALS);
-                targetUpdate.where(qualifier.getKey(), qualifier.getValue());
+            Expression expr = update.getWhereExpression();
+            if (expr != null) {
+                targetUpdate.where(expr);
             }
             List<WebUpdate.UpdateValue> updates = update.getUpdates();
             if (updates != null) {

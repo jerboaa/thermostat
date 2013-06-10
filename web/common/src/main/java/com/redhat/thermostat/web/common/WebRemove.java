@@ -36,20 +36,17 @@
 
 package com.redhat.thermostat.web.common;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Remove;
+import com.redhat.thermostat.storage.query.Expression;
 
 public class WebRemove implements Remove {
 
     private transient Map<Category<?>, Integer> categoryIds;
     private int categoryId;
-    private List<Qualifier<?>> qualifiers;
+    private Expression whereExpression;
 
     // NOTE: This is needed for de-serialization!
     public WebRemove() {
@@ -57,7 +54,6 @@ public class WebRemove implements Remove {
     }
 
     public WebRemove(Map<Category<?>, Integer> categoryIds) {
-        qualifiers = new ArrayList<>();
         this.categoryIds = categoryIds;
     }
 
@@ -68,8 +64,8 @@ public class WebRemove implements Remove {
     }
 
     @Override
-    public <T> WebRemove where(Key<T> key, T value) {
-        qualifiers.add(new Qualifier<T>(key, Criteria.EQUALS, value));
+    public WebRemove where(Expression expr) {
+        whereExpression = expr;
         return this;
     }
 
@@ -77,9 +73,9 @@ public class WebRemove implements Remove {
         return categoryId;
     }
 
-    public List<Qualifier<?>> getQualifiers() {
-        return qualifiers;
+    public Expression getWhereExpression() {
+        return whereExpression;
     }
-
+    
 }
 

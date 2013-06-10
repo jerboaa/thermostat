@@ -56,17 +56,18 @@ import com.redhat.thermostat.storage.query.ExpressionFactory;
 public class BackendInfoDAOImpl implements BackendInfoDAO {
 
     private final Storage storage;
+    private final ExpressionFactory factory;
 
     public BackendInfoDAOImpl(Storage storage) {
         this.storage = storage;
         storage.registerCategory(CATEGORY);
+        factory = new ExpressionFactory();
     }
 
     @Override
     public List<BackendInformation> getBackendInformation(HostRef host) {
         // Sort by order value
         Query<BackendInformation> query = storage.createQuery(CATEGORY);
-        ExpressionFactory factory = new ExpressionFactory();
         Expression expr = factory.equalTo(Key.AGENT_ID, host.getAgentId());
         query.where(expr);
 
@@ -92,7 +93,8 @@ public class BackendInfoDAOImpl implements BackendInfoDAO {
 
     @Override
     public void removeBackendInformation(BackendInformation info) {
-        Remove remove = storage.createRemove().from(CATEGORY).where(BACKEND_NAME, info.getName());
+        Expression expr = factory.equalTo(BACKEND_NAME, info.getName());
+        Remove remove = storage.createRemove().from(CATEGORY).where(expr);
         storage.removePojo(remove);
     }
 

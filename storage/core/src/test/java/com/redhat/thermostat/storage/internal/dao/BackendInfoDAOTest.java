@@ -74,6 +74,7 @@ public class BackendInfoDAOTest {
 
     private BackendInformation backendInfo1;
     private BackendInformation backend1;
+    private ExpressionFactory factory;
 
     @Before
     public void setUp() {
@@ -94,6 +95,8 @@ public class BackendInfoDAOTest {
         backend1.setObserveNewJvm(true);
         backend1.setPids(new int[] { -1, 0, 1});
         backend1.setOrderValue(100);
+        
+        factory = new ExpressionFactory();
     }
 
     @Test
@@ -152,7 +155,6 @@ public class BackendInfoDAOTest {
         List<BackendInformation> result = dao.getBackendInformation(agentref);
 
         verify(storage).createQuery(BackendInfoDAO.CATEGORY);
-        ExpressionFactory factory = new ExpressionFactory();
         Expression expr = factory.equalTo(Key.AGENT_ID, AGENT_ID);
         verify(query).where(eq(expr));
         verify(query).execute();
@@ -173,7 +175,8 @@ public class BackendInfoDAOTest {
         verify(storage).removePojo(remove);
         InOrder inOrder = inOrder(remove);
         inOrder.verify(remove).from(BackendInfoDAO.CATEGORY);
-        inOrder.verify(remove).where(BackendInfoDAO.BACKEND_NAME, "backend-name");
+        Expression expr = factory.equalTo(BackendInfoDAO.BACKEND_NAME, "backend-name");
+        inOrder.verify(remove).where(eq(expr));
     }
 
 }

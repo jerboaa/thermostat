@@ -65,6 +65,7 @@ import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.DAOException;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class VmInfoDAOTest {
 
@@ -287,7 +288,8 @@ public class VmInfoDAOTest {
         dao.putVmStoppedTime(vmId, stopTime);
 
         verify(storage).createUpdate(VmInfoDAO.vmInfoCategory);
-        verify(mockUpdate).where(Key.VM_ID, 1);
+        ExpressionFactory factory = new ExpressionFactory();
+        verify(mockUpdate).where(factory.equalTo(Key.VM_ID, 1));
         verify(mockUpdate).set(VmInfoDAO.stopTimeKey, 3L);
         verify(mockUpdate).apply();
         verifyNoMoreInteractions(mockUpdate);

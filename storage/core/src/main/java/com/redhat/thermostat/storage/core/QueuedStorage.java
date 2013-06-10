@@ -44,6 +44,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.storage.query.Expression;
 
 public class QueuedStorage implements Storage {
 
@@ -75,8 +76,8 @@ public class QueuedStorage implements Storage {
         }
 
         @Override
-        public <T> void where(Key<T> key, T value) {
-            delegateUpdate.where(key,  value);
+        public void where(Expression expr) {
+            delegateUpdate.where(expr);
             
         }
 

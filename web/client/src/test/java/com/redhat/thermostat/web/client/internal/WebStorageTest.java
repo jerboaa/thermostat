@@ -99,7 +99,6 @@ import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.query.Expression;
@@ -109,7 +108,6 @@ import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
 import com.redhat.thermostat.web.common.ExpressionSerializer;
 import com.redhat.thermostat.web.common.OperatorSerializer;
-import com.redhat.thermostat.web.common.Qualifier;
 import com.redhat.thermostat.web.common.WebInsert;
 import com.redhat.thermostat.web.common.WebQuery;
 import com.redhat.thermostat.web.common.WebRemove;
@@ -134,6 +132,8 @@ public class WebStorageTest {
     private static Key<Integer> key2;
 
     private WebStorage storage;
+
+    private ExpressionFactory factory;
 
     @BeforeClass
     public static void setupCategory() {
@@ -174,6 +174,7 @@ public class WebStorageTest {
         method = null;
         responseStatus = HttpServletResponse.SC_OK;
         registerCategory();
+        factory = new ExpressionFactory();
     }
 
     private void startServer(int port) throws Exception {
@@ -321,22 +322,23 @@ public class WebStorageTest {
         remove = remove.from(category);
         assertEquals(42, remove.getCategoryId());
         assertNotNull(remove);
-        remove = remove.where(key1, "test");
+        Expression expr = factory.equalTo(key1, "test");
+        remove = remove.where(expr);
         assertNotNull(remove);
-        List<Qualifier<?>> qualifiers = remove.getQualifiers();
-        assertEquals(1, qualifiers.size());
-        Qualifier<?> qualifier = qualifiers.get(0);
-        assertEquals(key1, qualifier.getKey());
-        assertEquals(Criteria.EQUALS, qualifier.getCriteria());
-        assertEquals("test", qualifier.getValue());
+        assertEquals(expr, remove.getWhereExpression());
     }
 
     @Test
     public void testRemovePojo() throws UnsupportedEncodingException, IOException {
-        Remove remove = storage.createRemove().from(category).where(key1, "test");
+        Expression expr = factory.equalTo(key1, "test");
+        Remove remove = storage.createRemove().from(category).where(expr);
         storage.removePojo(remove);
 
-        Gson gson = new Gson();
+        Gson gson = new GsonBuilder()
+                .registerTypeHierarchyAdapter(Expression.class,
+                        new ExpressionSerializer())
+                .registerTypeHierarchyAdapter(Operator.class,
+                        new OperatorSerializer()).create();
         StringReader reader = new StringReader(requestBody);
         BufferedReader bufRead = new BufferedReader(reader);
         String line = URLDecoder.decode(bufRead.readLine(), "UTF-8");
@@ -345,12 +347,7 @@ public class WebStorageTest {
         WebRemove actualRemove = gson.fromJson(parts[1], WebRemove.class);
         
         assertEquals(42, actualRemove.getCategoryId());
-        List<Qualifier<?>> qualifiers = actualRemove.getQualifiers();
-        assertEquals(1, qualifiers.size());
-        Qualifier<?> qualifier = qualifiers.get(0);
-        assertEquals(key1, qualifier.getKey());
-        assertEquals(Criteria.EQUALS, qualifier.getCriteria());
-        assertEquals("test", qualifier.getValue());
+        assertEquals(expr, actualRemove.getWhereExpression());
     }
 
     @Test
@@ -359,13 +356,9 @@ public class WebStorageTest {
         assertNotNull(update);
         assertEquals(42, update.getCategoryId());
 
-        update.where(key1, "test");
-        List<Qualifier<?>> qualifiers = update.getQualifiers();
-        assertEquals(1, qualifiers.size());
-        Qualifier<?> qualifier = qualifiers.get(0);
-        assertEquals(key1, qualifier.getKey());
-        assertEquals(Criteria.EQUALS, qualifier.getCriteria());
-        assertEquals("test", qualifier.getValue());
+        Expression expr = factory.equalTo(key1, "test");
+        update.where(expr);
+        assertEquals(expr, update.getWhereExpression());
 
         update.set(key1, "fluff");
         List<WebUpdate.UpdateValue> updates = update.getUpdates();
@@ -379,12 +372,17 @@ public class WebStorageTest {
     public void testUpdate() throws UnsupportedEncodingException, IOException, JsonSyntaxException, ClassNotFoundException {
 
         Update update = storage.createUpdate(category);
-        update.where(key1, "test");
+        Expression expr = factory.equalTo(key1, "test");
+        update.where(expr);
         update.set(key1, "fluff");
         update.set(key2, 42);
         update.apply();
 
-        Gson gson = new Gson();
+        Gson gson = new GsonBuilder()
+                .registerTypeHierarchyAdapter(Expression.class,
+                        new ExpressionSerializer())
+                .registerTypeHierarchyAdapter(Operator.class,
+                        new OperatorSerializer()).create();
         StringReader reader = new StringReader(requestBody);
         BufferedReader bufRead = new BufferedReader(reader);
         String line = URLDecoder.decode(bufRead.readLine(), "UTF-8");
@@ -408,12 +406,7 @@ public class WebStorageTest {
         assertEquals("java.lang.Integer", update2.getValueClass());
         assertNull(update2.getValue());
 
-        List<Qualifier<?>> qualifiers = receivedUpdate.getQualifiers();
-        assertEquals(1, qualifiers.size());
-        Qualifier<?> qualifier = qualifiers.get(0);
-        assertEquals(key1, qualifier.getKey());
-        assertEquals(Criteria.EQUALS, qualifier.getCriteria());
-        assertEquals("test", qualifier.getValue());
+        assertEquals(expr, receivedUpdate.getWhereExpression());
 
         parts = params[1].split("=");
         assertEquals(2, parts.length);

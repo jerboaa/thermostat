@@ -40,7 +40,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Query.Criteria;
+import com.redhat.thermostat.storage.query.Expression;
 
 public class WebUpdate {
 
@@ -88,16 +88,15 @@ public class WebUpdate {
     }
 
     private int categoryId;
-    private List<Qualifier<?>> qualifiers;
+    private Expression whereExpression;
     private List<UpdateValue> updateValues;
 
     public WebUpdate() {
-        qualifiers = new ArrayList<>();
         updateValues = new ArrayList<>();
     }
 
-    public <T> void where(Key<T> key, T value) {
-        qualifiers.add(new Qualifier<T>(key, Criteria.EQUALS, value));
+    public void where(Expression expr) {
+        whereExpression = expr;
     }
 
     public <T> void set(Key<T> key, T value) {
@@ -112,10 +111,10 @@ public class WebUpdate {
         this.categoryId = categoryId;
     }
 
-    public List<Qualifier<?>> getQualifiers() {
-        return qualifiers;
+    public Expression getWhereExpression() {
+        return whereExpression;
     }
-
+    
     public List<WebUpdate.UpdateValue> getUpdates() {
         return updateValues;
     }

@@ -161,6 +161,7 @@ public class MongoStorageTest {
     private DB db;
     private DBCollection testCollection, emptyTestCollection, mockedCollection;
     private DBCursor cursor;
+    private ExpressionFactory factory;
 
     private MongoStorage makeStorage() {
         MongoStorage storage = new MongoStorage(conf);
@@ -200,6 +201,8 @@ public class MongoStorageTest {
         when(emptyTestCollection.getCount()).thenReturn(0L);
         when(db.collectionExists(anyString())).thenReturn(false);
         when(db.createCollection(anyString(), any(DBObject.class))).thenReturn(testCollection);
+        
+        factory = new ExpressionFactory();
     }
 
     @After
@@ -394,7 +397,8 @@ public class MongoStorageTest {
     public void verifySimpleUpdate() {
         MongoStorage storage = makeStorage();
         Update update = storage.createUpdate(testCategory);
-        update.where(Key.AGENT_ID, "test1");
+        Expression expr = factory.equalTo(Key.AGENT_ID, "test1");
+        update.where(expr);
         update.set(key2, "test2");
         update.apply();
 
@@ -419,7 +423,8 @@ public class MongoStorageTest {
     public void verifyMultiFieldUpdate() {
         MongoStorage storage = makeStorage();
         Update update = storage.createUpdate(testCategory);
-        update.where(Key.AGENT_ID, "test1");
+        Expression expr = factory.equalTo(Key.AGENT_ID, "test1");
+        update.where(expr);
         update.set(key2, "test2");
         update.set(key3, "test3");
         update.apply();

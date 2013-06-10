@@ -57,10 +57,12 @@ import com.redhat.thermostat.storage.query.ExpressionFactory;
 public class VmInfoDAOImpl implements VmInfoDAO {
 
     private final Storage storage;
+    private final ExpressionFactory factory;
 
     public VmInfoDAOImpl(Storage storage) {
         this.storage = storage;
         storage.registerCategory(vmInfoCategory);
+        factory = new ExpressionFactory();
     }
 
     @Override
@@ -90,7 +92,6 @@ public class VmInfoDAOImpl implements VmInfoDAO {
 
     private Query<VmInfo> buildQuery(HostRef host) {
         Query<VmInfo> query = storage.createQuery(vmInfoCategory);
-        ExpressionFactory factory = new ExpressionFactory();
         Expression expr = factory.equalTo(Key.AGENT_ID, host.getAgentId());
         query.where(expr);
         return query;
@@ -130,7 +131,8 @@ public class VmInfoDAOImpl implements VmInfoDAO {
     @Override
     public void putVmStoppedTime(int vmId, long timestamp) {
         Update update = storage.createUpdate(vmInfoCategory);
-        update.where(Key.VM_ID, vmId);
+        Expression expr = factory.equalTo(Key.VM_ID, vmId);
+        update.where(expr);
         update.set(VmInfoDAO.stopTimeKey, timestamp);
         update.apply();
     }

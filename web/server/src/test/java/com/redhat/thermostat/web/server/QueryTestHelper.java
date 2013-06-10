@@ -42,16 +42,15 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Remove;
+import com.redhat.thermostat.storage.query.Expression;
 
 public class QueryTestHelper {
 
-    @SuppressWarnings("unchecked")
     public static Remove createMockRemove() {
         Remove mockRemove = mock(Remove.class);
         when(mockRemove.from(any(Category.class))).thenReturn(mockRemove);
-        when(mockRemove.where(any(Key.class), any())).thenReturn(mockRemove);
+        when(mockRemove.where(any(Expression.class))).thenReturn(mockRemove);
         return mockRemove;
     }
 

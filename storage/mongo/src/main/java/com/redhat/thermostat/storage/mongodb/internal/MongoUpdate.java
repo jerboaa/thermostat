@@ -42,6 +42,7 @@ import com.mongodb.DBObject;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Update;
+import com.redhat.thermostat.storage.query.Expression;
 
 class MongoUpdate implements Update {
 
@@ -51,10 +52,16 @@ class MongoUpdate implements Update {
     private DBObject query;
     private DBObject values;
     private Category category;
+    private MongoExpressionParser parser;
 
     public MongoUpdate(MongoStorage storage, Category category) {
+        this(storage, category, new MongoExpressionParser());
+    }
+    
+    MongoUpdate(MongoStorage storage, Category category, MongoExpressionParser parser) {
         this.storage = storage;
         this.category = category;
+        this.parser = parser;
     }
 
     Category getCategory() {
@@ -62,11 +69,8 @@ class MongoUpdate implements Update {
     }
 
     @Override
-    public <T> void where(Key<T> key, T value) {
-        if (query == null) {
-            query = new BasicDBObject();
-        }
-        query.put(key.getName(), value);
+    public void where(Expression expr) {
+        query = parser.parse(expr);
     }
 
     DBObject getQuery() {

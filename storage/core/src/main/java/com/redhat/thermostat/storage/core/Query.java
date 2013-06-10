@@ -44,15 +44,6 @@ import com.redhat.thermostat.storage.query.Expression;
  */
 public interface Query<T extends Pojo> {
 
-    enum Criteria {
-        EQUALS,
-        NOT_EQUAL_TO,
-        GREATER_THAN,
-        GREATER_THAN_OR_EQUAL_TO,
-        LESS_THAN,
-        LESS_THAN_OR_EQUAL_TO,
-    }
-    
     enum SortDirection {
         ASCENDING(1),
         DESCENDING(-1);

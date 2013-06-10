@@ -55,10 +55,12 @@ import com.redhat.thermostat.storage.query.ExpressionFactory;
 public class AgentInfoDAOImpl implements AgentInfoDAO {
 
     private final Storage storage;
+    private final ExpressionFactory factory;
 
     public AgentInfoDAOImpl(Storage storage) {
         this.storage = storage;
         storage.registerCategory(CATEGORY);
+        factory = new ExpressionFactory();
     }
 
     @Override
@@ -101,7 +103,6 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
     @Override
     public AgentInformation getAgentInformation(HostRef agentRef) {
         Query<AgentInformation> query = storage.createQuery(CATEGORY);
-        ExpressionFactory factory = new ExpressionFactory();
         Expression expr = factory.equalTo(Key.AGENT_ID, agentRef.getAgentId());
         query.where(expr);
         query.limit(1);
@@ -117,14 +118,16 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
 
     @Override
     public void removeAgentInformation(AgentInformation agentInfo) {
-        Remove remove = storage.createRemove().from(CATEGORY).where(Key.AGENT_ID, agentInfo.getAgentId());
+        Expression expr = factory.equalTo(Key.AGENT_ID, agentInfo.getAgentId());
+        Remove remove = storage.createRemove().from(CATEGORY).where(expr);
         storage.removePojo(remove);
     }
 
     @Override
     public void updateAgentInformation(AgentInformation agentInfo) {
         Update update = storage.createUpdate(CATEGORY);
-        update.where(Key.AGENT_ID, agentInfo.getAgentId());
+        Expression expr = factory.equalTo(Key.AGENT_ID, agentInfo.getAgentId());
+        update.where(expr);
         update.set(START_TIME_KEY, agentInfo.getStartTime());
         update.set(STOP_TIME_KEY, agentInfo.getStopTime());
         update.set(ALIVE_KEY, agentInfo.isAlive());

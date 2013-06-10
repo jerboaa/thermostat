@@ -37,6 +37,8 @@
 
 package com.redhat.thermostat.storage.core;
 
+import com.redhat.thermostat.storage.query.Expression;
+
 /**
  * Describes what data should be removed from storage.
  */
@@ -44,7 +46,7 @@ public interface Remove {
 
     Remove from(Category category);
 
-    <T> Remove where(Key<T> key, T value);
+    Remove where(Expression where);
 
 }
 

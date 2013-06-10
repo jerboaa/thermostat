@@ -153,6 +153,7 @@ public class WebStorageEndpointTest {
     private static Key<String> key1;
     private static Key<Integer> key2;
     private static Category<TestClass> category;
+    private ExpressionFactory factory;
 
     @BeforeClass
     public static void setupCategory() {
@@ -181,7 +182,8 @@ public class WebStorageEndpointTest {
         
         mockStorage = mock(Storage.class);
         StorageWrapper.setStorage(mockStorage);
-
+        
+        factory = new ExpressionFactory();
     }
 
     private void startServer(int port, LoginService loginService) throws Exception {
@@ -303,7 +305,6 @@ public class WebStorageEndpointTest {
         Map<Category,Integer> categoryIdMap = new HashMap<>();
         categoryIdMap.put(category, categoryId);
         WebQuery query = new WebQuery(categoryId);
-        ExpressionFactory factory = new ExpressionFactory();
         Expression expr = factory.equalTo(key1, "fluff");
         query.where(expr);
         query.sort(key1, SortDirection.DESCENDING);
@@ -563,7 +564,6 @@ public class WebStorageEndpointTest {
         conn.setRequestProperty("Authorization", "Basic "+ encodedAuthorization);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void authorizedRemovePojo() throws Exception {
         String[] roleNames = new String[] {
@@ -585,7 +585,7 @@ public class WebStorageEndpointTest {
         
         Remove mockRemove = mock(Remove.class);
         when(mockRemove.from(any(Category.class))).thenReturn(mockRemove);
-        when(mockRemove.where(any(Key.class), any())).thenReturn(mockRemove);
+        when(mockRemove.where(any(Expression.class))).thenReturn(mockRemove);
 
         when(mockStorage.createRemove()).thenReturn(mockRemove);
 
@@ -599,8 +599,13 @@ public class WebStorageEndpointTest {
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
         Map<Category<?>,Integer> categoryIds = new HashMap<>();
         categoryIds.put(category, categoryId);
-        WebRemove remove = new WebRemove(categoryIds).from(category).where(key1, "test");
-        Gson gson = new Gson();
+        Expression expr = factory.equalTo(key1, "test");
+        WebRemove remove = new WebRemove(categoryIds).from(category).where(expr);
+        Gson gson = new GsonBuilder()
+                .registerTypeHierarchyAdapter(Expression.class,
+                        new ExpressionSerializer())
+                .registerTypeHierarchyAdapter(Operator.class,
+                        new OperatorSerializer()).create();
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
         out.write("remove=");
         gson.toJson(remove, out);
@@ -610,7 +615,7 @@ public class WebStorageEndpointTest {
         assertEquals(200, conn.getResponseCode());
         verify(mockStorage).createRemove();
         verify(mockRemove).from(category);
-        verify(mockRemove).where(key1, "test");
+        verify(mockRemove).where(eq(expr));
         verify(mockStorage).removePojo(mockRemove);
     }
     
@@ -652,11 +657,16 @@ public class WebStorageEndpointTest {
 
         WebUpdate update = new WebUpdate();
         update.setCategoryId(categoryId);
-        update.where(key1, "test");
+        Expression expr = factory.equalTo(key1, "test");
+        update.where(expr);
         update.set(key1, "fluff");
         update.set(key2, 42);
 
-        Gson gson = new Gson();
+        Gson gson = new GsonBuilder()
+                .registerTypeHierarchyAdapter(Expression.class,
+                        new ExpressionSerializer())
+                .registerTypeHierarchyAdapter(Operator.class,
+                        new OperatorSerializer()).create();
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
         out.write("update=");
         gson.toJson(update, out);
@@ -667,7 +677,7 @@ public class WebStorageEndpointTest {
 
         assertEquals(200, conn.getResponseCode());
         verify(mockStorage).createUpdate(category);
-        verify(mockUpdate).where(key1, "test");
+        verify(mockUpdate).where(eq(expr));
         verify(mockUpdate).set(key1, "fluff");
         verify(mockUpdate).set(key2, 42);
         verify(mockUpdate).apply();

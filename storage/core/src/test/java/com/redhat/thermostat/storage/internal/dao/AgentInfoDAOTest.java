@@ -70,6 +70,7 @@ public class AgentInfoDAOTest {
 
     private AgentInformation agentInfo1;
     private AgentInformation agent1;
+    private ExpressionFactory factory;
 
     @Before
     public void setUp() {
@@ -86,6 +87,7 @@ public class AgentInfoDAOTest {
         agent1.setConfigListenAddress("foobar:666");
         agent1.setStartTime(100);
         agent1.setStopTime(10);
+        factory = new ExpressionFactory();
     }
 
     @Test
@@ -152,7 +154,6 @@ public class AgentInfoDAOTest {
         List<AgentInformation> aliveAgents = dao.getAliveAgents();
 
         verify(storage).createQuery(AgentInfoDAO.CATEGORY);
-        ExpressionFactory factory = new ExpressionFactory();
         Expression expr = factory.equalTo(AgentInfoDAO.ALIVE_KEY, Boolean.TRUE);
         verify(query).where(eq(expr));
         verify(query).execute();
@@ -202,7 +203,6 @@ public class AgentInfoDAOTest {
         AgentInformation computed = dao.getAgentInformation(agentRef);
 
         verify(storage).createQuery(AgentInfoDAO.CATEGORY);
-        ExpressionFactory factory = new ExpressionFactory();
         Expression expr = factory.equalTo(Key.AGENT_ID, agentInfo1.getAgentId());
         verify(query).where(eq(expr));
         verify(query).limit(1);
@@ -238,7 +238,8 @@ public class AgentInfoDAOTest {
         dao.updateAgentInformation(agentInfo1);
 
         verify(storage).createUpdate(AgentInfoDAO.CATEGORY);
-        verify(mockUpdate).where(Key.AGENT_ID, "1234");
+        Expression expr = factory.equalTo(Key.AGENT_ID, "1234");
+        verify(mockUpdate).where(eq(expr));
         verify(mockUpdate).set(AgentInfoDAO.START_TIME_KEY, 100L);
         verify(mockUpdate).set(AgentInfoDAO.STOP_TIME_KEY, 10L);
         verify(mockUpdate).set(AgentInfoDAO.CONFIG_LISTEN_ADDRESS, "foobar:666");
@@ -259,7 +260,8 @@ public class AgentInfoDAOTest {
 
         verify(storage).removePojo(mockRemove);
         verify(mockRemove).from(AgentInfoDAO.CATEGORY);
-        verify(mockRemove).where(Key.AGENT_ID, "1234");
+        Expression expr = factory.equalTo(Key.AGENT_ID, "1234");
+        verify(mockRemove).where(eq(expr));
     }
 
 }
