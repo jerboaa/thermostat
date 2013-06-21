@@ -48,6 +48,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.cli.Arguments;
+import com.redhat.thermostat.launcher.CommandLineArgumentParseException;
 
 public class CommandLineArgumentsParserTest {
 

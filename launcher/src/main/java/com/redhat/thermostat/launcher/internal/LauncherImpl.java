@@ -67,6 +67,7 @@ import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.tools.StorageAuthInfoGetter;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.BundleManager;
+import com.redhat.thermostat.launcher.CommandLineArgumentParseException;
 import com.redhat.thermostat.launcher.internal.CommandInfo.Environment;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.locale.LocalizedString;
@@ -267,14 +268,14 @@ public class LauncherImpl implements Launcher {
         Arguments args = null;
         try {
             args = parseCommandArguments(cmdArgs, options);
+            setupLogLevel(args);
+            CommandContext ctx = setupCommandContext(cmd, args);
+            cmd.run(ctx);
         } catch (CommandLineArgumentParseException e) {
             out.println(e.getMessage());
             runHelpCommandFor(cmdName);
             return;
         }
-        setupLogLevel(args);
-        CommandContext ctx = setupCommandContext(cmd, args);
-        cmd.run(ctx);
     }
 
     private void outputBadShellContext(boolean inShell, PrintStream out, String cmd) {
@@ -305,7 +306,6 @@ public class LauncherImpl implements Launcher {
 
     private Arguments parseCommandArguments(String[] cmdArgs, Options options)
             throws CommandLineArgumentParseException {
-
         CommandLineArgumentsParser cliArgsParser = new CommandLineArgumentsParser();
         cliArgsParser.addOptions(options);
         Arguments args = cliArgsParser.parse(cmdArgs);

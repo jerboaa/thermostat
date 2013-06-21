@@ -67,6 +67,7 @@ import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.ExitStatus;
+import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.cli.Arguments;
@@ -79,8 +80,6 @@ import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.internal.CommandInfo.Environment;
 import com.redhat.thermostat.launcher.internal.DisallowSystemExitSecurityManager.ExitException;
-import com.redhat.thermostat.launcher.internal.HelpCommand;
-import com.redhat.thermostat.launcher.internal.LauncherImpl;
 import com.redhat.thermostat.launcher.internal.LauncherImpl.LoggingInitializer;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.core.DbService;
@@ -97,6 +96,7 @@ public class LauncherImplTest {
     private static final String name1 = "test1";
     private static final String name2 = "test2";
     private static final String name3 = "test3";
+    private static final String name4 = "test4";
     private static SecurityManager secMan;
       
     @BeforeClass
@@ -182,7 +182,6 @@ public class LauncherImplTest {
         when(info2.getOptions()).thenReturn(options2);
         when(info2.getEnvironments()).thenReturn(EnumSet.of(Environment.SHELL, Environment.CLI));
 
-
         TestCommand cmd3 = new TestCommand();
         CommandInfo info3 = mock(CommandInfo.class);
         when(info3.getName()).thenReturn(name3);
@@ -191,6 +190,16 @@ public class LauncherImplTest {
         when(info3.getOptions()).thenReturn(new Options());
         when(info3.getEnvironments()).thenReturn(EnumSet.of(Environment.SHELL, Environment.CLI));
 
+        // This TestCommand object doesn't need to connect to storage,
+        // and it is used to test commands without any required option
+        TestCommand cmd4 = new TestCommand();
+        CommandInfo info4 = mock(CommandInfo.class);
+        when(info4.getName()).thenReturn(name4);
+        cmd4.setStorageRequired(false);
+        when(info4.getDescription()).thenReturn("description 4");
+        when(info4.getOptions()).thenReturn(new Options());
+        when(info4.getEnvironments()).thenReturn(EnumSet.of(Environment.SHELL, Environment.CLI));
+        
         AbstractStateNotifyingCommand basicCmd = mock(AbstractStateNotifyingCommand.class);
         CommandInfo basicInfo = mock(CommandInfo.class);
         when(basicInfo.getName()).thenReturn("basic");
@@ -210,7 +219,6 @@ public class LauncherImplTest {
         when(helpCommandInfo.getUsage()).thenReturn("thermostat help");
         when(helpCommandInfo.getEnvironments()).thenReturn(EnumSet.of(Environment.SHELL, Environment.CLI));
 
-
         HelpCommand helpCommand = new HelpCommand();
 
         CommandRegistry reg = ctxFactory.getCommandRegistry();
@@ -218,6 +226,7 @@ public class LauncherImplTest {
         reg.registerCommand(name1, cmd1);
         reg.registerCommand(name2, cmd2);
         reg.registerCommand(name3, cmd3);
+        reg.registerCommand(name4, cmd4);
         reg.registerCommand("basic", basicCmd);
 
         infos = mock(CommandInfoSource.class);
@@ -225,6 +234,7 @@ public class LauncherImplTest {
         when(infos.getCommandInfo(name1)).thenReturn(info1);
         when(infos.getCommandInfo(name2)).thenReturn(info2);
         when(infos.getCommandInfo(name3)).thenReturn(info3);
+        when(infos.getCommandInfo(name4)).thenReturn(info4);
         when(infos.getCommandInfo("basic")).thenReturn(basicInfo);
         when(infos.getCommandInfo("help")).thenReturn(helpCommandInfo);
 
@@ -234,6 +244,8 @@ public class LauncherImplTest {
         infoList.add(info1);
         infoList.add(info2);
         infoList.add(info3);
+        infoList.add(info4);
+        
         when(infos.getCommandInfos()).thenReturn(infoList);
 
         helpCommand.setCommandInfoSource(infos);
@@ -280,7 +292,8 @@ public class LauncherImplTest {
                         + " basic         nothing that means anything\n"
                         + " test1         description 1\n"
                         + " test2         description 2\n"
-                        + " test3         description 3\n";
+                        + " test3         description 3\n"
+                        + " test4         description 4\n";
         runAndVerifyCommand(new String[0], expected, false);
     }
 
@@ -301,7 +314,8 @@ public class LauncherImplTest {
             + " basic         nothing that means anything\n"
             + " test1         description 1\n"
             + " test2         description 2\n"
-            + " test3         description 3\n";
+            + " test3         description 3\n"
+            + " test4         description 4\n";
         runAndVerifyCommand(new String[] {"--help"}, expected, false);
     }
 
@@ -315,7 +329,8 @@ public class LauncherImplTest {
             + " basic         nothing that means anything\n"
             + " test1         description 1\n"
             + " test2         description 2\n"
-            + " test3         description 3\n";
+            + " test3         description 3\n"
+            + " test4         description 4\n";
         runAndVerifyCommand(new String[] {"-help"}, expected, false);
     }
 
@@ -329,7 +344,8 @@ public class LauncherImplTest {
             + " basic         nothing that means anything\n"
             + " test1         description 1\n"
             + " test2         description 2\n"
-            + " test3         description 3\n";
+            + " test3         description 3\n"
+            + " test4         description 4\n";
         runAndVerifyCommand(new String[] {"foobarbaz"}, expected, false);
     }
 
@@ -343,7 +359,8 @@ public class LauncherImplTest {
             + " basic         nothing that means anything\n"
             + " test1         description 1\n"
             + " test2         description 2\n"
-            + " test3         description 3\n";
+            + " test3         description 3\n"
+            + " test4         description 4\n";
         runAndVerifyCommand(new String[] {"foo",  "--bar", "baz"}, expected, false);
     }
 
@@ -370,6 +387,12 @@ public class LauncherImplTest {
                 + "  -l,--logLevel <arg>\n";
         runAndVerifyCommand(new String[] {"test1"}, expected, false);
     }
+    
+    @Test
+    public void testMissingNotRequiredOption() {
+        String expected = "";
+        runAndVerifyCommand(new String[] {"test4"}, expected, false);
+    }
 
     @Test
     public void testOptionMissingRequiredArgument() {
@@ -393,7 +416,8 @@ public class LauncherImplTest {
                 + " basic         nothing that means anything\n"
                 + " test1         description 1\n"
                 + " test2         description 2\n"
-                + " test3         description 3\n";
+                + " test3         description 3\n"
+                + " test4         description 4\n";
             runAndVerifyCommand(new String[] {"foo"}, expected, false);
     }
 

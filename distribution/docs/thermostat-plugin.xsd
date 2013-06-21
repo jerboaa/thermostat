@@ -53,7 +53,13 @@
     <xs:sequence>
       <xs:element ref="name"/>
       <xs:element ref="bundles"/>
-      <xs:element ref="dependencies" minOccurs="0" maxOccurs="1"/>
+      <xs:element ref="dependencies" minOccurs="0" maxOccurs="1">
+      <xs:annotation>
+        <xs:documentation>
+          Dependencies: depend on other libraries.
+        </xs:documentation>
+      </xs:annotation>
+      </xs:element>
     </xs:sequence>
   </xs:complexType>
 </xs:element>
@@ -66,10 +72,16 @@
       <xs:element ref="usage" minOccurs="0" maxOccurs="1"/>
       <xs:element ref="description"/>
       <xs:element ref="arguments" minOccurs="0" maxOccurs="1"/>
-      <xs:element ref="options"/>
+      <xs:element ref="options" minOccurs="0" maxOccurs="1"/>
       <xs:element ref="environments"/>
       <xs:element ref="bundles"/>
-      <xs:element ref="dependencies"/>
+      <xs:element ref="dependencies">
+      <xs:annotation>
+        <xs:documentation>
+          Dependencies: depend on other commands.
+        </xs:documentation>
+      </xs:annotation>
+      </xs:element>
     </xs:sequence>
   </xs:complexType>
 </xs:element> 
@@ -77,6 +89,11 @@
 
 <xs:element name="arguments">
   <xs:complexType>
+    <xs:annotation>
+      <xs:documentation>
+        "Arguments" tag has been set as optional for commands that don't need any specified argument 
+      </xs:documentation>
+    </xs:annotation>
     <xs:sequence>
       <xs:element ref="argument" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
@@ -85,6 +102,11 @@
 
 <xs:element name="options">
   <xs:complexType>
+    <xs:annotation>
+      <xs:documentation>
+        "Options" tag has been set as optional for commands that don't need any specified option 
+      </xs:documentation>
+    </xs:annotation>
     <xs:sequence>
       <xs:element ref="group" minOccurs="0" maxOccurs="1"/>
       <xs:element ref="option" minOccurs="1" maxOccurs="unbounded"/>

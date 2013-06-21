@@ -43,12 +43,14 @@ import java.util.List;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.MissingArgumentException;
 import org.apache.commons.cli.MissingOptionException;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import com.redhat.thermostat.common.cli.Arguments;
+import com.redhat.thermostat.launcher.CommandLineArgumentParseException;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 
@@ -71,17 +73,17 @@ public class CommandLineArgumentsParser {
             CommandLine commandLine;
             commandLine = parser.parse(options, args);
             return new CommandLineArguments(commandLine);
-        } catch (MissingOptionException mae) {
-            LocalizedString msg = createMissingOptionsMessage(mae);
-            throw new CommandLineArgumentParseException(msg, mae);
+        } catch (MissingOptionException moe) {
+            LocalizedString msg = createMissingOptionsMessage(moe);
+            throw new CommandLineArgumentParseException(msg, moe);
         } catch (ParseException e) {
             throw new CommandLineArgumentParseException(tr.localize(LocaleResources.PARSE_EXCEPTION_MESSAGE, e.getMessage()), e);
         }
     }
 
-    private LocalizedString createMissingOptionsMessage(MissingOptionException mae) {
+    private LocalizedString createMissingOptionsMessage(MissingOptionException moe) {
         @SuppressWarnings("unchecked")
-        List<String> missingOptions = mae.getMissingOptions();
+        List<String> missingOptions = moe.getMissingOptions();
         String[] presentableMissingOptions = new String[missingOptions.size()];
         int optIndex = 0;
         for (Iterator<String> i = missingOptions.iterator(); i.hasNext();) {

@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.launcher.internal;
+package com.redhat.thermostat.launcher;
 
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.shared.locale.LocalizedString;
