@@ -40,20 +40,23 @@ import java.awt.Color;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
-import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 import com.redhat.thermostat.shared.config.NativeLibraryResolver;
 
 public class GTKThemeUtils {
 
+    private static boolean nativeLoaded;
     private static boolean initialized;
     static {
         try {
             String lib = NativeLibraryResolver.getAbsoluteLibraryPath("GTKThemeUtils");
             System.load(lib);
-            initialized = init();
-        } catch (UnsatisfiedLinkError ignore) {}
+            nativeLoaded = true;
+        
+        } catch (UnsatisfiedLinkError ignore) {
+            nativeLoaded = false;
+        }
     }
     
     native private static boolean init();
@@ -83,7 +86,7 @@ public class GTKThemeUtils {
         rederiveColorMethod.setAccessible(true);
         rederiveColorMethod.invoke(color);
     }
-        
+
     private Color deriveColor(String colorID, Color defaultColor, float bOffset) {
 
         Color result = defaultColor;
@@ -108,52 +111,52 @@ public class GTKThemeUtils {
     
     public void setNimbusColours() {
 
-        if (!initialized) {
+        if (!nativeLoaded) {
             return;
         }
         
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
+        if (!initialized && !init()) {
+            return;
+        }
+        
+        initialized = true;
+        
+        // if we at least have the bg colour we can try the rest,
+        // otherwise, just skip everything and use nimbus defaults
+        if (hasColor("bg_color")) {
+            
+            // Those numbers are some kind of magic, they represent the
+            // value, or brightness, in the HSV encoding of the colour.
+            // The idea is to derive a darker version of the
+            // base colour because nimbus will use a brighter version
+            // for most components. The version used by nimbus does not
+            // exactly match because nimbus use many multi-gradient
+            // paints.
+            float brightnessOffset = -.300f;
+            
+            Color nimbusBase = deriveColor("bg_color", UIManager.getDefaults().getColor("nimbusBase"), brightnessOffset);
+            Color control = UIManager.getDefaults().getColor("control");
+            int bgColor = getColor("bg_color");
+            control = new Color(bgColor);
+            
+            Color info = control;
+            
+            UIManager.put("nimbusBase", nimbusBase);
+            
+            UIManager.put("control", control);
+            UIManager.put("info", info);
+            
+            Color nimbusFocus = UIManager.getDefaults().getColor("nimbusFocus");
+            if (hasColor("selected_bg_color")) {
+                int fgColor = getColor("selected_bg_color");
+                nimbusFocus = new Color(fgColor);
                 
-                // if we at least have the bg colour we can try the rest,
-                // otherwise, just skip everything and use nimbus defaults
-                if (hasColor("bg_color")) {
-
-                    // Those numbers are some kind of magic, they represent the
-                    // value, or brightness, in the HSV encoding of the colour.
-                    // The idea is to derive a darker version of the
-                    // base colour because nimbus will use a brighter version
-                    // for most components. The version used by nimbus does not
-                    // exactly match because nimbus use many multi-gradient
-                    // paints.
-                    float brightnessOffset = -.300f;
-                    
-                    Color nimbusBase = deriveColor("bg_color", UIManager.getDefaults().getColor("nimbusBase"), brightnessOffset);
-                    Color control = UIManager.getDefaults().getColor("control");
-                    int bgColor = getColor("bg_color");
-                    control = new Color(bgColor);
-                    
-                    Color info = control;
-                    
-                    UIManager.put("nimbusBase", nimbusBase);
-                    
-                    UIManager.put("control", control);
-                    UIManager.put("info", info);
-
-                    Color nimbusFocus = UIManager.getDefaults().getColor("nimbusFocus");
-                    if (hasColor("selected_bg_color")) {
-                        int fgColor = getColor("selected_bg_color");
-                        nimbusFocus = new Color(fgColor);
-                        
-                        UIManager.put("nimbusFocus", nimbusFocus);
-                        UIManager.put("nimbusSelectionBackground", nimbusFocus);
-                        UIManager.put("nimbusSelection", nimbusFocus);
-                        UIManager.put("menu", nimbusFocus);
-                        UIManager.put("Menu.background", nimbusFocus);
-                    }
-                }
+                UIManager.put("nimbusFocus", nimbusFocus);
+                UIManager.put("nimbusSelectionBackground", nimbusFocus);
+                UIManager.put("nimbusSelection", nimbusFocus);
+                UIManager.put("menu", nimbusFocus);
+                UIManager.put("Menu.background", nimbusFocus);
             }
-        });
+        }
     }
 }

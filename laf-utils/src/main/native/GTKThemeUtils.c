@@ -57,17 +57,10 @@ Java_com_redhat_thermostat_internal_utils_laf_gtk_GTKThemeUtils_init
     handler = XSetErrorHandler(NULL);
     io_handler = XSetIOErrorHandler(NULL);
 
-    g_thread_init(NULL);
-    gdk_threads_init();
-
-    gdk_threads_enter();
-
     gboolean result = gtk_init_check(NULL, NULL);
 
     XSetErrorHandler(handler);
     XSetIOErrorHandler(io_handler);
-
-    gdk_threads_leave();
 
     return (result == TRUE) ? JNI_TRUE : JNI_FALSE;
 }
@@ -76,8 +69,6 @@ JNIEXPORT jboolean JNICALL
 Java_com_redhat_thermostat_internal_utils_laf_gtk_GTKThemeUtils_hasColor
     (JNIEnv *env, jclass GTKThemeUtils, jstring jColourID)
 {
-    gdk_threads_enter();
-
     const char *colourID = (*env)->GetStringUTFChars(env, jColourID, NULL);
     gboolean result = FALSE;
 
@@ -102,8 +93,6 @@ bailWidget:
 bailString:
     (*env)->ReleaseStringUTFChars(env, jColourID, colourID);
 
-    gdk_threads_leave();
-
     return (result == TRUE) ? JNI_TRUE : JNI_FALSE;
 }
 
@@ -111,9 +100,6 @@ JNIEXPORT jint JNICALL
 Java_com_redhat_thermostat_internal_utils_laf_gtk_GTKThemeUtils_getColor
     (JNIEnv *env, jclass GTKThemeUtils, jstring jColourID)
 {
-
-    gdk_threads_enter();
-
     const char *colourID = (*env)->GetStringUTFChars(env, jColourID, NULL);
 
     GtkWidget *dummy = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -152,8 +138,6 @@ bailWidget:
 
 bailString:
     (*env)->ReleaseStringUTFChars(env, jColourID, colourID);
-
-    gdk_threads_leave();
 
     return pixel;
 }

@@ -41,6 +41,7 @@ import java.util.logging.Logger;
 
 import javax.swing.JPopupMenu;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.plaf.nimbus.NimbusLookAndFeel;
@@ -71,7 +72,24 @@ public class ThemeManager {
         return set;
     }
 
+    /**
+     * Sets the Look and Feel for Thermostat based on user preferences.
+     * 
+     * <br /><br />
+     * 
+     * If the default theme is used, we try to match if possible the native
+     * theme main colours.
+     * 
+     * <br /><br />
+     * 
+     * This method must be called in the EDT.
+     */
     public void setLAF() {
+        
+        if (!SwingUtilities.isEventDispatchThread()) {
+            throw new IllegalStateException("This method expect to be called " +
+            		                    "from the Event Dispatching Thread");
+        }
         
         boolean tryGTKColors = false;
         
