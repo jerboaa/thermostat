@@ -37,13 +37,11 @@
 package com.redhat.thermostat.itest;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import expectj.Spawn;
@@ -196,7 +194,7 @@ public class CliTest extends IntegrationTest {
     }
 
     @Test
-    public void testUnrecognizedEventsInShell() throws IOException, TimeoutException {
+    public void testUnrecognizedEventsInShell() throws Exception {
         // test '!' events
         Spawn shell = spawnThermostat("shell");
 
@@ -204,6 +202,7 @@ public class CliTest extends IntegrationTest {
         shell.send("what!?!\n");
         shell.expect(SHELL_PROMPT);
         shell.send("exit\n");
+        shell.expectClose();
 
         assertTrue(shell.getCurrentStandardErrContents().contains("!?!: event not found"));
         assertNoExceptions(shell.getCurrentStandardOutContents(), shell.getCurrentStandardErrContents());
