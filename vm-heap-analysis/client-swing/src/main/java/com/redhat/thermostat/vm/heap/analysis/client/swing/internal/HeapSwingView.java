@@ -40,11 +40,15 @@ import java.awt.Component;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.util.List;
 
+import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
+import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.KeyStroke;
 import javax.swing.OverlayLayout;
 import javax.swing.SwingUtilities;
 
@@ -107,6 +111,7 @@ public class HeapSwingView extends HeapView implements SwingComponent {
         
         visiblePane = new JPanel();
         visiblePane.setLayout(new BoxLayout(visiblePane, BoxLayout.X_AXIS));
+        visiblePane.setName(HeapSwingView.class.getName());
         
         heapDetailPanel = new HeapPanel();
         
@@ -137,7 +142,7 @@ public class HeapSwingView extends HeapView implements SwingComponent {
             }
         });
         overview.addToolBarButton(takeDumpIconButton);
-        
+                
         Icon listDumpIcon = IconResource.HISTORY.getIcon();
         showHeapListButton = new ActionToggleButton(listDumpIcon, translator.localize(LocaleResources.LIST_DUMPS_ACTION));
         showHeapListButton.setToolTipText(translator.localize(LocaleResources.LIST_DUMPS_ACTION).getContents());
@@ -153,6 +158,17 @@ public class HeapSwingView extends HeapView implements SwingComponent {
                 }
             }
         });
+        KeyStroke escape = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
+        @SuppressWarnings("serial")
+        javax.swing.Action closeOverlay = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                closeDumpListView();
+            }
+        };
+        overlay.getActionMap().put("close", closeOverlay);
+        overlay.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(escape, "close");
+        
         overview.addToolBarButton(showHeapListButton);
         
         // at the beginning, only the overview is visible
@@ -324,7 +340,9 @@ public class HeapSwingView extends HeapView implements SwingComponent {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                showHeapListButton.getToolbarButton().doClick();
+                if (overview.isVisible()) {
+                    showHeapListButton.getToolbarButton().doClick();
+                }
             }
         });
     }

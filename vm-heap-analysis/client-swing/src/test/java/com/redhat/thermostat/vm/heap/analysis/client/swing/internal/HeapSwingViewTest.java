@@ -41,6 +41,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.awt.Container;
+import java.awt.event.KeyEvent;
 import java.util.concurrent.CountDownLatch;
 
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
@@ -62,6 +63,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import com.redhat.thermostat.client.swing.components.HeaderPanel;
+import com.redhat.thermostat.client.swing.components.OverlayPanel;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapView;
@@ -210,7 +213,7 @@ public class HeapSwingViewTest {
         
         latch.await();
         
-        JLabelFixture overlay =  panel.label(OverlayComponent.class.getName());
+        JLabelFixture overlay = panel.label(OverlayComponent.class.getName());
         overlay.doubleClick();
         
         OverlayComponent overlayComponent = (OverlayComponent) overlay.component();
@@ -269,6 +272,28 @@ public class HeapSwingViewTest {
         listDupms.click();
 
         assertTrue(result[0]);
+    }
+    
+    @GUITest
+    @Test
+    public void testOverlayClosed() {
+        
+        frame.show();
+        
+        final JPanelFixture panel = frame.panel(HeapSwingView.class.getName());
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                view.openDumpListView(new SwingHeapDumpListView());
+            }
+        });
+        
+        JPanelFixture overlay = frame.panel(OverlayPanel.class.getName());
+        overlay.requireVisible();
+        
+        panel.robot.pressAndReleaseKey(KeyEvent.VK_ESCAPE, 0);
+        
+        overlay.requireNotVisible();
     }
 }
 

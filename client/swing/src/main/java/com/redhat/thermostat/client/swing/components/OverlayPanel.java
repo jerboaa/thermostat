@@ -44,6 +44,7 @@ import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.geom.Area;
@@ -98,6 +99,8 @@ public class OverlayPanel extends JPanel {
         setBorder(new OverlayBorder());
         setLayout(new BorderLayout(0, 10));
         
+        setName(OverlayPanel.class.getName());
+        
         titlePane = new JPanel();
         titlePane.setOpaque(true);
 
@@ -120,13 +123,18 @@ public class OverlayPanel extends JPanel {
         
         setOverlayVisible(false);
         
-        // filter events, we don't want them to reach components below us
+        installListeners();
+    }
+    
+    private void installListeners() {
+        
+        // filter events, we don't want them to reach components through us
         addMouseListener(new MouseAdapter() {});
         addMouseMotionListener(new MouseMotionAdapter() {});
         addKeyListener(new KeyAdapter() {});
         setFocusTraversalKeysEnabled(false);
     }
-    
+
     @Override
     public Component add(Component comp) {
         return content.add(comp);

@@ -97,6 +97,8 @@ public class HeaderPanel extends JPanel {
         
         setLayout(new BorderLayout(0, 0));
 
+        setName(HeaderPanel.class.getName());
+        
         headerLabel = new ShadowLabel(header, new EmptyIcon(5, 5));
         headerPanel = new GradientPanel(Color.WHITE, getBackground());
         headerPanel.setName("clickableArea");
