@@ -40,14 +40,31 @@ import java.awt.Insets;
 import java.awt.Rectangle;
 import java.lang.reflect.Field;
 
+import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.SwingConstants;
+import javax.swing.plaf.UIResource;
 import javax.swing.plaf.basic.BasicTabbedPaneUI;
 
+import com.redhat.thermostat.client.swing.IconResource;
 import com.redhat.thermostat.client.ui.Palette;
 
 class CleanTabUI extends BasicTabbedPaneUI {
     
     private Insets cleantabInsets;
+    
+    @SuppressWarnings("serial")
+    private class ArrowButton extends ActionButton implements UIResource, SwingConstants {
+
+        public ArrowButton(Icon icon) {
+            super(icon);
+            setRequestFocusEnabled(false);
+        }
+
+        public boolean isFocusTraversable() {
+            return false;
+        }
+    }
     
     public CleanTabUI() {
         cleantabInsets = new Insets(5, 10, 2, 10);
@@ -108,10 +125,24 @@ class CleanTabUI extends BasicTabbedPaneUI {
         }
     }
     
-    // TODO
-//    protected JButton createScrollButton(int direction) {
-//        return new JButton();
-//    }
+    protected JButton createScrollButton(int direction) {
+
+        IconResource resource = IconResource.ARROW_LEFT;
+        switch (direction) {
+        case EAST:
+        case NORTH:
+            resource = IconResource.ARROW_RIGHT;
+            break;
+
+        case WEST:
+        case SOUTH:
+        default:
+            resource = IconResource.ARROW_LEFT;
+            break;
+        }
+        
+        return new ArrowButton(resource.getIcon());
+    }
     
     @Override
     protected void paintContentBorderBottomEdge(Graphics g, int tabPlacement,

@@ -51,7 +51,7 @@ import com.redhat.thermostat.client.swing.GraphicsUtils;
 import com.redhat.thermostat.client.ui.Palette;
 
 @SuppressWarnings("serial")
-public class ToolbarButtonBorder extends DebugBorder implements UIResource, Serializable {
+class ToolbarButtonBorder extends DebugBorder implements UIResource, Serializable {
 
     public ToolbarButtonBorder(ToolbarButton button) {
         // TODO Auto-generated constructor stub

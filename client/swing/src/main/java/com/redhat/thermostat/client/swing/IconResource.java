@@ -61,11 +61,11 @@ public class IconResource {
     public static final IconResource CLEAN = new IconResource("clean.png");
     public static final IconResource TRASH = new IconResource("trash.png");
     
+    public static final IconResource ARROW_LEFT = new IconResource("arrow-left.png");
+    public static final IconResource ARROW_RIGHT = new IconResource("arrow-right.png");
+
     // TODO: add a proper one for this
     public static final IconResource HISTORY = RECORD;
-
-    // TODO: those should either go into appropriate modules or be converted into internal icons 
-    public static final IconResource ARROW_RIGHT = new IconResource(ICON_PREFIX + "48x48/actions/go-next.png", true);
 
     private final String path;
 
