@@ -36,12 +36,14 @@
 
 package com.redhat.thermostat.internal.utils.laf;
 
+import java.awt.Color;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JPopupMenu;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.plaf.nimbus.NimbusLookAndFeel;
@@ -92,6 +94,7 @@ public class ThemeManager {
         }
         
         boolean tryGTKColors = false;
+        boolean nimbusBased = false;
         
         // check if the user has other preferences...
         String laf = System.getProperty("swing.defaultlaf");
@@ -106,6 +109,7 @@ public class ThemeManager {
                 break;
             case "nimbus":
                 laf = NimbusLookAndFeel.class.getName();
+                nimbusBased = true;
                 break;
             case "dolphin":
                 laf = "com.redhat.swing.laf.dolphin.DolphinLookAndFeel";
@@ -116,6 +120,7 @@ public class ThemeManager {
 
         if (!setLAF(laf)) {
             setLAF(NimbusLookAndFeel.class.getName());
+            nimbusBased = true;
         }
         
         // Thermostat JPopupMenu instances should all be
@@ -137,6 +142,14 @@ public class ThemeManager {
         if (tryGTKColors && desktop != null && desktop.equalsIgnoreCase("gnome")) {
             GTKThemeUtils utils = new GTKThemeUtils();
             utils.setNimbusColours();
+        }
+        
+        if (nimbusBased) {
+            // very internal and very secret for now, should be moved
+            // to a proper location but first needs to be appropriately tested
+            // on multiple different look and feel
+            Color color = UIManager.getDefaults().getColor("nimbusSelectionBackground");
+            UIManager.put("thermostat-selection-bg-color", color);
         }
     }
 }

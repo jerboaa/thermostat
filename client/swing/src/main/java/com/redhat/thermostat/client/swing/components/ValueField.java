@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.client.swing.components;
 
+import java.awt.Color;
+
 import javax.swing.JEditorPane;
 import javax.swing.UIManager;
 import javax.swing.text.DefaultCaret;
@@ -48,14 +50,29 @@ import javax.swing.text.DefaultCaret;
 public class ValueField extends JEditorPane {
 
     public ValueField(String text) {
+        setUI(new ValueFieldUI());
+
         setText(text);
         setBorder(null);
         setOpaque(false);
+        
+        // TODO: we should cleanup those properties and define
+        // Thermostat specific ones based on the actual look and feel, since
+        // not all look and feel will necessarily have those set
         setBackground(UIManager.getColor("Label.background"));
         setForeground(UIManager.getColor("Label.foreground"));
-        setFont(UIManager.getFont("Label.font"));
-        setEditable(false);
+        setSelectedTextColor(UIManager.getColor("Label.background"));
+        
+        Color selectionColor = UIManager.getColor("thermostat-selection-bg-color");
+        if (selectionColor == null) {
+            selectionColor = UIManager.getColor("Label.foreground");
+        }
+        setSelectionColor(selectionColor);
 
+        setFont(UIManager.getFont("Label.font"));
+        
+        setEditable(false);
+        
         /*
          * The default caret update policy forces any scroll pane this
          * component is added to to scroll so that this component is visible.
@@ -67,6 +84,4 @@ public class ValueField extends JEditorPane {
          */
         ((DefaultCaret) getCaret()).setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
     }
-
 }
-
