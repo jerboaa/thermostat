@@ -562,6 +562,13 @@ public class QueuedStorageTest {
                 Thread.currentThread().interrupt();
             }
         }
+
+        @Override
+        public PreparedStatement prepareStatement(StatementDescriptor desc)
+                throws DescriptorParsingException {
+            // not implemented
+            return null;
+        }
         
     }
 }

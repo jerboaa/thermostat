@@ -54,11 +54,15 @@ import org.junit.Test;
 
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Replace;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
@@ -116,17 +120,18 @@ public class AgentInfoDAOTest {
         assertTrue(keys.contains(AgentInfoDAO.CONFIG_LISTEN_ADDRESS));
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
-    public void verifyGetAllAgentInformationWithOneAgentInStorage() {
-        @SuppressWarnings("unchecked")
-        Cursor<AgentInformation> agentCursor = mock(Cursor.class);
+    public void verifyGetAllAgentInformationWithOneAgentInStorage()
+            throws DescriptorParsingException, StatementExecutionException {
+        Cursor agentCursor = mock(Cursor.class);
         when(agentCursor.hasNext()).thenReturn(true).thenReturn(false);
         when(agentCursor.next()).thenReturn(agent1).thenReturn(null);
 
         Storage storage = mock(Storage.class);
-        Query query = mock(Query.class);
-        when(query.execute()).thenReturn(agentCursor);
-        when(storage.createQuery(any(Category.class))).thenReturn(query);
+        PreparedStatement stmt = mock(PreparedStatement.class);
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(agentCursor);
         AgentInfoDAOImpl dao = new AgentInfoDAOImpl(storage);
 
         List<AgentInformation> allAgentInfo = dao.getAllAgentInformation();
@@ -138,26 +143,29 @@ public class AgentInfoDAOTest {
         assertEquals(expected, result);
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
-    public void verifyGetAliveAgent() {
-        @SuppressWarnings("unchecked")
-        Cursor<AgentInformation> agentCursor = mock(Cursor.class);
+    public void verifyGetAliveAgent() throws DescriptorParsingException, StatementExecutionException {
+        Cursor agentCursor = mock(Cursor.class);
         when(agentCursor.hasNext()).thenReturn(true).thenReturn(false);
         when(agentCursor.next()).thenReturn(agent1).thenReturn(null);
 
         Query query = mock(Query.class);
         Storage storage = mock(Storage.class);
+        PreparedStatement stmt = mock(PreparedStatement.class);
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(agentCursor);
         when(storage.createQuery(any(Category.class))).thenReturn(query);
         when(query.execute()).thenReturn(agentCursor);
 
         AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
         List<AgentInformation> aliveAgents = dao.getAliveAgents();
 
-        verify(storage).createQuery(AgentInfoDAO.CATEGORY);
-        Expression expr = factory.equalTo(AgentInfoDAO.ALIVE_KEY, Boolean.TRUE);
-        verify(query).where(eq(expr));
-        verify(query).execute();
-        verifyNoMoreInteractions(query);
+        verify(storage).prepareStatement(any(StatementDescriptor.class));
+        verify(stmt).executeQuery();
+        verify(stmt).setString(eq(0), eq(AgentInfoDAOImpl.ALIVE_KEY.getName()));
+        verify(stmt).setBoolean(eq(1), eq(true));
+        verifyNoMoreInteractions(stmt);
 
         assertEquals(1, aliveAgents.size());
 
