@@ -53,10 +53,10 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Properties;
 import java.util.UUID;
-
-import javax.security.auth.login.LoginException;
 
 import org.eclipse.jetty.security.DefaultUserIdentity;
 import org.eclipse.jetty.security.MappedLoginService;
@@ -75,7 +75,10 @@ import com.redhat.thermostat.storage.config.ConnectionConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
 import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
@@ -225,6 +228,25 @@ public class WebAppTest {
         pojo.setVmId(987);
         add.setPojo(pojo);
         add.apply();
+        
+        // Add another couple of entries
+        add = webStorage.createAdd(VmClassStatDAO.vmClassStatsCategory);
+        pojo = new VmClassStat();
+        pojo.setAgentId("fluff");
+        pojo.setLoadedClasses(67890);
+        pojo.setTimeStamp(42);
+        pojo.setVmId(654);
+        add.setPojo(pojo);
+        add.apply();
+        
+        add = webStorage.createAdd(VmClassStatDAO.vmClassStatsCategory);
+        pojo = new VmClassStat();
+        pojo.setAgentId("fluff");
+        pojo.setLoadedClasses(12345);
+        pojo.setTimeStamp(42);
+        pojo.setVmId(321);
+        add.setPojo(pojo);
+        add.apply();
     }
 
     @Test
@@ -244,11 +266,321 @@ public class WebAppTest {
         Query<VmClassStat> query = webStorage.createQuery(VmClassStatDAO.vmClassStatsCategory);
         Cursor<VmClassStat> cursor = query.execute();
         assertTrue(cursor.hasNext());
+        cursor.next();
+        assertTrue(cursor.hasNext());
+        cursor.next();
+        assertTrue(cursor.hasNext());
+        cursor.next();
+        assertFalse(cursor.hasNext());
+    }
+    
+    @Test
+    public void authorizedQueryEqualTo() throws Exception {
+        String[] roleNames = new String[] {
+                Roles.REGISTER_CATEGORY,
+                Roles.READ,
+                Roles.LOGIN,
+                Roles.ACCESS_REALM
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        setupJAASForUser(roleNames, testuser, password);
+        connectStorage(testuser, password);
+        webStorage.registerCategory(VmClassStatDAO.vmClassStatsCategory);
+        
+        Query<VmClassStat> query = webStorage.createQuery(VmClassStatDAO.vmClassStatsCategory);
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.equalTo(Key.VM_ID, 987);
+        query.where(expr);
+        Cursor<VmClassStat> cursor = query.execute();
+        
+        assertTrue(cursor.hasNext());
         VmClassStat foundPojo = cursor.next();
         assertEquals("fluff", foundPojo.getAgentId());
         assertEquals(42, foundPojo.getTimeStamp());
         assertEquals(987, foundPojo.getVmId());
         assertEquals(12345, foundPojo.getLoadedClasses());
+        assertFalse(cursor.hasNext());
+    }
+    
+    @Test
+    public void authorizedQueryNotEqualTo() throws Exception {
+        String[] roleNames = new String[] {
+                Roles.REGISTER_CATEGORY,
+                Roles.READ,
+                Roles.LOGIN,
+                Roles.ACCESS_REALM
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        setupJAASForUser(roleNames, testuser, password);
+        connectStorage(testuser, password);
+        webStorage.registerCategory(VmClassStatDAO.vmClassStatsCategory);
+        
+        Query<VmClassStat> query = webStorage.createQuery(VmClassStatDAO.vmClassStatsCategory);
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.notEqualTo(Key.VM_ID, 321);
+        query.where(expr);
+        Cursor<VmClassStat> cursor = query.execute();
+        
+        assertTrue(cursor.hasNext());
+        VmClassStat result1 = cursor.next();
+        assertTrue(cursor.hasNext());
+        VmClassStat result2 = cursor.next();
+        // Account for arbitrary ordering
+        assertTrue(result1.getVmId() == 654 && result2.getVmId() == 987
+                || result1.getVmId() == 987 && result2.getVmId() == 654);
+        assertFalse(cursor.hasNext());
+    }
+    
+    @Test
+    public void authorizedQueryGreaterThan() throws Exception {
+        String[] roleNames = new String[] {
+                Roles.REGISTER_CATEGORY,
+                Roles.READ,
+                Roles.LOGIN,
+                Roles.ACCESS_REALM
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        setupJAASForUser(roleNames, testuser, password);
+        connectStorage(testuser, password);
+        webStorage.registerCategory(VmClassStatDAO.vmClassStatsCategory);
+        
+        Query<VmClassStat> query = webStorage.createQuery(VmClassStatDAO.vmClassStatsCategory);
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.greaterThan(Key.VM_ID, 654);
+        query.where(expr);
+        Cursor<VmClassStat> cursor = query.execute();
+        
+        assertTrue(cursor.hasNext());
+        VmClassStat result = cursor.next();
+        assertEquals(987, result.getVmId());
+        assertFalse(cursor.hasNext());
+    }
+    
+    @Test
+    public void authorizedQueryGreaterThanOrEqualTo() throws Exception {
+        String[] roleNames = new String[] {
+                Roles.REGISTER_CATEGORY,
+                Roles.READ,
+                Roles.LOGIN,
+                Roles.ACCESS_REALM
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        setupJAASForUser(roleNames, testuser, password);
+        connectStorage(testuser, password);
+        webStorage.registerCategory(VmClassStatDAO.vmClassStatsCategory);
+        
+        Query<VmClassStat> query = webStorage.createQuery(VmClassStatDAO.vmClassStatsCategory);
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.greaterThanOrEqualTo(Key.VM_ID, 654);
+        query.where(expr);
+        Cursor<VmClassStat> cursor = query.execute();
+        
+        assertTrue(cursor.hasNext());
+        VmClassStat result1 = cursor.next();
+        assertTrue(cursor.hasNext());
+        VmClassStat result2 = cursor.next();
+        // Account for arbitrary ordering
+        assertTrue(result1.getVmId() == 654 && result2.getVmId() == 987
+                || result1.getVmId() == 987 && result2.getVmId() == 654);
+        assertFalse(cursor.hasNext());
+    }
+    
+    @Test
+    public void authorizedQueryLessThan() throws Exception {
+        String[] roleNames = new String[] {
+                Roles.REGISTER_CATEGORY,
+                Roles.READ,
+                Roles.LOGIN,
+                Roles.ACCESS_REALM
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        setupJAASForUser(roleNames, testuser, password);
+        connectStorage(testuser, password);
+        webStorage.registerCategory(VmClassStatDAO.vmClassStatsCategory);
+        
+        Query<VmClassStat> query = webStorage.createQuery(VmClassStatDAO.vmClassStatsCategory);
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.lessThan(Key.VM_ID, 654);
+        query.where(expr);
+        Cursor<VmClassStat> cursor = query.execute();
+        
+        assertTrue(cursor.hasNext());
+        VmClassStat result = cursor.next();
+        assertEquals(321, result.getVmId());
+        assertFalse(cursor.hasNext());
+    }
+    
+    @Test
+    public void authorizedQueryLessThanOrEqualTo() throws Exception {
+        String[] roleNames = new String[] {
+                Roles.REGISTER_CATEGORY,
+                Roles.READ,
+                Roles.LOGIN,
+                Roles.ACCESS_REALM
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        setupJAASForUser(roleNames, testuser, password);
+        connectStorage(testuser, password);
+        webStorage.registerCategory(VmClassStatDAO.vmClassStatsCategory);
+        
+        Query<VmClassStat> query = webStorage.createQuery(VmClassStatDAO.vmClassStatsCategory);
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.lessThanOrEqualTo(Key.VM_ID, 654);
+        query.where(expr);
+        Cursor<VmClassStat> cursor = query.execute();
+        
+        assertTrue(cursor.hasNext());
+        VmClassStat result1 = cursor.next();
+        assertTrue(cursor.hasNext());
+        VmClassStat result2 = cursor.next();
+        // Account for arbitrary ordering
+        assertTrue(result1.getVmId() == 654 && result2.getVmId() == 321
+                || result1.getVmId() == 321 && result2.getVmId() == 654);
+        assertFalse(cursor.hasNext());
+    }
+    
+    @Test
+    public void authorizedQueryIn() throws Exception {
+        String[] roleNames = new String[] {
+                Roles.REGISTER_CATEGORY,
+                Roles.READ,
+                Roles.LOGIN,
+                Roles.ACCESS_REALM
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        setupJAASForUser(roleNames, testuser, password);
+        connectStorage(testuser, password);
+        webStorage.registerCategory(VmClassStatDAO.vmClassStatsCategory);
+        
+        Query<VmClassStat> query = webStorage.createQuery(VmClassStatDAO.vmClassStatsCategory);
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.in(Key.VM_ID, new HashSet<>(Arrays.asList(987, 321)), Integer.class);
+        query.where(expr);
+        Cursor<VmClassStat> cursor = query.execute();
+        
+        assertTrue(cursor.hasNext());
+        VmClassStat result1 = cursor.next();
+        assertTrue(cursor.hasNext());
+        VmClassStat result2 = cursor.next();
+        // Account for arbitrary ordering
+        assertTrue(result1.getVmId() == 987 && result2.getVmId() == 321
+                || result1.getVmId() == 321 && result2.getVmId() == 987);
+        assertFalse(cursor.hasNext());
+    }
+    
+    @Test
+    public void authorizedQueryNotIn() throws Exception {
+        String[] roleNames = new String[] {
+                Roles.REGISTER_CATEGORY,
+                Roles.READ,
+                Roles.LOGIN,
+                Roles.ACCESS_REALM
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        setupJAASForUser(roleNames, testuser, password);
+        connectStorage(testuser, password);
+        webStorage.registerCategory(VmClassStatDAO.vmClassStatsCategory);
+        
+        Query<VmClassStat> query = webStorage.createQuery(VmClassStatDAO.vmClassStatsCategory);
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.notIn(Key.VM_ID, new HashSet<>(Arrays.asList(987, 321)), Integer.class);
+        query.where(expr);
+        Cursor<VmClassStat> cursor = query.execute();
+        
+        assertTrue(cursor.hasNext());
+        VmClassStat result = cursor.next();
+        assertEquals(654, result.getVmId());
+        assertFalse(cursor.hasNext());
+    }
+    
+    @Test
+    public void authorizedQueryNot() throws Exception {
+        String[] roleNames = new String[] {
+                Roles.REGISTER_CATEGORY,
+                Roles.READ,
+                Roles.LOGIN,
+                Roles.ACCESS_REALM
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        setupJAASForUser(roleNames, testuser, password);
+        connectStorage(testuser, password);
+        webStorage.registerCategory(VmClassStatDAO.vmClassStatsCategory);
+        
+        Query<VmClassStat> query = webStorage.createQuery(VmClassStatDAO.vmClassStatsCategory);
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.not(factory.greaterThan(Key.VM_ID, 321));
+        query.where(expr);
+        Cursor<VmClassStat> cursor = query.execute();
+        
+        assertTrue(cursor.hasNext());
+        VmClassStat result = cursor.next();
+        assertEquals(321, result.getVmId());
+        assertFalse(cursor.hasNext());
+    }
+    
+    @Test
+    public void authorizedQueryAnd() throws Exception {
+        String[] roleNames = new String[] {
+                Roles.REGISTER_CATEGORY,
+                Roles.READ,
+                Roles.LOGIN,
+                Roles.ACCESS_REALM
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        setupJAASForUser(roleNames, testuser, password);
+        connectStorage(testuser, password);
+        webStorage.registerCategory(VmClassStatDAO.vmClassStatsCategory);
+        
+        Query<VmClassStat> query = webStorage.createQuery(VmClassStatDAO.vmClassStatsCategory);
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.and(factory.greaterThan(Key.VM_ID, 321), factory.lessThanOrEqualTo(Key.VM_ID, 654));
+        query.where(expr);
+        Cursor<VmClassStat> cursor = query.execute();
+        
+        assertTrue(cursor.hasNext());
+        VmClassStat result = cursor.next();
+        assertEquals(654, result.getVmId());
+        assertFalse(cursor.hasNext());
+    }
+    
+    @Test
+    public void authorizedQueryOr() throws Exception {
+        String[] roleNames = new String[] {
+                Roles.REGISTER_CATEGORY,
+                Roles.READ,
+                Roles.LOGIN,
+                Roles.ACCESS_REALM
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        setupJAASForUser(roleNames, testuser, password);
+        connectStorage(testuser, password);
+        webStorage.registerCategory(VmClassStatDAO.vmClassStatsCategory);
+        
+        Query<VmClassStat> query = webStorage.createQuery(VmClassStatDAO.vmClassStatsCategory);
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expr = factory.or(factory.greaterThan(Key.VM_ID, 654), 
+                factory.greaterThanOrEqualTo(VmClassStatDAO.loadedClassesKey, 67890L));
+        query.where(expr);
+        Cursor<VmClassStat> cursor = query.execute();
+        
+        assertTrue(cursor.hasNext());
+        VmClassStat result1 = cursor.next();
+        assertTrue(cursor.hasNext());
+        VmClassStat result2 = cursor.next();
+        // Account for arbitrary ordering
+        assertTrue(result1.getVmId() == 987 && result2.getVmId() == 654
+                || result1.getVmId() == 654 && result2.getVmId() == 987);
         assertFalse(cursor.hasNext());
     }
 
