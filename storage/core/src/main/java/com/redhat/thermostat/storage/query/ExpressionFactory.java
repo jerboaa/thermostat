@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.storage.query;
 
+import java.util.Set;
+
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
 
@@ -115,12 +117,36 @@ public class ExpressionFactory {
     }
     
     /**
+     * Creates a {@link BinarySetMembershipExpression} comparing if the
+     * provided key has a value equal to any of the provided values.
+     * @param key - {@link Key} whose value to compare against the provided values
+     * @param value - a set of values to compare against the key
+     * @param type - the type of values of stored in the provided set
+     * @return the new comparison expression
+     */
+    public <T> BinarySetMembershipExpression<T> in(Key<T> key, Set<T> values, Class<T> type) {
+        return createSetMembershipExpression(key, values, BinarySetMembershipOperator.IN, type);
+    }
+    
+    /**
+     * Creates a {@link BinarySetMembershipExpression} comparing if the
+     * provided key has a value not equal to all of the provided values.
+     * @param key - {@link Key} whose value to compare against the provided values
+     * @param value - a set of values to compare against the key
+     * @param type - the type of values of stored in the provided set
+     * @return the new comparison expression
+     */
+    public <T> BinarySetMembershipExpression<T> notIn(Key<T> key, Set<T> values, Class<T> type) {
+        return createSetMembershipExpression(key, values, BinarySetMembershipOperator.NOT_IN, type);
+    }
+    
+    /**
      * Creates a {@link UnaryLogicalExpression} which is a logical
      * negation of the provided expression.
      * @param expr - the expression to negate
      * @return the new negated expression
      */
-    public <T extends Expression> UnaryLogicalExpression<T> not(T expr) {
+    public <T extends ComparisonExpression> UnaryLogicalExpression<T> not(T expr) {
         return new UnaryLogicalExpression<>(expr, UnaryLogicalOperator.NOT);
     }
     
@@ -148,6 +174,12 @@ public class ExpressionFactory {
     
     private <T> BinaryComparisonExpression<T> createComparisonExpression(Key<T> key, T value, BinaryComparisonOperator op) {
         return new BinaryComparisonExpression<>(new LiteralExpression<>(key), op, new LiteralExpression<>(value));
+    }
+    
+    private <T> BinarySetMembershipExpression<T> createSetMembershipExpression(Key<T> key, Set<T> values,
+            BinarySetMembershipOperator op, Class<T> type) {
+        return new BinarySetMembershipExpression<>(new LiteralExpression<>(key), op, 
+                new LiteralSetExpression<>(values, type));
     }
     
 }

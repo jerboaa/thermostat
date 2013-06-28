@@ -37,7 +37,10 @@
 package com.redhat.thermostat.web.common;
 
 import java.lang.reflect.Type;
+import java.util.HashSet;
+import java.util.Set;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
@@ -50,8 +53,12 @@ import com.redhat.thermostat.storage.query.BinaryComparisonExpression;
 import com.redhat.thermostat.storage.query.BinaryComparisonOperator;
 import com.redhat.thermostat.storage.query.BinaryLogicalExpression;
 import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
+import com.redhat.thermostat.storage.query.BinarySetMembershipExpression;
+import com.redhat.thermostat.storage.query.BinarySetMembershipOperator;
+import com.redhat.thermostat.storage.query.ComparisonExpression;
 import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.storage.query.LiteralExpression;
+import com.redhat.thermostat.storage.query.LiteralSetExpression;
 import com.redhat.thermostat.storage.query.Operator;
 import com.redhat.thermostat.storage.query.UnaryLogicalExpression;
 import com.redhat.thermostat.storage.query.UnaryLogicalOperator;
@@ -89,6 +96,9 @@ public class ExpressionSerializer implements JsonSerializer<Expression>,
             if (BinaryComparisonExpression.class.isAssignableFrom(clazz)) {
                 result = deserializeBinaryComparisonExpression(json, context);
             }
+            else if (BinarySetMembershipExpression.class.isAssignableFrom(clazz)) {
+                result = deserializeBinarySetMembershipExpression(json, context);
+            }
             else if (BinaryLogicalExpression.class.isAssignableFrom(clazz)) {
                 result = deserializeBinaryLogicalExpression(json, context);
             }
@@ -97,6 +107,9 @@ public class ExpressionSerializer implements JsonSerializer<Expression>,
             }
             else if (LiteralExpression.class.isAssignableFrom(clazz)) {
                 result = deserializeLiteralExpression(json, context);
+            }
+            else if (LiteralSetExpression.class.isAssignableFrom(clazz)) {
+                result = deserializeLiteralArrayExpression(json, context);
             }
             else {
                 throw new JsonParseException("Unknown Expression of type " + className);
@@ -118,6 +131,18 @@ public class ExpressionSerializer implements JsonSerializer<Expression>,
         BinaryComparisonOperator op = context.deserialize(jsonOp, Operator.class);
         return new BinaryComparisonExpression<>(left, op, right);
     }
+    
+    private <T> Expression deserializeBinarySetMembershipExpression(JsonElement json,
+            JsonDeserializationContext context) {
+        JsonElement jsonLeft = json.getAsJsonObject().get(PROP_OPERAND_LEFT);
+        JsonElement jsonRight = json.getAsJsonObject().get(PROP_OPERAND_RIGHT);
+        JsonElement jsonOp = json.getAsJsonObject().get(PROP_OPERATOR);
+        
+        LiteralExpression<Key<T>> left = context.deserialize(jsonLeft, Expression.class);
+        LiteralSetExpression<T> right = context.deserialize(jsonRight, Expression.class);
+        BinarySetMembershipOperator op = context.deserialize(jsonOp, Operator.class);
+        return new BinarySetMembershipExpression<>(left, op, right);
+    }
 
     private <S extends Expression, T extends Expression> Expression deserializeBinaryLogicalExpression(JsonElement json,
             JsonDeserializationContext context) {
@@ -131,7 +156,7 @@ public class ExpressionSerializer implements JsonSerializer<Expression>,
         return new BinaryLogicalExpression<>(left, op, right);
     }
 
-    private <T extends Expression> Expression deserializeUnaryLogicalExpression(JsonElement json,
+    private <T extends ComparisonExpression> Expression deserializeUnaryLogicalExpression(JsonElement json,
             JsonDeserializationContext context) {
         JsonElement jsonOperand = json.getAsJsonObject().get(PROP_OPERAND);
         JsonElement jsonOp = json.getAsJsonObject().get(PROP_OPERATOR);
@@ -149,11 +174,36 @@ public class ExpressionSerializer implements JsonSerializer<Expression>,
         Class<?> valueClass = Class.forName(valueClassName);
         return makeLiteralExpression(context, jsonValue, valueClass);
     }
-
+    
     private <T> Expression makeLiteralExpression(JsonDeserializationContext context, 
             JsonElement jsonValue, Class<T> valueClass) throws ClassNotFoundException {
         T value = context.deserialize(jsonValue, valueClass);
         return new LiteralExpression<>(value);
+    }
+
+    private Expression deserializeLiteralArrayExpression(JsonElement json,
+            JsonDeserializationContext context) throws ClassNotFoundException {
+        JsonElement jsonValue = json.getAsJsonObject().get(PROP_VALUE);
+        if (jsonValue instanceof JsonArray) {
+            JsonElement jsonValueClass = json.getAsJsonObject().get(PROP_VALUE_CLASS);
+            String valueClassName = jsonValueClass.getAsString();
+            Class<?> type = Class.forName(valueClassName);
+            JsonArray jsonArr = (JsonArray) jsonValue;
+            return makeLiteralArrayExpression(context, jsonArr, type);
+        }
+        else {
+            throw new JsonParseException("No JsonArray supplied for " + PROP_VALUE);
+        }
+    }
+
+    private <T> Expression makeLiteralArrayExpression(JsonDeserializationContext context,
+            JsonArray jsonArr, Class<T> valueClass) {
+        Set<T> values = new HashSet<>();
+        for (JsonElement element : jsonArr) {
+            T value = context.deserialize(element, valueClass);
+            values.add(value);
+        }
+        return new LiteralSetExpression<>(values, valueClass);
     }
 
     @Override
@@ -181,6 +231,16 @@ public class ExpressionSerializer implements JsonSerializer<Expression>,
             result.add(PROP_OPERATOR, op);
             result.add(PROP_OPERAND_RIGHT, right);
         }
+        else if (src instanceof BinarySetMembershipExpression) {
+            BinarySetMembershipExpression<?> binExpr = (BinarySetMembershipExpression<?>) src;
+            JsonElement left = context.serialize(binExpr.getLeftOperand());
+            JsonElement op = context.serialize(binExpr.getOperator());
+            JsonElement right = context.serialize(binExpr.getRightOperand());
+            result = new JsonObject();
+            result.add(PROP_OPERAND_LEFT, left);
+            result.add(PROP_OPERATOR, op);
+            result.add(PROP_OPERAND_RIGHT, right);
+        }
         else if (src instanceof UnaryLogicalExpression) {
             UnaryLogicalExpression<?> unaryExpr = (UnaryLogicalExpression<?>) src;
             JsonElement operand = context.serialize(unaryExpr.getOperand());
@@ -197,10 +257,29 @@ public class ExpressionSerializer implements JsonSerializer<Expression>,
             // Store the type of value to properly deserialize it later
             result.addProperty(PROP_VALUE_CLASS, litExpr.getValue().getClass().getCanonicalName());
         }
+        else if (src instanceof LiteralSetExpression) {
+            LiteralSetExpression<?> litArrExpr = (LiteralSetExpression<?>) src;
+            result = serializeLiteralArrayExpression(litArrExpr, context);
+        }
         else {
             throw new JsonParseException("Unknown expression of type " + src.getClass());
         }
         result.addProperty(PROP_CLASS_NAME, src.getClass().getCanonicalName());
+        return result;
+    }
+    
+    private <T> JsonObject serializeLiteralArrayExpression(LiteralSetExpression<T> expr,
+            JsonSerializationContext context) {
+        JsonObject result = new JsonObject();
+        Set<T> list = expr.getValues();
+        Class<T> type = expr.getType();
+        JsonArray arr = new JsonArray();
+        for (T element : list) {
+            arr.add(context.serialize(element, type));
+        }
+        result.add(PROP_VALUE, arr);
+        // Store type of list elements
+        result.addProperty(PROP_VALUE_CLASS, type.getCanonicalName());
         return result;
     }
 

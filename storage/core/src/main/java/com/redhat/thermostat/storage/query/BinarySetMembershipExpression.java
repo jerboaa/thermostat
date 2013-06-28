@@ -36,26 +36,31 @@
 
 package com.redhat.thermostat.storage.query;
 
-/**
- * A {@link UnaryExpression} which represents a boolean formula
- * with one comparison expression and a logical operator.
- * @param <T> - type of {@link Expression} used for the operand
- */
-public final class UnaryLogicalExpression<T extends ComparisonExpression> extends
-        UnaryExpression<T, UnaryLogicalOperator>
-        implements LogicalExpression {
+import com.redhat.thermostat.storage.core.Key;
 
+/**
+ * A {@link BinaryExpression} that corresponds to an algebraic comparison
+ * between a {@link Key} and multiple values.
+ * @param <T> - the type parameter of this expression's {@link Key}
+ */
+public final class BinarySetMembershipExpression<T>
+        extends BinaryExpression<LiteralExpression<Key<T>>, LiteralSetExpression<T>, BinarySetMembershipOperator>
+        implements ComparisonExpression {
+    
     /**
-     * Constructs a {@link UnaryLogicalExpression} given an operand
-     * and a {@link UnaryLogicalOperator}.
+     * Constructs a {@link BinarySetMembershipExpression} whose operands are
+     * a {@link LiteralExpression} for a {@link Key} and a {@link LiteralSetExpression}
+     * for the set of values to compare against the key.
      * <p>
      * This constructor exists mainly for JSON serialization, use methods in
      * {@link ExpressionFactory} instead of this constructor.
-     * @param operand - the operand for this expression
+     * @param leftOperand - left operand for this expression
      * @param operator - the operator for this expression
+     * @param rightOperand - right operand for this expression
      */
-    public UnaryLogicalExpression(T operand, UnaryLogicalOperator operator) {
-        super(operand, operator);
+    public BinarySetMembershipExpression(LiteralExpression<Key<T>> leftOperand,
+            BinarySetMembershipOperator operator, LiteralSetExpression<T> rightOperand) {
+        super(leftOperand, operator, rightOperand);
     }
-
+    
 }

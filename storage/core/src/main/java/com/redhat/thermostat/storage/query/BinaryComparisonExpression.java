@@ -44,7 +44,8 @@ import com.redhat.thermostat.storage.core.Key;
  * @param <T> - the type parameter of this expression's {@link Key}
  */
 public final class BinaryComparisonExpression<T>
-        extends BinaryExpression<LiteralExpression<Key<T>>, LiteralExpression<T>, BinaryComparisonOperator> {
+        extends BinaryExpression<LiteralExpression<Key<T>>, LiteralExpression<T>, BinaryComparisonOperator> 
+        implements ComparisonExpression {
     
     /**
      * Constructs a {@link BinaryComparisonExpression} whose operands are

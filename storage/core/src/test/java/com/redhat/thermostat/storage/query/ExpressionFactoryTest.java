@@ -36,8 +36,12 @@
 
 package com.redhat.thermostat.storage.query;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -48,6 +52,7 @@ public class ExpressionFactoryTest {
     
     private static final Key<String> key = new Key<>("hello", true);
     private static final String VALUE = "world";
+    private static final Set<String> VALUES = new HashSet<>(Arrays.asList("world", "worlds"));
     ExpressionFactory factory;
 
     @Before
@@ -104,9 +109,25 @@ public class ExpressionFactoryTest {
     }
 
     @Test
+    public void testIn() {
+        Expression expr = new BinarySetMembershipExpression<>(
+                new LiteralExpression<>(key), BinarySetMembershipOperator.IN,
+                new LiteralSetExpression<>(VALUES, String.class));
+        assertEquals(expr, factory.in(key, VALUES, String.class));
+    }
+    
+    @Test
+    public void testNotIn() {
+        Expression expr = new BinarySetMembershipExpression<>(
+                new LiteralExpression<>(key), BinarySetMembershipOperator.NOT_IN,
+                new LiteralSetExpression<>(VALUES, String.class));
+        assertEquals(expr, factory.notIn(key, VALUES, String.class));
+    }
+    
+    @Test
     public void testNot() {
-        Expression operand = mock(Expression.class);
-        Expression expr = new UnaryLogicalExpression<Expression>(operand, UnaryLogicalOperator.NOT);
+        ComparisonExpression operand = mock(ComparisonExpression.class);
+        Expression expr = new UnaryLogicalExpression<ComparisonExpression>(operand, UnaryLogicalOperator.NOT);
         assertEquals(expr, factory.not(operand));
     }
 

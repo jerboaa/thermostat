@@ -36,26 +36,66 @@
 
 package com.redhat.thermostat.storage.query;
 
-/**
- * A {@link UnaryExpression} which represents a boolean formula
- * with one comparison expression and a logical operator.
- * @param <T> - type of {@link Expression} used for the operand
- */
-public final class UnaryLogicalExpression<T extends ComparisonExpression> extends
-        UnaryExpression<T, UnaryLogicalOperator>
-        implements LogicalExpression {
+import java.util.Collections;
+import java.util.Set;
 
+/**
+ * An {@link Expression} that contains a set of values.
+ * @param <T> - the type of this expression's values
+ */
+public final class LiteralSetExpression<T> implements Expression {
+
+    private Set<T> values;
+    private Class<T> type;
+    
     /**
-     * Constructs a {@link UnaryLogicalExpression} given an operand
-     * and a {@link UnaryLogicalOperator}.
+     * Constructs a {@link LiteralSetExpression} given a list of values
+     * and its type.
      * <p>
      * This constructor exists mainly for JSON serialization, use methods in
      * {@link ExpressionFactory} instead of this constructor.
-     * @param operand - the operand for this expression
-     * @param operator - the operator for this expression
+     * @param values - a list of values for this expression
+     * @param type - the type of values of stored in the provided set
+     * (needed for serialization)
      */
-    public UnaryLogicalExpression(T operand, UnaryLogicalOperator operator) {
-        super(operand, operator);
+    public LiteralSetExpression(Set<T> values, Class<T> type) {
+        // Don't need to write, make read-only copy
+        this.values = Collections.unmodifiableSet(values);
+        this.type = type;
     }
-
+    
+    /**
+     * @return the values represented by this expression
+     */
+    public Set<T> getValues() {
+        return values;
+    }
+    
+    /**
+     * @return the type of values stored in this expression
+     */
+    public Class<T> getType() {
+        return type;
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        boolean result = false;
+        if (obj != null && obj instanceof LiteralSetExpression) {
+            LiteralSetExpression<?> otherExpr = (LiteralSetExpression<?>) obj;
+            result = values.equals(otherExpr.values)
+                    && type.equals(otherExpr.type);
+        }
+        return result;
+    }
+    
+    @Override
+    public int hashCode() {
+        return values.hashCode() + type.hashCode();
+    }
+    
+    @Override
+    public String toString() {
+        return values.toString();
+    }
 }

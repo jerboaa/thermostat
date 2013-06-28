@@ -38,6 +38,10 @@ package com.redhat.thermostat.storage.mongodb.internal;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -55,15 +59,16 @@ public class MongoExpressionParserTest {
     private final Key<String> KEY_3 = new Key<>("key", true);
     
     private MongoExpressionParser parser;
+    private ExpressionFactory factory;
 
     @Before
     public void setUp() throws Exception {
         parser = new MongoExpressionParser();
+        factory = new ExpressionFactory();
     }
 
     @Test
     public void testWhereEquals() {
-        ExpressionFactory factory = new ExpressionFactory();
         Expression expr = factory.equalTo(KEY_3, "value");
         DBObject query = BasicDBObjectBuilder.start().add(KEY_3.getName(), "value").get();
         assertEquals(query, parser.parse(expr));
@@ -71,7 +76,6 @@ public class MongoExpressionParserTest {
 
     @Test
     public void testWhereNotEquals() {
-        ExpressionFactory factory = new ExpressionFactory();
         Expression expr = factory.notEqualTo(KEY_3, "value");
         DBObject query = BasicDBObjectBuilder.start().push(KEY_3.getName()).add("$ne", "value").get();
         assertEquals(query, parser.parse(expr));
@@ -79,7 +83,6 @@ public class MongoExpressionParserTest {
 
     @Test
     public void testWhereGreaterThan() {
-        ExpressionFactory factory = new ExpressionFactory();
         Expression expr = factory.greaterThan(KEY_3, "value");
         DBObject query = BasicDBObjectBuilder.start().push(KEY_3.getName()).add("$gt", "value").get();
         assertEquals(query, parser.parse(expr));
@@ -87,7 +90,6 @@ public class MongoExpressionParserTest {
 
     @Test
     public void testWhereGreaterThanOrEqualTo() {
-        ExpressionFactory factory = new ExpressionFactory();
         Expression expr = factory.greaterThanOrEqualTo(KEY_3, "value");
         DBObject query = BasicDBObjectBuilder.start().push(KEY_3.getName()).add("$gte", "value").get();
         assertEquals(query, parser.parse(expr));
@@ -95,7 +97,6 @@ public class MongoExpressionParserTest {
 
     @Test
     public void testWhereLessThan() {
-        ExpressionFactory factory = new ExpressionFactory();
         Expression expr = factory.lessThan(KEY_3, "value");
         DBObject query = BasicDBObjectBuilder.start().push(KEY_3.getName()).add("$lt", "value").get();
         assertEquals(query, parser.parse(expr));
@@ -103,15 +104,29 @@ public class MongoExpressionParserTest {
 
     @Test
     public void testWhereLessThanOrEqualTo() {
-        ExpressionFactory factory = new ExpressionFactory();
         Expression expr = factory.lessThanOrEqualTo(KEY_3, "value");
         DBObject query = BasicDBObjectBuilder.start().push(KEY_3.getName()).add("$lte", "value").get();
+        assertEquals(query, parser.parse(expr));
+    }
+    
+    @Test
+    public void testWhereIn() {
+        Set<String> values = new HashSet<>(Arrays.asList("value", "values"));
+        Expression expr = factory.in(KEY_3, values, String.class);
+        DBObject query = BasicDBObjectBuilder.start().push(KEY_3.getName()).add("$in", values).get();
+        assertEquals(query, parser.parse(expr));
+    }
+    
+    @Test
+    public void testWhereNotIn() {
+        Set<String> values = new HashSet<>(Arrays.asList("value", "values"));
+        Expression expr = factory.notIn(KEY_3, values, String.class);
+        DBObject query = BasicDBObjectBuilder.start().push(KEY_3.getName()).add("$nin", values).get();
         assertEquals(query, parser.parse(expr));
     }
 
     @Test
     public void testMultiWhere() {
-        ExpressionFactory factory = new ExpressionFactory();
         Expression expr = factory.and(factory.lessThanOrEqualTo(KEY_1, 1), factory.greaterThan(KEY_1, 2));
         
         BasicDBList list = new BasicDBList();
@@ -123,7 +138,6 @@ public class MongoExpressionParserTest {
     
     @Test
     public void testMultiWhere2() {
-        ExpressionFactory factory = new ExpressionFactory();
         Expression expr = factory.and(factory.lessThanOrEqualTo(KEY_1, 1), factory.greaterThan(KEY_2, 2));
 
         BasicDBList list = new BasicDBList();
@@ -135,7 +149,6 @@ public class MongoExpressionParserTest {
     
     @Test
     public void testMultiWhere3() {
-        ExpressionFactory factory = new ExpressionFactory();
         Expression expr = factory.and(factory.equalTo(KEY_1, 1), factory.greaterThan(KEY_1, 2));
 
         BasicDBList list = new BasicDBList();
@@ -147,7 +160,6 @@ public class MongoExpressionParserTest {
     
     @Test
     public void testMultiWhere4() {
-        ExpressionFactory factory = new ExpressionFactory();
         Expression expr = factory.and(factory.equalTo(KEY_1, 1), factory.greaterThan(KEY_2, 2));
 
         BasicDBList list = new BasicDBList();
@@ -159,7 +171,6 @@ public class MongoExpressionParserTest {
     
     @Test
     public void testWhereOr() {
-        ExpressionFactory factory = new ExpressionFactory();
         Expression expr = factory.or(factory.equalTo(KEY_1, 1), factory.greaterThan(KEY_2, 2));
 
         BasicDBList list = new BasicDBList();
@@ -170,31 +181,30 @@ public class MongoExpressionParserTest {
     }
     
     @Test
-    public void testWhereNot() {
-        ExpressionFactory factory = new ExpressionFactory();
+    public void testWhereNotCompare() {
         Expression expr = factory.not(factory.greaterThan(KEY_1, 1));
 
         DBObject dbObject = BasicDBObjectBuilder.start().push("test").push("$not").add("$gt", 1).get();
         assertEquals(dbObject, parser.parse(expr));
     }
     
-    @Test(expected=IllegalArgumentException.class)
-    public void testWhereNotLogicalExpr() {
-        ExpressionFactory factory = new ExpressionFactory();
-        Expression expr = factory.not(factory.and(factory.equalTo(KEY_1, 1), factory.equalTo(KEY_2, 2)));
-        parser.parse(expr);
+    @Test
+    public void testWhereNotSetCompare() {
+        Set<Integer> values = new HashSet<>(Arrays.asList(1, 2));
+        Expression expr = factory.not(factory.in(KEY_1, values, Integer.class));
+
+        DBObject dbObject = BasicDBObjectBuilder.start().push("test").push("$not").add("$in", values).get();
+        assertEquals(dbObject, parser.parse(expr));
     }
     
     @Test(expected=IllegalArgumentException.class)
     public void testWhereLogicalNotEquals() {
-        ExpressionFactory factory = new ExpressionFactory();
         Expression expr = factory.not(factory.equalTo(KEY_1, 1));
         parser.parse(expr);
     }
     
     @Test
     public void testWhere3() {
-        ExpressionFactory factory = new ExpressionFactory();
         Expression expr = factory.and(
                 factory.lessThanOrEqualTo(KEY_3, "value"),
                 factory.and(factory.equalTo(KEY_1, 1),

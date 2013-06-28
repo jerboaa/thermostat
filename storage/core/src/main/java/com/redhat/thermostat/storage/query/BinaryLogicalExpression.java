@@ -43,7 +43,8 @@ package com.redhat.thermostat.storage.query;
  * @param <T> - the type of {@link Expression} corresponding to the right operand
  */
 public final class BinaryLogicalExpression<S extends Expression, T extends Expression>
-        extends BinaryExpression<S, T, BinaryLogicalOperator> {
+        extends BinaryExpression<S, T, BinaryLogicalOperator>
+        implements LogicalExpression {
 
     /**
      * Constructs a {@link BinaryLogicalExpression} whose operands are

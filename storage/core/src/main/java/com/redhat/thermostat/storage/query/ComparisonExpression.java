@@ -36,26 +36,6 @@
 
 package com.redhat.thermostat.storage.query;
 
-/**
- * A {@link UnaryExpression} which represents a boolean formula
- * with one comparison expression and a logical operator.
- * @param <T> - type of {@link Expression} used for the operand
- */
-public final class UnaryLogicalExpression<T extends ComparisonExpression> extends
-        UnaryExpression<T, UnaryLogicalOperator>
-        implements LogicalExpression {
-
-    /**
-     * Constructs a {@link UnaryLogicalExpression} given an operand
-     * and a {@link UnaryLogicalOperator}.
-     * <p>
-     * This constructor exists mainly for JSON serialization, use methods in
-     * {@link ExpressionFactory} instead of this constructor.
-     * @param operand - the operand for this expression
-     * @param operator - the operator for this expression
-     */
-    public UnaryLogicalExpression(T operand, UnaryLogicalOperator operator) {
-        super(operand, operator);
-    }
+public interface ComparisonExpression extends Expression {
 
 }

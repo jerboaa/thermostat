@@ -47,7 +47,11 @@ import com.redhat.thermostat.storage.query.BinaryComparisonExpression;
 import com.redhat.thermostat.storage.query.BinaryComparisonOperator;
 import com.redhat.thermostat.storage.query.BinaryLogicalExpression;
 import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
+import com.redhat.thermostat.storage.query.BinarySetMembershipExpression;
+import com.redhat.thermostat.storage.query.BinarySetMembershipOperator;
+import com.redhat.thermostat.storage.query.ComparisonExpression;
 import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.LiteralSetExpression;
 import com.redhat.thermostat.storage.query.LiteralExpression;
 import com.redhat.thermostat.storage.query.UnaryLogicalExpression;
 import com.redhat.thermostat.storage.query.UnaryLogicalOperator;
@@ -57,7 +61,10 @@ public class MongoExpressionParser {
     public DBObject parse(Expression expr) {
         DBObject result;
         if (expr instanceof BinaryComparisonExpression) {
-            result = parseBinaryLiteralExpression((BinaryComparisonExpression<?>) expr);
+            result = parseBinaryComparisonExpression((BinaryComparisonExpression<?>) expr);
+        }
+        else if (expr instanceof BinarySetMembershipExpression) {
+            result = parseBinarySetComparisonExpression((BinarySetMembershipExpression<?>) expr);
         }
         else if (expr instanceof BinaryLogicalExpression) {
             // LHS OP RHS ==> { OP : [ LHS, RHS ] }
@@ -74,30 +81,19 @@ public class MongoExpressionParser {
         }
         else if (expr instanceof UnaryLogicalExpression) {
             UnaryLogicalExpression<?> uniExpr = (UnaryLogicalExpression<?>) expr;
-            Expression operand = uniExpr.getOperand();
+            ComparisonExpression operand = uniExpr.getOperand();
             UnaryLogicalOperator op = uniExpr.getOperator();
-            String strOp = getLogicalOperator(op);
-            // In MongoDB, NOT can only be applied to negate comparisons
-            if (operand instanceof BinaryComparisonExpression) {
+            // Special case
+            if (op == UnaryLogicalOperator.NOT && operand instanceof BinaryComparisonExpression) {
                 BinaryComparisonExpression<?> binExpr = (BinaryComparisonExpression<?>) operand;
                 if (binExpr.getOperator() == BinaryComparisonOperator.EQUALS) {
+                    // TODO Convert to $ne?
                     throw new IllegalArgumentException("Cannot use $not with equality");
                 }
-                DBObject object = parseBinaryLiteralExpression(binExpr);
-                // OP { LHS : RHS } => { LHS : { OP : RHS }}
-                // Apply operator to each key
-                Set<String> keySet = object.keySet();
-                for (String key : keySet) {
-                    Object value = object.get(key);
-                    BasicDBObject newValue = new BasicDBObject(strOp, value);
-                    object.put(key, newValue);
-                }
-                
-                result = object;
             }
-            else {
-                throw new IllegalArgumentException("Not a valid use of " + strOp + " in MongoDB");
-            }
+            DBObject object = parse(operand);
+            insertUnaryLogicalOperator(object, op);
+            result = object;
         }
         else {
             throw new IllegalArgumentException("Unknown Expression of type " + expr.getClass());
@@ -106,7 +102,19 @@ public class MongoExpressionParser {
         return result;
     }
 
-    private <T> DBObject parseBinaryLiteralExpression(BinaryComparisonExpression<T> expr) {
+    private void insertUnaryLogicalOperator(DBObject object, UnaryLogicalOperator op) {
+        String strOp = getLogicalOperator(op);
+        // OP { LHS : RHS } => { LHS : { OP : RHS }}
+        // Apply operator to each key
+        Set<String> keySet = object.keySet();
+        for (String key : keySet) {
+            Object value = object.get(key);
+            BasicDBObject newValue = new BasicDBObject(strOp, value);
+            object.put(key, newValue);
+        }
+    }
+
+    private <T> DBObject parseBinaryComparisonExpression(BinaryComparisonExpression<T> expr) {
         BasicDBObjectBuilder builder = BasicDBObjectBuilder.start();
         LiteralExpression<Key<T>> leftExpr = expr.getLeftOperand();
         LiteralExpression<T> rightExpr = expr.getRightOperand();
@@ -119,7 +127,7 @@ public class MongoExpressionParser {
             // LHS OP RHS => { LHS : { OP : RHS } }
             builder.push(leftExpr.getValue().getName());
 
-            String mongoOp = getLiteralOperator(op);
+            String mongoOp = getComparisonOperator(op);
             builder.add(mongoOp, rightExpr.getValue());
 
             builder.pop();
@@ -127,7 +135,22 @@ public class MongoExpressionParser {
         return builder.get();
     }
     
-    private String getLiteralOperator(BinaryComparisonOperator operator) {
+    private <T> DBObject parseBinarySetComparisonExpression(BinarySetMembershipExpression<T> expr) {
+        BasicDBObjectBuilder builder = BasicDBObjectBuilder.start();
+        LiteralExpression<Key<T>> leftExpr = expr.getLeftOperand();
+        LiteralSetExpression<T> rightExpr = expr.getRightOperand();
+        BinarySetMembershipOperator op = expr.getOperator();
+        // LHS OP [ RHS ] => { LHS : { OP : [ RHS ] } }
+        builder.push(leftExpr.getValue().getName());
+
+        String mongoOp = getSetMembershipOperator(op);
+        builder.add(mongoOp, rightExpr.getValues());
+
+        builder.pop();
+        return builder.get();
+    }
+    
+    private String getComparisonOperator(BinaryComparisonOperator operator) {
         String result;
         switch (operator) {
         case NOT_EQUAL_TO:
@@ -144,6 +167,21 @@ public class MongoExpressionParser {
             break;
         case GREATER_THAN_OR_EQUAL_TO:
             result = "$gte";
+            break;
+        default:
+            throw new IllegalArgumentException("MongoQuery can not handle " + operator);
+        }
+        return result;
+    }
+    
+    private String getSetMembershipOperator(BinarySetMembershipOperator operator) {
+        String result;
+        switch (operator) {
+        case IN:
+            result = "$in";
+            break;
+        case NOT_IN:
+            result = "$nin";
             break;
         default:
             throw new IllegalArgumentException("MongoQuery can not handle " + operator);
@@ -177,5 +215,5 @@ public class MongoExpressionParser {
         }
         return result;
     }
-
+    
 }
