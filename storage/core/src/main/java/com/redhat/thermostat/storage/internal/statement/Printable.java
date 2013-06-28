@@ -34,38 +34,27 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.core;
+package com.redhat.thermostat.storage.internal.statement;
 
-import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.core.PreparedStatement;
 
 /**
- * Describes what data should be fetched.
+ * Implement this interface for printable nodes in the
+ * {@link PreparedStatement} parse tree. This is mainly useful for debugging
+ * purposes. Most nodes of the prepared statement's parse tree implement it.
+ * 
+ *
+ * @see SuffixExpression#printExpn();
+ * @see WhereExpression#print(int);
+ * @see SortExpression#print(int);
+ * @see LimitExpression#print(int);
  */
-public interface Query<T extends Pojo> extends Statement {
+interface Printable {
 
-    enum SortDirection {
-        ASCENDING(1),
-        DESCENDING(-1);
-
-        private int value;
-
-        private SortDirection(int value) {
-            this.value = value;
-        }
-
-        public int getValue() {
-            return value;
-        }
-    }
-
-    void where(Expression expr);
-    
-    void sort(Key<?> key, SortDirection direction);
-
-    void limit(int n);
-
-    Cursor<T> execute();
-
+    /**
+     * Print a {@link Node} in a tree-like fashion.
+     * 
+     * @param level The level of this node in the tree.
+     */
+    void print(int level);
 }
-

@@ -34,38 +34,33 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.core;
+package com.redhat.thermostat.storage.internal.statement;
 
-import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Query.SortDirection;
 
 /**
- * Describes what data should be fetched.
+ * Data structure representing patched sort members.
+ *
+ * @see Patchable
+ * @see PatchedSortExpression
+ * @see SortMember
  */
-public interface Query<T extends Pojo> extends Statement {
+class PatchedSortMember {
 
-    enum SortDirection {
-        ASCENDING(1),
-        DESCENDING(-1);
+    private final SortDirection direction;
+    private final Key<?> sortKey;
 
-        private int value;
-
-        private SortDirection(int value) {
-            this.value = value;
-        }
-
-        public int getValue() {
-            return value;
-        }
+    PatchedSortMember(Key<?> sortKey, SortDirection direction) {
+        this.direction = direction;
+        this.sortKey = sortKey;
+    }
+    
+    SortDirection getDirection() {
+        return direction;
     }
 
-    void where(Expression expr);
-    
-    void sort(Key<?> key, SortDirection direction);
-
-    void limit(int n);
-
-    Cursor<T> execute();
-
+    Key<?> getSortKey() {
+        return sortKey;
+    }
 }
-

@@ -82,6 +82,7 @@
               com.redhat.thermostat.storage.internal.dao,
               com.redhat.thermostat.storage.internal,
               com.redhat.thermostat.storage.internal.test,
+              com.redhat.thermostat.storage.internal.statement,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>

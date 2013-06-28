@@ -34,38 +34,32 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.core;
-
-import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.storage.query.Expression;
+package com.redhat.thermostat.storage.internal.statement;
 
 /**
- * Describes what data should be fetched.
+ * 
+ * Represents an {@link Unfinished} sort value.
+ * 
+ * @see Patchable
+ *
  */
-public interface Query<T extends Pojo> extends Statement {
+class UnfinishedSortKey extends AbstractUnfinished {
 
-    enum SortDirection {
-        ASCENDING(1),
-        DESCENDING(-1);
-
-        private int value;
-
-        private SortDirection(int value) {
-            this.value = value;
-        }
-
-        public int getValue() {
-            return value;
-        }
+    private int paramIndex = -1;
+    
+    @Override
+    public int getParameterIndex() {
+        return paramIndex;
     }
 
-    void where(Expression expr);
+    @Override
+    public void setParameterIndex(int parameterIndex) {
+        this.paramIndex = parameterIndex;
+    }
     
-    void sort(Key<?> key, SortDirection direction);
-
-    void limit(int n);
-
-    Cursor<T> execute();
+    @Override
+    public String toString() {
+        return "Unfinished sort key (" + getParameterIndex() + ")";
+    }
 
 }
-

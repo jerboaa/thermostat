@@ -34,38 +34,39 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.core;
-
-import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.storage.query.Expression;
+package com.redhat.thermostat.storage.internal.statement;
 
 /**
- * Describes what data should be fetched.
+ * Data structure representing a where expression.
+ *
+ * @see Node
+ * @see SuffixExpression
+ * @see StatementDescriptorParser
  */
-public interface Query<T extends Pojo> extends Statement {
+class WhereExpression implements Printable, Patchable {
 
-    enum SortDirection {
-        ASCENDING(1),
-        DESCENDING(-1);
-
-        private int value;
-
-        private SortDirection(int value) {
-            this.value = value;
-        }
-
-        public int getValue() {
-            return value;
-        }
+    private final Node root;
+    
+    WhereExpression() {
+        this.root = new Node(null);
     }
 
-    void where(Expression expr);
+    public Node getRoot() {
+        return root;
+    }
+
+    @Override
+    public void print(int level) {
+        System.out.println("WHERE:");
+        Node node = (Node)root.getValue();
+        node.print(0);
+    }
+
+    @Override
+    public PatchedWhereExpression patch(PreparedParameter[] params)
+            throws IllegalPatchException {
+        Node node = (Node)root.getValue();
+        return node.patch(params);
+    }
     
-    void sort(Key<?> key, SortDirection direction);
-
-    void limit(int n);
-
-    Cursor<T> execute();
-
 }
-

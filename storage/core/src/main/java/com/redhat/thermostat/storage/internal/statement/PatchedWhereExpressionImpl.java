@@ -34,38 +34,24 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.core;
+package com.redhat.thermostat.storage.internal.statement;
 
-import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
 
 /**
- * Describes what data should be fetched.
+ * Implementation of the return type of patchable where expressions.
+ *
  */
-public interface Query<T extends Pojo> extends Statement {
-
-    enum SortDirection {
-        ASCENDING(1),
-        DESCENDING(-1);
-
-        private int value;
-
-        private SortDirection(int value) {
-            this.value = value;
-        }
-
-        public int getValue() {
-            return value;
-        }
+class PatchedWhereExpressionImpl implements PatchedWhereExpression {
+    
+    private final Expression expn;
+    
+    PatchedWhereExpressionImpl(Expression expn) {
+        this.expn = expn;
     }
 
-    void where(Expression expr);
-    
-    void sort(Key<?> key, SortDirection direction);
-
-    void limit(int n);
-
-    Cursor<T> execute();
-
+    @Override
+    public Expression getExpression() {
+        return expn;
+    }
 }
-

@@ -37,14 +37,22 @@
 package com.redhat.thermostat.storage.internal.dao;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Remove;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
@@ -54,6 +62,7 @@ import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class AgentInfoDAOImpl implements AgentInfoDAO {
 
+    private static final Logger logger = LoggingUtils.getLogger(AgentInfoDAOImpl.class);
     private final Storage storage;
     private final ExpressionFactory factory;
 
@@ -70,9 +79,22 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
 
     @Override
     public List<AgentInformation> getAllAgentInformation() {
-        Query<AgentInformation> query = storage.createQuery(CATEGORY);
-        Cursor<AgentInformation> agentCursor = query.execute();
-
+        String allAgentsQuery = "QUERY " + CATEGORY.getName();
+        AgentInformationDescriptor desc = new AgentInformationDescriptor(CATEGORY, allAgentsQuery);
+        PreparedStatement prepared = null;
+        Cursor<AgentInformation> agentCursor = null;
+        try {
+            prepared = storage.prepareStatement(desc);
+            agentCursor = prepared.executeQuery();
+        } catch (DescriptorParsingException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.severe("Preparing query '" + desc + "' failed!");
+            return Collections.emptyList();
+        } catch (StatementExecutionException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.severe("Executing query '" + desc + "' failed!");
+            return Collections.emptyList();
+        }
         List<AgentInformation> results = new ArrayList<>();
 
         while (agentCursor.hasNext()) {
@@ -84,13 +106,25 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
 
     @Override
     public List<AgentInformation> getAliveAgents() {
-        Query<AgentInformation> query = storage.createQuery(CATEGORY);
-        ExpressionFactory factory = new ExpressionFactory();
-        Expression expr = factory.equalTo(ALIVE_KEY, Boolean.TRUE);
-        query.where(expr);
-
-        Cursor<AgentInformation> agentCursor = query.execute();
-
+        // QUERY agent-config WHERE ? = true
+        String allAgentsQuery = "QUERY " + CATEGORY.getName() + " WHERE ?s = ?b";
+        AgentInformationDescriptor desc = new AgentInformationDescriptor(CATEGORY, allAgentsQuery);
+        PreparedStatement prepared = null;
+        Cursor<AgentInformation> agentCursor = null;
+        try {
+            prepared = storage.prepareStatement(desc);
+            prepared.setString(0, ALIVE_KEY.getName());
+            prepared.setBoolean(1, true);
+            agentCursor = prepared.executeQuery();
+        } catch (DescriptorParsingException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.severe("Preparing query '" + desc + "' failed!");
+            return Collections.emptyList();
+        } catch (StatementExecutionException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.severe("Executing query '" + desc + "' failed!");
+            return Collections.emptyList();
+        }
         List<AgentInformation> results = new ArrayList<>();
 
         while (agentCursor.hasNext()) {
@@ -133,6 +167,33 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
         update.set(ALIVE_KEY, agentInfo.isAlive());
         update.set(CONFIG_LISTEN_ADDRESS, agentInfo.getConfigListenAddress());
         update.apply();
+    }
+    
+    private static class AgentInformationDescriptor implements StatementDescriptor {
+        
+        private final Category<AgentInformation> category;
+        private final String desc;
+        
+        private AgentInformationDescriptor(Category<AgentInformation> cat, String desc) {
+            this.category = cat;
+            this.desc = desc;
+        }
+        
+        @Override
+        public Category<?> getCategory() {
+            return category;
+        }
+
+        @Override
+        public String getQueryDescriptor() {
+            return desc;
+        }
+        
+        @Override
+        public String toString() {
+            return getClass().getSimpleName() + " " + desc;
+        }
+        
     }
 
 }

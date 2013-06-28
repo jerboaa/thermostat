@@ -203,10 +203,7 @@ public class QueuedStorage implements Storage {
 
     }
 
-    <T extends Pojo> Cursor<T> findAllPojos(Query query, Class<T> resultClass) {
-        return query.execute();
-    }
-
+    @SuppressWarnings("rawtypes") 
     @Override
     public long getCount(Category category) {
         return delegate.getCount(category);
@@ -269,6 +266,12 @@ public class QueuedStorage implements Storage {
     @Override
     public void registerCategory(final Category<?> category) {
         delegate.registerCategory(category);
+    }
+    
+    @Override
+    public PreparedStatement prepareStatement(final StatementDescriptor desc)
+            throws DescriptorParsingException {
+        return delegate.prepareStatement(desc);
     }
 
     @Override

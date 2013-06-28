@@ -34,38 +34,75 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.core;
+package com.redhat.thermostat.storage.internal.statement;
 
-import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.storage.query.Expression;
+import java.util.Objects;
 
 /**
- * Describes what data should be fetched.
+ * 
+ * Represents an {@link Unfinished} node in the where expressions parse tree
+ * of prepared statements.
+ * 
+ * @see Patchable
+ *
  */
-public interface Query<T extends Pojo> extends Statement {
+class UnfinishedValueNode extends AbstractUnfinished {
 
-    enum SortDirection {
-        ASCENDING(1),
-        DESCENDING(-1);
+    private int parameterIndex = -1;
+    // determines if this patched value is a LHS or if false a RHS of a
+    // binary comparison.
+    private boolean isLHS;
+    // Specifies the expected type of this free parameter.
+    private Class<?> type;
 
-        private int value;
-
-        private SortDirection(int value) {
-            this.value = value;
-        }
-
-        public int getValue() {
-            return value;
-        }
+    Class<?> getType() {
+        return type;
     }
 
-    void where(Expression expr);
+    void setType(Class<?> type) {
+        this.type = type;
+    }
+
+    boolean isLHS() {
+        return isLHS;
+    }
+
+    void setLHS(boolean isLHS) {
+        this.isLHS = isLHS;
+    }
+
+    @Override
+    public int getParameterIndex() {
+        return parameterIndex;
+    }
+
+    @Override
+    public void setParameterIndex(int parameterIndex) {
+        this.parameterIndex = parameterIndex;
+    }
     
-    void sort(Key<?> key, SortDirection direction);
-
-    void limit(int n);
-
-    Cursor<T> execute();
+    @Override
+    public String toString() {
+        return "Unfinished value (" + getParameterIndex() + ")";
+    }
+    
+    @Override
+    public boolean equals(Object other) {
+        boolean basics = super.equals(other);
+        if (!basics) {
+            return false;
+        }
+        if (!(other instanceof UnfinishedValueNode)) {
+            return false;
+        }
+        UnfinishedValueNode o = (UnfinishedValueNode)other;
+        return basics && Objects.equals(isLHS(), o.isLHS) &&
+                Objects.equals(getType(), o.getType());
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hash(getParameterIndex(), isLHS(), getType());
+    }
 
 }
-

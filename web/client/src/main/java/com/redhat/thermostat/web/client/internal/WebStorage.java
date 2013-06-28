@@ -95,11 +95,15 @@ import com.redhat.thermostat.storage.core.BasePut;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Connection;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.SecureStorage;
+import com.redhat.thermostat.storage.core.Statement;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.core.Update;
@@ -701,6 +705,13 @@ public class WebStorage implements Storage, SecureStorage {
 
     int getCategoryId(Category<?> category) {
         return categoryIds.get(category);
+    }
+
+    @Override
+    public PreparedStatement prepareStatement(StatementDescriptor desc)
+            throws DescriptorParsingException {
+        // TODO Implement
+        return null;
     }
 
 }

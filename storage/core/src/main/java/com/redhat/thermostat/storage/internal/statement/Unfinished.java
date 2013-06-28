@@ -34,38 +34,25 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.core;
-
-import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.storage.query.Expression;
+package com.redhat.thermostat.storage.internal.statement;
 
 /**
- * Describes what data should be fetched.
+ * Marker interface for unfinished nodes in a prepared statement's parse tree.
+ *
  */
-public interface Query<T extends Pojo> extends Statement {
+public interface Unfinished {
 
-    enum SortDirection {
-        ASCENDING(1),
-        DESCENDING(-1);
+    /**
+     * @return The index which contains the actual value of this unfinished
+     *         node.
+     */
+    int getParameterIndex();
 
-        private int value;
-
-        private SortDirection(int value) {
-            this.value = value;
-        }
-
-        public int getValue() {
-            return value;
-        }
-    }
-
-    void where(Expression expr);
-    
-    void sort(Key<?> key, SortDirection direction);
-
-    void limit(int n);
-
-    Cursor<T> execute();
-
+    /**
+     * Sets the index which should be used for indexing into the list of
+     * parameters which contains actual values.
+     * 
+     * @param parameterIndex
+     */
+    void setParameterIndex(int parameterIndex);
 }
-

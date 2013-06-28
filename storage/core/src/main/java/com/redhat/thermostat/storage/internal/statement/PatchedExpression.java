@@ -34,69 +34,66 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.core;
+package com.redhat.thermostat.storage.internal.statement;
 
-import java.io.InputStream;
-import java.util.UUID;
-
-import com.redhat.thermostat.annotations.Service;
-import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.core.Query.SortDirection;
+import com.redhat.thermostat.storage.core.Key;
 
 /**
- * A storage can be used to store, query, update and remove data.
- * Implementations may use memory, a file, some database or even a network
- * server as the backing store.
+ * Return type for patched expressions
+ * 
+ * @see Patchable
  */
-@Service
-public interface Storage {
-
-    void setAgentId(UUID id);
-
-    String getAgentId();
-
-    void registerCategory(Category<?> category);
-    
-    /**
-     * Prepares the given statement for execution.
-     * 
-     * @param desc The statement descriptor to prepare.
-     * @return A {@link PreparedStatement} if the given statement was
-     *         something Storage knows about, {@code null} otherwise.
-     * @throws DescriptorParsingException If the descriptor string was invalid.
-     */
-    PreparedStatement prepareStatement(StatementDescriptor desc)
-            throws DescriptorParsingException;
-
-    /**
-     * Returns the Connection object that may be used to manage connections
-     * to this Storage. Subsequent calls to this method should return
-     * the same Connection.
-     * @return the Connection for this Storage
-     */
-    Connection getConnection();
-
-    Add createAdd(Category<?> category);
-    Replace createReplace(Category<?> category);
-
-    void removePojo(Remove remove);
-
-    /**
-     * Drop all data related to the currently running agent.
-     */
-    void purge(String agentId);
-
-    long getCount(Category<?> category);
-
-    void saveFile(String filename, InputStream data);
-
-    InputStream loadFile(String filename);
-
-    <T extends Pojo> Query<T> createQuery(Category<T> category);
-
-    Update createUpdate(Category<?> category);
-    Remove createRemove();
-
-    void shutdown();
-
+interface PatchedExpression {
+    // marker interface
 }
 
+interface PatchedWhereExpression extends PatchedExpression {
+    
+    /**
+     * @return The patched where expression.
+     * 
+     * @see {@link Expression}
+     */
+    Expression getExpression();
+}
+
+interface PatchedSortExpression extends PatchedExpression {
+    
+    /**
+     * 
+     * @return The patched sorts.
+     * 
+     * @see {@link PatchedSortMember}
+     * @see {@link Query#sort(Key, SortDirection)}
+     */
+    PatchedSortMember[] getSortMembers();
+    
+}
+
+interface PatchedSortMemberExpression extends PatchedExpression {
+    
+    /**
+     * 
+     * @return The patched sorts.
+     * 
+     * @see {@link PatchedSortMember}
+     * @see {@link Query#sort(Key, SortDirection)}
+     */
+    PatchedSortMember getSortMember();
+    
+}
+
+interface PatchedLimitExpression extends PatchedExpression {
+    
+    /**
+     * 
+     * @return The patched limit value.
+     * 
+     * @see {@link Query#limit(int)}
+     */
+    int getLimitValue();
+    
+}

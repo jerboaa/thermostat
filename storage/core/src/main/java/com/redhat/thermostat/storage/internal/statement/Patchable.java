@@ -34,38 +34,20 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.core;
-
-import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.storage.query.Expression;
+package com.redhat.thermostat.storage.internal.statement;
 
 /**
- * Describes what data should be fetched.
+ * Interface for patchable objects in a ParsedStatement.
+ *
  */
-public interface Query<T extends Pojo> extends Statement {
-
-    enum SortDirection {
-        ASCENDING(1),
-        DESCENDING(-1);
-
-        private int value;
-
-        private SortDirection(int value) {
-            this.value = value;
-        }
-
-        public int getValue() {
-            return value;
-        }
-    }
-
-    void where(Expression expr);
+interface Patchable {
     
-    void sort(Key<?> key, SortDirection direction);
-
-    void limit(int n);
-
-    Cursor<T> execute();
-
+    /**
+     * 
+     * @param params The parameters which should be used for patching.
+     * @return The finished (a.k.a patched) expression.
+     * @throws IllegalPatchException If something failed during patching.
+     */
+    PatchedExpression patch(PreparedParameter[] params) throws IllegalPatchException;
+    
 }
-

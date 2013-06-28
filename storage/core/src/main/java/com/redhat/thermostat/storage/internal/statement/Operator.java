@@ -34,38 +34,42 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.core;
-
-import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.storage.query.Expression;
+package com.redhat.thermostat.storage.internal.statement;
 
 /**
- * Describes what data should be fetched.
+ * Valid operators in the string representation of a prepared statement
+ * descriptor.
+ *
  */
-public interface Query<T extends Pojo> extends Statement {
-
-    enum SortDirection {
-        ASCENDING(1),
-        DESCENDING(-1);
-
-        private int value;
-
-        private SortDirection(int value) {
-            this.value = value;
-        }
-
-        public int getValue() {
-            return value;
-        }
-    }
-
-    void where(Expression expr);
+enum Operator {
     
-    void sort(Key<?> key, SortDirection direction);
-
-    void limit(int n);
-
-    Cursor<T> execute();
-
+    /** Logical AND operation */
+    AND("AND"),
+    /** Logical OR operation */
+    OR("OR"),
+    /** Logical NOT operation */
+    NOT("NOT"),
+    /** Equality comparison */
+    EQUALS("="),
+    /** Inequality comparison */
+    NOT_EQUAL_TO("!="),
+    /** Greater than comparison */
+    GREATER_THAN(">"),
+    /** Greater than or equal comparison */
+    GREATER_THAN_OR_EQUAL_TO(">="),
+    /** Less than comparison */
+    LESS_THAN("<"),
+    /** Less than or equal comparison */
+    LESS_THAN_OR_EQUAL_TO("<=");
+    
+    private String name;
+    
+    Operator(String name) {
+        this.name = name;
+    }
+    
+    public String getName() {
+        return name;
+    }
+    
 }
-

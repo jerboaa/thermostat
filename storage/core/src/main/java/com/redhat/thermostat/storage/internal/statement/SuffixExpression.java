@@ -34,38 +34,55 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.core;
-
-import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.storage.query.Expression;
+package com.redhat.thermostat.storage.internal.statement;
 
 /**
- * Describes what data should be fetched.
+ * Container for where, sort and limit expressions.
+ *
  */
-public interface Query<T extends Pojo> extends Statement {
+class SuffixExpression {
 
-    enum SortDirection {
-        ASCENDING(1),
-        DESCENDING(-1);
+    private WhereExpression whereExpn;
+    private SortExpression sortExpn;
+    private LimitExpression limitExpn;
 
-        private int value;
+    public WhereExpression getWhereExpn() {
+        return whereExpn;
+    }
 
-        private SortDirection(int value) {
-            this.value = value;
+    public void setWhereExpn(WhereExpression whereExpn) {
+        this.whereExpn = whereExpn;
+    }
+
+    public SortExpression getSortExpn() {
+        return sortExpn;
+    }
+
+    public void setSortExpn(SortExpression sortExpn) {
+        this.sortExpn = sortExpn;
+    }
+
+    public LimitExpression getLimitExpn() {
+        return limitExpn;
+    }
+
+    public void setLimitExpn(LimitExpression limitExpn) {
+        this.limitExpn = limitExpn;
+    }
+
+    /**
+     * Prints the entire suffix expression to stdout.
+     */
+    public void printExpn() {
+        if (whereExpn != null) {
+            whereExpn.print(0);
         }
-
-        public int getValue() {
-            return value;
+        if (sortExpn != null) {
+            sortExpn.print(0);
+        }
+        if (limitExpn != null) {
+            limitExpn.print(0);
         }
     }
 
-    void where(Expression expr);
-    
-    void sort(Key<?> key, SortDirection direction);
-
-    void limit(int n);
-
-    Cursor<T> execute();
-
 }
-

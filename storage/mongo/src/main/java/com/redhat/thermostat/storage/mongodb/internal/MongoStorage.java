@@ -61,10 +61,14 @@ import com.redhat.thermostat.storage.core.Connection;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.PreparedStatement;
+import com.redhat.thermostat.storage.core.PreparedStatementFactory;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Replace;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.model.Pojo;
@@ -330,6 +334,15 @@ public class MongoStorage implements Storage {
         } catch (Exception e) {
             // ignored
         }
+    }
+
+    @Override
+    public PreparedStatement prepareStatement(StatementDescriptor statementDesc)
+            throws DescriptorParsingException {
+        // FIXME: Use some kind of cache in order to avoid parsing of
+        // descriptors each time this is called. At least if the descriptor
+        // class is the same we should be able to do something here.
+        return PreparedStatementFactory.getInstance(this, statementDesc);
     }
 
 }

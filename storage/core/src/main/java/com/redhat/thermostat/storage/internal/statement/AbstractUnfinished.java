@@ -34,38 +34,31 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.core;
+package com.redhat.thermostat.storage.internal.statement;
 
-import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.storage.query.Expression;
+import java.util.Objects;
 
 /**
- * Describes what data should be fetched.
+ * Abstract superclass for unfinished nodes (i.e. nodes in the prepared
+ * statements parse tree which need to be patched with their real values).
+ * 
  */
-public interface Query<T extends Pojo> extends Statement {
+abstract class AbstractUnfinished implements Unfinished {
 
-    enum SortDirection {
-        ASCENDING(1),
-        DESCENDING(-1);
-
-        private int value;
-
-        private SortDirection(int value) {
-            this.value = value;
+    @Override
+    public boolean equals(Object other) {
+        if (other == null) {
+            return false;
         }
-
-        public int getValue() {
-            return value;
+        if (!(other instanceof Unfinished)) {
+            return false;
         }
+        Unfinished o = (Unfinished)other;
+        return getParameterIndex() == o.getParameterIndex();
     }
-
-    void where(Expression expr);
     
-    void sort(Key<?> key, SortDirection direction);
-
-    void limit(int n);
-
-    Cursor<T> execute();
-
+    @Override
+    public int hashCode() {
+        return Objects.hash(getParameterIndex());
+    }
 }
-
