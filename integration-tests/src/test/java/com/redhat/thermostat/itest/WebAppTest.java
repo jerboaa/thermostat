@@ -43,6 +43,7 @@ import static com.redhat.thermostat.itest.IntegrationTest.getThermostatHome;
 import static com.redhat.thermostat.itest.IntegrationTest.spawnThermostat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
@@ -58,11 +59,7 @@ import java.util.HashSet;
 import java.util.Properties;
 import java.util.UUID;
 
-import org.eclipse.jetty.security.DefaultUserIdentity;
-import org.eclipse.jetty.security.MappedLoginService;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.UserIdentity;
-import org.eclipse.jetty.util.security.Password;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -599,11 +596,19 @@ public class WebAppTest {
         
         byte[] data = "Hello World".getBytes();
         webStorage.saveFile("test", new ByteArrayInputStream(data));
-        // Note: Apparently, saving the file takes a bit. Without this
-        // waiting, we sometimes get problems on loadFile. There seems
-        // to be no way to synchronize on the operation in Mongo.
-        Thread.sleep(300);
-        InputStream loadStream = webStorage.loadFile("test");
+        // Note: On the server side, the file is saved into mongodb
+        // via GridFS.  The save operation returns before write is
+        // complete, and there is no callback mechanism to find out
+        // when the write is complete.  So, we try a few times to
+        // load it before considering it a failure.
+        InputStream loadStream = null;
+        int loadAttempts = 0;
+        while (loadStream == null && loadAttempts < 3) {
+            Thread.sleep(300);
+            loadStream = webStorage.loadFile("test");
+            loadAttempts++;
+        }
+        assertNotNull(loadStream);
         StringBuilder str = new StringBuilder();
         int i = loadStream.read();
         while (i != -1) {
@@ -611,31 +616,5 @@ public class WebAppTest {
             i = loadStream.read();
         }
         assertEquals("Hello World", str.toString());
-    }
-    
-    private static class TestLoginService extends MappedLoginService {
-
-        private final String[] roleNames;
-        private final String username;
-        private final String password;
-
-        private TestLoginService(String username, String password,
-                String[] roleNames) {
-            this.username = username;
-            this.password = password;
-            this.roleNames = roleNames;
-        }
-
-        @Override
-        protected void loadUsers() throws IOException {
-            putUser(username, new Password(password),
-                    roleNames);
-        }
-
-        @Override
-        protected UserIdentity loadUser(String username) {
-            return new DefaultUserIdentity(null, null,
-                    roleNames);
-        }
     }
 }

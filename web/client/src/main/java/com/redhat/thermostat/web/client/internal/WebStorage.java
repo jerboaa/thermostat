@@ -58,6 +58,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.net.ssl.SSLContext;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.codec.binary.Base64;
@@ -121,9 +122,11 @@ public class WebStorage implements Storage, SecureStorage {
     private static class CloseableHttpEntity implements Closeable, HttpEntity {
 
         private HttpEntity entity;
+        private int responseCode;
 
-        CloseableHttpEntity(HttpEntity entity) {
+        CloseableHttpEntity(HttpEntity entity, int responseCode) {
             this.entity = entity;
+            this.responseCode = responseCode;
         }
 
         @Override
@@ -181,6 +184,9 @@ public class WebStorage implements Storage, SecureStorage {
             }
         }
 
+        int getResponseCode() {
+            return responseCode;
+        }
     }
 
     private final class WebConnection extends Connection {
@@ -436,11 +442,19 @@ public class WebStorage implements Storage, SecureStorage {
         }
         HttpResponse response = httpClient.execute(httpPost);
         StatusLine status = response.getStatusLine();
-        if (status.getStatusCode() != 200) {
+        int responseCode = status.getStatusCode();
+        switch (responseCode) {
+        case (HttpServletResponse.SC_NO_CONTENT):
+            // Let calling code handle SC_NO_CONTENT
+            break;
+        case (HttpServletResponse.SC_OK):
+            // Let calling code handle SC_OK
+            break;
+        default:
             throw new IOException("Server returned status: " + status);
         }
 
-        return new CloseableHttpEntity(response.getEntity());
+        return new CloseableHttpEntity(response.getEntity(), responseCode);
     }
 
     private static InputStream getContent(HttpEntity entity) {
@@ -527,7 +541,28 @@ public class WebStorage implements Storage, SecureStorage {
         NameValuePair fileParam = new BasicNameValuePair("file", name);
         List<NameValuePair> formparams = Arrays.asList(fileParam);
         CloseableHttpEntity entity = post(endpoint + "/load-file", formparams);
+        if (entity.getResponseCode() == HttpServletResponse.SC_NO_CONTENT) {
+            return null;
+        }
         return new WebDataStream(entity);
+    }
+
+    @Override
+    public void saveFile(String name, InputStream in) throws StorageException {
+        InputStreamBody body = new InputStreamBody(in, name);
+        MultipartEntity mpEntity = new MultipartEntity();
+        mpEntity.addPart("file", body);
+        // See IcedTea bug #1314. For safe-file we need to do this. However,
+        // doing this for other actions messes up authentication when using
+        // jetty (and possibly others). Hence, do this expect-continue thingy
+        // only for save-file.
+        httpClient.getParams().setParameter("http.protocol.expect-continue", Boolean.TRUE);
+        try {
+            post(endpoint + "/save-file", mpEntity).close();
+        } finally {
+            // FIXME: Not sure if we need this :/
+            httpClient.getParams().removeParameter("http.protocol.expect-continue");
+        }
     }
 
     @Override
@@ -579,24 +614,6 @@ public class WebStorage implements Storage, SecureStorage {
                 gson.toJson(remove));
         List<NameValuePair> formparams = Arrays.asList(removeParam);
         post(endpoint + "/remove-pojo", formparams).close();
-    }
-
-    @Override
-    public void saveFile(String name, InputStream in) throws StorageException {
-        InputStreamBody body = new InputStreamBody(in, name);
-        MultipartEntity mpEntity = new MultipartEntity();
-        mpEntity.addPart("file", body);
-        // See IcedTea bug #1314. For safe-file we need to do this. However,
-        // doing this for other actions messes up authentication when using
-        // jetty (and possibly others). Hence, do this expect-continue thingy
-        // only for save-file.
-        httpClient.getParams().setParameter("http.protocol.expect-continue", Boolean.TRUE);
-        try {
-            post(endpoint + "/save-file", mpEntity).close();
-        } finally {
-            // FIXME: Not sure if we need this :/
-            httpClient.getParams().removeParameter("http.protocol.expect-continue");
-        }
     }
 
     @Override

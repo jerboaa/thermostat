@@ -119,13 +119,16 @@ public class WebStorageTest {
 
     private int port;
 
-    private String requestBody;
-
+    // Set these in prepareServer() to determine server behaviour
+    private int responseStatus = HttpServletResponse.SC_OK;
     private String responseBody;
+
+    // These get set by test server handler (anonymous class in startServer())
+    // Check them after WebStorage method call that should interact with server.
+    private String requestBody;
     private Map<String,String> headers;
     private String method;
     private String requestURI;
-    private int responseStatus;
 
     private static Category<TestObj> category;
     private static Key<String> key1;
@@ -151,7 +154,7 @@ public class WebStorageTest {
 
     @Before
     public void setUp() throws Exception {
-        
+
         port = FreePortFinder.findFreePort(new TryPort() {
             @Override
             public void tryPort(int port) throws Exception {
@@ -170,9 +173,6 @@ public class WebStorageTest {
         storage.setEndpoint("http://localhost:" + port + "/");
         storage.setAgentId(new UUID(123, 456));
         headers = new HashMap<>();
-        requestURI = null;
-        method = null;
-        responseStatus = HttpServletResponse.SC_OK;
         registerCategory();
         factory = new ExpressionFactory();
     }
@@ -216,6 +216,32 @@ public class WebStorageTest {
         server.start();
     }
 
+    // Specified status and response body.
+    private void prepareServer(int responseStatus, String responseBody) {
+        this.responseStatus = responseStatus;
+        this.responseBody = responseBody;
+
+        requestBody = null;
+        requestURI = null;
+        method = null;
+        headers.clear();
+    }
+
+    // Specified status and null response body.
+    private void prepareServer(int responseStatus) {
+        prepareServer(responseStatus, null);
+    }
+
+    // OK status and specified response body.
+    private void prepareServer(String responseBody) {
+        prepareServer(HttpServletResponse.SC_OK, responseBody);
+    }
+
+    // OK status and null response body.
+    private void prepareServer() {
+        prepareServer(HttpServletResponse.SC_OK);
+    }
+
     @After
     public void tearDown() throws Exception {
 
@@ -246,7 +272,6 @@ public class WebStorageTest {
         obj2.setProperty1("fluffor2");
         Gson gson = new GsonBuilder().registerTypeHierarchyAdapter(Expression.class, new ExpressionSerializer())
                 .registerTypeHierarchyAdapter(Operator.class, new OperatorSerializer()).create();
-        responseBody = gson.toJson(Arrays.asList(obj1, obj2));
 
         Key<String> key1 = new Key<>("property1", true);
         Query<TestObj> query = storage.createQuery(category);
@@ -254,7 +279,9 @@ public class WebStorageTest {
         Expression expr = factory.equalTo(key1, "fluff");
         query.where(expr);
 
+        prepareServer(gson.toJson(Arrays.asList(obj1, obj2)));
         Cursor<TestObj> results = query.execute();
+
         StringReader reader = new StringReader(requestBody);
         BufferedReader bufRead = new BufferedReader(reader);
         String line = URLDecoder.decode(bufRead.readLine(), "UTF-8");
@@ -291,6 +318,8 @@ public class WebStorageTest {
 
         Put replace = storage.createReplace(category);
         replace.setPojo(obj);
+
+        prepareServer();
         replace.apply();
 
         Gson gson = new Gson();
@@ -332,6 +361,8 @@ public class WebStorageTest {
     public void testRemovePojo() throws UnsupportedEncodingException, IOException {
         Expression expr = factory.equalTo(key1, "test");
         Remove remove = storage.createRemove().from(category).where(expr);
+
+        prepareServer();
         storage.removePojo(remove);
 
         Gson gson = new GsonBuilder()
@@ -376,6 +407,8 @@ public class WebStorageTest {
         update.where(expr);
         update.set(key1, "fluff");
         update.set(key2, 42);
+
+        prepareServer();
         update.apply();
 
         Gson gson = new GsonBuilder()
@@ -422,9 +455,7 @@ public class WebStorageTest {
     @Test
     public void testGetCount() throws UnsupportedEncodingException, IOException {
 
-        Gson gson = new Gson();
-        responseBody = gson.toJson(12345);
-
+        prepareServer(new Gson().toJson(12345));
         long result = storage.getCount(category);
 
         StringReader reader = new StringReader(requestBody);
@@ -440,7 +471,10 @@ public class WebStorageTest {
     public void testSaveFile() {
         String data = "Hello World";
         ByteArrayInputStream in = new ByteArrayInputStream(data.getBytes());
+
+        prepareServer();
         storage.saveFile("fluff", in);
+
         assertEquals("chunked", headers.get("Transfer-Encoding"));
         String contentType = headers.get("Content-Type");
         assertTrue(contentType.startsWith("multipart/form-data; boundary="));
@@ -458,8 +492,12 @@ public class WebStorageTest {
 
     @Test
     public void testLoadFile() throws IOException {
-        responseBody = "Hello World";
-        InputStream in = storage.loadFile("fluff");
+        prepareServer(HttpServletResponse.SC_NO_CONTENT);
+        InputStream in = storage.loadFile("no_file_here");
+        assertNull(in);
+
+        prepareServer("Hello World");
+        in = storage.loadFile("fluff");
         assertEquals("file=fluff", requestBody.trim());
         byte[] data = new byte[11];
         int totalRead = 0;
@@ -476,7 +514,10 @@ public class WebStorageTest {
 
     @Test
     public void testPurge() throws UnsupportedEncodingException, IOException {
+
+        prepareServer();
         storage.purge("fluff");
+
         assertEquals("POST", method);
         assertTrue(requestURI.endsWith("/purge"));
         StringReader reader = new StringReader(requestBody);
@@ -489,9 +530,10 @@ public class WebStorageTest {
 
     @Test
     public void testGenerateToken() throws UnsupportedEncodingException {
-        responseBody = "flufftoken";
 
         final String actionName = "some action";
+
+        prepareServer("flufftoken");
         AuthToken authToken = storage.generateToken(actionName);
 
         assertTrue(requestURI.endsWith("/generate-token"));
@@ -509,6 +551,7 @@ public class WebStorageTest {
         assertTrue(Arrays.equals(clientToken, authToken.getClientToken()));
 
         // Send another request and verify that we send a different client-token every time.
+        prepareServer("flufftoken");
         storage.generateToken(actionName);
 
         requestParts = requestBody.split("=");
@@ -521,6 +564,7 @@ public class WebStorageTest {
 
     @Test
     public void canSSLEnableClient() {
+        // This test doesn't use the class-wide storage+server setup.
         StartupConfiguration config = new StartupConfiguration() {
             
             @Override
@@ -528,7 +572,7 @@ public class WebStorageTest {
                 return "https://onlyHttpsPrefixUsed.example.com";
             }
         };
-        storage = new WebStorage(config);
+        WebStorage storage = new WebStorage(config);
         HttpClient client = storage.httpClient;
         SchemeRegistry schemeReg = client.getConnectionManager().getSchemeRegistry();
         Scheme scheme = schemeReg.getScheme("https");
@@ -545,8 +589,10 @@ public class WebStorageTest {
         
         AuthToken authToken = new AuthToken(token, tokenDigest);
 
-        responseStatus = 200;
+        prepareServer();
         boolean ok = storage.verifyToken(authToken, someAction);
+
+        assertTrue(ok);
         assertTrue(requestURI.endsWith("/verify-token"));
         assertEquals("POST", method);
         String[] requestParts = requestBody.split("&");
@@ -565,10 +611,9 @@ public class WebStorageTest {
         urlDecoded = URLDecoder.decode(authTokenParts[1], "UTF-8");
         String base64decoded = new String(Base64.decodeBase64(urlDecoded));
         assertEquals("stuff", base64decoded);
-        assertTrue(ok);
 
         // Try another one in which verification fails.
-        responseStatus = 401;
+        prepareServer(HttpServletResponse.SC_UNAUTHORIZED);
         ok = storage.verifyToken(authToken, someAction);
         assertFalse(ok);
         

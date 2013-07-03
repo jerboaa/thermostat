@@ -271,6 +271,10 @@ public class WebStorageEndPoint extends HttpServlet {
         
         String name = req.getParameter("file");
         try (InputStream data = storage.loadFile(name)) {
+            if (data == null) {
+                resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
+                return;
+            }
             OutputStream out = resp.getOutputStream();
             byte[] buffer = new byte[512];
             int read = 0;
@@ -280,6 +284,7 @@ public class WebStorageEndPoint extends HttpServlet {
                     out.write(buffer, 0, read);
                 }
             }
+            resp.setStatus(HttpServletResponse.SC_OK);
         }
     }
 
