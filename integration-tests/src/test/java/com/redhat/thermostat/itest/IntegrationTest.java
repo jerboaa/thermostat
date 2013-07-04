@@ -163,7 +163,9 @@ public class IntegrationTest {
         for (String toDelete : filesToDelete) {
             File theFile = new File(path, toDelete);
             if (!theFile.delete()) {
-                throw new IOException("cant delete: '" + theFile.toString() + "'.");
+                if (theFile.exists()) {
+                    throw new IOException("cant delete: '" + theFile.toString() + "'.");
+                }
             }
         }
     }
