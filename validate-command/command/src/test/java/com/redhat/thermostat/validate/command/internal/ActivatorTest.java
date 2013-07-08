@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Red Hat, Inc.
+ * Copyright 2012, 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,36 +34,31 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.plugin.validator;
+package com.redhat.thermostat.validate.command.internal;
 
+import static com.redhat.thermostat.testutils.Asserts.assertCommandIsRegistered;
+import static org.junit.Assert.*;
 
-public class PluginConfigurationValidatorException extends Exception {
-    
-    private static final long serialVersionUID = 1L;
-    private String filePath;
-    
-    /**
-     * Constructor of PluginConfigurationValidatorException
-     * @param filePath The absolute path to the file which failed to validate.
-     * @param message the detailed message
-     */
-    public PluginConfigurationValidatorException(String filePath, String message) {
-        super(message);
-        this.filePath = filePath;
+import org.junit.Test;
+
+import com.redhat.thermostat.testutils.StubBundleContext;
+import com.redhat.thermostat.validate.command.ValidateCommand;
+
+public class ActivatorTest {
+
+    @Test
+    public void testCommandsRegistered() throws Exception {
+        StubBundleContext ctx = new StubBundleContext();
+        
+        Activator activator = new Activator();
+        
+        activator.start(ctx);
+
+        assertCommandIsRegistered(ctx, "validate", ValidateCommand.class);
+        
+        activator.stop(ctx);
+        
+        assertEquals(0, ctx.getAllServices().size());
     }
-    
-    /**
-     * Constructor of PluginConfigurationValidatorException
-     * @param filePath The absolute path to the file which failed to validate.
-     * @param message the detailed message
-     */
-    public PluginConfigurationValidatorException(String filePath, String message, Throwable cause) {
-        super(message, cause);
-        this.filePath = filePath;
-    }
-    
-    public String getFilePath() {
-        return filePath;
-    }
-    
+
 }

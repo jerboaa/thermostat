@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Red Hat, Inc.
+ * Copyright 2012, 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,36 +34,20 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.plugin.validator;
+package com.redhat.thermostat.validate.command.locale;
 
+import com.redhat.thermostat.testutils.AbstractLocaleResourcesTest;
 
-public class PluginConfigurationValidatorException extends Exception {
-    
-    private static final long serialVersionUID = 1L;
-    private String filePath;
-    
-    /**
-     * Constructor of PluginConfigurationValidatorException
-     * @param filePath The absolute path to the file which failed to validate.
-     * @param message the detailed message
-     */
-    public PluginConfigurationValidatorException(String filePath, String message) {
-        super(message);
-        this.filePath = filePath;
+public class LocaleResourcesTest extends AbstractLocaleResourcesTest<LocaleResources> {
+
+    @Override
+    protected Class<LocaleResources> getEnumClass() {
+        return LocaleResources.class;
     }
-    
-    /**
-     * Constructor of PluginConfigurationValidatorException
-     * @param filePath The absolute path to the file which failed to validate.
-     * @param message the detailed message
-     */
-    public PluginConfigurationValidatorException(String filePath, String message, Throwable cause) {
-        super(message, cause);
-        this.filePath = filePath;
+
+    @Override
+    protected String getResourceBundle() {
+        return LocaleResources.RESOURCE_BUNDLE;
     }
-    
-    public String getFilePath() {
-        return filePath;
-    }
-    
+
 }

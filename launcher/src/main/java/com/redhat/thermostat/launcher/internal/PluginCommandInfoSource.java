@@ -96,9 +96,9 @@ public class PluginCommandInfoSource implements CommandInfoSource {
             } catch (PluginConfigurationParseException exception) {
                 logger.log(Level.WARNING, "unable to parse plugin configuration", exception);
             } catch (PluginConfigurationValidatorException exception) {
-                logger.log(Level.WARNING, "unable to validate " + exception.getFilePath() + " file\n");
+                logger.log(Level.INFO, "unable to validate " + exception.getFilePath() + " file\n");
             } catch (FileNotFoundException exception) {
-                logger.log(Level.WARNING, "file not found", exception);
+                logger.log(Level.INFO, "file not found", exception);
             }
         }
         combineCommands();

@@ -50,7 +50,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import com.redhat.thermostat.common.cli.Arguments;
-import com.redhat.thermostat.launcher.CommandLineArgumentParseException;
+import com.redhat.thermostat.common.cli.CommandLineArgumentParseException;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 

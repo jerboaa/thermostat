@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.plugin.validator;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 
@@ -51,21 +54,25 @@ import com.redhat.thermostat.plugin.validator.internal.ConfigurationValidatorErr
 
 
 public class PluginValidator {
-    
-    public void validate(StreamSource plugin) throws PluginConfigurationValidatorException {
+
+    public void validate(File pluginXml, boolean isCommand) throws PluginConfigurationValidatorException, FileNotFoundException {
         URL schemaUrl = PluginValidator.class.getResource("/thermostat-plugin.xsd");
         SchemaFactory schemaFactory = 
                 SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
         
-        try {
+        try (FileInputStream fis = new FileInputStream(pluginXml)) {
             Schema schema = schemaFactory.newSchema(schemaUrl);
             Validator validator = schema.newValidator();
-            validator.setErrorHandler(new ConfigurationValidatorErrorHandler());
-            validator.validate(plugin);
-        } catch (IOException | SAXException exception) {
+            validator.setErrorHandler(new ConfigurationValidatorErrorHandler(pluginXml, isCommand));
+            validator.validate(new StreamSource(fis));
+        } catch (SAXException exception) {
             throw new PluginConfigurationValidatorException
-                (plugin.getSystemId(), exception.getLocalizedMessage(), exception);
-        }
+            (pluginXml.getAbsolutePath(), exception.getLocalizedMessage(), exception);
+        } catch (FileNotFoundException fnfe) {
+            throw fnfe;
+        } catch (IOException ioe) {
+            throw new  PluginConfigurationValidatorException(ioe.getLocalizedMessage(), ioe.getMessage());
+        } 
     }
 
 }

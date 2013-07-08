@@ -44,8 +44,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import javax.xml.transform.stream.StreamSource;
-
 import org.junit.Test;
 
 public class PluginValidatorTest {
@@ -56,7 +54,7 @@ public class PluginValidatorTest {
         File testFile = createFile("testSystemId", config);
         PluginValidator validator = new PluginValidator();
         try {
-            validator.validate(new StreamSource(testFile));
+            validator.validate(testFile, false);
             fail("should not come here");
         } catch (PluginConfigurationValidatorException e) {
             //pass
@@ -89,7 +87,7 @@ public class PluginValidatorTest {
                     "</plugin>";
             File testFile = createFile("testSystemId", config);
             PluginValidator validator = new PluginValidator();
-            validator.validate(new StreamSource(testFile));
+            validator.validate(testFile, false);
             testFile.delete();
         
             config = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
@@ -112,7 +110,7 @@ public class PluginValidatorTest {
                     "</plugin>";
             File testFile2 = createFile("testSystemId", config);
             PluginValidator validator2 = new PluginValidator();
-            validator2.validate(new StreamSource(testFile));
+            validator2.validate(testFile, false);
             testFile2.delete();
         } catch (PluginConfigurationValidatorException e) {
            fail("should not reach here, plugin.xml should be validated according to schema");
@@ -144,7 +142,7 @@ public class PluginValidatorTest {
         File testFile = createFile("testSystemId", config);
         PluginValidator validator = new PluginValidator();
         try {
-            validator.validate(new StreamSource(testFile));
+            validator.validate(testFile, false);
             fail("plugin.xml should not validate according to schema");
         } catch (PluginConfigurationValidatorException e) {
             //pass
@@ -207,7 +205,7 @@ public class PluginValidatorTest {
         File testFile = createFile("testSystemId", config);
         PluginValidator validator = new PluginValidator();
         try {
-            validator.validate(new StreamSource(testFile));
+            validator.validate(testFile, false);
         } catch (PluginConfigurationValidatorException e) {
            fail("should not reach here, plugin.xml should be validated according to schema");
         } finally {

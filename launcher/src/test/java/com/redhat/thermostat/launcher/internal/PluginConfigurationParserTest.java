@@ -44,16 +44,10 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.List;
-
-import javax.xml.transform.stream.StreamSource;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;

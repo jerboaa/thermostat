@@ -37,6 +37,7 @@
 package com.redhat.thermostat.plugin.validator.internal;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
@@ -56,11 +57,18 @@ public class ConfigurationValidatorErrorHandler implements ErrorHandler {
     private static final Logger logger = LoggingUtils.getLogger(ConfigurationValidatorErrorHandler.class);
     private int warningsErrorsCounter = 0;
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+    private final File pluginXML;
+    private boolean isCommand;
     
     private enum ErrorType {
         WARNING,
         ERROR,
         FATAL_ERROR;
+    }
+    
+    public ConfigurationValidatorErrorHandler(File pluginXML, boolean isCommand) {
+        this.pluginXML = pluginXML;
+        this.isCommand = isCommand;
     }
 
     @Override
@@ -79,11 +87,11 @@ public class ConfigurationValidatorErrorHandler implements ErrorHandler {
     public void fatalError(SAXParseException exception) throws SAXParseException {
         if (warningsErrorsCounter == 0) {
             printInfo(exception, ErrorType.FATAL_ERROR);
-            logger.warning("XML not well formed");
+            logger.info("XML not well formed");
         }
     }
 
-    private static void printInfo(SAXParseException e, ErrorType type) {
+    private void printInfo(SAXParseException e, ErrorType type) {
         int columnNumber = e.getColumnNumber();
         int lineNumber = e.getLineNumber();
         
@@ -94,8 +102,7 @@ public class ConfigurationValidatorErrorHandler implements ErrorHandler {
         String thirdLine = null;
         String errorLine = null;
         String pointer = "";
-        String absolutePath = e.getSystemId();
-        absolutePath = absolutePath.substring(5);
+        String absolutePath = pluginXML.getAbsolutePath();
         
         Map<ErrorType,LocaleResources> translateKeys = new HashMap<>();
         translateKeys.put(ErrorType.ERROR, LocaleResources.VALIDATION_ERROR);
@@ -134,7 +141,12 @@ public class ConfigurationValidatorErrorHandler implements ErrorHandler {
         buffer.append(errorLine + "\n");
         buffer.append(pointer  + "\n");
         
-        logger.warning("\n" + buffer.toString());
+        if (isCommand) {
+            System.out.println(buffer.toString());
+        } else {
+            logger.info(buffer.toString());
+        }
+        
     }
     
     private static String formatMessage(String message) {

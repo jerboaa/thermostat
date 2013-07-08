@@ -53,7 +53,6 @@ import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.stream.StreamSource;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
@@ -90,24 +89,24 @@ import com.redhat.thermostat.plugin.validator.PluginValidator;
       &lt;name&gt;platform&lt;/name&gt;
       &lt;description&gt;launches a bare bone Platform Client&lt;/description&gt;
       &lt;options&gt; 
-	&lt;group&gt;
-	  &lt;required&gt;true&lt;/required&gt;
-	  &lt;option&gt;
-	    &lt;long&gt;optA&lt;/long&gt;
-	    &lt;short&gt;a&lt;/short&gt;
-	    &lt;required&gt;true&lt;/required&gt;
-	  &lt;/option&gt;
-	  &lt;option&gt;
-	    &lt;long&gt;optB&lt;/long&gt;
-	    &lt;short&gt;b&lt;/short&gt;
-	    &lt;required&gt;true&lt;/required&gt;
+    &lt;group&gt;
+      &lt;required&gt;true&lt;/required&gt;
+      &lt;option&gt;
+        &lt;long&gt;optA&lt;/long&gt;
+        &lt;short&gt;a&lt;/short&gt;
+        &lt;required&gt;true&lt;/required&gt;
+      &lt;/option&gt;
+      &lt;option&gt;
+        &lt;long&gt;optB&lt;/long&gt;
+        &lt;short&gt;b&lt;/short&gt;
+        &lt;required&gt;true&lt;/required&gt;
           &lt;/option&gt;
-	  &lt;option&gt;
-	    &lt;long&gt;optC&lt;/long&gt;
-	    &lt;short&gt;b&lt;/short&gt;	    
-	    &lt;required&gt;false&lt;/required&gt;
-	  &lt;/option&gt;
-	  &lt;option common="true"&gt;
+      &lt;option&gt;
+        &lt;long&gt;optC&lt;/long&gt;
+        &lt;short&gt;b&lt;/short&gt;        
+        &lt;required&gt;false&lt;/required&gt;
+      &lt;/option&gt;
+      &lt;option common="true"&gt;
             &lt;long&gt;dbUrl&lt;/long&gt;
           &lt;/option&gt;
           &lt;option common="true"&gt;
@@ -119,55 +118,55 @@ import com.redhat.thermostat.plugin.validator.PluginValidator;
           &lt;option common="true"&gt;
             &lt;long&gt;logLevel&lt;/long&gt;
           &lt;/option&gt;
-	&lt;/group&gt;   
-	&lt;option&gt;
-	  &lt;long&gt;heapId&lt;/long&gt;
-	  &lt;short&gt;h&lt;/short&gt;
-	  &lt;argument&gt;heapArgument&lt;/argument&gt;
-	  &lt;required&gt;true&lt;/required&gt;
-	  &lt;description&gt;the ID of the heapdump to analyze&lt;/description&gt;
-	&lt;/option&gt;
-	&lt;option&gt;
-	  &lt;long&gt;limit&lt;/long&gt;
-	  &lt;short&gt;L&lt;/short&gt;
-	  &lt;argument&gt;limitArgument&lt;/argument&gt;
-	  &lt;required&gt;false&lt;/required&gt;
-	  &lt;description&gt;limit search to top N results, defaults to 10&lt;/description&gt;
-	&lt;/option&gt;
+    &lt;/group&gt;   
+    &lt;option&gt;
+      &lt;long&gt;heapId&lt;/long&gt;
+      &lt;short&gt;h&lt;/short&gt;
+      &lt;argument&gt;heapArgument&lt;/argument&gt;
+      &lt;required&gt;true&lt;/required&gt;
+      &lt;description&gt;the ID of the heapdump to analyze&lt;/description&gt;
+    &lt;/option&gt;
+    &lt;option&gt;
+      &lt;long&gt;limit&lt;/long&gt;
+      &lt;short&gt;L&lt;/short&gt;
+      &lt;argument&gt;limitArgument&lt;/argument&gt;
+      &lt;required&gt;false&lt;/required&gt;
+      &lt;description&gt;limit search to top N results, defaults to 10&lt;/description&gt;
+    &lt;/option&gt;
       &lt;/options&gt;
       &lt;bundles&gt;
-	&lt;bundle&gt;thermostat-platform-common-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
-	&lt;bundle&gt;thermostat-platform-swing-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
+    &lt;bundle&gt;thermostat-platform-common-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
+    &lt;bundle&gt;thermostat-platform-swing-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
       &lt;/bundles&gt;
       &lt;dependencies&gt;
-	&lt;dependency&gt;thermostat-client-core-0.6.0-SNAPSHOT.jar&lt;/dependency&gt;
+    &lt;dependency&gt;thermostat-client-core-0.6.0-SNAPSHOT.jar&lt;/dependency&gt;
       &lt;/dependencies&gt;
     &lt;/command&gt;
     &lt;command&gt;
       &lt;name&gt;platform2&lt;/name&gt;
       &lt;description&gt;launches a bare bone Platform Client&lt;/description&gt;
        &lt;options&gt; 
-	&lt;option&gt;
-	  &lt;long&gt;heapId2&lt;/long&gt;
-	  &lt;short&gt;h&lt;/short&gt;
-	  &lt;argument&gt;heapId2Argument&lt;/argument&gt;
-	  &lt;required&gt;true&lt;/required&gt;
-	  &lt;description&gt;the ID of the heapdump to analyze&lt;/description&gt;
-	&lt;/option&gt;
-	&lt;option&gt;
-	  &lt;long&gt;limit2&lt;/long&gt;
-	  &lt;short&gt;L&lt;/short&gt;
-	  &lt;argument&gt;limit2Argument&lt;/argument&gt;
-	  &lt;required&gt;false&lt;/required&gt;
-	  &lt;description&gt;limit search to top N results, defaults to 10&lt;/description&gt;
-	&lt;/option&gt;
+    &lt;option&gt;
+      &lt;long&gt;heapId2&lt;/long&gt;
+      &lt;short&gt;h&lt;/short&gt;
+      &lt;argument&gt;heapId2Argument&lt;/argument&gt;
+      &lt;required&gt;true&lt;/required&gt;
+      &lt;description&gt;the ID of the heapdump to analyze&lt;/description&gt;
+    &lt;/option&gt;
+    &lt;option&gt;
+      &lt;long&gt;limit2&lt;/long&gt;
+      &lt;short&gt;L&lt;/short&gt;
+      &lt;argument&gt;limit2Argument&lt;/argument&gt;
+      &lt;required&gt;false&lt;/required&gt;
+      &lt;description&gt;limit search to top N results, defaults to 10&lt;/description&gt;
+    &lt;/option&gt;
       &lt;/options&gt;
       &lt;bundles&gt;
-	&lt;bundle&gt;thermostat-platform-common-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
-	&lt;bundle&gt;thermostat-platform-controllers-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
+    &lt;bundle&gt;thermostat-platform-common-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
+    &lt;bundle&gt;thermostat-platform-controllers-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
       &lt;/bundles&gt;
       &lt;dependencies&gt;
-	&lt;dependency&gt;thermostat-common-core-0.6.0-SNAPSHOT.jar&lt;/dependency&gt;
+    &lt;dependency&gt;thermostat-common-core-0.6.0-SNAPSHOT.jar&lt;/dependency&gt;
       &lt;/dependencies&gt;
     &lt;/command&gt;
   &lt;/commands&gt;
@@ -176,14 +175,14 @@ import com.redhat.thermostat.plugin.validator.PluginValidator;
       &lt;name&gt;platform3&lt;/name&gt;
       &lt;bundles&gt;
         &lt;bundle&gt;thermostat-platform-common-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
-	&lt;bundle&gt;thermostat-platform-controllers-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
-	&lt;bundle&gt;thermostat-platform-command-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
-	&lt;bundle&gt;thermostat-platform-common-export-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
-	&lt;bundle&gt;thermostat-platform-swing-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
+    &lt;bundle&gt;thermostat-platform-controllers-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
+    &lt;bundle&gt;thermostat-platform-command-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
+    &lt;bundle&gt;thermostat-platform-common-export-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
+    &lt;bundle&gt;thermostat-platform-swing-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
       &lt;/bundles&gt;
       &lt;dependencies&gt;
-	&lt;dependency&gt;thermostat-common-core-0.6.0-SNAPSHOT.jar&lt;/dependency&gt;
-	&lt;dependency&gt;thermostat-client-core-0.6.0-SNAPSHOT.jar&lt;/dependency&gt;
+    &lt;dependency&gt;thermostat-common-core-0.6.0-SNAPSHOT.jar&lt;/dependency&gt;
+    &lt;dependency&gt;thermostat-client-core-0.6.0-SNAPSHOT.jar&lt;/dependency&gt;
       &lt;/dependencies&gt;
     &lt;/extension&gt;
   &lt;/extensions&gt;
@@ -200,8 +199,15 @@ public class PluginConfigurationParser {
     
     public PluginConfiguration parse(File configurationFile) throws FileNotFoundException, PluginConfigurationValidatorException {
         PluginValidator validator = new PluginValidator();
-        validator.validate(new StreamSource(configurationFile));
-        return parse(configurationFile.getParentFile().getName(), new FileInputStream(configurationFile));
+        validator.validate(configurationFile, false);
+        PluginConfiguration config = null;
+        try (FileInputStream fis = new FileInputStream(configurationFile)) {
+            config = parse(configurationFile.getParentFile().getName(), fis);
+            
+        } catch (IOException ioFisClosed) {
+            // ignore if fis closing fails
+        }
+        return config;
     }
     
     PluginConfiguration parse(String pluginName, InputStream configurationStream) {
@@ -232,7 +238,7 @@ public class PluginConfigurationParser {
                 if (node.getNodeName().equals("commands")) {
                     commands = parseCommands(pluginName, node);
                 } else if (node.getNodeName().equals("extensions")) {
-                	extensions = parseExtensions(pluginName, node);
+                    extensions = parseExtensions(pluginName, node);
                 }
             }
         }

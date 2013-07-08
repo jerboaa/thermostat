@@ -34,21 +34,30 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.launcher;
+package com.redhat.thermostat.validate.command.internal;
 
-import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.shared.locale.LocalizedString;
+import java.util.Hashtable;
 
-public class CommandLineArgumentParseException extends CommandException {
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
-    public CommandLineArgumentParseException(LocalizedString message) {
-        super(message);
+import com.redhat.thermostat.common.cli.Command;
+import com.redhat.thermostat.validate.command.ValidateCommand;
+
+public class Activator implements BundleActivator {
+
+    private ServiceRegistration registration;
+
+    @Override
+    public void start(final BundleContext context) throws Exception {
+        Hashtable<String,String> properties = new Hashtable<>();
+        properties.put(Command.NAME, "validate");
+        registration = context.registerService(Command.class.getName(), new ValidateCommand(), properties);
     }
 
-    public CommandLineArgumentParseException(LocalizedString message, Throwable cause) {
-        super(message, cause);
+    @Override
+    public void stop(BundleContext context) throws Exception {
+        registration.unregister();
     }
-
-
 }
-
