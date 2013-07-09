@@ -36,6 +36,18 @@
 
 package com.redhat.thermostat.vm.heap.analysis.client.swing.internal.stats;
 
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
+import java.beans.Transient;
+import java.util.Date;
+import java.util.Objects;
+
 import com.redhat.thermostat.client.swing.GraphicsUtils;
 import com.redhat.thermostat.client.swing.components.CompositeIcon;
 import com.redhat.thermostat.client.swing.components.Icon;
@@ -46,21 +58,6 @@ import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapIconResources;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
 
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.GradientPaint;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.Paint;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.image.BufferedImage;
-import java.beans.Transient;
-import java.util.Date;
-import java.util.Objects;
-
 @SuppressWarnings("serial")
 public class OverlayComponent extends ShadowLabel {
 
@@ -68,7 +65,7 @@ public class OverlayComponent extends ShadowLabel {
     
     private boolean selected;
     private String _text;
-    
+        
     public class NiceIcon extends Icon {
         
         private Icon src;
@@ -115,26 +112,20 @@ public class OverlayComponent extends ShadowLabel {
         
         super(LocalizedString.EMPTY_STRING);
         
+        this.dump = dump;
+        this._text = new Date(dump.getTimestamp()).toString();
+        
         setOpaque(false);
-        
         setForeground(Palette.ROYAL_BLUE.getColor());
-        
         setName(OverlayComponent.class.getName());
-        
+        setFont(TimelineUtils.FONT);
+        setOpaque(false);
+        setToolTipText(_text);
+                
         Icon mask = new Icon(HeapIconResources.getIcon(HeapIconResources.PIN_MASK));
         Icon source = new NiceIcon(mask);
         
         setIcon(new CompositeIcon(mask, source));
-        
-        this.dump = dump;
-
-        this._text = new Date(dump.getTimestamp()).toString();
-        
-        setFont(TimelineUtils.FONT);
-
-        setOpaque(false);
-
-        setToolTipText(_text);
         
         addMouseListener(new MouseAdapter() {
             @Override

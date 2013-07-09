@@ -41,11 +41,13 @@ import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.io.File;
 import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
@@ -69,10 +71,13 @@ import com.redhat.thermostat.vm.heap.analysis.client.core.HeapIconResources;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.chart.OverviewChart;
 import com.redhat.thermostat.vm.heap.analysis.client.locale.LocaleResources;
+import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.stats.ExportDumpEvent;
+import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.stats.ExportDumpListener;
 import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.stats.HeapChartPanel;
 import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.stats.HeapDumpListener;
 import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.stats.HeapSelectionEvent;
 import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.stats.StatsPanel;
+import com.redhat.thermostat.vm.heap.analysis.common.DumpFile;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
 
 public class HeapSwingView extends HeapView implements SwingComponent {
@@ -92,6 +97,8 @@ public class HeapSwingView extends HeapView implements SwingComponent {
     
     private JPanel stack;
     
+    private JFileChooser fileChooser;
+    
     public HeapSwingView() {
         stats = new StatsPanel();
         stats.addHeapDumperListener(new ActionListener() {
@@ -106,6 +113,14 @@ public class HeapSwingView extends HeapView implements SwingComponent {
             public void actionPerformed(HeapSelectionEvent e) {
                 HeapDump dump = e.getSource().getHeapDump();
                 heapDumperNotifier.fireAction(HeapDumperAction.ANALYSE, dump);
+            }
+        });
+        
+        stats.addExportDumpListener(new ExportDumpListener() {
+            @Override
+            public void actionPerformed(ExportDumpEvent e) {
+                HeapDump dump = e.getSource();
+                heapDumperNotifier.fireAction(HeapDumperAction.REQUEST_EXPORT, dump);
             }
         });
         
@@ -173,6 +188,9 @@ public class HeapSwingView extends HeapView implements SwingComponent {
         
         // at the beginning, only the overview is visible
         visiblePane.add(overview);
+        
+        fileChooser = new JFileChooser();
+        fileChooser.setName("EXPORT_HEAP_DUMP_FILE_CHOOSER");
     }
     
     private class ViewVisibleListener extends ComponentVisibleListener {
@@ -375,5 +393,21 @@ public class HeapSwingView extends HeapView implements SwingComponent {
                 }
             });
         }
+    }
+    
+    @Override
+    public void openExportDialog(final DumpFile heapDump) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                fileChooser.setSelectedFile(heapDump.getFile());
+                int result = fileChooser.showSaveDialog(HeapSwingView.this.getUiComponent());
+                if (result == JFileChooser.APPROVE_OPTION) {
+                    File file = fileChooser.getSelectedFile();
+                    heapDump.setFile(file);
+                    heapDumperNotifier.fireAction(HeapDumperAction.SAVE_HEAP_DUMP, heapDump);
+                }
+            }
+        });
     }
 }

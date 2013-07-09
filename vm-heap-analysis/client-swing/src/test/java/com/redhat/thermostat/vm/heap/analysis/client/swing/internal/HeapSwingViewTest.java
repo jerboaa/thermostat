@@ -42,17 +42,21 @@ import static org.mockito.Mockito.when;
 
 import java.awt.Container;
 import java.awt.event.KeyEvent;
+import java.io.File;
 import java.util.concurrent.CountDownLatch;
 
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
 import org.fest.swing.annotation.GUITest;
+import org.fest.swing.core.Robot;
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
 import org.fest.swing.edt.GuiActionRunner;
 import org.fest.swing.edt.GuiTask;
+import org.fest.swing.finder.JFileChooserFinder;
 import org.fest.swing.fixture.Containers;
 import org.fest.swing.fixture.FrameFixture;
 import org.fest.swing.fixture.JButtonFixture;
+import org.fest.swing.fixture.JFileChooserFixture;
 import org.fest.swing.fixture.JLabelFixture;
 import org.fest.swing.fixture.JPanelFixture;
 import org.fest.swing.fixture.JPopupMenuFixture;
@@ -63,7 +67,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.client.swing.components.OverlayPanel;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
@@ -72,6 +75,7 @@ import com.redhat.thermostat.vm.heap.analysis.client.core.HeapView.HeapDumperAct
 import com.redhat.thermostat.vm.heap.analysis.client.core.chart.OverviewChart;
 import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.stats.HeapChartPanel;
 import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.stats.OverlayComponent;
+import com.redhat.thermostat.vm.heap.analysis.common.DumpFile;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
 import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 
@@ -213,7 +217,7 @@ public class HeapSwingViewTest {
         
         latch.await();
         
-        JLabelFixture overlay = panel.label(OverlayComponent.class.getName());
+        JLabelFixture overlay = panel.label(String.valueOf(dump.getTimestamp()));
         overlay.doubleClick();
         
         OverlayComponent overlayComponent = (OverlayComponent) overlay.component();
@@ -228,6 +232,93 @@ public class HeapSwingViewTest {
         
         assertTrue(result[0]);
         assertEquals(1, resultTimes[0]);
+    }
+    
+    @GUITest
+    @Test
+    public void testExportStep1() {
+        
+        HeapInfo info = mock(HeapInfo.class);
+        when(info.getTimeStamp()).thenReturn(now);
+        HeapDump dump = new HeapDump(info, null);
+
+        view.addHeapDump(dump);
+        
+        HeapInfo info2 = mock(HeapInfo.class);
+        when(info2.getTimeStamp()).thenReturn(now + 1);
+        HeapDump dump2 = new HeapDump(info2, null);
+
+        view.addHeapDump(dump2);
+        
+        final HeapDump [] resultDump = new HeapDump[1];
+
+        view.addDumperListener(new ActionListener<HeapView.HeapDumperAction>() {
+            @Override
+            public void actionPerformed(ActionEvent<HeapDumperAction> actionEvent) {
+                if (actionEvent.getActionId() == HeapDumperAction.REQUEST_EXPORT) {
+                    resultDump[0] = (HeapDump) actionEvent.getPayload();
+                }
+            }
+        });
+        
+        frame.show();
+              
+        JLabelFixture overlayFixture = frame.label(String.valueOf(dump.getTimestamp()));
+        overlayFixture.requireVisible();
+      
+        JPopupMenuFixture popupFixture = overlayFixture.showPopupMenu();
+        popupFixture.click();
+        
+        assertNotNull(resultDump[0]);
+        assertEquals(dump, resultDump[0]);
+        
+        overlayFixture = frame.label(String.valueOf(dump2.getTimestamp()));
+        overlayFixture.requireVisible();
+      
+        popupFixture = overlayFixture.showPopupMenu();
+        popupFixture.click();
+        
+        assertNotNull(resultDump[0]);
+        assertEquals(dump2, resultDump[0]);
+    }
+    
+    @GUITest
+    @Test
+    public void testExportStep2() {
+        
+        HeapInfo info = mock(HeapInfo.class);
+        HeapDump dump = mock(HeapDump.class);
+        when(dump.getInfo()).thenReturn(info);
+        
+        DumpFile localDump = new DumpFile();
+        localDump.setDump(dump);
+        localDump.setFile(new File("TEST-1-.hprof"));
+        
+        final DumpFile [] resultDump = new DumpFile[1];
+
+        view.addDumperListener(new ActionListener<HeapView.HeapDumperAction>() {
+            @Override
+            public void actionPerformed(ActionEvent<HeapDumperAction> actionEvent) {
+                if (actionEvent.getActionId() == HeapDumperAction.SAVE_HEAP_DUMP) {
+                    resultDump[0] = (DumpFile) actionEvent.getPayload();
+                }
+            }
+        });
+        
+        frame.show();
+
+        view.openExportDialog(localDump);
+
+        JFileChooserFixture fileChooser =
+                JFileChooserFinder.findFileChooser("EXPORT_HEAP_DUMP_FILE_CHOOSER").using(frame.robot);
+        File destination = new File("TEST-2-.hprof");
+        fileChooser.selectFile(destination);
+        fileChooser.approve();
+        
+        assertNotNull(resultDump[0]);
+        assertEquals(destination.getName(), resultDump[0].getFile().getName());
+        assertEquals(dump, resultDump[0].getDump());
+
     }
     
     @GUITest

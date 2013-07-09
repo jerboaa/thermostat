@@ -37,6 +37,8 @@
 package com.redhat.thermostat.vm.heap.analysis.client.core.internal;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.isA;
@@ -48,6 +50,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -63,6 +67,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import com.lowagie.text.pdf.codec.Base64.InputStream;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationCache;
@@ -88,6 +93,7 @@ import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectDetailsView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectDetailsViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectRootsView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectRootsViewProvider;
+import com.redhat.thermostat.vm.heap.analysis.common.DumpFile;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
 import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
@@ -350,7 +356,55 @@ public class HeapDumpControllerTest {
         verify(heapDumper).dump();
         verify(view).notifyHeapDumpComplete();
     }
+    
+    @Test
+    public void testRequestExport() throws CommandException, InterruptedException {
+        setUpListeners();
 
+        HeapDump dump = mock(HeapDump.class);
+        when(dump.getTimestamp()).thenReturn(1l);
+        when(dump.getType()).thenReturn("TEST");
+
+        ArgumentCaptor<DumpFile> localDumpCaptor = ArgumentCaptor.forClass(DumpFile.class);
+        
+        ActionEvent<HeapDumperAction> event = new ActionEvent<>(view, HeapDumperAction.REQUEST_EXPORT);
+        event.setPayload(dump);
+        
+        heapDumperListener.actionPerformed(event);
+        
+        verify(view).openExportDialog(localDumpCaptor.capture());
+        DumpFile localDump = localDumpCaptor.getValue();
+        
+        assertTrue(localDump.getFile().getName().endsWith(".TEST"));
+        assertEquals(dump, localDump.getDump());
+    }
+    
+    @Test
+    public void testExportLocation() throws CommandException, InterruptedException {
+        final CountDownLatch latch = new CountDownLatch(1);
+        mockExecutorService(latch);
+        
+        setUpListeners();
+
+        HeapInfo info = mock(HeapInfo.class);
+        HeapDump dump = mock(HeapDump.class);
+        when(dump.getInfo()).thenReturn(info);
+        DumpFile localDump = mock(DumpFile.class);
+        when(localDump.getDump()).thenReturn(dump);
+
+        InputStream stream = mock(InputStream.class);
+        when(heapDao.getHeapDumpData(any(HeapInfo.class))).thenReturn(stream);
+        
+        ActionEvent<HeapDumperAction> event = new ActionEvent<>(view, HeapDumperAction.SAVE_HEAP_DUMP);
+        event.setPayload(localDump);
+        
+        heapDumperListener.actionPerformed(event);
+        latch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+
+        verify(localDump).getFile();
+        verify(localDump).getDump();
+    }
+        
     @Test
     public void testRequestHeapDumpFails() throws CommandException, InterruptedException {
         final CountDownLatch latch = new CountDownLatch(1);

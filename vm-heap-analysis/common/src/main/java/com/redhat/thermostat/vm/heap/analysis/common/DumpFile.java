@@ -34,19 +34,28 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.heap.analysis.client.swing.internal.stats;
+package com.redhat.thermostat.vm.heap.analysis.common;
 
-import java.util.EventObject;
+import java.io.File;
 
-@SuppressWarnings("serial")
-public class HeapSelectionEvent extends EventObject {
+public class DumpFile {
 
-    public HeapSelectionEvent(OverlayComponent source) {
-        super(source);
+    private HeapDump dump;
+    private File location;
+    
+    public File getFile() {
+        return location;
     }
-
-    @Override
-    public OverlayComponent getSource() {
-        return (OverlayComponent) super.getSource();
+    
+    public HeapDump getDump() {
+        return dump;
+    }
+    
+    public void setDump(HeapDump dump) {
+        this.dump = dump;
+    }
+    
+    public void setFile(File location) {
+        this.location = location;
     }
 }

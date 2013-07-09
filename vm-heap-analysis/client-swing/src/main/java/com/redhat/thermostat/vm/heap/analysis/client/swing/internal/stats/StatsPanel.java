@@ -37,6 +37,7 @@
 package com.redhat.thermostat.vm.heap.analysis.client.swing.internal.stats;
 
 import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -53,10 +54,13 @@ public class StatsPanel extends JPanel {
 
     private HeapChartPanel heapPanel;
     private HeapDumperPopup popup;
-
+    
+    private ExportDumpPopup export;
     private List<OverlayComponent> overlays;
 
     private boolean canDump;
+    
+    private HeapDump selectedDump;
     
     public StatsPanel() {
         
@@ -67,7 +71,17 @@ public class StatsPanel extends JPanel {
         overlays = new ArrayList<>();
         
         popup = new HeapDumperPopup();
-
+        
+        export = new ExportDumpPopup();
+        export.addExportListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (selectedDump != null) {
+                    fireExportDumpEvent(selectedDump);
+                }
+            }
+        });
+        
         setLayout(new BorderLayout());
     }
     
@@ -75,10 +89,12 @@ public class StatsPanel extends JPanel {
         if (heapPanel != null) {
             remove(heapPanel);
         }
+        
         heapPanel = panel;
         for (OverlayComponent overlay : overlays) {
             heapPanel.add(overlay);
         }
+        
         heapPanel.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e)  {
                 checkPopup(e);
@@ -113,6 +129,10 @@ public class StatsPanel extends JPanel {
     public void addDumpListListener(HeapDumpListener listener) {
         listenerList.add(HeapDumpListener.class, listener);
     }
+
+    public void addExportDumpListener(ExportDumpListener listener) {
+        listenerList.add(ExportDumpListener.class, listener);
+    }
     
     public void disableHeapDumperControl(DumpDisabledReason reason) {
         canDump = false;
@@ -122,6 +142,18 @@ public class StatsPanel extends JPanel {
         canDump = true;
     }
 
+    private void fireExportDumpEvent(HeapDump source) {
+        Object[] listeners = listenerList.getListenerList();
+
+        ExportDumpEvent event = new ExportDumpEvent(source);
+        
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i] == ExportDumpListener.class) {
+                ((ExportDumpListener) listeners[i + 1]).actionPerformed(event);
+            }
+        }
+    }
+    
     private void fireHeapDumpClicked(OverlayComponent component) {
         Object[] listeners = listenerList.getListenerList();
 
@@ -134,9 +166,10 @@ public class StatsPanel extends JPanel {
         }
     }
     
-    public void addDump(HeapDump dump) {
+    public void addDump(final HeapDump dump) {
         OverlayComponent dumpOverlay = new OverlayComponent(dump);
-        if (!overlays.contains(dumpOverlay)){
+        if (!overlays.contains(dumpOverlay)) {
+            dumpOverlay.setName(String.valueOf(dump.getTimestamp()));
             overlays.add(dumpOverlay);
             dumpOverlay.addMouseListener(new MouseAdapter() {
                 @Override
@@ -150,7 +183,23 @@ public class StatsPanel extends JPanel {
                         fireHeapDumpClicked(sourceOverlay);
                     }
                 }
+                
+                public void mousePressed(MouseEvent e)  {
+                    checkPopup(e);
+                }  
+
+                public void mouseReleased(MouseEvent e) {
+                    checkPopup(e);
+                }
+                
+                private void checkPopup(MouseEvent e) {
+                    if (e.isPopupTrigger()) {
+                        selectedDump = dump;
+                        export.show(e.getComponent(), e.getX(), e.getY());
+                    }
+                }
             });
+            
             if (heapPanel != null) {
                 heapPanel.add(dumpOverlay);
             }
@@ -184,4 +233,3 @@ public class StatsPanel extends JPanel {
         }
     }
 }
-

@@ -36,10 +36,18 @@
 
 package com.redhat.thermostat.vm.heap.analysis.client.core.internal;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
@@ -67,6 +75,7 @@ import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectDetailsViewProvi
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectRootsViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.chart.OverviewChart;
 import com.redhat.thermostat.vm.heap.analysis.client.locale.LocaleResources;
+import com.redhat.thermostat.vm.heap.analysis.common.DumpFile;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
 import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
@@ -201,6 +210,26 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
                     dump = (HeapDump) actionEvent.getPayload();
                     analyseDump(dump);
                     break;
+                    
+                case REQUEST_EXPORT: {
+                    dump = (HeapDump) actionEvent.getPayload();
+                    DumpFile localHeapDump = new DumpFile();
+                    SimpleDateFormat format = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss_SSS");
+                    Date date = new Date(dump.getTimestamp());
+                    String timeStamp = format.format(date);
+                    String id = "heapdump-" + ref.getName() + "-" + timeStamp + "." + dump.getType();
+                    localHeapDump.setFile(new File(id));
+                    localHeapDump.setDump(dump);
+                    view.openExportDialog(localHeapDump);
+                } break;
+                
+                case SAVE_HEAP_DUMP: {
+                    // FIXME: we really need some indicator that something is
+                    // going on here, same for dumping requests
+                    DumpFile localHeapDump = (DumpFile) actionEvent.getPayload();
+                    saveHeapDump(localHeapDump);
+                } break;
+                
                 default:
                     break;
                 }
@@ -213,6 +242,31 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
         }
     }
 
+    private void saveHeapDump(final DumpFile localHeapDump) {
+        appService.getApplicationExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                HeapDump dump = localHeapDump.getDump();
+                File file = localHeapDump.getFile();
+                if (dump == null || file == null) {
+                    // this is here mainly for the tests, since we don't
+                    // expect files or dumps to be null
+                    return;
+                }
+                
+                try (InputStream in = heapDAO.getHeapDumpData(dump.getInfo())) {
+                    Files.copy(in, file.toPath());
+                    
+                } catch (IOException e) {
+                    LocalizedString message = translator.localize(LocaleResources.ERROR_EXPORTING_FILE);
+                    view.displayWarning(message);
+                    Logger.getLogger(HeapDumpController.class.getSimpleName()).
+                        log(Level.WARNING, message.getContents(), e);
+                }
+            }
+        });
+    }
+    
     private void openDumpList() {
         
         appService.getApplicationExecutor().execute(new Runnable() {

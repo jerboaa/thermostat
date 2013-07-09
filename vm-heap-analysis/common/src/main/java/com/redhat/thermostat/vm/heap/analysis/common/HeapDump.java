@@ -228,5 +228,9 @@ public class HeapDump {
     public int hashCode() {
         return heapInfo.hashCode();
     }
+    
+    public String getType() {
+        return "hprof";
+    }
 }
 
