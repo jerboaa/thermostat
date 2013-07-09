@@ -68,6 +68,7 @@ public class ServiceCommand extends AbstractCommand implements ActionListener<Ap
     private Semaphore agentBarrier = new Semaphore(0);
     private BundleContext context;
     private Launcher launcher;
+    private boolean storageFailed = false;
 
     public ServiceCommand(BundleContext context) {
         this.context = context;
@@ -85,6 +86,12 @@ public class ServiceCommand extends AbstractCommand implements ActionListener<Ap
         String[] storageStartArgs = new String[] { "storage", "--start" };
         launcher.run(storageStartArgs, listeners, false);
         agentBarrier.acquireUninterruptibly();
+        
+        if (storageFailed) {
+            storageFailed = false;
+            context.ungetService(launcherRef);
+            throw new CommandException(translator.localize(LocaleResources.SERVICE_FAILED_TO_START_DB));
+        }
         
         String[] storageStopArgs = new String[] { "storage", "--stop" };
         launcher.run(storageStopArgs, false);
@@ -106,16 +113,16 @@ public class ServiceCommand extends AbstractCommand implements ActionListener<Ap
                 String[] agentArgs =  new String[] {"agent", "-d", dbUrl};
                 System.err.println(translator.localize(LocaleResources.STARTING_AGENT).getContents());
                 launcher.run(agentArgs, false);
-                agentBarrier.release();
                 break;
             case FAIL:
-                System.err.println(translator.localize(LocaleResources.ERROR_STARTING_DB).getContents());
+                storageFailed = true;
                 Object payload = actionEvent.getPayload();
                 if (payload instanceof StorageAlreadyRunningException) {
                     System.err.println(translator.localize(LocaleResources.STORAGE_ALREADY_RUNNING).getContents());
                 }
                 break;
             }
+            agentBarrier.release();
         }
     }
 
