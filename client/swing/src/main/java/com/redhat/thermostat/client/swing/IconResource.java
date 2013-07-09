@@ -51,8 +51,6 @@ public class IconResource {
     
     private boolean fromFileSytem = false;
     
-    private static final String ICON_PREFIX = "/usr/share/icons/gnome/";
-
     public static final IconResource JAVA_APPLICATION = new IconResource("java_application_identifier.png");
     public static final IconResource HOST = new IconResource("computer.png");
     public static final IconResource SEARCH = new IconResource("search.png");
