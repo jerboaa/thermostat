@@ -42,6 +42,7 @@ import static org.junit.Assert.assertFalse;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -73,6 +74,11 @@ public class IntegrationTest {
         return "../distribution/target/storage/db";
     }
 
+    public static void clearStorageDataDirectory() throws IOException {
+        String storageDir = getStorageDataDirectory();
+        deleteFilesRecursivelyUnder(storageDir);
+    }
+
     public static Spawn spawnThermostat(String... args) throws IOException {
         return spawnThermostat(false, args);
     }
@@ -86,7 +92,6 @@ public class IntegrationTest {
             }
         }
         String toExecute = result.toString();
-        //System.out.println("executing: '" + toExecute + "'");
         if (localeDependent) {
             Executor exec = new LocaleExecutor(toExecute);
             return expect.spawn(exec);
@@ -158,15 +163,20 @@ public class IntegrationTest {
         return (int) pidField.get(process);
     }
 
-    public static void deleteFilesUnder(String path) throws IOException {
-        String[] filesToDelete = new File(path).list();
-        for (String toDelete : filesToDelete) {
-            File theFile = new File(path, toDelete);
-            if (!theFile.delete()) {
-                if (theFile.exists()) {
-                    throw new IOException("cant delete: '" + theFile.toString() + "'.");
-                }
+    private static void deleteFilesRecursivelyUnder(String path) throws IOException {
+        File directory = new File(path);
+        if (!directory.isDirectory()) {
+            throw new IOException("Cannot delete files under a non-directory: " + path);
+        }
+        File[] filesToDelete = directory.listFiles();
+        if (filesToDelete == null) {
+            throw new IOException("Error getting directory listing: " + path);
+        }
+        for (File theFile : filesToDelete) {
+            if (theFile.isDirectory()) {
+                deleteFilesRecursivelyUnder(theFile.getCanonicalPath());
             }
+            Files.deleteIfExists(theFile.toPath());
         }
     }
 

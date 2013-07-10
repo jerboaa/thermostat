@@ -36,11 +36,6 @@
 
 package com.redhat.thermostat.itest;
 
-import static com.redhat.thermostat.itest.IntegrationTest.assertNoExceptions;
-import static com.redhat.thermostat.itest.IntegrationTest.deleteFilesUnder;
-import static com.redhat.thermostat.itest.IntegrationTest.getStorageDataDirectory;
-import static com.redhat.thermostat.itest.IntegrationTest.getThermostatHome;
-import static com.redhat.thermostat.itest.IntegrationTest.spawnThermostat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -85,7 +80,7 @@ import com.redhat.thermostat.web.server.auth.Roles;
 
 import expectj.Spawn;
 
-public class WebAppTest {
+public class WebAppTest extends IntegrationTest {
 
     private static final String THERMOSTAT_USERS_FILE = getThermostatHome() +
             "/etc/thermostat-users.properties";
@@ -99,8 +94,7 @@ public class WebAppTest {
 
     @BeforeClass
     public static void setUpOnce() throws Exception {
-        String staleDataDir = getStorageDataDirectory();
-        deleteFilesUnder(staleDataDir);
+        clearStorageDataDirectory();
 
         Spawn storage = spawnThermostat("storage", "--start");
         storage.expect("pid:");

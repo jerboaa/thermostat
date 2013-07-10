@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.itest;
 
-import static org.junit.Assert.assertEquals;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,8 +53,7 @@ public class VmCommandsTest extends IntegrationTest {
 
     @BeforeClass
     public static void setUpOnce() throws IOException, InterruptedException {
-        String staleDataDir = getStorageDataDirectory();
-        deleteFilesUnder(staleDataDir);
+        clearStorageDataDirectory();
 
         Process startStorage = new ProcessBuilder(getThermostatExecutable(), "storage", "--start").start();
         startStorage.waitFor();
