@@ -95,8 +95,9 @@ public class ConfigurationValidatorErrorHandler implements ErrorHandler {
         int columnNumber = e.getColumnNumber();
         int lineNumber = e.getLineNumber();
         
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder builder = new StringBuilder();
         
+        String LS = System.getProperty("line.separator");
         String firstLine = null;
         String secondLine = null;
         String thirdLine = null;
@@ -125,26 +126,26 @@ public class ConfigurationValidatorErrorHandler implements ErrorHandler {
             pointer = pointer.concat("^");
             br.close();
         } catch (IOException exception) {
-            System.out.println("File not found!");;
+            // if br fails to close
         }
         
-        buffer.append(translator.localize(
+        builder.append(translator.localize(
                 translateKeys.get(type),
                 absolutePath, 
                 Integer.toString(lineNumber), 
                 Integer.toString(columnNumber)).getContents());
                     
-        buffer.append(formatMessage(e.getLocalizedMessage()) + "\n\n");
-        buffer.append(firstLine + "\n");
-        buffer.append(secondLine + "\n");
-        buffer.append(thirdLine + "\n");
-        buffer.append(errorLine + "\n");
-        buffer.append(pointer  + "\n");
+        builder.append(formatMessage(e.getLocalizedMessage())).append(LS).append(LS);
+        builder.append(firstLine).append(LS);
+        builder.append(secondLine).append(LS);
+        builder.append(thirdLine).append(LS);
+        builder.append(errorLine).append(LS);
+        builder.append(pointer).append(LS);
         
         if (isCommand) {
-            System.out.println(buffer.toString());
+            System.out.println(builder.toString());
         } else {
-            logger.info(buffer.toString());
+            logger.info(builder.toString());
         }
         
     }
