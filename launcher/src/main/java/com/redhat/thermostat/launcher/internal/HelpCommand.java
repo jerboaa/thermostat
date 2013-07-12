@@ -132,24 +132,34 @@ public class HelpCommand extends AbstractCommand  {
         PrintWriter pw = new PrintWriter(ctx.getConsole().getOutput());
         Options options = info.getOptions();
         String usage = APP_NAME + " " + info.getUsage() + "\n" + info.getDescription();
-        String header = getAvailabilityNote(info) + "\n" + APP_NAME + " " + info.getName();
+        String header = "";
+        if (isAvailabilityNoteNeeded(info)) {
+            header = header + getAvailabilityNote(info);
+        }
+        header = header + "\n" + APP_NAME + " " + info.getName();
         helpFormatter.printHelp(pw, 80, usage, header, options, 2, 4, null);
         pw.flush();
     }
 
+    private boolean isAvailabilityNoteNeeded(CommandInfo info) {
+        return !info.getEnvironments().contains(currentEnvironment);
+    }
+
+    /** Describe where command is available */
     private String getAvailabilityNote(CommandInfo info) {
+
         String availabilityNote = "";
 
-        // Availability note is only needed if the command is not available everywhere
-        if (!info.getEnvironments().containsAll(Arrays.asList(Environment.values()))) {
-            if (info.getEnvironments().contains(Environment.SHELL)) {
-                availabilityNote = translator.localize(LocaleResources.COMMAND_AVAILABLE_INSIDE_SHELL).getContents();
-            } else if (info.getEnvironments().contains(Environment.CLI)) {
-                availabilityNote = translator.localize(LocaleResources.COMMAND_AVAILABLE_OUTSIDE_SHELL).getContents();
-            } else {
-                throw new AssertionError("Need to handle a third environment");
-            }
+        // there are two mutually exclusive environments: if an availability
+        // note is needed, it will just be about one
+        if (info.getEnvironments().contains(Environment.SHELL)) {
+            availabilityNote = translator.localize(LocaleResources.COMMAND_AVAILABLE_INSIDE_SHELL).getContents();
+        } else if (info.getEnvironments().contains(Environment.CLI)) {
+            availabilityNote = translator.localize(LocaleResources.COMMAND_AVAILABLE_OUTSIDE_SHELL).getContents();
+        } else {
+            throw new AssertionError("Need to handle a third environment");
         }
+
         return availabilityNote;
     }
 
