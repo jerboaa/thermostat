@@ -78,94 +78,66 @@ public class MongoProcessRunner {
 
     private DBStartupConfiguration configuration;
     private boolean isQuiet;
+    private String pid;
     
     public MongoProcessRunner(DBStartupConfiguration configuration, boolean quiet) {
         this.configuration = configuration;
         this.isQuiet = quiet;
     }
 
-    private String getPid() {
-        
-        String pid = null;
-        
+    private boolean checkPid() {
         File pidfile = configuration.getPidFile();
         Charset charset = Charset.defaultCharset();
         if (pidfile.exists()) {
             try (BufferedReader reader = Files.newBufferedReader(pidfile.toPath(), charset)) {
                 pid = reader.readLine();
-                if (pid == null || pid.isEmpty()) {
+                if (pid.isEmpty()) {
                     pid = null;
                 }
             } catch (IOException ex) {
                 logger.log(Level.WARNING, "Exception while reading pid file", ex);
                 pid = null;
             }
-        }
-        
-        return pid;
-    }
-    
-    public void stopService() throws IOException, InterruptedException, InvalidConfigurationException, ApplicationException {
- 
-        List<String> commands = new ArrayList<>(Arrays.asList(MONGO_SHUTDOWN_ARGS));
-        commands.add(getPid());
-
-        LoggedExternalProcess process = new LoggedExternalProcess(commands);
-        int status = process.runAndReturnResult();
-        if (status == 0) {
-            display(translator.localize(LocaleResources.SERVER_SHUTDOWN_COMPLETE, configuration.getDBPath().toString()));
-            display(translator.localize(LocaleResources.LOG_FILE_AT, configuration.getLogFile().toString()));
-            // all went well, make sure to remove pid file.
-            try {
-                Files.delete(configuration.getPidFile().toPath());
-            } catch (IOException e) {
-                // ignore
-            }
         } else {
-            
-            LocalizedString message = translator.localize(LocaleResources.CANNOT_SHUTDOWN_SERVER,
-                    configuration.getDBPath().toString(),
-                    String.valueOf(status));
-            display(message);
-            throw new StorageStopException(configuration.getDBPath(), status, message.getContents());
+            pid = null;
         }
+        return (pid != null);
     }
-    
-    private boolean checkExistingProcess() {
-        String pid = getPid();
-        if (pid == null)
-            return false;
-        
-        String processName = UnixProcessUtilities.getInstance().getProcessName(getPid());
-        // TODO: check if we want mongos or mongod from the configs
-        return processName != null && processName.equalsIgnoreCase(MONGO_PROCESS);
+
+    private void deleteStalePidFile() {
+        pid = null;
+        LocalizedString message = translator.localize(LocaleResources.STALE_PID_FILE_NO_MATCHING_PROCESS, configuration.getPidFile().toString(), MONGO_PROCESS);
+        // Mongo didn't remove its PID file? Work around the issue. Log
+        // the event, remove the stale pid file and continue.
+        logger.log(Level.WARNING, message.getContents());
+        try {
+            Files.delete(configuration.getPidFile().toPath());
+        } catch (IOException benign) {
+            // ignore this benign error
+        }
     }
     
     public boolean isStorageRunning() {
-        return getPid() != null;
+        if (!checkPid()) {
+            return false;
+        }
+        
+        String processName = UnixProcessUtilities.getInstance().getProcessName(pid);
+        // TODO: check if we want mongos or mongod from the configs
+        boolean processIsRunning = processName != null && processName.equalsIgnoreCase(MONGO_PROCESS);
+        if (!processIsRunning) {
+            deleteStalePidFile();
+        }
+        return processIsRunning;
     }
     
     public void startService() throws IOException, InterruptedException,
             ApplicationException, InvalidConfigurationException {
 
-        String pid = getPid();
-        if (pid != null) {
-            LocalizedString message = null;
-            if (!checkExistingProcess()) {
-                message = translator.localize(LocaleResources.STALE_PID_FILE_NO_MATCHING_PROCESS, configuration.getPidFile().toString(), MONGO_PROCESS);
-                // Mongo didn't remove its PID file? Work around the issue. Log
-                // the event, remove the stale pid file and continue.
-                logger.log(Level.WARNING, message.getContents());
-                try {
-                    Files.delete(configuration.getPidFile().toPath());
-                } catch (IOException benign) {
-                    // ignore this benign error
-                }
-            } else {
-                message = translator.localize(LocaleResources.STORAGE_ALREADY_RUNNING_WITH_PID, String.valueOf(pid));
-                display(message);
-                throw new StorageAlreadyRunningException(Integer.valueOf(pid), message.getContents());
-            }
+        if (isStorageRunning()) {
+            LocalizedString message = translator.localize(LocaleResources.STORAGE_ALREADY_RUNNING_WITH_PID, pid);
+            display(message);
+            throw new StorageAlreadyRunningException(Integer.valueOf(pid), message.getContents());
         }
         
         String dbVersion = getDBVersion();
@@ -187,14 +159,15 @@ public class MongoProcessRunner {
         Thread.sleep(500);
 
         if (status == 0) {
-            pid = getPid();
-            if (pid == null) status = -1;
+            if (!isStorageRunning()) {
+                status = -1;
+            }
         }
-        
+
         if (status == 0) {
             display(translator.localize(LocaleResources.SERVER_LISTENING_ON, configuration.getDBConnectionString()));
             display(translator.localize(LocaleResources.LOG_FILE_AT, configuration.getLogFile().toString()));
-            display(translator.localize(LocaleResources.PID_IS,  String.valueOf(pid)));
+            display(translator.localize(LocaleResources.PID_IS, pid));
             
         } else {
             
@@ -203,6 +176,37 @@ public class MongoProcessRunner {
                              String.valueOf(status));
             display(message);
             throw new StorageStartException(configuration.getDBPath(), status, message.getContents());
+        }
+    }
+    
+    public void stopService() throws IOException, InterruptedException, InvalidConfigurationException, ApplicationException {
+ 
+        if (!isStorageRunning()) {
+            LocalizedString message = translator.localize(LocaleResources.STORAGE_NOT_RUNNING);
+            display(message);
+            throw new StorageNotRunningException(message.getContents());
+        }
+        List<String> commands = new ArrayList<>(Arrays.asList(MONGO_SHUTDOWN_ARGS));
+        commands.add(pid);
+
+        LoggedExternalProcess process = new LoggedExternalProcess(commands);
+        int status = process.runAndReturnResult();
+        if (status == 0) {
+            display(translator.localize(LocaleResources.SERVER_SHUTDOWN_COMPLETE, configuration.getDBPath().toString()));
+            display(translator.localize(LocaleResources.LOG_FILE_AT, configuration.getLogFile().toString()));
+            // all went well, make sure to remove pid file.
+            try {
+                Files.delete(configuration.getPidFile().toPath());
+            } catch (IOException e) {
+                // ignore
+            }
+        } else {
+            
+            LocalizedString message = translator.localize(LocaleResources.CANNOT_SHUTDOWN_SERVER,
+                    configuration.getDBPath().toString(),
+                    String.valueOf(status));
+            display(message);
+            throw new StorageStopException(configuration.getDBPath(), status, message.getContents());
         }
     }
     
