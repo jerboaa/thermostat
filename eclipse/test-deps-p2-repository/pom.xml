@@ -42,11 +42,11 @@
   <parent>
     <artifactId>thermostat-eclipse-parent</artifactId>
     <groupId>com.redhat.thermostat.eclipse.parent</groupId>
-    <version>0.10.0-SNAPSHOT</version>
+    <version>0.12.0-SNAPSHOT</version>
   </parent>
   <groupId>com.redhat.thermostat.eclipse.parent</groupId>
   <artifactId>com.redhat.thermostat.eclipse.test-deps-repo</artifactId>
-  <version>0.10.0-SNAPSHOT</version>
+  <version>0.12.0-SNAPSHOT</version>
   <packaging>eclipse-repository</packaging>
 
   <name>Thermostat Eclipse :: p2 repository for plain Java test deps</name>
@@ -59,7 +59,7 @@
     <dependency>
       <groupId>com.redhat.thermostat.eclipse.parent</groupId>
       <artifactId>com.redhat.thermostat.eclipse.test.deps.feature</artifactId>
-      <version>0.10.0-SNAPSHOT</version>
+      <version>0.12.0-SNAPSHOT</version>
       <type>eclipse-feature</type>
     </dependency>
   </dependencies>

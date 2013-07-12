@@ -4,7 +4,7 @@
   <parent>
     <artifactId>thermostat-host-overview</artifactId>
     <groupId>com.redhat.thermostat</groupId>
-    <version>0.10.0-SNAPSHOT</version>
+    <version>0.12.0-SNAPSHOT</version>
   </parent>
   <artifactId>thermostat-host-overview-client-core</artifactId>
   <packaging>bundle</packaging>

@@ -2,7 +2,7 @@
 <feature
       id="com.redhat.thermostat.eclipse.feature"
       label="Thermostat Eclipse Feature"
-      version="0.10.0.qualifier">
+      version="0.12.0.qualifier">
 
    <description url="http://icedtea.classpath.org/thermostat/">
       Thermostat Eclipse Plug-ins.
@@ -49,7 +49,7 @@ to do so, delete this exception statement from your version.
    </license>
 
    <requires>
-      <import feature="com.redhat.thermostat.client.feature" version="0.10.0.qualifier"/>
+      <import feature="com.redhat.thermostat.client.feature" version="0.12.0.qualifier"/>
    </requires>
 
    <plugin

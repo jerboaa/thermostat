@@ -2,7 +2,7 @@
 <feature
       id="com.redhat.thermostat.eclipse.test.deps.feature"
       label="Thermostat Eclipse Test Dependencies"
-      version="0.10.0.qualifier"
+      version="0.12.0.qualifier"
       provider-name="Red Hat Inc.">
 
    <description url="http://icedtea.classpath.org/thermostat">

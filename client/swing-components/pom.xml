@@ -5,7 +5,7 @@
   <parent>
     <artifactId>thermostat-client</artifactId>
     <groupId>com.redhat.thermostat</groupId>
-    <version>0.10.0-SNAPSHOT</version>
+    <version>0.12.0-SNAPSHOT</version>
   </parent>
   
   <artifactId>thermostat-swing-components</artifactId>

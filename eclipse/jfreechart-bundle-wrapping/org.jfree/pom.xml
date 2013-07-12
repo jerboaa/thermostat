@@ -43,7 +43,7 @@
     <parent>
       <groupId>com.redhat.thermostat.eclipse.parent</groupId>
       <artifactId>thermostat-eclipse-jfreechart</artifactId>
-      <version>0.10.0-SNAPSHOT</version>
+      <version>0.12.0-SNAPSHOT</version>
     </parent>
 
     <groupId>org.jfree</groupId>
