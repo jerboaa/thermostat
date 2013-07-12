@@ -51,6 +51,7 @@ import com.redhat.thermostat.common.cli.CommandContextFactory;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 import com.redhat.thermostat.launcher.BundleManager;
+import com.redhat.thermostat.launcher.internal.CurrentEnvironment.CurrentEnvironmentChangeListener;
 import com.redhat.thermostat.shared.config.Configuration;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
@@ -65,10 +66,12 @@ public class Activator implements BundleActivator {
         private ServiceRegistration exitStatusReg;
         private BundleContext context;
         private BundleManager bundleService;
+        private CurrentEnvironment currentEnvironment;
 
-        RegisterLauncherCustomizer(BundleContext context, BundleManager bundleService) {
+        RegisterLauncherCustomizer(BundleContext context, BundleManager bundleService, CurrentEnvironment env) {
             this.context = context;
             this.bundleService = bundleService;
+            this.currentEnvironment = env;
         }
 
         @Override
@@ -88,7 +91,7 @@ public class Activator implements BundleActivator {
 
             // Register Launcher service since FrameworkProvider is waiting for it blockingly.
             LauncherImpl launcher = new LauncherImpl(context,
-                    new CommandContextFactory(context), bundleService, commands);
+                    new CommandContextFactory(context), bundleService, commands, currentEnvironment);
             launcherReg = context.registerService(Launcher.class.getName(), launcher, null);
             bundleManReg = context.registerService(BundleManager.class, bundleService, null);
             ExitStatus exitStatus = new ExitStatusImpl(ExitStatus.EXIT_SUCCESS);
@@ -122,13 +125,22 @@ public class Activator implements BundleActivator {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public void start(final BundleContext context) throws Exception {
+        CurrentEnvironment environment = new CurrentEnvironment(Environment.CLI);
+
         BundleManager bundleService = new BundleManagerImpl(new Configuration());
-        ServiceTrackerCustomizer customizer = new RegisterLauncherCustomizer(context, bundleService);
+        ServiceTrackerCustomizer customizer = new RegisterLauncherCustomizer(context, bundleService, environment);
         serviceTracker = new ServiceTracker(context, Keyring.class, customizer);
         // Track for Keyring service.
         serviceTracker.open();
 
         final HelpCommand helpCommand = new HelpCommand();
+        environment.addListener(new CurrentEnvironmentChangeListener() {
+            @Override
+            public void enviornmentChanged(Environment oldEnv, Environment newEnv) {
+                helpCommand.setEnvironment(newEnv);
+            }
+        });
+        helpCommand.setEnvironment(environment.getCurrent());
 
         commandInfoSourceTracker = new ServiceTracker(context, CommandInfoSource.class, null) {
             @Override

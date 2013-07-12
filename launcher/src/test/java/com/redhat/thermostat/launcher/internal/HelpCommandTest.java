@@ -52,7 +52,6 @@ import org.junit.Test;
 
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.SimpleArguments;
-import com.redhat.thermostat.launcher.internal.CommandInfo.Environment;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 
 public class HelpCommandTest {
@@ -103,16 +102,20 @@ public class HelpCommandTest {
         CommandInfo info1 = mock(CommandInfo.class);
         when(info1.getName()).thenReturn("test1");
         when(info1.getDescription()).thenReturn("test command 1");
+        when(info1.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI, Environment.SHELL));
+
         infoList.add(info1);
 
         CommandInfo info2 = mock(CommandInfo.class);
         when(info2.getName()).thenReturn("test2longname");
         when(info2.getDescription()).thenReturn("test command 2");
+        when(info2.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI, Environment.SHELL));
         infoList.add(info2);
 
         when(infos.getCommandInfos()).thenReturn(infoList);
 
         HelpCommand cmd = new HelpCommand();
+        cmd.setEnvironment(Environment.CLI);
         cmd.setCommandInfoSource(infos);
 
         Arguments args = mock(Arguments.class);
@@ -153,26 +156,32 @@ public class HelpCommandTest {
         CommandInfo helpInfo = mock(CommandInfo.class);
         when(helpInfo.getName()).thenReturn("help");
         when(helpInfo.getDescription()).thenReturn("show help");
-        
+        when(helpInfo.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI, Environment.SHELL));
+
         CommandInfo info1 = mock(CommandInfo.class);
         when(info1.getName()).thenReturn("test1");
         when(info1.getDescription()).thenReturn("test command 1");
+        when(info1.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI, Environment.SHELL));
 
         CommandInfo info2 = mock(CommandInfo.class);
         when(info2.getName()).thenReturn("test2");
         when(info2.getDescription()).thenReturn("test command 2");
+        when(info2.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI, Environment.SHELL));
 
         CommandInfo info3 = mock(CommandInfo.class);
         when(info3.getName()).thenReturn("test3");
         when(info3.getDescription()).thenReturn("test command 3");
+        when(info3.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI, Environment.SHELL));
 
         CommandInfo info4 = mock(CommandInfo.class);
         when(info4.getName()).thenReturn("test4");
         when(info4.getDescription()).thenReturn("test command 4");
+        when(info4.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI, Environment.SHELL));
 
         when(infos.getCommandInfos()).thenReturn(Arrays.asList(info2, helpInfo, info4, info3, info1));
 
         HelpCommand cmd = new HelpCommand();
+        cmd.setEnvironment(Environment.CLI);
         cmd.setCommandInfoSource(infos);
         Arguments args = mock(Arguments.class);
         when(args.getNonOptionArguments()).thenReturn(new ArrayList<String>());
@@ -188,6 +197,50 @@ public class HelpCommandTest {
         assertEquals(expected, actual);
     }
 
+    @Test
+    public void verifyHelpFiltersCommands() {
+        CommandInfo helpInfo = mock(CommandInfo.class);
+        when(helpInfo.getName()).thenReturn("help");
+        when(helpInfo.getDescription()).thenReturn("show help");
+        when(helpInfo.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI));
+
+        CommandInfo info1 = mock(CommandInfo.class);
+        when(info1.getName()).thenReturn("test1");
+        when(info1.getDescription()).thenReturn("test command 1");
+        when(info1.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI, Environment.SHELL));
+
+        CommandInfo info2 = mock(CommandInfo.class);
+        when(info2.getName()).thenReturn("test2");
+        when(info2.getDescription()).thenReturn("test command 2");
+        when(info2.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI));
+
+        CommandInfo info3 = mock(CommandInfo.class);
+        when(info3.getName()).thenReturn("test3");
+        when(info3.getDescription()).thenReturn("test command 3");
+        when(info3.getEnvironments()).thenReturn(EnumSet.of(Environment.SHELL));
+
+        CommandInfo info4 = mock(CommandInfo.class);
+        when(info4.getName()).thenReturn("test4");
+        when(info4.getDescription()).thenReturn("test command 4");
+        when(info4.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI));
+
+        when(infos.getCommandInfos()).thenReturn(Arrays.asList(info2, helpInfo, info4, info3, info1));
+
+        HelpCommand cmd = new HelpCommand();
+        cmd.setEnvironment(Environment.CLI);
+        cmd.setCommandInfoSource(infos);
+        Arguments args = mock(Arguments.class);
+        when(args.getNonOptionArguments()).thenReturn(new ArrayList<String>());
+        cmd.run(ctxFactory.createContext(args));
+
+        String actual = ctxFactory.getOutput();
+        String expected = "list of commands:\n\n"
+                + " help          show help\n"
+                + " test1         test command 1\n"
+                + " test2         test command 2\n"
+                + " test4         test command 4\n";
+        assertEquals(expected, actual);
+    }
     @Test
     public void verifyHelpUnknownCmdPrintsSummaries() {
         when(infos.getCommandInfo("test1")).thenThrow(new CommandInfoNotFoundException("test1"));

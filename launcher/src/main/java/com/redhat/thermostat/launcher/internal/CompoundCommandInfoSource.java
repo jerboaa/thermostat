@@ -46,7 +46,6 @@ import java.util.Set;
 
 import org.apache.commons.cli.Options;
 
-import com.redhat.thermostat.launcher.internal.CommandInfo.Environment;
 
 
 /**

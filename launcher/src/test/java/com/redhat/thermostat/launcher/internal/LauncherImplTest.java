@@ -67,7 +67,6 @@ import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.ExitStatus;
-import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.cli.Arguments;
@@ -78,7 +77,6 @@ import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.launcher.BundleManager;
-import com.redhat.thermostat.launcher.internal.CommandInfo.Environment;
 import com.redhat.thermostat.launcher.internal.DisallowSystemExitSecurityManager.ExitException;
 import com.redhat.thermostat.launcher.internal.LauncherImpl.LoggingInitializer;
 import com.redhat.thermostat.shared.locale.LocalizedString;
@@ -220,6 +218,7 @@ public class LauncherImplTest {
         when(helpCommandInfo.getEnvironments()).thenReturn(EnumSet.of(Environment.SHELL, Environment.CLI));
 
         HelpCommand helpCommand = new HelpCommand();
+        helpCommand.setEnvironment(Environment.CLI);
 
         CommandRegistry reg = ctxFactory.getCommandRegistry();
         reg.registerCommand("help", helpCommand);
@@ -259,11 +258,12 @@ public class LauncherImplTest {
         when(appSvc.getApplicationExecutor()).thenReturn(exec);
         bundleContext.registerService(ApplicationService.class, appSvc, null);
 
+        CurrentEnvironment environment = mock(CurrentEnvironment.class);
         loggingInitializer = mock(LoggingInitializer.class);
         dbServiceFactory = mock(DbServiceFactory.class);
         version = mock(Version.class);
 
-        launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext), loggingInitializer, dbServiceFactory, version);
+        launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext), environment, loggingInitializer, dbServiceFactory, version);
 
         Keyring keyring = mock(Keyring.class);
         launcher.setPreferences(new ClientPreferences(keyring));

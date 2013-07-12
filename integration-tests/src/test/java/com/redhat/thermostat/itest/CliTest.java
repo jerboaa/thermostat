@@ -126,7 +126,7 @@ public class CliTest extends IntegrationTest {
 
         shell.expect(SHELL_PROMPT);
 
-        assertMatchesHelpCommandList(shell.getCurrentStandardOutContents());
+        assertMatchesShellHelpCommandList(shell.getCurrentStandardOutContents());
 
         shell.send("exit\n");
 
@@ -155,7 +155,7 @@ public class CliTest extends IntegrationTest {
         String stdOut = shell.getCurrentStandardOutContents();
         String stdErr = shell.getCurrentStandardErrContents();
 
-        assertMatchesHelpCommandList(shell.getCurrentStandardOutContents());
+        assertMatchesShellHelpCommandList(shell.getCurrentStandardOutContents());
         // use the Pattern.DOTALL flag (?s) so that line terminators match with
         // ".*". stdOut contains the SHELL_PROMPT too.
         assertTrue(stdOut.matches("(?s)^.*\nunknown command '--version'\n.*$"));
@@ -229,6 +229,14 @@ public class CliTest extends IntegrationTest {
         assertTrue(actual.contains("gui"));
         assertTrue(actual.contains("ping"));
         assertTrue(actual.contains("shell"));
+    }
+
+    private static void assertMatchesShellHelpCommandList(String actual) {
+        assertTrue(actual.contains("list of commands"));
+        assertTrue(actual.contains("help"));
+        assertTrue(actual.contains("connect"));
+        assertTrue(actual.contains("disconnect"));
+        assertTrue(actual.contains("ping"));
     }
 
 }

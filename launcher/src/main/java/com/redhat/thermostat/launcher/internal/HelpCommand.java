@@ -47,14 +47,13 @@ import java.util.List;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 
+import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
-import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.TableRenderer;
-import com.redhat.thermostat.launcher.internal.CommandInfo.Environment;
 import com.redhat.thermostat.shared.locale.Translate;
 
-public class HelpCommand extends AbstractCommand {
+public class HelpCommand extends AbstractCommand  {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
@@ -65,8 +64,14 @@ public class HelpCommand extends AbstractCommand {
 
     private CommandInfoSource commandInfoSource;
 
+    private Environment currentEnvironment;
+
     public void setCommandInfoSource(CommandInfoSource source) {
         this.commandInfoSource = source;
+    }
+
+    public void setEnvironment(Environment env) {
+        currentEnvironment = env;
     }
 
     @Override
@@ -91,7 +96,13 @@ public class HelpCommand extends AbstractCommand {
 
         TableRenderer renderer = new TableRenderer(2, COMMANDS_COLUMNS_WIDTH);
 
-        Collection<CommandInfo> commandInfos = commandInfoSource.getCommandInfos();
+        Collection<CommandInfo> commandInfos = new ArrayList<>();
+        for (CommandInfo info: commandInfoSource.getCommandInfos()) {
+            if (info.getEnvironments().contains(currentEnvironment)) {
+                commandInfos.add(info);
+            }
+        }
+
         List<CommandInfo> sortedCommandInfos = new ArrayList<>(commandInfos);
 
         Collections.sort(sortedCommandInfos, comparator);

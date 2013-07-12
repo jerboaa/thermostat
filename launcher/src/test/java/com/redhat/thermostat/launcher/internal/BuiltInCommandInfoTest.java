@@ -57,7 +57,6 @@ import org.apache.commons.cli.Options;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.launcher.internal.CommandInfo.Environment;
 import com.redhat.thermostat.shared.locale.Translate;
 
 public class BuiltInCommandInfoTest {

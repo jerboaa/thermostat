@@ -37,42 +37,46 @@
 package com.redhat.thermostat.launcher.internal;
 
 import java.util.List;
-import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.apache.commons.cli.Options;
+public class CurrentEnvironment {
 
-public interface CommandInfo {
+    public interface CurrentEnvironmentChangeListener {
+        public void enviornmentChanged(Environment oldEnv, Environment newEnv);
+    }
 
-    /**
-     * Returns a name for this command. This will be used by the user to select
-     * this command.
-     */
-    public String getName();
+    private Environment current;
+    private List<CurrentEnvironmentChangeListener> listeners = new CopyOnWriteArrayList<>();
 
-    /**
-     * A short description for the command indicating what it does.
-     */
-    public String getDescription();
+    public CurrentEnvironment(Environment initial) {
+        current = initial;
+    }
 
-    /**
-     * How the user should invoke this command
-     */
-    public String getUsage();
+    public Environment getCurrent() {
+        return current;
+    }
 
-    /**
-     * Environments where this command is available
-     */
-    public Set<Environment> getEnvironments();
+    public void setCurrent(Environment environment) {
+        if (environment == current) {
+            return;
+        }
 
-    /**
-     * Returns the Options that the command is prepared to handle.
-     * If the user provides unknown or malformed arguments, this command will
-     * not be invoked.
-     */
-    public Options getOptions();
+        Environment old = current;
+        current = environment;
+        fireEnvironmentChanged(old, current);
+    }
 
-    /** Returns a list of jar that this command depends on */
-    public List<String> getDependencyResourceNames();
+    private void fireEnvironmentChanged(Environment oldEnv, Environment newEnv) {
+        for (CurrentEnvironmentChangeListener listener : listeners) {
+            listener.enviornmentChanged(oldEnv, newEnv);
+        }
+    }
 
+    public void addListener(CurrentEnvironmentChangeListener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeListener(CurrentEnvironmentChangeListener listener) {
+        listeners.remove(listener);
+    }
 }
-

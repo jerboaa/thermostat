@@ -46,7 +46,6 @@ import java.util.Set;
 import org.apache.commons.cli.Options;
 import org.junit.Test;
 
-import com.redhat.thermostat.launcher.internal.CommandInfo.Environment;
 
 public class BasicCommandInfoTest {
 

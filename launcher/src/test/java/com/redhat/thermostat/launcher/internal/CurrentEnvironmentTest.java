@@ -36,43 +36,40 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import java.util.List;
-import java.util.Set;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
-import org.apache.commons.cli.Options;
+import org.junit.Test;
 
-public interface CommandInfo {
+import com.redhat.thermostat.launcher.internal.CurrentEnvironment.CurrentEnvironmentChangeListener;
 
-    /**
-     * Returns a name for this command. This will be used by the user to select
-     * this command.
-     */
-    public String getName();
+public class CurrentEnvironmentTest {
 
-    /**
-     * A short description for the command indicating what it does.
-     */
-    public String getDescription();
+    @Test
+    public void verifyInitialization() {
+        CurrentEnvironment environment = new CurrentEnvironment(Environment.CLI);
 
-    /**
-     * How the user should invoke this command
-     */
-    public String getUsage();
+        assertEquals(Environment.CLI, environment.getCurrent());
+    }
 
-    /**
-     * Environments where this command is available
-     */
-    public Set<Environment> getEnvironments();
+    @Test
+    public void verifySetAndGet() {
+        CurrentEnvironment environment = new CurrentEnvironment(Environment.CLI);
+        environment.setCurrent(Environment.SHELL);
 
-    /**
-     * Returns the Options that the command is prepared to handle.
-     * If the user provides unknown or malformed arguments, this command will
-     * not be invoked.
-     */
-    public Options getOptions();
+        assertEquals(Environment.SHELL, environment.getCurrent());
+    }
 
-    /** Returns a list of jar that this command depends on */
-    public List<String> getDependencyResourceNames();
+    @Test
+    public void verifyListenersAreInvoked() {
+        CurrentEnvironment environment = new CurrentEnvironment(Environment.CLI);
+        CurrentEnvironmentChangeListener listener = mock(CurrentEnvironmentChangeListener.class);
 
+        environment.addListener(listener);
+
+        environment.setCurrent(Environment.SHELL);
+
+        verify(listener).enviornmentChanged(Environment.CLI, Environment.SHELL);
+    }
 }
-

@@ -68,7 +68,6 @@ import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.tools.StorageAuthInfoGetter;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.BundleManager;
-import com.redhat.thermostat.launcher.internal.CommandInfo.Environment;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
@@ -95,17 +94,21 @@ public class LauncherImpl implements Launcher {
     private final Version coreVersion;
     private final CommandSource commandSource;
     private final CommandInfoSource commandInfoSource;
+    private final CurrentEnvironment currentEnvironment;
 
     /** MUST be mutated in a 'synchronized (this)' block */
     private ClientPreferences prefs;
 
 
-    public LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory, BundleManager registry, CommandInfoSource infoSource) {
-        this(context, cmdCtxFactory, registry, infoSource, new CommandSource(context), new LoggingInitializer(), new DbServiceFactory(), new Version());
+
+    public LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory, BundleManager registry, CommandInfoSource infoSource, CurrentEnvironment env) {
+        this(context, cmdCtxFactory, registry, infoSource,
+                new CommandSource(context), env, new LoggingInitializer(), new DbServiceFactory(), new Version());
     }
 
     LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory, BundleManager registry,
             CommandInfoSource commandInfoSource, CommandSource commandSource,
+            CurrentEnvironment currentEnvironment,
             LoggingInitializer loggingInitializer, DbServiceFactory dbServiceFactory, Version version) {
         this.context = context;
         this.cmdCtxFactory = cmdCtxFactory;
@@ -114,6 +117,7 @@ public class LauncherImpl implements Launcher {
         this.coreVersion = version;
         this.commandSource = commandSource;
         this.commandInfoSource = commandInfoSource;
+        this.currentEnvironment = currentEnvironment;
 
         loggingInitializer.initialize();
         logger = LoggingUtils.getLogger(LauncherImpl.class);
@@ -127,6 +131,10 @@ public class LauncherImpl implements Launcher {
     @Override
     public void run(String[] args, Collection<ActionListener<ApplicationState>> listeners, boolean inShell) {
         usageCount.incrementAndGet();
+
+        Environment oldEnvironment = currentEnvironment.getCurrent();
+        currentEnvironment.setCurrent(inShell ? Environment.SHELL : Environment.CLI);
+
         try {
             if (hasNoArguments(args)) {
                 runHelpCommand();
@@ -149,9 +157,9 @@ public class LauncherImpl implements Launcher {
             // they really aren't, but the finally block make it seem so.
             e.printStackTrace(System.err);
             throw e;
-        }
-        finally {
+        } finally {
             args = null;
+            currentEnvironment.setCurrent(oldEnvironment);
             boolean isLastLaunch = (usageCount.decrementAndGet() == 0);
             if (isLastLaunch) {
                 shutdown();
