@@ -154,6 +154,374 @@ public class StatementDescriptorParserTest {
     
     @SuppressWarnings("rawtypes")
     @Test
+    public void testParseQueryWithMultipleConcunctions() throws DescriptorParsingException {
+        String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' = 'b' AND 'c' = 'd' AND 'e' < ?i";
+        StatementDescriptor desc = getDescriptor(descrString, AgentInfoDAO.CATEGORY);
+        parser = new StatementDescriptorParser(storage, desc);
+        ParsedStatement statement = parser.parse();
+        assertEquals(1, statement.getNumParams());
+        assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
+        SuffixExpression expn = statement.getSuffixExpression();
+        assertNull(expn.getLimitExpn());
+        assertNull(expn.getSortExpn());
+        assertNotNull(expn.getWhereExpn());
+        WhereExpression where = expn.getWhereExpn();
+        // build the expected expression tree
+        WhereExpression expected = new WhereExpression();
+        BinaryExpressionNode and1 = new BinaryExpressionNode(expected.getRoot());
+        expected.getRoot().setValue(and1);
+        BinaryExpressionNode and2 = new BinaryExpressionNode(and1);
+        and1.setLeftChild(and2);
+        and1.setOperator(BinaryLogicalOperator.AND);
+        BinaryExpressionNode equality1 = new BinaryExpressionNode(and2);
+        and2.setOperator(BinaryLogicalOperator.AND);
+        and2.setLeftChild(equality1);
+        equality1.setOperator(BinaryComparisonOperator.EQUALS);
+        TerminalNode a = new TerminalNode(equality1);
+        Key aKey = new Key("a", false);
+        a.setValue(aKey);
+        equality1.setLeftChild(a);
+        TerminalNode b = new TerminalNode(equality1);
+        b.setValue("b");
+        equality1.setRightChild(b);
+        BinaryExpressionNode equality2 = new BinaryExpressionNode(and2);
+        and2.setRightChild(equality2);
+        equality2.setOperator(BinaryComparisonOperator.EQUALS);
+        TerminalNode c = new TerminalNode(equality2);
+        Key cKey = new Key("c", false);
+        c.setValue(cKey);
+        equality2.setLeftChild(c);
+        TerminalNode d = new TerminalNode(equality2);
+        d.setValue("d");
+        equality2.setRightChild(d);
+        BinaryExpressionNode lessThan = new BinaryExpressionNode(and1);
+        lessThan.setOperator(BinaryComparisonOperator.LESS_THAN);
+        and1.setRightChild(lessThan);
+        TerminalNode e = new TerminalNode(lessThan);
+        Key eKey = new Key("e", false);
+        e.setValue(eKey);
+        lessThan.setLeftChild(e);
+        UnfinishedValueNode f = new UnfinishedValueNode();
+        f.setParameterIndex(0);
+        f.setType(Integer.class);
+        f.setLHS(false);
+        TerminalNode fReal = new TerminalNode(lessThan);
+        fReal.setValue(f);
+        lessThan.setRightChild(fReal);
+        
+        assertTrue( WhereExpressions.equals(expected, where));
+    }
+    
+    @SuppressWarnings("rawtypes")
+    @Test
+    public void testParseQueryWithMultipleConcunctions2() throws DescriptorParsingException {
+        String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' = 'b' AND 'c' = 'd' AND 'e' < 'f' AND 'g' >= 'h'";
+        StatementDescriptor desc = getDescriptor(descrString, AgentInfoDAO.CATEGORY);
+        parser = new StatementDescriptorParser(storage, desc);
+        ParsedStatement statement = parser.parse();
+        assertEquals(0, statement.getNumParams());
+        assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
+        SuffixExpression expn = statement.getSuffixExpression();
+        assertNull(expn.getLimitExpn());
+        assertNull(expn.getSortExpn());
+        assertNotNull(expn.getWhereExpn());
+        WhereExpression where = expn.getWhereExpn();
+        // build the expected expression tree
+        WhereExpression expected = new WhereExpression();
+        BinaryExpressionNode and1 = new BinaryExpressionNode(expected.getRoot());
+        expected.getRoot().setValue(and1);
+        BinaryExpressionNode and2 = new BinaryExpressionNode(and1);
+        and1.setLeftChild(and2);
+        BinaryExpressionNode and3 = new BinaryExpressionNode(and2);
+        and3.setOperator(BinaryLogicalOperator.AND);
+        and2.setLeftChild(and3);
+        and1.setOperator(BinaryLogicalOperator.AND);
+        BinaryExpressionNode equality1 = new BinaryExpressionNode(and3);
+        and2.setOperator(BinaryLogicalOperator.AND);
+        and3.setLeftChild(equality1);
+        equality1.setOperator(BinaryComparisonOperator.EQUALS);
+        TerminalNode a = new TerminalNode(equality1);
+        Key aKey = new Key("a", false);
+        a.setValue(aKey);
+        equality1.setLeftChild(a);
+        TerminalNode b = new TerminalNode(equality1);
+        b.setValue("b");
+        equality1.setRightChild(b);
+        BinaryExpressionNode equality2 = new BinaryExpressionNode(and3);
+        and3.setRightChild(equality2);
+        equality2.setOperator(BinaryComparisonOperator.EQUALS);
+        TerminalNode c = new TerminalNode(equality2);
+        Key cKey = new Key("c", false);
+        c.setValue(cKey);
+        equality2.setLeftChild(c);
+        TerminalNode d = new TerminalNode(equality2);
+        d.setValue("d");
+        equality2.setRightChild(d);
+        BinaryExpressionNode lessThan = new BinaryExpressionNode(and2);
+        lessThan.setOperator(BinaryComparisonOperator.LESS_THAN);
+        and2.setRightChild(lessThan);
+        TerminalNode e = new TerminalNode(lessThan);
+        Key eKey = new Key("e", false);
+        e.setValue(eKey);
+        lessThan.setLeftChild(e);
+        TerminalNode f = new TerminalNode(lessThan);
+        f.setValue("f");
+        lessThan.setRightChild(f);
+        BinaryExpressionNode greaterOrEqual = new BinaryExpressionNode(and1);
+        greaterOrEqual.setOperator(BinaryComparisonOperator.GREATER_THAN_OR_EQUAL_TO);
+        TerminalNode g = new TerminalNode(greaterOrEqual);
+        Key gKey = new Key("g", false);
+        g.setValue(gKey);
+        greaterOrEqual.setLeftChild(g);
+        TerminalNode h = new TerminalNode(greaterOrEqual);
+        h.setValue("h");
+        greaterOrEqual.setRightChild(h);
+        and1.setRightChild(greaterOrEqual);
+        
+        assertTrue( WhereExpressions.equals(expected, where));
+    }
+    
+    @SuppressWarnings("rawtypes")
+    @Test
+    public void testParseQueryWithMultipleDisjunctions() throws DescriptorParsingException {
+        String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' = 'b' OR 'c' = 'd' OR 'e' < ?i";
+        StatementDescriptor desc = getDescriptor(descrString, AgentInfoDAO.CATEGORY);
+        parser = new StatementDescriptorParser(storage, desc);
+        ParsedStatement statement = parser.parse();
+        assertEquals(1, statement.getNumParams());
+        assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
+        SuffixExpression expn = statement.getSuffixExpression();
+        assertNull(expn.getLimitExpn());
+        assertNull(expn.getSortExpn());
+        assertNotNull(expn.getWhereExpn());
+        
+        WhereExpression where = expn.getWhereExpn();
+        // build the expected expression tree
+        WhereExpression expected = new WhereExpression();
+        BinaryExpressionNode or1 = new BinaryExpressionNode(expected.getRoot());
+        expected.getRoot().setValue(or1);
+        BinaryExpressionNode or2 = new BinaryExpressionNode(or1);
+        or1.setLeftChild(or2);
+        or1.setOperator(BinaryLogicalOperator.OR);
+        BinaryExpressionNode equality1 = new BinaryExpressionNode(or2);
+        or2.setOperator(BinaryLogicalOperator.OR);
+        or2.setLeftChild(equality1);
+        equality1.setOperator(BinaryComparisonOperator.EQUALS);
+        TerminalNode a = new TerminalNode(equality1);
+        Key aKey = new Key("a", false);
+        a.setValue(aKey);
+        equality1.setLeftChild(a);
+        TerminalNode b = new TerminalNode(equality1);
+        b.setValue("b");
+        equality1.setRightChild(b);
+        BinaryExpressionNode equality2 = new BinaryExpressionNode(or2);
+        or2.setRightChild(equality2);
+        equality2.setOperator(BinaryComparisonOperator.EQUALS);
+        TerminalNode c = new TerminalNode(equality2);
+        Key cKey = new Key("c", false);
+        c.setValue(cKey);
+        equality2.setLeftChild(c);
+        TerminalNode d = new TerminalNode(equality2);
+        d.setValue("d");
+        equality2.setRightChild(d);
+        BinaryExpressionNode lessThan = new BinaryExpressionNode(or1);
+        lessThan.setOperator(BinaryComparisonOperator.LESS_THAN);
+        or1.setRightChild(lessThan);
+        TerminalNode e = new TerminalNode(lessThan);
+        Key eKey = new Key("e", false);
+        e.setValue(eKey);
+        lessThan.setLeftChild(e);
+        UnfinishedValueNode f = new UnfinishedValueNode();
+        f.setParameterIndex(0);
+        f.setType(Integer.class);
+        f.setLHS(false);
+        TerminalNode fReal = new TerminalNode(lessThan);
+        fReal.setValue(f);
+        lessThan.setRightChild(fReal);
+        
+        assertTrue( WhereExpressions.equals(expected, where));
+    }
+    
+    @SuppressWarnings("rawtypes")
+    @Test
+    public void testParseQueryWithMultipleDisjunctions2() throws DescriptorParsingException {
+        String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' = 'b' OR 'c' = 'd' OR 'e' < 'f' OR 'g' >= 'h'";
+        StatementDescriptor desc = getDescriptor(descrString, AgentInfoDAO.CATEGORY);
+        parser = new StatementDescriptorParser(storage, desc);
+        ParsedStatement statement = parser.parse();
+        assertEquals(0, statement.getNumParams());
+        assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
+        SuffixExpression expn = statement.getSuffixExpression();
+        assertNull(expn.getLimitExpn());
+        assertNull(expn.getSortExpn());
+        assertNotNull(expn.getWhereExpn());
+        
+        WhereExpression where = expn.getWhereExpn();
+        // build the expected expression tree
+        WhereExpression expected = new WhereExpression();
+        BinaryExpressionNode or1 = new BinaryExpressionNode(expected.getRoot());
+        expected.getRoot().setValue(or1);
+        BinaryExpressionNode or2 = new BinaryExpressionNode(or1);
+        or1.setLeftChild(or2);
+        BinaryExpressionNode or3 = new BinaryExpressionNode(or2);
+        or3.setOperator(BinaryLogicalOperator.OR);
+        or2.setLeftChild(or3);
+        or1.setOperator(BinaryLogicalOperator.OR);
+        BinaryExpressionNode equality1 = new BinaryExpressionNode(or3);
+        or2.setOperator(BinaryLogicalOperator.OR);
+        or3.setLeftChild(equality1);
+        equality1.setOperator(BinaryComparisonOperator.EQUALS);
+        TerminalNode a = new TerminalNode(equality1);
+        Key aKey = new Key("a", false);
+        a.setValue(aKey);
+        equality1.setLeftChild(a);
+        TerminalNode b = new TerminalNode(equality1);
+        b.setValue("b");
+        equality1.setRightChild(b);
+        BinaryExpressionNode equality2 = new BinaryExpressionNode(or3);
+        or3.setRightChild(equality2);
+        equality2.setOperator(BinaryComparisonOperator.EQUALS);
+        TerminalNode c = new TerminalNode(equality2);
+        Key cKey = new Key("c", false);
+        c.setValue(cKey);
+        equality2.setLeftChild(c);
+        TerminalNode d = new TerminalNode(equality2);
+        d.setValue("d");
+        equality2.setRightChild(d);
+        BinaryExpressionNode lessThan = new BinaryExpressionNode(or2);
+        lessThan.setOperator(BinaryComparisonOperator.LESS_THAN);
+        or2.setRightChild(lessThan);
+        TerminalNode e = new TerminalNode(lessThan);
+        Key eKey = new Key("e", false);
+        e.setValue(eKey);
+        lessThan.setLeftChild(e);
+        TerminalNode f = new TerminalNode(lessThan);
+        f.setValue("f");
+        lessThan.setRightChild(f);
+        BinaryExpressionNode greaterOrEqual = new BinaryExpressionNode(or1);
+        greaterOrEqual.setOperator(BinaryComparisonOperator.GREATER_THAN_OR_EQUAL_TO);
+        TerminalNode g = new TerminalNode(greaterOrEqual);
+        Key gKey = new Key("g", false);
+        g.setValue(gKey);
+        greaterOrEqual.setLeftChild(g);
+        TerminalNode h = new TerminalNode(greaterOrEqual);
+        h.setValue("h");
+        greaterOrEqual.setRightChild(h);
+        or1.setRightChild(greaterOrEqual);
+        
+        assertTrue( WhereExpressions.equals(expected, where));
+    }
+    
+    @SuppressWarnings("rawtypes")
+    @Test
+    public void testParseQueryWithMultipleConDisjunctions() throws DescriptorParsingException {
+        String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' = 'b' OR 'c' = 'd' OR 'e' < 'f' OR 'g' >= 'h' AND 'x' = 'y' AND 'u' = 'w' AND 's' = 't'";
+        StatementDescriptor desc = getDescriptor(descrString, AgentInfoDAO.CATEGORY);
+        parser = new StatementDescriptorParser(storage, desc);
+        ParsedStatement statement = parser.parse();
+        assertEquals(0, statement.getNumParams());
+        assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
+        SuffixExpression expn = statement.getSuffixExpression();
+        assertNull(expn.getLimitExpn());
+        assertNull(expn.getSortExpn());
+        assertNotNull(expn.getWhereExpn());
+        
+        WhereExpression where = expn.getWhereExpn();
+        // build the expected expression tree
+        WhereExpression expected = new WhereExpression();
+        BinaryExpressionNode and3 = new BinaryExpressionNode(expected.getRoot());
+        expected.getRoot().setValue(and3);
+        and3.setOperator(BinaryLogicalOperator.AND);
+        BinaryExpressionNode and2 = new BinaryExpressionNode(and3);
+        and2.setOperator(BinaryLogicalOperator.AND);
+        BinaryExpressionNode and1 = new BinaryExpressionNode(and2);
+        and1.setOperator(BinaryLogicalOperator.AND);
+        BinaryExpressionNode equality3 = new BinaryExpressionNode(and1);
+        equality3.setOperator(BinaryComparisonOperator.EQUALS);
+        TerminalNode x = new TerminalNode(equality3);
+        x.setValue(new Key("x", false));
+        TerminalNode y = new TerminalNode(equality3);
+        y.setValue("y");
+        equality3.setLeftChild(x);
+        equality3.setRightChild(y);
+        and1.setRightChild(equality3);
+        and3.setLeftChild(and2);
+        and2.setLeftChild(and1);
+        BinaryExpressionNode equality4 = new BinaryExpressionNode(and2);
+        equality4.setOperator(BinaryComparisonOperator.EQUALS);
+        and2.setRightChild(equality4);
+        TerminalNode u = new TerminalNode(equality4);
+        u.setValue(new Key("u", false));
+        equality4.setLeftChild(u);
+        TerminalNode w = new TerminalNode(equality4);
+        w.setValue("w");
+        equality4.setRightChild(w);
+        BinaryExpressionNode equality5 = new BinaryExpressionNode(and3);
+        equality5.setOperator(BinaryComparisonOperator.EQUALS);
+        TerminalNode s = new TerminalNode(equality5);
+        s.setValue(new Key("s", false));
+        TerminalNode t = new TerminalNode(equality5);
+        t.setValue("t");
+        equality5.setLeftChild(s);
+        equality5.setRightChild(t);
+        and3.setRightChild(equality5);
+        BinaryExpressionNode or3 = new BinaryExpressionNode(and1);
+        BinaryExpressionNode or2 = new BinaryExpressionNode(or3);
+        BinaryExpressionNode or1 = new BinaryExpressionNode(or2);
+        or3.setOperator(BinaryLogicalOperator.OR);
+        or2.setOperator(BinaryLogicalOperator.OR);
+        or1.setOperator(BinaryLogicalOperator.OR);
+        or3.setLeftChild(or2);
+        or2.setLeftChild(or1);
+        BinaryExpressionNode equality1 = new BinaryExpressionNode(or1);
+        or1.setLeftChild(equality1);
+        equality1.setOperator(BinaryComparisonOperator.EQUALS);
+        TerminalNode a = new TerminalNode(equality1);
+        Key aKey = new Key("a", false);
+        a.setValue(aKey);
+        equality1.setLeftChild(a);
+        TerminalNode b = new TerminalNode(equality1);
+        b.setValue("b");
+        equality1.setRightChild(b);
+        BinaryExpressionNode equality2 = new BinaryExpressionNode(or1);
+        equality2.setOperator(BinaryComparisonOperator.EQUALS);
+        or1.setRightChild(equality2);
+        TerminalNode c = new TerminalNode(equality2);
+        Key cKey = new Key("c", false);
+        c.setValue(cKey);
+        equality2.setLeftChild(c);
+        TerminalNode d = new TerminalNode(equality2);
+        d.setValue("d");
+        equality2.setRightChild(d);
+        BinaryExpressionNode lessThan = new BinaryExpressionNode(or2);
+        lessThan.setOperator(BinaryComparisonOperator.LESS_THAN);
+        or2.setRightChild(lessThan);
+        or2.setLeftChild(or1);
+        TerminalNode e = new TerminalNode(lessThan);
+        Key eKey = new Key("e", false);
+        e.setValue(eKey);
+        lessThan.setLeftChild(e);
+        TerminalNode f = new TerminalNode(lessThan);
+        f.setValue("f");
+        lessThan.setRightChild(f);
+        BinaryExpressionNode greaterOrEqual = new BinaryExpressionNode(or3);
+        greaterOrEqual.setOperator(BinaryComparisonOperator.GREATER_THAN_OR_EQUAL_TO);
+        TerminalNode g = new TerminalNode(greaterOrEqual);
+        Key gKey = new Key("g", false);
+        g.setValue(gKey);
+        greaterOrEqual.setLeftChild(g);
+        TerminalNode h = new TerminalNode(greaterOrEqual);
+        h.setValue("h");
+        greaterOrEqual.setRightChild(h);
+        or3.setRightChild(greaterOrEqual);
+        or3.setLeftChild(or2);
+        and1.setLeftChild(or3);
+        
+        assertTrue(WhereExpressions.equals(expected, where));
+    }
+    
+    @SuppressWarnings("rawtypes")
+    @Test
     public void testParseQueryWhereAndSortMultiple() throws DescriptorParsingException {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' < 'b' AND 'c' = ?s OR NOT 'x' >= ?i SORT 'a' ASC , 'b' DSC , 'c' ASC";
         StatementDescriptor desc = getDescriptor(descrString, AgentInfoDAO.CATEGORY);

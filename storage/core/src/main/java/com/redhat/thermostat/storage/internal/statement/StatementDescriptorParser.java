@@ -66,7 +66,7 @@ import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
  *                  'LIMIT' term | \empty
  * where         := whereExp sort limit
  * whereExp      := andCond orCond
- * orCond        := 'OR' andCond | \empty
+ * orCond        := 'OR' whereExp | \empty
  * sort          := 'SORT' sortCond | \empty
  * sortCond      := sortPair sortList
  * sortPair      := literal sortModifier
@@ -74,7 +74,7 @@ import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
  * sortList      := ',' sortCond | \empty
  * limit         := 'LIMIT' term | \empty
  * andCond       := condition andBody
- * andBody       := 'AND' condition | \empty
+ * andBody       := 'AND' whereExp | \empty
  * condition     := 'NOT' condition | compExp
  * compExp       := term compExpRHS
  * term          := freeParam | literal
@@ -165,7 +165,7 @@ class StatementDescriptorParser {
             currTokenIndex++;
             WhereExpression expn = new WhereExpression();
             tree.setWhereExpn(expn);
-            matchWhereExp(expn);
+            matchWhereExp(expn.getRoot());
             matchSort(tree);
             matchLimit(tree);
         } else if (tokens[currTokenIndex].equals(KEYWORD_SORT)) {
@@ -248,12 +248,13 @@ class StatementDescriptorParser {
         }
     }
 
-    private void matchWhereExp(WhereExpression expn) throws DescriptorParsingException {
+    private void matchWhereExp(Node node) throws DescriptorParsingException {
         if (currTokenIndex >= tokens.length) {
             throw new DescriptorParsingException("Illegal where clause");
         }
-        matchAndCondition(expn.getRoot());
-        matchOrCondition(expn.getRoot());
+        assert(node != null);
+        matchAndCondition(node);
+        matchOrCondition(node);
     }
 
     private void matchAndCondition(Node currNode) throws DescriptorParsingException {
@@ -296,13 +297,15 @@ class StatementDescriptorParser {
         TerminalNode right = new TerminalNode(expr);
         expr.setLeftChild(left);
         expr.setRightChild(right);
+        
         if (currNode instanceof BinaryExpressionNode) {
             BinaryExpressionNode currNodeExpr = (BinaryExpressionNode)currNode;
             Node available = currNodeExpr.getLeftChild();
-            if (available != null) {
-                currNodeExpr.setRightChild(expr);
-            } else {
+            if (available == null) {
                 currNodeExpr.setLeftChild(expr);
+            } else {
+                assert(currNodeExpr.getRightChild() == null);
+                currNodeExpr.setRightChild(expr);
             }
         } else {
             assert(currNode instanceof NotBooleanExpressionNode || currNode instanceof Node);
@@ -497,14 +500,31 @@ class StatementDescriptorParser {
         if (currTokenIndex < tokens.length &&
                 tokens[currTokenIndex].equals(Operator.AND.getName())) {
             currTokenIndex++; // AND keyword
-            Node parent = currNode.getParent();
-            BinaryExpressionNode and = new BinaryExpressionNode(parent);
-            and.setLeftChild((Node)currNode.getValue());
-            currNode.setParent(and);
-            and.setOperator(BinaryLogicalOperator.AND);
-            currNode.setValue(and);
             
-            matchCondition(and);
+            Node parent = currNode;
+            if (currNode instanceof BinaryExpressionNode ||
+                    currNode instanceof NotBooleanExpressionNode) {
+                parent = currNode.getParent();
+                assert(parent != null);
+            }
+            BinaryExpressionNode and = new BinaryExpressionNode(parent);
+            and.setOperator(BinaryLogicalOperator.AND);
+            if (currNode instanceof BinaryExpressionNode ||
+                    currNode instanceof NotBooleanExpressionNode) {
+                currNode.setParent(and);
+                and.setLeftChild(currNode);
+                parent.setValue(and);
+            } else {
+                // Root node case
+                and.setLeftChild((Node)parent.getValue());
+                parent.setValue(and);
+            }
+            // Note the current AND expression node at this point of parsing
+            // must be at the root of the entire expression.
+            assert(and.getParent().getParent() == null);
+            
+            matchWhereExp(and);
+            
         }
         // empty
     }
@@ -513,14 +533,30 @@ class StatementDescriptorParser {
         if (currTokenIndex < tokens.length &&
                 tokens[currTokenIndex].equals(Operator.OR.getName())) {
             currTokenIndex++; // OR keyword
-            Node parent = currNode.getParent();
-            BinaryExpressionNode or = new BinaryExpressionNode(parent);
-            or.setLeftChild((Node)currNode.getValue());
-            currNode.setParent(or);
-            or.setOperator(BinaryLogicalOperator.OR);
-            currNode.setValue(or);
             
-            matchAndCondition(or);
+            Node parent = currNode;
+            if (currNode instanceof BinaryExpressionNode ||
+                    currNode instanceof NotBooleanExpressionNode) {
+                parent = currNode.getParent();
+                assert(parent != null);
+            }
+            BinaryExpressionNode or = new BinaryExpressionNode(parent);
+            or.setOperator(BinaryLogicalOperator.OR);
+            if (currNode instanceof BinaryExpressionNode ||
+                    currNode instanceof NotBooleanExpressionNode) {
+                currNode.setParent(or);
+                or.setLeftChild(currNode);
+                parent.setValue(or);
+            } else {
+                // Root node case
+                or.setLeftChild((Node)parent.getValue());
+                parent.setValue(or);
+            }
+            // Note the current OR expression node at this point of parsing
+            // must be at the root of the entire expression.
+            assert(or.getParent().getParent() == null);
+            
+            matchWhereExp(or);
         }
         // empty
     }

@@ -77,7 +77,7 @@ class Node implements Printable, Patchable {
         System.out.println("");
         if (value instanceof Node) {
             Node node = (Node)value;
-            node.print(level++);
+            node.print(level + 1);
         }
     }
     
