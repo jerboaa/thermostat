@@ -38,6 +38,7 @@ package com.redhat.thermostat.launcher.internal;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -50,6 +51,7 @@ import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.TableRenderer;
+import com.redhat.thermostat.launcher.internal.CommandInfo.Environment;
 import com.redhat.thermostat.shared.locale.Translate;
 
 public class HelpCommand extends AbstractCommand {
@@ -118,10 +120,26 @@ public class HelpCommand extends AbstractCommand {
         
         PrintWriter pw = new PrintWriter(ctx.getConsole().getOutput());
         Options options = info.getOptions();
-        String name = APP_NAME + " " + info.getName();
         String usage = APP_NAME + " " + info.getUsage() + "\n" + info.getDescription();
-        helpFormatter.printHelp(pw, 80, usage, name, options, 2, 4, null);
+        String header = getAvailabilityNote(info) + "\n" + APP_NAME + " " + info.getName();
+        helpFormatter.printHelp(pw, 80, usage, header, options, 2, 4, null);
         pw.flush();
+    }
+
+    private String getAvailabilityNote(CommandInfo info) {
+        String availabilityNote = "";
+
+        // Availability note is only needed if the command is not available everywhere
+        if (!info.getEnvironments().containsAll(Arrays.asList(Environment.values()))) {
+            if (info.getEnvironments().contains(Environment.SHELL)) {
+                availabilityNote = translator.localize(LocaleResources.COMMAND_AVAILABLE_INSIDE_SHELL).getContents();
+            } else if (info.getEnvironments().contains(Environment.CLI)) {
+                availabilityNote = translator.localize(LocaleResources.COMMAND_AVAILABLE_OUTSIDE_SHELL).getContents();
+            } else {
+                throw new AssertionError("Need to handle a third environment");
+            }
+        }
+        return availabilityNote;
     }
 
     @Override

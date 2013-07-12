@@ -178,7 +178,7 @@ public class CliTest extends IntegrationTest {
         assertTrue(usage.matches("^usage: thermostat shell$"));
         String description = lines[1];
         assertTrue(description.matches("^\\s+launches the Thermostat interactive shell$"));
-        assertTrue(lines[2].matches("thermostat shell"));
+        assertTrue(lines[3].matches("thermostat shell"));
     }
 
     @Test
@@ -189,6 +189,7 @@ public class CliTest extends IntegrationTest {
         String expectedOut = "Could not parse options: Unrecognized option: --foo\n"
                            + "usage: thermostat shell\n"
                            + "                  launches the Thermostat interactive shell\n"
+                           + "Note: this command is only supported outside the shell\n"
                            + "thermostat shell\n\n";
         assertEquals(expectedOut, stdOut);
     }

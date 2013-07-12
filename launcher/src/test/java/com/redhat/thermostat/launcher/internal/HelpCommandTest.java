@@ -44,6 +44,7 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.EnumSet;
 
 import org.apache.commons.cli.Options;
 import org.junit.Before;
@@ -51,6 +52,7 @@ import org.junit.Test;
 
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.SimpleArguments;
+import com.redhat.thermostat.launcher.internal.CommandInfo.Environment;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 
 public class HelpCommandTest {
@@ -129,6 +131,7 @@ public class HelpCommandTest {
         when(testCommandInfo.getUsage()).thenReturn("usage of test command");
         when(testCommandInfo.getDescription()).thenReturn("description of test command");
         when(testCommandInfo.getOptions()).thenReturn(new Options());
+        when(testCommandInfo.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI));
 
         when(infos.getCommandInfo("test1")).thenReturn(testCommandInfo);
 
@@ -141,6 +144,7 @@ public class HelpCommandTest {
         String actual = ctxFactory.getOutput();
         assertEquals("usage: thermostat usage of test command\n" +
                      "                  description of test command\n" +
+                     "Note: this command is only supported outside the shell\n" +
                      "thermostat test1\n\n", actual);
     }
 
