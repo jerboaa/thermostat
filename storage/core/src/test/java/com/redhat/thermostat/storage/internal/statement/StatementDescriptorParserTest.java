@@ -502,6 +502,117 @@ public class StatementDescriptorParserTest {
     }
     
     @Test
+    public void testParseQueryWithMultipleConDisjunctionsNegations() throws DescriptorParsingException {
+        String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' = 'b' OR NOT 'c' = 'd' OR 'e' < 'f' OR 'g' >= 'h' AND NOT 'x' = 'y' AND 'u' = 'w' AND 's' = 't'";
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        ParsedStatement<AgentInformation> statement = parser.parse();
+        assertEquals(0, statement.getNumParams());
+        assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
+        SuffixExpression expn = statement.getSuffixExpression();
+        assertNull(expn.getLimitExpn());
+        assertNull(expn.getSortExpn());
+        assertNotNull(expn.getWhereExpn());
+        
+        WhereExpression where = expn.getWhereExpn();
+        // build the expected expression tree
+        WhereExpression expected = new WhereExpression();
+        BinaryExpressionNode and3 = new BinaryExpressionNode(expected.getRoot());
+        expected.getRoot().setValue(and3);
+        and3.setOperator(BinaryLogicalOperator.AND);
+        BinaryExpressionNode and2 = new BinaryExpressionNode(and3);
+        and2.setOperator(BinaryLogicalOperator.AND);
+        BinaryExpressionNode and1 = new BinaryExpressionNode(and2);
+        and1.setOperator(BinaryLogicalOperator.AND);
+        NotBooleanExpressionNode not2 = new NotBooleanExpressionNode(and1);
+        BinaryExpressionNode equality3 = new BinaryExpressionNode(not2);
+        not2.setValue(equality3);
+        equality3.setOperator(BinaryComparisonOperator.EQUALS);
+        TerminalNode x = new TerminalNode(equality3);
+        x.setValue(new Key<String>("x", false));
+        TerminalNode y = new TerminalNode(equality3);
+        y.setValue("y");
+        equality3.setLeftChild(x);
+        equality3.setRightChild(y);
+        and1.setRightChild(not2);
+        and3.setLeftChild(and2);
+        and2.setLeftChild(and1);
+        BinaryExpressionNode equality4 = new BinaryExpressionNode(and2);
+        equality4.setOperator(BinaryComparisonOperator.EQUALS);
+        and2.setRightChild(equality4);
+        TerminalNode u = new TerminalNode(equality4);
+        u.setValue(new Key<String>("u", false));
+        equality4.setLeftChild(u);
+        TerminalNode w = new TerminalNode(equality4);
+        w.setValue("w");
+        equality4.setRightChild(w);
+        BinaryExpressionNode equality5 = new BinaryExpressionNode(and3);
+        equality5.setOperator(BinaryComparisonOperator.EQUALS);
+        TerminalNode s = new TerminalNode(equality5);
+        s.setValue(new Key<String>("s", false));
+        TerminalNode t = new TerminalNode(equality5);
+        t.setValue("t");
+        equality5.setLeftChild(s);
+        equality5.setRightChild(t);
+        and3.setRightChild(equality5);
+        BinaryExpressionNode or3 = new BinaryExpressionNode(and1);
+        BinaryExpressionNode or2 = new BinaryExpressionNode(or3);
+        BinaryExpressionNode or1 = new BinaryExpressionNode(or2);
+        or3.setOperator(BinaryLogicalOperator.OR);
+        or2.setOperator(BinaryLogicalOperator.OR);
+        or1.setOperator(BinaryLogicalOperator.OR);
+        or3.setLeftChild(or2);
+        or2.setLeftChild(or1);
+        BinaryExpressionNode equality1 = new BinaryExpressionNode(or1);
+        or1.setLeftChild(equality1);
+        equality1.setOperator(BinaryComparisonOperator.EQUALS);
+        TerminalNode a = new TerminalNode(equality1);
+        Key<String> aKey = new Key<>("a", false);
+        a.setValue(aKey);
+        equality1.setLeftChild(a);
+        TerminalNode b = new TerminalNode(equality1);
+        b.setValue("b");
+        equality1.setRightChild(b);
+        BinaryExpressionNode equality2 = new BinaryExpressionNode(or1);
+        equality2.setOperator(BinaryComparisonOperator.EQUALS);
+        NotBooleanExpressionNode not1 = new NotBooleanExpressionNode(or1);
+        not1.setValue(equality2);
+        or1.setRightChild(not1);
+        TerminalNode c = new TerminalNode(equality2);
+        Key<String> cKey = new Key<>("c", false);
+        c.setValue(cKey);
+        equality2.setLeftChild(c);
+        TerminalNode d = new TerminalNode(equality2);
+        d.setValue("d");
+        equality2.setRightChild(d);
+        BinaryExpressionNode lessThan = new BinaryExpressionNode(or2);
+        lessThan.setOperator(BinaryComparisonOperator.LESS_THAN);
+        or2.setRightChild(lessThan);
+        or2.setLeftChild(or1);
+        TerminalNode e = new TerminalNode(lessThan);
+        Key<String> eKey = new Key<>("e", false);
+        e.setValue(eKey);
+        lessThan.setLeftChild(e);
+        TerminalNode f = new TerminalNode(lessThan);
+        f.setValue("f");
+        lessThan.setRightChild(f);
+        BinaryExpressionNode greaterOrEqual = new BinaryExpressionNode(or3);
+        greaterOrEqual.setOperator(BinaryComparisonOperator.GREATER_THAN_OR_EQUAL_TO);
+        TerminalNode g = new TerminalNode(greaterOrEqual);
+        Key<String> gKey = new Key<>("g", false);
+        g.setValue(gKey);
+        greaterOrEqual.setLeftChild(g);
+        TerminalNode h = new TerminalNode(greaterOrEqual);
+        h.setValue("h");
+        greaterOrEqual.setRightChild(h);
+        or3.setRightChild(greaterOrEqual);
+        or3.setLeftChild(or2);
+        and1.setLeftChild(or3);
+        
+        assertTrue(WhereExpressions.equals(expected, where));
+    }
+    
+    @Test
     public void testParseQueryWhereAndSortMultiple() throws DescriptorParsingException {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' < 'b' AND 'c' = ?s OR NOT 'x' >= ?i SORT 'a' ASC , 'b' DSC , 'c' ASC";
         StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
@@ -1013,6 +1124,20 @@ public class StatementDescriptorParserTest {
     @Test
     public void rejectParseQueryWhereBoolTerm() throws DescriptorParsingException {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE true AND false";
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        try {
+            parser.parse();
+        } catch (DescriptorParsingException e) {
+            // pass
+        }
+    }
+    
+    @Test
+    public void rejectQueryWithParenthesis() throws DescriptorParsingException {
+        // We don't allow parenthesized expressions. This is due to mongodb not
+        // allowing this.
+        String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE NOT ( 'a' = 'b' AND 'c' = 'd' )";
         StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
         parser = new StatementDescriptorParser<>(storage, desc);
         try {
