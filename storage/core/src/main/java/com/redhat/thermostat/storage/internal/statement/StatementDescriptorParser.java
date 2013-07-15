@@ -44,9 +44,10 @@ import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.Query.SortDirection;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.core.Query.SortDirection;
+import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.BinaryComparisonOperator;
 import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
 
@@ -78,11 +79,12 @@ import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
  * condition     := 'NOT' condition | compExp
  * compExp       := term compExpRHS
  * term          := freeParam | literal
- * freeParam     := '?s' | '?i' | '?s[' | '?b'
- * literal       := sQuote string sQuote | int | boolean
+ * freeParam     := '?s' | '?i' | '?l' | '?s[' | '?b'
+ * literal       := sQuote string sQuote | int | long | boolean
  * sQuote        := \'
  * boolean       := &lt;true&gt; | &lt;false&gt;
  * int           := &lt;literal-int&gt;
+ * long          := &lt;literal-long&gt;
  * string        := &lt;literal-string-value&gt;
  * compExpRHS    := '=' term | '&lt;=' term | '&gt;=' term | '&lt;' term | '&gt;' term
  * </pre>
@@ -98,7 +100,7 @@ import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
  * 
  * NOTE: Comparison expressions have equal precedence.
  */
-class StatementDescriptorParser {
+class StatementDescriptorParser<T extends Pojo> {
 
     private static final String TOKEN_DELIMS = " \t\r\n\f";
     private static final String[] KNOWN_STATEMENT_TYPES = new String[] {
@@ -113,15 +115,15 @@ class StatementDescriptorParser {
     private static final char PARAM_PLACEHOLDER = '?';
     
     private final String[] tokens;
-    private final StatementDescriptor desc;
+    private final StatementDescriptor<T> desc;
     private final Storage storage;
     private int currTokenIndex;
     private int placeHolderCount;
     // the parsed statement
-    private ParsedStatement parsedStatement;
+    private ParsedStatement<T> parsedStatement;
     private SuffixExpression tree;
     
-    StatementDescriptorParser(Storage storage, StatementDescriptor desc) {
+    StatementDescriptorParser(Storage storage, StatementDescriptor<T> desc) {
         this.tokens = getTokens(desc.getQueryDescriptor());
         this.currTokenIndex = 0;
         this.placeHolderCount = 0;
@@ -138,7 +140,7 @@ class StatementDescriptorParser {
         return toks.toArray(new String[0]);
     }
 
-    public ParsedStatement parse() throws DescriptorParsingException {
+    public ParsedStatement<T> parse() throws DescriptorParsingException {
         matchStatementType();
         matchCategory();
         // matched so far, create the raw statement
@@ -457,12 +459,16 @@ class StatementDescriptorParser {
             // illegal type
             return null;
         }
-        assert(term.equals("i") || term.equals("s") || term.equals("s[") || term.equals("b"));
+        assert(term.equals("i") || term.equals("l") || term.equals("s") || term.equals("s[") || term.equals("b"));
         char switchChar = term.charAt(0);
         Class<?> type = null;
         switch (switchChar) {
         case 'i': {
             type = Integer.class;
+            break;
+        }
+        case 'l': {
+            type = Long.class;
             break;
         }
         case 's': {
@@ -564,8 +570,8 @@ class StatementDescriptorParser {
     private void createStatement() {
         if (tokens[0].equals(KNOWN_STATEMENT_TYPES[0])) {
             // query case
-            Query<?> query = storage.createQuery(desc.getCategory());
-            this.parsedStatement = new ParsedStatement(query);
+            Query<T> query = storage.createQuery(desc.getCategory());
+            this.parsedStatement = new ParsedStatement<>(query);
         } else {
             throw new IllegalStateException("Don't know how to create statement type '" + tokens[0] + "'");
         }

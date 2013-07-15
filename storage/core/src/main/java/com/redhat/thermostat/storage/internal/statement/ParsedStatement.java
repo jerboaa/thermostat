@@ -38,6 +38,7 @@ package com.redhat.thermostat.storage.internal.statement;
 
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Statement;
+import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
 
 /**
@@ -47,13 +48,13 @@ import com.redhat.thermostat.storage.query.Expression;
  *
  * @see PreparedStatementImpl#executeQuery()
  */
-class ParsedStatement {
+class ParsedStatement<T extends Pojo> {
 
     private int numParams;
     private SuffixExpression suffixExpn;
-    private final Statement statement;
+    private final Statement<T> statement;
     
-    ParsedStatement(Statement statement) {
+    ParsedStatement(Statement<T> statement) {
         this.statement = statement;
     }
     
@@ -61,11 +62,11 @@ class ParsedStatement {
         return numParams;
     }
 
-    public Statement getRawStatement() {
+    public Statement<T> getRawStatement() {
         return statement;
     }
     
-    public Statement patchQuery(PreparedStatementImpl stmt) throws IllegalPatchException {
+    public Statement<T> patchQuery(PreparedStatementImpl<T> stmt) throws IllegalPatchException {
         if (suffixExpn == null) {
             String msg = "Suffix expression must be set before patching!";
             IllegalStateException expn = new IllegalStateException(msg);
@@ -87,8 +88,8 @@ class ParsedStatement {
             return;
         }
         PatchedLimitExpression patchedExp = expn.patch(params);
-        if (statement instanceof Query<?>) {
-            Query<?> query = (Query<?>)statement;
+        if (statement instanceof Query) {
+            Query<T> query = (Query<T>) statement;
             query.limit(patchedExp.getLimitValue());
         } else {
             String msg = "Patching of non-query types not (yet) supported! Class was:"
@@ -105,8 +106,8 @@ class ParsedStatement {
             return;
         }
         PatchedSortExpression patchedExp = expn.patch(params);
-        if (statement instanceof Query<?>) {
-            Query<?> query = (Query<?>)statement;
+        if (statement instanceof Query) {
+            Query<T> query = (Query<T>) statement;
             PatchedSortMember[] members = patchedExp.getSortMembers();
             for (int i = 0; i < members.length; i++) {
                 query.sort(members[i].getSortKey(), members[i].getDirection());
@@ -129,8 +130,8 @@ class ParsedStatement {
         // the way.
         PatchedWhereExpression patchedExp = expn.patch(params);
         Expression whereClause = patchedExp.getExpression();
-        if (statement instanceof Query<?>) {
-            Query<?> query = (Query<?>)statement;
+        if (statement instanceof Query) {
+            Query<T> query = (Query<T>) statement;
             query.where(whereClause);
         } else {
             String msg = "Patching of non-query types not (yet) supported! Class was:"

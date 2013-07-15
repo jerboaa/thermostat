@@ -337,7 +337,7 @@ public class MongoStorage implements Storage {
     }
 
     @Override
-    public PreparedStatement prepareStatement(StatementDescriptor statementDesc)
+    public <T extends Pojo> PreparedStatement<T> prepareStatement(StatementDescriptor<T> statementDesc)
             throws DescriptorParsingException {
         // FIXME: Use some kind of cache in order to avoid parsing of
         // descriptors each time this is called. At least if the descriptor

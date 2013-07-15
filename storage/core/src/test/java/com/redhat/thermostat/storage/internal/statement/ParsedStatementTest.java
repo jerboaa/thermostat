@@ -52,6 +52,7 @@ import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.SortDirection;
+import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.BinaryComparisonExpression;
 import com.redhat.thermostat.storage.query.BinaryComparisonOperator;
 import com.redhat.thermostat.storage.query.BinaryLogicalExpression;
@@ -61,7 +62,7 @@ import com.redhat.thermostat.storage.query.LiteralExpression;
 
 public class ParsedStatementTest {
 
-    private Query<?> statement;
+    private Query<Pojo> statement;
     
     @Before
     public void setup() {
@@ -73,11 +74,10 @@ public class ParsedStatementTest {
         statement = null;
     }
     
-    @SuppressWarnings("rawtypes")
     @Test
     public void canPatchWhereAndExpr() throws IllegalPatchException {
         // create the parsedStatementImpl we are going to use
-        ParsedStatement parsedStmt = new ParsedStatement(statement);
+        ParsedStatement<Pojo> parsedStmt = new ParsedStatement<>(statement);
         SuffixExpression suffixExpn = new SuffixExpression();
         suffixExpn.setLimitExpn(null);
         suffixExpn.setSortExpn(null);
@@ -93,7 +93,7 @@ public class ParsedStatementTest {
         and.setLeftChild(leftEqual);
         and.setRightChild(rightEqual);
         TerminalNode a = new TerminalNode(leftEqual);
-        Key aKey = new Key("a", false);
+        Key<String> aKey = new Key<>("a", false);
         a.setValue(aKey);
         TerminalNode b = new TerminalNode(leftEqual);
         UnfinishedValueNode patchB = new UnfinishedValueNode();
@@ -116,41 +116,40 @@ public class ParsedStatementTest {
         parsedStmt.setSuffixExpression(suffixExpn);
         // next, create the PreparedStatement we are going to use for
         // patching.
-        PreparedStatementImpl preparedStatement = new PreparedStatementImpl(2);
+        PreparedStatementImpl<Pojo> preparedStatement = new PreparedStatementImpl<>(2);
         preparedStatement.setString(0, "test1");
         preparedStatement.setInt(1, 2);
         // finally test the patching
-        Query<?> query = (Query)parsedStmt.patchQuery(preparedStatement);
+        Query<Pojo> query = (Query<Pojo>)parsedStmt.patchQuery(preparedStatement);
         assertTrue(query instanceof TestQuery);
         TestQuery q = (TestQuery)query;
         Expression expectedExpression = q.expr;
         assertTrue(expectedExpression instanceof BinaryLogicalExpression);
-        BinaryLogicalExpression andFinal = (BinaryLogicalExpression)expectedExpression;
+        BinaryLogicalExpression<?, ?> andFinal = (BinaryLogicalExpression<?, ?>) expectedExpression;
         assertEquals(BinaryLogicalOperator.AND, andFinal.getOperator());
         assertTrue(andFinal.getLeftOperand() instanceof BinaryComparisonExpression);
         assertTrue(andFinal.getRightOperand() instanceof BinaryComparisonExpression);
-        BinaryComparisonExpression left = (BinaryComparisonExpression)andFinal.getLeftOperand();
-        BinaryComparisonExpression right = (BinaryComparisonExpression)andFinal.getRightOperand();
+        BinaryComparisonExpression<?> left = (BinaryComparisonExpression<?>)andFinal.getLeftOperand();
+        BinaryComparisonExpression<?> right = (BinaryComparisonExpression<?>)andFinal.getRightOperand();
         assertEquals(BinaryComparisonOperator.EQUALS, left.getOperator());
         assertEquals(BinaryComparisonOperator.EQUALS, right.getOperator());
         assertTrue(left.getLeftOperand() instanceof LiteralExpression);
         assertTrue(left.getRightOperand() instanceof LiteralExpression);
-        LiteralExpression leftLiteral1 = (LiteralExpression)left.getLeftOperand();
-        LiteralExpression rightLiteral1 = (LiteralExpression)left.getRightOperand();
+        LiteralExpression<?> leftLiteral1 = (LiteralExpression<?>)left.getLeftOperand();
+        LiteralExpression<?> rightLiteral1 = (LiteralExpression<?>)left.getRightOperand();
         assertEquals(aKey, leftLiteral1.getValue());
         assertEquals("test1", rightLiteral1.getValue());
-        LiteralExpression leftLiteral2 = (LiteralExpression)right.getLeftOperand();
-        LiteralExpression rightLiteral2 = (LiteralExpression)right.getRightOperand();
+        LiteralExpression<?> leftLiteral2 = (LiteralExpression<?>)right.getLeftOperand();
+        LiteralExpression<?> rightLiteral2 = (LiteralExpression<?>)right.getRightOperand();
         assertEquals("c", leftLiteral2.getValue());
         // right literal value should have been patched to a "d"
         assertEquals(2, rightLiteral2.getValue());
     }
     
-    @SuppressWarnings("rawtypes")
     @Test
     public void canPatchBasicWhereEquals() throws IllegalPatchException {
         // create the parsedStatementImpl we are going to use
-        ParsedStatement parsedStmt = new ParsedStatement(statement);
+        ParsedStatement<Pojo> parsedStmt = new ParsedStatement<>(statement);
         SuffixExpression suffixExpn = new SuffixExpression();
         suffixExpn.setLimitExpn(null);
         suffixExpn.setSortExpn(null);
@@ -160,7 +159,7 @@ public class ParsedStatementTest {
         expn.getRoot().setValue(and);
         and.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode a = new TerminalNode(and);
-        a.setValue(new Key("a", false));
+        a.setValue(new Key<>("a", false));
         TerminalNode b = new TerminalNode(and);
         UnfinishedValueNode bPatch = new UnfinishedValueNode();
         bPatch.setParameterIndex(0);
@@ -173,46 +172,45 @@ public class ParsedStatementTest {
         parsedStmt.setSuffixExpression(suffixExpn);
         // next, create the PreparedStatement we are going to use for
         // patching.
-        PreparedStatementImpl preparedStatement = new PreparedStatementImpl(1);
+        PreparedStatementImpl<Pojo> preparedStatement = new PreparedStatementImpl<>(1);
         preparedStatement.setBoolean(0, true);
         // finally test the patching
-        Query<?> query = (Query)parsedStmt.patchQuery(preparedStatement);
+        Query<?> query = (Query<?>)parsedStmt.patchQuery(preparedStatement);
         assertTrue(query instanceof TestQuery);
         TestQuery q = (TestQuery)query;
         Expression expectedExpression = q.expr;
         assertTrue(expectedExpression instanceof BinaryComparisonExpression);
-        BinaryComparisonExpression root = (BinaryComparisonExpression)expectedExpression;
+        BinaryComparisonExpression<?> root = (BinaryComparisonExpression<?>)expectedExpression;
         assertEquals(BinaryComparisonOperator.EQUALS, root.getOperator());
         assertTrue(root.getLeftOperand() instanceof LiteralExpression);
         assertTrue(root.getRightOperand() instanceof LiteralExpression);
-        LiteralExpression leftLiteral1 = (LiteralExpression)root.getLeftOperand();
-        LiteralExpression rightLiteral1 = (LiteralExpression)root.getRightOperand();
-        assertEquals(new Key("a", false), leftLiteral1.getValue());
+        LiteralExpression<?> leftLiteral1 = (LiteralExpression<?>)root.getLeftOperand();
+        LiteralExpression<?> rightLiteral1 = (LiteralExpression<?>)root.getRightOperand();
+        assertEquals(new Key<>("a", false), leftLiteral1.getValue());
         // this should have gotten patched to a "b"
         assertEquals(true, rightLiteral1.getValue());
         // now do it again with a different value
-        preparedStatement = new PreparedStatementImpl(1);
+        preparedStatement = new PreparedStatementImpl<>(1);
         preparedStatement.setBoolean(0, false);
-        query = (Query)parsedStmt.patchQuery(preparedStatement);
+        query = (Query<?>)parsedStmt.patchQuery(preparedStatement);
         assertTrue(query instanceof TestQuery);
         q = (TestQuery)query;
         expectedExpression = q.expr;
         assertTrue(expectedExpression instanceof BinaryComparisonExpression);
-        root = (BinaryComparisonExpression)expectedExpression;
+        root = (BinaryComparisonExpression<?>)expectedExpression;
         assertEquals(BinaryComparisonOperator.EQUALS, root.getOperator());
         assertTrue(root.getLeftOperand() instanceof LiteralExpression);
         assertTrue(root.getRightOperand() instanceof LiteralExpression);
-        leftLiteral1 = (LiteralExpression)root.getLeftOperand();
-        rightLiteral1 = (LiteralExpression)root.getRightOperand();
-        assertEquals(new Key("a", false), leftLiteral1.getValue());
+        leftLiteral1 = (LiteralExpression<?>)root.getLeftOperand();
+        rightLiteral1 = (LiteralExpression<?>)root.getRightOperand();
+        assertEquals(new Key<>("a", false), leftLiteral1.getValue());
         assertEquals(false, rightLiteral1.getValue());
     }
     
-    @SuppressWarnings("rawtypes")
     @Test
     public void canPatchBasicWhereEqualsLHSKeyAndRHSValue() throws IllegalPatchException {
         // create the parsedStatementImpl we are going to use
-        ParsedStatement parsedStmt = new ParsedStatement(statement);
+        ParsedStatement<Pojo> parsedStmt = new ParsedStatement<>(statement);
         SuffixExpression suffixExpn = new SuffixExpression();
         suffixExpn.setLimitExpn(null);
         suffixExpn.setSortExpn(null);
@@ -239,47 +237,47 @@ public class ParsedStatementTest {
         parsedStmt.setSuffixExpression(suffixExpn);
         // next, create the PreparedStatement we are going to use for
         // patching.
-        PreparedStatementImpl preparedStatement = new PreparedStatementImpl(2);
+        PreparedStatementImpl<Pojo> preparedStatement = new PreparedStatementImpl<>(2);
         preparedStatement.setString(0, "a");
         preparedStatement.setBoolean(1, true);
         // finally test the patching
-        Query<?> query = (Query)parsedStmt.patchQuery(preparedStatement);
+        Query<?> query = (Query<?>)parsedStmt.patchQuery(preparedStatement);
         assertTrue(query instanceof TestQuery);
         TestQuery q = (TestQuery)query;
         Expression expectedExpression = q.expr;
         assertTrue(expectedExpression instanceof BinaryComparisonExpression);
-        BinaryComparisonExpression root = (BinaryComparisonExpression)expectedExpression;
+        BinaryComparisonExpression<?> root = (BinaryComparisonExpression<?>)expectedExpression;
         assertEquals(BinaryComparisonOperator.EQUALS, root.getOperator());
         assertTrue(root.getLeftOperand() instanceof LiteralExpression);
         assertTrue(root.getRightOperand() instanceof LiteralExpression);
-        LiteralExpression leftLiteral1 = (LiteralExpression)root.getLeftOperand();
-        LiteralExpression rightLiteral1 = (LiteralExpression)root.getRightOperand();
-        assertEquals(new Key("a", false), leftLiteral1.getValue());
+        LiteralExpression<?> leftLiteral1 = (LiteralExpression<?>)root.getLeftOperand();
+        LiteralExpression<?> rightLiteral1 = (LiteralExpression<?>)root.getRightOperand();
+        assertEquals(new Key<>("a", false), leftLiteral1.getValue());
         // this should have gotten patched to a "b"
         assertEquals(true, rightLiteral1.getValue());
         // now do it again with a different value
-        preparedStatement = new PreparedStatementImpl(2);
+        preparedStatement = new PreparedStatementImpl<>(2);
         preparedStatement.setString(0, "a");
         preparedStatement.setBoolean(1, false);
-        query = (Query)parsedStmt.patchQuery(preparedStatement);
+        query = (Query<?>)parsedStmt.patchQuery(preparedStatement);
         assertTrue(query instanceof TestQuery);
         q = (TestQuery)query;
         expectedExpression = q.expr;
         assertTrue(expectedExpression instanceof BinaryComparisonExpression);
-        root = (BinaryComparisonExpression)expectedExpression;
+        root = (BinaryComparisonExpression<?>)expectedExpression;
         assertEquals(BinaryComparisonOperator.EQUALS, root.getOperator());
         assertTrue(root.getLeftOperand() instanceof LiteralExpression);
         assertTrue(root.getRightOperand() instanceof LiteralExpression);
-        leftLiteral1 = (LiteralExpression)root.getLeftOperand();
-        rightLiteral1 = (LiteralExpression)root.getRightOperand();
-        assertEquals(new Key("a", false), leftLiteral1.getValue());
+        leftLiteral1 = (LiteralExpression<?>)root.getLeftOperand();
+        rightLiteral1 = (LiteralExpression<?>)root.getRightOperand();
+        assertEquals(new Key<>("a", false), leftLiteral1.getValue());
         assertEquals(false, rightLiteral1.getValue());
     }
     
     @Test
     public void canPatchBasicLimit() throws IllegalPatchException {
         // create the parsedStatementImpl we are going to use
-        ParsedStatement parsedStmt = new ParsedStatement(statement);
+        ParsedStatement<Pojo> parsedStmt = new ParsedStatement<>(statement);
         SuffixExpression suffixExpn = new SuffixExpression();
         LimitExpression limitExpnToPatch = new LimitExpression();
         UnfinishedLimitValue unfinished = new UnfinishedLimitValue();
@@ -290,20 +288,18 @@ public class ParsedStatementTest {
         suffixExpn.setWhereExpn(null);
         parsedStmt.setSuffixExpression(suffixExpn);
         // set the value for the one unfinished param
-        PreparedStatementImpl preparedStatement = new PreparedStatementImpl(1);
+        PreparedStatementImpl<Pojo> preparedStatement = new PreparedStatementImpl<>(1);
         preparedStatement.setInt(0, 3);
-        @SuppressWarnings("rawtypes")
-        Query query = (Query)parsedStmt.patchQuery(preparedStatement);
+        Query<?> query = (Query<?>)parsedStmt.patchQuery(preparedStatement);
         assertTrue(query instanceof TestQuery);
         TestQuery q = (TestQuery)query;
         assertEquals(3, q.limitVal);
     }
     
-    @SuppressWarnings("rawtypes")
     @Test
     public void canPatchBasicSort() throws IllegalPatchException {
         // create the parsedStatementImpl we are going to use
-        ParsedStatement parsedStmt = new ParsedStatement(statement);
+        ParsedStatement<Pojo> parsedStmt = new ParsedStatement<>(statement);
         SuffixExpression suffixExpn = new SuffixExpression();
         // SORT ? ASC, b DSC
         SortExpression sortExpn = new SortExpression();
@@ -322,30 +318,29 @@ public class ParsedStatementTest {
         suffixExpn.setWhereExpn(null);
         parsedStmt.setSuffixExpression(suffixExpn);
         // set the value for the one unfinished param
-        PreparedStatementImpl preparedStatement = new PreparedStatementImpl(1);
+        PreparedStatementImpl<Pojo> preparedStatement = new PreparedStatementImpl<>(1);
         preparedStatement.setString(0, "a");
-        Query query = (Query)parsedStmt.patchQuery(preparedStatement);
+        Query<Pojo> query = (Query<Pojo>)parsedStmt.patchQuery(preparedStatement);
         assertTrue(query instanceof TestQuery);
         TestQuery q = (TestQuery)query;
-        List<Pair<Key, SortDirection>> actualSorts = q.sorts;
+        List<Pair<Key<?>, SortDirection>> actualSorts = q.sorts;
         assertEquals(2, actualSorts.size());
-        Pair first = actualSorts.get(0);
-        Key firstKeyActual = (Key)first.getFirst();
-        Key expectedFirst = new Key("a", false);
+        Pair<Key<?>, SortDirection> first = actualSorts.get(0);
+        Key<?> firstKeyActual = (Key<?>)first.getFirst();
+        Key<?> expectedFirst = new Key<>("a", false);
         assertEquals(expectedFirst, firstKeyActual);
         assertEquals(SortDirection.ASCENDING, first.getSecond());
-        Pair second = actualSorts.get(1);
-        Key secondKeyActual = (Key)second.getFirst();
-        Key expectedSecond = new Key("b", false);
+        Pair<Key<?>, SortDirection> second = actualSorts.get(1);
+        Key<?> secondKeyActual = (Key<?>)second.getFirst();
+        Key<?> expectedSecond = new Key<>("b", false);
         assertEquals(expectedSecond, secondKeyActual);
         assertEquals(SortDirection.DESCENDING, second.getSecond());
     }
     
-    @SuppressWarnings("rawtypes")
     @Test
     public void failPatchWithWrongType() throws IllegalPatchException {
         // create the parsedStatementImpl we are going to use
-        ParsedStatement parsedStmt = new ParsedStatement(statement);
+        ParsedStatement<Pojo> parsedStmt = new ParsedStatement<>(statement);
         SuffixExpression suffixExpn = new SuffixExpression();
         suffixExpn.setLimitExpn(null);
         suffixExpn.setSortExpn(null);
@@ -361,7 +356,7 @@ public class ParsedStatementTest {
         and.setLeftChild(leftEqual);
         and.setRightChild(rightEqual);
         TerminalNode a = new TerminalNode(leftEqual);
-        Key aKey = new Key("a", false);
+        Key<?> aKey = new Key<>("a", false);
         a.setValue(aKey);
         TerminalNode b = new TerminalNode(leftEqual);
         UnfinishedValueNode patchB = new UnfinishedValueNode();
@@ -371,7 +366,7 @@ public class ParsedStatementTest {
         leftEqual.setLeftChild(a);
         leftEqual.setRightChild(b);
         TerminalNode c = new TerminalNode(rightEqual);
-        Key cKey = new Key("c", false);
+        Key<?> cKey = new Key<>("c", false);
         c.setValue(cKey);
         rightEqual.setLeftChild(c);
         TerminalNode d = new TerminalNode(rightEqual);
@@ -385,7 +380,7 @@ public class ParsedStatementTest {
         parsedStmt.setSuffixExpression(suffixExpn);
         // next, create the PreparedStatement we are going to use for
         // patching.
-        PreparedStatementImpl preparedStatement = new PreparedStatementImpl(2);
+        PreparedStatementImpl<Pojo> preparedStatement = new PreparedStatementImpl<>(2);
         preparedStatement.setString(0, "test1");
         preparedStatement.setString(1, "foo");
         // finally test the patching
@@ -401,7 +396,7 @@ public class ParsedStatementTest {
     @Test
     public void failPatchBasicEqualsIfIndexOutofBounds() {
         // create the parsedStatementImpl we are going to use
-        ParsedStatement parsedStmt = new ParsedStatement(statement);
+        ParsedStatement<Pojo> parsedStmt = new ParsedStatement<>(statement);
         SuffixExpression suffixExpn = new SuffixExpression();
         suffixExpn.setLimitExpn(null);
         suffixExpn.setSortExpn(null);
@@ -421,7 +416,7 @@ public class ParsedStatementTest {
         suffixExpn.setWhereExpn(expn);
         parsedStmt.setNumFreeParams(1);
         parsedStmt.setSuffixExpression(suffixExpn);
-        PreparedStatementImpl preparedStatement = new PreparedStatementImpl(1);
+        PreparedStatementImpl<Pojo> preparedStatement = new PreparedStatementImpl<>(1);
         preparedStatement.setString(0, "b");
         // this should fail
         try {
@@ -432,11 +427,10 @@ public class ParsedStatementTest {
         }
     }
     
-    @SuppressWarnings("rawtypes")
-    private static class TestQuery implements Query {
+    private static class TestQuery implements Query<Pojo> {
 
         private Expression expr;
-        private List<Pair<Key, SortDirection>> sorts;
+        private List<Pair<Key<?>, SortDirection>> sorts;
         private int limitVal = -1;
         
         private TestQuery() {
@@ -449,8 +443,8 @@ public class ParsedStatementTest {
         }
 
         @Override
-        public void sort(Key key, SortDirection direction) {
-            Pair<Key, SortDirection> sortPair = new Pair<>(key, direction);
+        public void sort(Key<?> key, SortDirection direction) {
+            Pair<Key<?>, SortDirection> sortPair = new Pair<Key<?>, SortDirection>(key, direction);
             sorts.add(sortPair);
         }
 
@@ -460,7 +454,7 @@ public class ParsedStatementTest {
         }
 
         @Override
-        public Cursor execute() {
+        public Cursor<Pojo> execute() {
             // Not implemented
             return null;
         }

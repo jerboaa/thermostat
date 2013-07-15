@@ -45,6 +45,8 @@ import com.redhat.thermostat.storage.internal.statement.BinaryExpressionNode;
 import com.redhat.thermostat.storage.internal.statement.NotBooleanExpressionNode;
 import com.redhat.thermostat.storage.internal.statement.TerminalNode;
 import com.redhat.thermostat.storage.internal.statement.WhereExpression;
+import com.redhat.thermostat.storage.query.BinaryComparisonOperator;
+import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
 
 public class WhereExpressionsTest {
 
@@ -92,7 +94,7 @@ public class WhereExpressionsTest {
         WhereExpression expn1 = new WhereExpression();
         BinaryExpressionNode binNode1 = new BinaryExpressionNode(expn1.getRoot());
         expn1.getRoot().setValue(binNode1);
-        binNode1.setOperator("OR");
+        binNode1.setOperator(BinaryLogicalOperator.OR);
         NotBooleanExpressionNode notNode1 = new NotBooleanExpressionNode(binNode1);
         TerminalNode termNode1 = new TerminalNode(notNode1);
         termNode1.setValue("testing");
@@ -100,9 +102,9 @@ public class WhereExpressionsTest {
         binNode1.setLeftChild(notNode1);
         BinaryExpressionNode and1 = new BinaryExpressionNode(binNode1);
         binNode1.setRightChild(and1);
-        and1.setOperator("AND");
+        and1.setOperator(BinaryLogicalOperator.AND);
         BinaryExpressionNode left1 = new BinaryExpressionNode(and1);
-        left1.setOperator("=");
+        left1.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode termNode1Equal = new TerminalNode(left1);
         termNode1Equal.setValue("a");
         TerminalNode termNode1EqualOther = new TerminalNode(left1);
@@ -111,7 +113,7 @@ public class WhereExpressionsTest {
         left1.setRightChild(termNode1EqualOther);
         and1.setLeftChild(left1);
         BinaryExpressionNode right1 = new BinaryExpressionNode(and1);
-        right1.setOperator("<=");
+        right1.setOperator(BinaryComparisonOperator.LESS_THAN_OR_EQUAL_TO);
         TerminalNode termNode1LessEqual = new TerminalNode(right1);
         termNode1LessEqual.setValue("x");
         TerminalNode termNode1LessEqualOther = new TerminalNode(right1);
@@ -124,7 +126,7 @@ public class WhereExpressionsTest {
         WhereExpression expn2 = new WhereExpression();
         BinaryExpressionNode binNode2 = new BinaryExpressionNode(expn2.getRoot());
         expn2.getRoot().setValue(binNode2);
-        binNode2.setOperator("OR");
+        binNode2.setOperator(BinaryLogicalOperator.OR);
         NotBooleanExpressionNode notNode2 = new NotBooleanExpressionNode(binNode2);
         TerminalNode termNode2 = new TerminalNode(notNode2);
         termNode2.setValue("testing");
@@ -132,9 +134,9 @@ public class WhereExpressionsTest {
         binNode2.setLeftChild(notNode2);
         BinaryExpressionNode and2 = new BinaryExpressionNode(binNode2);
         binNode2.setRightChild(and2);
-        and2.setOperator("AND");
+        and2.setOperator(BinaryLogicalOperator.AND);
         BinaryExpressionNode left2 = new BinaryExpressionNode(and2);
-        left2.setOperator("=");
+        left2.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode termNode2Equal = new TerminalNode(left2);
         termNode2Equal.setValue("a");
         TerminalNode termNode2EqualOther = new TerminalNode(left2);
@@ -143,7 +145,7 @@ public class WhereExpressionsTest {
         left2.setRightChild(termNode2EqualOther);
         and2.setLeftChild(left2);
         BinaryExpressionNode right2 = new BinaryExpressionNode(and2);
-        right2.setOperator("<=");
+        right2.setOperator(BinaryComparisonOperator.LESS_THAN_OR_EQUAL_TO);
         TerminalNode termNode2LessEqual = new TerminalNode(right2);
         termNode2LessEqual.setValue("x");
         TerminalNode termNode2LessEqualOther = new TerminalNode(right2);
@@ -159,7 +161,7 @@ public class WhereExpressionsTest {
         WhereExpression expn1 = new WhereExpression();
         BinaryExpressionNode binNode1 = new BinaryExpressionNode(expn1.getRoot());
         expn1.getRoot().setValue(binNode1);
-        binNode1.setOperator("OR");
+        binNode1.setOperator(BinaryLogicalOperator.OR);
         NotBooleanExpressionNode notNode1 = new NotBooleanExpressionNode(binNode1);
         TerminalNode termNode1 = new TerminalNode(notNode1);
         termNode1.setValue("testing");
@@ -167,9 +169,9 @@ public class WhereExpressionsTest {
         binNode1.setLeftChild(notNode1);
         BinaryExpressionNode and1 = new BinaryExpressionNode(binNode1);
         binNode1.setRightChild(and1);
-        and1.setOperator("AND");
+        and1.setOperator(BinaryLogicalOperator.AND);
         BinaryExpressionNode left1 = new BinaryExpressionNode(and1);
-        left1.setOperator("=");
+        left1.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode termNode1Equal = new TerminalNode(left1);
         termNode1Equal.setValue("d"); // should be "a" to make it equal
         TerminalNode termNode1EqualOther = new TerminalNode(left1);
@@ -178,7 +180,7 @@ public class WhereExpressionsTest {
         left1.setRightChild(termNode1EqualOther);
         and1.setLeftChild(left1);
         BinaryExpressionNode right1 = new BinaryExpressionNode(and1);
-        right1.setOperator("<=");
+        right1.setOperator(BinaryComparisonOperator.LESS_THAN_OR_EQUAL_TO);
         TerminalNode termNode1LessEqual = new TerminalNode(right1);
         termNode1LessEqual.setValue("x");
         TerminalNode termNode1LessEqualOther = new TerminalNode(right1);
@@ -191,7 +193,7 @@ public class WhereExpressionsTest {
         WhereExpression expn2 = new WhereExpression();
         BinaryExpressionNode binNode2 = new BinaryExpressionNode(expn2.getRoot());
         expn2.getRoot().setValue(binNode2);
-        binNode2.setOperator("OR");
+        binNode2.setOperator(BinaryLogicalOperator.OR);
         NotBooleanExpressionNode notNode2 = new NotBooleanExpressionNode(binNode2);
         TerminalNode termNode2 = new TerminalNode(notNode2);
         termNode2.setValue("testing");
@@ -199,9 +201,9 @@ public class WhereExpressionsTest {
         binNode2.setLeftChild(notNode2);
         BinaryExpressionNode and2 = new BinaryExpressionNode(binNode2);
         binNode2.setRightChild(and2);
-        and2.setOperator("AND");
+        and2.setOperator(BinaryLogicalOperator.AND);
         BinaryExpressionNode left2 = new BinaryExpressionNode(and2);
-        left2.setOperator("=");
+        left2.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode termNode2Equal = new TerminalNode(left2);
         termNode2Equal.setValue("a");
         TerminalNode termNode2EqualOther = new TerminalNode(left2);
@@ -210,7 +212,7 @@ public class WhereExpressionsTest {
         left2.setRightChild(termNode2EqualOther);
         and2.setLeftChild(left2);
         BinaryExpressionNode right2 = new BinaryExpressionNode(and2);
-        right2.setOperator("<=");
+        right2.setOperator(BinaryComparisonOperator.LESS_THAN_OR_EQUAL_TO);
         TerminalNode termNode2LessEqual = new TerminalNode(right2);
         termNode2LessEqual.setValue("x");
         TerminalNode termNode2LessEqualOther = new TerminalNode(right2);
@@ -226,7 +228,7 @@ public class WhereExpressionsTest {
         WhereExpression expn1 = new WhereExpression();
         BinaryExpressionNode binNode1 = new BinaryExpressionNode(expn1.getRoot());
         expn1.getRoot().setValue(binNode1);
-        binNode1.setOperator("OR");
+        binNode1.setOperator(BinaryLogicalOperator.OR);
         NotBooleanExpressionNode notNode1 = new NotBooleanExpressionNode(binNode1);
         TerminalNode termNode1 = new TerminalNode(notNode1);
         termNode1.setValue("testing");
@@ -234,9 +236,9 @@ public class WhereExpressionsTest {
         binNode1.setLeftChild(notNode1);
         BinaryExpressionNode and1 = new BinaryExpressionNode(binNode1);
         binNode1.setRightChild(and1);
-        and1.setOperator("AND");
+        and1.setOperator(BinaryLogicalOperator.AND);
         BinaryExpressionNode left1 = new BinaryExpressionNode(and1);
-        left1.setOperator("=");
+        left1.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode termNode1Equal = new TerminalNode(left1);
         termNode1Equal.setValue("d"); // should be "a" to make it equal
         TerminalNode termNode1EqualOther = new TerminalNode(left1);
@@ -245,7 +247,7 @@ public class WhereExpressionsTest {
         left1.setRightChild(termNode1EqualOther);
         and1.setLeftChild(left1);
         BinaryExpressionNode right1 = new BinaryExpressionNode(and1);
-        right1.setOperator("<=");
+        right1.setOperator(BinaryComparisonOperator.LESS_THAN_OR_EQUAL_TO);
         TerminalNode termNode1LessEqual = new TerminalNode(right1);
         termNode1LessEqual.setValue("x");
         TerminalNode termNode1LessEqualOther = new TerminalNode(right1);
@@ -259,9 +261,9 @@ public class WhereExpressionsTest {
         NotBooleanExpressionNode notNode2 = new NotBooleanExpressionNode(expn2.getRoot());
         BinaryExpressionNode and2 = new BinaryExpressionNode(notNode2);
         notNode2.setValue(and2);
-        and2.setOperator("AND");
+        and2.setOperator(BinaryLogicalOperator.AND);
         BinaryExpressionNode left2 = new BinaryExpressionNode(and2);
-        left2.setOperator("=");
+        left2.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode termNode2Equal = new TerminalNode(left2);
         termNode2Equal.setValue("a");
         TerminalNode termNode2EqualOther = new TerminalNode(left2);
@@ -270,7 +272,7 @@ public class WhereExpressionsTest {
         left2.setRightChild(termNode2EqualOther);
         and2.setLeftChild(left2);
         BinaryExpressionNode right2 = new BinaryExpressionNode(and2);
-        right2.setOperator("<=");
+        right2.setOperator(BinaryComparisonOperator.LESS_THAN_OR_EQUAL_TO);
         TerminalNode termNode2LessEqual = new TerminalNode(right2);
         termNode2LessEqual.setValue("x");
         TerminalNode termNode2LessEqualOther = new TerminalNode(right2);

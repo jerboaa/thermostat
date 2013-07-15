@@ -64,7 +64,7 @@ public interface Storage {
      *         something Storage knows about, {@code null} otherwise.
      * @throws DescriptorParsingException If the descriptor string was invalid.
      */
-    PreparedStatement prepareStatement(StatementDescriptor desc)
+    <T extends Pojo> PreparedStatement<T> prepareStatement(StatementDescriptor<T> desc)
             throws DescriptorParsingException;
 
     /**

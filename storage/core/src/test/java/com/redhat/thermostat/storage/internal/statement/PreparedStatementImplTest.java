@@ -39,7 +39,6 @@ package com.redhat.thermostat.storage.internal.statement;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -52,6 +51,7 @@ import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.BinaryComparisonExpression;
 import com.redhat.thermostat.storage.query.BinaryComparisonOperator;
 import com.redhat.thermostat.storage.query.Expression;
@@ -61,7 +61,7 @@ public class PreparedStatementImplTest {
 
     @Test
     public void failToSetIndexOutOfBounds() {
-        PreparedStatementImpl preparedStatement = new PreparedStatementImpl(2);
+        PreparedStatementImpl<?> preparedStatement = new PreparedStatementImpl<>(2);
         preparedStatement.setInt(1, 3);
         preparedStatement.setString(0, "testing");
         try {
@@ -90,42 +90,44 @@ public class PreparedStatementImplTest {
         }
     }
     
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
     public void canDoParsingPatchingAndExecution() throws Exception {
         String queryString = "QUERY foo WHERE 'a' = ?s";
-        StatementDescriptor desc = mock(StatementDescriptor.class);
+        @SuppressWarnings("unchecked")
+        StatementDescriptor<Pojo> desc = (StatementDescriptor<Pojo>) mock(StatementDescriptor.class);
         when(desc.getQueryDescriptor()).thenReturn(queryString);
-        Category mockCategory = mock(Category.class);
+        @SuppressWarnings("unchecked")
+        Category<Pojo> mockCategory = (Category<Pojo>) mock(Category.class);
         when(desc.getCategory()).thenReturn(mockCategory);
         when(mockCategory.getName()).thenReturn("foo");
         Storage storage = mock(Storage.class);
         StubQuery stmt = new StubQuery();
-        when(storage.createQuery(any(Category.class))).thenReturn(stmt);
-        PreparedStatementImpl preparedStatement = new PreparedStatementImpl(storage, desc);
+        when(storage.createQuery(mockCategory)).thenReturn(stmt);
+        PreparedStatementImpl<Pojo> preparedStatement = new PreparedStatementImpl<>(storage, desc);
         preparedStatement.setString(0, "foo");
         preparedStatement.executeQuery();
         assertTrue(stmt.called);
-        LiteralExpression o1 = new LiteralExpression<>(new Key("a", false));
-        LiteralExpression o2 = new LiteralExpression<>("foo"); 
-        BinaryComparisonExpression<LiteralExpression> binComp = new BinaryComparisonExpression<LiteralExpression>(
+        LiteralExpression<Key<String>> o1 = new LiteralExpression<>(new Key<String>("a", false));
+        LiteralExpression<String> o2 = new LiteralExpression<>("foo"); 
+        BinaryComparisonExpression<String> binComp = new BinaryComparisonExpression<>(
                 o1, BinaryComparisonOperator.EQUALS, o2);
         assertEquals(binComp, stmt.expr);
     }
     
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
     public void failExecutionWithWronglyTypedParams() throws Exception {
         String queryString = "QUERY foo WHERE 'a' = ?b";
-        StatementDescriptor desc = mock(StatementDescriptor.class);
+        @SuppressWarnings("unchecked")
+        StatementDescriptor<Pojo> desc = (StatementDescriptor<Pojo>) mock(StatementDescriptor.class);
         when(desc.getQueryDescriptor()).thenReturn(queryString);
-        Category mockCategory = mock(Category.class);
+        @SuppressWarnings("unchecked")
+        Category<Pojo> mockCategory = (Category<Pojo>) mock(Category.class);
         when(desc.getCategory()).thenReturn(mockCategory);
         when(mockCategory.getName()).thenReturn("foo");
         Storage storage = mock(Storage.class);
         StubQuery stmt = new StubQuery();
-        when(storage.createQuery(any(Category.class))).thenReturn(stmt);
-        PreparedStatementImpl preparedStatement = new PreparedStatementImpl(storage, desc);
+        when(storage.createQuery(mockCategory)).thenReturn(stmt);
+        PreparedStatementImpl<Pojo> preparedStatement = new PreparedStatementImpl<>(storage, desc);
         preparedStatement.setString(0, "foo");
         try {
             preparedStatement.executeQuery();
@@ -136,8 +138,7 @@ public class PreparedStatementImplTest {
         }
     }
     
-    @SuppressWarnings("rawtypes")
-    private static class StubQuery implements Query {
+    private static class StubQuery implements Query<Pojo> {
 
         private Expression expr;
         private boolean called = false;
@@ -148,7 +149,7 @@ public class PreparedStatementImplTest {
         }
 
         @Override
-        public void sort(Key key, SortDirection direction) {
+        public void sort(Key<?> key, SortDirection direction) {
             // nothing
         }
 
@@ -158,7 +159,7 @@ public class PreparedStatementImplTest {
         }
 
         @Override
-        public Cursor execute() {
+        public Cursor<Pojo> execute() {
             called = true;
             return null;
         }

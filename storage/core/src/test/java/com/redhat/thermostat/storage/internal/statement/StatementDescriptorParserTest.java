@@ -51,36 +51,22 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.Query.SortDirection;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.core.Query.SortDirection;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.internal.statement.BinaryExpressionNode;
-import com.redhat.thermostat.storage.internal.statement.LimitExpression;
-import com.redhat.thermostat.storage.internal.statement.NotBooleanExpressionNode;
-import com.redhat.thermostat.storage.internal.statement.ParsedStatement;
-import com.redhat.thermostat.storage.internal.statement.SortExpression;
-import com.redhat.thermostat.storage.internal.statement.SortMember;
-import com.redhat.thermostat.storage.internal.statement.StatementDescriptorParser;
-import com.redhat.thermostat.storage.internal.statement.SuffixExpression;
-import com.redhat.thermostat.storage.internal.statement.TerminalNode;
-import com.redhat.thermostat.storage.internal.statement.UnfinishedLimitValue;
-import com.redhat.thermostat.storage.internal.statement.UnfinishedSortKey;
-import com.redhat.thermostat.storage.internal.statement.UnfinishedValueNode;
-import com.redhat.thermostat.storage.internal.statement.WhereExpression;
+import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.query.BinaryComparisonOperator;
 import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
 
 public class StatementDescriptorParserTest {
 
     private Storage storage;
-    @SuppressWarnings("rawtypes")
-    private Query mockQuery;
-    private StatementDescriptorParser parser;
+    private Query<AgentInformation> mockQuery;
+    private StatementDescriptorParser<AgentInformation> parser;
     
     @SuppressWarnings("unchecked")
     @Before
@@ -99,9 +85,9 @@ public class StatementDescriptorParserTest {
     @Test
     public void testParseQuerySimple() throws DescriptorParsingException {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName();
-        StatementDescriptor desc = getDescriptor(descrString, AgentInfoDAO.CATEGORY);
-        parser = new StatementDescriptorParser(storage, desc);
-        ParsedStatement statement = (ParsedStatement)parser.parse();
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        ParsedStatement<AgentInformation> statement = (ParsedStatement<AgentInformation>)parser.parse();
         assertEquals(0, statement.getNumParams());
         assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
         SuffixExpression tree = statement.getSuffixExpression();
@@ -113,9 +99,9 @@ public class StatementDescriptorParserTest {
     @Test
     public void testParseQuerySimpleWithLimit() throws DescriptorParsingException {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " LIMIT ?i";
-        StatementDescriptor desc = getDescriptor(descrString, AgentInfoDAO.CATEGORY);
-        parser = new StatementDescriptorParser(storage, desc);
-        ParsedStatement statement = (ParsedStatement)parser.parse();
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        ParsedStatement<AgentInformation> statement = (ParsedStatement<AgentInformation>)parser.parse();
         assertEquals(1, statement.getNumParams());
         assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
         SuffixExpression expn = statement.getSuffixExpression();
@@ -131,9 +117,9 @@ public class StatementDescriptorParserTest {
     @Test
     public void testParseSortMultiple() throws DescriptorParsingException {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " SORT 'a' ASC , 'b' DSC , 'c' ASC";
-        StatementDescriptor desc = getDescriptor(descrString, AgentInfoDAO.CATEGORY);
-        parser = new StatementDescriptorParser(storage, desc);
-        ParsedStatement statement = (ParsedStatement)parser.parse();
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        ParsedStatement<AgentInformation> statement = (ParsedStatement<AgentInformation>)parser.parse();
         assertEquals(0, statement.getNumParams());
         assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
         SuffixExpression suffixExpn = statement.getSuffixExpression();
@@ -152,13 +138,12 @@ public class StatementDescriptorParserTest {
         assertEquals("c", list.get(2).getSortKey());
     }
     
-    @SuppressWarnings("rawtypes")
     @Test
     public void testParseQueryWithMultipleConcunctions() throws DescriptorParsingException {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' = 'b' AND 'c' = 'd' AND 'e' < ?i";
-        StatementDescriptor desc = getDescriptor(descrString, AgentInfoDAO.CATEGORY);
-        parser = new StatementDescriptorParser(storage, desc);
-        ParsedStatement statement = parser.parse();
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        ParsedStatement<AgentInformation> statement = parser.parse();
         assertEquals(1, statement.getNumParams());
         assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
         SuffixExpression expn = statement.getSuffixExpression();
@@ -178,7 +163,7 @@ public class StatementDescriptorParserTest {
         and2.setLeftChild(equality1);
         equality1.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode a = new TerminalNode(equality1);
-        Key aKey = new Key("a", false);
+        Key<String> aKey = new Key<>("a", false);
         a.setValue(aKey);
         equality1.setLeftChild(a);
         TerminalNode b = new TerminalNode(equality1);
@@ -188,7 +173,7 @@ public class StatementDescriptorParserTest {
         and2.setRightChild(equality2);
         equality2.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode c = new TerminalNode(equality2);
-        Key cKey = new Key("c", false);
+        Key<String> cKey = new Key<>("c", false);
         c.setValue(cKey);
         equality2.setLeftChild(c);
         TerminalNode d = new TerminalNode(equality2);
@@ -198,7 +183,7 @@ public class StatementDescriptorParserTest {
         lessThan.setOperator(BinaryComparisonOperator.LESS_THAN);
         and1.setRightChild(lessThan);
         TerminalNode e = new TerminalNode(lessThan);
-        Key eKey = new Key("e", false);
+        Key<Integer> eKey = new Key<>("e", false);
         e.setValue(eKey);
         lessThan.setLeftChild(e);
         UnfinishedValueNode f = new UnfinishedValueNode();
@@ -212,13 +197,12 @@ public class StatementDescriptorParserTest {
         assertTrue( WhereExpressions.equals(expected, where));
     }
     
-    @SuppressWarnings("rawtypes")
     @Test
     public void testParseQueryWithMultipleConcunctions2() throws DescriptorParsingException {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' = 'b' AND 'c' = 'd' AND 'e' < 'f' AND 'g' >= 'h'";
-        StatementDescriptor desc = getDescriptor(descrString, AgentInfoDAO.CATEGORY);
-        parser = new StatementDescriptorParser(storage, desc);
-        ParsedStatement statement = parser.parse();
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        ParsedStatement<AgentInformation> statement = parser.parse();
         assertEquals(0, statement.getNumParams());
         assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
         SuffixExpression expn = statement.getSuffixExpression();
@@ -241,7 +225,7 @@ public class StatementDescriptorParserTest {
         and3.setLeftChild(equality1);
         equality1.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode a = new TerminalNode(equality1);
-        Key aKey = new Key("a", false);
+        Key<String> aKey = new Key<>("a", false);
         a.setValue(aKey);
         equality1.setLeftChild(a);
         TerminalNode b = new TerminalNode(equality1);
@@ -251,7 +235,7 @@ public class StatementDescriptorParserTest {
         and3.setRightChild(equality2);
         equality2.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode c = new TerminalNode(equality2);
-        Key cKey = new Key("c", false);
+        Key<String> cKey = new Key<>("c", false);
         c.setValue(cKey);
         equality2.setLeftChild(c);
         TerminalNode d = new TerminalNode(equality2);
@@ -261,7 +245,7 @@ public class StatementDescriptorParserTest {
         lessThan.setOperator(BinaryComparisonOperator.LESS_THAN);
         and2.setRightChild(lessThan);
         TerminalNode e = new TerminalNode(lessThan);
-        Key eKey = new Key("e", false);
+        Key<String> eKey = new Key<>("e", false);
         e.setValue(eKey);
         lessThan.setLeftChild(e);
         TerminalNode f = new TerminalNode(lessThan);
@@ -270,7 +254,7 @@ public class StatementDescriptorParserTest {
         BinaryExpressionNode greaterOrEqual = new BinaryExpressionNode(and1);
         greaterOrEqual.setOperator(BinaryComparisonOperator.GREATER_THAN_OR_EQUAL_TO);
         TerminalNode g = new TerminalNode(greaterOrEqual);
-        Key gKey = new Key("g", false);
+        Key<String> gKey = new Key<>("g", false);
         g.setValue(gKey);
         greaterOrEqual.setLeftChild(g);
         TerminalNode h = new TerminalNode(greaterOrEqual);
@@ -281,13 +265,12 @@ public class StatementDescriptorParserTest {
         assertTrue( WhereExpressions.equals(expected, where));
     }
     
-    @SuppressWarnings("rawtypes")
     @Test
     public void testParseQueryWithMultipleDisjunctions() throws DescriptorParsingException {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' = 'b' OR 'c' = 'd' OR 'e' < ?i";
-        StatementDescriptor desc = getDescriptor(descrString, AgentInfoDAO.CATEGORY);
-        parser = new StatementDescriptorParser(storage, desc);
-        ParsedStatement statement = parser.parse();
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        ParsedStatement<AgentInformation> statement = parser.parse();
         assertEquals(1, statement.getNumParams());
         assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
         SuffixExpression expn = statement.getSuffixExpression();
@@ -308,7 +291,7 @@ public class StatementDescriptorParserTest {
         or2.setLeftChild(equality1);
         equality1.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode a = new TerminalNode(equality1);
-        Key aKey = new Key("a", false);
+        Key<String> aKey = new Key<>("a", false);
         a.setValue(aKey);
         equality1.setLeftChild(a);
         TerminalNode b = new TerminalNode(equality1);
@@ -318,7 +301,7 @@ public class StatementDescriptorParserTest {
         or2.setRightChild(equality2);
         equality2.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode c = new TerminalNode(equality2);
-        Key cKey = new Key("c", false);
+        Key<String> cKey = new Key<>("c", false);
         c.setValue(cKey);
         equality2.setLeftChild(c);
         TerminalNode d = new TerminalNode(equality2);
@@ -328,7 +311,7 @@ public class StatementDescriptorParserTest {
         lessThan.setOperator(BinaryComparisonOperator.LESS_THAN);
         or1.setRightChild(lessThan);
         TerminalNode e = new TerminalNode(lessThan);
-        Key eKey = new Key("e", false);
+        Key<Integer> eKey = new Key<>("e", false);
         e.setValue(eKey);
         lessThan.setLeftChild(e);
         UnfinishedValueNode f = new UnfinishedValueNode();
@@ -342,13 +325,12 @@ public class StatementDescriptorParserTest {
         assertTrue( WhereExpressions.equals(expected, where));
     }
     
-    @SuppressWarnings("rawtypes")
     @Test
     public void testParseQueryWithMultipleDisjunctions2() throws DescriptorParsingException {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' = 'b' OR 'c' = 'd' OR 'e' < 'f' OR 'g' >= 'h'";
-        StatementDescriptor desc = getDescriptor(descrString, AgentInfoDAO.CATEGORY);
-        parser = new StatementDescriptorParser(storage, desc);
-        ParsedStatement statement = parser.parse();
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        ParsedStatement<AgentInformation> statement = parser.parse();
         assertEquals(0, statement.getNumParams());
         assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
         SuffixExpression expn = statement.getSuffixExpression();
@@ -372,7 +354,7 @@ public class StatementDescriptorParserTest {
         or3.setLeftChild(equality1);
         equality1.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode a = new TerminalNode(equality1);
-        Key aKey = new Key("a", false);
+        Key<String> aKey = new Key<>("a", false);
         a.setValue(aKey);
         equality1.setLeftChild(a);
         TerminalNode b = new TerminalNode(equality1);
@@ -382,7 +364,7 @@ public class StatementDescriptorParserTest {
         or3.setRightChild(equality2);
         equality2.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode c = new TerminalNode(equality2);
-        Key cKey = new Key("c", false);
+        Key<String> cKey = new Key<>("c", false);
         c.setValue(cKey);
         equality2.setLeftChild(c);
         TerminalNode d = new TerminalNode(equality2);
@@ -392,7 +374,7 @@ public class StatementDescriptorParserTest {
         lessThan.setOperator(BinaryComparisonOperator.LESS_THAN);
         or2.setRightChild(lessThan);
         TerminalNode e = new TerminalNode(lessThan);
-        Key eKey = new Key("e", false);
+        Key<String> eKey = new Key<>("e", false);
         e.setValue(eKey);
         lessThan.setLeftChild(e);
         TerminalNode f = new TerminalNode(lessThan);
@@ -401,7 +383,7 @@ public class StatementDescriptorParserTest {
         BinaryExpressionNode greaterOrEqual = new BinaryExpressionNode(or1);
         greaterOrEqual.setOperator(BinaryComparisonOperator.GREATER_THAN_OR_EQUAL_TO);
         TerminalNode g = new TerminalNode(greaterOrEqual);
-        Key gKey = new Key("g", false);
+        Key<String> gKey = new Key<>("g", false);
         g.setValue(gKey);
         greaterOrEqual.setLeftChild(g);
         TerminalNode h = new TerminalNode(greaterOrEqual);
@@ -412,13 +394,12 @@ public class StatementDescriptorParserTest {
         assertTrue( WhereExpressions.equals(expected, where));
     }
     
-    @SuppressWarnings("rawtypes")
     @Test
     public void testParseQueryWithMultipleConDisjunctions() throws DescriptorParsingException {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' = 'b' OR 'c' = 'd' OR 'e' < 'f' OR 'g' >= 'h' AND 'x' = 'y' AND 'u' = 'w' AND 's' = 't'";
-        StatementDescriptor desc = getDescriptor(descrString, AgentInfoDAO.CATEGORY);
-        parser = new StatementDescriptorParser(storage, desc);
-        ParsedStatement statement = parser.parse();
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        ParsedStatement<AgentInformation> statement = parser.parse();
         assertEquals(0, statement.getNumParams());
         assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
         SuffixExpression expn = statement.getSuffixExpression();
@@ -439,7 +420,7 @@ public class StatementDescriptorParserTest {
         BinaryExpressionNode equality3 = new BinaryExpressionNode(and1);
         equality3.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode x = new TerminalNode(equality3);
-        x.setValue(new Key("x", false));
+        x.setValue(new Key<>("x", false));
         TerminalNode y = new TerminalNode(equality3);
         y.setValue("y");
         equality3.setLeftChild(x);
@@ -451,7 +432,7 @@ public class StatementDescriptorParserTest {
         equality4.setOperator(BinaryComparisonOperator.EQUALS);
         and2.setRightChild(equality4);
         TerminalNode u = new TerminalNode(equality4);
-        u.setValue(new Key("u", false));
+        u.setValue(new Key<>("u", false));
         equality4.setLeftChild(u);
         TerminalNode w = new TerminalNode(equality4);
         w.setValue("w");
@@ -459,7 +440,7 @@ public class StatementDescriptorParserTest {
         BinaryExpressionNode equality5 = new BinaryExpressionNode(and3);
         equality5.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode s = new TerminalNode(equality5);
-        s.setValue(new Key("s", false));
+        s.setValue(new Key<>("s", false));
         TerminalNode t = new TerminalNode(equality5);
         t.setValue("t");
         equality5.setLeftChild(s);
@@ -477,7 +458,7 @@ public class StatementDescriptorParserTest {
         or1.setLeftChild(equality1);
         equality1.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode a = new TerminalNode(equality1);
-        Key aKey = new Key("a", false);
+        Key<String> aKey = new Key<>("a", false);
         a.setValue(aKey);
         equality1.setLeftChild(a);
         TerminalNode b = new TerminalNode(equality1);
@@ -487,7 +468,7 @@ public class StatementDescriptorParserTest {
         equality2.setOperator(BinaryComparisonOperator.EQUALS);
         or1.setRightChild(equality2);
         TerminalNode c = new TerminalNode(equality2);
-        Key cKey = new Key("c", false);
+        Key<String> cKey = new Key<>("c", false);
         c.setValue(cKey);
         equality2.setLeftChild(c);
         TerminalNode d = new TerminalNode(equality2);
@@ -498,7 +479,7 @@ public class StatementDescriptorParserTest {
         or2.setRightChild(lessThan);
         or2.setLeftChild(or1);
         TerminalNode e = new TerminalNode(lessThan);
-        Key eKey = new Key("e", false);
+        Key<String> eKey = new Key<>("e", false);
         e.setValue(eKey);
         lessThan.setLeftChild(e);
         TerminalNode f = new TerminalNode(lessThan);
@@ -507,7 +488,7 @@ public class StatementDescriptorParserTest {
         BinaryExpressionNode greaterOrEqual = new BinaryExpressionNode(or3);
         greaterOrEqual.setOperator(BinaryComparisonOperator.GREATER_THAN_OR_EQUAL_TO);
         TerminalNode g = new TerminalNode(greaterOrEqual);
-        Key gKey = new Key("g", false);
+        Key<String> gKey = new Key<>("g", false);
         g.setValue(gKey);
         greaterOrEqual.setLeftChild(g);
         TerminalNode h = new TerminalNode(greaterOrEqual);
@@ -520,13 +501,12 @@ public class StatementDescriptorParserTest {
         assertTrue(WhereExpressions.equals(expected, where));
     }
     
-    @SuppressWarnings("rawtypes")
     @Test
     public void testParseQueryWhereAndSortMultiple() throws DescriptorParsingException {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' < 'b' AND 'c' = ?s OR NOT 'x' >= ?i SORT 'a' ASC , 'b' DSC , 'c' ASC";
-        StatementDescriptor desc = getDescriptor(descrString, AgentInfoDAO.CATEGORY);
-        parser = new StatementDescriptorParser(storage, desc);
-        ParsedStatement statement = (ParsedStatement)parser.parse();
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        ParsedStatement<AgentInformation> statement = (ParsedStatement<AgentInformation>) parser.parse();
         assertEquals(2, statement.getNumParams());
         assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
         SuffixExpression suffixExpn = statement.getSuffixExpression();
@@ -555,7 +535,7 @@ public class StatementDescriptorParserTest {
         BinaryExpressionNode unequality = new BinaryExpressionNode(and);
         unequality.setOperator(BinaryComparisonOperator.LESS_THAN);
         TerminalNode a = new TerminalNode(unequality);
-        Key aKey = new Key("a", false);
+        Key<String> aKey = new Key<>("a", false);
         a.setValue(aKey);
         unequality.setLeftChild(a);
         TerminalNode b = new TerminalNode(unequality);
@@ -565,7 +545,7 @@ public class StatementDescriptorParserTest {
         BinaryExpressionNode equality = new BinaryExpressionNode(and);
         equality.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode c = new TerminalNode(equality);
-        Key cKey = new Key("c", false);
+        Key<String> cKey = new Key<>("c", false);
         c.setValue(cKey);
         equality.setLeftChild(c);
         UnfinishedValueNode patch1 = new UnfinishedValueNode();
@@ -580,7 +560,7 @@ public class StatementDescriptorParserTest {
         not.setValue(greaterEqual);
         greaterEqual.setOperator(BinaryComparisonOperator.GREATER_THAN_OR_EQUAL_TO);
         TerminalNode x = new TerminalNode(greaterEqual);
-        Key xKey = new Key("x", false);
+        Key<Integer> xKey = new Key<>("x", false);
         x.setValue(xKey);
         greaterEqual.setLeftChild(x);
         UnfinishedValueNode patch2 = new UnfinishedValueNode();
@@ -594,13 +574,12 @@ public class StatementDescriptorParserTest {
         assertTrue( WhereExpressions.equals(where, suffixExpn.getWhereExpn()));
     }
     
-    @SuppressWarnings("rawtypes")
     @Test
     public void testParseQueryWhereOrSortMultiple() throws DescriptorParsingException {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' < 'b' OR 'c' = ?s SORT 'a' ASC , ?s DSC , 'c' ASC";
-        StatementDescriptor desc = getDescriptor(descrString, AgentInfoDAO.CATEGORY);
-        parser = new StatementDescriptorParser(storage, desc);
-        ParsedStatement statement = (ParsedStatement)parser.parse();
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        ParsedStatement<AgentInformation> statement = (ParsedStatement<AgentInformation>) parser.parse();
         assertEquals(2, statement.getNumParams());
         assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
         SuffixExpression suffixExpn = statement.getSuffixExpression();
@@ -627,7 +606,7 @@ public class StatementDescriptorParserTest {
         BinaryExpressionNode unequality = new BinaryExpressionNode(or);
         unequality.setOperator(BinaryComparisonOperator.LESS_THAN);
         TerminalNode a = new TerminalNode(unequality);
-        Key aKey = new Key("a", false);
+        Key<String> aKey = new Key<>("a", false);
         a.setValue(aKey);
         unequality.setLeftChild(a);
         TerminalNode b = new TerminalNode(unequality);
@@ -637,7 +616,7 @@ public class StatementDescriptorParserTest {
         BinaryExpressionNode equality = new BinaryExpressionNode(or);
         equality.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode c = new TerminalNode(equality);
-        Key cKey = new Key("c", false);
+        Key<String> cKey = new Key<>("c", false);
         c.setValue(cKey);
         equality.setLeftChild(c);
         UnfinishedValueNode patch1 = new UnfinishedValueNode();
@@ -654,9 +633,9 @@ public class StatementDescriptorParserTest {
     @Test
     public void testParseQuerySimpleWhereAndSimpleSort() throws DescriptorParsingException {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' < 'b' SORT 'a' DSC";
-        StatementDescriptor desc = getDescriptor(descrString, AgentInfoDAO.CATEGORY);
-        parser = new StatementDescriptorParser(storage, desc);
-        ParsedStatement statement = (ParsedStatement)parser.parse();
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        ParsedStatement<AgentInformation> statement = (ParsedStatement<AgentInformation>)parser.parse();
         assertEquals(0, statement.getNumParams());
         assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
         SuffixExpression suffixExpn = statement.getSuffixExpression();
@@ -688,11 +667,11 @@ public class StatementDescriptorParserTest {
     @Test
     public void testParseQuerySimpleWithOneWhere() {
         String descString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE '" + Key.AGENT_ID.getName() + "' = ?s";
-        StatementDescriptor desc = getDescriptor(descString, AgentInfoDAO.CATEGORY);
-        parser = new StatementDescriptorParser(storage, desc);
-        ParsedStatement statement = null; 
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        ParsedStatement<AgentInformation> statement = null; 
         try {
-            statement = (ParsedStatement)parser.parse();
+            statement = (ParsedStatement<AgentInformation>)parser.parse();
         } catch (DescriptorParsingException e) {
             fail(e.getMessage());
         }
@@ -727,8 +706,8 @@ public class StatementDescriptorParserTest {
     public void testParseSimpleWithAndOr() {
         String descString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE '" + Key.AGENT_ID.getName() + "' = ?s" +
                             " AND ?s < ?b OR 'a' = 'b'";
-        StatementDescriptor desc = getDescriptor(descString, AgentInfoDAO.CATEGORY);
-        parser = new StatementDescriptorParser(storage, desc);
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
+        parser = new StatementDescriptorParser<>(storage, desc);
         ParsedStatement statement = null; 
         try {
             statement = (ParsedStatement)parser.parse();
@@ -797,11 +776,11 @@ public class StatementDescriptorParserTest {
     @Test
     public void testParseSimpleWithAnd() {
         String descString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' = ?s AND ?s = 'd'";
-        StatementDescriptor desc = getDescriptor(descString, AgentInfoDAO.CATEGORY);
-        parser = new StatementDescriptorParser(storage, desc);
-        ParsedStatement statement = null; 
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        ParsedStatement<AgentInformation> statement = null; 
         try {
-            statement = (ParsedStatement)parser.parse();
+            statement = (ParsedStatement<AgentInformation>)parser.parse();
         } catch (DescriptorParsingException e) {
             e.printStackTrace();
             fail(e.getMessage());
@@ -851,11 +830,11 @@ public class StatementDescriptorParserTest {
     @Test
     public void testParseSimpleWithNotOR() {
         String descString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE NOT 'a' = ?s OR ?s = 'd'";
-        StatementDescriptor desc = getDescriptor(descString, AgentInfoDAO.CATEGORY);
-        parser = new StatementDescriptorParser(storage, desc);
-        ParsedStatement statement = null; 
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        ParsedStatement<AgentInformation> statement = null; 
         try {
-            statement = (ParsedStatement)parser.parse();
+            statement = (ParsedStatement<AgentInformation>)parser.parse();
         } catch (DescriptorParsingException e) {
             e.printStackTrace();
             fail(e.getMessage());
@@ -907,11 +886,11 @@ public class StatementDescriptorParserTest {
     @Test
     public void testParseSimpleWithOr() {
         String descString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' = ?s OR ?s = 'd'";
-        StatementDescriptor desc = getDescriptor(descString, AgentInfoDAO.CATEGORY);
-        parser = new StatementDescriptorParser(storage, desc);
-        ParsedStatement statement = null; 
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        ParsedStatement<AgentInformation> statement = null; 
         try {
-            statement = (ParsedStatement)parser.parse();
+            statement = (ParsedStatement<AgentInformation>)parser.parse();
         } catch (DescriptorParsingException e) {
             e.printStackTrace();
             fail(e.getMessage());
@@ -961,11 +940,11 @@ public class StatementDescriptorParserTest {
     @Test
     public void testParseSimpleWithLimit() {
         String descString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " LIMIT 1";
-        StatementDescriptor desc = getDescriptor(descString, AgentInfoDAO.CATEGORY);
-        parser = new StatementDescriptorParser(storage, desc);
-        ParsedStatement statement = null; 
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        ParsedStatement<AgentInformation> statement = null; 
         try {
-            statement = (ParsedStatement)parser.parse();
+            statement = (ParsedStatement<AgentInformation>)parser.parse();
         } catch (DescriptorParsingException e) {
             e.printStackTrace();
             fail(e.getMessage());
@@ -982,8 +961,8 @@ public class StatementDescriptorParserTest {
     @Test
     public void rejectLimitWhichIsNotInt() {
         String descString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " LIMIT illegal";
-        StatementDescriptor desc = getDescriptor(descString, AgentInfoDAO.CATEGORY);
-        parser = new StatementDescriptorParser(storage, desc);
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
+        parser = new StatementDescriptorParser<>(storage, desc);
         try {
             parser.parse();
         } catch (DescriptorParsingException e) {
@@ -994,8 +973,8 @@ public class StatementDescriptorParserTest {
     @Test
     public void rejectLHSnotString() throws DescriptorParsingException {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE a < 1";
-        StatementDescriptor desc = getDescriptor(descrString, AgentInfoDAO.CATEGORY);
-        parser = new StatementDescriptorParser(storage, desc);
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
+        parser = new StatementDescriptorParser<>(storage, desc);
         try {
             parser.parse();
         } catch (DescriptorParsingException e) {
@@ -1006,10 +985,10 @@ public class StatementDescriptorParserTest {
     
     @Test
     public void rejectIllegalFreeParamType() throws DescriptorParsingException {
-        // ? should be one of '?i', '?s', '?b', '?s['
+        // ? should be one of '?i', '?l', '?s', '?b', '?s['
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE ? < 1";
-        StatementDescriptor desc = getDescriptor(descrString, AgentInfoDAO.CATEGORY);
-        parser = new StatementDescriptorParser(storage, desc);
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
+        parser = new StatementDescriptorParser<>(storage, desc);
         try {
             parser.parse();
         } catch (DescriptorParsingException e) {
@@ -1021,8 +1000,8 @@ public class StatementDescriptorParserTest {
     @Test
     public void rejectParseQueryWhereAndSortMultipleIllegalSortModifier() throws DescriptorParsingException {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'somekey' < 2 AND 'c' = ?s OR 'a' >= ?i SORT 'a' ASC , 'b' ILLEGAL , 'c' ASC";
-        StatementDescriptor desc = getDescriptor(descrString, AgentInfoDAO.CATEGORY);
-        parser = new StatementDescriptorParser(storage, desc);
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
+        parser = new StatementDescriptorParser<>(storage, desc);
         try {
             parser.parse();
         } catch (DescriptorParsingException e) {
@@ -1034,8 +1013,8 @@ public class StatementDescriptorParserTest {
     @Test
     public void rejectParseQueryWhereBoolTerm() throws DescriptorParsingException {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE true AND false";
-        StatementDescriptor desc = getDescriptor(descrString, AgentInfoDAO.CATEGORY);
-        parser = new StatementDescriptorParser(storage, desc);
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
+        parser = new StatementDescriptorParser<>(storage, desc);
         try {
             parser.parse();
         } catch (DescriptorParsingException e) {
@@ -1047,8 +1026,8 @@ public class StatementDescriptorParserTest {
     public void rejectSimpleQueryWithMissingSpaces() throws DescriptorParsingException {
         // we require a space before every operator/keyword
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY + " WHERE " + "'a'='b'";
-        StatementDescriptor desc = getDescriptor(descrString, AgentInfoDAO.CATEGORY);
-        parser = new StatementDescriptorParser(storage, desc);
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
+        parser = new StatementDescriptorParser<>(storage, desc);
         try {
             parser.parse();
         } catch (DescriptorParsingException e) {
@@ -1060,8 +1039,8 @@ public class StatementDescriptorParserTest {
     public void rejectSimpleQueryWithMissingSpaces2() throws DescriptorParsingException {
         // we require a space before every operator/keyword
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY + " WHERE " + "'a' ='b'";
-        StatementDescriptor desc = getDescriptor(descrString, AgentInfoDAO.CATEGORY);
-        parser = new StatementDescriptorParser(storage, desc);
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
+        parser = new StatementDescriptorParser<>(storage, desc);
         try {
             parser.parse();
         } catch (DescriptorParsingException e) {
@@ -1073,8 +1052,8 @@ public class StatementDescriptorParserTest {
     public void rejectSimpleQueryWithInvalidComparison() throws DescriptorParsingException {
         // <> is illegal
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY + " WHERE " + "'a' <> 'b'";
-        StatementDescriptor desc = getDescriptor(descrString, AgentInfoDAO.CATEGORY);
-        parser = new StatementDescriptorParser(storage, desc);
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
+        parser = new StatementDescriptorParser<>(storage, desc);
         try {
             parser.parse();
         } catch (DescriptorParsingException e) {
@@ -1085,8 +1064,8 @@ public class StatementDescriptorParserTest {
     @Test
     public void rejectInvalidDescriptorStringBadWhere() throws DescriptorParsingException {
         String descString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " where '" + Key.AGENT_ID.getName() + "'= ?s";
-        StatementDescriptor desc = getDescriptor(descString, AgentInfoDAO.CATEGORY);
-        parser = new StatementDescriptorParser(storage, desc);
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
+        parser = new StatementDescriptorParser<>(storage, desc);
         try {
             parser.parse();
             fail("lower case where not allowed in descriptor. Should have rejected.");
@@ -1099,8 +1078,8 @@ public class StatementDescriptorParserTest {
     @Test
     public void rejectInvalidDescriptorStringBadStatementType() throws DescriptorParsingException {
         String descString = "UNKNOWN some-unknown-category WHERE 1 = ?i";
-        StatementDescriptor desc = getDescriptor(descString, AgentInfoDAO.CATEGORY);
-        parser = new StatementDescriptorParser(storage, desc);
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
+        parser = new StatementDescriptorParser<>(storage, desc);
         try {
             parser.parse();
             fail("UNKNOWN not a valid statement type");
@@ -1113,8 +1092,8 @@ public class StatementDescriptorParserTest {
     @Test
     public void rejectInvalidDescriptorStringCategoryMismatch() throws DescriptorParsingException {
         String descString = "QUERY some-unknown-category WHERE 1 = ?i";
-        StatementDescriptor desc = getDescriptor(descString, AgentInfoDAO.CATEGORY);
-        parser = new StatementDescriptorParser(storage, desc);
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
+        parser = new StatementDescriptorParser<>(storage, desc);
         try {
             parser.parse();
             fail("category names in descriptor and Category object did not match!");
@@ -1127,8 +1106,8 @@ public class StatementDescriptorParserTest {
     @Test
     public void rejectInvalidDescriptorStringBadSortNoArg() throws DescriptorParsingException {
         String descString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' = ?i SORT";
-        StatementDescriptor desc = getDescriptor(descString, AgentInfoDAO.CATEGORY);
-        parser = new StatementDescriptorParser(storage, desc);
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
+        parser = new StatementDescriptorParser<>(storage, desc);
         try {
             parser.parse();
             fail("category names in descriptor and Category object did not match!");
@@ -1141,8 +1120,8 @@ public class StatementDescriptorParserTest {
     @Test
     public void rejectInvalidDescriptorStringBadWhereNoArg() throws DescriptorParsingException {
         String descString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE SORT";
-        StatementDescriptor desc = getDescriptor(descString, AgentInfoDAO.CATEGORY);
-        parser = new StatementDescriptorParser(storage, desc);
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
+        parser = new StatementDescriptorParser<>(storage, desc);
         try {
             parser.parse();
             fail("category names in descriptor and Category object did not match!");
@@ -1153,18 +1132,4 @@ public class StatementDescriptorParserTest {
         }
     }
     
-    private StatementDescriptor getDescriptor(final String desc, final Category<?> category) {
-        return new StatementDescriptor() {
-            
-            @Override
-            public String getQueryDescriptor() {
-                return desc;
-            }
-            
-            @Override
-            public Category<?> getCategory() {
-                return category;
-            }
-        };
-    }
 }

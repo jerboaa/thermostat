@@ -1,6 +1,16 @@
 package com.redhat.thermostat.storage.core;
 
-public interface StatementDescriptor {
+import com.redhat.thermostat.storage.model.Pojo;
+
+public class StatementDescriptor<T extends Pojo> {
+    
+    private Category<T> category;
+    private String desc;
+    
+    public StatementDescriptor(Category<T> category, String desc) {
+        this.category = category;
+        this.desc = desc;
+    }
 
     /**
      * Describes this statement for preparation. For example:
@@ -11,8 +21,12 @@ public interface StatementDescriptor {
      * 
      * @return The statement descriptor.
      */
-    String getQueryDescriptor();
+    public String getQueryDescriptor() {
+        return desc;
+    }
     
-    Category<?> getCategory();
+    public Category<T> getCategory() {
+        return category;
+    }
     
 }

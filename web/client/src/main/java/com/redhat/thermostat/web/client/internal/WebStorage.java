@@ -102,7 +102,6 @@ import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.SecureStorage;
-import com.redhat.thermostat.storage.core.Statement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageException;
@@ -708,7 +707,7 @@ public class WebStorage implements Storage, SecureStorage {
     }
 
     @Override
-    public PreparedStatement prepareStatement(StatementDescriptor desc)
+    public <T extends Pojo> PreparedStatement<T> prepareStatement(StatementDescriptor<T> desc)
             throws DescriptorParsingException {
         // TODO Implement
         return null;

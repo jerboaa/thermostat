@@ -269,7 +269,7 @@ public class QueuedStorage implements Storage {
     }
     
     @Override
-    public PreparedStatement prepareStatement(final StatementDescriptor desc)
+    public <T extends Pojo> PreparedStatement<T> prepareStatement(final StatementDescriptor<T> desc)
             throws DescriptorParsingException {
         return delegate.prepareStatement(desc);
     }

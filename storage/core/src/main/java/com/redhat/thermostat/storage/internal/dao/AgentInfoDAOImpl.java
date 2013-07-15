@@ -39,17 +39,16 @@ package com.redhat.thermostat.storage.internal.dao;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Put;
-import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
@@ -69,7 +68,7 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
     public AgentInfoDAOImpl(Storage storage) {
         this.storage = storage;
         storage.registerCategory(CATEGORY);
-        factory = new ExpressionFactory();
+        this.factory = new ExpressionFactory();
     }
 
     @Override
@@ -80,19 +79,19 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
     @Override
     public List<AgentInformation> getAllAgentInformation() {
         String allAgentsQuery = "QUERY " + CATEGORY.getName();
-        AgentInformationDescriptor desc = new AgentInformationDescriptor(CATEGORY, allAgentsQuery);
-        PreparedStatement prepared = null;
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(CATEGORY, allAgentsQuery);
+        PreparedStatement<AgentInformation> prepared = null;
         Cursor<AgentInformation> agentCursor = null;
         try {
             prepared = storage.prepareStatement(desc);
             agentCursor = prepared.executeQuery();
         } catch (DescriptorParsingException e) {
             // should not happen, but if it *does* happen, at least log it
-            logger.severe("Preparing query '" + desc + "' failed!");
+            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
             return Collections.emptyList();
         } catch (StatementExecutionException e) {
             // should not happen, but if it *does* happen, at least log it
-            logger.severe("Executing query '" + desc + "' failed!");
+            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
             return Collections.emptyList();
         }
         List<AgentInformation> results = new ArrayList<>();
@@ -108,8 +107,8 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
     public List<AgentInformation> getAliveAgents() {
         // QUERY agent-config WHERE ? = true
         String allAgentsQuery = "QUERY " + CATEGORY.getName() + " WHERE ?s = ?b";
-        AgentInformationDescriptor desc = new AgentInformationDescriptor(CATEGORY, allAgentsQuery);
-        PreparedStatement prepared = null;
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(CATEGORY, allAgentsQuery);
+        PreparedStatement<AgentInformation> prepared = null;
         Cursor<AgentInformation> agentCursor = null;
         try {
             prepared = storage.prepareStatement(desc);
@@ -118,11 +117,11 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
             agentCursor = prepared.executeQuery();
         } catch (DescriptorParsingException e) {
             // should not happen, but if it *does* happen, at least log it
-            logger.severe("Preparing query '" + desc + "' failed!");
+            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
             return Collections.emptyList();
         } catch (StatementExecutionException e) {
             // should not happen, but if it *does* happen, at least log it
-            logger.severe("Executing query '" + desc + "' failed!");
+            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
             return Collections.emptyList();
         }
         List<AgentInformation> results = new ArrayList<>();
@@ -136,11 +135,30 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
 
     @Override
     public AgentInformation getAgentInformation(HostRef agentRef) {
-        Query<AgentInformation> query = storage.createQuery(CATEGORY);
-        Expression expr = factory.equalTo(Key.AGENT_ID, agentRef.getAgentId());
-        query.where(expr);
-        query.limit(1);
-        return query.execute().next();
+        String query = "QUERY " + CATEGORY.getName() + " WHERE ?s = ?s";
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(CATEGORY, query);
+        PreparedStatement<AgentInformation> prepared;
+        Cursor<AgentInformation> agentCursor;
+        try {
+            prepared = storage.prepareStatement(desc);
+            prepared.setString(0, Key.AGENT_ID.getName());
+            prepared.setString(1, agentRef.getAgentId());
+            agentCursor = prepared.executeQuery();
+        } catch (DescriptorParsingException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
+            return null;
+        } catch (StatementExecutionException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
+            return null;
+        }
+        
+        AgentInformation result = null;
+        if (agentCursor.hasNext()) {
+            result = agentCursor.next();
+        }
+        return result;
     }
 
     @Override
@@ -169,32 +187,5 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
         update.apply();
     }
     
-    private static class AgentInformationDescriptor implements StatementDescriptor {
-        
-        private final Category<AgentInformation> category;
-        private final String desc;
-        
-        private AgentInformationDescriptor(Category<AgentInformation> cat, String desc) {
-            this.category = cat;
-            this.desc = desc;
-        }
-        
-        @Override
-        public Category<?> getCategory() {
-            return category;
-        }
-
-        @Override
-        public String getQueryDescriptor() {
-            return desc;
-        }
-        
-        @Override
-        public String toString() {
-            return getClass().getSimpleName() + " " + desc;
-        }
-        
-    }
-
 }
 

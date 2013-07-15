@@ -42,7 +42,7 @@ import com.redhat.thermostat.storage.query.Expression;
 /**
  * Describes what data should be fetched.
  */
-public interface Query<T extends Pojo> extends Statement {
+public interface Query<T extends Pojo> extends Statement<T> {
 
     enum SortDirection {
         ASCENDING(1),

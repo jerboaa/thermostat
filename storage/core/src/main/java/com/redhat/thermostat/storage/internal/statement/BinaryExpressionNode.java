@@ -45,19 +45,19 @@ import com.redhat.thermostat.storage.query.BinaryLogicalExpression;
 import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
 import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.storage.query.LiteralExpression;
-
+import com.redhat.thermostat.storage.query.Operator;
 
 class BinaryExpressionNode extends Node {
     
     private Node leftChild;
     private Node rightChild;
-    private Object operator;
+    private Operator operator;
 
-    public Object getOperator() {
+    public Operator getOperator() {
         return operator;
     }
 
-    public void setOperator(Object operator) {
+    public void setOperator(Operator operator) {
         this.operator = operator;
     }
 
@@ -99,13 +99,10 @@ class BinaryExpressionNode extends Node {
 
     private PatchedWhereExpression createExpression(Expression leftExpression,
             Expression rightExpression) {
-        assert( getOperator() != null );
-        if (getOperator() instanceof BinaryComparisonOperator) {
-            BinaryComparisonOperator op = (BinaryComparisonOperator)getOperator();
-            return getBinaryComparisonExpression(leftExpression, op, rightExpression);
-        } else if (getOperator() instanceof BinaryLogicalOperator) {
-            BinaryLogicalOperator op = (BinaryLogicalOperator)getOperator();
-            return getBinaryLogicalExpression(leftExpression, op, rightExpression);
+        if (operator instanceof BinaryComparisonOperator) {
+            return getBinaryComparisonExpression(leftExpression, (BinaryComparisonOperator) operator, rightExpression);
+        } else if (operator instanceof BinaryLogicalOperator) {
+            return getBinaryLogicalExpression(leftExpression, (BinaryLogicalOperator) operator, rightExpression);
         }
         return null;
     }
@@ -117,9 +114,9 @@ class BinaryExpressionNode extends Node {
         return new PatchedWhereExpressionImpl(impl);
     }
 
-    @SuppressWarnings({ "unchecked" }) // Unchecked casts to LiteralExpression
+    @SuppressWarnings("unchecked") // Unchecked casts to LiteralExpression
     private <T> PatchedWhereExpressionImpl getBinaryComparisonExpression(Expression a, BinaryComparisonOperator op, Expression b) {
-        LiteralExpression<Key <T>> leftOperand = (LiteralExpression<Key<T>>)a;
+        LiteralExpression<Key<T>> leftOperand = (LiteralExpression<Key<T>>) a;
         LiteralExpression<T> rightOperand = (LiteralExpression<T>)b;
         BinaryComparisonExpression<T> impl = new BinaryComparisonExpression<>(
                 leftOperand, op, rightOperand);

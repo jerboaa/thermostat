@@ -51,23 +51,25 @@ import com.redhat.thermostat.storage.model.Pojo;
  * Main implementation of {@link PreparedStatement}s.
  *
  */
-final public class PreparedStatementImpl implements PreparedStatement {
+final public class PreparedStatementImpl<T extends Pojo> implements PreparedStatement<T> {
     
-    private Query<? extends Pojo> query;
-    private DataModifyingStatement dmlStatement;
+    private StatementDescriptor<T> desc;
+    private Query<T> query;
+    private DataModifyingStatement<T> dmlStatement;
     private final PreparedParameter[] params;
-    private final ParsedStatement parsedStatement;
+    private final ParsedStatement<T> parsedStatement;
     
-    public PreparedStatementImpl(Storage storage, StatementDescriptor desc) throws DescriptorParsingException {
-        StatementDescriptorParser parser = new StatementDescriptorParser(storage, desc);
+    public PreparedStatementImpl(Storage storage, StatementDescriptor<T> desc) throws DescriptorParsingException {
+        this.desc = desc;
+        StatementDescriptorParser<T> parser = new StatementDescriptorParser<>(storage, desc);
         this.parsedStatement = parser.parse();
         int numParams = parsedStatement.getNumParams();
         params = new PreparedParameter[numParams];
-        Statement statement = parsedStatement.getRawStatement();
+        Statement<T> statement = parsedStatement.getRawStatement();
         if (statement instanceof DataModifyingStatement) {
-            this.dmlStatement = (DataModifyingStatement)statement;
-        } else if (statement instanceof Query<?>) {
-            this.query = (Query<?>)statement;
+            this.dmlStatement = (DataModifyingStatement<T>) statement;
+        } else if (statement instanceof Query) {
+            this.query = (Query<T>) statement;
         }
     }
     
@@ -113,17 +115,15 @@ final public class PreparedStatementImpl implements PreparedStatement {
                             + DataModifyingStatement.class.getName());
         }
         try {
-            dmlStatement = (DataModifyingStatement)parsedStatement.patchQuery(this);
+            dmlStatement = (DataModifyingStatement<T>) parsedStatement.patchQuery(this);
         } catch (Exception e) {
             throw new StatementExecutionException(e);
         }
         return dmlStatement.execute();
     }
 
-    // unchecked since query has no knowledge of type
-    @SuppressWarnings("unchecked")
     @Override
-    public Cursor<?> executeQuery() throws StatementExecutionException{
+    public Cursor<T> executeQuery() throws StatementExecutionException{
         if (query == null) {
             throw new IllegalStateException(
                     "Can't execute statement which isn't an instance of "
@@ -133,7 +133,7 @@ final public class PreparedStatementImpl implements PreparedStatement {
             // FIXME: I'm sure we can improve on this. We should avoid walking the
             // tree each time. Some cache with unfinished nodes and a reference
             // to the matching expression should be sufficient.
-            query = (Query<?>)parsedStatement.patchQuery(this);
+            query = (Query<T>) parsedStatement.patchQuery(this);
         } catch (IllegalPatchException e) {
             throw new StatementExecutionException(e);
         }
@@ -153,5 +153,10 @@ final public class PreparedStatementImpl implements PreparedStatement {
 
     PreparedParameter[] getParams() {
         return params;
+    }
+
+    @Override
+    public StatementDescriptor<T> getDescriptor() {
+        return desc;
     }
 }
