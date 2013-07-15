@@ -39,7 +39,6 @@ package com.redhat.thermostat.storage.internal.dao;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -52,18 +51,16 @@ import org.junit.Test;
 
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Replace;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
-import com.redhat.thermostat.storage.query.BinaryComparisonExpression;
-import com.redhat.thermostat.storage.query.BinaryComparisonOperator;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
-import com.redhat.thermostat.storage.query.LiteralExpression;
 
 public class NetworkInterfaceInfoDAOTest {
 
@@ -85,21 +82,22 @@ public class NetworkInterfaceInfoDAOTest {
     }
 
     @Test
-    public void testGetNetworkInterfaces() {
+    public void testGetNetworkInterfaces() throws DescriptorParsingException, StatementExecutionException {
 
         NetworkInterfaceInfo niInfo = new NetworkInterfaceInfo(INTERFACE_NAME);
         niInfo.setIp4Addr(IPV4_ADDR);
         niInfo.setIp6Addr(IPV6_ADDR);
 
         @SuppressWarnings("unchecked")
-        Cursor<NetworkInterfaceInfo> cursor = mock(Cursor.class);
+        Cursor<NetworkInterfaceInfo> cursor = (Cursor<NetworkInterfaceInfo>) mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(niInfo);
 
         Storage storage = mock(Storage.class);
-        Query query = mock(Query.class);
-        when(storage.createQuery(any(Category.class))).thenReturn(query);
-        when(query.execute()).thenReturn(cursor);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<NetworkInterfaceInfo> stmt = (PreparedStatement<NetworkInterfaceInfo>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(cursor);
 
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
@@ -107,11 +105,10 @@ public class NetworkInterfaceInfoDAOTest {
         NetworkInterfaceInfoDAO dao = new NetworkInterfaceInfoDAOImpl(storage);
         List<NetworkInterfaceInfo> netInfo = dao.getNetworkInterfaces(hostRef);
 
-        ExpressionFactory factory = new ExpressionFactory();
-        Expression expr = factory.equalTo(Key.AGENT_ID, "system");
-        verify(query).where(eq(expr));
-        verify(query).execute();
-        verifyNoMoreInteractions(query);
+        verify(storage).prepareStatement(anyDescriptor());
+        verify(stmt).setString(0, "system");
+        verify(stmt).executeQuery();
+        verifyNoMoreInteractions(stmt);
 
         assertEquals(1, netInfo.size());
 
@@ -120,6 +117,11 @@ public class NetworkInterfaceInfoDAOTest {
         assertEquals(INTERFACE_NAME, info.getInterfaceName());
         assertEquals(IPV4_ADDR, info.getIp4Addr());
         assertEquals(IPV6_ADDR, info.getIp6Addr());
+    }
+
+    @SuppressWarnings("unchecked")
+    private StatementDescriptor<NetworkInterfaceInfo> anyDescriptor() {
+        return (StatementDescriptor<NetworkInterfaceInfo>) any(StatementDescriptor.class);
     }
 
     @Test

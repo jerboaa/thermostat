@@ -39,7 +39,7 @@ package com.redhat.thermostat.vm.jmx.common.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -52,14 +52,14 @@ import org.junit.Test;
 
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Query.SortDirection;
+import com.redhat.thermostat.storage.core.PreparedStatement;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
+import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.vm.jmx.common.JmxNotification;
 import com.redhat.thermostat.vm.jmx.common.JmxNotificationStatus;
 
@@ -95,7 +95,7 @@ public class JmxNotificationDAOImplTest {
 
         JmxNotificationStatus data = mock(JmxNotificationStatus.class);
 
-        dao.addNotifcationStatus(data);
+        dao.addNotificationStatus(data);
 
         verify(add).setPojo(data);
         verify(add).apply();
@@ -103,27 +103,34 @@ public class JmxNotificationDAOImplTest {
     }
 
     @Test
-    public void verifyGetLatestNotificationStatus() {
+    public void verifyGetLatestNotificationStatus() throws DescriptorParsingException, StatementExecutionException {
         JmxNotificationStatus data = new JmxNotificationStatus();
 
-        Query<JmxNotificationStatus> query = mock(Query.class);
-        when(storage.createQuery(JmxNotificationDAOImpl.NOTIFICATION_STATUS)).thenReturn(query);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<JmxNotificationStatus> stmt = (PreparedStatement<JmxNotificationStatus>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor(JmxNotificationStatus.class))).thenReturn(stmt);
 
-        Cursor<JmxNotificationStatus> cursor = mock(Cursor.class);
+        @SuppressWarnings("unchecked")
+        Cursor<JmxNotificationStatus> cursor = (Cursor<JmxNotificationStatus>) mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(data).thenThrow(new AssertionError("should not be called"));
 
-        when(query.execute()).thenReturn(cursor);
+        when(stmt.executeQuery()).thenReturn(cursor);
 
         JmxNotificationStatus result = dao.getLatestNotificationStatus(vm);
 
-        ExpressionFactory factory = new ExpressionFactory();
-        Expression expr = factory.and(factory.equalTo(Key.AGENT_ID, AGENT_ID),
-                factory.equalTo(Key.VM_ID, VM_ID));
-        verify(query).where(expr);
-        verify(query).sort(Key.TIMESTAMP, SortDirection.DESCENDING);
+        verify(storage).prepareStatement(anyDescriptor(JmxNotificationStatus.class));
+        verify(stmt).setString(0, AGENT_ID);
+        verify(stmt).setInt(1, VM_ID);
+        verify(stmt).executeQuery();
+        verifyNoMoreInteractions(stmt);
         
         assertTrue(result == data);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T extends Pojo> StatementDescriptor<T> anyDescriptor(Class<T> type) {
+        return (StatementDescriptor<T>) any(StatementDescriptor.class);
     }
 
     @Test
@@ -141,29 +148,31 @@ public class JmxNotificationDAOImplTest {
     }
 
     @Test
-    public void verifyGetNotificationsForVmSince() {
+    public void verifyGetNotificationsForVmSince() throws DescriptorParsingException, StatementExecutionException {
         long timeStamp = 10;
 
         JmxNotification data = mock(JmxNotification.class);
 
-        Query<JmxNotification> query = mock(Query.class);
-        when(storage.createQuery(JmxNotificationDAOImpl.NOTIFICATIONS)).thenReturn(query);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<JmxNotification> stmt = (PreparedStatement<JmxNotification>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor(JmxNotification.class))).thenReturn(stmt);
 
-        Cursor<JmxNotification> cursor = mock(Cursor.class);
+        @SuppressWarnings("unchecked")
+        Cursor<JmxNotification> cursor = (Cursor<JmxNotification>) mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(data).thenThrow(new AssertionError("not supposed to be called again"));
 
-        when(query.execute()).thenReturn(cursor);
+        when(stmt.executeQuery()).thenReturn(cursor);
 
         List<JmxNotification> result = dao.getNotifications(vm, timeStamp);
 
-        ExpressionFactory factory = new ExpressionFactory();
-        Expression expr = factory.and(
-                factory.equalTo(Key.AGENT_ID, AGENT_ID),
-                factory.and(factory.equalTo(Key.VM_ID, VM_ID),
-                        factory.greaterThan(Key.TIMESTAMP, timeStamp)));
-        verify(query).where(eq(expr));
-
+        verify(storage).prepareStatement(anyDescriptor(JmxNotification.class));
+        verify(stmt).setString(0, AGENT_ID);
+        verify(stmt).setInt(1, VM_ID);
+        verify(stmt).setLong(2, timeStamp);
+        verify(stmt).executeQuery();
+        verifyNoMoreInteractions(stmt);
+        
         assertEquals(1, result.size());
         assertSame(data, result.get(0));
     }

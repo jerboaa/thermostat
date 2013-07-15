@@ -39,14 +39,20 @@ package com.redhat.thermostat.storage.internal.dao;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.OrderedComparator;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Put;
-import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Remove;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.storage.model.BackendInformation;
@@ -54,6 +60,11 @@ import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class BackendInfoDAOImpl implements BackendInfoDAO {
+    
+    private static final Logger logger = LoggingUtils.getLogger(BackendInfoDAOImpl.class);
+    private static final String QUERY_BACKEND_INFO = "QUERY "
+            + CATEGORY.getName() + " WHERE " 
+            + Key.AGENT_ID.getName() + " = ?s";
 
     private final Storage storage;
     private final ExpressionFactory factory;
@@ -66,13 +77,24 @@ public class BackendInfoDAOImpl implements BackendInfoDAO {
 
     @Override
     public List<BackendInformation> getBackendInformation(HostRef host) {
-        // Sort by order value
-        Query<BackendInformation> query = storage.createQuery(CATEGORY);
-        Expression expr = factory.equalTo(Key.AGENT_ID, host.getAgentId());
-        query.where(expr);
-
+        StatementDescriptor<BackendInformation> desc = new StatementDescriptor<>(CATEGORY, QUERY_BACKEND_INFO);
+        PreparedStatement<BackendInformation> prepared;
+        Cursor<BackendInformation> cursor;
+        try {
+            prepared = storage.prepareStatement(desc);
+            prepared.setString(0, host.getAgentId());
+            cursor = prepared.executeQuery();
+        } catch (DescriptorParsingException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
+            return Collections.emptyList();
+        } catch (StatementExecutionException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
+            return Collections.emptyList();
+        }
+        
         List<BackendInformation> results = new ArrayList<>();
-        Cursor<BackendInformation> cursor = query.execute();
         while (cursor.hasNext()) {
             BackendInformation backendInfo = cursor.next();
             results.add(backendInfo);
@@ -97,6 +119,6 @@ public class BackendInfoDAOImpl implements BackendInfoDAO {
         Remove remove = storage.createRemove().from(CATEGORY).where(expr);
         storage.removePojo(remove);
     }
-
+    
 }
 

@@ -62,6 +62,15 @@ import com.redhat.thermostat.storage.query.ExpressionFactory;
 public class AgentInfoDAOImpl implements AgentInfoDAO {
 
     private static final Logger logger = LoggingUtils.getLogger(AgentInfoDAOImpl.class);
+    private static final String QUERY_AGENT_INFO = "QUERY "
+            + CATEGORY.getName() + " WHERE " 
+            + Key.AGENT_ID.getName() + " = ?s";
+    private static final String QUERY_ALL_AGENTS = "QUERY "
+            + CATEGORY.getName();
+    private static final String QUERY_ALIVE_AGENTS = "QUERY "
+            + CATEGORY.getName() + " WHERE " 
+            + ALIVE_KEY.getName() + " = ?b";
+    
     private final Storage storage;
     private final ExpressionFactory factory;
 
@@ -78,8 +87,7 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
 
     @Override
     public List<AgentInformation> getAllAgentInformation() {
-        String allAgentsQuery = "QUERY " + CATEGORY.getName();
-        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(CATEGORY, allAgentsQuery);
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(CATEGORY, QUERY_ALL_AGENTS);
         PreparedStatement<AgentInformation> prepared = null;
         Cursor<AgentInformation> agentCursor = null;
         try {
@@ -105,15 +113,12 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
 
     @Override
     public List<AgentInformation> getAliveAgents() {
-        // QUERY agent-config WHERE ? = true
-        String allAgentsQuery = "QUERY " + CATEGORY.getName() + " WHERE ?s = ?b";
-        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(CATEGORY, allAgentsQuery);
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(CATEGORY, QUERY_ALIVE_AGENTS);
         PreparedStatement<AgentInformation> prepared = null;
         Cursor<AgentInformation> agentCursor = null;
         try {
             prepared = storage.prepareStatement(desc);
-            prepared.setString(0, ALIVE_KEY.getName());
-            prepared.setBoolean(1, true);
+            prepared.setBoolean(0, true);
             agentCursor = prepared.executeQuery();
         } catch (DescriptorParsingException e) {
             // should not happen, but if it *does* happen, at least log it
@@ -135,14 +140,12 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
 
     @Override
     public AgentInformation getAgentInformation(HostRef agentRef) {
-        String query = "QUERY " + CATEGORY.getName() + " WHERE ?s = ?s";
-        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(CATEGORY, query);
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(CATEGORY, QUERY_AGENT_INFO);
         PreparedStatement<AgentInformation> prepared;
         Cursor<AgentInformation> agentCursor;
         try {
             prepared = storage.prepareStatement(desc);
-            prepared.setString(0, Key.AGENT_ID.getName());
-            prepared.setString(1, agentRef.getAgentId());
+            prepared.setString(0, agentRef.getAgentId());
             agentCursor = prepared.executeQuery();
         } catch (DescriptorParsingException e) {
             // should not happen, but if it *does* happen, at least log it

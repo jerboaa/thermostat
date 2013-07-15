@@ -37,29 +37,50 @@
 package com.redhat.thermostat.storage.core;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class VmLatestPojoListGetter<T extends TimeStampedPojo> {
+    
+    private static final Logger logger = LoggingUtils.getLogger(VmLatestPojoListGetter.class);
 
     private final Storage storage;
     private final Category<T> cat;
+    private final String queryLatest;
 
     public VmLatestPojoListGetter(Storage storage, Category<T> cat) {
         this.storage = storage;
         this.cat = cat;
+        this.queryLatest = "QUERY " + cat.getName() + " WHERE "
+                + Key.AGENT_ID.getName() + " = ?s AND "
+                + Key.VM_ID.getName() + " = ?i AND " 
+                + Key.TIMESTAMP.getName() + " > ?l SORT "
+                + Key.TIMESTAMP.getName() + " DSC";
     }
 
     public List<T> getLatest(VmRef vmRef, long since) {
-        Query<T> query = buildQuery(vmRef, since);
+        PreparedStatement<T> query = buildQuery(vmRef, since);
+        if (query == null) {
+            return Collections.emptyList();
+        }
         return getLatest(query);
     }
 
-    private List<T> getLatest(Query<T> query) {
-        Cursor<T> cursor = query.execute();
+    private List<T> getLatest(PreparedStatement<T> query) {
+        Cursor<T> cursor;
+        try {
+            cursor = query.executeQuery();
+        } catch (StatementExecutionException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Executing query '" + query + "' failed!", e);
+            return Collections.emptyList();
+        }
+        
         List<T> result = new ArrayList<>();
         while (cursor.hasNext()) {
             T pojo = cursor.next();
@@ -68,16 +89,19 @@ public class VmLatestPojoListGetter<T extends TimeStampedPojo> {
         return result;
     }
 
-    protected Query<T> buildQuery(VmRef vmRef, long since) {
-        Query<T> query = storage.createQuery(cat);
-        // AGENT_ID == getAgentId() && VM_ID == getId() && TIMESTAMP > since
-        ExpressionFactory factory = new ExpressionFactory();
-        Expression expr = factory.and(factory.equalTo(Key.AGENT_ID, vmRef.getAgent().getAgentId()),
-                factory.and(factory.equalTo(Key.VM_ID, vmRef.getId()),
-                        factory.greaterThan(Key.TIMESTAMP, since)));
-        query.where(expr);
-        query.sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
-        return query;
+    protected PreparedStatement<T> buildQuery(VmRef vmRef, long since) {
+        StatementDescriptor<T> desc = new StatementDescriptor<>(cat, queryLatest);
+        PreparedStatement<T> stmt = null;
+        try {
+            stmt = storage.prepareStatement(desc);
+            stmt.setString(0, vmRef.getAgent().getAgentId());
+            stmt.setInt(1, vmRef.getId());
+            stmt.setLong(2, since);
+        } catch (DescriptorParsingException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
+        }
+        return stmt;
     }
 
 }

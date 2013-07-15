@@ -39,7 +39,6 @@ package com.redhat.thermostat.vm.cpu.common.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -54,13 +53,14 @@ import org.junit.Test;
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.PreparedStatement;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
 
@@ -89,17 +89,18 @@ public class VmCpuStatDAOTest {
     }
 
     @Test
-    public void testGetLatestCpuStatsBasic() {
+    public void testGetLatestCpuStatsBasic() throws DescriptorParsingException, StatementExecutionException {
 
         @SuppressWarnings("unchecked")
-        Cursor<VmCpuStat> cursor = mock(Cursor.class);
+        Cursor<VmCpuStat> cursor = (Cursor<VmCpuStat>) mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(cpuStat);
 
         Storage storage = mock(Storage.class);
-        Query query = mock(Query.class);
-        when(storage.createQuery(any(Category.class))).thenReturn(query);
-        when(query.execute()).thenReturn(cursor);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<VmCpuStat> stmt = (PreparedStatement<VmCpuStat>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(cursor);
 
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
@@ -108,26 +109,26 @@ public class VmCpuStatDAOTest {
         when(vmRef.getAgent()).thenReturn(hostRef);
         when(vmRef.getId()).thenReturn(VM_ID);
 
-
         VmCpuStatDAO dao = new VmCpuStatDAOImpl(storage);
         List<VmCpuStat> vmCpuStats = dao.getLatestVmCpuStats(vmRef, Long.MIN_VALUE);
 
-        verify(storage).createQuery(VmCpuStatDAO.vmCpuStatCategory);
-        ExpressionFactory factory = new ExpressionFactory();
-        Expression expr = factory.and(
-                factory.equalTo(Key.AGENT_ID, vmRef.getAgent().getAgentId()),
-                factory.and(factory.equalTo(Key.VM_ID, vmRef.getId()),
-                        factory.greaterThan(Key.TIMESTAMP, Long.MIN_VALUE)));
-        verify(query).where(eq(expr));
-        verify(query).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
-        verify(query).execute();
-        verifyNoMoreInteractions(query);
+        verify(storage).prepareStatement(anyDescriptor());
+        verify(stmt).setString(0, "system");
+        verify(stmt).setInt(1, VM_ID);
+        verify(stmt).setLong(2, Long.MIN_VALUE);
+        verify(stmt).executeQuery();
+        verifyNoMoreInteractions(stmt);
 
         assertEquals(1, vmCpuStats.size());
         VmCpuStat stat = vmCpuStats.get(0);
         assertEquals(TIMESTAMP, (Long) stat.getTimeStamp());
         assertEquals(CPU_LOAD, stat.getCpuLoad(), 0.001);
         assertEquals(VM_ID, (Integer) stat.getVmId());
+    }
+
+    @SuppressWarnings("unchecked")
+    private StatementDescriptor<VmCpuStat> anyDescriptor() {
+        return (StatementDescriptor<VmCpuStat>) any(StatementDescriptor.class);
     }
 
     @Test

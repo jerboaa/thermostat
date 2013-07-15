@@ -38,22 +38,33 @@ package com.redhat.thermostat.storage.internal.dao;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Put;
-import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.HostInfo;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class HostInfoDAOImpl implements HostInfoDAO {
+    
+    private static final Logger logger = LoggingUtils.getLogger(HostInfoDAOImpl.class);
+    private static final String QUERY_HOST_INFO = "QUERY "
+            + hostInfoCategory.getName() + " WHERE " 
+            + Key.AGENT_ID.getName() + " = ?s LIMIT 1";
+    private static final String QUERY_ALL_HOSTS = "QUERY " + hostInfoCategory.getName();
 
     private final Storage storage;
     private final AgentInfoDAO agentInfoDao;
@@ -67,12 +78,31 @@ public class HostInfoDAOImpl implements HostInfoDAO {
 
     @Override
     public HostInfo getHostInfo(HostRef ref) {
-        Query<HostInfo> query = storage.createQuery(hostInfoCategory);
-        ExpressionFactory factory = new ExpressionFactory();
-        Expression expr = factory.equalTo(Key.AGENT_ID, ref.getAgentId());
-        query.where(expr);
-        query.limit(1);
-        HostInfo result = query.execute().next();
+        return getHostInfo(ref.getAgentId());
+    }
+
+    private HostInfo getHostInfo(String agentId) {
+        StatementDescriptor<HostInfo> desc = new StatementDescriptor<>(hostInfoCategory, QUERY_HOST_INFO);
+        PreparedStatement<HostInfo> prepared;
+        Cursor<HostInfo> cursor;
+        try {
+            prepared = storage.prepareStatement(desc);
+            prepared.setString(0, agentId);
+            cursor = prepared.executeQuery();
+        } catch (DescriptorParsingException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
+            return null;
+        } catch (StatementExecutionException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
+            return null;
+        }
+        
+        HostInfo result = null;
+        if (cursor.hasNext()) {
+            result = cursor.next();
+        }
         return result;
     }
 
@@ -85,8 +115,28 @@ public class HostInfoDAOImpl implements HostInfoDAO {
 
     @Override
     public Collection<HostRef> getHosts() {
-        Query<HostInfo> allHosts = storage.createQuery(hostInfoCategory);
-        return getHosts(allHosts);
+        StatementDescriptor<HostInfo> desc = new StatementDescriptor<>(hostInfoCategory, QUERY_ALL_HOSTS);
+        PreparedStatement<HostInfo> prepared;
+        Cursor<HostInfo> cursor;
+        try {
+            prepared = storage.prepareStatement(desc);
+            cursor = prepared.executeQuery();
+        } catch (DescriptorParsingException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
+            return Collections.emptyList();
+        } catch (StatementExecutionException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
+            return Collections.emptyList();
+        }
+        
+        List<HostRef> result = new ArrayList<>();
+        while (cursor.hasNext()) {
+            HostInfo hostInfo = cursor.next();
+            result.add(toHostRef(hostInfo));
+        }
+        return result;
     }
 
     @Override
@@ -94,33 +144,24 @@ public class HostInfoDAOImpl implements HostInfoDAO {
         List<HostRef> hosts = new ArrayList<>();
         List<AgentInformation> agentInfos = agentInfoDao.getAliveAgents();
         for (AgentInformation agentInfo : agentInfos) {
-            Query<HostInfo> filter = storage.createQuery(hostInfoCategory);
-            ExpressionFactory factory = new ExpressionFactory();
-            Expression expr = factory.equalTo(Key.AGENT_ID, agentInfo.getAgentId());
-            filter.where(expr);
-            hosts.addAll(getHosts(filter));
+            HostInfo hostInfo = getHostInfo(agentInfo.getAgentId());
+            hosts.add(toHostRef(hostInfo));
         }
 
         return hosts;
     }
 
 
-    private Collection<HostRef> getHosts(Query<HostInfo> filter) {
-        Collection<HostRef> hosts = new ArrayList<HostRef>();
-        
-        Cursor<HostInfo> hostsCursor = filter.execute();
-        while(hostsCursor.hasNext()) {
-            HostInfo host = hostsCursor.next();
-            String agentId = host.getAgentId();
-            String hostName = host.getHostname();
-            hosts.add(new HostRef(agentId, hostName));
-        }
-        return hosts;
+    private HostRef toHostRef(HostInfo hostInfo) {
+        String agentId = hostInfo.getAgentId();
+        String hostName = hostInfo.getHostname();
+        return new HostRef(agentId, hostName);
     }
 
     @Override
     public long getCount() {
         return storage.getCount(hostInfoCategory);
     }
+    
 }
 

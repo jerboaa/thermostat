@@ -39,7 +39,6 @@ package com.redhat.thermostat.vm.classstat.common.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -53,13 +52,14 @@ import org.junit.Test;
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.PreparedStatement;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
 import com.redhat.thermostat.vm.classstat.common.model.VmClassStat;
 
@@ -81,7 +81,7 @@ public class VmClassStatDAOTest {
     }
 
     @Test
-    public void testGetLatestClassStatsBasic() {
+    public void testGetLatestClassStatsBasic() throws DescriptorParsingException, StatementExecutionException {
 
         VmClassStat vmClassStat = getClassStat();
 
@@ -91,9 +91,10 @@ public class VmClassStatDAOTest {
         when(cursor.next()).thenReturn(vmClassStat);
 
         Storage storage = mock(Storage.class);
-        Query query = mock(Query.class);
-        when(storage.createQuery(any(Category.class))).thenReturn(query);
-        when(query.execute()).thenReturn(cursor);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<VmClassStat> stmt = (PreparedStatement<VmClassStat>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(cursor);
 
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
@@ -105,21 +106,23 @@ public class VmClassStatDAOTest {
         VmClassStatDAO dao = new VmClassStatDAOImpl(storage);
         List<VmClassStat> vmClassStats = dao.getLatestClassStats(vmRef, Long.MIN_VALUE);
 
-        ExpressionFactory factory = new ExpressionFactory();
-        Expression expr = factory.and(
-                factory.equalTo(Key.AGENT_ID, "system"),
-                factory.and(factory.equalTo(Key.VM_ID, 321),
-                        factory.greaterThan(Key.TIMESTAMP, Long.MIN_VALUE)));
-        verify(query).where(eq(expr));
-        verify(query).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
-        verify(query).execute();
-        verifyNoMoreInteractions(query);
+        verify(storage).prepareStatement(anyDescriptor());
+        verify(stmt).setString(0, "system");
+        verify(stmt).setInt(1, 321);
+        verify(stmt).setLong(2, Long.MIN_VALUE);
+        verify(stmt).executeQuery();
+        verifyNoMoreInteractions(stmt);
 
         assertEquals(1, vmClassStats.size());
         VmClassStat stat = vmClassStats.get(0);
         assertEquals(TIMESTAMP, (Long) stat.getTimeStamp());
         assertEquals(LOADED_CLASSES, (Long) stat.getLoadedClasses());
         assertEquals(VM_ID, (Integer) stat.getVmId());
+    }
+
+    @SuppressWarnings("unchecked")
+    private StatementDescriptor<VmClassStat> anyDescriptor() {
+        return (StatementDescriptor<VmClassStat>) any(StatementDescriptor.class);
     }
 
     private VmClassStat getClassStat() {

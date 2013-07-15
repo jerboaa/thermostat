@@ -40,7 +40,6 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -54,8 +53,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class HostLatestPojoListGetterTest {
     private static final String AGENT_ID = "agentid";
@@ -102,28 +99,34 @@ public class HostLatestPojoListGetterTest {
     }
 
     @Test
-    public void testBuildQuery() {
+    public void testBuildQuery() throws DescriptorParsingException {
         Storage storage = mock(Storage.class);
-        Query query = mock(Query.class);
-        when (storage.createQuery(any(Category.class))).thenReturn(query);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<TestPojo> query = (PreparedStatement<TestPojo>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(query);
 
         HostLatestPojoListGetter<TestPojo> getter = new HostLatestPojoListGetter<>(storage, cat);
         query = getter.buildQuery(ref, 123);
 
         assertNotNull(query);
-        verify(storage).createQuery(cat);
-        Expression expr = createWhereExpression(123l);
-        verify(query).where(eq(expr));
-        verify(query).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
+        verify(query).setString(0, ref.getAgentId());
+        verify(query).setLong(1, 123L);
         verifyNoMoreInteractions(query);
     }
 
+    @SuppressWarnings("unchecked")
+    private StatementDescriptor<TestPojo> anyDescriptor() {
+        return (StatementDescriptor<TestPojo>) any(StatementDescriptor.class);
+    }
+
     @Test
-    public void testBuildQueryPopulatesUpdateTimes() {
+    public void testBuildQueryPopulatesUpdateTimes() throws DescriptorParsingException {
         Storage storage = mock(Storage.class);
-        Query ignored = mock(Query.class);
-        Query query = mock(Query.class);
-        when(storage.createQuery(any(Category.class))).thenReturn(ignored).thenReturn(query);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<TestPojo> ignored = (PreparedStatement<TestPojo>) mock(PreparedStatement.class);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<TestPojo> query = (PreparedStatement<TestPojo>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(ignored).thenReturn(query);
 
         HostLatestPojoListGetter<TestPojo> getter = new HostLatestPojoListGetter<>(storage, cat);
         ignored = getter.buildQuery(ref,Long.MIN_VALUE); // Ignore first return value.
@@ -131,31 +134,28 @@ public class HostLatestPojoListGetterTest {
         query = getter.buildQuery(ref, Long.MIN_VALUE);
 
         assertNotNull(query);
-        verify(storage, times(2)).createQuery(cat);
-        Expression expr = createWhereExpression(Long.MIN_VALUE);
-        verify(query).where(expr);
-        verify(query).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
+        verify(storage, times(2)).prepareStatement(anyDescriptor());
+        verify(query).setString(0, ref.getAgentId());
+        verify(query).setLong(1, Long.MIN_VALUE);
         verifyNoMoreInteractions(query);
     }
 
     @Test
-    public void testGetLatest() {
+    public void testGetLatest() throws DescriptorParsingException, StatementExecutionException {
         @SuppressWarnings("unchecked")
         Cursor<TestPojo> cursor = mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(result1).thenReturn(result2).thenReturn(null);
 
         Storage storage = mock(Storage.class);
-        Query query = mock(Query.class);
-        when(storage.createQuery(any(Category.class))).thenReturn(query);
-        when(query.execute()).thenReturn(cursor);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<TestPojo> query = (PreparedStatement<TestPojo>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(query);
+        when(query.executeQuery()).thenReturn(cursor);
 
         HostLatestPojoListGetter<TestPojo> getter = new HostLatestPojoListGetter<>(storage, cat);
 
         List<TestPojo> stats = getter.getLatest(ref, Long.MIN_VALUE);
-
-        Expression expr = createWhereExpression(Long.MIN_VALUE);
-        verify(query).where(expr);
 
         assertNotNull(stats);
         assertEquals(2, stats.size());
@@ -165,11 +165,6 @@ public class HostLatestPojoListGetterTest {
         TestPojo stat2 = stats.get(1);
         assertEquals(t2, stat2.getTimeStamp());
         assertArrayEquals(new double[] {load5_2, load10_2, load15_2}, stat2.getData(), 0.001);
-    }
-
-    private Expression createWhereExpression(long time) {
-        ExpressionFactory factory = new ExpressionFactory();
-        return factory.and(factory.equalTo(Key.AGENT_ID, AGENT_ID), factory.greaterThan(Key.TIMESTAMP, time));
     }
 
     @After

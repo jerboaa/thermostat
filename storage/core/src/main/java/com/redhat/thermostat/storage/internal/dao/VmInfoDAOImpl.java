@@ -38,13 +38,20 @@ package com.redhat.thermostat.storage.internal.dao;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Put;
-import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.core.VmRef;
@@ -55,7 +62,16 @@ import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class VmInfoDAOImpl implements VmInfoDAO {
-
+    
+    private final Logger logger = LoggingUtils.getLogger(VmInfoDAOImpl.class);
+    private final String QUERY_VM_INFO = "QUERY " 
+            + vmInfoCategory.getName() + " WHERE " 
+            + Key.AGENT_ID.getName() + " = ?s AND "
+            + Key.VM_ID.getName() + " = ?i LIMIT 1";
+    private final String QUERY_ALL_VMS = "QUERY " 
+            + vmInfoCategory.getName() + " WHERE " 
+            + Key.AGENT_ID.getName() + " = ?s";
+    
     private final Storage storage;
     private final ExpressionFactory factory;
 
@@ -67,16 +83,30 @@ public class VmInfoDAOImpl implements VmInfoDAO {
 
     @Override
     public VmInfo getVmInfo(VmRef ref) {
-        Query<VmInfo> findMatchingVm = storage.createQuery(vmInfoCategory);
-        // AGENT_ID == getAgentId() && VM_ID == getId()
-        ExpressionFactory factory = new ExpressionFactory();
-        Expression expr = factory.and(
-                factory.equalTo(Key.AGENT_ID, ref.getAgent().getAgentId()),
-                factory.equalTo(Key.VM_ID, ref.getId()));
-        findMatchingVm.where(expr);
-        findMatchingVm.limit(1);
-        VmInfo result = findMatchingVm.execute().next();
-        if (result == null) {
+        StatementDescriptor<VmInfo> desc = new StatementDescriptor<>(vmInfoCategory, QUERY_VM_INFO);
+        PreparedStatement<VmInfo> stmt;
+        Cursor<VmInfo> cursor;
+        try {
+            stmt = storage.prepareStatement(desc);
+            stmt.setString(0, ref.getAgent().getAgentId());
+            stmt.setInt(1, ref.getId());
+            cursor = stmt.executeQuery();
+        } catch (DescriptorParsingException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
+            return null;
+        } catch (StatementExecutionException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
+            return null;
+        }
+        
+        VmInfo result;
+        if (cursor.hasNext()) {
+            result = cursor.next();
+        }
+        else {
+            // FIXME this is inconsistent with null returned elsewhere
             throw new DAOException("Unknown VM: host:" + ref.getAgent().getAgentId() + ";vm:" + ref.getId());
         }
         return result;
@@ -84,17 +114,23 @@ public class VmInfoDAOImpl implements VmInfoDAO {
 
     @Override
     public Collection<VmRef> getVMs(HostRef host) {
-
-        Query<VmInfo> query = buildQuery(host);
-        Cursor<VmInfo> cursor = query.execute();
+        StatementDescriptor<VmInfo> desc = new StatementDescriptor<>(vmInfoCategory, QUERY_ALL_VMS);
+        PreparedStatement<VmInfo> stmt;
+        Cursor<VmInfo> cursor;
+        try {
+            stmt = storage.prepareStatement(desc);
+            stmt.setString(0, host.getAgentId());
+            cursor = stmt.executeQuery();
+        } catch (DescriptorParsingException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
+            return Collections.emptyList();
+        } catch (StatementExecutionException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
+            return Collections.emptyList();
+        }
         return buildVMsFromQuery(cursor, host);
-    }
-
-    private Query<VmInfo> buildQuery(HostRef host) {
-        Query<VmInfo> query = storage.createQuery(vmInfoCategory);
-        Expression expr = factory.equalTo(Key.AGENT_ID, host.getAgentId());
-        query.where(expr);
-        return query;
     }
 
     private Collection<VmRef> buildVMsFromQuery(Cursor<VmInfo> cursor, HostRef host) {

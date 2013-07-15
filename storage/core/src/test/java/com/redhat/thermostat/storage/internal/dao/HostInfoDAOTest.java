@@ -53,9 +53,12 @@ import org.junit.Test;
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.PreparedStatement;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
@@ -65,13 +68,15 @@ import com.redhat.thermostat.storage.model.HostInfo;
 
 public class HostInfoDAOTest {
 
-    static class Pair<T,U> {
-        final T first;
-        final U second;
+    static class Triple<S, T, U> {
+        final S first;
+        final T second;
+        final U third;
 
-        public Pair(T first, U second) {
+        public Triple(S first, T second, U third) {
             this.first = first;
             this.second = second;
+            this.third = third;
         }
     }
 
@@ -97,24 +102,35 @@ public class HostInfoDAOTest {
     }
 
     @Test
-    public void testGetHostInfo() {
-
+    public void testGetHostInfo() throws DescriptorParsingException, StatementExecutionException {
         Storage storage = mock(Storage.class);
-        Query query = mock(Query.class);
-        when(storage.createQuery(any(Category.class))).thenReturn(query);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<HostInfo> prepared = (PreparedStatement<HostInfo>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(prepared);
+
         HostInfo info = new HostInfo(HOST_NAME, OS_NAME, OS_KERNEL, CPU_MODEL, CPU_NUM, MEMORY_TOTAL);
-        Cursor cursor = mock(Cursor.class);
+        @SuppressWarnings("unchecked")
+        Cursor<HostInfo> cursor = (Cursor<HostInfo>) mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(info).thenReturn(null);
-        when(query.execute()).thenReturn(cursor);
+        when(prepared.executeQuery()).thenReturn(cursor);
         AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
 
         HostInfo result = new HostInfoDAOImpl(storage, agentInfoDao).getHostInfo(new HostRef("some uid", HOST_NAME));
+        
+        verify(storage).prepareStatement(anyDescriptor());
+        verify(prepared).setString(0, "some uid");
+        verify(prepared).executeQuery();
         assertSame(result, info);
+    }
+    
+    @SuppressWarnings("unchecked")
+    private StatementDescriptor<HostInfo> anyDescriptor() {
+        return (StatementDescriptor<HostInfo>) any(StatementDescriptor.class);
     }
 
     @Test
-    public void testGetHostsSingleHost() {
+    public void testGetHostsSingleHost() throws DescriptorParsingException, StatementExecutionException {
 
         Storage storage = setupStorageForSingleHost();
         AgentInfoDAO agentInfo = mock(AgentInfoDAO.class);
@@ -126,26 +142,25 @@ public class HostInfoDAOTest {
         assertTrue(hosts.contains(new HostRef("123", "fluffhost1")));
     }
 
-    private Storage setupStorageForSingleHost() {
-
+    private Storage setupStorageForSingleHost() throws DescriptorParsingException, StatementExecutionException {
         HostInfo hostConfig = new HostInfo("fluffhost1", OS_NAME, OS_KERNEL, CPU_MODEL, CPU_NUM, MEMORY_TOTAL);
         hostConfig.setAgentId("123");
 
         @SuppressWarnings("unchecked")
-        Cursor<HostInfo> cursor = mock(Cursor.class);
+        Cursor<HostInfo> cursor = (Cursor<HostInfo>) mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(hostConfig);
 
         Storage storage = mock(Storage.class);
-        Query query = mock(Query.class);
-        when(storage.createQuery(any(Category.class))).thenReturn(query);
-        when(query.execute()).thenReturn(cursor);
-        
+        @SuppressWarnings("unchecked")
+        PreparedStatement<HostInfo> stmt = (PreparedStatement<HostInfo>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(cursor);
         return storage;
     }
 
     @Test
-    public void testGetHosts3Hosts() {
+    public void testGetHosts3Hosts() throws DescriptorParsingException, StatementExecutionException {
 
         Storage storage = setupStorageFor3Hosts();
         AgentInfoDAO agentInfo = mock(AgentInfoDAO.class);
@@ -159,7 +174,7 @@ public class HostInfoDAOTest {
         assertTrue(hosts.contains(new HostRef("789", "fluffhost3")));
     }
 
-    private Storage setupStorageFor3Hosts() {
+    private Storage setupStorageFor3Hosts() throws DescriptorParsingException, StatementExecutionException {
 
         HostInfo hostConfig1 = new HostInfo("fluffhost1", OS_NAME, OS_KERNEL, CPU_MODEL, CPU_NUM, MEMORY_TOTAL);
         hostConfig1.setAgentId("123");
@@ -170,14 +185,15 @@ public class HostInfoDAOTest {
 
 
         @SuppressWarnings("unchecked")
-        Cursor<HostInfo> cursor = mock(Cursor.class);
+        Cursor<HostInfo> cursor = (Cursor<HostInfo>) mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(hostConfig1).thenReturn(hostConfig2).thenReturn(hostConfig3);
 
         Storage storage = mock(Storage.class);
-        Query query = mock(Query.class);
-        when(storage.createQuery(any(Category.class))).thenReturn(query);
-        when(query.execute()).thenReturn(cursor);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<HostInfo> stmt = (PreparedStatement<HostInfo>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(cursor);
         
         return storage;
     }
@@ -211,20 +227,24 @@ public class HostInfoDAOTest {
     }
     
     @Test
-    public void getAliveHostSingle() {
-        Pair<Storage, AgentInfoDAO> setup = setupForSingleAliveHost();
+    public void getAliveHostSingle() throws DescriptorParsingException, StatementExecutionException {
+        Triple<Storage, AgentInfoDAO, PreparedStatement<HostInfo>> setup = setupForSingleAliveHost();
         Storage storage = setup.first;
         AgentInfoDAO agentInfoDao = setup.second;
+        PreparedStatement<HostInfo> stmt = setup.third;
 
         HostInfoDAO hostsDAO = new HostInfoDAOImpl(storage, agentInfoDao);
         Collection<HostRef> hosts = hostsDAO.getAliveHosts();
 
         assertEquals(1, hosts.size());
         assertTrue(hosts.contains(new HostRef("123", "fluffhost1")));
-        verify(storage).createQuery(HostInfoDAO.hostInfoCategory);
+        verify(storage).prepareStatement(anyDescriptor());
+        verify(stmt).setString(0, "123");
+        verify(stmt).executeQuery();
     }
     
-    private Pair<Storage, AgentInfoDAO> setupForSingleAliveHost() {
+    private Triple<Storage, AgentInfoDAO, PreparedStatement<HostInfo>> setupForSingleAliveHost()
+            throws DescriptorParsingException, StatementExecutionException {
         
         // agents
         
@@ -256,22 +276,23 @@ public class HostInfoDAOTest {
         // storage
         
         Storage storage = mock(Storage.class);
-        Query query = mock(Query.class);
-        
-        when(storage.createQuery(any(Category.class))).thenReturn(query);
-        when(query.execute()).thenReturn(cursor1);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<HostInfo> stmt = (PreparedStatement<HostInfo>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(cursor1);
 
         AgentInfoDAO agentDao = mock(AgentInfoDAO.class);
         when(agentDao.getAliveAgents()).thenReturn(Arrays.asList(agentInfo1));
 
-        return new Pair<>(storage, agentDao);
+        return new Triple<>(storage, agentDao, stmt);
     }
 
     @Test
-    public void getAliveHost3() {
-        Pair<Storage, AgentInfoDAO> setup = setupForAliveHost3();
+    public void getAliveHost3() throws DescriptorParsingException, StatementExecutionException {
+        Triple<Storage, AgentInfoDAO, PreparedStatement<HostInfo>> setup = setupForAliveHost3();
         Storage storage = setup.first;
         AgentInfoDAO agentInfoDao = setup.second;
+        PreparedStatement<HostInfo> stmt = setup.third;
 
         HostInfoDAO hostsDAO = new HostInfoDAOImpl(storage, agentInfoDao);
         Collection<HostRef> hosts = hostsDAO.getAliveHosts();
@@ -281,10 +302,15 @@ public class HostInfoDAOTest {
         assertTrue(hosts.contains(new HostRef("123", "fluffhost1")));
         assertTrue(hosts.contains(new HostRef("456", "fluffhost2")));
         assertTrue(hosts.contains(new HostRef("678", "fluffhost3")));
-        verify(storage, atLeast(3)).createQuery(HostInfoDAO.hostInfoCategory);
+        verify(storage, atLeast(3)).prepareStatement(anyDescriptor());
+        verify(stmt).setString(0, "123");
+        verify(stmt).setString(0, "456");
+        verify(stmt).setString(0, "678");
+        verify(stmt, atLeast(3)).executeQuery();
     }
     
-    private Pair<Storage, AgentInfoDAO> setupForAliveHost3() {
+    private Triple<Storage, AgentInfoDAO, PreparedStatement<HostInfo>> setupForAliveHost3()
+            throws DescriptorParsingException, StatementExecutionException {
         
         // agents
         AgentInformation agentInfo1 = new AgentInformation();
@@ -331,14 +357,15 @@ public class HostInfoDAOTest {
         // storage
         
         Storage storage = mock(Storage.class);
-        Query query = mock(Query.class);
-        when(storage.createQuery(any(Category.class))).thenReturn(query);
-        when(query.execute()).thenReturn(cursor1).thenReturn(cursor2).thenReturn(cursor3);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<HostInfo> stmt = (PreparedStatement<HostInfo>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(cursor1).thenReturn(cursor2).thenReturn(cursor3);
         
         AgentInfoDAO agentDao = mock(AgentInfoDAO.class);
         when(agentDao.getAliveAgents()).thenReturn(Arrays.asList(agentInfo1, agentInfo2, agentInfo3));
 
-        return new Pair<>(storage, agentDao);
+        return new Triple<>(storage, agentDao, stmt);
     }
 }
 

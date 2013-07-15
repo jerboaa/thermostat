@@ -37,21 +37,32 @@
 package com.redhat.thermostat.vm.memory.common.internal;
 
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Put;
-import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;
 
 class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
 
+    private static final Logger logger = LoggingUtils.getLogger(VmMemoryStatDAOImpl.class);
+    private static final String QUERY_LATEST = "QUERY "
+            + vmMemoryStatsCategory.getName() + " WHERE "
+            + Key.AGENT_ID.getName() + " = ?s AND " 
+            + Key.VM_ID.getName() + " = ?i SORT " 
+            + Key.TIMESTAMP.getName() + " DSC LIMIT 1";
+    
     private final Storage storage;
     private final VmLatestPojoListGetter<VmMemoryStat> getter;
 
@@ -63,19 +74,29 @@ class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
 
     @Override
     public VmMemoryStat getLatestMemoryStat(VmRef ref) {
-        Query<VmMemoryStat> query = storage.createQuery(vmMemoryStatsCategory);
-        ExpressionFactory factory = new ExpressionFactory();
-        Expression expr = factory.and(
-                factory.equalTo(Key.AGENT_ID, ref.getAgent().getAgentId()),
-                factory.equalTo(Key.VM_ID, ref.getId()));
-        query.where(expr);
-        query.sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
-        query.limit(1);
-        Cursor<VmMemoryStat> cursor = query.execute();
-        if (cursor.hasNext()) {
-            return cursor.next();
+        StatementDescriptor<VmMemoryStat> desc = new StatementDescriptor<>(vmMemoryStatsCategory, QUERY_LATEST);
+        PreparedStatement<VmMemoryStat> stmt;
+        Cursor<VmMemoryStat> cursor;
+        try {
+            stmt = storage.prepareStatement(desc);
+            stmt.setString(0, ref.getAgent().getAgentId());
+            stmt.setInt(1, ref.getId());
+            cursor = stmt.executeQuery();
+        } catch (DescriptorParsingException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
+            return null;
+        } catch (StatementExecutionException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
+            return null;
         }
-        return null;
+        
+        VmMemoryStat result = null;
+        if (cursor.hasNext()) {
+            result = cursor.next();
+        }
+        return result;
     }
 
     @Override

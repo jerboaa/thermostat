@@ -57,18 +57,18 @@ import org.mockito.InOrder;
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Remove;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.storage.model.BackendInformation;
-import com.redhat.thermostat.storage.query.BinaryComparisonExpression;
-import com.redhat.thermostat.storage.query.BinaryComparisonOperator;
 import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.storage.query.ExpressionFactory;
-import com.redhat.thermostat.storage.query.LiteralExpression;
 
 public class BackendInfoDAOTest {
 
@@ -101,13 +101,13 @@ public class BackendInfoDAOTest {
 
     @Test
     public void verifyCategoryName() {
-        Category c = BackendInfoDAO.CATEGORY;
+        Category<BackendInformation> c = BackendInfoDAO.CATEGORY;
         assertEquals("backend-info", c.getName());
     }
 
     @Test
     public void verifyCategoryHasAllKeys() {
-        Category c = BackendInfoDAO.CATEGORY;
+        Category<BackendInformation> c = BackendInfoDAO.CATEGORY;
         Collection<Key<?>> keys = c.getKeys();
 
         assertTrue(keys.contains(Key.AGENT_ID));
@@ -135,32 +135,37 @@ public class BackendInfoDAOTest {
     }
 
     @Test
-    public void verifyGetBackendInformation() {
+    public void verifyGetBackendInformation() throws DescriptorParsingException, StatementExecutionException {
         final String AGENT_ID = "agent-id";
         HostRef agentref = mock(HostRef.class);
         when(agentref.getAgentId()).thenReturn(AGENT_ID);
 
         @SuppressWarnings("unchecked")
-        Cursor<BackendInformation> backendCursor = mock(Cursor.class);
+        Cursor<BackendInformation> backendCursor = (Cursor<BackendInformation>) mock(Cursor.class);
         when(backendCursor.hasNext()).thenReturn(true).thenReturn(false);
         when(backendCursor.next()).thenReturn(backend1).thenReturn(null);
 
-        Query query = mock(Query.class);
         Storage storage = mock(Storage.class);
-        when(storage.createQuery(any(Category.class))).thenReturn(query);
-        when(query.execute()).thenReturn(backendCursor);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<BackendInformation> stmt = (PreparedStatement<BackendInformation>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(backendCursor);
 
         BackendInfoDAO dao = new BackendInfoDAOImpl(storage);
 
         List<BackendInformation> result = dao.getBackendInformation(agentref);
 
-        verify(storage).createQuery(BackendInfoDAO.CATEGORY);
-        Expression expr = factory.equalTo(Key.AGENT_ID, AGENT_ID);
-        verify(query).where(eq(expr));
-        verify(query).execute();
-        verifyNoMoreInteractions(query);
+        verify(storage).prepareStatement(anyDescriptor());
+        verify(stmt).setString(0, AGENT_ID);
+        verify(stmt).executeQuery();
+        verifyNoMoreInteractions(stmt);
 
         assertEquals(Arrays.asList(backendInfo1), result);
+    }
+
+    @SuppressWarnings("unchecked")
+    private StatementDescriptor<BackendInformation> anyDescriptor() {
+        return (StatementDescriptor<BackendInformation>) any(StatementDescriptor.class);
     }
 
     @Test

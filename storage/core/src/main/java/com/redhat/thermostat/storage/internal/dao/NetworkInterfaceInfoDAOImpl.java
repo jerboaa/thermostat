@@ -37,20 +37,30 @@
 package com.redhat.thermostat.storage.internal.dao;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Put;
-import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
+
+    private static final Logger logger = LoggingUtils.getLogger(NetworkInterfaceInfoDAOImpl.class);
+    private static final String QUERY_NETWORK_INFO = "QUERY "
+            + networkInfoCategory.getName() + " WHERE "
+            + Key.AGENT_ID.getName() + " = ?s";
 
     private Storage storage;
 
@@ -61,12 +71,23 @@ public class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
 
     @Override
     public List<NetworkInterfaceInfo> getNetworkInterfaces(HostRef ref) {
-        Query<NetworkInterfaceInfo> allHostNetworkInterfaces = storage.createQuery(networkInfoCategory);
-        ExpressionFactory factory = new ExpressionFactory();
-        Expression expr = factory.equalTo(Key.AGENT_ID, ref.getAgentId());
-        allHostNetworkInterfaces.where(expr);
+        StatementDescriptor<NetworkInterfaceInfo> desc = new StatementDescriptor<>(networkInfoCategory, QUERY_NETWORK_INFO);
+        PreparedStatement<NetworkInterfaceInfo> stmt;
+        Cursor<NetworkInterfaceInfo> cursor;
+        try {
+            stmt = storage.prepareStatement(desc);
+            stmt.setString(0, ref.getAgentId());
+            cursor = stmt.executeQuery();
+        } catch (DescriptorParsingException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
+            return Collections.emptyList();
+        } catch (StatementExecutionException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
+            return Collections.emptyList();
+        }
 
-        Cursor<NetworkInterfaceInfo> cursor = allHostNetworkInterfaces.execute();
         List<NetworkInterfaceInfo> result = new ArrayList<>();
         while (cursor.hasNext()) {
             NetworkInterfaceInfo stat = cursor.next();

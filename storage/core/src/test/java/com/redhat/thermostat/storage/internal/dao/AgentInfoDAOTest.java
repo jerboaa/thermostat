@@ -166,8 +166,7 @@ public class AgentInfoDAOTest {
 
         verify(storage).prepareStatement(anyDescriptor());
         verify(stmt).executeQuery();
-        verify(stmt).setString(eq(0), eq(AgentInfoDAOImpl.ALIVE_KEY.getName()));
-        verify(stmt).setBoolean(eq(1), eq(true));
+        verify(stmt).setBoolean(0, true);
         verifyNoMoreInteractions(stmt);
 
         assertEquals(1, aliveAgents.size());
@@ -217,8 +216,7 @@ public class AgentInfoDAOTest {
         AgentInformation computed = dao.getAgentInformation(agentRef);
 
         verify(storage).prepareStatement(anyDescriptor());
-        verify(stmt).setString(0, Key.AGENT_ID.getName());
-        verify(stmt).setString(1, agentInfo1.getAgentId());
+        verify(stmt).setString(0, agentInfo1.getAgentId());
         verify(stmt).executeQuery();
         verifyNoMoreInteractions(stmt);
         AgentInformation expected = agentInfo1;

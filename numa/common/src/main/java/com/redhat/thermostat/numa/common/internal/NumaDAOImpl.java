@@ -37,26 +37,34 @@
 package com.redhat.thermostat.numa.common.internal;
 
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.numa.common.NumaDAO;
 import com.redhat.thermostat.numa.common.NumaHostInfo;
 import com.redhat.thermostat.numa.common.NumaStat;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Put;
-import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Replace;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class NumaDAOImpl implements NumaDAO {
 
+    private static final Logger logger = LoggingUtils.getLogger(NumaDAOImpl.class);
+    private static final String QUERY_NUMA_INFO = "QUERY "
+            + numaHostCategory.getName() + " WHERE " 
+            + Key.AGENT_ID.getName() + " = ?s LIMIT 1";
+    
     private final Storage storage;
     private final HostLatestPojoListGetter<NumaStat> getter;
-
 
     NumaDAOImpl(Storage storage) {
         this.storage = storage;
@@ -88,14 +96,25 @@ public class NumaDAOImpl implements NumaDAO {
 
     @Override
     public int getNumberOfNumaNodes(HostRef ref) {
-        Query<NumaHostInfo> query = storage.createQuery(numaHostCategory);
-        ExpressionFactory factory = new ExpressionFactory();
-        Expression expr = factory.equalTo(Key.AGENT_ID, ref.getAgentId());
-        query.where(expr);
-        query.limit(1);
-        Cursor<NumaHostInfo> numaHostInfo = query.execute();
-        if (numaHostInfo.hasNext()) {
-            return numaHostInfo.next().getNumNumaNodes();
+        StatementDescriptor<NumaHostInfo> desc = new StatementDescriptor<>(numaHostCategory, QUERY_NUMA_INFO);
+        PreparedStatement<NumaHostInfo> stmt;
+        Cursor<NumaHostInfo> cursor;
+        try {
+            stmt = storage.prepareStatement(desc);
+            stmt.setString(0, ref.getAgentId());
+            cursor = stmt.executeQuery();
+        } catch (DescriptorParsingException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
+            return 0;
+        } catch (StatementExecutionException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
+            return 0;
+        }
+        
+        if (cursor.hasNext()) {
+            return cursor.next().getNumNumaNodes();
         } else {
             return 0;
         }

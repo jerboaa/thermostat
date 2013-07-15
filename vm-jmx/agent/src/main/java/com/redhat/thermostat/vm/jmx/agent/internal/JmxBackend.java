@@ -153,7 +153,7 @@ public class JmxBackend extends BaseBackend {
             update.setVmId(pid);
             update.setEnabled(true);
             update.setTimeStamp(clock.getRealTimeMillis());
-            dao.addNotifcationStatus(update);
+            dao.addNotificationStatus(update);
         } catch (Exception e) {
             logger.log(Level.WARNING, "Unable to connect to the mx bean connector", e);
         }
@@ -168,7 +168,7 @@ public class JmxBackend extends BaseBackend {
         update.setVmId(pid);
         update.setEnabled(false);
         update.setTimeStamp(clock.getRealTimeMillis());
-        dao.addNotifcationStatus(update);
+        dao.addNotificationStatus(update);
 
         try {
             pool.release(pid, connection);

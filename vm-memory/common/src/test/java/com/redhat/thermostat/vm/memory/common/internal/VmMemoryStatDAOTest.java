@@ -39,7 +39,6 @@ package com.redhat.thermostat.vm.memory.common.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -56,13 +55,14 @@ import org.junit.Test;
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.PreparedStatement;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Generation;
@@ -76,14 +76,12 @@ public class VmMemoryStatDAOTest {
     private Storage storage;
     private VmRef vmRef;
 
-    private Query query;
+    private PreparedStatement<VmMemoryStat> stmt;
     private Cursor<VmMemoryStat> cursor;
 
     @SuppressWarnings("unchecked")
     @Before
-    public void setUp() {
-        
-
+    public void setUp() throws DescriptorParsingException, StatementExecutionException {
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn(AGENT_ID);
 
@@ -92,19 +90,23 @@ public class VmMemoryStatDAOTest {
         when(vmRef.getId()).thenReturn(VM_ID);
 
         storage = mock(Storage.class);
-        query = mock(Query.class);
-        when(storage.createQuery(any(Category.class))).thenReturn(query);
+        stmt = (PreparedStatement<VmMemoryStat>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
 
-        cursor = mock(Cursor.class);
-        when(query.execute()).thenReturn(cursor);
+        cursor = (Cursor<VmMemoryStat>) mock(Cursor.class);
+        when(stmt.executeQuery()).thenReturn(cursor);
 
         when(cursor.hasNext()).thenReturn(false);
+    }
 
+    @SuppressWarnings("unchecked")
+    private StatementDescriptor<VmMemoryStat> anyDescriptor() {
+        return (StatementDescriptor<VmMemoryStat>) any(StatementDescriptor.class);
     }
 
     @After
     public void tearDown() {
-        query = null;
+        stmt = null;
         vmRef = null;
         cursor = null;
         storage = null;
@@ -124,42 +126,39 @@ public class VmMemoryStatDAOTest {
     }
 
     @Test
-    public void testGetLatest() {
+    public void testGetLatest() throws DescriptorParsingException, StatementExecutionException {
         VmMemoryStatDAO impl = new VmMemoryStatDAOImpl(storage);
         impl.getLatestMemoryStat(vmRef);
 
-        ExpressionFactory factory = new ExpressionFactory();
-        Expression expr = factory.and(factory.equalTo(Key.AGENT_ID, AGENT_ID),
-                factory.equalTo(Key.VM_ID, VM_ID));
-        verify(query).where(eq(expr));
-        verify(query).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
+        verify(storage).prepareStatement(anyDescriptor());
+        verify(stmt).setString(0, vmRef.getAgent().getAgentId());
+        verify(stmt).setInt(1, vmRef.getId());
+        verify(stmt).executeQuery();
     }
 
     @Test
-    public void testGetLatestSince() {
+    public void testGetLatestSince() throws DescriptorParsingException, StatementExecutionException {
         VmMemoryStatDAO impl = new VmMemoryStatDAOImpl(storage);
-        impl.getLatestVmMemoryStats(vmRef, 123);
+        impl.getLatestVmMemoryStats(vmRef, 123L);
 
-        ExpressionFactory factory = new ExpressionFactory();
-        Expression expr = factory.and(
-                factory.equalTo(Key.AGENT_ID, AGENT_ID),
-                factory.and(factory.equalTo(Key.VM_ID, VM_ID),
-                        factory.greaterThan(Key.TIMESTAMP, 123l)));
-        verify(query).where(eq(expr));
-        verify(query).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
-        verify(query).execute();
-        verifyNoMoreInteractions(query);
+        verify(storage).prepareStatement(anyDescriptor());
+        verify(stmt).setString(0, vmRef.getAgent().getAgentId());
+        verify(stmt).setInt(1, vmRef.getId());
+        verify(stmt).setLong(2, 123L);
+        verify(stmt).executeQuery();
+        verifyNoMoreInteractions(stmt);
     }
 
     @Test
-    public void testGetLatestReturnsNullWhenStorageEmpty() {
+    public void testGetLatestReturnsNullWhenStorageEmpty() throws DescriptorParsingException, StatementExecutionException {
         when(cursor.hasNext()).thenReturn(false);
         when(cursor.next()).thenReturn(null);
 
         Storage storage = mock(Storage.class);
-        Query query = mock(Query.class);
-        when(storage.createQuery(any(Category.class))).thenReturn(query);
-        when(query.execute()).thenReturn(cursor);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<VmMemoryStat> stmt = (PreparedStatement<VmMemoryStat>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(cursor);
 
         VmMemoryStatDAO impl = new VmMemoryStatDAOImpl(storage);
         VmMemoryStat latest = impl.getLatestMemoryStat(vmRef);

@@ -41,7 +41,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -54,15 +53,15 @@ import org.junit.Test;
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Query.SortDirection;
+import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Replace;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
+import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
@@ -84,10 +83,11 @@ public class ThreadDaoImplTest {
     }
     
     @Test
-    public void testLoadVMCapabilities() {
-        Query query = mock(Query.class);
+    public void testLoadVMCapabilities() throws DescriptorParsingException, StatementExecutionException {
+        @SuppressWarnings("unchecked")
+        PreparedStatement<VMThreadCapabilities> stmt = (PreparedStatement<VMThreadCapabilities>) mock(PreparedStatement.class);
         Storage storage = mock(Storage.class);
-        when(storage.createQuery(any(Category.class))).thenReturn(query);
+        when(storage.prepareStatement(anyDescriptor(VMThreadCapabilities.class))).thenReturn(stmt);
         VmRef ref = mock(VmRef.class);
         when(ref.getId()).thenReturn(42);
         
@@ -98,35 +98,37 @@ public class ThreadDaoImplTest {
 
         VMThreadCapabilities expected = new VMThreadCapabilities();
         expected.setSupportedFeaturesList(new String[] { ThreadDao.CPU_TIME, ThreadDao.THREAD_ALLOCATED_MEMORY });
-        Cursor cursor = mock(Cursor.class);
+        @SuppressWarnings("unchecked")
+        Cursor<VMThreadCapabilities> cursor = (Cursor<VMThreadCapabilities>) mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(expected).thenReturn(null);
-        when(query.execute()).thenReturn(cursor);
+        when(stmt.executeQuery()).thenReturn(cursor);
         
         ThreadDaoImpl dao = new ThreadDaoImpl(storage);
         VMThreadCapabilities caps = dao.loadCapabilities(ref);
 
-        Expression expr = createWhereExpression();
-        verify(query).where(eq(expr));
-        verify(query).limit(1);
-        verify(query).execute();
-        verifyNoMoreInteractions(query);
+        verify(storage).prepareStatement(anyDescriptor(VMThreadCapabilities.class));
+        verify(stmt).setString(0, "0xcafe");
+        verify(stmt).setInt(1, 42);
+        verify(stmt).executeQuery();
+        verifyNoMoreInteractions(stmt);
 
         assertFalse(caps.supportContentionMonitor());
         assertTrue(caps.supportCPUTime());
         assertTrue(caps.supportThreadAllocatedMemory());
     }
 
-    private Expression createWhereExpression() {
-        ExpressionFactory factory = new ExpressionFactory();
-        return factory.and(factory.equalTo(Key.AGENT_ID, "0xcafe"), factory.equalTo(Key.VM_ID, 42));
+    @SuppressWarnings("unchecked")
+    private <T extends Pojo> StatementDescriptor<T> anyDescriptor(Class<T> type) {
+        return (StatementDescriptor<T>) any(StatementDescriptor.class);
     }
-    
+
     @Test
-    public void testLoadVMCapabilitiesWithoutAnyDataInStorage() {
-        Query query = mock(Query.class);
+    public void testLoadVMCapabilitiesWithoutAnyDataInStorage() throws DescriptorParsingException, StatementExecutionException {
+        @SuppressWarnings("unchecked")
+        PreparedStatement<VMThreadCapabilities> stmt = (PreparedStatement<VMThreadCapabilities>) mock(PreparedStatement.class);
         Storage storage = mock(Storage.class);
-        when(storage.createQuery(any(Category.class))).thenReturn(query);
+        when(storage.prepareStatement(anyDescriptor(VMThreadCapabilities.class))).thenReturn(stmt);
         VmRef ref = mock(VmRef.class);
         when(ref.getId()).thenReturn(42);
 
@@ -137,19 +139,20 @@ public class ThreadDaoImplTest {
 
         VMThreadCapabilities expected = new VMThreadCapabilities();
         expected.setSupportedFeaturesList(new String[] { ThreadDao.CPU_TIME, ThreadDao.THREAD_ALLOCATED_MEMORY });
-        Cursor cursor = mock(Cursor.class);
+        @SuppressWarnings("unchecked")
+        Cursor<VMThreadCapabilities> cursor = (Cursor<VMThreadCapabilities>) mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(false);
         when(cursor.next()).thenThrow(new NoSuchElementException());
-        when(query.execute()).thenReturn(cursor);
+        when(stmt.executeQuery()).thenReturn(cursor);
 
         ThreadDaoImpl dao = new ThreadDaoImpl(storage);
         VMThreadCapabilities caps = dao.loadCapabilities(ref);
 
-        Expression expr = createWhereExpression();
-        verify(query).where(eq(expr));
-        verify(query).limit(1);
-        verify(query).execute();
-        verifyNoMoreInteractions(query);
+        verify(storage).prepareStatement(anyDescriptor(VMThreadCapabilities.class));
+        verify(stmt).setString(0, "0xcafe");
+        verify(stmt).setInt(1, 42);
+        verify(stmt).executeQuery();
+        verifyNoMoreInteractions(stmt);
 
         assertEquals(null, caps);
     }
@@ -174,7 +177,7 @@ public class ThreadDaoImplTest {
     }
 
     @Test
-    public void testLoadLatestDeadLockStatus() {
+    public void testLoadLatestDeadLockStatus() throws DescriptorParsingException, StatementExecutionException {
         VmRef vm = mock(VmRef.class);
         when(vm.getId()).thenReturn(42);
         when(vm.getIdString()).thenReturn("42");
@@ -184,27 +187,27 @@ public class ThreadDaoImplTest {
         when(vm.getAgent()).thenReturn(agent);
 
         Storage storage = mock(Storage.class);
-        Query<VmDeadLockData> query = mock(Query.class);
-        Cursor<VmDeadLockData> cursor = mock(Cursor.class);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<VmDeadLockData> stmt = (PreparedStatement<VmDeadLockData>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor(VmDeadLockData.class))).thenReturn(stmt);
+        @SuppressWarnings("unchecked")
+        Cursor<VmDeadLockData> cursor = (Cursor<VmDeadLockData>) mock(Cursor.class);
         VmDeadLockData data = mock(VmDeadLockData.class);
 
         when(cursor.hasNext()).thenReturn(true);
         when(cursor.next()).thenReturn(data);
-        when(query.execute()).thenReturn(cursor);
-
-        when(storage.createQuery(ThreadDaoImpl.DEADLOCK_INFO)).thenReturn(query);
+        when(stmt.executeQuery()).thenReturn(cursor);
 
         ThreadDaoImpl dao = new ThreadDaoImpl(storage);
         VmDeadLockData result = dao.loadLatestDeadLockStatus(vm);
 
         assertSame(data, result);
 
-        Expression expr = createWhereExpression();
-        verify(query).where(eq(expr));
-        verify(query).sort(Key.TIMESTAMP, SortDirection.DESCENDING);
-        verify(query).execute();
-        verify(query).limit(1);
-        verifyNoMoreInteractions(query);
+        verify(storage).prepareStatement(anyDescriptor(VmDeadLockData.class));
+        verify(stmt).setString(0, "0xcafe");
+        verify(stmt).setInt(1, 42);
+        verify(stmt).executeQuery();
+        verifyNoMoreInteractions(stmt);
     }
 
     @Test
@@ -223,7 +226,7 @@ public class ThreadDaoImplTest {
     }
 
     @Test
-    public void testGetLatestHarvestingStatus() {
+    public void testGetLatestHarvestingStatus() throws DescriptorParsingException, StatementExecutionException {
         VmRef vm = mock(VmRef.class);
         when(vm.getId()).thenReturn(42);
         when(vm.getIdString()).thenReturn("42");
@@ -233,25 +236,25 @@ public class ThreadDaoImplTest {
         when(vm.getAgent()).thenReturn(agent);
 
         Storage storage = mock(Storage.class);
-        Query<ThreadHarvestingStatus> query = mock(Query.class);
-        Cursor<ThreadHarvestingStatus> cursor = mock(Cursor.class);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<ThreadHarvestingStatus> stmt = (PreparedStatement<ThreadHarvestingStatus>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor(ThreadHarvestingStatus.class))).thenReturn(stmt);
+        @SuppressWarnings("unchecked")
+        Cursor<ThreadHarvestingStatus> cursor = (Cursor<ThreadHarvestingStatus>) mock(Cursor.class);
         ThreadHarvestingStatus status = mock(ThreadHarvestingStatus.class);
 
         when(cursor.hasNext()).thenReturn(true);
         when(cursor.next()).thenReturn(status);
-        when(query.execute()).thenReturn(cursor);
-
-        when(storage.createQuery(ThreadDaoImpl.THREAD_HARVESTING_STATUS)).thenReturn(query);
+        when(stmt.executeQuery()).thenReturn(cursor);
 
         ThreadDaoImpl dao = new ThreadDaoImpl(storage);
         ThreadHarvestingStatus result = dao.getLatestHarvestingStatus(vm);
 
-        Expression expr = createWhereExpression();
-        verify(query).where(eq(expr));
-        verify(query).sort(Key.TIMESTAMP, SortDirection.DESCENDING);
-        verify(query).execute();
-        verify(query).limit(1);
-        verifyNoMoreInteractions(query);
+        verify(storage).prepareStatement(anyDescriptor(ThreadHarvestingStatus.class));
+        verify(stmt).setString(0, "0xcafe");
+        verify(stmt).setInt(1, 42);
+        verify(stmt).executeQuery();
+        verifyNoMoreInteractions(stmt);
 
         assertSame(status, result);
     }

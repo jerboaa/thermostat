@@ -37,28 +37,69 @@
 package com.redhat.thermostat.thread.dao.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Put;
-import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.model.VmDeadLockData;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
 import com.redhat.thermostat.thread.model.ThreadInfoData;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
+import com.redhat.thermostat.thread.model.VmDeadLockData;
 
 public class ThreadDaoImpl implements ThreadDao {
-
+    
+    private static final Logger logger = LoggingUtils.getLogger(ThreadDaoImpl.class);
+    
+    // Queries
+    private static final String QUERY_THREAD_CAPS = "QUERY "
+            + THREAD_CAPABILITIES.getName() + " WHERE "
+            + Key.AGENT_ID.getName() + " = ?s AND " 
+            + Key.VM_ID.getName() + " = ?i LIMIT 1";
+    private static final String QUERY_LATEST_SUMMARY = "QUERY "
+            + THREAD_SUMMARY.getName() + " WHERE "
+            + Key.AGENT_ID.getName() + " = ?s AND " 
+            + Key.VM_ID.getName() + " = ?i SORT " 
+            + Key.TIMESTAMP.getName() + "DSC LIMIT 1";
+    private static final String QUERY_SUMMARY_SINCE = "QUERY "
+            + THREAD_SUMMARY.getName() + " WHERE "
+            + Key.AGENT_ID.getName() + " = ?s AND " 
+            + Key.VM_ID.getName() + " = ?i AND "
+            + Key.TIMESTAMP.getName() + " > ?l SORT "
+            + Key.TIMESTAMP.getName() + "DSC";
+    private static final String QUERY_LATEST_HARVESTING_STATUS = "QUERY "
+            + THREAD_HARVESTING_STATUS.getName() + " WHERE "
+            + Key.AGENT_ID.getName() + " = ?s AND " 
+            + Key.VM_ID.getName() + " = ?i SORT " 
+            + Key.TIMESTAMP.getName() + "DSC LIMIT 1";
+    private static final String QUERY_THREAD_INFO = "QUERY "
+            + THREAD_INFO.getName() + " WHERE "
+            + Key.AGENT_ID.getName() + " = ?s AND " 
+            + Key.VM_ID.getName() + " = ?i AND "
+            + Key.TIMESTAMP.getName() + " > ?l SORT "
+            + Key.TIMESTAMP.getName() + "DSC";
+    private static final String QUERY_LATEST_DEADLOCK_INFO = "QUERY "
+            + DEADLOCK_INFO.getName() + " WHERE "
+            + Key.AGENT_ID.getName() + " = ?s AND " 
+            + Key.VM_ID.getName() + " = ?i SORT " 
+            + Key.TIMESTAMP.getName() + "DSC LIMIT 1";
+    
     private Storage storage;
+    
     public ThreadDaoImpl(Storage storage) {
         this.storage = storage;
         storage.registerCategory(THREAD_CAPABILITIES);
@@ -70,18 +111,25 @@ public class ThreadDaoImpl implements ThreadDao {
 
     @Override
     public VMThreadCapabilities loadCapabilities(VmRef vm) {
-        Query<VMThreadCapabilities> query = storage.createQuery(THREAD_CAPABILITIES);
-        ExpressionFactory factory = new ExpressionFactory();
-        Expression expr = factory.and(
-                factory.equalTo(Key.AGENT_ID, vm.getAgent().getAgentId()),
-                factory.equalTo(Key.VM_ID, vm.getId()));
-        query.where(expr);
-        query.limit(1);
-        Cursor<VMThreadCapabilities> cursor = query.execute();
-        if (!cursor.hasNext()) {
+        PreparedStatement<VMThreadCapabilities> stmt = prepareQuery(THREAD_CAPABILITIES, QUERY_THREAD_CAPS, vm);
+        if (stmt == null) {
             return null;
         }
-        VMThreadCapabilities caps = cursor.next();
+        
+        Cursor<VMThreadCapabilities> cursor;
+        try {
+            cursor = stmt.executeQuery();
+        } catch (StatementExecutionException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Executing query '" + stmt + "' failed!", e);
+            return null;
+        }
+        
+        VMThreadCapabilities caps = null;
+        if (cursor.hasNext()) {
+            caps = cursor.next();
+        }
+        
         return caps;
     }
     
@@ -101,12 +149,21 @@ public class ThreadDaoImpl implements ThreadDao {
     
     @Override
     public ThreadSummary loadLastestSummary(VmRef ref) {
+        PreparedStatement<ThreadSummary> stmt = prepareQuery(THREAD_SUMMARY, QUERY_LATEST_SUMMARY, ref);
+        if (stmt == null) {
+            return null;
+        }
+        
+        Cursor<ThreadSummary> cursor;
+        try {
+            cursor = stmt.executeQuery();
+        } catch (StatementExecutionException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Executing query '" + stmt + "' failed!", e);
+            return null;
+        }
+        
         ThreadSummary summary = null;
-
-        Query<ThreadSummary> query = prepareQuery(THREAD_SUMMARY, ref);
-        query.sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
-        query.limit(1);
-        Cursor<ThreadSummary> cursor = query.execute();
         if (cursor.hasNext()) {
             summary = cursor.next();
         }
@@ -116,13 +173,21 @@ public class ThreadDaoImpl implements ThreadDao {
     
     @Override
     public List<ThreadSummary> loadSummary(VmRef ref, long since) {
+        PreparedStatement<ThreadSummary> stmt = prepareQuery(THREAD_SUMMARY, QUERY_SUMMARY_SINCE, ref, since);
+        if (stmt == null) {
+            return Collections.emptyList();
+        }
+
+        Cursor<ThreadSummary> cursor;
+        try {
+            cursor = stmt.executeQuery();
+        } catch (StatementExecutionException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Executing query '" + stmt + "' failed!", e);
+            return Collections.emptyList();
+        }
         
         List<ThreadSummary> result = new ArrayList<>();
-        
-        Query<ThreadSummary> query = prepareQuery(THREAD_SUMMARY, ref, since);
-        query.sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
-
-        Cursor<ThreadSummary> cursor = query.execute();
         while (cursor.hasNext()) {
             ThreadSummary summary = cursor.next();
             result.add(summary);
@@ -140,15 +205,26 @@ public class ThreadDaoImpl implements ThreadDao {
 
     @Override
     public ThreadHarvestingStatus getLatestHarvestingStatus(VmRef vm) {
-        Query<ThreadHarvestingStatus> query = prepareQuery(THREAD_HARVESTING_STATUS, vm);
-        query.sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
-        query.limit(1);
-
-        Cursor<ThreadHarvestingStatus> cursor = query.execute();
-        if (cursor.hasNext()) {
-            return cursor.next();
+        PreparedStatement<ThreadHarvestingStatus> stmt = prepareQuery(THREAD_HARVESTING_STATUS, 
+                QUERY_LATEST_HARVESTING_STATUS, vm);
+        if (stmt == null) {
+            return null;
         }
-        return null;
+        
+        Cursor<ThreadHarvestingStatus> cursor;
+        try {
+            cursor = stmt.executeQuery();
+        } catch (StatementExecutionException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Executing query '" + stmt + "' failed!", e);
+            return null;
+        }
+        
+        ThreadHarvestingStatus result = null;
+        if (cursor.hasNext()) {
+            result = cursor.next();
+        }
+        return result;
     }
 
     @Override
@@ -160,12 +236,21 @@ public class ThreadDaoImpl implements ThreadDao {
 
     @Override
     public List<ThreadInfoData> loadThreadInfo(VmRef ref, long since) {
+        PreparedStatement<ThreadInfoData> stmt = prepareQuery(THREAD_INFO, QUERY_THREAD_INFO, ref, since);
+        if (stmt == null) {
+            return Collections.emptyList();
+        }
+        
+        Cursor<ThreadInfoData> cursor;
+        try {
+            cursor = stmt.executeQuery();
+        } catch (StatementExecutionException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Executing query '" + stmt + "' failed!", e);
+            return Collections.emptyList();
+        }
+        
         List<ThreadInfoData> result = new ArrayList<>();
-        
-        Query<ThreadInfoData> query = prepareQuery(THREAD_INFO, ref, since);
-        query.sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
-        
-        Cursor<ThreadInfoData> cursor = query.execute();
         while (cursor.hasNext()) {
             ThreadInfoData info = cursor.next();
             result.add(info);
@@ -176,17 +261,26 @@ public class ThreadDaoImpl implements ThreadDao {
 
     @Override
     public VmDeadLockData loadLatestDeadLockStatus(VmRef ref) {
-        Query<VmDeadLockData> query = prepareQuery(DEADLOCK_INFO, ref);
-        query.sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
-        query.limit(1);
-
-        Cursor<VmDeadLockData> cursor = query.execute();
+        PreparedStatement<VmDeadLockData> stmt = prepareQuery(DEADLOCK_INFO, QUERY_LATEST_DEADLOCK_INFO, ref);
+        if (stmt == null) {
+            return null;
+        }
+        
+        Cursor<VmDeadLockData> cursor;
+        try {
+            cursor = stmt.executeQuery();
+        } catch (StatementExecutionException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Executing query '" + stmt + "' failed!", e);
+            return null;
+        }
+        
+        VmDeadLockData result = null;
         if (cursor.hasNext()) {
-            VmDeadLockData data = cursor.next();
-            return data;
+            result = cursor.next();
         }
 
-        return null;
+        return result;
     }
 
     @Override
@@ -196,23 +290,25 @@ public class ThreadDaoImpl implements ThreadDao {
         add.apply();
     }
     
-    private <T extends Pojo> Query<T> prepareQuery(Category<T> category, VmRef vm) {
-        return prepareQuery(category, vm.getId(), vm.getAgent().getAgentId(), null);
+    private <T extends Pojo> PreparedStatement<T> prepareQuery(Category<T> category, String query, VmRef ref) {
+        return prepareQuery(category, query, ref, null);
     }
     
-    private <T extends Pojo> Query<T> prepareQuery(Category<T> category, VmRef vm, Long since) {
-        return prepareQuery(category, vm.getId(), vm.getAgent().getAgentId(), since);
-    }
-
-    private <T extends Pojo> Query<T> prepareQuery(Category<T> category, Integer vmId, String agentId, Long since) {
-        Query<T> query = storage.createQuery(category);
-        ExpressionFactory factory = new ExpressionFactory();
-        Expression expr = factory.and(factory.equalTo(Key.AGENT_ID, agentId), factory.equalTo(Key.VM_ID, vmId));
-        if (since != null) {
-            expr = factory.and(expr, factory.greaterThan(Key.TIMESTAMP, since));
+    private <T extends Pojo> PreparedStatement<T> prepareQuery(Category<T> category, String query, VmRef ref, Long since) {
+        StatementDescriptor<T> desc = new StatementDescriptor<>(category, query);
+        PreparedStatement<T> stmt = null;
+        try {
+            stmt = storage.prepareStatement(desc);
+            stmt.setString(0, ref.getAgent().getAgentId());
+            stmt.setInt(1, ref.getId());
+            if (since != null) {
+                stmt.setLong(2, since);
+            }
+        } catch (DescriptorParsingException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
         }
-        query.where(expr);
-        return query;
+        return stmt;
     }
     
     @Override

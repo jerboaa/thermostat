@@ -50,8 +50,4 @@ public interface PreparedStatement<T extends Pojo> {
      */
     int getId();
     
-    /**
-     * @return the {@link StatementDescriptor} that describes this statement.
-     */
-    StatementDescriptor<T> getDescriptor();
 }

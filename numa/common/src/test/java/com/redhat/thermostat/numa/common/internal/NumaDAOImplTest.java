@@ -34,9 +34,10 @@
  * to do so, delete this exception statement from your version.
  */
 
-
 package com.redhat.thermostat.numa.common.internal;
 
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -47,9 +48,17 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.numa.common.NumaDAO;
+import com.redhat.thermostat.numa.common.NumaHostInfo;
 import com.redhat.thermostat.numa.common.NumaNodeStat;
 import com.redhat.thermostat.numa.common.NumaStat;
 import com.redhat.thermostat.storage.core.Add;
+import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.PreparedStatement;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 
 public class NumaDAOImplTest {
@@ -101,6 +110,37 @@ public class NumaDAOImplTest {
         verify(add).setPojo(numaStat);
         verify(add).apply();
         verifyNoMoreInteractions(add);
+    }
+    
+    @Test
+    public void testGetNumberOfNumaNodes() throws DescriptorParsingException, StatementExecutionException {
+        NumaHostInfo info = mock(NumaHostInfo.class);
+        when(info.getNumNumaNodes()).thenReturn(2);
+        
+        @SuppressWarnings("unchecked")
+        PreparedStatement<NumaHostInfo> stmt = (PreparedStatement<NumaHostInfo>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
+        @SuppressWarnings("unchecked")
+        Cursor<NumaHostInfo> cursor = (Cursor<NumaHostInfo>) mock(Cursor.class);
+        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
+        when(cursor.next()).thenReturn(info).thenReturn(null);
+        when(stmt.executeQuery()).thenReturn(cursor);
+        
+        final String agentId = "system";
+        HostRef hostRef = mock(HostRef.class);
+        when(hostRef.getAgentId()).thenReturn(agentId);
+        int result = numaDAO.getNumberOfNumaNodes(hostRef);
+        assertEquals(2, result);
+        
+        verify(storage).prepareStatement(anyDescriptor());
+        verify(stmt).setString(0, agentId);
+        verify(stmt).executeQuery();
+        verifyNoMoreInteractions(stmt);
+    }
+
+    @SuppressWarnings("unchecked")
+    private StatementDescriptor<NumaHostInfo> anyDescriptor() {
+        return (StatementDescriptor<NumaHostInfo>) any(StatementDescriptor.class);
     }
 }
 

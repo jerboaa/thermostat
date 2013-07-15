@@ -45,6 +45,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
@@ -64,9 +65,12 @@ import org.mockito.ArgumentCaptor;
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.PreparedStatement;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
@@ -87,17 +91,18 @@ public class HeapDAOTest {
     private ObjectHistogram histogram;
     private InputStream histogramData;
 
-    private Query query;
+    private PreparedStatement<HeapInfo> stmt;
 
+    @SuppressWarnings("unchecked")
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws IOException, DescriptorParsingException, StatementExecutionException {
         storage = mock(Storage.class);
         add = mock(Add.class);
         when(storage.createAdd(any(Category.class))).thenReturn(add);
 
         when(storage.getAgentId()).thenReturn("test");
-        query = mock(Query.class); 
-        when(storage.createQuery(any(Category.class))).thenReturn(query);
+        stmt = (PreparedStatement<HeapInfo>) mock(PreparedStatement.class); 
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
 
         dao = new HeapDAOImpl(storage);
         
@@ -109,21 +114,22 @@ public class HeapDAOTest {
         out.close();
         histogramData = createHistogramData();
 
-        @SuppressWarnings("unchecked")
-        Cursor<HeapInfo> cursor = mock(Cursor.class);
+        Cursor<HeapInfo> cursor = (Cursor<HeapInfo>) mock(Cursor.class);
         HeapInfo info1 = new HeapInfo(234, 12345L);
         info1.setAgentId("123");
+        info1.setHeapId("testheap1");
         info1.setHeapDumpId("test1");
         info1.setHistogramId("histotest1");
 
         HeapInfo info2 = new HeapInfo(234, 23456L);
         info2.setAgentId("123");
+        info2.setHeapId("testheap2");
         info2.setHeapDumpId("test2");
         info2.setHistogramId("histotest2");
 
         when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(info1).thenReturn(info2).thenReturn(null);
-        when(query.execute()).thenReturn(cursor);
+        when(stmt.executeQuery()).thenReturn(cursor);
 
         // Setup for reading heapdump data.
         when(storage.loadFile("test-heap")).thenReturn(new ByteArrayInputStream(data));
@@ -131,6 +137,11 @@ public class HeapDAOTest {
 
         // We dont check for AGENT_ID. That's enforced/added/checked by Storage
 
+    }
+
+    @SuppressWarnings("unchecked")
+    private StatementDescriptor<HeapInfo> anyDescriptor() {
+        return (StatementDescriptor<HeapInfo>) any(StatementDescriptor.class);
     }
 
     private InputStream createHistogramData() throws IOException {
@@ -162,7 +173,7 @@ public class HeapDAOTest {
 
     @After
     public void tearDown() {
-        query = null;
+        stmt = null;
         histogramData = null;
         histogram = null;
         heapDumpData.delete();
@@ -175,7 +186,7 @@ public class HeapDAOTest {
 
     @Test
     public void testCategory() {
-        Category category = HeapDAO.heapInfoCategory;
+        Category<HeapInfo> category = HeapDAO.heapInfoCategory;
         assertNotNull(category);
         assertEquals("vm-heap-info", category.getName());
         Collection<Key<?>> keys = category.getKeys();
@@ -229,8 +240,7 @@ public class HeapDAOTest {
     }
 
     @Test
-    public void testGetAllHeapInfo() {
-        
+    public void testGetAllHeapInfo() throws DescriptorParsingException, StatementExecutionException {
         // verify a connection key has been created before requesting the
         // heap dumps
         verify(storage).registerCategory(HeapDAO.heapInfoCategory);
@@ -238,22 +248,49 @@ public class HeapDAOTest {
         HostRef host = new HostRef("123", "test-host");
         VmRef vm = new VmRef(host, 234, "test-vm");
         Collection<HeapInfo> heapInfos = dao.getAllHeapInfo(vm);
+
+        verify(storage).prepareStatement(anyDescriptor());
+        verify(stmt).setString(0, "123");
+        verify(stmt).setInt(1, 234);
+        verify(stmt).executeQuery();
+        verifyNoMoreInteractions(stmt);
         
         HeapInfo info1 = new HeapInfo(234, 12345);
         info1.setHeapDumpId("test1");
+        info1.setHeapId("testheap1");
         info1.setHistogramId("histotest1");
         
         HeapInfo info2 = new HeapInfo(234, 23456);
         info2.setHeapDumpId("test2");
+        info2.setHeapId("testheap2");
         info2.setHistogramId("histotest2");
         
         assertEquals(2, heapInfos.size());
         assertTrue(heapInfos.contains(info1));
         assertTrue(heapInfos.contains(info2));
     }
+    
+    @Test
+    public void testGetHeapInfo() throws DescriptorParsingException, StatementExecutionException {
+        final String heapId = "testheap1";
+        
+        HeapInfo result = dao.getHeapInfo(heapId);
+        
+        verify(storage).prepareStatement(anyDescriptor());
+        verify(stmt).setString(0, heapId);
+        verify(stmt).executeQuery();
+        verifyNoMoreInteractions(stmt);
+        
+        HeapInfo info = new HeapInfo(234, 12345);
+        info.setHeapDumpId("test1");
+        info.setHeapId("testheap1");
+        info.setHistogramId("histotest1");
+        
+        assertEquals(info, result);
+    }
 
     @Test
-    public void testGetHeapDump() throws IOException {
+    public void testGetHeapDump() throws IOException, DescriptorParsingException, StatementExecutionException {
         heapInfo.setHeapDumpId("test-heap");
         InputStream in = dao.getHeapDumpData(heapInfo);
         assertEquals(1, in.read());
@@ -273,8 +310,8 @@ public class HeapDAOTest {
     }
 
     @Test
-    public void testInvalidHeapId() throws IOException {
-        when(query.execute()).thenThrow(new IllegalArgumentException("invalid ObjectId"));
+    public void testInvalidHeapId() throws IOException, StatementExecutionException {
+        when(stmt.executeQuery()).thenThrow(new IllegalArgumentException("invalid ObjectId"));
         dao = new HeapDAOImpl(storage);
         heapInfo = dao.getHeapInfo("some-random-heap-id");
         assertTrue(heapInfo == null);

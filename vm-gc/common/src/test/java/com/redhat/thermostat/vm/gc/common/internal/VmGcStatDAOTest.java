@@ -39,7 +39,6 @@ package com.redhat.thermostat.vm.gc.common.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -53,13 +52,14 @@ import org.junit.Test;
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.PreparedStatement;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
 
@@ -85,19 +85,20 @@ public class VmGcStatDAOTest {
     }
 
     @Test
-    public void testGetLatestVmGcStatsBasic() {
+    public void testGetLatestVmGcStatsBasic() throws DescriptorParsingException, StatementExecutionException {
 
         VmGcStat vmGcStat = new VmGcStat(VM_ID, TIMESTAMP, COLLECTOR, RUN_COUNT, WALL_TIME);
 
         @SuppressWarnings("unchecked")
-        Cursor<VmGcStat> cursor = mock(Cursor.class);
+        Cursor<VmGcStat> cursor = (Cursor<VmGcStat>) mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(vmGcStat);
 
         Storage storage = mock(Storage.class);
-        Query query = mock(Query.class);
-        when(storage.createQuery(any(Category.class))).thenReturn(query);
-        when(query.execute()).thenReturn(cursor);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<VmGcStat> stmt = (PreparedStatement<VmGcStat>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(cursor);
 
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
@@ -106,20 +107,15 @@ public class VmGcStatDAOTest {
         when(vmRef.getAgent()).thenReturn(hostRef);
         when(vmRef.getId()).thenReturn(321);
 
-
         VmGcStatDAO dao = new VmGcStatDAOImpl(storage);
         List<VmGcStat> vmGcStats = dao.getLatestVmGcStats(vmRef, Long.MIN_VALUE);
 
-        verify(storage).createQuery(VmGcStatDAO.vmGcStatCategory);
-        ExpressionFactory factory = new ExpressionFactory();
-        Expression expr = factory.and(
-                factory.equalTo(Key.AGENT_ID, vmRef.getAgent().getAgentId()),
-                factory.and(factory.equalTo(Key.VM_ID, vmRef.getId()),
-                        factory.greaterThan(Key.TIMESTAMP, Long.MIN_VALUE)));
-        verify(query).where(eq(expr));
-        verify(query).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
-        verify(query).execute();
-        verifyNoMoreInteractions(query);
+        verify(storage).prepareStatement(anyDescriptor());
+        verify(stmt).setString(0, "system");
+        verify(stmt).setInt(1, 321);
+        verify(stmt).setLong(2, Long.MIN_VALUE);
+        verify(stmt).executeQuery();
+        verifyNoMoreInteractions(stmt);
 
         assertEquals(1, vmGcStats.size());
         VmGcStat stat = vmGcStats.get(0);
@@ -128,6 +124,11 @@ public class VmGcStatDAOTest {
         assertEquals(COLLECTOR, stat.getCollectorName());
         assertEquals(RUN_COUNT, (Long) stat.getRunCount());
         assertEquals(WALL_TIME, (Long) stat.getWallTime());
+    }
+
+    @SuppressWarnings("unchecked")
+    private StatementDescriptor<VmGcStat> anyDescriptor() {
+        return (StatementDescriptor<VmGcStat>) any(StatementDescriptor.class);
     }
 
     @Test

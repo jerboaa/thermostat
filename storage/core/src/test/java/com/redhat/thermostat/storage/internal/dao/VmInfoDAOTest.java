@@ -55,10 +55,13 @@ import org.junit.Test;
 
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Replace;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.core.VmRef;
@@ -132,16 +135,17 @@ public class VmInfoDAOTest {
     }
 
     @Test
-    public void testGetVmInfo() {
-
+    public void testGetVmInfo() throws DescriptorParsingException, StatementExecutionException {
         Storage storage = mock(Storage.class);
-        Query query = mock(Query.class);
-        when(storage.createQuery(any(Category.class))).thenReturn(query);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<VmInfo> stmt = (PreparedStatement<VmInfo>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
         VmInfo expected = new VmInfo(vmId, startTime, stopTime, jVersion, jHome, mainClass, commandLine, vmName, vmInfo, vmVersion, vmArgs, props, env, libs, uid, username);
-        Cursor cursor = mock(Cursor.class);
+        @SuppressWarnings("unchecked")
+        Cursor<VmInfo> cursor = (Cursor<VmInfo>) mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(expected).thenReturn(null);
-        when(query.execute()).thenReturn(cursor);
+        when(stmt.executeQuery()).thenReturn(cursor);
 
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
@@ -153,16 +157,27 @@ public class VmInfoDAOTest {
         VmInfoDAO dao = new VmInfoDAOImpl(storage);
         VmInfo info = dao.getVmInfo(vmRef);
         assertEquals(expected, info);
+        
+        verify(storage).prepareStatement(anyDescriptor());
+        verify(stmt).setString(0, "system");
+        verify(stmt).setInt(1, 321);
+        verify(stmt).executeQuery();
+    }
+
+    @SuppressWarnings("unchecked")
+    private StatementDescriptor<VmInfo> anyDescriptor() {
+        return (StatementDescriptor<VmInfo>) any(StatementDescriptor.class);
     }
 
     @Test
-    public void testGetVmInfoUnknownVM() {
-
+    public void testGetVmInfoUnknownVM() throws DescriptorParsingException, StatementExecutionException {
         Storage storage = mock(Storage.class);
-        Query query = mock(Query.class);
-        when(storage.createQuery(any(Category.class))).thenReturn(query);
-        Cursor cursor = mock(Cursor.class);
-        when(query.execute()).thenReturn(cursor);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<VmInfo> stmt = (PreparedStatement<VmInfo>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
+        @SuppressWarnings("unchecked")
+        Cursor<VmInfo> cursor = (Cursor<VmInfo>) mock(Cursor.class);
+        when(stmt.executeQuery()).thenReturn(cursor);
         
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
@@ -179,10 +194,14 @@ public class VmInfoDAOTest {
             assertEquals("Unknown VM: host:system;vm:321", ex.getMessage());
         }
 
+        verify(storage).prepareStatement(anyDescriptor());
+        verify(stmt).setString(0, "system");
+        verify(stmt).setInt(1, 321);
+        verify(stmt).executeQuery();
     }
 
     @Test
-    public void testSingleVM() {
+    public void testSingleVM() throws DescriptorParsingException, StatementExecutionException {
         Storage storage = setupStorageForSingleVM();
         VmInfoDAO dao = new VmInfoDAOImpl(storage);
         HostRef host = new HostRef("123", "fluffhost");
@@ -192,26 +211,27 @@ public class VmInfoDAOTest {
         assertCollection(vms, new VmRef(host, 123, "mainClass1"));
     }
 
-    private Storage setupStorageForSingleVM() {
+    private Storage setupStorageForSingleVM() throws DescriptorParsingException, StatementExecutionException {
 
       VmInfo vm1 = new VmInfo();
       vm1.setVmPid(123);
       vm1.setMainClass("mainClass1");
 
       @SuppressWarnings("unchecked")
-      Cursor<VmInfo> singleVMCursor = mock(Cursor.class);
+      Cursor<VmInfo> singleVMCursor = (Cursor<VmInfo>) mock(Cursor.class);
       when(singleVMCursor.hasNext()).thenReturn(true).thenReturn(false);
       when(singleVMCursor.next()).thenReturn(vm1);
 
       Storage storage = mock(Storage.class);
-      Query query = mock(Query.class);
-      when(storage.createQuery(any(Category.class))).thenReturn(query);
-      when(query.execute()).thenReturn(singleVMCursor);
+      @SuppressWarnings("unchecked")
+      PreparedStatement<VmInfo> stmt = (PreparedStatement<VmInfo>) mock(PreparedStatement.class);
+      when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
+      when(stmt.executeQuery()).thenReturn(singleVMCursor);
       return storage;
   }
 
     @Test
-    public void testMultiVMs() {
+    public void testMultiVMs() throws DescriptorParsingException, StatementExecutionException {
         Storage storage = setupStorageForMultiVM();
         VmInfoDAO dao = new VmInfoDAOImpl(storage);
 
@@ -222,8 +242,7 @@ public class VmInfoDAOTest {
         assertCollection(vms, new VmRef(host, 123, "mainClass1"), new VmRef(host, 456, "mainClass2"));
     }
 
-    private Storage setupStorageForMultiVM() {
-
+    private Storage setupStorageForMultiVM() throws DescriptorParsingException, StatementExecutionException {
       VmInfo vm1 = new VmInfo();
       vm1.setVmPid(123);
       vm1.setMainClass("mainClass1");
@@ -238,9 +257,10 @@ public class VmInfoDAOTest {
       when(multiVMsCursor.next()).thenReturn(vm1).thenReturn(vm2);
 
       Storage storage = mock(Storage.class);
-      Query query = mock(Query.class);
-      when(storage.createQuery(any(Category.class))).thenReturn(query);
-      when(query.execute()).thenReturn(multiVMsCursor);
+      @SuppressWarnings("unchecked")
+      PreparedStatement<VmInfo> stmt = (PreparedStatement<VmInfo>) mock(PreparedStatement.class);
+      when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
+      when(stmt.executeQuery()).thenReturn(multiVMsCursor);
       return storage;
   }
 

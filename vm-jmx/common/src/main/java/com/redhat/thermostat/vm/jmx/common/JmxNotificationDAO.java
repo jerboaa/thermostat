@@ -42,7 +42,7 @@ import com.redhat.thermostat.storage.core.VmRef;
 
 public interface JmxNotificationDAO {
 
-    void addNotifcationStatus(JmxNotificationStatus notificationsStatus);
+    void addNotificationStatus(JmxNotificationStatus notificationsStatus);
 
     JmxNotificationStatus getLatestNotificationStatus(VmRef statusFor);
 

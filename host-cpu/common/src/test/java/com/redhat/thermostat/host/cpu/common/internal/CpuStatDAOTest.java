@@ -40,7 +40,6 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -58,12 +57,13 @@ import com.redhat.thermostat.host.cpu.common.model.CpuStat;
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.PreparedStatement;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class CpuStatDAOTest {
 
@@ -79,12 +79,13 @@ public class CpuStatDAOTest {
     }
 
     @Test
-    public void testGetLatestCpuStats() {
+    public void testGetLatestCpuStats() throws DescriptorParsingException, StatementExecutionException {
 
         @SuppressWarnings("unchecked")
-        Cursor<CpuStat> cursor = mock(Cursor.class);
+        Cursor<CpuStat> cursor = (Cursor<CpuStat>) mock(Cursor.class);
         Storage storage = mock(Storage.class);
-        Query query = mock(Query.class);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<CpuStat> stmt = (PreparedStatement<CpuStat>) mock(PreparedStatement.class);
         HostRef hostRef = mock(HostRef.class);
         CpuStatDAO dao = new CpuStatDAOImpl(storage);
 
@@ -94,17 +95,17 @@ public class CpuStatDAOTest {
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(cpuStat);
 
-        when(storage.createQuery(any(Category.class))).thenReturn(query);
-        when(query.execute()).thenReturn(cursor);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(cursor);
         when(hostRef.getAgentId()).thenReturn("system");
 
         List<CpuStat> cpuStats = dao.getLatestCpuStats(hostRef, Long.MIN_VALUE);
 
-        Expression expr = createWhereExpression();
-        verify(query).where(eq(expr));
-        verify(query).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
-        verify(query).execute();
-        verifyNoMoreInteractions(query);
+        verify(storage).prepareStatement(anyDescriptor());
+        verify(stmt).setString(0, "system");
+        verify(stmt).setLong(1, Long.MIN_VALUE);
+        verify(stmt).executeQuery();
+        verifyNoMoreInteractions(stmt);
 
         assertEquals(1, cpuStats.size());
         CpuStat stat = cpuStats.get(0);
@@ -113,19 +114,18 @@ public class CpuStatDAOTest {
 
     }
 
-    private Expression createWhereExpression() {
-        ExpressionFactory factory = new ExpressionFactory();
-        return factory.and(factory.equalTo(Key.AGENT_ID, "system"),
-                factory.greaterThan(Key.TIMESTAMP, Long.MIN_VALUE));
+    @SuppressWarnings("unchecked")
+    private StatementDescriptor<CpuStat> anyDescriptor() {
+        return (StatementDescriptor<CpuStat>) any(StatementDescriptor.class);
     }
 
     @Test
-    public void testGetLatestCpuStatsTwice() {
-
+    public void testGetLatestCpuStatsTwice() throws DescriptorParsingException, StatementExecutionException {
         @SuppressWarnings("unchecked")
-        Cursor<CpuStat> cursor = mock(Cursor.class);
+        Cursor<CpuStat> cursor = (Cursor<CpuStat>) mock(Cursor.class);
         Storage storage = mock(Storage.class);
-        Query query = mock(Query.class);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<CpuStat> stmt = (PreparedStatement<CpuStat>) mock(PreparedStatement.class);
         HostRef hostRef = mock(HostRef.class);
 
         CpuStatDAO dao = new CpuStatDAOImpl(storage);
@@ -135,16 +135,18 @@ public class CpuStatDAOTest {
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(cpuStat);
 
-        when(storage.createQuery(CpuStatDAO.cpuStatCategory)).thenReturn(query);
-        when(query.execute()).thenReturn(cursor);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(cursor);
         when(hostRef.getAgentId()).thenReturn("system");
 
         dao.getLatestCpuStats(hostRef, Long.MIN_VALUE);
         dao.getLatestCpuStats(hostRef, Long.MIN_VALUE);
 
-        Expression expr = createWhereExpression();
-        verify(query, times(2)).execute();
-        verify(query, atLeastOnce()).where(eq(expr));
+        verify(storage, atLeastOnce()).prepareStatement(anyDescriptor());
+        verify(stmt, times(2)).setString(0, "system");
+        verify(stmt, times(2)).setLong(1, Long.MIN_VALUE);
+        verify(stmt, times(2)).executeQuery();
+        verifyNoMoreInteractions(stmt);
     }
 
     @Test

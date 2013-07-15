@@ -39,7 +39,6 @@ package com.redhat.thermostat.host.memory.common.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -55,12 +54,13 @@ import com.redhat.thermostat.host.memory.common.model.MemoryStat;
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.PreparedStatement;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class MemoryStatDAOTest {
 
@@ -90,7 +90,7 @@ public class MemoryStatDAOTest {
     }
 
     @Test
-    public void testGetLatestMemoryStats() {
+    public void testGetLatestMemoryStats() throws DescriptorParsingException, StatementExecutionException {
 
         MemoryStat memStat1 = new MemoryStat(TIMESTAMP, TOTAL, FREE, BUFFERS, CACHED, SWAP_TOTAL, SWAP_FREE, COMMIT_LIMIT);
 
@@ -100,9 +100,10 @@ public class MemoryStatDAOTest {
         when(cursor.next()).thenReturn(memStat1);
 
         Storage storage = mock(Storage.class);
-        Query query = mock(Query.class);
-        when(storage.createQuery(any(Category.class))).thenReturn(query);
-        when(query.execute()).thenReturn(cursor);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<MemoryStat> stmt = (PreparedStatement<MemoryStat>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(cursor);
 
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
@@ -110,13 +111,11 @@ public class MemoryStatDAOTest {
         MemoryStatDAO dao = new MemoryStatDAOImpl(storage);
         List<MemoryStat> memoryStats = dao.getLatestMemoryStats(hostRef, Long.MIN_VALUE);
 
-        verify(storage).createQuery(MemoryStatDAO.memoryStatCategory);
-        
-        Expression expr = createWhereExpression();
-        verify(query).where(eq(expr));
-        verify(query).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
-        verify(query).execute();
-        verifyNoMoreInteractions(query);
+        verify(storage).prepareStatement(anyDescriptor());
+        verify(stmt).setString(0, "system");
+        verify(stmt).setLong(1, Long.MIN_VALUE);
+        verify(stmt).executeQuery();
+        verifyNoMoreInteractions(stmt);
 
         assertEquals(1, memoryStats.size());
         MemoryStat stat = memoryStats.get(0);
@@ -129,6 +128,11 @@ public class MemoryStatDAOTest {
         assertEquals(SWAP_TOTAL, stat.getSwapTotal());
         assertEquals(SWAP_FREE, stat.getSwapFree());
         assertEquals(COMMIT_LIMIT, stat.getCommitLimit());
+    }
+
+    @SuppressWarnings("unchecked")
+    private StatementDescriptor<MemoryStat> anyDescriptor() {
+        return (StatementDescriptor<MemoryStat>) any(StatementDescriptor.class);
     }
 
     @Test
@@ -155,10 +159,5 @@ public class MemoryStatDAOTest {
         assertEquals((Long) 5L, count);
     }
     
-    private Expression createWhereExpression() {
-        ExpressionFactory factory = new ExpressionFactory();
-        return factory.and(factory.equalTo(Key.AGENT_ID, "system"),
-                factory.greaterThan(Key.TIMESTAMP, Long.MIN_VALUE));
-    }
 }
 

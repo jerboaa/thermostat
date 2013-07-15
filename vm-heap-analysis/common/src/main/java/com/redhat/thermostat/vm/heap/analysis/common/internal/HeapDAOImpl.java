@@ -46,18 +46,20 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Put;
-import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
 import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
@@ -66,6 +68,13 @@ import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 public class HeapDAOImpl implements HeapDAO {
 
     private static final Logger log = LoggingUtils.getLogger(HeapDAOImpl.class);
+    private static final String QUERY_ALL_HEAPS = "QUERY "
+            + heapInfoCategory.getName() + " WHERE " 
+            + Key.AGENT_ID.getName() + " = ?s AND " 
+            + Key.VM_ID.getName() + " = ?i";
+    private static final String QUERY_HEAP_INFO = "QUERY "
+            + heapInfoCategory.getName() + " WHERE " 
+            + heapIdKey.getName() + " = ?s LIMIT 1";
 
     private final Storage storage;
 
@@ -111,13 +120,24 @@ public class HeapDAOImpl implements HeapDAO {
 
     @Override
     public Collection<HeapInfo> getAllHeapInfo(VmRef vm) {
-        Query<HeapInfo> query = storage.createQuery(heapInfoCategory);
-        ExpressionFactory factory = new ExpressionFactory();
-        Expression expr = factory.and(
-                factory.equalTo(Key.AGENT_ID, vm.getAgent().getAgentId()),
-                factory.equalTo(Key.VM_ID, vm.getId()));
-        query.where(expr);
-        Cursor<HeapInfo> cursor = query.execute();
+        StatementDescriptor<HeapInfo> desc = new StatementDescriptor<>(heapInfoCategory, QUERY_ALL_HEAPS);
+        PreparedStatement<HeapInfo> stmt;
+        Cursor<HeapInfo> cursor;
+        try {
+            stmt = storage.prepareStatement(desc);
+            stmt.setString(0, vm.getAgent().getAgentId());
+            stmt.setInt(1, vm.getId());
+            cursor = stmt.executeQuery();
+        } catch (DescriptorParsingException e) {
+            // should not happen, but if it *does* happen, at least log it
+            log.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
+            return Collections.emptyList();
+        } catch (StatementExecutionException e) {
+            // should not happen, but if it *does* happen, at least log it
+            log.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
+            return Collections.emptyList();
+        }
+        
         Collection<HeapInfo> heapInfos = new ArrayList<>();
         while (cursor.hasNext()) {
             heapInfos.add(cursor.next());
@@ -144,14 +164,13 @@ public class HeapDAOImpl implements HeapDAO {
 
     @Override
     public HeapInfo getHeapInfo(String heapId) {
-        Query<HeapInfo> query = storage.createQuery(heapInfoCategory);
-        ExpressionFactory factory = new ExpressionFactory();
-        Expression expr = factory.equalTo(heapIdKey, heapId);
-        query.where(expr);
-        query.limit(1);
-        HeapInfo found = null;
+        StatementDescriptor<HeapInfo> desc = new StatementDescriptor<>(heapInfoCategory, QUERY_HEAP_INFO);
+        PreparedStatement<HeapInfo> stmt; 
+        Cursor<HeapInfo> cursor;
         try {
-            found = query.execute().next();
+            stmt = storage.prepareStatement(desc);
+            stmt.setString(0, heapId);
+            cursor = stmt.executeQuery();
         } catch (IllegalArgumentException iae) {
             /*
              * if the heap id is not found, we get a nice
@@ -159,10 +178,25 @@ public class HeapDAOImpl implements HeapDAO {
              * exception is caused by that before propagating it.
              */
             if (!iae.getMessage().contains("invalid ObjectId")) {
+                // FIXME Is this needed?
                 throw iae;
             }
+            return null;
+        } catch (DescriptorParsingException e) {
+            // should not happen, but if it *does* happen, at least log it
+            log.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
+            return null;
+        } catch (StatementExecutionException e) {
+            // should not happen, but if it *does* happen, at least log it
+            log.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
+            return null;
         }
-        return found;
+        
+        HeapInfo result = null;
+        if (cursor.hasNext()) {
+            result = cursor.next();
+        }
+        return result;
     }
 
     @Override

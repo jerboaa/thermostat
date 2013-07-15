@@ -37,18 +37,22 @@
 package com.redhat.thermostat.vm.jmx.common.internal;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Query.SortDirection;
+import com.redhat.thermostat.storage.core.PreparedStatement;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.vm.jmx.common.JmxNotification;
 import com.redhat.thermostat.vm.jmx.common.JmxNotificationDAO;
 import com.redhat.thermostat.vm.jmx.common.JmxNotificationStatus;
@@ -56,6 +60,7 @@ import com.redhat.thermostat.vm.jmx.common.JmxNotificationStatus;
 public class JmxNotificationDAOImpl implements JmxNotificationDAO {
 
     private static final Key<Boolean> NOTIFICATIONS_ENABLED = new Key<>("notififcationsEnabled", false);
+    private static final Logger logger = LoggingUtils.getLogger(JmxNotificationDAOImpl.class);
 
     static final Category<JmxNotificationStatus> NOTIFICATION_STATUS =
             new Category<>("vm-jmx-notification-status", JmxNotificationStatus.class,
@@ -73,6 +78,17 @@ public class JmxNotificationDAOImpl implements JmxNotificationDAO {
                     Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP,
                     SOURCE_BACKEND, SOURCE_DESCRPTION, CONTENTS);
 
+    private static final String QUERY_LATEST_NOTIFICATION_STATUS = "QUERY "
+            + NOTIFICATION_STATUS.getName() + " WHERE "
+            + Key.AGENT_ID.getName() + " = ?s AND " 
+            + Key.VM_ID.getName() + " = ?i SORT " 
+            + Key.TIMESTAMP.getName() + " DSC LIMIT 1";
+    private static final String QUERY_NOTIFICATIONS = "QUERY "
+            + NOTIFICATIONS.getName() + " WHERE " 
+            + Key.AGENT_ID.getName() + " = ?s AND " 
+            + Key.VM_ID.getName() + " = ?i AND "
+            + Key.TIMESTAMP.getName() + " > ?l";
+    
     private Storage storage;
 
     public JmxNotificationDAOImpl(Storage storage) {
@@ -82,7 +98,7 @@ public class JmxNotificationDAOImpl implements JmxNotificationDAO {
     }
 
     @Override
-    public void addNotifcationStatus(JmxNotificationStatus status) {
+    public void addNotificationStatus(JmxNotificationStatus status) {
         Add add = storage.createAdd(NOTIFICATION_STATUS);
         add.setPojo(status);
         add.apply();
@@ -90,21 +106,31 @@ public class JmxNotificationDAOImpl implements JmxNotificationDAO {
 
     @Override
     public JmxNotificationStatus getLatestNotificationStatus(VmRef statusFor) {
-        Query<JmxNotificationStatus> query = storage.createQuery(NOTIFICATION_STATUS);
+        StatementDescriptor<JmxNotificationStatus> desc = new StatementDescriptor<>(NOTIFICATION_STATUS, 
+                QUERY_LATEST_NOTIFICATION_STATUS);
+        PreparedStatement<JmxNotificationStatus> stmt;
+        Cursor<JmxNotificationStatus> cursor;
+        try {
+            stmt = storage.prepareStatement(desc);
+            stmt.setString(0, statusFor.getAgent().getAgentId());
+            stmt.setInt(1, statusFor.getId());
+            cursor = stmt.executeQuery();
+        } catch (DescriptorParsingException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
+            return null;
+        } catch (StatementExecutionException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
+            return null;
+        }
         
-        ExpressionFactory factory = new ExpressionFactory();
-        Expression expr = factory.and(factory.equalTo(Key.AGENT_ID, statusFor
-                .getAgent().getAgentId()), factory.equalTo(Key.VM_ID,
-                statusFor.getId()));
-        query.where(expr);
-
-        query.sort(Key.TIMESTAMP, SortDirection.DESCENDING);
-        Cursor<JmxNotificationStatus> results = query.execute();
-        if (results.hasNext()) {
-            return results.next();
+        JmxNotificationStatus result = null;
+        if (cursor.hasNext()) {
+            result = cursor.next();
         }
 
-        return null;
+        return result;
     }
 
     @Override
@@ -116,16 +142,26 @@ public class JmxNotificationDAOImpl implements JmxNotificationDAO {
 
     @Override
     public List<JmxNotification> getNotifications(VmRef notificationsFor, long timeStampSince) {
-        Query<JmxNotification> query = storage.createQuery(NOTIFICATIONS);
-        ExpressionFactory factory = new ExpressionFactory();
-        Expression expr = factory.and(factory.equalTo(Key.AGENT_ID,
-                notificationsFor.getAgent().getAgentId()), factory.and(
-                factory.equalTo(Key.VM_ID, notificationsFor.getId()),
-                factory.greaterThan(Key.TIMESTAMP, timeStampSince)));
-        query.where(expr);
+        StatementDescriptor<JmxNotification> desc = new StatementDescriptor<>(NOTIFICATIONS, QUERY_NOTIFICATIONS);
+        PreparedStatement<JmxNotification> stmt;
+        Cursor<JmxNotification> cursor;
+        try {
+            stmt = storage.prepareStatement(desc);
+            stmt.setString(0, notificationsFor.getAgent().getAgentId());
+            stmt.setInt(1, notificationsFor.getId());
+            stmt.setLong(2, timeStampSince);
+            cursor = stmt.executeQuery();
+        } catch (DescriptorParsingException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
+            return Collections.emptyList();
+        } catch (StatementExecutionException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
+            return Collections.emptyList();
+        }
 
         List<JmxNotification> results = new ArrayList<>();
-        Cursor<JmxNotification> cursor = query.execute();
         while (cursor.hasNext()) {
             results.add(cursor.next());
         }
