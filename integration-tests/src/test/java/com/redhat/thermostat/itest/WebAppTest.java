@@ -53,8 +53,11 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.util.component.LifeCycle;
+import org.eclipse.jetty.util.component.LifeCycle.Listener;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -151,11 +154,14 @@ public class WebAppTest extends IntegrationTest {
     }
 
     private static void startServer(int port) throws Exception {
+        final CountDownLatch contextStartedLatch = new CountDownLatch(1);
         server = new Server(port);
         ApplicationInfo appInfo = new ApplicationInfo();
         String version = appInfo.getMavenVersion();
         String warfile = "target/libs/thermostat-web-war-" + version + ".war";
         WebAppContext ctx = new WebAppContext(warfile, "/thermostat");
+        WebAppContextListener listener = new WebAppContextListener(contextStartedLatch);
+        ctx.addLifeCycleListener(listener);
         /* The web archive has a jetty-web.xml config file which sets up the
          * JAAS config. If done in code, this would look like this:
          *
@@ -172,6 +178,11 @@ public class WebAppTest extends IntegrationTest {
          */
         server.setHandler(ctx);
         server.start();
+        // wait for context to start
+        contextStartedLatch.await();
+        if (listener.failed) {
+            throw new IllegalStateException(listener.cause);
+        }
     }
 
     private static void connectStorage(String username, String password) {
@@ -610,5 +621,43 @@ public class WebAppTest extends IntegrationTest {
             i = loadStream.read();
         }
         assertEquals("Hello World", str.toString());
+    }
+    
+    private static class WebAppContextListener implements Listener {
+
+        private Throwable cause;
+        private boolean failed = false;
+        private final CountDownLatch contextStartedLatch;
+        private WebAppContextListener(CountDownLatch latch) {
+            this.contextStartedLatch = latch;
+        }
+        
+        @Override
+        public void lifeCycleStarting(LifeCycle event) {
+            // nothing
+        }
+
+        @Override
+        public void lifeCycleStarted(LifeCycle event) {
+            contextStartedLatch.countDown();
+        }
+
+        @Override
+        public void lifeCycleFailure(LifeCycle event, Throwable cause) {
+            this.failed = true;
+            this.cause = cause;
+            contextStartedLatch.countDown();
+        }
+
+        @Override
+        public void lifeCycleStopping(LifeCycle event) {
+            // nothing
+        }
+
+        @Override
+        public void lifeCycleStopped(LifeCycle event) {
+            // nothing
+        }
+            
     }
 }
