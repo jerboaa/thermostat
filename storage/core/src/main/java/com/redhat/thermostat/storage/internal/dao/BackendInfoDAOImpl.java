@@ -62,9 +62,9 @@ import com.redhat.thermostat.storage.query.ExpressionFactory;
 public class BackendInfoDAOImpl implements BackendInfoDAO {
     
     private static final Logger logger = LoggingUtils.getLogger(BackendInfoDAOImpl.class);
-    private static final String QUERY_BACKEND_INFO = "QUERY "
-            + CATEGORY.getName() + " WHERE " 
-            + Key.AGENT_ID.getName() + " = ?s";
+    static final String QUERY_BACKEND_INFO = "QUERY "
+            + CATEGORY.getName() + " WHERE '" 
+            + Key.AGENT_ID.getName() + "' = ?s";
 
     private final Storage storage;
     private final ExpressionFactory factory;

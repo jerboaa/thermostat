@@ -56,11 +56,11 @@ public class VmLatestPojoListGetter<T extends TimeStampedPojo> {
     public VmLatestPojoListGetter(Storage storage, Category<T> cat) {
         this.storage = storage;
         this.cat = cat;
-        this.queryLatest = "QUERY " + cat.getName() + " WHERE "
-                + Key.AGENT_ID.getName() + " = ?s AND "
-                + Key.VM_ID.getName() + " = ?i AND " 
-                + Key.TIMESTAMP.getName() + " > ?l SORT "
-                + Key.TIMESTAMP.getName() + " DSC";
+        this.queryLatest = "QUERY " + cat.getName() + " WHERE '"
+                + Key.AGENT_ID.getName() + "' = ?s AND '"
+                + Key.VM_ID.getName() + "' = ?i AND '" 
+                + Key.TIMESTAMP.getName() + "' > ?l SORT '"
+                + Key.TIMESTAMP.getName() + "' DSC";
     }
 
     public List<T> getLatest(VmRef vmRef, long since) {
@@ -102,6 +102,11 @@ public class VmLatestPojoListGetter<T extends TimeStampedPojo> {
             logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
         }
         return stmt;
+    }
+    
+    // package private for tests
+    String getQueryLatestDesc() {
+        return queryLatest;
     }
 
 }

@@ -58,9 +58,9 @@ import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
 public class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
 
     private static final Logger logger = LoggingUtils.getLogger(NetworkInterfaceInfoDAOImpl.class);
-    private static final String QUERY_NETWORK_INFO = "QUERY "
-            + networkInfoCategory.getName() + " WHERE "
-            + Key.AGENT_ID.getName() + " = ?s";
+    static final String QUERY_NETWORK_INFO = "QUERY "
+            + networkInfoCategory.getName() + " WHERE '"
+            + Key.AGENT_ID.getName() + "' = ?s";
 
     private Storage storage;
 

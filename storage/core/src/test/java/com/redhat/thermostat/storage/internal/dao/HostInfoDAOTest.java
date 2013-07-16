@@ -88,6 +88,14 @@ public class HostInfoDAOTest {
     private static final long MEMORY_TOTAL = 0xCAFEBABEl;
 
     @Test
+    public void preparedQueryDescriptorsAreSane() {
+        String expectedHostInfo = "QUERY host-info WHERE 'agentId' = ?s LIMIT 1";
+        assertEquals(expectedHostInfo, HostInfoDAOImpl.QUERY_HOST_INFO);
+        String expectedAllHosts = "QUERY host-info";
+        assertEquals(expectedAllHosts, HostInfoDAOImpl.QUERY_ALL_HOSTS);
+    }
+    
+    @Test
     public void testCategory() {
         assertEquals("host-info", HostInfoDAO.hostInfoCategory.getName());
         Collection<Key<?>> keys = HostInfoDAO.hostInfoCategory.getKeys();

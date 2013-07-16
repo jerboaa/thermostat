@@ -111,6 +111,12 @@ public class VmMemoryStatDAOTest {
         cursor = null;
         storage = null;
     }
+    
+    @Test
+    public void preparedQueryDescriptorsAreSane() {
+        String expectedQueryThreadCaps = "QUERY vm-memory-stats WHERE 'agentId' = ?s AND 'vmId' = ?i SORT 'timeStamp' DSC LIMIT 1";
+        assertEquals(expectedQueryThreadCaps, VmMemoryStatDAOImpl.QUERY_LATEST);
+    }
 
     @Test
     public void testCategories() {

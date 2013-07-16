@@ -183,6 +183,14 @@ public class HeapDAOTest {
         storage = null;
         add = null;
     }
+    
+    @Test
+    public void preparedQueryDescriptorsAreSane() {
+        String expectedQueryHeapInfo = "QUERY vm-heap-info WHERE 'heapId' = ?s LIMIT 1";
+        assertEquals(expectedQueryHeapInfo, HeapDAOImpl.QUERY_HEAP_INFO);
+        String expectedQueryAllHeaps = "QUERY vm-heap-info WHERE 'agentId' = ?s AND 'vmId' = ?i";
+        assertEquals(expectedQueryAllHeaps, HeapDAOImpl.QUERY_ALL_HEAPS);
+    }
 
     @Test
     public void testCategory() {

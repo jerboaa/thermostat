@@ -80,6 +80,12 @@ public class NetworkInterfaceInfoDAOTest {
         assertTrue(keys.contains(new Key<String>("ip6Addr", false)));
         assertEquals(4, keys.size());
     }
+    
+    @Test
+    public void preparedQueryDescriptorsAreSane() {
+        String expectedNetworkInfo = "QUERY network-info WHERE 'agentId' = ?s";
+        assertEquals(expectedNetworkInfo, NetworkInterfaceInfoDAOImpl.QUERY_NETWORK_INFO);
+    }
 
     @Test
     public void testGetNetworkInterfaces() throws DescriptorParsingException, StatementExecutionException {

@@ -108,6 +108,14 @@ public class VmInfoDAOTest {
         uid = 2000;
         username = "myUser";
     }
+    
+    @Test
+    public void preparedQueryDescriptorsAreSane() {
+        String expectedVmInfo = "QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?i LIMIT 1";
+        assertEquals(expectedVmInfo, VmInfoDAOImpl.QUERY_VM_INFO);
+        String expectedVmInfoAll = "QUERY vm-info WHERE 'agentId' = ?s";
+        assertEquals(expectedVmInfoAll, VmInfoDAOImpl.QUERY_ALL_VMS);
+    }
 
     @Test
     public void testCategory() {

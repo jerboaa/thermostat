@@ -57,11 +57,11 @@ import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;
 class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
 
     private static final Logger logger = LoggingUtils.getLogger(VmMemoryStatDAOImpl.class);
-    private static final String QUERY_LATEST = "QUERY "
-            + vmMemoryStatsCategory.getName() + " WHERE "
-            + Key.AGENT_ID.getName() + " = ?s AND " 
-            + Key.VM_ID.getName() + " = ?i SORT " 
-            + Key.TIMESTAMP.getName() + " DSC LIMIT 1";
+    static final String QUERY_LATEST = "QUERY "
+            + vmMemoryStatsCategory.getName() + " WHERE '"
+            + Key.AGENT_ID.getName() + "' = ?s AND '" 
+            + Key.VM_ID.getName() + "' = ?i SORT '" 
+            + Key.TIMESTAMP.getName() + "' DSC LIMIT 1";
     
     private final Storage storage;
     private final VmLatestPojoListGetter<VmMemoryStat> getter;

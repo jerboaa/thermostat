@@ -94,6 +94,16 @@ public class AgentInfoDAOTest {
     }
 
     @Test
+    public void preparedQueryDescriptorsAreSane() {
+        String expectedAgentInfo = "QUERY agent-config WHERE 'agentId' = ?s";
+        assertEquals(expectedAgentInfo, AgentInfoDAOImpl.QUERY_AGENT_INFO);
+        String expectedAllAgents = "QUERY agent-config";
+        assertEquals(expectedAllAgents, AgentInfoDAOImpl.QUERY_ALL_AGENTS);
+        String expectedAliveAgents = "QUERY agent-config WHERE 'alive' = ?b";
+        assertEquals(expectedAliveAgents, AgentInfoDAOImpl.QUERY_ALIVE_AGENTS);
+    }
+    
+    @Test
     public void verifyCategoryName() {
         Category<AgentInformation> category = AgentInfoDAO.CATEGORY;
         assertEquals("agent-config", category.getName());

@@ -61,10 +61,10 @@ import com.redhat.thermostat.storage.model.HostInfo;
 public class HostInfoDAOImpl implements HostInfoDAO {
     
     private static final Logger logger = LoggingUtils.getLogger(HostInfoDAOImpl.class);
-    private static final String QUERY_HOST_INFO = "QUERY "
-            + hostInfoCategory.getName() + " WHERE " 
-            + Key.AGENT_ID.getName() + " = ?s LIMIT 1";
-    private static final String QUERY_ALL_HOSTS = "QUERY " + hostInfoCategory.getName();
+    static final String QUERY_HOST_INFO = "QUERY "
+            + hostInfoCategory.getName() + " WHERE '" 
+            + Key.AGENT_ID.getName() + "' = ?s LIMIT 1";
+    static final String QUERY_ALL_HOSTS = "QUERY " + hostInfoCategory.getName();
 
     private final Storage storage;
     private final AgentInfoDAO agentInfoDao;

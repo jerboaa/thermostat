@@ -98,6 +98,12 @@ public class BackendInfoDAOTest {
         
         factory = new ExpressionFactory();
     }
+    
+    @Test
+    public void preparedQueryDescriptorsAreSane() {
+        String expectedBackendInfo = "QUERY backend-info WHERE 'agentId' = ?s";
+        assertEquals(expectedBackendInfo, BackendInfoDAOImpl.QUERY_BACKEND_INFO);
+    }
 
     @Test
     public void verifyCategoryName() {

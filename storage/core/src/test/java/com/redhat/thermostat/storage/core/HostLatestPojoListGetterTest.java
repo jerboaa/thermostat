@@ -97,6 +97,16 @@ public class HostLatestPojoListGetterTest {
         when(result3.getTimeStamp()).thenReturn(t3);
         when(result3.getData()).thenReturn(d3);
     }
+    
+    @Test
+    public void verifyQueryDescriptorIsSane() {
+        Storage storage = mock(Storage.class);
+        HostLatestPojoListGetter<TestPojo> getter = new HostLatestPojoListGetter<>(storage, cat);
+        String actualDesc = getter.getQueryLatestDesc();
+        String expected = "QUERY hostcategory WHERE 'agentId' = ?s AND " +
+         "'timeStamp' > ?l SORT 'timeStamp' DSC";
+        assertEquals(expected, actualDesc);
+    }
 
     @Test
     public void testBuildQuery() throws DescriptorParsingException {

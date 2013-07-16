@@ -88,6 +88,16 @@ public class VmLatestPojoListGetterTest {
         when(result3.getTimeStamp()).thenReturn(t3);
         when(result3.getData()).thenReturn(lc3);
     }
+    
+    @Test
+    public void verifyQueryDescriptorIsSane() {
+        Storage storage = mock(Storage.class);
+        VmLatestPojoListGetter<TestPojo> getter = new VmLatestPojoListGetter<>(storage, cat);
+        String actualDesc = getter.getQueryLatestDesc();
+        String expected = "QUERY vmcategory WHERE 'agentId' = ?s AND " +
+         "'vmId' = ?i AND 'timeStamp' > ?l SORT 'timeStamp' DSC";
+        assertEquals(expected, actualDesc);
+    }
 
     @Test
     public void testBuildQuery() throws DescriptorParsingException {

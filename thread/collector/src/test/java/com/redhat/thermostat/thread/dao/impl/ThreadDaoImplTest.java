@@ -70,6 +70,22 @@ import com.redhat.thermostat.thread.model.VmDeadLockData;
 public class ThreadDaoImplTest {
 
     @Test
+    public void preparedQueryDescriptorsAreSane() {
+        String expectedQueryThreadCaps = "QUERY vm-thread-capabilities WHERE 'agentId' = ?s AND 'vmId' = ?i LIMIT 1";
+        assertEquals(expectedQueryThreadCaps, ThreadDaoImpl.QUERY_THREAD_CAPS);
+        String expectedQueryLatestSummary = "QUERY vm-thread-summary WHERE 'agentId' = ?s AND 'vmId' = ?i SORT 'timeStamp' DSC LIMIT 1";
+        assertEquals(expectedQueryLatestSummary, ThreadDaoImpl.QUERY_LATEST_SUMMARY);
+        String expectedQuerySummarySince = "QUERY vm-thread-summary WHERE 'agentId' = ?s AND 'vmId' = ?i AND 'timeStamp' > ?l SORT 'timeStamp' DSC";
+        assertEquals(expectedQuerySummarySince, ThreadDaoImpl.QUERY_SUMMARY_SINCE);
+        String expectedQueryLatestHarvestingStatus = "QUERY vm-thread-harvesting WHERE 'agentId' = ?s AND 'vmId' = ?i SORT 'timeStamp' DSC LIMIT 1";
+        assertEquals(expectedQueryLatestHarvestingStatus, ThreadDaoImpl.QUERY_LATEST_HARVESTING_STATUS);
+        String expectedQueryThreadInfo = "QUERY vm-thread-info WHERE 'agentId' = ?s AND 'vmId' = ?i AND 'timeStamp' > ?l SORT 'timeStamp' DSC";
+        assertEquals(expectedQueryThreadInfo, ThreadDaoImpl.QUERY_THREAD_INFO);
+        String expectedQueryThreadLatestDeadlockInfo = "QUERY vm-deadlock-data WHERE 'agentId' = ?s AND 'vmId' = ?i SORT 'timeStamp' DSC LIMIT 1";
+        assertEquals(expectedQueryThreadLatestDeadlockInfo, ThreadDaoImpl.QUERY_LATEST_DEADLOCK_INFO);
+    }
+    
+    @Test
     public void testThreadDaoCategoryRegistration() {
         Storage storage = mock(Storage.class);
         

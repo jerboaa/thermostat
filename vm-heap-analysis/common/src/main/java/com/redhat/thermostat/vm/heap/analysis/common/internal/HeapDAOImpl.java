@@ -68,13 +68,13 @@ import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 public class HeapDAOImpl implements HeapDAO {
 
     private static final Logger log = LoggingUtils.getLogger(HeapDAOImpl.class);
-    private static final String QUERY_ALL_HEAPS = "QUERY "
-            + heapInfoCategory.getName() + " WHERE " 
-            + Key.AGENT_ID.getName() + " = ?s AND " 
-            + Key.VM_ID.getName() + " = ?i";
-    private static final String QUERY_HEAP_INFO = "QUERY "
-            + heapInfoCategory.getName() + " WHERE " 
-            + heapIdKey.getName() + " = ?s LIMIT 1";
+    static final String QUERY_ALL_HEAPS = "QUERY "
+            + heapInfoCategory.getName() + " WHERE '" 
+            + Key.AGENT_ID.getName() + "' = ?s AND '" 
+            + Key.VM_ID.getName() + "' = ?i";
+    static final String QUERY_HEAP_INFO = "QUERY "
+            + heapInfoCategory.getName() + " WHERE '" 
+            + heapIdKey.getName() + "' = ?s LIMIT 1";
 
     private final Storage storage;
 

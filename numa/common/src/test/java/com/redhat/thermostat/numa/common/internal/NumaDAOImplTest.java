@@ -55,7 +55,6 @@ import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
@@ -76,6 +75,12 @@ public class NumaDAOImplTest {
     public void tearDown() {
         numaDAO = null;
         storage = null;
+    }
+    
+    @Test
+    public void preparedQueryDescriptorsAreSane() {
+        String expectedQueryNumaInfo = "QUERY numa-host-info WHERE 'agentId' = ?s LIMIT 1";
+        assertEquals(expectedQueryNumaInfo, NumaDAOImpl.QUERY_NUMA_INFO);
     }
 
     @Test

@@ -78,16 +78,16 @@ public class JmxNotificationDAOImpl implements JmxNotificationDAO {
                     Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP,
                     SOURCE_BACKEND, SOURCE_DESCRPTION, CONTENTS);
 
-    private static final String QUERY_LATEST_NOTIFICATION_STATUS = "QUERY "
-            + NOTIFICATION_STATUS.getName() + " WHERE "
-            + Key.AGENT_ID.getName() + " = ?s AND " 
-            + Key.VM_ID.getName() + " = ?i SORT " 
-            + Key.TIMESTAMP.getName() + " DSC LIMIT 1";
-    private static final String QUERY_NOTIFICATIONS = "QUERY "
-            + NOTIFICATIONS.getName() + " WHERE " 
-            + Key.AGENT_ID.getName() + " = ?s AND " 
-            + Key.VM_ID.getName() + " = ?i AND "
-            + Key.TIMESTAMP.getName() + " > ?l";
+    static final String QUERY_LATEST_NOTIFICATION_STATUS = "QUERY "
+            + NOTIFICATION_STATUS.getName() + " WHERE '"
+            + Key.AGENT_ID.getName() + "' = ?s AND '" 
+            + Key.VM_ID.getName() + "' = ?i SORT '" 
+            + Key.TIMESTAMP.getName() + "' DSC LIMIT 1";
+    static final String QUERY_NOTIFICATIONS = "QUERY "
+            + NOTIFICATIONS.getName() + " WHERE '" 
+            + Key.AGENT_ID.getName() + "' = ?s AND '" 
+            + Key.VM_ID.getName() + "' = ?i AND '"
+            + Key.TIMESTAMP.getName() + "' > ?l";
     
     private Storage storage;
 

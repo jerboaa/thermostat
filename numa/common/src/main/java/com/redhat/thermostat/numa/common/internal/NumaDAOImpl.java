@@ -59,9 +59,9 @@ import com.redhat.thermostat.storage.core.Storage;
 public class NumaDAOImpl implements NumaDAO {
 
     private static final Logger logger = LoggingUtils.getLogger(NumaDAOImpl.class);
-    private static final String QUERY_NUMA_INFO = "QUERY "
-            + numaHostCategory.getName() + " WHERE " 
-            + Key.AGENT_ID.getName() + " = ?s LIMIT 1";
+    static final String QUERY_NUMA_INFO = "QUERY "
+            + numaHostCategory.getName() + " WHERE '" 
+            + Key.AGENT_ID.getName() + "' = ?s LIMIT 1";
     
     private final Storage storage;
     private final HostLatestPojoListGetter<NumaStat> getter;

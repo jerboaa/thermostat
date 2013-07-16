@@ -56,10 +56,10 @@ public class HostLatestPojoListGetter<T extends TimeStampedPojo> {
     public HostLatestPojoListGetter(Storage storage, Category<T> cat) {
         this.storage = storage;
         this.cat = cat;
-        this.queryLatest = "QUERY " + cat.getName() + " WHERE "
-                + Key.AGENT_ID.getName() + " = ?s AND "
-                + Key.TIMESTAMP.getName() + " > ?l SORT "
-                + Key.TIMESTAMP.getName() + " DSC";
+        this.queryLatest = "QUERY " + cat.getName() + " WHERE '"
+                + Key.AGENT_ID.getName() + "' = ?s AND '"
+                + Key.TIMESTAMP.getName() + "' > ?l SORT '"
+                + Key.TIMESTAMP.getName() + "' DSC";
     }
 
     public List<T> getLatest(HostRef hostRef, long since) {
@@ -99,6 +99,11 @@ public class HostLatestPojoListGetter<T extends TimeStampedPojo> {
             logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
         }
         return stmt;
+    }
+    
+    // package private for testing
+    String getQueryLatestDesc() {
+        return queryLatest;
     }
 }
 

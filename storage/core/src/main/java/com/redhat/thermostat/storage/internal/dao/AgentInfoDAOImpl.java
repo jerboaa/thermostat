@@ -62,14 +62,14 @@ import com.redhat.thermostat.storage.query.ExpressionFactory;
 public class AgentInfoDAOImpl implements AgentInfoDAO {
 
     private static final Logger logger = LoggingUtils.getLogger(AgentInfoDAOImpl.class);
-    private static final String QUERY_AGENT_INFO = "QUERY "
-            + CATEGORY.getName() + " WHERE " 
-            + Key.AGENT_ID.getName() + " = ?s";
-    private static final String QUERY_ALL_AGENTS = "QUERY "
+    static final String QUERY_AGENT_INFO = "QUERY "
+            + CATEGORY.getName() + " WHERE '"
+            + Key.AGENT_ID.getName() + "' = ?s";
+    static final String QUERY_ALL_AGENTS = "QUERY "
             + CATEGORY.getName();
-    private static final String QUERY_ALIVE_AGENTS = "QUERY "
-            + CATEGORY.getName() + " WHERE " 
-            + ALIVE_KEY.getName() + " = ?b";
+    static final String QUERY_ALIVE_AGENTS = "QUERY "
+            + CATEGORY.getName() + " WHERE '" 
+            + ALIVE_KEY.getName() + "' = ?b";
     
     private final Storage storage;
     private final ExpressionFactory factory;

@@ -64,13 +64,13 @@ import com.redhat.thermostat.storage.query.ExpressionFactory;
 public class VmInfoDAOImpl implements VmInfoDAO {
     
     private final Logger logger = LoggingUtils.getLogger(VmInfoDAOImpl.class);
-    private final String QUERY_VM_INFO = "QUERY " 
-            + vmInfoCategory.getName() + " WHERE " 
-            + Key.AGENT_ID.getName() + " = ?s AND "
-            + Key.VM_ID.getName() + " = ?i LIMIT 1";
-    private final String QUERY_ALL_VMS = "QUERY " 
-            + vmInfoCategory.getName() + " WHERE " 
-            + Key.AGENT_ID.getName() + " = ?s";
+    static final String QUERY_VM_INFO = "QUERY " 
+            + vmInfoCategory.getName() + " WHERE '" 
+            + Key.AGENT_ID.getName() + "' = ?s AND '"
+            + Key.VM_ID.getName() + "' = ?i LIMIT 1";
+    static final String QUERY_ALL_VMS = "QUERY " 
+            + vmInfoCategory.getName() + " WHERE '" 
+            + Key.AGENT_ID.getName() + "' = ?s";
     
     private final Storage storage;
     private final ExpressionFactory factory;

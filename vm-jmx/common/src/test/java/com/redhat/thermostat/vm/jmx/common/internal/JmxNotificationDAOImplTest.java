@@ -87,6 +87,14 @@ public class JmxNotificationDAOImplTest {
 
         dao = new JmxNotificationDAOImpl(storage);
     }
+    
+    @Test
+    public void preparedQueryDescriptorsAreSane() {
+        String expectedQueryLatestNotificationStatus = "QUERY vm-jmx-notification-status WHERE 'agentId' = ?s AND 'vmId' = ?i SORT 'timeStamp' DSC LIMIT 1";
+        assertEquals(expectedQueryLatestNotificationStatus, JmxNotificationDAOImpl.QUERY_LATEST_NOTIFICATION_STATUS);
+        String expectedQueryNotifications = "QUERY vm-jmx-notification WHERE 'agentId' = ?s AND 'vmId' = ?i AND 'timeStamp' > ?l";
+        assertEquals(expectedQueryNotifications, JmxNotificationDAOImpl.QUERY_NOTIFICATIONS);
+    }
 
     @Test
     public void verifyAddNotificationStatus() {
