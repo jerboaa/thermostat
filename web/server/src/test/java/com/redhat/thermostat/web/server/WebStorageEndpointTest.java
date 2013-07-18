@@ -56,6 +56,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
@@ -85,20 +86,25 @@ import org.mockito.ArgumentCaptor;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Categories;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.ParsedStatement;
 import com.redhat.thermostat.storage.core.Persist;
+import com.redhat.thermostat.storage.core.PreparedParameter;
+import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Query.SortDirection;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Replace;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.model.BasePojo;
+import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.storage.query.Operator;
@@ -106,9 +112,15 @@ import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
 import com.redhat.thermostat.web.common.ExpressionSerializer;
 import com.redhat.thermostat.web.common.OperatorSerializer;
+import com.redhat.thermostat.web.common.PreparedParameterSerializer;
 import com.redhat.thermostat.web.common.StorageWrapper;
+import com.redhat.thermostat.web.common.ThermostatGSONConverter;
 import com.redhat.thermostat.web.common.WebInsert;
-import com.redhat.thermostat.web.common.WebQuery;
+import com.redhat.thermostat.web.common.WebPreparedStatement;
+import com.redhat.thermostat.web.common.WebPreparedStatementResponse;
+import com.redhat.thermostat.web.common.WebPreparedStatementSerializer;
+import com.redhat.thermostat.web.common.WebQueryResponse;
+import com.redhat.thermostat.web.common.WebQueryResponseSerializer;
 import com.redhat.thermostat.web.common.WebRemove;
 import com.redhat.thermostat.web.common.WebUpdate;
 import com.redhat.thermostat.web.server.auth.Roles;
@@ -217,7 +229,7 @@ public class WebStorageEndpointTest {
         // manually maintained list of path handlers which should include
         // authorization checks
         final String[] authPaths = new String[] {
-                "find-all", "put-pojo", "register-category", "remove-pojo",
+                "prepare-statement", "query-execute", "put-pojo", "register-category", "remove-pojo",
                 "update-pojo", "get-count", "save-file", "load-file",
                 "purge", "ping", "generate-token", "verify-token"
         };
@@ -263,9 +275,10 @@ public class WebStorageEndpointTest {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
-    public void authorizedFindAllPojos() throws Exception {
+    public void authorizedPrepareQuery() throws Exception {
         String[] roleNames = new String[] {
                 Roles.REGISTER_CATEGORY,
+                Roles.PREPARE_STATEMENT,
                 Roles.READ
         };
         String testuser = "testuser";
@@ -286,60 +299,96 @@ public class WebStorageEndpointTest {
         TestClass expected2 = new TestClass();
         expected2.setKey1("fluff2");
         expected2.setKey2(43);
+        // prepare-statement does this under the hood
+        Query<TestClass> mockMongoQuery = mock(Query.class);
+        when(mockStorage.createQuery(eq(category))).thenReturn(mockMongoQuery);
+
         Cursor<TestClass> cursor = mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(expected1).thenReturn(expected2);
+        
+        PreparedStatement mockPreparedQuery = mock(PreparedStatement.class);
+        when(mockStorage.prepareStatement(any(StatementDescriptor.class))).thenReturn(mockPreparedQuery);
+        
+        ParsedStatement mockParsedStatement = mock(ParsedStatement.class);
+        when(mockParsedStatement.getNumParams()).thenReturn(1);
+        when(mockParsedStatement.patchStatement(any(PreparedParameter[].class))).thenReturn(mockMongoQuery);
+        when(mockPreparedQuery.getParsedStatement()).thenReturn(mockParsedStatement);
+        
+        // The web layer
+        when(mockPreparedQuery.executeQuery()).thenReturn(cursor);
+        // And the mongo layer
+        when(mockMongoQuery.execute()).thenReturn(cursor);
 
-        Query mockQuery = mock(Query.class);
-        when(mockStorage.createQuery(any(Category.class))).thenReturn(mockQuery);
-        when(mockQuery.execute()).thenReturn(cursor);
-
+        String strDescriptor = "QUERY " + category.getName() + " WHERE '" + key1.getName() + "' = ?s SORT '" + key1.getName() + "' DSC LIMIT 42";
         String endpoint = getEndpoint();
-        URL url = new URL(endpoint + "/find-all");
+        URL url = new URL(endpoint + "/prepare-statement");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
         sendAuthentication(conn, testuser, password);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
         conn.setDoInput(true);
         conn.setDoOutput(true);
-        Map<Category,Integer> categoryIdMap = new HashMap<>();
-        categoryIdMap.put(category, categoryId);
-        WebQuery query = new WebQuery(categoryId);
-        Expression expr = factory.equalTo(key1, "fluff");
-        query.where(expr);
-        query.sort(key1, SortDirection.DESCENDING);
-        query.limit(42);
         Gson gson = new GsonBuilder()
-                .registerTypeHierarchyAdapter(Expression.class,
-                        new ExpressionSerializer())
-                .registerTypeHierarchyAdapter(Operator.class,
-                        new OperatorSerializer()).create();
+                .registerTypeHierarchyAdapter(WebQueryResponse.class, new WebQueryResponseSerializer<>())
+                .registerTypeAdapter(Pojo.class, new ThermostatGSONConverter())
+                .registerTypeAdapter(WebPreparedStatement.class, new WebPreparedStatementSerializer())
+                .registerTypeAdapter(PreparedParameter.class, new PreparedParameterSerializer()).create();
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-        String body = "query=" + URLEncoder.encode(gson.toJson(query), "UTF-8");
+        String body = "query-descriptor=" + URLEncoder.encode(strDescriptor, "UTF-8") + "&category-id=" + categoryId;
         out.write(body + "\n");
         out.flush();
 
         Reader in = new InputStreamReader(conn.getInputStream());
-        TestClass[] results = gson.fromJson(in, TestClass[].class);
+        WebPreparedStatementResponse response = gson.fromJson(in, WebPreparedStatementResponse.class);
+        assertEquals(1, response.getNumFreeVariables());
+        assertEquals(0, response.getStatementId());
+        assertEquals("application/json; charset=UTF-8", conn.getContentType());
+        
+        
+        
+        // now execute the query we've just prepared
+        WebPreparedStatement<TestClass> stmt = new WebPreparedStatement<>(1, 0);
+        stmt.setString(0, "fluff");
+        
+        url = new URL(endpoint + "/query-execute");
+        HttpURLConnection conn2 = (HttpURLConnection) url.openConnection();
+        conn2.setRequestMethod("POST");
+        sendAuthentication(conn2, testuser, password);
+        conn2.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        conn2.setDoInput(true);
+        conn2.setDoOutput(true);
+        
+        out = new OutputStreamWriter(conn2.getOutputStream());
+        body = "prepared-stmt=" + gson.toJson(stmt, WebPreparedStatement.class);
+        out.write(body + "\n");
+        out.flush();
+
+        in = new InputStreamReader(conn2.getInputStream());
+        Type typeToken = new TypeToken<WebQueryResponse<TestClass>>(){}.getType();
+        WebQueryResponse<TestClass> result = gson.fromJson(in, typeToken);
+        TestClass[] results = result.getResultList();
         assertEquals(2, results.length);
         assertEquals("fluff1", results[0].getKey1());
         assertEquals(42, results[0].getKey2());
         assertEquals("fluff2", results[1].getKey1());
         assertEquals(43, results[1].getKey2());
 
-        assertEquals("application/json; charset=UTF-8", conn.getContentType());
-
-        verify(mockQuery).where(eq(expr));
-        verify(mockQuery).sort(key1, SortDirection.DESCENDING);
-        verify(mockQuery).limit(42);
-        verify(mockQuery).execute();
-        verifyNoMoreInteractions(mockQuery);
+        assertEquals("application/json; charset=UTF-8", conn2.getContentType());
+        verify(mockMongoQuery).execute();
+        verifyNoMoreInteractions(mockMongoQuery);
     }
     
     @Test
-    public void unauthorizedFindAllPojos() throws Exception {
+    public void unauthorizedPrepareStmt() throws Exception {
+        String failMsg = "thermostat-prepare-statement role missing, expected Forbidden!";
+        doUnauthorizedTest("prepare-statement", failMsg);
+    }
+    
+    @Test
+    public void unauthorizedExecutePreparedQuery() throws Exception {
         String failMsg = "thermostat-read role missing, expected Forbidden!";
-        doUnauthorizedTest("find-all", failMsg);
+        doUnauthorizedTest("query-execute", failMsg);
     }
     
     private void doUnauthorizedTest(String pathForEndPoint, String failMessage) throws Exception {

@@ -163,6 +163,12 @@ public class PreparedStatementImplTest {
             called = true;
             return null;
         }
+
+        @Override
+        public Expression getWhereExpression() {
+            // not implemented
+            return null;
+        }
         
     }
 }

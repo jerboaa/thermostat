@@ -59,6 +59,19 @@ import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.internal.statement.BinaryExpressionNode;
+import com.redhat.thermostat.storage.internal.statement.LimitExpression;
+import com.redhat.thermostat.storage.internal.statement.NotBooleanExpressionNode;
+import com.redhat.thermostat.storage.internal.statement.ParsedStatementImpl;
+import com.redhat.thermostat.storage.internal.statement.SortExpression;
+import com.redhat.thermostat.storage.internal.statement.SortMember;
+import com.redhat.thermostat.storage.internal.statement.StatementDescriptorParser;
+import com.redhat.thermostat.storage.internal.statement.SuffixExpression;
+import com.redhat.thermostat.storage.internal.statement.TerminalNode;
+import com.redhat.thermostat.storage.internal.statement.UnfinishedLimitValue;
+import com.redhat.thermostat.storage.internal.statement.UnfinishedSortKey;
+import com.redhat.thermostat.storage.internal.statement.UnfinishedValueNode;
+import com.redhat.thermostat.storage.internal.statement.WhereExpression;
 import com.redhat.thermostat.storage.query.BinaryComparisonOperator;
 import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
 
@@ -87,7 +100,7 @@ public class StatementDescriptorParserTest {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName();
         StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
         parser = new StatementDescriptorParser<>(storage, desc);
-        ParsedStatement<AgentInformation> statement = (ParsedStatement<AgentInformation>)parser.parse();
+        ParsedStatementImpl<AgentInformation> statement = (ParsedStatementImpl<AgentInformation>)parser.parse();
         assertEquals(0, statement.getNumParams());
         assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
         SuffixExpression tree = statement.getSuffixExpression();
@@ -101,7 +114,7 @@ public class StatementDescriptorParserTest {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' != 'b'";
         StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
         parser = new StatementDescriptorParser<>(storage, desc);
-        ParsedStatement<AgentInformation> statement = parser.parse();
+        ParsedStatementImpl<AgentInformation> statement = (ParsedStatementImpl<AgentInformation>)parser.parse();
         assertEquals(0, statement.getNumParams());
         assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
         SuffixExpression tree = statement.getSuffixExpression();
@@ -128,7 +141,7 @@ public class StatementDescriptorParserTest {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " LIMIT ?i";
         StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
         parser = new StatementDescriptorParser<>(storage, desc);
-        ParsedStatement<AgentInformation> statement = (ParsedStatement<AgentInformation>)parser.parse();
+        ParsedStatementImpl<AgentInformation> statement = (ParsedStatementImpl<AgentInformation>)parser.parse();
         assertEquals(1, statement.getNumParams());
         assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
         SuffixExpression expn = statement.getSuffixExpression();
@@ -146,7 +159,7 @@ public class StatementDescriptorParserTest {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " SORT 'a' ASC , 'b' DSC , 'c' ASC";
         StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
         parser = new StatementDescriptorParser<>(storage, desc);
-        ParsedStatement<AgentInformation> statement = (ParsedStatement<AgentInformation>)parser.parse();
+        ParsedStatementImpl<AgentInformation> statement = (ParsedStatementImpl<AgentInformation>)parser.parse();
         assertEquals(0, statement.getNumParams());
         assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
         SuffixExpression suffixExpn = statement.getSuffixExpression();
@@ -170,7 +183,7 @@ public class StatementDescriptorParserTest {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' = 'b' AND 'c' = 'd' AND 'e' < ?i";
         StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
         parser = new StatementDescriptorParser<>(storage, desc);
-        ParsedStatement<AgentInformation> statement = parser.parse();
+        ParsedStatementImpl<AgentInformation> statement = (ParsedStatementImpl<AgentInformation>)parser.parse();
         assertEquals(1, statement.getNumParams());
         assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
         SuffixExpression expn = statement.getSuffixExpression();
@@ -229,7 +242,7 @@ public class StatementDescriptorParserTest {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' = 'b' AND 'c' = 'd' AND 'e' < 'f' AND 'g' >= 'h'";
         StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
         parser = new StatementDescriptorParser<>(storage, desc);
-        ParsedStatement<AgentInformation> statement = parser.parse();
+        ParsedStatementImpl<AgentInformation> statement = (ParsedStatementImpl<AgentInformation>)parser.parse();
         assertEquals(0, statement.getNumParams());
         assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
         SuffixExpression expn = statement.getSuffixExpression();
@@ -297,7 +310,7 @@ public class StatementDescriptorParserTest {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' = 'b' OR 'c' = 'd' OR 'e' < ?i";
         StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
         parser = new StatementDescriptorParser<>(storage, desc);
-        ParsedStatement<AgentInformation> statement = parser.parse();
+        ParsedStatementImpl<AgentInformation> statement = (ParsedStatementImpl<AgentInformation>)parser.parse();
         assertEquals(1, statement.getNumParams());
         assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
         SuffixExpression expn = statement.getSuffixExpression();
@@ -357,7 +370,7 @@ public class StatementDescriptorParserTest {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' = 'b' OR 'c' = 'd' OR 'e' < 'f' OR 'g' >= 'h'";
         StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
         parser = new StatementDescriptorParser<>(storage, desc);
-        ParsedStatement<AgentInformation> statement = parser.parse();
+        ParsedStatementImpl<AgentInformation> statement = (ParsedStatementImpl<AgentInformation>)parser.parse();
         assertEquals(0, statement.getNumParams());
         assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
         SuffixExpression expn = statement.getSuffixExpression();
@@ -426,7 +439,7 @@ public class StatementDescriptorParserTest {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' = 'b' OR 'c' = 'd' OR 'e' < 'f' OR 'g' >= 'h' AND 'x' = 'y' AND 'u' = 'w' AND 's' = 't'";
         StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
         parser = new StatementDescriptorParser<>(storage, desc);
-        ParsedStatement<AgentInformation> statement = parser.parse();
+        ParsedStatementImpl<AgentInformation> statement = (ParsedStatementImpl<AgentInformation>) parser.parse();
         assertEquals(0, statement.getNumParams());
         assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
         SuffixExpression expn = statement.getSuffixExpression();
@@ -533,7 +546,7 @@ public class StatementDescriptorParserTest {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' = 'b' OR NOT 'c' = 'd' OR 'e' < 'f' OR 'g' >= 'h' AND NOT 'x' = 'y' AND 'u' = 'w' AND 's' = 't'";
         StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
         parser = new StatementDescriptorParser<>(storage, desc);
-        ParsedStatement<AgentInformation> statement = parser.parse();
+        ParsedStatementImpl<AgentInformation> statement = (ParsedStatementImpl<AgentInformation>) parser.parse();
         assertEquals(0, statement.getNumParams());
         assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
         SuffixExpression expn = statement.getSuffixExpression();
@@ -644,7 +657,7 @@ public class StatementDescriptorParserTest {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' < 'b' AND 'c' = ?s OR NOT 'x' >= ?i SORT 'a' ASC , 'b' DSC , 'c' ASC";
         StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
         parser = new StatementDescriptorParser<>(storage, desc);
-        ParsedStatement<AgentInformation> statement = (ParsedStatement<AgentInformation>) parser.parse();
+        ParsedStatementImpl<AgentInformation> statement = (ParsedStatementImpl<AgentInformation>) parser.parse();
         assertEquals(2, statement.getNumParams());
         assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
         SuffixExpression suffixExpn = statement.getSuffixExpression();
@@ -717,7 +730,7 @@ public class StatementDescriptorParserTest {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' < 'b' OR 'c' = ?s SORT 'a' ASC , ?s DSC , 'c' ASC";
         StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
         parser = new StatementDescriptorParser<>(storage, desc);
-        ParsedStatement<AgentInformation> statement = (ParsedStatement<AgentInformation>) parser.parse();
+        ParsedStatementImpl<AgentInformation> statement = (ParsedStatementImpl<AgentInformation>) parser.parse();
         assertEquals(2, statement.getNumParams());
         assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
         SuffixExpression suffixExpn = statement.getSuffixExpression();
@@ -773,7 +786,7 @@ public class StatementDescriptorParserTest {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' < 'b' SORT 'a' DSC";
         StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
         parser = new StatementDescriptorParser<>(storage, desc);
-        ParsedStatement<AgentInformation> statement = (ParsedStatement<AgentInformation>)parser.parse();
+        ParsedStatementImpl<AgentInformation> statement = (ParsedStatementImpl<AgentInformation>)parser.parse();
         assertEquals(0, statement.getNumParams());
         assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
         SuffixExpression suffixExpn = statement.getSuffixExpression();
@@ -807,9 +820,9 @@ public class StatementDescriptorParserTest {
         String descString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE '" + Key.AGENT_ID.getName() + "' = ?s";
         StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
         parser = new StatementDescriptorParser<>(storage, desc);
-        ParsedStatement<AgentInformation> statement = null; 
+        ParsedStatementImpl<AgentInformation> statement = null; 
         try {
-            statement = (ParsedStatement<AgentInformation>)parser.parse();
+            statement = (ParsedStatementImpl<AgentInformation>)parser.parse();
         } catch (DescriptorParsingException e) {
             fail(e.getMessage());
         }
@@ -839,16 +852,15 @@ public class StatementDescriptorParserTest {
         assertTrue(WhereExpressions.equals(where, suffixExpn.getWhereExpn()));
     }
 
-    @SuppressWarnings("rawtypes")
     @Test
     public void testParseSimpleWithAndOr() {
         String descString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE '" + Key.AGENT_ID.getName() + "' = ?s" +
                             " AND ?s < ?b OR 'a' = 'b'";
         StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
         parser = new StatementDescriptorParser<>(storage, desc);
-        ParsedStatement statement = null; 
+        ParsedStatementImpl<AgentInformation> statement = null; 
         try {
-            statement = (ParsedStatement)parser.parse();
+            statement = (ParsedStatementImpl<AgentInformation>)parser.parse();
         } catch (DescriptorParsingException e) {
             e.printStackTrace();
             fail(e.getMessage());
@@ -870,7 +882,7 @@ public class StatementDescriptorParserTest {
         BinaryExpressionNode equality = new BinaryExpressionNode(and);
         equality.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode a = new TerminalNode(equality);
-        Key aKey = new Key("a", false);
+        Key<String> aKey = new Key<>("a", false);
         a.setValue(aKey);
         equality.setLeftChild(a);
         TerminalNode b = new TerminalNode(equality);
@@ -880,7 +892,7 @@ public class StatementDescriptorParserTest {
         BinaryExpressionNode equality2 = new BinaryExpressionNode(and);
         equality2.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode c = new TerminalNode(equality2);
-        Key cKey = new Key(Key.AGENT_ID.getName(), false);
+        Key<String> cKey = new Key<>(Key.AGENT_ID.getName(), false);
         c.setValue(cKey);
         equality2.setLeftChild(c);
         UnfinishedValueNode patch1 = new UnfinishedValueNode();
@@ -903,7 +915,7 @@ public class StatementDescriptorParserTest {
         UnfinishedValueNode patch2 = new UnfinishedValueNode();
         patch2.setLHS(false);
         patch2.setParameterIndex(2);
-        patch2.setType(boolean.class);
+        patch2.setType(Boolean.class);
         TerminalNode y = new TerminalNode(lessThan);
         y.setValue(patch2);
         lessThan.setRightChild(y);
@@ -916,9 +928,9 @@ public class StatementDescriptorParserTest {
         String descString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' = ?s AND ?s = 'd'";
         StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
         parser = new StatementDescriptorParser<>(storage, desc);
-        ParsedStatement<AgentInformation> statement = null; 
+        ParsedStatementImpl<AgentInformation> statement = null; 
         try {
-            statement = (ParsedStatement<AgentInformation>)parser.parse();
+            statement = (ParsedStatementImpl<AgentInformation>)parser.parse();
         } catch (DescriptorParsingException e) {
             e.printStackTrace();
             fail(e.getMessage());
@@ -970,9 +982,9 @@ public class StatementDescriptorParserTest {
         String descString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE NOT 'a' = ?s OR ?s = 'd'";
         StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
         parser = new StatementDescriptorParser<>(storage, desc);
-        ParsedStatement<AgentInformation> statement = null; 
+        ParsedStatementImpl<AgentInformation> statement = null; 
         try {
-            statement = (ParsedStatement<AgentInformation>)parser.parse();
+            statement = (ParsedStatementImpl<AgentInformation>)parser.parse();
         } catch (DescriptorParsingException e) {
             e.printStackTrace();
             fail(e.getMessage());
@@ -1026,9 +1038,9 @@ public class StatementDescriptorParserTest {
         String descString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' = ?s OR ?s = 'd'";
         StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
         parser = new StatementDescriptorParser<>(storage, desc);
-        ParsedStatement<AgentInformation> statement = null; 
+        ParsedStatementImpl<AgentInformation> statement = null; 
         try {
-            statement = (ParsedStatement<AgentInformation>)parser.parse();
+            statement = (ParsedStatementImpl<AgentInformation>)parser.parse();
         } catch (DescriptorParsingException e) {
             e.printStackTrace();
             fail(e.getMessage());
@@ -1080,9 +1092,9 @@ public class StatementDescriptorParserTest {
         String descString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " LIMIT 1";
         StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
         parser = new StatementDescriptorParser<>(storage, desc);
-        ParsedStatement<AgentInformation> statement = null; 
+        ParsedStatementImpl<AgentInformation> statement = null; 
         try {
-            statement = (ParsedStatement<AgentInformation>)parser.parse();
+            statement = (ParsedStatementImpl<AgentInformation>)parser.parse();
         } catch (DescriptorParsingException e) {
             e.printStackTrace();
             fail(e.getMessage());

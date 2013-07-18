@@ -37,41 +37,56 @@
 package com.redhat.thermostat.web.common;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
-import java.util.HashMap;
-import java.util.Map;
-
+import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Key;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
 
-public class WebQueryTest {
+public class ThermostatGSONConverterTest {
 
-    private static class TestObj implements Pojo {
-        
+ private Gson gson;
+    
+    @Before
+    public void setup() {
+        gson = new GsonBuilder()
+                .registerTypeAdapter(Pojo.class, new ThermostatGSONConverter())
+                .create();
     }
-
+    
     @Test
-    public void test() {
-        Key<String> key1 = new Key<>("testkey", true);
-        Category<TestObj> category = new Category<>("test", TestObj.class, key1);
-        Map<Category,Integer> categoryIdMap = new HashMap<>();
-        categoryIdMap.put(category, 42);
-        WebQuery query = new WebQuery(42);
-        ExpressionFactory factory = new ExpressionFactory();
-        Expression expr = factory.equalTo(key1, "fluff");
-        query.where(expr);
-
-        Expression retExpr = query.getExpression();
-        assertNotNull(retExpr);
-        assertEquals(expr, retExpr);
-
-        assertEquals(42, query.getCategoryId());
+    public void canSerializeDeserializeBasic() {
+        // Our test pojo
+        AgentInformation agentInfo = new AgentInformation();
+        agentInfo.setAgentId("testing");
+        agentInfo.setAlive(true);
+        
+        String jsonStr = gson.toJson(agentInfo);
+        
+        AgentInformation actual = gson.fromJson(jsonStr, AgentInformation.class);
+        
+        assertEquals("testing", actual.getAgentId());
+        assertEquals(true, actual.isAlive());
+    }
+    
+    @Test
+    public void canSerializeDeserializeArray() {
+        // Our test pojo
+        AgentInformation agentInfo = new AgentInformation();
+        agentInfo.setAgentId("testing");
+        agentInfo.setAlive(true);
+        AgentInformation[] agentInfos = new AgentInformation[] {
+                agentInfo
+        };
+        
+        String jsonStr = gson.toJson(agentInfos);
+        
+        AgentInformation[] actual = gson.fromJson(jsonStr, AgentInformation[].class);
+        
+        assertEquals("testing", actual[0].getAgentId());
+        assertEquals(true, actual[0].isAlive());
     }
 }
-

@@ -96,11 +96,18 @@ import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
+import com.redhat.thermostat.storage.core.IllegalDescriptorException;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.PreparedParameter;
+import com.redhat.thermostat.storage.core.PreparedParameters;
+import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Put;
-import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Remove;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Update;
+import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.storage.query.Operator;
@@ -108,8 +115,14 @@ import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
 import com.redhat.thermostat.web.common.ExpressionSerializer;
 import com.redhat.thermostat.web.common.OperatorSerializer;
+import com.redhat.thermostat.web.common.PreparedParameterSerializer;
+import com.redhat.thermostat.web.common.ThermostatGSONConverter;
 import com.redhat.thermostat.web.common.WebInsert;
-import com.redhat.thermostat.web.common.WebQuery;
+import com.redhat.thermostat.web.common.WebPreparedStatement;
+import com.redhat.thermostat.web.common.WebPreparedStatementResponse;
+import com.redhat.thermostat.web.common.WebPreparedStatementSerializer;
+import com.redhat.thermostat.web.common.WebQueryResponse;
+import com.redhat.thermostat.web.common.WebQueryResponseSerializer;
 import com.redhat.thermostat.web.common.WebRemove;
 import com.redhat.thermostat.web.common.WebUpdate;
 
@@ -262,37 +275,108 @@ public class WebStorageTest {
 
         storage.registerCategory(category);
     }
-
+    
     @Test
-    public void testFindAllPojos() throws UnsupportedEncodingException, IOException {
+    public void preparingFaultyDescriptorThrowsException() throws UnsupportedEncodingException, IOException {
+        Gson gson = new GsonBuilder()
+                .registerTypeAdapter(WebPreparedStatement.class, new WebPreparedStatementSerializer())
+                .create();
 
+        // missing quotes for LHS key
+        String strDesc = "QUERY test WHERE a = ?s";
+        StatementDescriptor<TestObj> desc = new StatementDescriptor<>(category, strDesc);
+        
+        WebPreparedStatementResponse fakeResponse = new WebPreparedStatementResponse();
+        fakeResponse.setStatementId(WebPreparedStatementResponse.DESCRIPTOR_PARSE_FAILED);
+        prepareServer(gson.toJson(fakeResponse));
+        try {
+            storage.prepareStatement(desc);
+            fail("Should have refused to prepare the statement");
+        } catch (IllegalDescriptorException e) {
+            // should have thrown superclass DescriptorParsingException
+            fail(e.getMessage());
+        } catch (DescriptorParsingException e) {
+            // pass
+        }
+    }
+    
+    @Test
+    public void preparingUnknownDescriptorThrowsException() throws UnsupportedEncodingException, IOException {
+        Gson gson = new GsonBuilder()
+                .registerTypeAdapter(WebPreparedStatement.class, new WebPreparedStatementSerializer())
+                .create();
+
+        String strDesc = "QUERY test WHERE 'property1' = ?s";
+        StatementDescriptor<TestObj> desc = new StatementDescriptor<>(category, strDesc);
+        
+        WebPreparedStatementResponse fakeResponse = new WebPreparedStatementResponse();
+        fakeResponse.setStatementId(WebPreparedStatementResponse.ILLEGAL_STATEMENT);
+        prepareServer(gson.toJson(fakeResponse));
+        try {
+            storage.prepareStatement(desc);
+            fail("Should have refused to prepare the statement");
+        } catch (IllegalDescriptorException e) {
+            // pass
+            assertEquals(strDesc, e.getFailedDescriptor());
+        } catch (DescriptorParsingException e) {
+            // should have thrown IllegalDescriptorException
+            fail(e.getMessage());
+        }
+    }
+    
+    @Test
+    public void canPrepareAndExecuteQuery() throws UnsupportedEncodingException, IOException {
         TestObj obj1 = new TestObj();
         obj1.setProperty1("fluffor1");
         TestObj obj2 = new TestObj();
         obj2.setProperty1("fluffor2");
-        Gson gson = new GsonBuilder().registerTypeHierarchyAdapter(Expression.class, new ExpressionSerializer())
-                .registerTypeHierarchyAdapter(Operator.class, new OperatorSerializer()).create();
+        Gson gson = new GsonBuilder().registerTypeHierarchyAdapter(PreparedParameter.class, new PreparedParameterSerializer())
+                .registerTypeAdapter(WebPreparedStatement.class, new WebPreparedStatementSerializer())
+                .registerTypeAdapter(WebQueryResponse.class, new WebQueryResponseSerializer<>())
+                .registerTypeAdapter(Pojo.class, new ThermostatGSONConverter())
+                .create();
 
-        Key<String> key1 = new Key<>("property1", true);
-        Query<TestObj> query = storage.createQuery(category);
-        ExpressionFactory factory = new ExpressionFactory();
-        Expression expr = factory.equalTo(key1, "fluff");
-        query.where(expr);
-
-        prepareServer(gson.toJson(Arrays.asList(obj1, obj2)));
-        Cursor<TestObj> results = query.execute();
-
-        StringReader reader = new StringReader(requestBody);
-        BufferedReader bufRead = new BufferedReader(reader);
-        String line = URLDecoder.decode(bufRead.readLine(), "UTF-8");
-        String[] parts = line.split("=");
-        assertEquals("query", parts[0]);
-        WebQuery<?> restQuery = gson.fromJson(parts[1], WebQuery.class);
-
-        assertEquals(42, restQuery.getCategoryId());
-        Expression restExpr = restQuery.getExpression();
-        assertEquals(expr, restExpr);
-
+        String strDesc = "QUERY test WHERE 'property1' = ?s";
+        StatementDescriptor<TestObj> desc = new StatementDescriptor<>(category, strDesc);
+        PreparedStatement<TestObj> stmt = null;
+        
+        int fakePrepStmtId = 5;
+        WebPreparedStatementResponse fakeResponse = new WebPreparedStatementResponse();
+        fakeResponse.setNumFreeVariables(1);
+        fakeResponse.setStatementId(fakePrepStmtId);
+        prepareServer(gson.toJson(fakeResponse));
+        try {
+            stmt = storage.prepareStatement(desc);
+        } catch (DescriptorParsingException e) {
+            // descriptor should parse fine and is trusted
+            fail(e.getMessage());
+        }
+        assertTrue(stmt instanceof WebPreparedStatement);
+        WebPreparedStatement<TestObj> webStmt = (WebPreparedStatement<TestObj>)stmt;
+        assertEquals(fakePrepStmtId, webStmt.getStatementId());
+        PreparedParameters params = webStmt.getParams();
+        assertEquals(1, params.getParams().length);
+        assertNull(params.getParams()[0]);
+        
+        // now set a parameter
+        stmt.setString(0, "fluff");
+        assertEquals("fluff", params.getParams()[0].getValue());
+        assertEquals(String.class, params.getParams()[0].getType());
+        
+        WebQueryResponse<TestObj> fakeQueryResponse = new WebQueryResponse<>();
+        fakeQueryResponse.setResponseCode(WebQueryResponse.SUCCESS);
+        fakeQueryResponse.setResultList(new TestObj[] { obj1, obj2 });
+        prepareServer(gson.toJson(fakeQueryResponse));
+        Cursor<TestObj> results = null;
+        try {
+            results = stmt.executeQuery();
+        } catch (StatementExecutionException e) {
+            // should execute fine
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+        assertNotNull(results);
+        assertTrue(results instanceof WebCursor);
         assertTrue(results.hasNext());
         assertEquals("fluffor1", results.next().getProperty1());
         assertTrue(results.hasNext());
@@ -303,6 +387,17 @@ public class WebStorageTest {
             fail();
         } catch (NoSuchElementException ex) {
             // Pass.
+        }
+    }
+
+    @Test
+    public void createQueryFailsCorrectly() throws UnsupportedEncodingException, IOException {
+        try {
+            storage.createQuery(category);
+            fail("createQuery() should fail for WebStorage.");
+        } catch (IllegalStateException e) {
+            // pass
+            assertTrue(e.getMessage().contains("createQuery() not supported"));
         }
     }
 

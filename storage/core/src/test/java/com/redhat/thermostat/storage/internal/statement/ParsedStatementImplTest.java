@@ -49,7 +49,9 @@ import org.junit.Test;
 
 import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.IllegalPatchException;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.SortDirection;
 import com.redhat.thermostat.storage.model.Pojo;
@@ -60,7 +62,7 @@ import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
 import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.storage.query.LiteralExpression;
 
-public class ParsedStatementTest {
+public class ParsedStatementImplTest {
 
     private Query<Pojo> statement;
     
@@ -77,7 +79,7 @@ public class ParsedStatementTest {
     @Test
     public void canPatchWhereAndExpr() throws IllegalPatchException {
         // create the parsedStatementImpl we are going to use
-        ParsedStatement<Pojo> parsedStmt = new ParsedStatement<>(statement);
+        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement);
         SuffixExpression suffixExpn = new SuffixExpression();
         suffixExpn.setLimitExpn(null);
         suffixExpn.setSortExpn(null);
@@ -119,8 +121,9 @@ public class ParsedStatementTest {
         PreparedStatementImpl<Pojo> preparedStatement = new PreparedStatementImpl<>(2);
         preparedStatement.setString(0, "test1");
         preparedStatement.setInt(1, 2);
+        PreparedParameter[] params = preparedStatement.getParams();
         // finally test the patching
-        Query<Pojo> query = (Query<Pojo>)parsedStmt.patchQuery(preparedStatement);
+        Query<Pojo> query = (Query<Pojo>)parsedStmt.patchStatement(params);
         assertTrue(query instanceof TestQuery);
         TestQuery q = (TestQuery)query;
         Expression expectedExpression = q.expr;
@@ -149,7 +152,7 @@ public class ParsedStatementTest {
     @Test
     public void canPatchBasicWhereEquals() throws IllegalPatchException {
         // create the parsedStatementImpl we are going to use
-        ParsedStatement<Pojo> parsedStmt = new ParsedStatement<>(statement);
+        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement);
         SuffixExpression suffixExpn = new SuffixExpression();
         suffixExpn.setLimitExpn(null);
         suffixExpn.setSortExpn(null);
@@ -163,7 +166,7 @@ public class ParsedStatementTest {
         TerminalNode b = new TerminalNode(and);
         UnfinishedValueNode bPatch = new UnfinishedValueNode();
         bPatch.setParameterIndex(0);
-        bPatch.setType(boolean.class);
+        bPatch.setType(Boolean.class);
         b.setValue(bPatch);
         and.setLeftChild(a);
         and.setRightChild(b);
@@ -174,8 +177,9 @@ public class ParsedStatementTest {
         // patching.
         PreparedStatementImpl<Pojo> preparedStatement = new PreparedStatementImpl<>(1);
         preparedStatement.setBoolean(0, true);
+        PreparedParameter[] params = preparedStatement.getParams();
         // finally test the patching
-        Query<?> query = (Query<?>)parsedStmt.patchQuery(preparedStatement);
+        Query<?> query = (Query<?>)parsedStmt.patchStatement(params);
         assertTrue(query instanceof TestQuery);
         TestQuery q = (TestQuery)query;
         Expression expectedExpression = q.expr;
@@ -192,7 +196,8 @@ public class ParsedStatementTest {
         // now do it again with a different value
         preparedStatement = new PreparedStatementImpl<>(1);
         preparedStatement.setBoolean(0, false);
-        query = (Query<?>)parsedStmt.patchQuery(preparedStatement);
+        params = preparedStatement.getParams();
+        query = (Query<?>)parsedStmt.patchStatement(params);
         assertTrue(query instanceof TestQuery);
         q = (TestQuery)query;
         expectedExpression = q.expr;
@@ -210,7 +215,7 @@ public class ParsedStatementTest {
     @Test
     public void canPatchBasicWhereEqualsLHSKeyAndRHSValue() throws IllegalPatchException {
         // create the parsedStatementImpl we are going to use
-        ParsedStatement<Pojo> parsedStmt = new ParsedStatement<>(statement);
+        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement);
         SuffixExpression suffixExpn = new SuffixExpression();
         suffixExpn.setLimitExpn(null);
         suffixExpn.setSortExpn(null);
@@ -228,7 +233,7 @@ public class ParsedStatementTest {
         TerminalNode b = new TerminalNode(and);
         UnfinishedValueNode bPatch = new UnfinishedValueNode();
         bPatch.setParameterIndex(1);
-        bPatch.setType(boolean.class);
+        bPatch.setType(Boolean.class);
         b.setValue(bPatch);
         and.setLeftChild(a);
         and.setRightChild(b);
@@ -240,8 +245,9 @@ public class ParsedStatementTest {
         PreparedStatementImpl<Pojo> preparedStatement = new PreparedStatementImpl<>(2);
         preparedStatement.setString(0, "a");
         preparedStatement.setBoolean(1, true);
+        PreparedParameter[] params = preparedStatement.getParams();
         // finally test the patching
-        Query<?> query = (Query<?>)parsedStmt.patchQuery(preparedStatement);
+        Query<?> query = (Query<?>)parsedStmt.patchStatement(params);
         assertTrue(query instanceof TestQuery);
         TestQuery q = (TestQuery)query;
         Expression expectedExpression = q.expr;
@@ -259,7 +265,8 @@ public class ParsedStatementTest {
         preparedStatement = new PreparedStatementImpl<>(2);
         preparedStatement.setString(0, "a");
         preparedStatement.setBoolean(1, false);
-        query = (Query<?>)parsedStmt.patchQuery(preparedStatement);
+        params = preparedStatement.getParams();
+        query = (Query<?>)parsedStmt.patchStatement(params);
         assertTrue(query instanceof TestQuery);
         q = (TestQuery)query;
         expectedExpression = q.expr;
@@ -277,7 +284,7 @@ public class ParsedStatementTest {
     @Test
     public void canPatchBasicLimit() throws IllegalPatchException {
         // create the parsedStatementImpl we are going to use
-        ParsedStatement<Pojo> parsedStmt = new ParsedStatement<>(statement);
+        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement);
         SuffixExpression suffixExpn = new SuffixExpression();
         LimitExpression limitExpnToPatch = new LimitExpression();
         UnfinishedLimitValue unfinished = new UnfinishedLimitValue();
@@ -290,7 +297,9 @@ public class ParsedStatementTest {
         // set the value for the one unfinished param
         PreparedStatementImpl<Pojo> preparedStatement = new PreparedStatementImpl<>(1);
         preparedStatement.setInt(0, 3);
-        Query<?> query = (Query<?>)parsedStmt.patchQuery(preparedStatement);
+        PreparedParameter[] params = preparedStatement.getParams();
+        // finally test the patching
+        Query<?> query = (Query<?>)parsedStmt.patchStatement(params);
         assertTrue(query instanceof TestQuery);
         TestQuery q = (TestQuery)query;
         assertEquals(3, q.limitVal);
@@ -299,7 +308,7 @@ public class ParsedStatementTest {
     @Test
     public void canPatchBasicSort() throws IllegalPatchException {
         // create the parsedStatementImpl we are going to use
-        ParsedStatement<Pojo> parsedStmt = new ParsedStatement<>(statement);
+        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement);
         SuffixExpression suffixExpn = new SuffixExpression();
         // SORT ? ASC, b DSC
         SortExpression sortExpn = new SortExpression();
@@ -320,7 +329,9 @@ public class ParsedStatementTest {
         // set the value for the one unfinished param
         PreparedStatementImpl<Pojo> preparedStatement = new PreparedStatementImpl<>(1);
         preparedStatement.setString(0, "a");
-        Query<Pojo> query = (Query<Pojo>)parsedStmt.patchQuery(preparedStatement);
+        PreparedParameter[] params = preparedStatement.getParams();
+        // finally test the patching
+        Query<Pojo> query = (Query<Pojo>)parsedStmt.patchStatement(params);
         assertTrue(query instanceof TestQuery);
         TestQuery q = (TestQuery)query;
         List<Pair<Key<?>, SortDirection>> actualSorts = q.sorts;
@@ -340,7 +351,7 @@ public class ParsedStatementTest {
     @Test
     public void failPatchWithWrongType() throws IllegalPatchException {
         // create the parsedStatementImpl we are going to use
-        ParsedStatement<Pojo> parsedStmt = new ParsedStatement<>(statement);
+        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement);
         SuffixExpression suffixExpn = new SuffixExpression();
         suffixExpn.setLimitExpn(null);
         suffixExpn.setSortExpn(null);
@@ -385,7 +396,8 @@ public class ParsedStatementTest {
         preparedStatement.setString(1, "foo");
         // finally test the patching
         try {
-            parsedStmt.patchQuery(preparedStatement);
+            PreparedParameter[] params = preparedStatement.getParams();
+            parsedStmt.patchStatement(params);
             fail("should have failed to patch param 1 with a string value (expected int)");
         } catch (IllegalPatchException e) {
             // pass
@@ -396,7 +408,7 @@ public class ParsedStatementTest {
     @Test
     public void failPatchBasicEqualsIfIndexOutofBounds() {
         // create the parsedStatementImpl we are going to use
-        ParsedStatement<Pojo> parsedStmt = new ParsedStatement<>(statement);
+        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement);
         SuffixExpression suffixExpn = new SuffixExpression();
         suffixExpn.setLimitExpn(null);
         suffixExpn.setSortExpn(null);
@@ -418,9 +430,11 @@ public class ParsedStatementTest {
         parsedStmt.setSuffixExpression(suffixExpn);
         PreparedStatementImpl<Pojo> preparedStatement = new PreparedStatementImpl<>(1);
         preparedStatement.setString(0, "b");
-        // this should fail
         try {
-            parsedStmt.patchQuery(preparedStatement);
+            PreparedParameter[] params = preparedStatement.getParams();
+            // this should fail
+            parsedStmt.patchStatement(params);
+            fail("should not reach here");
         } catch (IllegalPatchException e) {
             // pass
             assertTrue(e.getCause() instanceof ArrayIndexOutOfBoundsException);
@@ -455,6 +469,12 @@ public class ParsedStatementTest {
 
         @Override
         public Cursor<Pojo> execute() {
+            // Not implemented
+            return null;
+        }
+
+        @Override
+        public Expression getWhereExpression() {
             // Not implemented
             return null;
         }
