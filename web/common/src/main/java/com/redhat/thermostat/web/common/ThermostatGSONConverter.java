@@ -81,7 +81,7 @@ public class ThermostatGSONConverter implements JsonSerializer<Pojo>, JsonDeseri
 
     @Override
     public JsonElement serialize(Pojo src, Type typeOfSrc, JsonSerializationContext context) {
-        Class cls = (Class) typeOfSrc;
+        Class<?> cls = (Class<?>) typeOfSrc;
         if (! cls.isAnnotationPresent(Entity.class)) {
             System.err.println("attempt to serialize non-Entity class: " + cls.getName());
             throw new IllegalArgumentException("attempt to serialize non-Entity class: " + cls.getName());

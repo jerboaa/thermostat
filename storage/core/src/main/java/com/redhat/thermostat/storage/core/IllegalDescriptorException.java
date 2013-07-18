@@ -36,38 +36,21 @@
 
 package com.redhat.thermostat.storage.core;
 
-import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.storage.query.Expression;
-
 /**
- * Describes what data should be fetched.
+ * Thrown if a prepared statement descriptor was refused by the storage endpoint.
  */
-public interface Query<T extends Pojo> extends Statement<T> {
+@SuppressWarnings("serial")
+public class IllegalDescriptorException extends DescriptorParsingException {
 
-    enum SortDirection {
-        ASCENDING(1),
-        DESCENDING(-1);
-
-        private int value;
-
-        private SortDirection(int value) {
-            this.value = value;
-        }
-
-        public int getValue() {
-            return value;
-        }
+    private final String failedDescriptor;
+    
+    public IllegalDescriptorException(String errorMsg, String strDescriptor) {
+        super(errorMsg);
+        this.failedDescriptor = strDescriptor;
     }
 
-    void where(Expression expr);
-    
-    void sort(Key<?> key, SortDirection direction);
-
-    void limit(int n);
-
-    Cursor<T> execute();
-    
-    Expression getWhereExpression();
+    public String getFailedDescriptor() {
+        return failedDescriptor;
+    }
 
 }
-

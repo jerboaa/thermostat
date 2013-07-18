@@ -34,49 +34,32 @@
  * to do so, delete this exception statement from your version.
  */
 
+package com.redhat.thermostat.web.server;
 
-package com.redhat.thermostat.web.common;
-
-import com.redhat.thermostat.storage.core.AbstractQuery;
-import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.storage.query.Expression;
 
-public class WebQuery<T extends Pojo> extends AbstractQuery<T> {
+class PreparedStatementHolder<T extends Pojo> {
 
-    private Expression expr;
-    private int categoryId;
-
-    public WebQuery() {
-        this(-1);
+    private final int id;
+    private final PreparedStatement<T> stmt;
+    private final Class<T> dataClass;
+    
+    PreparedStatementHolder(int id, PreparedStatement<T> stmt, Class<T> dataClass) {
+        this.id = id;
+        this.stmt = stmt;
+        this.dataClass = dataClass;
     }
 
-    public WebQuery(int categoryId) {
-        this.categoryId = categoryId;
+    int getId() {
+        return id;
     }
 
-    public int getCategoryId() {
-        return categoryId;
-    }
-
-    public void setCategoryId(int categoryId) {
-        this.categoryId = categoryId;
-    }
-
-    @Override
-    public void where(Expression expr) {
-        this.expr = expr;
+    PreparedStatement<T> getStmt() {
+        return stmt;
     }
     
-    public Expression getExpression() {
-        return expr;
+    Class<T> getDataClass() {
+        return dataClass;
     }
-
-    @Override
-    public Cursor<T> execute() {
-        // This should only ever be called when created from WebStorage, which provides its own subclass.
-        throw new IllegalStateException();
-    }
-
 }
-

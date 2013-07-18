@@ -39,6 +39,9 @@ package com.redhat.thermostat.storage.internal.statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.redhat.thermostat.storage.core.IllegalPatchException;
+import com.redhat.thermostat.storage.core.PreparedParameter;
+
 /**
  * Represents a sort expression of a prepared statement's parse tree.
  *

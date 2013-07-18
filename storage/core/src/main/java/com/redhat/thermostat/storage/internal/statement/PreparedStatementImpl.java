@@ -39,6 +39,10 @@ package com.redhat.thermostat.storage.internal.statement;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DataModifyingStatement;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
+import com.redhat.thermostat.storage.core.IllegalPatchException;
+import com.redhat.thermostat.storage.core.ParsedStatement;
+import com.redhat.thermostat.storage.core.PreparedParameter;
+import com.redhat.thermostat.storage.core.PreparedParameters;
 import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Statement;
@@ -56,15 +60,15 @@ final public class PreparedStatementImpl<T extends Pojo> implements PreparedStat
     private StatementDescriptor<T> desc;
     private Query<T> query;
     private DataModifyingStatement<T> dmlStatement;
-    private final PreparedParameter[] params;
-    private final ParsedStatement<T> parsedStatement;
+    private final PreparedParameters params;
+    private final ParsedStatementImpl<T> parsedStatement;
     
     public PreparedStatementImpl(Storage storage, StatementDescriptor<T> desc) throws DescriptorParsingException {
         this.desc = desc;
         StatementDescriptorParser<T> parser = new StatementDescriptorParser<>(storage, desc);
-        this.parsedStatement = parser.parse();
+        this.parsedStatement = (ParsedStatementImpl<T>)parser.parse();
         int numParams = parsedStatement.getNumParams();
-        params = new PreparedParameter[numParams];
+        params = new PreparedParameters(numParams);
         Statement<T> statement = parsedStatement.getRawStatement();
         if (statement instanceof DataModifyingStatement) {
             this.dmlStatement = (DataModifyingStatement<T>) statement;
@@ -75,36 +79,28 @@ final public class PreparedStatementImpl<T extends Pojo> implements PreparedStat
     
     // used for testing ParsedStatements
     PreparedStatementImpl(int numParams) {
-        params = new PreparedParameter[numParams];
+        params = new PreparedParameters(numParams);
         this.parsedStatement = null;
     }
     
     @Override
     public void setLong(int paramIndex, long paramValue) {
-        setType(paramIndex, paramValue, Long.class);
+        params.setLong(paramIndex, paramValue);
     }
 
     @Override
     public void setInt(int paramIndex, int paramValue) {
-        setType(paramIndex, paramValue, Integer.class);
+        params.setInt(paramIndex, paramValue);
     }
 
     @Override
     public void setStringList(int paramIndex, String[] paramValue) {
-        setType(paramIndex, paramValue, String[].class);
+        params.setStringList(paramIndex, paramValue);
     }
     
     @Override
     public void setBoolean(int paramIndex, boolean paramValue) {
-        setType(paramIndex, paramValue, boolean.class);
-    }
-
-    private void setType(int paramIndex, Object paramValue, Class<?> paramType) {
-        if (paramIndex >= params.length) {
-            throw new IllegalArgumentException("Parameter index '" + paramIndex + "' out of range.");
-        }
-        PreparedParameter param = new PreparedParameter(paramValue, paramType);
-        params[paramIndex] = param;
+        params.setBoolean(paramIndex, paramValue);
     }
 
     @Override
@@ -115,7 +111,7 @@ final public class PreparedStatementImpl<T extends Pojo> implements PreparedStat
                             + DataModifyingStatement.class.getName());
         }
         try {
-            dmlStatement = (DataModifyingStatement<T>) parsedStatement.patchQuery(this);
+            dmlStatement = (DataModifyingStatement<T>)parsedStatement.patchStatement(params.getParams());
         } catch (Exception e) {
             throw new StatementExecutionException(e);
         }
@@ -133,7 +129,7 @@ final public class PreparedStatementImpl<T extends Pojo> implements PreparedStat
             // FIXME: I'm sure we can improve on this. We should avoid walking the
             // tree each time. Some cache with unfinished nodes and a reference
             // to the matching expression should be sufficient.
-            query = (Query<T>) parsedStatement.patchQuery(this);
+            query = (Query<T>)parsedStatement.patchStatement(params.getParams());
         } catch (IllegalPatchException e) {
             throw new StatementExecutionException(e);
         }
@@ -141,18 +137,18 @@ final public class PreparedStatementImpl<T extends Pojo> implements PreparedStat
     }
 
     @Override
-    public int getId() {
-        // not implemented for Mongo
-        return -1;
+    public void setString(int paramIndex, String paramValue) {
+        params.setString(paramIndex, paramValue);
+    }
+    
+    // For testing only
+    PreparedParameter[] getParams() {
+        return params.getParams();
     }
 
     @Override
-    public void setString(int paramIndex, String paramValue) {
-        setType(paramIndex, paramValue, String.class);
-    }
-
-    PreparedParameter[] getParams() {
-        return params;
+    public ParsedStatement<T> getParsedStatement() {
+        return parsedStatement;
     }
 
     @Override

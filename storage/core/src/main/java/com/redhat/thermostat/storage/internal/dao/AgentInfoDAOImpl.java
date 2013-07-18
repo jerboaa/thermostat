@@ -189,6 +189,6 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
         update.set(CONFIG_LISTEN_ADDRESS, agentInfo.getConfigListenAddress());
         update.apply();
     }
-    
+
 }
 

@@ -38,7 +38,9 @@ package com.redhat.thermostat.storage.internal.statement;
 
 import java.util.Objects;
 
+import com.redhat.thermostat.storage.core.IllegalPatchException;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.query.LiteralExpression;
 
 /**

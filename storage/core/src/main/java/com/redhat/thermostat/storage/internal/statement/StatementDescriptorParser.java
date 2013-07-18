@@ -43,6 +43,7 @@ import java.util.StringTokenizer;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.ParsedStatement;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.SortDirection;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
@@ -120,7 +121,7 @@ class StatementDescriptorParser<T extends Pojo> {
     private int currTokenIndex;
     private int placeHolderCount;
     // the parsed statement
-    private ParsedStatement<T> parsedStatement;
+    private ParsedStatementImpl<T> parsedStatement;
     private SuffixExpression tree;
     
     StatementDescriptorParser(Storage storage, StatementDescriptor<T> desc) {
@@ -480,7 +481,7 @@ class StatementDescriptorParser<T extends Pojo> {
             break;
         }
         case 'b': {
-            type = boolean.class;
+            type = Boolean.class;
             break;
         }
         default:
@@ -571,7 +572,7 @@ class StatementDescriptorParser<T extends Pojo> {
         if (tokens[0].equals(KNOWN_STATEMENT_TYPES[0])) {
             // query case
             Query<T> query = storage.createQuery(desc.getCategory());
-            this.parsedStatement = new ParsedStatement<>(query);
+            this.parsedStatement = new ParsedStatementImpl<>(query);
         } else {
             throw new IllegalStateException("Don't know how to create statement type '" + tokens[0] + "'");
         }

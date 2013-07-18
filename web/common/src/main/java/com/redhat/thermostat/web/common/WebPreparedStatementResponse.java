@@ -34,40 +34,40 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.core;
-
-import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.storage.query.Expression;
+package com.redhat.thermostat.web.common;
 
 /**
- * Describes what data should be fetched.
+ * Model class as returned upon preparing statements.
  */
-public interface Query<T extends Pojo> extends Statement<T> {
-
-    enum SortDirection {
-        ASCENDING(1),
-        DESCENDING(-1);
-
-        private int value;
-
-        private SortDirection(int value) {
-            this.value = value;
-        }
-
-        public int getValue() {
-            return value;
-        }
+public class WebPreparedStatementResponse {
+    
+    public static final int ILLEGAL_STATEMENT = -1;
+    public static final int DESCRIPTOR_PARSE_FAILED = -2;
+    
+    public WebPreparedStatementResponse() {
+        // Should always be set using the setter before it
+        // is retrieved. Since 0 is a bad default for this,
+        // we set it to -1 in order to make this an invalid
+        // value right away.
+        this.numFreeVariables = -1;
+    }
+    
+    private int numFreeVariables;
+    private int statementId;
+    
+    public int getStatementId() {
+        return statementId;
     }
 
-    void where(Expression expr);
-    
-    void sort(Key<?> key, SortDirection direction);
+    public void setStatementId(int statementId) {
+        this.statementId = statementId;
+    }
 
-    void limit(int n);
+    public int getNumFreeVariables() {
+        return numFreeVariables;
+    }
 
-    Cursor<T> execute();
-    
-    Expression getWhereExpression();
-
+    public void setNumFreeVariables(int freeVars) {
+        this.numFreeVariables = freeVars;
+    }
 }
-

@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -68,14 +69,20 @@ import com.google.gson.JsonParser;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.Configuration;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
-import com.redhat.thermostat.storage.core.AbstractQuery.Sort;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Connection;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
+import com.redhat.thermostat.storage.core.IllegalPatchException;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.ParsedStatement;
+import com.redhat.thermostat.storage.core.PreparedParameter;
+import com.redhat.thermostat.storage.core.PreparedParameters;
+import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Remove;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.model.Pojo;
@@ -83,10 +90,15 @@ import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.storage.query.Operator;
 import com.redhat.thermostat.web.common.ExpressionSerializer;
 import com.redhat.thermostat.web.common.OperatorSerializer;
+import com.redhat.thermostat.web.common.PreparedParameterSerializer;
 import com.redhat.thermostat.web.common.StorageWrapper;
 import com.redhat.thermostat.web.common.ThermostatGSONConverter;
 import com.redhat.thermostat.web.common.WebInsert;
-import com.redhat.thermostat.web.common.WebQuery;
+import com.redhat.thermostat.web.common.WebPreparedStatement;
+import com.redhat.thermostat.web.common.WebPreparedStatementResponse;
+import com.redhat.thermostat.web.common.WebPreparedStatementSerializer;
+import com.redhat.thermostat.web.common.WebQueryResponse;
+import com.redhat.thermostat.web.common.WebQueryResponseSerializer;
 import com.redhat.thermostat.web.common.WebRemove;
 import com.redhat.thermostat.web.common.WebUpdate;
 import com.redhat.thermostat.web.server.auth.Roles;
@@ -117,6 +129,12 @@ public class WebStorageEndPoint extends HttpServlet {
 
     private Map<String, Integer> categoryIds;
     private Map<Integer, Category<?>> categories;
+    
+    private Map<StatementDescriptor<?>, PreparedStatementHolder<?>> preparedStmts;
+    private Map<Integer, PreparedStatementHolder<?>> preparedStatementIds;
+    // Lock to be held for setting/getting prepared queries in the above maps
+    private Object preparedStmtLock = new Object();
+    private int currentPreparedStmtId;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -132,9 +150,15 @@ public class WebStorageEndPoint extends HttpServlet {
                 .registerTypeHierarchyAdapter(Expression.class,
                         new ExpressionSerializer())
                 .registerTypeHierarchyAdapter(Operator.class,
-                        new OperatorSerializer()).create();
+                        new OperatorSerializer())
+                .registerTypeAdapter(WebQueryResponse.class, new WebQueryResponseSerializer<>())
+                .registerTypeAdapter(PreparedParameter.class, new PreparedParameterSerializer())
+                .registerTypeAdapter(WebPreparedStatement.class, new WebPreparedStatementSerializer())
+                .create();
         categoryIds = new HashMap<>();
         categories = new HashMap<>();
+        preparedStatementIds = new HashMap<>();
+        preparedStmts = new HashMap<>();
         TokenManager tokenManager = new TokenManager();
         String timeoutParam = getInitParameter(TOKEN_MANAGER_TIMEOUT_PARAM);
         if (timeoutParam != null) {
@@ -174,8 +198,11 @@ public class WebStorageEndPoint extends HttpServlet {
         String uri = req.getRequestURI();
         int lastPartIdx = uri.lastIndexOf("/");
         String cmd = uri.substring(lastPartIdx + 1);
-        if (cmd.equals("find-all")) {
-            findAll(req, resp);
+        if (cmd.equals("prepare-statement")) {
+            prepareStatement(req, resp);
+        }
+        else if (cmd.equals("query-execute")) {
+            queryExecute(req, resp);
         } else if (cmd.equals("put-pojo")) {
             putPojo(req, resp);
         } else if (cmd.equals("register-category")) {
@@ -240,6 +267,69 @@ public class WebStorageEndPoint extends HttpServlet {
             // we should have just checked if this throws any exception
             logger.log(Level.SEVERE, "Illegal configuration!", e);
             return null;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @WebStoragePathHandler( path = "prepare-statement" )
+    private <T extends Pojo> void prepareStatement(HttpServletRequest req,
+            HttpServletResponse resp) throws IOException {
+        if (! isAuthorized(req, resp, Roles.PREPARE_STATEMENT)) {
+            return;
+        }
+        String queryDescrParam = req.getParameter("query-descriptor");
+        String categoryIdParam = req.getParameter("category-id");
+        Integer catId = gson.fromJson(categoryIdParam, Integer.class);
+        Category<?> cat = getCategoryFromId(catId);
+        WebPreparedStatementResponse response = new WebPreparedStatementResponse();
+        if (cat == null) {
+            // bad category? we refuse to accept this
+            logger.log(Level.WARNING, "Attepted to prepare a statement with an illegal category id");
+            response.setStatementId(WebPreparedStatementResponse.ILLEGAL_STATEMENT);
+            writeResponse(resp, response, WebPreparedStatementResponse.class);
+            return;
+        }
+        StatementDescriptor<?> desc = new StatementDescriptor<>(cat, queryDescrParam);
+        synchronized (preparedStmtLock) {
+            // see if we've prepared this query already
+            if (preparedStmts.containsKey(desc)) {
+                PreparedStatementHolder<T> holder = (PreparedStatementHolder<T>) preparedStmts
+                        .get(desc);
+                ParsedStatement<T> parsed = holder.getStmt()
+                        .getParsedStatement();
+                int freeVars = parsed.getNumParams();
+                response.setNumFreeVariables(freeVars);
+                response.setStatementId(holder.getId());
+                writeResponse(resp, response,
+                        WebPreparedStatementResponse.class);
+                return;
+            }
+            // TODO: Check if descriptor is trusted (i.e. known)
+            
+            // Prepare the target statement and put it into our prepared statement
+            // maps.
+            PreparedStatement<T> targetPreparedStatement;
+            try {
+                targetPreparedStatement = (PreparedStatement<T>) storage
+                        .prepareStatement(desc);
+            } catch (DescriptorParsingException e) {
+                logger.log(Level.WARNING, "Descriptor parse error!", e);
+                response.setStatementId(WebPreparedStatementResponse.DESCRIPTOR_PARSE_FAILED);
+                writeResponse(resp, response,
+                        WebPreparedStatementResponse.class);
+                return;
+            }
+            PreparedStatementHolder<T> holder = new PreparedStatementHolder<T>(
+                    currentPreparedStmtId, targetPreparedStatement,
+                    (Class<T>) cat.getDataClass());
+            preparedStmts.put(desc, holder);
+            preparedStatementIds.put(currentPreparedStmtId, holder);
+            ParsedStatement<?> parsed = targetPreparedStatement
+                    .getParsedStatement();
+            response.setNumFreeVariables(parsed.getNumParams());
+            response.setStatementId(currentPreparedStmtId);
+            writeResponse(resp, response, WebPreparedStatementResponse.class);
+            currentPreparedStmtId++;
         }
     }
 
@@ -449,37 +539,54 @@ public class WebStorageEndPoint extends HttpServlet {
         }
     }
 
-    @WebStoragePathHandler( path = "find-all" )
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    private void findAll(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    @SuppressWarnings("unchecked")
+    @WebStoragePathHandler( path = "query-execute" )
+    private <T extends Pojo> void queryExecute(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         if (! isAuthorized(req, resp, Roles.READ)) {
             return;
         }
-        String queryParam = req.getParameter("query");
-        WebQuery query = gson.fromJson(queryParam, WebQuery.class);
-        Query targetQuery = constructTargetQuery(query);
-        ArrayList resultList = new ArrayList();
-        Cursor result = targetQuery.execute();
-        while (result.hasNext()) {
-            resultList.add(result.next());
+        String queryParam = req.getParameter("prepared-stmt");
+        WebPreparedStatement<T> stmt = gson.fromJson(queryParam, WebPreparedStatement.class);
+        
+        PreparedParameters p = stmt.getParams();
+        PreparedStatementHolder<T> targetStmtHolder = getStatementHolderFromId(stmt.getStatementId());
+        PreparedStatement<T> targetStmt = targetStmtHolder.getStmt();
+        ParsedStatement<T> parsed = targetStmt.getParsedStatement();
+        Query<T> targetQuery = null;
+        ArrayList<T> resultList = new ArrayList<>();
+        WebQueryResponse<T> response = new WebQueryResponse<>();
+        try {
+            targetQuery = (Query<T>)parsed.patchStatement(p.getParams());
+            response.setResponseCode(WebQueryResponse.SUCCESS);
+        } catch (IllegalPatchException e) {
+            response.setResponseCode(WebQueryResponse.ILLEGAL_PATCH);
+            writeResponse(resp, response, WebQueryResponse.class);
+            return;
         }
-        writeResponse(resp, resultList.toArray());
+        // TODO: Do proper query filtering
+        targetQuery = fixQuery(targetQuery, stmt.getStatementId());
+        Cursor<T> cursor = targetQuery.execute();
+        while (cursor.hasNext()) {
+            resultList.add(cursor.next());
+        }
+        T[] results = (T[])Array.newInstance(targetStmtHolder.getDataClass(), resultList.size());
+        for (int i = 0; i < resultList.size(); i++) {
+            results[i] = resultList.get(i);
+        }
+        response.setResultList(results);
+        writeResponse(resp, response, WebQueryResponse.class);
     }
 
-    private Query<?> constructTargetQuery(WebQuery<? extends Pojo> query) {
-        int categoryId = query.getCategoryId();
-        Category<?> category = getCategoryFromId(categoryId);
-
-        Query<?> targetQuery = storage.createQuery(category);
-        Expression whereExpr = query.getExpression();
-        if (whereExpr != null) {
-            targetQuery.where(whereExpr);
-        }
-        for (Sort s : query.getSorts()) {
-            targetQuery.sort(s.getKey(), s.getDirection());
-        }
-        targetQuery.limit(query.getLimit());
+    @SuppressWarnings("rawtypes")
+    private <T extends Pojo> Query fixQuery(Query<T> targetQuery, int statementId) {
+        // TODO: Change the expression so as to perform proper filtering.
         return targetQuery;
+    }
+
+    private <T extends Pojo> PreparedStatementHolder<T> getStatementHolderFromId(int statementId) {
+        @SuppressWarnings("unchecked") // we are the only ones adding them
+        PreparedStatementHolder<T> holder = (PreparedStatementHolder<T>)preparedStatementIds.get(statementId);
+        return holder;
     }
 
     private Category<?> getCategoryFromId(int categoryId) {
@@ -487,10 +594,11 @@ public class WebStorageEndPoint extends HttpServlet {
         return category;
     }
 
-    private void writeResponse(HttpServletResponse resp, Object result) throws IOException {
+    private void writeResponse(HttpServletResponse resp,
+            Object responseObj, Class<?> typeOfResponseObj) throws IOException {
         resp.setStatus(HttpServletResponse.SC_OK);
         resp.setContentType(RESPONSE_JSON_CONTENT_TYPE);
-        gson.toJson(result, resp.getWriter());
+        gson.toJson(responseObj, typeOfResponseObj, resp.getWriter());
         resp.flushBuffer();
     }
 

@@ -11,7 +11,7 @@ import com.redhat.thermostat.storage.model.Pojo;
  * @see Storage#prepareStatement(StatementDescriptor)
  *
  */
-public interface PreparedStatement<T extends Pojo> {
+public interface PreparedStatement<T extends Pojo> extends PreparedStatementSetter {
     
     void setBoolean(int paramIndex, boolean paramValue);
     
@@ -44,10 +44,8 @@ public interface PreparedStatement<T extends Pojo> {
     Cursor<T> executeQuery() throws StatementExecutionException;
     
     /**
-     * 
-     * @return The unique ID of this predefined statement for the underlying
-     *         {@link Storage}.
+     * @return An intermediary representation of this prepared statement.
      */
-    int getId();
-    
+    ParsedStatement<T> getParsedStatement();
+
 }

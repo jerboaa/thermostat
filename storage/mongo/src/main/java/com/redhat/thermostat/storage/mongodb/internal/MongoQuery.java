@@ -55,6 +55,7 @@ public class MongoQuery<T extends Pojo> extends AbstractQuery<T> {
     private Category<T> category;
     private Class<T> resultClass;
     private MongoExpressionParser parser;
+    private Expression expression = null;
 
     MongoQuery(MongoStorage storage, Category<T> category) {
         this(storage, category, new MongoExpressionParser());
@@ -77,6 +78,7 @@ public class MongoQuery<T extends Pojo> extends AbstractQuery<T> {
 
     @Override
     public void where(Expression expr) {
+        expression = expr;
         query = parser.parse(expr);
         hasClauses = true;
     }
@@ -112,6 +114,11 @@ public class MongoQuery<T extends Pojo> extends AbstractQuery<T> {
     @Override
     public Cursor<T> execute() {
         return storage.findAllPojos(this, resultClass);
+    }
+
+    @Override
+    public Expression getWhereExpression() {
+        return expression;
     }
 
 }

@@ -34,40 +34,64 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.core;
+package com.redhat.thermostat.web.common;
+
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 
 import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.storage.query.Expression;
 
 /**
- * Describes what data should be fetched.
+ * Model object for prepared query execution responses.
+ *
  */
-public interface Query<T extends Pojo> extends Statement<T> {
+public class WebQueryResponse<T extends Pojo> {
+    
+    public static final int SUCCESS = 0;
+    public static final int ILLEGAL_PATCH = -1;
 
-    enum SortDirection {
-        ASCENDING(1),
-        DESCENDING(-1);
-
-        private int value;
-
-        private SortDirection(int value) {
-            this.value = value;
-        }
-
-        public int getValue() {
-            return value;
-        }
+    private int responseCode;
+    private T[] resultList;
+    
+    public int getResponseCode() {
+        return responseCode;
     }
 
-    void where(Expression expr);
+    public void setResponseCode(int responseCode) {
+        this.responseCode = responseCode;
+    }
+
+    public T[] getResultList() {
+        return resultList;
+    }
+
+    public void setResultList(T[] resultList) {
+        this.resultList = resultList;
+    }
     
-    void sort(Key<?> key, SortDirection direction);
-
-    void limit(int n);
-
-    Cursor<T> execute();
-    
-    Expression getWhereExpression();
-
+    public ParameterizedType getRuntimeParametrizedType(final Class<T> dataClass) {
+        ParameterizedType webQueryResponseType = new ParameterizedType() {
+            
+            @Override
+            public Type getRawType() {
+                return WebQueryResponse.class;
+            }
+            
+            @Override
+            public Type getOwnerType() {
+                // top-level type, must return null
+                return null;
+            }
+            
+            @Override
+            public Type[] getActualTypeArguments() {
+                // WebQueryResponse has only one type parameter, which
+                // is the actual data class
+                return new Type[] {
+                        dataClass
+                };
+            }
+        };
+        return webQueryResponseType;
+    }
 }
-

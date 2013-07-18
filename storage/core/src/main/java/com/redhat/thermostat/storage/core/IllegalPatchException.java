@@ -36,38 +36,15 @@
 
 package com.redhat.thermostat.storage.core;
 
-import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.storage.query.Expression;
-
 /**
- * Describes what data should be fetched.
+ * Thrown if a prepared statement was attempted to patch, which resulted in
+ * NPEs or a type mismatch for some of the free variables.
+ *
  */
-public interface Query<T extends Pojo> extends Statement<T> {
+@SuppressWarnings("serial")
+public class IllegalPatchException extends Exception {
 
-    enum SortDirection {
-        ASCENDING(1),
-        DESCENDING(-1);
-
-        private int value;
-
-        private SortDirection(int value) {
-            this.value = value;
-        }
-
-        public int getValue() {
-            return value;
-        }
+    public IllegalPatchException(Throwable cause) {
+        super(cause);
     }
-
-    void where(Expression expr);
-    
-    void sort(Key<?> key, SortDirection direction);
-
-    void limit(int n);
-
-    Cursor<T> execute();
-    
-    Expression getWhereExpression();
-
 }
-

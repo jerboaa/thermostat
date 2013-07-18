@@ -34,28 +34,55 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.internal.statement;
+package com.redhat.thermostat.storage.core;
 
 /**
- * Represents a prepared parameter.
+ * 
+ * Shared class for setting prepared parameters.
  *
- * @see PreparedStatementImpl
  */
-class PreparedParameter {
+public final class PreparedParameters implements PreparedStatementSetter {
 
-    private final Object value;
-    private final Class<?> type;
+    private PreparedParameter[] params;
     
-    PreparedParameter(Object value, Class<?> type) {
-        this.value = value;
-        this.type = type;
+    public PreparedParameters(int numParams) {
+        params = new PreparedParameter[numParams];
+    }
+    
+    @Override
+    public void setLong(int paramIndex, long paramValue) {
+        setType(paramIndex, paramValue, Long.class);
     }
 
-    public Object getValue() {
-        return value;
+    @Override
+    public void setInt(int paramIndex, int paramValue) {
+        setType(paramIndex, paramValue, Integer.class);
     }
 
-    public Class<?> getType() {
-        return type;
+    @Override
+    public void setStringList(int paramIndex, String[] paramValue) {
+        setType(paramIndex, paramValue, String[].class);
+    }
+    
+    @Override
+    public void setBoolean(int paramIndex, boolean paramValue) {
+        setType(paramIndex, paramValue, Boolean.class);
+    }
+
+    @Override
+    public void setString(int paramIndex, String paramValue) {
+        setType(paramIndex, paramValue, String.class);
+    }
+
+    private void setType(int paramIndex, Object paramValue, Class<?> paramType) {
+        if (paramIndex >= params.length) {
+            throw new IllegalArgumentException("Parameter index '" + paramIndex + "' out of range.");
+        }
+        PreparedParameter param = new PreparedParameter(paramValue, paramType);
+        params[paramIndex] = param;
+    }
+    
+    public PreparedParameter[] getParams() {
+        return params;
     }
 }

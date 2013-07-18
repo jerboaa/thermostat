@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.storage.internal.statement;
 
+import com.redhat.thermostat.storage.core.IllegalPatchException;
+import com.redhat.thermostat.storage.core.ParsedStatement;
+import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Statement;
 import com.redhat.thermostat.storage.model.Pojo;
@@ -43,36 +46,38 @@ import com.redhat.thermostat.storage.query.Expression;
 
 /**
  * Result object as returned by {@link StatementDescriptorParser#parse()}.
- * An instance of this plus an {@link PreparedStatementImpl} instance should
+ * An instance of this plus a list of {@link PreparedParameter} should
  * be sufficient to patch up a prepared statement with its real values.
  *
  * @see PreparedStatementImpl#executeQuery()
  */
-class ParsedStatement<T extends Pojo> {
+class ParsedStatementImpl<T extends Pojo> implements ParsedStatement<T> {
 
     private int numParams;
     private SuffixExpression suffixExpn;
     private final Statement<T> statement;
-    
-    ParsedStatement(Statement<T> statement) {
+
+    ParsedStatementImpl(Statement<T> statement) {
         this.statement = statement;
     }
     
+    @Override
     public int getNumParams() {
         return numParams;
     }
 
+    @Override
     public Statement<T> getRawStatement() {
         return statement;
     }
     
-    public Statement<T> patchQuery(PreparedStatementImpl<T> stmt) throws IllegalPatchException {
+    @Override
+    public Statement<T> patchStatement(PreparedParameter[] params) throws IllegalPatchException {
         if (suffixExpn == null) {
             String msg = "Suffix expression must be set before patching!";
             IllegalStateException expn = new IllegalStateException(msg);
             throw new IllegalPatchException(expn);
         }
-        PreparedParameter[] params = stmt.getParams();
         patchWhere(params);
         patchSort(params);
         patchLimit(params);
@@ -141,15 +146,15 @@ class ParsedStatement<T extends Pojo> {
         }
     }
 
-    public void setNumFreeParams(int num) {
+    void setNumFreeParams(int num) {
         this.numParams = num;
     }
 
-    public void setSuffixExpression(SuffixExpression tree) {
+    void setSuffixExpression(SuffixExpression tree) {
         this.suffixExpn = tree;
     }
 
-    public SuffixExpression getSuffixExpression() {
+    SuffixExpression getSuffixExpression() {
         return suffixExpn;
     }
 

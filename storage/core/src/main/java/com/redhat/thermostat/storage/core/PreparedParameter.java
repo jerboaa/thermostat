@@ -36,38 +36,38 @@
 
 package com.redhat.thermostat.storage.core;
 
-import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.storage.query.Expression;
-
 /**
- * Describes what data should be fetched.
+ * Represents a prepared parameter.
+ *
+ * @see PreparedParameters
  */
-public interface Query<T extends Pojo> extends Statement<T> {
+public class PreparedParameter {
 
-    enum SortDirection {
-        ASCENDING(1),
-        DESCENDING(-1);
-
-        private int value;
-
-        private SortDirection(int value) {
-            this.value = value;
-        }
-
-        public int getValue() {
-            return value;
-        }
+    private Object value;
+    private Class<?> type;
+    
+    PreparedParameter(Object value, Class<?> type) {
+        this.value = value;
+        this.type = type;
+    }
+    
+    public PreparedParameter() {
+        // nothing. Exists for serialization purposes.
     }
 
-    void where(Expression expr);
-    
-    void sort(Key<?> key, SortDirection direction);
+    public Object getValue() {
+        return value;
+    }
 
-    void limit(int n);
+    public void setValue(Object value) {
+        this.value = value;
+    }
 
-    Cursor<T> execute();
-    
-    Expression getWhereExpression();
+    public Class<?> getType() {
+        return type;
+    }
 
+    public void setType(Class<?> type) {
+        this.type = type;
+    }
 }
-

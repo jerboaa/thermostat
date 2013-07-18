@@ -34,17 +34,38 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.internal.statement;
+package com.redhat.thermostat.storage.core;
+
+import com.redhat.thermostat.storage.model.Pojo;
 
 /**
- * Thrown if a prepared statement was attempted to patch, which resulted in
- * NPEs or a type mismatch for some of the free variables.
+ * An intermediary representation of a {@link PreparedStatement}.
  *
  */
-@SuppressWarnings("serial")
-class IllegalPatchException extends Exception {
+public interface ParsedStatement<T extends Pojo> {
 
-    IllegalPatchException(Throwable cause) {
-        super(cause);
-    }
+    /**
+     * Patches a statement, setting free variables. After patching, the
+     * statement is ready for execution.
+     * 
+     * @param params
+     *            The ordered list of values/types of free parameters.
+     * @return The statement ready for execution.
+     * @throws IllegalPatchException
+     *             If the patching fails for some reason.
+     */
+    Statement<T> patchStatement(PreparedParameter[] params)
+            throws IllegalPatchException;
+    
+    /**
+     * 
+     * @return The number of free variables.
+     */
+    int getNumParams();
+    
+    /**
+     * 
+     * @return The raw statement.
+     */
+    Statement<T> getRawStatement();
 }

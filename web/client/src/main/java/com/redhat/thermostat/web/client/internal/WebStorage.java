@@ -42,8 +42,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
-import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Type;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.SecureRandom;
@@ -96,13 +96,17 @@ import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Connection;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
+import com.redhat.thermostat.storage.core.IllegalDescriptorException;
+import com.redhat.thermostat.storage.core.IllegalPatchException;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.SecureStorage;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.core.Update;
@@ -111,9 +115,14 @@ import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.storage.query.Operator;
 import com.redhat.thermostat.web.common.ExpressionSerializer;
 import com.redhat.thermostat.web.common.OperatorSerializer;
+import com.redhat.thermostat.web.common.PreparedParameterSerializer;
 import com.redhat.thermostat.web.common.ThermostatGSONConverter;
 import com.redhat.thermostat.web.common.WebInsert;
-import com.redhat.thermostat.web.common.WebQuery;
+import com.redhat.thermostat.web.common.WebPreparedStatement;
+import com.redhat.thermostat.web.common.WebPreparedStatementResponse;
+import com.redhat.thermostat.web.common.WebPreparedStatementSerializer;
+import com.redhat.thermostat.web.common.WebQueryResponse;
+import com.redhat.thermostat.web.common.WebQueryResponseSerializer;
 import com.redhat.thermostat.web.common.WebRemove;
 import com.redhat.thermostat.web.common.WebUpdate;
 
@@ -318,20 +327,29 @@ public class WebStorage implements Storage, SecureStorage {
             updatePojo(this);
         }
     }
+    
+    private class WebPreparedStatementImpl<T extends Pojo> extends WebPreparedStatement<T> {
 
-    private class WebQueryImpl<T extends Pojo> extends WebQuery<T> {
-
-        private transient Class<T> dataClass;
-
-        WebQueryImpl(int categoryId, Class<T> dataClass) {
-            super(categoryId);
-            this.dataClass = dataClass;
+        // The type of the query result objects we'd get back upon
+        // statement execution
+        private final transient Type parametrizedTypeToken;
+        
+        public WebPreparedStatementImpl(Type parametrizedTypeToken, int numParams, int statementId) {
+            super(numParams, statementId);
+            this.parametrizedTypeToken = parametrizedTypeToken;
+        }
+        
+        @Override
+        public int execute() throws StatementExecutionException {
+            throw new IllegalStateException("Not yet implemented!");
         }
 
         @Override
-        public Cursor<T> execute() {
-            return findAllPojos(this, dataClass);
+        public Cursor<T> executeQuery()
+                throws StatementExecutionException {
+            return doExecuteQuery(this, parametrizedTypeToken);
         }
+        
     }
 
     private String endpoint;
@@ -363,7 +381,11 @@ public class WebStorage implements Storage, SecureStorage {
                         new ThermostatGSONConverter())
                 .registerTypeHierarchyAdapter(Expression.class,
                         new ExpressionSerializer())
-                .registerTypeHierarchyAdapter(Operator.class, new OperatorSerializer()).create();
+                .registerTypeHierarchyAdapter(Operator.class, new OperatorSerializer())
+                .registerTypeAdapter(WebPreparedStatement.class, new WebPreparedStatementSerializer())
+                .registerTypeAdapter(WebQueryResponse.class, new WebQueryResponseSerializer<>())
+                .registerTypeAdapter(PreparedParameter.class, new PreparedParameterSerializer())
+                .create();
         httpClient = client;
         random = new SecureRandom();
         conn = new WebConnection();
@@ -492,7 +514,10 @@ public class WebStorage implements Storage, SecureStorage {
 
     @Override
     public <T extends Pojo> Query<T> createQuery(Category<T> category) {
-        return new WebQueryImpl<>(categoryIds.get(category), category.getDataClass());
+        // There isn't going to be a query end-point on server side.
+        String msg = "createQuery() not supported for Web storage. " +
+                "Please use prepareStatement() instead.";
+        throw new IllegalStateException(msg);
     }
 
     @Override
@@ -507,14 +532,47 @@ public class WebStorage implements Storage, SecureStorage {
         return updateImpl;
     }
 
-    @SuppressWarnings("unchecked")
-    private <T extends Pojo> Cursor<T> findAllPojos(WebQuery<T> query, Class<T> resultClass) throws StorageException {
-        NameValuePair queryParam = new BasicNameValuePair("query", gson.toJson(query));
+    /**
+     * Executes a prepared query
+     * 
+     * @param stmt
+     *            The prepared statement to execute
+     * @param parametrizedTypeToken
+     *            The parametrized type token to use for deserialization.
+     *            Example as to how this was created:
+     *            <pre>
+     *            Type parametrizedTypeToken = new
+     *            TypeToken&lt;WebQueryResponse&lt;AgentInformation&gt;&gt;().getType();
+     *            </pre>
+     * @return A cursor for the generic type.
+     * @throws StatementExecutionException
+     *             If execution of the statement failed.
+     */
+    private <T extends Pojo> Cursor<T> doExecuteQuery(WebPreparedStatement<T> stmt, Type parametrizedTypeToken) throws StatementExecutionException {
+        NameValuePair queryParam = new BasicNameValuePair("prepared-stmt", gson.toJson(stmt, WebPreparedStatement.class));
         List<NameValuePair> formparams = Arrays.asList(queryParam);
-        try (CloseableHttpEntity entity = post(endpoint + "/find-all", formparams)) {
+        WebQueryResponse<T> qResp = null;
+        try (CloseableHttpEntity entity = post(endpoint + "/query-execute", formparams)) {
             Reader reader = getContentAsReader(entity);
-            T[] result = (T[]) gson.fromJson(reader, Array.newInstance(resultClass, 0).getClass());
+            qResp = gson.fromJson(reader, parametrizedTypeToken);
+        } catch (Exception e) {
+            throw new StatementExecutionException(e);
+        }
+        if (qResp.getResponseCode() == WebQueryResponse.SUCCESS) {
+            T[] result = qResp.getResultList();
             return new WebCursor<T>(result);
+        } else if (qResp.getResponseCode() == WebQueryResponse.ILLEGAL_PATCH) {
+            String msg = "Illegal statement argument. See server logs for details.";
+            IllegalArgumentException iae = new IllegalArgumentException(msg);
+            IllegalPatchException e = new IllegalPatchException(iae);
+            throw new StatementExecutionException(e);
+        } else {
+            // We only handle success responses and illegal patches, like
+            // we do for other storages. This is just a defensive measure in
+            // order to fail early in case something unexpected comes back.
+            String msg = "Unknown response from storage endpoint!";
+            IllegalStateException ise = new IllegalStateException(msg);
+            throw new StatementExecutionException(ise);
         }
     }
 
@@ -709,8 +767,38 @@ public class WebStorage implements Storage, SecureStorage {
     @Override
     public <T extends Pojo> PreparedStatement<T> prepareStatement(StatementDescriptor<T> desc)
             throws DescriptorParsingException {
-        // TODO Implement
-        return null;
+        String strDesc = desc.getQueryDescriptor();
+        int categoryId = getCategoryId(desc.getCategory());
+        NameValuePair nameParam = new BasicNameValuePair("query-descriptor",
+                strDesc);
+        NameValuePair categoryParam = new BasicNameValuePair("category-id",
+                gson.toJson(categoryId, Integer.class));
+        List<NameValuePair> formparams = Arrays
+                .asList(nameParam, categoryParam);
+        try (CloseableHttpEntity entity = post(endpoint + "/prepare-statement",
+                formparams)) {
+            Reader reader = getContentAsReader(entity);
+            WebPreparedStatementResponse result = gson.fromJson(reader, WebPreparedStatementResponse.class);
+            int numParams = result.getNumFreeVariables();
+            int statementId = result.getStatementId();
+            if (statementId == WebPreparedStatementResponse.ILLEGAL_STATEMENT) {
+                // we've got a descriptor the endpoint doesn't know about or
+                // refuses to accept for security reasons.
+                String msg = "Unknown query descriptor which endpoint of " + WebStorage.class.getName() + "refused to accept!";
+                throw new IllegalDescriptorException(msg, desc.getQueryDescriptor());
+            } else if (statementId == WebPreparedStatementResponse.DESCRIPTOR_PARSE_FAILED) {
+                String msg = "Statement descriptor failed to parse. " +
+                             "Please check server logs for details!";
+                throw new DescriptorParsingException(msg);
+            } else {
+                // We need this ugly trick in order for WebQueryResponse
+                // deserialization to work properly. I.e. GSON needs this type
+                // info hint.
+                Class<T> dataClass = desc.getCategory().getDataClass();
+                Type typeToken = new WebQueryResponse<T>().getRuntimeParametrizedType(dataClass);
+                return new WebPreparedStatementImpl<T>(typeToken, numParams, statementId);
+            }
+        }
     }
 
 }

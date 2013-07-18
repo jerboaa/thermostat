@@ -38,6 +38,8 @@ package com.redhat.thermostat.storage.internal.statement;
 
 import java.util.Objects;
 
+import com.redhat.thermostat.storage.core.IllegalPatchException;
+import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.query.ComparisonExpression;
 import com.redhat.thermostat.storage.query.UnaryLogicalExpression;
 import com.redhat.thermostat.storage.query.UnaryLogicalOperator;

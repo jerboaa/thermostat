@@ -36,7 +36,9 @@
 
 package com.redhat.thermostat.storage.internal.statement;
 
+import com.redhat.thermostat.storage.core.IllegalPatchException;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.Query.SortDirection;
 
 /**

@@ -36,38 +36,21 @@
 
 package com.redhat.thermostat.storage.core;
 
-import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.storage.query.Expression;
-
 /**
- * Describes what data should be fetched.
+ * Package private interface in order to ensure consistency of
+ * setters between {@link PreparedStatement} and {@link PreparedParamenters}.
+ *
  */
-public interface Query<T extends Pojo> extends Statement<T> {
+interface PreparedStatementSetter {
 
-    enum SortDirection {
-        ASCENDING(1),
-        DESCENDING(-1);
-
-        private int value;
-
-        private SortDirection(int value) {
-            this.value = value;
-        }
-
-        public int getValue() {
-            return value;
-        }
-    }
-
-    void where(Expression expr);
+    void setBoolean(int paramIndex, boolean paramValue);
     
-    void sort(Key<?> key, SortDirection direction);
-
-    void limit(int n);
-
-    Cursor<T> execute();
+    void setLong(int paramIndex, long paramValue);
     
-    Expression getWhereExpression();
-
+    void setInt(int paramIndex, int paramValue);
+    
+    void setString(int paramIndex, String paramValue);
+    
+    void setStringList(int paramIndex, String[] paramValue);
+    
 }
-

@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.storage.internal.statement;
 
+import com.redhat.thermostat.storage.core.IllegalPatchException;
+import com.redhat.thermostat.storage.core.PreparedParameter;
+
 /**
  * Represents a limit expression in the prepared statement's parse tree.
  *
