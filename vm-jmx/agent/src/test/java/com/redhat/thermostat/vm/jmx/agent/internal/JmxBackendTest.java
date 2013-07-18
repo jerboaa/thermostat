@@ -145,9 +145,9 @@ public class JmxBackendTest {
 
         MXBeanConnection connection = mock(MXBeanConnection.class);
         when(connection.get()).thenReturn(actual);
-        when(pool.acquire(0)).thenReturn(connection);
+        when(pool.acquire(42)).thenReturn(connection);
 
-        backend.enableNotificationsFor("0");
+        backend.enableNotificationsFor(42);
 
         verify(actual).addNotificationListener(eq(name1), any(NotificationListener.class), eq((NotificationFilter) null), any());
     }
@@ -167,9 +167,9 @@ public class JmxBackendTest {
 
         MXBeanConnection connection = mock(MXBeanConnection.class);
         when(connection.get()).thenReturn(actual);
-        when(pool.acquire(0)).thenReturn(connection);
+        when(pool.acquire(42)).thenReturn(connection);
 
-        backend.enableNotificationsFor("0");
+        backend.enableNotificationsFor(42);
 
         ArgumentCaptor<NotificationListener> listenerCaptor = ArgumentCaptor.forClass(NotificationListener.class);
         ArgumentCaptor<Object> handbackCaptor = ArgumentCaptor.forClass(Object.class);
@@ -210,9 +210,9 @@ public class JmxBackendTest {
 
         MXBeanConnection connection = mock(MXBeanConnection.class);
         when(connection.get()).thenReturn(actual);
-        when(pool.acquire(0)).thenReturn(connection);
+        when(pool.acquire(42)).thenReturn(connection);
 
-        backend.enableNotificationsFor("0");
+        backend.enableNotificationsFor(42);
 
         ArgumentCaptor<NotificationListener> listenerCaptor = ArgumentCaptor.forClass(NotificationListener.class);
         ArgumentCaptor<Object> handbackCaptor = ArgumentCaptor.forClass(Object.class);
@@ -244,9 +244,9 @@ public class JmxBackendTest {
 
         MXBeanConnection connection = mock(MXBeanConnection.class);
         when(connection.get()).thenReturn(actual);
-        when(pool.acquire(0)).thenReturn(connection);
+        when(pool.acquire(42)).thenReturn(connection);
 
-        backend.enableNotificationsFor("0");
+        backend.enableNotificationsFor(42);
 
         ArgumentCaptor<NotificationListener> listenerCaptor = ArgumentCaptor.forClass(NotificationListener.class);
         ArgumentCaptor<Object> handbackCaptor = ArgumentCaptor.forClass(Object.class);
@@ -272,12 +272,12 @@ public class JmxBackendTest {
 
         MXBeanConnection connection = mock(MXBeanConnection.class);
         when(connection.get()).thenReturn(actual);
-        when(pool.acquire(0)).thenReturn(connection);
+        when(pool.acquire(42)).thenReturn(connection);
 
-        backend.enableNotificationsFor("0");
+        backend.enableNotificationsFor(42);
 
-        backend.disableNotificationsFor("0");
+        backend.disableNotificationsFor(42);
 
-        verify(pool).release(0, connection);
+        verify(pool).release(42, connection);
     }
 }

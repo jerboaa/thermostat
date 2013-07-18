@@ -47,11 +47,11 @@ public interface UNIXProcessHandler {
      * Sends the given {@link UNIXSignal} to the process indicated by
      * {@code pid}.
      */
-    public void sendSignal(String pid, UNIXSignal signal);
+    public void sendSignal(Integer pid, UNIXSignal signal);
     
     /**
      * Gets the process name given its {@code pid}.
      */
-    public String getProcessName(String pid);
+    public String getProcessName(Integer pid);
 }
 

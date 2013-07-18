@@ -81,12 +81,12 @@ public class JmxNotificationDAOImpl implements JmxNotificationDAO {
     static final String QUERY_LATEST_NOTIFICATION_STATUS = "QUERY "
             + NOTIFICATION_STATUS.getName() + " WHERE '"
             + Key.AGENT_ID.getName() + "' = ?s AND '" 
-            + Key.VM_ID.getName() + "' = ?i SORT '" 
+            + Key.VM_ID.getName() + "' = ?s SORT '" 
             + Key.TIMESTAMP.getName() + "' DSC LIMIT 1";
     static final String QUERY_NOTIFICATIONS = "QUERY "
             + NOTIFICATIONS.getName() + " WHERE '" 
             + Key.AGENT_ID.getName() + "' = ?s AND '" 
-            + Key.VM_ID.getName() + "' = ?i AND '"
+            + Key.VM_ID.getName() + "' = ?s AND '"
             + Key.TIMESTAMP.getName() + "' > ?l";
     
     private Storage storage;
@@ -112,8 +112,8 @@ public class JmxNotificationDAOImpl implements JmxNotificationDAO {
         Cursor<JmxNotificationStatus> cursor;
         try {
             stmt = storage.prepareStatement(desc);
-            stmt.setString(0, statusFor.getAgent().getAgentId());
-            stmt.setInt(1, statusFor.getId());
+            stmt.setString(0, statusFor.getHostRef().getAgentId());
+            stmt.setString(1, statusFor.getVmId());
             cursor = stmt.executeQuery();
         } catch (DescriptorParsingException e) {
             // should not happen, but if it *does* happen, at least log it
@@ -147,8 +147,8 @@ public class JmxNotificationDAOImpl implements JmxNotificationDAO {
         Cursor<JmxNotification> cursor;
         try {
             stmt = storage.prepareStatement(desc);
-            stmt.setString(0, notificationsFor.getAgent().getAgentId());
-            stmt.setInt(1, notificationsFor.getId());
+            stmt.setString(0, notificationsFor.getHostRef().getAgentId());
+            stmt.setString(1, notificationsFor.getVmId());
             stmt.setLong(2, timeStampSince);
             cursor = stmt.executeQuery();
         } catch (DescriptorParsingException e) {

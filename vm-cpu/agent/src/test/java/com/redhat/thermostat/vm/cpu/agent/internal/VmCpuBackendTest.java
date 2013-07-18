@@ -134,8 +134,8 @@ public class VmCpuBackendTest {
         VmCpuStatBuilder builder = mock(VmCpuStatBuilder.class);
         VmCpuStat stat0 = mock(VmCpuStat.class);
         VmCpuStat stat1 = mock(VmCpuStat.class);
-        when(builder.build(0)).thenReturn(stat0);
-        when(builder.build(1)).thenReturn(stat1);
+        when(builder.build("vm1", 0)).thenReturn(stat0);
+        when(builder.build("vm2", 1)).thenReturn(stat1);
         backend.setVmCpuStatBuilder(builder);
         
         backend.activate();
@@ -145,8 +145,8 @@ public class VmCpuBackendTest {
         verify(executor).scheduleAtFixedRate(captor.capture(), any(Long.class), any(Long.class), any(TimeUnit.class));
         assertTrue(backend.isActive());
         
-        backend.vmStatusChanged(Status.VM_ACTIVE, 0);
-        backend.vmStatusChanged(Status.VM_STARTED, 1);
+        backend.vmStatusChanged(Status.VM_ACTIVE, "vm1", 0);
+        backend.vmStatusChanged(Status.VM_STARTED, "vm2", 1);
 
         Runnable runnable = captor.getValue();
         runnable.run();
@@ -158,8 +158,8 @@ public class VmCpuBackendTest {
         verify(vmCpuStatDao).putVmCpuStat(stat0);
         verify(vmCpuStatDao).putVmCpuStat(stat1);
 
-        backend.vmStatusChanged(Status.VM_STOPPED, 0);
-        backend.vmStatusChanged(Status.VM_STOPPED, 1);
+        backend.vmStatusChanged(Status.VM_STOPPED, "vm1", 0);
+        backend.vmStatusChanged(Status.VM_STOPPED, "vm2", 1);
 
         verify(builder).forgetAbout(0);
         verify(builder).forgetAbout(1);

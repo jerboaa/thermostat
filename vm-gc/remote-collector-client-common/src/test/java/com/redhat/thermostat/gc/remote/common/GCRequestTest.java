@@ -75,8 +75,8 @@ public class GCRequestTest {
         listener = mock(RequestResponseListener.class);
 
         HostRef ref = mock(HostRef.class);        
-        when(vm.getAgent()).thenReturn(ref);
-        when(vm.getIdString()).thenReturn("123456");
+        when(vm.getHostRef()).thenReturn(ref);
+        when(vm.getPid()).thenReturn(123456);
 
         AgentInformation info = mock(AgentInformation.class);
         when(info.getConfigListenAddress()).thenReturn("0.0.42.42:42");
@@ -106,8 +106,8 @@ public class GCRequestTest {
         };
         
         gcRequest.sendGCRequestToAgent(vm, agentDAO, listener);
-        verify(vm).getAgent();
-        verify(vm).getIdString();
+        verify(vm).getHostRef();
+        verify(vm).getPid();
         
         assertTrue(results[0]);
         assertTrue(results[1]);
@@ -115,7 +115,7 @@ public class GCRequestTest {
         
         verify(request).setReceiver(GCCommand.RECEIVER);
         verify(request).setParameter(GCCommand.class.getName(), GCCommand.REQUEST_GC.name());
-        verify(request).setParameter(GCCommand.VM_ID, "123456");
+        verify(request).setParameter(GCCommand.VM_PID, "123456");
         verify(request).addListener(listener);
         
         verify(queue).putRequest(request);

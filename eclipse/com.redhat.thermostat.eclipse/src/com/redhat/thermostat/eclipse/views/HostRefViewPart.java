@@ -55,7 +55,7 @@ public abstract class HostRefViewPart extends RefViewPart<HostRef> {
             ref = (HostRef) selection;
         }
         else if (selection instanceof VmRef) {
-            ref = ((VmRef) selection).getAgent();
+            ref = ((VmRef) selection).getHostRef();
         }
         return ref;
     }

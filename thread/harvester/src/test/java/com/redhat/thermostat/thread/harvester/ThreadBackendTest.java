@@ -38,7 +38,6 @@ package com.redhat.thermostat.thread.harvester;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -48,9 +47,10 @@ import java.util.Arrays;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.agent.VmStatusListener.Status;
+import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
+import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.Version;
 
 public class ThreadBackendTest {
@@ -95,28 +95,28 @@ public class ThreadBackendTest {
 
     @Test
     public void testActivateAfterDeactivate() {
-        when(threadHarvester.stopAndRemoveAllHarvesters()).thenReturn(Arrays.asList(1));
+        when(threadHarvester.stopAndRemoveAllHarvesters()).thenReturn(Arrays.asList(new Pair<>("vmId", 10)));
 
         assertTrue(backend.activate());
         assertTrue(backend.deactivate());
         assertTrue(backend.activate());
         assertTrue(backend.isActive());
 
-        verify(threadHarvester).startHarvester("1");
+        verify(threadHarvester).startHarvester("vmId", 10);
     }
 
     @Test
     public void testVmStarts() {
-        backend.vmStatusChanged(Status.VM_STARTED, 10);
+        backend.vmStatusChanged(Status.VM_STARTED, "vmId", 10);
 
-        verify(threadHarvester).saveVmCaps("10");
-        verify(threadHarvester).addThreadHarvestingStatus("10");
+        verify(threadHarvester).saveVmCaps("vmId", 10);
+        verify(threadHarvester).addThreadHarvestingStatus("vmId");
     }
 
     @Test
     public void testVmStops() {
-        backend.vmStatusChanged(Status.VM_STOPPED, 10);
+        backend.vmStatusChanged(Status.VM_STOPPED, "vmId", 10);
 
-        verify(threadHarvester).stopHarvester("10");
+        verify(threadHarvester).stopHarvester("vmId");
     }
 }

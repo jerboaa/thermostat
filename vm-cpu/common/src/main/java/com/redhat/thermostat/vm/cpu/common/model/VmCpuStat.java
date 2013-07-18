@@ -45,14 +45,14 @@ import com.redhat.thermostat.storage.model.TimeStampedPojo;
 public class VmCpuStat extends BasePojo implements TimeStampedPojo {
 
     private long timeStamp;
-    private int vmId;
+    private String vmId;
     private double cpuLoad;
 
     public VmCpuStat() {
         super();
     }
 
-    public VmCpuStat(long timeStamp, int vmId, double cpuLoad) {
+    public VmCpuStat(long timeStamp, String vmId, double cpuLoad) {
         this.timeStamp = timeStamp;
         this.vmId = vmId;
         this.cpuLoad = cpuLoad;
@@ -70,12 +70,12 @@ public class VmCpuStat extends BasePojo implements TimeStampedPojo {
     }
 
     @Persist
-    public int getVmId() {
+    public String getVmId() {
         return vmId;
     }
 
     @Persist
-    public void setVmId(int vmId) {
+    public void setVmId(String vmId) {
         this.vmId = vmId;
     }
 

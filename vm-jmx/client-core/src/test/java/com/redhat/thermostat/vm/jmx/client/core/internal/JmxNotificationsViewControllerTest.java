@@ -95,7 +95,7 @@ public class JmxNotificationsViewControllerTest {
 
         host = mock(HostRef.class);
         vm = mock(VmRef.class);
-        when(vm.getAgent()).thenReturn(host);
+        when(vm.getHostRef()).thenReturn(host);
 
         controller = new JmxNotificationsViewController(agentDao, notificationDao, timerFactory, queue, viewProvider, vm);
     }

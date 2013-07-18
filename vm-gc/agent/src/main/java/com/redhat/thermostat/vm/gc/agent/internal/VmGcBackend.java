@@ -59,8 +59,8 @@ public class VmGcBackend extends VmListenerBackend {
     }
 
     @Override
-    protected VmUpdateListener createVmListener(int pid) {
-        return new VmGcVmListener(vmGcStats, pid);
+    protected VmUpdateListener createVmListener(String vmId, int pid) {
+        return new VmGcVmListener(vmGcStats, vmId);
     }
 
 }

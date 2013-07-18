@@ -63,15 +63,15 @@ public class SwingVMKilledListener implements RequestResponseListener {
     public void fireComplete(Request request, Response response) {
         switch (response.getType()) {
         case ERROR:
-            String vmId = request.getParameter("vm-id");
+            String pid = request.getParameter("vm-pid");
             logger.log(Level.SEVERE,
                     "Kill request error for VM ID "
-                            + vmId);
-            showErrorMessage(t.localize(LocaleResources.KILL_ACTION_ERROR_RESPONSE_MSG, vmId).getContents());
+                            + pid);
+            showErrorMessage(t.localize(LocaleResources.KILL_ACTION_ERROR_RESPONSE_MSG, pid).getContents());
             break;
         case OK:
             logger.log(Level.INFO,
-                    "VM with id " + request.getParameter("vm-id")
+                    "VM with id " + request.getParameter("vm-pid")
                             + " killed on host "
                             + request.getTarget().toString());
             break;

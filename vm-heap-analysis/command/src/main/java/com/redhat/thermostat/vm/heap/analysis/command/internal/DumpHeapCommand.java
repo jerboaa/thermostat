@@ -49,6 +49,7 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.vm.heap.analysis.command.locale.LocaleResources;
 
 
@@ -85,11 +86,17 @@ public class DumpHeapCommand extends AbstractCommand {
             public void run() {
                 ex[0] = new CommandException(translator.localize(
                         LocaleResources.HEAP_DUMP_ERROR, args.getHost()
-                                .getStringID(), args.getVM().getStringID()));
+                                .getStringID(), args.getVM().getVmId()));
                 s.release();
             }
         };
 
+        ServiceReference vmInfoRef = context.getServiceReference(VmInfoDAO.class.getName());
+        if (vmInfoRef == null) {
+            throw new CommandException(translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
+        }
+        VmInfoDAO vmInfoDAO = (VmInfoDAO) context.getService(vmInfoRef);
+        
         ServiceReference agentInfoRef = context.getServiceReference(AgentInfoDAO.class.getName());
         if (agentInfoRef == null) {
             throw new CommandException(translator.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE));
@@ -102,8 +109,9 @@ public class DumpHeapCommand extends AbstractCommand {
         }
         RequestQueue queue = (RequestQueue) context.getService(requestQueueRef);
         
-        implementation.execute(agentInfoDAO, args.getVM(), queue, successHandler, errorHandler);
+        implementation.execute(vmInfoDAO, agentInfoDAO, args.getVM(), queue, successHandler, errorHandler);
         
+        context.ungetService(vmInfoRef);
         context.ungetService(agentInfoRef);
         context.ungetService(requestQueueRef);
         

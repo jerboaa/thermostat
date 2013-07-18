@@ -38,8 +38,10 @@ package com.redhat.thermostat.backend.system;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
@@ -50,7 +52,9 @@ import static org.mockito.Mockito.when;
 import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -66,8 +70,8 @@ import sun.jvmstat.monitor.event.VmStatusChangeEvent;
 
 import com.redhat.thermostat.agent.VmStatusListener.Status;
 import com.redhat.thermostat.backend.system.ProcessUserInfoBuilder.ProcessUserInfo;
-import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.VmInfo;
 
 public class JvmStatHostListenerTest {
     
@@ -137,10 +141,15 @@ public class JvmStatHostListenerTest {
         
         assertTrue(hostListener.getMonitoredVms().containsKey(1));
         assertTrue(hostListener.getMonitoredVms().containsKey(2));
-        assertEquals(monitoredVm1, hostListener.getMonitoredVms().get(1));
-        assertEquals(monitoredVm2, hostListener.getMonitoredVms().get(2));
-
-        verify(notifier, times(2)).notifyVmStatusChange(eq(Status.VM_STARTED), (isA(Integer.class)));
+        assertEquals(monitoredVm1, hostListener.getMonitoredVms().get(1).getSecond());
+        assertEquals(monitoredVm2, hostListener.getMonitoredVms().get(2).getSecond());
+        
+        // Check valid UUIDs
+        UUID uuid1 = UUID.fromString(hostListener.getMonitoredVms().get(1).getFirst());
+        UUID uuid2 = UUID.fromString(hostListener.getMonitoredVms().get(2).getFirst());
+        assertFalse(uuid1.equals(uuid2));
+        
+        verify(notifier, times(2)).notifyVmStatusChange(eq(Status.VM_STARTED), anyString(), (isA(Integer.class)));
     }
     
     @Test
@@ -160,10 +169,49 @@ public class JvmStatHostListenerTest {
         // Ensure only 1 removed
         assertFalse(hostListener.getMonitoredVms().containsKey(1));
         assertTrue(hostListener.getMonitoredVms().containsKey(2));
-        assertEquals(monitoredVm2, hostListener.getMonitoredVms().get(2));
+        assertEquals(monitoredVm2, hostListener.getMonitoredVms().get(2).getSecond());
 
-        verify(notifier).notifyVmStatusChange(eq(Status.VM_STOPPED), (isA(Integer.class)));
+        verify(notifier).notifyVmStatusChange(eq(Status.VM_STOPPED), anyString(), (isA(Integer.class)));
 
+    }
+    
+    @Test
+    public void testReusedPid() {
+        final Set<Integer> started = new HashSet<>();
+        started.add(1);
+        
+        // Start VM
+        VmStatusChangeEvent event = mock(VmStatusChangeEvent.class);
+        when(event.getMonitoredHost()).thenReturn(host);
+        when(event.getStarted()).thenReturn(started);
+        when(event.getTerminated()).thenReturn(Collections.emptySet());
+        hostListener.vmStatusChanged(event);
+        
+        ArgumentCaptor<String> vmIdCaptor = ArgumentCaptor.forClass(String.class);
+        
+        // Stop VM
+        event = mock(VmStatusChangeEvent.class);
+        when(event.getMonitoredHost()).thenReturn(host);
+        when(event.getStarted()).thenReturn(Collections.emptySet());
+        when(event.getTerminated()).thenReturn(started);
+        hostListener.vmStatusChanged(event);
+        
+        // Start new VM
+        event = mock(VmStatusChangeEvent.class);
+        when(event.getMonitoredHost()).thenReturn(host);
+        when(event.getStarted()).thenReturn(started);
+        when(event.getTerminated()).thenReturn(Collections.emptySet());
+        hostListener.vmStatusChanged(event);
+        
+        verify(notifier, times(2)).notifyVmStatusChange(eq(Status.VM_STARTED), vmIdCaptor.capture(), eq(1));
+        List<String> vmIds = vmIdCaptor.getAllValues();
+        
+        assertEquals(2, vmIds.size());
+        String vmId1 = vmIds.get(0);
+        String vmId2 = vmIds.get(1);
+        assertNotNull(vmId1);
+        assertNotNull(vmId2);
+        assertFalse(vmId1.equals(vmId2));
     }
 
     private void startVMs() throws InterruptedException, MonitorException {
@@ -178,20 +226,21 @@ public class JvmStatHostListenerTest {
         when(event.getTerminated()).thenReturn(Collections.emptySet());
         hostListener.vmStatusChanged(event);
 
-        verify(notifier, times(2)).notifyVmStatusChange(eq(Status.VM_STARTED), isA(Integer.class));
+        verify(notifier, times(2)).notifyVmStatusChange(eq(Status.VM_STARTED), anyString(), isA(Integer.class));
     }
 
     @Test
     public void testRecordVmInfo() throws MonitorException {
-        final int INFO_ID = 1;
+        final String INFO_ID = "vmId";
+        final int INFO_PID = 1;
         final long INFO_STARTTIME = Long.MIN_VALUE;
         final long INFO_STOPTIME = Long.MAX_VALUE;
-        hostListener.recordVmInfo(INFO_ID, INFO_STARTTIME, INFO_STOPTIME, extractor);
+        hostListener.recordVmInfo(INFO_ID, INFO_PID, INFO_STARTTIME, INFO_STOPTIME, extractor);
         ArgumentCaptor<VmInfo> captor = ArgumentCaptor.forClass(VmInfo.class);
         verify(vmInfoDAO).putVmInfo(captor.capture());
         VmInfo info = captor.getValue();
         
-        assertEquals(INFO_ID, info.getVmId());
+        assertEquals(INFO_PID, info.getVmPid());
         assertEquals(INFO_STARTTIME, info.getStartTimeStamp());
         assertEquals(INFO_STOPTIME, info.getStopTimeStamp());
         assertEquals(INFO_CMDLINE, info.getJavaCommandLine());

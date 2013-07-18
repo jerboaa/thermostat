@@ -67,6 +67,7 @@ import com.redhat.thermostat.testutils.StubBundleContext;
 public class VMInfoCommandTest {
     
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+    private static final String VM_ID = "eafd6db9-9487-41fc-a571-d6a4bfcfbd2f";
     private static TimeZone defaultTimezone;
 
     @BeforeClass
@@ -101,14 +102,14 @@ public class VMInfoCommandTest {
 
     private void setupDAOs() {
         HostRef host = new HostRef("123", "dummy");
-        vm = new VmRef(host, 234, "dummy");
+        vm = new VmRef(host, VM_ID, -1, "dummy");
         Calendar start = Calendar.getInstance();
         start.set(2012, 5, 7, 15, 32, 0);
         Calendar end = Calendar.getInstance();
         end.set(2013, 10, 1, 1, 22, 0);
-        VmInfo vmInfo = new VmInfo(234, start.getTimeInMillis(), end.getTimeInMillis(), "vmVersion", "javaHome", "mainClass", "commandLine", "vmName", "vmInfo", "vmVersion", "vmArguments", new HashMap<String,String>(), new HashMap<String,String>(), new String[0], 2000, "myUser");
+        VmInfo vmInfo = new VmInfo(VM_ID, 234, start.getTimeInMillis(), end.getTimeInMillis(), "vmVersion", "javaHome", "mainClass", "commandLine", "vmName", "vmInfo", "vmVersion", "vmArguments", new HashMap<String,String>(), new HashMap<String,String>(), new String[0], 2000, "myUser");
         when(vmsDAO.getVmInfo(vm)).thenReturn(vmInfo);
-        when(vmsDAO.getVmInfo(new VmRef(host, 9876, "dummy"))).thenThrow(new DAOException("Unknown VM ID: 9876"));
+        when(vmsDAO.getVmInfo(new VmRef(host, "noVm", -1, "dummy"))).thenThrow(new DAOException("Unknown VM ID: noVm"));
         when(vmsDAO.getVMs(host)).thenReturn(Arrays.asList(vm));
     }
 
@@ -118,10 +119,11 @@ public class VMInfoCommandTest {
         context.registerService(VmInfoDAO.class, vmsDAO, null);
         cmd = new VMInfoCommand(context);
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("vmId", "234");
+        args.addArgument("vmId", VM_ID);
         args.addArgument("hostId", "123");
         cmd.run(cmdCtxFactory.createContext(args));
-        String expected = "Process ID:      234\n" +
+        String expected = "VM ID:           " + VM_ID + "\n" +
+                          "Process ID:      234\n" +
                           "Start time:      Thu Jun 07 15:32:00 UTC 2012\n" +
                           "Stop time:       Fri Nov 01 01:22:00 UTC 2013\n" +
                           "User ID:         2000(myUser)\n" +
@@ -142,10 +144,11 @@ public class VMInfoCommandTest {
         context.registerService(VmInfoDAO.class, vmsDAO, null);
         cmd = new VMInfoCommand(context);
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("vmId", "234");
+        args.addArgument("vmId", VM_ID);
         args.addArgument("hostId", "123");
         cmd.run(cmdCtxFactory.createContext(args));
-        String expected = "Process ID:      234\n" +
+        String expected = "VM ID:           " + VM_ID + "\n" +
+                          "Process ID:      234\n" +
                           "Start time:      Thu Jun 07 15:32:00 UTC 2012\n" +
                           "Stop time:       Fri Nov 01 01:22:00 UTC 2013\n" +
                           "User ID:         <Unknown>\n" +
@@ -166,10 +169,11 @@ public class VMInfoCommandTest {
         context.registerService(VmInfoDAO.class, vmsDAO, null);
         cmd = new VMInfoCommand(context);
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("vmId", "234");
+        args.addArgument("vmId", VM_ID);
         args.addArgument("hostId", "123");
         cmd.run(cmdCtxFactory.createContext(args));
-        String expected = "Process ID:      234\n" +
+        String expected = "VM ID:           " + VM_ID + "\n" +
+                          "Process ID:      234\n" +
                           "Start time:      Thu Jun 07 15:32:00 UTC 2012\n" +
                           "Stop time:       Fri Nov 01 01:22:00 UTC 2013\n" +
                           "User ID:         2000\n" +
@@ -203,7 +207,8 @@ public class VMInfoCommandTest {
         SimpleArguments args = new SimpleArguments();
         args.addArgument("hostId", "123");
         cmd.run(cmdCtxFactory.createContext(args));
-        String expected = "Process ID:      234\n" +
+        String expected = "VM ID:           " + VM_ID + "\n" +
+                          "Process ID:      234\n" +
                           "Start time:      Thu Jun 07 15:32:00 UTC 2012\n" +
                           "Stop time:       Fri Nov 01 01:22:00 UTC 2013\n" +
                           "User ID:         2000(myUser)\n" +
@@ -220,27 +225,12 @@ public class VMInfoCommandTest {
         context.registerService(VmInfoDAO.class, vmsDAO, null);
         cmd = new VMInfoCommand(context);
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("vmId", "9876");
+        args.addArgument("vmId", "noVm");
         args.addArgument("hostId", "123");
         cmd.run(cmdCtxFactory.createContext(args));
-        String expected = "Unknown VM ID: 9876\n";
+        String expected = "Unknown VM ID: noVm\n";
         assertEquals("", cmdCtxFactory.getOutput());
         assertEquals(expected, cmdCtxFactory.getError());
-    }
-
-    @Test
-    public void testVmInfoNonNumericalVMID() throws CommandException {
-        context.registerService(VmInfoDAO.class, vmsDAO, null);
-        cmd = new VMInfoCommand(context);
-        SimpleArguments args = new SimpleArguments();
-        args.addArgument("vmId", "fluff");
-        args.addArgument("hostId", "123");
-        try {
-            cmd.run(cmdCtxFactory.createContext(args));
-        } catch (CommandException ex) {
-            String expected = "Invalid VM ID: fluff";
-            assertEquals(expected, ex.getMessage());
-        }
     }
 
     @Bug(id="1046",
@@ -252,14 +242,16 @@ public class VMInfoCommandTest {
         cmd = new VMInfoCommand(context);
         Calendar start = Calendar.getInstance();
         start.set(2012, 5, 7, 15, 32, 0);
-        VmInfo vmInfo = new VmInfo(234, start.getTimeInMillis(), Long.MIN_VALUE, "vmVersion", "javaHome", "mainClass", "commandLine", "vmName", "vmInfo", "vmVersion", "vmArguments", new HashMap<String,String>(), new HashMap<String,String>(), new String[0], 2000, "myUser");
+        final String vmId = "61a255db-1c27-43d6-aaee-28bb4788b8db";
+        VmInfo vmInfo = new VmInfo(vmId, 234, start.getTimeInMillis(), Long.MIN_VALUE, "vmVersion", "javaHome", "mainClass", "commandLine", "vmName", "vmInfo", "vmVersion", "vmArguments", new HashMap<String,String>(), new HashMap<String,String>(), new String[0], 2000, "myUser");
         when(vmsDAO.getVmInfo(vm)).thenReturn(vmInfo);
 
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("vmId", "234");
+        args.addArgument("vmId", VM_ID);
         args.addArgument("hostId", "123");
         cmd.run(cmdCtxFactory.createContext(args));
-        String expected = "Process ID:      234\n" +
+        String expected = "VM ID:           " + vmId + "\n" +
+                          "Process ID:      234\n" +
                           "Start time:      Thu Jun 07 15:32:00 UTC 2012\n" +
                           "Stop time:       <Running>\n" +
                           "User ID:         2000(myUser)\n" +

@@ -135,8 +135,7 @@ public class JmxBackend extends BaseBackend {
         return isActive;
     }
 
-    public void enableNotificationsFor(String vmId) {
-        int pid = Integer.valueOf(vmId);
+    public void enableNotificationsFor(int pid) {
         try {
             MXBeanConnection connection = pool.acquire(pid);
             connections.put(pid, connection);
@@ -159,9 +158,7 @@ public class JmxBackend extends BaseBackend {
         }
     }
 
-    public void disableNotificationsFor(String vmId) {
-        int pid = Integer.valueOf(vmId);
-
+    public void disableNotificationsFor(int pid) {
         MXBeanConnection connection = connections.get(pid);
 
         JmxNotificationStatus update = new JmxNotificationStatus();

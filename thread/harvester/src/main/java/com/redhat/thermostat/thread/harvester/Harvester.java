@@ -74,16 +74,17 @@ class Harvester {
     private MXBeanConnection connection;
     private ThreadMXBean collectorBean;
     private ThreadDao threadDao;
-    private int vmId;
-
+    private String vmId;
+    private int pid;
     
-    Harvester(ThreadDao threadDao, ScheduledExecutorService threadPool, String vmId, MXBeanConnectionPool connectionPool) {
-        this(threadDao, threadPool, new SystemClock(), vmId, connectionPool);
+    Harvester(ThreadDao threadDao, ScheduledExecutorService threadPool, String vmId, int pid, MXBeanConnectionPool connectionPool) {
+        this(threadDao, threadPool, new SystemClock(), vmId, pid, connectionPool);
     }
 
-    Harvester(ThreadDao threadDao, ScheduledExecutorService threadPool, Clock clock, String vmId, MXBeanConnectionPool connectionPool) {
+    Harvester(ThreadDao threadDao, ScheduledExecutorService threadPool, Clock clock, String vmId, int pid, MXBeanConnectionPool connectionPool) {
         this.threadDao = threadDao;
-        this.vmId = Integer.valueOf(vmId);
+        this.vmId = vmId;
+        this.pid = pid;
         this.threadPool = threadPool;
         this.connectionPool = connectionPool;
         this.clock = clock;
@@ -105,7 +106,7 @@ class Harvester {
 
     private boolean connect() {
         try {
-            connection = connectionPool.acquire(vmId);
+            connection = connectionPool.acquire(pid);
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "can't connect", ex);
             return false;
@@ -128,6 +129,10 @@ class Harvester {
         
         return disconnect();
     }
+    
+    int getPid() {
+        return pid;
+    }
 
     private boolean disconnect() {
         if (collectorBean != null) {
@@ -137,7 +142,7 @@ class Harvester {
         isConnected = false;
 
         try {
-            connectionPool.release(vmId, connection);
+            connectionPool.release(pid, connection);
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "can't disconnect", ex);
             return false;
@@ -238,7 +243,7 @@ class Harvester {
         boolean success = false;
 
         try {
-            MXBeanConnection connection = connectionPool.acquire(vmId);
+            MXBeanConnection connection = connectionPool.acquire(pid);
             try {
 
                 ThreadMXBean bean = getDataCollectorBean(connection);
@@ -269,7 +274,7 @@ class Harvester {
                 logger.log(Level.SEVERE, "can't get MXBeanConnection connection", ex);
                 success = false;
             }
-            connectionPool.release(vmId, connection);
+            connectionPool.release(pid, connection);
         } catch (Exception e) {
             logger.log(Level.SEVERE, "can't get MXBeanConnection connection", e);
             success = false;

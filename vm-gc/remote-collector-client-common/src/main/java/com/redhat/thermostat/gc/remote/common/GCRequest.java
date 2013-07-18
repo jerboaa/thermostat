@@ -58,7 +58,7 @@ public class GCRequest {
         
     public void sendGCRequestToAgent(VmRef vm, AgentInfoDAO agentDAO, RequestResponseListener responseListener) {
                 
-        HostRef targetHostRef = vm.getAgent();
+        HostRef targetHostRef = vm.getHostRef();
 
         String address = agentDAO.getAgentInformation(targetHostRef).getConfigListenAddress();
         String [] host = address.split(":");
@@ -70,7 +70,7 @@ public class GCRequest {
 
         gcRequest.setParameter(Request.ACTION, CMD_CHANNEL_ACTION_NAME);
         gcRequest.setParameter(GCCommand.class.getName(), GCCommand.REQUEST_GC.name());
-        gcRequest.setParameter(GCCommand.VM_ID, vm.getIdString());
+        gcRequest.setParameter(GCCommand.VM_PID, String.valueOf(vm.getPid()));
         
         gcRequest.addListener(responseListener);
 

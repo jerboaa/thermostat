@@ -177,13 +177,13 @@ public class VmMemoryStat extends BasePojo implements TimeStampedPojo {
 
     private Generation[] generations;
     private long timestamp;
-    private int vmId;
+    private String vmId;
 
     public VmMemoryStat() {
-        this(-1, -1, null);
+        this(-1, null, null);
     }
 
-    public VmMemoryStat(long timestamp, int vmId, Generation[] generations) {
+    public VmMemoryStat(long timestamp, String vmId, Generation[] generations) {
         this.timestamp = timestamp;
         this.vmId = vmId;
         if (generations != null) {
@@ -192,12 +192,12 @@ public class VmMemoryStat extends BasePojo implements TimeStampedPojo {
     }
 
     @Persist
-    public int getVmId() {
+    public String getVmId() {
         return vmId;
     }
 
     @Persist
-    public void setVmId(int vmId) {
+    public void setVmId(String vmId) {
         this.vmId = vmId;
     }
 

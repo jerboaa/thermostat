@@ -51,9 +51,9 @@ class VmClassStatVmListener implements VmUpdateListener {
     private static final Logger logger = LoggingUtils.getLogger(VmClassStatVmListener.class);
 
     private VmClassStatDAO dao;
-    private int vmId;
+    private String vmId;
 
-    VmClassStatVmListener(VmClassStatDAO dao, int vmId) {
+    VmClassStatVmListener(VmClassStatDAO dao, String vmId) {
         this.dao = dao;
         this.vmId = vmId;
     }

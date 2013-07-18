@@ -90,8 +90,8 @@ public class VmGcControllerTest {
 
         // Set up fake data
         List<VmGcStat> stats = new ArrayList<>();
-        VmGcStat stat1 = new VmGcStat(42, 1, "collector1", 1, 10);
-        VmGcStat stat2 = new VmGcStat(42, 2, "collector1", 5, 20);
+        VmGcStat stat1 = new VmGcStat("vmId", 1, "collector1", 1, 10);
+        VmGcStat stat2 = new VmGcStat("vmId", 2, "collector1", 5, 20);
         stats.add(stat1);
         stats.add(stat2);
 
@@ -99,7 +99,7 @@ public class VmGcControllerTest {
         gen = new Generation();
         gen.setName("generation 1");
         gen.setCollector("collector1");
-        VmMemoryStat memoryStat = new VmMemoryStat(1, 42, new Generation[] { gen });
+        VmMemoryStat memoryStat = new VmMemoryStat(1, "vmId", new Generation[] { gen });
 
         // Setup DAO
         VmGcStatDAO vmGcStatDAO = mock(VmGcStatDAO.class);

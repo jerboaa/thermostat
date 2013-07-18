@@ -64,9 +64,9 @@ public interface VmStatusListener {
         VM_STOPPED,
     }
 
-    // TODO what other information other than pid may be useful for plugins?
+    // TODO what other information other than vmId and pid may be useful for plugins?
 
-    public void vmStatusChanged(Status newStatus, int pid);
+    public void vmStatusChanged(Status newStatus, String vmId, int pid);
 
 }
 

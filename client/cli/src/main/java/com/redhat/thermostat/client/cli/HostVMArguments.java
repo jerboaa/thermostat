@@ -67,22 +67,12 @@ public class HostVMArguments {
         } else {
             host = new HostRef(hostId, "dummy");
         }
-        try {
-            int parsedVmId = parseVmId(vmId);
-            vm = new VmRef(host, parsedVmId, "dummy");
-        } catch (CommandException ce) {
-            if (vmRequired) {
-                throw ce;
-            }
+        if (vmId == null && vmRequired) {
+            throw new CommandException(tr.localize(LocaleResources.VMID_REQUIRED_MESSAGE));
+        } else if (vmId == null) {
             vm = null;
-        }
-    }
-
-    private int parseVmId(String vmId) throws CommandException {
-        try {
-            return Integer.parseInt(vmId);
-        } catch (NumberFormatException ex) {
-            throw new CommandException(tr.localize(LocaleResources.INVALID_VMID_MESSAGE, vmId), ex);
+        } else {
+            vm = new VmRef(host, vmId, -1, "dummy");
         }
     }
 

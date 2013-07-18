@@ -69,33 +69,33 @@ public class ThreadDaoImpl implements ThreadDao {
     static final String QUERY_THREAD_CAPS = "QUERY "
             + THREAD_CAPABILITIES.getName() + " WHERE '"
             + Key.AGENT_ID.getName() + "' = ?s AND '" 
-            + Key.VM_ID.getName() + "' = ?i LIMIT 1";
+            + Key.VM_ID.getName() + "' = ?s LIMIT 1";
     static final String QUERY_LATEST_SUMMARY = "QUERY "
             + THREAD_SUMMARY.getName() + " WHERE '"
             + Key.AGENT_ID.getName() + "' = ?s AND '" 
-            + Key.VM_ID.getName() + "' = ?i SORT '" 
+            + Key.VM_ID.getName() + "' = ?s SORT '" 
             + Key.TIMESTAMP.getName() + "' DSC LIMIT 1";
     static final String QUERY_SUMMARY_SINCE = "QUERY "
             + THREAD_SUMMARY.getName() + " WHERE '"
             + Key.AGENT_ID.getName() + "' = ?s AND '" 
-            + Key.VM_ID.getName() + "' = ?i AND '"
+            + Key.VM_ID.getName() + "' = ?s AND '"
             + Key.TIMESTAMP.getName() + "' > ?l SORT '"
             + Key.TIMESTAMP.getName() + "' DSC";
     static final String QUERY_LATEST_HARVESTING_STATUS = "QUERY "
             + THREAD_HARVESTING_STATUS.getName() + " WHERE '"
             + Key.AGENT_ID.getName() + "' = ?s AND '" 
-            + Key.VM_ID.getName() + "' = ?i SORT '" 
+            + Key.VM_ID.getName() + "' = ?s SORT '" 
             + Key.TIMESTAMP.getName() + "' DSC LIMIT 1";
     static final String QUERY_THREAD_INFO = "QUERY "
             + THREAD_INFO.getName() + " WHERE '"
             + Key.AGENT_ID.getName() + "' = ?s AND '" 
-            + Key.VM_ID.getName() + "' = ?i AND '"
+            + Key.VM_ID.getName() + "' = ?s AND '"
             + Key.TIMESTAMP.getName() + "' > ?l SORT '"
             + Key.TIMESTAMP.getName() + "' DSC";
     static final String QUERY_LATEST_DEADLOCK_INFO = "QUERY "
             + DEADLOCK_INFO.getName() + " WHERE '"
             + Key.AGENT_ID.getName() + "' = ?s AND '" 
-            + Key.VM_ID.getName() + "' = ?i SORT '" 
+            + Key.VM_ID.getName() + "' = ?s SORT '" 
             + Key.TIMESTAMP.getName() + "' DSC LIMIT 1";
     
     private Storage storage;
@@ -299,8 +299,8 @@ public class ThreadDaoImpl implements ThreadDao {
         PreparedStatement<T> stmt = null;
         try {
             stmt = storage.prepareStatement(desc);
-            stmt.setString(0, ref.getAgent().getAgentId());
-            stmt.setInt(1, ref.getId());
+            stmt.setString(0, ref.getHostRef().getAgentId());
+            stmt.setString(1, ref.getVmId());
             if (since != null) {
                 stmt.setLong(2, since);
             }

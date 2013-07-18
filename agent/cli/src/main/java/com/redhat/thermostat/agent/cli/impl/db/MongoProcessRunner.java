@@ -78,7 +78,7 @@ public class MongoProcessRunner {
 
     private DBStartupConfiguration configuration;
     private boolean isQuiet;
-    private String pid;
+    private Integer pid;
     
     public MongoProcessRunner(DBStartupConfiguration configuration, boolean quiet) {
         this.configuration = configuration;
@@ -90,12 +90,18 @@ public class MongoProcessRunner {
         Charset charset = Charset.defaultCharset();
         if (pidfile.exists()) {
             try (BufferedReader reader = Files.newBufferedReader(pidfile.toPath(), charset)) {
-                pid = reader.readLine();
-                if (pid.isEmpty()) {
+                String line = reader.readLine();
+                if (line.isEmpty()) {
                     pid = null;
+                }
+                else {
+                    pid = Integer.parseInt(line);
                 }
             } catch (IOException ex) {
                 logger.log(Level.WARNING, "Exception while reading pid file", ex);
+                pid = null;
+            } catch (NumberFormatException e) {
+                logger.log(Level.WARNING, "Mongo PID file does not contain a valid PID", e);
                 pid = null;
             }
         } else {
@@ -135,9 +141,9 @@ public class MongoProcessRunner {
             ApplicationException, InvalidConfigurationException {
 
         if (isStorageRunning()) {
-            LocalizedString message = translator.localize(LocaleResources.STORAGE_ALREADY_RUNNING_WITH_PID, pid);
+            LocalizedString message = translator.localize(LocaleResources.STORAGE_ALREADY_RUNNING_WITH_PID, String.valueOf(pid));
             display(message);
-            throw new StorageAlreadyRunningException(Integer.valueOf(pid), message.getContents());
+            throw new StorageAlreadyRunningException(pid, message.getContents());
         }
         
         String dbVersion = getDBVersion();
@@ -167,7 +173,7 @@ public class MongoProcessRunner {
         if (status == 0) {
             display(translator.localize(LocaleResources.SERVER_LISTENING_ON, configuration.getDBConnectionString()));
             display(translator.localize(LocaleResources.LOG_FILE_AT, configuration.getLogFile().toString()));
-            display(translator.localize(LocaleResources.PID_IS, pid));
+            display(translator.localize(LocaleResources.PID_IS, String.valueOf(pid)));
             
         } else {
             
@@ -187,7 +193,7 @@ public class MongoProcessRunner {
             throw new StorageNotRunningException(message.getContents());
         }
         List<String> commands = new ArrayList<>(Arrays.asList(MONGO_SHUTDOWN_ARGS));
-        commands.add(pid);
+        commands.add(String.valueOf(pid));
 
         LoggedExternalProcess process = new LoggedExternalProcess(commands);
         int status = process.runAndReturnResult();

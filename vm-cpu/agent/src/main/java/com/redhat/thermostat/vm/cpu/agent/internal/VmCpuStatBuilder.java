@@ -67,11 +67,12 @@ public class VmCpuStatBuilder {
     }
 
     /**
+     * @param vmId the unique identifier for the VM
      * @param pid the process id
      * @return an object representing the cpu usage of the process, or null if
      * the information can not be found.
      */
-    public synchronized VmCpuStat build(Integer pid) {
+    public synchronized VmCpuStat build(String vmId, Integer pid) {
         if (!lastProcessTicks.containsKey(pid) || !lastProcessTickTime.containsKey(pid)) {
             throw new IllegalArgumentException("unknown pid");
         }
@@ -103,7 +104,7 @@ public class VmCpuStatBuilder {
         lastProcessTicks.put(pid, programTicks);
         lastProcessTickTime.put(pid, time);
 
-        return new VmCpuStat(miliTime, pid, cpuLoad);
+        return new VmCpuStat(miliTime, vmId, cpuLoad);
     }
 
     public synchronized boolean knowsAbout(int pid) {

@@ -88,13 +88,13 @@ public class KillVMAction implements VMContextAction {
 
     @Override
     public void execute(VmRef reference) {
-        String address = agentDao.getAgentInformation(reference.getAgent()).getConfigListenAddress();
+        String address = agentDao.getAgentInformation(reference.getHostRef()).getConfigListenAddress();
         
         String [] host = address.split(":");
         InetSocketAddress target = new InetSocketAddress(host[0], Integer.parseInt(host[1]));
         Request murderer = getKillRequest(target);
         murderer.setParameter(Request.ACTION, CMD_CHANNEL_ACTION_NAME);
-        murderer.setParameter("vm-id", reference.getIdString());
+        murderer.setParameter("vm-pid", String.valueOf(reference.getPid()));
         murderer.setReceiver(RECEIVER);
         murderer.addListener(listener);
 

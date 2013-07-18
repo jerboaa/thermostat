@@ -49,19 +49,21 @@ public class VmStatusChangeNotifierTest {
 
     @Test
     public void verifyWorksWithoutAnyListeners() {
-        final int VM_ID = 2;
+        final String VM_ID = "vmId";
+        final int VM_PID = 2;
         StubBundleContext bundleContext = new StubBundleContext();
 
         VmStatusChangeNotifier notifier = new VmStatusChangeNotifier(bundleContext);
         notifier.start();
-        notifier.notifyVmStatusChange(Status.VM_STARTED, VM_ID);
+        notifier.notifyVmStatusChange(Status.VM_STARTED, VM_ID, VM_PID);
 
-        notifier.notifyVmStatusChange(Status.VM_STOPPED, VM_ID);
+        notifier.notifyVmStatusChange(Status.VM_STOPPED, VM_ID, VM_PID);
     }
 
     @Test
     public void verifyAllListenersAreNotified() {
-        final int VM_ID = 2;
+        final String VM_ID = "vmId";
+        final int VM_PID = 2;
         StubBundleContext bundleContext = new StubBundleContext();
 
         VmStatusListener listener = mock(VmStatusListener.class);
@@ -69,28 +71,29 @@ public class VmStatusChangeNotifierTest {
 
         VmStatusChangeNotifier notifier = new VmStatusChangeNotifier(bundleContext);
         notifier.start();
-        notifier.notifyVmStatusChange(Status.VM_STARTED, VM_ID);
+        notifier.notifyVmStatusChange(Status.VM_STARTED, VM_ID, VM_PID);
 
-        verify(listener).vmStatusChanged(Status.VM_STARTED, VM_ID);
+        verify(listener).vmStatusChanged(Status.VM_STARTED, VM_ID, VM_PID);
 
-        notifier.notifyVmStatusChange(Status.VM_STOPPED, VM_ID);
+        notifier.notifyVmStatusChange(Status.VM_STOPPED, VM_ID, VM_PID);
 
-        verify(listener).vmStatusChanged(Status.VM_STOPPED, VM_ID);
+        verify(listener).vmStatusChanged(Status.VM_STOPPED, VM_ID, VM_PID);
     }
 
     @Test
     public void verifyListenersAddedAfterVmStartRecieveVmActiveEvent() {
-        final int VM_ID = 2;
+        final String VM_ID = "vmId";
+        final int VM_PID = 2;
         StubBundleContext bundleContext = new StubBundleContext();
 
         VmStatusChangeNotifier notifier = new VmStatusChangeNotifier(bundleContext);
         notifier.start();
-        notifier.notifyVmStatusChange(Status.VM_STARTED, VM_ID);
+        notifier.notifyVmStatusChange(Status.VM_STARTED, VM_ID, VM_PID);
 
         VmStatusListener listener = mock(VmStatusListener.class);
         bundleContext.registerService(VmStatusListener.class, listener, null);
 
-        verify(listener).vmStatusChanged(Status.VM_ACTIVE, VM_ID);
+        verify(listener).vmStatusChanged(Status.VM_ACTIVE, VM_ID, VM_PID);
 
     }
 }

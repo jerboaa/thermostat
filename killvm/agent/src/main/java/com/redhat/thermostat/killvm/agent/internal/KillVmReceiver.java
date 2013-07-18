@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.killvm.agent.internal;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.command.RequestReceiver;
@@ -62,10 +63,16 @@ public class KillVmReceiver implements RequestReceiver {
             log.severe("Unix service null!");
             return new Response(ResponseType.ERROR);
         }
-        String vmId = request.getParameter("vm-id");
-        unixService.sendSignal(vmId, UNIXSignal.TERM);
-        log.fine("Killed VM with ID " + vmId);
-        return new Response(ResponseType.OK);
+        String strPid = request.getParameter("vm-pid");
+        try {
+            Integer pid = Integer.parseInt(strPid);
+            unixService.sendSignal(pid, UNIXSignal.TERM);
+            log.fine("Killed VM with PID " + pid);
+            return new Response(ResponseType.OK);
+        } catch (NumberFormatException e) {
+            log.log(Level.WARNING, "Invalid PID argument", e);
+            return new Response(ResponseType.ERROR);
+        }
     }
 
 }

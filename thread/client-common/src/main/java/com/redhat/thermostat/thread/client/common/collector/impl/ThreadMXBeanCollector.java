@@ -87,7 +87,7 @@ public class ThreadMXBeanCollector implements ThreadCollector {
     }
 
     Request createRequest() {
-        HostRef targetHostRef = ref.getAgent();
+        HostRef targetHostRef = ref.getHostRef();
         
         String address = agentDao.getAgentInformation(targetHostRef).getConfigListenAddress();
         String [] host = address.split(":");
@@ -106,7 +106,8 @@ public class ThreadMXBeanCollector implements ThreadCollector {
         Request harvester = createRequest();
         harvester.setParameter(Request.ACTION, CMD_CHANNEL_ACTION_NAME);
         harvester.setParameter(HarvesterCommand.class.getName(), HarvesterCommand.START.name());
-        harvester.setParameter(HarvesterCommand.VM_ID.name(), ref.getIdString());
+        harvester.setParameter(HarvesterCommand.VM_ID.name(), ref.getVmId());
+        harvester.setParameter(HarvesterCommand.VM_PID.name(), String.valueOf(ref.getPid()));
         
         return postAndWait(harvester);
 
@@ -118,7 +119,7 @@ public class ThreadMXBeanCollector implements ThreadCollector {
         Request harvester = createRequest();
         harvester.setParameter(Request.ACTION, CMD_CHANNEL_ACTION_NAME);
         harvester.setParameter(HarvesterCommand.class.getName(), HarvesterCommand.STOP.name());
-        harvester.setParameter(HarvesterCommand.VM_ID.name(), ref.getIdString());
+        harvester.setParameter(HarvesterCommand.VM_ID.name(), ref.getVmId());
 
         boolean result = postAndWait(harvester);
         return result;
@@ -180,7 +181,8 @@ public class ThreadMXBeanCollector implements ThreadCollector {
         Request harvester = createRequest();
         harvester.setParameter(Request.ACTION, CMD_CHANNEL_ACTION_NAME);
         harvester.setParameter(HarvesterCommand.class.getName(), HarvesterCommand.FIND_DEADLOCKS.name());
-        harvester.setParameter(HarvesterCommand.VM_ID.name(), ref.getIdString());
+        harvester.setParameter(HarvesterCommand.VM_ID.name(), ref.getVmId());
+        harvester.setParameter(HarvesterCommand.VM_PID.name(), String.valueOf(ref.getPid()));
 
         postAndWait(harvester);
     }

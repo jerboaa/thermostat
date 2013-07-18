@@ -57,7 +57,7 @@ public class JmxToggleNotificationRequest {
 
     public void sendEnableNotificationsRequestToAgent(VmRef vm, AgentInfoDAO agentDAO, boolean enable, RequestResponseListener responseListener) {
 
-        HostRef targetHostRef = vm.getAgent();
+        HostRef targetHostRef = vm.getHostRef();
 
         String address = agentDAO.getAgentInformation(targetHostRef).getConfigListenAddress();
         String[] host = address.split(":");
@@ -68,7 +68,7 @@ public class JmxToggleNotificationRequest {
         gcRequest.setReceiver(JmxCommand.RECEIVER);
 
         gcRequest.setParameter(JmxCommand.class.getName(), enable ? JmxCommand.ENABLE_JMX_NOTIFICATIONS.name() : JmxCommand.DISABLE_JMX_NOTIFICATIONS.name());
-        gcRequest.setParameter(JmxCommand.VM_ID, vm.getIdString());
+        gcRequest.setParameter(JmxCommand.VM_PID, String.valueOf(vm.getPid()));
 
         gcRequest.addListener(responseListener);
 

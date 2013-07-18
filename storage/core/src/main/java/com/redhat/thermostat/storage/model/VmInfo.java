@@ -84,6 +84,7 @@ public class VmInfo extends BasePojo {
         
     }
 
+    private String vmId;
     private int vmPid = 0;
     private long startTime = System.currentTimeMillis();
     private long stopTime = Long.MIN_VALUE;
@@ -105,12 +106,13 @@ public class VmInfo extends BasePojo {
         /* use defaults */
     }
 
-    public VmInfo(int vmPid, long startTime, long stopTime,
+    public VmInfo(String vmId, int vmPid, long startTime, long stopTime,
             String javaVersion, String javaHome,
             String mainClass, String commandLine,
             String vmName, String vmInfo, String vmVersion, String vmArguments,
             Map<String, String> properties, Map<String, String> environment, String[] loadedNativeLibraries,
             long uid, String username) {
+        this.vmId = vmId;
         this.vmPid = vmPid;
         this.startTime = startTime;
         this.stopTime = stopTime;
@@ -130,13 +132,13 @@ public class VmInfo extends BasePojo {
     }
 
     @Persist
-    public int getVmId() {
-        return vmPid;
+    public String getVmId() {
+        return vmId;
     }
 
     @Persist
-    public void setVmId(int vmId) {
-        this.vmPid = vmId;
+    public void setVmId(String vmId) {
+        this.vmId = vmId;
     }
 
     @Persist

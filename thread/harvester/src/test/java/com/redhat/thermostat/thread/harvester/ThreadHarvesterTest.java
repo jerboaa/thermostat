@@ -50,6 +50,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
@@ -82,15 +83,17 @@ public class ThreadHarvesterTest {
         
         when(request.getParameter(captor.capture())).
             thenReturn(HarvesterCommand.START.name()).
+            thenReturn("vmId").
             thenReturn("42").
             thenReturn("0xcafe");
         
         ThreadHarvester threadHarvester = new ThreadHarvester(executor, pool) {
             @Override
-            Harvester createHarvester(String vmId) {
+            Harvester createHarvester(String vmId, int pid) {
                 
                 createHarvesterCalled[0] = true;
-                assertEquals("42", vmId);
+                assertEquals("vmId", vmId);
+                assertEquals(42, pid);
                 
                 return harverster;
             }
@@ -99,10 +102,11 @@ public class ThreadHarvesterTest {
         threadHarvester.receive(request);
         
         List<String> values = captor.getAllValues();
-        assertEquals(2, values.size());
+        assertEquals(3, values.size());
         
         assertEquals(HarvesterCommand.class.getName(), values.get(0));
         assertEquals(HarvesterCommand.VM_ID.name(), values.get(1));
+        assertEquals(HarvesterCommand.VM_PID.name(), values.get(2));
         
         assertTrue(createHarvesterCalled[0]);
         
@@ -120,10 +124,10 @@ public class ThreadHarvesterTest {
         
         when(request.getParameter(captor.capture())).
             thenReturn(HarvesterCommand.STOP.name()).
-            thenReturn("42");
+            thenReturn("vmId");
         
         ThreadHarvester threadHarvester = new ThreadHarvester(executor, pool) {
-            { connectors.put("42", harverster); }
+            { connectors.put("vmId", harverster); }
         };
         threadHarvester.setThreadDao(dao);
         threadHarvester.receive(request);
@@ -150,15 +154,17 @@ public class ThreadHarvesterTest {
 
         when(request.getParameter(captor.capture())).
                 thenReturn(HarvesterCommand.FIND_DEADLOCKS.name()).
+                thenReturn("vmId").
                 thenReturn("42").
                 thenReturn("0xcafe");
 
         ThreadHarvester threadHarvester = new ThreadHarvester(executor, pool) {
             @Override
-            Harvester createHarvester(String vmId) {
+            Harvester createHarvester(String vmId, int pid) {
 
                 createHarvesterCalled[0] = true;
-                assertEquals("42", vmId);
+                assertEquals("vmId", vmId);
+                assertEquals(42, pid);
 
                 return harverster;
             }
@@ -167,10 +173,11 @@ public class ThreadHarvesterTest {
         threadHarvester.receive(request);
 
         List<String> values = captor.getAllValues();
-        assertEquals(2, values.size());
+        assertEquals(3, values.size());
 
         assertEquals(HarvesterCommand.class.getName(), values.get(0));
         assertEquals(HarvesterCommand.VM_ID.name(), values.get(1));
+        assertEquals(HarvesterCommand.VM_PID.name(), values.get(2));
 
         assertTrue(createHarvesterCalled[0]);
 
@@ -186,16 +193,17 @@ public class ThreadHarvesterTest {
         
         ThreadHarvester threadHarvester = new ThreadHarvester(executor, pool) {
             @Override
-            Harvester createHarvester(String vmId) {
+            Harvester createHarvester(String vmId, int pid) {
                 
                 createHarvesterCalled[0] = true;
-                assertEquals("42", vmId);
+                assertEquals("vmId", vmId);
+                assertEquals(42, pid);
                 
                 return harverster;
             }
         };
         threadHarvester.setThreadDao(dao);
-        threadHarvester.saveVmCaps("42");
+        threadHarvester.saveVmCaps("vmId", 42);
         
         assertTrue(createHarvesterCalled[0]);
         
@@ -219,13 +227,13 @@ public class ThreadHarvesterTest {
         ThreadHarvester harvester = new ThreadHarvester(executor, clock, pool);
         harvester.setThreadDao(dao);
 
-        harvester.addThreadHarvestingStatus("10");
+        harvester.addThreadHarvestingStatus("vmId");
 
         ArgumentCaptor<ThreadHarvestingStatus> statusCaptor = ArgumentCaptor.forClass(ThreadHarvestingStatus.class);
         verify(dao).saveHarvestingStatus(statusCaptor.capture());
 
         ThreadHarvestingStatus status = statusCaptor.getValue();
-        assertEquals(10, status.getVmId());
+        assertEquals("vmId", status.getVmId());
         assertEquals(false, status.isHarvesting());
         assertEquals(1, status.getTimeStamp());
     }
@@ -239,14 +247,14 @@ public class ThreadHarvesterTest {
         ThreadHarvester harvester = new ThreadHarvester(executor, clock, pool);
         harvester.setThreadDao(dao);
 
-        harvester.saveVmCaps("10");
-        harvester.addThreadHarvestingStatus("10");
+        harvester.saveVmCaps("vmId", 10);
+        harvester.addThreadHarvestingStatus("vmId");
 
         ArgumentCaptor<ThreadHarvestingStatus> statusCaptor = ArgumentCaptor.forClass(ThreadHarvestingStatus.class);
         verify(dao).saveHarvestingStatus(statusCaptor.capture());
 
         ThreadHarvestingStatus status = statusCaptor.getValue();
-        assertEquals(10, status.getVmId());
+        assertEquals("vmId", status.getVmId());
         assertEquals(false, status.isHarvesting());
         assertEquals(1, status.getTimeStamp());
     }
@@ -257,29 +265,34 @@ public class ThreadHarvesterTest {
         when(clock.getRealTimeMillis()).thenReturn(1l);
         ThreadDao dao = mock(ThreadDao.class);
 
-        final boolean[] createHarvesterCalled = new boolean[1];
         final Harvester javaHarvester = mock(Harvester.class);
         when(javaHarvester.start()).thenReturn(true);
         when(javaHarvester.stop()).thenReturn(true);
+        when(javaHarvester.getPid()).thenReturn(42);
 
         ThreadHarvester harvester = new ThreadHarvester(executor, clock, pool) {
             @Override
-            Harvester createHarvester(String vmId) {
-
-                createHarvesterCalled[0] = true;
-                assertEquals("42", vmId);
+            Harvester createHarvester(String vmId, int pid) {
+                assertEquals("vmId", vmId);
+                assertEquals(42, pid);
 
                 return javaHarvester;
             }
         };
+        
+        harvester.setThreadDao(dao);
+        harvester.startHarvester("vmId", 42);
+        
+        // Reset DAO
         harvester.setThreadDao(dao);
 
-        assertTrue(harvester.startHarvester("42"));
+        assertTrue(harvester.startHarvester("vmId", 42));
 
-        List<Integer> pids = harvester.stopAndRemoveAllHarvesters();
-        assertEquals(1, pids.size());
-        assertEquals(42, (int) pids.get(0));
-
+        List<Pair<String, Integer>> allSaved = harvester.stopAndRemoveAllHarvesters();
+        assertEquals(1, allSaved.size());
+        Pair<String, Integer> saved = allSaved.get(0);
+        assertEquals("vmId", saved.getFirst());
+        assertEquals(42, saved.getSecond().intValue());
     }
 }
 

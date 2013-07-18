@@ -54,7 +54,8 @@ import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class HeapDumperTest {
     private static final String TEST_HOST_ID = "1111111";
-    private static final int TEST_VM_ID = 2222222;
+    private static final String TEST_VM_ID = "vmId";
+    private static final Integer TEST_VM_PID = 2222222;
 
     private HeapDumper dumper;
 
@@ -69,7 +70,7 @@ public class HeapDumperTest {
         bundleContext.registerService(Launcher.class, launcher, null);
         
         HostRef hostRef = new HostRef(TEST_HOST_ID, "myHost");
-        VmRef ref = new VmRef(hostRef, TEST_VM_ID, "myVM");
+        VmRef ref = new VmRef(hostRef, TEST_VM_ID, TEST_VM_PID, "myVM");
         dumper = new HeapDumper(ref, bundleContext);
     }
 

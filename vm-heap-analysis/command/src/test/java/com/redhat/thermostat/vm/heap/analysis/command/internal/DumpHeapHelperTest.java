@@ -61,10 +61,13 @@ import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.model.VmInfo;
 
 public class DumpHeapHelperTest {
 
+    private VmInfoDAO vmInfoDAO;
     private AgentInfoDAO agentInfoDao;
     private DumpHeapHelper cmd;
     private VmRef vmRef;
@@ -86,8 +89,14 @@ public class DumpHeapHelperTest {
 
         cmd = new DumpHeapHelper();
         vmRef = mock(VmRef.class);
-        when(vmRef.getIdString()).thenReturn("123");
-        when(vmRef.getAgent()).thenReturn(host);
+        when(vmRef.getVmId()).thenReturn("vmId");
+        when(vmRef.getHostRef()).thenReturn(host);
+        
+        VmInfo vmInfo = mock(VmInfo.class);
+        when(vmInfo.getVmPid()).thenReturn(123);
+        vmInfoDAO = mock(VmInfoDAO.class);
+        when(vmInfoDAO.getVmInfo(vmRef)).thenReturn(vmInfo);
+        
         heapDumpCompleteAction = mock(Runnable.class);
         heapDumpFailedAction = mock(Runnable.class);
     }
@@ -103,7 +112,7 @@ public class DumpHeapHelperTest {
     @Test
     public void testExecute() {
 
-        cmd.execute(agentInfoDao, vmRef, reqQueue, heapDumpCompleteAction, heapDumpFailedAction);
+        cmd.execute(vmInfoDAO, agentInfoDao, vmRef, reqQueue, heapDumpCompleteAction, heapDumpFailedAction);
 
         ArgumentCaptor<Request> reqArg = ArgumentCaptor.forClass(Request.class);
         verify(reqQueue).putRequest(reqArg.capture());
@@ -111,7 +120,8 @@ public class DumpHeapHelperTest {
         assertEquals("com.redhat.thermostat.vm.heap.analysis.agent.internal.HeapDumpReceiver", req.getReceiver());
         verifyClassExists(req.getReceiver());
         assertEquals(RequestType.RESPONSE_EXPECTED, req.getType());
-        assertEquals("123", req.getParameter("vmId"));
+        assertEquals("vmId", req.getParameter("vmId"));
+        assertEquals("123", req.getParameter("vmPid"));
         assertEquals(new InetSocketAddress("test", 123), req.getTarget());
 
         Collection<RequestResponseListener> ls = req.getListeners();
@@ -125,7 +135,7 @@ public class DumpHeapHelperTest {
     @Test
     public void testExecuteFailure() {
 
-        cmd.execute(agentInfoDao, vmRef, reqQueue, heapDumpCompleteAction, heapDumpFailedAction);
+        cmd.execute(vmInfoDAO, agentInfoDao, vmRef, reqQueue, heapDumpCompleteAction, heapDumpFailedAction);
 
         ArgumentCaptor<Request> reqArg = ArgumentCaptor.forClass(Request.class);
         verify(reqQueue).putRequest(reqArg.capture());
@@ -133,7 +143,8 @@ public class DumpHeapHelperTest {
         assertEquals("com.redhat.thermostat.vm.heap.analysis.agent.internal.HeapDumpReceiver", req.getReceiver());
         verifyClassExists(req.getReceiver());
         assertEquals(RequestType.RESPONSE_EXPECTED, req.getType());
-        assertEquals("123", req.getParameter("vmId"));
+        assertEquals("vmId", req.getParameter("vmId"));
+        assertEquals("123", req.getParameter("vmPid"));
         assertEquals(new InetSocketAddress("test", 123), req.getTarget());
 
         Collection<RequestResponseListener> ls = req.getListeners();

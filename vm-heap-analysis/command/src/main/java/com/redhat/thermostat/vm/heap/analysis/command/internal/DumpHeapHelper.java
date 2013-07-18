@@ -47,12 +47,15 @@ import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.VmInfo;
 
 public class DumpHeapHelper {
     
     private static final String RECEIVER_CLASS_NAME = "com.redhat.thermostat.vm.heap.analysis.agent.internal.HeapDumpReceiver";
     private static final String CMD_CHANNEL_ACTION_NAME = "dump-heap";
     private static final String VM_ID_PARAM = "vmId";
+    private static final String VM_PID_PARAM = "vmPid";
 
     private class HeapDumpListener implements RequestResponseListener {
 
@@ -79,10 +82,14 @@ public class DumpHeapHelper {
 
     }
 
-    public void execute(AgentInfoDAO agentInfoDAO, VmRef reference,
+    public void execute(VmInfoDAO vmInfoDAO, AgentInfoDAO agentInfoDAO, VmRef reference,
             RequestQueue queue, Runnable heapDumpSuccessAction,
             Runnable heapDumpFailureAction) {
-        HostRef targetHostRef = reference.getAgent();
+        // Get PID
+        VmInfo info = vmInfoDAO.getVmInfo(reference);
+        int pid = info.getVmPid();
+        
+        HostRef targetHostRef = reference.getHostRef();
         String address = agentInfoDAO.getAgentInformation(targetHostRef).getConfigListenAddress();
         
         String [] host = address.split(":");
@@ -90,7 +97,8 @@ public class DumpHeapHelper {
         Request req = new Request(RequestType.RESPONSE_EXPECTED, target);
         req.setReceiver(RECEIVER_CLASS_NAME);
         req.setParameter(Request.ACTION, CMD_CHANNEL_ACTION_NAME);
-        req.setParameter(VM_ID_PARAM, reference.getIdString());
+        req.setParameter(VM_ID_PARAM, reference.getVmId());
+        req.setParameter(VM_PID_PARAM, String.valueOf(pid));
         req.addListener(new HeapDumpListener(heapDumpSuccessAction, heapDumpFailureAction));
 
         queue.putRequest(req);

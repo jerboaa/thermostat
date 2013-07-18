@@ -52,10 +52,10 @@ public class VmMemoryVmListener implements VmUpdateListener {
     
     private static final Logger logger = LoggingUtils.getLogger(VmMemoryVmListener.class);
 
-    private final int vmId;
+    private final String vmId;
     private final VmMemoryStatDAO memDAO;
 
-    public VmMemoryVmListener(VmMemoryStatDAO vmMemoryStatDao, int vmId) {
+    public VmMemoryVmListener(VmMemoryStatDAO vmMemoryStatDao, String vmId) {
         memDAO = vmMemoryStatDao;
         this.vmId = vmId;
     }

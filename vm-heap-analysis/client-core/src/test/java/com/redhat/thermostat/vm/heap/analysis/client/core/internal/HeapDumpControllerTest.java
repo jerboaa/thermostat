@@ -201,8 +201,8 @@ public class HeapDumpControllerTest {
         when(hostRef.getAgentId()).thenReturn("agent-id");
 
         VmRef ref = mock(VmRef.class);
-        when(ref.getIdString()).thenReturn("vm-id");
-        when(ref.getAgent()).thenReturn(hostRef);
+        when(ref.getVmId()).thenReturn("vm-id");
+        when(ref.getHostRef()).thenReturn(hostRef);
 
         controller = new HeapDumpController(vmDao, vmInfoDao, heapDao, ref, appService,
                 viewProvider, detailsViewProvider, histogramProvider,

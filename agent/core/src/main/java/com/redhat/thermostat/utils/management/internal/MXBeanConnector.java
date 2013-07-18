@@ -58,21 +58,21 @@ class MXBeanConnector implements Closeable {
     
     private boolean attached;
     
-    private String reference;
+    private int pid;
     
-    public MXBeanConnector(String reference) {
-        this.reference = reference;
+    public MXBeanConnector(int pid) {
+        this.pid = pid;
     }
     
     public MXBeanConnector(VmRef reference) {
-        this.reference = reference.getStringID();
+        this.pid = reference.getPid();
     }
     
     public synchronized void attach() throws Exception {
         if (attached)
             throw new IOException("Already attached");
         
-        vm = VirtualMachine.attach(reference);
+        vm = VirtualMachine.attach(String.valueOf(pid));
         attached = true;
         
         Properties props = vm.getAgentProperties();

@@ -61,7 +61,7 @@ public class UnixProcessUtilities implements UNIXProcessHandler {
     UnixProcessUtilities() {}
     
     @Override
-    public void sendSignal(String pid, UNIXSignal signal) {
+    public void sendSignal(Integer pid, UNIXSignal signal) {
         exec("kill -s " + signal.signalName() + " " + pid);
     }
     
@@ -75,7 +75,7 @@ public class UnixProcessUtilities implements UNIXProcessHandler {
     }
     
     @Override
-    public String getProcessName(String pid) {
+    public String getProcessName(Integer pid) {
         
         String result = null;
         
@@ -83,7 +83,7 @@ public class UnixProcessUtilities implements UNIXProcessHandler {
         commandLine.add("ps");
         commandLine.add("--no-heading");
         commandLine.add("-p");
-        commandLine.add(pid);
+        commandLine.add(String.valueOf(pid));
         
         try {
             Process process = createAndRunProcess(commandLine);

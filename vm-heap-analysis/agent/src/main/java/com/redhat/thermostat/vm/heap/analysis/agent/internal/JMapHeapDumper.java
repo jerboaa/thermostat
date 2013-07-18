@@ -46,10 +46,10 @@ class JMapHeapDumper {
 
     private static final Logger log = LoggingUtils.getLogger(JMapHeapDumper.class);
 
-    void dumpHeap(String vmId, String filename) throws HeapDumpException {
+    void dumpHeap(int pid, String filename) throws HeapDumpException {
         try {
             Process proc = Runtime.getRuntime().exec(
-                    new String[] { "jmap", "-dump:format=b,file=" + filename, vmId });
+                    new String[] { "jmap", "-dump:format=b,file=" + filename, String.valueOf(pid) });
             proc.waitFor();
             log.info("Heap dump written to: " + filename);
         } catch (InterruptedException e) {

@@ -67,7 +67,7 @@ import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
 public class VmCpuStatDAOTest {
 
     private static final Long TIMESTAMP = 1234L;
-    private static final Integer VM_ID = 321;
+    private static final String VM_ID = "321";
     private static final Double CPU_LOAD = 9.9;
 
     private VmCpuStat cpuStat;
@@ -106,15 +106,15 @@ public class VmCpuStatDAOTest {
         when(hostRef.getAgentId()).thenReturn("system");
 
         VmRef vmRef = mock(VmRef.class);
-        when(vmRef.getAgent()).thenReturn(hostRef);
-        when(vmRef.getId()).thenReturn(VM_ID);
+        when(vmRef.getHostRef()).thenReturn(hostRef);
+        when(vmRef.getVmId()).thenReturn(VM_ID);
 
         VmCpuStatDAO dao = new VmCpuStatDAOImpl(storage);
         List<VmCpuStat> vmCpuStats = dao.getLatestVmCpuStats(vmRef, Long.MIN_VALUE);
 
         verify(storage).prepareStatement(anyDescriptor());
         verify(stmt).setString(0, "system");
-        verify(stmt).setInt(1, VM_ID);
+        verify(stmt).setString(1, VM_ID);
         verify(stmt).setLong(2, Long.MIN_VALUE);
         verify(stmt).executeQuery();
         verifyNoMoreInteractions(stmt);
@@ -123,7 +123,7 @@ public class VmCpuStatDAOTest {
         VmCpuStat stat = vmCpuStats.get(0);
         assertEquals(TIMESTAMP, (Long) stat.getTimeStamp());
         assertEquals(CPU_LOAD, stat.getCpuLoad(), 0.001);
-        assertEquals(VM_ID, (Integer) stat.getVmId());
+        assertEquals(VM_ID, stat.getVmId());
     }
 
     @SuppressWarnings("unchecked")

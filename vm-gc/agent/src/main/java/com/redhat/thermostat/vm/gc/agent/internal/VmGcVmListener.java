@@ -50,10 +50,10 @@ public class VmGcVmListener implements VmUpdateListener {
     
     private static final Logger logger = LoggingUtils.getLogger(VmGcVmListener.class);
 
-    private final int vmId;
+    private final String vmId;
     private final VmGcStatDAO gcDAO;
 
-    public VmGcVmListener(VmGcStatDAO vmGcStatDao, int vmId) {
+    public VmGcVmListener(VmGcStatDAO vmGcStatDao, String vmId) {
         gcDAO = vmGcStatDao;
         this.vmId = vmId;
     }

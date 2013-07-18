@@ -60,7 +60,7 @@ class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
     static final String QUERY_LATEST = "QUERY "
             + vmMemoryStatsCategory.getName() + " WHERE '"
             + Key.AGENT_ID.getName() + "' = ?s AND '" 
-            + Key.VM_ID.getName() + "' = ?i SORT '" 
+            + Key.VM_ID.getName() + "' = ?s SORT '" 
             + Key.TIMESTAMP.getName() + "' DSC LIMIT 1";
     
     private final Storage storage;
@@ -79,8 +79,8 @@ class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
         Cursor<VmMemoryStat> cursor;
         try {
             stmt = storage.prepareStatement(desc);
-            stmt.setString(0, ref.getAgent().getAgentId());
-            stmt.setInt(1, ref.getId());
+            stmt.setString(0, ref.getHostRef().getAgentId());
+            stmt.setString(1, ref.getVmId());
             cursor = stmt.executeQuery();
         } catch (DescriptorParsingException e) {
             // should not happen, but if it *does* happen, at least log it

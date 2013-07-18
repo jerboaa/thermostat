@@ -95,8 +95,8 @@ public class DefaultHostsVMsLoaderTest {
     public void canGetVms() {
         HostRef hostR = mock(HostRef.class);
         Collection<VmRef> expectedVms = new ArrayList<>();
-        expectedVms.add(new VmRef(hostR, 1, "test1"));
-        expectedVms.add(new VmRef(hostR, 2, "test2"));
+        expectedVms.add(new VmRef(hostR, "321", 1, "test1"));
+        expectedVms.add(new VmRef(hostR, "654", 2, "test2"));
 
         loader = new DefaultHostsVMsLoader(mockHostsDAO, mockVmsDAO, false /* irrelevant */);
         when(mockVmsDAO.getVMs(hostR)).thenReturn(expectedVms);

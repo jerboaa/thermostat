@@ -81,7 +81,7 @@ public class ThreadCollectorTest {
         agentDao = mock(AgentInfoDAO.class);
         threadDao = mock(ThreadDao.class);
         reference = mock(VmRef.class);
-        when(reference.getIdString()).thenReturn("00101010");
+        when(reference.getVmId()).thenReturn("00101010");
         
         final Response response = mock(Response.class);
         when(response.getType()).thenReturn(ResponseType.OK);

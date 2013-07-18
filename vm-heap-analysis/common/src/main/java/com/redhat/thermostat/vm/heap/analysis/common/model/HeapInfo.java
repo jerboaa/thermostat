@@ -46,7 +46,7 @@ import com.redhat.thermostat.storage.model.TimeStampedPojo;
 @Entity
 public class HeapInfo extends BasePojo implements TimeStampedPojo {
 
-    private int vmId;
+    private String vmId;
     private long timeStamp;
 
     private String heapId;
@@ -54,21 +54,21 @@ public class HeapInfo extends BasePojo implements TimeStampedPojo {
     private String histogramId;
 
     public HeapInfo() {
-        this(-1, -1);
+        this(null, -1);
     }
 
-    public HeapInfo(int vmId, long timestamp) {
+    public HeapInfo(String vmId, long timestamp) {
         this.vmId = vmId;
         this.timeStamp = timestamp;
     }
 
     @Persist
-    public void setVmId(int vmId) {
+    public void setVmId(String vmId) {
         this.vmId = vmId;
     }
 
     @Persist
-    public int getVmId() {
+    public String getVmId() {
         return vmId;
     }
 

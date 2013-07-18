@@ -76,9 +76,9 @@ public class VmMemoryStatPrintDelegateTest {
     }
 
     private void setupDAOs() {
-        int vmId = 234;
+        String vmId = "vmId";
         HostRef host = new HostRef("123", "dummy");
-        vm = new VmRef(host, 234, "dummy");
+        vm = new VmRef(host, vmId, 234, "dummy");
 
         VmMemoryStat.Space space1_1_1 = newSpace("space1", 123456, 12345, 1, 0);
         VmMemoryStat.Space space1_1_2 = newSpace("space2", 123456, 12345, 1, 0);

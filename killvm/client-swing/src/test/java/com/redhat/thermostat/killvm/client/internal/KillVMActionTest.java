@@ -91,7 +91,7 @@ public class KillVMActionTest {
     public void canQueueKillRequest() {
         VmRef ref = mock(VmRef.class);
         HostRef hostref = mock(HostRef.class);
-        when(ref.getAgent()).thenReturn(hostref);
+        when(ref.getHostRef()).thenReturn(hostref);
         String agentAddress = "127.0.0.1:8888";
 
         AgentInformation agentInfo = mock(AgentInformation.class);
@@ -113,7 +113,7 @@ public class KillVMActionTest {
             }
         };
         action.execute(ref);
-        verify(req).setParameter(eq("vm-id"), any(String.class));
+        verify(req).setParameter(eq("vm-pid"), any(String.class));
         verify(req).setParameter(eq(Request.ACTION), any(String.class));
         verify(req).addListener(agentResponseListener);
         ArgumentCaptor<String> receiverCaptor = ArgumentCaptor

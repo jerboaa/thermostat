@@ -57,6 +57,7 @@ import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.vm.heap.analysis.command.locale.LocaleResources;
@@ -68,9 +69,11 @@ public class DumpHeapCommandTest {
 
     @Test
     public void verifyAcuallyCallsWorker() throws CommandException {
+        VmInfoDAO vmInfoDao = mock(VmInfoDAO.class);
         AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
         RequestQueue queue = mock(RequestQueue.class);
         StubBundleContext context = new StubBundleContext();
+        context.registerService(VmInfoDAO.class, vmInfoDao, null);
         context.registerService(AgentInfoDAO.class, agentInfoDao, null);
         context.registerService(RequestQueue.class, queue, null);
 
@@ -84,7 +87,7 @@ public class DumpHeapCommandTest {
                 successHandler.getValue().run();
                 return null;
             }
-        }).when(impl).execute(eq(agentInfoDao), any(VmRef.class), eq(queue),
+        }).when(impl).execute(eq(vmInfoDao), eq(agentInfoDao), any(VmRef.class), eq(queue),
                 successHandler.capture(), any(Runnable.class));
 
         DumpHeapCommand command = new DumpHeapCommand(context, impl);
@@ -93,20 +96,22 @@ public class DumpHeapCommandTest {
 
         SimpleArguments args = new SimpleArguments();
         args.addArgument("hostId", "foo");
-        args.addArgument("vmId", "0");
+        args.addArgument("vmId", "bar");
 
         command.run(factory.createContext(args));
 
-        verify(impl).execute(eq(agentInfoDao), isA(VmRef.class), eq(queue),
+        verify(impl).execute(eq(vmInfoDao), eq(agentInfoDao), isA(VmRef.class), eq(queue),
                 any(Runnable.class), any(Runnable.class));
         assertEquals("Done\n", factory.getOutput());
     }
 
     @Test
     public void verifyNeedsHostAndVmId() throws CommandException {
+        VmInfoDAO vmInfoDao = mock(VmInfoDAO.class);
         AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
         RequestQueue queue = mock(RequestQueue.class);
         StubBundleContext context = new StubBundleContext();
+        context.registerService(VmInfoDAO.class, vmInfoDao, null);
         context.registerService(AgentInfoDAO.class, agentInfoDao, null);
         context.registerService(RequestQueue.class, queue, null);
 
@@ -127,8 +132,10 @@ public class DumpHeapCommandTest {
 
     @Test
     public void verifyFailsIfAgentDaoIsNotAvailable() {
+        VmInfoDAO vmInfoDao = mock(VmInfoDAO.class);
         RequestQueue queue = mock(RequestQueue.class);
         StubBundleContext context = new StubBundleContext();
+        context.registerService(VmInfoDAO.class, vmInfoDao, null);
         context.registerService(RequestQueue.class, queue, null);
 
         DumpHeapHelper impl = mock(DumpHeapHelper.class);
@@ -138,7 +145,7 @@ public class DumpHeapCommandTest {
 
         SimpleArguments args = new SimpleArguments();
         args.addArgument("hostId", "foo");
-        args.addArgument("vmId", "0");
+        args.addArgument("vmId", "bar");
 
         try {
             command.run(factory.createContext(args));
@@ -150,8 +157,10 @@ public class DumpHeapCommandTest {
     
     @Test
     public void verifyFailsIfRequestQueueIsNotAvailable() {
+        VmInfoDAO vmInfoDao = mock(VmInfoDAO.class);
         AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
         StubBundleContext context = new StubBundleContext();
+        context.registerService(VmInfoDAO.class, vmInfoDao, null);
         context.registerService(AgentInfoDAO.class, agentInfoDao, null);
 
         DumpHeapHelper impl = mock(DumpHeapHelper.class);
@@ -161,7 +170,8 @@ public class DumpHeapCommandTest {
 
         SimpleArguments args = new SimpleArguments();
         args.addArgument("hostId", "foo");
-        args.addArgument("vmId", "0");
+        args.addArgument("vmId", "bar");
+        args.addArgument("vmPid", "123");
 
         try {
             command.run(factory.createContext(args));
@@ -170,14 +180,41 @@ public class DumpHeapCommandTest {
             assertEquals(TRANSLATOR.localize(LocaleResources.REQUEST_QUEUE_UNAVAILABLE).getContents(), ce.getMessage());
         }
     }
+    
+    @Test
+    public void verifyFailsIfVmDaoIsNotAvailable() {
+        AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
+        RequestQueue queue = mock(RequestQueue.class);
+        StubBundleContext context = new StubBundleContext();
+        context.registerService(AgentInfoDAO.class, agentInfoDao, null);
+        context.registerService(RequestQueue.class, queue, null);
+
+        DumpHeapHelper impl = mock(DumpHeapHelper.class);
+        DumpHeapCommand command = new DumpHeapCommand(context, impl);
+
+        TestCommandContextFactory factory = new TestCommandContextFactory();
+
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("hostId", "foo");
+        args.addArgument("vmId", "bar");
+
+        try {
+            command.run(factory.createContext(args));
+            fail();
+        } catch (CommandException ce) {
+            assertEquals(TRANSLATOR.localize(LocaleResources.VM_SERVICE_UNAVAILABLE).getContents(), ce.getMessage());
+        }
+    }
 
     @Test
     public void verifyErrorMessage() {
         final String HOST_ID = "myHost";
-        final int VM_ID = 9001;
+        final String VM_ID = "myVm";
+        VmInfoDAO vmInfoDao = mock(VmInfoDAO.class);
         AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
         RequestQueue queue = mock(RequestQueue.class);
         StubBundleContext context = new StubBundleContext();
+        context.registerService(VmInfoDAO.class, vmInfoDao, null);
         context.registerService(AgentInfoDAO.class, agentInfoDao, null);
         context.registerService(RequestQueue.class, queue, null);
 
@@ -187,25 +224,25 @@ public class DumpHeapCommandTest {
 
         SimpleArguments args = new SimpleArguments();
         args.addArgument("hostId", HOST_ID);
-        args.addArgument("vmId", String.valueOf(VM_ID));
+        args.addArgument("vmId", VM_ID);
 
         doAnswer(new Answer<Object>() {
 
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
-                Runnable failRunnable = (Runnable) invocation.getArguments()[4];
+                Runnable failRunnable = (Runnable) invocation.getArguments()[5];
                 failRunnable.run();
                 return null;
             }
-        }).when(impl).execute(any(AgentInfoDAO.class), any(VmRef.class), any(RequestQueue.class),
-                any(Runnable.class), any(Runnable.class));
+        }).when(impl).execute(any(VmInfoDAO.class), any(AgentInfoDAO.class), any(VmRef.class), 
+                any(RequestQueue.class), any(Runnable.class), any(Runnable.class));
 
         try {
             command.run(factory.createContext(args));
             fail("CommandException expected");
         } catch (CommandException e) {
             assertEquals(TRANSLATOR.localize(LocaleResources.HEAP_DUMP_ERROR,
-                    HOST_ID, String.valueOf(VM_ID)).getContents(), e.getMessage());
+                    HOST_ID, VM_ID).getContents(), e.getMessage());
         }
     }
 

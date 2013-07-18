@@ -145,7 +145,7 @@ public class ThreadInformationControllerTest {
         
         VmRef ref = mock(VmRef.class);
         HostRef agent = mock(HostRef.class);
-        when(ref.getAgent()).thenReturn(agent);
+        when(ref.getHostRef()).thenReturn(agent);
         when(agent.getAgentId()).thenReturn("0xcafe");
         
         ThreadCollectorFactory collectorFactory = mock(ThreadCollectorFactory.class);
@@ -175,9 +175,9 @@ public class ThreadInformationControllerTest {
         doNothing().when(view).addThreadActionListener(viewArgumentCaptor.capture());
         
         VmRef ref = mock(VmRef.class);
-        when(ref.getStringID()).thenReturn("42");
+        when(ref.getVmId()).thenReturn("42");
         HostRef agent = mock(HostRef.class);
-        when(ref.getAgent()).thenReturn(agent);
+        when(ref.getHostRef()).thenReturn(agent);
         when(agent.getAgentId()).thenReturn("0xcafe");
         
         ThreadCollector collector = mock(ThreadCollector.class);

@@ -36,14 +36,19 @@
 
 package com.redhat.thermostat.vm.jmx.agent.internal;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import com.redhat.thermostat.agent.command.RequestReceiver;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.vm.jmx.common.JmxCommand;
 
 public class JmxRequestListener implements RequestReceiver {
 
+    private static final Logger logger = LoggingUtils.getLogger(JmxRequestListener.class);
     private JmxBackend backend;
 
     public void setBackend(JmxBackend backend) {
@@ -53,16 +58,22 @@ public class JmxRequestListener implements RequestReceiver {
     @Override
     public Response receive(Request request) {
         Response response = new Response(ResponseType.OK);
-        String vmId = request.getParameter(JmxCommand.VM_ID);
-        String command = request.getParameter(JmxCommand.class.getName());
+        String strPid = request.getParameter(JmxCommand.VM_PID);
+        try {
+            int pid = Integer.parseInt(strPid);
+            String command = request.getParameter(JmxCommand.class.getName());
 
-        switch (JmxCommand.valueOf(command)) {
-        case DISABLE_JMX_NOTIFICATIONS:
-            backend.disableNotificationsFor(vmId);
-            break;
-        case ENABLE_JMX_NOTIFICATIONS:
-            backend.enableNotificationsFor(vmId);
-            break;
+            switch (JmxCommand.valueOf(command)) {
+            case DISABLE_JMX_NOTIFICATIONS:
+                backend.disableNotificationsFor(pid);
+                break;
+            case ENABLE_JMX_NOTIFICATIONS:
+                backend.enableNotificationsFor(pid);
+                break;
+            }
+        } catch (NumberFormatException e) {
+            logger.log(Level.WARNING, "Invalid PID: " + strPid, e); 
+            response = new Response(ResponseType.ERROR);
         }
 
         return response;

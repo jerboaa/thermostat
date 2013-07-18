@@ -45,6 +45,7 @@ import com.redhat.thermostat.agent.VmStatusListener;
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.backend.BaseBackend;
+import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
@@ -57,7 +58,7 @@ public class ThreadBackend extends BaseBackend implements VmStatusListener {
 
     private boolean active = false;
     private VmStatusListenerRegistrar vmListener;
-    private final List<Integer> pidsToHarvestOnEnable = new ArrayList<>();
+    private final List<Pair<String, Integer>> vmsToHarvestOnEnable = new ArrayList<>();
 
     public ThreadBackend(Version version, VmStatusListenerRegistrar registrar, ReceiverRegistry registry, ThreadHarvester harvester) {
         super("VM Thread Backend", "Gathers thread information about a JVM", "Red Hat, Inc", version.getVersionNumber());
@@ -79,9 +80,10 @@ public class ThreadBackend extends BaseBackend implements VmStatusListener {
         }
 
         // bring back all harvesters that were active
-        Iterator<Integer> iter = pidsToHarvestOnEnable.iterator();
+        Iterator<Pair<String, Integer>> iter = vmsToHarvestOnEnable.iterator();
         while (iter.hasNext()) {
-            harvester.startHarvester(String.valueOf(iter.next()));
+            Pair<String, Integer> saved = iter.next();
+            harvester.startHarvester(saved.getFirst(), saved.getSecond());
             iter.remove();
         }
 
@@ -101,7 +103,7 @@ public class ThreadBackend extends BaseBackend implements VmStatusListener {
         registry.unregisterReceivers();
 
         // stop all currently active harvesters
-        pidsToHarvestOnEnable.addAll(harvester.stopAndRemoveAllHarvesters());
+        vmsToHarvestOnEnable.addAll(harvester.stopAndRemoveAllHarvesters());
 
         active = false;
         return true;
@@ -113,12 +115,11 @@ public class ThreadBackend extends BaseBackend implements VmStatusListener {
     }
 
     @Override
-    public void vmStatusChanged(Status newStatus, int pid) {
-        String vmId = String.valueOf(pid);
+    public void vmStatusChanged(Status newStatus, String vmId, int pid) {
         switch (newStatus) {
         case VM_STARTED: case VM_ACTIVE:
             /* this is blocking */
-            harvester.saveVmCaps(vmId);
+            harvester.saveVmCaps(vmId, pid);
             harvester.addThreadHarvestingStatus(vmId);
             break;
         case VM_STOPPED:

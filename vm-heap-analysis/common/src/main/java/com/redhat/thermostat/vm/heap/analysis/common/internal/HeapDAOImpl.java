@@ -71,7 +71,7 @@ public class HeapDAOImpl implements HeapDAO {
     static final String QUERY_ALL_HEAPS = "QUERY "
             + heapInfoCategory.getName() + " WHERE '" 
             + Key.AGENT_ID.getName() + "' = ?s AND '" 
-            + Key.VM_ID.getName() + "' = ?i";
+            + Key.VM_ID.getName() + "' = ?s";
     static final String QUERY_HEAP_INFO = "QUERY "
             + heapInfoCategory.getName() + " WHERE '" 
             + heapIdKey.getName() + "' = ?s LIMIT 1";
@@ -125,8 +125,8 @@ public class HeapDAOImpl implements HeapDAO {
         Cursor<HeapInfo> cursor;
         try {
             stmt = storage.prepareStatement(desc);
-            stmt.setString(0, vm.getAgent().getAgentId());
-            stmt.setInt(1, vm.getId());
+            stmt.setString(0, vm.getHostRef().getAgentId());
+            stmt.setString(1, vm.getVmId());
             cursor = stmt.executeQuery();
         } catch (DescriptorParsingException e) {
             // should not happen, but if it *does* happen, at least log it

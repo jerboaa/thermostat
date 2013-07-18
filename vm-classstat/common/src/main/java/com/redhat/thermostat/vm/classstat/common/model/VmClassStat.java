@@ -44,27 +44,27 @@ import com.redhat.thermostat.storage.model.TimeStampedPojo;
 @Entity
 public class VmClassStat extends BasePojo implements TimeStampedPojo {
 
-    private int vmId;
+    private String vmId;
     private long timestamp;
     private long loadedClasses;
 
     public VmClassStat() {
-        this(-1, -1, -1);
+        this(null, -1, -1);
     }
 
-    public VmClassStat(int vmId, long timestamp, long loadedClasses) {
+    public VmClassStat(String vmId, long timestamp, long loadedClasses) {
         this.vmId = vmId;
         this.timestamp = timestamp;
         this.loadedClasses = loadedClasses;
     }
 
     @Persist
-    public int getVmId() {
+    public String getVmId() {
         return vmId;
     }
 
     @Persist
-    public void setVmId(int vmId) {
+    public void setVmId(String vmId) {
         this.vmId = vmId;
     }
 

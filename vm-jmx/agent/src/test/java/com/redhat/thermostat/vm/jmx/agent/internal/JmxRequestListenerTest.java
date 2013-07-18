@@ -71,11 +71,11 @@ public class JmxRequestListenerTest {
     public void testEnableNotifications() {
         Request req = new Request(RequestType.RESPONSE_EXPECTED, new InetSocketAddress(HOST, PORT));
         req.setParameter(JmxCommand.class.getName(), JmxCommand.ENABLE_JMX_NOTIFICATIONS.name());
-        req.setParameter(JmxCommand.VM_ID, "0");
+        req.setParameter(JmxCommand.VM_PID, "42");
 
         Response result = requestListener.receive(req);
 
-        verify(backend).enableNotificationsFor("0");
+        verify(backend).enableNotificationsFor(42);
 
         assertEquals(ResponseType.OK, result.getType());
     }
@@ -84,11 +84,11 @@ public class JmxRequestListenerTest {
     public void testDisableNotifications() {
         Request req = new Request(RequestType.RESPONSE_EXPECTED, new InetSocketAddress(HOST, PORT));
         req.setParameter(JmxCommand.class.getName(), JmxCommand.DISABLE_JMX_NOTIFICATIONS.name());
-        req.setParameter(JmxCommand.VM_ID, "0");
+        req.setParameter(JmxCommand.VM_PID, "42");
 
         Response result = requestListener.receive(req);
 
-        verify(backend).disableNotificationsFor("0");
+        verify(backend).disableNotificationsFor(42);
 
         assertEquals(ResponseType.OK, result.getType());
     }

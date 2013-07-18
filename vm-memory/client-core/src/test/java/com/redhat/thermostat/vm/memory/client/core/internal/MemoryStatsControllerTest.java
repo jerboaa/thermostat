@@ -151,7 +151,7 @@ public class MemoryStatsControllerTest {
         }
         
         long timestamp = 1;
-        int vmID = 1;
+        String vmID = "vmId";
         for (int i = 0; i < 5; i++) {
             VmMemoryStat vmMemory = new VmMemoryStat(timestamp++, vmID, generations);
             vmInfo.add(vmMemory);

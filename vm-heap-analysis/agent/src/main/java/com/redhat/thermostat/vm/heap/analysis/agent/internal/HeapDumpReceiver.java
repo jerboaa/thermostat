@@ -77,41 +77,45 @@ public class HeapDumpReceiver implements RequestReceiver {
     @Override
     public Response receive(Request request) {
         String vmId = request.getParameter("vmId");
+        String strPid = request.getParameter("vmPid");
         try {
-            File heapDumpFile = dumpHeap(vmId);
+            int vmPid = Integer.parseInt(strPid);
+            File heapDumpFile = dumpHeap(vmPid);
             ObjectHistogram histogram = loadHistogram(heapDumpFile.getAbsolutePath());
             saveHeapDumpInfo(vmId, heapDumpFile, histogram);
-            
         } catch (IOException e) {
             log.log(Level.SEVERE, "Unexpected IO problem while writing heap dump", e);
             return new Response(ResponseType.ERROR);
         } catch (HeapDumpException e) {
             log.log(Level.SEVERE, "Unexpected problem while writing heap dump", e);
             return new Response(ResponseType.ERROR);
+        } catch (NumberFormatException e) {
+            log.log(Level.WARNING, "Invalid PID: " + strPid, e);
+            return new Response(ResponseType.ERROR);
         }
         return new Response(ResponseType.OK);
     }
 
-    private File dumpHeap(String vmId) throws IOException, HeapDumpException {
+    private File dumpHeap(int pid) throws IOException, HeapDumpException {
         File tempFile = Files.createTempFile("thermostat-", "-heapdump").toFile();
         String tempFileName = tempFile.getAbsolutePath();
         tempFile.delete(); // Need to delete before dumping heap, jmap does not override existing file and stop with an error.
-        dumpHeapUsingJMX(vmId, tempFileName);
+        dumpHeapUsingJMX(pid, tempFileName);
         return tempFile;
     }
 
-    private void dumpHeapUsingJMX(String vmId, String filename) throws HeapDumpException {
+    private void dumpHeapUsingJMX(int pid, String filename) throws HeapDumpException {
 
         try {
-            jmxHeapDumper.dumpHeap(vmId, filename);
+            jmxHeapDumper.dumpHeap(pid, filename);
         } catch (HeapDumpException e) {
             log.log(Level.WARNING, "Heap dump using JMX failed, trying jmap", e);
-            dumpHeapUsingJMap(vmId, filename);
+            dumpHeapUsingJMap(pid, filename);
         }
     }
 
-    private void dumpHeapUsingJMap(String vmId, String filename) throws HeapDumpException {
-        jmapHeapDumper.dumpHeap(vmId, filename);
+    private void dumpHeapUsingJMap(int pid, String filename) throws HeapDumpException {
+        jmapHeapDumper.dumpHeap(pid, filename);
     }
 
     private ObjectHistogram loadHistogram(String heapDumpFilename) throws IOException {
@@ -119,7 +123,7 @@ public class HeapDumpReceiver implements RequestReceiver {
     }
 
     private void saveHeapDumpInfo(String vmId, File tempFile, ObjectHistogram histogram) throws IOException {
-        HeapInfo heapInfo = new HeapInfo(Integer.parseInt(vmId), System.currentTimeMillis());
+        HeapInfo heapInfo = new HeapInfo(vmId, System.currentTimeMillis());
         heapDao.putHeapInfo(heapInfo, tempFile, histogram);
     }
 

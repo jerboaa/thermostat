@@ -66,7 +66,7 @@ import com.redhat.thermostat.vm.jmx.common.JmxNotificationStatus;
 public class JmxNotificationDAOImplTest {
 
     private final String AGENT_ID = "an-agent's-id";
-    private final int VM_ID = -1;
+    private final String VM_ID = "vmId";
 
     private Storage storage;
 
@@ -80,8 +80,8 @@ public class JmxNotificationDAOImplTest {
         when(host.getAgentId()).thenReturn(AGENT_ID);
 
         vm = mock(VmRef.class);
-        when(vm.getAgent()).thenReturn(host);
-        when(vm.getId()).thenReturn(VM_ID);
+        when(vm.getHostRef()).thenReturn(host);
+        when(vm.getVmId()).thenReturn(VM_ID);
 
         storage = mock(Storage.class);
 
@@ -90,9 +90,9 @@ public class JmxNotificationDAOImplTest {
     
     @Test
     public void preparedQueryDescriptorsAreSane() {
-        String expectedQueryLatestNotificationStatus = "QUERY vm-jmx-notification-status WHERE 'agentId' = ?s AND 'vmId' = ?i SORT 'timeStamp' DSC LIMIT 1";
+        String expectedQueryLatestNotificationStatus = "QUERY vm-jmx-notification-status WHERE 'agentId' = ?s AND 'vmId' = ?s SORT 'timeStamp' DSC LIMIT 1";
         assertEquals(expectedQueryLatestNotificationStatus, JmxNotificationDAOImpl.QUERY_LATEST_NOTIFICATION_STATUS);
-        String expectedQueryNotifications = "QUERY vm-jmx-notification WHERE 'agentId' = ?s AND 'vmId' = ?i AND 'timeStamp' > ?l";
+        String expectedQueryNotifications = "QUERY vm-jmx-notification WHERE 'agentId' = ?s AND 'vmId' = ?s AND 'timeStamp' > ?l";
         assertEquals(expectedQueryNotifications, JmxNotificationDAOImpl.QUERY_NOTIFICATIONS);
     }
 
@@ -129,7 +129,7 @@ public class JmxNotificationDAOImplTest {
 
         verify(storage).prepareStatement(anyDescriptor(JmxNotificationStatus.class));
         verify(stmt).setString(0, AGENT_ID);
-        verify(stmt).setInt(1, VM_ID);
+        verify(stmt).setString(1, VM_ID);
         verify(stmt).executeQuery();
         verifyNoMoreInteractions(stmt);
         
@@ -176,7 +176,7 @@ public class JmxNotificationDAOImplTest {
 
         verify(storage).prepareStatement(anyDescriptor(JmxNotification.class));
         verify(stmt).setString(0, AGENT_ID);
-        verify(stmt).setInt(1, VM_ID);
+        verify(stmt).setString(1, VM_ID);
         verify(stmt).setLong(2, timeStamp);
         verify(stmt).executeQuery();
         verifyNoMoreInteractions(stmt);

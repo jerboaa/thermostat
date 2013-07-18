@@ -46,15 +46,15 @@ public class VMThreadCapabilities extends BasePojo {
     
     private String[] features;
 
-    private int vmId;
+    private String vmId;
 
     @Persist
-    public void setVmId(int vmId) {
+    public void setVmId(String vmId) {
         this.vmId = vmId;
     }
 
     @Persist
-    public int getVmId() {
+    public String getVmId() {
         return vmId;
     }
 

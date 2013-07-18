@@ -48,7 +48,7 @@ import com.redhat.thermostat.storage.model.TimeStampedPojo;
 @Entity
 public class ThreadInfoData extends BasePojo implements TimeStampedPojo {
 
-    private int vmId;
+    private String vmId;
     private StackTraceElement[] stackTrace;
     private long threadID;
     private State threadState;
@@ -83,12 +83,12 @@ public class ThreadInfoData extends BasePojo implements TimeStampedPojo {
     }
 
     @Persist
-    public void setVmId(int vmId) {
+    public void setVmId(String vmId) {
         this.vmId = vmId;
     }
 
     @Persist
-    public int getVmId() {
+    public String getVmId() {
         return vmId;
     }
 

@@ -72,7 +72,8 @@ import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class VmInfoDAOTest {
 
-    private int vmId;
+    private String vmId;
+    private int vmPid;
     private long startTime;
     private long stopTime;
     private String jVersion;
@@ -91,7 +92,8 @@ public class VmInfoDAOTest {
 
     @Before
     public void setUp() {
-        vmId = 1;
+        vmId = "vmId";
+        vmPid = 1;
         startTime = 2;
         stopTime = 3;
         jVersion = "java 1.0";
@@ -111,7 +113,7 @@ public class VmInfoDAOTest {
     
     @Test
     public void preparedQueryDescriptorsAreSane() {
-        String expectedVmInfo = "QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?i LIMIT 1";
+        String expectedVmInfo = "QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1";
         assertEquals(expectedVmInfo, VmInfoDAOImpl.QUERY_VM_INFO);
         String expectedVmInfoAll = "QUERY vm-info WHERE 'agentId' = ?s";
         assertEquals(expectedVmInfoAll, VmInfoDAOImpl.QUERY_ALL_VMS);
@@ -148,7 +150,7 @@ public class VmInfoDAOTest {
         @SuppressWarnings("unchecked")
         PreparedStatement<VmInfo> stmt = (PreparedStatement<VmInfo>) mock(PreparedStatement.class);
         when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
-        VmInfo expected = new VmInfo(vmId, startTime, stopTime, jVersion, jHome, mainClass, commandLine, vmName, vmInfo, vmVersion, vmArgs, props, env, libs, uid, username);
+        VmInfo expected = new VmInfo(vmId, vmPid, startTime, stopTime, jVersion, jHome, mainClass, commandLine, vmName, vmInfo, vmVersion, vmArgs, props, env, libs, uid, username);
         @SuppressWarnings("unchecked")
         Cursor<VmInfo> cursor = (Cursor<VmInfo>) mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
@@ -159,8 +161,8 @@ public class VmInfoDAOTest {
         when(hostRef.getAgentId()).thenReturn("system");
 
         VmRef vmRef = mock(VmRef.class);
-        when(vmRef.getAgent()).thenReturn(hostRef);
-        when(vmRef.getId()).thenReturn(321);
+        when(vmRef.getHostRef()).thenReturn(hostRef);
+        when(vmRef.getVmId()).thenReturn("vmId");
 
         VmInfoDAO dao = new VmInfoDAOImpl(storage);
         VmInfo info = dao.getVmInfo(vmRef);
@@ -168,7 +170,7 @@ public class VmInfoDAOTest {
         
         verify(storage).prepareStatement(anyDescriptor());
         verify(stmt).setString(0, "system");
-        verify(stmt).setInt(1, 321);
+        verify(stmt).setString(1, "vmId");
         verify(stmt).executeQuery();
     }
 
@@ -191,20 +193,20 @@ public class VmInfoDAOTest {
         when(hostRef.getAgentId()).thenReturn("system");
 
         VmRef vmRef = mock(VmRef.class);
-        when(vmRef.getAgent()).thenReturn(hostRef);
-        when(vmRef.getId()).thenReturn(321);
+        when(vmRef.getVmId()).thenReturn("noVm");
+        when(vmRef.getHostRef()).thenReturn(hostRef);
 
         VmInfoDAO dao = new VmInfoDAOImpl(storage);
         try {
             dao.getVmInfo(vmRef);
             fail();
         } catch (DAOException ex) {
-            assertEquals("Unknown VM: host:system;vm:321", ex.getMessage());
+            assertEquals("Unknown VM: host:system;vm:noVm", ex.getMessage());
         }
 
         verify(storage).prepareStatement(anyDescriptor());
         verify(stmt).setString(0, "system");
-        verify(stmt).setInt(1, 321);
+        verify(stmt).setString(1, "noVm");
         verify(stmt).executeQuery();
     }
 
@@ -216,12 +218,13 @@ public class VmInfoDAOTest {
 
         Collection<VmRef> vms = dao.getVMs(host);
 
-        assertCollection(vms, new VmRef(host, 123, "mainClass1"));
+        assertCollection(vms, new VmRef(host, "vmId", 123, "mainClass1"));
     }
 
     private Storage setupStorageForSingleVM() throws DescriptorParsingException, StatementExecutionException {
 
       VmInfo vm1 = new VmInfo();
+      vm1.setVmId("vmId");
       vm1.setVmPid(123);
       vm1.setMainClass("mainClass1");
 
@@ -247,15 +250,17 @@ public class VmInfoDAOTest {
 
         Collection<VmRef> vms = dao.getVMs(host);
 
-        assertCollection(vms, new VmRef(host, 123, "mainClass1"), new VmRef(host, 456, "mainClass2"));
+        assertCollection(vms, new VmRef(host, "vmId1", 123, "mainClass1"), new VmRef(host, "vmId2", 456, "mainClass2"));
     }
 
     private Storage setupStorageForMultiVM() throws DescriptorParsingException, StatementExecutionException {
       VmInfo vm1 = new VmInfo();
+      vm1.setVmId("vmId1");
       vm1.setVmPid(123);
       vm1.setMainClass("mainClass1");
 
       VmInfo vm2 = new VmInfo();
+      vm2.setVmId("vmId2");
       vm2.setVmPid(456);
       vm2.setMainClass("mainClass2");
 
@@ -295,7 +300,7 @@ public class VmInfoDAOTest {
         Replace replace = mock(Replace.class);
         when(storage.createReplace(any(Category.class))).thenReturn(replace);
 
-        VmInfo info = new VmInfo(vmId, startTime, stopTime, jVersion, jHome,
+        VmInfo info = new VmInfo(vmId, vmPid, startTime, stopTime, jVersion, jHome,
                 mainClass, commandLine, vmName, vmInfo, vmVersion, vmArgs,
                 props, env, libs, uid, username);
         VmInfoDAO dao = new VmInfoDAOImpl(storage);
@@ -317,7 +322,7 @@ public class VmInfoDAOTest {
 
         verify(storage).createUpdate(VmInfoDAO.vmInfoCategory);
         ExpressionFactory factory = new ExpressionFactory();
-        verify(mockUpdate).where(factory.equalTo(Key.VM_ID, 1));
+        verify(mockUpdate).where(factory.equalTo(Key.VM_ID, "vmId"));
         verify(mockUpdate).set(VmInfoDAO.stopTimeKey, 3L);
         verify(mockUpdate).apply();
         verifyNoMoreInteractions(mockUpdate);

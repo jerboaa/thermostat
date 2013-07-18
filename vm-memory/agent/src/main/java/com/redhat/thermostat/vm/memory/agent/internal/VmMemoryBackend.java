@@ -59,8 +59,8 @@ public class VmMemoryBackend extends VmListenerBackend {
     }
 
     @Override
-    protected VmUpdateListener createVmListener(int pid) {
-        return new VmMemoryVmListener(vmMemoryStats, pid);
+    protected VmUpdateListener createVmListener(String vmId, int pid) {
+        return new VmMemoryVmListener(vmMemoryStats, vmId);
     }
     
 }

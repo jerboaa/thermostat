@@ -55,7 +55,7 @@ import com.redhat.thermostat.vm.classstat.common.model.VmClassStat;
 
 public class VmClassStatVmListenerTest {
 
-    private static final Integer VM_ID = 123;
+    private static final String VM_ID = "vmId";
     private static final Long LOADED_CLASSES = 1234L;
 
     private VmClassStatDAO dao;
@@ -78,7 +78,7 @@ public class VmClassStatVmListenerTest {
         verify(dao).putVmClassStat(arg.capture());
         VmClassStat stat = arg.getValue();
         assertEquals(LOADED_CLASSES, (Long) stat.getLoadedClasses());
-        assertEquals(VM_ID, (Integer) stat.getVmId());
+        assertEquals(VM_ID, stat.getVmId());
     }
 
     @Test

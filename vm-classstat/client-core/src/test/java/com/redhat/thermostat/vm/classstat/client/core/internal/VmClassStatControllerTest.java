@@ -66,7 +66,7 @@ public class VmClassStatControllerTest {
     @Test
     public void testChartUpdate() {
 
-        VmClassStat stat1 = new VmClassStat(123, 12345, 1234);
+        VmClassStat stat1 = new VmClassStat("vmId", 12345, 1234);
         List<VmClassStat> stats = new ArrayList<VmClassStat>();
         stats.add(stat1);
 

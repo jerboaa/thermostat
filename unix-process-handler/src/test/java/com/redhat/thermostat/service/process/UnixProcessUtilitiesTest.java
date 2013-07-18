@@ -88,7 +88,7 @@ public class UnixProcessUtilitiesTest {
     @Test
     public void sendKillSignalTest() {
         
-        process.sendSignal("12345", UNIXSignal.KILL);
+        process.sendSignal(12345, UNIXSignal.KILL);
         
         Assert.assertTrue(processArguments.contains("kill -s kill 12345"));
         Assert.assertEquals(1, processArguments.size());
@@ -97,7 +97,7 @@ public class UnixProcessUtilitiesTest {
     @Test
     public void sendTermSignalTest() {
 
-        process.sendSignal("12345", UNIXSignal.TERM);
+        process.sendSignal(12345, UNIXSignal.TERM);
 
         Assert.assertTrue(processArguments.contains("kill -s term 12345"));
         Assert.assertEquals(1, processArguments.size());
@@ -106,7 +106,7 @@ public class UnixProcessUtilitiesTest {
     @Test
     public void getProcessName() {
 
-        String result = process.getProcessName("12345");
+        String result = process.getProcessName(12345);
         Assert.assertEquals("fluff", result);
         Assert.assertTrue(processArguments.contains("12345"));
         
@@ -132,7 +132,7 @@ public class UnixProcessUtilitiesTest {
             };
         };
         
-        String result = process.getProcessName("12345");
+        String result = process.getProcessName(12345);
         Assert.assertNull(result);
     }    
 }

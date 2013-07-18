@@ -43,14 +43,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.command.RequestReceiver;
 import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
-
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.thread.collector.HarvesterCommand;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
@@ -58,6 +61,8 @@ import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 
 public class ThreadHarvester implements RequestReceiver {
 
+    private static final Logger logger = LoggingUtils.getLogger(ThreadHarvester.class);
+    
     private ScheduledExecutorService executor;
     Map<String, Harvester> connectors;
 
@@ -75,22 +80,22 @@ public class ThreadHarvester implements RequestReceiver {
         this.clock = clock;
         this.connectionPool = connectionPool;
     }
-
+    
     /**
-     * Set the new implementation of thread DAO to be used as stroage
+     * Set the new implementation of thread DAO to be used as storage
      * @param dao
      */
     public void setThreadDao(ThreadDao dao) {
         // stop everything using the old implementation
-        List<Integer> saved = new ArrayList<>();
+        List<Pair<String, Integer>> allSaved = new ArrayList<>();
         if (this.dao != null) {
-            saved.addAll(stopAndRemoveAllHarvesters());
+            allSaved.addAll(stopAndRemoveAllHarvesters());
         }
 
         this.dao = dao;
         // re-enable all existing harvesters
-        for (Integer pid : saved) {
-            startHarvester(String.valueOf(pid));
+        for (Pair<String, Integer> saved : allSaved) {
+            startHarvester(saved.getFirst(), saved.getSecond());
         }
     }
     
@@ -106,7 +111,13 @@ public class ThreadHarvester implements RequestReceiver {
         switch (HarvesterCommand.valueOf(command)) {
         case START: {
             String vmId = request.getParameter(HarvesterCommand.VM_ID.name());
-            result = startHarvester(vmId);
+            String strPid = request.getParameter(HarvesterCommand.VM_PID.name());
+            try {
+                Integer pid = Integer.parseInt(strPid);
+                result = startHarvester(vmId, pid);
+            } catch (NumberFormatException e) {
+                logger.log(Level.WARNING, "Invalid pid: " + strPid, e);
+            }
             break;
         }   
         case STOP: {
@@ -116,7 +127,13 @@ public class ThreadHarvester implements RequestReceiver {
         }
         case FIND_DEADLOCKS:
             String vmId = request.getParameter(HarvesterCommand.VM_ID.name());
-            result = findAndSaveDeadLockInformation(vmId);
+            String strPid = request.getParameter(HarvesterCommand.VM_PID.name());
+            try {
+                Integer pid = Integer.parseInt(strPid);
+                result = findAndSaveDeadLockInformation(vmId, pid);
+            } catch (NumberFormatException e) {
+                logger.log(Level.WARNING, "Invalid pid: " + strPid, e);
+            }
             break;
         default:
             result = false;
@@ -135,17 +152,17 @@ public class ThreadHarvester implements RequestReceiver {
      * <p>
      * Saves current harvesting status to storage.
      */
-    public boolean startHarvester(String vmId) {
-        Harvester harvester = getHarvester(vmId);
+    public boolean startHarvester(String vmId, int pid) {
+        Harvester harvester = getHarvester(vmId, pid);
         boolean result = harvester.start();
         if (result) {
-            updateHarvestingStatus(Integer.valueOf(vmId), result);
+            updateHarvestingStatus(vmId, result);
         }
         return result;
     }
     
-    boolean saveVmCaps(String vmId) {
-        Harvester harvester = getHarvester(vmId);
+    boolean saveVmCaps(String vmId, int pid) {
+        Harvester harvester = getHarvester(vmId, pid);
         return harvester.saveVmCaps();
     }
 
@@ -160,21 +177,21 @@ public class ThreadHarvester implements RequestReceiver {
         if (harvester != null) {
             result = harvester.stop();
         }
-        updateHarvestingStatus(Integer.valueOf(vmId), false);
-        return true;
+        updateHarvestingStatus(vmId, false);
+        return result;
     }
 
     /** Save current status to storage */
-    public void addThreadHarvestingStatus(String pid) {
+    public void addThreadHarvestingStatus(String vmId) {
         boolean harvesting = false;
-        Harvester harvester = connectors.get(pid);
+        Harvester harvester = connectors.get(vmId);
         if (harvester != null) {
             harvesting = harvester.isConnected();
         }
-        updateHarvestingStatus(Integer.valueOf(pid), harvesting);
+        updateHarvestingStatus(vmId, harvesting);
     }
 
-    private void updateHarvestingStatus(int vmId, boolean harvesting) {
+    private void updateHarvestingStatus(String vmId, boolean harvesting) {
         ThreadHarvestingStatus status = new ThreadHarvestingStatus();
         status.setTimeStamp(clock.getRealTimeMillis());
         status.setVmId(vmId);
@@ -182,33 +199,35 @@ public class ThreadHarvester implements RequestReceiver {
         dao.saveHarvestingStatus(status);
     }
 
-    private Harvester getHarvester(String vmId) {
+    private Harvester getHarvester(String vmId, int pid) {
         Harvester harvester = connectors.get(vmId);
         if (harvester == null) {
-            harvester = createHarvester(vmId);
+            harvester = createHarvester(vmId, pid);
             connectors.put(vmId, harvester);
         }
         
         return harvester;
     }
 
-    Harvester createHarvester(String vmId) {
-        return new Harvester(dao, executor, vmId, connectionPool);
+    Harvester createHarvester(String vmId, int pid) {
+        return new Harvester(dao, executor, vmId, pid, connectionPool);
     }
 
     /**
-     * Returns a list of PIDs which the harvester stopped harvesting
+     * Returns a list of VM ID, PID pairs which can be used to resume
+     * the harvesters at a later time.
      */
-    public List<Integer> stopAndRemoveAllHarvesters() {
-        List<Integer> result = new ArrayList<>();
+    public List<Pair<String, Integer>> stopAndRemoveAllHarvesters() {
+        List<Pair<String, Integer>> result = new ArrayList<>();
         Iterator<Entry<String, Harvester>> iter = connectors.entrySet().iterator();
         while (iter.hasNext()) {
             Entry<String, Harvester> entry = iter.next();
-            int pid = Integer.valueOf(entry.getKey());
-            entry.getValue().stop();
-            updateHarvestingStatus(pid, false);
+            String vmId = entry.getKey();
+            Harvester harvester = entry.getValue();
+            harvester.stop();
+            updateHarvestingStatus(vmId, false);
             iter.remove();
-            result.add(pid);
+            result.add(new Pair<>(vmId, harvester.getPid()));
         }
         return result;
     }
@@ -217,10 +236,11 @@ public class ThreadHarvester implements RequestReceiver {
         return dao != null;
     }
 
-    public boolean findAndSaveDeadLockInformation(String vmId) {
-        Harvester harvester = getHarvester(vmId);
+    public boolean findAndSaveDeadLockInformation(String vmId, int pid) {
+        Harvester harvester = getHarvester(vmId, pid);
         boolean result = harvester.saveDeadLockData();
         return result;
     }
+    
 }
 

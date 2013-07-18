@@ -106,7 +106,7 @@ public class HeapDAOTest {
 
         dao = new HeapDAOImpl(storage);
         
-        heapInfo = new HeapInfo(123, 12345);
+        heapInfo = new HeapInfo("vm1", 12345);
         byte[] data = new byte[] { 1, 2, 3 };
         heapDumpData = File.createTempFile("test", "test");
         FileOutputStream out = new FileOutputStream(heapDumpData);
@@ -115,13 +115,13 @@ public class HeapDAOTest {
         histogramData = createHistogramData();
 
         Cursor<HeapInfo> cursor = (Cursor<HeapInfo>) mock(Cursor.class);
-        HeapInfo info1 = new HeapInfo(234, 12345L);
+        HeapInfo info1 = new HeapInfo("vm2", 12345L);
         info1.setAgentId("123");
         info1.setHeapId("testheap1");
         info1.setHeapDumpId("test1");
         info1.setHistogramId("histotest1");
 
-        HeapInfo info2 = new HeapInfo(234, 23456L);
+        HeapInfo info2 = new HeapInfo("vm2", 23456L);
         info2.setAgentId("123");
         info2.setHeapId("testheap2");
         info2.setHeapDumpId("test2");
@@ -188,7 +188,7 @@ public class HeapDAOTest {
     public void preparedQueryDescriptorsAreSane() {
         String expectedQueryHeapInfo = "QUERY vm-heap-info WHERE 'heapId' = ?s LIMIT 1";
         assertEquals(expectedQueryHeapInfo, HeapDAOImpl.QUERY_HEAP_INFO);
-        String expectedQueryAllHeaps = "QUERY vm-heap-info WHERE 'agentId' = ?s AND 'vmId' = ?i";
+        String expectedQueryAllHeaps = "QUERY vm-heap-info WHERE 'agentId' = ?s AND 'vmId' = ?s";
         assertEquals(expectedQueryAllHeaps, HeapDAOImpl.QUERY_ALL_HEAPS);
     }
 
@@ -216,15 +216,15 @@ public class HeapDAOTest {
         verify(add).apply();
 
         ArgumentCaptor<InputStream> data = ArgumentCaptor.forClass(InputStream.class);
-        verify(storage).saveFile(eq("heapdump-test-123-12345"), data.capture());
+        verify(storage).saveFile(eq("heapdump-test-vm1-12345"), data.capture());
         InputStream in = data.getValue();
         assertEquals(1, in.read());
         assertEquals(2, in.read());
         assertEquals(3, in.read());
         assertEquals(-1, in.read());
-        assertEquals("test-123-12345", heapInfo.getHeapId());
+        assertEquals("test-vm1-12345", heapInfo.getHeapId());
         ArgumentCaptor<InputStream> histoStream = ArgumentCaptor.forClass(InputStream.class);
-        verify(storage).saveFile(eq("histogram-test-123-12345"), histoStream.capture());
+        verify(storage).saveFile(eq("histogram-test-vm1-12345"), histoStream.capture());
         InputStream histoActual = histoStream.getValue();
         int expected;
         int actual;
@@ -244,7 +244,7 @@ public class HeapDAOTest {
         verify(add).apply();
 
         verify(storage, never()).saveFile(anyString(), any(InputStream.class));
-        assertEquals("test-123-12345", heapInfo.getHeapId());
+        assertEquals("test-vm1-12345", heapInfo.getHeapId());
     }
 
     @Test
@@ -254,21 +254,21 @@ public class HeapDAOTest {
         verify(storage).registerCategory(HeapDAO.heapInfoCategory);
         
         HostRef host = new HostRef("123", "test-host");
-        VmRef vm = new VmRef(host, 234, "test-vm");
+        VmRef vm = new VmRef(host, "vm2", 234, "test-vm");
         Collection<HeapInfo> heapInfos = dao.getAllHeapInfo(vm);
 
         verify(storage).prepareStatement(anyDescriptor());
         verify(stmt).setString(0, "123");
-        verify(stmt).setInt(1, 234);
+        verify(stmt).setString(1, "vm2");
         verify(stmt).executeQuery();
         verifyNoMoreInteractions(stmt);
         
-        HeapInfo info1 = new HeapInfo(234, 12345);
+        HeapInfo info1 = new HeapInfo("vm2", 12345);
         info1.setHeapDumpId("test1");
         info1.setHeapId("testheap1");
         info1.setHistogramId("histotest1");
         
-        HeapInfo info2 = new HeapInfo(234, 23456);
+        HeapInfo info2 = new HeapInfo("vm2", 23456);
         info2.setHeapDumpId("test2");
         info2.setHeapId("testheap2");
         info2.setHistogramId("histotest2");
@@ -289,7 +289,7 @@ public class HeapDAOTest {
         verify(stmt).executeQuery();
         verifyNoMoreInteractions(stmt);
         
-        HeapInfo info = new HeapInfo(234, 12345);
+        HeapInfo info = new HeapInfo("vm2", 12345);
         info.setHeapDumpId("test1");
         info.setHeapId("testheap1");
         info.setHistogramId("histotest1");

@@ -661,7 +661,7 @@ public class MainWindow extends JFrame implements MainView {
             } else if (value instanceof VmRef) {
                 VmRef vmRef = (VmRef) value;
                 String vmName = vmRef.getName();
-                String vmId = vmRef.getIdString();
+                String vmId = vmRef.getVmId();
                 return translator.localize(LocaleResources.VM_TOOLTIP, vmName, vmId).getContents();
             } else {
                 return null;

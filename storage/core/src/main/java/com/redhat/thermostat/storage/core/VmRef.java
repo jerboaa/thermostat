@@ -39,14 +39,14 @@ package com.redhat.thermostat.storage.core;
 public class VmRef implements Ref {
 
     private final HostRef hostRef;
-    private final Integer uid;
-    private final String uidString;
+    private final String id;
+    private final Integer pid;
     private final String name;
 
-    public VmRef(HostRef hostRef, Integer id, String name) {
+    public VmRef(HostRef hostRef, String id, Integer pid, String name) {
         this.hostRef = hostRef;
-        this.uid = id;
-        this.uidString = id.toString();
+        this.id = id;
+        this.pid = pid;
         this.name = name;
     }
 
@@ -55,19 +55,16 @@ public class VmRef implements Ref {
         return name;
     }
 
-    public HostRef getAgent() {
+    public HostRef getHostRef() {
         return hostRef;
     }
-
-    public Integer getId() {
-        return uid;
+    
+    public String getVmId() {
+        return id;
     }
-
-    /**
-     * Equivalent to {@link #getStringID()}.
-     */
-    public String getIdString() {
-        return uidString;
+    
+    public Integer getPid() {
+        return pid;
     }
 
     public String getName() {
@@ -86,7 +83,9 @@ public class VmRef implements Ref {
             return false;
         }
         VmRef other = (VmRef) obj;
-        if (equals(this.hostRef, other.hostRef) && equals(this.uid, other.uid) && equals(this.name, other.name)) {
+        if (equals(this.hostRef, other.hostRef)
+                && equals(this.id, other.id)
+                && equals(this.pid, other.pid) && equals(this.name, other.name)) {
             return true;
         }
         return false;
@@ -98,12 +97,12 @@ public class VmRef implements Ref {
 
     @Override
     public int hashCode() {
-        return uid.hashCode();
+        return id.hashCode();
     }
 
     @Override
     public String getStringID() {
-        return getIdString();
+        return id;
     }
 }
 

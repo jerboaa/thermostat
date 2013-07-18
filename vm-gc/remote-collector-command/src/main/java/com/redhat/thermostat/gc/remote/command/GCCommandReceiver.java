@@ -36,18 +36,22 @@
 
 package com.redhat.thermostat.gc.remote.command;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import com.redhat.thermostat.agent.command.RequestReceiver;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.gc.remote.command.internal.GC;
 import com.redhat.thermostat.gc.remote.command.internal.GCException;
 import com.redhat.thermostat.gc.remote.common.command.GCCommand;
-import com.redhat.thermostat.utils.management.MXBeanConnection;
 import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 
 public class GCCommandReceiver implements RequestReceiver {
 
+    private static final Logger logger = LoggingUtils.getLogger(GCCommandReceiver.class);
     private MXBeanConnectionPool pool;
 
     public GCCommandReceiver(MXBeanConnectionPool pool) {
@@ -61,11 +65,16 @@ public class GCCommandReceiver implements RequestReceiver {
         String command = request.getParameter(GCCommand.class.getName());
         switch (GCCommand.valueOf(command)) {
         case REQUEST_GC:
-            String vmId = request.getParameter(GCCommand.VM_ID);
+            String strPid = request.getParameter(GCCommand.VM_PID);
             try {
+                int vmId = Integer.parseInt(strPid);
                 new GC(pool, vmId).gc();
             } catch (GCException gce) {
                 response = new Response(ResponseType.ERROR);
+                logger.log(Level.WARNING, "GC request failed", gce);
+            } catch (NumberFormatException e) {
+                response = new Response(ResponseType.ERROR);
+                logger.log(Level.WARNING, "Invalid PID: " + strPid, e);
             }
             break;
         default:

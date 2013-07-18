@@ -67,7 +67,7 @@ public class VmInfoDAOImpl implements VmInfoDAO {
     static final String QUERY_VM_INFO = "QUERY " 
             + vmInfoCategory.getName() + " WHERE '" 
             + Key.AGENT_ID.getName() + "' = ?s AND '"
-            + Key.VM_ID.getName() + "' = ?i LIMIT 1";
+            + Key.VM_ID.getName() + "' = ?s LIMIT 1";
     static final String QUERY_ALL_VMS = "QUERY " 
             + vmInfoCategory.getName() + " WHERE '" 
             + Key.AGENT_ID.getName() + "' = ?s";
@@ -88,8 +88,8 @@ public class VmInfoDAOImpl implements VmInfoDAO {
         Cursor<VmInfo> cursor;
         try {
             stmt = storage.prepareStatement(desc);
-            stmt.setString(0, ref.getAgent().getAgentId());
-            stmt.setInt(1, ref.getId());
+            stmt.setString(0, ref.getHostRef().getAgentId());
+            stmt.setString(1, ref.getVmId());
             cursor = stmt.executeQuery();
         } catch (DescriptorParsingException e) {
             // should not happen, but if it *does* happen, at least log it
@@ -107,7 +107,7 @@ public class VmInfoDAOImpl implements VmInfoDAO {
         }
         else {
             // FIXME this is inconsistent with null returned elsewhere
-            throw new DAOException("Unknown VM: host:" + ref.getAgent().getAgentId() + ";vm:" + ref.getId());
+            throw new DAOException("Unknown VM: host:" + ref.getHostRef().getAgentId() + ";vm:" + ref.getVmId());
         }
         return result;
     }
@@ -145,10 +145,11 @@ public class VmInfoDAOImpl implements VmInfoDAO {
     }
 
     private VmRef buildVmRefFromChunk(VmInfo vmInfo, HostRef host) {
-        Integer id = vmInfo.getVmId();
+        String id = vmInfo.getVmId();
+        Integer pid = vmInfo.getVmPid();
         // TODO can we do better than the main class?
         String mainClass = vmInfo.getMainClass();
-        VmRef ref = new VmRef(host, id, mainClass);
+        VmRef ref = new VmRef(host, id, pid, mainClass);
         return ref;
     }
 
@@ -165,7 +166,7 @@ public class VmInfoDAOImpl implements VmInfoDAO {
     }
 
     @Override
-    public void putVmStoppedTime(int vmId, long timestamp) {
+    public void putVmStoppedTime(String vmId, long timestamp) {
         Update update = storage.createUpdate(vmInfoCategory);
         Expression expr = factory.equalTo(Key.VM_ID, vmId);
         update.where(expr);

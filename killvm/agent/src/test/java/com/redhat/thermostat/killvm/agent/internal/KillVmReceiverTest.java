@@ -39,6 +39,7 @@ package com.redhat.thermostat.killvm.agent.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -58,12 +59,32 @@ public class KillVmReceiverTest {
         UNIXProcessHandler proc = mock(UNIXProcessHandler.class);
         KillVmReceiver receiver = new KillVmReceiver(proc);
         Request req = mock(Request.class);
+        when(req.getParameter("vm-pid")).thenReturn("12345");
         Response response = receiver.receive(req);
         assertEquals(ResponseType.OK, response.getType());
     }
+    
+    @Test
+    public void receiverReturnsErrorNoPid() {
+        UNIXProcessHandler proc = mock(UNIXProcessHandler.class);
+        KillVmReceiver receiver = new KillVmReceiver(proc);
+        Request req = mock(Request.class);
+        Response response = receiver.receive(req);
+        assertEquals(ResponseType.ERROR, response.getType());
+    }
+    
+    @Test
+    public void receiverReturnsErrorBadPid() {
+        UNIXProcessHandler proc = mock(UNIXProcessHandler.class);
+        KillVmReceiver receiver = new KillVmReceiver(proc);
+        Request req = mock(Request.class);
+        when(req.getParameter("vm-pid")).thenReturn("hi");
+        Response response = receiver.receive(req);
+        assertEquals(ResponseType.ERROR, response.getType());
+    }
 
     @Test
-    public void receiverReturnsError() {
+    public void receiverReturnsErrorNoProcessHandler() {
         KillVmReceiver receiver = new KillVmReceiver(null);
         Request req = mock(Request.class);
         Response response = receiver.receive(req);

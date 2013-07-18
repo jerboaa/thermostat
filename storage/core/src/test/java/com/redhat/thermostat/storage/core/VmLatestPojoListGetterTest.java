@@ -55,6 +55,7 @@ import com.redhat.thermostat.storage.model.TimeStampedPojo;
 public class VmLatestPojoListGetterTest {
     private static final String AGENT_ID = "agentid";
     private static final String HOSTNAME = "host.example.com";
+    private static final String VM_ID = "vmId";
     private static final int VM_PID = 123;
     private static final String MAIN_CLASS = "Foo.class";
     private static final String CATEGORY_NAME = "vmcategory";
@@ -77,7 +78,7 @@ public class VmLatestPojoListGetterTest {
     @Before
     public void setUp() {
         hostRef = new HostRef(AGENT_ID, HOSTNAME);
-        vmRef = new VmRef(hostRef, VM_PID, MAIN_CLASS);
+        vmRef = new VmRef(hostRef, VM_ID, VM_PID, MAIN_CLASS);
         result1 = mock(TestPojo.class);
         when(result1.getTimeStamp()).thenReturn(t1);
         when(result1.getData()).thenReturn(lc1);
@@ -95,7 +96,7 @@ public class VmLatestPojoListGetterTest {
         VmLatestPojoListGetter<TestPojo> getter = new VmLatestPojoListGetter<>(storage, cat);
         String actualDesc = getter.getQueryLatestDesc();
         String expected = "QUERY vmcategory WHERE 'agentId' = ?s AND " +
-         "'vmId' = ?i AND 'timeStamp' > ?l SORT 'timeStamp' DSC";
+         "'vmId' = ?s AND 'timeStamp' > ?l SORT 'timeStamp' DSC";
         assertEquals(expected, actualDesc);
     }
 
@@ -112,7 +113,7 @@ public class VmLatestPojoListGetterTest {
         assertNotNull(query);
         verify(storage).prepareStatement(anyDescriptor());
         verify(query).setString(0, AGENT_ID);
-        verify(query).setInt(1, VM_PID);
+        verify(query).setString(1, VM_ID);
         verify(query).setLong(2, 123l);
         verifyNoMoreInteractions(query);
     }
@@ -138,7 +139,7 @@ public class VmLatestPojoListGetterTest {
         assertNotNull(query);
         verify(storage, times(2)).prepareStatement(anyDescriptor());
         verify(query).setString(0, AGENT_ID);
-        verify(query).setInt(1, VM_PID);
+        verify(query).setString(1, VM_ID);
         verify(query).setLong(2, Long.MIN_VALUE);
         verifyNoMoreInteractions(query);
     }
@@ -162,7 +163,7 @@ public class VmLatestPojoListGetterTest {
 
         verify(storage).prepareStatement(anyDescriptor());
         verify(query).setString(0, AGENT_ID);
-        verify(query).setInt(1, VM_PID);
+        verify(query).setString(1, VM_ID);
         verify(query).setLong(2, t2);
         verify(query).executeQuery();
         verifyNoMoreInteractions(query);

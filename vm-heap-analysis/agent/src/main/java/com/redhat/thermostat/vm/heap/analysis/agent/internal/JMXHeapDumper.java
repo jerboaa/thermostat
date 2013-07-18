@@ -52,17 +52,17 @@ class JMXHeapDumper {
 
     private static final String CONNECTOR_ADDRESS_PROPERTY = "com.sun.management.jmxremote.localConnectorAddress";
 
-    void dumpHeap(String vmId, String filename) throws HeapDumpException {
+    void dumpHeap(int pid, String filename) throws HeapDumpException {
         try {
-            doHeapDump(vmId, filename);
+            doHeapDump(pid, filename);
         } catch (Exception ex) {
             throw new HeapDumpException(ex);
         }
     }
 
-    private void doHeapDump(String vmId, String filename) throws Exception {
+    private void doHeapDump(int pid, String filename) throws Exception {
 
-        VirtualMachine vm = VirtualMachine.attach(vmId);
+        VirtualMachine vm = VirtualMachine.attach(String.valueOf(pid));
         String connectorAddress = getConnectorAddress(vm);
         JMXServiceURL url = new JMXServiceURL(connectorAddress);
 

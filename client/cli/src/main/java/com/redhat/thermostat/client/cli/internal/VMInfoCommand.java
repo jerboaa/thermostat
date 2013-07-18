@@ -110,6 +110,7 @@ public class VMInfoCommand extends AbstractCommand {
         VmInfo vmInfo = vmsDAO.getVmInfo(vm);
 
         TableRenderer table = new TableRenderer(2);
+        table.printLine(translator.localize(LocaleResources.VM_INFO_VM_ID).getContents(), vmInfo.getVmId());
         table.printLine(translator.localize(LocaleResources.VM_INFO_PROCESS_ID).getContents(), String.valueOf(vmInfo.getVmPid()));
         table.printLine(translator.localize(LocaleResources.VM_INFO_START_TIME).getContents(), new Date(vmInfo.getStartTimeStamp()).toString());
         if (vmInfo.isAlive()) {

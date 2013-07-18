@@ -66,7 +66,7 @@ import com.redhat.thermostat.vm.classstat.common.model.VmClassStat;
 public class VmClassStatDAOTest {
 
     private static final Long TIMESTAMP = 1234L;
-    private static final Integer VM_ID = 123;
+    private static final String VM_ID = "vmId";
     private static final Long LOADED_CLASSES = 12345L;
 
     @Test
@@ -100,15 +100,15 @@ public class VmClassStatDAOTest {
         when(hostRef.getAgentId()).thenReturn("system");
 
         VmRef vmRef = mock(VmRef.class);
-        when(vmRef.getAgent()).thenReturn(hostRef);
-        when(vmRef.getId()).thenReturn(321);
+        when(vmRef.getHostRef()).thenReturn(hostRef);
+        when(vmRef.getVmId()).thenReturn(VM_ID);
 
         VmClassStatDAO dao = new VmClassStatDAOImpl(storage);
         List<VmClassStat> vmClassStats = dao.getLatestClassStats(vmRef, Long.MIN_VALUE);
 
         verify(storage).prepareStatement(anyDescriptor());
         verify(stmt).setString(0, "system");
-        verify(stmt).setInt(1, 321);
+        verify(stmt).setString(1, VM_ID);
         verify(stmt).setLong(2, Long.MIN_VALUE);
         verify(stmt).executeQuery();
         verifyNoMoreInteractions(stmt);
@@ -117,7 +117,7 @@ public class VmClassStatDAOTest {
         VmClassStat stat = vmClassStats.get(0);
         assertEquals(TIMESTAMP, (Long) stat.getTimeStamp());
         assertEquals(LOADED_CLASSES, (Long) stat.getLoadedClasses());
-        assertEquals(VM_ID, (Integer) stat.getVmId());
+        assertEquals(VM_ID, stat.getVmId());
     }
 
     @SuppressWarnings("unchecked")

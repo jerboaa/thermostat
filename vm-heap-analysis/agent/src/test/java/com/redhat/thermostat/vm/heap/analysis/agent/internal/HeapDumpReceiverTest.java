@@ -37,6 +37,7 @@
 package com.redhat.thermostat.vm.heap.analysis.agent.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.same;
@@ -76,7 +77,8 @@ public class HeapDumpReceiverTest {
         heapDAO = mock(HeapDAO.class);
 
         request = mock(Request.class);
-        when(request.getParameter("vmId")).thenReturn("123");
+        when(request.getParameter("vmId")).thenReturn("vmId");
+        when(request.getParameter("vmPid")).thenReturn("42");
         jmxDumper = mock(JMXHeapDumper.class);
         jmapDumper = mock(JMapHeapDumper.class);
         histogramLoader = mock(HistogramLoader.class);
@@ -102,29 +104,29 @@ public class HeapDumpReceiverTest {
 
         assertEquals(ResponseType.OK, response.getType());
         ArgumentCaptor<String> filename = ArgumentCaptor.forClass(String.class);
-        verify(jmxDumper).dumpHeap(eq("123"), filename.capture());
+        verify(jmxDumper).dumpHeap(eq(42), filename.capture());
         verify(histogramLoader).load(filename.getValue());
         ArgumentCaptor<HeapInfo> heapInfo = ArgumentCaptor.forClass(HeapInfo.class);
         verify(heapDAO).putHeapInfo(heapInfo.capture(), eq(new File(filename.getValue())), same(expectedHistogramData));
-        assertEquals(123, heapInfo.getValue().getVmId());
+        assertEquals("vmId", heapInfo.getValue().getVmId());
     }
 
     @Test
     public void verifyFallbackWhenJMXFails() throws HeapDumpException {
 
-        doThrow(new HeapDumpException()).when(jmxDumper).dumpHeap(anyString(), anyString());
+        doThrow(new HeapDumpException()).when(jmxDumper).dumpHeap(anyInt(), anyString());
 
         Response response = receiver.receive(request);
 
         assertEquals(ResponseType.OK, response.getType());
-        verify(jmxDumper).dumpHeap(eq("123"), anyString());
+        verify(jmxDumper).dumpHeap(eq(42), anyString());
         
     }
 
     @Test
     public void verifyResponseTypeWhenAllFails() throws HeapDumpException {
-        doThrow(new HeapDumpException()).when(jmxDumper).dumpHeap(anyString(), anyString());
-        doThrow(new HeapDumpException()).when(jmapDumper).dumpHeap(anyString(), anyString());
+        doThrow(new HeapDumpException()).when(jmxDumper).dumpHeap(anyInt(), anyString());
+        doThrow(new HeapDumpException()).when(jmapDumper).dumpHeap(anyInt(), anyString());
         Response response = receiver.receive(request);
 
         assertEquals(ResponseType.ERROR, response.getType());

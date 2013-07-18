@@ -90,9 +90,9 @@ public class VmCpuStatPrintDelegateTest {
 
     private void setupDAOs() {
         vmCpuStatDAO = mock(VmCpuStatDAO.class);
-        int vmId = 234;
+        String vmId = "vmId";
         HostRef host = new HostRef("123", "dummy");
-        vm = new VmRef(host, 234, "dummy");
+        vm = new VmRef(host, vmId, 234, "dummy");
         VmCpuStat cpustat1 = new VmCpuStat(2, vmId, 65);
         VmCpuStat cpustat2 = new VmCpuStat(3, vmId, 70);
         cpuStats = Arrays.asList(cpustat1, cpustat2);

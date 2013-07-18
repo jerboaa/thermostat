@@ -79,9 +79,7 @@ import com.redhat.thermostat.client.ui.DecoratorProvider;
 import com.redhat.thermostat.client.ui.HostContextAction;
 import com.redhat.thermostat.client.ui.MenuAction;
 import com.redhat.thermostat.client.ui.MenuRegistry;
-import com.redhat.thermostat.client.ui.SummaryController;
 import com.redhat.thermostat.client.ui.VMContextAction;
-import com.redhat.thermostat.client.ui.VmInformationController;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
@@ -401,8 +399,8 @@ public class MainWindowControllerImplTest {
 
         Collection<VmRef> expectedVMs = new ArrayList<>();
         HostRef host = new HostRef("123", "fluffhost1");
-        expectedVMs.add(new VmRef(host, 123, "vm1"));
-        expectedVMs.add(new VmRef(host, 456, "vm2"));
+        expectedVMs.add(new VmRef(host, "321", 123, "vm1"));
+        expectedVMs.add(new VmRef(host, "654", 456, "vm2"));
 
         when(mockVmsDAO.getVMs(any(HostRef.class))).thenReturn(expectedVMs);
 
@@ -447,10 +445,10 @@ public class MainWindowControllerImplTest {
 
         VmRef vmRef = mock(VmRef.class);
         when(vmRef.getName()).thenReturn("testvm");
-        when(vmRef.getIdString()).thenReturn("testvmid");
+        when(vmRef.getVmId()).thenReturn("testvmid");
         HostRef ref = mock(HostRef.class);
         when(ref.getAgentId()).thenReturn("agentId");
-        when(vmRef.getAgent()).thenReturn(ref);
+        when(vmRef.getHostRef()).thenReturn(ref);
         
         when(view.getSelectedHostOrVm()).thenReturn(vmRef);
         
@@ -485,14 +483,14 @@ public class MainWindowControllerImplTest {
         when(view.getSelectedHostOrVm()).thenReturn(vmRef1).thenReturn(vmRef1).thenReturn(vmRef2).thenReturn(vmRef1);
 
         when(vmRef1.getName()).thenReturn("testvm");
-        when(vmRef1.getIdString()).thenReturn("testvmid");
+        when(vmRef1.getVmId()).thenReturn("testvmid");
         HostRef ref = mock(HostRef.class);
         when(ref.getAgentId()).thenReturn("agentId");
-        when(vmRef1.getAgent()).thenReturn(ref);
+        when(vmRef1.getHostRef()).thenReturn(ref);
         
         when(vmRef2.getName()).thenReturn("testvm");
-        when(vmRef2.getIdString()).thenReturn("testvmid");
-        when(vmRef2.getAgent()).thenReturn(ref);
+        when(vmRef2.getVmId()).thenReturn("testvmid");
+        when(vmRef2.getHostRef()).thenReturn(ref);
         
         VmInformationView vmInfoView2 = mock(VmInformationView.class);
         
@@ -568,7 +566,7 @@ public class MainWindowControllerImplTest {
 
     @Test
     public void verityVMActionsAreShown() {
-        VmInfo vmInfo = new VmInfo(0, 1, 2, null, null, null, null, null, null, null, null, null, null, null, -1, null);
+        VmInfo vmInfo = new VmInfo("123", 0, 1, 2, null, null, null, null, null, null, null, null, null, null, null, -1, null);
         when(mockVmsDAO.getVmInfo(isA(VmRef.class))).thenReturn(vmInfo);
 
         VmRef ref = mock(VmRef.class);

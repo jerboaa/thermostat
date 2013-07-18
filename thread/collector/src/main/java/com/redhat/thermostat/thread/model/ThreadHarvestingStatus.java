@@ -43,17 +43,17 @@ import com.redhat.thermostat.storage.model.BasePojo;
 @Entity
 public class ThreadHarvestingStatus extends BasePojo {
 
-    private int vmId;
+    private String vmId;
     private long timeStamp;
     private boolean collecting;
 
     @Persist
-    public int getVmId() {
+    public String getVmId() {
         return vmId;
     }
 
     @Persist
-    public void setVmId(int newVmId) {
+    public void setVmId(String newVmId) {
         this.vmId = newVmId;
     }
 

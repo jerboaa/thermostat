@@ -70,7 +70,7 @@ import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Space;
 
 public class VmMemoryStatDAOTest {
 
-    private static final int VM_ID = 0xcafe;
+    private static final String VM_ID = "0xcafe";
     private static final String AGENT_ID = "agent";
 
     private Storage storage;
@@ -86,8 +86,8 @@ public class VmMemoryStatDAOTest {
         when(hostRef.getAgentId()).thenReturn(AGENT_ID);
 
         vmRef = mock(VmRef.class);
-        when(vmRef.getAgent()).thenReturn(hostRef);
-        when(vmRef.getId()).thenReturn(VM_ID);
+        when(vmRef.getHostRef()).thenReturn(hostRef);
+        when(vmRef.getVmId()).thenReturn(VM_ID);
 
         storage = mock(Storage.class);
         stmt = (PreparedStatement<VmMemoryStat>) mock(PreparedStatement.class);
@@ -114,7 +114,7 @@ public class VmMemoryStatDAOTest {
     
     @Test
     public void preparedQueryDescriptorsAreSane() {
-        String expectedQueryThreadCaps = "QUERY vm-memory-stats WHERE 'agentId' = ?s AND 'vmId' = ?i SORT 'timeStamp' DSC LIMIT 1";
+        String expectedQueryThreadCaps = "QUERY vm-memory-stats WHERE 'agentId' = ?s AND 'vmId' = ?s SORT 'timeStamp' DSC LIMIT 1";
         assertEquals(expectedQueryThreadCaps, VmMemoryStatDAOImpl.QUERY_LATEST);
     }
 
@@ -137,8 +137,8 @@ public class VmMemoryStatDAOTest {
         impl.getLatestMemoryStat(vmRef);
 
         verify(storage).prepareStatement(anyDescriptor());
-        verify(stmt).setString(0, vmRef.getAgent().getAgentId());
-        verify(stmt).setInt(1, vmRef.getId());
+        verify(stmt).setString(0, vmRef.getHostRef().getAgentId());
+        verify(stmt).setString(1, vmRef.getVmId());
         verify(stmt).executeQuery();
     }
 
@@ -148,8 +148,8 @@ public class VmMemoryStatDAOTest {
         impl.getLatestVmMemoryStats(vmRef, 123L);
 
         verify(storage).prepareStatement(anyDescriptor());
-        verify(stmt).setString(0, vmRef.getAgent().getAgentId());
-        verify(stmt).setInt(1, vmRef.getId());
+        verify(stmt).setString(0, vmRef.getHostRef().getAgentId());
+        verify(stmt).setString(1, vmRef.getVmId());
         verify(stmt).setLong(2, 123L);
         verify(stmt).executeQuery();
         verifyNoMoreInteractions(stmt);
@@ -202,7 +202,7 @@ public class VmMemoryStatDAOTest {
             }
             gen.setSpaces(spaces.toArray(new Space[spaces.size()]));
         }
-        VmMemoryStat stat = new VmMemoryStat(1, 2, generations.toArray(new Generation[generations.size()]));
+        VmMemoryStat stat = new VmMemoryStat(1, "vmId", generations.toArray(new Generation[generations.size()]));
 
         Storage storage = mock(Storage.class);
         Add add = mock(Add.class);

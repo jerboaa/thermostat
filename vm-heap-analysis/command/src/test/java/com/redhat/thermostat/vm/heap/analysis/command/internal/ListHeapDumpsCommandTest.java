@@ -112,9 +112,9 @@ public class ListHeapDumpsCommandTest {
     @Test
     public void verifyWorks() throws CommandException {
         HostRef hostRef = mock(HostRef.class);
-        when(hostRef.getStringID()).thenReturn("host-id");
+        when(hostRef.getAgentId()).thenReturn("host-id");
         VmRef vmRef = mock(VmRef.class);
-        when(vmRef.getStringID()).thenReturn("1");
+        when(vmRef.getVmId()).thenReturn("1");
 
         HeapInfo heapInfo = mock(HeapInfo.class);
         Calendar timestamp = Calendar.getInstance();
@@ -152,12 +152,12 @@ public class ListHeapDumpsCommandTest {
         HostRef hostRef1 = mock(HostRef.class);
         when(hostRef1.getStringID()).thenReturn("host1");
         VmRef vmRef1 = mock(VmRef.class);
-        when(vmRef1.getStringID()).thenReturn("1");
+        when(vmRef1.getVmId()).thenReturn("1");
 
         HostRef hostRef2 = mock(HostRef.class);
         when(hostRef2.getStringID()).thenReturn("host2");
         VmRef vmRef2 = mock(VmRef.class);
-        when(vmRef2.getStringID()).thenReturn("2");
+        when(vmRef2.getVmId()).thenReturn("2");
 
         HeapInfo heapInfo = mock(HeapInfo.class);
         Calendar timestamp = Calendar.getInstance();
@@ -201,12 +201,12 @@ public class ListHeapDumpsCommandTest {
         when(hostRef1.getStringID()).thenReturn("host1");
         when(hostRef1.getAgentId()).thenReturn("host1");
         VmRef vmRef1 = mock(VmRef.class);
-        when(vmRef1.getStringID()).thenReturn("1");
+        when(vmRef1.getVmId()).thenReturn("1");
 
         HostRef hostRef2 = mock(HostRef.class);
         when(hostRef2.getStringID()).thenReturn("host2");
         VmRef vmRef2 = mock(VmRef.class);
-        when(vmRef2.getStringID()).thenReturn("2");
+        when(vmRef2.getVmId()).thenReturn("2");
 
         HeapInfo heapInfo = mock(HeapInfo.class);
         Calendar timestamp = Calendar.getInstance();

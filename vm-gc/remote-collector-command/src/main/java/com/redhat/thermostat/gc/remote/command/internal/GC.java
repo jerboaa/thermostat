@@ -52,9 +52,9 @@ public class GC {
     private MXBeanConnectionPool pool;
     private int vmId;
 
-    public GC(MXBeanConnectionPool pool, String vmId) {
+    public GC(MXBeanConnectionPool pool, int vmId) {
         this.pool = pool;
-        this.vmId = Integer.valueOf(vmId);
+        this.vmId = vmId;
     }
 
     public void gc() throws GCException {

@@ -71,6 +71,7 @@ import com.redhat.thermostat.vm.overview.client.locale.LocaleResources;
 public class VmOverviewControllerTest {
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     
+    private static final String VM_ID = "vmId";
     private static final int VM_PID = 1337;
     private static final long START_TIME = 10000;
     private static final long STOP_TIME = 20000;
@@ -128,7 +129,7 @@ public class VmOverviewControllerTest {
     }
 
     private VmInfo createVmInfo() {
-        VmInfo vmInfo = new VmInfo(VM_PID, START_TIME, STOP_TIME, JAVA_VERSION,
+        VmInfo vmInfo = new VmInfo(VM_ID, VM_PID, START_TIME, STOP_TIME, JAVA_VERSION,
                 JAVA_HOME, MAIN_CLASS, COMMAND_LINE, VM_NAME, VM_INFO,
                 VM_VERSION, VM_ARGS, PROPS, ENV, LIBS, UID, USERNAME);
         return vmInfo;
@@ -157,7 +158,7 @@ public class VmOverviewControllerTest {
     
     @Test
     public void verifyViewIsUpdatedWithDataNoUid() {
-        VmInfo vmInfo = new VmInfo(VM_PID, START_TIME, STOP_TIME, JAVA_VERSION,
+        VmInfo vmInfo = new VmInfo(VM_ID, VM_PID, START_TIME, STOP_TIME, JAVA_VERSION,
                 JAVA_HOME, MAIN_CLASS, COMMAND_LINE, VM_NAME, VM_INFO,
                 VM_VERSION, VM_ARGS, PROPS, ENV, LIBS, -1, null);
         createController(vmInfo);
@@ -183,7 +184,7 @@ public class VmOverviewControllerTest {
     
     @Test
     public void verifyViewIsUpdatedWithDataNoUsername() {
-        VmInfo vmInfo = new VmInfo(VM_PID, START_TIME, STOP_TIME, JAVA_VERSION,
+        VmInfo vmInfo = new VmInfo(VM_ID, VM_PID, START_TIME, STOP_TIME, JAVA_VERSION,
                 JAVA_HOME, MAIN_CLASS, COMMAND_LINE, VM_NAME, VM_INFO,
                 VM_VERSION, VM_ARGS, PROPS, ENV, LIBS, UID, null);
         createController(vmInfo);

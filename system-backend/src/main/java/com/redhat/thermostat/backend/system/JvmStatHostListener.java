@@ -40,6 +40,7 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -53,6 +54,7 @@ import sun.jvmstat.monitor.event.VmStatusChangeEvent;
 
 import com.redhat.thermostat.agent.VmStatusListener.Status;
 import com.redhat.thermostat.backend.system.ProcessUserInfoBuilder.ProcessUserInfo;
+import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
@@ -64,7 +66,7 @@ public class JvmStatHostListener implements HostListener {
 
     private final VmInfoDAO vmInfoDAO;
 
-    private Map<Integer, MonitoredVm> monitoredVms  = new HashMap<>();
+    private Map<Integer, Pair<String, MonitoredVm>> monitoredVms  = new HashMap<>();
     
     private VmStatusChangeNotifier notifier;
 
@@ -109,36 +111,37 @@ public class JvmStatHostListener implements HostListener {
         }
     }
 
-    private void sendNewVM(Integer vmId, MonitoredHost host)
+    private void sendNewVM(Integer vmPid, MonitoredHost host)
             throws MonitorException, URISyntaxException {
         MonitoredVm vm = host.getMonitoredVm(host.getHostIdentifier().resolve(
-                new VmIdentifier(vmId.toString())));
+                new VmIdentifier(vmPid.toString())));
         if (vm != null) {
             JvmStatDataExtractor extractor = new JvmStatDataExtractor(vm);
+            String vmId = UUID.randomUUID().toString();
             try {
                 long startTime = System.currentTimeMillis();
                 long stopTime = Long.MIN_VALUE;
-                recordVmInfo(vmId, startTime, stopTime, extractor);
+                recordVmInfo(vmId, vmPid, startTime, stopTime, extractor);
                 logger.finer("Sent VM_STARTED messsage");
             } catch (MonitorException me) {
                 logger.log(Level.WARNING, "error getting vm info for " + vmId, me);
             }
 
-            notifier.notifyVmStatusChange(Status.VM_STARTED, vmId);
+            notifier.notifyVmStatusChange(Status.VM_STARTED, vmId, vmPid);
 
-            monitoredVms.put(vmId, vm);
+            monitoredVms.put(vmPid, new Pair<>(vmId, vm));
         }
     }
 
-    void recordVmInfo(Integer vmId, long startTime, long stopTime,
+    void recordVmInfo(String vmId, Integer vmPid, long startTime, long stopTime,
             JvmStatDataExtractor extractor) throws MonitorException {
         Map<String, String> properties = new HashMap<String, String>();
         ProcDataSource dataSource = new ProcDataSource();
-        Map<String, String> environment = new ProcessEnvironmentBuilder(dataSource).build(vmId);
+        Map<String, String> environment = new ProcessEnvironmentBuilder(dataSource).build(vmPid);
         // TODO actually figure out the loaded libraries.
         String[] loadedNativeLibraries = new String[0];
-        ProcessUserInfo userInfo = userInfoBuilder.build(vmId);
-        VmInfo info = new VmInfo(vmId, startTime, stopTime,
+        ProcessUserInfo userInfo = userInfoBuilder.build(vmPid);
+        VmInfo info = new VmInfo(vmId, vmPid, startTime, stopTime,
                 extractor.getJavaVersion(), extractor.getJavaHome(),
                 extractor.getMainClass(), extractor.getCommandLine(),
                 extractor.getVmName(), extractor.getVmInfo(), extractor.getVmVersion(), extractor.getVmArguments(),
@@ -146,17 +149,19 @@ public class JvmStatHostListener implements HostListener {
         vmInfoDAO.putVmInfo(info);
     }
 
-    private void sendStoppedVM(Integer vmId, MonitoredHost host) throws URISyntaxException, MonitorException {
+    private void sendStoppedVM(Integer vmPid, MonitoredHost host) throws URISyntaxException, MonitorException {
         
-        VmIdentifier resolvedVmID = host.getHostIdentifier().resolve(new VmIdentifier(vmId.toString()));
+        VmIdentifier resolvedVmID = host.getHostIdentifier().resolve(new VmIdentifier(vmPid.toString()));
         if (resolvedVmID != null) {
+            Pair<String, MonitoredVm> vmData = monitoredVms.remove(vmPid);
+            
+            String vmId = vmData.getFirst();
+            notifier.notifyVmStatusChange(Status.VM_STOPPED, vmId, vmPid);
+
             long stopTime = System.currentTimeMillis();
-
-            notifier.notifyVmStatusChange(Status.VM_STOPPED, vmId);
-
             vmInfoDAO.putVmStoppedTime(vmId, stopTime);
 
-            MonitoredVm vm = monitoredVms.remove(vmId);
+            MonitoredVm vm = vmData.getSecond();
             vm.detach();
         }
     }
@@ -164,7 +169,7 @@ public class JvmStatHostListener implements HostListener {
     /*
      * For testing purposes only.
      */
-    Map<Integer, MonitoredVm> getMonitoredVms() {
+    Map<Integer, Pair<String, MonitoredVm>> getMonitoredVms() {
         return monitoredVms;
     }
     

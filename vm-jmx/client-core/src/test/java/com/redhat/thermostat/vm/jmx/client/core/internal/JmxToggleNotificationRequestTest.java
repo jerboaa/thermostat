@@ -76,7 +76,7 @@ public class JmxToggleNotificationRequestTest {
 
         host = mock(HostRef.class);
         vm = mock(VmRef.class);
-        when(vm.getAgent()).thenReturn(host);
+        when(vm.getHostRef()).thenReturn(host);
 
         agentDAO = mock(AgentInfoDAO.class);
 
@@ -97,7 +97,7 @@ public class JmxToggleNotificationRequestTest {
 
         assertEquals(new InetSocketAddress(HOST, PORT), req.getTarget());
         assertEquals(JmxCommand.RECEIVER, req.getReceiver());
-        assertEquals(vm.getIdString(), req.getParameter(JmxCommand.VM_ID));
+        assertEquals(String.valueOf(vm.getPid()), req.getParameter(JmxCommand.VM_PID));
 
         assertEquals(JmxCommand.ENABLE_JMX_NOTIFICATIONS.name(), req.getParameter(JmxCommand.class.getName()));
     }
@@ -112,7 +112,7 @@ public class JmxToggleNotificationRequestTest {
 
         assertEquals(new InetSocketAddress(HOST, PORT), req.getTarget());
         assertEquals(JmxCommand.RECEIVER, req.getReceiver());
-        assertEquals(vm.getIdString(), req.getParameter(JmxCommand.VM_ID));
+        assertEquals(String.valueOf(vm.getPid()), req.getParameter(JmxCommand.VM_PID));
 
         assertEquals(JmxCommand.DISABLE_JMX_NOTIFICATIONS.name(), req.getParameter(JmxCommand.class.getName()));
     }

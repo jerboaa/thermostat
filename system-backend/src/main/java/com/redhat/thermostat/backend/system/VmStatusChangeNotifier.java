@@ -62,13 +62,13 @@ import com.redhat.thermostat.agent.VmStatusListener.Status;
 public class VmStatusChangeNotifier {
 
     private final Object listenerLock = new Object();
-    private final Set<Integer> activePids;
+    private final Map<Integer, String> activePids;
     private final Map<VmStatusListener, Set<Integer>> listeners = new HashMap<>();
 
     private final ServiceTracker tracker;
 
     public VmStatusChangeNotifier(BundleContext bundleContext) {
-        this.activePids = new TreeSet<>();
+        this.activePids = new HashMap<>();
 
         tracker = new ServiceTracker(bundleContext, VmStatusListener.class, null) {
             @Override
@@ -77,8 +77,9 @@ public class VmStatusChangeNotifier {
 
                 synchronized (listenerLock) {
                     Set<Integer> notifiedAbout = new TreeSet<>();
-                    for (Integer pid : activePids) {
-                        listener.vmStatusChanged(Status.VM_ACTIVE, pid);
+                    for (Entry<Integer, String> entry : activePids.entrySet()) {
+                        Integer pid = entry.getKey();
+                        listener.vmStatusChanged(Status.VM_ACTIVE, entry.getValue(), pid);
                         notifiedAbout.add(pid);
                     }
 
@@ -111,21 +112,22 @@ public class VmStatusChangeNotifier {
      *
      * @param newStatus either {@link VmStatusListener.Status#VM_STARTED} or
      * {@link VmStatusListener.Status#VM_STOPPED}
-     * @param pid
+     * @param vmId unique identifier for the VM
+     * @param pid process ID for the VM
      */
-    public void notifyVmStatusChange(VmStatusListener.Status newStatus, int pid) {
+    public void notifyVmStatusChange(VmStatusListener.Status newStatus, String vmId, int pid) {
         if (newStatus == Status.VM_ACTIVE) {
             throw new IllegalArgumentException("Dont pass in " + Status.VM_ACTIVE + ", that will be handled automatically");
         }
 
         synchronized (listenerLock) {
             for (Entry<VmStatusListener, Set<Integer>> entry : listeners.entrySet()) {
-                entry.getKey().vmStatusChanged(newStatus, pid);
+                entry.getKey().vmStatusChanged(newStatus, vmId, pid);
                 entry.getValue().add(pid);
             }
 
             if (newStatus == Status.VM_STARTED) {
-                activePids.add(pid);
+                activePids.put(pid, vmId);
             } else {
                 activePids.remove(pid);
             }

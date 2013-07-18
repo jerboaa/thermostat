@@ -42,7 +42,8 @@ public enum HarvesterCommand {
     STOP,
     FIND_DEADLOCKS,
     
-    VM_ID;
+    VM_ID,
+    VM_PID;
 
     public static final String RECEIVER = "com.redhat.thermostat.thread.harvester.ThreadHarvester";
 

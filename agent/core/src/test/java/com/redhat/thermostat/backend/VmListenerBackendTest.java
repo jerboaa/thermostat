@@ -55,6 +55,8 @@ import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.backend.internal.VmMonitor;
 
 public class VmListenerBackendTest {
+    private static final String VM_ID = "vmId";
+    private static final int VM_PID = 1;
     
     private VmListenerBackend backend;
     private VmStatusListenerRegistrar registrar;
@@ -114,46 +116,39 @@ public class VmListenerBackendTest {
     
     @Test
     public void testNewVM() {
-        final int VM_PID = 1;
-
         // Should be no response if not observing new jvm.
         backend.setObserveNewJvm(false);
-        backend.vmStatusChanged(Status.VM_STARTED, VM_PID);
+        backend.vmStatusChanged(Status.VM_STARTED, VM_ID, VM_PID);
         verify(monitor, times(0)).handleNewVm(same(listener), same(VM_PID));
 
         backend.setObserveNewJvm(true);
-        backend.vmStatusChanged(Status.VM_STARTED, VM_PID);
+        backend.vmStatusChanged(Status.VM_STARTED, VM_ID, VM_PID);
         verify(monitor).handleNewVm(listener, VM_PID);
     }
 
     @Test
     public void testAlreadyRunningVM() {
-        final int VM_PID = 1;
-
         backend.setObserveNewJvm(true);
-        backend.vmStatusChanged(Status.VM_ACTIVE, VM_PID);
+        backend.vmStatusChanged(Status.VM_ACTIVE, VM_ID, VM_PID);
 
         verify(monitor).handleNewVm(listener, VM_PID);
     }
 
     @Test
     public void testStoppedVM() throws MonitorException, URISyntaxException {
-        final int VM_PID = 1;
-
         backend.setObserveNewJvm(true);
-        backend.vmStatusChanged(Status.VM_STARTED, VM_PID);
-        backend.vmStatusChanged(Status.VM_STOPPED, VM_PID);
+        backend.vmStatusChanged(Status.VM_STARTED, VM_ID, VM_PID);
+        backend.vmStatusChanged(Status.VM_STOPPED, VM_ID, VM_PID);
 
         verify(monitor).handleStoppedVm(VM_PID);
     }
 
     @Test
     public void testDeactivateUnregistersListener() throws URISyntaxException, MonitorException {
-        final int VM_PID = 1;
         backend.activate();
         
         backend.setObserveNewJvm(true);
-        backend.vmStatusChanged(Status.VM_STARTED, VM_PID);
+        backend.vmStatusChanged(Status.VM_STARTED, VM_ID, VM_PID);
         backend.deactivate();
         verify(monitor).removeVmListeners();
     }
@@ -171,7 +166,7 @@ public class VmListenerBackendTest {
         }
 
         @Override
-        protected VmUpdateListener createVmListener(int pid) {
+        protected VmUpdateListener createVmListener(String vmId, int pid) {
             return listener;
         }
         

@@ -65,7 +65,7 @@ import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
 
 public class VmGcStatDAOTest {
 
-    private static final Integer VM_ID = 123;
+    private static final String VM_ID = "VM321";
     private static final Long TIMESTAMP = 456L;
     private static final String COLLECTOR = "collector1";
     private static final Long RUN_COUNT = 10L;
@@ -104,15 +104,15 @@ public class VmGcStatDAOTest {
         when(hostRef.getAgentId()).thenReturn("system");
 
         VmRef vmRef = mock(VmRef.class);
-        when(vmRef.getAgent()).thenReturn(hostRef);
-        when(vmRef.getId()).thenReturn(321);
+        when(vmRef.getHostRef()).thenReturn(hostRef);
+        when(vmRef.getVmId()).thenReturn("VM321");
 
         VmGcStatDAO dao = new VmGcStatDAOImpl(storage);
         List<VmGcStat> vmGcStats = dao.getLatestVmGcStats(vmRef, Long.MIN_VALUE);
 
         verify(storage).prepareStatement(anyDescriptor());
         verify(stmt).setString(0, "system");
-        verify(stmt).setInt(1, 321);
+        verify(stmt).setString(1, "VM321");
         verify(stmt).setLong(2, Long.MIN_VALUE);
         verify(stmt).executeQuery();
         verifyNoMoreInteractions(stmt);
@@ -120,7 +120,7 @@ public class VmGcStatDAOTest {
         assertEquals(1, vmGcStats.size());
         VmGcStat stat = vmGcStats.get(0);
         assertEquals(TIMESTAMP, (Long) stat.getTimeStamp());
-        assertEquals(VM_ID, (Integer) stat.getVmId());
+        assertEquals(VM_ID, stat.getVmId());
         assertEquals(COLLECTOR, stat.getCollectorName());
         assertEquals(RUN_COUNT, (Long) stat.getRunCount());
         assertEquals(WALL_TIME, (Long) stat.getWallTime());

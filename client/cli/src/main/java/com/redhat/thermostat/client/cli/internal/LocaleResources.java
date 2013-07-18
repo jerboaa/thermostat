@@ -60,6 +60,7 @@ public enum LocaleResources {
 
     COMMAND_SHELL_IO_EXCEPTION,
 
+    VM_INFO_VM_ID,
     VM_INFO_PROCESS_ID,
     VM_INFO_START_TIME,
     VM_INFO_STOP_TIME,
@@ -74,6 +75,7 @@ public enum LocaleResources {
     COLUMN_HEADER_HOST_ID,
     COLUMN_HEADER_HOST,
     COLUMN_HEADER_VM_ID,
+    COLUMN_HEADER_VM_PID,
     COLUMN_HEADER_VM_NAME,
     COLUMN_HEADER_VM_STATUS,
     COLUMN_HEADER_TIME,
@@ -83,7 +85,7 @@ public enum LocaleResources {
     VM_STATUS_DEAD,
 
     HOSTID_REQUIRED_MESSAGE,
-    INVALID_VMID_MESSAGE,
+    VMID_REQUIRED_MESSAGE,
     ;
 
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.client.cli.strings";

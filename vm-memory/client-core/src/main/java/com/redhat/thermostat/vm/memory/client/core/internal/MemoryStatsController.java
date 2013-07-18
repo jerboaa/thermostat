@@ -201,8 +201,8 @@ public class MemoryStatsController implements InformationServiceController<VmRef
                         if (response.getType() == ResponseType.ERROR) {
                             view.displayWarning(translate.localize(
                                     LocaleResources.ERROR_PERFORMING_GC,
-                                    ref.getAgent().getAgentId(),
-                                    ref.getIdString()));
+                                    ref.getHostRef().getAgentId(),
+                                    ref.getVmId()));
                         }
                     }
                 };

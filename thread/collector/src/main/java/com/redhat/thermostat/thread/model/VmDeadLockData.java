@@ -48,7 +48,7 @@ public class VmDeadLockData extends BasePojo implements TimeStampedPojo {
     public static final String NO_DEADLOCK = "no-deadlocks";
 
     private long timeStamp;
-    private int vmId;
+    private String vmId;
     private String description;
 
     @Persist
@@ -63,12 +63,12 @@ public class VmDeadLockData extends BasePojo implements TimeStampedPojo {
     }
 
     @Persist
-    public void setVmId(int vmId) {
+    public void setVmId(String vmId) {
         this.vmId = vmId;
     }
 
     @Persist
-    public int getVmId() {
+    public String getVmId() {
         return vmId;
     }
 

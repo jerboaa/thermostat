@@ -38,8 +38,9 @@ package com.redhat.thermostat.vm.cpu.agent.internal;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -68,7 +69,7 @@ public class VmCpuBackend extends BaseBackend implements VmStatusListener {
     private VmStatusListenerRegistrar registrar;
     private boolean started;
 
-    private final List<Integer> pidsToMonitor = new CopyOnWriteArrayList<>();
+    private final Map<Integer, String> pidsToMonitor = new ConcurrentHashMap<>();
 
     public VmCpuBackend(ScheduledExecutorService executor, VmCpuStatDAO vmCpuStatDao, Version version,
             VmStatusListenerRegistrar registrar) {
@@ -96,9 +97,11 @@ public class VmCpuBackend extends BaseBackend implements VmStatusListener {
             executor.scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {
-                    for (Integer pid : pidsToMonitor) {
+                    for (Entry<Integer, String> entry : pidsToMonitor.entrySet()) {
+                        String vmId = entry.getValue();
+                        Integer pid = entry.getKey();
                         if (vmCpuStatBuilder.knowsAbout(pid)) {
-                            VmCpuStat dataBuilt = vmCpuStatBuilder.build(pid);
+                            VmCpuStat dataBuilt = vmCpuStatBuilder.build(vmId, pid);
                             if (dataBuilt != null) {
                                 vmCpuStats.putVmCpuStat(dataBuilt);
                             }
@@ -156,16 +159,15 @@ public class VmCpuBackend extends BaseBackend implements VmStatusListener {
      * Methods implementing VmStatusListener
      */
     @Override
-    public void vmStatusChanged(Status newStatus, int pid) {
+    public void vmStatusChanged(Status newStatus, String vmId, int pid) {
         switch (newStatus) {
         case VM_STARTED:
             /* fall-through */
         case VM_ACTIVE:
-            pidsToMonitor.add(pid);
+            pidsToMonitor.put(pid, vmId);
             break;
         case VM_STOPPED:
-            // the cast is important because it changes the call from remove(index) to remove(Object)
-            pidsToMonitor.remove((Integer) pid);
+            pidsToMonitor.remove(pid);
             vmCpuStatBuilder.forgetAbout(pid);
             break;
         }

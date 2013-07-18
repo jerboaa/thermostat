@@ -86,7 +86,7 @@ public class HarvesterTest {
         
         when(executor.scheduleAtFixedRate(arg0.capture(), arg1.capture(), arg2.capture(), arg3.capture())).thenReturn(null);
         
-        Harvester harvester = new Harvester(dao, executor, "42", pool) {
+        Harvester harvester = new Harvester(dao, executor, "vmId", 42, pool) {
             @Override
             synchronized void harvestData() {
                 harvestDataCalled[0] = true;
@@ -130,7 +130,7 @@ public class HarvesterTest {
         
         when(executor.scheduleAtFixedRate(arg0.capture(), arg1.capture(), arg2.capture(), arg3.capture())).thenReturn(null);
         
-        Harvester harvester = new Harvester(dao, executor, "42", pool) {
+        Harvester harvester = new Harvester(dao, executor, "vmId", 42, pool) {
             @Override
             synchronized void harvestData() {
                 harvestDataCalled[0] = true;
@@ -170,7 +170,7 @@ public class HarvesterTest {
         
         when(executor.scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class))).thenReturn(future);
         
-        Harvester harvester = new Harvester(dao, executor, "42", pool);
+        Harvester harvester = new Harvester(dao, executor, "vmId", 42, pool);
         
         harvester.start();
         
@@ -204,7 +204,7 @@ public class HarvesterTest {
         
         when(executor.scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class))).thenReturn(future);
         
-        Harvester harvester = new Harvester(dao, executor, "42", pool);
+        Harvester harvester = new Harvester(dao, executor, "vmId", 42, pool);
         
         harvester.start();
         
@@ -232,7 +232,7 @@ public class HarvesterTest {
         
         MXBeanConnectionPool pool = mock(MXBeanConnectionPool.class);
 
-        Harvester harvester = new Harvester(dao, executor, "42", pool);
+        Harvester harvester = new Harvester(dao, executor, "vmId", 42, pool);
         
         verify(executor, times(0)).scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class));
         
@@ -286,7 +286,7 @@ public class HarvesterTest {
 
         final boolean [] getDataCollectorBeanCalled = new boolean[1];
         
-        Harvester harvester = new Harvester(dao, executor, "42", pool) {
+        Harvester harvester = new Harvester(dao, executor, "vmId", 42, pool) {
             @Override
             ThreadMXBean getDataCollectorBean(MXBeanConnection connection)
                     throws MalformedObjectNameException {
@@ -307,10 +307,10 @@ public class HarvesterTest {
         verify(dao, times(2)).saveThreadInfo(any(ThreadInfoData.class));
         
         assertEquals(42, summaryCapture.getValue().getCurrentLiveThreads());
-        assertEquals(42, summaryCapture.getValue().getVmId());
+        assertEquals("vmId", summaryCapture.getValue().getVmId());
         
         assertEquals(42, summaryCapture.getValue().getCurrentLiveThreads());
-        assertEquals(42, summaryCapture.getValue().getVmId());
+        assertEquals("vmId", summaryCapture.getValue().getVmId());
 
         List<ThreadInfoData> threadInfos = threadInfoCapture.getAllValues();
         assertEquals(2, threadInfos.size());
@@ -345,7 +345,7 @@ public class HarvesterTest {
 
         final boolean [] getDataCollectorBeanCalled = new boolean[1];
         
-        Harvester harvester = new Harvester(dao, executor, "42", pool) {
+        Harvester harvester = new Harvester(dao, executor, "vmId", 42, pool) {
             @Override
             ThreadMXBean getDataCollectorBean(MXBeanConnection connection)
                     throws MalformedObjectNameException {
@@ -358,7 +358,7 @@ public class HarvesterTest {
         assertTrue(getDataCollectorBeanCalled[0]);
         
         verify(dao, times(1)).saveCapabilities(any(VMThreadCapabilities.class));
-        assertEquals(42, capsCapture.getValue().getVmId());
+        assertEquals("vmId", capsCapture.getValue().getVmId());
 
         String[] features = capsCapture.getValue().getSupportedFeaturesList();
         assertEquals(2, features.length);
@@ -387,7 +387,7 @@ public class HarvesterTest {
 
         final boolean[] getDataCollectorBeanCalled = new boolean[1];
 
-        Harvester harvester = new Harvester(dao, executor, clock, "42", pool) {
+        Harvester harvester = new Harvester(dao, executor, clock, "vmId", 42, pool) {
             @Override
             ThreadMXBean getDataCollectorBean(MXBeanConnection connection)
                     throws MalformedObjectNameException {
@@ -403,7 +403,7 @@ public class HarvesterTest {
 
         VmDeadLockData data = deadLockCapture.getValue();
 
-        assertEquals(42, data.getVmId());
+        assertEquals("vmId", data.getVmId());
         assertEquals(101010l, data.getTimeStamp());
         assertEquals("", data.getDeadLockDescription());
     }

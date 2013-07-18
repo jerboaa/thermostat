@@ -174,6 +174,9 @@ public class WebAppTest extends IntegrationTest {
             "/etc/thermostat-users.properties";
     private static final String THERMOSTAT_ROLES_FILE = getThermostatHome() +
             "/etc/thermostat-roles.properties";
+    private static final String VM_ID1 = "vmId1";
+    private static final String VM_ID2 = "vmId2";
+    private static final String VM_ID3 = "vmId3";
 
     private ExpressionFactory factory = new ExpressionFactory();
 
@@ -381,7 +384,7 @@ public class WebAppTest extends IntegrationTest {
         pojo.setAgentId("fluff");
         pojo.setLoadedClasses(12345);
         pojo.setTimeStamp(42);
-        pojo.setVmId(987);
+        pojo.setVmId(VM_ID1);
         add.setPojo(pojo);
         add.apply();
         
@@ -391,16 +394,16 @@ public class WebAppTest extends IntegrationTest {
         pojo.setAgentId("fluff");
         pojo.setLoadedClasses(67890);
         pojo.setTimeStamp(42);
-        pojo.setVmId(654);
+        pojo.setVmId(VM_ID2);
         add.setPojo(pojo);
         add.apply();
         
         add = webStorage.createAdd(VmClassStatDAO.vmClassStatsCategory);
         pojo = new VmClassStat();
         pojo.setAgentId("fluff");
-        pojo.setLoadedClasses(12345);
+        pojo.setLoadedClasses(34567);
         pojo.setTimeStamp(42);
-        pojo.setVmId(321);
+        pojo.setVmId(VM_ID3);
         add.setPojo(pojo);
         add.apply();
 
@@ -739,9 +742,8 @@ public class WebAppTest extends IntegrationTest {
 
         storage.registerCategory(VmCpuStatDAO.vmCpuStatCategory);
         long timeStamp = 5;
-        int vmId = 10;
         double cpuLoad = 0.15;
-        VmCpuStat pojo = new VmCpuStat(timeStamp, vmId, cpuLoad);
+        VmCpuStat pojo = new VmCpuStat(timeStamp, VM_ID1, cpuLoad);
         // Note: agentId not set on pojo
         Add add = storage.createAdd(VmCpuStatDAO.vmCpuStatCategory);
         add.setPojo(pojo);
@@ -754,7 +756,7 @@ public class WebAppTest extends IntegrationTest {
         assertFalse(cursor.hasNext());
 
         assertEquals(timeStamp, pojo.getTimeStamp());
-        assertEquals(vmId, pojo.getVmId());
+        assertEquals(VM_ID1, pojo.getVmId());
         assertEquals(cpuLoad, pojo.getCpuLoad(), EQUALS_DELTA);
         assertEquals(uuid.toString(), pojo.getAgentId());
 

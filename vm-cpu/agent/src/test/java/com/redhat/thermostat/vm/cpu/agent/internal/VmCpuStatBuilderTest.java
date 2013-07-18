@@ -77,7 +77,7 @@ public class VmCpuStatBuilderTest {
         long ticksPerSecond = 0;
         ProcessStatusInfoBuilder statusBuilder = mock(ProcessStatusInfoBuilder.class);
         VmCpuStatBuilder builder = new VmCpuStatBuilder(clock, cpuCount, ticksPerSecond, statusBuilder);
-        builder.build(0);
+        builder.build("vmId", 0);
     }
 
     @Test
@@ -99,11 +99,12 @@ public class VmCpuStatBuilderTest {
         VmCpuStatBuilder builder = new VmCpuStatBuilder(clock, cpuCount, ticksPerSecond, statusBuilder);
 
         builder.learnAbout(PID);
-        assertEquals(null, builder.build(PID));
+        assertEquals(null, builder.build("vmId", PID));
     }
 
     @Test
     public void testSaneBuild() {
+        final String VM_ID = "vmId";
         final int PID = 0;
 
         final int CPU_COUNT = 3;
@@ -139,10 +140,10 @@ public class VmCpuStatBuilderTest {
         VmCpuStatBuilder builder = new VmCpuStatBuilder(clock, CPU_COUNT, TICKS_PER_SECOND, statusBuilder);
 
         builder.learnAbout(PID);
-        VmCpuStat stat = builder.build(PID);
+        VmCpuStat stat = builder.build(VM_ID, PID);
 
         assertNotNull(stat);
-        assertEquals(PID, stat.getVmId());
+        assertEquals(VM_ID, stat.getVmId());
         assertEquals(CLOCK2, stat.getTimeStamp());
         assertEquals(CPU_LOAD_PERCENT, stat.getCpuLoad(), 0.0001);
     }

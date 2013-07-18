@@ -76,7 +76,7 @@ public class ThreadInformationController implements InformationServiceController
     {
         this.appService = appService;
         view = viewFactory.createView();
-        view.setApplicationService(appService, ref.getIdString() + "-" + ref.getAgent().getAgentId());
+        view.setApplicationService(appService, ref.getVmId() + "-" + ref.getHostRef().getAgentId());
         
         collector = collectorFactory.getCollector(ref);
         

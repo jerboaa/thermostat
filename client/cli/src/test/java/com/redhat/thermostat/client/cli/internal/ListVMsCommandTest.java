@@ -100,8 +100,9 @@ public class ListVMsCommandTest {
         context.registerService(VmInfoDAO.class, vmsDAO, null);
 
         HostRef host1 = new HostRef("123", "h1");
-        VmRef vm1 = new VmRef(host1, 1, "n");
-        VmInfo vm1Info = new VmInfo(1, 0, 1, "", "", "", "", "", "", "", "", null, null, null, -1, null);
+        String vmId = "vmId";
+        VmRef vm1 = new VmRef(host1, vmId, 1, "n");
+        VmInfo vm1Info = new VmInfo(vmId, 1, 0, 1, "", "", "", "", "", "", "", "", null, null, null, -1, null);
         when(hostsDAO.getHosts()).thenReturn(Arrays.asList(host1));
         when(vmsDAO.getVMs(host1)).thenReturn(Arrays.asList(vm1));
         when(vmsDAO.getVmInfo(eq(vm1))).thenReturn(vm1Info);
@@ -113,8 +114,8 @@ public class ListVMsCommandTest {
         cmd.run(ctx);
 
         String output = cmdCtxFactory.getOutput();
-        assertEquals("HOST_ID HOST VM_ID STATUS VM_NAME\n" +
-                     "123     h1   1     EXITED n\n", output);
+        assertEquals("HOST_ID HOST VM_ID VM_PID STATUS VM_NAME\n" +
+                     "123     h1   vmId  1      EXITED n\n", output);
     }
 
     @Test
@@ -126,11 +127,11 @@ public class ListVMsCommandTest {
         HostRef host2 = new HostRef("456", "longhostname");
         when(hostsDAO.getHosts()).thenReturn(Arrays.asList(host1, host2));
 
-        VmRef vm1 = new VmRef(host1, 1, "n");
-        VmRef vm2 = new VmRef(host1, 2, "n1");
-        VmRef vm3 = new VmRef(host2, 123456, "longvmname");
+        VmRef vm1 = new VmRef(host1, "vm1", 1, "n");
+        VmRef vm2 = new VmRef(host1, "vm2", 2, "n1");
+        VmRef vm3 = new VmRef(host2, "vm3", 123456, "longvmname");
 
-        VmInfo vmInfo = new VmInfo(1, 0, 1, "", "", "", "", "", "", "", "", null, null, null, -1, null);
+        VmInfo vmInfo = new VmInfo("vm1", 1, 0, 1, "", "", "", "", "", "", "", "", null, null, null, -1, null);
 
         when(vmsDAO.getVMs(host1)).thenReturn(Arrays.asList(vm1, vm2));
         when(vmsDAO.getVMs(host2)).thenReturn(Arrays.asList(vm3));
@@ -144,10 +145,10 @@ public class ListVMsCommandTest {
         cmd.run(ctx);
 
         String output = cmdCtxFactory.getOutput();
-        assertEquals("HOST_ID HOST         VM_ID  STATUS VM_NAME\n" +
-                     "123     h1           1      EXITED n\n" +
-                     "123     h1           2      EXITED n1\n" +
-                     "456     longhostname 123456 EXITED longvmname\n", output);
+        assertEquals("HOST_ID HOST         VM_ID VM_PID STATUS VM_NAME\n" +
+                     "123     h1           vm1   1      EXITED n\n" +
+                     "123     h1           vm2   2      EXITED n1\n" +
+                     "456     longhostname vm3   123456 EXITED longvmname\n", output);
     }
     
     @Test

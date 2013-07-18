@@ -58,7 +58,7 @@ public class VmLatestPojoListGetter<T extends TimeStampedPojo> {
         this.cat = cat;
         this.queryLatest = "QUERY " + cat.getName() + " WHERE '"
                 + Key.AGENT_ID.getName() + "' = ?s AND '"
-                + Key.VM_ID.getName() + "' = ?i AND '" 
+                + Key.VM_ID.getName() + "' = ?s AND '" 
                 + Key.TIMESTAMP.getName() + "' > ?l SORT '"
                 + Key.TIMESTAMP.getName() + "' DSC";
     }
@@ -94,8 +94,8 @@ public class VmLatestPojoListGetter<T extends TimeStampedPojo> {
         PreparedStatement<T> stmt = null;
         try {
             stmt = storage.prepareStatement(desc);
-            stmt.setString(0, vmRef.getAgent().getAgentId());
-            stmt.setInt(1, vmRef.getId());
+            stmt.setString(0, vmRef.getHostRef().getAgentId());
+            stmt.setString(1, vmRef.getVmId());
             stmt.setLong(2, since);
         } catch (DescriptorParsingException e) {
             // should not happen, but if it *does* happen, at least log it

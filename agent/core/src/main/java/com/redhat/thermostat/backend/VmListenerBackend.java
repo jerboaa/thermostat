@@ -117,13 +117,13 @@ public abstract class VmListenerBackend extends BaseBackend implements VmStatusL
         return started;
     }
 
-    public void vmStatusChanged(Status newStatus, int pid) {
+    public void vmStatusChanged(Status newStatus, String vmId, int pid) {
         switch (newStatus) {
         case VM_STARTED:
             /* fall-through */
         case VM_ACTIVE:
             if (getObserveNewJvm()) {
-                VmUpdateListener listener = createVmListener(pid);
+                VmUpdateListener listener = createVmListener(vmId, pid);
                 monitor.handleNewVm(listener, pid);
             } else {
                 logger.log(Level.FINE, "skipping new vm " + pid);
@@ -142,10 +142,11 @@ public abstract class VmListenerBackend extends BaseBackend implements VmStatusL
      * specified by the pid. This method is called when a new
      * JVM is started or for JVMs already active when this Backend
      * was activated.
+     * @param vmId unique identifier of the JVM
      * @param pid the process ID of the JVM
      * @return a new listener for the VM specified by pid
      */
-    protected abstract VmUpdateListener createVmListener(int pid);
+    protected abstract VmUpdateListener createVmListener(String vmId, int pid);
     
     /*
      * For testing purposes only.

@@ -50,6 +50,7 @@ class VMListFormatter {
     private static final String HOST_ID = translator.localize(LocaleResources.COLUMN_HEADER_HOST_ID).getContents();
     private static final String HOST = translator.localize(LocaleResources.COLUMN_HEADER_HOST).getContents();
     private static final String VM_ID = translator.localize(LocaleResources.COLUMN_HEADER_VM_ID).getContents();
+    private static final String VM_PID = translator.localize(LocaleResources.COLUMN_HEADER_VM_PID).getContents();
     private static final String VM_NAME = translator.localize(LocaleResources.COLUMN_HEADER_VM_NAME).getContents();
     private static final String VM_STATUS = translator.localize(LocaleResources.COLUMN_HEADER_VM_STATUS).getContents();
 
@@ -59,7 +60,7 @@ class VMListFormatter {
     private TableRenderer tableRenderer;
 
     VMListFormatter() {
-        tableRenderer = new TableRenderer(5);
+        tableRenderer = new TableRenderer(6);
         printHeader();
     }
 
@@ -72,19 +73,20 @@ class VMListFormatter {
     }
 
     private void printHeader() {
-        printLine(HOST_ID, HOST, VM_ID, VM_STATUS, VM_NAME);
+        printLine(HOST_ID, HOST, VM_ID, VM_PID, VM_STATUS, VM_NAME);
     }
 
     private void printVM(VmRef vm, VmInfo info) {
-        printLine(vm.getAgent().getAgentId(),
-                  vm.getAgent().getHostName(),
-                  vm.getId().toString(),
+        printLine(vm.getHostRef().getAgentId(),
+                  vm.getHostRef().getHostName(),
+                  vm.getVmId(),
+                  vm.getPid().toString(),
                   info.isAlive() ? STATUS_ALIVE : STATUS_DEAD,
                   vm.getName());
     }
 
-    private void printLine(String hostId, String host, String vmId, String status, String vmName) {
-        tableRenderer.printLine(hostId, host, vmId, status, vmName);
+    private void printLine(String hostId, String host, String vmId, String pid, String status, String vmName) {
+        tableRenderer.printLine(hostId, host, vmId, pid, status, vmName);
     }
 
 }

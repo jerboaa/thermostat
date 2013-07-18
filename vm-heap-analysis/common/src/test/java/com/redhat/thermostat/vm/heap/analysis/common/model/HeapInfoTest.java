@@ -50,14 +50,14 @@ public class HeapInfoTest {
 
     @Before
     public void setUp() {
-        heapInfo = new HeapInfo(321, 12345);
+        heapInfo = new HeapInfo("vmId", 12345);
         heapInfo.setAgentId("test-agent");
     }
 
     @Test
     public void testProperties() {
         assertEquals("test-agent", heapInfo.getAgentId());
-        assertEquals(321, heapInfo.getVmId());
+        assertEquals("vmId", heapInfo.getVmId());
         assertEquals(12345, heapInfo.getTimeStamp());
     }
 

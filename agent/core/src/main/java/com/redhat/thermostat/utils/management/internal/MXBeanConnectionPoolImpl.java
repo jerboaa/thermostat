@@ -91,7 +91,7 @@ public class MXBeanConnectionPoolImpl implements MXBeanConnectionPool {
 
     static class ConnectorCreator {
         public MXBeanConnector create(int pid) {
-            return new MXBeanConnector(String.valueOf(pid));
+            return new MXBeanConnector(pid);
         }
     }
 }

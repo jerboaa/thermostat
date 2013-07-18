@@ -124,8 +124,8 @@ public class ListHeapDumpsCommand extends AbstractCommand {
     private void printDumpsForVm(HeapDAO heapDAO, HostRef hostRef, VmRef vmRef, TableRenderer renderer) {
         Collection<HeapInfo> infos = heapDAO.getAllHeapInfo(vmRef);
         for (HeapInfo info : infos) {
-            renderer.printLine(hostRef.getStringID(),
-                               vmRef.getStringID(),
+            renderer.printLine(hostRef.getAgentId(),
+                               vmRef.getVmId(),
                                info.getHeapId(),
                                new Date(info.getTimeStamp()).toString());
         }
