@@ -22,7 +22,7 @@
     <repository>
       <id>swtbot</id>
       <layout>p2</layout>
-      <url>http://download.eclipse.org/technology/swtbot/releases/latest/</url>
+      <url>http://download.eclipse.org/technology/swtbot/releases/2.1.0/</url>
     </repository>
     <repository>
       <id>local_client</id>
