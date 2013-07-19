@@ -86,7 +86,7 @@ import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
  * int           := &lt;literal-int&gt;
  * long          := &lt;literal-long&gt;
  * string        := &lt;literal-string-value&gt;
- * compExpRHS    := '=' term | '&lt;=' term | '&gt;=' term | '&lt;' term | '&gt;' term
+ * compExpRHS    := '!=' term | '=' term | '&lt;=' term | '&gt;=' term | '&lt;' term | '&gt;' term
  * </pre>
  *
  * This implements the following logic precedence rules (in this order of

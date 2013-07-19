@@ -97,6 +97,33 @@ public class StatementDescriptorParserTest {
     }
     
     @Test
+    public void testParseNotEqualComparisonInWhere() throws DescriptorParsingException {
+        String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' != 'b'";
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        ParsedStatement<AgentInformation> statement = parser.parse();
+        assertEquals(0, statement.getNumParams());
+        assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
+        SuffixExpression tree = statement.getSuffixExpression();
+        assertNull(tree.getLimitExpn());
+        assertNull(tree.getSortExpn());
+        assertNotNull(tree.getWhereExpn());
+        
+        WhereExpression expected = new WhereExpression();
+        BinaryExpressionNode notEquals = new BinaryExpressionNode(expected.getRoot());
+        expected.getRoot().setValue(notEquals);
+        notEquals.setOperator(BinaryComparisonOperator.NOT_EQUAL_TO);
+        TerminalNode a = new TerminalNode(notEquals);
+        a.setValue(new Key<String>("a", false));
+        TerminalNode b = new TerminalNode(notEquals);
+        b.setValue("b");
+        notEquals.setLeftChild(a);
+        notEquals.setRightChild(b);
+        
+        assertTrue(WhereExpressions.equals(expected, tree.getWhereExpn()));
+    }
+    
+    @Test
     public void testParseQuerySimpleWithLimit() throws DescriptorParsingException {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " LIMIT ?i";
         StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
