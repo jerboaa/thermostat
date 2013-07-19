@@ -50,7 +50,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
@@ -74,12 +73,10 @@ import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.PreparedStatement;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.core.Query.SortDirection;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
 import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
@@ -109,7 +106,7 @@ import expectj.Spawn;
  */
 public class WebAppTest extends IntegrationTest {
 
-    private class CountdownConnectionListener implements ConnectionListener {
+    private static class CountdownConnectionListener implements ConnectionListener {
 
         private final ConnectionStatus target;
         private final CountDownLatch latch;
@@ -177,8 +174,6 @@ public class WebAppTest extends IntegrationTest {
     private static final String VM_ID1 = "vmId1";
     private static final String VM_ID2 = "vmId2";
     private static final String VM_ID3 = "vmId3";
-
-    private ExpressionFactory factory = new ExpressionFactory();
 
     private static Server server;
     private static int port;
@@ -353,8 +348,8 @@ public class WebAppTest extends IntegrationTest {
         storage.getConnection().disconnect();
     }
 
-    private void executeAndVerifyQuery(Query<CpuStat> query, List<Long> expectedTimestamps) {
-        Cursor<CpuStat> cursor = query.execute();
+    private void executeAndVerifyQuery(PreparedStatement<CpuStat> query, List<Long> expectedTimestamps) throws StatementExecutionException {
+        Cursor<CpuStat> cursor = query.executeQuery();
 
         for (Long time : expectedTimestamps) {
             assertTrue(cursor.hasNext());
@@ -417,14 +412,18 @@ public class WebAppTest extends IntegrationTest {
                 Roles.REGISTER_CATEGORY,
                 Roles.READ,
                 Roles.LOGIN,
-                Roles.ACCESS_REALM
+                Roles.ACCESS_REALM,
+                Roles.PREPARE_STATEMENT
         };
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
         
-        Query<CpuStat> query = webStorage.createQuery(CpuStatDAO.cpuStatCategory);
-        query.sort(Key.TIMESTAMP, SortDirection.ASCENDING);
+        String strDesc = "QUERY cpu-stats SORT ?s ASC";
+        StatementDescriptor<CpuStat> queryDesc = new StatementDescriptor<>(CpuStatDAO.cpuStatCategory, strDesc);
+        PreparedStatement<CpuStat> query = webStorage.prepareStatement(queryDesc);
 
+        query.setString(0, "timeStamp");
+        
         executeAndVerifyQuery(query, Arrays.asList(0l, 1l, 2l, 3l));
 
         webStorage.getConnection().disconnect();
@@ -437,16 +436,17 @@ public class WebAppTest extends IntegrationTest {
                 Roles.REGISTER_CATEGORY,
                 Roles.READ,
                 Roles.LOGIN,
-                Roles.ACCESS_REALM
+                Roles.ACCESS_REALM,
+                Roles.PREPARE_STATEMENT
         };
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
 
-        Query<CpuStat> query = webStorage.createQuery(CpuStatDAO.cpuStatCategory);
-        Expression expr = factory.equalTo(Key.TIMESTAMP, 2l);
-        query.where(expr);
-        query.sort(Key.TIMESTAMP, SortDirection.ASCENDING);
-
+        String strDesc = "QUERY cpu-stats WHERE 'timeStamp' = ?l SORT 'timeStamp' ASC";
+        StatementDescriptor<CpuStat> queryDesc = new StatementDescriptor<>(CpuStatDAO.cpuStatCategory, strDesc);
+        PreparedStatement<CpuStat> query = webStorage.prepareStatement(queryDesc);
+        query.setLong(0, 2l);
+        
         executeAndVerifyQuery(query, Arrays.asList(2l));
 
         webStorage.getConnection().disconnect();
@@ -459,16 +459,17 @@ public class WebAppTest extends IntegrationTest {
                 Roles.REGISTER_CATEGORY,
                 Roles.READ,
                 Roles.LOGIN,
-                Roles.ACCESS_REALM
+                Roles.ACCESS_REALM,
+                Roles.PREPARE_STATEMENT
         };
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
 
-        Query<CpuStat> query = webStorage.createQuery(CpuStatDAO.cpuStatCategory);
-        Expression expr = factory.notEqualTo(Key.TIMESTAMP, 2l);
-        query.where(expr);
-        query.sort(Key.TIMESTAMP, SortDirection.ASCENDING);
-
+        String strDesc = "QUERY cpu-stats WHERE 'timeStamp' != ?l SORT 'timeStamp' ASC";
+        StatementDescriptor<CpuStat> queryDesc = new StatementDescriptor<>(CpuStatDAO.cpuStatCategory, strDesc);
+        PreparedStatement<CpuStat> query = webStorage.prepareStatement(queryDesc);
+        query.setLong(0, 2l);
+        
         executeAndVerifyQuery(query, Arrays.asList(0l, 1l, 3l));
 
         webStorage.getConnection().disconnect();
@@ -481,16 +482,17 @@ public class WebAppTest extends IntegrationTest {
                 Roles.REGISTER_CATEGORY,
                 Roles.READ,
                 Roles.LOGIN,
-                Roles.ACCESS_REALM
+                Roles.ACCESS_REALM,
+                Roles.PREPARE_STATEMENT
         };
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
 
-        Query<CpuStat> query = webStorage.createQuery(CpuStatDAO.cpuStatCategory);
-        Expression expr = factory.greaterThan(Key.TIMESTAMP, 2l);
-        query.where(expr);
-        query.sort(Key.TIMESTAMP, SortDirection.ASCENDING);
-
+        String strDesc = "QUERY cpu-stats WHERE 'timeStamp' > ?l SORT 'timeStamp' ASC";
+        StatementDescriptor<CpuStat> queryDesc = new StatementDescriptor<>(CpuStatDAO.cpuStatCategory, strDesc);
+        PreparedStatement<CpuStat> query = webStorage.prepareStatement(queryDesc);
+        query.setLong(0, 2l);
+        
         executeAndVerifyQuery(query, Arrays.asList(3l));
 
         webStorage.getConnection().disconnect();
@@ -503,16 +505,17 @@ public class WebAppTest extends IntegrationTest {
                 Roles.REGISTER_CATEGORY,
                 Roles.READ,
                 Roles.LOGIN,
-                Roles.ACCESS_REALM
+                Roles.ACCESS_REALM,
+                Roles.PREPARE_STATEMENT
         };
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
 
-        Query<CpuStat> query = webStorage.createQuery(CpuStatDAO.cpuStatCategory);
-        Expression expr = factory.greaterThanOrEqualTo(Key.TIMESTAMP, 2l);
-        query.where(expr);
-        query.sort(Key.TIMESTAMP, SortDirection.ASCENDING);
-
+        String strDesc = "QUERY cpu-stats WHERE 'timeStamp' >= ?l SORT 'timeStamp' ASC";
+        StatementDescriptor<CpuStat> queryDesc = new StatementDescriptor<>(CpuStatDAO.cpuStatCategory, strDesc);
+        PreparedStatement<CpuStat> query = webStorage.prepareStatement(queryDesc);
+        query.setLong(0, 2l);
+        
         executeAndVerifyQuery(query, Arrays.asList(2l, 3l));
 
         webStorage.getConnection().disconnect();
@@ -525,16 +528,17 @@ public class WebAppTest extends IntegrationTest {
                 Roles.REGISTER_CATEGORY,
                 Roles.READ,
                 Roles.LOGIN,
-                Roles.ACCESS_REALM
+                Roles.ACCESS_REALM,
+                Roles.PREPARE_STATEMENT
         };
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
 
-        Query<CpuStat> query = webStorage.createQuery(CpuStatDAO.cpuStatCategory);
-        Expression expr = factory.lessThan(Key.TIMESTAMP, 2l);
-        query.where(expr);
-        query.sort(Key.TIMESTAMP, SortDirection.ASCENDING);
-
+        String strDesc = "QUERY cpu-stats WHERE 'timeStamp' < ?l SORT 'timeStamp' ASC";
+        StatementDescriptor<CpuStat> queryDesc = new StatementDescriptor<>(CpuStatDAO.cpuStatCategory, strDesc);
+        PreparedStatement<CpuStat> query = webStorage.prepareStatement(queryDesc);
+        query.setLong(0, 2l);
+        
         executeAndVerifyQuery(query, Arrays.asList(0l, 1l));
 
         webStorage.getConnection().disconnect();
@@ -547,62 +551,18 @@ public class WebAppTest extends IntegrationTest {
                 Roles.REGISTER_CATEGORY,
                 Roles.READ,
                 Roles.LOGIN,
-                Roles.ACCESS_REALM
+                Roles.ACCESS_REALM,
+                Roles.PREPARE_STATEMENT
         };
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
 
-        Query<CpuStat> query = webStorage.createQuery(CpuStatDAO.cpuStatCategory);
-        Expression expr = factory.lessThanOrEqualTo(Key.TIMESTAMP, 2l);
-        query.where(expr);
-        query.sort(Key.TIMESTAMP, SortDirection.ASCENDING);
+        String strDesc = "QUERY cpu-stats WHERE 'timeStamp' <= ?l SORT 'timeStamp' ASC";
+        StatementDescriptor<CpuStat> queryDesc = new StatementDescriptor<>(CpuStatDAO.cpuStatCategory, strDesc);
+        PreparedStatement<CpuStat> query = webStorage.prepareStatement(queryDesc);
+        query.setLong(0, 2l);
 
         executeAndVerifyQuery(query, Arrays.asList(0l, 1l, 2l));
-
-        webStorage.getConnection().disconnect();
-    }
-    
-    @Test
-    public void authorizedQueryIn() throws Exception {
-
-        String[] roleNames = new String[] {
-                Roles.REGISTER_CATEGORY,
-                Roles.READ,
-                Roles.LOGIN,
-                Roles.ACCESS_REALM
-        };
-        Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
-        webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
-
-        List<Long> times = Arrays.asList(0l, 2l);
-        Query<CpuStat> query = webStorage.createQuery(CpuStatDAO.cpuStatCategory);
-        Expression expr = factory.in(Key.TIMESTAMP, new HashSet<>(times), Long.class);
-        query.where(expr);
-        query.sort(Key.TIMESTAMP, SortDirection.ASCENDING);
-
-        executeAndVerifyQuery(query, times);
-
-        webStorage.getConnection().disconnect();
-    }
-    
-    @Test
-    public void authorizedQueryNotIn() throws Exception {
-
-        String[] roleNames = new String[] {
-                Roles.REGISTER_CATEGORY,
-                Roles.READ,
-                Roles.LOGIN,
-                Roles.ACCESS_REALM
-        };
-        Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
-        webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
-
-        Query<CpuStat> query = webStorage.createQuery(CpuStatDAO.cpuStatCategory);
-        Expression expr = factory.notIn(Key.TIMESTAMP, new HashSet<>(Arrays.asList(0l, 2l)), Long.class);
-        query.where(expr);
-        query.sort(Key.TIMESTAMP, SortDirection.ASCENDING);
-
-        executeAndVerifyQuery(query, Arrays.asList(1l, 3l));
 
         webStorage.getConnection().disconnect();
     }
@@ -614,16 +574,17 @@ public class WebAppTest extends IntegrationTest {
                 Roles.REGISTER_CATEGORY,
                 Roles.READ,
                 Roles.LOGIN,
-                Roles.ACCESS_REALM
+                Roles.ACCESS_REALM,
+                Roles.PREPARE_STATEMENT
         };
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
 
-        Query<CpuStat> query = webStorage.createQuery(CpuStatDAO.cpuStatCategory);
-        Expression expr = factory.not(factory.greaterThan(Key.TIMESTAMP, 2l));
-        query.where(expr);
-        query.sort(Key.TIMESTAMP, SortDirection.ASCENDING);
-
+        String strDesc = "QUERY cpu-stats WHERE NOT 'timeStamp' > ?l SORT 'timeStamp' ASC";
+        StatementDescriptor<CpuStat> queryDesc = new StatementDescriptor<>(CpuStatDAO.cpuStatCategory, strDesc);
+        PreparedStatement<CpuStat> query = webStorage.prepareStatement(queryDesc);
+        query.setLong(0, 2l);
+        
         executeAndVerifyQuery(query, Arrays.asList(0l, 1l, 2l));
 
         webStorage.getConnection().disconnect();
@@ -636,17 +597,17 @@ public class WebAppTest extends IntegrationTest {
                 Roles.REGISTER_CATEGORY,
                 Roles.READ,
                 Roles.LOGIN,
-                Roles.ACCESS_REALM
+                Roles.ACCESS_REALM,
+                Roles.PREPARE_STATEMENT
         };
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
 
-        Query<CpuStat> query = webStorage.createQuery(CpuStatDAO.cpuStatCategory);
-        Expression expr = factory.and(factory.greaterThan(Key.TIMESTAMP, 0l),
-                                      factory.lessThan(Key.TIMESTAMP, 2l));
-        query.where(expr);
-        query.sort(Key.TIMESTAMP, SortDirection.ASCENDING);
-
+        String strDesc = "QUERY cpu-stats WHERE 'timeStamp' > 0 AND 'timeStamp' < ?l SORT 'timeStamp' ASC";
+        StatementDescriptor<CpuStat> queryDesc = new StatementDescriptor<>(CpuStatDAO.cpuStatCategory, strDesc);
+        PreparedStatement<CpuStat> query = webStorage.prepareStatement(queryDesc);
+        query.setLong(0, 2l);
+        
         executeAndVerifyQuery(query, Arrays.asList(1l));
 
         webStorage.getConnection().disconnect();
@@ -659,17 +620,18 @@ public class WebAppTest extends IntegrationTest {
                 Roles.REGISTER_CATEGORY,
                 Roles.READ,
                 Roles.LOGIN,
-                Roles.ACCESS_REALM
+                Roles.ACCESS_REALM,
+                Roles.PREPARE_STATEMENT
         };
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
 
-        Query<CpuStat> query = webStorage.createQuery(CpuStatDAO.cpuStatCategory);
-        Expression expr = factory.or(factory.greaterThan(Key.TIMESTAMP, 2l),
-                                      factory.lessThan(Key.TIMESTAMP, 1l));
-        query.where(expr);
-        query.sort(Key.TIMESTAMP, SortDirection.ASCENDING);
-
+        String strDesc = "QUERY cpu-stats WHERE 'timeStamp' > ?l OR 'timeStamp' < ?l SORT 'timeStamp' ASC";
+        StatementDescriptor<CpuStat> queryDesc = new StatementDescriptor<>(CpuStatDAO.cpuStatCategory, strDesc);
+        PreparedStatement<CpuStat> query = webStorage.prepareStatement(queryDesc);
+        query.setLong(0, 2);
+        query.setLong(1, 1);
+        
         executeAndVerifyQuery(query, Arrays.asList(0l, 3l));
 
         webStorage.getConnection().disconnect();
@@ -734,7 +696,8 @@ public class WebAppTest extends IntegrationTest {
                 Roles.REGISTER_CATEGORY,
                 Roles.READ,
                 Roles.APPEND,
-                Roles.PURGE
+                Roles.PURGE,
+                Roles.PREPARE_STATEMENT
         };
         Storage storage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         UUID uuid = new UUID(42, 24);
@@ -749,8 +712,10 @@ public class WebAppTest extends IntegrationTest {
         add.setPojo(pojo);
         add.apply();
 
-        Query<VmCpuStat> query = storage.createQuery(VmCpuStatDAO.vmCpuStatCategory);
-        Cursor<VmCpuStat> cursor = query.execute();
+        String strDesc = "QUERY vm-cpu-stats";
+        StatementDescriptor<VmCpuStat> queryDesc = new StatementDescriptor<>(VmCpuStatDAO.vmCpuStatCategory, strDesc);
+        PreparedStatement<VmCpuStat> query = storage.prepareStatement(queryDesc);
+        Cursor<VmCpuStat> cursor = query.executeQuery();
         assertTrue(cursor.hasNext());
         pojo = cursor.next();
         assertFalse(cursor.hasNext());
