@@ -428,17 +428,26 @@ class StatementDescriptorParser<T extends Pojo> {
             String stringTerm = getStringTerm(term);
             return stringTerm;
         } catch (DescriptorParsingException e) {
-            // must be int or boolean
+            // Must be integer (long/int) or boolean. First check for boolean,
+            // then for long and regular ints.
+            if (term.equals(Boolean.toString(false)) || term.equals(Boolean.toString(true))) {
+                boolean boolVal = Boolean.parseBoolean(term);
+                return boolVal;
+            }
+            // Next, parse long or int.
             try {
+                int lastCharInTokenIndex = term.length() - 1;
+                // preceding l/L indicate long integer types.
+                if (term.charAt(lastCharInTokenIndex) == 'L' || term.charAt(lastCharInTokenIndex) == 'l') {
+                    long longVal = Long.parseLong(term.substring(0, lastCharInTokenIndex));
+                    return longVal;
+                }
+                // must be integer or some invalid type
                 int intVal = Integer.parseInt(term);
                 return intVal;
             } catch (NumberFormatException nfe) {
-                if (term.equals(Boolean.toString(false)) || term.equals(Boolean.toString(true))) {
-                    boolean boolVal = Boolean.parseBoolean(term);
-                    return boolVal;
-                } else {
-                    throw new DescriptorParsingException("Illegal terminal type. Token was ->" + term + "<-");
-                }
+                String msg = "Illegal terminal type. Token was ->" + term + "<-";
+                throw new DescriptorParsingException(msg);
             }
         }
     }

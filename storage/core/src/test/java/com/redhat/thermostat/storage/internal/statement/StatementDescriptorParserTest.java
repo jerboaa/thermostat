@@ -110,6 +110,134 @@ public class StatementDescriptorParserTest {
     }
     
     @Test
+    public void testParseLongInWhere() throws DescriptorParsingException {
+        String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' != 30000000003L";
+        doTestType(descrString, 30000000003L, 0);
+    }
+    
+    @Test
+    public void testParseLongInWhere2() throws DescriptorParsingException {
+        String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' != 30000000003l";
+        doTestType(descrString, 30000000003L, 0);
+    }
+    
+    @Test
+    public void testParseLongInWhere3() throws DescriptorParsingException {
+        String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' != 3l";
+        doTestType(descrString, 3L, 0);
+    }
+    
+    @Test
+    public void testParseLongInWhere4() throws DescriptorParsingException {
+        long val = Long.MIN_VALUE;
+        String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' != " + val + "l";
+        doTestType(descrString, val, 0);
+    }
+    
+    @Test
+    public void testParseIntInWhere() throws DescriptorParsingException {
+        String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' != 30000";
+        doTestType(descrString, 30000, 0);
+    }
+    
+    @Test
+    public void testParseIntInWhere2() throws DescriptorParsingException {
+        int val = Integer.MAX_VALUE - 1;
+        String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' != " + val;
+        doTestType(descrString, val, 0);
+    }
+    
+    @Test
+    public void testParseIntInWhere3() throws DescriptorParsingException {
+        int val = Integer.MIN_VALUE;
+        String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' != " + val;
+        doTestType(descrString, val, 0);
+    }
+    
+    @Test
+    public void testParseBooleanInWhere() throws DescriptorParsingException {
+        String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' != true";
+        doTestType(descrString, true, 0);
+    }
+    
+    @Test
+    public void testParseBooleanInWhere2() throws DescriptorParsingException {
+        String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' != false";
+        doTestType(descrString, false, 0);
+    }
+    
+    @Test
+    public void testParseStringInWhere() throws DescriptorParsingException {
+        String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' != 'testing'";
+        doTestType(descrString, "testing", 0);
+    }
+    
+    @Test
+    public void testParseStringTypeFreeVarInWhere() throws DescriptorParsingException {
+        String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' != ?s";
+        UnfinishedValueNode unfinished = new UnfinishedValueNode();
+        unfinished.setLHS(false);
+        unfinished.setType(String.class);
+        unfinished.setParameterIndex(0);
+        doTestType(descrString, unfinished, 1);
+    }
+    
+    @Test
+    public void testParseIntTypeFreeVarInWhere() throws DescriptorParsingException {
+        String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' != ?i";
+        UnfinishedValueNode unfinished = new UnfinishedValueNode();
+        unfinished.setLHS(false);
+        unfinished.setType(Integer.class);
+        unfinished.setParameterIndex(0);
+        doTestType(descrString, unfinished, 1);
+    }
+    
+    @Test
+    public void testParseLongTypeFreeVarInWhere() throws DescriptorParsingException {
+        String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' != ?l";
+        UnfinishedValueNode unfinished = new UnfinishedValueNode();
+        unfinished.setLHS(false);
+        unfinished.setType(Long.class);
+        unfinished.setParameterIndex(0);
+        doTestType(descrString, unfinished, 1);
+    }
+    
+    @Test
+    public void testParseBooleanTypeFreeVarInWhere() throws DescriptorParsingException {
+        String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' != ?b";
+        UnfinishedValueNode unfinished = new UnfinishedValueNode();
+        unfinished.setLHS(false);
+        unfinished.setType(Boolean.class);
+        unfinished.setParameterIndex(0);
+        doTestType(descrString, unfinished, 1);
+    }
+    
+    private void doTestType(String strDesc, Object bVal, int expNumFreeVars) throws DescriptorParsingException {
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, strDesc);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        ParsedStatementImpl<AgentInformation> statement = (ParsedStatementImpl<AgentInformation>)parser.parse();
+        assertEquals(expNumFreeVars, statement.getNumParams());
+        assertEquals(mockQuery.getClass().getName(), statement.getRawStatement().getClass().getName());
+        SuffixExpression tree = statement.getSuffixExpression();
+        assertNull(tree.getLimitExpn());
+        assertNull(tree.getSortExpn());
+        assertNotNull(tree.getWhereExpn());
+        
+        WhereExpression expected = new WhereExpression();
+        BinaryExpressionNode notEquals = new BinaryExpressionNode(expected.getRoot());
+        expected.getRoot().setValue(notEquals);
+        notEquals.setOperator(BinaryComparisonOperator.NOT_EQUAL_TO);
+        TerminalNode a = new TerminalNode(notEquals);
+        a.setValue(new Key<String>("a", false));
+        TerminalNode b = new TerminalNode(notEquals);
+        b.setValue(bVal);
+        notEquals.setLeftChild(a);
+        notEquals.setRightChild(b);
+        
+        assertTrue(WhereExpressions.equals(expected, tree.getWhereExpn()));
+    }
+    
+    @Test
     public void testParseNotEqualComparisonInWhere() throws DescriptorParsingException {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' != 'b'";
         StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
@@ -1109,12 +1237,29 @@ public class StatementDescriptorParserTest {
     }
     
     @Test
+    public void rejectLongValAsIntType() throws DescriptorParsingException {
+        // 30000000003 > Integer.MAX_VALUE; needs to be preceded by 'l/L'
+        String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' != 30000000003";
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descrString);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        
+        try {
+            parser.parse();
+            fail("should not parse");
+        } catch (DescriptorParsingException e) {
+            // pass
+            assertTrue(e.getMessage().contains("Illegal terminal type."));
+        }
+    }
+
+    @Test
     public void rejectLimitWhichIsNotInt() {
         String descString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " LIMIT illegal";
         StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
         parser = new StatementDescriptorParser<>(storage, desc);
         try {
             parser.parse();
+            fail("should not parse");
         } catch (DescriptorParsingException e) {
             assertEquals("Invalid limit expression. 'illegal' not an integer", e.getMessage());
         }
@@ -1127,6 +1272,7 @@ public class StatementDescriptorParserTest {
         parser = new StatementDescriptorParser<>(storage, desc);
         try {
             parser.parse();
+            fail("should not parse");
         } catch (DescriptorParsingException e) {
             // pass
             assertTrue(e.getMessage().contains("Expected string value. Got term ->a<-"));
@@ -1141,6 +1287,7 @@ public class StatementDescriptorParserTest {
         parser = new StatementDescriptorParser<>(storage, desc);
         try {
             parser.parse();
+            fail("should not parse");
         } catch (DescriptorParsingException e) {
             // pass
             assertEquals("Unknown type of free parameter: '?'", e.getMessage());
@@ -1154,6 +1301,7 @@ public class StatementDescriptorParserTest {
         parser = new StatementDescriptorParser<>(storage, desc);
         try {
             parser.parse();
+            fail("should not parse");
         } catch (DescriptorParsingException e) {
             // pass
             assertTrue(e.getMessage().contains("Expected ASC or DSC"));
@@ -1167,6 +1315,7 @@ public class StatementDescriptorParserTest {
         parser = new StatementDescriptorParser<>(storage, desc);
         try {
             parser.parse();
+            fail("should not parse");
         } catch (DescriptorParsingException e) {
             // pass
         }
@@ -1181,6 +1330,7 @@ public class StatementDescriptorParserTest {
         parser = new StatementDescriptorParser<>(storage, desc);
         try {
             parser.parse();
+            fail("should not parse");
         } catch (DescriptorParsingException e) {
             // pass
         }
@@ -1194,6 +1344,7 @@ public class StatementDescriptorParserTest {
         parser = new StatementDescriptorParser<>(storage, desc);
         try {
             parser.parse();
+            fail("should not parse");
         } catch (DescriptorParsingException e) {
             // pass
         }
@@ -1207,6 +1358,7 @@ public class StatementDescriptorParserTest {
         parser = new StatementDescriptorParser<>(storage, desc);
         try {
             parser.parse();
+            fail("should not parse");
         } catch (DescriptorParsingException e) {
             // pass
         }
@@ -1220,6 +1372,7 @@ public class StatementDescriptorParserTest {
         parser = new StatementDescriptorParser<>(storage, desc);
         try {
             parser.parse();
+            fail("should not parse");
         } catch (DescriptorParsingException e) {
             // pass
         }
