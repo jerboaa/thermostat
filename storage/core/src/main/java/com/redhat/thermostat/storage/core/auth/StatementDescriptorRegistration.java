@@ -34,47 +34,25 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.common;
+package com.redhat.thermostat.storage.core.auth;
+
+import java.util.ServiceLoader;
+import java.util.Set;
+
 
 /**
- * Model class as returned upon preparing statements.
+ * {@link ServiceLoader} interface used for registering
+ * trusted statement descriptors. The web storage endpoint
+ * uses implementations of this interface in order to collect
+ * the set of all trusted statement descriptors.
+ *
  */
-public class WebPreparedStatementResponse {
-    
+public interface StatementDescriptorRegistration {
+
     /**
-     * Response code for untrusted/unknown descriptors.
+     * 
+     * @return A set of string descriptors which should get
+     *         added to the trusted registry.
      */
-    public static final int ILLEGAL_STATEMENT = -1;
-    
-    /**
-     * Response code for descriptor parsing exceptions.
-     */
-    public static final int DESCRIPTOR_PARSE_FAILED = -2;
-    
-    public WebPreparedStatementResponse() {
-        // Should always be set using the setter before it
-        // is retrieved. Since 0 is a bad default for this,
-        // we set it to -1 in order to make this an invalid
-        // value right away.
-        this.numFreeVariables = -1;
-    }
-    
-    private int numFreeVariables;
-    private int statementId;
-    
-    public int getStatementId() {
-        return statementId;
-    }
-
-    public void setStatementId(int statementId) {
-        this.statementId = statementId;
-    }
-
-    public int getNumFreeVariables() {
-        return numFreeVariables;
-    }
-
-    public void setNumFreeVariables(int freeVars) {
-        this.numFreeVariables = freeVars;
-    }
+    Set<String> getStatementDescriptors();
 }

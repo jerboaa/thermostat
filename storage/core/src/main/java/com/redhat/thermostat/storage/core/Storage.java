@@ -59,10 +59,15 @@ public interface Storage {
     /**
      * Prepares the given statement for execution.
      * 
-     * @param desc The statement descriptor to prepare.
-     * @return A {@link PreparedStatement} if the given statement was
-     *         something Storage knows about, {@code null} otherwise.
-     * @throws DescriptorParsingException If the descriptor string was invalid.
+     * @param desc
+     *            The statement descriptor to prepare.
+     * @return A {@link PreparedStatement} if the given statement descriptor was
+     *         known and did not fail to parse.
+     * @throws DescriptorParsingException
+     *             If the descriptor string failed to parse.
+     * @throws IllegalDescriptorException
+     *             If storage refused to prepare a statement descriptor for
+     *             security reasons.
      */
     <T extends Pojo> PreparedStatement<T> prepareStatement(StatementDescriptor<T> desc)
             throws DescriptorParsingException;

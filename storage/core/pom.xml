@@ -64,6 +64,7 @@
             <Bundle-Activator>com.redhat.thermostat.storage.internal.Activator</Bundle-Activator>
             <Export-Package>
               com.redhat.thermostat.storage.core,
+              com.redhat.thermostat.storage.core.auth,
               com.redhat.thermostat.storage.config,
               com.redhat.thermostat.storage.model,
               com.redhat.thermostat.storage.dao,

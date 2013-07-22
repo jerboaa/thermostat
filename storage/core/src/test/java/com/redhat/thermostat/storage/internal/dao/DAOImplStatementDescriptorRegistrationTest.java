@@ -34,47 +34,44 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.common;
+package com.redhat.thermostat.storage.internal.dao;
 
-/**
- * Model class as returned upon preparing statements.
- */
-public class WebPreparedStatementResponse {
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ServiceLoader;
+import java.util.Set;
+
+import org.junit.Test;
+
+import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
+
+public class DAOImplStatementDescriptorRegistrationTest {
+
+    @Test
+    public void registersAllQueries() {
+        DAOImplStatementDescriptorRegistration reg = new DAOImplStatementDescriptorRegistration();
+        Set<String> descriptors = reg.getStatementDescriptors();
+        assertEquals(9, descriptors.size());
+        assertFalse(descriptors.contains(null));
+    }
     
-    /**
-     * Response code for untrusted/unknown descriptors.
+    /*
+     * The web storage end-point uses service loader in order to determine the
+     * list of trusted/known registrations. This test is to ensure service loading
+     * works for this module's regs. E.g. renaming of the impl class without
+     * changing META-INF/services/com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration
      */
-    public static final int ILLEGAL_STATEMENT = -1;
-    
-    /**
-     * Response code for descriptor parsing exceptions.
-     */
-    public static final int DESCRIPTOR_PARSE_FAILED = -2;
-    
-    public WebPreparedStatementResponse() {
-        // Should always be set using the setter before it
-        // is retrieved. Since 0 is a bad default for this,
-        // we set it to -1 in order to make this an invalid
-        // value right away.
-        this.numFreeVariables = -1;
-    }
-    
-    private int numFreeVariables;
-    private int statementId;
-    
-    public int getStatementId() {
-        return statementId;
-    }
-
-    public void setStatementId(int statementId) {
-        this.statementId = statementId;
-    }
-
-    public int getNumFreeVariables() {
-        return numFreeVariables;
-    }
-
-    public void setNumFreeVariables(int freeVars) {
-        this.numFreeVariables = freeVars;
+    @Test
+    public void serviceLoaderCanLoadRegistration() {
+        ServiceLoader<StatementDescriptorRegistration> loader = ServiceLoader.load(StatementDescriptorRegistration.class, DAOImplStatementDescriptorRegistration.class.getClassLoader());
+        List<StatementDescriptorRegistration> registrations = new ArrayList<>(1);
+        for (StatementDescriptorRegistration r: loader) {
+            registrations.add(r);
+        }
+        assertEquals(1, registrations.size());
+        assertEquals(9, registrations.get(0).getStatementDescriptors().size());
     }
 }

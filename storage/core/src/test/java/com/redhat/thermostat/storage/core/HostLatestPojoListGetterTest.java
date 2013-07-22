@@ -99,6 +99,13 @@ public class HostLatestPojoListGetterTest {
     }
     
     @Test
+    public void verifyQueryDescriptorFormat() {
+        String expected = "QUERY %s WHERE 'agentId' = ?s AND " +
+         "'timeStamp' > ?l SORT 'timeStamp' DSC";
+        assertEquals(expected, HostLatestPojoListGetter.HOST_LATEST_QUERY_FORMAT);
+    }
+    
+    @Test
     public void verifyQueryDescriptorIsSane() {
         Storage storage = mock(Storage.class);
         HostLatestPojoListGetter<TestPojo> getter = new HostLatestPojoListGetter<>(storage, cat);

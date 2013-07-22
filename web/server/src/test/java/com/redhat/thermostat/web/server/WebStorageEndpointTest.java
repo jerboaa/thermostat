@@ -62,8 +62,12 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -103,6 +107,7 @@ import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
+import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 import com.redhat.thermostat.storage.model.BasePojo;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
@@ -272,10 +277,61 @@ public class WebStorageEndpointTest {
         }
         assertEquals(authPaths.length, methodsReqAuthorization);
     }
+    
+    @Test
+    public void authorizedPrepareQueryWithUnTrustedDescriptor() throws Exception {
+        String strDescriptor = "QUERY " + category.getName() + " WHERE '" + key1.getName() + "' = ?s SORT '" + key1.getName() + "' DSC LIMIT 42";
+        // setup a statement descriptor set so as to mimic a not trusted desc
+        String wrongDescriptor = "QUERY something-other WHERE 'a' = true";
+        setupTrustedStatementRegistry(wrongDescriptor);
+        
+        String[] roleNames = new String[] {
+                Roles.REGISTER_CATEGORY,
+                Roles.PREPARE_STATEMENT
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        final LoginService loginService = new TestLoginService(testuser, password, roleNames); 
+        port = FreePortFinder.findFreePort(new TryPort() {
+            
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port, loginService);
+            }
+        });
+        registerCategory(testuser, password);
+        
+        String endpoint = getEndpoint();
+        URL url = new URL(endpoint + "/prepare-statement");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        sendAuthentication(conn, testuser, password);
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        conn.setDoInput(true);
+        conn.setDoOutput(true);
+        Gson gson = new GsonBuilder()
+                .registerTypeHierarchyAdapter(WebQueryResponse.class, new WebQueryResponseSerializer<>())
+                .registerTypeAdapter(Pojo.class, new ThermostatGSONConverter())
+                .registerTypeAdapter(WebPreparedStatement.class, new WebPreparedStatementSerializer())
+                .registerTypeAdapter(PreparedParameter.class, new PreparedParameterSerializer()).create();
+        OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
+        String body = "query-descriptor=" + URLEncoder.encode(strDescriptor, "UTF-8") + "&category-id=" + categoryId;
+        out.write(body + "\n");
+        out.flush();
+
+        Reader in = new InputStreamReader(conn.getInputStream());
+        WebPreparedStatementResponse response = gson.fromJson(in, WebPreparedStatementResponse.class);
+        assertEquals("descriptor not trusted, so expected number should be negative!", -1, response.getNumFreeVariables());
+        assertEquals(WebPreparedStatementResponse.ILLEGAL_STATEMENT, response.getStatementId());
+        assertEquals("application/json; charset=UTF-8", conn.getContentType());
+    }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
-    public void authorizedPrepareQuery() throws Exception {
+    public void authorizedPrepareQueryWithTrustedDescriptor() throws Exception {
+        String strDescriptor = "QUERY " + category.getName() + " WHERE '" + key1.getName() + "' = ?s SORT '" + key1.getName() + "' DSC LIMIT 42";
+        setupTrustedStatementRegistry(strDescriptor);
+        
         String[] roleNames = new String[] {
                 Roles.REGISTER_CATEGORY,
                 Roles.PREPARE_STATEMENT,
@@ -320,7 +376,6 @@ public class WebStorageEndpointTest {
         // And the mongo layer
         when(mockMongoQuery.execute()).thenReturn(cursor);
 
-        String strDescriptor = "QUERY " + category.getName() + " WHERE '" + key1.getName() + "' = ?s SORT '" + key1.getName() + "' DSC LIMIT 42";
         String endpoint = getEndpoint();
         URL url = new URL(endpoint + "/prepare-statement");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -379,6 +434,17 @@ public class WebStorageEndpointTest {
         verifyNoMoreInteractions(mockMongoQuery);
     }
     
+    private void setupTrustedStatementRegistry(String strDescriptor) {
+        Set<String> descs = new HashSet<>();
+        descs.add(strDescriptor);
+        StatementDescriptorRegistration reg = mock(StatementDescriptorRegistration.class);
+        when(reg.getStatementDescriptors()).thenReturn(descs);
+        List<StatementDescriptorRegistration> regs = new ArrayList<>(1);
+        regs.add(reg);
+        KnownDescriptorRegistry registry = new KnownDescriptorRegistry(regs);
+        KnownDescriptorRegistryFactory.setKnownDescriptorRegistry(registry);
+    }
+
     @Test
     public void unauthorizedPrepareStmt() throws Exception {
         String failMsg = "thermostat-prepare-statement role missing, expected Forbidden!";

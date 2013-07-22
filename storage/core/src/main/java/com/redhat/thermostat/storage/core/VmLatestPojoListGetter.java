@@ -47,8 +47,13 @@ import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
 public class VmLatestPojoListGetter<T extends TimeStampedPojo> {
     
+    public static final String VM_LATEST_QUERY_FORMAT = "QUERY %s WHERE '"
+            + Key.AGENT_ID.getName() + "' = ?s AND '"
+            + Key.VM_ID.getName() + "' = ?s AND '" 
+            + Key.TIMESTAMP.getName() + "' > ?l SORT '"
+            + Key.TIMESTAMP.getName() + "' DSC";
     private static final Logger logger = LoggingUtils.getLogger(VmLatestPojoListGetter.class);
-
+    
     private final Storage storage;
     private final Category<T> cat;
     private final String queryLatest;
@@ -56,11 +61,7 @@ public class VmLatestPojoListGetter<T extends TimeStampedPojo> {
     public VmLatestPojoListGetter(Storage storage, Category<T> cat) {
         this.storage = storage;
         this.cat = cat;
-        this.queryLatest = "QUERY " + cat.getName() + " WHERE '"
-                + Key.AGENT_ID.getName() + "' = ?s AND '"
-                + Key.VM_ID.getName() + "' = ?s AND '" 
-                + Key.TIMESTAMP.getName() + "' > ?l SORT '"
-                + Key.TIMESTAMP.getName() + "' DSC";
+        this.queryLatest = String.format(VM_LATEST_QUERY_FORMAT, cat.getName());
     }
 
     public List<T> getLatest(VmRef vmRef, long since) {

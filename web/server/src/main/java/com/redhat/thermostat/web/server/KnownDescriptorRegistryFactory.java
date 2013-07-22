@@ -34,47 +34,22 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.common;
+package com.redhat.thermostat.web.server;
 
-/**
- * Model class as returned upon preparing statements.
- */
-public class WebPreparedStatementResponse {
+final class KnownDescriptorRegistryFactory {
     
-    /**
-     * Response code for untrusted/unknown descriptors.
-     */
-    public static final int ILLEGAL_STATEMENT = -1;
+    private static KnownDescriptorRegistry reg;
     
-    /**
-     * Response code for descriptor parsing exceptions.
-     */
-    public static final int DESCRIPTOR_PARSE_FAILED = -2;
-    
-    public WebPreparedStatementResponse() {
-        // Should always be set using the setter before it
-        // is retrieved. Since 0 is a bad default for this,
-        // we set it to -1 in order to make this an invalid
-        // value right away.
-        this.numFreeVariables = -1;
+    final static KnownDescriptorRegistry getInstance() {
+        if (reg == null) {
+            return new KnownDescriptorRegistry();
+        } else {
+            return reg;
+        }
     }
     
-    private int numFreeVariables;
-    private int statementId;
-    
-    public int getStatementId() {
-        return statementId;
+    final static void setKnownDescriptorRegistry(KnownDescriptorRegistry reg) {
+        KnownDescriptorRegistryFactory.reg = reg;
     }
 
-    public void setStatementId(int statementId) {
-        this.statementId = statementId;
-    }
-
-    public int getNumFreeVariables() {
-        return numFreeVariables;
-    }
-
-    public void setNumFreeVariables(int freeVars) {
-        this.numFreeVariables = freeVars;
-    }
 }

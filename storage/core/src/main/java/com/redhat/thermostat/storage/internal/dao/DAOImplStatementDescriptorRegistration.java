@@ -34,47 +34,34 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.common;
+package com.redhat.thermostat.storage.internal.dao;
+
+import java.util.HashSet;
+import java.util.Set;
+
+import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 
 /**
- * Model class as returned upon preparing statements.
+ * Registers prepared queries issued by this maven module
+ * via various DAOs.
+ *
  */
-public class WebPreparedStatementResponse {
-    
-    /**
-     * Response code for untrusted/unknown descriptors.
-     */
-    public static final int ILLEGAL_STATEMENT = -1;
-    
-    /**
-     * Response code for descriptor parsing exceptions.
-     */
-    public static final int DESCRIPTOR_PARSE_FAILED = -2;
-    
-    public WebPreparedStatementResponse() {
-        // Should always be set using the setter before it
-        // is retrieved. Since 0 is a bad default for this,
-        // we set it to -1 in order to make this an invalid
-        // value right away.
-        this.numFreeVariables = -1;
-    }
-    
-    private int numFreeVariables;
-    private int statementId;
-    
-    public int getStatementId() {
-        return statementId;
+public class DAOImplStatementDescriptorRegistration implements
+        StatementDescriptorRegistration {
+
+    @Override
+    public Set<String> getStatementDescriptors() {
+        Set<String> daoDescs = new HashSet<>();
+        daoDescs.add(AgentInfoDAOImpl.QUERY_AGENT_INFO);
+        daoDescs.add(AgentInfoDAOImpl.QUERY_ALIVE_AGENTS);
+        daoDescs.add(AgentInfoDAOImpl.QUERY_ALL_AGENTS);
+        daoDescs.add(BackendInfoDAOImpl.QUERY_BACKEND_INFO);
+        daoDescs.add(HostInfoDAOImpl.QUERY_HOST_INFO);
+        daoDescs.add(HostInfoDAOImpl.QUERY_ALL_HOSTS);
+        daoDescs.add(NetworkInterfaceInfoDAOImpl.QUERY_NETWORK_INFO);
+        daoDescs.add(VmInfoDAOImpl.QUERY_ALL_VMS);
+        daoDescs.add(VmInfoDAOImpl.QUERY_VM_INFO);
+        return daoDescs;
     }
 
-    public void setStatementId(int statementId) {
-        this.statementId = statementId;
-    }
-
-    public int getNumFreeVariables() {
-        return numFreeVariables;
-    }
-
-    public void setNumFreeVariables(int freeVars) {
-        this.numFreeVariables = freeVars;
-    }
 }

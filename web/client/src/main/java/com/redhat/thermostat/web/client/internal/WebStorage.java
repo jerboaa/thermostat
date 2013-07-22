@@ -784,7 +784,7 @@ public class WebStorage implements Storage, SecureStorage {
             if (statementId == WebPreparedStatementResponse.ILLEGAL_STATEMENT) {
                 // we've got a descriptor the endpoint doesn't know about or
                 // refuses to accept for security reasons.
-                String msg = "Unknown query descriptor which endpoint of " + WebStorage.class.getName() + "refused to accept!";
+                String msg = "Unknown query descriptor which endpoint of " + WebStorage.class.getName() + " refused to accept!";
                 throw new IllegalDescriptorException(msg, desc.getQueryDescriptor());
             } else if (statementId == WebPreparedStatementResponse.DESCRIPTOR_PARSE_FAILED) {
                 String msg = "Statement descriptor failed to parse. " +

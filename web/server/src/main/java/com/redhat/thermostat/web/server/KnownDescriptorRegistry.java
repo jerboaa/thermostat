@@ -34,47 +34,43 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.common;
+package com.redhat.thermostat.web.server;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.ServiceLoader;
+import java.util.Set;
+
+import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 
 /**
- * Model class as returned upon preparing statements.
+ * Registers trusted statement descriptors.
+ *
  */
-public class WebPreparedStatementResponse {
-    
-    /**
-     * Response code for untrusted/unknown descriptors.
-     */
-    public static final int ILLEGAL_STATEMENT = -1;
-    
-    /**
-     * Response code for descriptor parsing exceptions.
-     */
-    public static final int DESCRIPTOR_PARSE_FAILED = -2;
-    
-    public WebPreparedStatementResponse() {
-        // Should always be set using the setter before it
-        // is retrieved. Since 0 is a bad default for this,
-        // we set it to -1 in order to make this an invalid
-        // value right away.
-        this.numFreeVariables = -1;
-    }
-    
-    private int numFreeVariables;
-    private int statementId;
-    
-    public int getStatementId() {
-        return statementId;
-    }
+final class KnownDescriptorRegistry {
 
-    public void setStatementId(int statementId) {
-        this.statementId = statementId;
+    private static final ServiceLoader<StatementDescriptorRegistration> TRUSTED_DESCS = ServiceLoader
+            .load(StatementDescriptorRegistration.class);
+    private final Iterable<StatementDescriptorRegistration> actualTrustedDescs;
+    
+    KnownDescriptorRegistry() {
+        this.actualTrustedDescs = TRUSTED_DESCS;
     }
-
-    public int getNumFreeVariables() {
-        return numFreeVariables;
+    
+    KnownDescriptorRegistry(Iterable<StatementDescriptorRegistration> trustedDescs) {
+        this.actualTrustedDescs = trustedDescs;
     }
-
-    public void setNumFreeVariables(int freeVars) {
-        this.numFreeVariables = freeVars;
+    
+    final Set<String> getRegisteredDescriptors() {
+        Set<String> trustedSet = new HashSet<>();
+        for (StatementDescriptorRegistration reg: actualTrustedDescs) {
+            Set<String> newCandidates = reg.getStatementDescriptors();
+            if (newCandidates.contains(null)) {
+                throw new IllegalStateException("null statement descriptor not acceptable!");
+            }
+            trustedSet.addAll(newCandidates);
+        }
+        // return a read-only set of all descriptors
+        return Collections.unmodifiableSet(trustedSet);
     }
 }

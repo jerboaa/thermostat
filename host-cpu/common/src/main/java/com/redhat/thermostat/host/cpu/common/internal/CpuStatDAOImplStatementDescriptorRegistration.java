@@ -34,47 +34,31 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.common;
+package com.redhat.thermostat.host.cpu.common.internal;
+
+import java.util.HashSet;
+import java.util.Set;
+
+import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
+import com.redhat.thermostat.storage.core.HostLatestPojoListGetter;
+import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 
 /**
- * Model class as returned upon preparing statements.
+ * Registers the prepared query issued by this maven module via
+ * {@link HostLatestPojoListGetter}.
+ *
  */
-public class WebPreparedStatementResponse {
-    
-    /**
-     * Response code for untrusted/unknown descriptors.
-     */
-    public static final int ILLEGAL_STATEMENT = -1;
-    
-    /**
-     * Response code for descriptor parsing exceptions.
-     */
-    public static final int DESCRIPTOR_PARSE_FAILED = -2;
-    
-    public WebPreparedStatementResponse() {
-        // Should always be set using the setter before it
-        // is retrieved. Since 0 is a bad default for this,
-        // we set it to -1 in order to make this an invalid
-        // value right away.
-        this.numFreeVariables = -1;
-    }
-    
-    private int numFreeVariables;
-    private int statementId;
-    
-    public int getStatementId() {
-        return statementId;
+public class CpuStatDAOImplStatementDescriptorRegistration implements
+        StatementDescriptorRegistration {
+
+    @Override
+    public Set<String> getStatementDescriptors() {
+        Set<String> descs = new HashSet<>();
+        String descriptor = String.format(
+                HostLatestPojoListGetter.HOST_LATEST_QUERY_FORMAT,
+                CpuStatDAO.cpuStatCategory.getName());
+        descs.add(descriptor);
+        return descs;
     }
 
-    public void setStatementId(int statementId) {
-        this.statementId = statementId;
-    }
-
-    public int getNumFreeVariables() {
-        return numFreeVariables;
-    }
-
-    public void setNumFreeVariables(int freeVars) {
-        this.numFreeVariables = freeVars;
-    }
 }

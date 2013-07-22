@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -135,6 +136,9 @@ public class WebStorageEndPoint extends HttpServlet {
     // Lock to be held for setting/getting prepared queries in the above maps
     private Object preparedStmtLock = new Object();
     private int currentPreparedStmtId;
+    
+    // read-only set of all known statement descriptors we trust and allow
+    private Set<String> knownStatementDescriptors;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -165,6 +169,10 @@ public class WebStorageEndPoint extends HttpServlet {
             tokenManager.setTimeout(Integer.parseInt(timeoutParam));
         }
         getServletContext().setAttribute(TOKEN_MANAGER_KEY, tokenManager);
+        
+        // Set the set of statement descriptors which we trust
+        KnownDescriptorRegistry descRegistry = KnownDescriptorRegistryFactory.getInstance();
+        knownStatementDescriptors = descRegistry.getRegisteredDescriptors();
     }
     
     @Override
@@ -290,6 +298,16 @@ public class WebStorageEndPoint extends HttpServlet {
             return;
         }
         StatementDescriptor<?> desc = new StatementDescriptor<>(cat, queryDescrParam);
+        // Check if descriptor is trusted (i.e. known)
+        if (!knownStatementDescriptors.contains(desc.getQueryDescriptor())) {
+            String msg = "Attempted to prepare a statement descriptor which we " +
+            		"don't trust! Descriptor was: ->" + desc.getQueryDescriptor() + "<-";
+            logger.log(Level.WARNING, msg);
+            response.setStatementId(WebPreparedStatementResponse.ILLEGAL_STATEMENT);
+            writeResponse(resp, response, WebPreparedStatementResponse.class);
+            return;
+        }
+        
         synchronized (preparedStmtLock) {
             // see if we've prepared this query already
             if (preparedStmts.containsKey(desc)) {
@@ -304,7 +322,6 @@ public class WebStorageEndPoint extends HttpServlet {
                         WebPreparedStatementResponse.class);
                 return;
             }
-            // TODO: Check if descriptor is trusted (i.e. known)
             
             // Prepare the target statement and put it into our prepared statement
             // maps.

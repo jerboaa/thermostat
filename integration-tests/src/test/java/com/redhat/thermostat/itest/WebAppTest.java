@@ -40,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -50,8 +51,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -73,6 +78,8 @@ import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
+import com.redhat.thermostat.storage.core.IllegalDescriptorException;
 import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
@@ -106,6 +113,49 @@ import expectj.Spawn;
  */
 public class WebAppTest extends IntegrationTest {
 
+    /*
+     * Registry of descriptors this test needs to allow in order to avoid
+     * illegal statement descriptor exceptions being thrown. See also:
+     * WebAppTestStatementDescriptorRegistration
+     */
+    public static final Set<String> TRUSTED_DESCRIPTORS;
+    // descriptive name -> descriptor mapping
+    private static final Map<String, String> DESCRIPTOR_MAP;
+    
+    private static final String KEY_AUTHORIZED_QUERY = "authorizedQuery";
+    private static final String KEY_AUTHORIZED_QUERY_EQUAL_TO = "authorizedQueryEqualTo";
+    private static final String KEY_AUTHORIZED_QUERY_NOT_EQUAL_TO = "authorizedQueryNotEqualTo";
+    private static final String KEY_AUTHORIZED_QUERY_GREATER_THAN = "authorizedQueryGreaterThan";
+    private static final String KEY_AUTHORIZED_QUERY_GREATER_THAN_OR_EQUAL_TO = "authorizedQueryGreaterThanOrEqualTo";
+    private static final String KEY_AUTHORIZED_QUERY_LESS_THAN = "authorizedQueryLessThan";
+    private static final String KEY_AUTHORIZED_QUERY_LESS_THAN_OR_EQUAL_TO = "authorizedQueryLessThanOrEqualTo";
+    private static final String KEY_AUTHORIZED_QUERY_NOT = "authorizedQueryNot";
+    private static final String KEY_AUTHORIZED_QUERY_AND = "authorizedQueryAnd";
+    private static final String KEY_AUTHORIZED_QUERY_OR = "authorizedQueryOr";
+    private static final String KEY_SET_DEFAULT_AGENT_ID = "setDefaultAgentID";
+    
+    static {
+        Map<String, String> descMap = new HashMap<>();
+        descMap.put(KEY_AUTHORIZED_QUERY, "QUERY cpu-stats SORT ?s ASC");
+        descMap.put(KEY_AUTHORIZED_QUERY_EQUAL_TO, "QUERY cpu-stats WHERE 'timeStamp' = ?l SORT 'timeStamp' ASC");
+        descMap.put(KEY_AUTHORIZED_QUERY_NOT_EQUAL_TO, "QUERY cpu-stats WHERE 'timeStamp' != ?l SORT 'timeStamp' ASC");
+        descMap.put(KEY_AUTHORIZED_QUERY_GREATER_THAN, "QUERY cpu-stats WHERE 'timeStamp' > ?l SORT 'timeStamp' ASC");
+        descMap.put(KEY_AUTHORIZED_QUERY_GREATER_THAN_OR_EQUAL_TO, "QUERY cpu-stats WHERE 'timeStamp' >= ?l SORT 'timeStamp' ASC");
+        descMap.put(KEY_AUTHORIZED_QUERY_LESS_THAN, "QUERY cpu-stats WHERE 'timeStamp' < ?l SORT 'timeStamp' ASC");
+        descMap.put(KEY_AUTHORIZED_QUERY_LESS_THAN_OR_EQUAL_TO, "QUERY cpu-stats WHERE 'timeStamp' <= ?l SORT 'timeStamp' ASC");
+        descMap.put(KEY_AUTHORIZED_QUERY_NOT, "QUERY cpu-stats WHERE NOT 'timeStamp' > ?l SORT 'timeStamp' ASC");
+        descMap.put(KEY_AUTHORIZED_QUERY_AND, "QUERY cpu-stats WHERE 'timeStamp' > 0 AND 'timeStamp' < ?l SORT 'timeStamp' ASC");
+        descMap.put(KEY_AUTHORIZED_QUERY_OR, "QUERY cpu-stats WHERE 'timeStamp' > ?l OR 'timeStamp' < ?l SORT 'timeStamp' ASC");
+        descMap.put(KEY_SET_DEFAULT_AGENT_ID, "QUERY vm-cpu-stats");
+        Set<String> trustedDescriptors = new HashSet<>();
+        for (String val: descMap.values()) {
+            trustedDescriptors.add(val);
+        }
+        TRUSTED_DESCRIPTORS = trustedDescriptors;
+        DESCRIPTOR_MAP = descMap;
+    }
+    
+    
     private static class CountdownConnectionListener implements ConnectionListener {
 
         private final ConnectionStatus target;
@@ -287,6 +337,14 @@ public class WebAppTest extends IntegrationTest {
         String version = appInfo.getMavenVersion();
         String warfile = "target/libs/thermostat-web-war-" + version + ".war";
         WebAppContext ctx = new WebAppContext(warfile, "/thermostat");
+        
+        // We need to set this to true in order for WebStorageEndPoint to pick
+        // up the descriptor registrations from WebAppTestStatementDescriptorRegistration
+        // which would result in 
+        // "java.util.ServiceConfigurationError: com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration: Provider com.redhat.thermostat.itest.WebAppTestStatementDescriptorRegistration not a subtype"
+        // errors.
+        ctx.setParentLoaderPriority(true);
+        
         WebAppContextListener listener = new WebAppContextListener(contextStartedLatch);
         ctx.addLifeCycleListener(listener);
         /* The web archive has a jetty-web.xml config file which sets up the
@@ -404,7 +462,7 @@ public class WebAppTest extends IntegrationTest {
 
         webStorage.getConnection().disconnect();
     }
-
+    
     @Test
     public void authorizedQuery() throws Exception {
 
@@ -418,7 +476,7 @@ public class WebAppTest extends IntegrationTest {
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
         
-        String strDesc = "QUERY cpu-stats SORT ?s ASC";
+        String strDesc = DESCRIPTOR_MAP.get(KEY_AUTHORIZED_QUERY);
         StatementDescriptor<CpuStat> queryDesc = new StatementDescriptor<>(CpuStatDAO.cpuStatCategory, strDesc);
         PreparedStatement<CpuStat> query = webStorage.prepareStatement(queryDesc);
 
@@ -442,7 +500,7 @@ public class WebAppTest extends IntegrationTest {
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
 
-        String strDesc = "QUERY cpu-stats WHERE 'timeStamp' = ?l SORT 'timeStamp' ASC";
+        String strDesc = DESCRIPTOR_MAP.get(KEY_AUTHORIZED_QUERY_EQUAL_TO);
         StatementDescriptor<CpuStat> queryDesc = new StatementDescriptor<>(CpuStatDAO.cpuStatCategory, strDesc);
         PreparedStatement<CpuStat> query = webStorage.prepareStatement(queryDesc);
         query.setLong(0, 2l);
@@ -465,7 +523,7 @@ public class WebAppTest extends IntegrationTest {
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
 
-        String strDesc = "QUERY cpu-stats WHERE 'timeStamp' != ?l SORT 'timeStamp' ASC";
+        String strDesc = DESCRIPTOR_MAP.get(KEY_AUTHORIZED_QUERY_NOT_EQUAL_TO);
         StatementDescriptor<CpuStat> queryDesc = new StatementDescriptor<>(CpuStatDAO.cpuStatCategory, strDesc);
         PreparedStatement<CpuStat> query = webStorage.prepareStatement(queryDesc);
         query.setLong(0, 2l);
@@ -488,7 +546,7 @@ public class WebAppTest extends IntegrationTest {
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
 
-        String strDesc = "QUERY cpu-stats WHERE 'timeStamp' > ?l SORT 'timeStamp' ASC";
+        String strDesc = DESCRIPTOR_MAP.get(KEY_AUTHORIZED_QUERY_GREATER_THAN);
         StatementDescriptor<CpuStat> queryDesc = new StatementDescriptor<>(CpuStatDAO.cpuStatCategory, strDesc);
         PreparedStatement<CpuStat> query = webStorage.prepareStatement(queryDesc);
         query.setLong(0, 2l);
@@ -511,7 +569,7 @@ public class WebAppTest extends IntegrationTest {
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
 
-        String strDesc = "QUERY cpu-stats WHERE 'timeStamp' >= ?l SORT 'timeStamp' ASC";
+        String strDesc = DESCRIPTOR_MAP.get(KEY_AUTHORIZED_QUERY_GREATER_THAN_OR_EQUAL_TO);
         StatementDescriptor<CpuStat> queryDesc = new StatementDescriptor<>(CpuStatDAO.cpuStatCategory, strDesc);
         PreparedStatement<CpuStat> query = webStorage.prepareStatement(queryDesc);
         query.setLong(0, 2l);
@@ -534,7 +592,7 @@ public class WebAppTest extends IntegrationTest {
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
 
-        String strDesc = "QUERY cpu-stats WHERE 'timeStamp' < ?l SORT 'timeStamp' ASC";
+        String strDesc = DESCRIPTOR_MAP.get(KEY_AUTHORIZED_QUERY_LESS_THAN);
         StatementDescriptor<CpuStat> queryDesc = new StatementDescriptor<>(CpuStatDAO.cpuStatCategory, strDesc);
         PreparedStatement<CpuStat> query = webStorage.prepareStatement(queryDesc);
         query.setLong(0, 2l);
@@ -557,7 +615,7 @@ public class WebAppTest extends IntegrationTest {
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
 
-        String strDesc = "QUERY cpu-stats WHERE 'timeStamp' <= ?l SORT 'timeStamp' ASC";
+        String strDesc = DESCRIPTOR_MAP.get(KEY_AUTHORIZED_QUERY_LESS_THAN_OR_EQUAL_TO);
         StatementDescriptor<CpuStat> queryDesc = new StatementDescriptor<>(CpuStatDAO.cpuStatCategory, strDesc);
         PreparedStatement<CpuStat> query = webStorage.prepareStatement(queryDesc);
         query.setLong(0, 2l);
@@ -580,7 +638,7 @@ public class WebAppTest extends IntegrationTest {
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
 
-        String strDesc = "QUERY cpu-stats WHERE NOT 'timeStamp' > ?l SORT 'timeStamp' ASC";
+        String strDesc = DESCRIPTOR_MAP.get(KEY_AUTHORIZED_QUERY_NOT);
         StatementDescriptor<CpuStat> queryDesc = new StatementDescriptor<>(CpuStatDAO.cpuStatCategory, strDesc);
         PreparedStatement<CpuStat> query = webStorage.prepareStatement(queryDesc);
         query.setLong(0, 2l);
@@ -603,7 +661,7 @@ public class WebAppTest extends IntegrationTest {
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
 
-        String strDesc = "QUERY cpu-stats WHERE 'timeStamp' > 0 AND 'timeStamp' < ?l SORT 'timeStamp' ASC";
+        String strDesc = DESCRIPTOR_MAP.get(KEY_AUTHORIZED_QUERY_AND);
         StatementDescriptor<CpuStat> queryDesc = new StatementDescriptor<>(CpuStatDAO.cpuStatCategory, strDesc);
         PreparedStatement<CpuStat> query = webStorage.prepareStatement(queryDesc);
         query.setLong(0, 2l);
@@ -626,7 +684,7 @@ public class WebAppTest extends IntegrationTest {
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
 
-        String strDesc = "QUERY cpu-stats WHERE 'timeStamp' > ?l OR 'timeStamp' < ?l SORT 'timeStamp' ASC";
+        String strDesc = DESCRIPTOR_MAP.get(KEY_AUTHORIZED_QUERY_OR);
         StatementDescriptor<CpuStat> queryDesc = new StatementDescriptor<>(CpuStatDAO.cpuStatCategory, strDesc);
         PreparedStatement<CpuStat> query = webStorage.prepareStatement(queryDesc);
         query.setLong(0, 2);
@@ -634,6 +692,37 @@ public class WebAppTest extends IntegrationTest {
         
         executeAndVerifyQuery(query, Arrays.asList(0l, 3l));
 
+        webStorage.getConnection().disconnect();
+    }
+    
+    @Test
+    public void refuseUnknownQueryDescriptor() throws IOException {
+
+        String[] roleNames = new String[] {
+                Roles.REGISTER_CATEGORY,
+                Roles.READ,
+                Roles.LOGIN,
+                Roles.ACCESS_REALM,
+                Roles.PREPARE_STATEMENT
+        };
+        Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
+        webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
+
+        String strDesc = "QUERY cpu-stats WHERE 'fooBarTest' = ?s";
+        assertFalse("wanted this descriptor to be untrusted!", TRUSTED_DESCRIPTORS.contains(strDesc));
+        StatementDescriptor<CpuStat> queryDesc = new StatementDescriptor<>(CpuStatDAO.cpuStatCategory, strDesc);
+        
+        try {
+            webStorage.prepareStatement(queryDesc);
+        } catch (IllegalDescriptorException e) {
+            // pass
+            String expectedMsg = "Unknown query descriptor which endpoint of com.redhat.thermostat.web.client.internal.WebStorage refused to accept!";
+            assertEquals(expectedMsg, e.getMessage());
+        } catch (DescriptorParsingException e) {
+            // should have been able to parse the descriptor
+            fail(e.getMessage());
+        }
+        
         webStorage.getConnection().disconnect();
     }
 
@@ -712,7 +801,7 @@ public class WebAppTest extends IntegrationTest {
         add.setPojo(pojo);
         add.apply();
 
-        String strDesc = "QUERY vm-cpu-stats";
+        String strDesc = DESCRIPTOR_MAP.get(KEY_SET_DEFAULT_AGENT_ID);
         StatementDescriptor<VmCpuStat> queryDesc = new StatementDescriptor<>(VmCpuStatDAO.vmCpuStatCategory, strDesc);
         PreparedStatement<VmCpuStat> query = storage.prepareStatement(queryDesc);
         Cursor<VmCpuStat> cursor = query.executeQuery();
