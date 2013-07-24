@@ -261,7 +261,7 @@
                 <symlink link="${project.build.directory}/libs/commons-collections.jar"
                          resource="${project.build.directory}/libs/commons-collections-3.2.1.jar" />
                 <symlink link="${project.build.directory}/libs/commons-logging.jar"
-                         resource="${project.build.directory}/libs/com.springsource.org.apache.commons.logging-1.1.1.jar" />
+                         resource="${project.build.directory}/libs/commons-logging-1.1.3.jar" />
                 <symlink link="${project.build.directory}/libs/lucene.jar"
                          resource="${project.build.directory}/libs/org.apache.servicemix.bundles.lucene-3.6.0_1.jar" />
                 <symlink link="${project.build.directory}/libs/gson.jar"

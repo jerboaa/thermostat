@@ -34,80 +34,55 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.launcher.internal;
+package com.redhat.thermostat.launcher;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.Objects;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
+/**
+ * Represents basic meta-data about a bundle, including the
+ * {@code Bundle-SymbolicName} and {@code Bundle-Version}.
+ */
+public class BundleInformation {
+    private final String name;
+    private final String version;
 
-import com.redhat.thermostat.launcher.BundleInformation;
-
-public class TestCommandInfo implements CommandInfo {
-
-    private String name;
-    private String description;
-    private String usage;
-
-    private Options options = new Options();
-    private Set<Environment> environments;
-
-    public TestCommandInfo(String name) {
+    /**
+     * @param name the {@code Bundle-SymbolicName} of the bundle
+     * @param version the {@code Bundle-Version} of the bundle
+     */
+    public BundleInformation(final String name, final String version) {
         this.name = name;
+        this.version = version;
     }
 
-    @Override
     public String getName() {
         return name;
     }
 
-    @Override
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String desc) {
-        description = desc;
+    public String getVersion() {
+        return version;
     }
 
     @Override
-    public String getUsage() {
-        return usage;
-    }
-
-    public void setUsage(String usage) {
-        this.usage = usage;
+    public String toString() {
+        return "Bundle[" + name + "=" + version + "]";
     }
 
     @Override
-    public Options getOptions() {
-        return options;
-    }
-
-    public void addOptions(Option... options) {
-        for (Option option : options) {
-            this.options.addOption(option);
-        }
+    public int hashCode() {
+        return Objects.hash(name, version);
     }
 
     @Override
-    public Set<Environment> getEnvironments() {
-        return environments;
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        BundleInformation other = (BundleInformation) obj;
+        return Objects.equals(name, other.getName()) && Objects.equals(version, other.getVersion());
     }
 
-    public void setAvailable(Set<Environment> environments) {
-        this.environments = environments;
-    }
-
-    @Override
-    public List<String> getDependencyResourceNames() {
-        return Collections.emptyList();
-    }
-
-    @Override
-    public List<BundleInformation> getBundles() {
-        return Collections.emptyList();
-    }
 }

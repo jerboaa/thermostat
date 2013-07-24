@@ -43,23 +43,23 @@
     <extension>
       <name>gui</name>
       <bundles>
-        <bundle>thermostat-host-cpu-common-${project.version}.jar</bundle>
-        <bundle>thermostat-host-cpu-client-core-${project.version}.jar</bundle>
-        <bundle>thermostat-host-cpu-client-swing-${project.version}.jar</bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.host.cpu.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.host.cpu.client.core</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.host.cpu.client.swing</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
     </extension>
     <extension>
       <name>agent</name>
       <bundles>
-        <bundle>thermostat-host-cpu-common-${project.version}.jar</bundle>
-        <bundle>thermostat-host-cpu-agent-${project.version}.jar</bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.host.cpu.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.host.cpu.agent</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
     </extension>
     <!-- Requires all storage entity classes to be loaded -->
     <extension>
       <name>webservice</name>
       <bundles>
-        <bundle>thermostat-host-cpu-common-${project.version}.jar</bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.host.cpu.common</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
     </extension>
   </extensions>

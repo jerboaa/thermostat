@@ -63,6 +63,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.launcher.BundleInformation;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandExtensions;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.NewCommand;
 import com.redhat.thermostat.plugin.validator.PluginConfigurationValidatorException;
@@ -148,21 +149,14 @@ public class PluginCommandInfoSourceTest {
 
     @Test
     public void verifyCommandInfoObjectsToExtendExistingCommandsAreCreated() throws IOException {
-        final String DEPENDENCY_BUNDLE = "dependency-bundle";
-        final String PLUGIN_BUNDLE = "plugin-bundle";
+        BundleInformation bundleInfo = new BundleInformation("plugin-bundle", "0.1");
 
         Path pluginDir = pluginRootDir.resolve("plugin1");
         Files.createDirectory(pluginDir);
-        Path pluginJar = pluginDir.resolve(PLUGIN_BUNDLE);
-        Files.createFile(pluginJar);
-
-        Path dependencyJar = jarRootDir.resolve(DEPENDENCY_BUNDLE);
-        Files.createFile(dependencyJar);
 
         CommandExtensions extensions = mock(CommandExtensions.class);
         when(extensions.getCommandName()).thenReturn("command-name");
-        when(extensions.getPluginBundles()).thenReturn(Arrays.asList(PLUGIN_BUNDLE));
-        when(extensions.getDepenedencyBundles()).thenReturn(Arrays.asList(DEPENDENCY_BUNDLE));
+        when(extensions.getBundles()).thenReturn(Arrays.asList(bundleInfo));
 
         when(parserResult.getExtendedCommands()).thenReturn(Arrays.asList(extensions));
 
@@ -171,11 +165,7 @@ public class PluginCommandInfoSourceTest {
         CommandInfo info = source.getCommandInfo("command-name");
         assertEquals("command-name", info.getName());
 
-        String expectedDep1Name = pluginJar.toFile().toURI().toString();
-        String expectedDep2Name = dependencyJar.toFile().toURI().toString();
-
-        assertTrue(info.getDependencyResourceNames().contains(expectedDep1Name));
-        assertTrue(info.getDependencyResourceNames().contains(expectedDep2Name));
+        assertTrue(info.getBundles().contains(bundleInfo));
     }
 
     @Test
@@ -185,16 +175,10 @@ public class PluginCommandInfoSourceTest {
         final String USAGE = "usage";
         final Options OPTIONS = new Options();
         final Set<Environment> ENVIRONMENTS = EnumSet.of(Environment.SHELL);
-        final String PLUGIN_BUNDLE = "plugin-bundle.jar";
-        final String DEPENDENCY_BUNDLE = "dependency-bundle.jar";
+        BundleInformation bundleInfo = new BundleInformation("plugin-bundle", "0.1");
 
         Path pluginDir = pluginRootDir.resolve("plugin1");
         Files.createDirectory(pluginDir);
-        Path pluginJar = pluginDir.resolve(PLUGIN_BUNDLE);
-        Files.createFile(pluginJar);
-
-        Path dependencyJar = jarRootDir.resolve(DEPENDENCY_BUNDLE);
-        Files.createFile(dependencyJar);
 
         NewCommand cmd = mock(NewCommand.class);
         when(cmd.getCommandName()).thenReturn(NAME);
@@ -202,8 +186,7 @@ public class PluginCommandInfoSourceTest {
         when(usageBuilder.getUsage(NAME, OPTIONS)).thenReturn(USAGE);
         when(cmd.getOptions()).thenReturn(OPTIONS);
         when(cmd.getEnvironments()).thenReturn(ENVIRONMENTS);
-        when(cmd.getPluginBundles()).thenReturn(Arrays.asList(PLUGIN_BUNDLE));
-        when(cmd.getDepenedencyBundles()).thenReturn(Arrays.asList(DEPENDENCY_BUNDLE));
+        when(cmd.getBundles()).thenReturn(Arrays.asList(bundleInfo));
 
         when(parserResult.getNewCommands()).thenReturn(Arrays.asList(cmd));
 
@@ -216,12 +199,8 @@ public class PluginCommandInfoSourceTest {
         assertEquals(USAGE, result.getUsage());
         assertEquals(OPTIONS, result.getOptions());
 
-        String expectedDep1Name = pluginJar.toFile().toURI().toString();
-        String expectedDep2Name = dependencyJar.toFile().toURI().toString();
-
-        List<String> deps = result.getDependencyResourceNames();
-        assertEquals(2, deps.size());
-        assertTrue(deps.contains(expectedDep1Name));
-        assertTrue(deps.contains(expectedDep2Name));
+        List<BundleInformation> deps = result.getBundles();
+        assertEquals(1, deps.size());
+        assertTrue(deps.contains(bundleInfo));
     }
 }

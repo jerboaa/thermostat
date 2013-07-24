@@ -48,13 +48,26 @@ import com.redhat.thermostat.shared.config.Configuration;
 
 /**
  * A Service that provides features to load bundles for given command names.
+ * <p>
+ * It can install bundles in to the current runtime and start them. It can find
+ * bundles by file paths or by bundle meta-data.
  */
 @Service
 public abstract class BundleManager {
 
     public abstract void setPrintOSGiInfo(boolean printOSGiInfo);
 
-    public abstract void addBundles(List<String> dependencies) throws BundleException, IOException;
+    /**
+     * Load and start bundles using the metadata about a bundle.
+     */
+    public abstract void loadBundlesByName(List<BundleInformation> bundles) throws BundleException, IOException;
+
+    /**
+     * Load and start bundles using file locations
+     *
+     * @param uriPaths a list of URI strings that represent on-disk locations of bundles
+     */
+    public abstract void loadBundlesByPath(List<String> uriPaths) throws BundleException, IOException;
 
     public static void preLoadBundles(Framework framework, List<String> bundleLocations,
             boolean printOSGiInfo) throws BundleException {

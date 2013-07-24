@@ -46,6 +46,8 @@ import java.util.Set;
 import org.apache.commons.cli.Options;
 import org.junit.Test;
 
+import com.redhat.thermostat.launcher.BundleInformation;
+
 
 public class BasicCommandInfoTest {
 
@@ -57,6 +59,7 @@ public class BasicCommandInfoTest {
         final Options OPTIONS = new Options();
         final Set<Environment> ENVIRONMENT = EnumSet.noneOf(Environment.class);
         final List<String> RESOURCES = Collections.emptyList();
+        final List<BundleInformation> BUNDLES = Collections.emptyList();
 
         BasicCommandInfo info = new BasicCommandInfo(NAME, DESCRIPTION, USAGE, OPTIONS, ENVIRONMENT, RESOURCES);
 
@@ -66,6 +69,7 @@ public class BasicCommandInfoTest {
         assertEquals(OPTIONS, info.getOptions());
         assertEquals(RESOURCES, info.getDependencyResourceNames());
 
-        assertEquals(String.format("%s (description='%s', dependencies='%s')", NAME, DESCRIPTION, RESOURCES.toString()), info.toString());
+        assertEquals(String.format("%s (description='%s', dependencies='%s', bundles='%s')", NAME, DESCRIPTION, RESOURCES.toString(), BUNDLES.toString()),
+                info.toString());
     }
 }

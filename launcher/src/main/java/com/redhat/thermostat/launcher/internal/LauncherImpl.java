@@ -245,7 +245,8 @@ public class LauncherImpl implements Launcher {
         }
 
         try {
-            registry.addBundles(cmdInfo.getDependencyResourceNames());
+            registry.loadBundlesByPath(cmdInfo.getDependencyResourceNames());
+            registry.loadBundlesByName(cmdInfo.getBundles());
         } catch (BundleException | IOException e) {
             // If this happens we definitely need to do something about it, and the
             // trace will be immeasurably helpful in figuring out what is wrong.

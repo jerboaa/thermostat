@@ -40,6 +40,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map.Entry;
@@ -52,6 +53,7 @@ import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.launcher.BundleInformation;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 
 public class BuiltInCommandInfo implements CommandInfo {
@@ -380,6 +382,11 @@ public class BuiltInCommandInfo implements CommandInfo {
 
     public List<String> getDependencyResourceNames() {
         return dependencies;
+    }
+
+    @Override
+    public List<BundleInformation> getBundles() {
+        return Collections.emptyList();
     }
 }
 

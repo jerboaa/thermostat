@@ -43,28 +43,28 @@
     <extension>
       <name>gui</name>
       <bundles>
-        <bundle>thermostat-vm-gc-common-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-gc-client-core-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-gc-client-swing-${project.version}.jar</bundle>
-        <bundle>thermostat-gc-remote-collector-common-${project.version}.jar</bundle>
-        <bundle>thermostat-gc-remote-collector-client-common-${project.version}.jar</bundle>
-        <bundle>thermostat-gc-remote-collector-client-swing-${project.version}.jar</bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.gc.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.gc.client.core</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.gc.client.swing</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.gc.remote.common.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.gc.remote.client.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.gc.remote.client.swing</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
     </extension>
     <extension>
       <name>agent</name>
       <bundles>
-        <bundle>thermostat-vm-gc-common-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-gc-agent-${project.version}.jar</bundle>
-        <bundle>thermostat-gc-remote-collector-common-${project.version}.jar</bundle>
-        <bundle>thermostat-gc-remote-collector-command-${project.version}.jar</bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.gc.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.gc.agent</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.gc.remote.common.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.gc.remote.command</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
     </extension>
     <!-- Requires all storage entity classes to be loaded -->
     <extension>
       <name>webservice</name>
       <bundles>
-        <bundle>thermostat-vm-gc-common-${project.version}.jar</bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.gc.common</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
     </extension>
   </extensions>

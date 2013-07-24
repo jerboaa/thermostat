@@ -7,8 +7,8 @@
 
 <!-- definition of simple elements -->
 <xs:element name="name" type="xs:string"/>
-<xs:element name="bundle" type="xs:string"/>
-<xs:element name="dependency" type="xs:string"/>
+<xs:element name="symbolic-name" type="xs:string"/>
+<xs:element name="version" type="xs:string"/>
 <xs:element name="usage" type="xs:string"/>
 <xs:element name="description" type="xs:string"/>
 <xs:element name="short" type="xs:string"/>
@@ -53,13 +53,6 @@
     <xs:sequence>
       <xs:element ref="name"/>
       <xs:element ref="bundles"/>
-      <xs:element ref="dependencies" minOccurs="0" maxOccurs="1">
-      <xs:annotation>
-        <xs:documentation>
-          Dependencies: depend on other libraries.
-        </xs:documentation>
-      </xs:annotation>
-      </xs:element>
     </xs:sequence>
   </xs:complexType>
 </xs:element>
@@ -75,13 +68,6 @@
       <xs:element ref="options" minOccurs="0" maxOccurs="1"/>
       <xs:element ref="environments"/>
       <xs:element ref="bundles"/>
-      <xs:element ref="dependencies">
-      <xs:annotation>
-        <xs:documentation>
-          Dependencies: depend on other commands.
-        </xs:documentation>
-      </xs:annotation>
-      </xs:element>
     </xs:sequence>
   </xs:complexType>
 </xs:element> 
@@ -169,6 +155,11 @@
 </xs:element>
 
 <xs:element name="bundles">
+  <xs:annotation>
+    <xs:documentation>
+      Specifies OSGi bundles
+    </xs:documentation>
+  </xs:annotation>
   <xs:complexType>
     <xs:sequence>
       <xs:element ref="bundle" minOccurs="1" maxOccurs="unbounded"/>
@@ -176,14 +167,30 @@
   </xs:complexType>
 </xs:element>
 
-
-<xs:element name="dependencies">
+<xs:element name="bundle">
+  <xs:annotation>
+    <xs:documentation>
+      Specifies an OSGi bundle
+    </xs:documentation>
+  </xs:annotation>
   <xs:complexType>
     <xs:sequence>
-      <xs:element ref="dependency" minOccurs="1" maxOccurs="unbounded"/>
+      <xs:element ref="symbolic-name">
+        <xs:annotation>
+          <xs:documentation>
+            The 'Bundle-SymbolicName' of the OSGi bundle
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element ref="version">
+        <xs:annotation>
+          <xs:documentation>
+            The 'Bundle-Version' of the OSGi bundle
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
     </xs:sequence>
   </xs:complexType>
 </xs:element>
-
 
 </xs:schema>

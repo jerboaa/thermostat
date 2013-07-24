@@ -43,30 +43,30 @@
     <extension>
       <name>gui</name>
       <bundles>
-        <bundle>thermostat-vm-cpu-common-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-cpu-client-core-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-cpu-client-swing-${project.version}.jar</bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.cpu.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.cpu.client.core</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.cpu.client.swing</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
     </extension>
     <extension>
       <name>agent</name>
       <bundles>
-        <bundle>thermostat-vm-cpu-common-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-cpu-agent-${project.version}.jar</bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.cpu.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.cpu.agent</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
     </extension>
     <!-- Requires all storage entity classes to be loaded -->
     <extension>
       <name>webservice</name>
       <bundles>
-        <bundle>thermostat-vm-cpu-common-${project.version}.jar</bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.cpu.common</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
     </extension>
     <extension>
       <name>vm-stat</name>
       <bundles>
-        <bundle>thermostat-vm-cpu-common-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-cpu-client-cli-${project.version}.jar</bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.cpu.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.cpu.client.cli</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
     </extension>
   </extensions>

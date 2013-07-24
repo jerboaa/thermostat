@@ -43,23 +43,23 @@
     <extension>
       <name>gui</name>
       <bundles>
-        <bundle>thermostat-vm-classstat-common-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-classstat-client-core-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-classstat-client-swing-${project.version}.jar</bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.classstat.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.classstat.client.core</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.classstat.client.swing</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
     </extension>
     <extension>
       <name>agent</name>
       <bundles>
-        <bundle>thermostat-vm-classstat-common-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-classstat-agent-${project.version}.jar</bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.classstat.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.classstat.agent</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
     </extension>
     <!-- Requires all storage entity classes to be loaded -->
     <extension>
       <name>webservice</name>
       <bundles>
-        <bundle>thermostat-vm-classstat-common-${project.version}.jar</bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.classstat.common</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
     </extension>
   </extensions>

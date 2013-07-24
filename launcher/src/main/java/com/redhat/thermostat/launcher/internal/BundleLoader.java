@@ -62,7 +62,7 @@ public class BundleLoader {
     }
 
     public List<Bundle> installAndStartBundles(Framework framework,
-            List<String>bundleLocations) throws BundleException {
+            List<String> bundleLocations) throws BundleException {
         List<Bundle> bundles = new ArrayList<>();
         BundleContext ctx = framework.getBundleContext();
         for (String location : bundleLocations) {

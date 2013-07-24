@@ -43,8 +43,8 @@
     <extension>
       <name>gui</name>
       <bundles>
-        <bundle>thermostat-vm-overview-client-core-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-overview-client-swing-${project.version}.jar</bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.overview.client.core</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.overview.client.swing</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
     </extension>
   </extensions>

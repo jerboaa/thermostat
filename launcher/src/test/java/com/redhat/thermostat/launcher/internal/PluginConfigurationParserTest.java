@@ -54,6 +54,7 @@ import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.junit.Test;
 
+import com.redhat.thermostat.launcher.BundleInformation;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandExtensions;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.NewCommand;
 import com.redhat.thermostat.shared.locale.Translate;
@@ -93,9 +94,9 @@ public class PluginConfigurationParserTest {
                 "    <extension>\n" +
                 "      <name>test</name>\n" +
                 "      <bundles>\n" +
-                "        <bundle>foo</bundle>\n" +
-                "        <bundle>bar</bundle>\n" +
-                "        <bundle>baz</bundle>\n" +
+                "        <bundle><symbolic-name>foo</symbolic-name><version>1.0</version></bundle>\n" +
+                "        <bundle><symbolic-name>bar</symbolic-name><version>1.0</version></bundle>\n" +
+                "        <bundle><symbolic-name>baz</symbolic-name><version>1.0</version></bundle>\n" +
                 "      </bundles>\n" +
                 "      <dependencies>\n" +
                 "        <dependency>thermostat-foo</dependency>\n" +
@@ -114,9 +115,10 @@ public class PluginConfigurationParserTest {
 
         CommandExtensions first = extensions.get(0);
         assertEquals("test", first.getCommandName());
-        assertEquals(Arrays.asList("foo", "bar", "baz"), first.getPluginBundles());
-        assertEquals(Arrays.asList("thermostat-foo"), first.getDepenedencyBundles());
-    }
+        BundleInformation[] expectedBundles = new BundleInformation[] {
+                new BundleInformation("foo", "1.0"), new BundleInformation("bar", "1.0"), new BundleInformation("baz", "1.0"),
+        };
+        assertEquals(Arrays.asList(expectedBundles), first.getBundles());    }
     
     @Test
     public void testConfigurationThatAddsNewCommand() throws UnsupportedEncodingException {
@@ -133,9 +135,9 @@ public class PluginConfigurationParserTest {
                 "        <environment>cli</environment>" +
                 "      </environments>" +
                 "      <bundles>\n" +
-                "        <bundle>foo</bundle>\n" +
-                "        <bundle>bar</bundle>\n" +
-                "        <bundle>baz</bundle>\n" +
+                "        <bundle><symbolic-name>foo</symbolic-name><version>1.0</version></bundle>\n" +
+                "        <bundle><symbolic-name>bar</symbolic-name><version>1.0</version></bundle>\n" +
+                "        <bundle><symbolic-name>baz</symbolic-name><version>1.0</version></bundle>\n" +
                 "      </bundles>\n" +
                 "      <dependencies>\n" +
                 "        <dependency>thermostat-foo</dependency>\n" +
@@ -161,8 +163,10 @@ public class PluginConfigurationParserTest {
         assertTrue(opts.getRequiredOptions().isEmpty());
         assertTrue(newCommand.getEnvironments().contains(Environment.SHELL));
         assertTrue(newCommand.getEnvironments().contains(Environment.CLI));
-        assertEquals(Arrays.asList("foo", "bar", "baz"), newCommand.getPluginBundles());
-        assertEquals(Arrays.asList("thermostat-foo"), newCommand.getDepenedencyBundles());
+        BundleInformation[] expectedBundles = new BundleInformation[] {
+                new BundleInformation("foo", "1.0"), new BundleInformation("bar", "1.0"), new BundleInformation("baz", "1.0"),
+        };
+        assertEquals(Arrays.asList(expectedBundles), newCommand.getBundles());
     }
 
     @Test
@@ -175,9 +179,9 @@ public class PluginConfigurationParserTest {
                 "    <extension>\n" +
                 "      <name>\ntest   \n</name>\n" +
                 "      <bundles>\n" +
-                "        <bundle>\n \t  \nfoo\t \n \n</bundle>\n" +
-                "        <bundle>\tbar  baz\n</bundle>\n" +
-                "        <bundle>buzz</bundle>\n" +
+                "        <bundle><symbolic-name>\n \t  \nfoo\t \n</symbolic-name><version>ignore</version>\n</bundle>\n" +
+                "        <bundle><symbolic-name>\tbar  baz\n</symbolic-name><version>ignore</version></bundle>\n" +
+                "        <bundle><symbolic-name>buzz</symbolic-name><version>ignore</version></bundle>\n" +
                 "      </bundles>\n" +
                 "      <dependencies>\n\t\n\t \t\t\n" +
                 "        <dependency>\t\t\t  thermostat-foo\n\t\t\n</dependency>\n" +
@@ -196,8 +200,10 @@ public class PluginConfigurationParserTest {
 
         CommandExtensions first = extensions.get(0);
         assertEquals("test", first.getCommandName());
-        assertEquals(Arrays.asList("foo", "bar  baz", "buzz"), first.getPluginBundles());
-        assertEquals(Arrays.asList("thermostat-foo"), first.getDepenedencyBundles());
+        BundleInformation[] expectedBundles = new BundleInformation[] {
+                new BundleInformation("foo", "ignore"), new BundleInformation("bar  baz", "ignore"), new BundleInformation("buzz", "ignore"),
+        };
+        assertEquals(Arrays.asList(expectedBundles), first.getBundles());
     }
 
     @Test

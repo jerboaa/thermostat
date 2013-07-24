@@ -43,30 +43,30 @@
     <extension>
       <name>gui</name>
       <bundles>
-        <bundle>thermostat-vm-memory-common-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-memory-client-core-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-memory-client-swing-${project.version}.jar</bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.memory.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.memory.client.core</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.memory.client.swing</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
     </extension>
     <extension>
       <name>agent</name>
       <bundles>
-        <bundle>thermostat-vm-memory-common-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-memory-agent-${project.version}.jar</bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.memory.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.memory.agent</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
     </extension>
     <!-- Requires all storage entity classes to be loaded -->
     <extension>
       <name>webservice</name>
       <bundles>
-        <bundle>thermostat-vm-memory-common-${project.version}.jar</bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.memory.common</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
     </extension>
     <extension>
       <name>vm-stat</name>
       <bundles>
-        <bundle>thermostat-vm-memory-common-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-memory-client-cli-${project.version}.jar</bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.memory.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.memory.client.cli</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
     </extension>
   </extensions>

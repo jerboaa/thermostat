@@ -70,27 +70,25 @@
         <environment>shell</environment>
       </environments>
       <bundles>
-        <bundle>thermostat-vm-heap-analysis-common-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-heap-analysis-command-${project.version}.jar</bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.common.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.core</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.cli</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.storage.mongodb</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.web.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.web.client</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.mongodb</symbolic-name><version>${mongo-driver.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.beanutils</symbolic-name><version>${commons-beanutils.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.codec</symbolic-name><version>${commons-codec.osgi-version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.collections</symbolic-name><version>${commons-collections.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.version}</version></bundle>
+        <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
+        <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
       </bundles>
-      <dependencies>
-        <dependency>thermostat-common-command-${project.version}.jar</dependency>
-        <dependency>thermostat-client-core-${project.version}.jar</dependency>
-        <dependency>thermostat-client-command-${project.version}.jar</dependency>
-        <dependency>thermostat-client-cli-${project.version}.jar</dependency>
-        <dependency>thermostat-storage-mongodb-${project.version}.jar</dependency>
-        <dependency>thermostat-web-common-${project.version}.jar</dependency>
-        <dependency>thermostat-web-client-${project.version}.jar</dependency>
-        <dependency>mongo.jar</dependency>
-        <dependency>commons-beanutils.jar</dependency>
-        <dependency>commons-codec.jar</dependency>
-        <dependency>commons-collections.jar</dependency>
-        <dependency>commons-logging.jar</dependency>
-        <dependency>httpcomponents-core.jar</dependency>
-        <dependency>httpcomponents-client.jar</dependency>
-        <dependency>gson.jar</dependency>
-        <dependency>netty.jar</dependency>
-      </dependencies>
     </command>
     <command>
       <name>find-objects</name>
@@ -125,27 +123,25 @@
         <environment>shell</environment>
       </environments>
       <bundles>
-        <bundle>thermostat-vm-heap-analysis-common-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-heap-analysis-command-${project.version}.jar</bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.common.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.core</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.cli</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.storage.mongodb</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.web.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.web.client</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.mongodb</symbolic-name><version>${mongo-driver.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.beanutils</symbolic-name><version>${commons-beanutils.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.codec</symbolic-name><version>${commons-codec.osgi-version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.collections</symbolic-name><version>${commons-collections.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.version}</version></bundle>
+        <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
+        <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
       </bundles>
-      <dependencies>
-        <dependency>thermostat-common-command-${project.version}.jar</dependency>
-        <dependency>thermostat-client-core-${project.version}.jar</dependency>
-        <dependency>thermostat-client-command-${project.version}.jar</dependency>
-        <dependency>thermostat-client-cli-${project.version}.jar</dependency>
-        <dependency>thermostat-storage-mongodb-${project.version}.jar</dependency>
-        <dependency>thermostat-web-common-${project.version}.jar</dependency>
-        <dependency>thermostat-web-client-${project.version}.jar</dependency>
-        <dependency>mongo.jar</dependency>
-        <dependency>commons-beanutils.jar</dependency>
-        <dependency>commons-codec.jar</dependency>
-        <dependency>commons-collections.jar</dependency>
-        <dependency>commons-logging.jar</dependency>
-        <dependency>httpcomponents-core.jar</dependency>
-        <dependency>httpcomponents-client.jar</dependency>
-        <dependency>gson.jar</dependency>
-        <dependency>netty.jar</dependency>
-      </dependencies>
     </command>
     <command>
       <name>find-root</name>
@@ -183,27 +179,25 @@
         <environment>shell</environment>
       </environments>
       <bundles>
-        <bundle>thermostat-vm-heap-analysis-common-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-heap-analysis-command-${project.version}.jar</bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.common.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.core</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.cli</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.storage.mongodb</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.web.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.web.client</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.mongodb</symbolic-name><version>${mongo-driver.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.beanutils</symbolic-name><version>${commons-beanutils.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.codec</symbolic-name><version>${commons-codec.osgi-version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.collections</symbolic-name><version>${commons-collections.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.version}</version></bundle>
+        <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
+        <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
       </bundles>
-      <dependencies>
-        <dependency>thermostat-common-command-${project.version}.jar</dependency>
-        <dependency>thermostat-client-core-${project.version}.jar</dependency>
-        <dependency>thermostat-client-command-${project.version}.jar</dependency>
-        <dependency>thermostat-client-cli-${project.version}.jar</dependency>
-        <dependency>thermostat-storage-mongodb-${project.version}.jar</dependency>
-        <dependency>thermostat-web-common-${project.version}.jar</dependency>
-        <dependency>thermostat-web-client-${project.version}.jar</dependency>
-        <dependency>mongo.jar</dependency>
-        <dependency>commons-beanutils.jar</dependency>
-        <dependency>commons-codec.jar</dependency>
-        <dependency>commons-collections.jar</dependency>
-        <dependency>commons-logging.jar</dependency>
-        <dependency>httpcomponents-core.jar</dependency>
-        <dependency>httpcomponents-client.jar</dependency>
-        <dependency>gson.jar</dependency>
-        <dependency>netty.jar</dependency>
-      </dependencies>
     </command>
     <command>
       <name>list-heap-dumps</name>
@@ -235,27 +229,25 @@
         <environment>shell</environment>
       </environments>
       <bundles>
-        <bundle>thermostat-vm-heap-analysis-common-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-heap-analysis-command-${project.version}.jar</bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.common.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.core</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.cli</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.storage.mongodb</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.web.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.web.client</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.mongodb</symbolic-name><version>${mongo-driver.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.beanutils</symbolic-name><version>${commons-beanutils.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.codec</symbolic-name><version>${commons-codec.osgi-version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.collections</symbolic-name><version>${commons-collections.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.version}</version></bundle>
+        <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
+        <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
       </bundles>
-      <dependencies>
-        <dependency>thermostat-common-command-${project.version}.jar</dependency>
-        <dependency>thermostat-client-core-${project.version}.jar</dependency>
-        <dependency>thermostat-client-command-${project.version}.jar</dependency>
-        <dependency>thermostat-client-cli-${project.version}.jar</dependency>
-        <dependency>thermostat-storage-mongodb-${project.version}.jar</dependency>
-        <dependency>thermostat-web-common-${project.version}.jar</dependency>
-        <dependency>thermostat-web-client-${project.version}.jar</dependency>
-        <dependency>mongo.jar</dependency>
-        <dependency>commons-beanutils.jar</dependency>
-        <dependency>commons-codec.jar</dependency>
-        <dependency>commons-collections.jar</dependency>
-        <dependency>commons-logging.jar</dependency>
-        <dependency>httpcomponents-core.jar</dependency>
-        <dependency>httpcomponents-client.jar</dependency>
-        <dependency>gson.jar</dependency>
-        <dependency>netty.jar</dependency>
-      </dependencies>
     </command>
     <command>
       <name>object-info</name>
@@ -287,27 +279,25 @@
         <environment>shell</environment>
       </environments>
       <bundles>
-        <bundle>thermostat-vm-heap-analysis-common-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-heap-analysis-command-${project.version}.jar</bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.common.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.core</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.cli</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.storage.mongodb</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.web.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.web.client</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.mongodb</symbolic-name><version>${mongo-driver.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.beanutils</symbolic-name><version>${commons-beanutils.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.codec</symbolic-name><version>${commons-codec.osgi-version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.collections</symbolic-name><version>${commons-collections.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.version}</version></bundle>
+        <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
+        <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
       </bundles>
-      <dependencies>
-        <dependency>thermostat-common-command-${project.version}.jar</dependency>
-        <dependency>thermostat-client-core-${project.version}.jar</dependency>
-        <dependency>thermostat-client-command-${project.version}.jar</dependency>
-        <dependency>thermostat-client-cli-${project.version}.jar</dependency>
-        <dependency>thermostat-storage-mongodb-${project.version}.jar</dependency>
-        <dependency>thermostat-web-common-${project.version}.jar</dependency>
-        <dependency>thermostat-web-client-${project.version}.jar</dependency>
-        <dependency>mongo.jar</dependency>
-        <dependency>commons-beanutils.jar</dependency>
-        <dependency>commons-codec.jar</dependency>
-        <dependency>commons-collections.jar</dependency>
-        <dependency>commons-logging.jar</dependency>
-        <dependency>httpcomponents-core.jar</dependency>
-        <dependency>httpcomponents-client.jar</dependency>
-        <dependency>gson.jar</dependency>
-        <dependency>netty.jar</dependency>
-      </dependencies>
     </command>
     <command>
       <name>save-heap-dump-to-file</name>
@@ -339,27 +329,25 @@
         <environment>shell</environment>
       </environments>
       <bundles>
-        <bundle>thermostat-vm-heap-analysis-common-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-heap-analysis-command-${project.version}.jar</bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.common.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.core</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.cli</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.storage.mongodb</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.web.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.web.client</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.mongodb</symbolic-name><version>${mongo-driver.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.beanutils</symbolic-name><version>${commons-beanutils.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.codec</symbolic-name><version>${commons-codec.osgi-version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.collections</symbolic-name><version>${commons-collections.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.version}</version></bundle>
+        <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
+        <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
       </bundles>
-      <dependencies>
-        <dependency>thermostat-common-command-${project.version}.jar</dependency>
-        <dependency>thermostat-client-core-${project.version}.jar</dependency>
-        <dependency>thermostat-client-command-${project.version}.jar</dependency>
-        <dependency>thermostat-client-cli-${project.version}.jar</dependency>
-        <dependency>thermostat-storage-mongodb-${project.version}.jar</dependency>
-        <dependency>thermostat-web-common-${project.version}.jar</dependency>
-        <dependency>thermostat-web-client-${project.version}.jar</dependency>
-        <dependency>mongo.jar</dependency>
-        <dependency>commons-beanutils.jar</dependency>
-        <dependency>commons-codec.jar</dependency>
-        <dependency>commons-collections.jar</dependency>
-        <dependency>commons-logging.jar</dependency>
-        <dependency>httpcomponents-core.jar</dependency>
-        <dependency>httpcomponents-client.jar</dependency>
-        <dependency>gson.jar</dependency>
-        <dependency>netty.jar</dependency>
-      </dependencies>
     </command>
     <command>
       <name>show-heap-histogram</name>
@@ -384,51 +372,50 @@
         <environment>shell</environment>
       </environments>
       <bundles>
-        <bundle>thermostat-vm-heap-analysis-common-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-heap-analysis-command-${project.version}.jar</bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.common.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.core</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.cli</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.storage.mongodb</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.web.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.web.client</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.mongodb</symbolic-name><version>${mongo-driver.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.beanutils</symbolic-name><version>${commons-beanutils.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.codec</symbolic-name><version>${commons-codec.osgi-version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.collections</symbolic-name><version>${commons-collections.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.version}</version></bundle>
+        <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
+        <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
       </bundles>
-      <dependencies>
-        <dependency>thermostat-common-command-${project.version}.jar</dependency>
-        <dependency>thermostat-client-core-${project.version}.jar</dependency>
-        <dependency>thermostat-client-command-${project.version}.jar</dependency>
-        <dependency>thermostat-client-cli-${project.version}.jar</dependency>
-        <dependency>thermostat-storage-mongodb-${project.version}.jar</dependency>
-        <dependency>thermostat-web-common-${project.version}.jar</dependency>
-        <dependency>thermostat-web-client-${project.version}.jar</dependency>
-        <dependency>mongo.jar</dependency>
-        <dependency>commons-beanutils.jar</dependency>
-        <dependency>commons-codec.jar</dependency>
-        <dependency>commons-collections.jar</dependency>
-        <dependency>commons-logging.jar</dependency>
-        <dependency>httpcomponents-core.jar</dependency>
-        <dependency>httpcomponents-client.jar</dependency>
-        <dependency>gson.jar</dependency>
-        <dependency>netty.jar</dependency>
-      </dependencies>
     </command>
   </commands>
   <extensions>
     <extension>
       <name>gui</name>
       <bundles>
-        <bundle>thermostat-vm-heap-analysis-common-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-heap-analysis-command-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-heap-analysis-client-core-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-heap-analysis-client-swing-${project.version}.jar</bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.common.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.core</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.swing</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
     </extension>
     <extension>
       <name>agent</name>
       <bundles>
-        <bundle>thermostat-vm-heap-analysis-common-${project.version}.jar</bundle>
-        <bundle>thermostat-vm-heap-analysis-agent-${project.version}.jar</bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.agent</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
     </extension>
     <!-- Requires all storage entity classes to be loaded -->
     <extension>
       <name>webservice</name>
       <bundles>
-        <bundle>thermostat-vm-heap-analysis-common-${project.version}.jar</bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.common</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
     </extension>
   </extensions>

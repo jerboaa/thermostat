@@ -38,38 +38,93 @@ package com.redhat.thermostat.launcher.internal;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.naming.ConfigurationException;
 
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.launch.Framework;
 
+import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.launcher.BundleInformation;
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.shared.config.Configuration;
 
 public class BundleManagerImpl extends BundleManager {
 
-    private Map<String, Bundle> loaded;
+    private static final Logger logger = LoggingUtils.getLogger(BundleManagerImpl.class);
+
+    // Bundle Name and version -> path
+    private final Map<BundleInformation, Path> known;
     private Configuration configuration;
     private BundleLoader loader;
 
     BundleManagerImpl(Configuration configuration) throws ConfigurationException, FileNotFoundException, IOException {
-        initLoadedBundles();
+        known = new HashMap<>();
+
         this.configuration = configuration;
         loader = new BundleLoader(configuration.getPrintOSGiInfo());
+
+        scanForBundles();
     }
 
-    private void initLoadedBundles() {
-        loaded = new HashMap<>();
-        Framework framework = getFramework(this.getClass());
-        for (Bundle bundle: framework.getBundleContext().getBundles()) {
-            loaded.put(bundle.getLocation(), bundle);
+    private void scanForBundles() {
+        long t1 = System.nanoTime();
+
+        try {
+            for (String root : new String[] { configuration.getLibRoot(), configuration.getPluginRoot() }) {
+                Files.walkFileTree(Paths.get(root), new SimpleFileVisitor<Path>() {
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                        if (file.toFile().getName().endsWith(".jar")) {
+                            try (JarFile jf = new JarFile(file.toFile())) {
+                                Manifest mf = jf.getManifest();
+                                String name = mf.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
+                                String version = mf.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
+                                if (name == null || version == null) {
+                                    logger.config("file " + file.toString() + " is missing osgi metadata; wont be usable for dependencies");
+                                } else {
+                                    known.put(new BundleInformation(name, version), file);
+                                }
+                            } catch (IOException e) {
+                                logger.severe("Error in reading " + file);
+                                // continue with other files, even if one file is broken
+                            }
+                        }
+                        return FileVisitResult.CONTINUE;
+                    }
+                });
+            }
+        } catch (IOException e) {
+            logger.log(Level.WARNING, "Error scanning bundles for metadata", e);
+        }
+
+        long t2 = System.nanoTime();
+        if (configuration.getPrintOSGiInfo()) {
+            logger.fine("Found: " + known.size() + " bundles");
+            logger.fine("Took " + (t2 -t1) + "ns");
+
+            for (Entry<BundleInformation, Path> bundles : known.entrySet()) {
+                logger.finest(bundles.getKey().toString() + " is at " + bundles.getValue().toString());
+            }
         }
     }
 
@@ -80,24 +135,37 @@ public class BundleManagerImpl extends BundleManager {
     }
 
     @Override
-    public void addBundles(List<String> requiredBundles) throws BundleException, IOException {
+    public void loadBundlesByName(List<BundleInformation> bundles) throws BundleException, IOException {
+        List<String> paths = new ArrayList<>();
+        for (BundleInformation info : bundles) {
+            Path bundlePath = known.get(info);
+            if (bundlePath == null) {
+                logger.warning("no known bundle matching " + info.toString());
+                continue;
+            }
+            paths.add(bundlePath.toFile().toURI().toString());
+        }
+        loadBundlesByPath(paths);
+    }
+
+    @Override
+    public void loadBundlesByPath(List<String> requiredBundles) throws BundleException, IOException {
+        Framework framework = getFramework(this.getClass());
+        BundleContext context = framework.getBundleContext();
+
         List<String> bundlesToLoad = new ArrayList<>();
         if (requiredBundles != null) {
             for (String resource : requiredBundles) {
-                if (!isBundleActive(resource)) {
+                if (!isBundleActive(context, resource)) {
                     bundlesToLoad.add(resource);
                 }
             }
         }
-        Framework framework = getFramework(this.getClass());
-        List<Bundle> successBundles = loader.installAndStartBundles(framework, bundlesToLoad);
-        for (Bundle bundle : successBundles) {
-            loaded.put(bundle.getLocation(), bundle);
-        }
+        loader.installAndStartBundles(framework, bundlesToLoad);
     }
 
-    private boolean isBundleActive(String location) {
-        Bundle bundle = loaded.get(location);
+    private boolean isBundleActive(BundleContext context, String location) {
+        Bundle bundle = context.getBundle(location);
         return (bundle != null) && (bundle.getState() == Bundle.ACTIVE);
     }
 

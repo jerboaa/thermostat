@@ -36,11 +36,14 @@
 
 package com.redhat.thermostat.launcher.internal;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.cli.Options;
+
+import com.redhat.thermostat.launcher.BundleInformation;
 
 
 public class PluginConfiguration {
@@ -64,25 +67,24 @@ public class PluginConfiguration {
     public static class CommandExtensions {
 
         private final String commandName;
-        private final List<String> additionalResources;
-        private final List<String> coreDeps;
+        private final List<BundleInformation> toLoad;
 
-        public CommandExtensions(String name, List<String> additionalResources, List<String> coreDeps) {
+        public CommandExtensions(String name, List<BundleInformation> toLoad) {
             this.commandName = name;
-            this.additionalResources = additionalResources;
-            this.coreDeps = coreDeps;
+            this.toLoad = toLoad;
         }
 
         public String getCommandName() {
             return commandName;
         }
 
-        public List<String> getPluginBundles() {
-            return Collections.unmodifiableList(additionalResources);
+        public List<BundleInformation> getBundles() {
+            return toLoad;
         }
 
-        public List<String> getDepenedencyBundles() {
-            return coreDeps;
+        @Override
+        public String toString() {
+            return "extends " + commandName + " using " + toLoad.toString();
         }
     }
 
@@ -94,21 +96,19 @@ public class PluginConfiguration {
         private final List<String> positionalArguments;
         private final Options options;
         private final Set<Environment> environment;
-        private final List<String> additionalResources;
-        private final List<String> coreDeps;
+        private final List<BundleInformation> bundles;
 
         public NewCommand(String name, String usage, String description,
                 List<String> positionalArguments, Options options,
                 Set<Environment> environment,
-                List<String> additionalResources, List<String> coreDeps) {
+                List<BundleInformation> bundles) {
             this.commandName = name;
             this.usage = usage;
             this.description = description;
             this.positionalArguments = positionalArguments;
             this.options = options;
             this.environment = environment;
-            this.additionalResources = additionalResources;
-            this.coreDeps = coreDeps;
+            this.bundles = bundles;
         }
 
         public String getCommandName() {
@@ -143,14 +143,9 @@ public class PluginConfiguration {
             return Collections.unmodifiableSet(environment);
         }
 
-        public List<String> getPluginBundles() {
-            return Collections.unmodifiableList(additionalResources);
+        public List<BundleInformation> getBundles() {
+            return Collections.unmodifiableList(bundles);
         }
-
-        public List<String> getDepenedencyBundles() {
-            return Collections.unmodifiableList(coreDeps);
-        }
-
 
     }
 

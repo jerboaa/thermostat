@@ -65,6 +65,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.launcher.BundleInformation;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandExtensions;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.NewCommand;
 import com.redhat.thermostat.plugin.validator.PluginConfigurationValidatorException;
@@ -141,11 +142,11 @@ import com.redhat.thermostat.plugin.validator.PluginValidator;
         &lt;environment&gt;shell&lt;/environment&gt;
       &lt;/environments&gt;
       &lt;bundles&gt;
-        &lt;bundle&gt;thermostat-platform-common-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
-        &lt;bundle&gt;thermostat-platform-swing-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
+        &lt;bundle&gt;&lt;name&gt;platform.core&lt;/name&gt;&lt;version&gt;0.6.0&lt;/version&gt;&lt;/bundle&gt;
+        &lt;bundle&gt;&lt;name&gt;platform.swing&lt;/name&gt;&lt;version&gt;0.6.0&lt;/version&gt;&lt;/bundle&gt;
       &lt;/bundles&gt;
       &lt;dependencies&gt;
-        &lt;dependency&gt;thermostat-client-core-0.6.0-SNAPSHOT.jar&lt;/dependency&gt;
+        &lt;bundle&gt;&lt;name&gt;client.core&lt;/name&gt;&lt;version&gt;0.6.0&lt;/version&gt;&lt;/bundle&gt;
       &lt;/dependencies&gt;
     &lt;/command&gt;
     &lt;command&gt;
@@ -174,11 +175,11 @@ import com.redhat.thermostat.plugin.validator.PluginValidator;
         &lt;environment&gt;shell&lt;/environment&gt;
       &lt;/environments&gt;
       &lt;bundles&gt;
-        &lt;bundle&gt;thermostat-platform-common-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
-        &lt;bundle&gt;thermostat-platform-controllers-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
+        &lt;bundle&gt;&lt;name&gt;platform.common&lt;/name&gt;&lt;version&gt;0.6.0&lt;/version&gt;&lt;/bundle&gt;
+        &lt;bundle&gt;&lt;name&gt;platform.controllers&lt;/name&gt;&lt;version&gt;0.6.0&lt;/version&gt;&lt;/bundle&gt;
       &lt;/bundles&gt;
       &lt;dependencies&gt;
-        &lt;dependency&gt;thermostat-common-core-0.6.0-SNAPSHOT.jar&lt;/dependency&gt;
+        &lt;bundle&gt;&lt;name&gt;common.core&lt;/name&gt;&lt;version&gt;0.6.0&lt;/version&gt;&lt;/bundle&gt;
       &lt;/dependencies&gt;
     &lt;/command&gt;
   &lt;/commands&gt;
@@ -186,15 +187,15 @@ import com.redhat.thermostat.plugin.validator.PluginValidator;
     &lt;extension&gt;
       &lt;name&gt;platform3&lt;/name&gt;
       &lt;bundles&gt;
-        &lt;bundle&gt;thermostat-platform-common-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
-        &lt;bundle&gt;thermostat-platform-controllers-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
-        &lt;bundle&gt;thermostat-platform-command-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
-        &lt;bundle&gt;thermostat-platform-common-export-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
-        &lt;bundle&gt;thermostat-platform-swing-0.6.0-SNAPSHOT.jar&lt;/bundle&gt;
+        &lt;bundle&gt;&lt;name&gt;platform.common&lt;/name&gt;&lt;version&gt;0.6.0&lt;/version&gt;&lt;/bundle&gt;
+        &lt;bundle&gt;&lt;name&gt;platform.controllers&lt;/name&gt;&lt;version&gt;0.6.0&lt;/version&gt;&lt;/bundle&gt;
+        &lt;bundle&gt;&lt;name&gt;platform.command&lt;/name&gt;&lt;version&gt;0.6.0&lt;/version&gt;&lt;/bundle&gt;
+        &lt;bundle&gt;&lt;name&gt;platform.common-export&lt;/name&gt;&lt;version&gt;0.6.0&lt;/version&gt;&lt;/bundle&gt;
+        &lt;bundle&gt;&lt;name&gt;platform.swing&lt;/name&gt;&lt;version&gt;0.6.0&lt;/version&gt;&lt;/bundle&gt;
       &lt;/bundles&gt;
       &lt;dependencies&gt;
-        &lt;dependency&gt;thermostat-common-core-0.6.0-SNAPSHOT.jar&lt;/dependency&gt;
-        &lt;dependency&gt;thermostat-client-core-0.6.0-SNAPSHOT.jar&lt;/dependency&gt;
+        &lt;bundle&gt;&lt;name&gt;common.core&lt;/name&gt;&lt;version&gt;0.6.0&lt;/version&gt;&lt;/bundle&gt;
+        &lt;bundle&gt;&lt;name&gt;client.core&lt;/name&gt;&lt;version&gt;0.6.0&lt;/version&gt;&lt;/bundle&gt;
       &lt;/dependencies&gt;
     &lt;/extension&gt;
   &lt;/extensions&gt;
@@ -294,8 +295,7 @@ public class PluginConfigurationParser {
 
     private CommandExtensions parseAdditionsToExistingCommand(String pluginName, Node commandNode) {
         String name = null;
-        List<String> bundles = new ArrayList<>();
-        List<String> dependencies = new ArrayList<>();
+        List<BundleInformation> bundles = new ArrayList<>();
 
         NodeList nodes = commandNode.getChildNodes();
         for (int i = 0; i < nodes.getLength(); i++) {
@@ -304,8 +304,6 @@ public class PluginConfigurationParser {
                 name = node.getTextContent().trim();
             } else if (node.getNodeName().equals("bundles")) {
                 bundles.addAll(parseBundles(pluginName, name, node));
-            } else if (node.getNodeName().equals("dependencies")) {
-                dependencies.addAll(parseDependencies(pluginName, name, node));
             }
         }
 
@@ -317,7 +315,7 @@ public class PluginConfigurationParser {
             logger.warning("plugin " + pluginName + " provides extensions without specifying the command");
             return null;
         }
-        return new CommandExtensions(name, bundles, dependencies);
+        return new CommandExtensions(name, bundles);
     }
 
     private NewCommand parseNewCommand(String pluginName, Node commandNode) {
@@ -327,8 +325,7 @@ public class PluginConfigurationParser {
         List<String> arguments = new ArrayList<>();
         Options options = new Options();
         Set<Environment> availableInEnvironments = EnumSet.noneOf(Environment.class);
-        List<String> bundles = new ArrayList<>();
-        List<String> dependencies = new ArrayList<>();
+        List<BundleInformation> bundles = new ArrayList<>();
 
         NodeList nodes = commandNode.getChildNodes();
         for (int i = 0; i < nodes.getLength(); i++) {
@@ -347,16 +344,11 @@ public class PluginConfigurationParser {
                 availableInEnvironments = parseEnvironment(pluginName, name, node);
             } else if (node.getNodeName().equals("bundles")) {
                 bundles.addAll(parseBundles(pluginName, name, node));
-            } else if (node.getNodeName().equals("dependencies")) {
-                dependencies.addAll(parseDependencies(pluginName, name, node));
             }
         }
 
         if (bundles.isEmpty()) {
             logger.warning("plugin " + pluginName  + " provides a new command " + name + " but supplies no bundles");
-        }
-        if (dependencies.isEmpty()) {
-            logger.warning("plugin " + pluginName  + " provides a new command " + name + " but lists no dependencies on thermostat");
         }
 
         if (name == null || description == null || availableInEnvironments.isEmpty()) {
@@ -364,16 +356,49 @@ public class PluginConfigurationParser {
                     "name='" + name + "', description='" + description + "', options='" + options + "'");
             return null;
         } else {
-            return new NewCommand(name, usage, description, arguments, options, availableInEnvironments, bundles, dependencies);
+            return new NewCommand(name, usage, description, arguments, options, availableInEnvironments, bundles);
         }
     }
 
-    private Collection<String> parseBundles(String pluginName, String commandName, Node bundlesNode) {
-        return parseNodeAsList(pluginName, commandName, bundlesNode, "bundle");
+    private List<BundleInformation> parseBundles(String pluginName, String commandName, Node bundlesNode) {
+        List<BundleInformation> result = new ArrayList<>();
+        NodeList nodes = bundlesNode.getChildNodes();
+        for (int i = 0; i < nodes.getLength(); i++) {
+            Node node = nodes.item(i);
+            if (node.getNodeName().equals("bundle")) {
+                BundleInformation bundleInfo = parseBundle(pluginName, commandName, node);
+                if (bundleInfo != null) {
+                    result.add(bundleInfo);
+                }
+            }
+        }
+        return result;
     }
 
-    private Collection<String> parseDependencies(String pluginName, String commandName, Node dependenciesNode) {
-        return parseNodeAsList(pluginName, commandName, dependenciesNode, "dependency");
+    private BundleInformation parseBundle(String pluginName, String commandName, Node bundleNode) {
+        String name = null;
+        String version = null;
+        NodeList nodes = bundleNode.getChildNodes();
+        for (int i = 0; i < nodes.getLength(); i++) {
+            Node node = nodes.item(i);
+            if (node.getNodeName().equals("symbolic-name")) {
+                name = node.getTextContent().trim();
+            } else if (node.getNodeName().equals("version")) {
+                version = node.getTextContent().trim();
+                // FIXME hack: convert maven-style qualifiers to osgi-style qualifiers.
+                // thermostat uses ${project.version}, which is the maven version, in the
+                // plugin.xml files. This converts that maven -SNAPSHOT into OSGi .SNAPSHOT
+                if (version.endsWith("-SNAPSHOT")) {
+                    version = version.replace("-SNAPSHOT", ".SNAPSHOT");
+                }
+            }
+        }
+        if (name == null || version == null) {
+            logger.warning("plugin " + pluginName  + " has an empty bundles element for command " + name);
+            return null;
+        }
+
+        return new BundleInformation(name, version);
     }
 
     private List<String> parseArguments(String pluginName, String commandName, Node argumentsNode) {

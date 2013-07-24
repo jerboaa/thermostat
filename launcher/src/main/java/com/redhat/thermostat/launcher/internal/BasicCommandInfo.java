@@ -36,10 +36,13 @@
 
 package com.redhat.thermostat.launcher.internal;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.cli.Options;
+
+import com.redhat.thermostat.launcher.BundleInformation;
 
 public class BasicCommandInfo implements CommandInfo {
 
@@ -49,6 +52,7 @@ public class BasicCommandInfo implements CommandInfo {
     private final Options options;
     private final Set<Environment> environments;
     private final List<String> resources;
+    private final List<BundleInformation> bundles;
 
     public BasicCommandInfo(String name, String description, String usage, Options options, Set<Environment> environments, List<String> resources) {
         this.name = name;
@@ -57,6 +61,17 @@ public class BasicCommandInfo implements CommandInfo {
         this.options = options;
         this.environments = environments;
         this.resources = resources;
+        this.bundles = Collections.emptyList();
+    }
+
+    public BasicCommandInfo(String name, String description, String usage, Options options, Set<Environment> environments, List<String> resources, List<BundleInformation> bundles) {
+        this.name = name;
+        this.description = description;
+        this.usage = usage;
+        this.options = options;
+        this.environments = environments;
+        this.resources = resources;
+        this.bundles = bundles;
     }
 
     @Override
@@ -90,7 +105,12 @@ public class BasicCommandInfo implements CommandInfo {
     }
 
     @Override
+    public List<BundleInformation> getBundles() {
+        return bundles;
+    }
+
+    @Override
     public String toString() {
-        return String.format("%s (description='%s', dependencies='%s')", name, description, resources.toString());
+        return String.format("%s (description='%s', dependencies='%s', bundles='%s')", name, description, resources.toString(), bundles.toString());
     }
 }

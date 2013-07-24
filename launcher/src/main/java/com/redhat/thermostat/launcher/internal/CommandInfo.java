@@ -41,6 +41,8 @@ import java.util.Set;
 
 import org.apache.commons.cli.Options;
 
+import com.redhat.thermostat.launcher.BundleInformation;
+
 public interface CommandInfo {
 
     /**
@@ -71,8 +73,10 @@ public interface CommandInfo {
      */
     public Options getOptions();
 
+    List<BundleInformation> getBundles();
+
     /** Returns a list of jar that this command depends on */
-    public List<String> getDependencyResourceNames();
+    List<String> getDependencyResourceNames();
 
 }
 

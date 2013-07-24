@@ -40,6 +40,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -50,6 +51,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.launcher.BundleInformation;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandExtensions;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.NewCommand;
 import com.redhat.thermostat.plugin.validator.PluginConfigurationValidatorException;
@@ -73,7 +75,7 @@ public class PluginCommandInfoSource implements CommandInfoSource {
     private final UsageStringBuilder usageBuilder;
 
     private Map<String, BasicCommandInfo> allNewCommands = new HashMap<>();
-    private Map<String, List<String>> additionalBundlesForExistingCommands = new HashMap<>();
+    private Map<String, List<BundleInformation>> additionalBundlesForExistingCommands = new HashMap<>();
 
     public PluginCommandInfoSource(String internalJarRoot, String pluginRootDir) {
         this(new File(internalJarRoot), new File(pluginRootDir), new PluginConfigurationParser(), new UsageStringBuilder());
@@ -111,19 +113,16 @@ public class PluginCommandInfoSource implements CommandInfoSource {
 
         for (CommandExtensions extension : pluginConfig.getExtendedCommands()) {
             String commandName = extension.getCommandName();
-            List<String> pluginBundles = extension.getPluginBundles();
-            List<String> dependencyBundles = extension.getDepenedencyBundles();
-            logger.config("plugin at " + pluginDir + " contributes " +
-                    pluginBundles.size() + " bundles to comamnd '" + commandName + "'");
+            List<BundleInformation> bundles = extension.getBundles();
+            logger.config("plugin at " + pluginDir + " needs " +
+                    bundles.size() + " bundles for comamnd '" + commandName + "'");
 
-            List<String> bundlePaths = additionalBundlesForExistingCommands.get(commandName);
+            List<BundleInformation> bundlePaths = additionalBundlesForExistingCommands.get(commandName);
             if (bundlePaths == null) {
                 bundlePaths = new LinkedList<>();
             }
 
-            addIfValidPath(bundlePaths, pluginDir, pluginBundles);
-
-            addIfValidPath(bundlePaths, coreJarRoot, dependencyBundles);
+            bundlePaths.addAll(bundles);
 
             additionalBundlesForExistingCommands.put(commandName, bundlePaths);
         }
@@ -136,12 +135,6 @@ public class PluginCommandInfoSource implements CommandInfoSource {
                 throw new IllegalStateException("multiple plugins are providing the command " + commandName);
             }
 
-            List<String> bundlePaths = new LinkedList<>();
-
-            addIfValidPath(bundlePaths, pluginDir, command.getPluginBundles());
-
-            addIfValidPath(bundlePaths, coreJarRoot, command.getDepenedencyBundles());
-
             String usage = command.getUsage();
             if (usage == null) {
                 usage = usageBuilder.getUsage(commandName, command.getOptions(), command.getPositionalArguments().toArray(new String[0]));
@@ -151,38 +144,29 @@ public class PluginCommandInfoSource implements CommandInfoSource {
                     usage,
                     command.getOptions(),
                     command.getEnvironments(),
-                    bundlePaths);
+                    Collections.<String>emptyList(),
+                    command.getBundles());
 
             allNewCommands.put(commandName, info);
         }
 
     }
 
-    private void addIfValidPath(List<String> result, File parentDir, List<String> pathsRelativeToParent) {
-        for (String bundle : pathsRelativeToParent) {
-            File bundleFile = new File(parentDir, bundle);
-            if (bundleFile.isFile()) {
-                result.add(bundleFile.toURI().toString());
-            } else {
-                logger.warning("File " + bundleFile.toString() + " not found. Removing it from list of bundles to load.");
-            }
-        }
-    }
-
     private void combineCommands() {
-        Iterator<Entry<String, List<String>>> iter = additionalBundlesForExistingCommands.entrySet().iterator();
+        Iterator<Entry<String, List<BundleInformation>>> iter = additionalBundlesForExistingCommands.entrySet().iterator();
         while (iter.hasNext()) {
-            Map.Entry<String, List<String>> entry = iter.next();
+            Map.Entry<String, List<BundleInformation>> entry = iter.next();
             if (allNewCommands.containsKey(entry.getKey())) {
                 BasicCommandInfo old = allNewCommands.get(entry.getKey());
-                List<String> updatedResources = new ArrayList<>();
-                updatedResources.addAll(old.getDependencyResourceNames());
+                List<BundleInformation> updatedResources = new ArrayList<>();
+                updatedResources.addAll(old.getBundles());
                 updatedResources.addAll(entry.getValue());
                 BasicCommandInfo updated = new BasicCommandInfo(old.getName(),
                         old.getDescription(),
                         old.getUsage(),
                         old.getOptions(),
                         old.getEnvironments(),
+                        Collections.<String>emptyList(),
                         updatedResources);
                 allNewCommands.put(entry.getKey(), updated);
                 iter.remove();
@@ -195,9 +179,9 @@ public class PluginCommandInfoSource implements CommandInfoSource {
         if (allNewCommands.containsKey(name)) {
             return allNewCommands.get(name);
         }
-        List<String> bundles = additionalBundlesForExistingCommands.get(name);
+        List<BundleInformation> bundles = additionalBundlesForExistingCommands.get(name);
         if (bundles != null) {
-            return new BasicCommandInfo(name, null, null, null, null, bundles);
+            return new BasicCommandInfo(name, null, null, null, null, Collections.<String>emptyList(), bundles);
         }
         throw new CommandInfoNotFoundException(name);
     }
@@ -206,8 +190,8 @@ public class PluginCommandInfoSource implements CommandInfoSource {
     public Collection<CommandInfo> getCommandInfos() {
         List<CommandInfo> result = new ArrayList<>();
         result.addAll(allNewCommands.values());
-        for (Entry<String, List<String>> entry : additionalBundlesForExistingCommands.entrySet()) {
-            result.add(new BasicCommandInfo(entry.getKey(), null, null, null, null, entry.getValue()));
+        for (Entry<String, List<BundleInformation>> entry : additionalBundlesForExistingCommands.entrySet()) {
+            result.add(new BasicCommandInfo(entry.getKey(), null, null, null, null, Collections.<String>emptyList(), entry.getValue()));
         }
         return result;
     }

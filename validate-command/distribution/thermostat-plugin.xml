@@ -51,13 +51,11 @@
         <environment>shell</environment>
       </environments>
       <bundles>
-        <bundle>thermostat-validate-command-${project.version}.jar</bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.validate.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.common.core</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.shared.config</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.plugin.validator</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
-      <dependencies>
-        <dependency>thermostat-common-core-${project.version}.jar</dependency>
-        <dependency>thermostat-shared-config-${project.version}.jar</dependency>
-        <dependency>thermostat-plugin-validator-${project.version}.jar</dependency>
-      </dependencies>
     </command>
   </commands>
 </plugin>

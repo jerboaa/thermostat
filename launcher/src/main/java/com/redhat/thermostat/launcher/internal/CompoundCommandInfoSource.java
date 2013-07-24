@@ -46,6 +46,8 @@ import java.util.Set;
 
 import org.apache.commons.cli.Options;
 
+import com.redhat.thermostat.launcher.BundleInformation;
+
 
 
 /**
@@ -135,8 +137,12 @@ public class CompoundCommandInfoSource implements CommandInfoSource {
         List<String> resources = new ArrayList<>();
         resources.addAll(info1.getDependencyResourceNames());
         resources.addAll(info2.getDependencyResourceNames());
+        List<BundleInformation> bundles = new ArrayList<>();
+        bundles.addAll(info1.getBundles());
+        bundles.addAll(info2.getBundles());
 
-        return new BasicCommandInfo(name, description, usage, options, environment, resources);
+
+        return new BasicCommandInfo(name, description, usage, options, environment, resources, bundles);
     }
 
     private <T> T selectBest(T first, T second) {
