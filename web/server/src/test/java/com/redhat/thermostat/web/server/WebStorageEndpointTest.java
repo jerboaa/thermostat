@@ -62,6 +62,7 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -69,11 +70,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.security.auth.Subject;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
+import org.eclipse.jetty.plus.jaas.JAASLoginService;
 import org.eclipse.jetty.security.DefaultUserIdentity;
 import org.eclipse.jetty.security.LoginService;
 import org.eclipse.jetty.security.MappedLoginService;
@@ -106,11 +109,12 @@ import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
+import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 import com.redhat.thermostat.storage.model.BasePojo;
 import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.storage.query.BinarySetMembershipExpression;
 import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.storage.query.Operator;
@@ -129,7 +133,10 @@ import com.redhat.thermostat.web.common.WebQueryResponse;
 import com.redhat.thermostat.web.common.WebQueryResponseSerializer;
 import com.redhat.thermostat.web.common.WebRemove;
 import com.redhat.thermostat.web.common.WebUpdate;
+import com.redhat.thermostat.web.server.auth.BasicRole;
+import com.redhat.thermostat.web.server.auth.RolePrincipal;
 import com.redhat.thermostat.web.server.auth.Roles;
+import com.redhat.thermostat.web.server.auth.UserPrincipal;
 import com.redhat.thermostat.web.server.auth.WebStoragePathHandler;
 
 public class WebStorageEndpointTest {
@@ -207,7 +214,6 @@ public class WebStorageEndpointTest {
     private void startServer(int port, LoginService loginService) throws Exception {
         server = new Server(port);
         WebAppContext ctx = new WebAppContext("src/main/webapp", "/");
-        ctx.getSecurityHandler().setAuthMethod("BASIC");
         ctx.getSecurityHandler().setLoginService(loginService);
         server.setHandler(ctx);
         server.start();
@@ -284,11 +290,12 @@ public class WebStorageEndpointTest {
         String strDescriptor = "QUERY " + category.getName() + " WHERE '" + key1.getName() + "' = ?s SORT '" + key1.getName() + "' DSC LIMIT 42";
         // setup a statement descriptor set so as to mimic a not trusted desc
         String wrongDescriptor = "QUERY something-other WHERE 'a' = true";
-        setupTrustedStatementRegistry(wrongDescriptor);
+        setupTrustedStatementRegistry(wrongDescriptor, null);
         
         String[] roleNames = new String[] {
                 Roles.REGISTER_CATEGORY,
-                Roles.PREPARE_STATEMENT
+                Roles.PREPARE_STATEMENT,
+                Roles.ACCESS_REALM,
         };
         String testuser = "testuser";
         String password = "testpassword";
@@ -331,16 +338,20 @@ public class WebStorageEndpointTest {
     @Test
     public void authorizedPrepareQueryWithTrustedDescriptor() throws Exception {
         String strDescriptor = "QUERY " + category.getName() + " WHERE '" + key1.getName() + "' = ?s SORT '" + key1.getName() + "' DSC LIMIT 42";
-        setupTrustedStatementRegistry(strDescriptor);
+        // metadata which basically does no filtering. There's another test which
+        // asserts only allowed data (via ACL) gets returned.
+        DescriptorMetadata metadata = new DescriptorMetadata();        
+        setupTrustedStatementRegistry(strDescriptor, metadata);
         
-        String[] roleNames = new String[] {
-                Roles.REGISTER_CATEGORY,
-                Roles.PREPARE_STATEMENT,
-                Roles.READ
-        };
-        String testuser = "testuser";
-        String password = "testpassword";
-        final LoginService loginService = new TestLoginService(testuser, password, roleNames); 
+        Set<BasicRole> roles = new HashSet<>();
+        roles.add(new RolePrincipal(Roles.REGISTER_CATEGORY));
+        roles.add(new RolePrincipal(Roles.PREPARE_STATEMENT));
+        roles.add(new RolePrincipal(Roles.READ));
+        roles.add(new RolePrincipal(Roles.ACCESS_REALM));
+        UserPrincipal testUser = new UserPrincipal("ignored1");
+        testUser.setRoles(roles);
+        
+        final LoginService loginService = new TestJAASLoginService(testUser);
         port = FreePortFinder.findFreePort(new TryPort() {
             
             @Override
@@ -348,7 +359,7 @@ public class WebStorageEndpointTest {
                 startServer(port, loginService);
             }
         });
-        registerCategory(testuser, password);
+        registerCategory("ignored1", "ignored2");
         
         TestClass expected1 = new TestClass();
         expected1.setKey1("fluff1");
@@ -381,7 +392,7 @@ public class WebStorageEndpointTest {
         URL url = new URL(endpoint + "/prepare-statement");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
-        sendAuthentication(conn, testuser, password);
+        sendAuthentication(conn, "ignored1", "ignored2");
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
         conn.setDoInput(true);
         conn.setDoOutput(true);
@@ -410,7 +421,7 @@ public class WebStorageEndpointTest {
         url = new URL(endpoint + "/query-execute");
         HttpURLConnection conn2 = (HttpURLConnection) url.openConnection();
         conn2.setRequestMethod("POST");
-        sendAuthentication(conn2, testuser, password);
+        sendAuthentication(conn2, "ignored1", "ignored2");
         conn2.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
         conn2.setDoInput(true);
         conn2.setDoOutput(true);
@@ -432,14 +443,152 @@ public class WebStorageEndpointTest {
 
         assertEquals("application/json; charset=UTF-8", conn2.getContentType());
         verify(mockMongoQuery).execute();
+        verify(mockMongoQuery).getWhereExpression();
         verifyNoMoreInteractions(mockMongoQuery);
     }
     
-    private void setupTrustedStatementRegistry(String strDescriptor) {
+    /*
+     * 
+     * This test simulates a case where the mongo query would return more than
+     * a user can see. In this case only records matching agentIds which are
+     * allowed via roles should get returned.
+     */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @Test
+    public void authorizedFilteredQuery() throws Exception {
+        Category oldCategory = category;
+        // redefine category to include the agentId key in the category.
+        // undone via a the try-finally block.
+        category = new Category("test-authorizedFilteredQuery", TestClass.class, key1, key2, Key.AGENT_ID);
+        try {
+            String strDescriptor = "QUERY " + category.getName() + " WHERE '" +
+                    key1.getName() + "' = ?s SORT '" + key1.getName() + "' DSC LIMIT 42";
+            DescriptorMetadata metadata = new DescriptorMetadata();
+            setupTrustedStatementRegistry(strDescriptor, metadata);
+            
+            Set<BasicRole> roles = new HashSet<>();
+            roles.add(new RolePrincipal(Roles.REGISTER_CATEGORY));
+            roles.add(new RolePrincipal(Roles.PREPARE_STATEMENT));
+            roles.add(new RolePrincipal(Roles.READ));
+            roles.add(new RolePrincipal(Roles.ACCESS_REALM));
+            String fakeAgentId = "someAgentId";
+            roles.add(new RolePrincipal("thermostat-agents-grant-read-agentId-" + fakeAgentId));
+            UserPrincipal testUser = new UserPrincipal("ignored1");
+            testUser.setRoles(roles);
+            
+            final LoginService loginService = new TestJAASLoginService(testUser);
+            port = FreePortFinder.findFreePort(new TryPort() {
+                
+                @Override
+                public void tryPort(int port) throws Exception {
+                    startServer(port, loginService);
+                }
+            });
+            registerCategory("ignored1", "ignored2");
+            
+            TestClass expected1 = new TestClass();
+            expected1.setKey1("fluff1");
+            expected1.setKey2(42);
+            TestClass expected2 = new TestClass();
+            expected2.setKey1("fluff2");
+            expected2.setKey2(43);
+            // prepare-statement does this under the hood
+            Query<TestClass> mockMongoQuery = mock(Query.class);
+            
+            when(mockStorage.createQuery(eq(category))).thenReturn(mockMongoQuery);
+    
+            Cursor<TestClass> cursor = mock(Cursor.class);
+            when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
+            when(cursor.next()).thenReturn(expected1).thenReturn(expected2);
+            
+            PreparedStatement mockPreparedQuery = mock(PreparedStatement.class);
+            when(mockStorage.prepareStatement(any(StatementDescriptor.class))).thenReturn(mockPreparedQuery);
+            
+            ParsedStatement mockParsedStatement = mock(ParsedStatement.class);
+            when(mockParsedStatement.getNumParams()).thenReturn(1);
+            when(mockParsedStatement.patchStatement(any(PreparedParameter[].class))).thenReturn(mockMongoQuery);
+            when(mockPreparedQuery.getParsedStatement()).thenReturn(mockParsedStatement);
+            
+            // The web layer
+            when(mockPreparedQuery.executeQuery()).thenReturn(cursor);
+            // And the mongo layer
+            when(mockMongoQuery.execute()).thenReturn(cursor);
+    
+            String endpoint = getEndpoint();
+            URL url = new URL(endpoint + "/prepare-statement");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            sendAuthentication(conn, "ignored1", "ignored2");
+            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            conn.setDoInput(true);
+            conn.setDoOutput(true);
+            Gson gson = new GsonBuilder()
+                    .registerTypeHierarchyAdapter(WebQueryResponse.class, new WebQueryResponseSerializer<>())
+                    .registerTypeAdapter(Pojo.class, new ThermostatGSONConverter())
+                    .registerTypeAdapter(WebPreparedStatement.class, new WebPreparedStatementSerializer())
+                    .registerTypeAdapter(PreparedParameter.class, new PreparedParameterSerializer()).create();
+            OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
+            String body = "query-descriptor=" + URLEncoder.encode(strDescriptor, "UTF-8") + "&category-id=" + categoryId;
+            out.write(body + "\n");
+            out.flush();
+    
+            Reader in = new InputStreamReader(conn.getInputStream());
+            WebPreparedStatementResponse response = gson.fromJson(in, WebPreparedStatementResponse.class);
+            assertEquals(1, response.getNumFreeVariables());
+            assertEquals(0, response.getStatementId());
+            assertEquals("application/json; charset=UTF-8", conn.getContentType());
+            
+            
+            
+            // now execute the query we've just prepared
+            WebPreparedStatement<TestClass> stmt = new WebPreparedStatement<>(1, 0);
+            stmt.setString(0, "fluff");
+            
+            url = new URL(endpoint + "/query-execute");
+            HttpURLConnection conn2 = (HttpURLConnection) url.openConnection();
+            conn2.setRequestMethod("POST");
+            sendAuthentication(conn2, "ignored1", "ignored2");
+            conn2.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            conn2.setDoInput(true);
+            conn2.setDoOutput(true);
+            
+            out = new OutputStreamWriter(conn2.getOutputStream());
+            body = "prepared-stmt=" + gson.toJson(stmt, WebPreparedStatement.class);
+            out.write(body + "\n");
+            out.flush();
+    
+            in = new InputStreamReader(conn2.getInputStream());
+            Type typeToken = new TypeToken<WebQueryResponse<TestClass>>(){}.getType();
+            WebQueryResponse<TestClass> result = gson.fromJson(in, typeToken);
+            TestClass[] results = result.getResultList();
+            assertEquals(2, results.length);
+            assertEquals("fluff1", results[0].getKey1());
+            assertEquals(42, results[0].getKey2());
+            assertEquals("fluff2", results[1].getKey1());
+            assertEquals(43, results[1].getKey2());
+    
+            assertEquals("application/json; charset=UTF-8", conn2.getContentType());
+            verify(mockMongoQuery).execute();
+            verify(mockMongoQuery).getWhereExpression();
+            ArgumentCaptor<Expression> expressionCaptor = ArgumentCaptor.forClass(Expression.class);
+            verify(mockMongoQuery).where(expressionCaptor.capture());
+            verifyNoMoreInteractions(mockMongoQuery);
+            
+            Expression capturedExpression = expressionCaptor.getValue();
+            assertTrue(capturedExpression instanceof BinarySetMembershipExpression);
+            Set<String> agentIds = new HashSet<>();
+            agentIds.add(fakeAgentId);
+            Expression expectedExpression = new ExpressionFactory().in(Key.AGENT_ID, agentIds, String.class);
+            assertEquals(expectedExpression, capturedExpression);
+        } finally {
+            category = oldCategory; 
+        }
+    }
+    
+    private void setupTrustedStatementRegistry(String strDescriptor, DescriptorMetadata metadata) {
         Set<String> descs = new HashSet<>();
         descs.add(strDescriptor);
-        StatementDescriptorRegistration reg = mock(StatementDescriptorRegistration.class);
-        when(reg.getStatementDescriptors()).thenReturn(descs);
+        StatementDescriptorRegistration reg = new TestStatementDescriptorRegistration(descs, metadata);
         List<StatementDescriptorRegistration> regs = new ArrayList<>(1);
         regs.add(reg);
         KnownDescriptorRegistry registry = new KnownDescriptorRegistry(regs);
@@ -461,6 +610,7 @@ public class WebStorageEndpointTest {
     private void doUnauthorizedTest(String pathForEndPoint, String failMessage) throws Exception {
         String[] insufficientRoleNames = new String[] {
                 Roles.REGISTER_CATEGORY,
+                Roles.ACCESS_REALM
         };
         doUnauthorizedTest(pathForEndPoint, failMessage, insufficientRoleNames, true);
     }
@@ -496,7 +646,8 @@ public class WebStorageEndpointTest {
     public void authorizedReplacePutPojo() throws Exception {
         String[] roleNames = new String[] {
                 Roles.REPLACE,
-                Roles.REGISTER_CATEGORY
+                Roles.REGISTER_CATEGORY,
+                Roles.ACCESS_REALM
         };
         String testuser = "testuser";
         String password = "testpassword";
@@ -546,6 +697,7 @@ public class WebStorageEndpointTest {
     public void unauthorizedReplacePutPojo() throws Exception {
         String[] insufficientRoleNames = new String[] {
                 Roles.REGISTER_CATEGORY,
+                Roles.ACCESS_REALM
         };
         String testuser = "testuser";
         String password = "testpassword";
@@ -587,7 +739,8 @@ public class WebStorageEndpointTest {
     public void authorizedInsertPutPojo() throws Exception {
         String[] roleNames = new String[] {
                 Roles.APPEND,
-                Roles.REGISTER_CATEGORY
+                Roles.REGISTER_CATEGORY,
+                Roles.ACCESS_REALM
         };
         String testuser = "testuser";
         String password = "testpassword";
@@ -637,6 +790,7 @@ public class WebStorageEndpointTest {
     public void unauthorizedInsertPutPojo() throws Exception {
         String[] insufficientRoleNames = new String[] {
                 Roles.REGISTER_CATEGORY,
+                Roles.ACCESS_REALM
         };
         String testuser = "testuser";
         String password = "testpassword";
@@ -684,7 +838,8 @@ public class WebStorageEndpointTest {
     public void authorizedRemovePojo() throws Exception {
         String[] roleNames = new String[] {
                 Roles.DELETE,
-                Roles.REGISTER_CATEGORY
+                Roles.REGISTER_CATEGORY,
+                Roles.ACCESS_REALM
         };
         String testuser = "testuser";
         String password = "testpassword";
@@ -745,7 +900,8 @@ public class WebStorageEndpointTest {
     public void authorizedUpdatePojo() throws Exception {
         String[] roleNames = new String[] {
                 Roles.UPDATE,
-                Roles.REGISTER_CATEGORY
+                Roles.REGISTER_CATEGORY,
+                Roles.ACCESS_REALM
         };
         String testuser = "testuser";
         String password = "testpassword";
@@ -811,7 +967,8 @@ public class WebStorageEndpointTest {
     public void authorizedGetCount() throws Exception {
         String[] roleNames = new String[] {
                 Roles.GET_COUNT,
-                Roles.REGISTER_CATEGORY
+                Roles.REGISTER_CATEGORY,
+                Roles.ACCESS_REALM
         };
         String testuser = "testuser";
         String password = "testpassword";
@@ -859,6 +1016,7 @@ public class WebStorageEndpointTest {
     public void authorizedSaveFile() throws Exception {
         String[] roleNames = new String[] {
                 Roles.SAVE_FILE,
+                Roles.ACCESS_REALM
         };
         String testuser = "testuser";
         String password = "testpassword";
@@ -916,6 +1074,7 @@ public class WebStorageEndpointTest {
     public void authorizedLoadFile() throws Exception {
         String[] roleNames = new String[] {
                 Roles.LOAD_FILE,
+                Roles.ACCESS_REALM
         };
         String testuser = "testuser";
         String password = "testpassword";
@@ -968,6 +1127,7 @@ public class WebStorageEndpointTest {
     public void authorizedPurge() throws Exception {
         String[] roleNames = new String[] {
                 Roles.PURGE,
+                Roles.ACCESS_REALM
         };
         String testuser = "testuser";
         String password = "testpassword";
@@ -1036,6 +1196,7 @@ public class WebStorageEndpointTest {
         String actionName = "testing";
         String[] roleNames = new String[] {
                 Roles.CMD_CHANNEL_GENERATE,
+                Roles.ACCESS_REALM,
                 // grant the "testing" action
                 WebStorageEndPoint.CMDC_AUTHORIZATION_GRANT_ROLE_PREFIX + actionName
         };
@@ -1055,7 +1216,9 @@ public class WebStorageEndpointTest {
     @Test
     public void unauthorizedGenerateToken() throws Exception {
         String failMsg = "thermostat-cmdc-generate role missing, expected Forbidden!";
-        String[] insufficientRoles = new String[0];
+        String[] insufficientRoles = new String[] {
+                Roles.ACCESS_REALM
+        };
         doUnauthorizedTest("generate-token", failMsg, insufficientRoles, false);
     }
 
@@ -1065,6 +1228,7 @@ public class WebStorageEndpointTest {
         String[] roleNames = new String[] {
                 Roles.CMD_CHANNEL_GENERATE,
                 Roles.CMD_CHANNEL_VERIFY,
+                Roles.ACCESS_REALM,
                 // grant "someAction" to be performed
                 WebStorageEndPoint.CMDC_AUTHORIZATION_GRANT_ROLE_PREFIX + actionName,
         };
@@ -1104,6 +1268,7 @@ public class WebStorageEndpointTest {
         String[] roleNames = new String[] {
                 Roles.CMD_CHANNEL_GENERATE,
                 Roles.CMD_CHANNEL_VERIFY,
+                Roles.ACCESS_REALM,
                 // missing the thermostat-cmdc-grant-someAction role
         };
         final LoginService loginService = new TestLoginService(testuser, password, roleNames); 
@@ -1125,7 +1290,8 @@ public class WebStorageEndpointTest {
         String[] roleNames = new String[] {
                 Roles.CMD_CHANNEL_GENERATE,
                 WebStorageEndPoint.CMDC_AUTHORIZATION_GRANT_ROLE_PREFIX + actionName,
-                Roles.CMD_CHANNEL_VERIFY
+                Roles.CMD_CHANNEL_VERIFY,
+                Roles.ACCESS_REALM
         };
         String testuser = "testuser";
         String password = "testpassword";
@@ -1163,6 +1329,7 @@ public class WebStorageEndpointTest {
         String[] roleNames = new String[] {
                 Roles.CMD_CHANNEL_GENERATE,
                 Roles.CMD_CHANNEL_VERIFY,
+                Roles.ACCESS_REALM,
                 // Grant "someAction", this test tests the time-out
                 WebStorageEndPoint.CMDC_AUTHORIZATION_GRANT_ROLE_PREFIX + actionName
         };
@@ -1199,7 +1366,8 @@ public class WebStorageEndpointTest {
     @Test
     public void authenticatedVerifyNonExistentToken() throws Exception {
         String[] roleNames = new String[] {
-                Roles.CMD_CHANNEL_VERIFY
+                Roles.CMD_CHANNEL_VERIFY,
+                Roles.ACCESS_REALM
         };
         String testuser = "testuser";
         String password = "testpassword";
@@ -1232,7 +1400,9 @@ public class WebStorageEndpointTest {
     @Test
     public void unauthorizedVerifyToken() throws Exception {
         String failMsg = "thermostat-cmdc-verify role missing, expected Forbidden!";
-        String[] insufficientRoles = new String[0];
+        String[] insufficientRoles = new String[] {
+                Roles.ACCESS_REALM
+        };
         doUnauthorizedTest("verify-token", failMsg, insufficientRoles, false);
     }
     
@@ -1332,5 +1502,69 @@ public class WebStorageEndpointTest {
                     roleNames);
         }
     }
+    
+    private static class TestJAASLoginService extends JAASLoginService {
+        
+        private final UserPrincipal userPrincipal;
+        
+        private TestJAASLoginService(UserPrincipal userPrincipal) {
+            this.userPrincipal = userPrincipal;
+        }
+        
+        @Override
+        public UserIdentity login(String username, Object credentials) {
+            return new TestUserIdentity(userPrincipal);
+        }
+        
+        private static class TestUserIdentity implements UserIdentity {
+
+            private final UserPrincipal userPrincipal;
+            
+            private TestUserIdentity(UserPrincipal principal) {
+                this.userPrincipal = principal;
+            }
+            
+            @Override
+            public Subject getSubject() {
+                throw new IllegalStateException("Not implemented");
+            }
+
+            @Override
+            public Principal getUserPrincipal() {
+                return userPrincipal;
+            }
+
+            @Override
+            public boolean isUserInRole(String role, Scope scope) {
+                RolePrincipal rolePrincipal = new RolePrincipal(role);
+                return userPrincipal.getRoles().contains(rolePrincipal);
+            }
+            
+        }
+    }
+    
+    private static class TestStatementDescriptorRegistration implements StatementDescriptorRegistration {
+
+        private final Set<String> descriptorSet;
+        private final DescriptorMetadata metadata;
+        private TestStatementDescriptorRegistration(Set<String> descriptorSet, DescriptorMetadata metadata) {
+            assertEquals(1, descriptorSet.size());
+            this.descriptorSet = descriptorSet;
+            this.metadata = metadata;
+        }
+        
+        @Override
+        public DescriptorMetadata getDescriptorMetadata(String descriptor,
+                PreparedParameter[] params) {
+            return metadata;
+        }
+
+        @Override
+        public Set<String> getStatementDescriptors() {
+            return descriptorSet;
+        }
+        
+    }
+    
 }
 

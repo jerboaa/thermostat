@@ -34,39 +34,78 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.server;
+package com.redhat.thermostat.storage.core.auth;
 
-import com.redhat.thermostat.storage.core.PreparedStatement;
+import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.model.Pojo;
 
-class PreparedStatementHolder<T extends Pojo> {
+/**
+ * Data describing a statement descriptor.
+ *
+ * @see StatementDescriptor
+ */
+public final class DescriptorMetadata {
 
-    private final int id;
-    private final PreparedStatement<T> stmt;
-    private final Class<T> dataClass;
-    private final StatementDescriptor<T> desc;
+    private final String agentId;
+    private final String vmId;
     
-    PreparedStatementHolder(int id, PreparedStatement<T> stmt, Class<T> dataClass, StatementDescriptor<T> desc) {
-        this.id = id;
-        this.stmt = stmt;
-        this.dataClass = dataClass;
-        this.desc = desc;
-    }
-
-    int getId() {
-        return id;
-    }
-
-    PreparedStatement<T> getStmt() {
-        return stmt;
+    /**
+     * Constructor.
+     * 
+     * @param agentId A non-null string representation of the agent UUID.
+     * @param vmId A non-null string representation of the vm UUID.
+     */
+    public DescriptorMetadata(String agentId, String vmId) {
+        this.agentId = agentId;
+        this.vmId = vmId;
     }
     
-    Class<T> getDataClass() {
-        return dataClass;
+    /**
+     * Constructor, setting vmId null.
+     * 
+     * @param agentId A non-null string representation of the agent UUID.
+     */
+    public DescriptorMetadata(String agentId) {
+        this(agentId, null);
+    }
+    
+    /**
+     * Constructor, setting agentId and vmId null.
+     */
+    public DescriptorMetadata() {
+        this(null, null);
     }
 
-    StatementDescriptor<T> getStatementDescriptor() {
-        return desc;
+    /**
+     * @return The value of the {@link Key#AGENT_ID} parameter which was used to
+     *         complete the query or null if there was none.
+     */
+    public final String getAgentId() {
+        return agentId; 
     }
+    
+    /**
+     * @return The value of the {@link Key#VM_ID} parameter which was used to
+     *         complete the query or null if there was none.
+     */
+    public final String getVmId() {
+        return vmId;
+    }
+    
+    /**
+     * 
+     * @return true if there is a {@link Key#AGENT_ID} parameter, false otherwise.
+     */
+    public final boolean hasAgentId() {
+        return agentId != null;
+    }
+    
+    /**
+     * 
+     * @return true if there is a {@link Key#VM_ID} parameter, false otherwise.
+     */
+    public final boolean hasVmId() {
+        return vmId != null;
+    }
+    
 }

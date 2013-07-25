@@ -39,6 +39,8 @@ package com.redhat.thermostat.vm.heap.analysis.common.internal;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.redhat.thermostat.storage.core.PreparedParameter;
+import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 
 /**
@@ -56,5 +58,24 @@ public class HeapDAOImplStatementDescriptorRegistration implements
         descs.add(HeapDAOImpl.QUERY_HEAP_INFO);
         return descs;
     }
+
+    @Override
+    public DescriptorMetadata getDescriptorMetadata(String descriptor,
+            PreparedParameter[] params) {
+        if (descriptor.equals(HeapDAOImpl.QUERY_ALL_HEAPS)) {
+            String agentId = (String)params[0].getValue();
+            String vmId = (String)params[1].getValue();
+            DescriptorMetadata metadata = new DescriptorMetadata(agentId, vmId);
+            return metadata;
+        } else if (descriptor.equals(HeapDAOImpl.QUERY_HEAP_INFO)) {
+            DescriptorMetadata metadata = new DescriptorMetadata();
+            return metadata;
+        } else {
+            throw new IllegalArgumentException("Unknown descriptor: ->"
+                    + descriptor + "<-");
+        }
+    }
+    
+    
 
 }

@@ -40,6 +40,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -49,6 +52,9 @@ import java.util.Set;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.storage.core.PreparedParameter;
+import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
+import com.redhat.thermostat.storage.core.auth.StatementDescriptorMetadataFactory;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 import com.redhat.thermostat.storage.internal.dao.DAOImplStatementDescriptorRegistration;
 
@@ -87,5 +93,43 @@ public class HeapDAOImplStatementDescriptorRegistrationTest {
         assertEquals(2, registrations.size());
         assertNotNull(heapDaoReg);
         assertEquals(2, heapDaoReg.getStatementDescriptors().size());
+    }
+    
+    @Test
+    public void canGetMetadataForAllHeapsQuery() {
+        PreparedParameter agentIdParam = mock(PreparedParameter.class);
+        PreparedParameter vmIdParam = mock(PreparedParameter.class);
+        String agentId = "agentId";
+        String vmId = "vmId";
+        when(agentIdParam.getValue()).thenReturn(agentId);
+        when(vmIdParam.getValue()).thenReturn(vmId);
+        PreparedParameter[] params = new PreparedParameter[] { agentIdParam,
+                vmIdParam };
+        
+        StatementDescriptorMetadataFactory factory = new HeapDAOImplStatementDescriptorRegistration();
+        DescriptorMetadata data = factory.getDescriptorMetadata(HeapDAOImpl.QUERY_ALL_HEAPS, params);
+        assertNotNull(data);
+        assertEquals(agentId, data.getAgentId());
+        assertEquals(vmId, data.getVmId());
+    }
+    
+    @Test
+    public void canGetMetadataForHeapInfoQuery() {
+        StatementDescriptorMetadataFactory factory = new HeapDAOImplStatementDescriptorRegistration();
+        DescriptorMetadata data = factory.getDescriptorMetadata(HeapDAOImpl.QUERY_HEAP_INFO, null);
+        assertNotNull(data);
+        assertFalse(data.hasAgentId());
+        assertFalse(data.hasVmId());
+    }
+    
+    @Test
+    public void unknownDescriptorThrowsException() {
+        StatementDescriptorMetadataFactory factory = new HeapDAOImplStatementDescriptorRegistration();
+        try {
+            factory.getDescriptorMetadata("QUERY foo-bar WHERE 'a' = 'b'", null);
+            fail("should have thrown exception");
+        } catch (IllegalArgumentException e) {
+            // pass
+        }
     }
 }

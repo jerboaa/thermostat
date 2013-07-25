@@ -38,15 +38,25 @@ package com.redhat.thermostat.web.server.auth;
 
 import java.io.Serializable;
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
+import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.web.server.auth.FilterResult.ResultType;
 
 /**
  * Class representing thermostat users
  *
  */
 public class UserPrincipal implements Serializable, Principal {
+    
+    private static final RolePrincipal GRANT_READ_ALL = new RolePrincipal(Roles.GRANT_READ_ALL);
     
     private static final Set<BasicRole> EMPTY_SET = new HashSet<>(0);
     private static final long serialVersionUID = 2646753284881445421L;
@@ -70,7 +80,7 @@ public class UserPrincipal implements Serializable, Principal {
      * @return The set of roles this principal is a member of. An empty set
      *         if this user has no role memberships.
      */
-    public Set<BasicRole> getRoles() {
+    public final Set<BasicRole> getRoles() {
         if (roles == null) {
             return EMPTY_SET;
         }
@@ -85,6 +95,66 @@ public class UserPrincipal implements Serializable, Principal {
      */
     public void setRoles(Set<BasicRole> roles) {
         this.roles = Objects.requireNonNull(roles);
+    }
+    
+    /**
+     * Prepare a read filter for this user which can be applied prior executing
+     * trusted prepared queries.
+     * 
+     * @param desc
+     *            The descriptor for which to get the filter.
+     * @param metaData
+     *            Metadata for the provided descriptor.
+     * 
+     * @return An {@link FilterResult} which can be used to make a decision on
+     *         which records to return.
+     */
+    public <T extends Pojo> FilterResult getReadFilter(StatementDescriptor<T> desc, DescriptorMetadata metaData) {
+        if (getRoles().contains(GRANT_READ_ALL)) {
+            // user can see everything, no filtering is happening at all.
+            return new FilterResult(ResultType.ALL);
+        }
+        List<StatementFilter<T>> filters = buildFilters();
+        
+        // perform filtering using our list of filters
+        Expression parentExpression = null;
+        FilterResult overallResult = null;
+        for (StatementFilter<T> filter: filters) {
+            overallResult = filter.applyFilter(desc, metaData, parentExpression);
+            switch (overallResult.getType()) {
+            case ALL: // fall-through, expression == null
+            case QUERY_EXPRESSION:
+                // continue filtering
+                parentExpression = overallResult.getFilterExpression();
+                break;
+            case EMPTY:
+                // no point continuing, already nothing
+                return overallResult;
+            default:
+                throw new IllegalStateException("Unknown result type!");
+            }
+        }
+        // done filtering
+        return overallResult;
+    }
+
+    /*
+     * Filters are applied in order. Passing through one which didn't return
+     * empty continues the filter chain. Currently, we filter by:
+     * agent IDs -> hostnames -> vm IDs -> vm usernames
+     */
+    private <T extends Pojo> List<StatementFilter<T>> buildFilters() {
+        List<StatementFilter<T>> filters = new ArrayList<>();
+        Set<BasicRole> roles = getRoles();
+        AgentIdFilter<T> agentIdFilter = new AgentIdFilter<>(roles);
+        HostnameFilter<T> hostnameFilter = new HostnameFilter<>(roles);
+        VmIdFilter<T> vmIdFilter = new VmIdFilter<>(roles);
+        VmUsernameFilter<T> vmUsernameFilter = new VmUsernameFilter<>(roles);
+        filters.add(agentIdFilter);
+        filters.add(hostnameFilter);
+        filters.add(vmIdFilter);
+        filters.add(vmUsernameFilter);
+        return filters;
     }
     
     @Override

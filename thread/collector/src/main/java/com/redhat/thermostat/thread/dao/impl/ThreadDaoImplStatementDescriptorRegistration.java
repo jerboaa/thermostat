@@ -39,6 +39,9 @@ package com.redhat.thermostat.thread.dao.impl;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.redhat.thermostat.storage.core.PreparedParameter;
+import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
+import com.redhat.thermostat.storage.core.auth.StatementDescriptorMetadataFactory;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 
 /**
@@ -47,18 +50,37 @@ import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
  *
  */
 public class ThreadDaoImplStatementDescriptorRegistration implements
-        StatementDescriptorRegistration {
+        StatementDescriptorRegistration, StatementDescriptorMetadataFactory {
 
-    @Override
-    public Set<String> getStatementDescriptors() {
-        Set<String> descs = new HashSet<>(6);
+    private final Set<String> descs;
+    
+    public ThreadDaoImplStatementDescriptorRegistration() {
+        descs = new HashSet<>(6);
         descs.add(ThreadDaoImpl.QUERY_LATEST_DEADLOCK_INFO);
         descs.add(ThreadDaoImpl.QUERY_LATEST_HARVESTING_STATUS);
         descs.add(ThreadDaoImpl.QUERY_LATEST_SUMMARY);
         descs.add(ThreadDaoImpl.QUERY_SUMMARY_SINCE);
         descs.add(ThreadDaoImpl.QUERY_THREAD_CAPS);
         descs.add(ThreadDaoImpl.QUERY_THREAD_INFO);
+    }
+    
+    @Override
+    public Set<String> getStatementDescriptors() {
         return descs;
+    }
+
+    @Override
+    public DescriptorMetadata getDescriptorMetadata(String descriptor,
+            PreparedParameter[] params) {
+        if (descs.contains(descriptor)) {
+            // All queries hava agentId/vmId parameters
+            String agentId = (String)params[0].getValue();
+            String vmId = (String)params[1].getValue();
+            DescriptorMetadata metadata = new DescriptorMetadata(agentId, vmId);
+            return metadata;
+        } else {
+            throw new IllegalArgumentException("Unknown descriptor ->" + descriptor + "<-");
+        }
     }
 
 }

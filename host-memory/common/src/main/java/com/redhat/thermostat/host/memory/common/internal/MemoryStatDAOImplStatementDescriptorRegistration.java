@@ -41,6 +41,8 @@ import java.util.Set;
 
 import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
 import com.redhat.thermostat.storage.core.HostLatestPojoListGetter;
+import com.redhat.thermostat.storage.core.PreparedParameter;
+import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 
 /**
@@ -51,13 +53,27 @@ import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 public class MemoryStatDAOImplStatementDescriptorRegistration implements
         StatementDescriptorRegistration {
 
+    static final String descriptor = String.format(HostLatestPojoListGetter.HOST_LATEST_QUERY_FORMAT, 
+            MemoryStatDAO.memoryStatCategory.getName());
+    
     @Override
     public Set<String> getStatementDescriptors() {
         Set<String> descs = new HashSet<>(1);
-        String descriptor = String.format(HostLatestPojoListGetter.HOST_LATEST_QUERY_FORMAT, 
-                MemoryStatDAO.memoryStatCategory.getName());
         descs.add(descriptor);
         return descs;
+    }
+
+    @Override
+    public DescriptorMetadata getDescriptorMetadata(String descriptor,
+            PreparedParameter[] params) {
+        if (descriptor.equals(MemoryStatDAOImplStatementDescriptorRegistration.descriptor)) {
+            String agentId = (String)params[0].getValue();
+            DescriptorMetadata metadata = new DescriptorMetadata(agentId);
+            return metadata;
+        } else {
+            throw new IllegalArgumentException("Unknown descriptor: ->"
+                    + descriptor + "<-");
+        }
     }
 
 }

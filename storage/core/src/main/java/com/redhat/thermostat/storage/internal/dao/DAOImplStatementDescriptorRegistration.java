@@ -39,6 +39,9 @@ package com.redhat.thermostat.storage.internal.dao;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.redhat.thermostat.storage.core.PreparedParameter;
+import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
+import com.redhat.thermostat.storage.core.auth.StatementDescriptorMetadataFactory;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 
 /**
@@ -47,8 +50,8 @@ import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
  *
  */
 public class DAOImplStatementDescriptorRegistration implements
-        StatementDescriptorRegistration {
-
+        StatementDescriptorRegistration, StatementDescriptorMetadataFactory {
+    
     @Override
     public Set<String> getStatementDescriptors() {
         Set<String> daoDescs = new HashSet<>();
@@ -62,6 +65,48 @@ public class DAOImplStatementDescriptorRegistration implements
         daoDescs.add(VmInfoDAOImpl.QUERY_ALL_VMS);
         daoDescs.add(VmInfoDAOImpl.QUERY_VM_INFO);
         return daoDescs;
+    }
+
+    @Override
+    public DescriptorMetadata getDescriptorMetadata(String descriptor,
+            PreparedParameter[] params) {
+        if (descriptor.equals(AgentInfoDAOImpl.QUERY_AGENT_INFO)) {
+            String agentId = (String)params[0].getValue();
+            DescriptorMetadata metadata = new DescriptorMetadata(agentId);
+            return metadata;
+        } else if (descriptor.equals(AgentInfoDAOImpl.QUERY_ALIVE_AGENTS)) {
+            DescriptorMetadata metadata = new DescriptorMetadata();
+            return metadata;
+        } else if (descriptor.equals(AgentInfoDAOImpl.QUERY_ALL_AGENTS)) {
+            DescriptorMetadata metadata = new DescriptorMetadata();
+            return metadata;
+        } else if (descriptor.equals(BackendInfoDAOImpl.QUERY_BACKEND_INFO)) {
+            String agentId = (String)params[0].getValue();
+            DescriptorMetadata metadata = new DescriptorMetadata(agentId);
+            return metadata;
+        } else if (descriptor.equals(HostInfoDAOImpl.QUERY_HOST_INFO)) {
+            String agentId = (String)params[0].getValue();
+            DescriptorMetadata metadata = new DescriptorMetadata(agentId);
+            return metadata;
+        } else if (descriptor.equals(HostInfoDAOImpl.QUERY_ALL_HOSTS)) {
+            DescriptorMetadata metadata = new DescriptorMetadata();
+            return metadata;
+        } else if (descriptor.equals(NetworkInterfaceInfoDAOImpl.QUERY_NETWORK_INFO)) {
+            String agentId = (String)params[0].getValue();
+            DescriptorMetadata metadata = new DescriptorMetadata(agentId);
+            return metadata;
+        } else if (descriptor.equals(VmInfoDAOImpl.QUERY_ALL_VMS)) {
+            String agentId = (String)params[0].getValue();
+            DescriptorMetadata metadata = new DescriptorMetadata(agentId);
+            return metadata;
+        } else if (descriptor.equals(VmInfoDAOImpl.QUERY_VM_INFO)) {
+            String agentId = (String)params[0].getValue();
+            String vmId = (String)params[1].getValue();
+            DescriptorMetadata metadata = new DescriptorMetadata(agentId, vmId);
+            return metadata;
+        } else {
+            throw new IllegalArgumentException("Unknown descriptor: ->" + descriptor + "<-");
+        }
     }
 
 }

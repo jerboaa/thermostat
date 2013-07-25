@@ -42,6 +42,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
 import java.lang.reflect.Array;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -50,6 +53,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.security.auth.Subject;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -86,7 +90,11 @@ import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
+import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
+import com.redhat.thermostat.storage.core.auth.StatementDescriptorMetadataFactory;
 import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.storage.query.BinaryLogicalExpression;
+import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
 import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.storage.query.Operator;
 import com.redhat.thermostat.web.common.ExpressionSerializer;
@@ -102,7 +110,9 @@ import com.redhat.thermostat.web.common.WebQueryResponse;
 import com.redhat.thermostat.web.common.WebQueryResponseSerializer;
 import com.redhat.thermostat.web.common.WebRemove;
 import com.redhat.thermostat.web.common.WebUpdate;
+import com.redhat.thermostat.web.server.auth.FilterResult;
 import com.redhat.thermostat.web.server.auth.Roles;
+import com.redhat.thermostat.web.server.auth.UserPrincipal;
 import com.redhat.thermostat.web.server.auth.WebStoragePathHandler;
 
 @SuppressWarnings("serial")
@@ -111,6 +121,7 @@ public class WebStorageEndPoint extends HttpServlet {
     static final String CMDC_AUTHORIZATION_GRANT_ROLE_PREFIX = "thermostat-cmdc-grant-";
     private static final String TOKEN_MANAGER_TIMEOUT_PARAM = "token-manager-timeout";
     private static final String TOKEN_MANAGER_KEY = "token-manager";
+    private static final String JETTY_JAAS_USER_PRINCIPAL_CLASS_NAME = "org.eclipse.jetty.plus.jaas.JAASUserPrincipal";
 
     // our strings can contain non-ASCII characters. Use UTF-8
     // see also PR 1344
@@ -139,6 +150,8 @@ public class WebStorageEndPoint extends HttpServlet {
     
     // read-only set of all known statement descriptors we trust and allow
     private Set<String> knownStatementDescriptors;
+    // read-only map of known descriptors => descriptor metadata
+    private Map<String, StatementDescriptorMetadataFactory> descMetadataFactories;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -173,6 +186,7 @@ public class WebStorageEndPoint extends HttpServlet {
         // Set the set of statement descriptors which we trust
         KnownDescriptorRegistry descRegistry = KnownDescriptorRegistryFactory.getInstance();
         knownStatementDescriptors = descRegistry.getRegisteredDescriptors();
+        descMetadataFactories = descRegistry.getDescriptorMetadataFactories();
     }
     
     @Override
@@ -288,7 +302,7 @@ public class WebStorageEndPoint extends HttpServlet {
         String queryDescrParam = req.getParameter("query-descriptor");
         String categoryIdParam = req.getParameter("category-id");
         Integer catId = gson.fromJson(categoryIdParam, Integer.class);
-        Category<?> cat = getCategoryFromId(catId);
+        Category<T> cat = (Category<T>)getCategoryFromId(catId);
         WebPreparedStatementResponse response = new WebPreparedStatementResponse();
         if (cat == null) {
             // bad category? we refuse to accept this
@@ -297,7 +311,7 @@ public class WebStorageEndPoint extends HttpServlet {
             writeResponse(resp, response, WebPreparedStatementResponse.class);
             return;
         }
-        StatementDescriptor<?> desc = new StatementDescriptor<>(cat, queryDescrParam);
+        StatementDescriptor<T> desc = new StatementDescriptor<>(cat, queryDescrParam);
         // Check if descriptor is trusted (i.e. known)
         if (!knownStatementDescriptors.contains(desc.getQueryDescriptor())) {
             String msg = "Attempted to prepare a statement descriptor which we " +
@@ -338,7 +352,7 @@ public class WebStorageEndPoint extends HttpServlet {
             }
             PreparedStatementHolder<T> holder = new PreparedStatementHolder<T>(
                     currentPreparedStmtId, targetPreparedStatement,
-                    (Class<T>) cat.getDataClass());
+                    (Class<T>) cat.getDataClass(), desc);
             preparedStmts.put(desc, holder);
             preparedStatementIds.put(currentPreparedStmtId, holder);
             ParsedStatement<?> parsed = targetPreparedStatement
@@ -566,6 +580,7 @@ public class WebStorageEndPoint extends HttpServlet {
         WebPreparedStatement<T> stmt = gson.fromJson(queryParam, WebPreparedStatement.class);
         
         PreparedParameters p = stmt.getParams();
+        PreparedParameter[] params = p.getParams();
         PreparedStatementHolder<T> targetStmtHolder = getStatementHolderFromId(stmt.getStatementId());
         PreparedStatement<T> targetStmt = targetStmtHolder.getStmt();
         ParsedStatement<T> parsed = targetStmt.getParsedStatement();
@@ -573,15 +588,20 @@ public class WebStorageEndPoint extends HttpServlet {
         ArrayList<T> resultList = new ArrayList<>();
         WebQueryResponse<T> response = new WebQueryResponse<>();
         try {
-            targetQuery = (Query<T>)parsed.patchStatement(p.getParams());
+            targetQuery = (Query<T>)parsed.patchStatement(params);
             response.setResponseCode(WebQueryResponse.SUCCESS);
         } catch (IllegalPatchException e) {
             response.setResponseCode(WebQueryResponse.ILLEGAL_PATCH);
             writeResponse(resp, response, WebQueryResponse.class);
             return;
         }
-        // TODO: Do proper query filtering
-        targetQuery = fixQuery(targetQuery, stmt.getStatementId());
+        
+        StatementDescriptor<T> desc = targetStmtHolder.getStatementDescriptor();
+        StatementDescriptorMetadataFactory factory = descMetadataFactories.get(desc.getQueryDescriptor());
+        DescriptorMetadata actualMetadata = factory.getDescriptorMetadata(desc.getQueryDescriptor(), params);
+        
+        UserPrincipal userPrincipal = getUserPrincipal(req);
+        targetQuery = getQueryForPrincipal(userPrincipal, targetQuery, desc, actualMetadata);
         Cursor<T> cursor = targetQuery.execute();
         while (cursor.hasNext()) {
             resultList.add(cursor.next());
@@ -593,11 +613,87 @@ public class WebStorageEndPoint extends HttpServlet {
         response.setResultList(results);
         writeResponse(resp, response, WebQueryResponse.class);
     }
+    
+    private UserPrincipal getUserPrincipal(HttpServletRequest req) {
+        // Since we use our own JAAS based auth module this cast is safe
+        // for Tomcat and JBoss AS 7 since they allow for configuration of
+        // user principal classes. As for Jetty, it always uses
+        // JAASUserPrincipal, but that principal has access to the subject
+        // which in turn has our user principal added.
+        Principal principal = req.getUserPrincipal();
+        
+        if (principal.getClass().getName().equals(JETTY_JAAS_USER_PRINCIPAL_CLASS_NAME)) {
+            // Jetty has our principal on the accessible subject.
+            Subject subject = null;
+            try {
+                // Do this via reflection in order to avoid a hard dependency
+                // on jetty-plus.
+                Class<?> jassUserPrincipal = Class.forName(JETTY_JAAS_USER_PRINCIPAL_CLASS_NAME);
+                Method method = jassUserPrincipal.getDeclaredMethod("getSubject");
+                subject = (Subject)method.invoke(principal);
+            } catch (ClassNotFoundException | NoSuchMethodException
+                    | SecurityException | IllegalAccessException
+                    | IllegalArgumentException | InvocationTargetException e) {
+                logger.log(Level.WARNING, e.getMessage(), e);
+            }
+            if (subject == null) {
+                throw new IllegalStateException(
+                        "Could not retrieve subject from principal of type "
+                                + JETTY_JAAS_USER_PRINCIPAL_CLASS_NAME);
+            }
+            Set<UserPrincipal> userPrincipals = subject.getPrincipals(UserPrincipal.class);
+            if (userPrincipals.size() != 1) {
+                throw new IllegalStateException("More than one thermostat user principals!");
+            }
+            return userPrincipals.iterator().next();
+        } else {
+            // A simple cast should succeed for the non-jetty case. At the very
+            // least this should work for Tomcat and JBoss AS 7.
+            return (UserPrincipal)principal;
+        }
+        
+    }
 
-    @SuppressWarnings("rawtypes")
-    private <T extends Pojo> Query fixQuery(Query<T> targetQuery, int statementId) {
-        // TODO: Change the expression so as to perform proper filtering.
-        return targetQuery;
+    /*
+     * Performs the heavy lifting of query filtering. It adds a where expression
+     * and uses conjunction to the original, unfilterered, query.
+     */
+    private <T extends Pojo> Query<T> getQueryForPrincipal(
+            UserPrincipal userPrincipal, Query<T> patchedQuery,
+            StatementDescriptor<T> desc, DescriptorMetadata metaData) {
+        Expression whereExpression = patchedQuery.getWhereExpression();
+        FilterResult result = userPrincipal.getReadFilter(desc, metaData);
+        Expression authorizationExpression = null;
+        switch (result.getType()) {
+        case ALL: // fall-through. same as next case.
+        case QUERY_EXPRESSION:
+            authorizationExpression = result.getFilterExpression();
+            break;
+        case EMPTY:
+            return getEmptyQuery();
+        default:
+            throw new IllegalStateException("Unknown type!");
+        }
+        // Handled empty already
+        if (whereExpression == null) {
+            // no where, use auth expression only
+            if (authorizationExpression != null) {
+                patchedQuery.where(authorizationExpression);
+                return patchedQuery;
+            }
+        } else {
+            if (authorizationExpression != null) {
+                Expression andExpression = new BinaryLogicalExpression<Expression, Expression>(
+                        authorizationExpression, BinaryLogicalOperator.AND,
+                        whereExpression);
+                patchedQuery.where(andExpression);
+                return patchedQuery;
+            }
+        }
+        assert( (whereExpression != null && authorizationExpression == null) ||
+                (whereExpression == null && authorizationExpression == null));
+        // nothing to tag on
+        return patchedQuery;
     }
 
     private <T extends Pojo> PreparedStatementHolder<T> getStatementHolderFromId(int statementId) {
@@ -698,6 +794,61 @@ public class WebStorageEndPoint extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
             return false;
         }
+    }
+    
+    private <T extends Pojo> Query<T> getEmptyQuery() {
+        final Query<T> empty = new Query<T>() {
+
+            @Override
+            public void where(Expression expr) {
+                // must not be called.
+                throw new IllegalStateException();
+            }
+
+            @Override
+            public void sort(Key<?> key,
+                    com.redhat.thermostat.storage.core.Query.SortDirection direction) {
+                // must not be called.
+                throw new IllegalStateException();
+            }
+
+            @Override
+            public void limit(int n) {
+                // must not be called.
+                throw new IllegalStateException();
+            }
+
+            @Override
+            public Cursor<T> execute() {
+                return getEmptyCursor();
+            }
+
+            @Override
+            public Expression getWhereExpression() {
+                // must not be called.
+                throw new IllegalStateException();
+            }
+            
+        };
+        return empty;
+    }
+    
+    private <T extends Pojo> Cursor<T> getEmptyCursor() {
+        final Cursor<T> empty = new Cursor<T>() {
+
+            @Override
+            public boolean hasNext() {
+                return false;
+            }
+
+            @Override
+            public T next() {
+                // must not be called.
+                throw new IllegalStateException();
+            }
+            
+        };
+        return empty;
     }
 
 

@@ -34,53 +34,29 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.numa.common.internal;
+package com.redhat.thermostat.storage.core.auth;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import com.redhat.thermostat.numa.common.NumaDAO;
-import com.redhat.thermostat.storage.core.HostLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.PreparedParameter;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 
 /**
- * Registers prepared queries issued by this maven module via
- * {@link HostLatestPojoListGetter} and via {@link NumaDAOImpl}.
- *
+ * Factory for {@link DescriptorMetadata}. The web storage entpoint uses these
+ * factories in order to instantiate DescriptorMetadata objects for descriptors.
+ * 
  */
-public class NumaDAOImplStatementDescriptorRegistration implements
-        StatementDescriptorRegistration {
-    
-    private final Set<String> descs;
-    
-    public NumaDAOImplStatementDescriptorRegistration() {
-        descs = new HashSet<>(2);
-        String descriptor = String.format(
-                HostLatestPojoListGetter.HOST_LATEST_QUERY_FORMAT,
-                NumaDAO.numaStatCategory.getName());
-        descs.add(descriptor);
-        descs.add(NumaDAOImpl.QUERY_NUMA_INFO);
-    }
+public interface StatementDescriptorMetadataFactory {
 
-    @Override
-    public Set<String> getStatementDescriptors() {
-        return descs;
-    }
-
-    @Override
-    public DescriptorMetadata getDescriptorMetadata(String descriptor,
-            PreparedParameter[] params) {
-        if (descs.contains(descriptor)) {
-            // both queries use agentId
-            String agentId = (String)params[0].getValue();
-            DescriptorMetadata metadata = new DescriptorMetadata(agentId);
-            return metadata;
-        } else {
-            throw new IllegalArgumentException("Unknown descriptor: ->"
-                    + descriptor + "<-");
-        }
-    }
-
+    /**
+     * @param descriptor
+     *            The string representation of the statement descriptor for
+     *            which to get the metadata for.
+     * @param params
+     *            An array containing free parameter values for the given
+     *            descriptor. This is guaranteed to be not null and has the same
+     *            number of elements (in the same order) as the original query
+     *            descriptor had free variables.
+     * @return The metadata describing the descriptor.
+     * 
+     * @see DescriptorMetadata
+     */
+    DescriptorMetadata getDescriptorMetadata(String descriptor, PreparedParameter[] params);
 }

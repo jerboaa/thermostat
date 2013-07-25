@@ -47,12 +47,14 @@ import java.util.Set;
  * the set of all trusted statement descriptors.
  *
  */
-public interface StatementDescriptorRegistration {
+public interface StatementDescriptorRegistration extends StatementDescriptorMetadataFactory {
 
     /**
      * 
      * @return A set of string descriptors which should get
-     *         added to the trusted registry.
+     *         added to the trusted registry. The returned set
+     *         must not contain <code>null</code>.
      */
     Set<String> getStatementDescriptors();
+    
 }

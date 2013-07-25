@@ -38,6 +38,11 @@ package com.redhat.thermostat.storage.internal.dao;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +51,9 @@ import java.util.Set;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.storage.core.PreparedParameter;
+import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
+import com.redhat.thermostat.storage.core.auth.StatementDescriptorMetadataFactory;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 
 public class DAOImplStatementDescriptorRegistrationTest {
@@ -73,5 +81,148 @@ public class DAOImplStatementDescriptorRegistrationTest {
         }
         assertEquals(1, registrations.size());
         assertEquals(9, registrations.get(0).getStatementDescriptors().size());
+    }
+    
+    @Test
+    public void canGetMetadataForAgentAliveQuery() {
+        StatementDescriptorMetadataFactory factory = new DAOImplStatementDescriptorRegistration();
+        DescriptorMetadata data = factory.getDescriptorMetadata(AgentInfoDAOImpl.QUERY_ALIVE_AGENTS, null);
+        assertNotNull(data);
+        assertFalse(data.hasAgentId());
+        assertFalse(data.hasVmId());
+    }
+    
+    @Test
+    public void canGetMetadataForAgentInfoQuery() {
+        PreparedParameter agentIdParam = mock(PreparedParameter.class);
+        String agentId = "agentId";
+        when(agentIdParam.getValue()).thenReturn(agentId);
+        PreparedParameter[] params = new PreparedParameter[] {
+                agentIdParam
+        };
+        
+        StatementDescriptorMetadataFactory factory = new DAOImplStatementDescriptorRegistration();
+        DescriptorMetadata data = factory.getDescriptorMetadata(AgentInfoDAOImpl.QUERY_AGENT_INFO, params);
+        assertNotNull(data);
+        assertFalse(data.hasVmId());
+        assertEquals(agentId, data.getAgentId());
+    }
+    
+    @Test
+    public void canGetMetadataForAllAgentsQuery() {
+        StatementDescriptorMetadataFactory factory = new DAOImplStatementDescriptorRegistration();
+        DescriptorMetadata data = factory.getDescriptorMetadata(AgentInfoDAOImpl.QUERY_ALL_AGENTS, null);
+        assertNotNull(data);
+        assertFalse(data.hasAgentId());
+        assertFalse(data.hasVmId());
+    }
+    
+    @Test
+    public void canGetMetadataForBackendInfoQuery() {
+        PreparedParameter agentIdParam = mock(PreparedParameter.class);
+        String agentId = "agentId";
+        when(agentIdParam.getValue()).thenReturn(agentId);
+        PreparedParameter[] params = new PreparedParameter[] {
+                agentIdParam
+        };
+        
+        StatementDescriptorMetadataFactory factory = new DAOImplStatementDescriptorRegistration();
+        DescriptorMetadata data = factory.getDescriptorMetadata(BackendInfoDAOImpl.QUERY_BACKEND_INFO, params);
+        assertNotNull(data);
+        assertTrue(data.hasAgentId());
+        assertFalse(data.hasVmId());
+        assertEquals(agentId, data.getAgentId());
+    }
+    
+    @Test
+    public void canGetMetadataForHostInfoQuery() {
+        PreparedParameter agentIdParam = mock(PreparedParameter.class);
+        String agentId = "agentId";
+        when(agentIdParam.getValue()).thenReturn(agentId);
+        PreparedParameter[] params = new PreparedParameter[] {
+                agentIdParam
+        };
+        
+        StatementDescriptorMetadataFactory factory = new DAOImplStatementDescriptorRegistration();
+        DescriptorMetadata data = factory.getDescriptorMetadata(HostInfoDAOImpl.QUERY_HOST_INFO, params);
+        assertNotNull(data);
+        assertTrue(data.hasAgentId());
+        assertFalse(data.hasVmId());
+        assertEquals(agentId, data.getAgentId());
+    }
+    
+    @Test
+    public void canGetMetadataForAllHostsQuery() {
+        StatementDescriptorMetadataFactory factory = new DAOImplStatementDescriptorRegistration();
+        DescriptorMetadata data = factory.getDescriptorMetadata(HostInfoDAOImpl.QUERY_ALL_HOSTS, null);
+        assertNotNull(data);
+        assertFalse(data.hasAgentId());
+        assertFalse(data.hasVmId());
+    }
+    
+    @Test
+    public void canGetMetadataForNetworkInfoQuery() {
+        PreparedParameter agentIdParam = mock(PreparedParameter.class);
+        String agentId = "agentId";
+        when(agentIdParam.getValue()).thenReturn(agentId);
+        PreparedParameter[] params = new PreparedParameter[] {
+                agentIdParam
+        };
+        
+        StatementDescriptorMetadataFactory factory = new DAOImplStatementDescriptorRegistration();
+        DescriptorMetadata data = factory.getDescriptorMetadata(NetworkInterfaceInfoDAOImpl.QUERY_NETWORK_INFO, params);
+        assertNotNull(data);
+        assertTrue(data.hasAgentId());
+        assertFalse(data.hasVmId());
+        assertEquals(agentId, data.getAgentId());
+    }
+    
+    @Test
+    public void canGetMetadataForVmInfoAllQuery() {
+        PreparedParameter agentIdParam = mock(PreparedParameter.class);
+        String agentId = "agentId";
+        when(agentIdParam.getValue()).thenReturn(agentId);
+        PreparedParameter[] params = new PreparedParameter[] {
+                agentIdParam
+        };
+        
+        StatementDescriptorMetadataFactory factory = new DAOImplStatementDescriptorRegistration();
+        DescriptorMetadata data = factory.getDescriptorMetadata(VmInfoDAOImpl.QUERY_ALL_VMS, params);
+        assertNotNull(data);
+        assertTrue(data.hasAgentId());
+        assertFalse(data.hasVmId());
+        assertEquals(agentId, data.getAgentId());
+    }
+    
+    @Test
+    public void canGetMetadataForSpecificVmInfoQuery() {
+        PreparedParameter agentIdParam = mock(PreparedParameter.class);
+        PreparedParameter vmIdParam = mock(PreparedParameter.class);
+        String agentId = "agentId";
+        String vmId = "vmId";
+        when(agentIdParam.getValue()).thenReturn(agentId);
+        when(vmIdParam.getValue()).thenReturn(vmId);
+        PreparedParameter[] params = new PreparedParameter[] {
+                agentIdParam, vmIdParam
+        };
+        
+        StatementDescriptorMetadataFactory factory = new DAOImplStatementDescriptorRegistration();
+        DescriptorMetadata data = factory.getDescriptorMetadata(VmInfoDAOImpl.QUERY_VM_INFO, params);
+        assertNotNull(data);
+        assertTrue(data.hasVmId());
+        assertTrue(data.hasAgentId());
+        assertEquals(agentId, data.getAgentId());
+        assertEquals(vmId, data.getVmId());
+    }
+    
+    @Test
+    public void unknownDescriptorThrowsException() {
+        StatementDescriptorMetadataFactory factory = new DAOImplStatementDescriptorRegistration();
+        try {
+            factory.getDescriptorMetadata("QUERY foo-bar WHERE 'a' = 'b'", null);
+            fail("should have thrown exception");
+        } catch (IllegalArgumentException e) {
+            // pass
+        }
     }
 }

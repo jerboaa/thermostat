@@ -68,6 +68,13 @@
       <version>${jetty.version}</version>
       <scope>test</scope>
     </dependency>
+    <!-- Required for JAASLoginService used in WebStorageEndpointTest -->
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-plus</artifactId>
+      <version>${jetty.version}</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-webapp</artifactId>

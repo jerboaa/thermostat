@@ -34,53 +34,46 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.numa.common.internal;
+package com.redhat.thermostat.web.server.auth;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import com.redhat.thermostat.numa.common.NumaDAO;
-import com.redhat.thermostat.storage.core.HostLatestPojoListGetter;
-import com.redhat.thermostat.storage.core.PreparedParameter;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
+import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.web.server.auth.FilterResult.ResultType;
 
-/**
- * Registers prepared queries issued by this maven module via
- * {@link HostLatestPojoListGetter} and via {@link NumaDAOImpl}.
- *
- */
-public class NumaDAOImplStatementDescriptorRegistration implements
-        StatementDescriptorRegistration {
+abstract class AbstractFilter<T extends Pojo> implements StatementFilter<T> {
+
+    private static final String ALL_ROLE_NAME = "ALL";
+    protected final Set<BasicRole> userRoles;
     
-    private final Set<String> descs;
+    protected AbstractFilter(Set<BasicRole> userRoles) {
+        this.userRoles = userRoles;
+    }
     
-    public NumaDAOImplStatementDescriptorRegistration() {
-        descs = new HashSet<>(2);
-        String descriptor = String.format(
-                HostLatestPojoListGetter.HOST_LATEST_QUERY_FORMAT,
-                NumaDAO.numaStatCategory.getName());
-        descs.add(descriptor);
-        descs.add(NumaDAOImpl.QUERY_NUMA_INFO);
+    protected Set<String> getGranted(String prefix) {
+        Set<String> allowedObjectsFromRoles = new HashSet<>();
+        for (BasicRole r : userRoles) {
+            if (r.getName().startsWith(prefix)) {
+                String allowedVm = r.getName().substring(
+                        prefix.length());
+                if (!allowedVm.equals(ALL_ROLE_NAME)) {
+                    allowedObjectsFromRoles.add(allowedVm);
+                }
+            }
+        }
+        return allowedObjectsFromRoles;
     }
-
-    @Override
-    public Set<String> getStatementDescriptors() {
-        return descs;
-    }
-
-    @Override
-    public DescriptorMetadata getDescriptorMetadata(String descriptor,
-            PreparedParameter[] params) {
-        if (descs.contains(descriptor)) {
-            // both queries use agentId
-            String agentId = (String)params[0].getValue();
-            DescriptorMetadata metadata = new DescriptorMetadata(agentId);
-            return metadata;
+    
+    protected FilterResult allWithExpression(Expression parentExpression) {
+        if (parentExpression != null) {
+            FilterResult result = new FilterResult(
+                    ResultType.QUERY_EXPRESSION);
+            result.setFilterExpression(parentExpression);
+            return result;
         } else {
-            throw new IllegalArgumentException("Unknown descriptor: ->"
-                    + descriptor + "<-");
+            return new FilterResult(ResultType.ALL);
         }
     }
-
 }

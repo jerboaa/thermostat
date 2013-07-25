@@ -84,6 +84,7 @@ import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
 import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
@@ -117,6 +118,12 @@ public class WebAppTest extends IntegrationTest {
      * WebAppTestStatementDescriptorRegistration
      */
     public static final Set<String> TRUSTED_DESCRIPTORS;
+    /*
+     * Map which maps a string descriptor to DescriptorMetadata.
+     * See also: WebAppTestStatementDescriptorRegistration
+     * 
+     */
+    public static final Map<String, DescriptorMetadata> METADATA_MAPPING;
     // descriptive name -> descriptor mapping
     private static final Map<String, String> DESCRIPTOR_MAP;
     
@@ -146,11 +153,15 @@ public class WebAppTest extends IntegrationTest {
         descMap.put(KEY_AUTHORIZED_QUERY_OR, "QUERY cpu-stats WHERE 'timeStamp' > ?l OR 'timeStamp' < ?l SORT 'timeStamp' ASC");
         descMap.put(KEY_SET_DEFAULT_AGENT_ID, "QUERY vm-cpu-stats");
         Set<String> trustedDescriptors = new HashSet<>();
+        Map<String, DescriptorMetadata> metadata = new HashMap<>();
+        DescriptorMetadata descMetadata = new DescriptorMetadata();
         for (String val: descMap.values()) {
             trustedDescriptors.add(val);
+            metadata.put(val, descMetadata);
         }
         TRUSTED_DESCRIPTORS = trustedDescriptors;
         DESCRIPTOR_MAP = descMap;
+        METADATA_MAPPING = metadata;
     }
     
     
@@ -459,7 +470,8 @@ public class WebAppTest extends IntegrationTest {
                 Roles.READ,
                 Roles.LOGIN,
                 Roles.ACCESS_REALM,
-                Roles.PREPARE_STATEMENT
+                Roles.PREPARE_STATEMENT,
+                Roles.GRANT_READ_ALL
         };
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
@@ -483,7 +495,8 @@ public class WebAppTest extends IntegrationTest {
                 Roles.READ,
                 Roles.LOGIN,
                 Roles.ACCESS_REALM,
-                Roles.PREPARE_STATEMENT
+                Roles.PREPARE_STATEMENT,
+                Roles.GRANT_READ_ALL
         };
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
@@ -506,7 +519,8 @@ public class WebAppTest extends IntegrationTest {
                 Roles.READ,
                 Roles.LOGIN,
                 Roles.ACCESS_REALM,
-                Roles.PREPARE_STATEMENT
+                Roles.PREPARE_STATEMENT,
+                Roles.GRANT_READ_ALL
         };
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
@@ -529,7 +543,8 @@ public class WebAppTest extends IntegrationTest {
                 Roles.READ,
                 Roles.LOGIN,
                 Roles.ACCESS_REALM,
-                Roles.PREPARE_STATEMENT
+                Roles.PREPARE_STATEMENT,
+                Roles.GRANT_READ_ALL
         };
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
@@ -552,7 +567,8 @@ public class WebAppTest extends IntegrationTest {
                 Roles.READ,
                 Roles.LOGIN,
                 Roles.ACCESS_REALM,
-                Roles.PREPARE_STATEMENT
+                Roles.PREPARE_STATEMENT,
+                Roles.GRANT_READ_ALL
         };
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
@@ -575,7 +591,8 @@ public class WebAppTest extends IntegrationTest {
                 Roles.READ,
                 Roles.LOGIN,
                 Roles.ACCESS_REALM,
-                Roles.PREPARE_STATEMENT
+                Roles.PREPARE_STATEMENT,
+                Roles.GRANT_READ_ALL
         };
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
@@ -598,7 +615,8 @@ public class WebAppTest extends IntegrationTest {
                 Roles.READ,
                 Roles.LOGIN,
                 Roles.ACCESS_REALM,
-                Roles.PREPARE_STATEMENT
+                Roles.PREPARE_STATEMENT,
+                Roles.GRANT_READ_ALL
         };
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
@@ -621,7 +639,8 @@ public class WebAppTest extends IntegrationTest {
                 Roles.READ,
                 Roles.LOGIN,
                 Roles.ACCESS_REALM,
-                Roles.PREPARE_STATEMENT
+                Roles.PREPARE_STATEMENT,
+                Roles.GRANT_READ_ALL
         };
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
@@ -644,7 +663,8 @@ public class WebAppTest extends IntegrationTest {
                 Roles.READ,
                 Roles.LOGIN,
                 Roles.ACCESS_REALM,
-                Roles.PREPARE_STATEMENT
+                Roles.PREPARE_STATEMENT,
+                Roles.GRANT_READ_ALL
         };
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
@@ -667,7 +687,8 @@ public class WebAppTest extends IntegrationTest {
                 Roles.READ,
                 Roles.LOGIN,
                 Roles.ACCESS_REALM,
-                Roles.PREPARE_STATEMENT
+                Roles.PREPARE_STATEMENT,
+                Roles.GRANT_READ_ALL
         };
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
@@ -774,7 +795,8 @@ public class WebAppTest extends IntegrationTest {
                 Roles.READ,
                 Roles.APPEND,
                 Roles.PURGE,
-                Roles.PREPARE_STATEMENT
+                Roles.PREPARE_STATEMENT,
+                Roles.GRANT_READ_ALL
         };
         Storage storage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         UUID uuid = new UUID(42, 24);

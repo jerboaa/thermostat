@@ -39,7 +39,9 @@ package com.redhat.thermostat.vm.cpu.common.internal;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.VmLatestPojoListGetter;
+import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 
@@ -50,14 +52,28 @@ import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
  */
 public class VmCpuStatDAOImplStatementDescriptorRegistration implements
         StatementDescriptorRegistration {
+    
+    static final String descriptor = String.format(VmLatestPojoListGetter.VM_LATEST_QUERY_FORMAT,
+            VmCpuStatDAO.vmCpuStatCategory.getName());
 
     @Override
     public Set<String> getStatementDescriptors() {
         Set<String> descs = new HashSet<>();
-        String descriptor = String.format(VmLatestPojoListGetter.VM_LATEST_QUERY_FORMAT,
-                VmCpuStatDAO.vmCpuStatCategory.getName());
         descs.add(descriptor);
         return descs;
+    }
+    
+    @Override
+    public DescriptorMetadata getDescriptorMetadata(String descriptor,
+            PreparedParameter[] params) {
+        if (descriptor.equals(VmCpuStatDAOImplStatementDescriptorRegistration.descriptor)) {
+            String agentId = (String)params[0].getValue();
+            String vmId = (String)params[1].getValue();
+            DescriptorMetadata metadata = new DescriptorMetadata(agentId, vmId);
+            return metadata;
+        } else {
+            throw new IllegalArgumentException("Unknown descriptor: ->" + descriptor + "<-");
+        }
     }
 
 }

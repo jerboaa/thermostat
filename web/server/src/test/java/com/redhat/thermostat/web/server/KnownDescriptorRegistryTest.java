@@ -43,10 +43,13 @@ import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.storage.core.PreparedParameter;
+import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 
 public class KnownDescriptorRegistryTest {
@@ -87,9 +90,8 @@ public class KnownDescriptorRegistryTest {
         descs.add("QUERY test WHERE 'a' = ?s");
         descs.add(null);
         Iterable<StatementDescriptorRegistration> regs = getRegs(descs);
-        KnownDescriptorRegistry reg = new KnownDescriptorRegistry(regs);
         try {
-            reg.getRegisteredDescriptors();
+            new KnownDescriptorRegistry(regs);
             fail("Should not have accepted null descriptor");
         } catch (IllegalStateException e) {
             assertEquals("null statement descriptor not acceptable!", e.getMessage());
@@ -98,7 +100,7 @@ public class KnownDescriptorRegistryTest {
 
     private Iterable<StatementDescriptorRegistration> getRegs(Set<String> descs) {
         StatementDescriptorRegistration reg = new TestStatementDescriptorRegistration(
-                descs);
+                descs, null);
         StatementDescriptorRegistration[] regs = new StatementDescriptorRegistration[] { reg };
         return Arrays.asList(regs);
     }
@@ -106,14 +108,22 @@ public class KnownDescriptorRegistryTest {
     private static class TestStatementDescriptorRegistration implements StatementDescriptorRegistration {
 
         private final Set<String> descs;
+        private final Map<String, DescriptorMetadata> metadata;
         
-        private TestStatementDescriptorRegistration(Set<String> descs) {
+        private TestStatementDescriptorRegistration(Set<String> descs, Map<String, DescriptorMetadata> metadata) {
             this.descs = descs;
+            this.metadata = metadata;
         }
         
         @Override
         public Set<String> getStatementDescriptors() {
             return descs;
+        }
+
+        @Override
+        public DescriptorMetadata getDescriptorMetadata(String descriptor,
+                PreparedParameter[] params) {
+            return metadata.get(descriptor);
         }
         
     }

@@ -39,6 +39,8 @@ package com.redhat.thermostat.vm.jmx.common.internal;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.redhat.thermostat.storage.core.PreparedParameter;
+import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 
 /**
@@ -48,13 +50,33 @@ import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
  */
 public class JmxNotificationDAOImplStatementDescriptorRegistration implements
         StatementDescriptorRegistration {
+    
+    private final Set<String> descs;
+    
+    public JmxNotificationDAOImplStatementDescriptorRegistration() {
+        descs = new HashSet<>(2);
+        descs.add(JmxNotificationDAOImpl.QUERY_LATEST_NOTIFICATION_STATUS);
+        descs.add(JmxNotificationDAOImpl.QUERY_NOTIFICATIONS);
+    }
 
     @Override
     public Set<String> getStatementDescriptors() {
-        Set<String> descs = new HashSet<>(2);
-        descs.add(JmxNotificationDAOImpl.QUERY_LATEST_NOTIFICATION_STATUS);
-        descs.add(JmxNotificationDAOImpl.QUERY_NOTIFICATIONS);
         return descs;
+    }
+
+    @Override
+    public DescriptorMetadata getDescriptorMetadata(String descriptor,
+            PreparedParameter[] params) {
+        if (descs.contains(descriptor)) {
+            // both queries we know about have agent/vmId parameters
+            String agentId = (String)params[0].getValue();
+            String vmId = (String)params[1].getValue();
+            DescriptorMetadata metadata = new DescriptorMetadata(agentId, vmId);
+            return metadata;
+        } else {
+            throw new IllegalArgumentException("Unknown descriptor: ->"
+                    + descriptor + "<-");
+        }
     }
 
 }

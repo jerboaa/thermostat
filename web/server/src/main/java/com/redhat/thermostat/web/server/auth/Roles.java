@@ -41,6 +41,28 @@ package com.redhat.thermostat.web.server.auth;
  *
  */
 public interface Roles {
+    
+    /**
+     * Allows for a user to read records tied to any host.
+     */
+    final String GRANT_HOSTS_READ_ALL = "thermostat-hosts-grant-read-hostname-ALL";
+    /**
+     * Allows for a user to read records tied to any JVM id.
+     */
+    final String GRANT_VMS_READ_BY_VM_ID_ALL = "thermostat-vms-grant-read-vmId-ALL";
+    /**
+     * Allows for a user to read records tied to any username the JVM is running as.
+     */
+    final String GRANT_VMS_READ_BY_USERNAME_ALL = "thermostat-vms-grant-read-username-ALL";
+    /**
+     * Allows for a user to see records tied to any agent.
+     */
+    final String GRANT_AGENTS_READ_ALL = "thermostat-agents-grant-read-agentId-ALL";
+    /**
+     * Allows for a user to read all records. No restrictions are
+     * performed on as to what this user can see.
+     */
+    final String GRANT_READ_ALL = "thermostat-grant-read-ALL";
 
     final String APPEND = "thermostat-add";
     final String REPLACE = "thermostat-replace";
@@ -58,11 +80,12 @@ public interface Roles {
     final String LOGIN = "thermostat-login";
     final String ACCESS_REALM = "thermostat-realm";
     
-    final String[] ALL_ROLES = {
-            APPEND, REPLACE, UPDATE, DELETE, READ, GET_COUNT, LOAD_FILE,
-            SAVE_FILE, PURGE, REGISTER_CATEGORY, CMD_CHANNEL_GENERATE,
-            CMD_CHANNEL_VERIFY, LOGIN, ACCESS_REALM, PREPARE_STATEMENT
-    };
+    final String[] ALL_ROLES = { APPEND, REPLACE, UPDATE, DELETE, READ,
+            GET_COUNT, LOAD_FILE, SAVE_FILE, PURGE, REGISTER_CATEGORY,
+            CMD_CHANNEL_GENERATE, CMD_CHANNEL_VERIFY, LOGIN, ACCESS_REALM,
+            PREPARE_STATEMENT, GRANT_AGENTS_READ_ALL, GRANT_HOSTS_READ_ALL,
+            GRANT_VMS_READ_BY_USERNAME_ALL, GRANT_VMS_READ_BY_VM_ID_ALL,
+            GRANT_READ_ALL };
     
     final String[] AGENT_ROLES = {
             APPEND, REPLACE, UPDATE, DELETE, SAVE_FILE, PURGE,

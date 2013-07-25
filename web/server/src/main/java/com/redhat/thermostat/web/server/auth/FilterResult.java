@@ -34,53 +34,41 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.numa.common.internal;
+package com.redhat.thermostat.web.server.auth;
 
-import java.util.HashSet;
-import java.util.Set;
+import com.redhat.thermostat.storage.query.Expression;
 
-import com.redhat.thermostat.numa.common.NumaDAO;
-import com.redhat.thermostat.storage.core.HostLatestPojoListGetter;
-import com.redhat.thermostat.storage.core.PreparedParameter;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
+public class FilterResult {
 
-/**
- * Registers prepared queries issued by this maven module via
- * {@link HostLatestPojoListGetter} and via {@link NumaDAOImpl}.
- *
- */
-public class NumaDAOImplStatementDescriptorRegistration implements
-        StatementDescriptorRegistration {
+    public enum ResultType {
+        /** Statement would return an empty result */
+        EMPTY,
+        /** Statement can go through unfiltered */
+        ALL,
+        /** Statement needs to be filtered with the given expression */
+        QUERY_EXPRESSION
+    }
     
-    private final Set<String> descs;
+    private final ResultType type;
+    private Expression filterExpression;
     
-    public NumaDAOImplStatementDescriptorRegistration() {
-        descs = new HashSet<>(2);
-        String descriptor = String.format(
-                HostLatestPojoListGetter.HOST_LATEST_QUERY_FORMAT,
-                NumaDAO.numaStatCategory.getName());
-        descs.add(descriptor);
-        descs.add(NumaDAOImpl.QUERY_NUMA_INFO);
+    FilterResult(ResultType type) {
+        this.type = type;
     }
 
-    @Override
-    public Set<String> getStatementDescriptors() {
-        return descs;
+    public Expression getFilterExpression() {
+        return filterExpression;
     }
 
-    @Override
-    public DescriptorMetadata getDescriptorMetadata(String descriptor,
-            PreparedParameter[] params) {
-        if (descs.contains(descriptor)) {
-            // both queries use agentId
-            String agentId = (String)params[0].getValue();
-            DescriptorMetadata metadata = new DescriptorMetadata(agentId);
-            return metadata;
-        } else {
-            throw new IllegalArgumentException("Unknown descriptor: ->"
-                    + descriptor + "<-");
+    void setFilterExpression(Expression filterExpression) {
+        if (type != ResultType.QUERY_EXPRESSION) {
+            throw new IllegalStateException("Only query expression return type can have filter expression set");
         }
+        this.filterExpression = filterExpression;
     }
 
+    public ResultType getType() {
+        return type;
+    }
+    
 }

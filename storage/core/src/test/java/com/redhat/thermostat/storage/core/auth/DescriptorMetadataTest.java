@@ -34,53 +34,42 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.numa.common.internal;
+package com.redhat.thermostat.storage.core.auth;
 
-import java.util.HashSet;
-import java.util.Set;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
-import com.redhat.thermostat.numa.common.NumaDAO;
-import com.redhat.thermostat.storage.core.HostLatestPojoListGetter;
-import com.redhat.thermostat.storage.core.PreparedParameter;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
+import org.junit.Test;
 
-/**
- * Registers prepared queries issued by this maven module via
- * {@link HostLatestPojoListGetter} and via {@link NumaDAOImpl}.
- *
- */
-public class NumaDAOImplStatementDescriptorRegistration implements
-        StatementDescriptorRegistration {
-    
-    private final Set<String> descs;
-    
-    public NumaDAOImplStatementDescriptorRegistration() {
-        descs = new HashSet<>(2);
-        String descriptor = String.format(
-                HostLatestPojoListGetter.HOST_LATEST_QUERY_FORMAT,
-                NumaDAO.numaStatCategory.getName());
-        descs.add(descriptor);
-        descs.add(NumaDAOImpl.QUERY_NUMA_INFO);
+public class DescriptorMetadataTest {
+
+    @Test
+    public void testBasics() {
+        DescriptorMetadata metaData = new DescriptorMetadata();
+        assertNull(metaData.getAgentId());
+        assertNull(metaData.getVmId());
+        assertFalse(metaData.hasAgentId());
+        assertFalse(metaData.hasVmId());
+        
+        String agentId = "some-agent-id";
+        
+        metaData = new DescriptorMetadata(agentId);
+        assertNotNull(metaData.getAgentId());
+        assertEquals(agentId, metaData.getAgentId());
+        assertTrue(metaData.hasAgentId());
+        assertNull(metaData.getVmId());
+        assertFalse(metaData.hasVmId());
+        
+        String vmId = "some vm id";
+        metaData = new DescriptorMetadata(agentId, vmId);
+        assertNotNull(metaData.getAgentId());
+        assertEquals(agentId, metaData.getAgentId());
+        assertTrue(metaData.hasAgentId());
+        assertNotNull(metaData.getVmId());
+        assertTrue(metaData.hasVmId());
+        assertEquals(vmId, metaData.getVmId());
     }
-
-    @Override
-    public Set<String> getStatementDescriptors() {
-        return descs;
-    }
-
-    @Override
-    public DescriptorMetadata getDescriptorMetadata(String descriptor,
-            PreparedParameter[] params) {
-        if (descs.contains(descriptor)) {
-            // both queries use agentId
-            String agentId = (String)params[0].getValue();
-            DescriptorMetadata metadata = new DescriptorMetadata(agentId);
-            return metadata;
-        } else {
-            throw new IllegalArgumentException("Unknown descriptor: ->"
-                    + descriptor + "<-");
-        }
-    }
-
 }

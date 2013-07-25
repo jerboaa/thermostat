@@ -34,53 +34,35 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.numa.common.internal;
+package com.redhat.thermostat.web.server.auth;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import com.redhat.thermostat.numa.common.NumaDAO;
-import com.redhat.thermostat.storage.core.HostLatestPojoListGetter;
-import com.redhat.thermostat.storage.core.PreparedParameter;
+import com.redhat.thermostat.storage.core.PreparedStatement;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
+import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.storage.query.Expression;
 
 /**
- * Registers prepared queries issued by this maven module via
- * {@link HostLatestPojoListGetter} and via {@link NumaDAOImpl}.
+ * A filter suitable to get applied to {@link PreparedStatement}s before they
+ * are executed.
  *
  */
-public class NumaDAOImplStatementDescriptorRegistration implements
-        StatementDescriptorRegistration {
+interface StatementFilter<T extends Pojo> {
+
+    /**
+     * Applies this filter. Note that filters may be chained.
+     * 
+     * @param desc
+     *            The statement descriptor to apply the filter to.
+     * @param metaData
+     *            Metadata pertaining to the given descriptor.
+     * @param parentExpression
+     *            The Expression as constructed by the previous Filter. May be
+     *            null.
+     * @return A filtered result with the Expression set to use for filtering if
+     *         result type was QUERY_EXPRESSION.
+     */
+    FilterResult applyFilter(StatementDescriptor<T> desc,
+            DescriptorMetadata metaData, Expression parentExpression);
     
-    private final Set<String> descs;
-    
-    public NumaDAOImplStatementDescriptorRegistration() {
-        descs = new HashSet<>(2);
-        String descriptor = String.format(
-                HostLatestPojoListGetter.HOST_LATEST_QUERY_FORMAT,
-                NumaDAO.numaStatCategory.getName());
-        descs.add(descriptor);
-        descs.add(NumaDAOImpl.QUERY_NUMA_INFO);
-    }
-
-    @Override
-    public Set<String> getStatementDescriptors() {
-        return descs;
-    }
-
-    @Override
-    public DescriptorMetadata getDescriptorMetadata(String descriptor,
-            PreparedParameter[] params) {
-        if (descs.contains(descriptor)) {
-            // both queries use agentId
-            String agentId = (String)params[0].getValue();
-            DescriptorMetadata metadata = new DescriptorMetadata(agentId);
-            return metadata;
-        } else {
-            throw new IllegalArgumentException("Unknown descriptor: ->"
-                    + descriptor + "<-");
-        }
-    }
-
 }

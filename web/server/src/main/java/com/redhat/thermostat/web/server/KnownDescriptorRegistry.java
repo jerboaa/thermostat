@@ -37,10 +37,13 @@
 package com.redhat.thermostat.web.server;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
 
+import com.redhat.thermostat.storage.core.auth.StatementDescriptorMetadataFactory;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 
 /**
@@ -51,26 +54,37 @@ final class KnownDescriptorRegistry {
 
     private static final ServiceLoader<StatementDescriptorRegistration> TRUSTED_DESCS = ServiceLoader
             .load(StatementDescriptorRegistration.class);
-    private final Iterable<StatementDescriptorRegistration> actualTrustedDescs;
+    private final Set<String> trustedSet;
+    private final Map<String, StatementDescriptorMetadataFactory> descriptorMetadataFactories;
     
     KnownDescriptorRegistry() {
-        this.actualTrustedDescs = TRUSTED_DESCS;
+        this(TRUSTED_DESCS);
     }
     
     KnownDescriptorRegistry(Iterable<StatementDescriptorRegistration> trustedDescs) {
-        this.actualTrustedDescs = trustedDescs;
-    }
-    
-    final Set<String> getRegisteredDescriptors() {
-        Set<String> trustedSet = new HashSet<>();
-        for (StatementDescriptorRegistration reg: actualTrustedDescs) {
+        descriptorMetadataFactories = new HashMap<>();
+        trustedSet = new HashSet<>();
+        for (StatementDescriptorRegistration reg: trustedDescs) {
             Set<String> newCandidates = reg.getStatementDescriptors();
             if (newCandidates.contains(null)) {
                 throw new IllegalStateException("null statement descriptor not acceptable!");
             }
+            // prepare the reverse lookup metadata map
+            StatementDescriptorMetadataFactory factory = (StatementDescriptorMetadataFactory) reg;
+            for (String descKey: newCandidates) {
+                descriptorMetadataFactories.put(descKey, factory);
+            }
             trustedSet.addAll(newCandidates);
         }
+    }
+    
+    final Set<String> getRegisteredDescriptors() {
         // return a read-only set of all descriptors
         return Collections.unmodifiableSet(trustedSet);
+    }
+    
+    final Map<String, StatementDescriptorMetadataFactory> getDescriptorMetadataFactories() {
+        // return a read-only mapping
+        return Collections.unmodifiableMap(descriptorMetadataFactories);
     }
 }
