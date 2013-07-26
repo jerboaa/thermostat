@@ -110,8 +110,14 @@ public class IntegrationTest {
     }
 
     public static void clearStorageDataDirectory() throws IOException {
-        String storageDir = getStorageDataDirectory();
-        deleteFilesRecursivelyUnder(storageDir);
+        File storageDir = new File(getStorageDataDirectory());
+        if (storageDir.exists()) {
+            if (storageDir.isDirectory()) {
+                deleteFilesRecursivelyUnder(storageDir);
+            } else {
+                throw new IllegalStateException(storageDir + " exists but is not a directory");
+            }
+        }
     }
 
     public static Process runThermostat(String... args) throws IOException {
@@ -240,18 +246,17 @@ public class IntegrationTest {
         return (int) pidField.get(process);
     }
 
-    private static void deleteFilesRecursivelyUnder(String path) throws IOException {
-        File directory = new File(path);
-        if (!directory.isDirectory()) {
+    private static void deleteFilesRecursivelyUnder(File path) throws IOException {
+        if (!path.isDirectory()) {
             throw new IOException("Cannot delete files under a non-directory: " + path);
         }
-        File[] filesToDelete = directory.listFiles();
+        File[] filesToDelete = path.listFiles();
         if (filesToDelete == null) {
             throw new IOException("Error getting directory listing: " + path);
         }
         for (File theFile : filesToDelete) {
             if (theFile.isDirectory()) {
-                deleteFilesRecursivelyUnder(theFile.getCanonicalPath());
+                deleteFilesRecursivelyUnder(theFile);
             }
             Files.deleteIfExists(theFile.toPath());
         }
