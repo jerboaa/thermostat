@@ -75,14 +75,16 @@ public class StorageTest extends IntegrationTest {
     public void testServiceStartAndKilling() throws Exception {
 
         SpawnResult spawnResult = spawnThermostatAndGetProcess("service");
-        Spawn storage = spawnResult.spawn;
+        Spawn service = spawnResult.spawn;
 
         try {
-            storage.expectErr("agent started");
-        }
-        finally {
+            service.expectErr("agent started");
+        } finally {
             killRecursively(spawnResult.process);
         }
+
+        service.stop();
+        service.expectClose();
 
     }
 
