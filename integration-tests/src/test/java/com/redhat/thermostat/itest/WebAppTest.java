@@ -95,7 +95,7 @@ import com.redhat.thermostat.web.server.auth.Roles;
 
 import expectj.Spawn;
 
-/*
+/**
  * This test class starts up a mongod instance and a web storage instance
  * (in jetty container) in front of that.  Tests should make their own
  * connection to the web storage, probably by making use of one of the
@@ -217,10 +217,8 @@ public class WebAppTest extends IntegrationTest {
     private static final String PREP_USER = "prepuser";
     private static final String PREP_PASSWORD = "preppassword";
     private static final double EQUALS_DELTA = 0.00000000000001;
-    private static final String THERMOSTAT_USERS_FILE = getThermostatHome() +
-            "/etc/thermostat-users.properties";
-    private static final String THERMOSTAT_ROLES_FILE = getThermostatHome() +
-            "/etc/thermostat-roles.properties";
+    private static final String THERMOSTAT_USERS_FILE = getConfigurationDir() + "/thermostat-users.properties";
+    private static final String THERMOSTAT_ROLES_FILE = getConfigurationDir() + "/thermostat-roles.properties";
     private static final String VM_ID1 = "vmId1";
     private static final String VM_ID2 = "vmId2";
     private static final String VM_ID3 = "vmId3";

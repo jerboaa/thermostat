@@ -44,6 +44,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.redhat.thermostat.common.utils.StreamUtils;
@@ -55,14 +56,36 @@ import expectj.TimeoutException;
 
 /**
  * Helper methods to support writing an integration test.
+ * <p>
+ * This class should be used by all integration tests to start
+ * thermostat and to obtain paths to various locations. Starting
+ * thermostat manually will cause issues with wrong paths being
+ * used.
  */
 public class IntegrationTest {
+
+    public static class SpawnResult {
+        final Process process;
+        final Spawn spawn;
+
+        public SpawnResult(Process process, Spawn spawn) {
+            this.process = process;
+            this.spawn = spawn;
+        }
+    }
+
+    // FIXME Make sure all methods are using a sane environment that's set up correctly
 
     public static final long TIMEOUT_IN_SECONDS = 30;
 
     public static final String SHELL_PROMPT = "Thermostat >";
 
-    public static String getThermostatExecutable() {
+    private static final String THERMOSTAT_HOME = "THERMOSTAT_HOME";
+    private static final String USER_THERMOSTAT_HOME = "USER_THERMOSTAT_HOME";
+
+    /* This is a mirror of paths from c.r.t.shared.Configuration */
+
+    private static String getThermostatExecutable() {
         return "../distribution/target/bin/thermostat";
     }
     
@@ -70,13 +93,34 @@ public class IntegrationTest {
         return "../distribution/target";
     }
 
+    public static String getPluginHome() {
+        return getThermostatHome() + "/plugins";
+    }
+
+    public static String getConfigurationDir() {
+        return getThermostatHome() + "/etc";
+    }
+
+    public static String getUserThermostatHome() {
+        return "../distribution/target/user-home";
+    }
+
     public static String getStorageDataDirectory() {
-        return "../distribution/target/storage/db";
+        return getUserThermostatHome() + "/data/db";
     }
 
     public static void clearStorageDataDirectory() throws IOException {
         String storageDir = getStorageDataDirectory();
         deleteFilesRecursivelyUnder(storageDir);
+    }
+
+    public static Process runThermostat(String... args) throws IOException {
+        List<String> completeArgs = new ArrayList<String>(args.length+1);
+        completeArgs.add(getThermostatExecutable());
+        completeArgs.addAll(Arrays.asList(args));
+        ProcessBuilder builder = buildThermostatProcess(completeArgs);
+
+        return builder.start();
     }
 
     public static Spawn spawnThermostat(String... args) throws IOException {
@@ -92,14 +136,52 @@ public class IntegrationTest {
             }
         }
         String toExecute = result.toString();
+        Executor exec = null;
         if (localeDependent) {
-            Executor exec = new LocaleExecutor(toExecute);
-            return expect.spawn(exec);
+            exec = new LocaleExecutor(toExecute);
         } else {
-            return expect.spawn(toExecute);
+            exec = new SimpleExecutor(toExecute);
         }
+        return expect.spawn(exec);
     }
 
+    public static SpawnResult spawnThermostatAndGetProcess(String... args) throws IOException {
+        final List<String> completeArgs = new ArrayList<String>(args.length+1);
+        completeArgs.add(getThermostatExecutable());
+        completeArgs.addAll(Arrays.asList(args));
+
+        final Process[] process = new Process[1];
+
+        ExpectJ expect = new ExpectJ(TIMEOUT_IN_SECONDS);
+
+        Spawn spawn = expect.spawn(new Executor() {
+            @Override
+            public Process execute() throws IOException {
+                ProcessBuilder builder = buildThermostatProcess(completeArgs);
+                Process service = builder.start();
+                process[0] = service;
+                return service;
+            }
+        });
+
+        return new SpawnResult(process[0], spawn);
+    }
+
+    private static ProcessBuilder buildThermostatProcess(List<String> args) {
+        ProcessBuilder builder = new ProcessBuilder(args);
+        builder.environment().put(THERMOSTAT_HOME, getThermostatHome());
+        builder.environment().put(USER_THERMOSTAT_HOME, getUserThermostatHome());
+
+        return builder;
+    }
+
+    /**
+     * Generic method to run a program.
+     * <p>
+     * DO NOT USE THIS TO RUN THERMOSTAT ITSELF. It does not set up the
+     * environment correctly, using incorrect data and possibly overwriting
+     * important data.
+     */
     public static Spawn spawn(List<String> args) throws IOException {
         ExpectJ expect = new ExpectJ(TIMEOUT_IN_SECONDS);
         StringBuilder result = new StringBuilder();
@@ -107,11 +189,6 @@ public class IntegrationTest {
             result.append(arg).append(" ");
         }
         return expect.spawn(result.substring(0, result.length() - 1));
-    }
-
-    public static Spawn spawn(Executor executor) throws IOException {
-        ExpectJ expect = new ExpectJ(TIMEOUT_IN_SECONDS);
-        return expect.spawn(executor);
     }
 
     /**
@@ -202,18 +279,45 @@ public class IntegrationTest {
         spawn.send(password + "\r");
     }
 
-    private static class LocaleExecutor implements Executor {
+    private static class LocaleExecutor extends EnvironmentExecutor {
 
-        public static final String[] LANG_C = { "LANG=C " };
-        private String process;
+        public static final String[] ENV_WITH_LANG_C = {
+                THERMOSTAT_HOME + "=" + getThermostatHome(),
+                USER_THERMOSTAT_HOME + "=" + getUserThermostatHome(),
+                "LANG=C"
+        };
 
         public LocaleExecutor(String process) {
+            super(process, ENV_WITH_LANG_C);
+        }
+
+    }
+
+    private static class SimpleExecutor extends EnvironmentExecutor {
+
+        public static final String[] ENV_WITH = {
+                THERMOSTAT_HOME + "=" + getThermostatHome(),
+                USER_THERMOSTAT_HOME + "=" + getUserThermostatHome(),
+        };
+
+        public SimpleExecutor(String process) {
+            super(process, ENV_WITH);
+        }
+    }
+
+    private static class EnvironmentExecutor implements Executor {
+
+        private final String[] env;
+        private final String process;
+
+        public EnvironmentExecutor(String process, String[] env) {
             this.process = process;
+            this.env = env;
         }
 
         @Override
         public Process execute() throws IOException {
-            return Runtime.getRuntime().exec(process, LANG_C);
+            return Runtime.getRuntime().exec(process, env);
         }
 
         @Override

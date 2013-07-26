@@ -41,107 +41,170 @@ import java.io.File;
 import com.redhat.thermostat.shared.locale.LocaleResources;
 import com.redhat.thermostat.shared.locale.Translate;
 
+/**
+ * Contains locations to various files and directories used by thermostat
+ * components.
+ * <p>
+ * Some configuration files or directories are system-wide while
+ * others are per-user. System-wide file or directories are indicated
+ * by the word System in the name. These should contain non-mutable
+ * data that is meant to be used by all instances of thermostat
+ * running on one machine. Per-user directories will normally contain
+ * configuration and data specific for a different instance of
+ * thermostat. Per-user files and directories indicated by the word
+ * "User" in the method name.
+ * <p>
+ * The directories are split according to functionality, along the lines of
+ * Filesystem Hierarchy Standard (FHS).
+ */
 public class Configuration {
 
+    // Note: these paths are used by the integration tests too. Please update
+    // them whenever you change this class.
+
+    private static final String THERMOSTAT_HOME = "THERMOSTAT_HOME";
+    private static final String USER_THERMOSTAT_HOME = "USER_THERMOSTAT_HOME";
     private static final String THERMOSTAT_USER_DIR = ".thermostat";
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
-    private String home;
+    private final String home;
+    private final File userHome;
+
     private boolean printOsgiInfo = false;
 
     public Configuration() throws InvalidConfigurationException {
         // allow this to be specified also as a property, especially for
         // tests, this overrides the env setting
-        String home = System.getProperty("THERMOSTAT_HOME");
+        String home = System.getProperty(THERMOSTAT_HOME);
         if (home == null) {
-            home = System.getenv("THERMOSTAT_HOME");
+            home = System.getenv(THERMOSTAT_HOME);
         }
         
         if (home == null) {
-            throw new InvalidConfigurationException(t.localize(LocaleResources.ENV_NO_HOME));
+            throw new InvalidConfigurationException(THERMOSTAT_HOME + " not defined...");
         }
         this.home = home;
+
+        // allow this to be specified also as a special property, meant for tests
+        String userHome = System.getProperty(USER_THERMOSTAT_HOME);
+        if (userHome == null) {
+            userHome = System.getenv(USER_THERMOSTAT_HOME);
+        }
+        if (userHome == null) {
+            userHome = System.getProperty("user.home") + File.separatorChar + THERMOSTAT_USER_DIR;
+        }
+        this.userHome = new File(userHome);
     }
 
-    public String getThermostatHome() throws InvalidConfigurationException {
-        return home;
+    /*
+     * Overall hierarchy
+     *
+     * TODO: these might have to be different for 'root' or 'thermostat' users
+     */
+
+    public File getSystemThermostatHome() throws InvalidConfigurationException {
+        return new File(home);
     }
 
-    public String getThermostatUserHome() {
-        String home = System.getProperty("user.home");
-        return home + File.separator + THERMOSTAT_USER_DIR;
+    public File getUserThermostatHome() throws InvalidConfigurationException {
+        return userHome;
     }
 
-    public String getPluginRoot() throws InvalidConfigurationException {
-        return home + File.separator + "plugins";
+    public File getSystemPluginRoot() throws InvalidConfigurationException {
+        return new File(home, "plugins");
     }
 
-    public File getBackendsBaseDirectory() throws InvalidConfigurationException {
-        String loc = getThermostatHome() + File.separatorChar + "backends";
-        File file = new File(loc);
-        return file;
-    }
-
-    public String getLibRoot() throws InvalidConfigurationException {
-        return home + File.separator + "libs";
+    public File getSystemLibRoot() throws InvalidConfigurationException {
+        return new File(home, "libs");
     }
     
-    public String getNativeLibsRoot() throws InvalidConfigurationException {
-        return getLibRoot() + File.separator + "native";
+    public File getSystemNativeLibsRoot() throws InvalidConfigurationException {
+        return new File(getSystemLibRoot(), "native");
     }
 
-    public String getConfigurationDir() throws InvalidConfigurationException {
-        return home + File.separator + "etc";
+    public File getSystemConfigurationDirectory() throws InvalidConfigurationException {
+        return new File(getSystemThermostatHome(), "etc");
     }
 
-    public File getStorageBaseDirectory() throws InvalidConfigurationException {
-        String loc = getThermostatHome() + File.separatorChar + "storage";
-        File file = new File(loc);
-        return file;
-    }
-    
-    public File getStorageDirectory() throws InvalidConfigurationException {
-        return new File(getStorageBaseDirectory(), "db");
-    }
-    
-    public File getStorageConfigurationFile() throws InvalidConfigurationException {
-        return new File(getStorageBaseDirectory(), "db.properties");
+    public File getUserConfigurationDirectory() throws InvalidConfigurationException {
+        return new File(getUserThermostatHome(), "etc");
     }
 
-    public File getStorageLogFile() throws InvalidConfigurationException {
-        File logDir = new File(getStorageBaseDirectory(), "logs");
-        File logFile = new File(logDir, "db.log");
-        
+    /** A location that contains data that is persisted */
+    public File getUserPersistentDataDirectory() throws InvalidConfigurationException {
+        File dataDir = new File(getUserThermostatHome(), "data");
+        return dataDir;
+    }
+
+    /** Contains data that is only useful for the duration that thermostat is running */
+    public File getUserRuntimeDataDirectory() throws InvalidConfigurationException {
+        File runDir = new File(getUserThermostatHome(), "run");
+        return runDir;
+    }
+
+    public File getUserLogDirectory() throws InvalidConfigurationException {
+        File logDir = new File(getUserThermostatHome(), "logs");
+        return logDir;
+    }
+
+    public File getUserCacheDirectory() throws InvalidConfigurationException {
+        File cacheDir = new File(getUserThermostatHome(), "cache");
+        return cacheDir;
+    }
+
+    /* Specific files and directories */
+
+    public File getUserStorageDirectory() throws InvalidConfigurationException {
+        return new File(getUserPersistentDataDirectory(), "db");
+    }
+
+    public File getSystemStorageConfigurationFile() throws InvalidConfigurationException {
+        return new File(getSystemConfigurationDirectory(), "db.properties");
+    }
+
+    public File getUserStorageConfigurationFile() throws InvalidConfigurationException {
+        return new File(getUserConfigurationDirectory(), "db.properties");
+    }
+
+    public File getUserStorageLogFile() throws InvalidConfigurationException {
+        File logFile = new File(getUserLogDirectory(), "db.log");
         return logFile;
     }
 
-    public File getStoragePidFile() throws InvalidConfigurationException {
-        File logDir = new File(getStorageBaseDirectory(), "run");
-        File logFile = new File(logDir, "db.pid");
-        
+    public File getUserStoragePidFile() throws InvalidConfigurationException {
+        File logFile = new File(getUserRuntimeDataDirectory(), "db.pid");
         return logFile;
     }
 
-    public File getAgentConfigurationFile() throws InvalidConfigurationException {
-        File agent = new File(getThermostatHome(), "agent");
-        return new File(agent, "agent.properties");
+    public File getSystemAgentConfigurationFile() throws InvalidConfigurationException {
+        return new File(getSystemConfigurationDirectory(), "agent.properties");
     }
 
-    public File getAgentAuthConfigFile() throws InvalidConfigurationException {
-        File agent = new File(getThermostatHome(), "agent");
-        return new File(agent, "agent.auth");
+    public File getUserAgentConfigurationFile() throws InvalidConfigurationException {
+        return new File(getUserConfigurationDirectory(), "agent.properties");
     }
 
-    public File getClientConfigurationDirectory() throws InvalidConfigurationException {
-        File client = new File(getThermostatHome(), "client");
+    public File getSystemAgentAuthConfigFile() throws InvalidConfigurationException {
+        return new File(getSystemConfigurationDirectory(), "agent.auth");
+    }
+
+    public File getUserAgentAuthConfigFile() throws InvalidConfigurationException {
+        return new File(getUserConfigurationDirectory(), "agent.auth");
+    }
+
+    public File getUserClientConfigurationFile() throws InvalidConfigurationException {
+        File client = new File(getUserConfigurationDirectory(), "client.properties");
         return client;
     }
 
-    public File getHistoryFile() throws InvalidConfigurationException {
-        File history = new File(getClientConfigurationDirectory(), "cli-history");
+    public File getUserHistoryFile() throws InvalidConfigurationException {
+        File history = new File(getUserPersistentDataDirectory(), "cli-history");
         return history;
     }
 
+    // TODO add logging files here (see LoggingUtils)
+    // TODO add ssl.properties file here (see SSLConfiguration)
+    
     public boolean getPrintOSGiInfo() {
         return printOsgiInfo;
     }

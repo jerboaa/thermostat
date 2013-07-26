@@ -36,12 +36,12 @@
 
 package com.redhat.thermostat.launcher.internal;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
@@ -90,8 +90,8 @@ public class BundleManagerImpl extends BundleManager {
         long t1 = System.nanoTime();
 
         try {
-            for (String root : new String[] { configuration.getLibRoot(), configuration.getPluginRoot() }) {
-                Files.walkFileTree(Paths.get(root), new SimpleFileVisitor<Path>() {
+            for (File root : new File[] { configuration.getSystemLibRoot(), configuration.getSystemPluginRoot() }) {
+                Files.walkFileTree(root.toPath(), new SimpleFileVisitor<Path>() {
                     @Override
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                         if (file.toFile().getName().endsWith(".jar")) {

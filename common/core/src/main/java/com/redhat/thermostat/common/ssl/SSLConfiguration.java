@@ -157,7 +157,7 @@ public class SSLConfiguration {
     private static void loadClientProperties()
             throws InvalidConfigurationException {
         if (clientProps == null) {
-            File clientPropertiesFile = new File(new Configuration().getConfigurationDir(),
+            File clientPropertiesFile = new File(new Configuration().getUserConfigurationDirectory(),
                     "ssl.properties");
             initClientProperties(clientPropertiesFile);
         }

@@ -81,7 +81,7 @@ public class ShellCommand extends AbstractCommand {
         public PersistentHistory get() {
             PersistentHistory history = null;
             try {
-                history = new FileHistory(new Configuration().getHistoryFile());
+                history = new FileHistory(new Configuration().getUserHistoryFile());
             } catch (InvalidConfigurationException | IOException e) {
                 /* no history available */
             }

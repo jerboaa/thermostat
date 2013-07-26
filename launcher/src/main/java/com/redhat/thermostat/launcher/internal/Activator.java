@@ -80,11 +80,11 @@ public class Activator implements BundleActivator {
             Keyring keyring = (Keyring)context.getService(reference);
             Configuration config = bundleService.getConfiguration();
 
-            String commandsDir = config.getConfigurationDir() + File.separator + "commands";
+            String commandsDir = new File(config.getSystemConfigurationDirectory(), "commands").toString();
             CommandInfoSource builtInCommandSource =
-                    new BuiltInCommandInfoSource(commandsDir, config.getLibRoot());
+                    new BuiltInCommandInfoSource(commandsDir, config.getSystemLibRoot().toString());
             CommandInfoSource pluginCommandSource = new PluginCommandInfoSource(
-                            config.getLibRoot(), config.getPluginRoot());
+                            config.getSystemLibRoot().toString(), config.getSystemPluginRoot().toString());
             CommandInfoSource commands = new CompoundCommandInfoSource(builtInCommandSource, pluginCommandSource);
 
             cmdInfoReg = context.registerService(CommandInfoSource.class, commands, null);

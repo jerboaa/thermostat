@@ -45,8 +45,10 @@ if [ x"$THERMOSTAT_INSTALL_DIR" = x ] ; then
 fi
 # Not always are installation directory and thermostat home one and
 # the same location.
-THERMOSTAT_HOME=${THERMOSTAT_INSTALL_DIR}
-export THERMOSTAT_HOME
+if [ x"$THERMOSTAT_HOME" = x ] ; then
+  THERMOSTAT_HOME=${THERMOSTAT_INSTALL_DIR}
+  export THERMOSTAT_HOME
+fi
 THERMOSTAT_LIBS="${THERMOSTAT_HOME}/libs"
 
 # need tools from the JVM

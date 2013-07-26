@@ -57,7 +57,7 @@ public class ConfigurationTest {
         // remove THERMOSTAT_HOME system property for a clean slate
         Properties props = System.getProperties();
         Properties newProps = new Properties();
-        for (Object key: props.keySet()) {
+        for (Object key : props.keySet()) {
             if (!key.equals("THERMOSTAT_HOME")) {
                 newProps.put(key, props.get(key));
             }
@@ -66,35 +66,46 @@ public class ConfigurationTest {
     }
 
     @Test
-    public void testLocations() throws InvalidConfigurationException, IOException {
+    public void testSystemLocations() throws InvalidConfigurationException, IOException {
         String thermostatHome = "/tmp";
         System.setProperty("THERMOSTAT_HOME", thermostatHome);
-        
+
         char s = File.separatorChar;
 
         Configuration config = new Configuration();
 
-        Assert.assertEquals(thermostatHome, config.getThermostatHome());
+        Assert.assertEquals(thermostatHome, config.getSystemThermostatHome().getCanonicalPath());
 
-        Assert.assertEquals(thermostatHome + s + "agent" + s + "agent.properties",
-                            config.getAgentConfigurationFile().getCanonicalPath());
-        Assert.assertEquals(thermostatHome + s + "agent" + s + "agent.auth",
-                                    config.getAgentAuthConfigFile().getCanonicalPath());
-        Assert.assertEquals(thermostatHome + s + "storage", config.getStorageBaseDirectory().getCanonicalPath());
-        Assert.assertEquals(thermostatHome + s + "storage" + s + "db.properties",
-                            config.getStorageConfigurationFile().getCanonicalPath());
-        Assert.assertEquals(thermostatHome + s + "storage" + s + "db",
-                config.getStorageDirectory().getCanonicalPath());
-        Assert.assertEquals(thermostatHome + s + "storage" + s + "logs" + s + "db.log",
-                config.getStorageLogFile().getCanonicalPath());
-        Assert.assertEquals(thermostatHome + s + "storage" + s + "run" + s + "db.pid",
-                config.getStoragePidFile().getCanonicalPath());
         Assert.assertEquals(thermostatHome + s + "libs" + s + "native",
-                config.getNativeLibsRoot());
-        Assert.assertEquals(thermostatHome + s + "libs", config.getLibRoot());
-        Assert.assertEquals(thermostatHome + s + "plugins", config.getPluginRoot());
+                config.getSystemNativeLibsRoot().getCanonicalPath());
+        Assert.assertEquals(thermostatHome + s + "etc", config.getSystemConfigurationDirectory().getCanonicalPath());
+        Assert.assertEquals(thermostatHome + s + "libs", config.getSystemLibRoot().getCanonicalPath());
+        Assert.assertEquals(thermostatHome + s + "plugins", config.getSystemPluginRoot().getCanonicalPath());
     }
-    
+
+    @Test
+    public void testUserLocations() throws InvalidConfigurationException, IOException {
+        String thermostatHome = "/tmp";
+        System.setProperty("THERMOSTAT_HOME", thermostatHome);
+        char s = File.separatorChar;
+        String userHome = System.getProperty("user.home") + s + ".thermostat";
+        Configuration config = new Configuration();
+
+        Assert.assertEquals(userHome + s + "etc" + s + "agent.properties",
+                config.getUserAgentConfigurationFile().getCanonicalPath());
+        Assert.assertEquals(userHome + s + "etc" + s + "agent.auth",
+                config.getUserAgentAuthConfigFile().getCanonicalPath());
+        Assert.assertEquals(userHome + s + "etc" + s + "db.properties",
+                config.getUserStorageConfigurationFile().getCanonicalPath());
+
+        Assert.assertEquals(userHome + s + "data" + s + "db",
+                config.getUserStorageDirectory().getCanonicalPath());
+        Assert.assertEquals(userHome + s + "run" + s + "db.pid",
+                config.getUserStoragePidFile().getCanonicalPath());
+        Assert.assertEquals(userHome + s + "logs" + s + "db.log",
+                config.getUserStorageLogFile().getCanonicalPath());
+    }
+
     @Test
     public void instantiationThrowsException() {
         try {
@@ -106,4 +117,3 @@ public class ConfigurationTest {
         }
     }
 }
-

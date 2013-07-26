@@ -80,6 +80,7 @@ public class ThermostatTest {
         tempDir = Files.createTempDirectory("test");
         tempDir.toFile().deleteOnExit();
         System.setProperty("THERMOSTAT_HOME", tempDir.toString());
+        System.setProperty("USER_THERMOSTAT_HOME", tempDir.toString());
         
         File tempEtc = new File(tempDir.toFile(), "etc");
         tempEtc.mkdirs();

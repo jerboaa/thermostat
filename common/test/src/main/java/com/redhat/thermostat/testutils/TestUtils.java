@@ -37,6 +37,7 @@
 package com.redhat.thermostat.testutils;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -65,47 +66,86 @@ public class TestUtils {
     }
 
     /**
+     * Creates and initializes a directory suitable for use as the storage's
+     * configuration directory
+     */
+    public static String setupStorageConfigs(Properties dbConfig) throws IOException {
+        Random random = new Random();
+
+        String tmpDir = System.getProperty("java.io.tmpdir") + File.separatorChar +
+                 Math.abs(random.nextInt()) + File.separatorChar;
+
+        setupSystemStorageConfig(tmpDir, dbConfig);
+        setupUserStorageConfig(tmpDir);
+
+        return tmpDir;
+    }
+
+    private static void setupSystemStorageConfig(String root, Properties dbConfig) throws FileNotFoundException, IOException {
+        System.setProperty("THERMOSTAT_HOME", root);
+
+        File config = new File(root, "etc");
+        config.mkdirs();
+        File tmpConfigs = new File(config, "db.properties");
+
+        dbConfig.store(new FileOutputStream(tmpConfigs), "thermostat test properties");
+    }
+
+    private static void setupUserStorageConfig(String root) {
+        System.setProperty("USER_THERMOSTAT_HOME", root);
+
+        new File(root, "run").mkdirs();
+        new File(root, "logs").mkdirs();
+
+        File data = new File(root + "data");
+        data.mkdirs();
+        new File(data, "db").mkdirs();
+    }
+
+    /**
      * Creates and initializes a directory suitable for use as the agent's
      * configuration directory
-     *
-     * @return a String containing the path to the temporary configuration directory
-     * @throws IOException
      */
-    public static String setupAgentConfigs() throws IOException {
+    public static String setupAgentConfigs(Properties agentProperties) throws IOException {
         // need to create dummy config files for the tests
         Random random = new Random();
 
         String tmpDir = System.getProperty("java.io.tmpdir") + File.separatorChar +
                 Math.abs(random.nextInt()) + File.separatorChar;
 
-        System.setProperty("THERMOSTAT_HOME", tmpDir);
-        File agent = new File(tmpDir, "agent");
-        agent.mkdirs();
+        setupSystemAgentConfig(tmpDir, agentProperties);
+        setupUserAgentConfig(tmpDir);
 
-        File tmpConfigs = new File(agent, "agent.properties");
+        return tmpDir;
+    }
 
-        new File(agent, "run").mkdirs();
-        new File(agent, "logs").mkdirs();
+    private static void setupSystemAgentConfig(String root, Properties agentProperties) throws FileNotFoundException, IOException {
+        System.setProperty("THERMOSTAT_HOME", root);
 
-        File backends = new File(tmpDir, "backends");
-        File system = new File(backends, "system");
-        system.mkdirs();
+        File etc = new File(root, "etc");
+        etc.mkdirs();
+        File tmpConfigs = new File(etc, "agent.properties");
 
-        Properties props = new Properties();
-        
-        props.setProperty("SAVE_ON_EXIT", "true");
-        props.setProperty("CONFIG_LISTEN_ADDRESS", "42.42.42.42:42");
-        
         try (OutputStream propsOutputStream = new FileOutputStream(tmpConfigs)) {
-            props.store(propsOutputStream, "thermostat agent test properties");
+            agentProperties.store(propsOutputStream, "thermostat agent test properties");
         }
 
-        File tmpAuth = new File(agent, "agent.auth");
+        File tmpAuth = new File(etc, "agent.auth");
         FileWriter authWriter = new FileWriter(tmpAuth);
         authWriter.append("username=user\npassword=pass\n");
         authWriter.flush();
         authWriter.close();
-        return tmpDir;
+    }
+
+    private static void setupUserAgentConfig(String root) throws IOException {
+        System.setProperty("USER_THERMOSTAT_HOME", root);
+
+        File agent = new File(root, "agent");
+        agent.mkdirs();
+
+        new File(agent, "run").mkdirs();
+        new File(agent, "logs").mkdirs();
+
     }
 }
 

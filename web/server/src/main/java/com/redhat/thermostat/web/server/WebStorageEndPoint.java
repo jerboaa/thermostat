@@ -270,7 +270,7 @@ public class WebStorageEndPoint extends HttpServlet {
     private File getThermostatHome() {
         try {
             Configuration config = new Configuration();
-            return new File(config.getThermostatHome());
+            return config.getSystemThermostatHome();
         } catch (InvalidConfigurationException e) {
             // we should have just checked if this throws any exception
             logger.log(Level.SEVERE, "Illegal configuration!", e);

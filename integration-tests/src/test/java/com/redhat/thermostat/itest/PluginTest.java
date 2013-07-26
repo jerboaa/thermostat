@@ -51,7 +51,7 @@ import expectj.Spawn;
 
 public class PluginTest extends IntegrationTest {
 
-    private static final String PLUGIN_HOME = getThermostatHome() + File.separator + "plugins";
+    private static final String PLUGIN_HOME = getPluginHome();
 
     private static NewCommandPlugin newPlugin = new NewCommandPlugin(PLUGIN_HOME + File.separator + "new");
     private static UnknownExtendsPlugin unknownExtension = new UnknownExtendsPlugin(PLUGIN_HOME + File.separator + "unknown");

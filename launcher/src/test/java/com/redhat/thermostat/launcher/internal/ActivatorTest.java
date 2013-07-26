@@ -108,7 +108,7 @@ public class ActivatorTest {
         context.registerService(Command.class, helpCommand, props);
 
         Configuration config = mock(Configuration.class);
-        when(config.getThermostatHome()).thenReturn("");
+        when(config.getSystemThermostatHome()).thenReturn(new File(""));
         when(registryService.getConfiguration()).thenReturn(config);
 
         BuiltInCommandInfoSource source1 = mock(BuiltInCommandInfoSource.class);

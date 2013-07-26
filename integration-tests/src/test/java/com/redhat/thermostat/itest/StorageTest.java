@@ -36,11 +36,8 @@
 
 package com.redhat.thermostat.itest;
 
-import java.io.IOException;
-
 import org.junit.Test;
 
-import expectj.Executor;
 import expectj.Spawn;
 
 public class StorageTest extends IntegrationTest {
@@ -76,25 +73,17 @@ public class StorageTest extends IntegrationTest {
 
     @Test
     public void testServiceStartAndKilling() throws Exception {
-        Spawn storage;
-        final Process[] process = new Process[1];
 
-        storage = spawn(new Executor() {
-            @Override
-            public Process execute() throws IOException {
-                ProcessBuilder builder = new ProcessBuilder(getThermostatExecutable(), "service");
-                Process service = builder.start();
-                process[0] = service;
-                return service;
-            }
-        });
+        SpawnResult spawnResult = spawnThermostatAndGetProcess("service");
+        Spawn storage = spawnResult.spawn;
 
         try {
             storage.expectErr("agent started");
         }
         finally {
-            killRecursively(process[0]);
+            killRecursively(spawnResult.process);
         }
+
     }
 
 }

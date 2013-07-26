@@ -36,43 +36,35 @@
 
 package com.redhat.thermostat.shared.config;
 
-import java.io.File;
+import static org.junit.Assert.assertFalse;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-/**
- * Class which enables resolving of native libraries placed in
- * {@link Configuration#getNativeLibsRoot()}.
- *
- */
-public class NativeLibraryResolver {
+public class NativeLibrayResolverTest {
 
-    /**
-     * Gets the absolute path of a native library. The native library must be
-     * placed in directory as returned by {@link Configuration#getNativeLibsRoot()}.
-     * 
-     * @param libraryName
-     *            The name of the library. Specified in the same fashion as for
-     *            {@link System#loadLibrary(String)}.
-     * @return The absolute path to the native library, suitable to be loaded
-     *         via {@link System#load(String)};
-     */
-    public static String getAbsoluteLibraryPath(String libraryName) {
-        String nativeLibsRoot = null;
-        // Allow a property for tests
-        nativeLibsRoot = System.getProperty("com.redhat.thermostat.shared.loader.testNativesHome");
-        if (nativeLibsRoot != null) {
-            return doResolve(nativeLibsRoot, libraryName);
-        }
-        try {
-            Configuration config = new Configuration();
-            nativeLibsRoot = config.getSystemNativeLibsRoot().getPath();
-        } catch (InvalidConfigurationException e) {
-            throw new AssertionError(e);
-        }
-        return doResolve(nativeLibsRoot, libraryName);
+    private static final String THERMOSTAT_HOME = "THERMOSTAT_HOME";
+
+    private String saved;
+
+    @Before
+    public void setUp() {
+        saved = System.setProperty(THERMOSTAT_HOME, "../foo/");
     }
-    
-    private static String doResolve(String root, String libraryName) {
-        return new File(root, System.mapLibraryName(libraryName)).getAbsolutePath();
+
+    @After
+    public void tearDown() {
+        if (saved == null) {
+            System.clearProperty(THERMOSTAT_HOME);
+        } else {
+            System.setProperty(THERMOSTAT_HOME, null);
+        }
+    }
+
+    @Test
+    public void testGetAbsoluteLibraryPath() {
+        String absPath = NativeLibraryResolver.getAbsoluteLibraryPath("foo");
+        assertFalse(absPath.startsWith(".."));
     }
 }

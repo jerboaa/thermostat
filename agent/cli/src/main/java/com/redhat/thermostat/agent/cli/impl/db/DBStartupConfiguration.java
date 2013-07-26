@@ -63,12 +63,12 @@ public class DBStartupConfiguration implements StartupConfiguration {
     
     private String ip;
         
-    public DBStartupConfiguration(File properties, File dbPath, File logFile,
-            File pidFile) throws InvalidConfigurationException {
+    public DBStartupConfiguration(File systemProperties, File userProperties,
+            File dbPath, File logFile, File pidFile) throws InvalidConfigurationException {
         this.dbPath = dbPath;
         this.logFile = logFile;
         this.pidFile = pidFile;
-        readAndSetProperties(properties);
+        readAndSetProperties(systemProperties, userProperties);
     }
     
     public File getDBPath() {
@@ -142,26 +142,36 @@ public class DBStartupConfiguration implements StartupConfiguration {
         this.sslKeyPassphrase = sslKeyPassphrase;
     }
     
-    private void readAndSetProperties(File propertyFile) throws InvalidConfigurationException {
+    private void readAndSetProperties(File systemPropertiesFile, File userPropertiesFile) throws InvalidConfigurationException {
         
-        Properties properties = new Properties();
+        Properties systemProperties = new Properties();
         try {
-            properties.load(new FileInputStream(propertyFile));
-            
+            systemProperties.load(new FileInputStream(systemPropertiesFile));
         } catch (IOException e) {
-            throw new InvalidConfigurationException(e);
+            throw new InvalidConfigurationException(/* "Could not find system configuration", */e);
         }
         
-        if (properties.containsKey(DBConfig.PORT.name())) {
-            String port = (String) properties.get(DBConfig.PORT.name());
+        Properties properties = new Properties(systemProperties);
+        try {
+            properties.load(new FileInputStream(userPropertiesFile));
+        } catch (IOException e) {
+            // that's fine. we will just rely on system properties
+        }
+
+        readAndSetProperties(properties);
+    }
+
+    private void readAndSetProperties(Properties properties) {
+        String port = properties.getProperty(DBConfig.PORT.name());
+        if (port != null) {
             int localPort = Integer.parseInt(port);
             setPort(localPort);
         } else {
             throw new InvalidConfigurationException(t.localize(LocaleResources.MISSING_PROPERTY, DBConfig.PORT.toString()));
         }
         
-        if (properties.containsKey(DBConfig.BIND.name())) {
-            String ip = (String) properties.get(DBConfig.BIND.name());
+        String ip = properties.getProperty(DBConfig.BIND.name());
+        if (ip != null) {
             setBindIP(ip);
         } else {
             throw new InvalidConfigurationException(t.localize(LocaleResources.MISSING_PROPERTY, DBConfig.BIND.toString()));

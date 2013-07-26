@@ -68,15 +68,16 @@ public class StorageCommand extends AbstractStateNotifyingCommand {
     private void parseArguments(Arguments args) throws InvalidConfigurationException {
     
         Configuration thermostatConfiguration = new Configuration();
-        File dbPath = thermostatConfiguration.getStorageDirectory();
-        File logFile = thermostatConfiguration.getStorageLogFile();
-        File pidFile = thermostatConfiguration.getStoragePidFile();
-        File propertyFile = thermostatConfiguration.getStorageConfigurationFile();
-        if (!propertyFile.exists()) {
-            throw new InvalidConfigurationException(t.localize(LocaleResources.MISSING_DB_CONFIG, propertyFile.toString()));
+        File dbPath = thermostatConfiguration.getUserStorageDirectory();
+        File logFile = thermostatConfiguration.getUserStorageLogFile();
+        File pidFile = thermostatConfiguration.getUserStoragePidFile();
+        File systemPropertyFile = thermostatConfiguration.getSystemStorageConfigurationFile();
+        if (!systemPropertyFile.exists()) {
+            throw new InvalidConfigurationException(t.localize(LocaleResources.MISSING_DB_CONFIG, systemPropertyFile.toString()));
         }
+        File userPropertyFile = thermostatConfiguration.getUserStorageConfigurationFile();
         // read everything that is in the configs
-        this.configuration = new DBStartupConfiguration(propertyFile, dbPath, logFile, pidFile);
+        this.configuration = new DBStartupConfiguration(systemPropertyFile, userPropertyFile, dbPath, logFile, pidFile);
         parser = new DBOptionParser(configuration, args);
         parser.parse();
     }
@@ -119,6 +120,7 @@ public class StorageCommand extends AbstractStateNotifyingCommand {
     
     private void startService() throws IOException, InterruptedException, InvalidConfigurationException, ApplicationException {
         try {
+            createNeededDirectories();
             runner.startService();
         } catch (ApplicationException | InvalidConfigurationException | IOException e) {
             // something went wrong set status appropriately. This makes sure
@@ -130,6 +132,29 @@ public class StorageCommand extends AbstractStateNotifyingCommand {
         getNotifier().fireAction(ApplicationState.START);
     }
     
+    private void createNeededDirectories() throws InvalidConfigurationException {
+        File[] requiredDirectories = new File[] {
+                configuration.getDBPath(),
+        };
+
+        for (File directory : requiredDirectories) {
+            if (!directory.isDirectory() && !directory.mkdirs()) {
+                throw new InvalidConfigurationException(t.localize(LocaleResources.MISSING_DB_DIR));
+            }
+        }
+
+        File[] requiredFiles = new File[] {
+                configuration.getLogFile(),
+                configuration.getPidFile(),
+        };
+
+        for (File file : requiredFiles) {
+            File directory = file.getParentFile();
+            if (!directory.isDirectory() && !directory.mkdirs()) {
+                throw new InvalidConfigurationException(t.localize(LocaleResources.MISSING_DB_DIR));
+            }
+        }
+    }
     
     private void stopService() throws IOException, InterruptedException, InvalidConfigurationException, ApplicationException {
         try {
@@ -144,6 +169,15 @@ public class StorageCommand extends AbstractStateNotifyingCommand {
         getNotifier().fireAction(ApplicationState.STOP);
     }
     
+    private void check() throws InvalidConfigurationException {
+        if (!configuration.getDBPath().exists() ||
+            !configuration.getLogFile().getParentFile().exists() ||
+            !configuration.getPidFile().getParentFile().exists())
+        {
+            throw new InvalidConfigurationException(t.localize(LocaleResources.MISSING_DB_DIR));
+        }
+    }
+
     private void printServiceStatus(CommandContext ctx) {
         if (runner.isStorageRunning()) {
             ctx.getConsole().getOutput().println(t.localize(LocaleResources.STORAGE_RUNNING).getContents());
@@ -154,15 +188,6 @@ public class StorageCommand extends AbstractStateNotifyingCommand {
     
     MongoProcessRunner createRunner() {
         return new MongoProcessRunner(configuration, parser.isQuiet());
-    }
-
-    private void check() throws InvalidConfigurationException {
-        if (!configuration.getDBPath().exists() ||
-            !configuration.getLogFile().getParentFile().exists() || 
-            !configuration.getPidFile().getParentFile().exists())
-        {
-            throw new InvalidConfigurationException(t.localize(LocaleResources.MISSING_DB_DIR));
-        }
     }
 
     public DBStartupConfiguration getConfiguration() {

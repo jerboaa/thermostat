@@ -38,6 +38,7 @@ package com.redhat.thermostat.agent.config;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Properties;
 
 import junit.framework.Assert;
 
@@ -55,7 +56,12 @@ public class AgentOptionParserTest {
     
     @BeforeClass
     public static void setup() throws IOException {
-        tmpFile = new File(TestUtils.setupAgentConfigs());
+
+        Properties agentProperties = new Properties();
+        agentProperties.setProperty("SAVE_ON_EXIT", "true");
+        agentProperties.setProperty("CONFIG_LISTEN_ADDRESS", "42.42.42.42:42");
+
+        tmpFile = new File(TestUtils.setupAgentConfigs(agentProperties));
     }
     
     @AfterClass

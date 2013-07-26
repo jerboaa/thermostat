@@ -71,7 +71,10 @@ class RolesAmender {
     private final Set<Object> users; 
 
     RolesAmender(Set<Object> users) {
-        this((new Configuration().getConfigurationDir() + File.separator + DEFAULT_ROLES_FILE), users);
+        // this is the default configuration supplied with thermostat
+        // it should not be overriden by editing this configuraton file
+        // see javadocs of PropertiesUsernameRolesLoginModule
+        this((new Configuration().getSystemConfigurationDirectory() + File.separator + DEFAULT_ROLES_FILE), users);
     }
     
     RolesAmender(String rolesFile, Set<Object> users) {

@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.eclipse.internal.preferences;
 
-import java.util.prefs.BackingStoreException;
+import java.io.IOException;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.preferences.DefaultScope;
@@ -113,7 +113,7 @@ public class MainPreferencePage extends FieldEditorPreferencePage implements
             clientPrefs.setCredentials(usernameEditor.getStringValue(), passwordEditor.getStringValue());
             try {
                 clientPrefs.flush();
-            } catch (BackingStoreException e) {
+            } catch (IOException e) {
                 LoggerFacility.getInstance().log(IStatus.ERROR, "Failed to save preferences", e);
             }
         }

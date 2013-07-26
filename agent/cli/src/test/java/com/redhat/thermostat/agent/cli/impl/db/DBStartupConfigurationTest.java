@@ -71,7 +71,8 @@ public class DBStartupConfigurationTest {
     @Test
     public void canGetConfigFromPropertiesFile() throws Exception {
         File dbProps = new File(this.getClass().getResource("/testDbConfig.properties").getFile());
-        DBStartupConfiguration dbConfig = new DBStartupConfiguration(dbProps, dbPath, dbLogFile, dbPidFile);
+        File canNotBeFoundFile = new File("");
+        DBStartupConfiguration dbConfig = new DBStartupConfiguration(dbProps, canNotBeFoundFile, dbPath, dbLogFile, dbPidFile);
         
         assertEquals(dbLogFile.getAbsolutePath(), dbConfig.getLogFile().getAbsolutePath());
         assertEquals(dbPidFile.getAbsolutePath(), dbConfig.getPidFile().getAbsolutePath());
@@ -86,7 +87,8 @@ public class DBStartupConfigurationTest {
     @Test
     public void canGetConfigFromPropertiesFile2() throws Exception {
         File dbProps = new File(this.getClass().getResource("/testDbConfig2.properties").getFile());
-        DBStartupConfiguration dbConfig = new DBStartupConfiguration(dbProps, dbPath, dbLogFile, dbPidFile);
+        File canNotBeFoundFile = new File("");
+        DBStartupConfiguration dbConfig = new DBStartupConfiguration(dbProps, canNotBeFoundFile, dbPath, dbLogFile, dbPidFile);
         
         assertEquals(dbLogFile.getAbsolutePath(), dbConfig.getLogFile().getAbsolutePath());
         assertEquals(dbPidFile.getAbsolutePath(), dbConfig.getPidFile().getAbsolutePath());
@@ -101,8 +103,9 @@ public class DBStartupConfigurationTest {
     @Test
     public void missingBindThrowsConfigException() throws Exception {
         File dbProps = new File(this.getClass().getResource("/brokenDbConfig.properties").getFile());
+        File canNotBeFoundFile = new File("");
         try {
-            new DBStartupConfiguration(dbProps, dbPath, dbLogFile, dbPidFile);
+            new DBStartupConfiguration(dbProps, canNotBeFoundFile, dbPath, dbLogFile, dbPidFile);
             fail("BIND was not specified in properties file");
         } catch (InvalidConfigurationException e) {
             assertEquals("BIND property missing", e.getMessage());
@@ -112,8 +115,9 @@ public class DBStartupConfigurationTest {
     @Test
     public void missingPortThrowsConfigException() throws Exception {
         File dbProps = new File(this.getClass().getResource("/brokenDbConfig2.properties").getFile());
+        File canNotBeFoundFile = new File("");
         try {
-            new DBStartupConfiguration(dbProps, dbPath, dbLogFile, dbPidFile);
+            new DBStartupConfiguration(dbProps, canNotBeFoundFile, dbPath, dbLogFile, dbPidFile);
             fail("PORT was not specified in properties file");
         } catch (InvalidConfigurationException e) {
             assertEquals("PORT property missing", e.getMessage());

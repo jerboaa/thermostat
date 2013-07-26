@@ -36,9 +36,19 @@
 
 package com.redhat.thermostat.common.config;
 
-import java.util.prefs.BackingStoreException;
-import java.util.prefs.Preferences;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.config.Configuration;
+import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.utils.keyring.Credentials;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
@@ -49,26 +59,47 @@ public class ClientPreferences {
     static final String CONNECTION_URL = "connection-url";
     static final String SAVE_ENTITLEMENTS = "save-entitlements";
     static final String DEFAULT_CONNECTION_URL = "mongodb://127.0.0.1:27518";
+
+    private static final Logger logger = LoggingUtils.getLogger(ClientPreferences.class);
     
-    private final Preferences prefs;
+    private Properties prefs;
     
     private Keyring keyring;
     
     private Credentials userCredentials;
     
     public ClientPreferences(Keyring keyring) {
-        this(Preferences.userRoot().node("thermostat"), keyring);
+        Properties props = new Properties();
+        try {
+            File userConfig = new Configuration().getUserClientConfigurationFile();
+            if (userConfig.isFile()) {
+                try {
+                    try (InputStream fis = new FileInputStream(userConfig)) {
+                        props.load(fis);
+                    }
+                } catch (IOException e) {
+                    logger.log(Level.CONFIG, "unable to load client configuration", e);
+                }
+            }
+        } catch (InvalidConfigurationException e) {
+            logger.log(Level.CONFIG, "unable to load configuration", e);
+        }
+        init(props, keyring);
     }
 
-    // Testing hook with injectable j.u.p.Preferences
-    ClientPreferences(Preferences prefs, Keyring keyring) {
-        this.prefs = prefs;
+    // Testing hook with injectable j.u.Properties
+    ClientPreferences(Properties properties, Keyring keyring) {
+        init(properties, keyring);
+    }
+
+    private void init(Properties properties, Keyring keyring) {
+        this.prefs = properties;
         this.keyring = keyring;
         this.userCredentials = new Credentials();
         userCredentials.setDescription("thermostat keychain");
 
         // load the initial defaults
-        userCredentials.setUserName(prefs.get(USERNAME, ""));
+        userCredentials.setUserName(prefs.getProperty(USERNAME, ""));
         this.userCredentials.setPassword("");
         if (getSaveEntitlements()) {
             keyring.loadPassword(userCredentials);
@@ -76,15 +107,15 @@ public class ClientPreferences {
     }
 
     public boolean getSaveEntitlements() {
-        return prefs.getBoolean(SAVE_ENTITLEMENTS, false);
+        return Boolean.valueOf(prefs.getProperty(SAVE_ENTITLEMENTS, "false"));
     }
     
     public void setSaveEntitlements(boolean save) {
-        prefs.putBoolean(SAVE_ENTITLEMENTS, save);
+        prefs.setProperty(SAVE_ENTITLEMENTS, Boolean.toString(save));
     }
     
     public String getConnectionUrl() {
-        return prefs.get(CONNECTION_URL, DEFAULT_CONNECTION_URL);
+        return prefs.getProperty(CONNECTION_URL, DEFAULT_CONNECTION_URL);
     }
 
     public String getPassword() {
@@ -95,7 +126,7 @@ public class ClientPreferences {
     }
 
     public String getUserName() {        
-        return prefs.get(USERNAME, "");
+        return prefs.getProperty(USERNAME, "");
     }
 
     public void setConnectionUrl(String url) {
@@ -113,8 +144,8 @@ public class ClientPreferences {
         }
     }
     
-    public void flush() throws BackingStoreException {
-        prefs.flush();
+    public void flush() throws IOException {
+        prefs.store(new FileWriter(new Configuration().getUserClientConfigurationFile()), "");
         userCredentials.setUserName(getUserName());
         if (getSaveEntitlements()) {
             keyring.loadPassword(userCredentials);

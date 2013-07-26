@@ -95,7 +95,7 @@ public class FrameworkProvider {
     }
 
     private String getOSGiPublicPackages() throws FileNotFoundException, IOException {
-        File osgiBundleDefinitions = new File(configuration.getConfigurationDir(), "osgi-export.properties");
+        File osgiBundleDefinitions = new File(configuration.getSystemConfigurationDirectory(), "osgi-export.properties");
 
         Properties bundles = new Properties();
         bundles.load(new FileInputStream(osgiBundleDefinitions));
@@ -161,7 +161,10 @@ public class FrameworkProvider {
     }
 
     private Framework makeFramework() throws FileNotFoundException, IOException {
-        File osgiCacheDir = new File(configuration.getThermostatHome(), "osgi-cache");
+        File osgiCacheDir = new File(configuration.getUserCacheDirectory(), "osgi-cache");
+        if (!osgiCacheDir.isDirectory() && !osgiCacheDir.mkdirs()) {
+            throw new RuntimeException("Unable to create " + osgiCacheDir);
+        }
 
         // Create temporary directory which will be used as cache for OSGi bundles. See
         // http://www.osgi.org/javadoc/r4v43/core/org/osgi/framework/Constants.html#FRAMEWORK_STORAGE
@@ -281,7 +284,7 @@ public class FrameworkProvider {
     }
 
     private String actualLocation(String resourceName) {
-        return new File(configuration.getLibRoot(), resourceName).toURI().toString();
+        return new File(configuration.getSystemLibRoot(), resourceName).toURI().toString();
     }
 }
 

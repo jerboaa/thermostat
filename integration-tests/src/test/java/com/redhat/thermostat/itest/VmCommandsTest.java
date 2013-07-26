@@ -55,7 +55,7 @@ public class VmCommandsTest extends IntegrationTest {
     public static void setUpOnce() throws IOException, InterruptedException {
         clearStorageDataDirectory();
 
-        Process startStorage = new ProcessBuilder(getThermostatExecutable(), "storage", "--start").start();
+        Process startStorage = runThermostat("storage", "--start");
         startStorage.waitFor();
 
         // TODO insert actual data into the database and test that
@@ -63,7 +63,7 @@ public class VmCommandsTest extends IntegrationTest {
 
     @AfterClass
     public static void tearDownOnce() throws InterruptedException, IOException {
-        Process stopStorage = new ProcessBuilder(getThermostatExecutable(), "storage", "--stop").start();
+        Process stopStorage = runThermostat("storage", "--stop");
         stopStorage.waitFor();
     }
 

@@ -125,15 +125,15 @@ public final class LoggingUtils {
     }
 
     public static void loadGlobalLoggingConfig() throws InvalidConfigurationException {
-        File thermostatConfigurationDir = new File(new Configuration().getConfigurationDir());
-        File loggingPropertiesFile = new File(thermostatConfigurationDir, "logging.properties");
+        File systemConfigurationDir = new Configuration().getSystemConfigurationDirectory();
+        File loggingPropertiesFile = new File(systemConfigurationDir, "logging.properties");
         loadConfig(loggingPropertiesFile);
     }
     
 
     public static void loadUserLoggingConfig() throws InvalidConfigurationException {
-        File thermostatUserDir = new File(new Configuration().getThermostatUserHome());
-        File loggingPropertiesFile = new File(thermostatUserDir, "logging.properties");
+        File userConfigurationDir = new Configuration().getUserConfigurationDirectory();
+        File loggingPropertiesFile = new File(userConfigurationDir, "logging.properties");
         loadConfig(loggingPropertiesFile);
     }
 

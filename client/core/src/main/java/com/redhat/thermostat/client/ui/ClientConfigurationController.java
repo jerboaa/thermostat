@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.client.ui;
 
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.BackingStoreException;
@@ -87,7 +88,7 @@ public class ClientConfigurationController implements ActionListener<Action> {
         
         try {
             model.flush();
-        } catch (BackingStoreException e) {
+        } catch (IOException e) {
             logger.log(Level.WARNING, "error saving client preferences", e);
         }
     }

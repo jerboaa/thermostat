@@ -61,7 +61,9 @@ class PropertiesUserValidator implements UserValidator {
     private Properties users;
     
     PropertiesUserValidator() {
-        this((new Configuration().getConfigurationDir() + File.separator + DEFAULT_USERS_FILE));
+        // this is the default configuration. it should be overriden through different means
+        // see javadoc of PropertiesUsernameRolesLoginModule
+        this((new Configuration().getSystemConfigurationDirectory() + File.separator + DEFAULT_USERS_FILE));
     }
     
     PropertiesUserValidator(String usersFile) {

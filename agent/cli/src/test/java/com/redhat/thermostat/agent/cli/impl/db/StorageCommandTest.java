@@ -64,12 +64,13 @@ import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
+import com.redhat.thermostat.testutils.TestUtils;
 
 public class StorageCommandTest {
     
     private static final String PORT = "27518";
     private static final String BIND = "127.0.0.1";
-    private static final String DB = "storage/db";
+    private static final String DB = "data/db";
 
     private String tmpDir;
     private ExitStatus exitStatus;
@@ -79,28 +80,12 @@ public class StorageCommandTest {
         exitStatus = mock(ExitStatus.class);
         // need to create a dummy config file for the test
         try {
-            Random random = new Random();
-            
-            tmpDir = System.getProperty("java.io.tmpdir") + File.separatorChar +
-                     Math.abs(random.nextInt()) + File.separatorChar;
-            
-            System.setProperty("THERMOSTAT_HOME", tmpDir);
-            File base = new File(tmpDir + "storage");
-            base.mkdirs();
-                        
-            File tmpConfigs = new File(base, "db.properties");
-            
-            new File(base, "run").mkdirs();
-            new File(base, "logs").mkdirs();
-            new File(base, "db").mkdirs();
-            
             Properties props = new Properties();
             
             props.setProperty(DBConfig.BIND.name(), BIND);
             props.setProperty(DBConfig.PORT.name(), PORT);
 
-            props.store(new FileOutputStream(tmpConfigs), "thermostat test properties");
-            
+            tmpDir = TestUtils.setupStorageConfigs(props);
         } catch (IOException e) {
             Assert.fail("cannot setup tests: " + e);
         }

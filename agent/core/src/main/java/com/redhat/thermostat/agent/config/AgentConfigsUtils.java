@@ -62,26 +62,33 @@ public class AgentConfigsUtils {
         AgentStartupConfiguration config = new AgentStartupConfiguration();
 
         Configuration mainConfig = new Configuration();
-        File propertyFile = mainConfig.getAgentConfigurationFile();
-        readAndSetProperties(propertyFile, config);
-        File agentAuthFile = mainConfig.getAgentAuthConfigFile();
+        File systemConfiguration = mainConfig.getSystemAgentConfigurationFile();
+        File userConfiguration = mainConfig.getUserAgentConfigurationFile();
+        readAndSetProperties(systemConfiguration, userConfiguration, config);
+        File agentAuthFile = mainConfig.getUserAgentAuthConfigFile();
         setAuthConfigFromFile(agentAuthFile, config);
         return config;
     }
     
-    private static void readAndSetProperties(File propertyFile, AgentStartupConfiguration configuration)
+    private static void readAndSetProperties(File systemConfigFile, File userConfigFile, AgentStartupConfiguration configuration)
             throws InvalidConfigurationException
     {
-        Properties properties = new Properties();
+        Properties systemConfig = new Properties();
         try {
-            properties.load(new FileInputStream(propertyFile));
-            
+            systemConfig.load(new FileInputStream(systemConfigFile));
         } catch (IOException e) {
             throw new InvalidConfigurationException(e);
         }
-        
-        if (properties.containsKey(AgentProperties.DB_URL.name())) {
-            String db = properties.getProperty(AgentProperties.DB_URL.name());
+
+        Properties properties = new Properties(systemConfig);
+        try {
+            properties.load(new FileInputStream(userConfigFile));
+        } catch (IOException e) {
+            // that's okay. just use system config
+        }
+
+        String db = properties.getProperty(AgentProperties.DB_URL.name());
+        if (db != null) {
             configuration.setDatabaseURL(db);
         }
         

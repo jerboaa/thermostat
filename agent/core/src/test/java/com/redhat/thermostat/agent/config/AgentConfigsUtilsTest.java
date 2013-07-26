@@ -39,6 +39,7 @@ package com.redhat.thermostat.agent.config;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Properties;
 import java.util.Random;
 
 import org.junit.Assert;
@@ -53,13 +54,22 @@ public class AgentConfigsUtilsTest {
     private static Random random;
 
     @BeforeClass
-    public static void setUpRandom() {
+    public static void setUpOnce() {
         random = new Random();
+
+        Properties agentProperties = new Properties();
+        agentProperties.setProperty("SAVE_ON_EXIT", "true");
+        agentProperties.setProperty("CONFIG_LISTEN_ADDRESS", "42.42.42.42:42");
+
+        try {
+            TestUtils.setupAgentConfigs(agentProperties);
+        } catch (IOException e) {
+            throw new AssertionError("Unable to create agent configuration", e);
+        }
     }
     
     @Test
     public void testCreateAgentConfigs() throws InvalidConfigurationException, IOException {
-        TestUtils.setupAgentConfigs();
         AgentStartupConfiguration config = AgentConfigsUtils.createAgentConfigs();        
 
         Assert.assertFalse(config.purge());

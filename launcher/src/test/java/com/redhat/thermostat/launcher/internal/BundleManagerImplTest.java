@@ -38,14 +38,12 @@ package com.redhat.thermostat.launcher.internal;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.file.FileVisitResult;
@@ -67,14 +65,11 @@ import org.osgi.framework.launch.Framework;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.redhat.thermostat.plugin.validator.PluginConfigurationValidatorException;
 import com.redhat.thermostat.shared.config.Configuration;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({BundleManagerImpl.class, FrameworkUtil.class})
 public class BundleManagerImplTest {
-
-    private static final String cmdName = "one";
 
     private static final String jar1Name = "/one.jar";
     private static final String jar2Name = "/two.jar";
@@ -100,8 +95,8 @@ public class BundleManagerImplTest {
         Files.createDirectories(jarRootDir);
 
         conf = mock(Configuration.class);
-        when(conf.getLibRoot()).thenReturn(jarRootDir.toFile().getPath());
-        when(conf.getPluginRoot()).thenReturn(pluginRootDir.toFile().getPath());
+        when(conf.getSystemLibRoot()).thenReturn(jarRootDir.toFile());
+        when(conf.getSystemPluginRoot()).thenReturn(pluginRootDir.toFile());
 
         theContext = mock(BundleContext.class);
         theFramework = mock(Framework.class);
