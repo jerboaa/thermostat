@@ -45,7 +45,6 @@ import java.io.IOException;
 import org.junit.Test;
 
 import expectj.Spawn;
-import expectj.TimeoutException;
 
 /**
  * Integration tests to exercise the basics of the thermostat command line.

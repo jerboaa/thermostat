@@ -46,11 +46,7 @@ public class StorageTest extends IntegrationTest {
     public void startAndStopStorage() throws Exception {
         Spawn storage;
 
-        storage = spawnThermostat("storage", "--start");
-        storage.expect("pid:");
-        storage.expectClose();
-
-        assertNoExceptions(storage.getCurrentStandardOutContents(), storage.getCurrentStandardErrContents());
+        storage = startStorage();
 
         storage = spawnThermostat("storage", "--status");
         storage.expect("Storage is running");
@@ -58,11 +54,7 @@ public class StorageTest extends IntegrationTest {
         
         assertNoExceptions(storage.getCurrentStandardOutContents(), storage.getCurrentStandardErrContents());
         
-        storage = spawnThermostat("storage", "--stop");
-        storage.expect("server shutdown complete");
-        storage.expectClose();
-        
-        assertNoExceptions(storage.getCurrentStandardOutContents(), storage.getCurrentStandardErrContents());
+        storage = stopStorage();
         
         storage = spawnThermostat("storage", "--status");
         storage.expect("Storage is not running");

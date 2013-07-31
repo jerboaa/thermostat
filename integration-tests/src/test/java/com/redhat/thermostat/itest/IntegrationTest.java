@@ -132,6 +132,39 @@ public class IntegrationTest {
     public static Spawn spawnThermostat(String... args) throws IOException {
         return spawnThermostat(false, args);
     }
+    
+    public static Spawn startStorage() throws Exception {
+        clearStorageDataDirectory();
+
+        Spawn storage = spawnThermostat("storage", "--start");
+        try {
+            storage.expect("pid:");
+        } catch (IOException e) {
+            // this may happen if storage is already running.
+            e.printStackTrace();
+            String stdOutContents = storage.getCurrentStandardOutContents();
+            
+            System.err.flush();
+            System.out.flush();
+            System.err.println("stdout was: -->" + stdOutContents +"<--");
+            System.err.println("stderr was: -->" + storage.getCurrentStandardErrContents() + "<--");
+            System.err.flush();
+            assertFalse(stdOutContents.contains("Storage is already running with pid"));
+            throw new Exception("Something funny is going on when trying to start storage!", e);
+        }
+        storage.expectClose();
+
+        assertNoExceptions(storage.getCurrentStandardOutContents(), storage.getCurrentStandardErrContents());
+        return storage;
+    }
+    
+    public static Spawn stopStorage() throws Exception {
+        Spawn storage = spawnThermostat("storage", "--stop");
+        storage.expect("server shutdown complete");
+        storage.expectClose();
+        assertNoExceptions(storage.getCurrentStandardOutContents(), storage.getCurrentStandardErrContents());
+        return storage;
+    }
 
     public static Spawn spawnThermostat(boolean localeDependent, String... args) throws IOException {
         ExpectJ expect = new ExpectJ(TIMEOUT_IN_SECONDS);
@@ -213,6 +246,7 @@ public class IntegrationTest {
     }
 
     private static void killProcess(int processId) throws Exception {
+        System.err.println("Killing process with pid: " + processId);
         Runtime.getRuntime().exec("kill " + processId).waitFor();
     }
 

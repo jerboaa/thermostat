@@ -72,8 +72,6 @@ import com.redhat.thermostat.vm.classstat.common.model.VmClassStat;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
 
-import expectj.Spawn;
-
 /*
  * This test class starts up a mongod instance and tests if thermostat
  * queries with expressions return what they supposed to return. 
@@ -117,13 +115,7 @@ public class MongoQueriesTest extends IntegrationTest {
 
     @BeforeClass
     public static void setUpOnce() throws Exception {
-        clearStorageDataDirectory();
-
-        Spawn storage = spawnThermostat("storage", "--start");
-        storage.expect("pid:");
-        storage.expectClose();
-
-        assertNoExceptions(storage.getCurrentStandardOutContents(), storage.getCurrentStandardErrContents());
+        startStorage();
 
         addCpuData(4);
     }
@@ -132,11 +124,7 @@ public class MongoQueriesTest extends IntegrationTest {
     public static void tearDownOnce() throws Exception {
         deleteCpuData();
 
-        Spawn storage = spawnThermostat("storage", "--stop");
-        storage.expect("server shutdown complete");
-        storage.expectClose();
-        assertNoExceptions(storage.getCurrentStandardOutContents(), storage.getCurrentStandardErrContents());
-
+        stopStorage();
     }
 
     /*
