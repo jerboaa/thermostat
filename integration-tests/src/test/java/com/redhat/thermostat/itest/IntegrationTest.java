@@ -142,9 +142,15 @@ public class IntegrationTest {
         } catch (IOException e) {
             // this may happen if storage is already running.
             e.printStackTrace();
-            String stderrContents = storage.getCurrentStandardOutContents();
-            System.err.println(stderrContents);
-            assertFalse(stderrContents.contains("Storage is already running with pid"));
+            String stdOutContents = storage.getCurrentStandardOutContents();
+            
+            System.err.flush();
+            System.out.flush();
+            System.err.println("stdout was: -->" + stdOutContents +"<--");
+            System.err.println("stderr was: -->" + storage.getCurrentStandardErrContents() + "<--");
+            System.err.flush();
+            assertFalse(stdOutContents.contains("Storage is already running with pid"));
+            throw new Exception("Something funny is going on when trying to start storage!", e);
         }
         storage.expectClose();
 
