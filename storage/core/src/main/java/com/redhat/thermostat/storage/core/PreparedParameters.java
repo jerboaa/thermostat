@@ -49,6 +49,11 @@ public final class PreparedParameters implements PreparedStatementSetter {
         params = new PreparedParameter[numParams];
     }
     
+    @SuppressWarnings("unused")
+    private PreparedParameters() {
+        // nothing. Exists for serialization purposes.
+    }
+    
     @Override
     public void setLong(int paramIndex, long paramValue) {
         setType(paramIndex, paramValue, Long.class);
