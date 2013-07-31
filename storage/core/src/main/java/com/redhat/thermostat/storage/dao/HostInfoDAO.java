@@ -59,11 +59,26 @@ public interface HostInfoDAO extends Countable {
             Key.AGENT_ID, hostNameKey, osNameKey, osKernelKey,
             cpuCountKey, cpuModelKey, hostMemoryTotalKey);
 
+    /**
+     * 
+     * @param ref The host ref for which to get the HostInfo object for.
+     * @return The corresponding HostInfo object. May return null if the user
+     *         is not permitted to retrieve this HostInfo.
+     */
     HostInfo getHostInfo(HostRef ref);
 
     void putHostInfo(HostInfo info);
 
+    /**
+     * 
+     * @return A collection of hosts, which may be empty.
+     */
     Collection<HostRef> getHosts();
+    
+    /**
+     * 
+     * @return A collection of alive hosts which may be empty.
+     */
     Collection<HostRef> getAliveHosts();
 }
 

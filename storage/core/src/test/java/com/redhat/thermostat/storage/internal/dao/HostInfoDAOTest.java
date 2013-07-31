@@ -251,14 +251,26 @@ public class HostInfoDAOTest {
         verify(stmt).executeQuery();
     }
     
+    @Test
+    public void getAliveHostsEmptyDueToHostInfoBeingNull() throws DescriptorParsingException, StatementExecutionException {
+        Triple<Storage, AgentInfoDAO, PreparedStatement<HostInfo>> setup = setupForNullHostInfo();
+        Storage storage = setup.first;
+        AgentInfoDAO agentInfoDao = setup.second;
+        PreparedStatement<HostInfo> stmt = setup.third;
+
+        HostInfoDAO hostsDAO = new HostInfoDAOImpl(storage, agentInfoDao);
+        Collection<HostRef> hosts = hostsDAO.getAliveHosts();
+
+        assertEquals(0, hosts.size());
+        verify(storage).prepareStatement(anyDescriptor());
+        verify(stmt).setString(0, "123");
+        verify(stmt).executeQuery();
+    }
+    
     private Triple<Storage, AgentInfoDAO, PreparedStatement<HostInfo>> setupForSingleAliveHost()
             throws DescriptorParsingException, StatementExecutionException {
         
         // agents
-        
-        AgentInformation agentConfig1 = new AgentInformation();
-        agentConfig1.setAgentId("123");
-        agentConfig1.setAlive(true);
 
         AgentInformation agentInfo1 = new AgentInformation();
         agentInfo1.setAgentId("123");
@@ -280,6 +292,35 @@ public class HostInfoDAOTest {
         Cursor<HostInfo> cursor1 = mock(Cursor.class);
         when(cursor1.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor1.next()).thenReturn(hostConfig1);
+
+        // storage
+        
+        Storage storage = mock(Storage.class);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<HostInfo> stmt = (PreparedStatement<HostInfo>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(cursor1);
+
+        AgentInfoDAO agentDao = mock(AgentInfoDAO.class);
+        when(agentDao.getAliveAgents()).thenReturn(Arrays.asList(agentInfo1));
+
+        return new Triple<>(storage, agentDao, stmt);
+    }
+    
+    private Triple<Storage, AgentInfoDAO, PreparedStatement<HostInfo>> setupForNullHostInfo()
+            throws DescriptorParsingException, StatementExecutionException {
+        
+        // agents
+
+        AgentInformation agentInfo1 = new AgentInformation();
+        agentInfo1.setAgentId("123");
+        agentInfo1.setAlive(true);
+        
+        // cursor
+
+        @SuppressWarnings("unchecked")
+        Cursor<HostInfo> cursor1 = mock(Cursor.class);
+        when(cursor1.hasNext()).thenReturn(false);
 
         // storage
         

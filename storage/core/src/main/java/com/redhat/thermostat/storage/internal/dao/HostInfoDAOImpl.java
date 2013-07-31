@@ -145,7 +145,11 @@ public class HostInfoDAOImpl implements HostInfoDAO {
         List<AgentInformation> agentInfos = agentInfoDao.getAliveAgents();
         for (AgentInformation agentInfo : agentInfos) {
             HostInfo hostInfo = getHostInfo(agentInfo.getAgentId());
-            hosts.add(toHostRef(hostInfo));
+            // getHostInfo may return null if user is not allowed to
+            // see the given host by ACL.
+            if (hostInfo != null) {
+                hosts.add(toHostRef(hostInfo));
+            }
         }
 
         return hosts;
