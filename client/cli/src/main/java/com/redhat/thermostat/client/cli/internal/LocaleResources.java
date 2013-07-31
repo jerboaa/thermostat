@@ -86,6 +86,12 @@ public enum LocaleResources {
 
     HOSTID_REQUIRED_MESSAGE,
     VMID_REQUIRED_MESSAGE,
+    
+    PURGING_AGENT_DATA,
+    STORAGE_UNAVAILABLE,
+    AGENT_UNAVAILABLE,
+    CANNOT_PURGE_AGENT_RUNNING,
+    AGENT_NOT_FOUND,
     ;
 
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.client.cli.strings";

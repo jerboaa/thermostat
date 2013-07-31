@@ -86,7 +86,7 @@ public interface Storage {
     void removePojo(Remove remove);
 
     /**
-     * Drop all data related to the currently running agent.
+     * Drop all data related to the specified agent.
      */
     void purge(String agentId);
 

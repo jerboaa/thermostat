@@ -49,10 +49,13 @@ import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.times;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import org.junit.After;
@@ -203,6 +206,13 @@ public class MongoStorageTest {
         when(db.createCollection(anyString(), any(DBObject.class))).thenReturn(testCollection);
         
         factory = new ExpressionFactory();
+        
+        Set<String> collectionNames = new LinkedHashSet<>();
+        collectionNames.add("testCollection");
+        collectionNames.add("emptyTestCollection");
+        when(db.getCollectionNames()).thenReturn(collectionNames);
+        when(db.getCollectionFromString("testCollection")).thenReturn(testCollection);
+        when(db.getCollectionFromString("emptyTestCollection")).thenReturn(emptyTestCollection);
     }
 
     @After
@@ -488,6 +498,18 @@ public class MongoStorageTest {
         setDbFieldInStorage(storage);
         storage.shutdown();
         verify(mockMongo).close();
+    }
+
+    @Test
+    public void verifyDBPurge() throws Exception {
+        MongoStorage storage = makeStorage();
+        setDbFieldInStorage(storage);
+        String agentId = "agentId123";
+        BasicDBObject query = new BasicDBObject(Key.AGENT_ID.getName(), agentId);
+        storage.purge(agentId);
+        
+        verify(testCollection, times(1)).remove(query);
+        verify(emptyTestCollection, times(1)).remove(query);
     }
 
     private void setDbFieldInStorage(MongoStorage storage) throws Exception {
