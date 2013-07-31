@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.storage.internal.statement;
 
+import com.redhat.thermostat.storage.core.BackingStorage;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DataModifyingStatement;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
@@ -48,7 +49,6 @@ import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Statement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.Pojo;
 
 /**
@@ -63,7 +63,7 @@ final public class PreparedStatementImpl<T extends Pojo> implements PreparedStat
     private final PreparedParameters params;
     private final ParsedStatementImpl<T> parsedStatement;
     
-    public PreparedStatementImpl(Storage storage, StatementDescriptor<T> desc) throws DescriptorParsingException {
+    public PreparedStatementImpl(BackingStorage storage, StatementDescriptor<T> desc) throws DescriptorParsingException {
         this.desc = desc;
         StatementDescriptorParser<T> parser = new StatementDescriptorParser<>(storage, desc);
         this.parsedStatement = (ParsedStatementImpl<T>)parser.parse();

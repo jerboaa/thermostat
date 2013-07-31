@@ -34,42 +34,40 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.client.internal;
+package com.redhat.thermostat.storage.core;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import java.util.concurrent.ExecutorService;
 
-import org.junit.Test;
-import org.mockito.Mockito;
+import com.redhat.thermostat.storage.model.Pojo;
 
-import com.redhat.thermostat.storage.config.AuthenticationConfiguration;
-import com.redhat.thermostat.storage.config.StartupConfiguration;
-import com.redhat.thermostat.storage.core.BackingStorage;
-import com.redhat.thermostat.storage.core.QueuedStorage;
-import com.redhat.thermostat.storage.core.SecureStorage;
-import com.redhat.thermostat.storage.core.Storage;
+public class QueuedBackingStorage extends QueuedStorage implements
+        BackingStorage {
+    
+    public QueuedBackingStorage(BackingStorage delegate) {
+        super(delegate);
+    }
 
-public class WebStorageProviderTest {
+    QueuedBackingStorage(BackingStorage delegate, ExecutorService executor,
+            ExecutorService fileExecutor) {
+        super(delegate, executor, fileExecutor);
+    }
 
-    @Test
-    public void createStorageCreatesSecureStorage() {
-        WebStorageProvider provider = new WebStorageProvider();
-        MockConfiguration config = mock(MockConfiguration.class);
-        when(config.getDBConnectionString()).thenReturn("http://something");
-        provider.setConfig(config);
-        Storage storage = provider.createStorage();
-        assertTrue(storage instanceof SecureStorage);
-        assertTrue(storage instanceof QueuedStorage);
-        assertFalse(storage instanceof BackingStorage);
-        verify(config, Mockito.atLeastOnce()).getUsername();
-        verify(config, Mockito.atLeastOnce()).getPassword();
+    @Override
+    public <T extends Pojo> Query<T> createQuery(Category<T> category) {
+        return ((BackingStorage) delegate).createQuery(category);
     }
     
-    private abstract static class MockConfiguration implements
-            AuthenticationConfiguration, StartupConfiguration {
-        // no-op
+    @Override
+    public <T extends Pojo> PreparedStatement<T> prepareStatement(
+            StatementDescriptor<T> desc) throws DescriptorParsingException {
+        // FIXME: Use some kind of cache in order to avoid parsing of
+        // descriptors each time this is called. At least if the descriptor
+        // class is the same we should be able to do something here.
+        
+        // Don't just defer to the delegate, since we want statements
+        // prepared by this method to create queries using the
+        // createQuery method in this class.
+        return PreparedStatementFactory.getInstance(this, desc);
     }
+
 }

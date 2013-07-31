@@ -34,42 +34,24 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.client.internal;
+package com.redhat.thermostat.storage.core;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import com.redhat.thermostat.storage.model.Pojo;
 
-import org.junit.Test;
-import org.mockito.Mockito;
-
-import com.redhat.thermostat.storage.config.AuthenticationConfiguration;
-import com.redhat.thermostat.storage.config.StartupConfiguration;
-import com.redhat.thermostat.storage.core.BackingStorage;
-import com.redhat.thermostat.storage.core.QueuedStorage;
-import com.redhat.thermostat.storage.core.SecureStorage;
-import com.redhat.thermostat.storage.core.Storage;
-
-public class WebStorageProviderTest {
-
-    @Test
-    public void createStorageCreatesSecureStorage() {
-        WebStorageProvider provider = new WebStorageProvider();
-        MockConfiguration config = mock(MockConfiguration.class);
-        when(config.getDBConnectionString()).thenReturn("http://something");
-        provider.setConfig(config);
-        Storage storage = provider.createStorage();
-        assertTrue(storage instanceof SecureStorage);
-        assertTrue(storage instanceof QueuedStorage);
-        assertFalse(storage instanceof BackingStorage);
-        verify(config, Mockito.atLeastOnce()).getUsername();
-        verify(config, Mockito.atLeastOnce()).getPassword();
-    }
+/**
+ * This subclass of {@link Storage} should be implemented by classes that
+ * interact directly with a form of storage (e.g. a database).
+ * 
+ * This interface contains methods which provide capabilities we do not want to
+ * expose directly to clients. Clients should instead prepare statements using
+ * {@link Storage#prepareStatement(StatementDescriptor)}. The methods in this
+ * interface then provide the mechanisms to execute the prepared statement, and
+ * should only be used by the prepared statement implementations.
+ */
+public interface BackingStorage extends Storage {
     
-    private abstract static class MockConfiguration implements
-            AuthenticationConfiguration, StartupConfiguration {
-        // no-op
-    }
+    <T extends Pojo> Query<T> createQuery(Category<T> category);
+    
+    // TODO Move createUpdate and createRemove here
+
 }

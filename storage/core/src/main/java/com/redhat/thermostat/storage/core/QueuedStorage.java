@@ -229,11 +229,6 @@ public class QueuedStorage implements Storage {
     }
 
     @Override
-    public <T extends Pojo> Query<T> createQuery(Category<T> category) {
-        return delegate.createQuery(category);
-    }
-
-    @Override
     public Update createUpdate(Category<?> category) {
         QueuedUpdate update = new QueuedUpdate(delegate.createUpdate(category));
         return update;

@@ -44,13 +44,13 @@ import static org.mockito.Mockito.when;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.storage.core.BackingStorage;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.BinaryComparisonExpression;
 import com.redhat.thermostat.storage.query.BinaryComparisonOperator;
@@ -100,7 +100,7 @@ public class PreparedStatementImplTest {
         Category<Pojo> mockCategory = (Category<Pojo>) mock(Category.class);
         when(desc.getCategory()).thenReturn(mockCategory);
         when(mockCategory.getName()).thenReturn("foo");
-        Storage storage = mock(Storage.class);
+        BackingStorage storage = mock(BackingStorage.class);
         StubQuery stmt = new StubQuery();
         when(storage.createQuery(mockCategory)).thenReturn(stmt);
         PreparedStatementImpl<Pojo> preparedStatement = new PreparedStatementImpl<>(storage, desc);
@@ -124,7 +124,7 @@ public class PreparedStatementImplTest {
         Category<Pojo> mockCategory = (Category<Pojo>) mock(Category.class);
         when(desc.getCategory()).thenReturn(mockCategory);
         when(mockCategory.getName()).thenReturn("foo");
-        Storage storage = mock(Storage.class);
+        BackingStorage storage = mock(BackingStorage.class);
         StubQuery stmt = new StubQuery();
         when(storage.createQuery(mockCategory)).thenReturn(stmt);
         PreparedStatementImpl<Pojo> preparedStatement = new PreparedStatementImpl<>(storage, desc);

@@ -57,6 +57,7 @@ import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
 import com.redhat.thermostat.host.cpu.common.model.CpuStat;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Add;
+import com.redhat.thermostat.storage.core.BackingStorage;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.core.Cursor;
@@ -131,7 +132,7 @@ public class MongoQueriesTest extends IntegrationTest {
      * Make a connection to mongo storage (returning the Storage object). Before
      * initiating the connection, add the ConnectionListener to Storage.
      */
-    private static Storage getAndConnectStorage(ConnectionListener listener) {
+    private static BackingStorage getAndConnectStorage(ConnectionListener listener) {
         final String url = "mongodb://127.0.0.1:27518";
         StartupConfiguration config = new StartupConfiguration() {
 
@@ -141,7 +142,7 @@ public class MongoQueriesTest extends IntegrationTest {
             }
             
         };
-        Storage storage = new MongoStorage(config);
+        BackingStorage storage = new MongoStorage(config);
         if (listener != null) {
             storage.getConnection().addListener(listener);
         }
@@ -241,7 +242,7 @@ public class MongoQueriesTest extends IntegrationTest {
     public void canQueryNoWhere() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         ConnectionListener listener = new CountdownConnectionListener(ConnectionStatus.CONNECTED, latch);
-        Storage mongoStorage = getAndConnectStorage(listener);
+        BackingStorage mongoStorage = getAndConnectStorage(listener);
         latch.await();
         mongoStorage.getConnection().removeListener(listener);
         mongoStorage.registerCategory(CpuStatDAO.cpuStatCategory);
@@ -258,7 +259,7 @@ public class MongoQueriesTest extends IntegrationTest {
     public void canQueryEqualTo() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         ConnectionListener listener = new CountdownConnectionListener(ConnectionStatus.CONNECTED, latch);
-        Storage mongoStorage = getAndConnectStorage(listener);
+        BackingStorage mongoStorage = getAndConnectStorage(listener);
         latch.await();
         mongoStorage.getConnection().removeListener(listener);
         mongoStorage.registerCategory(CpuStatDAO.cpuStatCategory);
@@ -277,7 +278,7 @@ public class MongoQueriesTest extends IntegrationTest {
     public void canQueryNotEqualTo() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         ConnectionListener listener = new CountdownConnectionListener(ConnectionStatus.CONNECTED, latch);
-        Storage mongoStorage = getAndConnectStorage(listener);
+        BackingStorage mongoStorage = getAndConnectStorage(listener);
         latch.await();
         mongoStorage.getConnection().removeListener(listener);
         mongoStorage.registerCategory(CpuStatDAO.cpuStatCategory);
@@ -296,7 +297,7 @@ public class MongoQueriesTest extends IntegrationTest {
     public void canQueryGreaterThan() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         ConnectionListener listener = new CountdownConnectionListener(ConnectionStatus.CONNECTED, latch);
-        Storage mongoStorage = getAndConnectStorage(listener);
+        BackingStorage mongoStorage = getAndConnectStorage(listener);
         latch.await();
         mongoStorage.getConnection().removeListener(listener);
         mongoStorage.registerCategory(CpuStatDAO.cpuStatCategory);
@@ -315,7 +316,7 @@ public class MongoQueriesTest extends IntegrationTest {
     public void canQueryGreaterThanOrEqualTo() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         ConnectionListener listener = new CountdownConnectionListener(ConnectionStatus.CONNECTED, latch);
-        Storage mongoStorage = getAndConnectStorage(listener);
+        BackingStorage mongoStorage = getAndConnectStorage(listener);
         latch.await();
         mongoStorage.getConnection().removeListener(listener);
         mongoStorage.registerCategory(CpuStatDAO.cpuStatCategory);
@@ -334,7 +335,7 @@ public class MongoQueriesTest extends IntegrationTest {
     public void canQueryLessThan() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         ConnectionListener listener = new CountdownConnectionListener(ConnectionStatus.CONNECTED, latch);
-        Storage mongoStorage = getAndConnectStorage(listener);
+        BackingStorage mongoStorage = getAndConnectStorage(listener);
         latch.await();
         mongoStorage.getConnection().removeListener(listener);
         mongoStorage.registerCategory(CpuStatDAO.cpuStatCategory);
@@ -353,7 +354,7 @@ public class MongoQueriesTest extends IntegrationTest {
     public void canQueryLessThanOrEqualTo() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         ConnectionListener listener = new CountdownConnectionListener(ConnectionStatus.CONNECTED, latch);
-        Storage mongoStorage = getAndConnectStorage(listener);
+        BackingStorage mongoStorage = getAndConnectStorage(listener);
         latch.await();
         mongoStorage.getConnection().removeListener(listener);
         mongoStorage.registerCategory(CpuStatDAO.cpuStatCategory);
@@ -372,7 +373,7 @@ public class MongoQueriesTest extends IntegrationTest {
     public void canQueryIn() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         ConnectionListener listener = new CountdownConnectionListener(ConnectionStatus.CONNECTED, latch);
-        Storage mongoStorage = getAndConnectStorage(listener);
+        BackingStorage mongoStorage = getAndConnectStorage(listener);
         latch.await();
         mongoStorage.getConnection().removeListener(listener);
         mongoStorage.registerCategory(CpuStatDAO.cpuStatCategory);
@@ -392,7 +393,7 @@ public class MongoQueriesTest extends IntegrationTest {
     public void canQueryNotIn() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         ConnectionListener listener = new CountdownConnectionListener(ConnectionStatus.CONNECTED, latch);
-        Storage mongoStorage = getAndConnectStorage(listener);
+        BackingStorage mongoStorage = getAndConnectStorage(listener);
         latch.await();
         mongoStorage.getConnection().removeListener(listener);
         mongoStorage.registerCategory(CpuStatDAO.cpuStatCategory);
@@ -411,7 +412,7 @@ public class MongoQueriesTest extends IntegrationTest {
     public void canQueryNot() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         ConnectionListener listener = new CountdownConnectionListener(ConnectionStatus.CONNECTED, latch);
-        Storage mongoStorage = getAndConnectStorage(listener);
+        BackingStorage mongoStorage = getAndConnectStorage(listener);
         latch.await();
         mongoStorage.getConnection().removeListener(listener);
         mongoStorage.registerCategory(CpuStatDAO.cpuStatCategory);
@@ -430,7 +431,7 @@ public class MongoQueriesTest extends IntegrationTest {
     public void canQueryAnd() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         ConnectionListener listener = new CountdownConnectionListener(ConnectionStatus.CONNECTED, latch);
-        Storage mongoStorage = getAndConnectStorage(listener);
+        BackingStorage mongoStorage = getAndConnectStorage(listener);
         latch.await();
         mongoStorage.getConnection().removeListener(listener);
         mongoStorage.registerCategory(CpuStatDAO.cpuStatCategory);
@@ -450,7 +451,7 @@ public class MongoQueriesTest extends IntegrationTest {
     public void canQueryOr() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         ConnectionListener listener = new CountdownConnectionListener(ConnectionStatus.CONNECTED, latch);
-        Storage mongoStorage = getAndConnectStorage(listener);
+        BackingStorage mongoStorage = getAndConnectStorage(listener);
         latch.await();
         mongoStorage.getConnection().removeListener(listener);
         mongoStorage.registerCategory(CpuStatDAO.cpuStatCategory);
@@ -504,7 +505,7 @@ public class MongoQueriesTest extends IntegrationTest {
     public void setDefaultAgentID() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         ConnectionListener listener = new CountdownConnectionListener(ConnectionStatus.CONNECTED, latch);
-        Storage mongoStorage = getAndConnectStorage(listener);
+        BackingStorage mongoStorage = getAndConnectStorage(listener);
         latch.await();
         mongoStorage.getConnection().removeListener(listener);
         UUID uuid = new UUID(42, 24);

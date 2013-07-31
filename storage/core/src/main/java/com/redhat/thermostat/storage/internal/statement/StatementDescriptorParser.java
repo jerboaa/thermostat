@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import com.redhat.thermostat.storage.core.BackingStorage;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
@@ -47,7 +48,6 @@ import com.redhat.thermostat.storage.core.ParsedStatement;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.SortDirection;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.BinaryComparisonOperator;
 import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
@@ -117,14 +117,14 @@ class StatementDescriptorParser<T extends Pojo> {
     
     private final String[] tokens;
     private final StatementDescriptor<T> desc;
-    private final Storage storage;
+    private final BackingStorage storage;
     private int currTokenIndex;
     private int placeHolderCount;
     // the parsed statement
     private ParsedStatementImpl<T> parsedStatement;
     private SuffixExpression tree;
     
-    StatementDescriptorParser(Storage storage, StatementDescriptor<T> desc) {
+    StatementDescriptorParser(BackingStorage storage, StatementDescriptor<T> desc) {
         this.tokens = getTokens(desc.getQueryDescriptor());
         this.currTokenIndex = 0;
         this.placeHolderCount = 0;

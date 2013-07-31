@@ -51,12 +51,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.storage.core.BackingStorage;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.SortDirection;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.internal.statement.BinaryExpressionNode;
@@ -77,14 +77,14 @@ import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
 
 public class StatementDescriptorParserTest {
 
-    private Storage storage;
+    private BackingStorage storage;
     private Query<AgentInformation> mockQuery;
     private StatementDescriptorParser<AgentInformation> parser;
     
     @SuppressWarnings("unchecked")
     @Before
     public void setup() {
-        storage = mock(Storage.class);
+        storage = mock(BackingStorage.class);
         mockQuery = mock(Query.class);
         when(storage.createQuery(any(AgentInfoDAO.CATEGORY.getClass()))).thenReturn(mockQuery);
     }

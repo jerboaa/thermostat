@@ -391,17 +391,6 @@ public class WebStorageTest {
     }
 
     @Test
-    public void createQueryFailsCorrectly() throws UnsupportedEncodingException, IOException {
-        try {
-            storage.createQuery(category);
-            fail("createQuery() should fail for WebStorage.");
-        } catch (IllegalStateException e) {
-            // pass
-            assertTrue(e.getMessage().contains("createQuery() not supported"));
-        }
-    }
-
-    @Test
     public void testPut() throws IOException, JsonSyntaxException, ClassNotFoundException {
 
         TestObj obj = new TestObj();

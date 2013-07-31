@@ -101,7 +101,6 @@ import com.redhat.thermostat.storage.core.IllegalPatchException;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.SecureStorage;
@@ -510,14 +509,6 @@ public class WebStorage implements Storage, SecureStorage {
             Integer id = gson.fromJson(reader, Integer.class);
             categoryIds.put(category, id);
         }
-    }
-
-    @Override
-    public <T extends Pojo> Query<T> createQuery(Category<T> category) {
-        // There isn't going to be a query end-point on server side.
-        String msg = "createQuery() not supported for Web storage. " +
-                "Please use prepareStatement() instead.";
-        throw new IllegalStateException(msg);
     }
 
     @Override

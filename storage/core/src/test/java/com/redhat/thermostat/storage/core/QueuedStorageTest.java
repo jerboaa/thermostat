@@ -194,24 +194,16 @@ public class QueuedStorageTest {
         }
     }
 
-    private static class TestPojo implements Pojo {
-        
-    }
-
     private QueuedStorage queuedStorage;
     private Storage delegateStorage;
     private Add delegateAdd;
     private Replace delegateReplace;
-    private Query<?> delegateQuery;
 
     private TestExecutor executor;
     private TestExecutor fileExecutor;
 
-    @SuppressWarnings("rawtypes")
-    private Cursor expectedResults;
     private InputStream expectedFile;
 
-    @SuppressWarnings("unchecked")
     @Before
     public void setUp() {
         executor = new TestExecutor();
@@ -222,30 +214,23 @@ public class QueuedStorageTest {
         delegateReplace = mock(Replace.class);
 
         Remove remove = mock(Remove.class);
-        delegateQuery = mock(Query.class);
         when(delegateStorage.createAdd(any(Category.class))).thenReturn(delegateAdd);
         when(delegateStorage.createReplace(any(Category.class))).thenReturn(delegateReplace);
         when(delegateStorage.createRemove()).thenReturn(remove);
-        when(delegateStorage.createQuery(any(Category.class))).thenReturn(delegateQuery);
-        expectedResults = mock(Cursor.class);
-        when(delegateQuery.execute()).thenReturn(expectedResults);
         when(delegateStorage.getCount(any(Category.class))).thenReturn(42l);
         expectedFile = mock(InputStream.class);
         when(delegateStorage.loadFile(anyString())).thenReturn(expectedFile);
         when(delegateStorage.getAgentId()).thenReturn("huzzah");
         queuedStorage = new QueuedStorage(delegateStorage, executor, fileExecutor);
-        
     }
 
     @After
     public void tearDown() {
         expectedFile = null;
-        expectedResults = null;
         queuedStorage = null;
         delegateStorage = null;
         fileExecutor = null;
         executor = null;
-        delegateQuery = null;
     }
 
     @Test
@@ -325,22 +310,6 @@ public class QueuedStorageTest {
         verify(delegateStorage, times(1)).purge("fluff");
         verifyNoMoreInteractions(delegateStorage);
 
-        assertNull(fileExecutor.getTask());
-    }
-
-    @Test
-    public void testFindAllPojos() {
-        @SuppressWarnings("unchecked")
-        Category<TestPojo> category = mock(Category.class);
-        Query<TestPojo> query = queuedStorage.createQuery(category);
-        verify(delegateStorage).createQuery(category);
-        verifyNoMoreInteractions(delegateStorage);
-
-        Cursor<TestPojo> result = query.execute();
-        verify(delegateQuery).execute();
-        assertSame(expectedResults, result);
-
-        assertNull(executor.getTask());
         assertNull(fileExecutor.getTask());
     }
 
@@ -535,12 +504,6 @@ public class QueuedStorageTest {
         }
 
         @Override
-        public <T extends Pojo> Query<T> createQuery(Category<T> category) {
-            // not implemented
-            throw new AssertionError();
-        }
-
-        @Override
         public Update createUpdate(Category<?> category) {
             // not implemented
             throw new AssertionError();
@@ -564,7 +527,7 @@ public class QueuedStorageTest {
         }
 
         @Override
-        public PreparedStatement prepareStatement(StatementDescriptor desc)
+        public <T extends Pojo> PreparedStatement<T> prepareStatement(StatementDescriptor<T> desc)
                 throws DescriptorParsingException {
             // not implemented
             return null;

@@ -92,6 +92,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.redhat.thermostat.storage.core.Add;
+import com.redhat.thermostat.storage.core.BackingStorage;
 import com.redhat.thermostat.storage.core.Categories;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
@@ -164,7 +165,7 @@ public class WebStorageEndpointTest {
 
     private Server server;
     private int port;
-    private Storage mockStorage;
+    private BackingStorage mockStorage;
     private Integer categoryId;
 
     private static Key<String> key1;
@@ -197,7 +198,7 @@ public class WebStorageEndpointTest {
         assertTrue(fakeHome.canRead());
         System.setProperty("THERMOSTAT_HOME", fakeHome.getAbsolutePath());
         
-        mockStorage = mock(Storage.class);
+        mockStorage = mock(BackingStorage.class);
         StorageWrapper.setStorage(mockStorage);
         
         factory = new ExpressionFactory();

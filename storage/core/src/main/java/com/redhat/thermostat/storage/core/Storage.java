@@ -96,8 +96,6 @@ public interface Storage {
 
     InputStream loadFile(String filename);
 
-    <T extends Pojo> Query<T> createQuery(Category<T> category);
-
     Update createUpdate(Category<?> category);
     Remove createRemove();
 

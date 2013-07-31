@@ -36,14 +36,15 @@
 
 package com.redhat.thermostat.storage.mongodb.internal;
 
-import org.junit.Test;
-
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.junit.Test;
+
 import com.redhat.thermostat.storage.config.StartupConfiguration;
+import com.redhat.thermostat.storage.core.BackingStorage;
 import com.redhat.thermostat.storage.core.QueuedStorage;
 import com.redhat.thermostat.storage.core.SecureStorage;
 import com.redhat.thermostat.storage.core.Storage;
@@ -59,6 +60,7 @@ public class MongoStorageProviderTest {
         provider.setConfig(config);
         Storage result = provider.createStorage();
         assertTrue(result instanceof QueuedStorage);
+        assertTrue(result instanceof BackingStorage);
         assertFalse(result instanceof SecureStorage);
     }
 }

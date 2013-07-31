@@ -9,7 +9,7 @@ import com.redhat.thermostat.storage.model.Pojo;
  */
 public class PreparedStatementFactory {
 
-    public static <T extends Pojo> PreparedStatement<T> getInstance(Storage storage,
+    public static <T extends Pojo> PreparedStatement<T> getInstance(BackingStorage storage,
             StatementDescriptor<T> desc) throws DescriptorParsingException {
         // This is the sole method in order to avoid leaking impl details of
         // this OSGi module. Storage implementations will have to use this
