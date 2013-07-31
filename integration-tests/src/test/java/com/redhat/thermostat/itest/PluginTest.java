@@ -74,7 +74,6 @@ public class PluginTest extends IntegrationTest {
         shell.expectClose();
 
         String stdOut = shell.getCurrentStandardOutContents();
-        String stdErr = shell.getCurrentStandardErrContents();
 
         assertTrue(stdOut.contains("list of commands"));
         assertTrue(stdOut.contains("help"));

@@ -52,19 +52,15 @@ import expectj.Spawn;
 public class VmCommandsTest extends IntegrationTest {
 
     @BeforeClass
-    public static void setUpOnce() throws IOException, InterruptedException {
-        clearStorageDataDirectory();
-
-        Process startStorage = runThermostat("storage", "--start");
-        startStorage.waitFor();
+    public static void setUpOnce() throws Exception {
+        startStorage();
 
         // TODO insert actual data into the database and test that
     }
 
     @AfterClass
-    public static void tearDownOnce() throws InterruptedException, IOException {
-        Process stopStorage = runThermostat("storage", "--stop");
-        stopStorage.waitFor();
+    public static void tearDownOnce() throws Exception {
+        stopStorage();
     }
 
     @Ignore //FIXME when keyring/preferences improvements have been made, un-Ignore

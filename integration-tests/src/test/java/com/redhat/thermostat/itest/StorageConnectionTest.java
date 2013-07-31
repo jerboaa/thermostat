@@ -38,8 +38,6 @@ package com.redhat.thermostat.itest;
 
 import java.io.IOException;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -49,22 +47,14 @@ import expectj.TimeoutException;
 
 public class StorageConnectionTest extends IntegrationTest {
 
-    @BeforeClass
-    public static void setUpOnce() throws IOException, TimeoutException, ExpectJException {
-        Spawn storage = spawnThermostat("storage", "--start");
-        storage.expect("pid:");
-        storage.expectClose();
-
-        assertNoExceptions(storage.getCurrentStandardOutContents(), storage.getCurrentStandardErrContents());
+    // @BeforeClass // reinstate once we actually need storage running (see ignored tests)
+    public static void setUpOnce() throws Exception {
+        startStorage();
     }
 
-    @AfterClass
-    public static void tearDownOnce() throws IOException, TimeoutException, ExpectJException {
-        Spawn storage = spawnThermostat("storage", "--stop");
-        storage.expect("server shutdown complete");
-        storage.expectClose();
-
-        assertNoExceptions(storage.getCurrentStandardOutContents(), storage.getCurrentStandardErrContents());
+    // @AfterClass // reinstate once we actually need storage running
+    public static void tearDownOnce() throws Exception {
+        stopStorage();
     }
 
     @Ignore //FIXME when keyring/preferences improvements have been made, un-Ignore

@@ -93,8 +93,6 @@ import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
 import com.redhat.thermostat.web.client.internal.WebStorage;
 import com.redhat.thermostat.web.server.auth.Roles;
 
-import expectj.Spawn;
-
 /**
  * This test class starts up a mongod instance and a web storage instance
  * (in jetty container) in front of that.  Tests should make their own
@@ -230,13 +228,8 @@ public class WebAppTest extends IntegrationTest {
 
     @BeforeClass
     public static void setUpOnce() throws Exception {
-        clearStorageDataDirectory();
+        startStorage();
 
-        Spawn storage = spawnThermostat("storage", "--start");
-        storage.expect("pid:");
-        storage.expectClose();
-
-        assertNoExceptions(storage.getCurrentStandardOutContents(), storage.getCurrentStandardErrContents());
         backupUsers = Files.createTempFile("itest-backup-thermostat-users", "");
         backupRoles = Files.createTempFile("itest-backup-thermostat-roles", "");
         backupRoles.toFile().deleteOnExit();
@@ -261,13 +254,10 @@ public class WebAppTest extends IntegrationTest {
     public static void tearDownOnce() throws Exception {
         deleteCpuData();
 
-        Spawn storage = spawnThermostat("storage", "--stop");
-        storage.expect("server shutdown complete");
-        storage.expectClose();
-        assertNoExceptions(storage.getCurrentStandardOutContents(), storage.getCurrentStandardErrContents());
-
         server.stop();
         server.join();
+        
+        stopStorage();
 
         Files.copy(backupUsers, new File(THERMOSTAT_USERS_FILE).toPath(), StandardCopyOption.REPLACE_EXISTING);
         Files.copy(backupRoles, new File(THERMOSTAT_ROLES_FILE).toPath(), StandardCopyOption.REPLACE_EXISTING);
