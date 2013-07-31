@@ -45,6 +45,9 @@ import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.model.AgentInformation;
 
+/**
+ * Access information about agents that agents publish to storage.
+ */
 @Service
 public interface AgentInfoDAO extends Countable {
 
@@ -60,17 +63,47 @@ public interface AgentInfoDAO extends Countable {
             ALIVE_KEY,
             CONFIG_LISTEN_ADDRESS);
 
+    /**
+     * Get information about all known agents.
+     *
+     * @return a {@link List} of {@link AgentInformation} for all agents
+     * who have published their information. Will be empty if there is no
+     * information.
+     */
     List<AgentInformation> getAllAgentInformation();
 
+    /**
+     * Get information about all alive agents.
+     *
+     * @return a {@link List} of {@link AgentInformation} for all alive
+     * agents who have published their information. Will be empty if there
+     * is no information or no alive agents.
+     */
     List<AgentInformation> getAliveAgents();
 
+    /**
+     * Get information about a specific agent.
+     *
+     * @return a {@link AgentInformation} describing information about the agent
+     * indicated by {@code agentRef}. {@code null} if no information about the
+     * agent could be located.
+     */
     AgentInformation getAgentInformation(HostRef agentRef);
 
+    /**
+     * Publish information about agent into the storage.
+     */
     void addAgentInformation(AgentInformation agentInfo);
 
+    /**
+     * Update information about an existing agent. No changes will be performed
+     * if there is no matching agent.
+     */
     void updateAgentInformation(AgentInformation agentInfo);
 
+    /**
+     * Remove information about an agent that was published to storage.
+     */
     void removeAgentInformation(AgentInformation agentInfo);
 
 }
-

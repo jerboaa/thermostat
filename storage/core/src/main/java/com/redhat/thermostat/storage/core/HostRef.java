@@ -36,11 +36,20 @@
 
 package com.redhat.thermostat.storage.core;
 
+/**
+ * Identifies an agent or a host
+ */
+// See http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=1508 for
+// more information
 public class HostRef implements Ref {
 
     private final String uid;
     private final String name;
 
+    /**
+     * @param id the UUID string that uniquely identifies an agent/host
+     * @param name the host name of an agent/host
+     */
     public HostRef(String id, String name) {
         this.uid = id;
         this.name = name;
