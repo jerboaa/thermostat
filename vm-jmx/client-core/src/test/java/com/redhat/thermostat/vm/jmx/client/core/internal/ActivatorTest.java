@@ -56,6 +56,7 @@ public class ActivatorTest {
     public void testActivatorRegistersService() throws Exception {
         StubBundleContext bundleContext = new StubBundleContext();
 
+        bundleContext.registerService(ApplicationService.class, mock(ApplicationService.class), null);
         bundleContext.registerService(AgentInfoDAO.class, mock(AgentInfoDAO.class), null);
         bundleContext.registerService(JmxNotificationDAO.class, mock(JmxNotificationDAO.class), null);
         bundleContext.registerService(ApplicationService.class, mock(ApplicationService.class), null);

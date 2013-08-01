@@ -47,6 +47,7 @@ import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.shared.locale.LocalizedString;
@@ -66,21 +67,57 @@ public class JmxNotificationsViewController implements InformationServiceControl
     private final JmxNotificationsView view;
     private final Timer timer;
     private final JmxNotificationDAO dao;
-    private final AgentInfoDAO agentDAO;
     private final VmRef vm;
     private final Translate<LocaleResources> t = LocaleResources.createLocalizer();
+    private final JmxToggleNotificationRequest toggleReq;
 
     private final AtomicBoolean notificationsEnabled = new AtomicBoolean(false);
-
-    public JmxNotificationsViewController(AgentInfoDAO agent, JmxNotificationDAO notification,
-            TimerFactory timerFactory, final RequestQueue queue,
-            JmxNotificationsViewProvider viewProvider,
-            VmRef vmId) {
+    
+    public JmxNotificationsViewController(ApplicationService appSvc,
+            AgentInfoDAO agent, JmxNotificationDAO notification,
+            TimerFactory timerFactory, RequestQueue queue,
+            JmxNotificationsViewProvider viewProvider, VmRef vmId) {
+        this(appSvc, agent, notification, timerFactory, queue, viewProvider, vmId,
+                new JmxToggleNotificationRequestFactory());
+    }
+    
+    JmxNotificationsViewController(final ApplicationService appSvc,
+            AgentInfoDAO agent, JmxNotificationDAO notification,
+            TimerFactory timerFactory, RequestQueue queue,
+            JmxNotificationsViewProvider viewProvider, VmRef vmId,
+            JmxToggleNotificationRequestFactory reqFactory) {
         this.dao = notification;
-        this.agentDAO = agent;
         this.view = viewProvider.createView();
         this.timer = timerFactory.createTimer();
         this.vm = vmId;
+        
+        // Callbacks for toggle notifications
+        final Runnable successAction = new Runnable() {
+
+            @Override
+            public void run() {
+                notificationsEnabled.set(!notificationsEnabled.get());
+                view.setNotificationsEnabled(notificationsEnabled.get());
+            }
+        };
+
+        final Runnable failureAction = new Runnable() {
+
+            @Override
+            public void run() {
+                LocalizedString warning;
+                if (notificationsEnabled.get()) {
+                    warning = t.localize(LocaleResources.NOTIFICATIONS_CANNOT_DISABLE);
+                }
+                else {
+                    warning = t.localize(LocaleResources.NOTIFICATIONS_CANNOT_ENABLE);
+                }
+                view.displayWarning(warning);
+                view.setNotificationsEnabled(notificationsEnabled.get());
+            }
+        };
+        
+        this.toggleReq = reqFactory.createRequest(queue, agent, successAction, failureAction);
 
         initializeTimer();
 
@@ -103,11 +140,13 @@ public class JmxNotificationsViewController implements InformationServiceControl
             @Override
             public void actionPerformed(ActionEvent<NotificationAction> actionEvent) {
                 if (actionEvent.getActionId() == NotificationAction.TOGGLE_NOTIFICATIONS) {
-                    notificationsEnabled.set(!notificationsEnabled.get());
-
-                    new JmxToggleNotificationRequest(queue).sendEnableNotificationsRequestToAgent(vm, agentDAO, notificationsEnabled.get(), null);
-
-                    view.setNotificationsEnabled(notificationsEnabled.get());
+                    // This can block on network, do outside EDT/UI thread
+                    appSvc.getApplicationExecutor().execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            toggleReq.sendEnableNotificationsRequestToAgent(vm, !notificationsEnabled.get());
+                        }
+                    });
                 }
             }
         });
@@ -155,6 +194,15 @@ public class JmxNotificationsViewController implements InformationServiceControl
     @Override
     public LocalizedString getLocalizedName() {
         return t.localize(LocaleResources.NOTIFICATIONS_TITLE);
+    }
+    
+    static class JmxToggleNotificationRequestFactory {
+        
+        JmxToggleNotificationRequest createRequest(RequestQueue queue, AgentInfoDAO agentDAO, 
+                Runnable successAction, Runnable failureAction) {
+            return new JmxToggleNotificationRequest(queue, agentDAO, successAction, failureAction);
+        }
+        
     }
 
 }

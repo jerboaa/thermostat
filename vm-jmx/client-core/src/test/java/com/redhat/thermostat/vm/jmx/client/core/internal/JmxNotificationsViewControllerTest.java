@@ -37,40 +37,51 @@
 package com.redhat.thermostat.vm.jmx.client.core.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.net.InetSocketAddress;
 import java.util.Arrays;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.command.Request;
+import com.redhat.thermostat.shared.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.vm.jmx.client.core.JmxNotificationsView;
 import com.redhat.thermostat.vm.jmx.client.core.JmxNotificationsView.NotificationAction;
 import com.redhat.thermostat.vm.jmx.client.core.JmxNotificationsViewProvider;
+import com.redhat.thermostat.vm.jmx.client.core.LocaleResources;
+import com.redhat.thermostat.vm.jmx.client.core.internal.JmxNotificationsViewController.JmxToggleNotificationRequestFactory;
 import com.redhat.thermostat.vm.jmx.common.JmxNotification;
 import com.redhat.thermostat.vm.jmx.common.JmxNotificationDAO;
 import com.redhat.thermostat.vm.jmx.common.JmxNotificationStatus;
 
 public class JmxNotificationsViewControllerTest {
 
-    private AgentInfoDAO agentDao;
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+    
     private JmxNotificationDAO notificationDao;
     private JmxNotificationsView view;
     private JmxNotificationsViewProvider viewProvider;
@@ -80,10 +91,28 @@ public class JmxNotificationsViewControllerTest {
     private RequestQueue queue;
     private JmxNotificationsViewController controller;
     private HostRef host;
+    private JmxToggleNotificationRequest toggleReq;
+
+    private Runnable successAction;
+
+    private Runnable failureAction;
 
     @Before
     public void setUp() {
-        agentDao = mock(AgentInfoDAO.class);
+        ApplicationService appSvc = mock(ApplicationService.class);
+        ExecutorService execSvc = mock(ExecutorService.class);
+        when(appSvc.getApplicationExecutor()).thenReturn(execSvc);
+        // Run task immediately
+        doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                Runnable runnable = (Runnable) invocation.getArguments()[0];
+                runnable.run();
+                return null;
+            }
+        }).when(execSvc).execute(any(Runnable.class));
+        
+        AgentInfoDAO agentDao = mock(AgentInfoDAO.class);
         notificationDao = mock(JmxNotificationDAO.class);
         queue = mock(RequestQueue.class);
         view = mock(JmxNotificationsView.class);
@@ -96,8 +125,20 @@ public class JmxNotificationsViewControllerTest {
         host = mock(HostRef.class);
         vm = mock(VmRef.class);
         when(vm.getHostRef()).thenReturn(host);
+        
+        JmxToggleNotificationRequestFactory reqFactory = mock(JmxToggleNotificationRequestFactory.class);
+        toggleReq = mock(JmxToggleNotificationRequest.class);
+        when(reqFactory.createRequest(eq(queue), eq(agentDao), any(Runnable.class), 
+                any(Runnable.class))).thenReturn(toggleReq);
 
-        controller = new JmxNotificationsViewController(agentDao, notificationDao, timerFactory, queue, viewProvider, vm);
+        controller = new JmxNotificationsViewController(appSvc, agentDao, notificationDao, timerFactory, 
+                queue, viewProvider, vm, reqFactory);
+        ArgumentCaptor<Runnable> successCaptor = ArgumentCaptor.forClass(Runnable.class);
+        ArgumentCaptor<Runnable> failureCaptor = ArgumentCaptor.forClass(Runnable.class);
+        verify(reqFactory).createRequest(eq(queue), eq(agentDao), successCaptor.capture(), failureCaptor.capture());
+        
+        successAction = successCaptor.getValue();
+        failureAction = failureCaptor.getValue();
     }
 
     @Test
@@ -169,17 +210,91 @@ public class JmxNotificationsViewControllerTest {
         ArgumentCaptor<ActionListener> listenerCaptor = ArgumentCaptor.forClass(ActionListener.class);
 
         verify(view).addNotificationActionListener(listenerCaptor.capture());
-
-        AgentInformation agentInfo = mock(AgentInformation.class);
-        when(agentInfo.getConfigListenAddress()).thenReturn("example.com:0");
-        when(agentDao.getAgentInformation(host)).thenReturn(agentInfo);
+        answerSuccess(true);
 
         listenerCaptor.getValue().actionPerformed(new ActionEvent<>(view, NotificationAction.TOGGLE_NOTIFICATIONS));
 
-        ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
-        verify(queue).putRequest(requestCaptor.capture());
-
-        Request req = requestCaptor.getValue();
-        assertEquals(new InetSocketAddress("example.com", 0), req.getTarget());
+        verify(toggleReq).sendEnableNotificationsRequestToAgent(eq(vm), eq(true));
+        verify(view).setNotificationsEnabled(true);
     }
+    
+    @Test
+    public void enableNotificationsFails() {
+        ArgumentCaptor<ActionListener> listenerCaptor = ArgumentCaptor.forClass(ActionListener.class);
+
+        verify(view).addNotificationActionListener(listenerCaptor.capture());
+        answerFailure(true);
+
+        listenerCaptor.getValue().actionPerformed(new ActionEvent<>(view, NotificationAction.TOGGLE_NOTIFICATIONS));
+
+        verify(toggleReq).sendEnableNotificationsRequestToAgent(vm, true);
+        verify(view, never()).setNotificationsEnabled(true);
+        verify(view).setNotificationsEnabled(false);
+        
+        ArgumentCaptor<LocalizedString> warningCaptor = ArgumentCaptor.forClass(LocalizedString.class);
+        verify(view).displayWarning(warningCaptor.capture());
+        assertEquals(translator.localize(LocaleResources.NOTIFICATIONS_CANNOT_ENABLE).getContents(), 
+                warningCaptor.getValue().getContents());
+    }
+    
+    @Test
+    public void disableNotificationsWhenViewFiresEvent() {
+        ArgumentCaptor<ActionListener> listenerCaptor = ArgumentCaptor.forClass(ActionListener.class);
+
+        verify(view).addNotificationActionListener(listenerCaptor.capture());
+        answerSuccess(true);
+        answerSuccess(false);
+
+        // Enable, then disable
+        listenerCaptor.getValue().actionPerformed(new ActionEvent<>(view, NotificationAction.TOGGLE_NOTIFICATIONS));
+        listenerCaptor.getValue().actionPerformed(new ActionEvent<>(view, NotificationAction.TOGGLE_NOTIFICATIONS));
+
+        verify(toggleReq).sendEnableNotificationsRequestToAgent(vm, false);
+        verify(view).setNotificationsEnabled(false);
+    }
+
+    private void answerSuccess(boolean enable) {
+        doAnswer(new Answer<Void>() {
+
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                successAction.run();
+                return null;
+            }
+        }).when(toggleReq).sendEnableNotificationsRequestToAgent(vm, enable);
+    }
+
+    private void answerFailure(boolean enable) {
+        doAnswer(new Answer<Void>() {
+
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                failureAction.run();
+                return null;
+            }
+        }).when(toggleReq).sendEnableNotificationsRequestToAgent(vm, enable);
+    }
+
+    @Test
+    public void disableNotificationsFails() {
+        ArgumentCaptor<ActionListener> listenerCaptor = ArgumentCaptor.forClass(ActionListener.class);
+
+        verify(view).addNotificationActionListener(listenerCaptor.capture());
+        answerSuccess(true);
+        answerFailure(false);
+        
+        listenerCaptor.getValue().actionPerformed(new ActionEvent<>(view, NotificationAction.TOGGLE_NOTIFICATIONS));
+        listenerCaptor.getValue().actionPerformed(new ActionEvent<>(view, NotificationAction.TOGGLE_NOTIFICATIONS));
+
+        verify(toggleReq).sendEnableNotificationsRequestToAgent(vm, false);
+        verify(view, never()).setNotificationsEnabled(false);
+        verify(view, times(2)).setNotificationsEnabled(true);
+        
+        ArgumentCaptor<LocalizedString> warningCaptor = ArgumentCaptor.forClass(LocalizedString.class);
+        verify(view).displayWarning(warningCaptor.capture());
+        assertEquals(translator.localize(LocaleResources.NOTIFICATIONS_CANNOT_DISABLE).getContents(), 
+                warningCaptor.getValue().getContents());
+    }
+
+    
 }

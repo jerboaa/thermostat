@@ -39,6 +39,7 @@ package com.redhat.thermostat.vm.jmx.client.core;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.vm.jmx.common.JmxNotification;
 
 public abstract class JmxNotificationsView extends BasicView implements UIComponent {
@@ -53,5 +54,6 @@ public abstract class JmxNotificationsView extends BasicView implements UICompon
     public abstract void setNotificationsEnabled(boolean enabled);
     public abstract void clearNotifications();
     public abstract void addNotification(JmxNotification data);
+    public abstract void displayWarning(LocalizedString warning);
 
 }

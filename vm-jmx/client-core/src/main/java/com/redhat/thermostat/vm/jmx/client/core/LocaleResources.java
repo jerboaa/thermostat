@@ -49,6 +49,9 @@ public enum LocaleResources {
     NOTIFICATIONS_ENABLE_DESCRIPTION,
     NOTIFICATIONS_DISABLE,
     NOTIFICATIONS_DISABLE_DESCRIPTION,
+    
+    NOTIFICATIONS_CANNOT_ENABLE,
+    NOTIFICATIONS_CANNOT_DISABLE,
     ;
 
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.vm.jmx.client.core.strings";

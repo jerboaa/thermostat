@@ -47,6 +47,7 @@ import javax.swing.BorderFactory;
 import javax.swing.ButtonModel;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
@@ -61,6 +62,7 @@ import com.redhat.thermostat.client.swing.components.LocalizedLabel;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.jmx.client.core.JmxNotificationsView;
 import com.redhat.thermostat.vm.jmx.client.core.LocaleResources;
@@ -188,6 +190,16 @@ public class JmxNotificationsSwingView extends JmxNotificationsView implements S
     @Override
     public Component getUiComponent() {
         return visiblePanel;
+    }
+
+    @Override
+    public void displayWarning(final LocalizedString warning) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                JOptionPane.showMessageDialog(visiblePanel.getParent(), warning.getContents(), "", JOptionPane.WARNING_MESSAGE);
+            }
+        });
     }
 
 }

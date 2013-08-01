@@ -37,23 +37,33 @@
 package com.redhat.thermostat.vm.jmx.client.core.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.net.InetSocketAddress;
+import java.util.Collection;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
+import com.redhat.thermostat.common.command.Response;
+import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.vm.jmx.client.core.internal.JmxToggleNotificationRequest.JmxToggleResponseListener;
+import com.redhat.thermostat.vm.jmx.client.core.internal.JmxToggleNotificationRequest.JmxToggleResponseListenerFactory;
 import com.redhat.thermostat.vm.jmx.common.JmxCommand;
 
 public class JmxToggleNotificationRequestTest {
@@ -66,8 +76,12 @@ public class JmxToggleNotificationRequestTest {
     private HostRef host;
     private VmRef vm;
     private AgentInfoDAO agentDAO;
-    private RequestResponseListener responseListener;
     private AgentInformation agentInfo;
+    private JmxToggleResponseListenerFactory factory;
+    private JmxToggleResponseListener listener;
+    private Runnable successAction;
+    private Runnable failureAction;
+    private JmxToggleNotificationRequest toggleReq;
 
     @Before
     public void setUp() {
@@ -83,37 +97,101 @@ public class JmxToggleNotificationRequestTest {
         agentInfo = mock(AgentInformation.class);
         when(agentInfo.getConfigListenAddress()).thenReturn(HOST + ":" + PORT);
         when(agentDAO.getAgentInformation(host)).thenReturn(agentInfo);
-
-        responseListener = mock(RequestResponseListener.class);
+        
+        factory = mock(JmxToggleResponseListenerFactory.class);
+        listener = mock(JmxToggleResponseListener.class);
+        successAction = mock(Runnable.class);
+        failureAction = mock(Runnable.class);
+        when(factory.createListener(successAction, failureAction)).thenReturn(listener);
+        
+        toggleReq = new JmxToggleNotificationRequest(queue, agentDAO, successAction, failureAction);
     }
 
     @Test
-    public void testEnableNotificationMessage() {
-        new JmxToggleNotificationRequest(queue).sendEnableNotificationsRequestToAgent(vm, agentDAO, true, responseListener);
+    public void testEnableNotificationsSuccess() {
+        answerSuccess();
+        toggleReq.sendEnableNotificationsRequestToAgent(vm, true);
 
         verify(queue).putRequest(requestCaptor.capture());
 
         Request req = requestCaptor.getValue();
 
         assertEquals(new InetSocketAddress(HOST, PORT), req.getTarget());
+        assertEquals(JmxToggleNotificationRequest.CMD_CHANNEL_ACTION_NAME, req.getParameter(Request.ACTION));
         assertEquals(JmxCommand.RECEIVER, req.getReceiver());
         assertEquals(String.valueOf(vm.getPid()), req.getParameter(JmxCommand.VM_PID));
 
         assertEquals(JmxCommand.ENABLE_JMX_NOTIFICATIONS.name(), req.getParameter(JmxCommand.class.getName()));
+        
+        verify(successAction).run();
+        verify(failureAction, never()).run();
+    }
+    
+    @Test
+    public void testEnableNotificationsFailure() {
+        answerFailure();
+        toggleReq.sendEnableNotificationsRequestToAgent(vm, true);
+
+        verify(successAction, never()).run();
+        verify(failureAction).run();
     }
 
     @Test
-    public void testDisableNotificationMessage() {
-        new JmxToggleNotificationRequest(queue).sendEnableNotificationsRequestToAgent(vm, agentDAO, false, responseListener);
+    public void testDisableNotificationsSuccess() {
+        answerSuccess();
+        toggleReq.sendEnableNotificationsRequestToAgent(vm, false);
 
         verify(queue).putRequest(requestCaptor.capture());
 
         Request req = requestCaptor.getValue();
 
         assertEquals(new InetSocketAddress(HOST, PORT), req.getTarget());
+        assertEquals(JmxToggleNotificationRequest.CMD_CHANNEL_ACTION_NAME, req.getParameter(Request.ACTION));
         assertEquals(JmxCommand.RECEIVER, req.getReceiver());
         assertEquals(String.valueOf(vm.getPid()), req.getParameter(JmxCommand.VM_PID));
 
         assertEquals(JmxCommand.DISABLE_JMX_NOTIFICATIONS.name(), req.getParameter(JmxCommand.class.getName()));
+        
+        verify(successAction).run();
+        verify(failureAction, never()).run();
+    }
+    
+    @Test
+    public void testDisableNotificationsFailure() {
+        answerFailure();
+        toggleReq.sendEnableNotificationsRequestToAgent(vm, false);
+
+        verify(successAction, never()).run();
+        verify(failureAction).run();
+    }
+    
+    private void answerSuccess() {
+        doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                // Fire complete OK
+                Request req = (Request) invocation.getArguments()[0];
+                Collection<RequestResponseListener> listeners = req.getListeners();
+                assertEquals(1, listeners.size());
+                RequestResponseListener listener = listeners.iterator().next();
+                listener.fireComplete(req, new Response(ResponseType.OK));
+                return null;
+            }
+        }).when(queue).putRequest(any(Request.class));
+    }
+
+    private void answerFailure() {
+        doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                // Fire complete ERROR
+                Request req = (Request) invocation.getArguments()[0];
+                Collection<RequestResponseListener> listeners = req.getListeners();
+                assertEquals(1, listeners.size());
+                RequestResponseListener listener = listeners.iterator().next();
+                listener.fireComplete(req, new Response(ResponseType.ERROR));
+                return null;
+            }
+        }).when(queue).putRequest(any(Request.class));
     }
 }

@@ -45,6 +45,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.client.command.RequestQueue;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
@@ -67,6 +68,7 @@ public class JmxNotificationsViewServiceImplTest {
 
     @Before
     public void setUp() {
+        ApplicationService appSvc = mock(ApplicationService.class);
         agentDao = mock(AgentInfoDAO.class);
         notificationDao = mock(JmxNotificationDAO.class);
         timer = mock(Timer.class);
@@ -79,7 +81,8 @@ public class JmxNotificationsViewServiceImplTest {
         viewProvider = mock(JmxNotificationsViewProvider.class);
         when(viewProvider.createView()).thenReturn(view);
 
-        service = new JmxNotificationsViewServiceImpl(agentDao, notificationDao, queue, timerFactory, viewProvider);
+        service = new JmxNotificationsViewServiceImpl(appSvc, agentDao, notificationDao, 
+                queue, timerFactory, viewProvider);
     }
 
     @Test

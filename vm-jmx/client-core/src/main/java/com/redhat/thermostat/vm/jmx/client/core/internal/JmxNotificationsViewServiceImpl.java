@@ -40,6 +40,7 @@ import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.core.NameMatchingRefFilter;
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.storage.core.VmRef;
@@ -52,14 +53,18 @@ public class JmxNotificationsViewServiceImpl implements JmxNotificationsViewServ
 
     private final Filter<VmRef> FILTER = new NameMatchingRefFilter<>();
 
+    private final ApplicationService appSvc;
     private final JmxNotificationsViewProvider viewProvider;
     private final JmxNotificationDAO notificationDao;
     private final AgentInfoDAO agentDao;
     private final RequestQueue requestQueue;
     private final TimerFactory timerFactory;
 
-    public JmxNotificationsViewServiceImpl(AgentInfoDAO agentDao, JmxNotificationDAO notificationDao,
-            RequestQueue requestQueue, TimerFactory timerFactory, JmxNotificationsViewProvider viewProvider) {
+    public JmxNotificationsViewServiceImpl(ApplicationService appSvc,
+            AgentInfoDAO agentDao, JmxNotificationDAO notificationDao,
+            RequestQueue requestQueue, TimerFactory timerFactory,
+            JmxNotificationsViewProvider viewProvider) {
+        this.appSvc = appSvc;
         this.agentDao = agentDao;
         this.notificationDao = notificationDao;
         this.timerFactory = timerFactory;
@@ -74,7 +79,8 @@ public class JmxNotificationsViewServiceImpl implements JmxNotificationsViewServ
 
     @Override
     public InformationServiceController<VmRef> getInformationServiceController(VmRef ref) {
-        return new JmxNotificationsViewController(agentDao, notificationDao, timerFactory, requestQueue, viewProvider, ref);
+        return new JmxNotificationsViewController(appSvc, agentDao, notificationDao, timerFactory,
+                requestQueue, viewProvider, ref);
     }
 
     @Override

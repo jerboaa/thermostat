@@ -40,43 +40,89 @@ import java.net.InetSocketAddress;
 
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.command.Request;
-import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Request.RequestType;
+import com.redhat.thermostat.common.command.RequestResponseListener;
+import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.vm.jmx.common.JmxCommand;
 
 public class JmxToggleNotificationRequest {
+    
+    static final String CMD_CHANNEL_ACTION_NAME = "jmx-toggle-notifications";
 
     private RequestQueue queue;
+    private AgentInfoDAO agentDAO;
+    private Runnable successAction;
+    private Runnable failureAction;
+    private JmxToggleResponseListenerFactory factory;
 
-    public JmxToggleNotificationRequest(RequestQueue queue) {
+    public JmxToggleNotificationRequest(RequestQueue queue, AgentInfoDAO agentDAO,
+            Runnable successAction, Runnable failureAction) {
+        this(queue, agentDAO, successAction, failureAction, new JmxToggleResponseListenerFactory());
+    }
+    
+    JmxToggleNotificationRequest(RequestQueue queue, AgentInfoDAO agentDAO, Runnable successAction, 
+            Runnable failureAction, JmxToggleResponseListenerFactory factory) {
         this.queue = queue;
+        this.agentDAO = agentDAO;
+        this.successAction = successAction;
+        this.failureAction = failureAction;
+        this.factory = factory;
     }
 
-    public void sendEnableNotificationsRequestToAgent(VmRef vm, AgentInfoDAO agentDAO, boolean enable, RequestResponseListener responseListener) {
-
+    public void sendEnableNotificationsRequestToAgent(VmRef vm, boolean enable) {
         HostRef targetHostRef = vm.getHostRef();
 
         String address = agentDAO.getAgentInformation(targetHostRef).getConfigListenAddress();
         String[] host = address.split(":");
 
         InetSocketAddress target = new InetSocketAddress(host[0], Integer.parseInt(host[1]));
-        Request gcRequest = createRequest(target);
+        Request req = new Request(RequestType.RESPONSE_EXPECTED, target);
 
-        gcRequest.setReceiver(JmxCommand.RECEIVER);
+        req.setReceiver(JmxCommand.RECEIVER);
 
-        gcRequest.setParameter(JmxCommand.class.getName(), enable ? JmxCommand.ENABLE_JMX_NOTIFICATIONS.name() : JmxCommand.DISABLE_JMX_NOTIFICATIONS.name());
-        gcRequest.setParameter(JmxCommand.VM_PID, String.valueOf(vm.getPid()));
+        req.setParameter(Request.ACTION, CMD_CHANNEL_ACTION_NAME);
+        req.setParameter(JmxCommand.class.getName(), enable ? JmxCommand.ENABLE_JMX_NOTIFICATIONS.name() : JmxCommand.DISABLE_JMX_NOTIFICATIONS.name());
+        req.setParameter(JmxCommand.VM_PID, String.valueOf(vm.getPid()));
 
-        gcRequest.addListener(responseListener);
+        JmxToggleResponseListener listener = factory.createListener(successAction, failureAction);
+        req.addListener(listener);
 
-        queue.putRequest(gcRequest);
+        queue.putRequest(req);
     }
+    
+    static class JmxToggleResponseListener implements RequestResponseListener {
+        
+        private Runnable successAction;
+        private Runnable failureAction;
+        
+        public JmxToggleResponseListener(Runnable successAction, Runnable failureAction) {
+            this.successAction = successAction;
+            this.failureAction = failureAction;
+        }
 
-    // for testing
-    Request createRequest(InetSocketAddress target) {
-        return new Request(RequestType.RESPONSE_EXPECTED, target);
+        @Override
+        public void fireComplete(Request request, Response response) {
+            switch (response.getType()) {
+            case OK:
+                successAction.run();
+                break;
+            default:
+                failureAction.run();
+                break;
+            }
+        }
+        
+    }
+    
+    static class JmxToggleResponseListenerFactory {
+        
+        JmxToggleResponseListener createListener(Runnable successAction, 
+                Runnable failureAction) {
+            return new JmxToggleResponseListener(successAction, failureAction);
+        }
+        
     }
 }

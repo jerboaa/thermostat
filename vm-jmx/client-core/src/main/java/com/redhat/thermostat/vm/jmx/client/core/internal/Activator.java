@@ -65,6 +65,7 @@ public class Activator implements BundleActivator {
     public void start(final BundleContext context) throws Exception {
 
         final Class<?>[] deps = new Class<?>[] {
+                ApplicationService.class,
                 AgentInfoDAO.class,
                 JmxNotificationDAO.class,
                 ApplicationService.class,
@@ -75,13 +76,14 @@ public class Activator implements BundleActivator {
         depsTracker = new MultipleServiceTracker(context, deps, new Action() {
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
+                ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
                 AgentInfoDAO agentDao = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
                 JmxNotificationDAO notificationDao = (JmxNotificationDAO) services.get(JmxNotificationDAO.class.getName());
                 JmxNotificationsViewProvider viewProvider = (JmxNotificationsViewProvider) services.get(JmxNotificationsViewProvider.class.getName());
                 TimerFactory tf = ((ApplicationService) services.get(ApplicationService.class.getName())).getTimerFactory();
                 RequestQueue queue = (RequestQueue) services.get(RequestQueue.class.getName());
 
-                JmxNotificationsViewServiceImpl notificationsView = new JmxNotificationsViewServiceImpl(agentDao, notificationDao, queue, tf, viewProvider);
+                JmxNotificationsViewServiceImpl notificationsView = new JmxNotificationsViewServiceImpl(appSvc, agentDao, notificationDao, queue, tf, viewProvider);
 
                 Dictionary props = new Hashtable();
                 props.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
