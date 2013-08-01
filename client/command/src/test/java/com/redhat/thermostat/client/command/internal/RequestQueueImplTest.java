@@ -36,14 +36,21 @@
 
 package com.redhat.thermostat.client.command.internal;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.verify;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
+
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
@@ -53,39 +60,85 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.common.command.Request;
+import com.redhat.thermostat.common.command.RequestResponseListener;
+import com.redhat.thermostat.common.command.Response;
+import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.storage.core.AuthToken;
 import com.redhat.thermostat.storage.core.SecureStorage;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.StorageException;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ FrameworkUtil.class })
 public class RequestQueueImplTest {
 
+    private BundleContext mockContext;
+    private ServiceReference mockServiceRef;
+    
+    @Before
+    public void setup() {
+        PowerMockito.mockStatic(FrameworkUtil.class);
+        Bundle mockBundle = mock(Bundle.class);
+        mockContext = mock(BundleContext.class);
+        mockServiceRef = mock(ServiceReference.class);
+        when(mockContext.getServiceReference(Storage.class.getName())).thenReturn(mockServiceRef);
+        when(mockBundle.getBundleContext()).thenReturn(mockContext);
+        when(FrameworkUtil.getBundle(RequestQueueImpl.class)).thenReturn(mockBundle);
+    }
 
     /*
      * Other tests ensure that secure storage is returned from storage providers.
-     * This is an attemtp to make sure that authentication hooks are actually
+     * This is an attempt to make sure that authentication hooks are actually
      * called if storage is an instance of SecureStorage.
      * 
      */
     @Test
     public void putRequestAuthenticatesForSecureStorage() {
-        PowerMockito.mockStatic(FrameworkUtil.class);
-        Bundle mockBundle = mock(Bundle.class);
-        BundleContext mockContext = mock(BundleContext.class);
-        ServiceReference mockServiceRef = mock(ServiceReference.class);
-        when(mockContext.getServiceReference(Storage.class.getName())).thenReturn(mockServiceRef);
         SecureStorage mockStorage = mock(SecureStorage.class);
+        when(mockContext.getService(mockServiceRef)).thenReturn(mockStorage);
+        
         AuthToken mockToken = mock(AuthToken.class);
         when(mockStorage.generateToken(any(String.class))).thenReturn(mockToken);
-        when(mockContext.getService(mockServiceRef)).thenReturn(mockStorage);
-        when(mockBundle.getBundleContext()).thenReturn(mockContext);
-        when(FrameworkUtil.getBundle(RequestQueueImpl.class)).thenReturn(mockBundle);
+        
         ConfigurationRequestContext ctx = mock(ConfigurationRequestContext.class);
         RequestQueueImpl queue = new RequestQueueImpl(ctx);
         Request request = mock(Request.class);
         queue.putRequest(request);
         verify(request).setParameter(eq(Request.CLIENT_TOKEN), any(String.class));
         verify(request).setParameter(eq(Request.AUTH_TOKEN), any(String.class));
+        assertTrue(queue.getQueue().contains(request));
+    }
+    
+    @Test
+    public void testNoEnqueueIfAuthFailed() {
+        SecureStorage mockStorage = mock(SecureStorage.class);
+        when(mockContext.getService(mockServiceRef)).thenReturn(mockStorage);
+        
+        when(mockStorage.generateToken(any(String.class))).thenThrow(new StorageException());
+        
+        ConfigurationRequestContext ctx = mock(ConfigurationRequestContext.class);
+        RequestQueueImpl queue = new RequestQueueImpl(ctx);
+        Request request = mock(Request.class);
+        
+        RequestResponseListener listener = mock(RequestResponseListener.class);
+        when(request.getListeners()).thenReturn(Arrays.asList(listener));
+        queue.putRequest(request);
+        
+        ArgumentCaptor<Response> responseCaptor = ArgumentCaptor.forClass(Response.class);
+        verify(listener).fireComplete(eq(request), responseCaptor.capture());
+        assertEquals(ResponseType.AUTH_FAILED, responseCaptor.getValue().getType());
+        assertFalse(queue.getQueue().contains(request));
+    }
+    
+    @Test
+    public void testEnqueueNoSecureStorage() {
+        Storage mockStorage = mock(Storage.class);
+        when(mockContext.getService(mockServiceRef)).thenReturn(mockStorage);
+        
+        ConfigurationRequestContext ctx = mock(ConfigurationRequestContext.class);
+        RequestQueueImpl queue = new RequestQueueImpl(ctx);
+        Request request = mock(Request.class);
+        queue.putRequest(request);
+        assertTrue(queue.getQueue().contains(request));
     }
 }

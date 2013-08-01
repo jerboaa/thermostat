@@ -80,20 +80,25 @@ class RequestQueueImpl implements RequestQueue {
 
     @Override
     public void putRequest(Request request) {
-        authenticateRequest(request);
-        queue.add(request);
+        // Only enqueue request if we've successfully authenticated
+        if (authenticateRequest(request)) {
+            queue.add(request);
+        }
     }
 
-    private void authenticateRequest(Request request) {
+    private boolean authenticateRequest(Request request) {
+        boolean result = true; // Successful by default, unless storage is secure
         BundleContext bCtx = FrameworkUtil.getBundle(getClass()).getBundleContext();
         ServiceReference storageRef = bCtx.getServiceReference(Storage.class.getName());
         Storage storage = (Storage) bCtx.getService(storageRef);
         if (storage instanceof SecureStorage) {
-            authenticateRequest(request, (SecureStorage) storage);
+            result = authenticateRequest(request, (SecureStorage) storage);
         }
+        return result;
     }
 
-    private void authenticateRequest(Request request, SecureStorage storage) {
+    private boolean authenticateRequest(Request request, SecureStorage storage) {
+        boolean result = false; // Successful only if generateToken succeeds
         try {
             String actionName = request.getParameter(Request.ACTION);
             // actionName must not be null here.
@@ -101,9 +106,12 @@ class RequestQueueImpl implements RequestQueue {
             AuthToken token = storage.generateToken(actionName);
             request.setParameter(Request.CLIENT_TOKEN, Base64.encodeBase64String(token.getClientToken()));
             request.setParameter(Request.AUTH_TOKEN, Base64.encodeBase64String(token.getToken()));
+            result = true;
         } catch (StorageException ex) {
+            logger.log(Level.WARNING, "Authentication failed", ex);
             fireComplete(request, new Response(ResponseType.AUTH_FAILED));
         }
+        return result;
     }
 
     synchronized void startProcessingRequests() {
@@ -182,6 +190,13 @@ class RequestQueueImpl implements RequestQueue {
         // report an error on client side and to perform (optional) host name verification.
         boolean performHostnameCheck = !SSLConfiguration.disableHostnameVerification();
         future.addListener(new SSLHandshakeFinishedListener(request, performHostnameCheck, sslHandler, this));
+    }
+    
+    /*
+     * For testing purposes only.
+     */
+    BlockingQueue<Request> getQueue() {
+        return queue;
     }
 }
 
