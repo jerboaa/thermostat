@@ -38,6 +38,8 @@ package com.redhat.thermostat.agent.cli.impl.db;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.cli.impl.locale.LocaleResources;
 import com.redhat.thermostat.common.ExitStatus;
@@ -47,12 +49,14 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.common.tools.ApplicationState;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.Configuration;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.locale.Translate;
 
 public class StorageCommand extends AbstractStateNotifyingCommand {
 
+    private static final Logger logger = LoggingUtils.getLogger(StorageCommand.class);
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
     private DBStartupConfiguration configuration;
@@ -114,6 +118,7 @@ public class StorageCommand extends AbstractStateNotifyingCommand {
             // rethrow
             throw e;
         } catch (Exception e) {
+            logger.log(Level.WARNING, e.getMessage(), e);
             getNotifier().fireAction(ApplicationState.FAIL, e);
         }
     }
