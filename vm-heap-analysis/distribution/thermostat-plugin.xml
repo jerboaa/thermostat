@@ -397,6 +397,8 @@
     <extension>
       <name>gui</name>
       <bundles>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.client.core</symbolic-name><version>0.12.0-SNAPSHOT</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.client.swing</symbolic-name><version>0.12.0-SNAPSHOT</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.common</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.command</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.common.command</symbolic-name><version>${project.version}</version></bundle>
