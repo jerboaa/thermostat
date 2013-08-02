@@ -115,22 +115,10 @@ public class HostInfoDAOImpl implements HostInfoDAO {
 
     @Override
     public Collection<HostRef> getHosts() {
-        StatementDescriptor<HostInfo> desc = new StatementDescriptor<>(hostInfoCategory, QUERY_ALL_HOSTS);
-        PreparedStatement<HostInfo> prepared;
-        Cursor<HostInfo> cursor;
-        try {
-            prepared = storage.prepareStatement(desc);
-            cursor = prepared.executeQuery();
-        } catch (DescriptorParsingException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
-            return Collections.emptyList();
-        } catch (StatementExecutionException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
+        Cursor<HostInfo> cursor = getAllHostInfoCursor();
+        if (cursor == null) {
             return Collections.emptyList();
         }
-        
         List<HostRef> result = new ArrayList<>();
         while (cursor.hasNext()) {
             HostInfo hostInfo = cursor.next();
@@ -155,16 +143,41 @@ public class HostInfoDAOImpl implements HostInfoDAO {
         return hosts;
     }
 
-
     private HostRef toHostRef(HostInfo hostInfo) {
         String agentId = hostInfo.getAgentId();
         String hostName = hostInfo.getHostname();
         return new HostRef(agentId, hostName);
     }
+    
+    private Cursor<HostInfo> getAllHostInfoCursor() {
+        StatementDescriptor<HostInfo> desc = new StatementDescriptor<>(hostInfoCategory, QUERY_ALL_HOSTS);
+        PreparedStatement<HostInfo> prepared;
+        try {
+            prepared = storage.prepareStatement(desc);
+            return prepared.executeQuery();
+        } catch (DescriptorParsingException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
+            return null;
+        } catch (StatementExecutionException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
+            return null;
+        }
+    }
 
     @Override
     public long getCount() {
-        return storage.getCount(hostInfoCategory);
+        long count = 0;
+        Cursor<HostInfo> hostInfoCursor = getAllHostInfoCursor();
+        if (hostInfoCursor == null) {
+            return count;
+        }
+        while (hostInfoCursor.hasNext()) {
+            count++;
+            hostInfoCursor.next();
+        }
+        return count;
     }
     
 }

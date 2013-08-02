@@ -62,6 +62,7 @@ public class DAOImplStatementDescriptorRegistration implements
         daoDescs.add(HostInfoDAOImpl.QUERY_HOST_INFO);
         daoDescs.add(HostInfoDAOImpl.QUERY_ALL_HOSTS);
         daoDescs.add(NetworkInterfaceInfoDAOImpl.QUERY_NETWORK_INFO);
+        daoDescs.add(VmInfoDAOImpl.QUERY_ALL_VMS_FOR_HOST);
         daoDescs.add(VmInfoDAOImpl.QUERY_ALL_VMS);
         daoDescs.add(VmInfoDAOImpl.QUERY_VM_INFO);
         return daoDescs;

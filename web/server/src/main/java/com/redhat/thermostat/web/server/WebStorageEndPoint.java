@@ -233,8 +233,6 @@ public class WebStorageEndPoint extends HttpServlet {
             removePojo(req, resp);
         } else if (cmd.equals("update-pojo")) {
             updatePojo(req, resp);
-        } else if (cmd.equals("get-count")) {
-            getCount(req, resp);
         } else if (cmd.equals("save-file")) {
             saveFile(req, resp);
         } else if (cmd.equals("load-file")) {
@@ -436,26 +434,6 @@ public class WebStorageEndPoint extends HttpServlet {
             throw new ServletException(ex);
         }
         
-    }
-
-    @WebStoragePathHandler( path = "get-count" )
-    private void getCount(HttpServletRequest req, HttpServletResponse resp) {
-        if (! isAuthorized(req, resp, Roles.GET_COUNT)) {
-            return;
-        }
-        try {
-            String categoryParam = req.getParameter("category");
-            int categoryId = gson.fromJson(categoryParam, Integer.class);
-            Category<?> category = getCategoryFromId(categoryId);
-            long result = storage.getCount(category);
-            resp.setStatus(HttpServletResponse.SC_OK);
-            resp.setContentType(RESPONSE_JSON_CONTENT_TYPE);
-            gson.toJson(result, resp.getWriter());
-            resp.flushBuffer();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        }
     }
 
     @WebStoragePathHandler( path = "register-category" )

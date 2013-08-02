@@ -81,7 +81,7 @@ public class KnownDescriptorRegistryTest {
         // storage-core registers 9 queries; this module has
         // only storage-core as maven dep which registers queries.
         // see DAOImplStatementDescriptorRegistration
-        assertEquals(9, trustedDescs.size());
+        assertEquals(10, trustedDescs.size());
     }
     
     @Test

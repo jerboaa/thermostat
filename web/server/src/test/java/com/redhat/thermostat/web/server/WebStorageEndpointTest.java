@@ -242,7 +242,7 @@ public class WebStorageEndpointTest {
         // authorization checks
         final String[] authPaths = new String[] {
                 "prepare-statement", "query-execute", "put-pojo", "register-category", "remove-pojo",
-                "update-pojo", "get-count", "save-file", "load-file",
+                "update-pojo", "save-file", "load-file",
                 "purge", "ping", "generate-token", "verify-token"
         };
         Map<String, Boolean> checkedAutPaths = new HashMap<>();
@@ -960,56 +960,6 @@ public class WebStorageEndpointTest {
     public void unauthorizedUpdatePojo() throws Exception {
         String failMsg = "thermostat-update role missing, expected Forbidden!";
         doUnauthorizedTest("update-pojo", failMsg);
-    }
-
-
-    @Test
-    public void authorizedGetCount() throws Exception {
-        String[] roleNames = new String[] {
-                Roles.GET_COUNT,
-                Roles.REGISTER_CATEGORY,
-                Roles.ACCESS_REALM
-        };
-        String testuser = "testuser";
-        String password = "testpassword";
-        final LoginService loginService = new TestLoginService(testuser, password, roleNames); 
-        port = FreePortFinder.findFreePort(new TryPort() {
-            
-            @Override
-            public void tryPort(int port) throws Exception {
-                startServer(port, loginService);
-            }
-        });
-        registerCategory(testuser, password);
-        
-        when(mockStorage.getCount(category)).thenReturn(12345L);
-        String endpoint = getEndpoint();
-
-        URL url = new URL(endpoint + "/get-count");
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("POST");
-        sendAuthentication(conn, testuser, password);
-        conn.setDoOutput(true);
-        conn.setDoInput(true);
-        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        Gson gson = new Gson();
-        OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-        out.write("category=" + categoryId);
-        out.flush();
-
-        InputStream in = conn.getInputStream();
-        Reader reader = new InputStreamReader(in);
-        long result = gson.fromJson(reader, Long.class);
-        assertEquals(200, conn.getResponseCode());
-        assertEquals(12345, result);
-        verify(mockStorage).getCount(category);
-        
-    }
-    
-    @Test
-    public void unauthorizedGetCount() throws Exception {
-        String failMsg = "thermostat-get-count role missing, expected Forbidden!";
-        doUnauthorizedTest("get-count", failMsg);
     }
 
     @Test

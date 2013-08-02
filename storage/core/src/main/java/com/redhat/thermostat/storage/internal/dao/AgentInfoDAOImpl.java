@@ -82,24 +82,22 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
 
     @Override
     public long getCount() {
-        return storage.getCount(CATEGORY);
+        long count = 0L;
+        Cursor<AgentInformation> agentCursor = getCursorForAllAgentInformation();
+        if (agentCursor == null) {
+            return count;
+        }
+        while (agentCursor.hasNext()) {
+            count++;
+            agentCursor.next();
+        }
+        return count;
     }
 
     @Override
     public List<AgentInformation> getAllAgentInformation() {
-        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(CATEGORY, QUERY_ALL_AGENTS);
-        PreparedStatement<AgentInformation> prepared = null;
-        Cursor<AgentInformation> agentCursor = null;
-        try {
-            prepared = storage.prepareStatement(desc);
-            agentCursor = prepared.executeQuery();
-        } catch (DescriptorParsingException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
-            return Collections.emptyList();
-        } catch (StatementExecutionException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
+        Cursor<AgentInformation> agentCursor = getCursorForAllAgentInformation();
+        if (agentCursor == null) {
             return Collections.emptyList();
         }
         List<AgentInformation> results = new ArrayList<>();
@@ -109,6 +107,24 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
             results.add(agentInfo);
         }
         return results;
+    }
+    
+    private Cursor<AgentInformation> getCursorForAllAgentInformation() {
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(CATEGORY, QUERY_ALL_AGENTS);
+        PreparedStatement<AgentInformation> prepared = null;
+        try {
+            prepared = storage.prepareStatement(desc);
+            return prepared.executeQuery();
+        } catch (DescriptorParsingException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
+            return null;
+        } catch (StatementExecutionException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
+            return null;
+        }
+        
     }
 
     @Override

@@ -537,21 +537,6 @@ public class WebStorageTest {
     }
 
     @Test
-    public void testGetCount() throws UnsupportedEncodingException, IOException {
-
-        prepareServer(new Gson().toJson(12345));
-        long result = storage.getCount(category);
-
-        StringReader reader = new StringReader(requestBody);
-        BufferedReader bufRead = new BufferedReader(reader);
-        String line = URLDecoder.decode(bufRead.readLine(), "UTF-8");
-        String[] parts = line.split("=");
-        assertEquals("category", parts[0]);
-        assertEquals("42", parts[1]);
-        assertEquals(12345, result);
-    }
-
-    @Test
     public void testSaveFile() {
         String data = "Hello World";
         ByteArrayInputStream in = new ByteArrayInputStream(data.getBytes());

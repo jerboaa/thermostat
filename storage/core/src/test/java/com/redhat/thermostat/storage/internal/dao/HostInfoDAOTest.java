@@ -224,14 +224,13 @@ public class HostInfoDAOTest {
     }
 
     @Test
-    public void testGetCount() {
-        Storage storage = mock(Storage.class);
-        when(storage.getCount(any(Category.class))).thenReturn(5L);
-        AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
+    public void testGetCount() throws Exception {
+        Storage storage = setupStorageForSingleHost();
+        AgentInfoDAO agentInfo = mock(AgentInfoDAO.class);
 
-        HostInfoDAO dao = new HostInfoDAOImpl(storage, agentInfoDao);
-        Long count = dao.getCount();
-        assertEquals((Long) 5L, count);
+        HostInfoDAO hostsDAO = new HostInfoDAOImpl(storage, agentInfo);
+
+        assertEquals(1, hostsDAO.getCount());
     }
     
     @Test

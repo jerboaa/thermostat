@@ -149,15 +149,6 @@ public class MemoryStatDAOTest {
         verify(add).setPojo(stat);
         verify(add).apply();
     }
-
-    @Test
-    public void testGetCount() {
-        Storage storage = mock(Storage.class);
-        when(storage.getCount(any(Category.class))).thenReturn(5L);
-        MemoryStatDAO dao = new MemoryStatDAOImpl(storage);
-        Long count = dao.getCount();
-        assertEquals((Long) 5L, count);
-    }
     
 }
 

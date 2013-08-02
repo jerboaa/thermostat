@@ -189,12 +189,6 @@ public class QueuedStorage implements Storage {
 
     }
 
-    @SuppressWarnings("rawtypes") 
-    @Override
-    public long getCount(Category category) {
-        return delegate.getCount(category);
-    }
-
     @Override
     public void saveFile(final String filename, final InputStream data) {
 

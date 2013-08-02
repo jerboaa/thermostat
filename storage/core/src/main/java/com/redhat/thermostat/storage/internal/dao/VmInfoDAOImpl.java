@@ -68,9 +68,10 @@ public class VmInfoDAOImpl implements VmInfoDAO {
             + vmInfoCategory.getName() + " WHERE '" 
             + Key.AGENT_ID.getName() + "' = ?s AND '"
             + Key.VM_ID.getName() + "' = ?s LIMIT 1";
-    static final String QUERY_ALL_VMS = "QUERY " 
+    static final String QUERY_ALL_VMS_FOR_HOST = "QUERY " 
             + vmInfoCategory.getName() + " WHERE '" 
             + Key.AGENT_ID.getName() + "' = ?s";
+    static final String QUERY_ALL_VMS = "QUERY " + vmInfoCategory.getName();
     
     private final Storage storage;
     private final ExpressionFactory factory;
@@ -114,7 +115,7 @@ public class VmInfoDAOImpl implements VmInfoDAO {
 
     @Override
     public Collection<VmRef> getVMs(HostRef host) {
-        StatementDescriptor<VmInfo> desc = new StatementDescriptor<>(vmInfoCategory, QUERY_ALL_VMS);
+        StatementDescriptor<VmInfo> desc = new StatementDescriptor<>(vmInfoCategory, QUERY_ALL_VMS_FOR_HOST);
         PreparedStatement<VmInfo> stmt;
         Cursor<VmInfo> cursor;
         try {
@@ -155,7 +156,27 @@ public class VmInfoDAOImpl implements VmInfoDAO {
 
     @Override
     public long getCount() {
-        return storage.getCount(vmInfoCategory);
+        long count = 0;
+        StatementDescriptor<VmInfo> desc = new StatementDescriptor<>(vmInfoCategory, QUERY_ALL_VMS);
+        PreparedStatement<VmInfo> stmt;
+        Cursor<VmInfo> cursor;
+        try {
+            stmt = storage.prepareStatement(desc);
+            cursor = stmt.executeQuery();
+        } catch (DescriptorParsingException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
+            return count;
+        } catch (StatementExecutionException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
+            return count;
+        }
+        while (cursor.hasNext()) {
+            count++;
+            cursor.next();
+        }
+        return count;
     }
 
     @Override

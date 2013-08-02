@@ -153,6 +153,31 @@ public class AgentInfoDAOTest {
         assertEquals(expected, result);
     }
     
+    /*
+     * getCount() with two AgentInformation records.
+     */
+    @Test
+    public void testGetCount()
+            throws DescriptorParsingException, StatementExecutionException {
+        AgentInformation agent2 = new AgentInformation();
+        
+        @SuppressWarnings("unchecked")
+        Cursor<AgentInformation> agentCursor = (Cursor<AgentInformation>) mock(Cursor.class);
+        when(agentCursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
+        when(agentCursor.next()).thenReturn(agent1).thenReturn(agent2).thenReturn(null);
+
+        Storage storage = mock(Storage.class);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<AgentInformation> stmt = (PreparedStatement<AgentInformation>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(agentCursor);
+        AgentInfoDAOImpl dao = new AgentInfoDAOImpl(storage);
+
+        long count = dao.getCount();
+
+        assertEquals(2, count);
+    }
+    
     @SuppressWarnings("unchecked")
     private StatementDescriptor<AgentInformation> anyDescriptor() {
         return (StatementDescriptor<AgentInformation>) any(StatementDescriptor.class);

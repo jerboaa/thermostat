@@ -88,8 +88,6 @@ public interface Storage {
      */
     void purge(String agentId);
 
-    long getCount(Category<?> category);
-
     void saveFile(String filename, InputStream data);
 
     InputStream loadFile(String filename);

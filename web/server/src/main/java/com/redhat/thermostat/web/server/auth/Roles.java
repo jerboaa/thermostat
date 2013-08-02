@@ -70,7 +70,6 @@ public interface Roles {
     final String DELETE = "thermostat-remove";
     final String PREPARE_STATEMENT = "thermostat-prepare-statement";
     final String READ = "thermostat-query";
-    final String GET_COUNT = "thermostat-get-count";
     final String LOAD_FILE = "thermostat-load-file";
     final String SAVE_FILE = "thermostat-save-file";
     final String PURGE = "thermostat-purge";
@@ -81,7 +80,7 @@ public interface Roles {
     final String ACCESS_REALM = "thermostat-realm";
     
     final String[] ALL_ROLES = { APPEND, REPLACE, UPDATE, DELETE, READ,
-            GET_COUNT, LOAD_FILE, SAVE_FILE, PURGE, REGISTER_CATEGORY,
+            LOAD_FILE, SAVE_FILE, PURGE, REGISTER_CATEGORY,
             CMD_CHANNEL_GENERATE, CMD_CHANNEL_VERIFY, LOGIN, ACCESS_REALM,
             PREPARE_STATEMENT, GRANT_AGENTS_READ_ALL, GRANT_HOSTS_READ_ALL,
             GRANT_VMS_READ_BY_USERNAME_ALL, GRANT_VMS_READ_BY_VM_ID_ALL,
@@ -95,7 +94,7 @@ public interface Roles {
     
     final String[] CLIENT_ROLES = {
             ACCESS_REALM, LOGIN, CMD_CHANNEL_GENERATE, LOAD_FILE,
-            GET_COUNT, READ, REGISTER_CATEGORY, PREPARE_STATEMENT
+            READ, REGISTER_CATEGORY, PREPARE_STATEMENT
     };
     
 }

@@ -69,9 +69,5 @@ public class MemoryStatDAOImpl implements MemoryStatDAO {
         add.apply();
     }
 
-    @Override
-    public long getCount() {
-        return storage.getCount(memoryStatCategory);
-    }
 }
 

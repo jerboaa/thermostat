@@ -68,10 +68,5 @@ class CpuStatDAOImpl implements CpuStatDAO {
         add.setPojo(stat);
         add.apply();
     }
-
-    @Override
-    public long getCount() {
-        return storage.getCount(cpuStatCategory);
-    }
 }
 

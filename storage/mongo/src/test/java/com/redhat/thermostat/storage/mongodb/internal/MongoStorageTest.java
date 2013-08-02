@@ -306,28 +306,6 @@ public class MongoStorageTest {
         verifyDefaultCursor(cursor);
     }
 
-    @Test
-    public void verifyGetCount() throws Exception {
-        MongoStorage storage = makeStorage();
-        long count = storage.getCount(testCategory);
-        assertEquals(2, count);
-    }
-
-    @Test
-    public void verifyGetCountForEmptyCategory() throws Exception {
-        MongoStorage storage = makeStorage();
-        long count = storage.getCount(emptyTestCategory);
-        assertEquals(0, count);
-    }
-
-    @Test
-    public void verifyGetCountForNonexistentCategory() throws Exception {
-        MongoStorage storage = makeStorage();
-        setDbFieldInStorage(storage);
-        long count = storage.getCount(new Category("NonExistent", TestClass.class));
-        assertEquals(0, count);
-    }
-
     private void verifyDefaultCursor(Cursor<TestClass> cursor) {
         assertTrue(cursor.hasNext());
         TestClass obj1 = cursor.next();

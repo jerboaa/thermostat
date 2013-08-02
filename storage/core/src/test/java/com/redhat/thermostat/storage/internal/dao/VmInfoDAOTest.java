@@ -116,7 +116,9 @@ public class VmInfoDAOTest {
         String expectedVmInfo = "QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1";
         assertEquals(expectedVmInfo, VmInfoDAOImpl.QUERY_VM_INFO);
         String expectedVmInfoAll = "QUERY vm-info WHERE 'agentId' = ?s";
-        assertEquals(expectedVmInfoAll, VmInfoDAOImpl.QUERY_ALL_VMS);
+        assertEquals(expectedVmInfoAll, VmInfoDAOImpl.QUERY_ALL_VMS_FOR_HOST);
+        String expectedAllVms = "QUERY vm-info";
+        assertEquals(expectedAllVms, VmInfoDAOImpl.QUERY_ALL_VMS);
     }
 
     @Test
@@ -285,12 +287,10 @@ public class VmInfoDAOTest {
     }
 
     @Test
-    public void testGetCount() {
-        Storage storage = mock(Storage.class);
-        when(storage.getCount(any(Category.class))).thenReturn(5L);
+    public void testGetCount() throws Exception {
+        Storage storage = setupStorageForMultiVM();
         VmInfoDAO dao = new VmInfoDAOImpl(storage);
-        Long count = dao.getCount();
-        assertEquals((Long) 5L, count);
+        assertEquals(2, dao.getCount());
     }
 
     @Test

@@ -217,7 +217,6 @@ public class QueuedStorageTest {
         when(delegateStorage.createAdd(any(Category.class))).thenReturn(delegateAdd);
         when(delegateStorage.createReplace(any(Category.class))).thenReturn(delegateReplace);
         when(delegateStorage.createRemove()).thenReturn(remove);
-        when(delegateStorage.getCount(any(Category.class))).thenReturn(42l);
         expectedFile = mock(InputStream.class);
         when(delegateStorage.loadFile(anyString())).thenReturn(expectedFile);
         when(delegateStorage.getAgentId()).thenReturn("huzzah");
@@ -291,17 +290,6 @@ public class QueuedStorageTest {
         verify(delegateStorage, times(1)).purge("fluff");
         verifyNoMoreInteractions(delegateStorage);
 
-        assertNull(fileExecutor.getTask());
-    }
-
-    @Test
-    public void testGetCount() {
-        Category<?> category = mock(Category.class);
-
-        long result = queuedStorage.getCount(category);
-        assertEquals(42, result);
-
-        assertNull(executor.getTask());
         assertNull(fileExecutor.getTask());
     }
 
@@ -455,12 +443,6 @@ public class QueuedStorageTest {
 
         @Override
         public void purge(String agentId) {
-            // not implemented
-            throw new AssertionError();
-        }
-
-        @Override
-        public long getCount(Category<?> category) {
             // not implemented
             throw new AssertionError();
         }

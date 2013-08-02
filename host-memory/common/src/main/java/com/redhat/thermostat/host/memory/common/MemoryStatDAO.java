@@ -40,13 +40,12 @@ import java.util.List;
 
 import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.host.memory.common.model.MemoryStat;
-import com.redhat.thermostat.storage.core.Countable;
-import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 
 @Service
-public interface MemoryStatDAO extends Countable {
+public interface MemoryStatDAO {
 
     static Key<Long> memoryTotalKey = new Key<>("total", false);
     static Key<Long> memoryFreeKey = new Key<>("free", false);

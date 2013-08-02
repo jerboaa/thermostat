@@ -163,14 +163,5 @@ public class CpuStatDAOTest {
         verify(add).setPojo(stat);
         verify(add).apply();
     }
-
-    @Test
-    public void testGetCount() {
-        Storage storage = mock(Storage.class);
-        when(storage.getCount(any(Category.class))).thenReturn(5L);
-        CpuStatDAO dao = new CpuStatDAOImpl(storage);
-        Long count = dao.getCount();
-        assertEquals((Long) 5L, count);
-    }
 }
 

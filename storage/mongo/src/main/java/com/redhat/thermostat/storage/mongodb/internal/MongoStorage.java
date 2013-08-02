@@ -326,16 +326,6 @@ public class MongoStorage implements BackingStorage {
         return dbCursor;
     }
 
-
-    @Override
-    public long getCount(Category<?> category) {
-        DBCollection coll = getCachedCollection(category);
-        if (coll != null) {
-            return coll.getCount();
-        }
-        return 0L;
-    }
-
     @Override
     public void saveFile(String filename, InputStream data) {
         GridFS gridFS = new GridFS(db);

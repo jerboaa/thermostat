@@ -596,17 +596,6 @@ public class WebStorage implements Storage, SecureStorage {
     }
 
     @Override
-    public long getCount(Category<?> category) throws StorageException {
-        NameValuePair categoryParam = new BasicNameValuePair("category", gson.toJson(categoryIds.get(category)));
-        List<NameValuePair> formparams = Arrays.asList(categoryParam);
-        try (CloseableHttpEntity entity = post(endpoint + "/get-count", formparams)) {
-            Reader reader = getContentAsReader(entity);
-            long result = gson.fromJson(reader, Long.class);
-            return result;
-        }
-    }
-
-    @Override
     public InputStream loadFile(String name) throws StorageException {
         NameValuePair fileParam = new BasicNameValuePair("file", name);
         List<NameValuePair> formparams = Arrays.asList(fileParam);
