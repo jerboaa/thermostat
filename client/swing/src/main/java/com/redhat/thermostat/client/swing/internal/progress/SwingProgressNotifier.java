@@ -36,17 +36,19 @@
 
 package com.redhat.thermostat.client.swing.internal.progress;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import javax.swing.SwingUtilities;
+
 import com.redhat.thermostat.client.core.progress.ProgressHandle;
 import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-import javax.swing.SwingUtilities;
+import com.redhat.thermostat.common.model.Range;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 
 public class SwingProgressNotifier implements ProgressNotifier, SwingComponent {
 
@@ -79,6 +81,10 @@ public class SwingProgressNotifier implements ProgressNotifier, SwingComponent {
         this(aggregateNotificationArea, notificationArea, glassPane, true);
     }
     
+    /**
+     * For test only, allows to build a notifier that runs update outside
+     * the EDT.
+     */
     SwingProgressNotifier(AggregateNotificationPanel aggregateNotificationArea,
                           ProgressNotificationArea notificationArea,
                           ThermostatGlassPane glassPane, boolean runInEDT)
@@ -90,6 +96,14 @@ public class SwingProgressNotifier implements ProgressNotifier, SwingComponent {
         notifier = new ActionNotifier<>(this);
         
         this.runInEDT = runInEDT;
+    }
+    
+    /**
+     * For test only, access the internal map containing handles and
+     * progress components currently tracked by this notifier.
+     */
+    Map<ProgressHandle, AggregateProgressComponent> __getTasks() {
+        return tasks;
     }
     
     private void handleTask(ActionEvent<ProgressHandle.Status> status, ProgressHandle handle) {
@@ -107,7 +121,9 @@ public class SwingProgressNotifier implements ProgressNotifier, SwingComponent {
 
         case STOPPED: {
             AggregateProgressComponent progressBar = tasks.remove(handle);
-            aggregateNotificationArea.removeProgress(progressBar);
+            if (progressBar != null) {
+                aggregateNotificationArea.removeProgress(progressBar);                
+            }
             
             if (tasks.isEmpty()) {
                 notificationArea.reset();
@@ -125,9 +141,46 @@ public class SwingProgressNotifier implements ProgressNotifier, SwingComponent {
             }
             
         } break;
+        
+        case TASK_CHANGED: {
+            AggregateProgressComponent progressBar = tasks.get(handle);
+            if (progressBar != null) {
+                String text = ((LocalizedString) status.getPayload()).getContents();
+                progressBar.getTaskStatus().setText(text);
+            }
+        
+        } break;
+        
+        case DETERMINATE_STATUS_CHANGED: {
+            AggregateProgressComponent progressBar = tasks.get(handle);
+            if (progressBar != null) {
+                boolean state = ((Boolean) status.getPayload()).booleanValue();
+                progressBar.getProgressBar().setIndeterminate(state);                
+            }
+        } break;
+
+        case BOUNDS_CHANGED: {
+            AggregateProgressComponent progressBar = tasks.get(handle);
+            if (progressBar != null) {
+                
+                @SuppressWarnings("unchecked")
+                Range<Integer> range = (Range<Integer>) status.getPayload();
+                progressBar.getProgressBar().setMinimum(range.getMin().intValue());
+                progressBar.getProgressBar().setMaximum(range.getMax().intValue());
+            }
+            
+        } break;
+        
+        case PROGRESS_CHANGED: {
+            AggregateProgressComponent progressBar = tasks.get(handle);
+            if (progressBar != null) {
+                int value = ((Integer) status.getPayload()).intValue();
+                progressBar.getProgressBar().setValue(value);
+            }
+        } break;
             
         default:
-            throw new UnsupportedOperationException("Case not implemented");
+            // nothing here
         }
     }
     

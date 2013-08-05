@@ -41,11 +41,16 @@ import java.awt.BorderLayout;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.core.progress.ProgressHandle;
+import com.redhat.thermostat.client.core.progress.ProgressHandle.Status;
 import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.client.swing.components.Icon;
 import com.redhat.thermostat.client.swing.components.ShadowLabel;
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.model.Range;
 
 @SuppressWarnings("serial")
 public class ProgressNotificationArea extends JPanel {
@@ -66,10 +71,33 @@ public class ProgressNotificationArea extends JPanel {
         moreTasksIcon = new FontAwesomeIcon('\uf0d8', 12);
     }
 
+    private void handleAction(ActionEvent<Status> actionEvent, JProgressBar progressBar) {
+        switch(actionEvent.getActionId()) {
+        case DETERMINATE_STATUS_CHANGED:
+            progressBar.setIndeterminate(((Boolean) actionEvent.getPayload()).booleanValue());
+            break;
+
+        case BOUNDS_CHANGED: {
+            @SuppressWarnings("unchecked")
+            Range<Integer> range = (Range<Integer>) actionEvent.getPayload();
+            progressBar.setMinimum(range.getMin().intValue());
+            progressBar.setMaximum(range.getMax().intValue());
+            
+        } break;
+        
+        case PROGRESS_CHANGED:
+            progressBar.setValue(((Integer) actionEvent.getPayload()).intValue());
+            break;
+            
+        default:
+            break;
+        }
+    }
+    
     public void setRunningTask(final ProgressHandle handle) {
         removeAll();
-        
-        taskLabel.setText(handle.getName());
+                
+        taskLabel.setText(handle.getName().getContents());
         if (hasMore) {
             taskLabel.setIcon(moreTasksIcon);
         } else {
@@ -78,11 +106,23 @@ public class ProgressNotificationArea extends JPanel {
         
         add(taskLabel, BorderLayout.CENTER);
         
-        JProgressBar progressBar = new JProgressBar();
+        final JProgressBar progressBar = new JProgressBar();
         progressBar.setIndeterminate(handle.isIndeterminate());
         add(progressBar, BorderLayout.EAST);
 
-        progressBar.setName(handle.getName());
+        progressBar.setName(handle.getName().getContents());
+        
+        handle.addProgressListener(new ActionListener<ProgressHandle.Status>() {
+            @Override
+            public void actionPerformed(final ActionEvent<Status> actionEvent) {
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        handleAction(actionEvent, progressBar);
+                    }
+                });
+            }
+        });
         
         runningTask = handle;
         

@@ -50,6 +50,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.client.core.progress.ProgressHandle;
+import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
@@ -104,6 +106,8 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
     private ObjectRootsViewProvider objectRootsViewProvider;
     private HeapDumpListViewProvider heapDumpListViewProvider;
 
+    private ProgressNotifier notifier;
+    
     public HeapDumpController(final VmMemoryStatDAO vmMemoryStatDao,
                               final VmInfoDAO vmInfoDao,
                               final HeapDAO heapDao, final VmRef ref,
@@ -112,11 +116,13 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
                               HeapHistogramViewProvider histogramProvider,
                               ObjectDetailsViewProvider objectDetailsProvider,
                               ObjectRootsViewProvider objectRootsProvider,
-                              HeapDumpListViewProvider heapDumpListViewProvider)
+                              HeapDumpListViewProvider heapDumpListViewProvider,
+                              ProgressNotifier notifier)
     {
         this(vmMemoryStatDao, vmInfoDao, heapDao, ref, appService, viewProvider,
              detailsViewProvider, histogramProvider, objectDetailsProvider,
-             objectRootsProvider, heapDumpListViewProvider, new HeapDumper(ref));
+             objectRootsProvider, heapDumpListViewProvider, new HeapDumper(ref),
+             notifier);
     }
 
     HeapDumpController(final VmMemoryStatDAO vmMemoryStatDao,
@@ -129,8 +135,10 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
                        ObjectDetailsViewProvider objectDetailsProvider,
                        ObjectRootsViewProvider objectRootsProvider,
                        HeapDumpListViewProvider heapDumpListViewProvider,
-                       final HeapDumper heapDumper)
+                       final HeapDumper heapDumper,
+                       ProgressNotifier notifier)
     {
+        this.notifier = notifier;
         this.objectDetailsViewProvider = objectDetailsProvider;
         this.objectRootsViewProvider = objectRootsProvider;
         this.histogramViewProvider = histogramProvider;
@@ -223,9 +231,7 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
                     view.openExportDialog(localHeapDump);
                 } break;
                 
-                case SAVE_HEAP_DUMP: {
-                    // FIXME: we really need some indicator that something is
-                    // going on here, same for dumping requests
+                case SAVE_HEAP_DUMP: {                    
                     DumpFile localHeapDump = (DumpFile) actionEvent.getPayload();
                     saveHeapDump(localHeapDump);
                 } break;
@@ -246,6 +252,14 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
         appService.getApplicationExecutor().execute(new Runnable() {
             @Override
             public void run() {
+
+                LocalizedString taskName = translator.localize(LocaleResources.HEAP_DUMP_IN_PROGRESS);
+                
+                final ProgressHandle handle = new ProgressHandle(taskName);
+                handle.setTask(taskName);
+                handle.setIndeterminate(true);
+                notifier.register(handle);
+
                 HeapDump dump = localHeapDump.getDump();
                 File file = localHeapDump.getFile();
                 if (dump == null || file == null) {
@@ -254,6 +268,7 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
                     return;
                 }
                 
+                handle.start();
                 try (InputStream in = heapDAO.getHeapDumpData(dump.getInfo())) {
                     Files.copy(in, file.toPath());
                     
@@ -262,6 +277,8 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
                     view.displayWarning(message);
                     Logger.getLogger(HeapDumpController.class.getSimpleName()).
                         log(Level.WARNING, message.getContents(), e);
+                } finally {
+                    handle.stop();
                 }
             }
         });

@@ -37,9 +37,12 @@
 package com.redhat.thermostat.client.swing.internal.progress;
 
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.junit.Assert.assertTrue;
 
+import javax.swing.JLabel;
+import javax.swing.JProgressBar;
 import javax.swing.RepaintManager;
 
 import org.junit.Before;
@@ -53,6 +56,8 @@ import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.client.swing.internal.progress.SwingProgressNotifier.PropertyChange;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.model.Range;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 
 public class SwingProgressNotifierTest {
 
@@ -61,7 +66,7 @@ public class SwingProgressNotifierTest {
     private ThermostatGlassPane glassPane;
     
     @BeforeClass
-    public void setUpOnce() {
+    public static void setUpOnce() {
         // This is needed because some other test may have installed the
         // EDT violation checker repaint manager.
         // We don't need this check here, since we are not testing Swing
@@ -78,12 +83,14 @@ public class SwingProgressNotifierTest {
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
-    public void testNotifier() throws InterruptedException {
+    public void testNotifierStartStop() throws InterruptedException {
         ProgressNotifier notifier =
                 new SwingProgressNotifier(aggregateNotificationArea,
                                           notificationArea, glassPane, false);
         
         ProgressHandle handle = mock(ProgressHandle.class);
+        when(handle.getName()).thenReturn(LocalizedString.EMPTY_STRING);
+        when(handle.getTask()).thenReturn(LocalizedString.EMPTY_STRING);
         notifier.register(handle);
         
         final boolean [] result = new boolean[1];
@@ -112,15 +119,89 @@ public class SwingProgressNotifierTest {
         
         assertTrue(notifier.hasTasks());
         
-        AggregateProgressComponent aggregateComponent = notificationAreaCaptor.getValue();
-        
         event = new ActionEvent<ProgressHandle.Status>(handle, Status.STOPPED);
         listener.actionPerformed(event);
         
+        AggregateProgressComponent aggregateComponent = notificationAreaCaptor.getValue();
         verify(aggregateNotificationArea).removeProgress(aggregateComponent);
         verify(notificationArea).reset();
         verify(notificationArea).setHasMore(false);
         
         assertTrue(result[0]);
+    }
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @Test
+    public void testHandleStatusChanges() throws InterruptedException {
+        SwingProgressNotifier notifier =
+                new SwingProgressNotifier(aggregateNotificationArea,
+                                          notificationArea, glassPane, false);
+
+        JProgressBar progressBar = mock(JProgressBar.class);
+        JLabel label = mock(JLabel.class);
+        AggregateProgressComponent progressComponent =
+                mock(AggregateProgressComponent.class);
+        when(progressComponent.getProgressBar()).thenReturn(progressBar);
+        when(progressComponent.getTaskStatus()).thenReturn(label);
+
+        ProgressHandle handle = mock(ProgressHandle.class);
+        when(handle.getName()).thenReturn(LocalizedString.EMPTY_STRING);
+        when(handle.getTask()).thenReturn(LocalizedString.EMPTY_STRING);
+        notifier.register(handle);
+
+        ArgumentCaptor<ActionListener> captor =
+                ArgumentCaptor.forClass(ActionListener.class);
+        verify(handle).addProgressListener(captor.capture());
+        
+        notifier.__getTasks().put(handle, progressComponent);
+        ActionListener listener = captor.getValue();
+        
+        LocalizedString textPayload = new LocalizedString("test");
+        ActionEvent<ProgressHandle.Status> event =
+                new ActionEvent<ProgressHandle.Status>(handle, Status.TASK_CHANGED);
+        event.setPayload(textPayload);
+        listener.actionPerformed(event);
+
+        verify(label).setText(textPayload.getContents());
+
+        event = new ActionEvent<ProgressHandle.Status>(handle, Status.DETERMINATE_STATUS_CHANGED);
+        event.setPayload(Boolean.TRUE);
+        listener.actionPerformed(event);
+        
+        verify(progressBar).setIndeterminate(true);
+
+        event = new ActionEvent<ProgressHandle.Status>(handle, Status.DETERMINATE_STATUS_CHANGED);
+        event.setPayload(Boolean.FALSE);
+        listener.actionPerformed(event);
+        
+        verify(progressBar).setIndeterminate(false);
+        
+        event = new ActionEvent<ProgressHandle.Status>(handle, Status.PROGRESS_CHANGED);
+        event.setPayload(Integer.valueOf(10));
+        listener.actionPerformed(event);
+        
+        verify(progressBar).setValue(10);
+        
+        event = new ActionEvent<ProgressHandle.Status>(handle, Status.PROGRESS_CHANGED);
+        event.setPayload(Integer.valueOf(99));
+        listener.actionPerformed(event);
+        
+        verify(progressBar).setValue(99);
+        
+        Range<Integer> range = new Range<Integer>(5, 20);
+        event = new ActionEvent<ProgressHandle.Status>(handle, Status.BOUNDS_CHANGED);
+        event.setPayload(range);
+        listener.actionPerformed(event);
+        
+        verify(progressBar).setMinimum(5);
+        verify(progressBar).setMaximum(20);
+        
+        range = new Range<Integer>(99, 101);
+        event = new ActionEvent<ProgressHandle.Status>(handle, Status.BOUNDS_CHANGED);
+        event.setPayload(range);
+        listener.actionPerformed(event);
+        
+        verify(progressBar).setMinimum(99);
+        verify(progressBar).setMaximum(101);
     }
 }

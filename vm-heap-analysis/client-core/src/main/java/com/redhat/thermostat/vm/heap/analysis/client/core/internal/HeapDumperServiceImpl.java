@@ -39,6 +39,7 @@ package com.redhat.thermostat.vm.heap.analysis.client.core.internal;
 import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.core.NameMatchingRefFilter;
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
@@ -68,6 +69,8 @@ public class HeapDumperServiceImpl implements HeapDumperService {
     private ObjectDetailsViewProvider objectDetailsViewProvider;
     private ObjectRootsViewProvider objectRootsViewProvider;
 
+    private ProgressNotifier notifier;
+    
     private HeapDumpListViewProvider heapDumpListViewProvider;
     
     public HeapDumperServiceImpl(ApplicationService appService,
@@ -77,7 +80,8 @@ public class HeapDumperServiceImpl implements HeapDumperService {
             HeapHistogramViewProvider histogramViewProvider,
             ObjectDetailsViewProvider objectDetailsViewProvider,
             ObjectRootsViewProvider objectRootsViewProvider,
-            HeapDumpListViewProvider heapDumpListViewProvider) {
+            HeapDumpListViewProvider heapDumpListViewProvider,
+            ProgressNotifier notifier) {
         this.vmInfoDao = vmInfoDao;
         this.vmMemoryStatDao = vmMemoryStatDao;
         this.heapDao = heapDao;
@@ -88,13 +92,14 @@ public class HeapDumperServiceImpl implements HeapDumperService {
         this.objectDetailsViewProvider = objectDetailsViewProvider;
         this.objectRootsViewProvider = objectRootsViewProvider;
         this.heapDumpListViewProvider = heapDumpListViewProvider;
+        this.notifier = notifier;
     }
 
     @Override
     public InformationServiceController<VmRef> getInformationServiceController(VmRef ref) {
         return new HeapDumpController(vmMemoryStatDao, vmInfoDao, heapDao, ref, appService,
                 viewProvider, detailsViewProvider, histogramViewProvider, objectDetailsViewProvider,
-                objectRootsViewProvider, heapDumpListViewProvider);
+                objectRootsViewProvider, heapDumpListViewProvider, notifier);
     }
 
     @Override

@@ -44,6 +44,7 @@ import static org.mockito.Mockito.mock;
 import org.junit.Test;
 
 import com.redhat.thermostat.client.core.InformationService;
+import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.testutils.StubBundleContext;
@@ -88,6 +89,7 @@ public class ActivatorTest {
         ObjectDetailsViewProvider objectDetailsViewProvider = mock(ObjectDetailsViewProvider.class);
         ObjectRootsViewProvider objectRootsViewProvider = mock(ObjectRootsViewProvider.class);
         HeapDumpListViewProvider heapDumpListViewProvider = mock(HeapDumpListViewProvider.class);
+        ProgressNotifier progressNotifier = mock(ProgressNotifier.class);
 
         context.registerService(VmInfoDAO.class, vmInfoDao, null);
         context.registerService(VmMemoryStatDAO.class, vmMemoryStatDAO, null);
@@ -100,6 +102,7 @@ public class ActivatorTest {
         context.registerService(ObjectDetailsViewProvider.class, objectDetailsViewProvider, null);
         context.registerService(ObjectRootsViewProvider.class, objectRootsViewProvider, null);
         context.registerService(HeapDumpListViewProvider.class, heapDumpListViewProvider, null);
+        context.registerService(ProgressNotifier.class, progressNotifier, null);
 
         Activator activator = new Activator();
 
@@ -110,7 +113,7 @@ public class ActivatorTest {
         activator.stop(context);
 
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(10, context.getAllServices().size());
+        assertEquals(11, context.getAllServices().size());
     }
 
 }

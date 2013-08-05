@@ -39,23 +39,30 @@ package com.redhat.thermostat.client.core.progress;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.times;
-
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.model.Range;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 
 public class ProgressHandleTest {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
-    public void testProgressHandle() {
+    public void testProgressHandleStartStop() {
         ActionListener listener = mock(ActionListener.class);
         
-        ProgressHandle handle = new ProgressHandle("test #1");
+        LocalizedString name = new LocalizedString("test #1");
+        ProgressHandle handle = new ProgressHandle(name);
+        
+        assertEquals(name, handle.getName());
+        
         handle.addProgressListener(listener);
 
         ArgumentCaptor<ActionEvent> captor =
@@ -73,5 +80,111 @@ public class ProgressHandleTest {
         
         event = captor.getValue();
         assertEquals(ProgressHandle.Status.STOPPED, event.getActionId());
+    }
+    
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Test
+    public void testProgressHandleStatusChange() {
+        ActionListener listener = mock(ActionListener.class);
+        
+        LocalizedString name = new LocalizedString("test #1");
+        ProgressHandle handle = new ProgressHandle(name);
+        
+        assertEquals(name, handle.getName());
+        
+        handle.addProgressListener(listener);
+
+        ArgumentCaptor<ActionEvent> captor =
+                ArgumentCaptor.forClass(ActionEvent.class);        
+        
+        handle.setIndeterminate(true);
+
+        verify(listener).actionPerformed(captor.capture());
+        
+        ActionEvent event = captor.getValue();
+        assertEquals(ProgressHandle.Status.DETERMINATE_STATUS_CHANGED, event.getActionId());
+        assertTrue(handle.isIndeterminate());
+        assertEquals(Boolean.TRUE, event.getPayload());
+
+        handle.setIndeterminate(false);
+
+        verify(listener, times(2)).actionPerformed(captor.capture());
+        
+        event = captor.getValue();
+        assertEquals(ProgressHandle.Status.DETERMINATE_STATUS_CHANGED, event.getActionId());
+        assertFalse(handle.isIndeterminate());
+        assertEquals(Boolean.FALSE, event.getPayload());
+    }
+    
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Test
+    public void testProgressHandleProgressChange() {
+        ActionListener listener = mock(ActionListener.class);
+        
+        LocalizedString name = new LocalizedString("test #1");
+        ProgressHandle handle = new ProgressHandle(name);
+        
+        assertEquals(name, handle.getName());
+        
+        handle.addProgressListener(listener);
+
+        ArgumentCaptor<ActionEvent> captor =
+                ArgumentCaptor.forClass(ActionEvent.class);        
+        
+        handle.setProgress(5);
+
+        verify(listener).actionPerformed(captor.capture());
+        
+        ActionEvent event = captor.getValue();
+        assertEquals(ProgressHandle.Status.PROGRESS_CHANGED, event.getActionId());
+        assertEquals(5, handle.getProgress());
+        assertEquals(Integer.valueOf(5), event.getPayload());
+
+        handle.setProgress(15);
+
+        verify(listener, times(2)).actionPerformed(captor.capture());
+        
+        event = captor.getValue();
+        assertEquals(ProgressHandle.Status.PROGRESS_CHANGED, event.getActionId());
+        assertEquals(15, handle.getProgress());
+        assertEquals(Integer.valueOf(15), event.getPayload());
+    }
+    
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Test
+    public void testProgressHandleBoundsChange() {
+        ActionListener listener = mock(ActionListener.class);
+        
+        LocalizedString name = new LocalizedString("test #1");
+        ProgressHandle handle = new ProgressHandle(name);
+        
+        assertEquals(name, handle.getName());
+        
+        handle.addProgressListener(listener);
+
+        ArgumentCaptor<ActionEvent> captor =
+                ArgumentCaptor.forClass(ActionEvent.class);        
+        
+        Range<Integer> range = new Range<Integer>(10, 20);
+        
+        handle.setRange(range);
+
+        verify(listener).actionPerformed(captor.capture());
+        
+        ActionEvent event = captor.getValue();
+        assertEquals(ProgressHandle.Status.BOUNDS_CHANGED, event.getActionId());
+        assertEquals(range, handle.getRange());
+        assertEquals(range, event.getPayload());
+
+        range = new Range<Integer>(0xCAFE, 42);
+        handle.setRange(range);
+
+        verify(listener, times(2)).actionPerformed(captor.capture());
+        
+        event = captor.getValue();
+        assertEquals(ProgressHandle.Status.BOUNDS_CHANGED, event.getActionId());
+        assertEquals(range, handle.getRange());
+        assertEquals(range, event.getPayload());
+
     }
 }

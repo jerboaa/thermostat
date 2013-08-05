@@ -46,6 +46,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.client.core.InformationService;
+import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
@@ -80,12 +81,17 @@ public class Activator implements BundleActivator {
             ObjectDetailsViewProvider.class,
             ObjectRootsViewProvider.class,
             HeapDumpListViewProvider.class,
+            ProgressNotifier.class,
         };
 
         tracker = new MultipleServiceTracker(context, deps, new Action() {
             
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
+                
+                ProgressNotifier notifier = (ProgressNotifier) services.get(ProgressNotifier.class.getName());
+                Objects.requireNonNull(notifier);
+                
                 ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
                 Objects.requireNonNull(appSvc);
                 VmInfoDAO vmInfoDao = Objects.requireNonNull((VmInfoDAO) services.get(VmInfoDAO.class.getName()));
@@ -115,7 +121,7 @@ public class Activator implements BundleActivator {
                         vmInfoDao, vmMemoryStatDao, heapDao, viewProvider,
                         detailsViewProvider, histogramViewProvider,
                         objectDetailsViewProvider, objectRootsViewProvider,
-                        heapDumpListViewProvider);
+                        heapDumpListViewProvider, notifier);
                 Dictionary<String, String> properties = new Hashtable<>();
                 properties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
                 properties.put(InformationService.KEY_SERVICE_ID, HeapDumperService.SERVICE_ID);

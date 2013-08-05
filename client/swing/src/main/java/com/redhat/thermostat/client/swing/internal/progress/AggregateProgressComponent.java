@@ -37,11 +37,14 @@
 package com.redhat.thermostat.client.swing.internal.progress;
 
 import java.awt.BasicStroke;
+import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
 
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 
@@ -51,30 +54,53 @@ import com.redhat.thermostat.client.swing.components.DebugBorder;
 import com.redhat.thermostat.client.swing.components.GradientPanel;
 import com.redhat.thermostat.client.swing.components.ShadowLabel;
 import com.redhat.thermostat.client.ui.Palette;
-import com.redhat.thermostat.shared.locale.LocalizedString;
 
 @SuppressWarnings("serial")
-public class AggregateProgressComponent extends GradientPanel {
-    
+class AggregateProgressComponent extends GradientPanel {
+
+    private JProgressBar progressBar;
+    private ShadowLabel taskStatus;
     public AggregateProgressComponent(ProgressHandle handle) {
         
         super(Palette.WHITE.getColor(), Palette.PALE_GRAY.getColor());
+        
+        setLayout(new BorderLayout());
         
         setBorder(new AggregateProgressComponentBorder());
         
         JPanel panel = new JPanel(new GridLayout());
         panel.setOpaque(false);
-        add(panel);
+        add(panel, BorderLayout.CENTER);
         
-        ShadowLabel text = new ShadowLabel(new LocalizedString(handle.getName()));
+        ShadowLabel text = new ShadowLabel(handle.getName());
         panel.add(text);
 
-        JProgressBar progressBar = new JProgressBar();
-        progressBar.setString(handle.getName());
-        progressBar.setStringPainted(true);
+        progressBar = new JProgressBar();
+        progressBar.setName(handle.getName().getContents());
+        progressBar.setStringPainted(false);
       
         progressBar.setIndeterminate(handle.isIndeterminate());
         panel.add(progressBar);
+        
+        JPanel currentTaskStatusPane = new JPanel(new GridLayout());
+        currentTaskStatusPane.setOpaque(false);
+        
+        taskStatus = new ShadowLabel();
+
+        Font defaultFont = taskStatus.getFont();
+        taskStatus.setFont(defaultFont.deriveFont(defaultFont.getSize2D() - 2.5f));
+        taskStatus.setText(handle.getTask().getContents());
+        currentTaskStatusPane.add(taskStatus);
+        
+        add(currentTaskStatusPane, BorderLayout.SOUTH);
+    }
+    
+    public JProgressBar getProgressBar() {
+        return progressBar;
+    }
+    
+    public JLabel getTaskStatus() {
+        return taskStatus;
     }
     
     private static class AggregateProgressComponentBorder extends DebugBorder {
