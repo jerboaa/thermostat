@@ -54,6 +54,7 @@ import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.ShadowLabel;
+import com.redhat.thermostat.client.swing.components.ThermostatThinScrollBar;
 import com.redhat.thermostat.client.ui.Palette;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListView;
@@ -90,9 +91,9 @@ public class SwingHeapDumpListView extends HeapDumpListView implements SwingComp
         list.setCellRenderer(new HeapCellRenderer());
         
         scrollPane = new JScrollPane(list);
+        scrollPane.setVerticalScrollBar(new ThermostatThinScrollBar(ThermostatThinScrollBar.VERTICAL));
         scrollPane.setBorder(null);
         scrollPane.setViewportBorder(null);
-        
         scrollPane.getViewport().setOpaque(false);
         scrollPane.setOpaque(false);
 
