@@ -90,13 +90,7 @@ public class MongoProcessRunner {
         Charset charset = Charset.defaultCharset();
         if (pidfile.exists()) {
             try (BufferedReader reader = Files.newBufferedReader(pidfile.toPath(), charset)) {
-                String line = reader.readLine();
-                if (line.isEmpty()) {
-                    pid = null;
-                }
-                else {
-                    pid = Integer.parseInt(line);
-                }
+                pid = doGetPid(reader);
             } catch (IOException ex) {
                 logger.log(Level.WARNING, "Exception while reading pid file", ex);
                 pid = null;
@@ -108,6 +102,18 @@ public class MongoProcessRunner {
             pid = null;
         }
         return (pid != null);
+    }
+    
+    // package private for testing
+    Integer doGetPid(BufferedReader reader) throws IOException {
+        String line = reader.readLine();
+        // readLine() returns null on EOF
+        if (line == null || line.isEmpty()) {
+            return null;
+        }
+        else {
+            return Integer.parseInt(line);
+        }
     }
 
     private void deleteStalePidFile() {

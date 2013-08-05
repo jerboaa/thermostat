@@ -1,10 +1,12 @@
 package com.redhat.thermostat.agent.cli.impl.db;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -112,6 +114,14 @@ public class MongoProcessRunnerTest {
         } catch (InvalidConfigurationException e) {
             assertEquals("No SSL key passphrase set!", e.getMessage());
         }
+    }
+    
+    @Test
+    public void testCheckPidNull() throws IOException {
+        BufferedReader reader = mock(BufferedReader.class);
+        when(reader.readLine()).thenReturn(null);
+        Integer pid = runner.doGetPid(reader);
+        assertNull(pid);
     }
 
     private void verifyEquals(String[] expected, String[] actual) {
