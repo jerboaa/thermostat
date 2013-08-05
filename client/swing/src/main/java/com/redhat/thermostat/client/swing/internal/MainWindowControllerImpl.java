@@ -54,6 +54,7 @@ import org.osgi.framework.InvalidSyntaxException;
 import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.client.core.NameMatchingRefFilter;
+import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.client.core.views.AgentInformationDisplayView;
 import com.redhat.thermostat.client.core.views.AgentInformationViewProvider;
 import com.redhat.thermostat.client.core.views.ClientConfigViewProvider;
@@ -119,7 +120,7 @@ public class MainWindowControllerImpl implements MainWindowController {
 
     private MainView view;
     private Keyring keyring;
-
+    
     private HostInfoDAO hostInfoDAO;
     private VmInfoDAO vmInfoDAO;
     private AgentInfoDAO agentInfoDAO;
@@ -199,7 +200,7 @@ public class MainWindowControllerImpl implements MainWindowController {
         this(context, appSvc, new MainWindow(), new RegistryFactory(context), shutdown);
     }
 
-    MainWindowControllerImpl(BundleContext context, ApplicationService appSvc,
+    MainWindowControllerImpl(final BundleContext context, ApplicationService appSvc,
             final MainView view,
             RegistryFactory registryFactory,
             final CountDownLatch shutdown) {
@@ -280,6 +281,8 @@ public class MainWindowControllerImpl implements MainWindowController {
                 updateView();
 
                 installListenersAndStartRegistries();
+                
+                registerProgressNotificator(context);
             }
 
             @Override
@@ -355,7 +358,7 @@ public class MainWindowControllerImpl implements MainWindowController {
         view.updateTree(hostFilters, vmFilters, hostTreeDecorators, vmTreeDecorators, loader);
     }
 
-    private void initView() {
+    private void initView() {        
         view.setWindowTitle(appInfo.getName());
         view.addActionListener(new ActionListener<MainView.Action>() {
 
@@ -442,6 +445,11 @@ public class MainWindowControllerImpl implements MainWindowController {
         vmInfoRegistry.start();
     }
 
+    private void registerProgressNotificator(BundleContext context) {
+        ProgressNotifier notifier = view.getNotifier();
+        context.registerService(ProgressNotifier.class, notifier, null);
+    }
+    
     private void uninstallListenersAndStopRegistries() {
         menuRegistry.removeActionListener(menuListener);
         menuListener = null;

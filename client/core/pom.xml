@@ -123,6 +123,7 @@
               com.redhat.thermostat.client.locale,
               <!-- Interfaces for views, controllers, etc. -->
               com.redhat.thermostat.client.core,
+              com.redhat.thermostat.client.core.progress,
               com.redhat.thermostat.client.core.controllers,
               com.redhat.thermostat.client.core.views
             </Export-Package>

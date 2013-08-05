@@ -93,13 +93,21 @@ import sun.misc.Signal;
 import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.EdtHelper;
 import com.redhat.thermostat.client.swing.MenuHelper;
 import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.client.swing.components.OverlayPanel;
 import com.redhat.thermostat.client.swing.components.SearchField;
 import com.redhat.thermostat.client.swing.components.SearchField.SearchAction;
 import com.redhat.thermostat.client.swing.components.ThermostatPopupMenu;
 import com.redhat.thermostat.client.swing.internal.components.DecoratedDefaultMutableTreeNode;
+import com.redhat.thermostat.client.swing.internal.progress.AggregateNotificationPanel;
+import com.redhat.thermostat.client.swing.internal.progress.AggregateProgressBarOverlayLayout;
+import com.redhat.thermostat.client.swing.internal.progress.ProgressNotificationArea;
+import com.redhat.thermostat.client.swing.internal.progress.SwingProgressNotifier;
+import com.redhat.thermostat.client.swing.internal.progress.SwingProgressNotifier.PropertyChange;
+import com.redhat.thermostat.client.swing.internal.progress.ThermostatGlassPane;
 import com.redhat.thermostat.client.ui.ContextAction;
 import com.redhat.thermostat.client.ui.Decorator;
 import com.redhat.thermostat.client.ui.DecoratorProvider;
@@ -116,6 +124,7 @@ import com.redhat.thermostat.storage.core.HostsVMsLoader;
 import com.redhat.thermostat.storage.core.Ref;
 import com.redhat.thermostat.storage.core.VmRef;
 
+@SuppressWarnings("restriction")
 public class MainWindow extends JFrame implements MainView {
     
     public static final String MAIN_WINDOW_NAME = "Thermostat_mainWindo_JFrame_parent#1";
@@ -314,6 +323,8 @@ public class MainWindow extends JFrame implements MainView {
 
     }
 
+    private SwingProgressNotifier notifier;
+    
     private static final long serialVersionUID = 5608972421496808177L;
 
     private final JMenuBar mainMenuBar = new JMenuBar();
@@ -381,8 +392,13 @@ public class MainWindow extends JFrame implements MainView {
         
         //agentVmTree.setLargeModel(true);
         agentVmTree.setRowHeight(25);
-        
+
         statusBar = new StatusBar();
+        
+        ThermostatGlassPane glassPane = new ThermostatGlassPane();
+        setGlassPane(glassPane);
+        setupNotificationPane(statusBar, glassPane);
+        
         getContentPane().add(statusBar, BorderLayout.SOUTH);
         
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -404,9 +420,68 @@ public class MainWindow extends JFrame implements MainView {
                 fireViewAction(Action.HIDDEN);
             }
         });
-
     }
 
+    private void setupNotificationPane(StatusBar statusBar, final ThermostatGlassPane glassPane) {
+
+        AggregateNotificationPanel aggregateNotificationArea = new AggregateNotificationPanel();
+        
+        ProgressNotificationArea notificationArea = new ProgressNotificationArea();
+        notifier = new SwingProgressNotifier(aggregateNotificationArea, notificationArea, glassPane);
+
+        statusBar.add(notificationArea, BorderLayout.CENTER);
+
+        glassPane.setLayout(new AggregateProgressBarOverlayLayout());
+        LocalizedString title = translator.localize(LocaleResources.PROGRESS_NOTIFICATION_AREA_TITLE);
+        final OverlayPanel overlay = new OverlayPanel(title, false);
+        glassPane.add(overlay);
+
+        glassPane.addHierarchyListener(new ComponentVisibleListener() {
+            @Override
+            public void componentShown(Component component) {
+                overlay.setOverlayVisible(true);
+            }
+
+            @Override
+            public void componentHidden(Component component) {
+                overlay.setOverlayVisible(false);
+            }
+        });
+
+        overlay.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                glassPane.setVisible(false);
+            }
+        });
+
+        overlay.add(aggregateNotificationArea, BorderLayout.CENTER);
+        notifier.addPropertyChangeListener(new com.redhat.thermostat.common.
+                                           ActionListener<SwingProgressNotifier.PropertyChange>()
+        {
+            @Override
+            public void actionPerformed(com.redhat.thermostat.common.
+                                        ActionEvent<PropertyChange> actionEvent)
+            {
+                glassPane.setVisible(false);
+            }
+        });
+        
+        statusBar.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (notifier.hasTasks()) {
+                    glassPane.setVisible(!glassPane.isVisible());
+                }
+            }
+        });
+    }
+    
+    @Override
+    public SwingProgressNotifier getNotifier() {
+        return notifier;
+    }
+    
     private void setupMenus() {
 
         JMenu fileMenu = new JMenu(translator.localize(LocaleResources.MENU_FILE).getContents());
@@ -553,7 +628,6 @@ public class MainWindow extends JFrame implements MainView {
         return result;
     }
 
-    @SuppressWarnings("restriction")
     public class ShutdownClient extends WindowAdapter implements java.awt.event.ActionListener, sun.misc.SignalHandler {
 
         @Override

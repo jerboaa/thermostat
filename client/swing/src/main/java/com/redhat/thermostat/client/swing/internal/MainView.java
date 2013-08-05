@@ -42,6 +42,7 @@ import java.util.List;
 import javax.swing.JFrame;
 
 import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.ui.ContextAction;
 import com.redhat.thermostat.client.ui.DecoratorProvider;
@@ -97,11 +98,16 @@ public interface MainView {
     void addMenu(MenuAction action);
 
     /**
+     * Returns the progress notifier associate with this view.
+     */
+    ProgressNotifier getNotifier();
+    
+    /**
      * Removes a menu item to the window. Assumes the menu path is valid (has a
      * non-zero length) and the menu already exists.
      */
     void removeMenu(MenuAction action);
-
+    
     /**
      * Shows a popup context menu created from the list of supplied context
      * actions. When an item in the popup menu is selected, an

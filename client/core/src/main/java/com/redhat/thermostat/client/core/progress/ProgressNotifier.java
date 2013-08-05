@@ -34,50 +34,11 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.components;
-
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-
-import javax.swing.Icon;
-import javax.swing.JLabel;
-import javax.swing.plaf.metal.MetalLabelUI;
-
-import com.redhat.thermostat.client.swing.GraphicsUtils;
-import com.redhat.thermostat.shared.locale.LocalizedString;
+package com.redhat.thermostat.client.core.progress;
 
 /**
- * A {@link JLabel} that has a shadow.
  */
-@SuppressWarnings("serial")
-public class ShadowLabel extends JLabel {
-
-    private ShadowLabel(String text, Icon icon) {
-        super(text);
-        this.setIcon(icon);
-        setUI(new ShadowLabelUI());
-    }
-    
-    public ShadowLabel(LocalizedString text) {
-        this(text, null);
-    }
-
-    public ShadowLabel(LocalizedString text, Icon icon) {
-        this(text.getContents(), icon);
-    }
-    
-    public ShadowLabel() {
-        this("", null);
-    }
-    
-    private class ShadowLabelUI extends MetalLabelUI {
-        
-        @Override
-        protected void paintEnabledText(JLabel l, Graphics g, String s, int textX, int textY) {
-            GraphicsUtils graphicsUtils = GraphicsUtils.getInstance();
-            Graphics2D graphics = graphicsUtils.createAAGraphics(g);
-            graphicsUtils.drawStringWithShadow(l, graphics, s, ShadowLabel.this.getForeground(), textX, textY);
-        }
-    }
+public interface ProgressNotifier {
+    void register(ProgressHandle handle);
+    boolean hasTasks();
 }
-

@@ -65,6 +65,7 @@ import org.mockito.ArgumentCaptor;
 import org.osgi.framework.BundleException;
 
 import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.client.core.views.AgentInformationViewProvider;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.ClientConfigViewProvider;
@@ -193,6 +194,9 @@ public class MainWindowControllerImplTest {
         view = mock(MainView.class);
         ArgumentCaptor<ActionListener> grabListener = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addActionListener(grabListener.capture());
+        
+        ProgressNotifier notifier = mock(ProgressNotifier.class);
+        when(view.getNotifier()).thenReturn(notifier);
         
         RegistryFactory registryFactory = mock(RegistryFactory.class);
         hostFilterRegistry = mock(HostFilterRegistry.class);

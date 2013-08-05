@@ -170,6 +170,7 @@
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.client.swing.internal,
+              com.redhat.thermostat.client.swing.internal.progress,
               com.redhat.thermostat.client.swing.internal.components,
               com.redhat.thermostat.client.swing.internal.osgi,
               com.redhat.thermostat.client.swing.internal.views,

@@ -157,12 +157,12 @@ public class OverlayPanel extends JPanel {
 
         Graphics2D graphics = utils.createAAGraphics(g);
         graphics.setColor(utils.deriveWithAlpha(Palette.PALE_GRAY.getColor(), 200));
- 
+        
         Rectangle clip = graphics.getClipBounds();
         Insets borderInsets = getBorder().getBorderInsets(this);
         
-        clip.height = clip.height - borderInsets.bottom - borderInsets.top;
-        clip.width = clip.width - borderInsets.left - borderInsets.right;
+        clip.height = getHeight() - borderInsets.bottom - borderInsets.top;
+        clip.width = getWidth() - borderInsets.left - borderInsets.right;
         
         graphics.translate(borderInsets.left, borderInsets.top);
         graphics.fillRect(clip.x, clip.y, clip.width, clip.height);
@@ -227,7 +227,6 @@ public class OverlayPanel extends JPanel {
         public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
             if (DEBUG) {
                 super.paintBorder(c, g, x, y, width, height);
-                return;
             }
             
             if (buffer != null && buffer.getWidth() == getWidth() && buffer.getHeight() == getHeight()) {
