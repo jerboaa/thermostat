@@ -39,131 +39,83 @@ package com.redhat.thermostat.vm.heap.analysis.client.swing.internal.stats;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.LayoutManager2;
 import java.awt.Rectangle;
 import java.awt.geom.Rectangle2D;
 
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.plot.XYPlot;
 
+import com.redhat.thermostat.client.swing.components.AbstractLayout;
 import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.common.model.LongRangeNormalizer;
 
-/**
- *
- */
-public class HeapChartPanelLayout implements LayoutManager2 {
+public class HeapChartPanelLayout extends AbstractLayout {
 
     @Override
-    public void addLayoutComponent(String name, Component comp) {        
-    }
-
-    @Override
-    public void removeLayoutComponent(Component comp) {
-    }
-
-    @Override
-    public Dimension preferredLayoutSize(Container parent) {
-        return new Dimension(5, 5);
-    }
-
-    @Override
-    public Dimension minimumLayoutSize(Container parent) {
-        return new Dimension(5, 5);
-    }
-
-    @Override
-    public void layoutContainer(Container parent) {
+    protected void doLayout(Container parent) {
         
         HeapChartPanel chartPanel = (HeapChartPanel) parent;
-        synchronized (chartPanel.getTreeLock()) {
-
-            Rectangle2D area = chartPanel.getScreenDataArea();
-            
-            XYPlot plot = (XYPlot) chartPanel.getChart().getPlot();
-            DateAxis domainAxis = (DateAxis) plot.getDomainAxis();
-
-            // need first and last value
-            
-            long max = domainAxis.getMaximumDate().getTime();
-            long min = domainAxis.getMinimumDate().getTime();
-
-            Range<Long> offset = new Range<Long>(min, max);
-            
-            LongRangeNormalizer normaliser = new LongRangeNormalizer(offset);
-            chartPanel.getScreenDataArea();
-            
-            normaliser.setMaxNormalized((int) (area.getX() + area.getWidth()));
-            normaliser.setMinNormalized((int) area.getX());
-            
-            int y = (int) (area.getHeight()/2);
-            int bound = y;
-            
-            boolean moveUp = false;
-            int delta = 0;
-            int x = 0;
-            
-            Component[] children = chartPanel.getComponents();
-            for (Component _child : children) {
-                
-                if (!(_child instanceof OverlayComponent)) {
-                    continue;
-                }
-                
-                OverlayComponent child = (OverlayComponent) _child;
-                
-                if (!child.isVisible()) {
-                    continue;
-                }
-                
-                Dimension preferredSize = child.getIconCenter();
-
-                normaliser.setValue(child.getTimestamp());
-                x = (int) normaliser.getValueNormalized() - preferredSize.width;
-
-                preferredSize = child.getPreferredSize();
-                Rectangle bounds = new Rectangle(x, y, preferredSize.width, preferredSize.height);
-
-                if (delta > bound) {
-                    delta = 0;
-                }
-
-                if (moveUp) {
-                    bounds.y = bounds.y - delta;
-                } else {
-                    bounds.y = bounds.y + delta;
-                    delta += bounds.height;
-                }
-                moveUp = !moveUp;
-
-                child.setSize(preferredSize);
-                child.setBounds(bounds);
-            }
-        }
-    }
-
-    @Override
-    public void addLayoutComponent(Component comp, Object constraints) {
+        Rectangle2D area = chartPanel.getScreenDataArea();
         
-    }
+        XYPlot plot = (XYPlot) chartPanel.getChart().getPlot();
+        DateAxis domainAxis = (DateAxis) plot.getDomainAxis();
 
-    @Override
-    public Dimension maximumLayoutSize(Container target) {
-        return new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE);
-    }
+        // need first and last value
+        
+        long max = domainAxis.getMaximumDate().getTime();
+        long min = domainAxis.getMinimumDate().getTime();
 
-    @Override
-    public float getLayoutAlignmentX(Container target) {
-        return 0.5f;
-    }
+        Range<Long> offset = new Range<Long>(min, max);
+        
+        LongRangeNormalizer normaliser = new LongRangeNormalizer(offset);
+        chartPanel.getScreenDataArea();
+        
+        normaliser.setMaxNormalized((int) (area.getX() + area.getWidth()));
+        normaliser.setMinNormalized((int) area.getX());
+        
+        int y = (int) (area.getHeight()/2);
+        int bound = y;
+        
+        boolean moveUp = false;
+        int delta = 0;
+        int x = 0;
+        
+        Component[] children = chartPanel.getComponents();
+        for (Component _child : children) {
+            
+            if (!(_child instanceof OverlayComponent)) {
+                continue;
+            }
+            
+            OverlayComponent child = (OverlayComponent) _child;
+            
+            if (!child.isVisible()) {
+                continue;
+            }
+            
+            Dimension preferredSize = child.getIconCenter();
 
-    @Override
-    public float getLayoutAlignmentY(Container target) {
-        return 0.5f;
-    }
+            normaliser.setValue(child.getTimestamp());
+            x = (int) normaliser.getValueNormalized() - preferredSize.width;
 
-    @Override
-    public void invalidateLayout(Container target) {        
+            preferredSize = child.getPreferredSize();
+            Rectangle bounds = new Rectangle(x, y, preferredSize.width, preferredSize.height);
+
+            if (delta > bound) {
+                delta = 0;
+            }
+
+            if (moveUp) {
+                bounds.y = bounds.y - delta;
+            } else {
+                bounds.y = bounds.y + delta;
+                delta += bounds.height;
+            }
+            moveUp = !moveUp;
+
+            child.setSize(preferredSize);
+            child.setBounds(bounds);
+        }
     }
 
 }
