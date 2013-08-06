@@ -156,6 +156,8 @@ public class WebStorageEndPoint extends HttpServlet {
     private Set<String> knownStatementDescriptors;
     // read-only map of known descriptors => descriptor metadata
     private Map<String, StatementDescriptorMetadataFactory> descMetadataFactories;
+    // read-only set of all known categories which we allow to get registered.
+    private Set<String> knownCategoryNames;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -191,6 +193,9 @@ public class WebStorageEndPoint extends HttpServlet {
         KnownDescriptorRegistry descRegistry = KnownDescriptorRegistryFactory.getInstance();
         knownStatementDescriptors = descRegistry.getRegisteredDescriptors();
         descMetadataFactories = descRegistry.getDescriptorMetadataFactories();
+        // Set the set of category names which we allow to get registered
+        KnownCategoryRegistry categoryRegistry = KnownCategoryRegistryFactory.getInstance();
+        knownCategoryNames = categoryRegistry.getRegisteredCategoryNames();
     }
     
     @Override
@@ -478,7 +483,15 @@ public class WebStorageEndPoint extends HttpServlet {
             } else {
                 // Regular, non-aggregate category. Those categories we actually
                 // need to register with backing storage.
-                // 
+                //
+                // Make sure we only register known categories
+                if (! knownCategoryNames.contains(categoryName)) {
+                    logger.log(Level.WARNING,
+                        "Attempt to register category which we don't know of! Name was '"
+                                + categoryName + "'");
+                    resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    return;
+                }
                 // The following has the side effect of registering the newly
                 // deserialized Category in the Categories class.
                 category = gson.fromJson(categoryParam, Category.class);

@@ -114,6 +114,7 @@ import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
+import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.model.AggregateCount;
@@ -184,13 +185,14 @@ public class WebStorageEndpointTest {
     private static Key<String> key1;
     private static Key<Integer> key2;
     private static Category<TestClass> category;
+    private static String categoryName = "test";
     private ExpressionFactory factory;
 
     @BeforeClass
     public static void setupCategory() {
         key1 = new Key<>("key1", true);
         key2 = new Key<>("key2", false);
-        category = new Category<>("test", TestClass.class, key1, key2);
+        category = new Category<>(categoryName, TestClass.class, key1, key2);
     }
 
     @AfterClass
@@ -234,6 +236,8 @@ public class WebStorageEndpointTest {
             server.stop();
             server.join();
         }
+        KnownCategoryRegistryFactory.setInstance(null);
+        KnownDescriptorRegistryFactory.setKnownDescriptorRegistry(null);
     }
 
     /**
@@ -313,6 +317,9 @@ public class WebStorageEndpointTest {
                 startServer(port, loginService);
             }
         });
+        // This makes register category work for the "test" category.
+        // Undone via @After
+        setupTrustedCategory(categoryName);
         registerCategory(testuser, password);
         
         String endpoint = getEndpoint();
@@ -365,6 +372,9 @@ public class WebStorageEndpointTest {
                 startServer(port, loginService);
             }
         });
+        // This makes register category work for the "test" category.
+        // Undone via @After
+        setupTrustedCategory(categoryName);
         registerCategory("ignored1", "ignored2");
         
         TestClass expected1 = new TestClass();
@@ -463,9 +473,10 @@ public class WebStorageEndpointTest {
     @Test
     public void authorizedFilteredQuery() throws Exception {
         Category oldCategory = category;
+        String categoryName = "test-authorizedFilteredQuery";
         // redefine category to include the agentId key in the category.
         // undone via a the try-finally block.
-        category = new Category("test-authorizedFilteredQuery", TestClass.class, key1, key2, Key.AGENT_ID);
+        category = new Category(categoryName, TestClass.class, key1, key2, Key.AGENT_ID);
         try {
             String strDescriptor = "QUERY " + category.getName() + " WHERE '" +
                     key1.getName() + "' = ?s SORT '" + key1.getName() + "' DSC LIMIT 42";
@@ -490,6 +501,9 @@ public class WebStorageEndpointTest {
                     startServer(port, loginService);
                 }
             });
+            // This makes register category work for the "test" category.
+            // Undone via @After
+            setupTrustedCategory(categoryName);
             registerCategory("ignored1", "ignored2");
             
             TestClass expected1 = new TestClass();
@@ -695,6 +709,17 @@ public class WebStorageEndpointTest {
         verifyNoMoreInteractions(mockMongoQuery);
     }
     
+    private void setupTrustedCategory(String categoryName) {
+        Set<String> descs = new HashSet<>();
+        descs.add(categoryName);
+        CategoryRegistration reg = mock(CategoryRegistration.class);
+        when(reg.getCategoryNames()).thenReturn(descs);
+        List<CategoryRegistration> regs = new ArrayList<>(1);
+        regs.add(reg);
+        KnownCategoryRegistry registry = new KnownCategoryRegistry(regs);
+        KnownCategoryRegistryFactory.setInstance(registry);
+    }
+    
     private void setupTrustedStatementRegistry(String strDescriptor, DescriptorMetadata metadata) {
         Set<String> descs = new HashSet<>();
         descs.add(strDescriptor);
@@ -703,6 +728,48 @@ public class WebStorageEndpointTest {
         regs.add(reg);
         KnownDescriptorRegistry registry = new KnownDescriptorRegistry(regs);
         KnownDescriptorRegistryFactory.setKnownDescriptorRegistry(registry);
+    }
+    
+    @Test
+    public void cannotRegisterCategoryWithoutRegistrationOnInit() throws Exception {
+        // need this in order to pass basic permissions.
+        String[] roleNames = new String[] {
+                Roles.REGISTER_CATEGORY
+        };
+        String username = "testuser";
+        String password = "testpassword";
+        final LoginService loginService = new TestLoginService(username, password, roleNames); 
+        port = FreePortFinder.findFreePort(new TryPort() {
+            
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port, loginService);
+            }
+        });
+        try {
+            String endpoint = getEndpoint();
+            URL url = new URL(endpoint + "/register-category");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            String enc = "UTF-8";
+            conn.setRequestProperty("Content-Encoding", enc);
+            conn.setDoOutput(true);
+            conn.setDoInput(true);
+            conn.setRequestMethod("POST");
+            sendAuthentication(conn, username, password);
+            OutputStream out = conn.getOutputStream();
+            Gson gson = new Gson();
+            OutputStreamWriter writer = new OutputStreamWriter(out);
+            writer.write("name=");
+            writer.write(URLEncoder.encode(category.getName(), enc));
+            writer.write("&category=");
+            writer.write(URLEncoder.encode(gson.toJson(category), enc));
+            writer.flush();
+
+            // "test" category name not registered, expecting forbidden.
+            assertEquals(HttpServletResponse.SC_FORBIDDEN, conn.getResponseCode());
+        } catch (IOException e) {
+            fail("Should not throw exception! " + e.getMessage());
+        }
     }
 
     @Test
@@ -739,6 +806,9 @@ public class WebStorageEndpointTest {
             }
         });
         if (doRegisterCategory) {
+            // This makes register category work for the "test" category.
+            // Undone via @After
+            setupTrustedCategory(categoryName);
             registerCategory(testuser, password);
         }
         
@@ -819,6 +889,9 @@ public class WebStorageEndpointTest {
                 startServer(port, loginService);
             }
         });
+        // This makes register category work for the "test" category.
+        // Undone via @After
+        setupTrustedCategory(categoryName);
         registerCategory(testuser, password);
         
         Replace replace = mock(Replace.class);
@@ -869,6 +942,9 @@ public class WebStorageEndpointTest {
                 startServer(port, loginService);
             }
         });
+        // This makes register category work for the "test" category.
+        // Undone via @After
+        setupTrustedCategory(categoryName);
         registerCategory(testuser, password);
         
         String endpoint = getEndpoint();
@@ -912,6 +988,9 @@ public class WebStorageEndpointTest {
                 startServer(port, loginService);
             }
         });
+        // This makes register category work for the "test" category.
+        // Undone via @After
+        setupTrustedCategory(categoryName);
         registerCategory(testuser, password);
         
         Add insert = mock(Add.class);
@@ -962,6 +1041,9 @@ public class WebStorageEndpointTest {
                 startServer(port, loginService);
             }
         });
+        // This makes register category work for the "test" category.
+        // Undone via @After
+        setupTrustedCategory(categoryName);
         registerCategory(testuser, password);
         
         String endpoint = getEndpoint();
@@ -1011,6 +1093,9 @@ public class WebStorageEndpointTest {
                 startServer(port, loginService);
             }
         });
+        // This makes register category work for the "test" category.
+        // Undone via @After
+        setupTrustedCategory(categoryName);
         registerCategory(testuser, password);
         
         
@@ -1069,6 +1154,9 @@ public class WebStorageEndpointTest {
                 startServer(port, loginService);
             }
         });
+        // This makes register category work for the "test" category.
+        // Undone via @After
+        setupTrustedCategory(categoryName);
         registerCategory(testuser, password);
         
         Update mockUpdate = mock(Update.class);
