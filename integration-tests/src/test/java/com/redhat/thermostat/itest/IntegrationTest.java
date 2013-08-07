@@ -86,11 +86,11 @@ public class IntegrationTest {
     /* This is a mirror of paths from c.r.t.shared.Configuration */
 
     private static String getThermostatExecutable() {
-        return "../distribution/target/bin/thermostat";
+        return getThermostatHome() + "/bin/thermostat";
     }
     
     public static String getThermostatHome() {
-        return "../distribution/target";
+        return "../distribution/target/image";
     }
 
     public static String getPluginHome() {

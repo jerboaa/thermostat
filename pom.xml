@@ -58,7 +58,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <thermostat.build.directory>target</thermostat.build.directory>
     <thermostat.java.version>1.7</thermostat.java.version>
-    <thermostat.home>${project.build.directory}</thermostat.home>
+    <thermostat.home>${user.dir}/distribution/target/image/</thermostat.home>
     <!-- used in systemd service files. Set this to the username thermostat should run
          under when run via systemd. -->
     <thermostat.system.user>thermostat</thermostat.system.user>

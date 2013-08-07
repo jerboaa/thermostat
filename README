@@ -82,7 +82,7 @@ Eclipse-based client is experimental.
    
 2.1.2.
    The resulting Thermostat system can now be found under the directory
-   distribution/target.
+   distribution/target/image.
            
 --------------------------------------------------------------------------------
 2.2. BUILDING THERMOSTAT ECLIPSE (optional)
@@ -110,7 +110,7 @@ Eclipse-based client is experimental.
 --------------------------------------------------------------------------------
 3.1. RUNNING THERMOSTAT CORE
 
-  cd into distribution/target directory just created
+  cd into distribution/target/image directory just created
 
   To start the agent and the db:
   bin/thermostat service

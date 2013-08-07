@@ -71,7 +71,7 @@
   <!-- THERMOSTAT_HOME is set via the listener below -->
   <context-param>
     <param-name>THERMOSTAT_HOME</param-name>
-    <param-value>${project.build.directory}/../../../distribution/target/</param-value>
+    <param-value>${thermostat.home}</param-value>
   </context-param>
   
   <listener>

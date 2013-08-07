@@ -52,7 +52,6 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <main.basedir>${project.basedir}/..</main.basedir>
   </properties>
 
   <build>
@@ -86,7 +85,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <argLine>-Djava.security.auth.login.config=${main.basedir}/distribution/target/etc/thermostat_jaas.conf ${coverageAgent}</argLine>
+          <argLine>-Djava.security.auth.login.config=${thermostat.home}/etc/thermostat_jaas.conf ${coverageAgent}</argLine>
           <skip>true</skip>
         </configuration>
         <executions>
