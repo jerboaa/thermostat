@@ -53,7 +53,7 @@
   <properties>
     <tycho-version>0.15.0</tycho-version>
     <tycho-extras-version>0.15.0</tycho-extras-version>
-    <platform-version-name>juno</platform-version-name>
+    <platform-version-name>kepler</platform-version-name>
     <eclipse-site>http://download.eclipse.org/releases/${platform-version-name}</eclipse-site>
     <orbit-site>http://download.eclipse.org/tools/orbit/downloads/drops/R20120526062928/repository/</orbit-site>
     <eclipse-root>${basedir}</eclipse-root>
@@ -74,17 +74,17 @@
       </properties>
     </profile>
     <profile>
-      <id>platform-juno</id>
+      <id>platform-kepler</id>
       <activation>
         <activeByDefault>true</activeByDefault>
         <property>
           <name>platform-version-name</name>
-          <value>juno</value>
+          <value>kepler</value>
         </property>
       </activation>
       <properties>
-        <eclipse-site>http://download.eclipse.org/releases/juno</eclipse-site>
-        <platform-version>[3.8,4.3)</platform-version>
+        <eclipse-site>http://download.eclipse.org/releases/kepler</eclipse-site>
+        <platform-version>[3.8,4.4)</platform-version>
       </properties>
     </profile>
   </profiles>

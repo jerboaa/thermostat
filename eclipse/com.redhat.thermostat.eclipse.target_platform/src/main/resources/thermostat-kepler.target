@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?pde version="3.8"?><target name="Thermostat Eclipse" sequenceNumber="29">
+<locations>
+<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.platform.sdk" version="4.3.0.I20130605-2000"/>
+<repository location="http://download.eclipse.org/releases/kepler"/>
+</location>
+<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+<unit id="com.redhat.thermostat.client.feature.feature.group" version="0.12.0.SNAPSHOT"/>
+<repository location="file:${eclipse-root}/composite-repo/target/composite-repo/"/>
+</location>
+<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+<unit id="com.redhat.thermostat.eclipse.test.deps.feature.feature.group" version="0.12.0.SNAPSHOT"/>
+<repository location="file:${eclipse-root}/test-deps-p2-repository/target/repository/"/>
+</location>
+<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.swtbot.eclipse.feature.group" version="2.1.0.201302221524"/>
+<unit id="org.eclipse.swtbot.feature.group" version="2.1.0.201302221524"/>
+<repository location="http://download.eclipse.org/technology/swtbot/releases/2.1.0/"/>
+</location>
+</locations>
+</target>
