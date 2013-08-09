@@ -56,7 +56,7 @@ public class Activator implements BundleActivator {
         reg.registerCommand("vm-stat", new VMStatCommand());
         reg.registerCommand("disconnect", new DisconnectCommand());
         reg.registerCommand("connect", new ConnectCommand());
-        reg.registerCommand("clean-history", new CleanHistoryCommand(context));
+        reg.registerCommand("clean-data", new CleanDataCommand(context));
     }
 
     @Override
