@@ -95,9 +95,12 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.redhat.thermostat.storage.core.Add;
+import com.redhat.thermostat.storage.core.AggregateQuery;
+import com.redhat.thermostat.storage.core.AggregateQuery.AggregateFunction;
 import com.redhat.thermostat.storage.core.BackingStorage;
 import com.redhat.thermostat.storage.core.Categories;
 import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Key;
@@ -112,7 +115,10 @@ import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
+import com.redhat.thermostat.storage.dao.HostInfoDAO;
+import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.BasePojo;
+import com.redhat.thermostat.storage.model.HostInfo;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.BinarySetMembershipExpression;
 import com.redhat.thermostat.storage.query.Expression;
@@ -585,6 +591,110 @@ public class WebStorageEndpointTest {
         }
     }
     
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @Test
+    public void authorizedPreparedAggregateQuery() throws Exception {
+        String strDescriptor = "QUERY-COUNT " + category.getName();
+        DescriptorMetadata metadata = new DescriptorMetadata();
+        setupTrustedStatementRegistry(strDescriptor, metadata);
+        
+        Set<BasicRole> roles = new HashSet<>();
+        roles.add(new RolePrincipal(Roles.REGISTER_CATEGORY));
+        roles.add(new RolePrincipal(Roles.PREPARE_STATEMENT));
+        roles.add(new RolePrincipal(Roles.READ));
+        roles.add(new RolePrincipal(Roles.ACCESS_REALM));
+        UserPrincipal testUser = new UserPrincipal("ignored1");
+        testUser.setRoles(roles);
+        
+        final LoginService loginService = new TestJAASLoginService(testUser); 
+        port = FreePortFinder.findFreePort(new TryPort() {
+            
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port, loginService);
+            }
+        });
+        
+        AggregateCount count = new AggregateCount();
+        count.setCount(500);
+        // prepare-statement does this under the hood
+        Query<AggregateCount> mockMongoQuery = mock(AggregateQuery.class);
+        Category<AggregateCount> adapted = new CategoryAdapter(category).getAdapted(AggregateCount.class);
+        registerCategory(adapted, "no-matter", "no-matter");
+        when(mockStorage.createAggregateQuery(eq(AggregateFunction.COUNT), eq(adapted))).thenReturn(mockMongoQuery);
+
+        Cursor<AggregateCount> cursor = mock(Cursor.class);
+        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
+        when(cursor.next()).thenReturn(count);
+        
+        PreparedStatement mockPreparedQuery = mock(PreparedStatement.class);
+        when(mockStorage.prepareStatement(any(StatementDescriptor.class))).thenReturn(mockPreparedQuery);
+        
+        ParsedStatement mockParsedStatement = mock(ParsedStatement.class);
+        when(mockParsedStatement.getNumParams()).thenReturn(0);
+        when(mockParsedStatement.patchStatement(any(PreparedParameter[].class))).thenReturn(mockMongoQuery);
+        when(mockPreparedQuery.getParsedStatement()).thenReturn(mockParsedStatement);
+        
+        // The web layer
+        when(mockPreparedQuery.executeQuery()).thenReturn(cursor);
+        // And the mongo layer
+        when(mockMongoQuery.execute()).thenReturn(cursor);
+
+        String endpoint = getEndpoint();
+        URL url = new URL(endpoint + "/prepare-statement");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        sendAuthentication(conn, "no-matter", "no-matter");
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        conn.setDoInput(true);
+        conn.setDoOutput(true);
+        Gson gson = new GsonBuilder()
+                .registerTypeHierarchyAdapter(WebQueryResponse.class, new WebQueryResponseSerializer<>())
+                .registerTypeAdapter(Pojo.class, new ThermostatGSONConverter())
+                .registerTypeAdapter(WebPreparedStatement.class, new WebPreparedStatementSerializer())
+                .registerTypeAdapter(PreparedParameter.class, new PreparedParameterSerializer()).create();
+        OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
+        String body = "query-descriptor=" + URLEncoder.encode(strDescriptor, "UTF-8") + "&category-id=" + categoryId;
+        out.write(body + "\n");
+        out.flush();
+
+        Reader in = new InputStreamReader(conn.getInputStream());
+        WebPreparedStatementResponse response = gson.fromJson(in, WebPreparedStatementResponse.class);
+        assertEquals(0, response.getNumFreeVariables());
+        assertEquals(0, response.getStatementId());
+        assertEquals("application/json; charset=UTF-8", conn.getContentType());
+        
+        
+        
+        // now execute the query we've just prepared
+        WebPreparedStatement<AggregateCount> stmt = new WebPreparedStatement<>(0, 0);
+        
+        url = new URL(endpoint + "/query-execute");
+        HttpURLConnection conn2 = (HttpURLConnection) url.openConnection();
+        conn2.setRequestMethod("POST");
+        sendAuthentication(conn2, "no-matter", "no-matter");
+        conn2.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        conn2.setDoInput(true);
+        conn2.setDoOutput(true);
+        
+        out = new OutputStreamWriter(conn2.getOutputStream());
+        body = "prepared-stmt=" + gson.toJson(stmt, WebPreparedStatement.class);
+        out.write(body + "\n");
+        out.flush();
+
+        in = new InputStreamReader(conn2.getInputStream());
+        Type typeToken = new TypeToken<WebQueryResponse<AggregateCount>>(){}.getType();
+        WebQueryResponse<AggregateCount> result = gson.fromJson(in, typeToken);
+        AggregateCount[] results = result.getResultList();
+        assertEquals(1, results.length);
+        assertEquals(500, results[0].getCount());
+
+        assertEquals("application/json; charset=UTF-8", conn2.getContentType());
+        verify(mockMongoQuery).execute();
+        verify(mockMongoQuery).getWhereExpression();
+        verifyNoMoreInteractions(mockMongoQuery);
+    }
+    
     private void setupTrustedStatementRegistry(String strDescriptor, DescriptorMetadata metadata) {
         Set<String> descs = new HashSet<>();
         descs.add(strDescriptor);
@@ -640,6 +750,56 @@ public class WebStorageEndpointTest {
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
         
         assertEquals(failMessage, HttpServletResponse.SC_FORBIDDEN, conn.getResponseCode());
+    }
+    
+    @Test
+    public void authorizedRegisterCategoryTest() throws Exception {
+        Set<BasicRole> roles = new HashSet<>();
+        roles.add(new RolePrincipal(Roles.REGISTER_CATEGORY));
+        roles.add(new RolePrincipal(Roles.ACCESS_REALM));
+        UserPrincipal testUser = new UserPrincipal("ignored1");
+        testUser.setRoles(roles);
+        
+        final LoginService loginService = new TestJAASLoginService(testUser); 
+        port = FreePortFinder.findFreePort(new TryPort() {
+            
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port, loginService);
+            }
+        });
+        Category<HostInfo> wantedCategory = HostInfoDAO.hostInfoCategory;
+        Category<AggregateCount> aggregate = new CategoryAdapter<HostInfo, AggregateCount>(wantedCategory).getAdapted(AggregateCount.class);
+        
+        // First the originating category has to be registered, then the adapted
+        // one.
+        Integer realId = registerCategoryAndGetId(wantedCategory, "no-matter", "no-matter");
+        Integer aggregateId = registerCategoryAndGetId(aggregate, "no-matter", "no-matter");
+        
+        assertTrue("Aggregate categories need their own ID", aggregateId != realId);
+        
+        verify(mockStorage).registerCategory(eq(wantedCategory));
+        verifyNoMoreInteractions(mockStorage);
+    }
+    
+    private Integer registerCategoryAndGetId(Category<?> cat, String username, String password) throws Exception {
+        String endpoint = getEndpoint();
+        URL url = new URL(endpoint + "/register-category");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        sendAuthentication(conn, username, password);
+
+        conn.setDoOutput(true);
+        conn.setDoInput(true);
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
+        Gson gson = new Gson();
+        out.write("name=" + cat.getName() + "&data-class=" + cat.getDataClass().getName() + "&category=" + gson.toJson(cat));
+        out.flush();
+        assertEquals(200, conn.getResponseCode());
+        Reader reader = new InputStreamReader(conn.getInputStream());
+        Integer id = gson.fromJson(reader, Integer.class);
+        return id;
     }
 
     @Test
@@ -1109,6 +1269,10 @@ public class WebStorageEndpointTest {
     }
 
     private void registerCategory(String username, String password) {
+        registerCategory(category, username, password);
+    }
+    
+    private void registerCategory(Category<?> category, String username, String password) {
         try {
             String endpoint = getEndpoint();
             URL url = new URL(endpoint + "/register-category");
@@ -1126,6 +1290,8 @@ public class WebStorageEndpointTest {
             writer.write(URLEncoder.encode(category.getName(), enc));
             writer.write("&category=");
             writer.write(URLEncoder.encode(gson.toJson(category), enc));
+            writer.write("&data-class=");
+            writer.write(URLEncoder.encode(category.getDataClass().getName(), enc));
             writer.flush();
 
             InputStream in = conn.getInputStream();

@@ -63,6 +63,7 @@ import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.HostInfo;
 
 
@@ -224,13 +225,25 @@ public class HostInfoDAOTest {
     }
 
     @Test
-    public void testGetCount() throws Exception {
-        Storage storage = setupStorageForSingleHost();
-        AgentInfoDAO agentInfo = mock(AgentInfoDAO.class);
+    public void testGetCount() throws DescriptorParsingException,
+            StatementExecutionException {
+        AggregateCount count = new AggregateCount();
+        count.setCount(2);
 
-        HostInfoDAO hostsDAO = new HostInfoDAOImpl(storage, agentInfo);
+        @SuppressWarnings("unchecked")
+        Cursor<AggregateCount> countCursor = (Cursor<AggregateCount>) mock(Cursor.class);
+        when(countCursor.next()).thenReturn(count);
 
-        assertEquals(1, hostsDAO.getCount());
+        Storage storage = mock(Storage.class);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<AggregateCount> stmt = (PreparedStatement<AggregateCount>) mock(PreparedStatement.class);
+        @SuppressWarnings("unchecked")
+        StatementDescriptor<AggregateCount> desc = any(StatementDescriptor.class);
+        when(storage.prepareStatement(desc)).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(countCursor);
+        HostInfoDAOImpl dao = new HostInfoDAOImpl(storage, null);
+
+        assertEquals(2, dao.getCount());
     }
     
     @Test

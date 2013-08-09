@@ -37,13 +37,18 @@
 package com.redhat.thermostat.storage.core;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.model.Pojo;
 
 public class CategoryTest {
@@ -90,7 +95,26 @@ public class CategoryTest {
         Collection<Key<?>> keys = category.getKeys();
 
         keys.remove(key1);
-
+    }
+    
+    @Test
+    public void testEquals() {
+        Key<String> key1 = new Key<String>("key1", false);
+        Key<String> key2 = new Key<String>("key2", false);
+        Key<String> key3 = new Key<String>("key3", false);
+        Category<TestObj> category = new Category<>("testEquals", TestObj.class, key1, key2, key3);
+        assertTrue(category.equals(category));
+        assertFalse(category.equals(HostInfoDAO.hostInfoCategory));
+    }
+    
+    @Test
+    public void testHashCode() {
+        Key<String> key1 = new Key<String>("key1", false);
+        Category<TestObj> category = new Category<>("testHashCode", TestObj.class, key1);
+        Map<String, Key<?>> keys = new HashMap<>();
+        keys.put(key1.getName(), key1);
+        int expectedHash = Objects.hash("testHashCode", keys, TestObj.class);
+        assertEquals(expectedHash, category.hashCode());
     }
 }
 

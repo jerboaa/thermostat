@@ -49,15 +49,15 @@ import com.redhat.thermostat.storage.model.Pojo;
  */
 public class Category<T extends Pojo> {
 
-    private String name;
-    private final Map<String, Key<?>> keys;
+    protected String name;
+    protected Map<String, Key<?>> keys;
     private transient Class<T> dataClass;
-    private String dataClassName;
+    protected String dataClassName;
 
     public Category() {
         this(null, null);
     }
-
+    
     /**
      * Creates a new Category instance with the specified name.
      *
@@ -124,10 +124,11 @@ public class Category<T extends Pojo> {
 
     @Override
     public String toString() {
-        return getName() + keys;
+        return getName() + "|" + getDataClass().getName() + "|" + keys;
     }
+    
     public int hashCode() {
-        return Objects.hash(name, keys);
+        return Objects.hash(name, keys, getDataClass());
     }
 
     public boolean equals(Object o) {
@@ -135,7 +136,9 @@ public class Category<T extends Pojo> {
             return false;
         }
         Category<?> other = (Category<?>) o;
-        return Objects.equals(name, other.name) && Objects.equals(keys, other.keys);
+        return Objects.equals(name, other.name) &&
+                Objects.equals(keys, other.keys) &&
+                Objects.equals(getDataClass(), other.getDataClass());
     }
 }
 

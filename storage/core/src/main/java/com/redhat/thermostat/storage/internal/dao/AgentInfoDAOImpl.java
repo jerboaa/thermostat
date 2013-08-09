@@ -43,6 +43,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -56,10 +58,11 @@ import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.storage.query.ExpressionFactory;
 
-public class AgentInfoDAOImpl implements AgentInfoDAO {
+public class AgentInfoDAOImpl extends BaseCountable implements AgentInfoDAO {
 
     private static final Logger logger = LoggingUtils.getLogger(AgentInfoDAOImpl.class);
     static final String QUERY_AGENT_INFO = "QUERY "
@@ -67,37 +70,52 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
             + Key.AGENT_ID.getName() + "' = ?s";
     static final String QUERY_ALL_AGENTS = "QUERY "
             + CATEGORY.getName();
+    // We can use AgentInfoDAO.CATEGORY.getName() here since this query
+    // only changes the data class. When executed we use the adapted
+    // aggregate category.
+    static final String AGGREGATE_COUNT_ALL_AGENTS = "QUERY-COUNT "
+            + CATEGORY.getName();
     static final String QUERY_ALIVE_AGENTS = "QUERY "
             + CATEGORY.getName() + " WHERE '" 
             + ALIVE_KEY.getName() + "' = ?b";
     
     private final Storage storage;
+    private final Category<AggregateCount> aggregateCategory;
     private final ExpressionFactory factory;
 
     public AgentInfoDAOImpl(Storage storage) {
         this.storage = storage;
+        // prepare adapted category and register it.
+        CategoryAdapter<AgentInformation, AggregateCount> adapter = new CategoryAdapter<>(CATEGORY);
+        this.aggregateCategory = adapter.getAdapted(AggregateCount.class);
         storage.registerCategory(CATEGORY);
+        storage.registerCategory(aggregateCategory);
         this.factory = new ExpressionFactory();
     }
 
     @Override
     public long getCount() {
-        long count = 0L;
-        Cursor<AgentInformation> agentCursor = getCursorForAllAgentInformation();
-        if (agentCursor == null) {
-            return count;
-        }
-        while (agentCursor.hasNext()) {
-            count++;
-            agentCursor.next();
-        }
+        StatementDescriptor<AggregateCount> desc = new StatementDescriptor<>(
+                aggregateCategory, AGGREGATE_COUNT_ALL_AGENTS);
+        long count = getCount(desc, storage);
         return count;
     }
 
     @Override
     public List<AgentInformation> getAllAgentInformation() {
-        Cursor<AgentInformation> agentCursor = getCursorForAllAgentInformation();
-        if (agentCursor == null) {
+        Cursor<AgentInformation> agentCursor;
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(CATEGORY, QUERY_ALL_AGENTS);
+        PreparedStatement<AgentInformation> prepared = null;
+        try {
+            prepared = storage.prepareStatement(desc);
+            agentCursor =  prepared.executeQuery();
+        } catch (DescriptorParsingException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
+            return Collections.emptyList();
+        } catch (StatementExecutionException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
             return Collections.emptyList();
         }
         List<AgentInformation> results = new ArrayList<>();
@@ -107,24 +125,6 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
             results.add(agentInfo);
         }
         return results;
-    }
-    
-    private Cursor<AgentInformation> getCursorForAllAgentInformation() {
-        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(CATEGORY, QUERY_ALL_AGENTS);
-        PreparedStatement<AgentInformation> prepared = null;
-        try {
-            prepared = storage.prepareStatement(desc);
-            return prepared.executeQuery();
-        } catch (DescriptorParsingException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
-            return null;
-        } catch (StatementExecutionException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
-            return null;
-        }
-        
     }
 
     @Override

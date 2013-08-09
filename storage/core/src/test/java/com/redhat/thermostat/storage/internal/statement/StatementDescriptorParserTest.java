@@ -42,6 +42,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -50,15 +51,21 @@ import java.util.List;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.storage.core.AggregateQuery;
 import com.redhat.thermostat.storage.core.BackingStorage;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.AggregateQuery.AggregateFunction;
 import com.redhat.thermostat.storage.core.Query.SortDirection;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.internal.statement.BinaryExpressionNode;
 import com.redhat.thermostat.storage.internal.statement.LimitExpression;
 import com.redhat.thermostat.storage.internal.statement.NotBooleanExpressionNode;
@@ -93,6 +100,32 @@ public class StatementDescriptorParserTest {
     public void teardown() {
         storage = null;
         mockQuery = null;
+    }
+    
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Test
+    public void testParseAggregateCount() throws DescriptorParsingException {
+        Query<AggregateCount> query = mock(AggregateQuery.class);
+        ArgumentCaptor<Category> captor = ArgumentCaptor.forClass(Category.class);
+        when(storage.createAggregateQuery(eq(AggregateFunction.COUNT), captor.capture())).thenReturn(query);
+        // first adapt from the target category in order to be able to produce the
+        // right aggregate query with a different result type.
+        CategoryAdapter<AgentInformation, AggregateCount> adapter = new CategoryAdapter<>(AgentInfoDAO.CATEGORY);
+        Category<AggregateCount> aggregateCategory = adapter.getAdapted(AggregateCount.class);
+        String descrString = "QUERY-COUNT " + aggregateCategory.getName() + " WHERE 'a' = 'b'";
+        StatementDescriptor<AggregateCount> desc = new StatementDescriptor<>(aggregateCategory, descrString);
+        StatementDescriptorParser<AggregateCount> parser = new StatementDescriptorParser<>(storage, desc);
+        ParsedStatementImpl<AggregateCount> statement = (ParsedStatementImpl<AggregateCount>)parser.parse();
+        assertEquals(0, statement.getNumParams());
+        assertTrue(statement.getRawStatement() instanceof AggregateQuery);
+        Category<AggregateCount> capturedCategory = captor.getValue();
+        assertEquals(aggregateCategory, capturedCategory);
+        SuffixExpression expn = statement.getSuffixExpression();
+        assertNotNull(expn);
+        WhereExpression where = expn.getWhereExpn();
+        assertNotNull(where);
+        assertNull(expn.getSortExpn());
+        assertNull(expn.getLimitExpn());
     }
     
     @Test

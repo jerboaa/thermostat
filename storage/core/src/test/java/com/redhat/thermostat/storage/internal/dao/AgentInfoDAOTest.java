@@ -66,6 +66,7 @@ import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.storage.query.ExpressionFactory;
 
@@ -153,29 +154,26 @@ public class AgentInfoDAOTest {
         assertEquals(expected, result);
     }
     
-    /*
-     * getCount() with two AgentInformation records.
-     */
     @Test
     public void testGetCount()
             throws DescriptorParsingException, StatementExecutionException {
-        AgentInformation agent2 = new AgentInformation();
+        AggregateCount count = new AggregateCount();
+        count.setCount(2);
         
         @SuppressWarnings("unchecked")
-        Cursor<AgentInformation> agentCursor = (Cursor<AgentInformation>) mock(Cursor.class);
-        when(agentCursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
-        when(agentCursor.next()).thenReturn(agent1).thenReturn(agent2).thenReturn(null);
+        Cursor<AggregateCount> countCursor = (Cursor<AggregateCount>) mock(Cursor.class);
+        when(countCursor.next()).thenReturn(count);
 
         Storage storage = mock(Storage.class);
         @SuppressWarnings("unchecked")
-        PreparedStatement<AgentInformation> stmt = (PreparedStatement<AgentInformation>) mock(PreparedStatement.class);
-        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
-        when(stmt.executeQuery()).thenReturn(agentCursor);
+        PreparedStatement<AggregateCount> stmt = (PreparedStatement<AggregateCount>) mock(PreparedStatement.class);
+        @SuppressWarnings("unchecked")
+        StatementDescriptor<AggregateCount> desc = any(StatementDescriptor.class);
+        when(storage.prepareStatement(desc)).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(countCursor);
         AgentInfoDAOImpl dao = new AgentInfoDAOImpl(storage);
 
-        long count = dao.getCount();
-
-        assertEquals(2, count);
+        assertEquals(2, dao.getCount());
     }
     
     @SuppressWarnings("unchecked")

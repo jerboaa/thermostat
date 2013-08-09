@@ -62,7 +62,7 @@ public interface AgentInfoDAO extends Countable {
             STOP_TIME_KEY,
             ALIVE_KEY,
             CONFIG_LISTEN_ADDRESS);
-
+    
     /**
      * Get information about all known agents.
      *

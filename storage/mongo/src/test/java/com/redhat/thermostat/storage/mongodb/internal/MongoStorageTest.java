@@ -47,9 +47,9 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.times;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -57,6 +57,7 @@ import java.lang.reflect.Field;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 
 import org.junit.After;
 import org.junit.Before;
@@ -81,6 +82,7 @@ import com.mongodb.gridfs.GridFSInputFile;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Key;
@@ -88,7 +90,10 @@ import com.redhat.thermostat.storage.core.Persist;
 import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Update;
+import com.redhat.thermostat.storage.dao.HostInfoDAO;
+import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.BasePojo;
+import com.redhat.thermostat.storage.model.HostInfo;
 import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.storage.query.ExpressionFactory;
 
@@ -223,6 +228,18 @@ public class MongoStorageTest {
         testCollection = null;
         emptyTestCollection = null;
         cursor = null;
+    }
+    
+    @Test
+    public void testRegisterCategory() throws Exception {
+        DB db = PowerMockito.mock(DB.class);
+        CountDownLatch latch = new CountDownLatch(1);
+        MongoStorage storage = new MongoStorage(db, latch);
+        latch.countDown();
+        storage.registerCategory(HostInfoDAO.hostInfoCategory);
+        Category<AggregateCount> countCat = new CategoryAdapter<HostInfo, AggregateCount>(HostInfoDAO.hostInfoCategory).getAdapted(AggregateCount.class);
+        storage.registerCategory(countCat);
+        verify(db).collectionExists(eq(HostInfoDAO.hostInfoCategory.getName()));
     }
 
     @Test

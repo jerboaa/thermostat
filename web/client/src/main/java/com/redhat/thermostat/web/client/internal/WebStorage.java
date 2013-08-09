@@ -516,11 +516,13 @@ public class WebStorage implements Storage, SecureStorage {
     public void registerCategory(Category<?> category) throws StorageException {
         NameValuePair nameParam = new BasicNameValuePair("name",
                 category.getName());
+        NameValuePair dataClassParam = new BasicNameValuePair("data-class",
+                category.getDataClass().getName());
         
         NameValuePair categoryParam = new BasicNameValuePair("category",
                 gson.toJson(category));
         List<NameValuePair> formparams = Arrays
-                .asList(nameParam, categoryParam);
+                .asList(nameParam, categoryParam, dataClassParam);
         try (CloseableHttpEntity entity = post(endpoint + "/register-category",
                 formparams)) {
             Reader reader = getContentAsReader(entity);

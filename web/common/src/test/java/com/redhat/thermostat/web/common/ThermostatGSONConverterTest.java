@@ -44,6 +44,7 @@ import org.junit.Test;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.Pojo;
 
 public class ThermostatGSONConverterTest {
@@ -88,5 +89,16 @@ public class ThermostatGSONConverterTest {
         
         assertEquals("testing", actual[0].getAgentId());
         assertEquals(true, actual[0].isAlive());
+    }
+    
+    @Test
+    public void canSerializeDeserializeAggregateCount() {
+        long expectedCount = 3333000333L;
+        AggregateCount count = new AggregateCount();
+        count.setCount(expectedCount);
+        String jsonStr = gson.toJson(count);
+        // now do the reverse
+        AggregateCount c2 = gson.fromJson(jsonStr, AggregateCount.class);
+        assertEquals(expectedCount, c2.getCount());
     }
 }

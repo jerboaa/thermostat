@@ -44,6 +44,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -57,11 +59,12 @@ import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.DAOException;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.storage.query.ExpressionFactory;
 
-public class VmInfoDAOImpl implements VmInfoDAO {
+public class VmInfoDAOImpl extends BaseCountable implements VmInfoDAO {
     
     private final Logger logger = LoggingUtils.getLogger(VmInfoDAOImpl.class);
     static final String QUERY_VM_INFO = "QUERY " 
@@ -72,13 +75,19 @@ public class VmInfoDAOImpl implements VmInfoDAO {
             + vmInfoCategory.getName() + " WHERE '" 
             + Key.AGENT_ID.getName() + "' = ?s";
     static final String QUERY_ALL_VMS = "QUERY " + vmInfoCategory.getName();
+    static final String AGGREGATE_COUNT_ALL_VMS = "QUERY-COUNT " + vmInfoCategory.getName();
     
     private final Storage storage;
     private final ExpressionFactory factory;
+    private final Category<AggregateCount> aggregateCategory;
 
     public VmInfoDAOImpl(Storage storage) {
         this.storage = storage;
+        // Adapt category to the aggregate form
+        CategoryAdapter<VmInfo, AggregateCount> adapter = new CategoryAdapter<>(vmInfoCategory);
+        this.aggregateCategory = adapter.getAdapted(AggregateCount.class);
         storage.registerCategory(vmInfoCategory);
+        storage.registerCategory(aggregateCategory);
         factory = new ExpressionFactory();
     }
 
@@ -156,26 +165,9 @@ public class VmInfoDAOImpl implements VmInfoDAO {
 
     @Override
     public long getCount() {
-        long count = 0;
-        StatementDescriptor<VmInfo> desc = new StatementDescriptor<>(vmInfoCategory, QUERY_ALL_VMS);
-        PreparedStatement<VmInfo> stmt;
-        Cursor<VmInfo> cursor;
-        try {
-            stmt = storage.prepareStatement(desc);
-            cursor = stmt.executeQuery();
-        } catch (DescriptorParsingException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
-            return count;
-        } catch (StatementExecutionException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
-            return count;
-        }
-        while (cursor.hasNext()) {
-            count++;
-            cursor.next();
-        }
+        StatementDescriptor<AggregateCount> desc = new StatementDescriptor<>(
+                aggregateCategory, AGGREGATE_COUNT_ALL_VMS);
+        long count = getCount(desc, storage);
         return count;
     }
 

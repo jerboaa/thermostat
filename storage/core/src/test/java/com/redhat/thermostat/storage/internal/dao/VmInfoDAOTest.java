@@ -67,6 +67,7 @@ import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.DAOException;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.storage.query.ExpressionFactory;
 
@@ -287,9 +288,24 @@ public class VmInfoDAOTest {
     }
 
     @Test
-    public void testGetCount() throws Exception {
-        Storage storage = setupStorageForMultiVM();
-        VmInfoDAO dao = new VmInfoDAOImpl(storage);
+    public void testGetCount()
+            throws DescriptorParsingException, StatementExecutionException {
+        AggregateCount count = new AggregateCount();
+        count.setCount(2);
+        
+        @SuppressWarnings("unchecked")
+        Cursor<AggregateCount> countCursor = (Cursor<AggregateCount>) mock(Cursor.class);
+        when(countCursor.next()).thenReturn(count);
+
+        Storage storage = mock(Storage.class);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<AggregateCount> stmt = (PreparedStatement<AggregateCount>) mock(PreparedStatement.class);
+        @SuppressWarnings("unchecked")
+        StatementDescriptor<AggregateCount> desc = any(StatementDescriptor.class);
+        when(storage.prepareStatement(desc)).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(countCursor);
+        VmInfoDAOImpl dao = new VmInfoDAOImpl(storage);
+
         assertEquals(2, dao.getCount());
     }
 

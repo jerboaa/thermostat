@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import com.redhat.thermostat.storage.core.AggregateQuery.AggregateFunction;
 import com.redhat.thermostat.storage.core.BackingStorage;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
@@ -61,7 +62,7 @@ import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
  * 
  * <pre>
  * statementDesc := statementType category suffix
- * statementType := 'QUERY'
+ * statementType := 'QUERY' | 'QUERY-COUNT'
  * category      := literal
  * suffix        := 'WHERE' where |
  *                  'SORT' sortCond |
@@ -105,7 +106,7 @@ class StatementDescriptorParser<T extends Pojo> {
 
     private static final String TOKEN_DELIMS = " \t\r\n\f";
     private static final String[] KNOWN_STATEMENT_TYPES = new String[] {
-        "QUERY",
+        "QUERY", "QUERY-COUNT"
     };
     private static final String SORTLIST_SEP = ",";
     private static final String KEYWORD_WHERE = "WHERE";
@@ -579,10 +580,15 @@ class StatementDescriptorParser<T extends Pojo> {
 
     private void createStatement() {
         if (tokens[0].equals(KNOWN_STATEMENT_TYPES[0])) {
-            // query case
+            // regular query case
             Query<T> query = storage.createQuery(desc.getCategory());
             this.parsedStatement = new ParsedStatementImpl<>(query);
-        } else {
+        } else if (tokens[0].equals(KNOWN_STATEMENT_TYPES[1])) {
+            // create aggregate count query
+            Query<T> query = storage.createAggregateQuery(AggregateFunction.COUNT, desc.getCategory());
+            this.parsedStatement = new ParsedStatementImpl<>(query);
+        }
+        else {
             throw new IllegalStateException("Don't know how to create statement type '" + tokens[0] + "'");
         }
     }
@@ -603,8 +609,10 @@ class StatementDescriptorParser<T extends Pojo> {
     }
 
     private void matchStatementType() throws DescriptorParsingException {
-        // matches 'QUERY' only at this point
+        // matches 'QUERY' and 'QUERY-COUNT' only at this point
         if (tokens[currTokenIndex].equals(KNOWN_STATEMENT_TYPES[0])) {
+            currTokenIndex++;
+        } else if (tokens[currTokenIndex].equals(KNOWN_STATEMENT_TYPES[1])) {
             currTokenIndex++;
         } else {
             throw new DescriptorParsingException("Unknown statement type: '" + tokens[currTokenIndex] + "'");

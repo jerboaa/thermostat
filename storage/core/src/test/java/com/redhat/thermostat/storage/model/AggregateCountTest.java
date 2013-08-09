@@ -34,47 +34,35 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.core;
+package com.redhat.thermostat.storage.model;
 
-import java.util.concurrent.ExecutorService;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-import com.redhat.thermostat.storage.core.AggregateQuery.AggregateFunction;
-import com.redhat.thermostat.storage.model.Pojo;
+import java.util.NoSuchElementException;
 
-public class QueuedBackingStorage extends QueuedStorage implements
-        BackingStorage {
-    
-    public QueuedBackingStorage(BackingStorage delegate) {
-        super(delegate);
+import org.junit.Test;
+
+import com.redhat.thermostat.storage.core.Cursor;
+
+public class AggregateCountTest {
+
+    @Test
+    public void testCursor() {
+        AggregateCount c = new AggregateCount();
+        c.setCount(10);
+        Cursor<AggregateCount> cursor = c.getCursor();
+        assertTrue(cursor.hasNext());
+        AggregateCount actual = cursor.next();
+        assertEquals(10, actual.getCount());
+        assertFalse(cursor.hasNext());
+        try {
+            cursor.next();
+            fail("Should have thrown NoSuchElementException!");
+        } catch (NoSuchElementException e) {
+            // pass
+        }
     }
-
-    QueuedBackingStorage(BackingStorage delegate, ExecutorService executor,
-            ExecutorService fileExecutor) {
-        super(delegate, executor, fileExecutor);
-    }
-
-    @Override
-    public <T extends Pojo> Query<T> createQuery(Category<T> category) {
-        return ((BackingStorage) delegate).createQuery(category);
-    }
-    
-    @Override
-    public <T extends Pojo> PreparedStatement<T> prepareStatement(
-            StatementDescriptor<T> desc) throws DescriptorParsingException {
-        // FIXME: Use some kind of cache in order to avoid parsing of
-        // descriptors each time this is called. At least if the descriptor
-        // class is the same we should be able to do something here.
-        
-        // Don't just defer to the delegate, since we want statements
-        // prepared by this method to create queries using the
-        // createQuery method in this class.
-        return PreparedStatementFactory.getInstance(this, desc);
-    }
-
-    @Override
-    public <T extends Pojo> Query<T> createAggregateQuery(
-            AggregateFunction function, Category<T> category) {
-        return ((BackingStorage) delegate).createAggregateQuery(function, category);
-    }
-
 }

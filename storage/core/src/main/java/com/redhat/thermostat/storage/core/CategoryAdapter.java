@@ -36,45 +36,42 @@
 
 package com.redhat.thermostat.storage.core;
 
-import java.util.concurrent.ExecutorService;
+import java.util.Objects;
 
-import com.redhat.thermostat.storage.core.AggregateQuery.AggregateFunction;
+import com.redhat.thermostat.storage.internal.AdaptedCategory;
 import com.redhat.thermostat.storage.model.Pojo;
 
-public class QueuedBackingStorage extends QueuedStorage implements
-        BackingStorage {
+/**
+ * 
+ * Adapts a given category to an aggregate equivalent.
+ *
+ * @param <T> The source data type.
+ * @param <S> The target data type after adaptation.
+ */
+public class CategoryAdapter<T extends Pojo, S extends Pojo> {
+
+    private final Category<T> sourceCategory;
     
-    public QueuedBackingStorage(BackingStorage delegate) {
-        super(delegate);
-    }
-
-    QueuedBackingStorage(BackingStorage delegate, ExecutorService executor,
-            ExecutorService fileExecutor) {
-        super(delegate, executor, fileExecutor);
-    }
-
-    @Override
-    public <T extends Pojo> Query<T> createQuery(Category<T> category) {
-        return ((BackingStorage) delegate).createQuery(category);
+    /**
+     * Constructor.
+     * 
+     * @param sourceCategory
+     *            A known source category.
+     * @throws NullPointerException
+     *             if sourceCategory was null.
+     * @throws IllegalArgumentException
+     *             if sourceCategory is not known.
+     */
+    public CategoryAdapter(Category<T> sourceCategory) {
+        Objects.requireNonNull(sourceCategory);
+        if (!Categories.contains(sourceCategory.getName())) {
+            throw new IllegalStateException("Only registered categories can be adapted!");
+        }
+        this.sourceCategory = sourceCategory;
     }
     
-    @Override
-    public <T extends Pojo> PreparedStatement<T> prepareStatement(
-            StatementDescriptor<T> desc) throws DescriptorParsingException {
-        // FIXME: Use some kind of cache in order to avoid parsing of
-        // descriptors each time this is called. At least if the descriptor
-        // class is the same we should be able to do something here.
-        
-        // Don't just defer to the delegate, since we want statements
-        // prepared by this method to create queries using the
-        // createQuery method in this class.
-        return PreparedStatementFactory.getInstance(this, desc);
+    public Category<S> getAdapted(Class<S> targetType) {
+        AdaptedCategory<S, T> adapted = new AdaptedCategory<>(sourceCategory, targetType);
+        return adapted;
     }
-
-    @Override
-    public <T extends Pojo> Query<T> createAggregateQuery(
-            AggregateFunction function, Category<T> category) {
-        return ((BackingStorage) delegate).createAggregateQuery(function, category);
-    }
-
 }

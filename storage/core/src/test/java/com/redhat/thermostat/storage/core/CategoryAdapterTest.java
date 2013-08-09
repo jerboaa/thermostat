@@ -36,45 +36,45 @@
 
 package com.redhat.thermostat.storage.core;
 
-import java.util.concurrent.ExecutorService;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import com.redhat.thermostat.storage.core.AggregateQuery.AggregateFunction;
-import com.redhat.thermostat.storage.model.Pojo;
+import org.junit.Test;
 
-public class QueuedBackingStorage extends QueuedStorage implements
-        BackingStorage {
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.model.AggregateCount;
+
+public class CategoryAdapterTest {
+
+    @Test
+    public void canAdaptToAggregateResultDataClass() {
+        CategoryAdapter<AgentInformation, AggregateCount> adapter = new CategoryAdapter<>(AgentInfoDAO.CATEGORY);
+        Category<AggregateCount> aggregateCountCat = adapter.getAdapted(AggregateCount.class);
+        assertEquals(AggregateCount.class, aggregateCountCat.getDataClass());
+        assertEquals(AgentInfoDAO.CATEGORY.getName(), aggregateCountCat.getName());
+        assertFalse(AgentInfoDAO.CATEGORY.equals(aggregateCountCat));
+    }
     
-    public QueuedBackingStorage(BackingStorage delegate) {
-        super(delegate);
-    }
-
-    QueuedBackingStorage(BackingStorage delegate, ExecutorService executor,
-            ExecutorService fileExecutor) {
-        super(delegate, executor, fileExecutor);
-    }
-
-    @Override
-    public <T extends Pojo> Query<T> createQuery(Category<T> category) {
-        return ((BackingStorage) delegate).createQuery(category);
+    @Test
+    public void canCreateAdapterFromNull() {
+        try {
+            new CategoryAdapter<>(null);
+        } catch (NullPointerException e) {
+            // pass
+        }
     }
     
-    @Override
-    public <T extends Pojo> PreparedStatement<T> prepareStatement(
-            StatementDescriptor<T> desc) throws DescriptorParsingException {
-        // FIXME: Use some kind of cache in order to avoid parsing of
-        // descriptors each time this is called. At least if the descriptor
-        // class is the same we should be able to do something here.
-        
-        // Don't just defer to the delegate, since we want statements
-        // prepared by this method to create queries using the
-        // createQuery method in this class.
-        return PreparedStatementFactory.getInstance(this, desc);
+    @Test
+    public void cannotAdaptUnknown() {
+        Category<?> unknown = mock(Category.class);
+        when(unknown.getName()).thenReturn("foo");
+        try {
+            new CategoryAdapter<>(unknown);
+        } catch (IllegalStateException e) {
+            // pass
+        }
     }
-
-    @Override
-    public <T extends Pojo> Query<T> createAggregateQuery(
-            AggregateFunction function, Category<T> category) {
-        return ((BackingStorage) delegate).createAggregateQuery(function, category);
-    }
-
 }

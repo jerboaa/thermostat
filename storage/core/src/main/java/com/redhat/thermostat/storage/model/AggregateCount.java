@@ -34,47 +34,76 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.core;
+package com.redhat.thermostat.storage.model;
 
-import java.util.concurrent.ExecutorService;
+import java.util.NoSuchElementException;
+import java.util.Objects;
 
-import com.redhat.thermostat.storage.core.AggregateQuery.AggregateFunction;
-import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.Entity;
+import com.redhat.thermostat.storage.core.Persist;
 
-public class QueuedBackingStorage extends QueuedStorage implements
-        BackingStorage {
+/**
+ * Model class for aggregate counts.
+ *
+ */
+@Entity
+public class AggregateCount implements AggregateResult {
+
+    private long count;
     
-    public QueuedBackingStorage(BackingStorage delegate) {
-        super(delegate);
+    @Persist
+    public long getCount() {
+        return count;
     }
-
-    QueuedBackingStorage(BackingStorage delegate, ExecutorService executor,
-            ExecutorService fileExecutor) {
-        super(delegate, executor, fileExecutor);
-    }
-
-    @Override
-    public <T extends Pojo> Query<T> createQuery(Category<T> category) {
-        return ((BackingStorage) delegate).createQuery(category);
+    
+    @Persist
+    public void setCount(long count) {
+        this.count = count;
     }
     
     @Override
-    public <T extends Pojo> PreparedStatement<T> prepareStatement(
-            StatementDescriptor<T> desc) throws DescriptorParsingException {
-        // FIXME: Use some kind of cache in order to avoid parsing of
-        // descriptors each time this is called. At least if the descriptor
-        // class is the same we should be able to do something here.
+    public boolean equals(Object other) {
+        if (!(other instanceof AggregateCount)) {
+            return false;
+        }
+        AggregateCount o = (AggregateCount)other;
+        return this.getCount() == o.getCount();
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hash(getCount());
+    }
+    
+    @SuppressWarnings("unchecked")
+    public <T extends Pojo> Cursor<T> getCursor() {
+        return (Cursor<T>) new AggregateCursor<>(this);
+    }
+    
+    private static class AggregateCursor<T extends Pojo> implements Cursor<T> {
+
+        private boolean available = true;
+        private final T count;
         
-        // Don't just defer to the delegate, since we want statements
-        // prepared by this method to create queries using the
-        // createQuery method in this class.
-        return PreparedStatementFactory.getInstance(this, desc);
-    }
+        private AggregateCursor(T count) {
+            this.count = count;
+        }
+        
+        @Override
+        public boolean hasNext() {
+            return available; 
+        }
 
-    @Override
-    public <T extends Pojo> Query<T> createAggregateQuery(
-            AggregateFunction function, Category<T> category) {
-        return ((BackingStorage) delegate).createAggregateQuery(function, category);
+        @Override
+        public T next() {
+            if (available) {
+                available = false;
+                return count;
+            } else {
+                throw new NoSuchElementException();
+            }
+        }
+        
     }
-
 }

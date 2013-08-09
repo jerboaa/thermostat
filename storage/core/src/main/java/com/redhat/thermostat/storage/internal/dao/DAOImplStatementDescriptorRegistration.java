@@ -58,13 +58,16 @@ public class DAOImplStatementDescriptorRegistration implements
         daoDescs.add(AgentInfoDAOImpl.QUERY_AGENT_INFO);
         daoDescs.add(AgentInfoDAOImpl.QUERY_ALIVE_AGENTS);
         daoDescs.add(AgentInfoDAOImpl.QUERY_ALL_AGENTS);
+        daoDescs.add(AgentInfoDAOImpl.AGGREGATE_COUNT_ALL_AGENTS);
         daoDescs.add(BackendInfoDAOImpl.QUERY_BACKEND_INFO);
         daoDescs.add(HostInfoDAOImpl.QUERY_HOST_INFO);
         daoDescs.add(HostInfoDAOImpl.QUERY_ALL_HOSTS);
+        daoDescs.add(HostInfoDAOImpl.AGGREGATE_COUNT_ALL_HOSTS);
         daoDescs.add(NetworkInterfaceInfoDAOImpl.QUERY_NETWORK_INFO);
         daoDescs.add(VmInfoDAOImpl.QUERY_ALL_VMS_FOR_HOST);
         daoDescs.add(VmInfoDAOImpl.QUERY_ALL_VMS);
         daoDescs.add(VmInfoDAOImpl.QUERY_VM_INFO);
+        daoDescs.add(VmInfoDAOImpl.AGGREGATE_COUNT_ALL_VMS);
         return daoDescs;
     }
 
@@ -90,6 +93,9 @@ public class DAOImplStatementDescriptorRegistration implements
             DescriptorMetadata metadata = new DescriptorMetadata(agentId);
             return metadata;
         } else if (descriptor.equals(HostInfoDAOImpl.QUERY_ALL_HOSTS)) {
+            DescriptorMetadata metadata = new DescriptorMetadata();
+            return metadata;
+        } else if (descriptor.equals(HostInfoDAOImpl.AGGREGATE_COUNT_ALL_HOSTS)) {
             DescriptorMetadata metadata = new DescriptorMetadata();
             return metadata;
         } else if (descriptor.equals(NetworkInterfaceInfoDAOImpl.QUERY_NETWORK_INFO)) {

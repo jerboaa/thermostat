@@ -55,6 +55,8 @@ import com.mongodb.gridfs.GridFSInputFile;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.AbstractQuery.Sort;
 import com.redhat.thermostat.storage.core.Add;
+import com.redhat.thermostat.storage.core.AggregateQuery;
+import com.redhat.thermostat.storage.core.AggregateQuery.AggregateFunction;
 import com.redhat.thermostat.storage.core.BackingStorage;
 import com.redhat.thermostat.storage.core.BasePut;
 import com.redhat.thermostat.storage.core.Category;
@@ -71,6 +73,8 @@ import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Update;
+import com.redhat.thermostat.storage.model.AggregateCount;
+import com.redhat.thermostat.storage.model.AggregateResult;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
 
@@ -80,6 +84,21 @@ import com.redhat.thermostat.storage.query.Expression;
  * In this implementation, each CATEGORY is given a distinct collection.
  */
 public class MongoStorage implements BackingStorage {
+    
+    private class MongoCountQuery<T extends Pojo> extends AggregateQuery<T> {
+        
+        private final Category<T> category;
+        
+        private MongoCountQuery(MongoQuery<T> queryToAggregate, Category<T> category) {
+            super(AggregateFunction.COUNT, queryToAggregate);
+            this.category = category;
+        }
+
+        @Override
+        public Cursor<T> execute() {
+            return executeGetCount(category, (MongoQuery<T>)this.queryToAggregate);
+        }
+    }
 
     private class MongoAdd extends BasePut implements Add {
 
@@ -140,6 +159,12 @@ public class MongoStorage implements BackingStorage {
     private CountDownLatch connectedLatch;
     private UUID agentId;
 
+    // For testing only
+    MongoStorage(DB db, CountDownLatch latch) {
+        this.db = db;
+        this.connectedLatch = latch;
+    }
+    
     public MongoStorage(StartupConfiguration conf) {
         conn = new MongoConnection(conf);
         connectedLatch = new CountDownLatch(1);
@@ -158,6 +183,18 @@ public class MongoStorage implements BackingStorage {
                 }
             }
         });
+    }
+
+    public <T extends Pojo> Cursor<T> executeGetCount(Category<T> category, MongoQuery<T> queryToAggregate) {
+        DBCollection coll = getCachedCollection(category);
+        long count = 0L;
+        DBObject query = queryToAggregate.getGeneratedQuery();
+        if (coll != null) {
+            count = coll.getCount(query);
+        }
+        AggregateCount result = new AggregateCount();
+        result.setCount(count);
+        return result.getCursor();
     }
 
     @Override
@@ -260,6 +297,11 @@ public class MongoStorage implements BackingStorage {
     
     @Override
     public void registerCategory(Category<?> category) {
+        Class<?> dataClass = category.getDataClass();
+        if (AggregateResult.class.isAssignableFrom(dataClass)) {
+            // adapted aggregate category, no need to actually register
+            return;
+        }
         String name = category.getName();
         if (collectionCache.containsKey(name)) {
             throw new IllegalStateException("Category may only be associated with one backend.");
@@ -364,6 +406,19 @@ public class MongoStorage implements BackingStorage {
         // descriptors each time this is called. At least if the descriptor
         // class is the same we should be able to do something here.
         return PreparedStatementFactory.getInstance(this, statementDesc);
+    }
+
+    @Override
+    public <T extends Pojo> Query<T> createAggregateQuery(
+            AggregateFunction function, Category<T> category) {
+        switch (function) {
+        case COUNT:
+            MongoQuery<T> query = (MongoQuery<T>)createQuery(category);
+            return new MongoCountQuery<>(query, category);
+        default:
+            throw new IllegalStateException("function not supported: "
+                    + function);
+        }
     }
 
 }

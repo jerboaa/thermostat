@@ -44,6 +44,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -56,24 +58,34 @@ import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.HostInfo;
 
-public class HostInfoDAOImpl implements HostInfoDAO {
+public class HostInfoDAOImpl extends BaseCountable implements HostInfoDAO {
     
     private static final Logger logger = LoggingUtils.getLogger(HostInfoDAOImpl.class);
     static final String QUERY_HOST_INFO = "QUERY "
             + hostInfoCategory.getName() + " WHERE '" 
             + Key.AGENT_ID.getName() + "' = ?s LIMIT 1";
     static final String QUERY_ALL_HOSTS = "QUERY " + hostInfoCategory.getName();
+    // We can use hostInfoCategory.getName() here since this query
+    // only changes the data class. When executed we use the adapted
+    // aggregate category.
+    static final String AGGREGATE_COUNT_ALL_HOSTS = "QUERY-COUNT " + hostInfoCategory.getName();
 
     private final Storage storage;
     private final AgentInfoDAO agentInfoDao;
-
+    private final Category<AggregateCount> aggregateCategory;
+    
 
     public HostInfoDAOImpl(Storage storage, AgentInfoDAO agentInfo) {
         this.storage = storage;
         this.agentInfoDao = agentInfo;
+        // Adapt category to the aggregate form
+        CategoryAdapter<HostInfo, AggregateCount> adapter = new CategoryAdapter<>(hostInfoCategory);
+        this.aggregateCategory = adapter.getAdapted(AggregateCount.class);
         storage.registerCategory(hostInfoCategory);
+        storage.registerCategory(aggregateCategory);
     }
 
     @Override
@@ -168,15 +180,9 @@ public class HostInfoDAOImpl implements HostInfoDAO {
 
     @Override
     public long getCount() {
-        long count = 0;
-        Cursor<HostInfo> hostInfoCursor = getAllHostInfoCursor();
-        if (hostInfoCursor == null) {
-            return count;
-        }
-        while (hostInfoCursor.hasNext()) {
-            count++;
-            hostInfoCursor.next();
-        }
+        StatementDescriptor<AggregateCount> desc = new StatementDescriptor<>(
+                aggregateCategory, AGGREGATE_COUNT_ALL_HOSTS);
+        long count = getCount(desc, storage);
         return count;
     }
     

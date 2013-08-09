@@ -36,45 +36,56 @@
 
 package com.redhat.thermostat.storage.core;
 
-import java.util.concurrent.ExecutorService;
-
-import com.redhat.thermostat.storage.core.AggregateQuery.AggregateFunction;
 import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.storage.query.Expression;
 
-public class QueuedBackingStorage extends QueuedStorage implements
-        BackingStorage {
+/**
+ * Common super class for aggregate queries.
+ */
+public abstract class AggregateQuery<T extends Pojo> implements Query<T> {
     
-    public QueuedBackingStorage(BackingStorage delegate) {
-        super(delegate);
-    }
-
-    QueuedBackingStorage(BackingStorage delegate, ExecutorService executor,
-            ExecutorService fileExecutor) {
-        super(delegate, executor, fileExecutor);
-    }
-
-    @Override
-    public <T extends Pojo> Query<T> createQuery(Category<T> category) {
-        return ((BackingStorage) delegate).createQuery(category);
+    public enum AggregateFunction {
+        /**
+         * Aggregate records by counting them.
+         */
+        COUNT
     }
     
+    protected final Query<T> queryToAggregate;
+    private final AggregateFunction function;
+
+    public AggregateQuery(AggregateFunction function, Query<T> queryToAggregate) {
+        this.function = function;
+        this.queryToAggregate = queryToAggregate;
+    }
+    
     @Override
-    public <T extends Pojo> PreparedStatement<T> prepareStatement(
-            StatementDescriptor<T> desc) throws DescriptorParsingException {
-        // FIXME: Use some kind of cache in order to avoid parsing of
-        // descriptors each time this is called. At least if the descriptor
-        // class is the same we should be able to do something here.
-        
-        // Don't just defer to the delegate, since we want statements
-        // prepared by this method to create queries using the
-        // createQuery method in this class.
-        return PreparedStatementFactory.getInstance(this, desc);
+    public void where(Expression expr) {
+        queryToAggregate.where(expr);
     }
 
     @Override
-    public <T extends Pojo> Query<T> createAggregateQuery(
-            AggregateFunction function, Category<T> category) {
-        return ((BackingStorage) delegate).createAggregateQuery(function, category);
+    public void sort(Key<?> key,
+            SortDirection direction) {
+        queryToAggregate.sort(key, direction);
+    }
+
+    @Override
+    public void limit(int n) {
+        queryToAggregate.limit(n);
+    }
+
+    @Override
+    public Expression getWhereExpression() {
+        return queryToAggregate.getWhereExpression();
+    }
+    
+    /**
+     * 
+     * @return The function by which to aggregate by.
+     */
+    public AggregateFunction getAggregateFunction() {
+        return this.function;
     }
 
 }

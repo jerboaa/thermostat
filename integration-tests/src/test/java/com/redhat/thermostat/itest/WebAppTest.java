@@ -75,6 +75,8 @@ import com.redhat.thermostat.host.cpu.common.model.CpuStat;
 import com.redhat.thermostat.storage.config.ConnectionConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Add;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.core.Cursor;
@@ -85,6 +87,9 @@ import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
+import com.redhat.thermostat.storage.dao.HostInfoDAO;
+import com.redhat.thermostat.storage.model.AggregateCount;
+import com.redhat.thermostat.storage.model.HostInfo;
 import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
 import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
@@ -389,8 +394,37 @@ public class WebAppTest extends IntegrationTest {
 
         storage.getConnection().disconnect();
     }
+    
+    private static void addHostInfoData(int numberOfItems) throws IOException {
+        String[] roleNames = new String[] {
+                Roles.REGISTER_CATEGORY,
+                Roles.ACCESS_REALM,
+                Roles.LOGIN,
+                Roles.APPEND
+        };
+        Storage storage = getAndConnectStorage(PREP_USER, PREP_PASSWORD, roleNames);
+        storage.registerCategory(HostInfoDAO.hostInfoCategory);
+
+        for (int i = 0; i < numberOfItems; i++) {
+            HostInfo hostInfo = new HostInfo("foo " + i, "linux " + i, "kernel", "t8", i, i * 1000);
+            hostInfo.setAgentId("test-host-agent-id");
+            Add add = storage.createAdd(HostInfoDAO.hostInfoCategory);
+            add.setPojo(hostInfo);
+            add.apply();
+        }
+
+        storage.getConnection().disconnect();
+    }
 
     private static void deleteCpuData() throws IOException {
+        doDeleteData(CpuStatDAO.cpuStatCategory, "test-agent-id");
+    }
+    
+    private static void deleteHostInfoData() throws IOException {
+        doDeleteData(HostInfoDAO.hostInfoCategory, "test-host-agent-id");
+    }
+    
+    private static void doDeleteData(Category<?> category, String agentId) throws IOException {
         String[] roleNames = new String[] {
                 Roles.REGISTER_CATEGORY,
                 Roles.ACCESS_REALM,
@@ -398,10 +432,8 @@ public class WebAppTest extends IntegrationTest {
                 Roles.PURGE
         };
         Storage storage = getAndConnectStorage(PREP_USER, PREP_PASSWORD, roleNames);
-        storage.registerCategory(CpuStatDAO.cpuStatCategory);
-
-        storage.purge("test-agent-id");
-
+        storage.registerCategory(category);
+        storage.purge(agentId);
         storage.getConnection().disconnect();
     }
 
@@ -485,6 +517,44 @@ public class WebAppTest extends IntegrationTest {
         executeAndVerifyQuery(query, Arrays.asList(0l, 1l, 2l, 3l));
 
         webStorage.getConnection().disconnect();
+    }
+    
+    @Test
+    public void authorizedAggregateCount() throws Exception {
+        try {
+            int count = 2;
+            // registers host info category
+            addHostInfoData(count);
+            
+            String[] roleNames = new String[] {
+                    Roles.REGISTER_CATEGORY,
+                    Roles.READ,
+                    Roles.LOGIN,
+                    Roles.ACCESS_REALM,
+                    Roles.PREPARE_STATEMENT,
+                    Roles.GRANT_READ_ALL // don't want to test filtered results
+            };
+            Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
+            Category<AggregateCount> adapted = new CategoryAdapter<HostInfo, AggregateCount>(HostInfoDAO.hostInfoCategory).getAdapted(AggregateCount.class);
+            // register adapted category.
+            webStorage.registerCategory(adapted);
+            
+            // storage-core registers this descriptor. no need to do it in this
+            // test.
+            String strDesc = "QUERY-COUNT host-info";
+            StatementDescriptor<AggregateCount> queryDesc = new StatementDescriptor<>(adapted, strDesc);
+            PreparedStatement<AggregateCount> query = webStorage.prepareStatement(queryDesc);
+    
+            Cursor<AggregateCount> cursor = query.executeQuery();
+            assertTrue(cursor.hasNext());
+            AggregateCount c = cursor.next();
+            assertFalse(cursor.hasNext());
+            assertEquals(count, c.getCount());
+    
+            webStorage.getConnection().disconnect();
+        } finally {
+            deleteHostInfoData();
+        }
     }
     
     @Test

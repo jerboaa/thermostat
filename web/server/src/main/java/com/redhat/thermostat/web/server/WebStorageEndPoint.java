@@ -47,6 +47,7 @@ import java.lang.reflect.Method;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -74,7 +75,9 @@ import com.google.gson.JsonParser;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.Configuration;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
+import com.redhat.thermostat.storage.core.Categories;
 import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.Connection;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
@@ -92,6 +95,7 @@ import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorMetadataFactory;
+import com.redhat.thermostat.storage.model.AggregateResult;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.BinaryLogicalExpression;
 import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
@@ -122,6 +126,7 @@ public class WebStorageEndPoint extends HttpServlet {
     private static final String TOKEN_MANAGER_TIMEOUT_PARAM = "token-manager-timeout";
     private static final String TOKEN_MANAGER_KEY = "token-manager";
     private static final String JETTY_JAAS_USER_PRINCIPAL_CLASS_NAME = "org.eclipse.jetty.plus.jaas.JAASUserPrincipal";
+    private static final String CATEGORY_KEY_FORMAT = "%s|%s";
 
     // our strings can contain non-ASCII characters. Use UTF-8
     // see also PR 1344
@@ -436,6 +441,7 @@ public class WebStorageEndPoint extends HttpServlet {
         
     }
 
+    @SuppressWarnings("unchecked") // need to adapt categories
     @WebStoragePathHandler( path = "register-category" )
     private synchronized void registerCategory(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         if (! isAuthorized(req, resp, Roles.REGISTER_CATEGORY)) {
@@ -443,17 +449,45 @@ public class WebStorageEndPoint extends HttpServlet {
         }
         
         String categoryName = req.getParameter("name");
+        String dataClassName = req.getParameter("data-class");
+        // We need to index into the category map using name + data class since
+        // we have a different category for aggregate queries. For them the
+        // category name will be the same, but the data class will be different.
+        String categoryKey = String.format(CATEGORY_KEY_FORMAT, categoryName, dataClassName);
         String categoryParam = req.getParameter("category");
         int id;
-        if (categoryIds.containsKey(categoryName)) {
-            id = categoryIds.get(categoryName);
+        if (categoryIds.containsKey(categoryKey)) {
+            id = categoryIds.get(categoryKey);
         } else {
-            // The following has the side effect of registering the newly deserialized Category in the Categories class.
-            Category<?> category = gson.fromJson(categoryParam, Category.class);
-            storage.registerCategory(category);
-
+            Class<?> dataClass = getDataClassFromName(dataClassName);
+            Category<?> category = null;
+            if ((AggregateResult.class.isAssignableFrom(dataClass))) {
+                // Aggregate category case
+                Category<?> original = Categories.getByName(categoryName);
+                if (original == null) {
+                    // DAOs register categories when they are constructed. If we
+                    // end up triggering this we are in deep water. An aggregate
+                    // query was attempted before the underlying category is
+                    // registered at all? Not good!
+                    throw new IllegalStateException("Original category of aggregate not registered!");
+                }
+                // Adapt the original category to the one we want
+                @SuppressWarnings({ "rawtypes" })
+                CategoryAdapter adapter = new CategoryAdapter(original);
+                category = adapter.getAdapted(dataClass);
+                logger.log(Level.FINEST, "(id: " + currentCategoryId + ") not registering aggregate category " + category );
+            } else {
+                // Regular, non-aggregate category. Those categories we actually
+                // need to register with backing storage.
+                // 
+                // The following has the side effect of registering the newly
+                // deserialized Category in the Categories class.
+                category = gson.fromJson(categoryParam, Category.class);
+                storage.registerCategory(category);
+                logger.log(Level.FINEST, "(id: " + currentCategoryId + ") registered non-aggreate category: " + category);
+            }
             id = currentCategoryId;
-            categoryIds.put(categoryName, id);
+            categoryIds.put(categoryKey, id);
             categories.put(id, category);
             currentCategoryId++;
         }
@@ -462,6 +496,15 @@ public class WebStorageEndPoint extends HttpServlet {
         Writer writer = resp.getWriter();
         gson.toJson(id, writer);
         writer.flush();
+    }
+
+    private Class<?> getDataClassFromName(String dataClassName) {
+        try {
+            Class<?> clazz = Class.forName(dataClassName);
+            return clazz;
+        } catch (ClassNotFoundException e) {
+            throw new IllegalStateException("Unknown data class!");
+        }
     }
 
     @WebStoragePathHandler( path = "put-pojo" )

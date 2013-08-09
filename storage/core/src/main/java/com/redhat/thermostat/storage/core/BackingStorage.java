@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.storage.core;
 
+import com.redhat.thermostat.storage.core.AggregateQuery.AggregateFunction;
 import com.redhat.thermostat.storage.model.Pojo;
 
 /**
@@ -51,6 +52,8 @@ import com.redhat.thermostat.storage.model.Pojo;
 public interface BackingStorage extends Storage {
     
     <T extends Pojo> Query<T> createQuery(Category<T> category);
+    
+    <T extends Pojo> Query<T> createAggregateQuery(AggregateFunction function, Category<T> category);
     
     // TODO Move createUpdate and createRemove here
 
