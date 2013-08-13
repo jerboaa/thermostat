@@ -50,11 +50,14 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
@@ -82,7 +85,9 @@ import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.IllegalDescriptorException;
+import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
+import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
@@ -90,6 +95,10 @@ import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.HostInfo;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
 import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
@@ -143,9 +152,11 @@ public class WebAppTest extends IntegrationTest {
     private static final String KEY_AUTHORIZED_QUERY_AND = "authorizedQueryAnd";
     private static final String KEY_AUTHORIZED_QUERY_OR = "authorizedQueryOr";
     private static final String KEY_SET_DEFAULT_AGENT_ID = "setDefaultAgentID";
+    private static final String KEY_AUTHORIZED_FILTERED_QUERY = "authorizedFilteredQuerySubset";
     
     static {
         Map<String, String> descMap = new HashMap<>();
+        descMap.put(KEY_AUTHORIZED_FILTERED_QUERY, "QUERY agent-config");
         descMap.put(KEY_AUTHORIZED_QUERY, "QUERY cpu-stats SORT ?s ASC");
         descMap.put(KEY_AUTHORIZED_QUERY_EQUAL_TO, "QUERY cpu-stats WHERE 'timeStamp' = ?l SORT 'timeStamp' ASC");
         descMap.put(KEY_AUTHORIZED_QUERY_NOT_EQUAL_TO, "QUERY cpu-stats WHERE 'timeStamp' != ?l SORT 'timeStamp' ASC");
@@ -386,7 +397,7 @@ public class WebAppTest extends IntegrationTest {
 
         for (int i = 0; i < numberOfItems; i++) {
             CpuStat pojo = new CpuStat("test-agent-id", i, new double[] {i, i*2});
-            Add add = storage.createAdd(CpuStatDAO.cpuStatCategory);
+            Add<CpuStat> add = storage.createAdd(CpuStatDAO.cpuStatCategory);
             add.setPojo(pojo);
             add.apply();
         }
@@ -406,8 +417,27 @@ public class WebAppTest extends IntegrationTest {
 
         for (int i = 0; i < numberOfItems; i++) {
             HostInfo hostInfo = new HostInfo("test-host-agent-id", "foo " + i, "linux " + i, "kernel", "t8", i, i * 1000);
-            Add add = storage.createAdd(HostInfoDAO.hostInfoCategory);
+            Add<HostInfo> add = storage.createAdd(HostInfoDAO.hostInfoCategory);
             add.setPojo(hostInfo);
+            add.apply();
+        }
+
+        storage.getConnection().disconnect();
+    }
+    
+    private static void addAgentConfigData(List<AgentInformation> items) throws IOException {
+        String[] roleNames = new String[] {
+                Roles.REGISTER_CATEGORY,
+                Roles.ACCESS_REALM,
+                Roles.LOGIN,
+                Roles.APPEND
+        };
+        Storage storage = getAndConnectStorage(PREP_USER, PREP_PASSWORD, roleNames);
+        storage.registerCategory(AgentInfoDAO.CATEGORY);
+
+        for (AgentInformation info: items) {
+            Add<AgentInformation> add = storage.createAdd(AgentInfoDAO.CATEGORY);
+            add.setPojo(info);
             add.apply();
         }
 
@@ -432,6 +462,28 @@ public class WebAppTest extends IntegrationTest {
         Storage storage = getAndConnectStorage(PREP_USER, PREP_PASSWORD, roleNames);
         storage.registerCategory(category);
         storage.purge(agentId);
+        storage.getConnection().disconnect();
+    }
+    
+    private static void deleteAgentConfigData(List<AgentInformation> items) throws IOException {
+        String[] roleNames = new String[] {
+                Roles.REGISTER_CATEGORY,
+                Roles.ACCESS_REALM,
+                Roles.LOGIN,
+                Roles.DELETE
+        };
+        Storage storage = getAndConnectStorage(PREP_USER, PREP_PASSWORD, roleNames);
+        storage.registerCategory(AgentInfoDAO.CATEGORY);
+        ExpressionFactory factory = new ExpressionFactory();
+        Remove<AgentInformation> remove = storage.createRemove(AgentInfoDAO.CATEGORY);
+        Set<String> agentIds = new HashSet<>();
+        for (AgentInformation info: items) {
+            agentIds.add(info.getAgentId());
+        }
+        Expression expression = factory.in(Key.AGENT_ID, agentIds, String.class);
+        remove.where(expression);
+        remove.apply();
+
         storage.getConnection().disconnect();
     }
 
@@ -461,7 +513,7 @@ public class WebAppTest extends IntegrationTest {
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(VmClassStatDAO.vmClassStatsCategory);
         
-        Add add = webStorage.createAdd(VmClassStatDAO.vmClassStatsCategory);
+        Add<VmClassStat> add = webStorage.createAdd(VmClassStatDAO.vmClassStatsCategory);
         VmClassStat pojo = new VmClassStat();
         pojo.setAgentId("fluff");
         pojo.setLoadedClasses(12345);
@@ -488,6 +540,117 @@ public class WebAppTest extends IntegrationTest {
         pojo.setVmId(VM_ID3);
         add.setPojo(pojo);
         add.apply();
+
+        webStorage.getConnection().disconnect();
+    }
+    
+    /*
+     * Tests whether a query only returns results which a user is allowed to see.
+     * 
+     * In particular, multiple agent-config records available in the DB, but
+     * only a subset are allowed to be seen by the user.
+     */
+    @Test
+    public void authorizedFilteredQuerySubset() throws Exception {
+        // add agent records into the DB
+        List<AgentInformation> items = Collections.emptyList();
+        try {
+            String agentIdGrantPrefix = "thermostat-agents-grant-read-agentId-";
+            String agent1Id = "agent1";
+            String agent2Id = "agent2";
+            items = getAgentInformationItemsIncluding(new String[] { agent1Id, agent2Id });
+            // assert pre-condition. records in db need to be more than expected
+            // result set size.
+            assertTrue(items.size() > 2);
+            addAgentConfigData(items);
+            String[] roleNames = new String[] {
+                    Roles.REGISTER_CATEGORY,
+                    Roles.READ,
+                    Roles.LOGIN,
+                    Roles.ACCESS_REALM,
+                    Roles.PREPARE_STATEMENT,
+                    // Grant read access only for "agent1" and "agent2" agend IDs
+                    agentIdGrantPrefix + agent1Id,
+                    agentIdGrantPrefix + agent2Id
+            };
+            
+            Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
+            webStorage.registerCategory(AgentInfoDAO.CATEGORY);
+            
+            String strDesc = DESCRIPTOR_MAP.get(KEY_AUTHORIZED_FILTERED_QUERY);
+            StatementDescriptor<AgentInformation> queryDesc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, strDesc);
+            PreparedStatement<AgentInformation> query = webStorage.prepareStatement(queryDesc);
+            Cursor<AgentInformation> cursor = query.executeQuery();
+            assertTrue(cursor.hasNext());
+            List<AgentInformation> actual = new ArrayList<>();
+            while (cursor.hasNext()) {
+                AgentInformation info = cursor.next();
+                actual.add(info);
+            }
+            assertEquals(2, actual.size());
+            assertFalse("Returned agentIds should be different!", actual.get(0).getAgentId().equals(actual.get(1).getAgentId()));
+            for (AgentInformation info: actual) {
+                assertTrue(info.getAgentId().equals(agent1Id) || info.getAgentId().equals(agent2Id));
+            }
+        } finally {
+           deleteAgentConfigData(items); 
+        }
+    }
+    
+    
+    private List<AgentInformation> getAgentInformationItemsIncluding(
+            String[] includeItems) {
+        List<AgentInformation> infos = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            String agentId = UUID.randomUUID().toString() + "--" + i;
+            if (i < includeItems.length) {
+                agentId = includeItems[i];
+            }
+            AgentInformation info = new AgentInformation();
+            info.setAgentId(agentId);
+            info.setAlive((i % 2) == 0);
+            info.setConfigListenAddress("127.0.0." + i + ":88888");
+            info.setStartTime(i * 300);
+            info.setStopTime((i + 1) * 400);
+            infos.add(info);
+        }
+        return infos;
+    }
+
+    /*
+     * Tests whether no query results are returned for a user which lacks *any*
+     * granting roles for reads.
+     */
+    @Test
+    public void authorizedFilteredQueryNone() throws Exception {
+        String[] roleNames = new String[] {
+                Roles.REGISTER_CATEGORY,
+                Roles.READ, // this is just the stop-gap role.
+                Roles.LOGIN,
+                Roles.ACCESS_REALM,
+                Roles.PREPARE_STATEMENT,
+                // lacking read grant roles
+        };
+        Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
+        webStorage.registerCategory(CpuStatDAO.cpuStatCategory);
+        
+        String strDesc = DESCRIPTOR_MAP.get(KEY_AUTHORIZED_QUERY);
+        StatementDescriptor<CpuStat> queryDesc = new StatementDescriptor<>(CpuStatDAO.cpuStatCategory, strDesc);
+        PreparedStatement<CpuStat> query = webStorage.prepareStatement(queryDesc);
+
+        query.setString(0, "timeStamp");
+        // Note: with read-all granted, this returns 4 records. See authorized
+        //       query test.
+        // For this test, however, it should come back empty.
+        
+        Cursor<CpuStat> cursor = query.executeQuery();
+        assertFalse(cursor.hasNext());
+        try {
+            cursor.next();
+            fail("cursor should have thrown exception!");
+        } catch (NoSuchElementException e) {
+            // pass
+        }
 
         webStorage.getConnection().disconnect();
     }
@@ -872,7 +1035,7 @@ public class WebAppTest extends IntegrationTest {
         long timeStamp = 5;
         double cpuLoad = 0.15;
         VmCpuStat pojo = new VmCpuStat(uuid.toString(), timeStamp, VM_ID1, cpuLoad);
-        Add add = storage.createAdd(VmCpuStatDAO.vmCpuStatCategory);
+        Add<VmCpuStat> add = storage.createAdd(VmCpuStatDAO.vmCpuStatCategory);
         add.setPojo(pojo);
         add.apply();
 
