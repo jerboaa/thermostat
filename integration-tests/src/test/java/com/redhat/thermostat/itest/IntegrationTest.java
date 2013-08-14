@@ -296,9 +296,19 @@ public class IntegrationTest {
         }
     }
 
+    /** Confirm that there are no 'command not found'-like messages in the spawn's stdout/stderr */
+    public static void assertCommandIsFound(Spawn spawn) {
+        assertCommandIsFound(spawn.getCurrentStandardOutContents(), spawn.getCurrentStandardErrContents());
+    }
+
     public static void assertCommandIsFound(String stdOutContents, String stdErrContents) {
         assertFalse(stdOutContents.contains("unknown command"));
         assertFalse(stdErrContents.contains("unknown command"));
+    }
+
+    /** Confirm that there are no exception stack traces in the spawn's stdout/stderr */
+    public static void assertNoExceptions(Spawn spawn) {
+        assertNoExceptions(spawn.getCurrentStandardOutContents(), spawn.getCurrentStandardErrContents());
     }
 
     public static void assertNoExceptions(String stdOutContents, String stdErrContents) {

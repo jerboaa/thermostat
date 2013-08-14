@@ -37,6 +37,7 @@
 package com.redhat.thermostat.launcher.internal;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -104,14 +105,21 @@ public class BuiltInCommandInfo implements CommandInfo {
                 continue;
             }
             File file = new File(libRoot, value.trim());
-            String path = file.toURI().toString();
-            if (!file.exists()) {
-                logger.severe("Bundle " + path + " required by " + getName() +
+            try {
+                String path = file.getCanonicalFile().toURI().toString();
+                if (!file.exists()) {
+                    logger.severe("Bundle " + path + " required by " + getName() +
+                            " command does not exist in the filesystem.  This will cause" +
+                            " osgi wiring issue when attempting to run this command.");
+                    // Allow to proceed because this command may never be called.
+                } else {
+                    dependencies.add(path);
+                }
+            } catch (IOException e) {
+                logger.severe("Bundle " + file + " required by " + getName() +
                         " command does not exist in the filesystem.  This will cause" +
                         " osgi wiring issue when attempting to run this command.");
                 // Allow to proceed because this command may never be called.
-            } else {
-                dependencies.add(path);
             }
         }
     }

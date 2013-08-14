@@ -72,7 +72,12 @@ public class BundleManagerImpl extends BundleManager {
 
     private static final Logger logger = LoggingUtils.getLogger(BundleManagerImpl.class);
 
-    // Bundle Name and version -> path
+    // Bundle Name and version -> path (with symlinks resolved)
+    // Match FrameworkProvider which uses canonical/symlink-resolved paths. If
+    // there is a mismatch, there are going to be clashes with trying to load
+    // two files (which are really the same) with the same bundle symbolic
+    // name/version. See
+    // http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=1514
     private final Map<BundleInformation, Path> known;
     private Configuration configuration;
     private BundleLoader loader;
@@ -102,7 +107,17 @@ public class BundleManagerImpl extends BundleManager {
                                 if (name == null || version == null) {
                                     logger.config("file " + file.toString() + " is missing osgi metadata; wont be usable for dependencies");
                                 } else {
-                                    known.put(new BundleInformation(name, version), file);
+                                    BundleInformation info = new BundleInformation(name, version);
+                                    Path old = known.get(info);
+                                    // Path is completely resolved. First one wins.
+                                    if (old == null) {
+                                        known.put(info, file.toRealPath());
+                                    } else {
+                                        if (!old.equals(file.toRealPath())) {
+                                            logger.warning("bundles " + old + " and " + file + " both provide " + info);
+                                        }
+                                        // leave old
+                                    }
                                 }
                             } catch (IOException e) {
                                 logger.severe("Error in reading " + file);
@@ -121,10 +136,10 @@ public class BundleManagerImpl extends BundleManager {
         if (configuration.getPrintOSGiInfo()) {
             logger.fine("Found: " + known.size() + " bundles");
             logger.fine("Took " + (t2 -t1) + "ns");
+        }
 
-            for (Entry<BundleInformation, Path> bundles : known.entrySet()) {
-                logger.finest(bundles.getKey().toString() + " is at " + bundles.getValue().toString());
-            }
+        for (Entry<BundleInformation, Path> bundles : known.entrySet()) {
+            logger.finest(bundles.getKey().toString() + " is at " + bundles.getValue().toString());
         }
     }
 
@@ -143,7 +158,7 @@ public class BundleManagerImpl extends BundleManager {
                 logger.warning("no known bundle matching " + info.toString());
                 continue;
             }
-            paths.add(bundlePath.toFile().toURI().toString());
+            paths.add(bundlePath.toFile().getCanonicalFile().toURI().toString());
         }
         loadBundlesByPath(paths);
     }

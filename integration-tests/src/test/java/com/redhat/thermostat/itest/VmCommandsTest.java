@@ -125,6 +125,26 @@ public class VmCommandsTest extends IntegrationTest {
         }
     }
 
+    @Test
+    public void testNormalCommandAndPluginInShell() throws Exception {
+        Spawn shell = spawnThermostat("shell");
+
+        shell.expect(SHELL_PROMPT);
+        shell.send("list-vms\n");
+
+        shell.expect(SHELL_PROMPT);
+
+        shell.send("dump-heap\n");
+
+        shell.expect(SHELL_PROMPT);
+
+        shell.send("exit\n");
+        shell.expectClose();
+
+        assertCommandIsFound(shell);
+        assertNoExceptions(shell);
+    }
+
     private static Spawn commandAgainstMongo(String... args) throws IOException {
         if (args == null || args.length == 0) {
             throw new IllegalArgumentException("args must be an array with something");

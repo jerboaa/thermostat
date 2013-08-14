@@ -62,6 +62,7 @@ import org.osgi.util.tracker.ServiceTracker;
 import com.redhat.thermostat.common.Launcher;
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.shared.config.Configuration;
+import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 
 public class FrameworkProvider {
 
@@ -283,8 +284,18 @@ public class FrameworkProvider {
         }
     }
 
+    // Resolve symlinks completely; This makes the behaviour of this class
+    // consistent with BundleManagerImpl and avoid problems where two different
+    // files across bootstrap and later code provide the same bundle symbolic
+    // name version
     private String actualLocation(String resourceName) {
-        return new File(configuration.getSystemLibRoot(), resourceName).toURI().toString();
+        File file = new File(configuration.getSystemLibRoot(), resourceName);
+        try {
+            return file.getCanonicalFile().toURI().toString();
+        } catch (IOException e) {
+            // okay, lets not canonicalize the path
+            return file.toURI().toString();
+        }
     }
 }
 
