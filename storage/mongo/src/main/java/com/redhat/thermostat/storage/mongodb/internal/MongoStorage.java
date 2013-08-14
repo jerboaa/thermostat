@@ -72,6 +72,7 @@ import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.storage.query.Expression;
 
 /**
  * Implementation of the Storage interface that uses MongoDB to store the instrumentation data.
@@ -94,6 +95,41 @@ public class MongoStorage implements BackingStorage {
         @Override
         public void apply() {
             replaceImpl(getCategory(), getPojo());
+        }
+        
+    }
+    
+    private class MongoRemove implements Remove {
+
+        @SuppressWarnings("rawtypes")
+        private Category category;
+        private DBObject query;
+        private MongoExpressionParser parser;
+        
+        private MongoRemove() {
+            this(new MongoExpressionParser());
+        }
+        
+        private MongoRemove(MongoExpressionParser parser) {
+            this.parser = parser;
+        }
+
+        @Override
+        public void from(@SuppressWarnings("rawtypes") Category category) {
+            if (query != null) {
+                throw new IllegalStateException();
+            }
+            this.category = category;
+        }
+
+        @Override
+        public void where(Expression expr) {
+            query = parser.parse(expr);
+        }
+        
+        @Override
+        public void apply() {
+            removePojo(category, query);
         }
         
     }
@@ -191,14 +227,8 @@ public class MongoStorage implements BackingStorage {
         coll.update(query, values);
     }
 
-    @Override
-    public void removePojo(Remove remove) {
-        assert (remove instanceof MongoRemove);
-        MongoRemove mongoRemove = (MongoRemove) remove;
-        DBObject query = mongoRemove.getQuery();
-        Category<?> category = mongoRemove.getCategory();
+    private void removePojo(Category<?> category, DBObject query) {
         DBCollection coll = getCachedCollection(category);
-
         coll.remove(query);
     }
 

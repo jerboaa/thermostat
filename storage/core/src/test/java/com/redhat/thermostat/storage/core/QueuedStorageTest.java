@@ -280,25 +280,6 @@ public class QueuedStorageTest {
     }
 
     @Test
-    public void testRemovePojo() {
-
-        Remove remove = queuedStorage.createRemove();
-        verify(delegateStorage).createRemove();
-        verifyNoMoreInteractions(delegateStorage);
-
-        queuedStorage.removePojo(remove);
-
-        Runnable r = executor.getTask();
-        assertNotNull(r);
-        verifyZeroInteractions(delegateStorage);
-        r.run();
-        verify(delegateStorage, times(1)).removePojo(remove);
-        verifyNoMoreInteractions(delegateStorage);
-
-        assertNull(fileExecutor.getTask());
-    }
-
-    @Test
     public void testPurge() {
 
         queuedStorage.purge("fluff");
@@ -468,12 +449,6 @@ public class QueuedStorageTest {
 
         @Override
         public Replace createReplace(Category<?> category) {
-            // not implemented
-            throw new AssertionError();
-        }
-
-        @Override
-        public void removePojo(Remove remove) {
             // not implemented
             throw new AssertionError();
         }

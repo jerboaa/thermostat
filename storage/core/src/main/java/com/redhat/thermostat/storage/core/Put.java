@@ -44,10 +44,7 @@ public interface Put {
 
     /**
      * Sets the POJO that is to be put into the database.
-     * Notice that this is usually not necessary to call, because Storage.add() 
-     * and Storage.replace() already take this argument. It is useful
-     * for pre-building and caching queries though.
-     *
+     * 
      * @param the pojo to be put into the database
      */
     void setPojo(Pojo pojo);

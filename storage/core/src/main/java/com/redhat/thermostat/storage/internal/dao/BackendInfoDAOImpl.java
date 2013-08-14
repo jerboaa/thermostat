@@ -116,8 +116,10 @@ public class BackendInfoDAOImpl implements BackendInfoDAO {
     @Override
     public void removeBackendInformation(BackendInformation info) {
         Expression expr = factory.equalTo(BACKEND_NAME, info.getName());
-        Remove remove = storage.createRemove().from(CATEGORY).where(expr);
-        storage.removePojo(remove);
+        Remove remove = storage.createRemove();
+        remove.from(CATEGORY);
+        remove.where(expr);
+        remove.apply();
     }
     
 }

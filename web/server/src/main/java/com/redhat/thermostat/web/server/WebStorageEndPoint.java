@@ -521,12 +521,12 @@ public class WebStorageEndPoint extends HttpServlet {
         String removeParam = req.getParameter("remove");
         WebRemove remove = gson.fromJson(removeParam, WebRemove.class);
         Remove targetRemove = storage.createRemove();
-        targetRemove = targetRemove.from(getCategoryFromId(remove.getCategoryId()));
+        targetRemove.from(getCategoryFromId(remove.getCategoryId()));
         Expression expr = remove.getWhereExpression();
         if (expr != null) {
             targetRemove.where(expr);
         }
-        storage.removePojo(targetRemove);
+        targetRemove.apply();
         resp.setStatus(HttpServletResponse.SC_OK);
     }
 

@@ -83,8 +83,6 @@ public interface Storage {
     Add createAdd(Category<?> category);
     Replace createReplace(Category<?> category);
 
-    void removePojo(Remove remove);
-
     /**
      * Drop all data related to the specified agent.
      */

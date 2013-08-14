@@ -432,22 +432,22 @@ public class WebStorageTest {
     public void testCreateRemove() {
         WebRemove remove = (WebRemove) storage.createRemove();
         assertNotNull(remove);
-        remove = remove.from(category);
+        remove.from(category);
         assertEquals(42, remove.getCategoryId());
-        assertNotNull(remove);
         Expression expr = factory.equalTo(key1, "test");
-        remove = remove.where(expr);
-        assertNotNull(remove);
+        remove.where(expr);
         assertEquals(expr, remove.getWhereExpression());
     }
 
     @Test
     public void testRemovePojo() throws UnsupportedEncodingException, IOException {
         Expression expr = factory.equalTo(key1, "test");
-        Remove remove = storage.createRemove().from(category).where(expr);
+        Remove remove = storage.createRemove();
+        remove.from(category);
+        remove.where(expr);
 
         prepareServer();
-        storage.removePojo(remove);
+        remove.apply();
 
         Gson gson = new GsonBuilder()
                 .registerTypeHierarchyAdapter(Expression.class,

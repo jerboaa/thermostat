@@ -48,25 +48,18 @@ public class WebRemove implements Remove {
     private int categoryId;
     private Expression whereExpression;
 
-    // NOTE: This is needed for de-serialization!
-    public WebRemove() {
-        this(null);
-    }
-
     public WebRemove(Map<Category<?>, Integer> categoryIds) {
         this.categoryIds = categoryIds;
     }
 
     @Override
-    public WebRemove from(Category category) {
+    public void from(Category category) {
         categoryId = categoryIds.get(category);
-        return this;
     }
 
     @Override
-    public WebRemove where(Expression expr) {
+    public void where(Expression expr) {
         whereExpression = expr;
-        return this;
     }
 
     public int getCategoryId() {
@@ -75,6 +68,13 @@ public class WebRemove implements Remove {
 
     public Expression getWhereExpression() {
         return whereExpression;
+    }
+
+    @Override
+    public void apply() {
+        // This should never be called. Overridden by the actual
+        // implementation.
+        throw new IllegalStateException();
     }
     
 }

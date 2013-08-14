@@ -272,15 +272,15 @@ public class AgentInfoDAOTest {
 
     @Test
     public void verifyRemoveAgentInformation() {
-        Remove mockRemove = QueryTestHelper.createMockRemove();
+        Remove mockRemove = mock(Remove.class);
         Storage storage = mock(Storage.class);
         when(storage.createRemove()).thenReturn(mockRemove);
         AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
 
         dao.removeAgentInformation(agentInfo1);
 
-        verify(storage).removePojo(mockRemove);
         verify(mockRemove).from(AgentInfoDAO.CATEGORY);
+        verify(mockRemove).apply();
         Expression expr = factory.equalTo(Key.AGENT_ID, "1234");
         verify(mockRemove).where(eq(expr));
     }

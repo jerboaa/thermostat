@@ -327,6 +327,24 @@ public class WebStorage implements Storage, SecureStorage {
         }
     }
     
+    private class WebRemoveImpl extends WebRemove {
+
+        // required for serialization
+        private WebRemoveImpl() {
+            this(null);
+        }
+        
+        private WebRemoveImpl(Map<Category<?>, Integer> categoryIds) {
+            super(categoryIds);
+        }
+        
+        @Override
+        public void apply() {
+            removePojo(this);
+        }
+        
+    }
+    
     private class WebPreparedStatementImpl<T extends Pojo> extends WebPreparedStatement<T> {
 
         // The type of the query result objects we'd get back upon
@@ -513,7 +531,7 @@ public class WebStorage implements Storage, SecureStorage {
 
     @Override
     public Remove createRemove() {
-        return new WebRemove(categoryIds);
+        return new WebRemoveImpl(categoryIds);
     }
 
     @Override
@@ -660,8 +678,7 @@ public class WebStorage implements Storage, SecureStorage {
         }
     }
 
-    @Override
-    public void removePojo(Remove remove) throws StorageException {
+    private void removePojo(Remove remove) throws StorageException {
         NameValuePair removeParam = new BasicNameValuePair("remove",
                 gson.toJson(remove));
         List<NameValuePair> formparams = Arrays.asList(removeParam);

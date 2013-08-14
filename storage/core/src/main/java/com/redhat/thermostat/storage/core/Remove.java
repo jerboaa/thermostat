@@ -44,9 +44,14 @@ import com.redhat.thermostat.storage.query.Expression;
  */
 public interface Remove {
 
-    Remove from(Category category);
+    void from(Category category);
 
-    Remove where(Expression where);
+    void where(Expression where);
+    
+    /**
+     * Applies this remove operation.
+     */
+    void apply();
 
 }
 

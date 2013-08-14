@@ -176,20 +176,6 @@ public class QueuedStorage implements Storage {
     }
 
     @Override
-    public void removePojo(final Remove remove) {
-
-        executor.execute(new Runnable() {
-            
-            @Override
-            public void run() {
-                delegate.removePojo(remove);
-            }
-
-        });
-
-    }
-
-    @Override
     public void purge(final String agentId) {
 
         executor.execute(new Runnable() {

@@ -855,8 +855,6 @@ public class WebStorageEndpointTest {
         
         
         Remove mockRemove = mock(Remove.class);
-        when(mockRemove.from(any(Category.class))).thenReturn(mockRemove);
-        when(mockRemove.where(any(Expression.class))).thenReturn(mockRemove);
 
         when(mockStorage.createRemove()).thenReturn(mockRemove);
 
@@ -871,7 +869,9 @@ public class WebStorageEndpointTest {
         Map<Category<?>,Integer> categoryIds = new HashMap<>();
         categoryIds.put(category, categoryId);
         Expression expr = factory.equalTo(key1, "test");
-        WebRemove remove = new WebRemove(categoryIds).from(category).where(expr);
+        WebRemove remove = new WebRemove(categoryIds);
+        remove.from(category);
+        remove.where(expr);
         Gson gson = new GsonBuilder()
                 .registerTypeHierarchyAdapter(Expression.class,
                         new ExpressionSerializer())
@@ -887,7 +887,7 @@ public class WebStorageEndpointTest {
         verify(mockStorage).createRemove();
         verify(mockRemove).from(category);
         verify(mockRemove).where(eq(expr));
-        verify(mockStorage).removePojo(mockRemove);
+        verify(mockRemove).apply();
     }
     
     @Test
