@@ -44,9 +44,19 @@ public interface JmxNotificationDAO {
 
     void addNotificationStatus(JmxNotificationStatus notificationsStatus);
 
+    /**
+     * Returns the latest (based on the timestamp) status for the given vm
+     *
+     * @return a {@link JmxNotificationStatus} representing the status or
+     * {@code null} if no such information could be located
+     */
     JmxNotificationStatus getLatestNotificationStatus(VmRef statusFor);
 
     void addNotification(JmxNotification notification);
 
+    /**
+     * @return a {@link List} (may be empty) of all {@link JmxNotification}s
+     * matching the vm and with a timestamp greater than {@code timeStampSince}
+     */
     List<JmxNotification> getNotifications(VmRef notificationsFor, long timeStampSince);
 }

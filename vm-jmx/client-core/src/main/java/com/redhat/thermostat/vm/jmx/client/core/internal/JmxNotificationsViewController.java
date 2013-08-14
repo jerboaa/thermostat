@@ -165,6 +165,10 @@ public class JmxNotificationsViewController implements InformationServiceControl
             @Override
             public void run() {
                 JmxNotificationStatus status = dao.getLatestNotificationStatus(vm);
+                if (status == null) {
+                    return;
+                }
+
                 notificationsEnabled.set(status.isEnabled());
                 view.setNotificationsEnabled(notificationsEnabled.get());
 

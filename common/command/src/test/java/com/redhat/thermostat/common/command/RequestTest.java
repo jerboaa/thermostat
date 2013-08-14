@@ -115,7 +115,7 @@ public class RequestTest {
     public void testToString() {
         InetSocketAddress addr = new InetSocketAddress(1234);
         Request request = new Request(RequestType.RESPONSE_EXPECTED, addr);
-        assertEquals("{ Request: {target = "+ addr.toString() + "}, {type = RESPONSE_EXPECTED} }", request.toString());
+        assertEquals("{ Request: {target = "+ addr.toString() + "}, {type = RESPONSE_EXPECTED}, {parameters = {}} }", request.toString());
     }
 }
 

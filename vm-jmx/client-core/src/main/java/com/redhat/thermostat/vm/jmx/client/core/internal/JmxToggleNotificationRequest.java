@@ -86,6 +86,7 @@ public class JmxToggleNotificationRequest {
         req.setParameter(Request.ACTION, CMD_CHANNEL_ACTION_NAME);
         req.setParameter(JmxCommand.class.getName(), enable ? JmxCommand.ENABLE_JMX_NOTIFICATIONS.name() : JmxCommand.DISABLE_JMX_NOTIFICATIONS.name());
         req.setParameter(JmxCommand.VM_PID, String.valueOf(vm.getPid()));
+        req.setParameter(JmxCommand.VM_ID, vm.getVmId());
 
         JmxToggleResponseListener listener = factory.createListener(successAction, failureAction);
         req.addListener(listener);

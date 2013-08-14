@@ -45,16 +45,16 @@ import com.redhat.thermostat.storage.model.TimeStampedPojo;
 public class JmxNotificationStatus extends BasePojo implements TimeStampedPojo {
 
     private long timeStamp = 0;
-    private int vmId = 0;
+    private String vmId = null;
     private boolean enabled = false;
 
     @Persist
-    public int getVmId() {
+    public String getVmId() {
         return vmId;
     }
 
     @Persist
-    public void setVmId(int vmId) {
+    public void setVmId(String vmId) {
         this.vmId = vmId;
     }
 

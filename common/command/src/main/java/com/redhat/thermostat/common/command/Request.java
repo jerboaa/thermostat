@@ -154,7 +154,7 @@ public class Request implements Message {
     
     @Override
     public String toString() {
-        return "{ Request: {target = " + target.toString() + "}, {type = " + type.name() + "} }";
+        return "{ Request: {target = " + target.toString() + "}, {type = " + type.name() + "}, {parameters = " + parameters.toString() + "} }";
     }
 }
 

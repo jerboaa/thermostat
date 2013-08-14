@@ -147,7 +147,7 @@ public class JmxBackendTest {
         when(connection.get()).thenReturn(actual);
         when(pool.acquire(42)).thenReturn(connection);
 
-        backend.enableNotificationsFor(42);
+        backend.enableNotificationsFor("42", 42);
 
         verify(actual).addNotificationListener(eq(name1), any(NotificationListener.class), eq((NotificationFilter) null), any());
     }
@@ -169,7 +169,7 @@ public class JmxBackendTest {
         when(connection.get()).thenReturn(actual);
         when(pool.acquire(42)).thenReturn(connection);
 
-        backend.enableNotificationsFor(42);
+        backend.enableNotificationsFor("42", 42);
 
         ArgumentCaptor<NotificationListener> listenerCaptor = ArgumentCaptor.forClass(NotificationListener.class);
         ArgumentCaptor<Object> handbackCaptor = ArgumentCaptor.forClass(Object.class);
@@ -212,7 +212,7 @@ public class JmxBackendTest {
         when(connection.get()).thenReturn(actual);
         when(pool.acquire(42)).thenReturn(connection);
 
-        backend.enableNotificationsFor(42);
+        backend.enableNotificationsFor("42", 42);
 
         ArgumentCaptor<NotificationListener> listenerCaptor = ArgumentCaptor.forClass(NotificationListener.class);
         ArgumentCaptor<Object> handbackCaptor = ArgumentCaptor.forClass(Object.class);
@@ -246,7 +246,7 @@ public class JmxBackendTest {
         when(connection.get()).thenReturn(actual);
         when(pool.acquire(42)).thenReturn(connection);
 
-        backend.enableNotificationsFor(42);
+        backend.enableNotificationsFor("42", 42);
 
         ArgumentCaptor<NotificationListener> listenerCaptor = ArgumentCaptor.forClass(NotificationListener.class);
         ArgumentCaptor<Object> handbackCaptor = ArgumentCaptor.forClass(Object.class);
@@ -256,7 +256,7 @@ public class JmxBackendTest {
         NotificationListener listener = listenerCaptor.getValue();
 
         verify(actual).queryNames(null, null);
-        verify(actual).addNotificationListener(eq(MBeanServerDelegate.DELEGATE_NAME), isA(NotificationListener.class), eq((NotificationFilter) null), isA(Integer.class));
+        verify(actual).addNotificationListener(eq(MBeanServerDelegate.DELEGATE_NAME), isA(NotificationListener.class), eq((NotificationFilter) null), isA(Object.class));
 
         listener.handleNotification(mBeanRemovedNotification, handbackCaptor.getValue());
 
@@ -274,9 +274,9 @@ public class JmxBackendTest {
         when(connection.get()).thenReturn(actual);
         when(pool.acquire(42)).thenReturn(connection);
 
-        backend.enableNotificationsFor(42);
+        backend.enableNotificationsFor("42", 42);
 
-        backend.disableNotificationsFor(42);
+        backend.disableNotificationsFor("42", 42);
 
         verify(pool).release(42, connection);
     }

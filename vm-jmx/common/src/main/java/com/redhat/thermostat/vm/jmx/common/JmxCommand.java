@@ -42,6 +42,7 @@ public enum JmxCommand {
     DISABLE_JMX_NOTIFICATIONS,
     ;
 
+    public static final String VM_ID = "VM_ID";
     public static final String VM_PID = "VM_PID";
     public static final String RECEIVER = "com.redhat.thermostat.vm.jmx.agent.internal.JmxRequestListener";
 }

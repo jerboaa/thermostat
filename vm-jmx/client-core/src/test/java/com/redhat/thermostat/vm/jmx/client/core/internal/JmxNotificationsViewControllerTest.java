@@ -38,7 +38,9 @@ package com.redhat.thermostat.vm.jmx.client.core.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -46,6 +48,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -173,6 +176,22 @@ public class JmxNotificationsViewControllerTest {
 
         verify(view).addNotification(data);
 
+    }
+
+    @Test
+    public void verifyTimerWorksWhenNoStatus() {
+        ArgumentCaptor<Runnable> actionCaptor = ArgumentCaptor.forClass(Runnable.class);
+        verify(timer).setAction(actionCaptor.capture());
+
+        Runnable timerAction = actionCaptor.getValue();
+
+        JmxNotification data = mock(JmxNotification.class);
+        when(notificationDao.getNotifications(vm, Long.MIN_VALUE)).thenReturn(new ArrayList<JmxNotification>());
+        JmxNotificationStatus status = mock(JmxNotificationStatus.class);
+        when(notificationDao.getLatestNotificationStatus(vm)).thenReturn(null);
+
+        verify(view, never()).setNotificationsEnabled(anyBoolean());
+        verify(view, never()).addNotification(isA(JmxNotification.class));
     }
 
     @Test

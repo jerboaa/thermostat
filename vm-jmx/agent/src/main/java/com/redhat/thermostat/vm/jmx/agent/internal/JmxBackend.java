@@ -83,6 +83,17 @@ public class JmxBackend extends BaseBackend {
 
     private boolean isActive = false;
 
+    // Used as a callback handler
+    private static class VmIdAndPid {
+        public final String vmId;
+        public final int pid;
+
+        public VmIdAndPid(String vmId, int pid) {
+            this.vmId = vmId;
+            this.pid = pid;
+        }
+    }
+
     public JmxBackend(Version version, ReceiverRegistry registry, JmxNotificationDAO dao, MXBeanConnectionPool pool, RequestReceiver receiver) {
         this(version, registry, dao, pool, receiver, new SystemClock());
     }
@@ -135,7 +146,8 @@ public class JmxBackend extends BaseBackend {
         return isActive;
     }
 
-    public void enableNotificationsFor(int pid) {
+    public void enableNotificationsFor(String vmId, int pid) {
+        VmIdAndPid idAndPid = new VmIdAndPid(vmId, pid);
         try {
             MXBeanConnection connection = pool.acquire(pid);
             connections.put(pid, connection);
@@ -143,13 +155,13 @@ public class JmxBackend extends BaseBackend {
             Set<ObjectName> names = server.queryNames(null, null);
             for (ObjectName name : names) {
                 if (name.equals(MBeanServerDelegate.DELEGATE_NAME)) {
-                    server.addNotificationListener(MBeanServerDelegate.DELEGATE_NAME, this.registrationNotificationListener, null, pid);
+                    server.addNotificationListener(MBeanServerDelegate.DELEGATE_NAME, this.registrationNotificationListener, null, idAndPid);
                 } else {
-                    addNotificationListenerToMBean(pid, server, name);
+                    addNotificationListenerToMBean(idAndPid, server, name);
                 }
             }
             JmxNotificationStatus update = new JmxNotificationStatus();
-            update.setVmId(pid);
+            update.setVmId(vmId);
             update.setEnabled(true);
             update.setTimeStamp(clock.getRealTimeMillis());
             dao.addNotificationStatus(update);
@@ -158,11 +170,11 @@ public class JmxBackend extends BaseBackend {
         }
     }
 
-    public void disableNotificationsFor(int pid) {
+    public void disableNotificationsFor(String vmId, int pid) {
         MXBeanConnection connection = connections.get(pid);
 
         JmxNotificationStatus update = new JmxNotificationStatus();
-        update.setVmId(pid);
+        update.setVmId(vmId);
         update.setEnabled(false);
         update.setTimeStamp(clock.getRealTimeMillis());
         dao.addNotificationStatus(update);
@@ -178,15 +190,15 @@ public class JmxBackend extends BaseBackend {
 
         @Override
         public void handleNotification(Notification notification, Object handback) {
-            Integer pid = (Integer) handback;
-            MBeanServerConnection server = connections.get(pid).get();
+            VmIdAndPid idAndPid = (VmIdAndPid) handback;
+            MBeanServerConnection server = connections.get(idAndPid.pid).get();
             MBeanServerNotification serverNotification = (MBeanServerNotification) notification;
             ObjectName name = serverNotification.getMBeanName();
 
             try {
                 if (MBeanServerNotification.REGISTRATION_NOTIFICATION.equals(serverNotification.getType())) {
                     logger.fine("MBean Registered: " + name);
-                    addNotificationListenerToMBean(pid, server, name);
+                    addNotificationListenerToMBean(idAndPid, server, name);
                 } else if (MBeanServerNotification.UNREGISTRATION_NOTIFICATION.equals(serverNotification.getType())) {
                     logger.fine("MBean Unregistered: " + name);
                     // we should remove the listener, but the object is not
@@ -204,10 +216,10 @@ public class JmxBackend extends BaseBackend {
 
         @Override
         public void handleNotification(Notification notification, Object handback) {
-            int pid = (Integer) handback;
+            VmIdAndPid idAndPid = (VmIdAndPid) handback;
 
             JmxNotification data = new JmxNotification();
-            data.setVmId(pid);
+            data.setVmId(idAndPid.vmId);
             data.setImportance("unknown");
             data.setTimeStamp(notification.getTimeStamp());
             data.setSourceBackend(JmxBackend.class.getName());
@@ -218,10 +230,10 @@ public class JmxBackend extends BaseBackend {
         }
     }
 
-    private void addNotificationListenerToMBean(int pid, MBeanServerConnection server, ObjectName name)
+    private void addNotificationListenerToMBean(VmIdAndPid idAndPid, MBeanServerConnection server, ObjectName name)
             throws InstanceNotFoundException, IntrospectionException, ReflectionException, IOException {
         if (server.getMBeanInfo(name).getNotifications().length > 0) {
-            server.addNotificationListener(name, JmxBackend.this.notificationWriter, null, pid);
+            server.addNotificationListener(name, JmxBackend.this.notificationWriter, null, idAndPid);
         }
     }
 }

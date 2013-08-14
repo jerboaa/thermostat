@@ -58,6 +58,7 @@ public class JmxRequestListener implements RequestReceiver {
     @Override
     public Response receive(Request request) {
         Response response = new Response(ResponseType.OK);
+        String vmId = request.getParameter(JmxCommand.VM_ID);
         String strPid = request.getParameter(JmxCommand.VM_PID);
         try {
             int pid = Integer.parseInt(strPid);
@@ -65,10 +66,10 @@ public class JmxRequestListener implements RequestReceiver {
 
             switch (JmxCommand.valueOf(command)) {
             case DISABLE_JMX_NOTIFICATIONS:
-                backend.disableNotificationsFor(pid);
+                backend.disableNotificationsFor(vmId, pid);
                 break;
             case ENABLE_JMX_NOTIFICATIONS:
-                backend.enableNotificationsFor(pid);
+                backend.enableNotificationsFor(vmId, pid);
                 break;
             }
         } catch (NumberFormatException e) {

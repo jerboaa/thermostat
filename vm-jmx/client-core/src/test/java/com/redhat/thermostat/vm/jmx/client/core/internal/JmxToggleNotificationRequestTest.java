@@ -120,6 +120,7 @@ public class JmxToggleNotificationRequestTest {
         assertEquals(JmxToggleNotificationRequest.CMD_CHANNEL_ACTION_NAME, req.getParameter(Request.ACTION));
         assertEquals(JmxCommand.RECEIVER, req.getReceiver());
         assertEquals(String.valueOf(vm.getPid()), req.getParameter(JmxCommand.VM_PID));
+        assertEquals(vm.getVmId(), req.getParameter(JmxCommand.VM_ID));
 
         assertEquals(JmxCommand.ENABLE_JMX_NOTIFICATIONS.name(), req.getParameter(JmxCommand.class.getName()));
         
@@ -149,6 +150,7 @@ public class JmxToggleNotificationRequestTest {
         assertEquals(JmxToggleNotificationRequest.CMD_CHANNEL_ACTION_NAME, req.getParameter(Request.ACTION));
         assertEquals(JmxCommand.RECEIVER, req.getReceiver());
         assertEquals(String.valueOf(vm.getPid()), req.getParameter(JmxCommand.VM_PID));
+        assertEquals(vm.getVmId(), req.getParameter(JmxCommand.VM_ID));
 
         assertEquals(JmxCommand.DISABLE_JMX_NOTIFICATIONS.name(), req.getParameter(JmxCommand.class.getName()));
         
