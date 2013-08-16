@@ -328,14 +328,9 @@ public class WebStorage implements Storage, SecureStorage {
     }
     
     private class WebRemoveImpl extends WebRemove {
-
-        // required for serialization
-        private WebRemoveImpl() {
-            this(null);
-        }
         
-        private WebRemoveImpl(Map<Category<?>, Integer> categoryIds) {
-            super(categoryIds);
+        private WebRemoveImpl(int categoryId) {
+            super(categoryId);
         }
         
         @Override
@@ -532,8 +527,8 @@ public class WebStorage implements Storage, SecureStorage {
     }
 
     @Override
-    public Remove createRemove() {
-        return new WebRemoveImpl(categoryIds);
+    public Remove createRemove(Category<?> category) {
+        return new WebRemoveImpl(categoryIds.get(category));
     }
 
     @Override

@@ -1016,7 +1016,7 @@ public class WebStorageEndpointTest {
         
         Remove mockRemove = mock(Remove.class);
 
-        when(mockStorage.createRemove()).thenReturn(mockRemove);
+        when(mockStorage.createRemove(category)).thenReturn(mockRemove);
 
         String endpoint = getEndpoint();
 
@@ -1026,11 +1026,8 @@ public class WebStorageEndpointTest {
         sendAuthentication(conn, testuser, password);
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        Map<Category<?>,Integer> categoryIds = new HashMap<>();
-        categoryIds.put(category, categoryId);
         Expression expr = factory.equalTo(key1, "test");
-        WebRemove remove = new WebRemove(categoryIds);
-        remove.from(category);
+        WebRemove remove = new WebRemove(categoryId);
         remove.where(expr);
         Gson gson = new GsonBuilder()
                 .registerTypeHierarchyAdapter(Expression.class,
@@ -1044,8 +1041,7 @@ public class WebStorageEndpointTest {
         out.flush();
 
         assertEquals(200, conn.getResponseCode());
-        verify(mockStorage).createRemove();
-        verify(mockRemove).from(category);
+        verify(mockStorage).createRemove(eq(category));
         verify(mockRemove).where(eq(expr));
         verify(mockRemove).apply();
     }

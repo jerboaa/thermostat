@@ -47,7 +47,6 @@ import java.lang.reflect.Method;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -541,8 +540,8 @@ public class WebStorageEndPoint extends HttpServlet {
         
         String removeParam = req.getParameter("remove");
         WebRemove remove = gson.fromJson(removeParam, WebRemove.class);
-        Remove targetRemove = storage.createRemove();
-        targetRemove.from(getCategoryFromId(remove.getCategoryId()));
+        Category<?> targetCategory = getCategoryFromId(remove.getCategoryId());
+        Remove targetRemove = storage.createRemove(targetCategory);
         Expression expr = remove.getWhereExpression();
         if (expr != null) {
             targetRemove.where(expr);

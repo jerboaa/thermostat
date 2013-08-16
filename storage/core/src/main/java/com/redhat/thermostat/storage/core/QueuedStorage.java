@@ -215,8 +215,8 @@ public class QueuedStorage implements Storage {
     }
 
     @Override
-    public Remove createRemove() {
-        return delegate.createRemove();
+    public Remove createRemove(Category<?> category) {
+        return delegate.createRemove(category);
     }
 
     @Override

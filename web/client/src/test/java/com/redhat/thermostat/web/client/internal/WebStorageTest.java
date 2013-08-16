@@ -430,9 +430,7 @@ public class WebStorageTest {
 
     @Test
     public void testCreateRemove() {
-        WebRemove remove = (WebRemove) storage.createRemove();
-        assertNotNull(remove);
-        remove.from(category);
+        WebRemove remove = (WebRemove) storage.createRemove(category);
         assertEquals(42, remove.getCategoryId());
         Expression expr = factory.equalTo(key1, "test");
         remove.where(expr);
@@ -442,8 +440,7 @@ public class WebStorageTest {
     @Test
     public void testRemovePojo() throws UnsupportedEncodingException, IOException {
         Expression expr = factory.equalTo(key1, "test");
-        Remove remove = storage.createRemove();
-        remove.from(category);
+        Remove remove = storage.createRemove(category);
         remove.where(expr);
 
         prepareServer();

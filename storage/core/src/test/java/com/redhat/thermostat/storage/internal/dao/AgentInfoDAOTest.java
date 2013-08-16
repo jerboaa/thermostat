@@ -297,12 +297,11 @@ public class AgentInfoDAOTest {
     public void verifyRemoveAgentInformation() {
         Remove mockRemove = mock(Remove.class);
         Storage storage = mock(Storage.class);
-        when(storage.createRemove()).thenReturn(mockRemove);
+        when(storage.createRemove(eq(AgentInfoDAO.CATEGORY))).thenReturn(mockRemove);
         AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
 
         dao.removeAgentInformation(agentInfo1);
 
-        verify(mockRemove).from(AgentInfoDAO.CATEGORY);
         verify(mockRemove).apply();
         Expression expr = factory.equalTo(Key.AGENT_ID, "1234");
         verify(mockRemove).where(eq(expr));

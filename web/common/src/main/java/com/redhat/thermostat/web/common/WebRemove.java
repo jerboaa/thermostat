@@ -36,25 +36,16 @@
 
 package com.redhat.thermostat.web.common;
 
-import java.util.Map;
-
-import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.query.Expression;
 
 public class WebRemove implements Remove {
 
-    private transient Map<Category<?>, Integer> categoryIds;
-    private int categoryId;
+    private final int categoryId;
     private Expression whereExpression;
 
-    public WebRemove(Map<Category<?>, Integer> categoryIds) {
-        this.categoryIds = categoryIds;
-    }
-
-    @Override
-    public void from(Category category) {
-        categoryId = categoryIds.get(category);
+    public WebRemove(int categoryId) {
+        this.categoryId = categoryId;
     }
 
     @Override

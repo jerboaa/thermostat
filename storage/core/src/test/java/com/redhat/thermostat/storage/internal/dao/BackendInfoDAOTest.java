@@ -178,13 +178,12 @@ public class BackendInfoDAOTest {
     public void verifyRemoveBackendInformation() {
         Remove remove = mock(Remove.class);
         Storage storage = mock(Storage.class);
-        when(storage.createRemove()).thenReturn(remove);
+        when(storage.createRemove(eq(BackendInfoDAO.CATEGORY))).thenReturn(remove);
         BackendInfoDAO dao = new BackendInfoDAOImpl(storage);
 
         dao.removeBackendInformation(backendInfo1);
 
         InOrder inOrder = inOrder(remove);
-        inOrder.verify(remove).from(BackendInfoDAO.CATEGORY);
         Expression expr = factory.equalTo(BackendInfoDAO.BACKEND_NAME, "backend-name");
         inOrder.verify(remove).where(eq(expr));
         inOrder.verify(remove).apply();

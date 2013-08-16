@@ -190,8 +190,7 @@ public class AgentInfoDAOImpl extends BaseCountable implements AgentInfoDAO {
     @Override
     public void removeAgentInformation(AgentInformation agentInfo) {
         Expression expr = factory.equalTo(Key.AGENT_ID, agentInfo.getAgentId());
-        Remove remove = storage.createRemove();
-        remove.from(CATEGORY);
+        Remove remove = storage.createRemove(CATEGORY);
         remove.where(expr);
         remove.apply();
     }

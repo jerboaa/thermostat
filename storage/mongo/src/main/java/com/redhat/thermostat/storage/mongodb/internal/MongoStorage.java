@@ -121,23 +121,16 @@ public class MongoStorage implements BackingStorage {
     private class MongoRemove implements Remove {
 
         @SuppressWarnings("rawtypes")
-        private Category category;
+        private final Category category;
         private DBObject query;
-        private MongoExpressionParser parser;
+        private final MongoExpressionParser parser;
         
-        private MongoRemove() {
-            this(new MongoExpressionParser());
+        private MongoRemove(Category<?> category) {
+            this(category, new MongoExpressionParser());
         }
         
-        private MongoRemove(MongoExpressionParser parser) {
+        private MongoRemove(Category<?> category, MongoExpressionParser parser) {
             this.parser = parser;
-        }
-
-        @Override
-        public void from(@SuppressWarnings("rawtypes") Category category) {
-            if (query != null) {
-                throw new IllegalStateException();
-            }
             this.category = category;
         }
 
@@ -338,8 +331,8 @@ public class MongoStorage implements BackingStorage {
     }
 
     @Override
-    public Remove createRemove() {
-        return new MongoRemove();
+    public Remove createRemove(Category<?> category) {
+        return new MongoRemove(category);
     }
 
     <T extends Pojo> Cursor<T> findAllPojos(MongoQuery<T> mongoQuery, Class<T> resultClass) {

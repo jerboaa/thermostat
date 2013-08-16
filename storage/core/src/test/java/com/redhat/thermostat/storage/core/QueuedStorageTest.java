@@ -216,7 +216,7 @@ public class QueuedStorageTest {
         Remove remove = mock(Remove.class);
         when(delegateStorage.createAdd(any(Category.class))).thenReturn(delegateAdd);
         when(delegateStorage.createReplace(any(Category.class))).thenReturn(delegateReplace);
-        when(delegateStorage.createRemove()).thenReturn(remove);
+        when(delegateStorage.createRemove(any(Category.class))).thenReturn(remove);
         expectedFile = mock(InputStream.class);
         when(delegateStorage.loadFile(anyString())).thenReturn(expectedFile);
         when(delegateStorage.getAgentId()).thenReturn("huzzah");
@@ -467,7 +467,7 @@ public class QueuedStorageTest {
         }
 
         @Override
-        public Remove createRemove() {
+        public Remove createRemove(Category<?> category) {
             // not implemented
             throw new AssertionError();
         }

@@ -93,7 +93,7 @@ public interface Storage {
     InputStream loadFile(String filename);
 
     Update createUpdate(Category<?> category);
-    Remove createRemove();
+    Remove createRemove(Category<?> category);
 
     void shutdown();
 
