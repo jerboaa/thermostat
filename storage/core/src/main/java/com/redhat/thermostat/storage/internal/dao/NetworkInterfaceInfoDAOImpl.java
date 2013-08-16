@@ -48,7 +48,7 @@ import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.Put;
+import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
@@ -98,7 +98,7 @@ public class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
 
     @Override
     public void putNetworkInterfaceInfo(NetworkInterfaceInfo info) {
-        Put replace = storage.createReplace(networkInfoCategory);
+        Replace replace = storage.createReplace(networkInfoCategory);
         replace.setPojo(info);
         replace.apply();
     }

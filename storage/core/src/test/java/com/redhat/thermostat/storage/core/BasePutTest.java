@@ -37,47 +37,37 @@
 
 package com.redhat.thermostat.storage.core;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.storage.model.Pojo;
 
 public class BasePutTest {
-
-    private BasePut insert;
-
+    
+    private Category<?> category;
+    
     @Before
-    public void setUp() {
-        insert = new BasePut() {
-            public void apply() {
-                // Do nothing.
-            }
-        };
-    }
-
-    @After
-    public void tearDown() {
-        insert = null;
+    public void setup() {
+        category = mock(Category.class);
     }
 
     @Test
     public void testCategory() {
-        Category category = mock(Category.class);
+        TestBasePut insert = new TestBasePut(category);
 
-        assertNull(insert.getCategory());
-        insert.setCategory(category);
+        assertNotNull(insert.getCategory());
         assertSame(category, insert.getCategory());
 
         try {
-            insert.setCategory(category);
+            insert = new TestBasePut(null);
             fail();
-        } catch (IllegalStateException ex) {
+        } catch (NullPointerException ex) {
             // Ok.
         }
     }
@@ -86,9 +76,22 @@ public class BasePutTest {
     public void testPojo() {
         Pojo pojo = mock(Pojo.class);
 
+        TestBasePut insert = new TestBasePut(category);
         assertNull(insert.getPojo());
         insert.setPojo(pojo);
         assertSame(pojo, insert.getPojo());
+    }
+    
+    private static class TestBasePut extends BasePut {
+
+        public TestBasePut(Category<?> category) {
+            super(category);
+        }
+
+        @Override
+        public void apply() {
+            // Do nothing
+        }
         
     }
 }

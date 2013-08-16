@@ -102,8 +102,8 @@ import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.PreparedParameters;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Remove;
+import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Update;
@@ -400,7 +400,7 @@ public class WebStorageTest {
         UUID agentId = new UUID(1, 2);
         storage.setAgentId(agentId);
 
-        Put replace = storage.createReplace(category);
+        Replace replace = storage.createReplace(category);
         replace.setPojo(obj);
 
         prepareServer();

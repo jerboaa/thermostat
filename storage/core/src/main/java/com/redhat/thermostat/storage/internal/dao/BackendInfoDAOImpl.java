@@ -44,12 +44,12 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.OrderedComparator;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
@@ -108,7 +108,7 @@ public class BackendInfoDAOImpl implements BackendInfoDAO {
 
     @Override
     public void addBackendInformation(BackendInformation info) {
-        Put add = storage.createAdd(BackendInfoDAO.CATEGORY);
+        Add add = storage.createAdd(BackendInfoDAO.CATEGORY);
         add.setPojo(info);
         add.apply();
     }

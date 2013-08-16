@@ -38,10 +38,10 @@ package com.redhat.thermostat.vm.cpu.common.internal;
 
 import java.util.List;
 
-import com.redhat.thermostat.storage.core.Put;
+import com.redhat.thermostat.storage.core.Add;
+import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
 
@@ -63,7 +63,7 @@ public class VmCpuStatDAOImpl implements VmCpuStatDAO {
 
     @Override
     public void putVmCpuStat(VmCpuStat stat) {
-        Put add = storage.createAdd(vmCpuStatCategory);
+        Add add = storage.createAdd(vmCpuStatCategory);
         add.setPojo(stat);
         add.apply();
     }

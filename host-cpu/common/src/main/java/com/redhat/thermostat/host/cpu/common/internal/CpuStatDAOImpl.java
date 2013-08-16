@@ -38,11 +38,11 @@ package com.redhat.thermostat.host.cpu.common.internal;
 
 import java.util.List;
 
+import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.HostLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
 import com.redhat.thermostat.host.cpu.common.model.CpuStat;
-import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Storage;
 
 class CpuStatDAOImpl implements CpuStatDAO {
@@ -64,7 +64,7 @@ class CpuStatDAOImpl implements CpuStatDAO {
 
     @Override
     public void putCpuStat(CpuStat stat) {
-        Put add = storage.createAdd(cpuStatCategory);
+        Add add = storage.createAdd(cpuStatCategory);
         add.setPojo(stat);
         add.apply();
     }

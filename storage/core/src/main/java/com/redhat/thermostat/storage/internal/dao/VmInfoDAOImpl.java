@@ -44,6 +44,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.Cursor;
@@ -51,7 +52,6 @@ import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
@@ -173,7 +173,7 @@ public class VmInfoDAOImpl extends BaseCountable implements VmInfoDAO {
 
     @Override
     public void putVmInfo(VmInfo info) {
-        Put replace = storage.createAdd(vmInfoCategory);
+        Add replace = storage.createAdd(vmInfoCategory);
         replace.setPojo(info);
         replace.apply();
     }

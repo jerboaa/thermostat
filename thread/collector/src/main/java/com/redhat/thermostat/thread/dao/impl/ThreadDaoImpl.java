@@ -43,12 +43,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.Put;
+import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
@@ -135,14 +136,14 @@ public class ThreadDaoImpl implements ThreadDao {
     
     @Override
     public void saveCapabilities(VMThreadCapabilities caps) {
-        Put replace = storage.createReplace(THREAD_CAPABILITIES);
+        Replace replace = storage.createReplace(THREAD_CAPABILITIES);
         replace.setPojo(caps);
         replace.apply();
     }
     
     @Override
     public void saveSummary(ThreadSummary summary) {
-        Put add = storage.createAdd(THREAD_SUMMARY);
+        Add add = storage.createAdd(THREAD_SUMMARY);
         add.setPojo(summary);
         add.apply();
     }
@@ -198,7 +199,7 @@ public class ThreadDaoImpl implements ThreadDao {
 
     @Override
     public void saveHarvestingStatus(ThreadHarvestingStatus status) {
-        Put add = storage.createAdd(THREAD_HARVESTING_STATUS);
+        Add add = storage.createAdd(THREAD_HARVESTING_STATUS);
         add.setPojo(status);
         add.apply();
     }
@@ -229,7 +230,7 @@ public class ThreadDaoImpl implements ThreadDao {
 
     @Override
     public void saveThreadInfo(ThreadInfoData info) {
-        Put add = storage.createAdd(THREAD_INFO);
+        Add add = storage.createAdd(THREAD_INFO);
         add.setPojo(info);
         add.apply();
     }
@@ -285,7 +286,7 @@ public class ThreadDaoImpl implements ThreadDao {
 
     @Override
     public void saveDeadLockStatus(VmDeadLockData deadLockInfo) {
-        Put add = storage.createAdd(DEADLOCK_INFO);
+        Add add = storage.createAdd(DEADLOCK_INFO);
         add.setPojo(deadLockInfo);
         add.apply();
     }

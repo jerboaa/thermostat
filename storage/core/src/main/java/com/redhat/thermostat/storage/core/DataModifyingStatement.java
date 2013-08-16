@@ -13,7 +13,8 @@ public interface DataModifyingStatement<T extends Pojo> extends Statement<T> {
     /**
      * Executes this statement.
      * 
-     * @return Zero on success. A non-zero failure code otherwise.
+     * @return a number greater than zero on success. A negative failure code
+     *         otherwise.
      */
     int execute();
 }

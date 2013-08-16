@@ -87,8 +87,8 @@ import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Persist;
-import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.model.AggregateCount;
@@ -358,7 +358,7 @@ public class MongoStorageTest {
         MongoStorage storage = makeStorage();
         TestClass pojo = new TestClass();
         pojo.setAgentId("123");
-        Put add = storage.createAdd(testCategory);
+        Add add = storage.createAdd(testCategory);
         add.setPojo(pojo);
         add.apply();
         ArgumentCaptor<DBObject> dbobj = ArgumentCaptor.forClass(DBObject.class);
@@ -462,7 +462,7 @@ public class MongoStorageTest {
         pojo.setKey5("test5");
 
         MongoStorage storage = makeStorage();
-        Put replace = storage.createReplace(testCategory);
+        Replace replace = storage.createReplace(testCategory);
         replace.setPojo(pojo);
         replace.apply();
 

@@ -52,6 +52,10 @@ public class QueuedStorage implements Storage {
 
     private class QueuedReplace extends BasePut implements Replace {
 
+        private QueuedReplace(Category<?> category) {
+            super(category);
+        }
+        
         @Override
         public void apply() {
             replaceImpl(getCategory(), getPojo());
@@ -61,6 +65,10 @@ public class QueuedStorage implements Storage {
 
     private class QueuedAdd extends BasePut implements Add {
 
+        private QueuedAdd(Category<?> category) {
+            super(category);
+        }
+        
         @Override
         public void apply() {
             addImpl(getCategory(), getPojo());
@@ -133,15 +141,13 @@ public class QueuedStorage implements Storage {
 
     @Override
     public Add createAdd(Category<?> into) {
-        QueuedAdd add = new QueuedAdd();
-        add.setCategory(into);
+        QueuedAdd add = new QueuedAdd(into);
         return add;
     }
 
     @Override
     public Replace createReplace(Category<?> into) {
-        QueuedReplace replace = new QueuedReplace();
-        replace.setCategory(into);
+        QueuedReplace replace = new QueuedReplace(into);
         return replace;
     }
 

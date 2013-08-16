@@ -51,7 +51,7 @@ import com.redhat.thermostat.storage.core.HostLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.Put;
+import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
@@ -75,7 +75,7 @@ public class NumaDAOImpl implements NumaDAO {
 
     @Override
     public void putNumaStat(NumaStat stat) {
-        Put add = storage.createAdd(numaStatCategory);
+        Add add = storage.createAdd(numaStatCategory);
         add.setPojo(stat);
         add.apply();
     }

@@ -43,6 +43,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.Cursor;
@@ -50,7 +51,6 @@ import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
@@ -182,7 +182,7 @@ public class AgentInfoDAOImpl extends BaseCountable implements AgentInfoDAO {
 
     @Override
     public void addAgentInformation(AgentInformation agentInfo) {
-        Put replace = storage.createAdd(CATEGORY);
+        Add replace = storage.createAdd(CATEGORY);
         replace.setPojo(agentInfo);
         replace.apply();
     }

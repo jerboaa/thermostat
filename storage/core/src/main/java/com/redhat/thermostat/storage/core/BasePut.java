@@ -37,22 +37,20 @@
 
 package com.redhat.thermostat.storage.core;
 
-import com.redhat.thermostat.storage.model.Pojo;
+import java.util.Objects;
 
+import com.redhat.thermostat.storage.model.Pojo;
 
 public abstract class BasePut implements Put {
 
-    private Category category;
+    private final Category<?> category;
     private Pojo pojo;
-
-    public final void setCategory(Category category) {
-        if (this.category != null) {
-            throw new IllegalStateException();
-        }
-        this.category = category;
+    
+    public BasePut(Category<?> category) {
+        this.category = Objects.requireNonNull(category);
     }
 
-    public final Category getCategory() {
+    public final Category<?> getCategory() {
         return category;
     }
 

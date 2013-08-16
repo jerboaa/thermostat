@@ -40,7 +40,7 @@ package com.redhat.thermostat.storage.core;
 import com.redhat.thermostat.storage.model.Pojo;
 
 
-public interface Put {
+interface Put {
 
     /**
      * Sets the POJO that is to be put into the database.

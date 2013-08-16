@@ -102,6 +102,10 @@ public class MongoStorage implements BackingStorage {
 
     private class MongoAdd extends BasePut implements Add {
 
+        private MongoAdd(Category<?> category) {
+            super(category);
+        }
+        
         @Override
         public void apply() {
             addImpl(getCategory(), getPojo());
@@ -111,6 +115,10 @@ public class MongoStorage implements BackingStorage {
 
     private class MongoReplace extends BasePut implements Replace {
 
+        private MongoReplace(Category<?> category) {
+            super(category);
+        }
+        
         @Override
         public void apply() {
             replaceImpl(getCategory(), getPojo());
@@ -207,15 +215,13 @@ public class MongoStorage implements BackingStorage {
 
     @Override
     public Add createAdd(Category<?> into) {
-        MongoAdd add = new MongoAdd();
-        add.setCategory(into);
+        MongoAdd add = new MongoAdd(into);
         return add;
     }
 
     @Override
     public Replace createReplace(Category<?> into) {
-        MongoReplace replace = new MongoReplace();
-        replace.setCategory(into);
+        MongoReplace replace = new MongoReplace(into);
         return replace;
     }
 

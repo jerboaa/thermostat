@@ -301,6 +301,10 @@ public class WebStorage implements Storage, SecureStorage {
 
     private class WebAdd extends BasePut implements Add {
 
+        private WebAdd(Category<?> category) {
+            super(category);
+        }
+        
         @Override
         public void apply() {
             int categoryId = getCategoryId(getCategory());
@@ -311,6 +315,10 @@ public class WebStorage implements Storage, SecureStorage {
 
     private class WebReplace extends BasePut implements Replace {
 
+        private WebReplace(Category<?> category) {
+            super(category);
+        }
+        
         @Override
         public void apply() {
             int categoryId = getCategoryId(getCategory());
@@ -630,15 +638,13 @@ public class WebStorage implements Storage, SecureStorage {
 
     @Override
     public Add createAdd(Category<?> into) {
-        WebAdd add = new WebAdd();
-        add.setCategory(into);
+        WebAdd add = new WebAdd(into);
         return add;
     }
 
     @Override
     public Replace createReplace(Category<?> into) {
-        WebReplace replace = new WebReplace();
-        replace.setCategory(into);
+        WebReplace replace = new WebReplace(into);
         return replace;
     }
     

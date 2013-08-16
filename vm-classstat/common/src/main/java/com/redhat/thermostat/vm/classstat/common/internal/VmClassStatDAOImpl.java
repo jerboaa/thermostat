@@ -38,7 +38,7 @@ package com.redhat.thermostat.vm.classstat.common.internal;
 
 import java.util.List;
 
-import com.redhat.thermostat.storage.core.Put;
+import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.VmRef;
@@ -63,7 +63,7 @@ class VmClassStatDAOImpl implements VmClassStatDAO {
 
     @Override
     public void putVmClassStat(VmClassStat stat) {
-        Put add = storage.createAdd(vmClassStatsCategory);
+        Add add = storage.createAdd(vmClassStatsCategory);
         add.setPojo(stat);
         add.apply();
     }

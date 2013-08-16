@@ -74,6 +74,7 @@ import com.google.gson.JsonParser;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.Configuration;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
+import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Categories;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.CategoryAdapter;
@@ -86,9 +87,9 @@ import com.redhat.thermostat.storage.core.ParsedStatement;
 import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.PreparedParameters;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Remove;
+import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
@@ -529,12 +530,12 @@ public class WebStorageEndPoint extends HttpServlet {
         WebInsert insert = gson.fromJson(insertParam, WebInsert.class);
         int categoryId = insert.getCategoryId();
         Category<?> category = getCategoryFromId(categoryId);
-        Put targetPut = storage.createAdd(category);
+        Add targetAdd = storage.createAdd(category);
         Class<? extends Pojo> pojoCls = category.getDataClass();
         String pojoParam = req.getParameter("pojo");
         Pojo pojo = gson.fromJson(pojoParam, pojoCls);
-        targetPut.setPojo(pojo);
-        targetPut.apply();
+        targetAdd.setPojo(pojo);
+        targetAdd.apply();
         resp.setStatus(HttpServletResponse.SC_OK);
     }
     
@@ -547,12 +548,12 @@ public class WebStorageEndPoint extends HttpServlet {
         WebInsert insert = gson.fromJson(insertParam, WebInsert.class);
         int categoryId = insert.getCategoryId();
         Category<?> category = getCategoryFromId(categoryId);
-        Put targetPut = storage.createReplace(category);
+        Replace targetReplace = storage.createReplace(category);
         Class<? extends Pojo> pojoCls = category.getDataClass();
         String pojoParam = req.getParameter("pojo");
         Pojo pojo = gson.fromJson(pojoParam, pojoCls);
-        targetPut.setPojo(pojo);
-        targetPut.apply();
+        targetReplace.setPojo(pojo);
+        targetReplace.apply();
         resp.setStatus(HttpServletResponse.SC_OK);
     }
 

@@ -44,6 +44,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.Cursor;
@@ -51,7 +52,6 @@ import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
@@ -120,7 +120,7 @@ public class HostInfoDAOImpl extends BaseCountable implements HostInfoDAO {
 
     @Override
     public void putHostInfo(HostInfo info) {
-        Put add = storage.createAdd(hostInfoCategory);
+        Add add = storage.createAdd(hostInfoCategory);
         add.setPojo(info);
         add.apply();
     }
