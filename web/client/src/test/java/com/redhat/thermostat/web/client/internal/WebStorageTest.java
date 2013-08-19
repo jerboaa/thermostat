@@ -391,7 +391,7 @@ public class WebStorageTest {
     }
 
     @Test
-    public void testPut() throws IOException, JsonSyntaxException, ClassNotFoundException {
+    public void testReplace() throws IOException, JsonSyntaxException, ClassNotFoundException {
 
         TestObj obj = new TestObj();
         obj.setProperty1("fluff");
@@ -416,7 +416,6 @@ public class WebStorageTest {
         assertEquals("insert", parts[0]);
         WebInsert insert = gson.fromJson(parts[1], WebInsert.class);
         assertEquals(42, insert.getCategoryId());
-        assertEquals(true, insert.isReplace());
 
         parts = params[1].split("=");
         assertEquals(2, parts.length);

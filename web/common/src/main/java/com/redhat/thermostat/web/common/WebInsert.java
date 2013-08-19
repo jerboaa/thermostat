@@ -41,14 +41,12 @@ package com.redhat.thermostat.web.common;
 public class WebInsert {
 
     private int categoryId;
-    private boolean replace;
 
     public WebInsert() {
     }
 
-    public WebInsert(int categoryId, boolean replace) {
+    public WebInsert(int categoryId) {
         this.categoryId = categoryId;
-        this.replace = replace;
     }
 
     public int getCategoryId() {
@@ -58,15 +56,6 @@ public class WebInsert {
     public void setCategoryId(int categoryId) {
         this.categoryId = categoryId;
     }
-
-    public boolean isReplace() {
-        return replace;
-    }
-
-    public void setReplace(boolean replace) {
-        this.replace = replace;
-    }
-
 
 }
 

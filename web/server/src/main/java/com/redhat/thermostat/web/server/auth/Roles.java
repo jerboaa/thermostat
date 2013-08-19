@@ -55,6 +55,14 @@ public interface Roles {
      */
     final String GRANT_VMS_READ_BY_USERNAME_ALL = "thermostat-vms-grant-read-username-ALL";
     /**
+     * Allows for a user to read any file from storage.
+     */
+    final String GRANT_FILES_READ_ALL = "thermostat-files-grant-read-filename-ALL";
+    /**
+     * Allows for a user to write any file to storage.
+     */
+    final String GRANT_FILES_WRITE_ALL = "thermostat-files-grant-write-filename-ALL";
+    /**
      * Allows for a user to see records tied to any agent.
      */
     final String GRANT_AGENTS_READ_ALL = "thermostat-agents-grant-read-agentId-ALL";

@@ -304,7 +304,7 @@ public class WebStorage implements Storage, SecureStorage {
         @Override
         public void apply() {
             int categoryId = getCategoryId(getCategory());
-            putImpl(new WebInsert(categoryId, false), getPojo());
+            addImpl(new WebInsert(categoryId), getPojo());
         }
         
     }
@@ -314,7 +314,7 @@ public class WebStorage implements Storage, SecureStorage {
         @Override
         public void apply() {
             int categoryId = getCategoryId(getCategory());
-            putImpl(new WebInsert(categoryId, true), getPojo());
+            replaceImpl(new WebInsert(categoryId), getPojo());
         }
         
     }
@@ -641,17 +641,25 @@ public class WebStorage implements Storage, SecureStorage {
         replace.setCategory(into);
         return replace;
     }
+    
+    private void addImpl(WebInsert insert, final Pojo pojo) throws StorageException {
+        List<NameValuePair> formParams = getPutFormParams(insert, pojo);
+        post(endpoint + "/add-pojo", formParams).close();
+    }
 
-    private void putImpl(WebInsert insert, final Pojo pojo) throws StorageException {
-
+    private List<NameValuePair> getPutFormParams(WebInsert insert, Pojo pojo) {
         maybeAddAgentId(pojo);
         NameValuePair insertParam = new BasicNameValuePair("insert",
                 gson.toJson(insert));
         NameValuePair pojoParam = new BasicNameValuePair("pojo",
                 gson.toJson(pojo));
         List<NameValuePair> formparams = Arrays.asList(insertParam, pojoParam);
-        post(endpoint + "/put-pojo", formparams).close();
+        return formparams;
+    }
 
+    private void replaceImpl(WebInsert insert, final Pojo pojo) throws StorageException {
+        List<NameValuePair> formparams = getPutFormParams(insert, pojo);
+        post(endpoint + "/replace-pojo", formparams).close();
     }
 
     private void maybeAddAgentId(final Pojo pojo) throws AssertionError {

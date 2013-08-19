@@ -231,11 +231,12 @@ public class WebStorageEndPoint extends HttpServlet {
         String cmd = uri.substring(lastPartIdx + 1);
         if (cmd.equals("prepare-statement")) {
             prepareStatement(req, resp);
-        }
-        else if (cmd.equals("query-execute")) {
+        } else if (cmd.equals("query-execute")) {
             queryExecute(req, resp);
-        } else if (cmd.equals("put-pojo")) {
-            putPojo(req, resp);
+        } else if (cmd.equals("add-pojo")) {
+            addPojo(req, resp);
+        } else if (cmd.equals("replace-pojo")) {
+            replacePojo(req, resp);
         } else if (cmd.equals("register-category")) {
             registerCategory(req, resp);
         } else if (cmd.equals("remove-pojo")) {
@@ -519,24 +520,34 @@ public class WebStorageEndPoint extends HttpServlet {
         }
     }
 
-    @WebStoragePathHandler( path = "put-pojo" )
-    private void putPojo(HttpServletRequest req, HttpServletResponse resp) {
+    @WebStoragePathHandler( path = "add-pojo" )
+    private void addPojo(HttpServletRequest req, HttpServletResponse resp) {
+        if (! isAuthorized(req, resp, Roles.APPEND)) {
+            return;
+        }
         String insertParam = req.getParameter("insert");
         WebInsert insert = gson.fromJson(insertParam, WebInsert.class);
         int categoryId = insert.getCategoryId();
         Category<?> category = getCategoryFromId(categoryId);
-        Put targetPut = null;
-        if (insert.isReplace()) {
-            if (! isAuthorized(req, resp, Roles.REPLACE)) {
-                return;
-            }
-            targetPut = storage.createReplace(category);
-        } else {
-            if (! isAuthorized(req, resp, Roles.APPEND)) {
-                return;
-            }
-            targetPut = storage.createAdd(category);
+        Put targetPut = storage.createAdd(category);
+        Class<? extends Pojo> pojoCls = category.getDataClass();
+        String pojoParam = req.getParameter("pojo");
+        Pojo pojo = gson.fromJson(pojoParam, pojoCls);
+        targetPut.setPojo(pojo);
+        targetPut.apply();
+        resp.setStatus(HttpServletResponse.SC_OK);
+    }
+    
+    @WebStoragePathHandler( path = "replace-pojo" )
+    private void replacePojo(HttpServletRequest req, HttpServletResponse resp) {
+        if (! isAuthorized(req, resp, Roles.REPLACE)) {
+            return;
         }
+        String insertParam = req.getParameter("insert");
+        WebInsert insert = gson.fromJson(insertParam, WebInsert.class);
+        int categoryId = insert.getCategoryId();
+        Category<?> category = getCategoryFromId(categoryId);
+        Put targetPut = storage.createReplace(category);
         Class<? extends Pojo> pojoCls = category.getDataClass();
         String pojoParam = req.getParameter("pojo");
         Pojo pojo = gson.fromJson(pojoParam, pojoCls);

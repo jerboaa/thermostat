@@ -251,7 +251,7 @@ public class WebStorageEndpointTest {
         // manually maintained list of path handlers which should include
         // authorization checks
         final String[] authPaths = new String[] {
-                "prepare-statement", "query-execute", "put-pojo", "register-category", "remove-pojo",
+                "prepare-statement", "query-execute", "add-pojo", "replace-pojo", "register-category", "remove-pojo",
                 "update-pojo", "save-file", "load-file",
                 "purge", "ping", "generate-token", "verify-token"
         };
@@ -873,7 +873,7 @@ public class WebStorageEndpointTest {
     }
 
     @Test
-    public void authorizedReplacePutPojo() throws Exception {
+    public void authorizedReplacePojo() throws Exception {
         String[] roleNames = new String[] {
                 Roles.REPLACE,
                 Roles.REGISTER_CATEGORY,
@@ -903,14 +903,14 @@ public class WebStorageEndpointTest {
 
         String endpoint = getEndpoint();
 
-        URL url = new URL(endpoint + "/put-pojo");
+        URL url = new URL(endpoint + "/replace-pojo");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
         sendAuthentication(conn, testuser, password);
 
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        WebInsert insert = new WebInsert(categoryId, true);
+        WebInsert insert = new WebInsert(categoryId);
         Gson gson = new Gson();
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
         out.write("insert=");
@@ -927,7 +927,7 @@ public class WebStorageEndpointTest {
     }    
     
     @Test
-    public void unauthorizedReplacePutPojo() throws Exception {
+    public void unauthorizedReplacePojo() throws Exception {
         String[] insufficientRoleNames = new String[] {
                 Roles.REGISTER_CATEGORY,
                 Roles.ACCESS_REALM
@@ -948,7 +948,7 @@ public class WebStorageEndpointTest {
         registerCategory(testuser, password);
         
         String endpoint = getEndpoint();
-        URL url = new URL(endpoint + "/put-pojo");
+        URL url = new URL(endpoint + "/replace-pojo");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
         sendAuthentication(conn, testuser, password);
@@ -956,7 +956,7 @@ public class WebStorageEndpointTest {
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
         // replace
-        WebInsert insert = new WebInsert(categoryId, true);
+        WebInsert insert = new WebInsert(categoryId);
         Gson gson = new Gson();
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
         out.write("insert=");
@@ -972,7 +972,7 @@ public class WebStorageEndpointTest {
     }
 
     @Test
-    public void authorizedInsertPutPojo() throws Exception {
+    public void authorizedAddPojo() throws Exception {
         String[] roleNames = new String[] {
                 Roles.APPEND,
                 Roles.REGISTER_CATEGORY,
@@ -1002,14 +1002,14 @@ public class WebStorageEndpointTest {
 
         String endpoint = getEndpoint();
 
-        URL url = new URL(endpoint + "/put-pojo");
+        URL url = new URL(endpoint + "/add-pojo");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
         sendAuthentication(conn, testuser, password);
 
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        WebInsert ins = new WebInsert(categoryId, false);
+        WebInsert ins = new WebInsert(categoryId);
         Gson gson = new Gson();
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
         out.write("insert=");
@@ -1026,7 +1026,7 @@ public class WebStorageEndpointTest {
     }
     
     @Test
-    public void unauthorizedInsertPutPojo() throws Exception {
+    public void unauthorizedAddPojo() throws Exception {
         String[] insufficientRoleNames = new String[] {
                 Roles.REGISTER_CATEGORY,
                 Roles.ACCESS_REALM
@@ -1047,7 +1047,7 @@ public class WebStorageEndpointTest {
         registerCategory(testuser, password);
         
         String endpoint = getEndpoint();
-        URL url = new URL(endpoint + "/put-pojo");
+        URL url = new URL(endpoint + "/add-pojo");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
         sendAuthentication(conn, testuser, password);
@@ -1055,7 +1055,7 @@ public class WebStorageEndpointTest {
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
         // replace
-        WebInsert insert = new WebInsert(categoryId, false);
+        WebInsert insert = new WebInsert(categoryId);
         Gson gson = new Gson();
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
         out.write("insert=");
