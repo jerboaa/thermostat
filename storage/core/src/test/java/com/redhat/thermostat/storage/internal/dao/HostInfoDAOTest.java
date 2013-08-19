@@ -94,6 +94,8 @@ public class HostInfoDAOTest {
         assertEquals(expectedHostInfo, HostInfoDAOImpl.QUERY_HOST_INFO);
         String expectedAllHosts = "QUERY host-info";
         assertEquals(expectedAllHosts, HostInfoDAOImpl.QUERY_ALL_HOSTS);
+        String aggregateAllHosts = "QUERY-COUNT host-info";
+        assertEquals(aggregateAllHosts, HostInfoDAOImpl.AGGREGATE_COUNT_ALL_HOSTS);
     }
     
     @Test

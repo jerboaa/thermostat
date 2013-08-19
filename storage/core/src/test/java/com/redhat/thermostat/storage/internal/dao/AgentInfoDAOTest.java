@@ -102,6 +102,8 @@ public class AgentInfoDAOTest {
         assertEquals(expectedAllAgents, AgentInfoDAOImpl.QUERY_ALL_AGENTS);
         String expectedAliveAgents = "QUERY agent-config WHERE 'alive' = ?b";
         assertEquals(expectedAliveAgents, AgentInfoDAOImpl.QUERY_ALIVE_AGENTS);
+        String aggregateAllAgents = "QUERY-COUNT agent-config";
+        assertEquals(aggregateAllAgents, AgentInfoDAOImpl.AGGREGATE_COUNT_ALL_AGENTS);
     }
     
     @Test

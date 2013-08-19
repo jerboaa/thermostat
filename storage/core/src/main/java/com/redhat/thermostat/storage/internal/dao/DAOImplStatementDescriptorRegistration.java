@@ -81,7 +81,8 @@ public class DAOImplStatementDescriptorRegistration implements
         } else if (descriptor.equals(AgentInfoDAOImpl.QUERY_ALIVE_AGENTS)) {
             DescriptorMetadata metadata = new DescriptorMetadata();
             return metadata;
-        } else if (descriptor.equals(AgentInfoDAOImpl.QUERY_ALL_AGENTS)) {
+        } else if (descriptor.equals(AgentInfoDAOImpl.QUERY_ALL_AGENTS) ||
+                descriptor.equals(AgentInfoDAOImpl.AGGREGATE_COUNT_ALL_AGENTS)) {
             DescriptorMetadata metadata = new DescriptorMetadata();
             return metadata;
         } else if (descriptor.equals(BackendInfoDAOImpl.QUERY_BACKEND_INFO)) {
@@ -92,17 +93,19 @@ public class DAOImplStatementDescriptorRegistration implements
             String agentId = (String)params[0].getValue();
             DescriptorMetadata metadata = new DescriptorMetadata(agentId);
             return metadata;
-        } else if (descriptor.equals(HostInfoDAOImpl.QUERY_ALL_HOSTS)) {
-            DescriptorMetadata metadata = new DescriptorMetadata();
-            return metadata;
-        } else if (descriptor.equals(HostInfoDAOImpl.AGGREGATE_COUNT_ALL_HOSTS)) {
+        } else if (descriptor.equals(HostInfoDAOImpl.QUERY_ALL_HOSTS) ||
+                descriptor.equals(HostInfoDAOImpl.AGGREGATE_COUNT_ALL_HOSTS)) {
             DescriptorMetadata metadata = new DescriptorMetadata();
             return metadata;
         } else if (descriptor.equals(NetworkInterfaceInfoDAOImpl.QUERY_NETWORK_INFO)) {
             String agentId = (String)params[0].getValue();
             DescriptorMetadata metadata = new DescriptorMetadata(agentId);
             return metadata;
-        } else if (descriptor.equals(VmInfoDAOImpl.QUERY_ALL_VMS)) {
+        } else if (descriptor.equals(VmInfoDAOImpl.QUERY_ALL_VMS) ||
+                descriptor.equals(VmInfoDAOImpl.AGGREGATE_COUNT_ALL_VMS)) {
+            DescriptorMetadata metadata = new DescriptorMetadata();
+            return metadata;
+        } else if (descriptor.equals(VmInfoDAOImpl.QUERY_ALL_VMS_FOR_HOST)) {
             String agentId = (String)params[0].getValue();
             DescriptorMetadata metadata = new DescriptorMetadata(agentId);
             return metadata;

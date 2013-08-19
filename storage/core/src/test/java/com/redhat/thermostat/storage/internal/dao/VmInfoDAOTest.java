@@ -120,6 +120,8 @@ public class VmInfoDAOTest {
         assertEquals(expectedVmInfoAll, VmInfoDAOImpl.QUERY_ALL_VMS_FOR_HOST);
         String expectedAllVms = "QUERY vm-info";
         assertEquals(expectedAllVms, VmInfoDAOImpl.QUERY_ALL_VMS);
+        String aggregateAllVms = "QUERY-COUNT vm-info";
+        assertEquals(aggregateAllVms, VmInfoDAOImpl.AGGREGATE_COUNT_ALL_VMS);
     }
 
     @Test

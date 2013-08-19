@@ -84,6 +84,31 @@ public class DAOImplStatementDescriptorRegistrationTest {
     }
     
     @Test
+    public void metaDataFactoryIsSane() {
+        PreparedParameter agentIdParam = mock(PreparedParameter.class);
+        PreparedParameter vmIdParam = mock(PreparedParameter.class);
+        String agentId = "agentId";
+        String vmId = "vmId";
+        when(agentIdParam.getValue()).thenReturn(agentId);
+        when(vmIdParam.getValue()).thenReturn(vmId);
+        PreparedParameter[] fakeParams = new PreparedParameter[] {
+                agentIdParam, vmIdParam
+        };
+        
+        DAOImplStatementDescriptorRegistration factory = new DAOImplStatementDescriptorRegistration();
+        List<String> errorList = new ArrayList<>();
+        for (String desc: factory.getStatementDescriptors()) {
+            // should be able to get metadata for all descriptors
+            try {
+                factory.getDescriptorMetadata(desc, fakeParams);
+            } catch (IllegalArgumentException e) {
+                errorList.add(e.getMessage());
+            }
+        }
+        assertEquals(errorList.toString(), 0, errorList.size());
+    }
+    
+    @Test
     public void canGetMetadataForAgentAliveQuery() {
         StatementDescriptorMetadataFactory factory = new DAOImplStatementDescriptorRegistration();
         DescriptorMetadata data = factory.getDescriptorMetadata(AgentInfoDAOImpl.QUERY_ALIVE_AGENTS, null);
@@ -112,6 +137,11 @@ public class DAOImplStatementDescriptorRegistrationTest {
     public void canGetMetadataForAllAgentsQuery() {
         StatementDescriptorMetadataFactory factory = new DAOImplStatementDescriptorRegistration();
         DescriptorMetadata data = factory.getDescriptorMetadata(AgentInfoDAOImpl.QUERY_ALL_AGENTS, null);
+        assertNotNull(data);
+        assertFalse(data.hasAgentId());
+        assertFalse(data.hasVmId());
+        // Do the same for the aggregate
+        data = factory.getDescriptorMetadata(AgentInfoDAOImpl.AGGREGATE_COUNT_ALL_AGENTS, null);
         assertNotNull(data);
         assertFalse(data.hasAgentId());
         assertFalse(data.hasVmId());
@@ -158,6 +188,27 @@ public class DAOImplStatementDescriptorRegistrationTest {
         assertNotNull(data);
         assertFalse(data.hasAgentId());
         assertFalse(data.hasVmId());
+        // Do the same for the aggregate query
+        data = factory.getDescriptorMetadata(HostInfoDAOImpl.AGGREGATE_COUNT_ALL_HOSTS, null);
+        assertNotNull(data);
+        assertFalse(data.hasAgentId());
+        assertFalse(data.hasVmId());
+    }
+    
+    @Test
+    public void canGetMetadataForAllVmsPerHostQuery() {
+        PreparedParameter agentIdParam = mock(PreparedParameter.class);
+        String agentId = "agentId";
+        when(agentIdParam.getValue()).thenReturn(agentId);
+        PreparedParameter[] params = new PreparedParameter[] {
+                agentIdParam
+        };
+        StatementDescriptorMetadataFactory factory = new DAOImplStatementDescriptorRegistration();
+        DescriptorMetadata data = factory.getDescriptorMetadata(VmInfoDAOImpl.QUERY_ALL_VMS_FOR_HOST, params);
+        assertNotNull(data);
+        assertTrue(data.hasAgentId());
+        assertEquals(agentId, data.getAgentId());
+        assertFalse(data.hasVmId());
     }
     
     @Test
@@ -178,20 +229,17 @@ public class DAOImplStatementDescriptorRegistrationTest {
     }
     
     @Test
-    public void canGetMetadataForVmInfoAllQuery() {
-        PreparedParameter agentIdParam = mock(PreparedParameter.class);
-        String agentId = "agentId";
-        when(agentIdParam.getValue()).thenReturn(agentId);
-        PreparedParameter[] params = new PreparedParameter[] {
-                agentIdParam
-        };
-        
+    public void canGetMetadataForVmInfoAllQuery() {        
         StatementDescriptorMetadataFactory factory = new DAOImplStatementDescriptorRegistration();
-        DescriptorMetadata data = factory.getDescriptorMetadata(VmInfoDAOImpl.QUERY_ALL_VMS, params);
+        DescriptorMetadata data = factory.getDescriptorMetadata(VmInfoDAOImpl.QUERY_ALL_VMS, null);
         assertNotNull(data);
-        assertTrue(data.hasAgentId());
+        assertFalse(data.hasAgentId());
         assertFalse(data.hasVmId());
-        assertEquals(agentId, data.getAgentId());
+        // Do the same for the aggregate query
+        data = factory.getDescriptorMetadata(VmInfoDAOImpl.AGGREGATE_COUNT_ALL_VMS, null);
+        assertNotNull(data);
+        assertFalse(data.hasAgentId());
+        assertFalse(data.hasVmId());
     }
     
     @Test
