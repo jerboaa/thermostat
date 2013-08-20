@@ -52,6 +52,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
@@ -59,7 +60,6 @@ import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Remove;
-import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
@@ -261,16 +261,16 @@ public class AgentInfoDAOTest {
     @Test
     public void verifyAddAgentInformation() {
         Storage storage = mock(Storage.class);
-        Replace replace = mock(Replace.class);
-        when(storage.createReplace(any(Category.class))).thenReturn(replace);
+        Add add = mock(Add.class);
+        when(storage.createAdd(any(Category.class))).thenReturn(add);
 
         AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
 
         dao.addAgentInformation(agentInfo1);
 
-        verify(storage).createReplace(AgentInfoDAO.CATEGORY);
-        verify(replace).setPojo(agentInfo1);
-        verify(replace).apply();
+        verify(storage).createAdd(AgentInfoDAO.CATEGORY);
+        verify(add).setPojo(agentInfo1);
+        verify(add).apply();
     }
 
     @Test

@@ -53,13 +53,13 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
@@ -315,8 +315,8 @@ public class VmInfoDAOTest {
     public void testPutVmInfo() {
 
         Storage storage = mock(Storage.class);
-        Replace replace = mock(Replace.class);
-        when(storage.createReplace(any(Category.class))).thenReturn(replace);
+        Add add = mock(Add.class);
+        when(storage.createAdd(any(Category.class))).thenReturn(add);
 
         VmInfo info = new VmInfo(vmId, vmPid, startTime, stopTime, jVersion, jHome,
                 mainClass, commandLine, vmName, vmInfo, vmVersion, vmArgs,
@@ -324,9 +324,9 @@ public class VmInfoDAOTest {
         VmInfoDAO dao = new VmInfoDAOImpl(storage);
         dao.putVmInfo(info);
 
-        verify(storage).createReplace(VmInfoDAO.vmInfoCategory);
-        verify(replace).setPojo(info);
-        verify(replace).apply();
+        verify(storage).createAdd(VmInfoDAO.vmInfoCategory);
+        verify(add).setPojo(info);
+        verify(add).apply();
     }
 
     @Test

@@ -182,7 +182,7 @@ public class AgentInfoDAOImpl extends BaseCountable implements AgentInfoDAO {
 
     @Override
     public void addAgentInformation(AgentInformation agentInfo) {
-        Put replace = storage.createReplace(CATEGORY);
+        Put replace = storage.createAdd(CATEGORY);
         replace.setPojo(agentInfo);
         replace.apply();
     }

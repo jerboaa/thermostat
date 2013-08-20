@@ -173,7 +173,7 @@ public class VmInfoDAOImpl extends BaseCountable implements VmInfoDAO {
 
     @Override
     public void putVmInfo(VmInfo info) {
-        Put replace = storage.createReplace(vmInfoCategory);
+        Put replace = storage.createAdd(vmInfoCategory);
         replace.setPojo(info);
         replace.apply();
     }

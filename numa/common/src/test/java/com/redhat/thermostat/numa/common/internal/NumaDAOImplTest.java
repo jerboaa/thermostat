@@ -46,12 +46,14 @@ import static org.mockito.Mockito.when;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.numa.common.NumaDAO;
 import com.redhat.thermostat.numa.common.NumaHostInfo;
 import com.redhat.thermostat.numa.common.NumaNodeStat;
 import com.redhat.thermostat.numa.common.NumaStat;
 import com.redhat.thermostat.storage.core.Add;
+import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -115,6 +117,24 @@ public class NumaDAOImplTest {
         verify(add).setPojo(numaStat);
         verify(add).apply();
         verifyNoMoreInteractions(add);
+    }
+    
+    @Test
+    public void testPutNumberOfNumaNodes() {
+        Storage storage = mock(Storage.class);
+        Add add = mock(Add.class);
+        when(storage.createAdd(any(Category.class))).thenReturn(add);
+
+        NumaDAOImpl dao = new NumaDAOImpl(storage);
+
+        dao.putNumberOfNumaNodes(4);
+
+        verify(storage).createAdd(NumaDAO.numaHostCategory);
+        ArgumentCaptor<NumaHostInfo> captor = ArgumentCaptor.forClass(NumaHostInfo.class);
+        verify(add).setPojo(captor.capture());
+        NumaHostInfo info = captor.getValue();
+        assertEquals(4, info.getNumNumaNodes());
+        verify(add).apply();
     }
     
     @Test
