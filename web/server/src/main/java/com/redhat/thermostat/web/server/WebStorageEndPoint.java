@@ -124,6 +124,8 @@ import com.redhat.thermostat.web.server.auth.WebStoragePathHandler;
 public class WebStorageEndPoint extends HttpServlet {
 
     static final String CMDC_AUTHORIZATION_GRANT_ROLE_PREFIX = "thermostat-cmdc-grant-";
+    static final String FILES_READ_GRANT_ROLE_PREFIX = "thermostat-files-grant-read-filename-";
+    static final String FILES_WRITE_GRANT_ROLE_PREFIX = "thermostat-files-grant-write-filename-";
     private static final String TOKEN_MANAGER_TIMEOUT_PARAM = "token-manager-timeout";
     private static final String TOKEN_MANAGER_KEY = "token-manager";
     private static final String JETTY_JAAS_USER_PRINCIPAL_CLASS_NAME = "org.eclipse.jetty.plus.jaas.JAASUserPrincipal";
@@ -401,6 +403,9 @@ public class WebStorageEndPoint extends HttpServlet {
         }
         
         String name = req.getParameter("file");
+        if (! isAllowedToLoadFile(req, resp, name)) {
+            return;
+        }
         try (InputStream data = storage.loadFile(name)) {
             if (data == null) {
                 resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
@@ -438,6 +443,9 @@ public class WebStorageEndPoint extends HttpServlet {
                 String fieldName = item.getFieldName();
                 if (fieldName.equals("file")) {
                     String name = item.getName();
+                    if (! isAllowedToSaveFile(req, resp, name)) {
+                        return;
+                    }
                     InputStream in = item.getInputStream();
                     storage.saveFile(name, in);
                 }
@@ -446,6 +454,35 @@ public class WebStorageEndPoint extends HttpServlet {
             throw new ServletException(ex);
         }
         
+    }
+
+    private boolean isAllowedToLoadFile(HttpServletRequest req,
+            HttpServletResponse resp, String filename) {
+        String fileRole = FILES_READ_GRANT_ROLE_PREFIX + filename;
+        return isAllowed(req, resp, filename, Roles.GRANT_FILES_READ_ALL, fileRole);
+        
+    }
+
+    private boolean isAllowedToSaveFile(HttpServletRequest req,
+            HttpServletResponse resp, String filename) {
+        String fileRole = FILES_WRITE_GRANT_ROLE_PREFIX + filename;
+        return isAllowed(req, resp, filename, Roles.GRANT_FILES_WRITE_ALL, fileRole);
+    }
+
+    private boolean isAllowed(HttpServletRequest req, HttpServletResponse resp,
+            String filename, String grantAllRole, String specificFileRole) {
+        if (req.isUserInRole(grantAllRole) || req.isUserInRole(specificFileRole)) {
+            return true;
+        } else {
+            String detailMsg = "User '" + req.getRemoteUser() +
+                    "' does not belong to any of the following roles: [ " + 
+                    grantAllRole + ", " + 
+                    specificFileRole + " ]";
+            logger.log(Level.INFO, "Permission denied for file '" +
+                    filename + "'. " + detailMsg);
+            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            return false;
+        }
     }
 
     @SuppressWarnings("unchecked") // need to adapt categories

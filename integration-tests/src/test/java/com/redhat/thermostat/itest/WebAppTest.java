@@ -972,7 +972,9 @@ public class WebAppTest extends IntegrationTest {
                 Roles.LOAD_FILE,
                 Roles.SAVE_FILE,
                 Roles.ACCESS_REALM,
-                Roles.LOGIN
+                Roles.LOGIN,
+                Roles.GRANT_FILES_WRITE_ALL,
+                Roles.GRANT_FILES_READ_ALL
         };
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         

@@ -1227,9 +1227,12 @@ public class WebStorageEndpointTest {
 
     @Test
     public void authorizedSaveFile() throws Exception {
+        String filename = "fluff";
         String[] roleNames = new String[] {
                 Roles.SAVE_FILE,
-                Roles.ACCESS_REALM
+                Roles.ACCESS_REALM,
+                // User also needs permission for specific file to be saved.
+                WebStorageEndPoint.FILES_WRITE_GRANT_ROLE_PREFIX + filename
         };
         String testuser = "testuser";
         String password = "testpassword";
@@ -1252,7 +1255,7 @@ public class WebStorageEndpointTest {
         conn.setRequestProperty("Transfer-Encoding", "chunked");
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
         out.write("--fluff\r\n");
-        out.write("Content-Disposition: form-data; name=\"file\"; filename=\"fluff\"\r\n");
+        out.write("Content-Disposition: form-data; name=\"file\"; filename=\"" + filename + "\"\r\n");
         out.write("Content-Type: application/octet-stream\r\n");
         out.write("Content-Transfer-Encoding: binary\r\n");
         out.write("\r\n");
@@ -1260,9 +1263,10 @@ public class WebStorageEndpointTest {
         out.write("--fluff--\r\n");
         out.flush();
         // needed in order to trigger inCaptor interaction with mock
-        conn.getResponseCode();
+        int respCode = conn.getResponseCode();
+        assertEquals(HttpServletResponse.SC_OK, respCode);
         ArgumentCaptor<InputStream> inCaptor = ArgumentCaptor.forClass(InputStream.class);
-        verify(mockStorage).saveFile(eq("fluff"), inCaptor.capture());
+        verify(mockStorage).saveFile(eq(filename), inCaptor.capture());
         InputStream in = inCaptor.getValue();
         byte[] data = new byte[11];
         int totalRead = 0;
@@ -1279,15 +1283,60 @@ public class WebStorageEndpointTest {
     @Test
     public void unauthorizedSaveFile() throws Exception {
         String failMsg = "thermostat-save-file role missing, expected Forbidden!";
-        String[] insufficientRoles = new String[0];
+        String[] insufficientRoles = new String[] {
+                Roles.ACCESS_REALM
+        };
         doUnauthorizedTest("save-file", failMsg, insufficientRoles, false);
+    }
+    
+    @Test
+    public void unauthorizedSaveFileMissingSpecificRole() throws Exception {
+        String filename = "foo.txt";
+        String[] insufficientRoles = new String[] {
+                Roles.SAVE_FILE,
+                Roles.ACCESS_REALM
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        final LoginService loginService = new TestLoginService(testuser, password, insufficientRoles); 
+        port = FreePortFinder.findFreePort(new TryPort() {
+            
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port, loginService);
+            }
+        });
+        String endpoint = getEndpoint();
+
+        URL url = new URL(endpoint + "/save-file");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        sendAuthentication(conn, testuser, password);
+        conn.setDoOutput(true);
+        conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=fluff");
+        conn.setRequestProperty("Transfer-Encoding", "chunked");
+        OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
+        out.write("--fluff\r\n");
+        out.write("Content-Disposition: form-data; name=\"file\"; filename=\"" + filename + "\"\r\n");
+        out.write("Content-Type: application/octet-stream\r\n");
+        out.write("Content-Transfer-Encoding: binary\r\n");
+        out.write("\r\n");
+        out.write("Hello World\r\n");
+        out.write("--fluff--\r\n");
+        out.flush();
+        int respCode = conn.getResponseCode();
+        assertEquals(HttpServletResponse.SC_FORBIDDEN, respCode);
+        verifyNoMoreInteractions(mockStorage);
     }
 
     @Test
     public void authorizedLoadFile() throws Exception {
+        String filename = "fluff";
         String[] roleNames = new String[] {
                 Roles.LOAD_FILE,
-                Roles.ACCESS_REALM
+                Roles.ACCESS_REALM,
+                // Grant the specific read file permission
+                WebStorageEndPoint.FILES_READ_GRANT_ROLE_PREFIX + filename
         };
         String testuser = "testuser";
         String password = "testpassword";
@@ -1302,7 +1351,7 @@ public class WebStorageEndpointTest {
         
         byte[] data = "Hello World".getBytes();
         InputStream in = new ByteArrayInputStream(data);
-        when(mockStorage.loadFile("fluff")).thenReturn(in);
+        when(mockStorage.loadFile(filename)).thenReturn(in);
 
         String endpoint = getEndpoint();
         URL url = new URL(endpoint + "/load-file");
@@ -1313,8 +1362,10 @@ public class WebStorageEndpointTest {
         conn.setDoOutput(true);
         conn.setDoInput(true);
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-        out.write("file=fluff");
+        out.write("file=" + filename);
         out.flush();
+        int respCode = conn.getResponseCode();
+        assertEquals(HttpServletResponse.SC_OK, respCode);
         in = conn.getInputStream();
         data = new byte[11];
         int totalRead = 0;
@@ -1326,14 +1377,54 @@ public class WebStorageEndpointTest {
             totalRead += read;
         }
         assertEquals("Hello World", new String(data));
-        verify(mockStorage).loadFile("fluff");
+        verify(mockStorage).loadFile(filename);
     }
     
     @Test
     public void unauthorizedLoadFile() throws Exception {
         String failMsg = "thermostat-load-file role missing, expected Forbidden!";
-        String[] insufficientRoles = new String[0];
+        String[] insufficientRoles = new String[] {
+                Roles.ACCESS_REALM
+        };
         doUnauthorizedTest("load-file", failMsg, insufficientRoles, false);
+    }
+    
+    @Test
+    public void unauthorizedLoadFileMissingSpecificRole() throws Exception {
+        String filename = "foo.txt";
+        String[] insufficientRoles = new String[] {
+                Roles.LOAD_FILE,
+                Roles.ACCESS_REALM
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        final LoginService loginService = new TestLoginService(testuser, password, insufficientRoles); 
+        port = FreePortFinder.findFreePort(new TryPort() {
+            
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port, loginService);
+            }
+        });
+        
+        byte[] data = "Hello World".getBytes();
+        InputStream in = new ByteArrayInputStream(data);
+        when(mockStorage.loadFile(filename)).thenReturn(in);
+
+        String endpoint = getEndpoint();
+        URL url = new URL(endpoint + "/load-file");
+
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        sendAuthentication(conn, testuser, password);
+        conn.setDoOutput(true);
+        conn.setDoInput(true);
+        OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
+        out.write("file=" + filename);
+        out.flush();
+        int respCode = conn.getResponseCode();
+        assertEquals(HttpServletResponse.SC_FORBIDDEN, respCode);
+        verifyNoMoreInteractions(mockStorage);
     }
 
     @Test
@@ -1360,14 +1451,50 @@ public class WebStorageEndpointTest {
         sendAuthentication(conn, testuser, password);
         conn.getOutputStream().write("agentId=fluff".getBytes());
         int status = conn.getResponseCode();
-        assertEquals(200, status);
+        assertEquals(HttpServletResponse.SC_OK, status);
         verify(mockStorage).purge("fluff");
+    }
+    
+    @Test
+    public void unauthorizedAccessRealm() throws Exception {
+        String failMsg = Roles.ACCESS_REALM + " role missing, expected Forbidden!";
+        String[] insufficientRoles = new String[0];
+        // entry point for this test doesn't matter. Use '/'. 
+        doUnauthorizedTest("", failMsg, insufficientRoles, false);
+    }
+    
+    @Test
+    public void authorizedAccessRealm() throws Exception {
+        String[] roles = new String[] {
+                Roles.ACCESS_REALM
+        };
+        String testuser = "testuser";
+        String password = "testpassword";
+        final LoginService loginService = new TestLoginService(testuser, password, roles); 
+        port = FreePortFinder.findFreePort(new TryPort() {
+            
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port, loginService);
+            }
+        });
+        
+        String endpoint = getEndpoint();
+        URL url = new URL(endpoint + "/"); // Testing the realm, nothing else.
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        sendAuthentication(conn, testuser, password);
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        
+        assertEquals(HttpServletResponse.SC_OK, conn.getResponseCode());
     }
     
     @Test
     public void unauthorizedPurge() throws Exception {
         String failMsg = "thermostat-purge role missing, expected Forbidden!";
-        String[] insufficientRoles = new String[0];
+        String[] insufficientRoles = new String[] {
+                Roles.ACCESS_REALM
+        };
         doUnauthorizedTest("purge", failMsg, insufficientRoles, false);
     }
 
