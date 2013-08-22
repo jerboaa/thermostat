@@ -124,10 +124,10 @@ public class VmMemoryStatDAOTest {
 
         assertEquals("vm-memory-stats", VmMemoryStatDAO.vmMemoryStatsCategory.getName());
         keys = VmMemoryStatDAO.vmMemoryStatsCategory.getKeys();
-        assertTrue(keys.contains(new Key<>("agentId", true)));
-        assertTrue(keys.contains(new Key<Integer>("vmId", true)));
-        assertTrue(keys.contains(new Key<Long>("timeStamp", false)));
-        assertTrue(keys.contains(new Key<Generation[]>("generations", false)));
+        assertTrue(keys.contains(new Key<>("agentId")));
+        assertTrue(keys.contains(new Key<Integer>("vmId")));
+        assertTrue(keys.contains(new Key<Long>("timeStamp")));
+        assertTrue(keys.contains(new Key<Generation[]>("generations")));
         assertEquals(4, keys.size());
     }
 

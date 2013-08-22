@@ -44,11 +44,11 @@ import com.redhat.thermostat.storage.core.Key;
 
 public interface NumaDAO {
 
-    static final Key<NumaNodeStat[]> nodeStats = new Key<>("nodeStats", false);
+    static final Key<NumaNodeStat[]> nodeStats = new Key<>("nodeStats");
     
     static final Category<NumaStat> numaStatCategory = new Category<>("numa-stat", NumaStat.class, Key.AGENT_ID, Key.TIMESTAMP, nodeStats);
 
-    static final Key<Integer> hostNumNumaNodes = new Key<>("hostNumNumaNodes", false);
+    static final Key<Integer> hostNumNumaNodes = new Key<>("hostNumNumaNodes");
 
     static final Category<NumaHostInfo> numaHostCategory = new Category<>("numa-host-info", NumaHostInfo.class, Key.AGENT_ID, hostNumNumaNodes);
 

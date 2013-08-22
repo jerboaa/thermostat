@@ -128,24 +128,24 @@ public class VmInfoDAOTest {
     public void testCategory() {
         assertEquals("vm-info", VmInfoDAO.vmInfoCategory.getName());
         Collection<Key<?>> keys = VmInfoDAO.vmInfoCategory.getKeys();
-        assertTrue(keys.contains(new Key<>("agentId", true)));
-        assertTrue(keys.contains(new Key<Integer>("vmId", true)));
-        assertTrue(keys.contains(new Key<Integer>("vmPid", false)));
-        assertTrue(keys.contains(new Key<String>("javaVersion", false)));
-        assertTrue(keys.contains(new Key<String>("javaHome", false)));
-        assertTrue(keys.contains(new Key<String>("mainClass", false)));
-        assertTrue(keys.contains(new Key<String>("javaCommandLine", false)));
-        assertTrue(keys.contains(new Key<String>("vmArguments", false)));
-        assertTrue(keys.contains(new Key<String>("vmName", false)));
-        assertTrue(keys.contains(new Key<String>("vmInfo", false)));
-        assertTrue(keys.contains(new Key<String>("vmVersion", false)));
-        assertTrue(keys.contains(new Key<Map<String, String>>("properties", false)));
-        assertTrue(keys.contains(new Key<Map<String, String>>("environment", false)));
-        assertTrue(keys.contains(new Key<List<String>>("loadedNativeLibraries", false)));
-        assertTrue(keys.contains(new Key<Long>("startTimeStamp", false)));
-        assertTrue(keys.contains(new Key<Long>("stopTimeStamp", false)));
-        assertTrue(keys.contains(new Key<Long>("uid", false)));
-        assertTrue(keys.contains(new Key<Long>("username", false)));
+        assertTrue(keys.contains(new Key<>("agentId")));
+        assertTrue(keys.contains(new Key<Integer>("vmId")));
+        assertTrue(keys.contains(new Key<Integer>("vmPid")));
+        assertTrue(keys.contains(new Key<String>("javaVersion")));
+        assertTrue(keys.contains(new Key<String>("javaHome")));
+        assertTrue(keys.contains(new Key<String>("mainClass")));
+        assertTrue(keys.contains(new Key<String>("javaCommandLine")));
+        assertTrue(keys.contains(new Key<String>("vmArguments")));
+        assertTrue(keys.contains(new Key<String>("vmName")));
+        assertTrue(keys.contains(new Key<String>("vmInfo")));
+        assertTrue(keys.contains(new Key<String>("vmVersion")));
+        assertTrue(keys.contains(new Key<Map<String, String>>("properties")));
+        assertTrue(keys.contains(new Key<Map<String, String>>("environment")));
+        assertTrue(keys.contains(new Key<List<String>>("loadedNativeLibraries")));
+        assertTrue(keys.contains(new Key<Long>("startTimeStamp")));
+        assertTrue(keys.contains(new Key<Long>("stopTimeStamp")));
+        assertTrue(keys.contains(new Key<Long>("uid")));
+        assertTrue(keys.contains(new Key<Long>("username")));
         assertEquals(18, keys.size());
     }
 

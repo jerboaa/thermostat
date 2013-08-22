@@ -38,8 +38,6 @@
 package com.redhat.thermostat.numa.common;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -55,13 +53,8 @@ public class NumaDAOTest {
         assertEquals(3, cat.getKeys().size());
 
         assertEquals("agentId", cat.getKey("agentId").getName());
-        assertTrue(cat.getKey("agentId").isPartialCategoryKey());
         assertEquals("timeStamp", cat.getKey("timeStamp").getName());
-        assertFalse(cat.getKey("timeStamp").isPartialCategoryKey());
-
         assertEquals("nodeStats", cat.getKey("nodeStats").getName());
-        assertFalse(cat.getKey("nodeStats").isPartialCategoryKey());
-
     }
 }
 

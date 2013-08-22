@@ -59,7 +59,7 @@ import com.redhat.thermostat.vm.jmx.common.JmxNotificationStatus;
 
 public class JmxNotificationDAOImpl implements JmxNotificationDAO {
 
-    private static final Key<Boolean> NOTIFICATIONS_ENABLED = new Key<>("notififcationsEnabled", false);
+    private static final Key<Boolean> NOTIFICATIONS_ENABLED = new Key<>("notififcationsEnabled");
     private static final Logger logger = LoggingUtils.getLogger(JmxNotificationDAOImpl.class);
 
     static final Category<JmxNotificationStatus> NOTIFICATION_STATUS =
@@ -69,9 +69,9 @@ public class JmxNotificationDAOImpl implements JmxNotificationDAO {
     // TODO: private static final Key IMPORTANCE = new Key<>("importance",
     // false);
 
-    private static final Key<String> SOURCE_BACKEND = new Key<>("sourceBackend", false);
-    private static final Key<String> SOURCE_DESCRPTION = new Key<>("sourceDescription", false);
-    private static final Key<String> CONTENTS = new Key<>("contents", false);
+    private static final Key<String> SOURCE_BACKEND = new Key<>("sourceBackend");
+    private static final Key<String> SOURCE_DESCRPTION = new Key<>("sourceDescription");
+    private static final Key<String> CONTENTS = new Key<>("contents");
 
     static final Category<JmxNotification> NOTIFICATIONS =
             new Category<>("vm-jmx-notification", JmxNotification.class,

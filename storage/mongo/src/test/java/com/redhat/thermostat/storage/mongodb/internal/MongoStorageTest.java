@@ -157,11 +157,11 @@ public class MongoStorageTest {
         }
     }
 
-    private static final Key<String> key1 = new Key<>("key1", true);
-    private static final Key<String> key2 = new Key<>("key2", true);
-    private static final Key<String> key3 = new Key<>("key3", false);
-    private static final Key<String> key4 = new Key<>("key4", false);
-    private static final Key<String> key5 = new Key<>("key5", false);
+    private static final Key<String> key1 = new Key<>("key1");
+    private static final Key<String> key2 = new Key<>("key2");
+    private static final Key<String> key3 = new Key<>("key3");
+    private static final Key<String> key4 = new Key<>("key4");
+    private static final Key<String> key5 = new Key<>("key5");
     private static final Category<TestClass> testCategory = new Category<>("MongoStorageTest", TestClass.class, key1, key2, key3, key4, key5);
     private static final Category<TestClass> emptyTestCategory = new Category("MongoEmptyCategory", TestClass.class);
 

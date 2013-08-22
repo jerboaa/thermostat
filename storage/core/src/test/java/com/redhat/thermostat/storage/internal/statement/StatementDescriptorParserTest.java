@@ -261,7 +261,7 @@ public class StatementDescriptorParserTest {
         expected.getRoot().setValue(notEquals);
         notEquals.setOperator(BinaryComparisonOperator.NOT_EQUAL_TO);
         TerminalNode a = new TerminalNode(notEquals);
-        a.setValue(new Key<String>("a", false));
+        a.setValue(new Key<String>("a"));
         TerminalNode b = new TerminalNode(notEquals);
         b.setValue(bVal);
         notEquals.setLeftChild(a);
@@ -288,7 +288,7 @@ public class StatementDescriptorParserTest {
         expected.getRoot().setValue(notEquals);
         notEquals.setOperator(BinaryComparisonOperator.NOT_EQUAL_TO);
         TerminalNode a = new TerminalNode(notEquals);
-        a.setValue(new Key<String>("a", false));
+        a.setValue(new Key<String>("a"));
         TerminalNode b = new TerminalNode(notEquals);
         b.setValue("b");
         notEquals.setLeftChild(a);
@@ -364,7 +364,7 @@ public class StatementDescriptorParserTest {
         and2.setLeftChild(equality1);
         equality1.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode a = new TerminalNode(equality1);
-        Key<String> aKey = new Key<>("a", false);
+        Key<String> aKey = new Key<>("a");
         a.setValue(aKey);
         equality1.setLeftChild(a);
         TerminalNode b = new TerminalNode(equality1);
@@ -374,7 +374,7 @@ public class StatementDescriptorParserTest {
         and2.setRightChild(equality2);
         equality2.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode c = new TerminalNode(equality2);
-        Key<String> cKey = new Key<>("c", false);
+        Key<String> cKey = new Key<>("c");
         c.setValue(cKey);
         equality2.setLeftChild(c);
         TerminalNode d = new TerminalNode(equality2);
@@ -384,7 +384,7 @@ public class StatementDescriptorParserTest {
         lessThan.setOperator(BinaryComparisonOperator.LESS_THAN);
         and1.setRightChild(lessThan);
         TerminalNode e = new TerminalNode(lessThan);
-        Key<Integer> eKey = new Key<>("e", false);
+        Key<Integer> eKey = new Key<>("e");
         e.setValue(eKey);
         lessThan.setLeftChild(e);
         UnfinishedValueNode f = new UnfinishedValueNode();
@@ -426,7 +426,7 @@ public class StatementDescriptorParserTest {
         and3.setLeftChild(equality1);
         equality1.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode a = new TerminalNode(equality1);
-        Key<String> aKey = new Key<>("a", false);
+        Key<String> aKey = new Key<>("a");
         a.setValue(aKey);
         equality1.setLeftChild(a);
         TerminalNode b = new TerminalNode(equality1);
@@ -436,7 +436,7 @@ public class StatementDescriptorParserTest {
         and3.setRightChild(equality2);
         equality2.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode c = new TerminalNode(equality2);
-        Key<String> cKey = new Key<>("c", false);
+        Key<String> cKey = new Key<>("c");
         c.setValue(cKey);
         equality2.setLeftChild(c);
         TerminalNode d = new TerminalNode(equality2);
@@ -446,7 +446,7 @@ public class StatementDescriptorParserTest {
         lessThan.setOperator(BinaryComparisonOperator.LESS_THAN);
         and2.setRightChild(lessThan);
         TerminalNode e = new TerminalNode(lessThan);
-        Key<String> eKey = new Key<>("e", false);
+        Key<String> eKey = new Key<>("e");
         e.setValue(eKey);
         lessThan.setLeftChild(e);
         TerminalNode f = new TerminalNode(lessThan);
@@ -455,7 +455,7 @@ public class StatementDescriptorParserTest {
         BinaryExpressionNode greaterOrEqual = new BinaryExpressionNode(and1);
         greaterOrEqual.setOperator(BinaryComparisonOperator.GREATER_THAN_OR_EQUAL_TO);
         TerminalNode g = new TerminalNode(greaterOrEqual);
-        Key<String> gKey = new Key<>("g", false);
+        Key<String> gKey = new Key<>("g");
         g.setValue(gKey);
         greaterOrEqual.setLeftChild(g);
         TerminalNode h = new TerminalNode(greaterOrEqual);
@@ -492,7 +492,7 @@ public class StatementDescriptorParserTest {
         or2.setLeftChild(equality1);
         equality1.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode a = new TerminalNode(equality1);
-        Key<String> aKey = new Key<>("a", false);
+        Key<String> aKey = new Key<>("a");
         a.setValue(aKey);
         equality1.setLeftChild(a);
         TerminalNode b = new TerminalNode(equality1);
@@ -502,7 +502,7 @@ public class StatementDescriptorParserTest {
         or2.setRightChild(equality2);
         equality2.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode c = new TerminalNode(equality2);
-        Key<String> cKey = new Key<>("c", false);
+        Key<String> cKey = new Key<>("c");
         c.setValue(cKey);
         equality2.setLeftChild(c);
         TerminalNode d = new TerminalNode(equality2);
@@ -512,7 +512,7 @@ public class StatementDescriptorParserTest {
         lessThan.setOperator(BinaryComparisonOperator.LESS_THAN);
         or1.setRightChild(lessThan);
         TerminalNode e = new TerminalNode(lessThan);
-        Key<Integer> eKey = new Key<>("e", false);
+        Key<Integer> eKey = new Key<>("e");
         e.setValue(eKey);
         lessThan.setLeftChild(e);
         UnfinishedValueNode f = new UnfinishedValueNode();
@@ -555,7 +555,7 @@ public class StatementDescriptorParserTest {
         or3.setLeftChild(equality1);
         equality1.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode a = new TerminalNode(equality1);
-        Key<String> aKey = new Key<>("a", false);
+        Key<String> aKey = new Key<>("a");
         a.setValue(aKey);
         equality1.setLeftChild(a);
         TerminalNode b = new TerminalNode(equality1);
@@ -565,7 +565,7 @@ public class StatementDescriptorParserTest {
         or3.setRightChild(equality2);
         equality2.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode c = new TerminalNode(equality2);
-        Key<String> cKey = new Key<>("c", false);
+        Key<String> cKey = new Key<>("c");
         c.setValue(cKey);
         equality2.setLeftChild(c);
         TerminalNode d = new TerminalNode(equality2);
@@ -575,7 +575,7 @@ public class StatementDescriptorParserTest {
         lessThan.setOperator(BinaryComparisonOperator.LESS_THAN);
         or2.setRightChild(lessThan);
         TerminalNode e = new TerminalNode(lessThan);
-        Key<String> eKey = new Key<>("e", false);
+        Key<String> eKey = new Key<>("e");
         e.setValue(eKey);
         lessThan.setLeftChild(e);
         TerminalNode f = new TerminalNode(lessThan);
@@ -584,7 +584,7 @@ public class StatementDescriptorParserTest {
         BinaryExpressionNode greaterOrEqual = new BinaryExpressionNode(or1);
         greaterOrEqual.setOperator(BinaryComparisonOperator.GREATER_THAN_OR_EQUAL_TO);
         TerminalNode g = new TerminalNode(greaterOrEqual);
-        Key<String> gKey = new Key<>("g", false);
+        Key<String> gKey = new Key<>("g");
         g.setValue(gKey);
         greaterOrEqual.setLeftChild(g);
         TerminalNode h = new TerminalNode(greaterOrEqual);
@@ -621,7 +621,7 @@ public class StatementDescriptorParserTest {
         BinaryExpressionNode equality3 = new BinaryExpressionNode(and1);
         equality3.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode x = new TerminalNode(equality3);
-        x.setValue(new Key<>("x", false));
+        x.setValue(new Key<>("x"));
         TerminalNode y = new TerminalNode(equality3);
         y.setValue("y");
         equality3.setLeftChild(x);
@@ -633,7 +633,7 @@ public class StatementDescriptorParserTest {
         equality4.setOperator(BinaryComparisonOperator.EQUALS);
         and2.setRightChild(equality4);
         TerminalNode u = new TerminalNode(equality4);
-        u.setValue(new Key<>("u", false));
+        u.setValue(new Key<>("u"));
         equality4.setLeftChild(u);
         TerminalNode w = new TerminalNode(equality4);
         w.setValue("w");
@@ -641,7 +641,7 @@ public class StatementDescriptorParserTest {
         BinaryExpressionNode equality5 = new BinaryExpressionNode(and3);
         equality5.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode s = new TerminalNode(equality5);
-        s.setValue(new Key<>("s", false));
+        s.setValue(new Key<>("s"));
         TerminalNode t = new TerminalNode(equality5);
         t.setValue("t");
         equality5.setLeftChild(s);
@@ -659,7 +659,7 @@ public class StatementDescriptorParserTest {
         or1.setLeftChild(equality1);
         equality1.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode a = new TerminalNode(equality1);
-        Key<String> aKey = new Key<>("a", false);
+        Key<String> aKey = new Key<>("a");
         a.setValue(aKey);
         equality1.setLeftChild(a);
         TerminalNode b = new TerminalNode(equality1);
@@ -669,7 +669,7 @@ public class StatementDescriptorParserTest {
         equality2.setOperator(BinaryComparisonOperator.EQUALS);
         or1.setRightChild(equality2);
         TerminalNode c = new TerminalNode(equality2);
-        Key<String> cKey = new Key<>("c", false);
+        Key<String> cKey = new Key<>("c");
         c.setValue(cKey);
         equality2.setLeftChild(c);
         TerminalNode d = new TerminalNode(equality2);
@@ -680,7 +680,7 @@ public class StatementDescriptorParserTest {
         or2.setRightChild(lessThan);
         or2.setLeftChild(or1);
         TerminalNode e = new TerminalNode(lessThan);
-        Key<String> eKey = new Key<>("e", false);
+        Key<String> eKey = new Key<>("e");
         e.setValue(eKey);
         lessThan.setLeftChild(e);
         TerminalNode f = new TerminalNode(lessThan);
@@ -689,7 +689,7 @@ public class StatementDescriptorParserTest {
         BinaryExpressionNode greaterOrEqual = new BinaryExpressionNode(or3);
         greaterOrEqual.setOperator(BinaryComparisonOperator.GREATER_THAN_OR_EQUAL_TO);
         TerminalNode g = new TerminalNode(greaterOrEqual);
-        Key<String> gKey = new Key<>("g", false);
+        Key<String> gKey = new Key<>("g");
         g.setValue(gKey);
         greaterOrEqual.setLeftChild(g);
         TerminalNode h = new TerminalNode(greaterOrEqual);
@@ -730,7 +730,7 @@ public class StatementDescriptorParserTest {
         not2.setValue(equality3);
         equality3.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode x = new TerminalNode(equality3);
-        x.setValue(new Key<String>("x", false));
+        x.setValue(new Key<String>("x"));
         TerminalNode y = new TerminalNode(equality3);
         y.setValue("y");
         equality3.setLeftChild(x);
@@ -742,7 +742,7 @@ public class StatementDescriptorParserTest {
         equality4.setOperator(BinaryComparisonOperator.EQUALS);
         and2.setRightChild(equality4);
         TerminalNode u = new TerminalNode(equality4);
-        u.setValue(new Key<String>("u", false));
+        u.setValue(new Key<String>("u"));
         equality4.setLeftChild(u);
         TerminalNode w = new TerminalNode(equality4);
         w.setValue("w");
@@ -750,7 +750,7 @@ public class StatementDescriptorParserTest {
         BinaryExpressionNode equality5 = new BinaryExpressionNode(and3);
         equality5.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode s = new TerminalNode(equality5);
-        s.setValue(new Key<String>("s", false));
+        s.setValue(new Key<String>("s"));
         TerminalNode t = new TerminalNode(equality5);
         t.setValue("t");
         equality5.setLeftChild(s);
@@ -768,7 +768,7 @@ public class StatementDescriptorParserTest {
         or1.setLeftChild(equality1);
         equality1.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode a = new TerminalNode(equality1);
-        Key<String> aKey = new Key<>("a", false);
+        Key<String> aKey = new Key<>("a");
         a.setValue(aKey);
         equality1.setLeftChild(a);
         TerminalNode b = new TerminalNode(equality1);
@@ -780,7 +780,7 @@ public class StatementDescriptorParserTest {
         not1.setValue(equality2);
         or1.setRightChild(not1);
         TerminalNode c = new TerminalNode(equality2);
-        Key<String> cKey = new Key<>("c", false);
+        Key<String> cKey = new Key<>("c");
         c.setValue(cKey);
         equality2.setLeftChild(c);
         TerminalNode d = new TerminalNode(equality2);
@@ -791,7 +791,7 @@ public class StatementDescriptorParserTest {
         or2.setRightChild(lessThan);
         or2.setLeftChild(or1);
         TerminalNode e = new TerminalNode(lessThan);
-        Key<String> eKey = new Key<>("e", false);
+        Key<String> eKey = new Key<>("e");
         e.setValue(eKey);
         lessThan.setLeftChild(e);
         TerminalNode f = new TerminalNode(lessThan);
@@ -800,7 +800,7 @@ public class StatementDescriptorParserTest {
         BinaryExpressionNode greaterOrEqual = new BinaryExpressionNode(or3);
         greaterOrEqual.setOperator(BinaryComparisonOperator.GREATER_THAN_OR_EQUAL_TO);
         TerminalNode g = new TerminalNode(greaterOrEqual);
-        Key<String> gKey = new Key<>("g", false);
+        Key<String> gKey = new Key<>("g");
         g.setValue(gKey);
         greaterOrEqual.setLeftChild(g);
         TerminalNode h = new TerminalNode(greaterOrEqual);
@@ -847,7 +847,7 @@ public class StatementDescriptorParserTest {
         BinaryExpressionNode unequality = new BinaryExpressionNode(and);
         unequality.setOperator(BinaryComparisonOperator.LESS_THAN);
         TerminalNode a = new TerminalNode(unequality);
-        Key<String> aKey = new Key<>("a", false);
+        Key<String> aKey = new Key<>("a");
         a.setValue(aKey);
         unequality.setLeftChild(a);
         TerminalNode b = new TerminalNode(unequality);
@@ -857,7 +857,7 @@ public class StatementDescriptorParserTest {
         BinaryExpressionNode equality = new BinaryExpressionNode(and);
         equality.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode c = new TerminalNode(equality);
-        Key<String> cKey = new Key<>("c", false);
+        Key<String> cKey = new Key<>("c");
         c.setValue(cKey);
         equality.setLeftChild(c);
         UnfinishedValueNode patch1 = new UnfinishedValueNode();
@@ -872,7 +872,7 @@ public class StatementDescriptorParserTest {
         not.setValue(greaterEqual);
         greaterEqual.setOperator(BinaryComparisonOperator.GREATER_THAN_OR_EQUAL_TO);
         TerminalNode x = new TerminalNode(greaterEqual);
-        Key<Integer> xKey = new Key<>("x", false);
+        Key<Integer> xKey = new Key<>("x");
         x.setValue(xKey);
         greaterEqual.setLeftChild(x);
         UnfinishedValueNode patch2 = new UnfinishedValueNode();
@@ -918,7 +918,7 @@ public class StatementDescriptorParserTest {
         BinaryExpressionNode unequality = new BinaryExpressionNode(or);
         unequality.setOperator(BinaryComparisonOperator.LESS_THAN);
         TerminalNode a = new TerminalNode(unequality);
-        Key<String> aKey = new Key<>("a", false);
+        Key<String> aKey = new Key<>("a");
         a.setValue(aKey);
         unequality.setLeftChild(a);
         TerminalNode b = new TerminalNode(unequality);
@@ -928,7 +928,7 @@ public class StatementDescriptorParserTest {
         BinaryExpressionNode equality = new BinaryExpressionNode(or);
         equality.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode c = new TerminalNode(equality);
-        Key<String> cKey = new Key<>("c", false);
+        Key<String> cKey = new Key<>("c");
         c.setValue(cKey);
         equality.setLeftChild(c);
         UnfinishedValueNode patch1 = new UnfinishedValueNode();
@@ -967,7 +967,7 @@ public class StatementDescriptorParserTest {
         unequality.setOperator(BinaryComparisonOperator.LESS_THAN);
         TerminalNode a = new TerminalNode(unequality);
         @SuppressWarnings("rawtypes")
-        Key aKey = new Key("a", false);
+        Key aKey = new Key("a");
         a.setValue(aKey);
         unequality.setLeftChild(a);
         TerminalNode b = new TerminalNode(unequality);
@@ -1000,7 +1000,7 @@ public class StatementDescriptorParserTest {
         equality.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode a = new TerminalNode(equality);
         @SuppressWarnings("rawtypes")
-        Key aKey = new Key(Key.AGENT_ID.getName(), false);
+        Key aKey = new Key(Key.AGENT_ID.getName());
         a.setValue(aKey);
         equality.setLeftChild(a);
         TerminalNode b = new TerminalNode(equality);
@@ -1043,7 +1043,7 @@ public class StatementDescriptorParserTest {
         BinaryExpressionNode equality = new BinaryExpressionNode(and);
         equality.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode a = new TerminalNode(equality);
-        Key<String> aKey = new Key<>("a", false);
+        Key<String> aKey = new Key<>("a");
         a.setValue(aKey);
         equality.setLeftChild(a);
         TerminalNode b = new TerminalNode(equality);
@@ -1053,7 +1053,7 @@ public class StatementDescriptorParserTest {
         BinaryExpressionNode equality2 = new BinaryExpressionNode(and);
         equality2.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode c = new TerminalNode(equality2);
-        Key<String> cKey = new Key<>(Key.AGENT_ID.getName(), false);
+        Key<String> cKey = new Key<>(Key.AGENT_ID.getName());
         c.setValue(cKey);
         equality2.setLeftChild(c);
         UnfinishedValueNode patch1 = new UnfinishedValueNode();
@@ -1111,7 +1111,7 @@ public class StatementDescriptorParserTest {
         equality.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode a = new TerminalNode(equality);
         @SuppressWarnings("rawtypes")
-        Key aKey = new Key("a", false);
+        Key aKey = new Key("a");
         a.setValue(aKey);
         equality.setLeftChild(a);
         UnfinishedValueNode unfinished = new UnfinishedValueNode();
@@ -1169,7 +1169,7 @@ public class StatementDescriptorParserTest {
         TerminalNode rightCompTerm = new TerminalNode(comparison);
         TerminalNode leftCompTerm = new TerminalNode(comparison);
         @SuppressWarnings("rawtypes")
-        Key aKey = new Key("a", false);
+        Key aKey = new Key("a");
         leftCompTerm.setValue(aKey);
         UnfinishedValueNode patch1 = new UnfinishedValueNode();
         patch1.setParameterIndex(0);
@@ -1221,7 +1221,7 @@ public class StatementDescriptorParserTest {
         equality.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode a = new TerminalNode(equality);
         @SuppressWarnings("rawtypes")
-        Key aKey = new Key("a", false);
+        Key aKey = new Key("a");
         a.setValue(aKey);
         equality.setLeftChild(a);
         UnfinishedValueNode unfinished = new UnfinishedValueNode();

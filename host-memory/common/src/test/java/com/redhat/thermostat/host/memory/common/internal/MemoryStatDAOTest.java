@@ -77,15 +77,15 @@ public class MemoryStatDAOTest {
     public void testCategory() {
         assertEquals("memory-stats", MemoryStatDAO.memoryStatCategory.getName());
         Collection<Key<?>> keys = MemoryStatDAO.memoryStatCategory.getKeys();
-        assertTrue(keys.contains(new Key<>("agentId", true)));
-        assertTrue(keys.contains(new Key<Long>("timeStamp", false)));
-        assertTrue(keys.contains(new Key<Long>("total", false)));
-        assertTrue(keys.contains(new Key<Long>("free", false)));
-        assertTrue(keys.contains(new Key<Long>("buffers", false)));
-        assertTrue(keys.contains(new Key<Long>("cached", false)));
-        assertTrue(keys.contains(new Key<Long>("swapTotal", false)));
-        assertTrue(keys.contains(new Key<Long>("swapFree", false)));
-        assertTrue(keys.contains(new Key<Long>("commitLimit", false)));
+        assertTrue(keys.contains(new Key<>("agentId")));
+        assertTrue(keys.contains(new Key<Long>("timeStamp")));
+        assertTrue(keys.contains(new Key<Long>("total")));
+        assertTrue(keys.contains(new Key<Long>("free")));
+        assertTrue(keys.contains(new Key<Long>("buffers")));
+        assertTrue(keys.contains(new Key<Long>("cached")));
+        assertTrue(keys.contains(new Key<Long>("swapTotal")));
+        assertTrue(keys.contains(new Key<Long>("swapFree")));
+        assertTrue(keys.contains(new Key<Long>("commitLimit")));
         assertEquals(9, keys.size());
     }
 

@@ -47,13 +47,13 @@ import com.redhat.thermostat.storage.core.Key;
 @Service
 public interface MemoryStatDAO {
 
-    static Key<Long> memoryTotalKey = new Key<>("total", false);
-    static Key<Long> memoryFreeKey = new Key<>("free", false);
-    static Key<Long> memoryBuffersKey = new Key<>("buffers", false);
-    static Key<Long> memoryCachedKey = new Key<>("cached", false);
-    static Key<Long> memorySwapTotalKey = new Key<>("swapTotal", false);
-    static Key<Long> memorySwapFreeKey = new Key<>("swapFree", false);
-    static Key<Long> memoryCommitLimitKey = new Key<>("commitLimit", false);
+    static Key<Long> memoryTotalKey = new Key<>("total");
+    static Key<Long> memoryFreeKey = new Key<>("free");
+    static Key<Long> memoryBuffersKey = new Key<>("buffers");
+    static Key<Long> memoryCachedKey = new Key<>("cached");
+    static Key<Long> memorySwapTotalKey = new Key<>("swapTotal");
+    static Key<Long> memorySwapFreeKey = new Key<>("swapFree");
+    static Key<Long> memoryCommitLimitKey = new Key<>("commitLimit");
 
     static final Category<MemoryStat> memoryStatCategory = new Category<>("memory-stats", MemoryStat.class,
             Key.AGENT_ID, Key.TIMESTAMP, memoryTotalKey, memoryFreeKey, memoryBuffersKey,

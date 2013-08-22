@@ -102,13 +102,13 @@ public class HostInfoDAOTest {
     public void testCategory() {
         assertEquals("host-info", HostInfoDAO.hostInfoCategory.getName());
         Collection<Key<?>> keys = HostInfoDAO.hostInfoCategory.getKeys();
-        assertTrue(keys.contains(new Key<>("agentId", true)));
-        assertTrue(keys.contains(new Key<String>("hostname", true)));
-        assertTrue(keys.contains(new Key<String>("osName", false)));
-        assertTrue(keys.contains(new Key<String>("osKernel", false)));
-        assertTrue(keys.contains(new Key<String>("cpuModel", false)));
-        assertTrue(keys.contains(new Key<Integer>("cpuCount", false)));
-        assertTrue(keys.contains(new Key<Long>("totalMemory", false)));
+        assertTrue(keys.contains(new Key<>("agentId")));
+        assertTrue(keys.contains(new Key<String>("hostname")));
+        assertTrue(keys.contains(new Key<String>("osName")));
+        assertTrue(keys.contains(new Key<String>("osKernel")));
+        assertTrue(keys.contains(new Key<String>("cpuModel")));
+        assertTrue(keys.contains(new Key<Integer>("cpuCount")));
+        assertTrue(keys.contains(new Key<Long>("totalMemory")));
         assertEquals(7, keys.size());
     }
 

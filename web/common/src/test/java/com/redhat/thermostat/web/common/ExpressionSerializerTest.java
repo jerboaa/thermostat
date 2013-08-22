@@ -62,7 +62,7 @@ import com.redhat.thermostat.storage.query.UnaryLogicalExpression;
 
 public class ExpressionSerializerTest {
 
-    private static final Key<String> key = new Key<>("hello", true);
+    private static final Key<String> key = new Key<>("hello");
     private Gson gson;
 
     private static final class TestExpression implements Expression {

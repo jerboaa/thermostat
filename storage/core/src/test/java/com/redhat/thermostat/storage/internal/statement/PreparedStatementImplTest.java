@@ -107,7 +107,7 @@ public class PreparedStatementImplTest {
         preparedStatement.setString(0, "foo");
         preparedStatement.executeQuery();
         assertTrue(stmt.called);
-        LiteralExpression<Key<String>> o1 = new LiteralExpression<>(new Key<String>("a", false));
+        LiteralExpression<Key<String>> o1 = new LiteralExpression<>(new Key<String>("a"));
         LiteralExpression<String> o2 = new LiteralExpression<>("foo"); 
         BinaryComparisonExpression<String> binComp = new BinaryComparisonExpression<>(
                 o1, BinaryComparisonOperator.EQUALS, o2);

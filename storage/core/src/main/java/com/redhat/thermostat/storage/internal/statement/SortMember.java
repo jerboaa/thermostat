@@ -92,7 +92,7 @@ class SortMember implements Printable, Patchable {
             } else {
                 keyVal = (String)getSortKey();
             }
-            Key<?> sortKey = new Key<>(keyVal, false);
+            Key<?> sortKey = new Key<>(keyVal);
             PatchedSortMember m = new PatchedSortMember(sortKey, getDirection());
             return new PatchedSortMemberExpressionImpl(m);
         } catch (Exception e) {

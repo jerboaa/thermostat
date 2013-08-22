@@ -47,9 +47,9 @@ import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
 @Service
 public interface NetworkInterfaceInfoDAO {
 
-    static Key<String> ifaceKey = new Key<>("interfaceName", true);
-    static Key<String> ip4AddrKey = new Key<>("ip4Addr", false);
-    static Key<String> ip6AddrKey = new Key<>("ip6Addr", false);
+    static Key<String> ifaceKey = new Key<>("interfaceName");
+    static Key<String> ip4AddrKey = new Key<>("ip4Addr");
+    static Key<String> ip6AddrKey = new Key<>("ip6Addr");
 
     static final Category<NetworkInterfaceInfo> networkInfoCategory = new Category<>("network-info", NetworkInterfaceInfo.class,
             Key.AGENT_ID, ifaceKey, ip4AddrKey, ip6AddrKey);

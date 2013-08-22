@@ -48,12 +48,12 @@ import com.redhat.thermostat.storage.model.HostInfo;
 @Service
 public interface HostInfoDAO extends Countable {
 
-    static Key<String> hostNameKey = new Key<>("hostname", true);
-    static Key<String> osNameKey = new Key<>("osName", false);
-    static Key<String> osKernelKey = new Key<>("osKernel", false);
-    static Key<Integer> cpuCountKey = new Key<>("cpuCount", false);
-    static Key<String> cpuModelKey = new Key<>("cpuModel", false);
-    static Key<Long> hostMemoryTotalKey = new Key<>("totalMemory", false);
+    static Key<String> hostNameKey = new Key<>("hostname");
+    static Key<String> osNameKey = new Key<>("osName");
+    static Key<String> osKernelKey = new Key<>("osKernel");
+    static Key<Integer> cpuCountKey = new Key<>("cpuCount");
+    static Key<String> cpuModelKey = new Key<>("cpuModel");
+    static Key<Long> hostMemoryTotalKey = new Key<>("totalMemory");
 
     static final Category<HostInfo> hostInfoCategory = new Category<>("host-info", HostInfo.class,
             Key.AGENT_ID, hostNameKey, osNameKey, osKernelKey,

@@ -54,9 +54,9 @@ import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class MongoExpressionParserTest {
     
-    private final Key<Integer> KEY_1 = new Key<>("test", true);
-    private final Key<Integer> KEY_2 = new Key<>("test2", true);
-    private final Key<String> KEY_3 = new Key<>("key", true);
+    private final Key<Integer> KEY_1 = new Key<>("test");
+    private final Key<Integer> KEY_2 = new Key<>("test2");
+    private final Key<String> KEY_3 = new Key<>("key");
     
     private MongoExpressionParser parser;
     private ExpressionFactory factory;

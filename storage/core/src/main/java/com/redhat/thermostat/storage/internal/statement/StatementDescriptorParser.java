@@ -416,7 +416,7 @@ class StatementDescriptorParser<T extends Pojo> {
             // statement context as the purpose of this was to ensure "type"
             // compatibility between Key <=> value comparisons.
             String stringTerm = getStringTerm(term);
-            Key<?> key = new Key<>(stringTerm, false);
+            Key<?> key = new Key<>(stringTerm);
             node.setValue(key);
         } else {
             Object typedValue = getTypedValue(term);

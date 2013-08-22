@@ -47,7 +47,7 @@ import com.redhat.thermostat.vm.classstat.common.model.VmClassStat;
 @Service
 public interface VmClassStatDAO {
 
-    static final Key<Long> loadedClassesKey = new Key<>("loadedClasses", false);
+    static final Key<Long> loadedClassesKey = new Key<>("loadedClasses");
 
     static final Category<VmClassStat> vmClassStatsCategory = new Category<>(
             "vm-class-stats", VmClassStat.class, Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, loadedClassesKey);

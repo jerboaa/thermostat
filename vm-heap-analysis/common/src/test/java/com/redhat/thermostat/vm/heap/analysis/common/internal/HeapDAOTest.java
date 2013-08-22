@@ -199,12 +199,12 @@ public class HeapDAOTest {
         assertEquals("vm-heap-info", category.getName());
         Collection<Key<?>> keys = category.getKeys();
         assertEquals(6, keys.size());
-        assertTrue(keys.contains(new Key<>("agentId", true)));
-        assertTrue(keys.contains(new Key<>("vmId", true)));
-        assertTrue(keys.contains(new Key<>("timeStamp", false)));
-        assertTrue(keys.contains(new Key<>("heapId", false)));
-        assertTrue(keys.contains(new Key<>("heapDumpId", false)));
-        assertTrue(keys.contains(new Key<>("histogramId", false)));
+        assertTrue(keys.contains(new Key<>("agentId")));
+        assertTrue(keys.contains(new Key<>("vmId")));
+        assertTrue(keys.contains(new Key<>("timeStamp")));
+        assertTrue(keys.contains(new Key<>("heapId")));
+        assertTrue(keys.contains(new Key<>("heapDumpId")));
+        assertTrue(keys.contains(new Key<>("histogramId")));
     }
 
     @Test

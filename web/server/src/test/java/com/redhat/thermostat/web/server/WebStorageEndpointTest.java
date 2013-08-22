@@ -191,8 +191,8 @@ public class WebStorageEndpointTest {
 
     @BeforeClass
     public static void setupCategory() {
-        key1 = new Key<>("key1", true);
-        key2 = new Key<>("key2", false);
+        key1 = new Key<>("key1");
+        key2 = new Key<>("key2");
         category = new Category<>(categoryName, TestClass.class, key1, key2);
     }
 

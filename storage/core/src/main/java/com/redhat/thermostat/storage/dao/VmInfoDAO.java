@@ -51,22 +51,22 @@ import com.redhat.thermostat.storage.model.VmInfo;
 @Service
 public interface VmInfoDAO extends Countable {
 
-    static final Key<Integer> vmPidKey = new Key<>("vmPid", false);
-    static final Key<String> runtimeVersionKey = new Key<>("javaVersion", false);
-    static final Key<String> javaHomeKey = new Key<>("javaHome", false);
-    static final Key<String> mainClassKey = new Key<>("mainClass", false);
-    static final Key<String> commandLineKey = new Key<>("javaCommandLine", false);
-    static final Key<String> vmArgumentsKey = new Key<>("vmArguments", false);
-    static final Key<String> vmNameKey = new Key<>("vmName", false);
-    static final Key<String> vmInfoKey = new Key<>("vmInfo", false);
-    static final Key<String> vmVersionKey = new Key<>("vmVersion", false);
-    static final Key<Map<String, String>> propertiesKey = new Key<>("properties", false);
-    static final Key<Map<String, String>> environmentKey = new Key<>("environment", false);
-    static final Key<List<String>> librariesKey = new Key<>("loadedNativeLibraries", false);
-    static final Key<Long> startTimeKey = new Key<>("startTimeStamp", false);
-    static final Key<Long> stopTimeKey = new Key<>("stopTimeStamp", false);
-    static final Key<Long> uidKey = new Key<>("uid", false);
-    static final Key<String> usernameKey = new Key<>("username", false);
+    static final Key<Integer> vmPidKey = new Key<>("vmPid");
+    static final Key<String> runtimeVersionKey = new Key<>("javaVersion");
+    static final Key<String> javaHomeKey = new Key<>("javaHome");
+    static final Key<String> mainClassKey = new Key<>("mainClass");
+    static final Key<String> commandLineKey = new Key<>("javaCommandLine");
+    static final Key<String> vmArgumentsKey = new Key<>("vmArguments");
+    static final Key<String> vmNameKey = new Key<>("vmName");
+    static final Key<String> vmInfoKey = new Key<>("vmInfo");
+    static final Key<String> vmVersionKey = new Key<>("vmVersion");
+    static final Key<Map<String, String>> propertiesKey = new Key<>("properties");
+    static final Key<Map<String, String>> environmentKey = new Key<>("environment");
+    static final Key<List<String>> librariesKey = new Key<>("loadedNativeLibraries");
+    static final Key<Long> startTimeKey = new Key<>("startTimeStamp");
+    static final Key<Long> stopTimeKey = new Key<>("stopTimeStamp");
+    static final Key<Long> uidKey = new Key<>("uid");
+    static final Key<String> usernameKey = new Key<>("username");
 
     static final Category<VmInfo> vmInfoCategory = new Category<>("vm-info", VmInfo.class,
             Key.AGENT_ID, Key.VM_ID, vmPidKey, runtimeVersionKey, javaHomeKey,

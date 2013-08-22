@@ -51,10 +51,10 @@ import com.redhat.thermostat.storage.model.AgentInformation;
 @Service
 public interface AgentInfoDAO extends Countable {
 
-    static final Key<Long> START_TIME_KEY = new Key<>("startTime", false);
-    static final Key<Long> STOP_TIME_KEY = new Key<>("stopTime", false);
-    static final Key<Boolean> ALIVE_KEY = new Key<>("alive", false);
-    static final Key<String> CONFIG_LISTEN_ADDRESS = new Key<>("configListenAddress", false);
+    static final Key<Long> START_TIME_KEY = new Key<>("startTime");
+    static final Key<Long> STOP_TIME_KEY = new Key<>("stopTime");
+    static final Key<Boolean> ALIVE_KEY = new Key<>("alive");
+    static final Key<String> CONFIG_LISTEN_ADDRESS = new Key<>("configListenAddress");
 
     static final Category<AgentInformation> CATEGORY = new Category<>("agent-config", AgentInformation.class,
             Key.AGENT_ID,

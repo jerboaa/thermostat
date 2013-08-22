@@ -47,10 +47,10 @@ import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
 @Service
 public interface VmGcStatDAO {
 
-    static final Key<String> collectorKey = new Key<>("collectorName", false);
-    static final Key<Long> runCountKey = new Key<>("runCount", false);
+    static final Key<String> collectorKey = new Key<>("collectorName");
+    static final Key<Long> runCountKey = new Key<>("runCount");
     /** time in microseconds */
-    static final Key<Long> wallTimeKey = new Key<>("wallTime", false);
+    static final Key<Long> wallTimeKey = new Key<>("wallTime");
 
     static final Category<VmGcStat> vmGcStatCategory = new Category<>("vm-gc-stats", VmGcStat.class,
             Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, collectorKey,

@@ -38,48 +38,40 @@ package com.redhat.thermostat.storage.core;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
-
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
-
-import com.redhat.thermostat.storage.core.Key;
 
 public class KeyTest {
     private static final String name1 = "key1";
     private static final String name2 = "key2";
     private static final String name3 = "key3";
 
-    private static final Key<String> key1 = new Key<>(name1, true);
-    private static final Key<String> key2 = new Key<>(name2, true);
-    private static final Key<String> key3 = new Key<>(name3, false);
-    private static final Key<String> key4 = new Key<>(name1, false);
-    private static final Key<String> key5 = new Key<>(name1, true);
+    private static final Key<String> key1 = new Key<>(name1);
+    private static final Key<String> key2 = new Key<>(name2);
+    private static final Key<String> key3 = new Key<>(name3);
+    private static final Key<String> key4 = new Key<>(name1);
 
     @Test
     public void verifyConstructorResultsInExpectedValues() {
-        Key<String> key = new Key<>(name1, true);
+        Key<String> key = new Key<>(name1);
         assertEquals(key.getName(), name1);
-        assertTrue(key.isPartialCategoryKey());
-        key = new Key<>(name2, false);
+        key = new Key<>(name2);
         assertEquals(key.getName(), name2);
-        assertFalse(key.isPartialCategoryKey());
     }
 
     @Test (expected=IllegalArgumentException.class)
     public void verifyConstructorThrowsExceptionOnNullName() {
         @SuppressWarnings("unused")
-        Key<String> key = new Key<>(null, true);
+        Key<String> key = new Key<>(null);
     }
 
     @Test (expected=IllegalArgumentException.class)
     public void verifyConstructorThrowsExceptionZeroLengthName() {
         @SuppressWarnings("unused")
-        Key<String> key = new Key<>("", true);
+        Key<String> key = new Key<>("");
     }
 
     @Test
@@ -97,19 +89,10 @@ public class KeyTest {
     }
 
     @Test
-    public void verifyIsPartialCategoryKeyReturnsCorrectValue() {
-        boolean value = key1.isPartialCategoryKey();
-        assertTrue(value);
-        value = key3.isPartialCategoryKey();
-        assertFalse(value);
-    }
-
-    @Test
     public void verifyEqualsReturnsCorrectValue() {
         assertThat(key1, not(equalTo(key2)));
         assertThat(key1, not(equalTo(key3)));
-        assertThat(key1, not(equalTo(key4)));
-        assertThat(key1, equalTo(key5));
+        assertThat(key1, equalTo(key4));
     }
 
     @Test
@@ -117,8 +100,8 @@ public class KeyTest {
         int key1hash1 = key1.hashCode();
         int key1hash2 = key1.hashCode();
         assertEquals(key1hash1, key1hash2);
-        int key5hash1 = key5.hashCode();
-        assertEquals(key1hash1, key5hash1);
+        int key4hash1 = key4.hashCode();
+        assertEquals(key1hash1, key4hash1);
     }
 
     @Test
@@ -131,16 +114,6 @@ public class KeyTest {
     public void toStringReturnsExpectedString() {
         String string1 = key1.toString();
         assertEquals(string1, "Key: key1");
-    }
-
-    @Test
-    public void verifyAgentIdIsPartialkey() {
-        assertTrue(Key.AGENT_ID.isPartialCategoryKey());
-    }
-
-    @Test
-    public void verifyVmIdIsPartialkey() {
-        assertTrue(Key.VM_ID.isPartialCategoryKey());
     }
 }
 

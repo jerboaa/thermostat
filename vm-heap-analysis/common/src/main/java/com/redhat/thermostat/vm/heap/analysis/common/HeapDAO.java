@@ -50,9 +50,9 @@ import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 @Service
 public interface HeapDAO {
 
-    static final Key<String> heapIdKey = new Key<String>("heapId", false);
-    static final Key<String> heapDumpIdKey = new Key<String>("heapDumpId", false);
-    static final Key<String> histogramIdKey = new Key<String>("histogramId", false);
+    static final Key<String> heapIdKey = new Key<String>("heapId");
+    static final Key<String> heapDumpIdKey = new Key<String>("heapDumpId");
+    static final Key<String> histogramIdKey = new Key<String>("histogramId");
 
     public static final Category<HeapInfo> heapInfoCategory = new Category<>("vm-heap-info", HeapInfo.class, Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, heapIdKey, heapDumpIdKey, histogramIdKey);
 

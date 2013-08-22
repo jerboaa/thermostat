@@ -59,24 +59,24 @@ public class CategoryTest {
 
     @Test
     public void testGetKey() {
-        Key<String> key1 = new Key<String>("key1", false);
+        Key<String> key1 = new Key<String>("key1");
         Category<TestObj> category = new Category<>("testGetKey", TestObj.class, key1);
         assertEquals(key1, category.getKey("key1"));
     }
 
     @Test
     public void testGetNonExistingKey() {
-        Key<String> key1 = new Key<String>("key1", false);
+        Key<String> key1 = new Key<String>("key1");
         Category<TestObj> category = new Category<>("testGetNonExistingKey", TestObj.class, key1);
         assertNull(category.getKey("key2"));
     }
 
     @Test
     public void testGetKeys() {
-        Key<String> key1 = new Key<String>("key1", false);
-        Key<String> key2 = new Key<String>("key2", false);
-        Key<String> key3 = new Key<String>("key3", false);
-        Key<String> key4 = new Key<String>("key4", false);
+        Key<String> key1 = new Key<String>("key1");
+        Key<String> key2 = new Key<String>("key2");
+        Key<String> key3 = new Key<String>("key3");
+        Key<String> key4 = new Key<String>("key4");
         Category<TestObj> category = new Category<>("testGetKeys", TestObj.class, key1, key2, key3, key4);
         assertEquals(4, category.getKeys().size());
         assertTrue(category.getKeys().contains(key1));
@@ -87,9 +87,9 @@ public class CategoryTest {
 
     @Test(expected=UnsupportedOperationException.class)
     public void verifyThatKeysAreUnmodifiable() {
-        Key<String> key1 = new Key<String>("key1", false);
-        Key<String> key2 = new Key<String>("key2", false);
-        Key<String> key3 = new Key<String>("key3", false);
+        Key<String> key1 = new Key<String>("key1");
+        Key<String> key2 = new Key<String>("key2");
+        Key<String> key3 = new Key<String>("key3");
         Category<TestObj> category = new Category<>("verifyThatKeysAreUnmodifiable", TestObj.class, key1, key2, key3);
 
         Collection<Key<?>> keys = category.getKeys();
@@ -99,9 +99,9 @@ public class CategoryTest {
     
     @Test
     public void testEquals() {
-        Key<String> key1 = new Key<String>("key1", false);
-        Key<String> key2 = new Key<String>("key2", false);
-        Key<String> key3 = new Key<String>("key3", false);
+        Key<String> key1 = new Key<String>("key1");
+        Key<String> key2 = new Key<String>("key2");
+        Key<String> key3 = new Key<String>("key3");
         Category<TestObj> category = new Category<>("testEquals", TestObj.class, key1, key2, key3);
         assertTrue(category.equals(category));
         assertFalse(category.equals(HostInfoDAO.hostInfoCategory));
@@ -109,7 +109,7 @@ public class CategoryTest {
     
     @Test
     public void testHashCode() {
-        Key<String> key1 = new Key<String>("key1", false);
+        Key<String> key1 = new Key<String>("key1");
         Category<TestObj> category = new Category<>("testHashCode", TestObj.class, key1);
         Map<String, Key<?>> keys = new HashMap<>();
         keys.put(key1.getName(), key1);

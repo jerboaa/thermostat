@@ -81,7 +81,7 @@ class TerminalNode extends Node {
             }
             if (patch.isLHS()) {
                 // LHS need to get patched to keys
-                Key<?> valueKey = new Key<>((String)param.getValue(), false);
+                Key<?> valueKey = new Key<>((String)param.getValue());
                 actualValue = valueKey;
             } else {
                 actualValue = param.getValue();

@@ -95,7 +95,7 @@ public class ParsedStatementImplTest {
         and.setLeftChild(leftEqual);
         and.setRightChild(rightEqual);
         TerminalNode a = new TerminalNode(leftEqual);
-        Key<String> aKey = new Key<>("a", false);
+        Key<String> aKey = new Key<>("a");
         a.setValue(aKey);
         TerminalNode b = new TerminalNode(leftEqual);
         UnfinishedValueNode patchB = new UnfinishedValueNode();
@@ -162,7 +162,7 @@ public class ParsedStatementImplTest {
         expn.getRoot().setValue(and);
         and.setOperator(BinaryComparisonOperator.EQUALS);
         TerminalNode a = new TerminalNode(and);
-        a.setValue(new Key<>("a", false));
+        a.setValue(new Key<>("a"));
         TerminalNode b = new TerminalNode(and);
         UnfinishedValueNode bPatch = new UnfinishedValueNode();
         bPatch.setParameterIndex(0);
@@ -190,7 +190,7 @@ public class ParsedStatementImplTest {
         assertTrue(root.getRightOperand() instanceof LiteralExpression);
         LiteralExpression<?> leftLiteral1 = (LiteralExpression<?>)root.getLeftOperand();
         LiteralExpression<?> rightLiteral1 = (LiteralExpression<?>)root.getRightOperand();
-        assertEquals(new Key<>("a", false), leftLiteral1.getValue());
+        assertEquals(new Key<>("a"), leftLiteral1.getValue());
         // this should have gotten patched to a "b"
         assertEquals(true, rightLiteral1.getValue());
         // now do it again with a different value
@@ -208,7 +208,7 @@ public class ParsedStatementImplTest {
         assertTrue(root.getRightOperand() instanceof LiteralExpression);
         leftLiteral1 = (LiteralExpression<?>)root.getLeftOperand();
         rightLiteral1 = (LiteralExpression<?>)root.getRightOperand();
-        assertEquals(new Key<>("a", false), leftLiteral1.getValue());
+        assertEquals(new Key<>("a"), leftLiteral1.getValue());
         assertEquals(false, rightLiteral1.getValue());
     }
     
@@ -258,7 +258,7 @@ public class ParsedStatementImplTest {
         assertTrue(root.getRightOperand() instanceof LiteralExpression);
         LiteralExpression<?> leftLiteral1 = (LiteralExpression<?>)root.getLeftOperand();
         LiteralExpression<?> rightLiteral1 = (LiteralExpression<?>)root.getRightOperand();
-        assertEquals(new Key<>("a", false), leftLiteral1.getValue());
+        assertEquals(new Key<>("a"), leftLiteral1.getValue());
         // this should have gotten patched to a "b"
         assertEquals(true, rightLiteral1.getValue());
         // now do it again with a different value
@@ -277,7 +277,7 @@ public class ParsedStatementImplTest {
         assertTrue(root.getRightOperand() instanceof LiteralExpression);
         leftLiteral1 = (LiteralExpression<?>)root.getLeftOperand();
         rightLiteral1 = (LiteralExpression<?>)root.getRightOperand();
-        assertEquals(new Key<>("a", false), leftLiteral1.getValue());
+        assertEquals(new Key<>("a"), leftLiteral1.getValue());
         assertEquals(false, rightLiteral1.getValue());
     }
     
@@ -338,12 +338,12 @@ public class ParsedStatementImplTest {
         assertEquals(2, actualSorts.size());
         Pair<Key<?>, SortDirection> first = actualSorts.get(0);
         Key<?> firstKeyActual = (Key<?>)first.getFirst();
-        Key<?> expectedFirst = new Key<>("a", false);
+        Key<?> expectedFirst = new Key<>("a");
         assertEquals(expectedFirst, firstKeyActual);
         assertEquals(SortDirection.ASCENDING, first.getSecond());
         Pair<Key<?>, SortDirection> second = actualSorts.get(1);
         Key<?> secondKeyActual = (Key<?>)second.getFirst();
-        Key<?> expectedSecond = new Key<>("b", false);
+        Key<?> expectedSecond = new Key<>("b");
         assertEquals(expectedSecond, secondKeyActual);
         assertEquals(SortDirection.DESCENDING, second.getSecond());
     }
@@ -367,7 +367,7 @@ public class ParsedStatementImplTest {
         and.setLeftChild(leftEqual);
         and.setRightChild(rightEqual);
         TerminalNode a = new TerminalNode(leftEqual);
-        Key<?> aKey = new Key<>("a", false);
+        Key<?> aKey = new Key<>("a");
         a.setValue(aKey);
         TerminalNode b = new TerminalNode(leftEqual);
         UnfinishedValueNode patchB = new UnfinishedValueNode();
@@ -377,7 +377,7 @@ public class ParsedStatementImplTest {
         leftEqual.setLeftChild(a);
         leftEqual.setRightChild(b);
         TerminalNode c = new TerminalNode(rightEqual);
-        Key<?> cKey = new Key<>("c", false);
+        Key<?> cKey = new Key<>("c");
         c.setValue(cKey);
         rightEqual.setLeftChild(c);
         TerminalNode d = new TerminalNode(rightEqual);

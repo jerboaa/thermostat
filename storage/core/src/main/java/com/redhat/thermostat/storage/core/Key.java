@@ -36,20 +36,21 @@
 
 package com.redhat.thermostat.storage.core;
 
+import java.util.Objects;
+
 /**
- * A Key is used to refer to data in a {@link Chunk}.  It may also be a partial key to the
- * set of data represented by a {@link Chunk} in a category.
+ * Keys are attributes in {@link Category}s. Think of them as
+ * column names in a table if you're familiar with SQL.
  */
 public class Key<T> {
 
     // Keys used by most Categories.
-    public static final Key<Long> TIMESTAMP = new Key<>("timeStamp", false);
-    public static final Key<String> AGENT_ID = new Key<>("agentId", true);
-    public static final Key<String> VM_ID = new Key<>("vmId", true);
-    public static final Key<String> ID = new Key<>("_id", false);
+    public static final Key<Long> TIMESTAMP = new Key<>("timeStamp");
+    public static final Key<String> AGENT_ID = new Key<>("agentId");
+    public static final Key<String> VM_ID = new Key<>("vmId");
+    public static final Key<String> ID = new Key<>("_id");
 
     private String name;
-    private boolean isPartialCategoryKey;
 
     public Key() {
         // This is used only in de-serialization, e.g. using Gson, and therefore
@@ -57,12 +58,11 @@ public class Key<T> {
         super();
     }
 
-    public Key(String name, boolean isPartialCategoryKey) {
+    public Key(String name) {
         if (name == null || name.length() == 0) {
             throw new IllegalArgumentException("A Key must have a non-null name of length >= 1.");
         }
         this.name = name;
-        this.isPartialCategoryKey = isPartialCategoryKey;
     }
 
     public String getName() {
@@ -71,15 +71,6 @@ public class Key<T> {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public boolean isPartialCategoryKey() {
-        return isPartialCategoryKey;
-    }
-
-    public void setPartialCategoryKey(boolean partialCategoryKey) {
-        this.isPartialCategoryKey = partialCategoryKey;
-
     }
 
     @Override
@@ -91,16 +82,12 @@ public class Key<T> {
             return false;
         }
         Key<?> e = (Key<?>) o;
-        return (isPartialCategoryKey == e.isPartialCategoryKey()) &&
-            name.equals(e.getName());
+        return name.equals(e.getName());
     }
 
     @Override
     public int hashCode() {
-        int hash = 1867;
-        hash = hash * 37 + (isPartialCategoryKey ? 0 : 1);
-        hash = hash * 37 + (name == null ? 0 : name.hashCode());
-        return hash;
+        return Objects.hash(name);
     }
 
     @Override

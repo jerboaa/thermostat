@@ -77,10 +77,10 @@ public class NetworkInterfaceInfoDAOTest {
 
         assertEquals("network-info", NetworkInterfaceInfoDAO.networkInfoCategory.getName());
         keys = NetworkInterfaceInfoDAO.networkInfoCategory.getKeys();
-        assertTrue(keys.contains(new Key<>("agentId", true)));
-        assertTrue(keys.contains(new Key<String>("interfaceName", true)));
-        assertTrue(keys.contains(new Key<String>("ip4Addr", false)));
-        assertTrue(keys.contains(new Key<String>("ip6Addr", false)));
+        assertTrue(keys.contains(new Key<>("agentId")));
+        assertTrue(keys.contains(new Key<String>("interfaceName")));
+        assertTrue(keys.contains(new Key<String>("ip4Addr")));
+        assertTrue(keys.contains(new Key<String>("ip6Addr")));
         assertEquals(4, keys.size());
     }
     

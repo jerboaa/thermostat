@@ -155,8 +155,8 @@ public class WebStorageTest {
 
     @BeforeClass
     public static void setupCategory() {
-        key1 = new Key<>("property1", true);
-        key2 = new Key<>("property2", true);
+        key1 = new Key<>("property1");
+        key2 = new Key<>("property2");
         category = new Category<>("test", TestObj.class, key1);
     }
 

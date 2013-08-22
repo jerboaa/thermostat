@@ -50,7 +50,7 @@ import com.redhat.thermostat.storage.core.Key;
 
 public class ExpressionFactoryTest {
     
-    private static final Key<String> key = new Key<>("hello", true);
+    private static final Key<String> key = new Key<>("hello");
     private static final String VALUE = "world";
     private static final Set<String> VALUES = new HashSet<>(Arrays.asList("world", "worlds"));
     ExpressionFactory factory;

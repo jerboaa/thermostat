@@ -47,7 +47,7 @@ import com.redhat.thermostat.storage.core.Key;
 @Service
 public interface CpuStatDAO {
 
-    static Key<List<Double>> cpuLoadKey = new Key<>("perProcessorUsage", false);
+    static Key<List<Double>> cpuLoadKey = new Key<>("perProcessorUsage");
 
     static final Category<CpuStat> cpuStatCategory = new Category<>("cpu-stats", CpuStat.class,
             Key.AGENT_ID, Key.TIMESTAMP, cpuLoadKey);
