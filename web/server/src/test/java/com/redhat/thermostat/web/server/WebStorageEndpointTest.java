@@ -113,8 +113,8 @@ import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Update;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
+import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.model.AggregateCount;
@@ -132,13 +132,14 @@ import com.redhat.thermostat.web.common.OperatorSerializer;
 import com.redhat.thermostat.web.common.PreparedParameterSerializer;
 import com.redhat.thermostat.web.common.StorageWrapper;
 import com.redhat.thermostat.web.common.ThermostatGSONConverter;
-import com.redhat.thermostat.web.common.WebInsert;
+import com.redhat.thermostat.web.common.WebAdd;
 import com.redhat.thermostat.web.common.WebPreparedStatement;
 import com.redhat.thermostat.web.common.WebPreparedStatementResponse;
 import com.redhat.thermostat.web.common.WebPreparedStatementSerializer;
 import com.redhat.thermostat.web.common.WebQueryResponse;
 import com.redhat.thermostat.web.common.WebQueryResponseSerializer;
 import com.redhat.thermostat.web.common.WebRemove;
+import com.redhat.thermostat.web.common.WebReplace;
 import com.redhat.thermostat.web.common.WebUpdate;
 import com.redhat.thermostat.web.server.auth.BasicRole;
 import com.redhat.thermostat.web.server.auth.RolePrincipal;
@@ -900,6 +901,7 @@ public class WebStorageEndpointTest {
         TestClass expected1 = new TestClass();
         expected1.setKey1("fluff1");
         expected1.setKey2(42);
+        Expression expectedExpression = new ExpressionFactory().equalTo(key1, "fluff1");
 
         String endpoint = getEndpoint();
 
@@ -910,11 +912,16 @@ public class WebStorageEndpointTest {
 
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        WebInsert insert = new WebInsert(categoryId);
-        Gson gson = new Gson();
+        WebReplace webReplace = new WebReplace(categoryId);
+        webReplace.where(expectedExpression);
+        Gson gson = new GsonBuilder()
+            .registerTypeHierarchyAdapter(Expression.class,
+                    new ExpressionSerializer())
+            .registerTypeHierarchyAdapter(Operator.class,
+                    new OperatorSerializer()).create();
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-        out.write("insert=");
-        gson.toJson(insert, out);
+        out.write("replace=");
+        gson.toJson(webReplace, out);
         out.flush();
         out.write("&pojo=");
         gson.toJson(expected1, out);
@@ -923,6 +930,7 @@ public class WebStorageEndpointTest {
         assertEquals(200, conn.getResponseCode());
         verify(mockStorage).createReplace(category);
         verify(replace).setPojo(expected1);
+        verify(replace).where(eq(expectedExpression));
         verify(replace).apply();
     }    
     
@@ -955,12 +963,15 @@ public class WebStorageEndpointTest {
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        // replace
-        WebInsert insert = new WebInsert(categoryId);
-        Gson gson = new Gson();
+        WebReplace webReplace = new WebReplace(categoryId);
+        Gson gson = new GsonBuilder()
+            .registerTypeHierarchyAdapter(Expression.class,
+                new ExpressionSerializer())
+            .registerTypeHierarchyAdapter(Operator.class,
+                new OperatorSerializer()).create();
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-        out.write("insert=");
-        gson.toJson(insert, out);
+        out.write("replace=");
+        gson.toJson(webReplace, out);
         out.flush();
         out.write("&pojo=");
         TestClass expected1 = new TestClass();
@@ -1009,10 +1020,10 @@ public class WebStorageEndpointTest {
 
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        WebInsert ins = new WebInsert(categoryId);
+        WebAdd ins = new WebAdd(categoryId);
         Gson gson = new Gson();
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-        out.write("insert=");
+        out.write("add=");
         gson.toJson(ins, out);
         out.flush();
         out.write("&pojo=");
@@ -1054,11 +1065,10 @@ public class WebStorageEndpointTest {
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        // replace
-        WebInsert insert = new WebInsert(categoryId);
+        WebAdd insert = new WebAdd(categoryId);
         Gson gson = new Gson();
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-        out.write("insert=");
+        out.write("add=");
         gson.toJson(insert, out);
         out.flush();
         out.write("&pojo=");

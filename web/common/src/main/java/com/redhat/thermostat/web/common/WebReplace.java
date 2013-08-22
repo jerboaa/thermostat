@@ -34,22 +34,58 @@
  * to do so, delete this exception statement from your version.
  */
 
+package com.redhat.thermostat.web.common;
 
-package com.redhat.thermostat.storage.core;
-
+import com.redhat.thermostat.storage.core.Replace;
+import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
 
-/**
- * Describes which object should get inserted into storage or which
- * object should get updated with new values in storage.
- * 
- * If the where expression matches an object in storage, this
- * object will get updated. Otherwise a new object gets inserted into
- * storage.
- *
- */
-public interface Replace extends Put {
+public class WebReplace implements Replace {
+    
+    private int categoryId;
+    private transient Pojo pojo;
+    private Expression whereExpression;
+    
+    public WebReplace() {
+        // nothing
+    }
+    
+    public WebReplace(int categoryId) {
+        this.categoryId = categoryId;
+    }
 
-    void where(Expression expression);
+    @Override
+    public void setPojo(Pojo pojo) {
+        this.pojo = pojo;
+    }
+
+    @Override
+    public void apply() {
+        // Should never be called directly, but overridden by
+        // the actual implementation. Here only so that it can be used
+        // for serialization.
+        throw new IllegalStateException();
+    }
+
+    @Override
+    public void where(Expression expression) {
+        this.whereExpression = expression;
+    }
+
+    public int getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(int categoryId) {
+        this.categoryId = categoryId;
+    }
+
+    public Pojo getPojo() {
+        return pojo;
+    }
+
+    public Expression getWhereExpression() {
+        return whereExpression;
+    }
+
 }
-

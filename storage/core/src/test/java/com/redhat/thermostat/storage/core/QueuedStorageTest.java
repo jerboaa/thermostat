@@ -69,6 +69,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 
 public class QueuedStorageTest {
@@ -233,12 +235,14 @@ public class QueuedStorageTest {
     }
 
     @Test
-    public void testInsert() {
+    public void testReplace() {
         Category<?> category = mock(Category.class);
         Pojo pojo = mock(Pojo.class);
 
-        Put put = queuedStorage.createReplace(category);
+        Replace put = queuedStorage.createReplace(category);
         put.setPojo(pojo);
+        Expression expression = new ExpressionFactory().equalTo(Key.AGENT_ID, "foo");
+        put.where(expression);
         put.apply();
 
         Runnable r = executor.getTask();
@@ -249,6 +253,7 @@ public class QueuedStorageTest {
         r.run();
         verify(delegateStorage).createReplace(category);
         verify(delegateReplace).setPojo(pojo);
+        verify(delegateReplace).where(expression);
         verify(delegateReplace).apply();
         verifyNoMoreInteractions(delegateStorage);
 

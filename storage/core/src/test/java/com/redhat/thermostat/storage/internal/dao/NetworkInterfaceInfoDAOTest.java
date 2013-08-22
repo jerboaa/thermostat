@@ -37,6 +37,7 @@
 package com.redhat.thermostat.storage.internal.dao;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -61,6 +62,8 @@ import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class NetworkInterfaceInfoDAOTest {
 
@@ -132,19 +135,46 @@ public class NetworkInterfaceInfoDAOTest {
 
     @Test
     public void testPutNetworkInterfaceInfo() {
+        String agentId = "fooAgent";
+        doTestPutNetworkInerfaceInfo(false, agentId);
+    }
+    
+    @Test
+    public void testPutNetworkInterfaceInfoWithoutAgentIdInInfo() {
+        String agentId = "fooStorageAgentId";
+        doTestPutNetworkInerfaceInfo(true, agentId);
+    }
+    
+    private void doTestPutNetworkInerfaceInfo(boolean agentIdFromStorage, String agentId) {
         Storage storage = mock(Storage.class);
         Replace replace = mock(Replace.class);
         when(storage.createReplace(any(Category.class))).thenReturn(replace);
+        if (agentIdFromStorage) {
+            when(storage.getAgentId()).thenReturn(agentId);
+        }
 
         NetworkInterfaceInfo info = new NetworkInterfaceInfo(INTERFACE_NAME);
         info.setIp4Addr(IPV4_ADDR);
         info.setIp6Addr(IPV6_ADDR);
+        if (!agentIdFromStorage) {
+            info.setAgentId(agentId);
+        } else {
+            // case where agentId gets replaced by the DAO
+            // with the one set for storage.
+            assertNull(info.getAgentId());
+        }
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression left = factory.equalTo(Key.AGENT_ID, agentId);
+        Expression right = factory.equalTo(NetworkInterfaceInfoDAO.ifaceKey, INTERFACE_NAME);
+        Expression expected = factory.and(left, right);
         NetworkInterfaceInfoDAO dao = new NetworkInterfaceInfoDAOImpl(storage);
         dao.putNetworkInterfaceInfo(info);
 
         verify(storage).createReplace(NetworkInterfaceInfoDAO.networkInfoCategory);
         verify(replace).setPojo(info);
+        verify(replace).where(expected);
         verify(replace).apply();
     }
+    
 }
 

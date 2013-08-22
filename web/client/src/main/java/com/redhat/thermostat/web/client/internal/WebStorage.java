@@ -91,7 +91,6 @@ import com.redhat.thermostat.storage.config.AuthenticationConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.AuthToken;
-import com.redhat.thermostat.storage.core.BasePut;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Connection;
 import com.redhat.thermostat.storage.core.Cursor;
@@ -116,13 +115,14 @@ import com.redhat.thermostat.web.common.ExpressionSerializer;
 import com.redhat.thermostat.web.common.OperatorSerializer;
 import com.redhat.thermostat.web.common.PreparedParameterSerializer;
 import com.redhat.thermostat.web.common.ThermostatGSONConverter;
-import com.redhat.thermostat.web.common.WebInsert;
+import com.redhat.thermostat.web.common.WebAdd;
 import com.redhat.thermostat.web.common.WebPreparedStatement;
 import com.redhat.thermostat.web.common.WebPreparedStatementResponse;
 import com.redhat.thermostat.web.common.WebPreparedStatementSerializer;
 import com.redhat.thermostat.web.common.WebQueryResponse;
 import com.redhat.thermostat.web.common.WebQueryResponseSerializer;
 import com.redhat.thermostat.web.common.WebRemove;
+import com.redhat.thermostat.web.common.WebReplace;
 import com.redhat.thermostat.web.common.WebUpdate;
 
 public class WebStorage implements Storage, SecureStorage {
@@ -299,30 +299,28 @@ public class WebStorage implements Storage, SecureStorage {
 
     }
 
-    private class WebAdd extends BasePut implements Add {
+    private class WebAddImpl extends WebAdd {
 
-        private WebAdd(Category<?> category) {
-            super(category);
+        private WebAddImpl(int categoryId) {
+            super(categoryId);
         }
         
         @Override
         public void apply() {
-            int categoryId = getCategoryId(getCategory());
-            addImpl(new WebInsert(categoryId), getPojo());
+            addImpl(this);
         }
         
     }
 
-    private class WebReplace extends BasePut implements Replace {
-
-        private WebReplace(Category<?> category) {
-            super(category);
+    private class WebReplaceImpl extends WebReplace {
+        
+        private WebReplaceImpl(int categoryId) {
+            super(categoryId);
         }
         
         @Override
         public void apply() {
-            int categoryId = getCategoryId(getCategory());
-            replaceImpl(new WebInsert(categoryId), getPojo());
+            replaceImpl(this);
         }
         
     }
@@ -638,34 +636,38 @@ public class WebStorage implements Storage, SecureStorage {
 
     @Override
     public Add createAdd(Category<?> into) {
-        WebAdd add = new WebAdd(into);
+        int categoryId = getCategoryId(into);
+        WebAdd add = new WebAddImpl(categoryId);
         return add;
     }
 
     @Override
     public Replace createReplace(Category<?> into) {
-        WebReplace replace = new WebReplace(into);
+        int categoryId = getCategoryId(into);
+        WebReplace replace = new WebReplaceImpl(categoryId);
         return replace;
     }
     
-    private void addImpl(WebInsert insert, final Pojo pojo) throws StorageException {
-        List<NameValuePair> formParams = getPutFormParams(insert, pojo);
+    private void addImpl(final WebAdd add) throws StorageException {
+        Pojo pojo = add.getPojo();
+        maybeAddAgentId(pojo);
+        NameValuePair pojoParam = new BasicNameValuePair("pojo",
+                gson.toJson(pojo));
+        NameValuePair addParam = new BasicNameValuePair("add",
+                gson.toJson(add));
+        List<NameValuePair> formParams = Arrays.asList(addParam, pojoParam);
         post(endpoint + "/add-pojo", formParams).close();
     }
 
-    private List<NameValuePair> getPutFormParams(WebInsert insert, Pojo pojo) {
+    private void replaceImpl(final WebReplace replace) throws StorageException {
+        Pojo pojo = replace.getPojo();
         maybeAddAgentId(pojo);
-        NameValuePair insertParam = new BasicNameValuePair("insert",
-                gson.toJson(insert));
+        NameValuePair replaceParam = new BasicNameValuePair("replace",
+                gson.toJson(replace));
         NameValuePair pojoParam = new BasicNameValuePair("pojo",
                 gson.toJson(pojo));
-        List<NameValuePair> formparams = Arrays.asList(insertParam, pojoParam);
-        return formparams;
-    }
-
-    private void replaceImpl(WebInsert insert, final Pojo pojo) throws StorageException {
-        List<NameValuePair> formparams = getPutFormParams(insert, pojo);
-        post(endpoint + "/replace-pojo", formparams).close();
+        List<NameValuePair> formParams = Arrays.asList(replaceParam, pojoParam);
+        post(endpoint + "/replace-pojo", formParams).close();
     }
 
     private void maybeAddAgentId(final Pojo pojo) throws AssertionError {

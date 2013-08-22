@@ -38,6 +38,7 @@
 package com.redhat.thermostat.storage.core;
 
 import java.io.InputStream;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -52,13 +53,20 @@ public class QueuedStorage implements Storage {
 
     private class QueuedReplace extends BasePut implements Replace {
 
+        private Expression expression;
+        
         private QueuedReplace(Category<?> category) {
             super(category);
         }
         
         @Override
         public void apply() {
-            replaceImpl(getCategory(), getPojo());
+            replaceImpl(getCategory(), getPojo(), expression);
+        }
+
+        @Override
+        public void where(Expression expression) {
+            this.expression = Objects.requireNonNull(expression);
         }
         
     }
@@ -151,7 +159,7 @@ public class QueuedStorage implements Storage {
         return replace;
     }
 
-    private void replaceImpl(final Category<?> category, final Pojo pojo) {
+    private void replaceImpl(final Category<?> category, final Pojo pojo, final Expression expression) {
         
         executor.execute(new Runnable() {
             
@@ -159,6 +167,7 @@ public class QueuedStorage implements Storage {
             public void run() {
                 Replace replace = delegate.createReplace(category);
                 replace.setPojo(pojo);
+                replace.where(expression);
                 replace.apply();
             }
 

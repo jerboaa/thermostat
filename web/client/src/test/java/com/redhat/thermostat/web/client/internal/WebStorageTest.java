@@ -90,6 +90,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
+import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.AuthToken;
 import com.redhat.thermostat.storage.core.Categories;
 import com.redhat.thermostat.storage.core.Category;
@@ -117,13 +118,14 @@ import com.redhat.thermostat.web.common.ExpressionSerializer;
 import com.redhat.thermostat.web.common.OperatorSerializer;
 import com.redhat.thermostat.web.common.PreparedParameterSerializer;
 import com.redhat.thermostat.web.common.ThermostatGSONConverter;
-import com.redhat.thermostat.web.common.WebInsert;
+import com.redhat.thermostat.web.common.WebAdd;
 import com.redhat.thermostat.web.common.WebPreparedStatement;
 import com.redhat.thermostat.web.common.WebPreparedStatementResponse;
 import com.redhat.thermostat.web.common.WebPreparedStatementSerializer;
 import com.redhat.thermostat.web.common.WebQueryResponse;
 import com.redhat.thermostat.web.common.WebQueryResponseSerializer;
 import com.redhat.thermostat.web.common.WebRemove;
+import com.redhat.thermostat.web.common.WebReplace;
 import com.redhat.thermostat.web.common.WebUpdate;
 
 public class WebStorageTest {
@@ -389,6 +391,43 @@ public class WebStorageTest {
             // Pass.
         }
     }
+    
+    @Test
+    public void testAdd() throws IOException, JsonSyntaxException, ClassNotFoundException {
+
+        TestObj obj = new TestObj();
+        obj.setProperty1("fluff");
+
+        // We need an agentId, so that we can check automatic insert of agentId.
+        UUID agentId = new UUID(1, 2);
+        storage.setAgentId(agentId);
+
+        Add add = storage.createAdd(category);
+        add.setPojo(obj);
+
+        prepareServer();
+        add.apply();
+
+        Gson gson = new Gson();
+        StringReader reader = new StringReader(requestBody);
+        BufferedReader bufRead = new BufferedReader(reader);
+        String line = URLDecoder.decode(bufRead.readLine(), "UTF-8");
+        String [] params = line.split("&");
+        assertEquals(2, params.length);
+        String[] parts = params[0].split("=");
+        assertEquals("add", parts[0]);
+        WebAdd add2 = gson.fromJson(parts[1], WebAdd.class);
+        assertEquals(42, add2.getCategoryId());
+
+        parts = params[1].split("=");
+        assertEquals(2, parts.length);
+        assertEquals("pojo", parts[0]);
+        Object resultObj = gson.fromJson(parts[1], TestObj.class);
+
+        // Set agentId on expected object, because we expect WebStorage to insert it for us.
+        obj.setAgentId(agentId.toString());
+        assertEquals(obj, resultObj);
+    }
 
     @Test
     public void testReplace() throws IOException, JsonSyntaxException, ClassNotFoundException {
@@ -401,20 +440,26 @@ public class WebStorageTest {
         storage.setAgentId(agentId);
 
         Replace replace = storage.createReplace(category);
+        Expression expr = new ExpressionFactory().equalTo(key1, "fluff");
         replace.setPojo(obj);
+        replace.where(expr);
 
         prepareServer();
         replace.apply();
 
-        Gson gson = new Gson();
+        Gson gson = new GsonBuilder()
+                .registerTypeHierarchyAdapter(Expression.class,
+                        new ExpressionSerializer())
+                .registerTypeHierarchyAdapter(Operator.class,
+                        new OperatorSerializer()).create();
         StringReader reader = new StringReader(requestBody);
         BufferedReader bufRead = new BufferedReader(reader);
         String line = URLDecoder.decode(bufRead.readLine(), "UTF-8");
         String [] params = line.split("&");
         assertEquals(2, params.length);
         String[] parts = params[0].split("=");
-        assertEquals("insert", parts[0]);
-        WebInsert insert = gson.fromJson(parts[1], WebInsert.class);
+        assertEquals("replace", parts[0]);
+        WebReplace insert = gson.fromJson(parts[1], WebReplace.class);
         assertEquals(42, insert.getCategoryId());
 
         parts = params[1].split("=");

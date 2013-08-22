@@ -106,13 +106,14 @@ import com.redhat.thermostat.web.common.OperatorSerializer;
 import com.redhat.thermostat.web.common.PreparedParameterSerializer;
 import com.redhat.thermostat.web.common.StorageWrapper;
 import com.redhat.thermostat.web.common.ThermostatGSONConverter;
-import com.redhat.thermostat.web.common.WebInsert;
+import com.redhat.thermostat.web.common.WebAdd;
 import com.redhat.thermostat.web.common.WebPreparedStatement;
 import com.redhat.thermostat.web.common.WebPreparedStatementResponse;
 import com.redhat.thermostat.web.common.WebPreparedStatementSerializer;
 import com.redhat.thermostat.web.common.WebQueryResponse;
 import com.redhat.thermostat.web.common.WebQueryResponseSerializer;
 import com.redhat.thermostat.web.common.WebRemove;
+import com.redhat.thermostat.web.common.WebReplace;
 import com.redhat.thermostat.web.common.WebUpdate;
 import com.redhat.thermostat.web.server.auth.FilterResult;
 import com.redhat.thermostat.web.server.auth.Roles;
@@ -526,9 +527,9 @@ public class WebStorageEndPoint extends HttpServlet {
         if (! isAuthorized(req, resp, Roles.APPEND)) {
             return;
         }
-        String insertParam = req.getParameter("insert");
-        WebInsert insert = gson.fromJson(insertParam, WebInsert.class);
-        int categoryId = insert.getCategoryId();
+        String addParam = req.getParameter("add");
+        WebAdd add = gson.fromJson(addParam, WebAdd.class);
+        int categoryId = add.getCategoryId();
         Category<?> category = getCategoryFromId(categoryId);
         Add targetAdd = storage.createAdd(category);
         Class<? extends Pojo> pojoCls = category.getDataClass();
@@ -544,15 +545,17 @@ public class WebStorageEndPoint extends HttpServlet {
         if (! isAuthorized(req, resp, Roles.REPLACE)) {
             return;
         }
-        String insertParam = req.getParameter("insert");
-        WebInsert insert = gson.fromJson(insertParam, WebInsert.class);
-        int categoryId = insert.getCategoryId();
+        String replaceParam = req.getParameter("replace");
+        WebReplace replace = gson.fromJson(replaceParam, WebReplace.class);
+        int categoryId = replace.getCategoryId();
         Category<?> category = getCategoryFromId(categoryId);
         Replace targetReplace = storage.createReplace(category);
         Class<? extends Pojo> pojoCls = category.getDataClass();
         String pojoParam = req.getParameter("pojo");
         Pojo pojo = gson.fromJson(pojoParam, pojoCls);
         targetReplace.setPojo(pojo);
+        Expression expr = replace.getWhereExpression();
+        targetReplace.where(expr);
         targetReplace.apply();
         resp.setStatus(HttpServletResponse.SC_OK);
     }

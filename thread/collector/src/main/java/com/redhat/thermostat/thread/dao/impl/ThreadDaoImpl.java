@@ -55,6 +55,8 @@ import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
 import com.redhat.thermostat.thread.model.ThreadInfoData;
@@ -137,7 +139,16 @@ public class ThreadDaoImpl implements ThreadDao {
     @Override
     public void saveCapabilities(VMThreadCapabilities caps) {
         Replace replace = storage.createReplace(THREAD_CAPABILITIES);
+        ExpressionFactory factory = new ExpressionFactory();
+        String agentId = caps.getAgentId();
+        if (agentId == null) {
+            agentId = storage.getAgentId();
+        }
+        Expression agentKey = factory.equalTo(Key.AGENT_ID, agentId);
+        Expression vmKey = factory.equalTo(Key.VM_ID, caps.getVmId());
+        Expression and = factory.and(agentKey, vmKey);
         replace.setPojo(caps);
+        replace.where(and);
         replace.apply();
     }
     

@@ -69,6 +69,7 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -452,7 +453,7 @@ public class MongoStorageTest {
     }
 
     @Test
-    public void verifyInsertReplaceCallsUpdate() {
+    public void verifyReplace() {
         TestClass pojo = new TestClass();
         pojo.setAgentId("123");
         pojo.setKey1("test1");
@@ -463,6 +464,11 @@ public class MongoStorageTest {
 
         MongoStorage storage = makeStorage();
         Replace replace = storage.createReplace(testCategory);
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression first = factory.equalTo(key1, "test1");
+        Expression second = factory.equalTo(key2, "test2");
+        Expression and = factory.and(first, second);
+        replace.where(and);
         replace.setPojo(pojo);
         replace.apply();
 
@@ -471,9 +477,16 @@ public class MongoStorageTest {
         verify(testCollection).update(queryCaptor.capture(), valueCaptor.capture(), eq(true), eq(false));
 
         DBObject query = queryCaptor.getValue();
-        assertEquals(2, query.keySet().size());
-        assertEquals("test1", query.get("key1"));
-        assertEquals("test2", query.get("key2"));
+        assertEquals("expected explicit and query", 1, query.keySet().size());
+        Object andObj = query.get("$and");
+        assertNotNull(andObj);
+        assertTrue(andObj instanceof BasicDBList);
+        BasicDBList list = (BasicDBList)andObj;
+        assertEquals("expected two operands", 2, list.size());
+        DBObject firstCond = (DBObject)list.get(0);
+        DBObject secondCond = (DBObject)list.get(1);
+        assertEquals("test1", firstCond.get("key1"));
+        assertEquals("test2", secondCond.get("key2"));
 
         DBObject value = valueCaptor.getValue();
         assertEquals(6, value.keySet().size());

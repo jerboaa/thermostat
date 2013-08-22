@@ -37,10 +37,10 @@
 package com.redhat.thermostat.storage.mongodb.internal;
 
 import java.io.InputStream;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
@@ -114,14 +114,28 @@ public class MongoStorage implements BackingStorage {
     }
 
     private class MongoReplace extends BasePut implements Replace {
+        
+        private DBObject query;
+        private final MongoExpressionParser parser;
 
         private MongoReplace(Category<?> category) {
             super(category);
+            this.parser = new MongoExpressionParser();
         }
         
         @Override
         public void apply() {
-            replaceImpl(getCategory(), getPojo());
+            if (query == null) {
+                String msg = "where expression must be set. " +
+                             "Please call where() before apply().";
+                throw new IllegalStateException(msg);
+            }
+            replaceImpl(getCategory(), getPojo(), query);
+        }
+
+        @Override
+        public void where(Expression expression) {
+            this.query = parser.parse(Objects.requireNonNull(expression));
         }
         
     }
@@ -231,18 +245,9 @@ public class MongoStorage implements BackingStorage {
         coll.insert(toInsert);
     }
 
-    private void replaceImpl(final Category<?> cat, final Pojo pojo) {
+    private void replaceImpl(final Category<?> cat, final Pojo pojo, final DBObject query) {
         DBCollection coll = getCachedCollection(cat);
         DBObject toInsert = preparePut(pojo);
-
-        DBObject query = new BasicDBObject();
-        Collection<Key<?>> keys = cat.getKeys();
-        for (Key<?> key : keys) {
-            if (key.isPartialCategoryKey()) {
-                String name = key.getName();
-                query.put(name, toInsert.get(name));
-            }
-        }
         coll.update(query, toInsert, true, false);
     }
 

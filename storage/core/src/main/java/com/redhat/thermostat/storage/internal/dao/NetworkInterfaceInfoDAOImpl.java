@@ -54,6 +54,8 @@ import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
+import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
 
@@ -99,7 +101,16 @@ public class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
     @Override
     public void putNetworkInterfaceInfo(NetworkInterfaceInfo info) {
         Replace replace = storage.createReplace(networkInfoCategory);
+        ExpressionFactory factory = new ExpressionFactory();
+        String agentId = info.getAgentId();
+        if (agentId == null) {
+            agentId = storage.getAgentId();
+        }
+        Expression left = factory.equalTo(Key.AGENT_ID, agentId);
+        Expression right = factory.equalTo(NetworkInterfaceInfoDAO.ifaceKey, info.getInterfaceName());
+        Expression expression = factory.and(left, right); 
         replace.setPojo(info);
+        replace.where(expression);
         replace.apply();
     }
 

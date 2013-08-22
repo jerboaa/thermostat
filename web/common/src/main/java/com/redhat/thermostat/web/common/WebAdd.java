@@ -37,15 +37,19 @@
 
 package com.redhat.thermostat.web.common;
 
+import com.redhat.thermostat.storage.core.Add;
+import com.redhat.thermostat.storage.model.Pojo;
 
-public class WebInsert {
+
+public class WebAdd implements Add {
 
     private int categoryId;
+    private transient Pojo pojo;
 
-    public WebInsert() {
+    public WebAdd() {
     }
 
-    public WebInsert(int categoryId) {
+    public WebAdd(int categoryId) {
         this.categoryId = categoryId;
     }
 
@@ -57,5 +61,22 @@ public class WebInsert {
         this.categoryId = categoryId;
     }
 
+
+    @Override
+    public void setPojo(Pojo pojo) {
+        this.pojo = pojo;
+    }
+    
+    public Pojo getPojo() {
+        return pojo;
+    }
+
+    @Override
+    public void apply() {
+        // Should never be called directly, but overridden by
+        // the actual implementation. Here only so that it can be used
+        // for serialization.
+        throw new IllegalStateException();
+    }
 }
 
