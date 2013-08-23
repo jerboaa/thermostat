@@ -40,10 +40,21 @@ package com.redhat.thermostat.storage.core;
 import com.redhat.thermostat.storage.query.Expression;
 
 /**
- * Describes what data should be removed from storage.
+ * Write operation to be used for removing records from storage.
+ * 
+ * @see Add
+ * @see Update
+ * @see Replace
  */
 public interface Remove {
 
+    /**
+     * Boolean expression in order to restrict the set of records to be removed
+     * from storage.
+     * 
+     * @param where
+     *            The boolean expression.
+     */
     void where(Expression where);
     
     /**

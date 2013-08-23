@@ -40,16 +40,21 @@ package com.redhat.thermostat.storage.core;
 import com.redhat.thermostat.storage.query.Expression;
 
 /**
- * Describes which object should get inserted into storage or which
- * object should get updated with new values in storage.
+ * Write operation which should be used if any existing record should get
+ * updated with new values. It can be thought of as {@link Update} for
+ * <strong>all</strong> properties of a record.
  * 
- * If the where expression matches an object in storage, this
- * object will get updated. Otherwise a new object gets inserted into
- * storage.
- *
+ * The only distinction to a regular {@link Update} is that if Replace is used
+ * and the associated where yields no result, a <strong>new</strong> record will
+ * be insterted into Storage.
+ * 
+ * @see Add
+ * @see Remove
+ * @see Update
  */
 public interface Replace extends Put {
 
     void where(Expression expression);
+
 }
 

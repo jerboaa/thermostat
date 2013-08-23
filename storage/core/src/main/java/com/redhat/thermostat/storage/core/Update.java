@@ -39,7 +39,11 @@ package com.redhat.thermostat.storage.core;
 import com.redhat.thermostat.storage.query.Expression;
 
 /**
- * Updates fields of a database entry. 
+ * Updates properties of a record in storage.
+ * 
+ * @see Add
+ * @see Replace
+ * @see Remove
  */
 public interface Update {
 
@@ -49,22 +53,24 @@ public interface Update {
      * found (i.e. the where-clause yields no results), a
      * <code>StorageException</code> may get thrown.
      * 
-     * @param key the key of the field of the where clause
-     * @param value the value of the field of the where clause
+     * @param expr
+     *            A boolean expression.
      */
     void where(Expression expr);
 
     /**
-     * Sets a field in a found document to the specified value. If the same key is
+     * Sets a field in a found record to the specified value. If the same key is
      * set more than once, the latest values overrides the former values.
-     *
-     * @param key the key of the field
-     * @param value the value to set
+     * 
+     * @param key
+     *            the key of the field
+     * @param value
+     *            the value to set
      */
     <T> void set(Key<T> key, T value);
 
     /**
-     * Applies the update operation.
+     * Applies this update operation.
      */
     void apply();
 }

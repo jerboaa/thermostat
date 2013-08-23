@@ -37,7 +37,17 @@
 
 package com.redhat.thermostat.storage.core;
 
+/**
+ * Write operation to be used for adding new records into
+ * storage.
+ *
+ * @see Update
+ * @see Replace
+ * @see Remove
+ */
 public interface Add extends Put {
+    
+    
 
 }
 
