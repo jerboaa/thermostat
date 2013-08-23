@@ -42,6 +42,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -52,7 +53,6 @@ import java.util.NoSuchElementException;
 import org.junit.Test;
 
 import com.redhat.thermostat.storage.core.Add;
-import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -200,8 +200,9 @@ public class ThreadDaoImplTest {
     
     private void doTestSaveVMCaps(boolean agentIdFromStorage, String agentId) {
         Storage storage = mock(Storage.class);
-        Replace replace = mock(Replace.class);
-        when(storage.createReplace(any(Category.class))).thenReturn(replace);
+        @SuppressWarnings("unchecked")
+        Replace<VMThreadCapabilities> replace = mock(Replace.class);
+        when(storage.createReplace(eq(ThreadDao.THREAD_CAPABILITIES))).thenReturn(replace);
         if (agentIdFromStorage) {
             when(storage.getAgentId()).thenReturn(agentId);
         }
@@ -274,7 +275,8 @@ public class ThreadDaoImplTest {
     @Test
     public void testSaveDeadLockStatus() {
         Storage storage = mock(Storage.class);
-        Add add = mock(Add.class);
+        @SuppressWarnings("unchecked")
+        Add<VmDeadLockData> add = mock(Add.class);
         when(storage.createAdd(ThreadDaoImpl.DEADLOCK_INFO)).thenReturn(add);
 
         VmDeadLockData status = mock(VmDeadLockData.class);
@@ -322,7 +324,8 @@ public class ThreadDaoImplTest {
     @Test
     public void testSetHarvestingStatus() {
         Storage storage = mock(Storage.class);
-        Add add = mock(Add.class);
+        @SuppressWarnings("unchecked")
+        Add<ThreadHarvestingStatus> add = mock(Add.class);
         when(storage.createAdd(ThreadDaoImpl.THREAD_HARVESTING_STATUS)).thenReturn(add);
 
         ThreadHarvestingStatus status = mock(ThreadHarvestingStatus.class);

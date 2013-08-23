@@ -47,18 +47,18 @@ import com.redhat.thermostat.storage.model.Pojo;
  * @see Replace
  * @see Update
  */
-public interface Add {
+public interface Add<T extends Pojo> extends DataModifyingStatement<T> {
 
     /**
-     * Sets the POJO that is to be put into the storage.
+     * Sets the POJO that is to be added into storage.
      *
-     * @param pojo the pojo to be put into the storage
+     * @param pojo the pojo to be added into storage
      */
     void setPojo(Pojo pojo);
 
     /**
-     * Applies this {@code Add} operation to the storage.
+     * Applies this {@code Add} operation to storage.
      */
-    void apply();
+    int apply();
 }
 

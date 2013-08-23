@@ -101,7 +101,7 @@ class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
 
     @Override
     public void putVmMemoryStat(VmMemoryStat stat) {
-        Add add = storage.createAdd(vmMemoryStatsCategory);
+        Add<VmMemoryStat> add = storage.createAdd(vmMemoryStatsCategory);
         add.setPojo(stat);
         add.apply();
     }

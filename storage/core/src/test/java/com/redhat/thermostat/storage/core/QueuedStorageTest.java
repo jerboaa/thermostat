@@ -198,14 +198,15 @@ public class QueuedStorageTest {
 
     private QueuedStorage queuedStorage;
     private Storage delegateStorage;
-    private Add delegateAdd;
-    private Replace delegateReplace;
+    private Add<?> delegateAdd;
+    private Replace<?> delegateReplace;
 
     private TestExecutor executor;
     private TestExecutor fileExecutor;
 
     private InputStream expectedFile;
 
+    @SuppressWarnings("unchecked")
     @Before
     public void setUp() {
         executor = new TestExecutor();
@@ -215,7 +216,7 @@ public class QueuedStorageTest {
         delegateAdd = mock(Add.class);
         delegateReplace = mock(Replace.class);
 
-        Remove remove = mock(Remove.class);
+        Remove<?> remove = mock(Remove.class);
         when(delegateStorage.createAdd(any(Category.class))).thenReturn(delegateAdd);
         when(delegateStorage.createReplace(any(Category.class))).thenReturn(delegateReplace);
         when(delegateStorage.createRemove(any(Category.class))).thenReturn(remove);
@@ -239,7 +240,7 @@ public class QueuedStorageTest {
         Category<?> category = mock(Category.class);
         Pojo pojo = mock(Pojo.class);
 
-        Replace replace = queuedStorage.createReplace(category);
+        Replace<?> replace = queuedStorage.createReplace(category);
         replace.setPojo(pojo);
         Expression expression = new ExpressionFactory().equalTo(Key.AGENT_ID, "foo");
         replace.where(expression);
@@ -260,14 +261,15 @@ public class QueuedStorageTest {
         assertNull(fileExecutor.getTask());
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testUpdatePojo() {
-        Update delegateUpdate = mock(Update.class);
+        Update<?> delegateUpdate = mock(Update.class);
         when(delegateStorage.createUpdate(any(Category.class))).thenReturn(delegateUpdate);
 
         Category<?> category = mock(Category.class);
 
-        Update update = queuedStorage.createUpdate(category);
+        Update<?> update = queuedStorage.createUpdate(category);
         verify(delegateStorage).createUpdate(category);
         verifyNoMoreInteractions(delegateStorage);
 
@@ -435,13 +437,13 @@ public class QueuedStorageTest {
         }
 
         @Override
-        public Add createAdd(Category<?> category) {
+        public <T extends Pojo> Add<T> createAdd(Category<T> category) {
             // not implemented
             throw new AssertionError();
         }
 
         @Override
-        public Replace createReplace(Category<?> category) {
+        public <T extends Pojo> Replace<T> createReplace(Category<T> category) {
             // not implemented
             throw new AssertionError();
         }
@@ -466,13 +468,13 @@ public class QueuedStorageTest {
         }
 
         @Override
-        public Update createUpdate(Category<?> category) {
+        public <T extends Pojo> Update<T> createUpdate(Category<T> category) {
             // not implemented
             throw new AssertionError();
         }
 
         @Override
-        public Remove createRemove(Category<?> category) {
+        public <T extends Pojo> Remove<T> createRemove(Category<T> category) {
             // not implemented
             throw new AssertionError();
         }

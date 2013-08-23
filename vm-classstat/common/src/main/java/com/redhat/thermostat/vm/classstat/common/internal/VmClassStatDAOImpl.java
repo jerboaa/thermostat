@@ -63,7 +63,7 @@ class VmClassStatDAOImpl implements VmClassStatDAO {
 
     @Override
     public void putVmClassStat(VmClassStat stat) {
-        Add add = storage.createAdd(vmClassStatsCategory);
+        Add<VmClassStat> add = storage.createAdd(vmClassStatsCategory);
         add.setPojo(stat);
         add.apply();
     }

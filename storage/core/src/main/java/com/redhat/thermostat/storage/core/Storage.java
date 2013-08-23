@@ -80,8 +80,8 @@ public interface Storage {
      */
     Connection getConnection();
 
-    Add createAdd(Category<?> category);
-    Replace createReplace(Category<?> category);
+    <T extends Pojo> Add<T> createAdd(Category<T> category);
+    <T extends Pojo> Replace<T> createReplace(Category<T> category);
 
     /**
      * Drop all data related to the specified agent.
@@ -92,8 +92,8 @@ public interface Storage {
 
     InputStream loadFile(String filename);
 
-    Update createUpdate(Category<?> category);
-    Remove createRemove(Category<?> category);
+    <T extends Pojo> Update<T> createUpdate(Category<T> category);
+    <T extends Pojo> Remove<T> createRemove(Category<T> category);
 
     void shutdown();
 

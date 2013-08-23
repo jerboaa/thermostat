@@ -40,7 +40,7 @@ import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
 
-public class WebReplace implements Replace {
+public class WebReplace<T extends Pojo> implements Replace<T> {
     
     private int categoryId;
     private transient Pojo pojo;
@@ -60,7 +60,7 @@ public class WebReplace implements Replace {
     }
 
     @Override
-    public void apply() {
+    public int apply() {
         // Should never be called directly, but overridden by
         // the actual implementation. Here only so that it can be used
         // for serialization.

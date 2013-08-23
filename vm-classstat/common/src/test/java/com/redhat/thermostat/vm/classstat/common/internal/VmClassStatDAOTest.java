@@ -39,6 +39,7 @@ package com.redhat.thermostat.vm.classstat.common.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -50,7 +51,6 @@ import java.util.List;
 import org.junit.Test;
 
 import com.redhat.thermostat.storage.core.Add;
-import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -133,8 +133,9 @@ public class VmClassStatDAOTest {
     public void testPutVmClassStat() {
 
         Storage storage = mock(Storage.class);
-        Add add = mock(Add.class);
-        when(storage.createAdd(any(Category.class))).thenReturn(add);
+        @SuppressWarnings("unchecked")
+        Add<VmClassStat> add = mock(Add.class);
+        when(storage.createAdd(eq(VmClassStatDAO.vmClassStatsCategory))).thenReturn(add);
 
         VmClassStat stat = new VmClassStat(VM_ID, TIMESTAMP, LOADED_CLASSES);
         VmClassStatDAO dao = new VmClassStatDAOImpl(storage);

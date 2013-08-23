@@ -51,7 +51,7 @@ public class QueuedStorage implements Storage {
 
     private static final int SHUTDOWN_TIMEOUT_SECONDS = 3;
 
-    private class QueuedReplace extends AddReplaceHelper implements Replace {
+    private class QueuedReplace<T extends Pojo> extends AddReplaceHelper implements Replace<T> {
 
         private Expression expression;
         
@@ -60,8 +60,9 @@ public class QueuedStorage implements Storage {
         }
         
         @Override
-        public void apply() {
+        public int apply() {
             replaceImpl(getCategory(), getPojo(), expression);
+            return DataModifyingStatement.DEFAULT_STATUS_SUCCESS;
         }
 
         @Override
@@ -71,23 +72,24 @@ public class QueuedStorage implements Storage {
         
     }
 
-    private class QueuedAdd extends AddReplaceHelper implements Add {
+    private class QueuedAdd<T extends Pojo> extends AddReplaceHelper implements Add<T> {
 
         private QueuedAdd(Category<?> category) {
             super(category);
         }
         
         @Override
-        public void apply() {
+        public int apply() {
             addImpl(getCategory(), getPojo());
+            return DataModifyingStatement.DEFAULT_STATUS_SUCCESS;
         }
         
     }
 
-    private class QueuedUpdate implements Update {
-        private Update delegateUpdate;
+    private class QueuedUpdate<T extends Pojo> implements Update<T> {
+        private Update<T> delegateUpdate;
 
-        QueuedUpdate(Update delegateUpdate) {
+        QueuedUpdate(Update<T> delegateUpdate) {
             this.delegateUpdate = delegateUpdate;
         }
 
@@ -98,12 +100,12 @@ public class QueuedStorage implements Storage {
         }
 
         @Override
-        public <T> void set(Key<T> key, T value) {
+        public <S> void set(Key<S> key, S value) {
             delegateUpdate.set(key, value);
         }
 
         @Override
-        public void apply() {
+        public int apply() {
             executor.execute(new Runnable() {
                 
                 @Override
@@ -112,6 +114,7 @@ public class QueuedStorage implements Storage {
                 }
 
             });
+            return DataModifyingStatement.DEFAULT_STATUS_SUCCESS;
         }
 
     }
@@ -148,14 +151,14 @@ public class QueuedStorage implements Storage {
     }
 
     @Override
-    public Add createAdd(Category<?> into) {
-        QueuedAdd add = new QueuedAdd(into);
+    public <T extends Pojo> Add<T> createAdd(Category<T> into) {
+        QueuedAdd<T> add = new QueuedAdd<>(into);
         return add;
     }
 
     @Override
-    public Replace createReplace(Category<?> into) {
-        QueuedReplace replace = new QueuedReplace(into);
+    public <T extends Pojo> Replace<T> createReplace(Category<T> into) {
+        QueuedReplace<T> replace = new QueuedReplace<>(into);
         return replace;
     }
 
@@ -165,7 +168,7 @@ public class QueuedStorage implements Storage {
             
             @Override
             public void run() {
-                Replace replace = delegate.createReplace(category);
+                Replace<?> replace = delegate.createReplace(category);
                 replace.setPojo(pojo);
                 replace.where(expression);
                 replace.apply();
@@ -181,7 +184,7 @@ public class QueuedStorage implements Storage {
             
             @Override
             public void run() {
-                Add add = delegate.createAdd(category);
+                Add<?> add = delegate.createAdd(category);
                 add.setPojo(pojo);
                 add.apply();
             }
@@ -224,13 +227,13 @@ public class QueuedStorage implements Storage {
     }
 
     @Override
-    public Update createUpdate(Category<?> category) {
-        QueuedUpdate update = new QueuedUpdate(delegate.createUpdate(category));
+    public <T extends Pojo> Update<T> createUpdate(Category<T> category) {
+        QueuedUpdate<T> update = new QueuedUpdate<>(delegate.createUpdate(category));
         return update;
     }
 
     @Override
-    public Remove createRemove(Category<?> category) {
+    public <T extends Pojo> Remove<T> createRemove(Category<T> category) {
         return delegate.createRemove(category);
     }
 

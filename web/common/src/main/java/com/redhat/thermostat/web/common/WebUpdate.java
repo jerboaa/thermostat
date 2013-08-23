@@ -40,9 +40,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Update;
+import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
 
-public class WebUpdate {
+public class WebUpdate<T extends Pojo> implements Update<T> {
 
     public static class UpdateValue {
         private Key<?> key;
@@ -99,7 +101,7 @@ public class WebUpdate {
         whereExpression = expr;
     }
 
-    public <T> void set(Key<T> key, T value) {
+    public <S> void set(Key<S> key, S value) {
         updateValues.add(new UpdateValue(key, value));
     }
 
@@ -117,6 +119,13 @@ public class WebUpdate {
     
     public List<WebUpdate.UpdateValue> getUpdates() {
         return updateValues;
+    }
+
+    @Override
+    public int apply() {
+        // This should never be called. Overridden by the actual
+        // implementation.
+        throw new IllegalStateException();
     }
 
 }

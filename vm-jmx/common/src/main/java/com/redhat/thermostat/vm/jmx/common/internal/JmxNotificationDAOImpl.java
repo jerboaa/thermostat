@@ -96,7 +96,7 @@ public class JmxNotificationDAOImpl implements JmxNotificationDAO {
 
     @Override
     public void addNotificationStatus(JmxNotificationStatus status) {
-        Add add = storage.createAdd(NOTIFICATION_STATUS);
+        Add<JmxNotificationStatus> add = storage.createAdd(NOTIFICATION_STATUS);
         add.setPojo(status);
         add.apply();
     }
@@ -132,7 +132,7 @@ public class JmxNotificationDAOImpl implements JmxNotificationDAO {
 
     @Override
     public void addNotification(JmxNotification notification) {
-        Add add = storage.createAdd(NOTIFICATIONS);
+        Add<JmxNotification> add = storage.createAdd(NOTIFICATIONS);
         add.setPojo(notification);
         add.apply();
     }

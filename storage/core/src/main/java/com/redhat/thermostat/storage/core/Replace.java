@@ -56,12 +56,13 @@ import com.redhat.thermostat.storage.query.Expression;
  * @see Remove
  * @see Update
  */
-public interface Replace {
+public interface Replace<T extends Pojo> extends DataModifyingStatement<T> {
 
     /**
      * Sets the POJO that will be used to replace the value in storage.
      *
-     * @param pojo the pojo to be put into the storage
+     * @param pojo the pojo which describes the updated values or the new
+     *             record to be added to storage.
      */
     void setPojo(Pojo pojo);
 
@@ -73,7 +74,7 @@ public interface Replace {
     /**
      * Applies this {@code Replace} operation to the storage.
      */
-    void apply();
+    int apply();
 
 }
 

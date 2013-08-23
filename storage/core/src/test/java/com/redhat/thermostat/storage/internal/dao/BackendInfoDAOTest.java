@@ -128,8 +128,9 @@ public class BackendInfoDAOTest {
     @Test
     public void verifyAddBackendInformation() {
         Storage storage = mock(Storage.class);
-        Add add = mock(Add.class);
-        when(storage.createAdd(any(Category.class))).thenReturn(add);
+        @SuppressWarnings("unchecked")
+        Add<BackendInformation> add = mock(Add.class);
+        when(storage.createAdd(eq(BackendInfoDAO.CATEGORY))).thenReturn(add);
 
         BackendInfoDAO dao = new BackendInfoDAOImpl(storage);
 
@@ -176,7 +177,8 @@ public class BackendInfoDAOTest {
 
     @Test
     public void verifyRemoveBackendInformation() {
-        Remove remove = mock(Remove.class);
+        @SuppressWarnings("unchecked")
+        Remove<BackendInformation> remove = mock(Remove.class);
         Storage storage = mock(Storage.class);
         when(storage.createRemove(eq(BackendInfoDAO.CATEGORY))).thenReturn(remove);
         BackendInfoDAO dao = new BackendInfoDAOImpl(storage);

@@ -44,29 +44,29 @@ import java.util.Map;
 
 public class Categories {
 
-    private static final Map<String, Category> namesToCategories = new HashMap<>();
+    private static final Map<String, Category<?>> namesToCategories = new HashMap<>();
 
     public static synchronized boolean contains(String name) {
         return namesToCategories.containsKey(name);
     }
 
-    public static synchronized void add(Category category) {
+    public static synchronized void add(Category<?> category) {
         if (namesToCategories.containsKey(category.getName())) {
             throw new IllegalArgumentException("category already registered");
         }
         namesToCategories.put(category.getName(), category);
     }
 
-    public static synchronized void remove(Category category) {
+    public static synchronized void remove(Category<?> category) {
         namesToCategories.remove(category.getName());
     }
 
-    public static synchronized Category getByName(String categoryName) {
+    public static synchronized Category<?> getByName(String categoryName) {
         return namesToCategories.get(categoryName);
     }
 
-    public static synchronized List<Category> getAllCategories() {
-        return Collections.unmodifiableList(new ArrayList<Category>(namesToCategories.values()));
+    public static synchronized List<Category<?>> getAllCategories() {
+        return Collections.unmodifiableList(new ArrayList<Category<?>>(namesToCategories.values()));
     }
 
 }

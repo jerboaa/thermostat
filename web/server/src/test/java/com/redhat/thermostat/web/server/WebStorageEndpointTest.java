@@ -895,8 +895,9 @@ public class WebStorageEndpointTest {
         setupTrustedCategory(categoryName);
         registerCategory(testuser, password);
         
-        Replace replace = mock(Replace.class);
-        when(mockStorage.createReplace(any(Category.class))).thenReturn(replace);
+        @SuppressWarnings("unchecked")
+        Replace<TestClass> replace = mock(Replace.class);
+        when(mockStorage.createReplace(eq(category))).thenReturn(replace);
 
         TestClass expected1 = new TestClass();
         expected1.setKey1("fluff1");
@@ -912,7 +913,7 @@ public class WebStorageEndpointTest {
 
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        WebReplace webReplace = new WebReplace(categoryId);
+        WebReplace<TestClass> webReplace = new WebReplace<>(categoryId);
         webReplace.where(expectedExpression);
         Gson gson = new GsonBuilder()
             .registerTypeHierarchyAdapter(Expression.class,
@@ -963,7 +964,7 @@ public class WebStorageEndpointTest {
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        WebReplace webReplace = new WebReplace(categoryId);
+        WebReplace<TestClass> webReplace = new WebReplace<>(categoryId);
         Gson gson = new GsonBuilder()
             .registerTypeHierarchyAdapter(Expression.class,
                 new ExpressionSerializer())
@@ -1004,8 +1005,9 @@ public class WebStorageEndpointTest {
         setupTrustedCategory(categoryName);
         registerCategory(testuser, password);
         
-        Add insert = mock(Add.class);
-        when(mockStorage.createAdd(any(Category.class))).thenReturn(insert);
+        @SuppressWarnings("unchecked")
+        Add<TestClass> insert = mock(Add.class);
+        when(mockStorage.createAdd(eq(category))).thenReturn(insert);
 
         TestClass expected1 = new TestClass();
         expected1.setKey1("fluff1");
@@ -1020,7 +1022,7 @@ public class WebStorageEndpointTest {
 
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        WebAdd ins = new WebAdd(categoryId);
+        WebAdd<TestClass> ins = new WebAdd<>(categoryId);
         Gson gson = new Gson();
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
         out.write("add=");
@@ -1065,7 +1067,7 @@ public class WebStorageEndpointTest {
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        WebAdd insert = new WebAdd(categoryId);
+        WebAdd<TestClass> insert = new WebAdd<>(categoryId);
         Gson gson = new Gson();
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
         out.write("add=");
@@ -1109,7 +1111,8 @@ public class WebStorageEndpointTest {
         registerCategory(testuser, password);
         
         
-        Remove mockRemove = mock(Remove.class);
+        @SuppressWarnings("unchecked")
+        Remove<TestClass> mockRemove = mock(Remove.class);
 
         when(mockStorage.createRemove(category)).thenReturn(mockRemove);
 
@@ -1122,7 +1125,7 @@ public class WebStorageEndpointTest {
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
         Expression expr = factory.equalTo(key1, "test");
-        WebRemove remove = new WebRemove(categoryId);
+        WebRemove<?> remove = new WebRemove<>(categoryId);
         remove.where(expr);
         Gson gson = new GsonBuilder()
                 .registerTypeHierarchyAdapter(Expression.class,
@@ -1169,8 +1172,9 @@ public class WebStorageEndpointTest {
         setupTrustedCategory(categoryName);
         registerCategory(testuser, password);
         
-        Update mockUpdate = mock(Update.class);
-        when(mockStorage.createUpdate(any(Category.class))).thenReturn(mockUpdate);
+        @SuppressWarnings("unchecked")
+        Update<TestClass> mockUpdate = mock(Update.class);
+        when(mockStorage.createUpdate(eq(category))).thenReturn(mockUpdate);
 
         String endpoint = getEndpoint();
 
@@ -1181,7 +1185,7 @@ public class WebStorageEndpointTest {
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
-        WebUpdate update = new WebUpdate();
+        WebUpdate<?> update = new WebUpdate<>();
         update.setCategoryId(categoryId);
         Expression expr = factory.equalTo(key1, "test");
         update.where(expr);

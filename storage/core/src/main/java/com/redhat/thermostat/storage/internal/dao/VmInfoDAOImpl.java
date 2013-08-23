@@ -173,14 +173,14 @@ public class VmInfoDAOImpl extends BaseCountable implements VmInfoDAO {
 
     @Override
     public void putVmInfo(VmInfo info) {
-        Add replace = storage.createAdd(vmInfoCategory);
+        Add<VmInfo> replace = storage.createAdd(vmInfoCategory);
         replace.setPojo(info);
         replace.apply();
     }
 
     @Override
     public void putVmStoppedTime(String vmId, long timestamp) {
-        Update update = storage.createUpdate(vmInfoCategory);
+        Update<VmInfo> update = storage.createUpdate(vmInfoCategory);
         Expression expr = factory.equalTo(Key.VM_ID, vmId);
         update.where(expr);
         update.set(VmInfoDAO.stopTimeKey, timestamp);

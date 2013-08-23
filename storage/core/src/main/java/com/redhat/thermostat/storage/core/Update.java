@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.storage.core;
 
+import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
 
 /**
@@ -45,7 +46,7 @@ import com.redhat.thermostat.storage.query.Expression;
  * @see Replace
  * @see Remove
  */
-public interface Update {
+public interface Update<T extends Pojo> extends DataModifyingStatement<T> {
 
     /**
      * Given a boolean expression, this method specifies a where condition for
@@ -67,11 +68,11 @@ public interface Update {
      * @param value
      *            the value to set
      */
-    <T> void set(Key<T> key, T value);
+    <S> void set(Key<S> key, S value);
 
     /**
      * Applies this update operation.
      */
-    void apply();
+    int apply();
 }
 

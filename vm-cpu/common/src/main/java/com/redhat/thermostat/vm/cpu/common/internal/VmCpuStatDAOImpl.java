@@ -63,7 +63,7 @@ public class VmCpuStatDAOImpl implements VmCpuStatDAO {
 
     @Override
     public void putVmCpuStat(VmCpuStat stat) {
-        Add add = storage.createAdd(vmCpuStatCategory);
+        Add<VmCpuStat> add = storage.createAdd(vmCpuStatCategory);
         add.setPojo(stat);
         add.apply();
     }

@@ -261,8 +261,9 @@ public class AgentInfoDAOTest {
     @Test
     public void verifyAddAgentInformation() {
         Storage storage = mock(Storage.class);
-        Add add = mock(Add.class);
-        when(storage.createAdd(any(Category.class))).thenReturn(add);
+        @SuppressWarnings("unchecked")
+        Add<AgentInformation> add = mock(Add.class);
+        when(storage.createAdd(eq(AgentInfoDAO.CATEGORY))).thenReturn(add);
 
         AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
 
@@ -276,9 +277,10 @@ public class AgentInfoDAOTest {
     @Test
     public void verifyUpdateAgentInformation() {
 
-        Update mockUpdate = mock(Update.class);
+        @SuppressWarnings("unchecked")
+        Update<AgentInformation> mockUpdate = mock(Update.class);
         Storage storage = mock(Storage.class);
-        when(storage.createUpdate(any(Category.class))).thenReturn(mockUpdate);
+        when(storage.createUpdate(eq(AgentInfoDAO.CATEGORY))).thenReturn(mockUpdate);
         AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
 
         dao.updateAgentInformation(agentInfo1);
@@ -297,7 +299,8 @@ public class AgentInfoDAOTest {
 
     @Test
     public void verifyRemoveAgentInformation() {
-        Remove mockRemove = mock(Remove.class);
+        @SuppressWarnings("unchecked")
+        Remove<AgentInformation> mockRemove = mock(Remove.class);
         Storage storage = mock(Storage.class);
         when(storage.createRemove(eq(AgentInfoDAO.CATEGORY))).thenReturn(mockRemove);
         AgentInfoDAO dao = new AgentInfoDAOImpl(storage);

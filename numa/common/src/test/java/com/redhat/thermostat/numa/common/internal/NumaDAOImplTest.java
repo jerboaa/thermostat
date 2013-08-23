@@ -38,6 +38,7 @@ package com.redhat.thermostat.numa.common.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -53,7 +54,6 @@ import com.redhat.thermostat.numa.common.NumaHostInfo;
 import com.redhat.thermostat.numa.common.NumaNodeStat;
 import com.redhat.thermostat.numa.common.NumaStat;
 import com.redhat.thermostat.storage.core.Add;
-import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -93,7 +93,8 @@ public class NumaDAOImplTest {
     @Test
     public void testPutNumaStat() {
 
-        Add add = mock(Add.class);
+        @SuppressWarnings("unchecked")
+        Add<NumaStat> add = mock(Add.class);
         when(storage.createAdd(NumaDAO.numaStatCategory)).thenReturn(add);
 
         NumaNodeStat stat = new NumaNodeStat();
@@ -122,8 +123,9 @@ public class NumaDAOImplTest {
     @Test
     public void testPutNumberOfNumaNodes() {
         Storage storage = mock(Storage.class);
-        Add add = mock(Add.class);
-        when(storage.createAdd(any(Category.class))).thenReturn(add);
+        @SuppressWarnings("unchecked")
+        Add<NumaHostInfo> add = mock(Add.class);
+        when(storage.createAdd(eq(NumaDAO.numaHostCategory))).thenReturn(add);
 
         NumaDAOImpl dao = new NumaDAOImpl(storage);
 

@@ -40,6 +40,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -55,7 +56,6 @@ import org.junit.Test;
 import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
 import com.redhat.thermostat.host.cpu.common.model.CpuStat;
 import com.redhat.thermostat.storage.core.Add;
-import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -152,8 +152,9 @@ public class CpuStatDAOTest {
     @Test
     public void testPutCpuStat() {
         Storage storage = mock(Storage.class);
-        Add add = mock(Add.class);
-        when(storage.createAdd(any(Category.class))).thenReturn(add);
+        @SuppressWarnings("unchecked")
+        Add<CpuStat> add = mock(Add.class);
+        when(storage.createAdd(eq(CpuStatDAO.cpuStatCategory))).thenReturn(add);
         
         CpuStat stat = new CpuStat(1,  new double[] {5.0, 10.0, 15.0});
         CpuStatDAO dao = new CpuStatDAOImpl(storage);

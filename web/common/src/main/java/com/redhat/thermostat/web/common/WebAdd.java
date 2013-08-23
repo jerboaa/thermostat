@@ -41,7 +41,7 @@ import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.model.Pojo;
 
 
-public class WebAdd implements Add {
+public class WebAdd<T extends Pojo> implements Add<T> {
 
     private int categoryId;
     private transient Pojo pojo;
@@ -72,7 +72,7 @@ public class WebAdd implements Add {
     }
 
     @Override
-    public void apply() {
+    public int apply() {
         // Should never be called directly, but overridden by
         // the actual implementation. Here only so that it can be used
         // for serialization.

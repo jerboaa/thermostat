@@ -42,29 +42,30 @@ import com.mongodb.DBObject;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Update;
+import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
 
-class MongoUpdate implements Update {
+class MongoUpdate<T extends Pojo> implements Update<T> {
 
     private static final String SET_MODIFIER = "$set";
 
     private MongoStorage storage;
     private DBObject query;
     private DBObject values;
-    private Category category;
+    private Category<?> category;
     private MongoExpressionParser parser;
 
-    public MongoUpdate(MongoStorage storage, Category category) {
+    public MongoUpdate(MongoStorage storage, Category<?> category) {
         this(storage, category, new MongoExpressionParser());
     }
     
-    MongoUpdate(MongoStorage storage, Category category, MongoExpressionParser parser) {
+    MongoUpdate(MongoStorage storage, Category<?> category, MongoExpressionParser parser) {
         this.storage = storage;
         this.category = category;
         this.parser = parser;
     }
 
-    Category getCategory() {
+    Category<?> getCategory() {
         return category;
     }
 
@@ -78,7 +79,7 @@ class MongoUpdate implements Update {
     }
 
     @Override
-    public <T> void set(Key<T> key, T value) {
+    public <S> void set(Key<S> key, S value) {
         if (values == null) {
             values = new BasicDBObject();
         }
@@ -90,8 +91,8 @@ class MongoUpdate implements Update {
     }
 
     @Override
-    public void apply() {
-        storage.updatePojo(this);
+    public int apply() {
+        return storage.updatePojo(this);
     }
 }
 

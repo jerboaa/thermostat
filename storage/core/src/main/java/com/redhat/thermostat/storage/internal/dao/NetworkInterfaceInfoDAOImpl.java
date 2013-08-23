@@ -100,7 +100,7 @@ public class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
 
     @Override
     public void putNetworkInterfaceInfo(NetworkInterfaceInfo info) {
-        Replace replace = storage.createReplace(networkInfoCategory);
+        Replace<NetworkInterfaceInfo> replace = storage.createReplace(networkInfoCategory);
         ExpressionFactory factory = new ExpressionFactory();
         String agentId = info.getAgentId();
         if (agentId == null) {

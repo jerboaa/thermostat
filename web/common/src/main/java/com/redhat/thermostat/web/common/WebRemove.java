@@ -37,9 +37,10 @@
 package com.redhat.thermostat.web.common;
 
 import com.redhat.thermostat.storage.core.Remove;
+import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
 
-public class WebRemove implements Remove {
+public class WebRemove<T extends Pojo> implements Remove<T> {
 
     private final int categoryId;
     private Expression whereExpression;
@@ -62,7 +63,7 @@ public class WebRemove implements Remove {
     }
 
     @Override
-    public void apply() {
+    public int apply() {
         // This should never be called. Overridden by the actual
         // implementation.
         throw new IllegalStateException();

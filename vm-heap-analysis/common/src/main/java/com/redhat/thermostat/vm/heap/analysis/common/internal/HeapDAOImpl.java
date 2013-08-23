@@ -97,7 +97,7 @@ public class HeapDAOImpl implements HeapDAO {
         if (histogramData != null) {
             heapInfo.setHistogramId(histogramId);
         }
-        Add add = storage.createAdd(heapInfoCategory);
+        Add<HeapInfo> add = storage.createAdd(heapInfoCategory);
         add.setPojo(heapInfo);
         add.apply();
 

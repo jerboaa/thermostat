@@ -182,7 +182,7 @@ public class AgentInfoDAOImpl extends BaseCountable implements AgentInfoDAO {
 
     @Override
     public void addAgentInformation(AgentInformation agentInfo) {
-        Add replace = storage.createAdd(CATEGORY);
+        Add<AgentInformation> replace = storage.createAdd(CATEGORY);
         replace.setPojo(agentInfo);
         replace.apply();
     }
@@ -190,14 +190,14 @@ public class AgentInfoDAOImpl extends BaseCountable implements AgentInfoDAO {
     @Override
     public void removeAgentInformation(AgentInformation agentInfo) {
         Expression expr = factory.equalTo(Key.AGENT_ID, agentInfo.getAgentId());
-        Remove remove = storage.createRemove(CATEGORY);
+        Remove<AgentInformation> remove = storage.createRemove(CATEGORY);
         remove.where(expr);
         remove.apply();
     }
 
     @Override
     public void updateAgentInformation(AgentInformation agentInfo) {
-        Update update = storage.createUpdate(CATEGORY);
+        Update<AgentInformation> update = storage.createUpdate(CATEGORY);
         Expression expr = factory.equalTo(Key.AGENT_ID, agentInfo.getAgentId());
         update.where(expr);
         update.set(START_TIME_KEY, agentInfo.getStartTime());

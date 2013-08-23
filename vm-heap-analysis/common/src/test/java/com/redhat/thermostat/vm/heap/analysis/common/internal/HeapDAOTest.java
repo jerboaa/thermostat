@@ -85,7 +85,7 @@ public class HeapDAOTest {
 
     private HeapDAO dao;
     private Storage storage;
-    private Add add;
+    private Add<HeapInfo> add;
     private HeapInfo heapInfo;
     private File heapDumpData;
     private ObjectHistogram histogram;

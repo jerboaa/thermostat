@@ -37,6 +37,7 @@
 
 package com.redhat.thermostat.storage.core;
 
+import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
 
 /**
@@ -46,7 +47,7 @@ import com.redhat.thermostat.storage.query.Expression;
  * @see Update
  * @see Replace
  */
-public interface Remove {
+public interface Remove<T extends Pojo> extends DataModifyingStatement<T> {
 
     /**
      * Boolean expression in order to restrict the set of records to be removed
@@ -60,7 +61,7 @@ public interface Remove {
     /**
      * Applies this remove operation.
      */
-    void apply();
+    int apply();
 
 }
 

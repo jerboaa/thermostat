@@ -528,10 +528,10 @@ public class WebStorageEndPoint extends HttpServlet {
             return;
         }
         String addParam = req.getParameter("add");
-        WebAdd add = gson.fromJson(addParam, WebAdd.class);
+        WebAdd<?> add = gson.fromJson(addParam, WebAdd.class);
         int categoryId = add.getCategoryId();
         Category<?> category = getCategoryFromId(categoryId);
-        Add targetAdd = storage.createAdd(category);
+        Add<?> targetAdd = storage.createAdd(category);
         Class<? extends Pojo> pojoCls = category.getDataClass();
         String pojoParam = req.getParameter("pojo");
         Pojo pojo = gson.fromJson(pojoParam, pojoCls);
@@ -546,10 +546,10 @@ public class WebStorageEndPoint extends HttpServlet {
             return;
         }
         String replaceParam = req.getParameter("replace");
-        WebReplace replace = gson.fromJson(replaceParam, WebReplace.class);
+        WebReplace<?> replace = gson.fromJson(replaceParam, WebReplace.class);
         int categoryId = replace.getCategoryId();
         Category<?> category = getCategoryFromId(categoryId);
-        Replace targetReplace = storage.createReplace(category);
+        Replace<?> targetReplace = storage.createReplace(category);
         Class<? extends Pojo> pojoCls = category.getDataClass();
         String pojoParam = req.getParameter("pojo");
         Pojo pojo = gson.fromJson(pojoParam, pojoCls);
@@ -567,9 +567,9 @@ public class WebStorageEndPoint extends HttpServlet {
         }
         
         String removeParam = req.getParameter("remove");
-        WebRemove remove = gson.fromJson(removeParam, WebRemove.class);
+        WebRemove<?> remove = gson.fromJson(removeParam, WebRemove.class);
         Category<?> targetCategory = getCategoryFromId(remove.getCategoryId());
-        Remove targetRemove = storage.createRemove(targetCategory);
+        Remove<?> targetRemove = storage.createRemove(targetCategory);
         Expression expr = remove.getWhereExpression();
         if (expr != null) {
             targetRemove.where(expr);

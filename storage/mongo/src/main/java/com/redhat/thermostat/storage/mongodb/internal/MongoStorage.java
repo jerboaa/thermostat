@@ -49,6 +49,7 @@ import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import com.mongodb.WriteResult;
 import com.mongodb.gridfs.GridFS;
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
@@ -100,20 +101,20 @@ public class MongoStorage implements BackingStorage {
         }
     }
 
-    private class MongoAdd extends AddReplaceHelper implements Add {
+    private class MongoAdd<T extends Pojo> extends AddReplaceHelper implements Add<T> {
 
         private MongoAdd(Category<?> category) {
             super(category);
         }
         
         @Override
-        public void apply() {
-            addImpl(getCategory(), getPojo());
+        public int apply() {
+            return addImpl(getCategory(), getPojo());
         }
         
     }
 
-    private class MongoReplace extends AddReplaceHelper implements Replace {
+    private class MongoReplace<T extends Pojo> extends AddReplaceHelper implements Replace<T> {
         
         private DBObject query;
         private final MongoExpressionParser parser;
@@ -124,13 +125,13 @@ public class MongoStorage implements BackingStorage {
         }
         
         @Override
-        public void apply() {
+        public int apply() {
             if (query == null) {
                 String msg = "where expression must be set. " +
                              "Please call where() before apply().";
                 throw new IllegalStateException(msg);
             }
-            replaceImpl(getCategory(), getPojo(), query);
+            return replaceImpl(getCategory(), getPojo(), query);
         }
 
         @Override
@@ -140,7 +141,7 @@ public class MongoStorage implements BackingStorage {
         
     }
     
-    private class MongoRemove implements Remove {
+    private class MongoRemove<T extends Pojo> implements Remove<T> {
 
         @SuppressWarnings("rawtypes")
         private final Category category;
@@ -162,8 +163,8 @@ public class MongoStorage implements BackingStorage {
         }
         
         @Override
-        public void apply() {
-            removePojo(category, query);
+        public int apply() {
+            return removePojo(category, query);
         }
         
     }
@@ -228,27 +229,35 @@ public class MongoStorage implements BackingStorage {
     }
 
     @Override
-    public Add createAdd(Category<?> into) {
-        MongoAdd add = new MongoAdd(into);
+    public <T extends Pojo> Add<T> createAdd(Category<T> into) {
+        MongoAdd<T> add = new MongoAdd<>(into);
         return add;
     }
 
     @Override
-    public Replace createReplace(Category<?> into) {
-        MongoReplace replace = new MongoReplace(into);
+    public <T extends Pojo> Replace<T> createReplace(Category<T> into) {
+        MongoReplace<T> replace = new MongoReplace<>(into);
         return replace;
     }
 
-    private void addImpl(final Category<?> cat, final Pojo pojo) {
+    private int addImpl(final Category<?> cat, final Pojo pojo) {
         DBCollection coll = getCachedCollection(cat);
         DBObject toInsert = preparePut(pojo);
-        coll.insert(toInsert);
+        WriteResult result = coll.insert(toInsert);
+        return numAffectedRecords(result);
     }
 
-    private void replaceImpl(final Category<?> cat, final Pojo pojo, final DBObject query) {
+    private int replaceImpl(final Category<?> cat, final Pojo pojo, final DBObject query) {
         DBCollection coll = getCachedCollection(cat);
         DBObject toInsert = preparePut(pojo);
-        coll.update(query, toInsert, true, false);
+        WriteResult result = coll.update(query, toInsert, true, false);
+        return numAffectedRecords(result);
+    }
+    
+    private int numAffectedRecords(WriteResult result) {
+        // response code corresponds to the number of records affected.
+        int responseCode = result.getN();
+        return responseCode;
     }
 
     private DBObject preparePut(final Pojo pojo) {
@@ -260,17 +269,19 @@ public class MongoStorage implements BackingStorage {
         return toInsert;
     }
 
-    void updatePojo(MongoUpdate mongoUpdate) {
+    int updatePojo(MongoUpdate<?> mongoUpdate) {
         Category<?> cat = mongoUpdate.getCategory();
         DBCollection coll = getCachedCollection(cat);
         DBObject query = mongoUpdate.getQuery();
         DBObject values = mongoUpdate.getValues();
-        coll.update(query, values);
+        WriteResult result = coll.update(query, values);
+        return numAffectedRecords(result);
     }
 
-    private void removePojo(Category<?> category, DBObject query) {
+    private int removePojo(Category<?> category, DBObject query) {
         DBCollection coll = getCachedCollection(category);
-        coll.remove(query);
+        WriteResult result = coll.remove(query);
+        return numAffectedRecords(result);
     }
 
     private DBCollection getCachedCollection(Category<?> category) {
@@ -337,13 +348,13 @@ public class MongoStorage implements BackingStorage {
     }
 
     @Override
-    public Update createUpdate(Category<?> category) {
-        return new MongoUpdate(this, category);
+    public <T extends Pojo> Update<T> createUpdate(Category<T> category) {
+        return new MongoUpdate<>(this, category);
     }
 
     @Override
-    public Remove createRemove(Category<?> category) {
-        return new MongoRemove(category);
+    public <T extends Pojo> Remove<T> createRemove(Category<T> category) {
+        return new MongoRemove<>(category);
     }
 
     <T extends Pojo> Cursor<T> findAllPojos(MongoQuery<T> mongoQuery, Class<T> resultClass) {

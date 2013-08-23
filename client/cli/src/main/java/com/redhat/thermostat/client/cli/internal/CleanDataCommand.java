@@ -173,7 +173,7 @@ public class CleanDataCommand extends AbstractCommand {
     }
 
     private Set<String> getAllRegisteredAgents(Storage storage) {
-        List<Category> categories = Categories.getAllCategories();
+        List<Category<?>> categories = Categories.getAllCategories();
         Set<String> agents = new HashSet<>();
         PreparedStatement<BasePojo> prepared = null;
         Cursor<BasePojo> agentCursor = null;

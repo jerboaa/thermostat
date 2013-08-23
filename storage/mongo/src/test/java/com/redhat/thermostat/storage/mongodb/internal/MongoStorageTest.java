@@ -77,6 +77,7 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoURI;
+import com.mongodb.WriteResult;
 import com.mongodb.gridfs.GridFS;
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
@@ -206,6 +207,19 @@ public class MongoStorageTest {
         when(testCollection.find()).thenReturn(cursor);
         when(testCollection.findOne(any(DBObject.class))).thenReturn(value1);
         when(testCollection.getCount()).thenReturn(2L);
+        
+        WriteResult mockWriteResult = mock(WriteResult.class);
+        // fake that 1 record was affected for all db write ops.
+        when(mockWriteResult.getN()).thenReturn(1);
+        // mock for remove
+        when(testCollection.remove(any(DBObject.class))).thenReturn(mockWriteResult);
+        // mock for update
+        when(testCollection.update(any(DBObject.class), any(DBObject.class))).thenReturn(mockWriteResult);
+        // mock for replace
+        when(testCollection.update(any(DBObject.class), any(DBObject.class), eq(true), eq(false))).thenReturn(mockWriteResult);
+        // mock for add
+        when(testCollection.insert(any(DBObject.class))).thenReturn(mockWriteResult);
+        
         emptyTestCollection = PowerMockito.mock(DBCollection.class);
         when(emptyTestCollection.getCount()).thenReturn(0L);
         when(db.collectionExists(anyString())).thenReturn(false);

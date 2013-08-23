@@ -40,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -51,7 +52,6 @@ import java.util.Collection;
 import org.junit.Test;
 
 import com.redhat.thermostat.storage.core.Add;
-import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -212,8 +212,9 @@ public class HostInfoDAOTest {
     @Test
     public void testPutHostInfo() {
         Storage storage = mock(Storage.class);
-        Add add = mock(Add.class);
-        when(storage.createAdd(any(Category.class))).thenReturn(add);
+        @SuppressWarnings("unchecked")
+        Add<HostInfo> add = mock(Add.class);
+        when(storage.createAdd(eq(HostInfoDAO.hostInfoCategory))).thenReturn(add);
 
         AgentInfoDAO agentInfo = mock(AgentInfoDAO.class);
 

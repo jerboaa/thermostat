@@ -138,7 +138,8 @@ public class ThreadDaoImpl implements ThreadDao {
     
     @Override
     public void saveCapabilities(VMThreadCapabilities caps) {
-        Replace replace = storage.createReplace(THREAD_CAPABILITIES);
+        @SuppressWarnings("unchecked")
+        Replace<VMThreadCapabilities> replace = storage.createReplace(THREAD_CAPABILITIES);
         ExpressionFactory factory = new ExpressionFactory();
         String agentId = caps.getAgentId();
         if (agentId == null) {
@@ -154,7 +155,8 @@ public class ThreadDaoImpl implements ThreadDao {
     
     @Override
     public void saveSummary(ThreadSummary summary) {
-        Add add = storage.createAdd(THREAD_SUMMARY);
+        @SuppressWarnings("unchecked")
+        Add<ThreadSummary> add = storage.createAdd(THREAD_SUMMARY);
         add.setPojo(summary);
         add.apply();
     }
@@ -210,7 +212,8 @@ public class ThreadDaoImpl implements ThreadDao {
 
     @Override
     public void saveHarvestingStatus(ThreadHarvestingStatus status) {
-        Add add = storage.createAdd(THREAD_HARVESTING_STATUS);
+        @SuppressWarnings("unchecked")
+        Add<ThreadHarvestingStatus> add = storage.createAdd(THREAD_HARVESTING_STATUS);
         add.setPojo(status);
         add.apply();
     }
@@ -241,7 +244,8 @@ public class ThreadDaoImpl implements ThreadDao {
 
     @Override
     public void saveThreadInfo(ThreadInfoData info) {
-        Add add = storage.createAdd(THREAD_INFO);
+        @SuppressWarnings("unchecked")
+        Add<ThreadInfoData> add = storage.createAdd(THREAD_INFO);
         add.setPojo(info);
         add.apply();
     }
@@ -297,7 +301,8 @@ public class ThreadDaoImpl implements ThreadDao {
 
     @Override
     public void saveDeadLockStatus(VmDeadLockData deadLockInfo) {
-        Add add = storage.createAdd(DEADLOCK_INFO);
+        @SuppressWarnings("unchecked")
+        Add<VmDeadLockData> add = storage.createAdd(DEADLOCK_INFO);
         add.setPojo(deadLockInfo);
         add.apply();
     }

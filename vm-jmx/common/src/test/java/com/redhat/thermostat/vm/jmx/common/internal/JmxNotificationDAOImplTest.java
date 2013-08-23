@@ -98,7 +98,8 @@ public class JmxNotificationDAOImplTest {
 
     @Test
     public void verifyAddNotificationStatus() {
-        Add add = mock(Add.class);
+        @SuppressWarnings("unchecked")
+        Add<JmxNotificationStatus> add = mock(Add.class);
         when(storage.createAdd(JmxNotificationDAOImpl.NOTIFICATION_STATUS)).thenReturn(add);
 
         JmxNotificationStatus data = mock(JmxNotificationStatus.class);
@@ -143,7 +144,8 @@ public class JmxNotificationDAOImplTest {
 
     @Test
     public void verfiyAddNotification() {
-        Add add = mock(Add.class);
+        @SuppressWarnings("unchecked")
+        Add<JmxNotification> add = mock(Add.class);
         when(storage.createAdd(JmxNotificationDAOImpl.NOTIFICATIONS)).thenReturn(add);
 
         JmxNotification data = mock(JmxNotification.class);

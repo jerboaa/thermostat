@@ -115,7 +115,7 @@ final public class PreparedStatementImpl<T extends Pojo> implements PreparedStat
         } catch (Exception e) {
             throw new StatementExecutionException(e);
         }
-        return dmlStatement.execute();
+        return dmlStatement.apply();
     }
 
     @Override

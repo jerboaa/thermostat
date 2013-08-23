@@ -120,7 +120,7 @@ public class HostInfoDAOImpl extends BaseCountable implements HostInfoDAO {
 
     @Override
     public void putHostInfo(HostInfo info) {
-        Add add = storage.createAdd(hostInfoCategory);
+        Add<HostInfo> add = storage.createAdd(hostInfoCategory);
         add.setPojo(info);
         add.apply();
     }

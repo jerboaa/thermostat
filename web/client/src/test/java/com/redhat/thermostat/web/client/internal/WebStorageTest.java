@@ -402,7 +402,7 @@ public class WebStorageTest {
         UUID agentId = new UUID(1, 2);
         storage.setAgentId(agentId);
 
-        Add add = storage.createAdd(category);
+        Add<TestObj> add = storage.createAdd(category);
         add.setPojo(obj);
 
         prepareServer();
@@ -416,7 +416,8 @@ public class WebStorageTest {
         assertEquals(2, params.length);
         String[] parts = params[0].split("=");
         assertEquals("add", parts[0]);
-        WebAdd add2 = gson.fromJson(parts[1], WebAdd.class);
+        @SuppressWarnings("unchecked")
+        WebAdd<TestObj> add2 = gson.fromJson(parts[1], WebAdd.class);
         assertEquals(42, add2.getCategoryId());
 
         parts = params[1].split("=");
@@ -439,7 +440,7 @@ public class WebStorageTest {
         UUID agentId = new UUID(1, 2);
         storage.setAgentId(agentId);
 
-        Replace replace = storage.createReplace(category);
+        Replace<TestObj> replace = storage.createReplace(category);
         Expression expr = new ExpressionFactory().equalTo(key1, "fluff");
         replace.setPojo(obj);
         replace.where(expr);
@@ -459,7 +460,8 @@ public class WebStorageTest {
         assertEquals(2, params.length);
         String[] parts = params[0].split("=");
         assertEquals("replace", parts[0]);
-        WebReplace insert = gson.fromJson(parts[1], WebReplace.class);
+        @SuppressWarnings("unchecked")
+        WebReplace<TestObj> insert = gson.fromJson(parts[1], WebReplace.class);
         assertEquals(42, insert.getCategoryId());
 
         parts = params[1].split("=");
@@ -474,7 +476,7 @@ public class WebStorageTest {
 
     @Test
     public void testCreateRemove() {
-        WebRemove remove = (WebRemove) storage.createRemove(category);
+        WebRemove<?> remove = (WebRemove<?>) storage.createRemove(category);
         assertEquals(42, remove.getCategoryId());
         Expression expr = factory.equalTo(key1, "test");
         remove.where(expr);
@@ -484,7 +486,7 @@ public class WebStorageTest {
     @Test
     public void testRemovePojo() throws UnsupportedEncodingException, IOException {
         Expression expr = factory.equalTo(key1, "test");
-        Remove remove = storage.createRemove(category);
+        Remove<?> remove = storage.createRemove(category);
         remove.where(expr);
 
         prepareServer();
@@ -500,7 +502,7 @@ public class WebStorageTest {
         String line = URLDecoder.decode(bufRead.readLine(), "UTF-8");
         String[] parts = line.split("=");
         assertEquals("remove", parts[0]);
-        WebRemove actualRemove = gson.fromJson(parts[1], WebRemove.class);
+        WebRemove<?> actualRemove = gson.fromJson(parts[1], WebRemove.class);
         
         assertEquals(42, actualRemove.getCategoryId());
         assertEquals(expr, actualRemove.getWhereExpression());
@@ -508,7 +510,7 @@ public class WebStorageTest {
 
     @Test
     public void testCreateUpdate() {
-        WebUpdate update = (WebUpdate) storage.createUpdate(category);
+        WebUpdate<?> update = (WebUpdate<?>) storage.createUpdate(category);
         assertNotNull(update);
         assertEquals(42, update.getCategoryId());
 
@@ -527,7 +529,7 @@ public class WebStorageTest {
     @Test
     public void testUpdate() throws UnsupportedEncodingException, IOException, JsonSyntaxException, ClassNotFoundException {
 
-        Update update = storage.createUpdate(category);
+        Update<?> update = storage.createUpdate(category);
         Expression expr = factory.equalTo(key1, "test");
         update.where(expr);
         update.set(key1, "fluff");
@@ -548,7 +550,7 @@ public class WebStorageTest {
         assertEquals(2, params.length);
         String[] parts = params[0].split("=");
         assertEquals("update", parts[0]);
-        WebUpdate receivedUpdate = gson.fromJson(parts[1], WebUpdate.class);
+        WebUpdate<?> receivedUpdate = gson.fromJson(parts[1], WebUpdate.class);
         assertEquals(42, receivedUpdate.getCategoryId());
 
         List<WebUpdate.UpdateValue> updates = receivedUpdate.getUpdates();

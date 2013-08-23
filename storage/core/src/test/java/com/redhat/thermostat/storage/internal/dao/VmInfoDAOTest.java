@@ -40,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -54,7 +55,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.storage.core.Add;
-import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -315,8 +315,9 @@ public class VmInfoDAOTest {
     public void testPutVmInfo() {
 
         Storage storage = mock(Storage.class);
-        Add add = mock(Add.class);
-        when(storage.createAdd(any(Category.class))).thenReturn(add);
+        @SuppressWarnings("unchecked")
+        Add<VmInfo> add = mock(Add.class);
+        when(storage.createAdd(eq(VmInfoDAO.vmInfoCategory))).thenReturn(add);
 
         VmInfo info = new VmInfo(vmId, vmPid, startTime, stopTime, jVersion, jHome,
                 mainClass, commandLine, vmName, vmInfo, vmVersion, vmArgs,
@@ -331,9 +332,10 @@ public class VmInfoDAOTest {
 
     @Test
     public void testPutVmStoppedTime() {
-        Update mockUpdate = mock(Update.class);
+        @SuppressWarnings("unchecked")
+        Update<VmInfo> mockUpdate = mock(Update.class);
         Storage storage = mock(Storage.class);
-        when(storage.createUpdate(any(Category.class))).thenReturn(mockUpdate);
+        when(storage.createUpdate(eq(VmInfoDAO.vmInfoCategory))).thenReturn(mockUpdate);
 
         VmInfoDAO dao = new VmInfoDAOImpl(storage);
         dao.putVmStoppedTime(vmId, stopTime);

@@ -94,6 +94,7 @@ import com.redhat.thermostat.storage.core.AuthToken;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Connection;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DataModifyingStatement;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.IllegalDescriptorException;
 import com.redhat.thermostat.storage.core.IllegalPatchException;
@@ -299,49 +300,49 @@ public class WebStorage implements Storage, SecureStorage {
 
     }
 
-    private class WebAddImpl extends WebAdd {
+    private class WebAddImpl<T extends Pojo> extends WebAdd<T> {
 
         private WebAddImpl(int categoryId) {
             super(categoryId);
         }
         
         @Override
-        public void apply() {
-            addImpl(this);
+        public int apply() {
+            return addImpl(this);
         }
         
     }
 
-    private class WebReplaceImpl extends WebReplace {
+    private class WebReplaceImpl<T extends Pojo> extends WebReplace<T> {
         
         private WebReplaceImpl(int categoryId) {
             super(categoryId);
         }
         
         @Override
-        public void apply() {
-            replaceImpl(this);
+        public int apply() {
+            return replaceImpl(this);
         }
         
     }
 
-    private class WebUpdateImpl extends WebUpdate implements Update {
+    private class WebUpdateImpl<T extends Pojo> extends WebUpdate<T> {
     
         @Override
-        public void apply() {
-            updatePojo(this);
+        public int apply() {
+            return updatePojo(this);
         }
     }
     
-    private class WebRemoveImpl extends WebRemove {
+    private class WebRemoveImpl<T extends Pojo> extends WebRemove<T> {
         
         private WebRemoveImpl(int categoryId) {
             super(categoryId);
         }
         
         @Override
-        public void apply() {
-            removePojo(this);
+        public int apply() {
+            return removePojo(this);
         }
         
     }
@@ -533,13 +534,13 @@ public class WebStorage implements Storage, SecureStorage {
     }
 
     @Override
-    public Remove createRemove(Category<?> category) {
-        return new WebRemoveImpl(categoryIds.get(category));
+    public <T extends Pojo> Remove<T> createRemove(Category<T> category) {
+        return new WebRemoveImpl<>(categoryIds.get(category));
     }
 
     @Override
-    public Update createUpdate(Category<?> category) {
-        WebUpdateImpl updateImpl = new WebUpdateImpl();
+    public <T extends Pojo> Update<T> createUpdate(Category<T> category) {
+        WebUpdateImpl<T> updateImpl = new WebUpdateImpl<>();
         updateImpl.setCategoryId(categoryIds.get(category));
         return updateImpl;
     }
@@ -635,20 +636,20 @@ public class WebStorage implements Storage, SecureStorage {
     }
 
     @Override
-    public Add createAdd(Category<?> into) {
+    public <T extends Pojo> Add<T> createAdd(Category<T> into) {
         int categoryId = getCategoryId(into);
-        WebAdd add = new WebAddImpl(categoryId);
+        WebAdd<T> add = new WebAddImpl<>(categoryId);
         return add;
     }
 
     @Override
-    public Replace createReplace(Category<?> into) {
+    public <T extends Pojo> Replace<T> createReplace(Category<T> into) {
         int categoryId = getCategoryId(into);
-        WebReplace replace = new WebReplaceImpl(categoryId);
+        WebReplace<T> replace = new WebReplaceImpl<>(categoryId);
         return replace;
     }
     
-    private void addImpl(final WebAdd add) throws StorageException {
+    private int addImpl(final WebAdd<?> add) throws StorageException {
         Pojo pojo = add.getPojo();
         maybeAddAgentId(pojo);
         NameValuePair pojoParam = new BasicNameValuePair("pojo",
@@ -657,9 +658,10 @@ public class WebStorage implements Storage, SecureStorage {
                 gson.toJson(add));
         List<NameValuePair> formParams = Arrays.asList(addParam, pojoParam);
         post(endpoint + "/add-pojo", formParams).close();
+        return DataModifyingStatement.DEFAULT_STATUS_SUCCESS;
     }
 
-    private void replaceImpl(final WebReplace replace) throws StorageException {
+    private int replaceImpl(final WebReplace<?> replace) throws StorageException {
         Pojo pojo = replace.getPojo();
         maybeAddAgentId(pojo);
         NameValuePair replaceParam = new BasicNameValuePair("replace",
@@ -668,6 +670,7 @@ public class WebStorage implements Storage, SecureStorage {
                 gson.toJson(pojo));
         List<NameValuePair> formParams = Arrays.asList(replaceParam, pojoParam);
         post(endpoint + "/replace-pojo", formParams).close();
+        return DataModifyingStatement.DEFAULT_STATUS_SUCCESS;
     }
 
     private void maybeAddAgentId(final Pojo pojo) throws AssertionError {
@@ -680,11 +683,12 @@ public class WebStorage implements Storage, SecureStorage {
         }
     }
 
-    private void removePojo(Remove remove) throws StorageException {
+    private int removePojo(Remove<?> remove) throws StorageException {
         NameValuePair removeParam = new BasicNameValuePair("remove",
                 gson.toJson(remove));
         List<NameValuePair> formparams = Arrays.asList(removeParam);
         post(endpoint + "/remove-pojo", formparams).close();
+        return DataModifyingStatement.DEFAULT_STATUS_SUCCESS;
     }
 
     @Override
@@ -692,8 +696,8 @@ public class WebStorage implements Storage, SecureStorage {
         this.agentId = agentId;
     }
 
-    private void updatePojo(Update update) throws StorageException {
-        WebUpdate webUp = (WebUpdate) update;
+    private int updatePojo(Update<?> update) throws StorageException {
+        WebUpdate<?> webUp = (WebUpdate<?>) update;
         List<WebUpdate.UpdateValue> updateValues = webUp.getUpdates();
         List<Object> values = new ArrayList<>(updateValues.size());
         for (WebUpdate.UpdateValue updateValue : updateValues) {
@@ -707,6 +711,7 @@ public class WebStorage implements Storage, SecureStorage {
         List<NameValuePair> formparams = Arrays
                 .asList(updateParam, valuesParam);
         post(endpoint + "/update-pojo", formparams).close();
+        return DataModifyingStatement.DEFAULT_STATUS_SUCCESS;
     }
 
     public void setEndpoint(String endpoint) {

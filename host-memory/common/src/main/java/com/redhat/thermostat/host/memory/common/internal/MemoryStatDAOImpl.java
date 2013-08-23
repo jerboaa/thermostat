@@ -64,7 +64,7 @@ public class MemoryStatDAOImpl implements MemoryStatDAO {
 
     @Override
     public void putMemoryStat(MemoryStat stat) {
-        Add add = storage.createAdd(memoryStatCategory);
+        Add<MemoryStat> add = storage.createAdd(memoryStatCategory);
         add.setPojo(stat);
         add.apply();
     }
