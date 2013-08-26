@@ -9,7 +9,7 @@
       <defaultValue>The name of your Thermostat extension goes here</defaultValue>
     </requiredProperty>
     <requiredProperty key="thermostatVersion">
-      <defaultValue>0.12.0-SNAPSHOT</defaultValue>
+      <defaultValue>0.14.0-SNAPSHOT</defaultValue>
     </requiredProperty>
   </requiredProperties>
 
