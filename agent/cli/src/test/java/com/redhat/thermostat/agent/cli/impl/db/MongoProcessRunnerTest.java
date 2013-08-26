@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -122,6 +123,33 @@ public class MongoProcessRunnerTest {
         when(reader.readLine()).thenReturn(null);
         Integer pid = runner.doGetPid(reader);
         assertNull(pid);
+    }
+    
+    @Test
+    public void canGetVersionFromVersionCmdOutputV22() throws IOException {
+        String versionOutput = "db version v2.2.4, pdfile version 4.5\n" +
+                               "Mon Aug 26 17:13:45 git version: nogitversion";
+        ByteArrayInputStream in = new ByteArrayInputStream(versionOutput.getBytes());
+        String version = runner.doGetDBVersion(in);
+        assertEquals("2.2.4", version);
+    }
+    
+    @Test
+    public void canGetVersionFromVersionCmdOutputV24() throws IOException {
+        String versionOutput = "db version v2.4.5\n" +
+                               "Mon Aug 26 18:01:28.404 git version: nogitversion";
+        ByteArrayInputStream in = new ByteArrayInputStream(versionOutput.getBytes());
+        String version = runner.doGetDBVersion(in);
+        assertEquals("2.4.5", version);
+    }
+    
+    @Test
+    public void canProceedIfGetDbVersionThrowsException() throws IOException {
+        String versionOutput = "foo\n" +
+                               "Mon Aug 26 18:01:28.404 git version: nogitversion";
+        ByteArrayInputStream in = new ByteArrayInputStream(versionOutput.getBytes());
+        String version = runner.doGetDBVersion(in);
+        assertEquals(MongoProcessRunner.NO_JOURNAL_FIRST_VERSION, version);
     }
 
     private void verifyEquals(String[] expected, String[] actual) {

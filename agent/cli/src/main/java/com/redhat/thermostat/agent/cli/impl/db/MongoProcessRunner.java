@@ -74,7 +74,7 @@ public class MongoProcessRunner {
     };
 
     private static final String NO_JOURNAL_ARGUMENT = "--nojournal";
-    private static final String NO_JOURNAL_FIRST_VERSION = "1.9.2";
+    static final String NO_JOURNAL_FIRST_VERSION = "1.9.2";
 
     private DBStartupConfiguration configuration;
     private boolean isQuiet;
@@ -271,11 +271,31 @@ public class MongoProcessRunner {
             throw e;
         }
         InputStream out = process.getInputStream();
-        InputStreamReader reader = new InputStreamReader(out);
-        BufferedReader bufReader = new BufferedReader(reader);
-        String firstLine = bufReader.readLine();
-        int commaIdx = firstLine.indexOf(",", 12);
-        String versionString = firstLine.substring(12, commaIdx);
+        return doGetDBVersion(out);
+    }
+    
+    // package private for testing
+    String doGetDBVersion(InputStream in) throws IOException {
+        // Default to no-journal first version if we can't parse the version
+        // output for some reason.
+        String versionString = NO_JOURNAL_FIRST_VERSION;
+        String firstLine = null;
+        try(InputStreamReader reader = new InputStreamReader(in)) {
+            BufferedReader bufReader = new BufferedReader(reader);
+            firstLine = bufReader.readLine();
+            int commaIdx = firstLine.indexOf(",", 12);
+            if (commaIdx != -1) {
+                versionString = firstLine.substring(12, commaIdx);
+            } else {
+                versionString = firstLine.substring(12);
+            }
+        } catch (Exception e) {
+            // catching Exception here in order to also catch potential NPEs or
+            // IndexOutOfBoundExceptions. If those conditions happen we fall
+            // back to the no journal first version.
+            logger.log(Level.WARNING, "Failed to parse mongodb version from: '" +
+                firstLine + "'. Assuming version " + NO_JOURNAL_FIRST_VERSION, e);
+        }
         return versionString;
     }
 
