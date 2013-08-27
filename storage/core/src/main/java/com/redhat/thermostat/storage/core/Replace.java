@@ -47,6 +47,9 @@ import com.redhat.thermostat.storage.query.Expression;
  * The only distinction to a regular {@link Update} is that if Replace is used
  * and the associated where yields no result, a <strong>new</strong> record will
  * be insterted into Storage.
+ * <p>
+ * The result of this operation is undefined if the {@code where} expression
+ * matches more than one record in storage.
  * 
  * @see Add
  * @see Remove
