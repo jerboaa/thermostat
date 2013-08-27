@@ -239,11 +239,11 @@ public class QueuedStorageTest {
         Category<?> category = mock(Category.class);
         Pojo pojo = mock(Pojo.class);
 
-        Replace put = queuedStorage.createReplace(category);
-        put.setPojo(pojo);
+        Replace replace = queuedStorage.createReplace(category);
+        replace.setPojo(pojo);
         Expression expression = new ExpressionFactory().equalTo(Key.AGENT_ID, "foo");
-        put.where(expression);
-        put.apply();
+        replace.where(expression);
+        replace.apply();
 
         Runnable r = executor.getTask();
         assertNotNull(r);

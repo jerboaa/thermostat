@@ -37,31 +37,57 @@
 
 package com.redhat.thermostat.storage.core;
 
-import java.util.Objects;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+
+import org.junit.Before;
+import org.junit.Test;
 
 import com.redhat.thermostat.storage.model.Pojo;
 
-public abstract class BasePut implements Put {
-
-    private final Category<?> category;
-    private Pojo pojo;
+public class AddReplaceHelperTest {
     
-    public BasePut(Category<?> category) {
-        this.category = Objects.requireNonNull(category);
+    private Category<?> category;
+    
+    @Before
+    public void setup() {
+        category = mock(Category.class);
     }
 
-    public final Category<?> getCategory() {
-        return category;
+    @Test
+    public void testCategory() {
+        TestBasePut insert = new TestBasePut(category);
+
+        assertNotNull(insert.getCategory());
+        assertSame(category, insert.getCategory());
+
+        try {
+            insert = new TestBasePut(null);
+            fail();
+        } catch (NullPointerException ex) {
+            // Ok.
+        }
     }
 
-    @Override
-    public final void setPojo(Pojo pojo) {
-        this.pojo = pojo;
-    }
+    @Test
+    public void testPojo() {
+        Pojo pojo = mock(Pojo.class);
 
-    public final Pojo getPojo() {
-        return pojo;
+        TestBasePut insert = new TestBasePut(category);
+        assertNull(insert.getPojo());
+        insert.setPojo(pojo);
+        assertSame(pojo, insert.getPojo());
     }
+    
+    private static class TestBasePut extends AddReplaceHelper {
 
+        public TestBasePut(Category<?> category) {
+            super(category);
+        }
+        
+    }
 }
 

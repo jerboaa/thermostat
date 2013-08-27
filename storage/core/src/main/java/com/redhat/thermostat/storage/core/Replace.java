@@ -37,27 +37,43 @@
 
 package com.redhat.thermostat.storage.core;
 
+import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
 
 /**
  * Write operation which should be used if any existing record should get
  * updated with new values. It can be thought of as {@link Update} for
  * <strong>all</strong> properties of a record.
- * 
+ * <p>
  * The only distinction to a regular {@link Update} is that if Replace is used
- * and the associated where yields no result, a <strong>new</strong> record will
- * be insterted into Storage.
+ * and the associated {@code where} expression yields no result, a
+ * <strong>new</strong> record will be insterted into Storage.
  * <p>
  * The result of this operation is undefined if the {@code where} expression
  * matches more than one record in storage.
- * 
+ *
  * @see Add
  * @see Remove
  * @see Update
  */
-public interface Replace extends Put {
+public interface Replace {
 
+    /**
+     * Sets the POJO that will be used to replace the value in storage.
+     *
+     * @param pojo the pojo to be put into the storage
+     */
+    void setPojo(Pojo pojo);
+
+    /**
+     * Specifies what criteria to use to find the record to replace
+     */
     void where(Expression expression);
+
+    /**
+     * Applies this {@code Replace} operation to the storage.
+     */
+    void apply();
 
 }
 

@@ -37,17 +37,28 @@
 
 package com.redhat.thermostat.storage.core;
 
+import com.redhat.thermostat.storage.model.Pojo;
+
 /**
  * Write operation to be used for adding new records into
  * storage.
  *
- * @see Update
- * @see Replace
  * @see Remove
+ * @see Replace
+ * @see Update
  */
-public interface Add extends Put {
-    
-    
+public interface Add {
 
+    /**
+     * Sets the POJO that is to be put into the storage.
+     *
+     * @param pojo the pojo to be put into the storage
+     */
+    void setPojo(Pojo pojo);
+
+    /**
+     * Applies this {@code Add} operation to the storage.
+     */
+    void apply();
 }
 

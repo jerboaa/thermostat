@@ -37,21 +37,31 @@
 
 package com.redhat.thermostat.storage.core;
 
+import java.util.Objects;
+
 import com.redhat.thermostat.storage.model.Pojo;
 
+/** Helps in implementing {@link Add} and {@link Replace} classes */
+public abstract class AddReplaceHelper {
 
-interface Put {
+    private final Category<?> category;
+    private Pojo pojo;
+    
+    public AddReplaceHelper(Category<?> category) {
+        this.category = Objects.requireNonNull(category);
+    }
 
-    /**
-     * Sets the POJO that is to be put into the database.
-     * 
-     * @param the pojo to be put into the database
-     */
-    void setPojo(Pojo pojo);
+    public final Category<?> getCategory() {
+        return category;
+    }
 
-    /**
-     * Applies this put operation to the database.
-     */
-    void apply();
+    public final void setPojo(Pojo pojo) {
+        this.pojo = pojo;
+    }
+
+    public final Pojo getPojo() {
+        return pojo;
+    }
+
 }
 

@@ -51,7 +51,7 @@ public class QueuedStorage implements Storage {
 
     private static final int SHUTDOWN_TIMEOUT_SECONDS = 3;
 
-    private class QueuedReplace extends BasePut implements Replace {
+    private class QueuedReplace extends AddReplaceHelper implements Replace {
 
         private Expression expression;
         
@@ -71,7 +71,7 @@ public class QueuedStorage implements Storage {
         
     }
 
-    private class QueuedAdd extends BasePut implements Add {
+    private class QueuedAdd extends AddReplaceHelper implements Add {
 
         private QueuedAdd(Category<?> category) {
             super(category);

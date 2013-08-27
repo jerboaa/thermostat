@@ -58,7 +58,7 @@ import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.AggregateQuery;
 import com.redhat.thermostat.storage.core.AggregateQuery.AggregateFunction;
 import com.redhat.thermostat.storage.core.BackingStorage;
-import com.redhat.thermostat.storage.core.BasePut;
+import com.redhat.thermostat.storage.core.AddReplaceHelper;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Connection;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
@@ -100,7 +100,7 @@ public class MongoStorage implements BackingStorage {
         }
     }
 
-    private class MongoAdd extends BasePut implements Add {
+    private class MongoAdd extends AddReplaceHelper implements Add {
 
         private MongoAdd(Category<?> category) {
             super(category);
@@ -113,7 +113,7 @@ public class MongoStorage implements BackingStorage {
         
     }
 
-    private class MongoReplace extends BasePut implements Replace {
+    private class MongoReplace extends AddReplaceHelper implements Replace {
         
         private DBObject query;
         private final MongoExpressionParser parser;
