@@ -43,7 +43,8 @@ import com.redhat.thermostat.shared.locale.LocalizedString;
 public class LocalizedLabel extends JLabel {
 
     public LocalizedLabel(LocalizedString text) {
-        super(text.getContents());
+        // enable word-wrapping
+        super("<html>" + text.getContents() + "</html>");
     }
 
 }

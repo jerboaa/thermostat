@@ -66,17 +66,14 @@ public class JmxNotificationDAOImpl implements JmxNotificationDAO {
             new Category<>("vm-jmx-notification-status", JmxNotificationStatus.class,
                     Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, NOTIFICATIONS_ENABLED);
 
-    // TODO: private static final Key IMPORTANCE = new Key<>("importance",
-    // false);
-
     private static final Key<String> SOURCE_BACKEND = new Key<>("sourceBackend");
-    private static final Key<String> SOURCE_DESCRPTION = new Key<>("sourceDescription");
+    private static final Key<String> SOURCE_DETAILS = new Key<>("sourceDetails");
     private static final Key<String> CONTENTS = new Key<>("contents");
 
     static final Category<JmxNotification> NOTIFICATIONS =
             new Category<>("vm-jmx-notification", JmxNotification.class,
                     Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP,
-                    SOURCE_BACKEND, SOURCE_DESCRPTION, CONTENTS);
+                    SOURCE_BACKEND, SOURCE_DETAILS, CONTENTS);
 
     static final String QUERY_LATEST_NOTIFICATION_STATUS = "QUERY "
             + NOTIFICATION_STATUS.getName() + " WHERE '"

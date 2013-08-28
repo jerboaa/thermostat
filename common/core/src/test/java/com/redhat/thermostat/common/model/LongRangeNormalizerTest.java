@@ -46,35 +46,17 @@ import com.redhat.thermostat.common.model.LongRangeNormalizer;
 public class LongRangeNormalizerTest {
 
     @Test
-    public void testSameRange() {
-        
-        Range<Long> range = new Range<>(0l, 10l);
-        
-        LongRangeNormalizer model = new LongRangeNormalizer(range);
-        
-        model.setValue(5);
-        
-        model.setMaxNormalized(10);
-        model.setMinNormalized(0);
-        
-        
-        Assert.assertEquals((int) model.getValue(), model.getValueNormalized());
-    }
-
-    @Test
     public void testDoubleRange() {
         
         Range<Long> range = new Range<>(0l, 10l);
         
         LongRangeNormalizer model = new LongRangeNormalizer(range);
         
-        model.setValue(5);
-        
         model.setMaxNormalized(20);
         model.setMinNormalized(0);
         
         
-        Assert.assertEquals(10, model.getValueNormalized());
+        Assert.assertEquals(10, model.getValueNormalized(5));
     }
     
     @Test
@@ -84,34 +66,30 @@ public class LongRangeNormalizerTest {
         
         LongRangeNormalizer model = new LongRangeNormalizer(range);
         
-        model.setValue(5);
-        
         model.setMaxNormalized(40);
         model.setMinNormalized(0);
                 
-        Assert.assertEquals(20, model.getValueNormalized());
+        Assert.assertEquals(20, model.getValueNormalized(5));
         
         model.setMaxNormalized(60);
         model.setMinNormalized(0);
                 
-        Assert.assertEquals(30, model.getValueNormalized());
+        Assert.assertEquals(30, model.getValueNormalized(5));
                 
         model.setMaxNormalized(200);
         model.setMinNormalized(100);
                 
-        Assert.assertEquals(150, model.getValueNormalized());
+        Assert.assertEquals(150, model.getValueNormalized(5));
         
         range.setMax(100l);
         range.setMin(0l);
-        model.setValue(50);
         
         model.setMaxNormalized(1);
         model.setMinNormalized(0);
                 
-        Assert.assertEquals(1, model.getValueNormalized());
+        Assert.assertEquals(1, model.getValueNormalized(50));
         
-        model.setValue(49);
-        Assert.assertEquals(0, model.getValueNormalized());
+        Assert.assertEquals(0, model.getValueNormalized(49));
     }
 }
 

@@ -42,6 +42,10 @@ public enum LocaleResources {
 
     HOST_PRIMARY_STATUS,
     VM_PRIMARY_STATUS,
+
+    ZOOM_IN,
+    ZOOM_OUT,
+    RESET_ZOOM,
     ;
 
     static final String RESOURCE_BUNDLE =

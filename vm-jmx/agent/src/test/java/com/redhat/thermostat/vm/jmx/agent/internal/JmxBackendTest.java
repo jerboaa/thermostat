@@ -180,6 +180,7 @@ public class JmxBackendTest {
 
         Notification notification = mock(Notification.class);
         when(notification.toString()).thenReturn("testing");
+        when(notification.getSource()).thenReturn(name1);
 
         listener.handleNotification(notification, handbackCaptor.getValue());
 

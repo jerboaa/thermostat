@@ -34,59 +34,72 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.model;
+package com.redhat.thermostat.client.swing.components;
 
-/**
- * A class that normalizes {@link LongRange} values to another given range.
- * 
- * <br /><br />
- * 
- * The range of normalization is inclusive of the extremes.
- */
-public class LongRangeNormalizer {
+import java.awt.Paint;
 
-    private long minNormalized;
-    
-    private long maxNormalized;
- 
-    private Range<Long> range;
-    
-    public LongRangeNormalizer(Range<Long> range) {
-        this.range = range;
+import javax.swing.JComponent;
+import javax.swing.UIManager;
+
+public class EventTimeline extends JComponent {
+
+    private static final String uiClassID = "EventTimelineUI";
+
+    private EventTimelineModel model = new EventTimelineModel();
+
+    private Paint selectionEdgePaint = null;
+    private Paint selectionFillPaint = null;
+    private Paint eventPaint;
+
+    public EventTimeline() {
+        updateUI();
     }
 
-    public LongRangeNormalizer(Range<Long> range, long minNormalized, long maxNormalized) {
-        this.range = range;
-        this.maxNormalized = maxNormalized;
-        this.minNormalized = minNormalized;
+    public void setUI(EventTimelineUI newUI) {
+        super.setUI(newUI);
     }
-    
-    public LongRangeNormalizer(Range<Long> range, Range<Long> normilizedRange) {
-        this.range = range;
-        maxNormalized = normilizedRange.max;
-        minNormalized = normilizedRange.min;
+
+    @Override
+    public void updateUI() {
+        if (UIManager.get(getUIClassID()) != null) {
+            setUI((EventTimelineUI) UIManager.getUI(this));
+        } else {
+            setUI(new BasicEventTimelineUI());
+        }
     }
-    
-    public void setMaxNormalized(long maxNormalized) {
-        this.maxNormalized = maxNormalized;
+
+    @Override
+    public String getUIClassID() {
+        return uiClassID;
     }
-    
-    public void setMinNormalized(long minNormalized) {
-        this.minNormalized = minNormalized;
+
+    public EventTimelineModel getModel() {
+        return model;
     }
-    
-    
-    public long getMaxNormalized() {
-        return maxNormalized;
+
+    public Paint getSelectionEdgePaint() {
+        return selectionEdgePaint;
     }
-    
-    public long getMinNormalized() {
-        return minNormalized;
+
+    public void setSelectionEdgePaint(Paint edgePaint) {
+        this.selectionEdgePaint = edgePaint;
     }
-    
-    public long getValueNormalized(long value) {
-        double normalized = ((value - range.min) * (double)(maxNormalized - minNormalized)/(range.max - range.min)) + minNormalized;
-        return Math.round(normalized);
+
+    public Paint getSelectionFillPaint() {
+        return selectionFillPaint;
     }
+
+    public void setSelectionFillPaint(Paint fillPaint) {
+        this.selectionFillPaint = fillPaint;
+    }
+
+    public void setEventPaint(Paint eventPaint) {
+        this.eventPaint = eventPaint;
+    }
+
+    public Paint getEventPaint() {
+        return eventPaint;
+    }
+
+
 }
-

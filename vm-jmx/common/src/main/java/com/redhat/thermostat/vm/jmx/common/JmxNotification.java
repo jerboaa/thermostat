@@ -46,7 +46,6 @@ public class JmxNotification extends BasePojo implements TimeStampedPojo {
 
     private long timeStamp;
     private String vmId;
-    private String importance;
     private String sourceBackend;
     private String sourceDetails;
     private String contents;
@@ -59,16 +58,6 @@ public class JmxNotification extends BasePojo implements TimeStampedPojo {
     @Persist
     public void setVmId(String vmId) {
         this.vmId = vmId;
-    }
-
-    @Persist
-    public String getImportance() {
-        return importance;
-    }
-
-    @Persist
-    public void setImportance(String importance) {
-        this.importance = importance;
     }
 
     @Persist

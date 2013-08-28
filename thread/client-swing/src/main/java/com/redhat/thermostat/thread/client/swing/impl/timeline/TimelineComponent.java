@@ -107,7 +107,7 @@ public class TimelineComponent extends GradientPanel {
         
         int currentValue = scrollPane.getHorizontalScrollBar().getValue();
         int totalInc = pixelUnitIncrement;
-        TimelineUtils.drawMarks(range, graphics, bounds, currentValue, false, totalInc);
+        TimelineUtils.drawMarks(graphics, bounds, currentValue, false, totalInc);
 
         drawBoldMarks(graphics, currentValue, bounds, totalInc);
         Color lastColor = drawTimeline(graphics, currentValue, bounds);
@@ -157,21 +157,17 @@ public class TimelineComponent extends GradientPanel {
             TimelineInfo info1 = infos[i];
             TimelineInfo info2 = infos[i + 1];
             
-            normalizer.setValue(info1.getTimeStamp());
-            int x0 = (int) normalizer.getValueNormalized();
+            int x0 = (int) normalizer.getValueNormalized(info1.getTimeStamp());
 
-            normalizer.setValue(info2.getTimeStamp());
-            int x1 = (int) normalizer.getValueNormalized();
+            int x1 = (int) normalizer.getValueNormalized(info2.getTimeStamp());
             
             graphics.setColor(info1.getColor().getColor());
             graphics.fillRect(x0, 5, x1 - x0 + 1, 5);
         }
         
-        normalizer.setValue(infos[infos.length - 1].getTimeStamp());
-        int x0 = (int) normalizer.getValueNormalized();
+        int x0 = (int) normalizer.getValueNormalized(infos[infos.length - 1].getTimeStamp());
 
-        normalizer.setValue(infos[infos.length - 1].getTimeStamp() + 250);
-        int x1 = (int) normalizer.getValueNormalized();
+        int x1 = (int) normalizer.getValueNormalized(infos[infos.length - 1].getTimeStamp() + 250);
 
         graphics.setColor(lastColor);        
         graphics.fillRect(x0, 5, x1 - x0 + 1, 5);

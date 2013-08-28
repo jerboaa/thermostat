@@ -95,8 +95,7 @@ public class HeapChartPanelLayout extends AbstractLayout {
             
             Dimension preferredSize = child.getIconCenter();
 
-            normaliser.setValue(child.getTimestamp());
-            x = (int) normaliser.getValueNormalized() - preferredSize.width;
+            x = (int) normaliser.getValueNormalized(child.getTimestamp()) - preferredSize.width;
 
             preferredSize = child.getPreferredSize();
             Rectangle bounds = new Rectangle(x, y, preferredSize.width, preferredSize.height);

@@ -220,11 +220,10 @@ public class JmxBackend extends BaseBackend {
 
             JmxNotification data = new JmxNotification();
             data.setVmId(idAndPid.vmId);
-            data.setImportance("unknown");
             data.setTimeStamp(notification.getTimeStamp());
             data.setSourceBackend(JmxBackend.class.getName());
-            data.setSourceDetails("dunno");
-            data.setContents(notification.toString());
+            data.setSourceDetails(((ObjectName) notification.getSource()).getCanonicalName());
+            data.setContents(notification.getMessage());
             dao.addNotification(data);
 
         }

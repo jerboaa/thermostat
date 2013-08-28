@@ -34,59 +34,12 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.model;
+package com.redhat.thermostat.client.swing.components;
 
-/**
- * A class that normalizes {@link LongRange} values to another given range.
- * 
- * <br /><br />
- * 
- * The range of normalization is inclusive of the extremes.
- */
-public class LongRangeNormalizer {
+import com.redhat.thermostat.common.model.Range;
 
-    private long minNormalized;
-    
-    private long maxNormalized;
- 
-    private Range<Long> range;
-    
-    public LongRangeNormalizer(Range<Long> range) {
-        this.range = range;
-    }
+public interface EventTimelineRangeChangeListener {
 
-    public LongRangeNormalizer(Range<Long> range, long minNormalized, long maxNormalized) {
-        this.range = range;
-        this.maxNormalized = maxNormalized;
-        this.minNormalized = minNormalized;
-    }
-    
-    public LongRangeNormalizer(Range<Long> range, Range<Long> normilizedRange) {
-        this.range = range;
-        maxNormalized = normilizedRange.max;
-        minNormalized = normilizedRange.min;
-    }
-    
-    public void setMaxNormalized(long maxNormalized) {
-        this.maxNormalized = maxNormalized;
-    }
-    
-    public void setMinNormalized(long minNormalized) {
-        this.minNormalized = minNormalized;
-    }
-    
-    
-    public long getMaxNormalized() {
-        return maxNormalized;
-    }
-    
-    public long getMinNormalized() {
-        return minNormalized;
-    }
-    
-    public long getValueNormalized(long value) {
-        double normalized = ((value - range.min) * (double)(maxNormalized - minNormalized)/(range.max - range.min)) + minNormalized;
-        return Math.round(normalized);
-    }
+    void rangeChanged(Range<Long> overview, Range<Long> detail);
+
 }
-

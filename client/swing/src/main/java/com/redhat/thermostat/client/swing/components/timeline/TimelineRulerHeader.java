@@ -88,7 +88,7 @@ public abstract class TimelineRulerHeader extends GradientPanel {
     public Range<Long> getRange() {
         return range;
     }
-    
+
     @Override
     public int getHeight() {
         return DEFAULT_HEIGHT;
@@ -136,7 +136,7 @@ public abstract class TimelineRulerHeader extends GradientPanel {
         
         int unitIncrement = getUnitIncrementInPixels();
         
-        TimelineUtils.drawMarks(range, graphics, bounds, currentValue, false, unitIncrement);
+        TimelineUtils.drawMarks(graphics, bounds, currentValue, false, unitIncrement);
         drawTimelineStrings(graphics, currentValue, bounds, unitIncrement);
         
         graphics.setColor(Palette.THERMOSTAT_BLU.getColor());
