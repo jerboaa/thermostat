@@ -224,69 +224,6 @@
               <goal>run</goal>
             </goals>
           </execution>
-          <execution>
-            <id>version-less-dep-symlinks</id>
-            <phase>prepare-package</phase>
-            <configuration>
-              <target>
-                <symlink link="${project.build.directory}/image/libs/commons-codec.jar"
-                         resource="${project.build.directory}/image/libs/commons-codec-1.7.jar" />
-                <symlink link="${project.build.directory}/image/libs/netty.jar"
-                         resource="${project.build.directory}/image/libs/netty-3.2.4.Final.jar" />
-                <symlink link="${project.build.directory}/image/libs/jline2.jar"
-                         resource="${project.build.directory}/image/libs/jline-2.9.jar" />
-                <symlink link="${project.build.directory}/image/libs/mongo.jar"
-                         resource="${project.build.directory}/image/libs/mongo-java-driver-2.7.3.jar" />
-                <symlink link="${project.build.directory}/image/libs/commons-cli.jar"
-                         resource="${project.build.directory}/image/libs/commons-cli-1.2.jar" />
-                <symlink link="${project.build.directory}/image/libs/commons-beanutils.jar"
-                         resource="${project.build.directory}/image/libs/commons-beanutils-1.8.3.jar" />
-                <symlink link="${project.build.directory}/image/libs/commons-collections.jar"
-                         resource="${project.build.directory}/image/libs/commons-collections-3.2.1.jar" />
-                <symlink link="${project.build.directory}/image/libs/commons-logging.jar"
-                         resource="${project.build.directory}/image/libs/commons-logging-1.1.3.jar" />
-                <symlink link="${project.build.directory}/image/libs/lucene.jar"
-                         resource="${project.build.directory}/image/libs/org.apache.servicemix.bundles.lucene-3.6.0_1.jar" />
-                <symlink link="${project.build.directory}/image/libs/gson.jar"
-                         resource="${project.build.directory}/image/libs/gson-2.2.2.jar" />
-                <symlink link="${project.build.directory}/image/libs/jetty-continuation.jar"
-                         resource="${project.build.directory}/image/libs/jetty-continuation-8.1.5.v20120716.jar" />
-                <symlink link="${project.build.directory}/image/libs/jetty-plus.jar"
-                         resource="${project.build.directory}/image/libs/jetty-plus-8.1.5.v20120716.jar" />
-                <symlink link="${project.build.directory}/image/libs/jetty-jndi.jar"
-                         resource="${project.build.directory}/image/libs/jetty-jndi-8.1.5.v20120716.jar" />
-                <symlink link="${project.build.directory}/image/libs/jetty-http.jar"
-                         resource="${project.build.directory}/image/libs/jetty-http-8.1.5.v20120716.jar" />
-                <symlink link="${project.build.directory}/image/libs/jetty-io.jar"
-                         resource="${project.build.directory}/image/libs/jetty-io-8.1.5.v20120716.jar" />
-                <symlink link="${project.build.directory}/image/libs/jetty-security.jar"
-                         resource="${project.build.directory}/image/libs/jetty-security-8.1.5.v20120716.jar" />
-                <symlink link="${project.build.directory}/image/libs/jetty-server.jar"
-                         resource="${project.build.directory}/image/libs/jetty-server-8.1.5.v20120716.jar" />
-                <symlink link="${project.build.directory}/image/libs/jetty-servlet.jar"
-                         resource="${project.build.directory}/image/libs/jetty-servlet-8.1.5.v20120716.jar" />
-                <symlink link="${project.build.directory}/image/libs/jetty-util.jar"
-                         resource="${project.build.directory}/image/libs/jetty-util-8.1.5.v20120716.jar" />
-                <symlink link="${project.build.directory}/image/libs/jetty-webapp.jar"
-                         resource="${project.build.directory}/image/libs/jetty-webapp-8.1.5.v20120716.jar" />
-                <symlink link="${project.build.directory}/image/libs/jetty-xml.jar"
-                         resource="${project.build.directory}/image/libs/jetty-xml-8.1.5.v20120716.jar" />
-                <symlink link="${project.build.directory}/image/libs/javax-servlet.jar"
-                         resource="${project.build.directory}/image/libs/javax.servlet-3.0.0.v201112011016.jar" />
-                <symlink link="${project.build.directory}/image/libs/commons-io.jar"
-                         resource="${project.build.directory}/image/libs/commons-io-2.4.jar" />
-                <symlink link="${project.build.directory}/image/libs/commons-fileupload.jar"
-                         resource="${project.build.directory}/image/libs/commons-fileupload-1.2.2.jar" />
-                <symlink link="${project.build.directory}/image/libs/httpcomponents-core.jar"
-                         resource="${project.build.directory}/image/libs/httpcore-osgi-4.1.2.jar" />
-                <symlink link="${project.build.directory}/image/libs/httpcomponents-client.jar"
-                         resource="${project.build.directory}/image/libs/httpclient-osgi-4.1.2.jar" />
-              </target>
-            </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution>
         </executions>
       </plugin>
     </plugins>
