@@ -46,8 +46,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.common.Launcher;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.testutils.StubBundleContext;

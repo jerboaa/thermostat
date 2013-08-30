@@ -46,11 +46,11 @@ import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 import com.redhat.thermostat.common.ExitStatus;
-import com.redhat.thermostat.common.Launcher;
 import com.redhat.thermostat.common.cli.CommandContextFactory;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 import com.redhat.thermostat.launcher.BundleManager;
+import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.launcher.internal.CurrentEnvironment.CurrentEnvironmentChangeListener;
 import com.redhat.thermostat.shared.config.Configuration;
 import com.redhat.thermostat.utils.keyring.Keyring;

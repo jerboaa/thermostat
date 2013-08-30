@@ -63,7 +63,7 @@ public interface Command {
 
     /**
      * Execute the command.  A CommandException may be thrown to indicate a failure
-     * condition; if so the {@link com.redhat.thermostat.launcher.Launcher} will
+     * condition; if so the {@link com.redhat.thermostat.launcher.launcher.Launcher} will
      * present the exception message to the user.
      */
     public void run(CommandContext ctx) throws CommandException;

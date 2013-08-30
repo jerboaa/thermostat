@@ -57,12 +57,12 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.client.cli.internal.ShellCommand.HistoryProvider;
-import com.redhat.thermostat.common.Launcher;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
+import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 
 public class ShellCommandTest {

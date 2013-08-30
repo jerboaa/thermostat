@@ -72,11 +72,11 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.common.ExitStatus;
-import com.redhat.thermostat.common.Launcher;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.launcher.BundleManager;
+import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.launcher.internal.Activator.RegisterLauncherCustomizer;
 import com.redhat.thermostat.shared.config.Configuration;
 import com.redhat.thermostat.testutils.StubBundleContext;
