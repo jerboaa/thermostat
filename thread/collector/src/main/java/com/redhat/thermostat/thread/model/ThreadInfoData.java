@@ -61,7 +61,15 @@ public class ThreadInfoData extends BasePojo implements TimeStampedPojo {
     private long waitedCount;
     
     private long timestamp;
+    
+    public ThreadInfoData() {
+        this(null);
+    }
 
+    public ThreadInfoData(String writerId) {
+        super(writerId);
+    }
+    
     public void setStackTrace(StackTraceElement[] stackTrace) {
         this.stackTrace = stackTrace;
     }

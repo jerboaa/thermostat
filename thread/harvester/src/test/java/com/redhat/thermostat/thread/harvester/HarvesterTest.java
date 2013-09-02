@@ -57,10 +57,12 @@ import java.util.concurrent.TimeUnit;
 
 import javax.management.MalformedObjectNameException;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.ThreadInfoData;
 import com.redhat.thermostat.thread.model.ThreadSummary;
@@ -70,6 +72,13 @@ import com.redhat.thermostat.utils.management.MXBeanConnection;
 import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 
 public class HarvesterTest {
+    
+    private WriterID writerId;
+    
+    @Before
+    public void setup() {
+        writerId = mock(WriterID.class);
+    }
 
     @Test
     public void testStart() {
@@ -86,7 +95,7 @@ public class HarvesterTest {
         
         when(executor.scheduleAtFixedRate(arg0.capture(), arg1.capture(), arg2.capture(), arg3.capture())).thenReturn(null);
         
-        Harvester harvester = new Harvester(dao, executor, "vmId", 42, pool) {
+        Harvester harvester = new Harvester(dao, executor, "vmId", 42, pool, writerId) {
             @Override
             synchronized void harvestData() {
                 harvestDataCalled[0] = true;
@@ -130,7 +139,7 @@ public class HarvesterTest {
         
         when(executor.scheduleAtFixedRate(arg0.capture(), arg1.capture(), arg2.capture(), arg3.capture())).thenReturn(null);
         
-        Harvester harvester = new Harvester(dao, executor, "vmId", 42, pool) {
+        Harvester harvester = new Harvester(dao, executor, "vmId", 42, pool, writerId) {
             @Override
             synchronized void harvestData() {
                 harvestDataCalled[0] = true;
@@ -170,7 +179,7 @@ public class HarvesterTest {
         
         when(executor.scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class))).thenReturn(future);
         
-        Harvester harvester = new Harvester(dao, executor, "vmId", 42, pool);
+        Harvester harvester = new Harvester(dao, executor, "vmId", 42, pool, writerId);
         
         harvester.start();
         
@@ -204,7 +213,7 @@ public class HarvesterTest {
         
         when(executor.scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class))).thenReturn(future);
         
-        Harvester harvester = new Harvester(dao, executor, "vmId", 42, pool);
+        Harvester harvester = new Harvester(dao, executor, "vmId", 42, pool, writerId);
         
         harvester.start();
         
@@ -232,7 +241,7 @@ public class HarvesterTest {
         
         MXBeanConnectionPool pool = mock(MXBeanConnectionPool.class);
 
-        Harvester harvester = new Harvester(dao, executor, "vmId", 42, pool);
+        Harvester harvester = new Harvester(dao, executor, "vmId", 42, pool, writerId);
         
         verify(executor, times(0)).scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class));
         
@@ -286,7 +295,7 @@ public class HarvesterTest {
 
         final boolean [] getDataCollectorBeanCalled = new boolean[1];
         
-        Harvester harvester = new Harvester(dao, executor, "vmId", 42, pool) {
+        Harvester harvester = new Harvester(dao, executor, "vmId", 42, pool, writerId) {
             @Override
             ThreadMXBean getDataCollectorBean(MXBeanConnection connection)
                     throws MalformedObjectNameException {
@@ -345,7 +354,7 @@ public class HarvesterTest {
 
         final boolean [] getDataCollectorBeanCalled = new boolean[1];
         
-        Harvester harvester = new Harvester(dao, executor, "vmId", 42, pool) {
+        Harvester harvester = new Harvester(dao, executor, "vmId", 42, pool, writerId) {
             @Override
             ThreadMXBean getDataCollectorBean(MXBeanConnection connection)
                     throws MalformedObjectNameException {
@@ -387,7 +396,7 @@ public class HarvesterTest {
 
         final boolean[] getDataCollectorBeanCalled = new boolean[1];
 
-        Harvester harvester = new Harvester(dao, executor, clock, "vmId", 42, pool) {
+        Harvester harvester = new Harvester(dao, executor, clock, "vmId", 42, pool, writerId) {
             @Override
             ThreadMXBean getDataCollectorBean(MXBeanConnection connection)
                     throws MalformedObjectNameException {

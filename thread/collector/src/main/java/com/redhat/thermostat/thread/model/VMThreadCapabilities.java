@@ -45,9 +45,16 @@ import com.redhat.thermostat.thread.dao.ThreadDao;
 public class VMThreadCapabilities extends BasePojo {
     
     private String[] features;
-
     private String vmId;
+    
+    public VMThreadCapabilities() {
+        this(null);
+    }
 
+    public VMThreadCapabilities(String writerId) {
+        super(writerId);
+    }
+    
     @Persist
     public void setVmId(String vmId) {
         this.vmId = vmId;

@@ -88,7 +88,7 @@ public class VmDeadLockControllerTest {
     @Test
     public void verifyRealDeadLockDataIsDisplayedOnViewAction() {
         final String DESCRIPTION = "foo bar";
-        VmDeadLockData data = new VmDeadLockData();
+        VmDeadLockData data = new VmDeadLockData("foo-agent");
         data.setDeadLockDescription(DESCRIPTION);
 
         controller.initialize();
@@ -108,7 +108,7 @@ public class VmDeadLockControllerTest {
 
     @Test
     public void verifyNoDeadLockDataIsDisplayedOnViewAction() {
-        VmDeadLockData data = new VmDeadLockData();
+        VmDeadLockData data = new VmDeadLockData("foo-agent");
         data.setDeadLockDescription(VmDeadLockData.NO_DEADLOCK);
 
         controller.initialize();
@@ -160,7 +160,7 @@ public class VmDeadLockControllerTest {
     public void verifyTimerActionRefreshesView() {
         doThrow(new AssertionError()).when(collector).requestDeadLockCheck();
 
-        VmDeadLockData data = new VmDeadLockData();
+        VmDeadLockData data = new VmDeadLockData("foo-agent");
         data.setDeadLockDescription(VmDeadLockData.NO_DEADLOCK);
         controller.initialize();
 

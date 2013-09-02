@@ -51,6 +51,14 @@ public class ThreadSummary extends BasePojo implements TimeStampedPojo {
     
     private long timestamp;
 
+    public ThreadSummary() {
+        this(null);
+    }
+    
+    public ThreadSummary(String writerId) {
+        super(writerId);
+    }
+    
     @Persist
     public void setVmId(String vmId) {
         this.vmId = vmId;

@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.thread.harvester.osgi;
 
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -48,7 +49,10 @@ import org.osgi.util.tracker.ServiceTracker;
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.backend.Backend;
+import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.Version;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.harvester.ThreadBackend;
 import com.redhat.thermostat.thread.harvester.ThreadHarvester;
@@ -58,7 +62,7 @@ public class Activator implements BundleActivator {
     
     private ScheduledExecutorService executor = Executors.newScheduledThreadPool(24);
 
-    private ServiceTracker connectionPoolTracker;
+    private MultipleServiceTracker connectionPoolTracker;
     private ServiceTracker threadDaoTracker;
     private ServiceRegistration backendRegistration;
 
@@ -68,20 +72,25 @@ public class Activator implements BundleActivator {
     
     @Override
     public void start(final BundleContext context) throws Exception {
-
-        connectionPoolTracker = new ServiceTracker(context, MXBeanConnectionPool.class, null) {
+        
+        Class<?>[] deps = new Class<?>[] {
+                MXBeanConnectionPool.class,
+                WriterID.class,
+        };
+        connectionPoolTracker = new MultipleServiceTracker(context, deps, new Action() {
+            
             @Override
-            public Object addingService(ServiceReference reference) {
-                MXBeanConnectionPool pool =  (MXBeanConnectionPool) super.addingService(reference);
-                harvester = new ThreadHarvester(executor, pool);
-                return pool;
+            public void dependenciesAvailable(Map<String, Object> services) {
+                MXBeanConnectionPool pool = (MXBeanConnectionPool) services.get(MXBeanConnectionPool.class.getName());
+                WriterID writerId = (WriterID) services.get(WriterID.class.getName());
+                harvester = new ThreadHarvester(executor, pool, writerId);
             }
+
             @Override
-            public void removedService(ServiceReference reference, Object service) {
-                super.removedService(reference, service);
+            public void dependenciesUnavailable() {
                 harvester = null;
             }
-        };
+        });
         connectionPoolTracker.open();
 
         registry = new ReceiverRegistry(context);

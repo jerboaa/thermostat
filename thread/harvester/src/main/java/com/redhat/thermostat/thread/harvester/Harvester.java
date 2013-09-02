@@ -52,6 +52,7 @@ import javax.management.MalformedObjectNameException;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.ThreadInfoData;
 import com.redhat.thermostat.thread.model.ThreadSummary;
@@ -65,29 +66,35 @@ class Harvester {
     
     private static final Logger logger = LoggingUtils.getLogger(Harvester.class);
     
-    private boolean isConnected;
-    private ScheduledExecutorService threadPool;
-    private ScheduledFuture<?> harvester;
-    private Clock clock;
+    private final ScheduledExecutorService threadPool;
+    private final Clock clock;
     
-    private MXBeanConnectionPool connectionPool;
+    private final MXBeanConnectionPool connectionPool;
+    private final ThreadDao threadDao;
+    private final String vmId;
+    private final int pid;
+    private final WriterID writerId;
+    private boolean isConnected;
+    private ScheduledFuture<?> harvester;
     private MXBeanConnection connection;
     private ThreadMXBean collectorBean;
-    private ThreadDao threadDao;
-    private String vmId;
-    private int pid;
     
-    Harvester(ThreadDao threadDao, ScheduledExecutorService threadPool, String vmId, int pid, MXBeanConnectionPool connectionPool) {
-        this(threadDao, threadPool, new SystemClock(), vmId, pid, connectionPool);
+    Harvester(ThreadDao threadDao, ScheduledExecutorService threadPool,
+            String vmId, int pid, MXBeanConnectionPool connectionPool,
+            WriterID writerId) {
+        this(threadDao, threadPool, new SystemClock(), vmId, pid, connectionPool, writerId);
     }
 
-    Harvester(ThreadDao threadDao, ScheduledExecutorService threadPool, Clock clock, String vmId, int pid, MXBeanConnectionPool connectionPool) {
+    Harvester(ThreadDao threadDao, ScheduledExecutorService threadPool,
+            Clock clock, String vmId, int pid,
+            MXBeanConnectionPool connectionPool, WriterID writerId) {
         this.threadDao = threadDao;
         this.vmId = vmId;
         this.pid = pid;
         this.threadPool = threadPool;
         this.connectionPool = connectionPool;
         this.clock = clock;
+        this.writerId = writerId;
     }
     
     synchronized boolean start() {
@@ -170,8 +177,9 @@ class Harvester {
     synchronized void harvestData() {
       try {
           long timestamp = clock.getRealTimeMillis();
-          
-          ThreadSummary summary = new ThreadSummary();
+
+          String wId = writerId.getWriterID();
+          ThreadSummary summary = new ThreadSummary(wId);
           
           if (collectorBean == null) {
               collectorBean = getDataCollectorBean(connection);
@@ -203,7 +211,7 @@ class Harvester {
           ThreadInfo[] threadInfos = collectorBean.getThreadInfo(ids, true, true);
           
           for (int i = 0; i < ids.length; i++) {
-              ThreadInfoData info = new ThreadInfoData();
+              ThreadInfoData info = new ThreadInfoData(wId);
               ThreadInfo beanInfo = threadInfos[i];
 
               info.setTimeStamp(timestamp);
@@ -247,7 +255,8 @@ class Harvester {
             try {
 
                 ThreadMXBean bean = getDataCollectorBean(connection);
-                VMThreadCapabilities caps = new VMThreadCapabilities();
+                String wId = writerId.getWriterID();
+                VMThreadCapabilities caps = new VMThreadCapabilities(wId);
 
                 List<String> features = new ArrayList<>(3);
                 if (bean.isThreadCpuTimeSupported())
@@ -309,8 +318,9 @@ class Harvester {
                 }
                 description = descriptionBuilder.toString();
             }
-
-            VmDeadLockData data = new VmDeadLockData();
+            
+            String wId = writerId.getWriterID();
+            VmDeadLockData data = new VmDeadLockData(wId);
             data.setTimeStamp(timeStamp);
             data.setVmId(vmId);
             data.setDeadLockDescription(description);
@@ -327,5 +337,6 @@ class Harvester {
 
         return true;
     }
+    
 }
 

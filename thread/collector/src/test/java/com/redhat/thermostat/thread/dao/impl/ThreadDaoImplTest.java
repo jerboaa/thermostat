@@ -40,7 +40,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -111,12 +110,13 @@ public class ThreadDaoImplTest {
         VmRef ref = mock(VmRef.class);
         when(ref.getVmId()).thenReturn("VM42");
         
+        String agentId = "0xcafe";
         HostRef agent = mock(HostRef.class);
-        when(agent.getAgentId()).thenReturn("0xcafe");
+        when(agent.getAgentId()).thenReturn(agentId);
         
         when(ref.getHostRef()).thenReturn(agent);
 
-        VMThreadCapabilities expected = new VMThreadCapabilities();
+        VMThreadCapabilities expected = new VMThreadCapabilities(agentId);
         expected.setSupportedFeaturesList(new String[] { ThreadDao.CPU_TIME, ThreadDao.THREAD_ALLOCATED_MEMORY });
         @SuppressWarnings("unchecked")
         Cursor<VMThreadCapabilities> cursor = (Cursor<VMThreadCapabilities>) mock(Cursor.class);
@@ -152,12 +152,13 @@ public class ThreadDaoImplTest {
         VmRef ref = mock(VmRef.class);
         when(ref.getVmId()).thenReturn("VM42");
 
+        String agentId = "0xcafe";
         HostRef agent = mock(HostRef.class);
-        when(agent.getAgentId()).thenReturn("0xcafe");
+        when(agent.getAgentId()).thenReturn(agentId);
 
         when(ref.getHostRef()).thenReturn(agent);
 
-        VMThreadCapabilities expected = new VMThreadCapabilities();
+        VMThreadCapabilities expected = new VMThreadCapabilities(agentId);
         expected.setSupportedFeaturesList(new String[] { ThreadDao.CPU_TIME, ThreadDao.THREAD_ALLOCATED_MEMORY });
         @SuppressWarnings("unchecked")
         Cursor<VMThreadCapabilities> cursor = (Cursor<VMThreadCapabilities>) mock(Cursor.class);
@@ -179,36 +180,19 @@ public class ThreadDaoImplTest {
 
     /*
      * Tests saving of VMCapabilities when agentId has been explicitly set
-     * in thread capabilities model class.
+     * in thread capabilities model class. Every model class is required
+     * to set this explicitly.
      */
     @Test
     public void testSaveVMCapabilities() {
         String agentId = "fooAgent";
-        doTestSaveVMCaps(false, agentId);
-    }
-    
-    /*
-     * Tests saving of VMCapabilities when agentId has NOT been explicitly set
-     * in thread capabilities model class. AgentId should get filled in from
-     * storage.
-     */
-    @Test
-    public void testSaveVMCapabilitiesWithNoAgentIdExplicitlySet() {
-        String agentId = "fooStorageAgent";
-        doTestSaveVMCaps(true, agentId);
-    }
-    
-    private void doTestSaveVMCaps(boolean agentIdFromStorage, String agentId) {
         Storage storage = mock(Storage.class);
         @SuppressWarnings("unchecked")
         Replace<VMThreadCapabilities> replace = mock(Replace.class);
         when(storage.createReplace(eq(ThreadDao.THREAD_CAPABILITIES))).thenReturn(replace);
-        if (agentIdFromStorage) {
-            when(storage.getAgentId()).thenReturn(agentId);
-        }
         
         String vmId = "VM42";
-        VMThreadCapabilities caps = new VMThreadCapabilities();
+        VMThreadCapabilities caps = new VMThreadCapabilities(agentId);
         String[] capsFeatures = new String[] {
                 ThreadDao.CONTENTION_MONITOR,
                 ThreadDao.CPU_TIME,
@@ -219,12 +203,6 @@ public class ThreadDaoImplTest {
         assertTrue(caps.supportCPUTime());
         assertTrue(caps.supportThreadAllocatedMemory());
         caps.setVmId(vmId);
-        if (!agentIdFromStorage) {
-            caps.setAgentId(agentId);
-        } else {
-            // case where we want to have agentId null on caps itself.
-            assertNull(caps.getAgentId());
-        }
         ThreadDaoImpl dao = new ThreadDaoImpl(storage);
         dao.saveCapabilities(caps);
         
@@ -237,6 +215,7 @@ public class ThreadDaoImplTest {
         verify(replace).setPojo(caps);
         verify(replace).where(expected);
         verify(replace).apply();
+        assertEquals(agentId, caps.getAgentId());
     }
 
     @Test

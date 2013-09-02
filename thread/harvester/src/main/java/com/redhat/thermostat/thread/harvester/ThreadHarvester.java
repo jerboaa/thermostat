@@ -54,6 +54,7 @@ import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.thread.collector.HarvesterCommand;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
@@ -63,22 +64,24 @@ public class ThreadHarvester implements RequestReceiver {
 
     private static final Logger logger = LoggingUtils.getLogger(ThreadHarvester.class);
     
-    private ScheduledExecutorService executor;
-    Map<String, Harvester> connectors;
+    private final ScheduledExecutorService executor;
+    final Map<String, Harvester> connectors;
 
+    private final Clock clock;
+    private final MXBeanConnectionPool connectionPool;
+    private final WriterID writerId;
     private ThreadDao dao;
-    private Clock clock;
-    private MXBeanConnectionPool connectionPool;
 
-    public ThreadHarvester(ScheduledExecutorService executor, MXBeanConnectionPool pool) {
-        this(executor, new SystemClock(), pool);
+    public ThreadHarvester(ScheduledExecutorService executor, MXBeanConnectionPool pool, WriterID writerID) {
+        this(executor, new SystemClock(), pool, writerID);
     }
     
-    public ThreadHarvester(ScheduledExecutorService executor, Clock clock, MXBeanConnectionPool connectionPool) {
+    public ThreadHarvester(ScheduledExecutorService executor, Clock clock, MXBeanConnectionPool connectionPool, WriterID writerId) {
         this.executor = executor;
         this.connectors = new HashMap<>();
         this.clock = clock;
         this.connectionPool = connectionPool;
+        this.writerId = writerId;
     }
     
     /**
@@ -192,7 +195,8 @@ public class ThreadHarvester implements RequestReceiver {
     }
 
     private void updateHarvestingStatus(String vmId, boolean harvesting) {
-        ThreadHarvestingStatus status = new ThreadHarvestingStatus();
+        String wId = writerId.getWriterID();
+        ThreadHarvestingStatus status = new ThreadHarvestingStatus(wId);
         status.setTimeStamp(clock.getRealTimeMillis());
         status.setVmId(vmId);
         status.setHarvesting(harvesting);
@@ -210,7 +214,7 @@ public class ThreadHarvester implements RequestReceiver {
     }
 
     Harvester createHarvester(String vmId, int pid) {
-        return new Harvester(dao, executor, vmId, pid, connectionPool);
+        return new Harvester(dao, executor, vmId, pid, connectionPool, writerId);
     }
 
     /**

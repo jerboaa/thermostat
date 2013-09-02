@@ -54,6 +54,7 @@ import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.thread.collector.HarvesterCommand;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
@@ -63,11 +64,13 @@ public class ThreadHarvesterTest {
 
     private MXBeanConnectionPool pool;
     private ScheduledExecutorService executor;
+    private WriterID writerId;
 
     @Before
     public void setUp() {
         pool = mock(MXBeanConnectionPool.class);
         executor = mock(ScheduledExecutorService.class);
+        writerId = mock(WriterID.class);
     }
 
     @Test
@@ -87,7 +90,7 @@ public class ThreadHarvesterTest {
             thenReturn("42").
             thenReturn("0xcafe");
         
-        ThreadHarvester threadHarvester = new ThreadHarvester(executor, pool) {
+        ThreadHarvester threadHarvester = new ThreadHarvester(executor, pool, writerId) {
             @Override
             Harvester createHarvester(String vmId, int pid) {
                 
@@ -126,7 +129,7 @@ public class ThreadHarvesterTest {
             thenReturn(HarvesterCommand.STOP.name()).
             thenReturn("vmId");
         
-        ThreadHarvester threadHarvester = new ThreadHarvester(executor, pool) {
+        ThreadHarvester threadHarvester = new ThreadHarvester(executor, pool, writerId) {
             { connectors.put("vmId", harverster); }
         };
         threadHarvester.setThreadDao(dao);
@@ -158,7 +161,7 @@ public class ThreadHarvesterTest {
                 thenReturn("42").
                 thenReturn("0xcafe");
 
-        ThreadHarvester threadHarvester = new ThreadHarvester(executor, pool) {
+        ThreadHarvester threadHarvester = new ThreadHarvester(executor, pool, writerId) {
             @Override
             Harvester createHarvester(String vmId, int pid) {
 
@@ -191,7 +194,7 @@ public class ThreadHarvesterTest {
         final boolean[] createHarvesterCalled = new boolean[1];
         final Harvester harverster = mock(Harvester.class);
         
-        ThreadHarvester threadHarvester = new ThreadHarvester(executor, pool) {
+        ThreadHarvester threadHarvester = new ThreadHarvester(executor, pool, writerId) {
             @Override
             Harvester createHarvester(String vmId, int pid) {
                 
@@ -212,7 +215,7 @@ public class ThreadHarvesterTest {
 
     @Test
     public void testRecieveWithoutDaosFails() {
-        ThreadHarvester harvester = new ThreadHarvester(executor, pool);
+        ThreadHarvester harvester = new ThreadHarvester(executor, pool, writerId);
         Response response = harvester.receive(mock(Request.class));
 
         assertEquals(ResponseType.ERROR, response.getType());
@@ -224,7 +227,7 @@ public class ThreadHarvesterTest {
         when(clock.getRealTimeMillis()).thenReturn(1l);
         ThreadDao dao = mock(ThreadDao.class);
 
-        ThreadHarvester harvester = new ThreadHarvester(executor, clock, pool);
+        ThreadHarvester harvester = new ThreadHarvester(executor, clock, pool, writerId);
         harvester.setThreadDao(dao);
 
         harvester.addThreadHarvestingStatus("vmId");
@@ -244,7 +247,7 @@ public class ThreadHarvesterTest {
         when(clock.getRealTimeMillis()).thenReturn(1l);
         ThreadDao dao = mock(ThreadDao.class);
 
-        ThreadHarvester harvester = new ThreadHarvester(executor, clock, pool);
+        ThreadHarvester harvester = new ThreadHarvester(executor, clock, pool, writerId);
         harvester.setThreadDao(dao);
 
         harvester.saveVmCaps("vmId", 10);
@@ -270,7 +273,7 @@ public class ThreadHarvesterTest {
         when(javaHarvester.stop()).thenReturn(true);
         when(javaHarvester.getPid()).thenReturn(42);
 
-        ThreadHarvester harvester = new ThreadHarvester(executor, clock, pool) {
+        ThreadHarvester harvester = new ThreadHarvester(executor, clock, pool, writerId) {
             @Override
             Harvester createHarvester(String vmId, int pid) {
                 assertEquals("vmId", vmId);

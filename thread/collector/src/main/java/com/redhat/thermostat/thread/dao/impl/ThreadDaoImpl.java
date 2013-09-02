@@ -142,9 +142,6 @@ public class ThreadDaoImpl implements ThreadDao {
         Replace<VMThreadCapabilities> replace = storage.createReplace(THREAD_CAPABILITIES);
         ExpressionFactory factory = new ExpressionFactory();
         String agentId = caps.getAgentId();
-        if (agentId == null) {
-            agentId = storage.getAgentId();
-        }
         Expression agentKey = factory.equalTo(Key.AGENT_ID, agentId);
         Expression vmKey = factory.equalTo(Key.VM_ID, caps.getVmId());
         Expression and = factory.and(agentKey, vmKey);

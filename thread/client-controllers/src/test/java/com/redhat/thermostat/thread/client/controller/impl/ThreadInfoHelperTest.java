@@ -50,22 +50,22 @@ public class ThreadInfoHelperTest {
 
     @Test
     public void verifyMap() {
-        ThreadInfoData data1 = new ThreadInfoData();
+        ThreadInfoData data1 = new ThreadInfoData("foo-agent");
         data1.setThreadName("test1");
         data1.setThreadId(1);
         data1.setState(Thread.State.RUNNABLE);
         
-        ThreadInfoData data2 = new ThreadInfoData();
+        ThreadInfoData data2 = new ThreadInfoData("foo-agent");
         data2.setThreadName("test2");
         data2.setThreadId(2);
         data2.setState(Thread.State.BLOCKED);
         
-        ThreadInfoData data3 = new ThreadInfoData();
+        ThreadInfoData data3 = new ThreadInfoData("foo-agent");
         data3.setThreadName("test1");
         data3.setThreadId(1);
         data3.setState(Thread.State.TIMED_WAITING);
         
-        ThreadInfoData data4 = new ThreadInfoData();
+        ThreadInfoData data4 = new ThreadInfoData("foo-agent");
         data4.setThreadName("test2");
         data4.setThreadId(2);
         data4.setState(Thread.State.RUNNABLE);

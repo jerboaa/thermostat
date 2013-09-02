@@ -36,58 +36,36 @@
 
 package com.redhat.thermostat.thread.model;
 
-import com.redhat.thermostat.storage.core.Entity;
-import com.redhat.thermostat.storage.core.Persist;
-import com.redhat.thermostat.storage.model.BasePojo;
-import com.redhat.thermostat.storage.model.TimeStampedPojo;
+import static org.junit.Assert.assertEquals;
 
-@Entity
-public class VmDeadLockData extends BasePojo implements TimeStampedPojo {
+import java.util.ArrayList;
 
-    /** Used as the description when no deadlock could be detected */
-    public static final String NO_DEADLOCK = "no-deadlocks";
+import org.junit.Test;
 
-    private long timeStamp;
-    private String vmId;
-    private String description;
-    
-    public VmDeadLockData() {
-        this(null);
+public class ThreadModelPojosTest {
+
+    private static final Class<?>[] CLASSES_LIST = new Class[] {
+        ThreadHarvestingStatus.class,
+        ThreadInfoData.class,
+        ThreadSummary.class,
+        VmDeadLockData.class,
+        VMThreadCapabilities.class
+    };
+
+    @Test
+    public void testBasicInstantiation() {
+        ArrayList<Class<?>> failureClasses = new ArrayList<>();
+        for (Class<?> clazz : CLASSES_LIST) {
+            try {
+                // pojo converters use this
+                clazz.newInstance();
+                // pass
+            } catch (InstantiationException | IllegalAccessException e) {
+                failureClasses.add(clazz);
+            }
+        }
+        String msg = "Should be able to instantiate class using no-arg constructor: "
+                + failureClasses;
+        assertEquals(msg, 0, failureClasses.size());
     }
-    
-    public VmDeadLockData(String writerId) {
-        super(writerId);
-    }
-
-    @Persist
-    @Override
-    public long getTimeStamp() {
-        return timeStamp;
-    }
-
-    @Persist
-    public void setTimeStamp(long timeStamp) {
-        this.timeStamp = timeStamp;
-    }
-
-    @Persist
-    public void setVmId(String vmId) {
-        this.vmId = vmId;
-    }
-
-    @Persist
-    public String getVmId() {
-        return vmId;
-    }
-
-    @Persist
-    public String getDeadLockDescription() {
-        return description;
-    }
-
-    @Persist
-    public void setDeadLockDescription(String description) {
-        this.description = description;
-    }
-
 }

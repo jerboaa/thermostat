@@ -46,6 +46,14 @@ public class ThreadHarvestingStatus extends BasePojo {
     private String vmId;
     private long timeStamp;
     private boolean collecting;
+    
+    public ThreadHarvestingStatus() {
+        this(null);
+    }
+    
+    public ThreadHarvestingStatus(String writerId) {
+        super(writerId);
+    }
 
     @Persist
     public String getVmId() {
