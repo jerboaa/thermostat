@@ -44,6 +44,7 @@ import org.junit.Test;
 
 import com.redhat.thermostat.agent.cli.impl.db.StorageCommand;
 import com.redhat.thermostat.common.ExitStatus;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class ActivatorTest {
@@ -51,22 +52,28 @@ public class ActivatorTest {
     @Test
     public void verifyActivatorRegistersCommands() throws Exception {        
         StubBundleContext bundleContext = new StubBundleContext();
+
         ExitStatus exitStatus = mock(ExitStatus.class);
+        WriterID writerID = mock(WriterID.class);
+        bundleContext.registerService(WriterID.class, writerID, null);
         bundleContext.registerService(ExitStatus.class, exitStatus, null);
         
         Activator activator = new Activator();
 
+        assertEquals(0, bundleContext.getServiceListeners().size());
+        
         activator.start(bundleContext);
-
+        
+        assertEquals(2, bundleContext.getServiceListeners().size());
+        
         assertCommandIsRegistered(bundleContext, "agent", AgentApplication.class);
-
         assertCommandIsRegistered(bundleContext, "service", ServiceCommand.class);
-
         assertCommandIsRegistered(bundleContext, "storage", StorageCommand.class);
 
         activator.stop(bundleContext);
 
-        assertEquals(1, bundleContext.getAllServices().size());
+        assertEquals(0, bundleContext.getServiceListeners().size());
+        assertEquals(2, bundleContext.getAllServices().size());
     }
 }
 

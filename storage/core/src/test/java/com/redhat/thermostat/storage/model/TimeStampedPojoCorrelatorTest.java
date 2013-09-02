@@ -56,6 +56,7 @@ public class TimeStampedPojoCorrelatorTest {
         private long timestamp;
 
         private TestTimeStampedPojo(long timestamp) {
+            super(null);
             this.timestamp = timestamp;
         }
 

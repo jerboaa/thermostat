@@ -64,7 +64,7 @@ public class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
             + networkInfoCategory.getName() + " WHERE '"
             + Key.AGENT_ID.getName() + "' = ?s";
 
-    private Storage storage;
+    private final Storage storage;
 
     public NetworkInterfaceInfoDAOImpl(Storage storage) {
         this.storage = storage;
@@ -103,9 +103,6 @@ public class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
         Replace<NetworkInterfaceInfo> replace = storage.createReplace(networkInfoCategory);
         ExpressionFactory factory = new ExpressionFactory();
         String agentId = info.getAgentId();
-        if (agentId == null) {
-            agentId = storage.getAgentId();
-        }
         Expression left = factory.equalTo(Key.AGENT_ID, agentId);
         Expression right = factory.equalTo(NetworkInterfaceInfoDAO.ifaceKey, info.getInterfaceName());
         Expression expression = factory.and(left, right); 

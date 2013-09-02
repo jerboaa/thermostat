@@ -570,7 +570,7 @@ public class MainWindowControllerImplTest {
 
     @Test
     public void verityVMActionsAreShown() {
-        VmInfo vmInfo = new VmInfo("123", 0, 1, 2, null, null, null, null, null, null, null, null, null, null, null, -1, null);
+        VmInfo vmInfo = new VmInfo("foo", "123", 0, 1, 2, null, null, null, null, null, null, null, null, null, null, null, -1, null);
         when(mockVmsDAO.getVmInfo(isA(VmRef.class))).thenReturn(vmInfo);
 
         VmRef ref = mock(VmRef.class);

@@ -34,48 +34,38 @@
  * to do so, delete this exception statement from your version.
  */
 
-
 package com.redhat.thermostat.storage.model;
 
-import java.util.Objects;
+import static org.junit.Assert.assertEquals;
 
-import com.redhat.thermostat.storage.core.Persist;
+import java.util.ArrayList;
 
-public class BasePojo implements Pojo {
+import org.junit.Test;
 
-    private String agentId;
+public class PojoModelInstantiationTest {
     
-    public BasePojo(String writerId) {
-        this.agentId = writerId;
-    }
+    private static final Class<?>[] CLASSES_LIST = new Class[] {
+        AgentInformation.class,
+        BackendInformation.class,
+        NetworkInterfaceInfo.class,
+        VmInfo.class,
+        HostInfo.class
+    };
 
-    @Persist
-    public final String getAgentId() {
-        return agentId;
+    @Test
+    public void testBasicInstantiation() {
+        ArrayList<Class<?>> failureClasses = new ArrayList<>();
+        for (Class<?> clazz : CLASSES_LIST) {
+            try {
+                // pojo converters use this
+                clazz.newInstance();
+                // pass
+            } catch (InstantiationException | IllegalAccessException e) {
+                failureClasses.add(clazz);
+            }
+        }
+        String msg = "Should be able to instantiate class using no-arg constructor: "
+                + failureClasses;
+        assertEquals(msg, 0, failureClasses.size());
     }
-
-    @Persist
-    public final void setAgentId(String agentId) {
-        this.agentId = agentId;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(agentId);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        BasePojo other = (BasePojo) obj;
-        return Objects.equals(agentId, other.agentId);
-    }
-
-    
 }
-

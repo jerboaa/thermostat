@@ -34,48 +34,21 @@
  * to do so, delete this exception statement from your version.
  */
 
+package com.redhat.thermostat.storage.internal;
 
-package com.redhat.thermostat.storage.model;
+import com.redhat.thermostat.storage.core.WriterID;
 
-import java.util.Objects;
-
-import com.redhat.thermostat.storage.core.Persist;
-
-public class BasePojo implements Pojo {
-
-    private String agentId;
+public class WriterIDImpl implements WriterID {
     
-    public BasePojo(String writerId) {
-        this.agentId = writerId;
-    }
-
-    @Persist
-    public final String getAgentId() {
-        return agentId;
-    }
-
-    @Persist
-    public final void setAgentId(String agentId) {
-        this.agentId = agentId;
+    private final String writerId;
+    
+    public WriterIDImpl(String writerId) {
+        this.writerId = writerId;
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hashCode(agentId);
+    public String getWriterID() {
+        return writerId;
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        BasePojo other = (BasePojo) obj;
-        return Objects.equals(agentId, other.agentId);
-    }
-
-    
 }
-

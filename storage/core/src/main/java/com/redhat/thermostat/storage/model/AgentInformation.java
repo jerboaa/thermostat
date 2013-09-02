@@ -55,6 +55,14 @@ public class AgentInformation extends BasePojo {
     @SuppressWarnings("unused")
     private List<BackendInformation> backends = new ArrayList<BackendInformation>();
 
+    public AgentInformation() {
+        this(null);
+    }
+    
+    public AgentInformation(String writerId) {
+        super(writerId);
+    }
+    
     @Persist
     public long getStartTime() {
         return startTime;

@@ -44,6 +44,7 @@ import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.backend.internal.BackendException;
 import com.redhat.thermostat.backend.internal.VmMonitor;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.WriterID;
 
 /**
  * This class is a convenient subclass of {@link Backend} (via {@link BaseBackend}) for those
@@ -59,17 +60,21 @@ public abstract class VmListenerBackend extends BaseBackend implements VmStatusL
     private static final Logger logger = LoggingUtils.getLogger(VmListenerBackend.class);
     
     private final VmStatusListenerRegistrar registrar;
+    private final WriterID writerId;
     private VmMonitor monitor;
     private boolean started;
 
     public VmListenerBackend(String backendName, String description,
-            String vendor, String version, VmStatusListenerRegistrar registrar) {
-        this(backendName, description, vendor, version, false, registrar);
+            String vendor, String version, VmStatusListenerRegistrar registrar,
+            WriterID writerId) {
+        this(backendName, description, vendor, version, false, registrar, writerId);
     }
     public VmListenerBackend(String backendName, String description,
-            String vendor, String version, boolean observeNewJvm, VmStatusListenerRegistrar registrar) {
+            String vendor, String version, boolean observeNewJvm,
+            VmStatusListenerRegistrar registrar, WriterID writerId) {
         super(backendName, description, vendor, version, observeNewJvm);
         this.registrar = registrar;
+        this.writerId = writerId;
         try {
             this.monitor = new VmMonitor();
         } catch (BackendException e) {
@@ -123,7 +128,8 @@ public abstract class VmListenerBackend extends BaseBackend implements VmStatusL
             /* fall-through */
         case VM_ACTIVE:
             if (getObserveNewJvm()) {
-                VmUpdateListener listener = createVmListener(vmId, pid);
+                String wId = writerId.getWriterID();
+                VmUpdateListener listener = createVmListener(wId, vmId, pid);
                 monitor.handleNewVm(listener, pid);
             } else {
                 logger.log(Level.FINE, "skipping new vm " + pid);
@@ -146,7 +152,7 @@ public abstract class VmListenerBackend extends BaseBackend implements VmStatusL
      * @param pid the process ID of the JVM
      * @return a new listener for the VM specified by pid
      */
-    protected abstract VmUpdateListener createVmListener(String vmId, int pid);
+    protected abstract VmUpdateListener createVmListener(String writerId, String vmId, int pid);
     
     /*
      * For testing purposes only.

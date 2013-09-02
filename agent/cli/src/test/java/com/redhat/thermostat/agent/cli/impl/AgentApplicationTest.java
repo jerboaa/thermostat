@@ -39,7 +39,6 @@ package com.redhat.thermostat.agent.cli.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
@@ -80,6 +79,7 @@ import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.storage.core.DbServiceFactory;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.testutils.StubBundleContext;
@@ -98,6 +98,7 @@ public class AgentApplicationTest {
     private ConfigurationCreator configCreator;
     private ExitStatus exitStatus;
     private DbServiceFactory dbServiceFactory;
+    private WriterID writerId;
     
     @Before
     public void setUp() throws InvalidConfigurationException {
@@ -121,6 +122,7 @@ public class AgentApplicationTest {
         context.registerService(ConfigurationServer.class.getName(), configServer, null);
         dbServiceFactory = mock(DbServiceFactory.class);
         dbService = mock(DbService.class);
+        writerId = mock(WriterID.class);
         when(dbServiceFactory.createDbService(anyString(), anyString(), anyString())).thenReturn(dbService);
 
         exitStatus = mock(ExitStatus.class);
@@ -138,7 +140,7 @@ public class AgentApplicationTest {
 
     @Test
     public void testAgentStartup() throws CommandException, InterruptedException {
-        final AgentApplication agent = new AgentApplication(context, exitStatus, configCreator, dbServiceFactory);
+        final AgentApplication agent = new AgentApplication(context, exitStatus, writerId, configCreator, dbServiceFactory);
         final CountDownLatch latch = new CountDownLatch(1);
         final CommandException[] ce = new CommandException[1];
         final long timeoutMillis = 5000L;
@@ -175,7 +177,7 @@ public class AgentApplicationTest {
                 .withArguments(any(BundleContext.class))
                 .thenThrow(InvalidSyntaxException.class);
         final AgentApplication agent = new AgentApplication(context,
-                exitStatus, configCreator, dbServiceFactory);
+                exitStatus, writerId, configCreator, dbServiceFactory);
         try {
             agent.startAgent(null, null, null);
         } catch (RuntimeException e) {
@@ -193,13 +195,13 @@ public class AgentApplicationTest {
         Agent mockAgent = mock(Agent.class);
         whenNew(Agent.class).withParameterTypes(BackendRegistry.class,
                 AgentStartupConfiguration.class, Storage.class,
-                AgentInfoDAO.class, BackendInfoDAO.class).withArguments(
+                AgentInfoDAO.class, BackendInfoDAO.class, WriterID.class).withArguments(
                 any(BackendRegistry.class),
                 any(AgentStartupConfiguration.class), any(Storage.class),
-                any(AgentInfoDAO.class), any(BackendInfoDAO.class)).thenReturn(mockAgent);
+                any(AgentInfoDAO.class), any(BackendInfoDAO.class), any(WriterID.class)).thenReturn(mockAgent);
         doThrow(LaunchException.class).when(mockAgent).start();
         final AgentApplication agent = new AgentApplication(context,
-                exitStatus, configCreator, dbServiceFactory);
+                exitStatus, writerId, configCreator, dbServiceFactory);
         try {
             agent.startAgent(null, null, null);
         } catch (RuntimeException e) {

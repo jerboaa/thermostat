@@ -71,6 +71,7 @@ import com.redhat.thermostat.storage.core.ConnectionException;
 import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.storage.core.DbServiceFactory;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 
@@ -89,17 +90,19 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
     private ServiceTracker configServerTracker;
     private MultipleServiceTracker daoTracker;
     private final ExitStatus exitStatus;
+    private final WriterID writerId;
     private CountDownLatch shutdownLatch;
 
-    public AgentApplication(BundleContext bundleContext, ExitStatus exitStatus) {
-        this(bundleContext, exitStatus, new ConfigurationCreator(), new DbServiceFactory());
+    public AgentApplication(BundleContext bundleContext, ExitStatus exitStatus, WriterID writerId) {
+        this(bundleContext, exitStatus, writerId, new ConfigurationCreator(), new DbServiceFactory());
     }
 
-    AgentApplication(BundleContext bundleContext, ExitStatus exitStatus, ConfigurationCreator configurationCreator, DbServiceFactory dbServiceFactory) {
+    AgentApplication(BundleContext bundleContext, ExitStatus exitStatus, WriterID writerId, ConfigurationCreator configurationCreator, DbServiceFactory dbServiceFactory) {
         this.bundleContext = bundleContext;
         this.configurationCreator = configurationCreator;
         this.dbServiceFactory = dbServiceFactory;
         this.exitStatus = exitStatus;
+        this.writerId = writerId;
     }
     
     private void parseArguments(Arguments args) throws InvalidConfigurationException {
@@ -246,7 +249,7 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
             throw new RuntimeException(e);
         }
 
-        final Agent agent = new Agent(backendRegistry, configuration, storage, agentInfoDAO, backendInfoDAO);
+        final Agent agent = new Agent(backendRegistry, configuration, storage, agentInfoDAO, backendInfoDAO, writerId);
         try {
             logger.fine("Starting agent.");
             agent.start();

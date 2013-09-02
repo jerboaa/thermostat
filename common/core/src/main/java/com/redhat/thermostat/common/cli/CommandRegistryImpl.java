@@ -50,7 +50,7 @@ import org.osgi.framework.ServiceRegistration;
 public class CommandRegistryImpl implements CommandRegistry {
 
     private BundleContext context;
-    private Collection<ServiceRegistration> myRegisteredCommands;
+    private Collection<ServiceRegistration<?>> myRegisteredCommands;
 
     public CommandRegistryImpl(BundleContext ctx) {
         context = ctx;
@@ -64,15 +64,17 @@ public class CommandRegistryImpl implements CommandRegistry {
 
         Hashtable<String,String> props = new Hashtable<>();
         props.put(Command.NAME, name);
-        ServiceRegistration registration = context.registerService(Command.class.getName(), cmd, props);
+        ServiceRegistration<?> registration = context.registerService(Command.class.getName(), cmd, props);
         myRegisteredCommands.add(registration);
     }
 
     @Override
     public void unregisterCommands() {
-        for (ServiceRegistration reg : myRegisteredCommands) {
+        for (ServiceRegistration<?> reg : myRegisteredCommands) {
             reg.unregister();
         }
+        // we've just unregistered commands
+        myRegisteredCommands.clear();
     }
 
 }

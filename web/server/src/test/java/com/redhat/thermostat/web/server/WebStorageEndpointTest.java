@@ -151,6 +151,11 @@ public class WebStorageEndpointTest {
 
     @Entity
     public static class TestClass extends BasePojo {
+        
+        public TestClass() {
+            super(null);
+        }
+        
         private String key1;
         private int key2;
         @Persist

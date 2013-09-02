@@ -37,6 +37,7 @@
 package com.redhat.thermostat.storage.model;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 import java.util.Map;
 
@@ -48,7 +49,7 @@ public class BackendInformationTest {
 
     @Test
     public void testConfigurationNotNull() {
-        BackendInformation backendInfo = new BackendInformation();
+        BackendInformation backendInfo = new BackendInformation("foo-agent");
         Map<String,String> config = backendInfo.getConfiguration();
         assertNotNull(config);
     }

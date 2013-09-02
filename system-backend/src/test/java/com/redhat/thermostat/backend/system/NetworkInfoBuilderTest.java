@@ -38,11 +38,13 @@ package com.redhat.thermostat.backend.system;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 import java.util.List;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
 
 public class NetworkInfoBuilderTest {
@@ -50,7 +52,10 @@ public class NetworkInfoBuilderTest {
     @Test
     public void testBuilder() {
 
-        List<NetworkInterfaceInfo> info = NetworkInfoBuilder.build();
+        WriterID id = mock(WriterID.class);
+        
+        NetworkInfoBuilder builder = new NetworkInfoBuilder(id);
+        List<NetworkInterfaceInfo> info = builder.build();
         assertNotNull(info);
         for (NetworkInterfaceInfo iface: info) {
             assertNotNull(iface);

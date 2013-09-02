@@ -69,10 +69,9 @@ public class AgentInformationDisplayControllerTest {
     }
 
     private void setUpAgentAndBackendInformation() {
-        agentInfo1 = new AgentInformation();
-        agentInfo1.setAgentId("agent-1");
+        agentInfo1 = new AgentInformation("agent-1");
 
-        backendInfo1 = new BackendInformation();
+        backendInfo1 = new BackendInformation("agent-1");
         backendInfo1.setName("backend-1");
         backendInfo1.setDescription("backend-description1");
     }

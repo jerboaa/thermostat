@@ -36,49 +36,63 @@
 
 package com.redhat.thermostat.agent.cli.impl;
 
+import java.util.Map;
+
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.agent.cli.impl.db.StorageCommand;
 import com.redhat.thermostat.common.ExitStatus;
+import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
+import com.redhat.thermostat.storage.core.WriterID;
 
 public class Activator implements BundleActivator {
 
     private CommandRegistry reg;
     private AgentApplication agentApplication;
-    @SuppressWarnings("rawtypes")
-    private ServiceTracker exitStatusTracker;
+    private MultipleServiceTracker tracker;
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public void start(final BundleContext context) throws Exception {
         reg = new CommandRegistryImpl(context);
-
-        exitStatusTracker = new ServiceTracker(context, ExitStatus.class, null) {
+        
+        Class<?>[] deps = new Class<?>[] {
+                ExitStatus.class,
+                WriterID.class // agent app uses it
+        };
+        tracker = new MultipleServiceTracker(context, deps, new Action() {
             
             @Override
-            public Object addingService(ServiceReference reference) {
-                ExitStatus exitStatus = (ExitStatus)context.getService(reference);
-                agentApplication = new AgentApplication(context, exitStatus);
+            public void dependenciesAvailable(Map<String, Object> services) {
+                ExitStatus exitStatus = (ExitStatus) services.get(ExitStatus.class.getName());
+                WriterID writerID = (WriterID) services.get(WriterID.class.getName());
+                agentApplication = new AgentApplication(context, exitStatus, writerID);
                 reg.registerCommand("service", new ServiceCommand(context));
                 reg.registerCommand("storage", new StorageCommand(exitStatus));
                 reg.registerCommand("agent", agentApplication);
-                return exitStatus;
             }
-            
-        };
-        exitStatusTracker.open();
+
+            @Override
+            public void dependenciesUnavailable() {
+                agentApplication.shutdown();
+                reg.unregisterCommands();
+            }
+        });
+        tracker.open();
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        agentApplication.shutdown();
+        if (agentApplication != null) {
+            // Bundle may be shut down *before* deps become available and
+            // app is set.
+            agentApplication.shutdown();
+        }
         reg.unregisterCommands();
-        exitStatusTracker.close();
+        tracker.close();
     }
 }
 

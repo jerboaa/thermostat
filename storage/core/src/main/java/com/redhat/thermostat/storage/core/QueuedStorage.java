@@ -39,7 +39,6 @@ package com.redhat.thermostat.storage.core;
 
 import java.io.InputStream;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -235,25 +234,6 @@ public class QueuedStorage implements Storage {
     @Override
     public <T extends Pojo> Remove<T> createRemove(Category<T> category) {
         return delegate.createRemove(category);
-    }
-
-    @Override
-    public void setAgentId(final UUID id) {
-
-        executor.execute(new Runnable() {
-            
-            @Override
-            public void run() {
-                delegate.setAgentId(id);
-            }
-
-        });
-
-    }
-
-    @Override
-    public String getAgentId() {
-        return delegate.getAgentId();
     }
 
     @Override

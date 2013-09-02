@@ -42,6 +42,8 @@ import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.osgi.framework.BundleContext;
+
 import sun.jvmstat.monitor.HostIdentifier;
 import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredHost;
@@ -49,6 +51,7 @@ import sun.jvmstat.monitor.MonitoredHost;
 import com.redhat.thermostat.backend.BaseBackend;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
@@ -71,11 +74,12 @@ public class SystemBackend extends BaseBackend {
     private MonitoredHost host = null;
     private JvmStatHostListener hostListener = null;
 
+    private final NetworkInfoBuilder networkInfoBuilder;
     private final HostInfoBuilder hostInfoBuilder;
 
 
     public SystemBackend(HostInfoDAO hostInfoDAO, NetworkInterfaceInfoDAO netInfoDAO, VmInfoDAO vmInfoDAO,
-            Version version, VmStatusChangeNotifier notifier, UserNameUtil userNameUtil) {
+            Version version, VmStatusChangeNotifier notifier, UserNameUtil userNameUtil, WriterID writerId) {
         super("System Backend",
                 "Gathers basic information from the system",
                 "Red Hat, Inc.",
@@ -84,8 +88,9 @@ public class SystemBackend extends BaseBackend {
         this.networkInterfaces = netInfoDAO;
 
         ProcDataSource source = new ProcDataSource();
-        hostInfoBuilder = new HostInfoBuilder(source);
-        hostListener = new JvmStatHostListener(vmInfoDAO, notifier, new ProcessUserInfoBuilder(source, userNameUtil));
+        hostInfoBuilder = new HostInfoBuilder(source, writerId);
+        hostListener = new JvmStatHostListener(vmInfoDAO, notifier, new ProcessUserInfoBuilder(source, userNameUtil), writerId);
+        networkInfoBuilder = new NetworkInfoBuilder(writerId);
     }
 
     @Override
@@ -103,7 +108,7 @@ public class SystemBackend extends BaseBackend {
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                for (NetworkInterfaceInfo info: NetworkInfoBuilder.build()) {
+                for (NetworkInterfaceInfo info: networkInfoBuilder.build()) {
                     networkInterfaces.putNetworkInterfaceInfo(info);
                 }
             }

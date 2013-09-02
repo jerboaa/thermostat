@@ -78,15 +78,13 @@ public class AgentInfoDAOTest {
 
     @Before
     public void setUp() {
-        agentInfo1 = new AgentInformation();
-        agentInfo1.setAgentId("1234");
+        agentInfo1 = new AgentInformation("1234");
         agentInfo1.setAlive(true);
         agentInfo1.setConfigListenAddress("foobar:666");
         agentInfo1.setStartTime(100);
         agentInfo1.setStopTime(10);
 
-        agent1 = new AgentInformation();
-        agent1.setAgentId("1234");
+        agent1 = new AgentInformation("1234");
         agent1.setAlive(true);
         agent1.setConfigListenAddress("foobar:666");
         agent1.setStartTime(100);

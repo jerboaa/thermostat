@@ -61,6 +61,7 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
@@ -99,7 +100,7 @@ public class AgentTest {
     @SuppressWarnings("unused")
     @Test
     public void testAgentInit() throws Exception {
-        Agent agent = new Agent(backendRegistry, config, storage, agentInfoDao, backendInfoDao);
+        Agent agent = new Agent(backendRegistry, config, storage, agentInfoDao, backendInfoDao, null);
         
         verify(backendRegistry).addActionListener(any(ActionListener.class));
     }
@@ -109,7 +110,9 @@ public class AgentTest {
         
         // Start agent.
         UUID uuid = UUID.randomUUID();
-        Agent agent = new Agent(backendRegistry, uuid, config, storage, agentInfoDao, backendInfoDao);
+        WriterID id = mock(WriterID.class);
+        when(id.getWriterID()).thenReturn(uuid.toString());
+        Agent agent = new Agent(backendRegistry, config, storage, agentInfoDao, backendInfoDao, id);
         
         agent.start();
 
@@ -127,7 +130,8 @@ public class AgentTest {
         ArgumentCaptor<ActionListener> backendListener = ArgumentCaptor.forClass(ActionListener.class);
 
         // Start agent.
-        Agent agent = new Agent(backendRegistry, config, storage, agentInfoDao, backendInfoDao);
+        WriterID id = mock(WriterID.class);
+        Agent agent = new Agent(backendRegistry, config, storage, agentInfoDao, backendInfoDao, id);
         verify(backendRegistry).addActionListener(backendListener.capture());
         
         agent.start();
@@ -173,7 +177,9 @@ public class AgentTest {
     public void testStopAgentWithPurging() throws Exception {
                 
         UUID uuid = UUID.randomUUID();
-        Agent agent = new Agent(backendRegistry, uuid, config, storage, agentInfoDao, backendInfoDao);
+        WriterID id = mock(WriterID.class);
+        when(id.getWriterID()).thenReturn(uuid.toString());
+        Agent agent = new Agent(backendRegistry, config, storage, agentInfoDao, backendInfoDao, id);
         agent.start();
         
         // stop agent
@@ -193,7 +199,8 @@ public class AgentTest {
         when(config.getStartTime()).thenReturn(123L);
         when(config.purge()).thenReturn(false);
         
-        Agent agent = new Agent(backendRegistry, config, storage, agentInfoDao, backendInfoDao);
+        WriterID id = mock(WriterID.class);
+        Agent agent = new Agent(backendRegistry, config, storage, agentInfoDao, backendInfoDao, id);
         agent.start();
         
         // stop agent

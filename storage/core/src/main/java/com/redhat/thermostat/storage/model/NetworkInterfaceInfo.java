@@ -47,10 +47,11 @@ public class NetworkInterfaceInfo extends BasePojo {
     private String ip6Addr;
 
     public NetworkInterfaceInfo() {
-        super();
+        this(null, null);
     }
 
-    public NetworkInterfaceInfo(String iFace) {
+    public NetworkInterfaceInfo(String writerId, String iFace) {
+        super(writerId);
         this.iFace = iFace;
         this.ip4Addr = null;
         this.ip6Addr = null;

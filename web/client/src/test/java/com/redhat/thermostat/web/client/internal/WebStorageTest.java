@@ -186,7 +186,6 @@ public class WebStorageTest {
         };
         storage = new WebStorage(config);
         storage.setEndpoint("http://localhost:" + port + "/");
-        storage.setAgentId(new UUID(123, 456));
         headers = new HashMap<>();
         registerCategory();
         factory = new ExpressionFactory();
@@ -395,12 +394,10 @@ public class WebStorageTest {
     @Test
     public void testAdd() throws IOException, JsonSyntaxException, ClassNotFoundException {
 
+        UUID agentId = new UUID(1, 2);
         TestObj obj = new TestObj();
         obj.setProperty1("fluff");
-
-        // We need an agentId, so that we can check automatic insert of agentId.
-        UUID agentId = new UUID(1, 2);
-        storage.setAgentId(agentId);
+        obj.setAgentId(agentId.toString());
 
         Add<TestObj> add = storage.createAdd(category);
         add.setPojo(obj);
@@ -424,21 +421,17 @@ public class WebStorageTest {
         assertEquals(2, parts.length);
         assertEquals("pojo", parts[0]);
         Object resultObj = gson.fromJson(parts[1], TestObj.class);
-
-        // Set agentId on expected object, because we expect WebStorage to insert it for us.
-        obj.setAgentId(agentId.toString());
         assertEquals(obj, resultObj);
     }
 
     @Test
     public void testReplace() throws IOException, JsonSyntaxException, ClassNotFoundException {
 
-        TestObj obj = new TestObj();
-        obj.setProperty1("fluff");
-
         // We need an agentId, so that we can check automatic insert of agentId.
         UUID agentId = new UUID(1, 2);
-        storage.setAgentId(agentId);
+        TestObj obj = new TestObj();
+        obj.setAgentId(agentId.toString());
+        obj.setProperty1("fluff");
 
         Replace<TestObj> replace = storage.createReplace(category);
         Expression expr = new ExpressionFactory().equalTo(key1, "fluff");
@@ -468,9 +461,6 @@ public class WebStorageTest {
         assertEquals(2, parts.length);
         assertEquals("pojo", parts[0]);
         Object resultObj = gson.fromJson(parts[1], TestObj.class);
-
-        // Set agentId on expected object, because we expect WebStorage to insert it for us.
-        obj.setAgentId(agentId.toString());
         assertEquals(obj, resultObj);
     }
 
@@ -755,7 +745,6 @@ public class WebStorageTest {
         };
         storage = new WebStorage(config, client, connManager);
         storage.setEndpoint("http://localhost:" + port + "/");
-        storage.setAgentId(new UUID(123, 456));
         
         CountDownLatch latch = new CountDownLatch(1);
         MyListener listener = new MyListener(latch);

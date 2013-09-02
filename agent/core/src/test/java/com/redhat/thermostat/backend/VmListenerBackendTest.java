@@ -53,6 +53,7 @@ import sun.jvmstat.monitor.MonitorException;
 import com.redhat.thermostat.agent.VmStatusListener.Status;
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.backend.internal.VmMonitor;
+import com.redhat.thermostat.storage.core.WriterID;
 
 public class VmListenerBackendTest {
     private static final String VM_ID = "vmId";
@@ -66,8 +67,9 @@ public class VmListenerBackendTest {
     @Before
     public void setup() {
         registrar = mock(VmStatusListenerRegistrar.class);
+        WriterID id = mock(WriterID.class);
         backend = new TestBackend("Test Backend", "Backend for test", "Test Co.",
-                "0.0.0", registrar);
+                "0.0.0", registrar, id);
         monitor = mock(VmMonitor.class);
         listener = mock(VmUpdateListener.class);
         backend.setMonitor(monitor);
@@ -156,8 +158,8 @@ public class VmListenerBackendTest {
     private class TestBackend extends VmListenerBackend {
 
         public TestBackend(String name, String description, String vendor,
-                String version, VmStatusListenerRegistrar registrar) {
-            super(name, description, vendor, version, registrar);
+                String version, VmStatusListenerRegistrar registrar, WriterID writerId) {
+            super(name, description, vendor, version, registrar, writerId);
         }
 
         @Override
@@ -166,7 +168,7 @@ public class VmListenerBackendTest {
         }
 
         @Override
-        protected VmUpdateListener createVmListener(String vmId, int pid) {
+        protected VmUpdateListener createVmListener(String writerId, String vmId, int pid) {
             return listener;
         }
         

@@ -99,10 +99,10 @@ public class HostOverviewControllerTest {
         when(appSvc.getTimerFactory()).thenReturn(timerFactory);
 
         // Setup DAOs
-        HostInfo hostInfo = new HostInfo(HOST_NAME, OS_NAME, KERNEL_NAME, CPU_MODEL, CPU_COUNT, TOTAL_MEMORY);
+        HostInfo hostInfo = new HostInfo("foo", HOST_NAME, OS_NAME, KERNEL_NAME, CPU_MODEL, CPU_COUNT, TOTAL_MEMORY);
 
         List<NetworkInterfaceInfo> networkInfo = new ArrayList<NetworkInterfaceInfo>();
-        NetworkInterfaceInfo ifaceInfo = new NetworkInterfaceInfo(NETWORK_INTERFACE);
+        NetworkInterfaceInfo ifaceInfo = new NetworkInterfaceInfo("foo", NETWORK_INTERFACE);
         ifaceInfo.setIp4Addr(IPV4_ADDR);
         ifaceInfo.setIp6Addr(IPV6_ADDR);
         networkInfo.add(ifaceInfo);

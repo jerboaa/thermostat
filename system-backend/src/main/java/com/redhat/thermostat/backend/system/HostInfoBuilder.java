@@ -46,6 +46,7 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.common.Size.Unit;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.model.HostInfo;
 import com.redhat.thermostat.utils.ProcDataSource;
 import com.redhat.thermostat.utils.hostname.HostName;
@@ -85,9 +86,11 @@ public class HostInfoBuilder {
     }
 
     private final ProcDataSource dataSource;
+    private final WriterID writerId;
 
-    public HostInfoBuilder(ProcDataSource dataSource) {
+    public HostInfoBuilder(ProcDataSource dataSource, WriterID writerId) {
         this.dataSource = dataSource;
+        this.writerId = writerId;
     }
 
     public HostInfo build() {
@@ -96,8 +99,8 @@ public class HostInfoBuilder {
         HostMemoryInfo memoryInfo = getMemoryInfo();
         long totalMemorySize = (long) memoryInfo.totalMemory.convertTo(Unit.B).getValue();
         HostOsInfo osInfo = getOsInfo();
-
-        return new HostInfo(hostname, osInfo.distribution, osInfo.kernel, cpuInfo.model, cpuInfo.count, totalMemorySize);
+        String wId = writerId.getWriterID();
+        return new HostInfo(wId, hostname, osInfo.distribution, osInfo.kernel, cpuInfo.model, cpuInfo.count, totalMemorySize);
     }
 
     HostCpuInfo getCpuInfo() {

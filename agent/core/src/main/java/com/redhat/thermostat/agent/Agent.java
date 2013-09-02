@@ -37,7 +37,6 @@
 package com.redhat.thermostat.agent;
 
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -51,6 +50,7 @@ import com.redhat.thermostat.common.LaunchException;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
@@ -63,18 +63,17 @@ public class Agent {
 
     private static final Logger logger = LoggingUtils.getLogger(Agent.class);
 
-    private final UUID id;
     private final BackendRegistry backendRegistry;
     private final AgentStartupConfiguration config;
-
-    private AgentInformation agentInfo;
+    private final Map<Backend, BackendInformation> backendInfos;
+    private final Storage storage;
+    private final AgentInfoDAO agentDao;
+    private final BackendInfoDAO backendDao;
+    private final WriterID writerID;
     
-    private Map<Backend, BackendInformation> backendInfos;
-
-    private Storage storage;
-    private AgentInfoDAO agentDao;
-    private BackendInfoDAO backendDao;
+    private AgentInformation agentInfo;
     private boolean started = false;
+    
 
     private ActionListener<ThermostatExtensionRegistry.Action> backendRegistryListener =
             new ActionListener<ThermostatExtensionRegistry.Action>()
@@ -121,25 +120,15 @@ public class Agent {
             }
         }
     };
-    
-    public Agent(BackendRegistry backendRegistry,
-            AgentStartupConfiguration config, Storage storage,
-            AgentInfoDAO agentInfoDao, BackendInfoDAO backendInfoDao) {
-        this(backendRegistry, UUID.randomUUID(), config, storage, agentInfoDao,
-                backendInfoDao);
-    }
 
-    public Agent(BackendRegistry registry, UUID agentId,
-            AgentStartupConfiguration config, Storage storage,
-            AgentInfoDAO agentInfoDao, BackendInfoDAO backendInfoDao) {
-        this.id = agentId;
+    public Agent(BackendRegistry registry, AgentStartupConfiguration config, Storage storage,
+            AgentInfoDAO agentInfoDao, BackendInfoDAO backendInfoDao, WriterID writerId) {
         this.backendRegistry = registry;
         this.config = config;
         this.storage = storage;
-        this.storage.setAgentId(agentId);
         this.agentDao = agentInfoDao;
         this.backendDao = backendInfoDao;
-
+        this.writerID = writerId;
         backendInfos = new ConcurrentHashMap<>();
         
         backendRegistry.addActionListener(backendRegistryListener);
@@ -148,7 +137,7 @@ public class Agent {
     public synchronized void start() throws LaunchException {
         if (!started) {
             agentInfo = createAgentInformation();
-            agentInfo.setAgentId(id.toString());
+            agentInfo.setAgentId(getId());
             agentDao.addAgentInformation(agentInfo);
             
             backendRegistry.start();
@@ -164,7 +153,8 @@ public class Agent {
     }
     
     private AgentInformation createAgentInformation() {
-        AgentInformation agentInfo = new AgentInformation();
+        String writerId = getId();
+        AgentInformation agentInfo = new AgentInformation(writerId);
         agentInfo.setStartTime(config.getStartTime());
         agentInfo.setAlive(true);
         agentInfo.setConfigListenAddress(config.getConfigListenAddress());
@@ -172,8 +162,8 @@ public class Agent {
     }
 
     private BackendInformation createBackendInformation(Backend backend) {
-
-        BackendInformation backendInfo = new BackendInformation();
+        String writerId = getId();
+        BackendInformation backendInfo = new BackendInformation(writerId);
         backendInfo.setName(backend.getName());
         backendInfo.setDescription(backend.getDescription());
         backendInfo.setObserveNewJvm(backend.getObserveNewJvm());
@@ -212,9 +202,9 @@ public class Agent {
         agentInfo.setAlive(false);
         agentDao.updateAgentInformation(agentInfo);
     }
-
-    public UUID getId() {
-        return id;
+    
+    public String getId() {
+        return writerID.getWriterID();
     }
 
 }

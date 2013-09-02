@@ -119,7 +119,7 @@ public class HostInfoDAOTest {
         PreparedStatement<HostInfo> prepared = (PreparedStatement<HostInfo>) mock(PreparedStatement.class);
         when(storage.prepareStatement(anyDescriptor())).thenReturn(prepared);
 
-        HostInfo info = new HostInfo(HOST_NAME, OS_NAME, OS_KERNEL, CPU_MODEL, CPU_NUM, MEMORY_TOTAL);
+        HostInfo info = new HostInfo("foo-agent", HOST_NAME, OS_NAME, OS_KERNEL, CPU_MODEL, CPU_NUM, MEMORY_TOTAL);
         @SuppressWarnings("unchecked")
         Cursor<HostInfo> cursor = (Cursor<HostInfo>) mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
@@ -154,7 +154,7 @@ public class HostInfoDAOTest {
     }
 
     private Storage setupStorageForSingleHost() throws DescriptorParsingException, StatementExecutionException {
-        HostInfo hostConfig = new HostInfo("fluffhost1", OS_NAME, OS_KERNEL, CPU_MODEL, CPU_NUM, MEMORY_TOTAL);
+        HostInfo hostConfig = new HostInfo("foo-agent", "fluffhost1", OS_NAME, OS_KERNEL, CPU_MODEL, CPU_NUM, MEMORY_TOTAL);
         hostConfig.setAgentId("123");
 
         @SuppressWarnings("unchecked")
@@ -180,20 +180,16 @@ public class HostInfoDAOTest {
         Collection<HostRef> hosts = hostsDAO.getHosts();
 
         assertEquals(3, hosts.size());
-        assertTrue(hosts.contains(new HostRef("123", "fluffhost1")));
-        assertTrue(hosts.contains(new HostRef("456", "fluffhost2")));
-        assertTrue(hosts.contains(new HostRef("789", "fluffhost3")));
+        assertTrue(hosts.contains(new HostRef("foo-agent-123", "fluffhost1")));
+        assertTrue(hosts.contains(new HostRef("foo-agent-456", "fluffhost2")));
+        assertTrue(hosts.contains(new HostRef("foo-agent-789", "fluffhost3")));
     }
 
     private Storage setupStorageFor3Hosts() throws DescriptorParsingException, StatementExecutionException {
 
-        HostInfo hostConfig1 = new HostInfo("fluffhost1", OS_NAME, OS_KERNEL, CPU_MODEL, CPU_NUM, MEMORY_TOTAL);
-        hostConfig1.setAgentId("123");
-        HostInfo hostConfig2 = new HostInfo("fluffhost2", OS_NAME, OS_KERNEL, CPU_MODEL, CPU_NUM, MEMORY_TOTAL);
-        hostConfig2.setAgentId("456");
-        HostInfo hostConfig3 = new HostInfo("fluffhost3", OS_NAME, OS_KERNEL, CPU_MODEL, CPU_NUM, MEMORY_TOTAL);
-        hostConfig3.setAgentId("789");
-
+        HostInfo hostConfig1 = new HostInfo("foo-agent-123", "fluffhost1", OS_NAME, OS_KERNEL, CPU_MODEL, CPU_NUM, MEMORY_TOTAL);
+        HostInfo hostConfig2 = new HostInfo("foo-agent-456", "fluffhost2", OS_NAME, OS_KERNEL, CPU_MODEL, CPU_NUM, MEMORY_TOTAL);
+        HostInfo hostConfig3 = new HostInfo("foo-agent-789", "fluffhost3", OS_NAME, OS_KERNEL, CPU_MODEL, CPU_NUM, MEMORY_TOTAL);
 
         @SuppressWarnings("unchecked")
         Cursor<HostInfo> cursor = (Cursor<HostInfo>) mock(Cursor.class);
@@ -218,7 +214,7 @@ public class HostInfoDAOTest {
 
         AgentInfoDAO agentInfo = mock(AgentInfoDAO.class);
 
-        HostInfo info = new HostInfo(HOST_NAME, OS_NAME, OS_KERNEL, CPU_MODEL, CPU_NUM, MEMORY_TOTAL);
+        HostInfo info = new HostInfo("foo-agent", HOST_NAME, OS_NAME, OS_KERNEL, CPU_MODEL, CPU_NUM, MEMORY_TOTAL);
         HostInfoDAO dao = new HostInfoDAOImpl(storage, agentInfo);
         dao.putHostInfo(info);
 
@@ -287,8 +283,7 @@ public class HostInfoDAOTest {
         
         // agents
 
-        AgentInformation agentInfo1 = new AgentInformation();
-        agentInfo1.setAgentId("123");
+        AgentInformation agentInfo1 = new AgentInformation("123");
         agentInfo1.setAlive(true);
         
         // hosts
@@ -327,8 +322,7 @@ public class HostInfoDAOTest {
         
         // agents
 
-        AgentInformation agentInfo1 = new AgentInformation();
-        agentInfo1.setAgentId("123");
+        AgentInformation agentInfo1 = new AgentInformation("123");
         agentInfo1.setAlive(true);
         
         // cursor
@@ -377,16 +371,13 @@ public class HostInfoDAOTest {
             throws DescriptorParsingException, StatementExecutionException {
         
         // agents
-        AgentInformation agentInfo1 = new AgentInformation();
-        agentInfo1.setAgentId("123");
+        AgentInformation agentInfo1 = new AgentInformation("123");
         agentInfo1.setAlive(true);
 
-        AgentInformation agentInfo2 = new AgentInformation();
-        agentInfo2.setAgentId("456");
+        AgentInformation agentInfo2 = new AgentInformation("456");
         agentInfo2.setAlive(true);
 
-        AgentInformation agentInfo3 = new AgentInformation();
-        agentInfo3.setAgentId("678");
+        AgentInformation agentInfo3 = new AgentInformation("678");
         agentInfo3.setAlive(true);
         
         // hosts

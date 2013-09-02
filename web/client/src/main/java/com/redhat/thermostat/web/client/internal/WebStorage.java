@@ -53,7 +53,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -372,7 +371,6 @@ public class WebStorage implements Storage, SecureStorage {
     }
 
     private String endpoint;
-    private UUID agentId;
 
     private Map<Category<?>, Integer> categoryIds;
     private Gson gson;
@@ -590,11 +588,6 @@ public class WebStorage implements Storage, SecureStorage {
     }
 
     @Override
-    public String getAgentId() {
-        return agentId.toString();
-    }
-
-    @Override
     public Connection getConnection() {
         return conn;
     }
@@ -651,7 +644,7 @@ public class WebStorage implements Storage, SecureStorage {
     
     private int addImpl(final WebAdd<?> add) throws StorageException {
         Pojo pojo = add.getPojo();
-        maybeAddAgentId(pojo);
+        checkAgentIdIsSet(pojo);
         NameValuePair pojoParam = new BasicNameValuePair("pojo",
                 gson.toJson(pojo));
         NameValuePair addParam = new BasicNameValuePair("add",
@@ -663,7 +656,7 @@ public class WebStorage implements Storage, SecureStorage {
 
     private int replaceImpl(final WebReplace<?> replace) throws StorageException {
         Pojo pojo = replace.getPojo();
-        maybeAddAgentId(pojo);
+        checkAgentIdIsSet(pojo);
         NameValuePair replaceParam = new BasicNameValuePair("replace",
                 gson.toJson(replace));
         NameValuePair pojoParam = new BasicNameValuePair("pojo",
@@ -673,10 +666,10 @@ public class WebStorage implements Storage, SecureStorage {
         return DataModifyingStatement.DEFAULT_STATUS_SUCCESS;
     }
 
-    private void maybeAddAgentId(final Pojo pojo) throws AssertionError {
+    private void checkAgentIdIsSet(final Pojo pojo) throws AssertionError {
         try {
             if (BeanUtils.getProperty(pojo, Key.AGENT_ID.getName()) == null) {
-                BeanUtils.setProperty(pojo, Key.AGENT_ID.getName(), getAgentId());
+                throw new AssertionError("agentId must be set!");
             }
         } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             throw new AssertionError("Pojo needs to have an agentId property");
@@ -689,11 +682,6 @@ public class WebStorage implements Storage, SecureStorage {
         List<NameValuePair> formparams = Arrays.asList(removeParam);
         post(endpoint + "/remove-pojo", formparams).close();
         return DataModifyingStatement.DEFAULT_STATUS_SUCCESS;
-    }
-
-    @Override
-    public void setAgentId(UUID agentId) {
-        this.agentId = agentId;
     }
 
     private int updatePojo(Update<?> update) throws StorageException {

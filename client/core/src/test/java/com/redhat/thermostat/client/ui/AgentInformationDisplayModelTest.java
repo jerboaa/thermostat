@@ -51,8 +51,8 @@ import com.redhat.thermostat.storage.model.AgentInformation;
 
 public class AgentInformationDisplayModelTest {
 
-    private AgentInformation agentInfo1 = new AgentInformation();
-    private AgentInformation agentInfo2 = new AgentInformation();
+    private AgentInformation agentInfo1 = new AgentInformation("agent-1");
+    private AgentInformation agentInfo2 = new AgentInformation("agent-2");
 
     private AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
     private BackendInfoDAO backendInfoDao = mock(BackendInfoDAO.class);

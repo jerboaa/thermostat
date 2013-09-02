@@ -56,6 +56,14 @@ public class BackendInformation extends BasePojo implements Ordered {
     private int orderValue;
     private Map<String, String> configuration = new HashMap<String,String>();
 
+    public BackendInformation() {
+        this(null);
+    }
+    
+    public BackendInformation(String writerId) {
+        super(writerId);
+    }
+    
     @Persist
     public String getName() {
         return name;

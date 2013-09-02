@@ -49,18 +49,26 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
 
 public class NetworkInfoBuilder {
 
     private static final Logger logger = LoggingUtils.getLogger(NetworkInfoBuilder.class);
 
-    public static List<NetworkInterfaceInfo> build() {
+    private final WriterID writerId;
+    
+    public NetworkInfoBuilder(WriterID writerId) {
+        this.writerId = writerId;
+    }
+    
+    public List<NetworkInterfaceInfo> build() {
         List<NetworkInterfaceInfo> infos = new ArrayList<NetworkInterfaceInfo>();
+        String wId = writerId.getWriterID();
         try {
             Enumeration<NetworkInterface> ifaces = NetworkInterface.getNetworkInterfaces();
             for (NetworkInterface iface : Collections.list(ifaces)) {
-                NetworkInterfaceInfo info = new NetworkInterfaceInfo(iface.getName());
+                NetworkInterfaceInfo info = new NetworkInterfaceInfo(wId, iface.getName());
                 for (InetAddress addr : Collections.list(iface.getInetAddresses())) {
                     if (addr instanceof Inet4Address) {
                         info.setIp4Addr(addr.getHostAddress());

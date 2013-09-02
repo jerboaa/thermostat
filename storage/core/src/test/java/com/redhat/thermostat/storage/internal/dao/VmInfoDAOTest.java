@@ -155,7 +155,7 @@ public class VmInfoDAOTest {
         @SuppressWarnings("unchecked")
         PreparedStatement<VmInfo> stmt = (PreparedStatement<VmInfo>) mock(PreparedStatement.class);
         when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
-        VmInfo expected = new VmInfo(vmId, vmPid, startTime, stopTime, jVersion, jHome, mainClass, commandLine, vmName, vmInfo, vmVersion, vmArgs, props, env, libs, uid, username);
+        VmInfo expected = new VmInfo("foo-agent", vmId, vmPid, startTime, stopTime, jVersion, jHome, mainClass, commandLine, vmName, vmInfo, vmVersion, vmArgs, props, env, libs, uid, username);
         @SuppressWarnings("unchecked")
         Cursor<VmInfo> cursor = (Cursor<VmInfo>) mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
@@ -319,7 +319,7 @@ public class VmInfoDAOTest {
         Add<VmInfo> add = mock(Add.class);
         when(storage.createAdd(eq(VmInfoDAO.vmInfoCategory))).thenReturn(add);
 
-        VmInfo info = new VmInfo(vmId, vmPid, startTime, stopTime, jVersion, jHome,
+        VmInfo info = new VmInfo("foo-agent", vmId, vmPid, startTime, stopTime, jVersion, jHome,
                 mainClass, commandLine, vmName, vmInfo, vmVersion, vmArgs,
                 props, env, libs, uid, username);
         VmInfoDAO dao = new VmInfoDAOImpl(storage);

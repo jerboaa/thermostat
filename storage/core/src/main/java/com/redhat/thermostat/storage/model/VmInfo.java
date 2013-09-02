@@ -104,14 +104,16 @@ public class VmInfo extends BasePojo {
 
     public VmInfo() {
         /* use defaults */
+        super(null);
     }
 
-    public VmInfo(String vmId, int vmPid, long startTime, long stopTime,
+    public VmInfo(String writerId, String vmId, int vmPid, long startTime, long stopTime,
             String javaVersion, String javaHome,
             String mainClass, String commandLine,
             String vmName, String vmInfo, String vmVersion, String vmArguments,
             Map<String, String> properties, Map<String, String> environment, String[] loadedNativeLibraries,
             long uid, String username) {
+        super(writerId);
         this.vmId = vmId;
         this.vmPid = vmPid;
         this.startTime = startTime;

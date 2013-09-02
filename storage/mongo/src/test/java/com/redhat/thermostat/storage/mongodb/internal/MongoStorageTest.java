@@ -42,6 +42,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -56,7 +57,6 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
 import org.junit.After;
@@ -111,6 +111,10 @@ public class MongoStorageTest {
 
     @Entity
     public static class TestClass extends BasePojo {
+        
+        public TestClass() {
+            super(null);
+        }
         private String key1;
         private String key2;
         private String key3;
@@ -383,17 +387,28 @@ public class MongoStorageTest {
     }
 
     @Test
-    public void verifyPutChunkUsesCorrectGlobalAgent() throws Exception {
+    public void verifyPutChunkDoesNotUseGlobalAgent() throws Exception {
         MongoStorage storage = makeStorage();
-        storage.setAgentId(new UUID(1, 2));
         TestClass pojo = new TestClass();
         Add add = storage.createAdd(testCategory);
         add.setPojo(pojo);
-        add.apply();
-        ArgumentCaptor<DBObject> dbobj = ArgumentCaptor.forClass(DBObject.class);
-        verify(testCollection).insert(dbobj.capture());
-        DBObject val = dbobj.getValue();
-        assertEquals(new UUID(1, 2).toString(), val.get("agentId"));
+        try {
+            add.apply();
+            fail("We do not allow null agentId");
+        } catch (AssertionError e) {
+            // pass
+        }
+        Replace replace = storage.createReplace(testCategory);
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression whereExp = factory.equalTo(Key.AGENT_ID, "foobar");
+        replace.setPojo(pojo);
+        replace.where(whereExp);
+        try {
+            replace.apply();
+            fail("We do not allow null agentId");
+        } catch (AssertionError e) {
+            // pass
+        }
     }
 
     @Test

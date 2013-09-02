@@ -56,6 +56,7 @@ import com.redhat.thermostat.agent.VmStatusListener.Status;
 import com.redhat.thermostat.backend.system.ProcessUserInfoBuilder.ProcessUserInfo;
 import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.utils.ProcDataSource;
@@ -65,17 +66,16 @@ public class JvmStatHostListener implements HostListener {
     private static final Logger logger = LoggingUtils.getLogger(JvmStatHostListener.class);
 
     private final VmInfoDAO vmInfoDAO;
-
+    private final VmStatusChangeNotifier notifier;
+    private final ProcessUserInfoBuilder userInfoBuilder;
+    private final WriterID writerId;
     private Map<Integer, Pair<String, MonitoredVm>> monitoredVms  = new HashMap<>();
-    
-    private VmStatusChangeNotifier notifier;
 
-    private ProcessUserInfoBuilder userInfoBuilder;
-
-    JvmStatHostListener(VmInfoDAO vmInfoDAO, VmStatusChangeNotifier notifier, ProcessUserInfoBuilder userInfoBuilder) {
+    JvmStatHostListener(VmInfoDAO vmInfoDAO, VmStatusChangeNotifier notifier, ProcessUserInfoBuilder userInfoBuilder, WriterID writerId) {
         this.vmInfoDAO = vmInfoDAO;
         this.notifier = notifier;
         this.userInfoBuilder = userInfoBuilder;
+        this.writerId = writerId;
     }
 
     @Override
@@ -141,7 +141,7 @@ public class JvmStatHostListener implements HostListener {
         // TODO actually figure out the loaded libraries.
         String[] loadedNativeLibraries = new String[0];
         ProcessUserInfo userInfo = userInfoBuilder.build(vmPid);
-        VmInfo info = new VmInfo(vmId, vmPid, startTime, stopTime,
+        VmInfo info = new VmInfo(writerId.getWriterID(), vmId, vmPid, startTime, stopTime,
                 extractor.getJavaVersion(), extractor.getJavaHome(),
                 extractor.getMainClass(), extractor.getCommandLine(),
                 extractor.getVmName(), extractor.getVmInfo(), extractor.getVmVersion(), extractor.getVmArguments(),

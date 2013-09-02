@@ -34,48 +34,22 @@
  * to do so, delete this exception statement from your version.
  */
 
+package com.redhat.thermostat.storage.core;
 
-package com.redhat.thermostat.storage.model;
+import com.redhat.thermostat.annotations.Service;
 
-import java.util.Objects;
+/**
+ * Service interface class for getting the writer ID which should
+ * be used for writing data to {@link Storage}.
+ *
+ * @see Key#AGENT_ID
+ */
+@Service
+public interface WriterID {
 
-import com.redhat.thermostat.storage.core.Persist;
-
-public class BasePojo implements Pojo {
-
-    private String agentId;
-    
-    public BasePojo(String writerId) {
-        this.agentId = writerId;
-    }
-
-    @Persist
-    public final String getAgentId() {
-        return agentId;
-    }
-
-    @Persist
-    public final void setAgentId(String agentId) {
-        this.agentId = agentId;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(agentId);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        BasePojo other = (BasePojo) obj;
-        return Objects.equals(agentId, other.agentId);
-    }
-
-    
+    /**
+     * 
+     * @return the writer ID.
+     */
+    String getWriterID();
 }
-

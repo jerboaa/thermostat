@@ -107,7 +107,7 @@ public class VMInfoCommandTest {
         start.set(2012, 5, 7, 15, 32, 0);
         Calendar end = Calendar.getInstance();
         end.set(2013, 10, 1, 1, 22, 0);
-        VmInfo vmInfo = new VmInfo(VM_ID, 234, start.getTimeInMillis(), end.getTimeInMillis(), "vmVersion", "javaHome", "mainClass", "commandLine", "vmName", "vmInfo", "vmVersion", "vmArguments", new HashMap<String,String>(), new HashMap<String,String>(), new String[0], 2000, "myUser");
+        VmInfo vmInfo = new VmInfo("foo", VM_ID, 234, start.getTimeInMillis(), end.getTimeInMillis(), "vmVersion", "javaHome", "mainClass", "commandLine", "vmName", "vmInfo", "vmVersion", "vmArguments", new HashMap<String,String>(), new HashMap<String,String>(), new String[0], 2000, "myUser");
         when(vmsDAO.getVmInfo(vm)).thenReturn(vmInfo);
         when(vmsDAO.getVmInfo(new VmRef(host, "noVm", -1, "dummy"))).thenThrow(new DAOException("Unknown VM ID: noVm"));
         when(vmsDAO.getVMs(host)).thenReturn(Arrays.asList(vm));
@@ -243,7 +243,7 @@ public class VMInfoCommandTest {
         Calendar start = Calendar.getInstance();
         start.set(2012, 5, 7, 15, 32, 0);
         final String vmId = "61a255db-1c27-43d6-aaee-28bb4788b8db";
-        VmInfo vmInfo = new VmInfo(vmId, 234, start.getTimeInMillis(), Long.MIN_VALUE, "vmVersion", "javaHome", "mainClass", "commandLine", "vmName", "vmInfo", "vmVersion", "vmArguments", new HashMap<String,String>(), new HashMap<String,String>(), new String[0], 2000, "myUser");
+        VmInfo vmInfo = new VmInfo("foo", vmId, 234, start.getTimeInMillis(), Long.MIN_VALUE, "vmVersion", "javaHome", "mainClass", "commandLine", "vmName", "vmInfo", "vmVersion", "vmArguments", new HashMap<String,String>(), new HashMap<String,String>(), new String[0], 2000, "myUser");
         when(vmsDAO.getVmInfo(vm)).thenReturn(vmInfo);
 
         SimpleArguments args = new SimpleArguments();

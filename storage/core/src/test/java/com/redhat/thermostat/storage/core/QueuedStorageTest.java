@@ -222,7 +222,6 @@ public class QueuedStorageTest {
         when(delegateStorage.createRemove(any(Category.class))).thenReturn(remove);
         expectedFile = mock(InputStream.class);
         when(delegateStorage.loadFile(anyString())).thenReturn(expectedFile);
-        when(delegateStorage.getAgentId()).thenReturn("huzzah");
         queuedStorage = new QueuedStorage(delegateStorage, executor, fileExecutor);
     }
 
@@ -327,31 +326,6 @@ public class QueuedStorageTest {
     }
 
     @Test
-    public void testSetAgentId() {
-        UUID id = new UUID(123, 456);
-
-        queuedStorage.setAgentId(id);
-
-        verifyZeroInteractions(delegateStorage);
-        Runnable task = executor.getTask();
-        task.run();
-        verify(delegateStorage).setAgentId(id);
-        
-        assertNull(fileExecutor.getTask());
-    }
-
-    @Test
-    public void testGetAgentId() {
-        String agentId = queuedStorage.getAgentId();
-
-        verify(delegateStorage).getAgentId();
-        assertEquals("huzzah", agentId);
-
-        assertNull(executor.getTask());
-        assertNull(fileExecutor.getTask());
-    }
-
-    @Test
     public void testRegisterCategory() {
 
         Category<?> category = mock(Category.class);
@@ -411,18 +385,6 @@ public class QueuedStorageTest {
     private static class StubStorage implements Storage {
 
         long shutDownTime = -1;
-
-        @Override
-        public void setAgentId(UUID id) {
-            // not implemented
-            throw new AssertionError();
-        }
-
-        @Override
-        public String getAgentId() {
-            // not implementes
-            throw new AssertionError();
-        }
 
         @Override
         public void registerCategory(Category<?> category) {

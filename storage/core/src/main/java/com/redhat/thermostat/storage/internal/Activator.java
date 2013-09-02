@@ -38,6 +38,7 @@ package com.redhat.thermostat.storage.internal;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -46,6 +47,7 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
@@ -59,8 +61,10 @@ import com.redhat.thermostat.storage.internal.dao.VmInfoDAOImpl;
 
 public class Activator implements BundleActivator {
     
-    ServiceTracker tracker;
-    List<ServiceRegistration> regs;
+    private static final String WRITER_UUID = UUID.randomUUID().toString();
+    
+    ServiceTracker<Storage, Storage> tracker;
+    List<ServiceRegistration<?>> regs;
     
     public Activator() {
         regs = new ArrayList<>();
@@ -68,12 +72,19 @@ public class Activator implements BundleActivator {
 
     @Override
     public void start(BundleContext context) throws Exception {
-        tracker = new ServiceTracker(context, Storage.class, null) {
+        // WriterID has to be registered unconditionally (at least not as part
+        // of the Storage.class tracker, since that is only registered once
+        // storage is connected).
+        final WriterID writerID = new WriterIDImpl(WRITER_UUID);
+        ServiceRegistration<?> reg = context.registerService(WriterID.class, writerID, null);
+        regs.add(reg);
+        
+        tracker = new ServiceTracker<Storage, Storage>(context, Storage.class, null) {
             @Override
-            public Object addingService(ServiceReference reference) {
+            public Storage addingService(ServiceReference<Storage> reference) {
                 Storage storage = (Storage) super.addingService(reference);
                 AgentInfoDAO agentInfoDao = new AgentInfoDAOImpl(storage);
-                ServiceRegistration reg = context.registerService(AgentInfoDAO.class.getName(), agentInfoDao, null);
+                ServiceRegistration<?> reg = context.registerService(AgentInfoDAO.class.getName(), agentInfoDao, null);
                 regs.add(reg);
                 BackendInfoDAO backendInfoDao = new BackendInfoDAOImpl(storage);
                 reg = context.registerService(BackendInfoDAO.class.getName(), backendInfoDao, null);
@@ -91,12 +102,9 @@ public class Activator implements BundleActivator {
             }
             
             @Override
-            public void removedService(ServiceReference reference,
-                    Object service) {
-                for (ServiceRegistration reg : regs) {
-                    reg.unregister();
-                }
-                regs.clear();
+            public void removedService(ServiceReference<Storage> reference,
+                    Storage service) {
+                unregisterServices();
                 super.removedService(reference, service);
             }
         };
@@ -104,8 +112,16 @@ public class Activator implements BundleActivator {
         tracker.open();
     }
 
+    private void unregisterServices() {
+        for (ServiceRegistration<?> reg : regs) {
+            reg.unregister();
+        }
+        regs.clear();
+    }
+
     @Override
     public void stop(BundleContext context) throws Exception {
+        unregisterServices();
         tracker.close();
     }
 }

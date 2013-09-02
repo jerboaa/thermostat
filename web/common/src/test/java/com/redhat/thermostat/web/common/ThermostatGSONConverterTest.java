@@ -61,8 +61,7 @@ public class ThermostatGSONConverterTest {
     @Test
     public void canSerializeDeserializeBasic() {
         // Our test pojo
-        AgentInformation agentInfo = new AgentInformation();
-        agentInfo.setAgentId("testing");
+        AgentInformation agentInfo = new AgentInformation("testing");
         agentInfo.setAlive(true);
         
         String jsonStr = gson.toJson(agentInfo);
@@ -76,8 +75,7 @@ public class ThermostatGSONConverterTest {
     @Test
     public void canSerializeDeserializeArray() {
         // Our test pojo
-        AgentInformation agentInfo = new AgentInformation();
-        agentInfo.setAgentId("testing");
+        AgentInformation agentInfo = new AgentInformation("testing");
         agentInfo.setAlive(true);
         AgentInformation[] agentInfos = new AgentInformation[] {
                 agentInfo

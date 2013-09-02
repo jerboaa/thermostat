@@ -49,6 +49,7 @@ import com.redhat.thermostat.backend.system.VmStatusChangeNotifier;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.Version;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
@@ -73,7 +74,8 @@ public class SystemBackendActivator implements BundleActivator {
                 HostInfoDAO.class,
                 NetworkInterfaceInfoDAO.class,
                 VmInfoDAO.class,
-                UserNameUtil.class
+                UserNameUtil.class,
+                WriterID.class // system backend uses it
         };
         tracker = new MultipleServiceTracker(context, deps, new Action() {
             @Override
@@ -84,7 +86,8 @@ public class SystemBackendActivator implements BundleActivator {
                 VmInfoDAO vmInfoDAO = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
                 UserNameUtil userNameUtil = (UserNameUtil) services.get(UserNameUtil.class.getName());
                 Version version = new Version(context.getBundle());
-                backend = new SystemBackend(hostInfoDAO, netInfoDAO, vmInfoDAO, version, notifier, userNameUtil);
+                WriterID id = (WriterID) services.get(WriterID.class.getName());
+                backend = new SystemBackend(hostInfoDAO, netInfoDAO, vmInfoDAO, version, notifier, userNameUtil, id);
                 reg = context.registerService(Backend.class, backend, null);
             }
             

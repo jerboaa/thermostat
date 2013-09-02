@@ -66,8 +66,7 @@ public class WebQueryResponseSerializerTest {
     @Test
     public void canSerializeBasic() {
         // Our test pojo
-        AgentInformation agentInfo = new AgentInformation();
-        agentInfo.setAgentId("testing");
+        AgentInformation agentInfo = new AgentInformation("testing");
         agentInfo.setAlive(false);
         AgentInformation[] resultList = new AgentInformation[] {
                 agentInfo
@@ -101,8 +100,7 @@ public class WebQueryResponseSerializerTest {
     @Test
     public void canSerializeAndDeserializeBasic() {
         // Our test pojo
-        AgentInformation agentInfo = new AgentInformation();
-        agentInfo.setAgentId("testing");
+        AgentInformation agentInfo = new AgentInformation("testing");
         agentInfo.setAlive(false);
         AgentInformation[] resultList = new AgentInformation[] {
                 agentInfo
@@ -132,8 +130,7 @@ public class WebQueryResponseSerializerTest {
     @Test
     public void canSerializeAndDeserializeVariousPojos() {
         // Our test pojo
-        AgentInformation agentInfo = new AgentInformation();
-        agentInfo.setAgentId("testing");
+        AgentInformation agentInfo = new AgentInformation("testing");
         agentInfo.setAlive(false);
         AgentInformation[] resultList = new AgentInformation[] {
                 agentInfo

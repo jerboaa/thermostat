@@ -61,6 +61,11 @@ public class MongoCursorTest {
 
     @Entity
     public static class TestClass extends BasePojo {
+        
+        public TestClass() {
+            super(null);
+        }
+        
         private String key1;
         private String key2;
         private String key3;

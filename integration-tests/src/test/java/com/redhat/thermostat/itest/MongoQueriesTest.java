@@ -160,8 +160,7 @@ public class MongoQueriesTest extends IntegrationTest {
         storage.registerCategory(CpuStatDAO.cpuStatCategory);
 
         for (int i = 0; i < numberOfItems; i++) {
-            CpuStat pojo = new CpuStat(i, new double[] {i, i*2});
-            pojo.setAgentId("test-agent-id");
+            CpuStat pojo = new CpuStat("test-agent-id", i, new double[] {i, i*2});
             Add add = storage.createAdd(CpuStatDAO.cpuStatCategory);
             add.setPojo(pojo);
             add.apply();
@@ -502,20 +501,18 @@ public class MongoQueriesTest extends IntegrationTest {
     }
 
     @Test
-    public void setDefaultAgentID() throws Exception {
+    public void storagePurge() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         ConnectionListener listener = new CountdownConnectionListener(ConnectionStatus.CONNECTED, latch);
         BackingStorage mongoStorage = getAndConnectStorage(listener);
         latch.await();
         mongoStorage.getConnection().removeListener(listener);
         UUID uuid = new UUID(42, 24);
-        mongoStorage.setAgentId(uuid);
 
         mongoStorage.registerCategory(VmCpuStatDAO.vmCpuStatCategory);
         long timeStamp = 5;
         double cpuLoad = 0.15;
-        VmCpuStat pojo = new VmCpuStat(timeStamp, VM_ID1, cpuLoad);
-        // Note: agentId not set on pojo
+        VmCpuStat pojo = new VmCpuStat(uuid.toString(), timeStamp, VM_ID1, cpuLoad);
         Add add = mongoStorage.createAdd(VmCpuStatDAO.vmCpuStatCategory);
         add.setPojo(pojo);
         add.apply();

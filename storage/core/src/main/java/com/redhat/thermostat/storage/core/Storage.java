@@ -37,7 +37,6 @@
 package com.redhat.thermostat.storage.core;
 
 import java.io.InputStream;
-import java.util.UUID;
 
 import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.storage.model.Pojo;
@@ -49,10 +48,6 @@ import com.redhat.thermostat.storage.model.Pojo;
  */
 @Service
 public interface Storage {
-
-    void setAgentId(UUID id);
-
-    String getAgentId();
 
     void registerCategory(Category<?> category);
     

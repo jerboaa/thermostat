@@ -44,6 +44,9 @@ import com.redhat.thermostat.storage.model.BasePojo;
 @Entity
 public class TestObj extends BasePojo {
 
+    public TestObj() {
+        super(null);
+    }
     
     private String property1;
 

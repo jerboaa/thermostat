@@ -70,6 +70,7 @@ import sun.jvmstat.monitor.event.VmStatusChangeEvent;
 
 import com.redhat.thermostat.agent.VmStatusListener.Status;
 import com.redhat.thermostat.backend.system.ProcessUserInfoBuilder.ProcessUserInfo;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
 
@@ -103,7 +104,8 @@ public class JvmStatHostListenerTest {
         ProcessUserInfo userInfo = new ProcessUserInfo(INFO_VMUSERID, INFO_VMUSERNAME);
         when(userInfoBuilder.build(any(int.class))).thenReturn(userInfo);
 
-        hostListener = new JvmStatHostListener(vmInfoDAO, notifier, userInfoBuilder);
+        WriterID id = mock(WriterID.class);
+        hostListener = new JvmStatHostListener(vmInfoDAO, notifier, userInfoBuilder, id);
         
         host = mock(MonitoredHost.class);
         HostIdentifier hostId = mock(HostIdentifier.class);

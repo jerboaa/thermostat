@@ -38,6 +38,7 @@ package com.redhat.thermostat.common.cli;
 
 import static com.redhat.thermostat.testutils.Asserts.assertCommandIsRegistered;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 
 import org.junit.After;
@@ -94,6 +95,32 @@ public class CommandRegistryImplTest {
 
         commandRegistry.unregisterCommands();
 
+        assertEquals(0, bundleContext.getAllServices().size());
+    }
+    
+    @Test
+    public void testUnregisterCommandsMultipleTimes() {
+        Command cmd1 = mock(Command.class);
+        String name1 = "test1";
+        Command cmd2 = mock(Command.class);
+        String name2 = "test2";
+
+        commandRegistry.registerCommand(name1, cmd1);
+        commandRegistry.registerCommand(name2, cmd2);
+
+        assertEquals(2, bundleContext.getAllServices().size());
+
+        commandRegistry.unregisterCommands();
+
+        assertEquals(0, bundleContext.getAllServices().size());
+        
+        try {
+            commandRegistry.unregisterCommands();
+            // pass
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("unregistering commands should have cleared services registrations");
+        }
         assertEquals(0, bundleContext.getAllServices().size());
     }
 

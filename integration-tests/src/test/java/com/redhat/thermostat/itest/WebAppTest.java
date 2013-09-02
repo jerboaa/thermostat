@@ -385,8 +385,7 @@ public class WebAppTest extends IntegrationTest {
         storage.registerCategory(CpuStatDAO.cpuStatCategory);
 
         for (int i = 0; i < numberOfItems; i++) {
-            CpuStat pojo = new CpuStat(i, new double[] {i, i*2});
-            pojo.setAgentId("test-agent-id");
+            CpuStat pojo = new CpuStat("test-agent-id", i, new double[] {i, i*2});
             Add add = storage.createAdd(CpuStatDAO.cpuStatCategory);
             add.setPojo(pojo);
             add.apply();
@@ -406,8 +405,7 @@ public class WebAppTest extends IntegrationTest {
         storage.registerCategory(HostInfoDAO.hostInfoCategory);
 
         for (int i = 0; i < numberOfItems; i++) {
-            HostInfo hostInfo = new HostInfo("foo " + i, "linux " + i, "kernel", "t8", i, i * 1000);
-            hostInfo.setAgentId("test-host-agent-id");
+            HostInfo hostInfo = new HostInfo("test-host-agent-id", "foo " + i, "linux " + i, "kernel", "t8", i, i * 1000);
             Add add = storage.createAdd(HostInfoDAO.hostInfoCategory);
             add.setPojo(hostInfo);
             add.apply();
@@ -857,7 +855,7 @@ public class WebAppTest extends IntegrationTest {
     }
 
     @Test
-    public void setDefaultAgentID() throws Exception {
+    public void storagePurge() throws Exception {
         String[] roleNames = new String[] {
                 Roles.ACCESS_REALM,
                 Roles.LOGIN,
@@ -870,13 +868,10 @@ public class WebAppTest extends IntegrationTest {
         };
         Storage storage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         UUID uuid = new UUID(42, 24);
-        storage.setAgentId(uuid);
-
         storage.registerCategory(VmCpuStatDAO.vmCpuStatCategory);
         long timeStamp = 5;
         double cpuLoad = 0.15;
-        VmCpuStat pojo = new VmCpuStat(timeStamp, VM_ID1, cpuLoad);
-        // Note: agentId not set on pojo
+        VmCpuStat pojo = new VmCpuStat(uuid.toString(), timeStamp, VM_ID1, cpuLoad);
         Add add = storage.createAdd(VmCpuStatDAO.vmCpuStatCategory);
         add.setPojo(pojo);
         add.apply();

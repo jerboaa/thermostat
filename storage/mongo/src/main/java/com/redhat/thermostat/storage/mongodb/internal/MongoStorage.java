@@ -41,7 +41,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
 import com.mongodb.BasicDBObject;
@@ -169,16 +168,16 @@ public class MongoStorage implements BackingStorage {
         
     }
 
-    private MongoConnection conn;
+    private final MongoConnection conn;
+    private final Map<String, DBCollection> collectionCache = new HashMap<String, DBCollection>();
+    private final CountDownLatch connectedLatch;
     private DB db = null;
-    private Map<String, DBCollection> collectionCache = new HashMap<String, DBCollection>();
-    private CountDownLatch connectedLatch;
-    private UUID agentId;
 
     // For testing only
     MongoStorage(DB db, CountDownLatch latch) {
         this.db = db;
         this.connectedLatch = latch;
+        this.conn = null;
     }
     
     public MongoStorage(StartupConfiguration conf) {
@@ -219,16 +218,6 @@ public class MongoStorage implements BackingStorage {
     }
 
     @Override
-    public void setAgentId(UUID agentId) {
-        this.agentId = agentId;
-    }
-
-    @Override
-    public String getAgentId() {
-        return agentId.toString();
-    }
-
-    @Override
     public <T extends Pojo> Add<T> createAdd(Category<T> into) {
         MongoAdd<T> add = new MongoAdd<>(into);
         return add;
@@ -264,7 +253,8 @@ public class MongoStorage implements BackingStorage {
         MongoPojoConverter converter = new MongoPojoConverter();
         DBObject toInsert = converter.convertPojoToMongo(pojo);
         if (toInsert.get(Key.AGENT_ID.getName()) == null) {
-            toInsert.put(Key.AGENT_ID.getName(), getAgentId());
+            // FIXME: Remove
+            throw new AssertionError("agentID must be set");
         }
         return toInsert;
     }

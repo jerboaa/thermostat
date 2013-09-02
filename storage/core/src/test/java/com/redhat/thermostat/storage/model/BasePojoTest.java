@@ -34,48 +34,32 @@
  * to do so, delete this exception statement from your version.
  */
 
-
 package com.redhat.thermostat.storage.model;
 
-import java.util.Objects;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
-import com.redhat.thermostat.storage.core.Persist;
+import org.junit.Test;
 
-public class BasePojo implements Pojo {
+public class BasePojoTest {
 
-    private String agentId;
+    @Test
+    public void testDefaultConstructorMissing() {
+        // Developers are advised to always use the one-arg constructor
+        // which sets the writer-ID. The no-arg constructor in the extending
+        // class should be provided there directly. Not in BasePojo. This is
+        // to assist devs via the compiler for missing writer-ID properties. 
+        try {
+            BasePojo.class.newInstance();
+            fail("Are you sure you want to provide a no-arg constructor in BasePojo?");
+        } catch (Exception e) {
+            // pass
+        }
+    }
     
-    public BasePojo(String writerId) {
-        this.agentId = writerId;
+    @Test
+    public void testWriterIdConstructor() {
+        BasePojo pojo = new BasePojo("foo-agent");
+        assertEquals("foo-agent", pojo.getAgentId());
     }
-
-    @Persist
-    public final String getAgentId() {
-        return agentId;
-    }
-
-    @Persist
-    public final void setAgentId(String agentId) {
-        this.agentId = agentId;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(agentId);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        BasePojo other = (BasePojo) obj;
-        return Objects.equals(agentId, other.agentId);
-    }
-
-    
 }
-

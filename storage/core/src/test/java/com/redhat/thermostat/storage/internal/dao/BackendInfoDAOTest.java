@@ -79,7 +79,7 @@ public class BackendInfoDAOTest {
     @Before
     public void setUp() {
 
-        backendInfo1 = new BackendInformation();
+        backendInfo1 = new BackendInformation("foo-agent1");
 
         backendInfo1.setName("backend-name");
         backendInfo1.setDescription("description");
@@ -88,7 +88,7 @@ public class BackendInfoDAOTest {
         backendInfo1.setPids(new int[] { -1, 0, 1});
         backendInfo1.setOrderValue(100);
 
-        backend1 = new BackendInformation();
+        backend1 = new BackendInformation("foo-agent2");
         backend1.setName("backend-name");
         backend1.setDescription("description");
         backend1.setActive(true);
