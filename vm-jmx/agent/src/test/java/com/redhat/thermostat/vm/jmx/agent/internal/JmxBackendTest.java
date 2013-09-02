@@ -67,6 +67,7 @@ import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.agent.command.RequestReceiver;
 import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.common.Version;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.utils.management.MXBeanConnection;
 import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.vm.jmx.common.JmxNotification;
@@ -91,7 +92,8 @@ public class JmxBackendTest {
         dao = mock(JmxNotificationDAO.class);
         pool = mock(MXBeanConnectionPool.class);
 
-        backend = new JmxBackend(version, registry, dao, pool, receiver);
+        WriterID id = mock(WriterID.class);
+        backend = new JmxBackend(version, registry, dao, pool, receiver, id);
     }
 
     @Test

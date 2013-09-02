@@ -38,11 +38,10 @@ package com.redhat.thermostat.vm.heap.analysis.common.model;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 import org.junit.Before;
 import org.junit.Test;
-
-import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 
 public class HeapInfoTest {
 
@@ -50,8 +49,8 @@ public class HeapInfoTest {
 
     @Before
     public void setUp() {
-        heapInfo = new HeapInfo("vmId", 12345);
-        heapInfo.setAgentId("test-agent");
+        String agentId = "test-agent";
+        heapInfo = new HeapInfo(agentId, "vmId", 12345);
     }
 
     @Test
@@ -73,6 +72,16 @@ public class HeapInfoTest {
         assertNull(heapInfo.getHistogramId());
         heapInfo.setHistogramId("test");
         assertEquals("test", heapInfo.getHistogramId());
+    }
+    
+    @Test
+    public void testBasicInstantiation() {
+        try {
+            // pojo converters use this
+            HeapInfo.class.newInstance();
+        } catch (Exception e) {
+            fail("should be able to instantiate using no-arg constructor");
+        }
     }
 }
 

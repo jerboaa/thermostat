@@ -92,7 +92,7 @@ public class VmMemoryStatPrintDelegateTest {
 
         VmMemoryStat.Generation[] gens1 = new VmMemoryStat.Generation[] { gen1_1, gen1_2 };
 
-        VmMemoryStat memStat1 = new VmMemoryStat(1, vmId, gens1);
+        VmMemoryStat memStat1 = new VmMemoryStat("foo-agent", 1, vmId, gens1);
 
         VmMemoryStat.Space space2_1_1 = newSpace("space1", 123456, 12345, 2, 0);
         VmMemoryStat.Space space2_1_2 = newSpace("space2", 123456, 12345, 2, 0);
@@ -106,7 +106,7 @@ public class VmMemoryStatPrintDelegateTest {
 
         VmMemoryStat.Generation[] gens2 = new VmMemoryStat.Generation[] { gen2_1, gen2_2 };
 
-        VmMemoryStat memStat2 = new VmMemoryStat(2, vmId, gens2);
+        VmMemoryStat memStat2 = new VmMemoryStat("foo-agent", 2, vmId, gens2);
 
         VmMemoryStat.Space space3_1_1 = newSpace("space1", 123456, 12345, 4, 0);
         VmMemoryStat.Space space3_1_2 = newSpace("space2", 123456, 12345, 5, 0);
@@ -120,7 +120,7 @@ public class VmMemoryStatPrintDelegateTest {
 
         VmMemoryStat.Generation[] gens3 = new VmMemoryStat.Generation[] { gen3_1, gen3_2 };
 
-        VmMemoryStat memStat3 = new VmMemoryStat(3, vmId, gens3);
+        VmMemoryStat memStat3 = new VmMemoryStat("foo-agent", 3, vmId, gens3);
 
         vmMemoryStatDAO = mock(VmMemoryStatDAO.class);
         memoryStats = Arrays.asList(memStat1, memStat2, memStat3);

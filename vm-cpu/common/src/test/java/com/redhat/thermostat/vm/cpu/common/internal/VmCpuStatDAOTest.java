@@ -74,7 +74,7 @@ public class VmCpuStatDAOTest {
 
     @Before
     public void setUp() {
-        cpuStat = new VmCpuStat(TIMESTAMP, VM_ID, CPU_LOAD);
+        cpuStat = new VmCpuStat("foo-agent", TIMESTAMP, VM_ID, CPU_LOAD);
     }
 
     @Test
@@ -138,7 +138,7 @@ public class VmCpuStatDAOTest {
         Add<VmCpuStat> add = mock(Add.class);
         when(storage.createAdd(eq(VmCpuStatDAO.vmCpuStatCategory))).thenReturn(add);
         
-        VmCpuStat stat = new VmCpuStat(TIMESTAMP, VM_ID, CPU_LOAD);
+        VmCpuStat stat = new VmCpuStat("foo-agent", TIMESTAMP, VM_ID, CPU_LOAD);
         VmCpuStatDAO dao = new VmCpuStatDAOImpl(storage);
         dao.putVmCpuStat(stat);
 

@@ -50,12 +50,14 @@ class VmClassStatVmListener implements VmUpdateListener {
     
     private static final Logger logger = LoggingUtils.getLogger(VmClassStatVmListener.class);
 
-    private VmClassStatDAO dao;
-    private String vmId;
+    private final VmClassStatDAO dao;
+    private final String vmId;
+    private final String writerId;
 
-    VmClassStatVmListener(VmClassStatDAO dao, String vmId) {
+    VmClassStatVmListener(String writerId, VmClassStatDAO dao, String vmId) {
         this.dao = dao;
         this.vmId = vmId;
+        this.writerId = writerId;
     }
 
     @Override
@@ -64,7 +66,7 @@ class VmClassStatVmListener implements VmUpdateListener {
         try {
             long loadedClasses = extractor.getLoadedClasses();
             long timestamp = System.currentTimeMillis();
-            VmClassStat stat = new VmClassStat(vmId, timestamp, loadedClasses);
+            VmClassStat stat = new VmClassStat(writerId, vmId, timestamp, loadedClasses);
             dao.putVmClassStat(stat);
         } catch (VmUpdateException e) {
             logger.log(Level.WARNING, "error gathering class info for vm " + vmId, e);

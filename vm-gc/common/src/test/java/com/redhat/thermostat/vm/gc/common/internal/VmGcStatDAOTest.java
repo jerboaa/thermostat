@@ -87,7 +87,7 @@ public class VmGcStatDAOTest {
     @Test
     public void testGetLatestVmGcStatsBasic() throws DescriptorParsingException, StatementExecutionException {
 
-        VmGcStat vmGcStat = new VmGcStat(VM_ID, TIMESTAMP, COLLECTOR, RUN_COUNT, WALL_TIME);
+        VmGcStat vmGcStat = new VmGcStat("foo-agent", VM_ID, TIMESTAMP, COLLECTOR, RUN_COUNT, WALL_TIME);
 
         @SuppressWarnings("unchecked")
         Cursor<VmGcStat> cursor = (Cursor<VmGcStat>) mock(Cursor.class);
@@ -137,7 +137,7 @@ public class VmGcStatDAOTest {
         Add add = mock(Add.class);
         when(storage.createAdd(any(Category.class))).thenReturn(add);
         
-        VmGcStat stat = new VmGcStat(VM_ID, TIMESTAMP, COLLECTOR, RUN_COUNT, WALL_TIME);
+        VmGcStat stat = new VmGcStat("foo-agent", VM_ID, TIMESTAMP, COLLECTOR, RUN_COUNT, WALL_TIME);
         VmGcStatDAO dao = new VmGcStatDAOImpl(storage);
         dao.putVmGcStat(stat);
 

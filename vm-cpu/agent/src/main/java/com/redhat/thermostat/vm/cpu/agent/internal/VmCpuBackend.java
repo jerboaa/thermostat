@@ -53,6 +53,7 @@ import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.utils.ProcDataSource;
 import com.redhat.thermostat.utils.SysConf;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
@@ -63,16 +64,16 @@ public class VmCpuBackend extends BaseBackend implements VmStatusListener {
     private static final Logger LOGGER = LoggingUtils.getLogger(VmCpuBackend.class);
     static final long PROC_CHECK_INTERVAL = 1000; // TODO make this configurable.
 
+    private final VmCpuStatDAO vmCpuStats;
+    private final ScheduledExecutorService executor;
+    private final VmStatusListenerRegistrar registrar;
     private VmCpuStatBuilder vmCpuStatBuilder;
-    private VmCpuStatDAO vmCpuStats;
-    private ScheduledExecutorService executor;
-    private VmStatusListenerRegistrar registrar;
     private boolean started;
 
     private final Map<Integer, String> pidsToMonitor = new ConcurrentHashMap<>();
 
     public VmCpuBackend(ScheduledExecutorService executor, VmCpuStatDAO vmCpuStatDao, Version version,
-            VmStatusListenerRegistrar registrar) {
+            VmStatusListenerRegistrar registrar, WriterID writerId) {
         super("VM CPU Backend",
                 "Gathers CPU statistics about a JVM",
                 "Red Hat, Inc.",
@@ -86,7 +87,8 @@ public class VmCpuBackend extends BaseBackend implements VmStatusListener {
         ProcDataSource source = new ProcDataSource();
         ProcessStatusInfoBuilder builder = new ProcessStatusInfoBuilder(new ProcDataSource());
         int numCpus = getCpuCount(source);
-        vmCpuStatBuilder = new VmCpuStatBuilder(clock, numCpus, ticksPerSecond, builder);
+        vmCpuStatBuilder = new VmCpuStatBuilder(clock, numCpus, ticksPerSecond,
+                                                builder, writerId);
     }
 
     @Override

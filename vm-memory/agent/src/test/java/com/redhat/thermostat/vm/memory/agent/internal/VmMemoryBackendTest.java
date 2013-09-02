@@ -60,8 +60,8 @@ public class VmMemoryBackendTest {
         when(version.getVersionNumber()).thenReturn("0.0.0");
 
         VmStatusListenerRegistrar registrar = mock(VmStatusListenerRegistrar.class);
-
-        backend = new VmMemoryBackend(vmMemoryStatDao, version, registrar);
+        
+        backend = new VmMemoryBackend(vmMemoryStatDao, version, registrar, null);
     }
 
     @Test

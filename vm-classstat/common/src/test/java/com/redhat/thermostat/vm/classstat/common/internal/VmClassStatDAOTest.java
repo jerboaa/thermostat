@@ -126,7 +126,7 @@ public class VmClassStatDAOTest {
     }
 
     private VmClassStat getClassStat() {
-        return new VmClassStat(VM_ID, TIMESTAMP, LOADED_CLASSES);
+        return new VmClassStat("foo-agent", VM_ID, TIMESTAMP, LOADED_CLASSES);
     }
 
     @Test
@@ -137,7 +137,7 @@ public class VmClassStatDAOTest {
         Add<VmClassStat> add = mock(Add.class);
         when(storage.createAdd(eq(VmClassStatDAO.vmClassStatsCategory))).thenReturn(add);
 
-        VmClassStat stat = new VmClassStat(VM_ID, TIMESTAMP, LOADED_CLASSES);
+        VmClassStat stat = new VmClassStat("foo-agent", VM_ID, TIMESTAMP, LOADED_CLASSES);
         VmClassStatDAO dao = new VmClassStatDAOImpl(storage);
         dao.putVmClassStat(stat);
 

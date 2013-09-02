@@ -43,6 +43,7 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
 
 public class VmCpuStatBuilder {
@@ -58,12 +59,15 @@ public class VmCpuStatBuilder {
     private final int cpuCount;
     private final long ticksPerSecond;
     private final ProcessStatusInfoBuilder statusBuilder;
+    private final WriterID context;
 
-    public VmCpuStatBuilder(Clock clock, int cpuCount, long ticksPerSecond, ProcessStatusInfoBuilder statusBuilder) {
+    public VmCpuStatBuilder(Clock clock, int cpuCount, long ticksPerSecond,
+            ProcessStatusInfoBuilder statusBuilder, WriterID writerId) {
         this.clock = clock;
         this.cpuCount = cpuCount;
         this.ticksPerSecond = ticksPerSecond;
         this.statusBuilder = statusBuilder;
+        this.context = writerId;
     }
 
     /**
@@ -103,8 +107,9 @@ public class VmCpuStatBuilder {
 
         lastProcessTicks.put(pid, programTicks);
         lastProcessTickTime.put(pid, time);
-
-        return new VmCpuStat(miliTime, vmId, cpuLoad);
+        
+        String wId = context.getWriterID();
+        return new VmCpuStat(wId, miliTime, vmId, cpuLoad);
     }
 
     public synchronized boolean knowsAbout(int pid) {

@@ -47,6 +47,7 @@ import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.HistogramLoader;
 import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
@@ -62,16 +63,20 @@ public class HeapDumpReceiver implements RequestReceiver {
     private final JMapHeapDumper jmapHeapDumper;
 
     private final HistogramLoader histogramLoader;
+    private final WriterID writerId;
 
-    public HeapDumpReceiver(HeapDAO heapDao) {
-        this(heapDao, new JMXHeapDumper(), new JMapHeapDumper(), new HistogramLoader());
+    public HeapDumpReceiver(HeapDAO heapDao, WriterID writerId) {
+        this(heapDao, new JMXHeapDumper(), new JMapHeapDumper(), new HistogramLoader(), writerId);
     }
 
-    HeapDumpReceiver(HeapDAO heapDao, JMXHeapDumper jmxHeapDumper, JMapHeapDumper jmapHeapDumper, HistogramLoader histogramLoader) {
+    HeapDumpReceiver(HeapDAO heapDao, JMXHeapDumper jmxHeapDumper,
+                     JMapHeapDumper jmapHeapDumper, HistogramLoader histogramLoader,
+                     WriterID writerId) {
         this.heapDao = heapDao;
         this.jmxHeapDumper = jmxHeapDumper;
         this.jmapHeapDumper = jmapHeapDumper;
         this.histogramLoader = histogramLoader;
+        this.writerId = writerId;
     }
 
     @Override
@@ -123,7 +128,8 @@ public class HeapDumpReceiver implements RequestReceiver {
     }
 
     private void saveHeapDumpInfo(String vmId, File tempFile, ObjectHistogram histogram) throws IOException {
-        HeapInfo heapInfo = new HeapInfo(vmId, System.currentTimeMillis());
+        String wId = writerId.getWriterID();
+        HeapInfo heapInfo = new HeapInfo(wId, vmId, System.currentTimeMillis());
         heapDao.putHeapInfo(heapInfo, tempFile, histogram);
     }
 

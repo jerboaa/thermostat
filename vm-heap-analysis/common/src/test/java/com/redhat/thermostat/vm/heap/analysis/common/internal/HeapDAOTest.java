@@ -100,13 +100,13 @@ public class HeapDAOTest {
         add = mock(Add.class);
         when(storage.createAdd(any(Category.class))).thenReturn(add);
 
-        when(storage.getAgentId()).thenReturn("test");
         stmt = (PreparedStatement<HeapInfo>) mock(PreparedStatement.class); 
         when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
 
         dao = new HeapDAOImpl(storage);
         
-        heapInfo = new HeapInfo("vm1", 12345);
+        String writerId = "test";
+        heapInfo = new HeapInfo(writerId, "vm1", 12345);
         byte[] data = new byte[] { 1, 2, 3 };
         heapDumpData = File.createTempFile("test", "test");
         FileOutputStream out = new FileOutputStream(heapDumpData);
@@ -115,13 +115,13 @@ public class HeapDAOTest {
         histogramData = createHistogramData();
 
         Cursor<HeapInfo> cursor = (Cursor<HeapInfo>) mock(Cursor.class);
-        HeapInfo info1 = new HeapInfo("vm2", 12345L);
+        HeapInfo info1 = new HeapInfo(writerId, "vm2", 12345L);
         info1.setAgentId("123");
         info1.setHeapId("testheap1");
         info1.setHeapDumpId("test1");
         info1.setHistogramId("histotest1");
 
-        HeapInfo info2 = new HeapInfo("vm2", 23456L);
+        HeapInfo info2 = new HeapInfo(writerId, "vm2", 23456L);
         info2.setAgentId("123");
         info2.setHeapId("testheap2");
         info2.setHeapDumpId("test2");
@@ -263,12 +263,12 @@ public class HeapDAOTest {
         verify(stmt).executeQuery();
         verifyNoMoreInteractions(stmt);
         
-        HeapInfo info1 = new HeapInfo("vm2", 12345);
+        HeapInfo info1 = new HeapInfo("foo-agent", "vm2", 12345);
         info1.setHeapDumpId("test1");
         info1.setHeapId("testheap1");
         info1.setHistogramId("histotest1");
         
-        HeapInfo info2 = new HeapInfo("vm2", 23456);
+        HeapInfo info2 = new HeapInfo("foo-agent", "vm2", 23456);
         info2.setHeapDumpId("test2");
         info2.setHeapId("testheap2");
         info2.setHistogramId("histotest2");
@@ -289,7 +289,7 @@ public class HeapDAOTest {
         verify(stmt).executeQuery();
         verifyNoMoreInteractions(stmt);
         
-        HeapInfo info = new HeapInfo("vm2", 12345);
+        HeapInfo info = new HeapInfo("foo-agent", "vm2", 12345);
         info.setHeapDumpId("test1");
         info.setHeapId("testheap1");
         info.setHistogramId("histotest1");

@@ -44,16 +44,22 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.test.Bug;
-import com.redhat.thermostat.vm.cpu.agent.internal.ProcessStatusInfo;
-import com.redhat.thermostat.vm.cpu.agent.internal.ProcessStatusInfoBuilder;
-import com.redhat.thermostat.vm.cpu.agent.internal.VmCpuStatBuilder;
 import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
 
 public class VmCpuStatBuilderTest {
+    
+    private WriterID writerID;
+    
+    @Before
+    public void setup() {
+        writerID = mock(WriterID.class);
+    }
 
     @Test
     public void testBuilderKnowsNothing() {
@@ -61,7 +67,7 @@ public class VmCpuStatBuilderTest {
         ProcessStatusInfoBuilder statusBuilder = mock(ProcessStatusInfoBuilder.class);
         int cpuCount = 0;
         long ticksPerSecond = 0;
-        VmCpuStatBuilder builder = new VmCpuStatBuilder(clock, cpuCount, ticksPerSecond, statusBuilder);
+        VmCpuStatBuilder builder = new VmCpuStatBuilder(clock, cpuCount, ticksPerSecond, statusBuilder, writerID);
 
         assertFalse(builder.knowsAbout(0));
         assertFalse(builder.knowsAbout(1));
@@ -76,7 +82,7 @@ public class VmCpuStatBuilderTest {
         int cpuCount = 0;
         long ticksPerSecond = 0;
         ProcessStatusInfoBuilder statusBuilder = mock(ProcessStatusInfoBuilder.class);
-        VmCpuStatBuilder builder = new VmCpuStatBuilder(clock, cpuCount, ticksPerSecond, statusBuilder);
+        VmCpuStatBuilder builder = new VmCpuStatBuilder(clock, cpuCount, ticksPerSecond, statusBuilder, writerID);
         builder.build("vmId", 0);
     }
 
@@ -96,7 +102,7 @@ public class VmCpuStatBuilderTest {
         ProcessStatusInfoBuilder statusBuilder = mock(ProcessStatusInfoBuilder.class);
         when(statusBuilder.build(any(Integer.class))).thenReturn(initialInfo).thenReturn(laterInfo).thenReturn(null);
 
-        VmCpuStatBuilder builder = new VmCpuStatBuilder(clock, cpuCount, ticksPerSecond, statusBuilder);
+        VmCpuStatBuilder builder = new VmCpuStatBuilder(clock, cpuCount, ticksPerSecond, statusBuilder, writerID);
 
         builder.learnAbout(PID);
         assertEquals(null, builder.build("vmId", PID));
@@ -137,7 +143,7 @@ public class VmCpuStatBuilderTest {
         ProcessStatusInfoBuilder statusBuilder = mock(ProcessStatusInfoBuilder.class);
         when(statusBuilder.build(any(Integer.class))).thenReturn(initialInfo).thenReturn(laterInfo).thenReturn(null);
 
-        VmCpuStatBuilder builder = new VmCpuStatBuilder(clock, CPU_COUNT, TICKS_PER_SECOND, statusBuilder);
+        VmCpuStatBuilder builder = new VmCpuStatBuilder(clock, CPU_COUNT, TICKS_PER_SECOND, statusBuilder, writerID);
 
         builder.learnAbout(PID);
         VmCpuStat stat = builder.build(VM_ID, PID);
@@ -159,7 +165,7 @@ public class VmCpuStatBuilderTest {
         // This thing returns null if the /proc entry goes away.  Rather than try to
         // 'guess' at a pid that will not be present during test, just mock this.
         when(procBuilder.build(any(Integer.class))).thenReturn(null);
-        VmCpuStatBuilder builder = new VmCpuStatBuilder(clock, 3, 100, procBuilder);
+        VmCpuStatBuilder builder = new VmCpuStatBuilder(clock, 3, 100, procBuilder, writerID);
         // If we can't handle a process' /proc entry disappearing, the next line
         // will throw exception.  If it does not, then we are okay.
         try {

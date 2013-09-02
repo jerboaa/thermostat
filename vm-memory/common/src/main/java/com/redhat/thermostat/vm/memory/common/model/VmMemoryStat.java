@@ -180,10 +180,11 @@ public class VmMemoryStat extends BasePojo implements TimeStampedPojo {
     private String vmId;
 
     public VmMemoryStat() {
-        this(-1, null, null);
+        this(null, -1, null, null);
     }
 
-    public VmMemoryStat(long timestamp, String vmId, Generation[] generations) {
+    public VmMemoryStat(String writerId, long timestamp, String vmId, Generation[] generations) {
+        super(writerId);
         this.timestamp = timestamp;
         this.vmId = vmId;
         if (generations != null) {

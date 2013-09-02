@@ -54,10 +54,11 @@ public class HeapInfo extends BasePojo implements TimeStampedPojo {
     private String histogramId;
 
     public HeapInfo() {
-        this(null, -1);
+        this(null, null, -1);
     }
 
-    public HeapInfo(String vmId, long timestamp) {
+    public HeapInfo(String writerId, String vmId, long timestamp) {
+        super(writerId);
         this.vmId = vmId;
         this.timeStamp = timestamp;
     }

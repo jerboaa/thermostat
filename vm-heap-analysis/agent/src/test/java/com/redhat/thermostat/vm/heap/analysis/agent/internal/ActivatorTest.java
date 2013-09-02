@@ -39,16 +39,13 @@ package com.redhat.thermostat.vm.heap.analysis.agent.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-
 import static org.mockito.Mockito.mock;
 
 import org.junit.Test;
-import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.agent.command.RequestReceiver;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.testutils.StubBundleContext;
-import com.redhat.thermostat.vm.heap.analysis.agent.internal.Activator;
-import com.redhat.thermostat.vm.heap.analysis.agent.internal.HeapDumpReceiver;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 
 public class ActivatorTest {
@@ -74,7 +71,9 @@ public class ActivatorTest {
         StubBundleContext ctx = new StubBundleContext();
 
         HeapDAO heapDao = mock(HeapDAO.class);
-        ServiceRegistration registration = ctx.registerService(HeapDAO.class, heapDao, null);
+        WriterID writerId = mock(WriterID.class);
+        ctx.registerService(HeapDAO.class, heapDao, null);
+        ctx.registerService(WriterID.class, writerId, null);
 
         Activator activator = new Activator();
 
@@ -82,15 +81,13 @@ public class ActivatorTest {
 
         assertTrue(ctx.isServiceRegistered(RequestReceiver.class.getName(), HeapDumpReceiver.class));
 
-        assertEquals(1, ctx.getServiceListeners().size());
+        assertEquals(2, ctx.getServiceListeners().size());
 
         activator.stop(ctx);
 
         assertFalse(ctx.isServiceRegistered(RequestReceiver.class.getName(), HeapDumpReceiver.class));
 
         assertEquals(0, ctx.getServiceListeners().size());
-
-        assertEquals(0, ctx.getExportedServiceCount(registration));
     }
 
 }

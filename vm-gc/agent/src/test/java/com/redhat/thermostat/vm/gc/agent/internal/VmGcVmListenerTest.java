@@ -65,7 +65,7 @@ public class VmGcVmListenerTest {
     public void setup() throws VmUpdateException {
         final int numGCs = 2;
         vmGcStatDAO = mock(VmGcStatDAO.class);
-        vmListener = new VmGcVmListener(vmGcStatDAO, "vmId");
+        vmListener = new VmGcVmListener("foo-agent", vmGcStatDAO, "vmId");
         
         extractor = mock(VmGcDataExtractor.class);
         

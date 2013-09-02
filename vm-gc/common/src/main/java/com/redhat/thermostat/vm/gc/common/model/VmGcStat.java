@@ -51,10 +51,11 @@ public class VmGcStat extends BasePojo implements TimeStampedPojo {
     private long wallTime;
 
     public VmGcStat() {
-        super();
+        super(null);
     }
 
-    public VmGcStat(String vmId, long timestamp, String collectorName, long runCount, long wallTime) {
+    public VmGcStat(String writerId, String vmId, long timestamp, String collectorName, long runCount, long wallTime) {
+        super(writerId);
         this.timeStamp = timestamp;
         this.vmId = vmId;
         this.collectorName = collectorName;

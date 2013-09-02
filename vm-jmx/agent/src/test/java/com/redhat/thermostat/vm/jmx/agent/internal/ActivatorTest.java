@@ -46,6 +46,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
 
 import com.redhat.thermostat.backend.Backend;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.vm.jmx.agent.internal.Activator;
@@ -65,19 +66,20 @@ public class ActivatorTest {
 
         bundleContext.registerService(JmxNotificationDAO.class, mock(JmxNotificationDAO.class), null);
         bundleContext.registerService(MXBeanConnectionPool.class, mock(MXBeanConnectionPool.class), null);
+        bundleContext.registerService(WriterID.class, mock(WriterID.class), null);
 
         Activator activator = new Activator();
 
         activator.start(bundleContext);
 
         assertTrue(bundleContext.isServiceRegistered(Backend.class.getName(), JmxBackend.class));
-        assertEquals(3, bundleContext.getAllServices().size());
+        assertEquals(4, bundleContext.getAllServices().size());
 
         // thermostat will activate the backend; simulate that
         activator.getBackend().activate();
 
         activator.stop(bundleContext);
 
-        assertEquals(2, bundleContext.getAllServices().size());
+        assertEquals(3, bundleContext.getAllServices().size());
     }
 }

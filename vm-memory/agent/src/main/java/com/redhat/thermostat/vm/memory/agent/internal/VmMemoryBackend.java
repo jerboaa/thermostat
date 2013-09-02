@@ -40,16 +40,19 @@ import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.backend.VmListenerBackend;
 import com.redhat.thermostat.backend.VmUpdateListener;
 import com.redhat.thermostat.common.Version;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 
 public class VmMemoryBackend extends VmListenerBackend {
 
     private VmMemoryStatDAO vmMemoryStats;
     
-    public VmMemoryBackend(VmMemoryStatDAO vmMemoryStatDAO, Version version, VmStatusListenerRegistrar registrar) {
+    public VmMemoryBackend(VmMemoryStatDAO vmMemoryStatDAO, Version version,
+            VmStatusListenerRegistrar registrar, WriterID writerId) {
         super("VM Memory Backend",
                 "Gathers memory statistics about a JVM",
-                "Red Hat, Inc.", version.getVersionNumber(), true, registrar);
+                "Red Hat, Inc.", version.getVersionNumber(),
+                true, registrar, writerId);
         this.vmMemoryStats = vmMemoryStatDAO;
     }
 
@@ -59,8 +62,8 @@ public class VmMemoryBackend extends VmListenerBackend {
     }
 
     @Override
-    protected VmUpdateListener createVmListener(String vmId, int pid) {
-        return new VmMemoryVmListener(vmMemoryStats, vmId);
+    protected VmUpdateListener createVmListener(String writerId, String vmId, int pid) {
+        return new VmMemoryVmListener(writerId, vmMemoryStats, vmId);
     }
     
 }

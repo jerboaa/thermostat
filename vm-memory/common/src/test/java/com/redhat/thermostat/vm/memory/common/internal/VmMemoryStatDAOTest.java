@@ -202,7 +202,7 @@ public class VmMemoryStatDAOTest {
             }
             gen.setSpaces(spaces.toArray(new Space[spaces.size()]));
         }
-        VmMemoryStat stat = new VmMemoryStat(1, "vmId", generations.toArray(new Generation[generations.size()]));
+        VmMemoryStat stat = new VmMemoryStat("foo-agent", 1, "vmId", generations.toArray(new Generation[generations.size()]));
 
         Storage storage = mock(Storage.class);
         @SuppressWarnings("unchecked")

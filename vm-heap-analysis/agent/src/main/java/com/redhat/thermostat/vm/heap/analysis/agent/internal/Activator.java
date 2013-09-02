@@ -36,12 +36,15 @@
 
 package com.redhat.thermostat.vm.heap.analysis.agent.internal;
 
+import java.util.Map;
+
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
+import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 
 public class Activator implements BundleActivator {
@@ -50,36 +53,40 @@ public class Activator implements BundleActivator {
 
     private HeapDumpReceiver receiver = null;
 
-    private ServiceTracker heapDumpCommandReceiverTracker;
+    private MultipleServiceTracker tracker;
 
     @Override
     public void start(BundleContext context) {
         receivers = new ReceiverRegistry(context);
-
-        heapDumpCommandReceiverTracker = new ServiceTracker(context, HeapDAO.class.getName(), null) {
-            @Override
-            public Object addingService(ServiceReference reference) {
-                HeapDAO service = (HeapDAO) super.addingService(reference);
-                receiver = new HeapDumpReceiver(service);
-                receivers.registerReceiver(receiver);
-                return service;
-            }
-
-            @Override
-            public void removedService(ServiceReference reference, Object service) {
-                receivers.unregisterReceivers();
-                super.removedService(reference, service);
-            }
+        
+        Class<?>[] deps = new Class<?>[] {
+                HeapDAO.class,
+                WriterID.class // heap dump receiver uses it.
         };
-        heapDumpCommandReceiverTracker.open();
 
+        tracker = new MultipleServiceTracker(context, deps, new Action() {
+
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                HeapDAO service = (HeapDAO) services.get(HeapDAO.class.getName());
+                WriterID writerId = (WriterID) services.get(WriterID.class.getName());
+                receiver = new HeapDumpReceiver(service, writerId);
+                receivers.registerReceiver(receiver);
+            }
+
+            @Override
+            public void dependenciesUnavailable() {
+                receivers.unregisterReceivers();
+            }
+            
+        });
+        tracker.open();
     }
 
     @Override
     public void stop(BundleContext context) {
-        heapDumpCommandReceiverTracker.close();
-
         receivers.unregisterReceivers();
+        tracker.close();
     }
 
 }

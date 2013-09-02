@@ -52,10 +52,12 @@ public class VmGcVmListener implements VmUpdateListener {
 
     private final String vmId;
     private final VmGcStatDAO gcDAO;
+    private final String writerId;
 
-    public VmGcVmListener(VmGcStatDAO vmGcStatDao, String vmId) {
+    public VmGcVmListener(String writerId, VmGcStatDAO vmGcStatDao, String vmId) {
         gcDAO = vmGcStatDao;
         this.vmId = vmId;
+        this.writerId = writerId;
     }
 
     @Override
@@ -69,7 +71,7 @@ public class VmGcVmListener implements VmUpdateListener {
             long collectors = extractor.getTotalCollectors();
             for (int i = 0; i < collectors; i++) {
                 long timestamp = System.currentTimeMillis();
-                VmGcStat stat = new VmGcStat(vmId, timestamp,
+                VmGcStat stat = new VmGcStat(writerId, vmId, timestamp,
                         extractor.getCollectorName(i),
                         extractor.getCollectorInvocations(i),
                         extractor.getCollectorTime(i));

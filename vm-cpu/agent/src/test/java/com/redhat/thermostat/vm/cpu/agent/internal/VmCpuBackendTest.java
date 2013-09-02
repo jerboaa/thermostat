@@ -60,6 +60,7 @@ import com.redhat.thermostat.agent.VmStatusListener.Status;
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.common.Version;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
 
@@ -80,7 +81,8 @@ public class VmCpuBackendTest {
         
         registrar = mock(VmStatusListenerRegistrar.class);
         
-        backend = new VmCpuBackend(executor, vmCpuStatDao, version, registrar);
+        WriterID id = mock(WriterID.class);
+        backend = new VmCpuBackend(executor, vmCpuStatDao, version, registrar, id);
     }
 
     @Test

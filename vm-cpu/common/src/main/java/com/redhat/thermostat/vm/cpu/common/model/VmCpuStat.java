@@ -49,10 +49,11 @@ public class VmCpuStat extends BasePojo implements TimeStampedPojo {
     private double cpuLoad;
 
     public VmCpuStat() {
-        super();
+        super(null);
     }
 
-    public VmCpuStat(long timeStamp, String vmId, double cpuLoad) {
+    public VmCpuStat(String writerId, long timeStamp, String vmId, double cpuLoad) {
+        super(writerId);
         this.timeStamp = timeStamp;
         this.vmId = vmId;
         this.cpuLoad = cpuLoad;

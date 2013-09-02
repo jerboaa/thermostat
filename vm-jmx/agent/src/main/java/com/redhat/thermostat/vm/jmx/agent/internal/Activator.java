@@ -46,19 +46,24 @@ import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.Version;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.vm.jmx.common.JmxNotificationDAO;
 
 public class Activator implements BundleActivator {
 
-    private ServiceRegistration registration;
+    private ServiceRegistration<Backend> registration;
     private JmxBackend jmxBackend;
     private MultipleServiceTracker tracker;
 
     @Override
     public void start(final BundleContext context) throws Exception {
 
-        Class<?>[] deps = new Class<?>[] { JmxNotificationDAO.class, MXBeanConnectionPool.class };
+        Class<?>[] deps = new Class<?>[] {
+                JmxNotificationDAO.class,
+                MXBeanConnectionPool.class,
+                WriterID.class, // jmx backend uses it
+        };
         tracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
 
             @Override
@@ -68,9 +73,10 @@ public class Activator implements BundleActivator {
                 Version version = new Version(context.getBundle());
                 ReceiverRegistry registry = new ReceiverRegistry(context);
                 JmxRequestListener receiver = new JmxRequestListener();
-                jmxBackend = new JmxBackend(version, registry, dao, pool, receiver);
+                WriterID writerId = (WriterID) services.get(WriterID.class.getName());
+                jmxBackend = new JmxBackend(version, registry, dao, pool, receiver, writerId);
                 receiver.setBackend(jmxBackend);
-                registration = context.registerService(Backend.class.getName(), jmxBackend, null);
+                registration = context.registerService(Backend.class, jmxBackend, null);
             }
 
             @Override

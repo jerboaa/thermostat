@@ -46,6 +46,7 @@ import org.junit.Test;
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.common.Version;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 
 public class VmGcBackendTest {
@@ -60,8 +61,9 @@ public class VmGcBackendTest {
         when(version.getVersionNumber()).thenReturn("0.0.0");
 
         VmStatusListenerRegistrar registrar = mock(VmStatusListenerRegistrar.class);
-
-        backend = new VmGcBackend(vmGcStatDao, version, registrar);
+        
+        WriterID id = mock(WriterID.class);
+        backend = new VmGcBackend(vmGcStatDao, version, registrar, id);
     }
 
     @Test

@@ -48,19 +48,21 @@ import com.redhat.thermostat.backend.BackendService;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.Version;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 
 public class Activator implements BundleActivator {
     
     private MultipleServiceTracker tracker;
     private VmGcBackend backend;
-    private ServiceRegistration reg;
+    private ServiceRegistration<Backend> reg;
     
     @Override
     public void start(final BundleContext context) throws Exception {
         Class<?>[] deps = new Class<?>[] {
                 BackendService.class,
-                VmGcStatDAO.class
+                VmGcStatDAO.class,
+                WriterID.class, // vm gc backend uses it.
         };
 
         final VmStatusListenerRegistrar registerer = new VmStatusListenerRegistrar(context);
@@ -71,8 +73,9 @@ public class Activator implements BundleActivator {
             public void dependenciesAvailable(Map<String, Object> services) {
                 VmGcStatDAO vmGcStatDao = (VmGcStatDAO) services.get(VmGcStatDAO.class.getName());
                 Version version = new Version(context.getBundle());
-                backend = new VmGcBackend(vmGcStatDao, version, registerer);
-                reg = context.registerService(Backend.class.getName(), backend, null);
+                WriterID writerId = (WriterID) services.get(WriterID.class.getName());
+                backend = new VmGcBackend(vmGcStatDao, version, registerer, writerId);
+                reg = context.registerService(Backend.class, backend, null);
             }
 
             @Override

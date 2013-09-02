@@ -68,7 +68,7 @@ public class VmCpuControllerTest {
     @Test
     public void testChartUpdate() {
 
-        VmCpuStat stat1 = new VmCpuStat(123, "vmId", 50.5);
+        VmCpuStat stat1 = new VmCpuStat("foo-agent", 123, "vmId", 50.5);
         List<VmCpuStat> stats = new ArrayList<VmCpuStat>();
         stats.add(stat1);
 

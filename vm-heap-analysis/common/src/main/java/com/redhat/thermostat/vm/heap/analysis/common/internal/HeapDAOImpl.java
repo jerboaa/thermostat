@@ -85,7 +85,6 @@ public class HeapDAOImpl implements HeapDAO {
 
     @Override
     public void putHeapInfo(HeapInfo heapInfo, File heapDumpData, ObjectHistogram histogramData) throws IOException {
-        heapInfo.setAgentId(storage.getAgentId());
         String heapId = heapInfo.getAgentId() + "-" + heapInfo.getVmId() + "-" + heapInfo.getTimeStamp();
         System.err.println("assigning heapId: " + heapId);
         heapInfo.setHeapId(heapId);

@@ -366,7 +366,7 @@ public class JmxNotificationsSwingView extends JmxNotificationsView implements S
             @Override
             public void run() {
                 int c = i.incrementAndGet();
-                JmxNotification data = new JmxNotification();
+                JmxNotification data = new JmxNotification("foo-agent");
                 data.setTimeStamp(time + (c * TimeUnit.MINUTES.toMillis(1)));
                 data.setSourceBackend("foo");
                 data.setSourceDetails("GarbageCollection " + c);

@@ -34,36 +34,21 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.gc.agent.internal;
+package com.redhat.thermostat.vm.cpu.common.model;
 
-import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.backend.VmListenerBackend;
-import com.redhat.thermostat.backend.VmUpdateListener;
-import com.redhat.thermostat.common.Version;
-import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
+import static org.junit.Assert.fail;
 
-public class VmGcBackend extends VmListenerBackend {
+import org.junit.Test;
 
-    private final VmGcStatDAO vmGcStats;
+public class MemoryStatTest {
 
-    public VmGcBackend(VmGcStatDAO vmGcStatDAO, Version version,
-            VmStatusListenerRegistrar registrar, WriterID writerId) {
-        super("VM GC Backend",
-                "Gathers garbage collection statistics about a JVM",
-                "Red Hat, Inc.", version.getVersionNumber(), true, registrar, writerId);
-        this.vmGcStats = vmGcStatDAO;
+    @Test
+    public void testBasicInstantiation() {
+        try {
+            // pojo converters use this
+            VmCpuStat.class.newInstance();
+        } catch (Exception e) {
+            fail("should be able to instantiate using no-arg constructor");
+        }
     }
-
-    @Override
-    public int getOrderValue() {
-        return ORDER_MEMORY_GROUP + 20;
-    }
-
-    @Override
-    protected VmUpdateListener createVmListener(String writerId, String vmId, int pid) {
-        return new VmGcVmListener(writerId, vmGcStats, vmId);
-    }
-
 }
-

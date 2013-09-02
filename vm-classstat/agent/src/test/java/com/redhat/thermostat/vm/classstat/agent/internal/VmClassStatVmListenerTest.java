@@ -64,7 +64,7 @@ public class VmClassStatVmListenerTest {
     @Before
     public void setUp() {
         dao = mock(VmClassStatDAO.class);
-        listener = new VmClassStatVmListener(dao, VM_ID);
+        listener = new VmClassStatVmListener("foo-agent", dao, VM_ID);
     }
 
     @Test

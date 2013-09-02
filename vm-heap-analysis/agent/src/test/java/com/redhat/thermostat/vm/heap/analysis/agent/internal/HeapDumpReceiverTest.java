@@ -57,6 +57,7 @@ import org.mockito.ArgumentCaptor;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.HistogramLoader;
 import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
@@ -82,7 +83,8 @@ public class HeapDumpReceiverTest {
         jmxDumper = mock(JMXHeapDumper.class);
         jmapDumper = mock(JMapHeapDumper.class);
         histogramLoader = mock(HistogramLoader.class);
-        receiver = new HeapDumpReceiver(heapDAO, jmxDumper, jmapDumper, histogramLoader);
+        WriterID id = mock(WriterID.class);
+        receiver = new HeapDumpReceiver(heapDAO, jmxDumper, jmapDumper, histogramLoader, id);
     }
 
     @After

@@ -113,7 +113,7 @@ public class JmxNotificationDAOImplTest {
 
     @Test
     public void verifyGetLatestNotificationStatus() throws DescriptorParsingException, StatementExecutionException {
-        JmxNotificationStatus data = new JmxNotificationStatus();
+        JmxNotificationStatus data = new JmxNotificationStatus("foo-agent");
 
         @SuppressWarnings("unchecked")
         PreparedStatement<JmxNotificationStatus> stmt = (PreparedStatement<JmxNotificationStatus>) mock(PreparedStatement.class);

@@ -60,6 +60,7 @@ import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.utils.management.MXBeanConnection;
 import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.vm.jmx.common.JmxNotification;
@@ -80,6 +81,7 @@ public class JmxBackend extends BaseBackend {
     private final NotificationListener notificationWriter;
 
     private final Map<Integer, MXBeanConnection> connections = new HashMap<>();
+    private final WriterID writerId;
 
     private boolean isActive = false;
 
@@ -94,17 +96,22 @@ public class JmxBackend extends BaseBackend {
         }
     }
 
-    public JmxBackend(Version version, ReceiverRegistry registry, JmxNotificationDAO dao, MXBeanConnectionPool pool, RequestReceiver receiver) {
-        this(version, registry, dao, pool, receiver, new SystemClock());
+    public JmxBackend(Version version, ReceiverRegistry registry,
+            JmxNotificationDAO dao, MXBeanConnectionPool pool,
+            RequestReceiver receiver, WriterID writerId) {
+        this(version, registry, dao, pool, receiver, new SystemClock(), writerId);
     }
 
-    public JmxBackend(Version version, ReceiverRegistry registry, JmxNotificationDAO dao, MXBeanConnectionPool pool, RequestReceiver receiver, Clock clock) {
+    public JmxBackend(Version version, ReceiverRegistry registry,
+            JmxNotificationDAO dao, MXBeanConnectionPool pool,
+            RequestReceiver receiver, Clock clock, WriterID writerId) {
         super("VM JMX Backend", "gathers JMX information using JMX", "Red Hat, Inc.", version.getVersionNumber());
 
         this.registry = registry;
         this.pool = pool;
         this.dao = dao;
         this.clock = clock;
+        this.writerId = writerId;
 
         this.registrationNotificationListener = new RegistrationNotificationListener();
         this.notificationWriter = new NotificationWriter();
@@ -160,7 +167,8 @@ public class JmxBackend extends BaseBackend {
                     addNotificationListenerToMBean(idAndPid, server, name);
                 }
             }
-            JmxNotificationStatus update = new JmxNotificationStatus();
+            String wId = writerId.getWriterID();
+            JmxNotificationStatus update = new JmxNotificationStatus(wId);
             update.setVmId(vmId);
             update.setEnabled(true);
             update.setTimeStamp(clock.getRealTimeMillis());
@@ -173,7 +181,8 @@ public class JmxBackend extends BaseBackend {
     public void disableNotificationsFor(String vmId, int pid) {
         MXBeanConnection connection = connections.get(pid);
 
-        JmxNotificationStatus update = new JmxNotificationStatus();
+        String wId = writerId.getWriterID();
+        JmxNotificationStatus update = new JmxNotificationStatus(wId);
         update.setVmId(vmId);
         update.setEnabled(false);
         update.setTimeStamp(clock.getRealTimeMillis());
@@ -218,7 +227,8 @@ public class JmxBackend extends BaseBackend {
         public void handleNotification(Notification notification, Object handback) {
             VmIdAndPid idAndPid = (VmIdAndPid) handback;
 
-            JmxNotification data = new JmxNotification();
+            String wId = writerId.getWriterID();
+            JmxNotification data = new JmxNotification(wId);
             data.setVmId(idAndPid.vmId);
             data.setTimeStamp(notification.getTimeStamp());
             data.setSourceBackend(JmxBackend.class.getName());
@@ -235,4 +245,5 @@ public class JmxBackend extends BaseBackend {
             server.addNotificationListener(name, JmxBackend.this.notificationWriter, null, idAndPid);
         }
     }
+
 }

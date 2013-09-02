@@ -34,36 +34,35 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.gc.agent.internal;
+package com.redhat.thermostat.vm.jmx.common;
 
-import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.backend.VmListenerBackend;
-import com.redhat.thermostat.backend.VmUpdateListener;
-import com.redhat.thermostat.common.Version;
-import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
+import static org.junit.Assert.assertEquals;
 
-public class VmGcBackend extends VmListenerBackend {
+import java.util.ArrayList;
 
-    private final VmGcStatDAO vmGcStats;
+import org.junit.Test;
 
-    public VmGcBackend(VmGcStatDAO vmGcStatDAO, Version version,
-            VmStatusListenerRegistrar registrar, WriterID writerId) {
-        super("VM GC Backend",
-                "Gathers garbage collection statistics about a JVM",
-                "Red Hat, Inc.", version.getVersionNumber(), true, registrar, writerId);
-        this.vmGcStats = vmGcStatDAO;
+public class JmxPojosInstantiationTest {
+
+    private static final Class<?>[] CLASSES_LIST = new Class[] {
+        JmxNotification.class,
+        JmxNotificationStatus.class
+    };
+
+    @Test
+    public void testBasicInstantiation() {
+        ArrayList<Class<?>> failureClasses = new ArrayList<>();
+        for (Class<?> clazz : CLASSES_LIST) {
+            try {
+                // pojo converters use this
+                clazz.newInstance();
+                // pass
+            } catch (InstantiationException | IllegalAccessException e) {
+                failureClasses.add(clazz);
+            }
+        }
+        String msg = "Should be able to instantiate class using no-arg constructor: "
+                + failureClasses;
+        assertEquals(msg, 0, failureClasses.size());
     }
-
-    @Override
-    public int getOrderValue() {
-        return ORDER_MEMORY_GROUP + 20;
-    }
-
-    @Override
-    protected VmUpdateListener createVmListener(String writerId, String vmId, int pid) {
-        return new VmGcVmListener(writerId, vmGcStats, vmId);
-    }
-
 }
-

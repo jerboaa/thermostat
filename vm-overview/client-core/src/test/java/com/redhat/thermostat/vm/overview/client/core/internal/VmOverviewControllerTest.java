@@ -129,7 +129,7 @@ public class VmOverviewControllerTest {
     }
 
     private VmInfo createVmInfo() {
-        VmInfo vmInfo = new VmInfo(VM_ID, VM_PID, START_TIME, STOP_TIME, JAVA_VERSION,
+        VmInfo vmInfo = new VmInfo("foo-agent", VM_ID, VM_PID, START_TIME, STOP_TIME, JAVA_VERSION,
                 JAVA_HOME, MAIN_CLASS, COMMAND_LINE, VM_NAME, VM_INFO,
                 VM_VERSION, VM_ARGS, PROPS, ENV, LIBS, UID, USERNAME);
         return vmInfo;
@@ -158,7 +158,7 @@ public class VmOverviewControllerTest {
     
     @Test
     public void verifyViewIsUpdatedWithDataNoUid() {
-        VmInfo vmInfo = new VmInfo(VM_ID, VM_PID, START_TIME, STOP_TIME, JAVA_VERSION,
+        VmInfo vmInfo = new VmInfo("foo-agent", VM_ID, VM_PID, START_TIME, STOP_TIME, JAVA_VERSION,
                 JAVA_HOME, MAIN_CLASS, COMMAND_LINE, VM_NAME, VM_INFO,
                 VM_VERSION, VM_ARGS, PROPS, ENV, LIBS, -1, null);
         createController(vmInfo);
@@ -184,7 +184,7 @@ public class VmOverviewControllerTest {
     
     @Test
     public void verifyViewIsUpdatedWithDataNoUsername() {
-        VmInfo vmInfo = new VmInfo(VM_ID, VM_PID, START_TIME, STOP_TIME, JAVA_VERSION,
+        VmInfo vmInfo = new VmInfo("foo-agent", VM_ID, VM_PID, START_TIME, STOP_TIME, JAVA_VERSION,
                 JAVA_HOME, MAIN_CLASS, COMMAND_LINE, VM_NAME, VM_INFO,
                 VM_VERSION, VM_ARGS, PROPS, ENV, LIBS, UID, null);
         createController(vmInfo);

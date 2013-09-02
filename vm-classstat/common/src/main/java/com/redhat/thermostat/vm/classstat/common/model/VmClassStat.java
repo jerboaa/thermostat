@@ -49,10 +49,11 @@ public class VmClassStat extends BasePojo implements TimeStampedPojo {
     private long loadedClasses;
 
     public VmClassStat() {
-        this(null, -1, -1);
+        this(null, null, -1, -1);
     }
 
-    public VmClassStat(String vmId, long timestamp, long loadedClasses) {
+    public VmClassStat(String writerId, String vmId, long timestamp, long loadedClasses) {
+        super(writerId);
         this.vmId = vmId;
         this.timestamp = timestamp;
         this.loadedClasses = loadedClasses;

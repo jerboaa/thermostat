@@ -54,10 +54,12 @@ public class VmMemoryVmListener implements VmUpdateListener {
 
     private final String vmId;
     private final VmMemoryStatDAO memDAO;
+    private final String writerId;
 
-    public VmMemoryVmListener(VmMemoryStatDAO vmMemoryStatDao, String vmId) {
+    public VmMemoryVmListener(String writerId, VmMemoryStatDAO vmMemoryStatDao, String vmId) {
         memDAO = vmMemoryStatDao;
         this.vmId = vmId;
+        this.writerId = writerId;
     }
 
     @Override
@@ -91,7 +93,7 @@ public class VmMemoryVmListener implements VmUpdateListener {
                 }
                 g.setSpaces(spaces);
             }
-            VmMemoryStat stat = new VmMemoryStat(timestamp, vmId, generations);
+            VmMemoryStat stat = new VmMemoryStat(writerId, timestamp, vmId, generations);
             memDAO.putVmMemoryStat(stat);
         } catch (VmUpdateException e) {
             logger.log(Level.WARNING, "error gathering memory info for vm " + vmId, e);

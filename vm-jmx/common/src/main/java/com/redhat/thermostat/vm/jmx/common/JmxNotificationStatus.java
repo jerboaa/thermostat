@@ -47,6 +47,14 @@ public class JmxNotificationStatus extends BasePojo implements TimeStampedPojo {
     private long timeStamp = 0;
     private String vmId = null;
     private boolean enabled = false;
+    
+    public JmxNotificationStatus() {
+        this(null);
+    }
+    
+    public JmxNotificationStatus(String writerId) {
+        super(writerId);
+    }
 
     @Persist
     public String getVmId() {

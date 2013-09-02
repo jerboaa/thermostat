@@ -49,6 +49,7 @@ import org.osgi.framework.Version;
 
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendService;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 
@@ -63,7 +64,7 @@ public class ActivatorTest {
         activator.start(context);
 
         assertEquals(0, context.getAllServices().size());
-        assertEquals(2, context.getServiceListeners().size());
+        assertEquals(3, context.getServiceListeners().size());
 
         activator.stop(context);
     }
@@ -81,9 +82,11 @@ public class ActivatorTest {
         
         BackendService service = mock(BackendService.class);
         VmGcStatDAO vmGcStatDAO = mock(VmGcStatDAO.class);
+        WriterID writerID = mock(WriterID.class);
 
         context.registerService(BackendService.class, service, null);
         context.registerService(VmGcStatDAO.class, vmGcStatDAO, null);
+        context.registerService(WriterID.class, writerID, null);
 
         Activator activator = new Activator();
 
@@ -98,7 +101,7 @@ public class ActivatorTest {
         assertFalse(backend.isActive());
 
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(2, context.getAllServices().size());
+        assertEquals(3, context.getAllServices().size());
     }
 
 }
