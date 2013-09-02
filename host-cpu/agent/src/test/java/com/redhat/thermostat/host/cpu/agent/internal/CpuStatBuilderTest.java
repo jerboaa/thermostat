@@ -52,6 +52,7 @@ import org.junit.Test;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.host.cpu.common.model.CpuStat;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.utils.ProcDataSource;
 
 public class CpuStatBuilderTest {
@@ -59,7 +60,8 @@ public class CpuStatBuilderTest {
     @Test
     public void testSimpleBuild() {
         ProcDataSource dataSource = new ProcDataSource();
-        CpuStatBuilder builder= new CpuStatBuilder(new SystemClock(), dataSource, 100l);
+        WriterID writerId = mock(WriterID.class);
+        CpuStatBuilder builder= new CpuStatBuilder(new SystemClock(), dataSource, 100l, writerId);
         builder.initialize();
         CpuStat stat = builder.build();
         assertNotNull(stat);
@@ -70,7 +72,7 @@ public class CpuStatBuilderTest {
         Clock clock = mock(Clock.class);
         ProcDataSource dataSource = mock(ProcDataSource.class);
         long ticksPerSecond = 1;
-        CpuStatBuilder builder = new CpuStatBuilder(clock, dataSource, ticksPerSecond);
+        CpuStatBuilder builder = new CpuStatBuilder(clock, dataSource, ticksPerSecond, null);
         builder.build();
     }
 
@@ -98,7 +100,8 @@ public class CpuStatBuilderTest {
 
         ProcDataSource dataSource = mock(ProcDataSource.class);
         when(dataSource.getStatReader()).thenReturn(reader1).thenReturn(reader2);
-        CpuStatBuilder builder = new CpuStatBuilder(clock, dataSource, ticksPerSecond);
+        WriterID writerId = mock(WriterID.class);
+        CpuStatBuilder builder = new CpuStatBuilder(clock, dataSource, ticksPerSecond, writerId);
 
         builder.initialize();
 

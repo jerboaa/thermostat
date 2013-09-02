@@ -44,6 +44,7 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.host.cpu.common.model.CpuStat;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.utils.ProcDataSource;
 
 public class CpuStatBuilder {
@@ -53,13 +54,15 @@ public class CpuStatBuilder {
     private final ProcDataSource dataSource;
     private final Clock clock;
     private final long ticksPerSecond;
+    private final WriterID writerId;
 
     private boolean initialized = false;
 
     private long[] previousCpuTicks;
     private long previousTime;
 
-    public CpuStatBuilder(Clock clock, ProcDataSource dataSource, long ticksPerSecond) {
+    public CpuStatBuilder(Clock clock, ProcDataSource dataSource, long ticksPerSecond, WriterID writerId) {
+        this.writerId = writerId;
         this.dataSource = dataSource;
         this.clock = clock;
         this.ticksPerSecond = ticksPerSecond;
@@ -94,8 +97,9 @@ public class CpuStatBuilder {
         }
         previousTime = currentTime;
         previousCpuTicks = currentValues;
+        String wId = writerId.getWriterID();
 
-        return new CpuStat(currentRealTime, cpuUsage);
+        return new CpuStat(wId, currentRealTime, cpuUsage);
     }
 
     private long[] getCurrentCpuTicks() {

@@ -44,6 +44,7 @@ import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.utils.ProcDataSource;
 import com.redhat.thermostat.utils.SysConf;
 
@@ -56,7 +57,8 @@ public class HostCpuBackend extends BaseBackend {
     private ScheduledExecutorService executor;
     private boolean started;
 
-    public HostCpuBackend(ScheduledExecutorService executor, CpuStatDAO cpuStatDAO, Version version) {
+    public HostCpuBackend(ScheduledExecutorService executor,
+            CpuStatDAO cpuStatDAO, Version version, final WriterID writerId) {
         super("Host CPU Backend",
                 "Gathers CPU statistics about a host",
                 "Red Hat, Inc.",
@@ -66,7 +68,7 @@ public class HostCpuBackend extends BaseBackend {
         Clock clock = new SystemClock();
         long ticksPerSecond = SysConf.getClockTicksPerSecond();
         ProcDataSource source = new ProcDataSource();
-        cpuStatBuilder = new CpuStatBuilder(clock, source, ticksPerSecond);
+        cpuStatBuilder = new CpuStatBuilder(clock, source, ticksPerSecond, writerId);
     }
 
     @Override

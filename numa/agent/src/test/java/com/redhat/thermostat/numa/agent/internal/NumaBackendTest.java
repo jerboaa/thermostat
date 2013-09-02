@@ -37,7 +37,6 @@
 package com.redhat.thermostat.numa.agent.internal;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
@@ -62,8 +61,10 @@ import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.numa.common.NumaDAO;
+import com.redhat.thermostat.numa.common.NumaHostInfo;
 import com.redhat.thermostat.numa.common.NumaNodeStat;
 import com.redhat.thermostat.numa.common.NumaStat;
+import com.redhat.thermostat.storage.core.WriterID;
 
 public class NumaBackendTest {
     
@@ -84,7 +85,8 @@ public class NumaBackendTest {
         Version version = mock(Version.class);
         when(version.getVersionNumber()).thenReturn("0.0.0");
         numaDAO = mock(NumaDAO.class);
-        backend = new NumaBackend(appService, numaDAO, collector, version);
+        WriterID id = mock(WriterID.class);
+        backend = new NumaBackend(appService, numaDAO, collector, version, id);
     }
 
     @After
@@ -121,7 +123,9 @@ public class NumaBackendTest {
         verifyNoMoreInteractions(timer);
 
         Runnable action = actionCaptor.getValue();
-        verify(numaDAO).putNumberOfNumaNodes(42);
+        NumaHostInfo info = new NumaHostInfo(null);
+        info.setNumNumaNodes(42);
+        verify(numaDAO).putNumberOfNumaNodes(info);
         verifyNoMoreInteractions(numaDAO);
         verify(collector).getNumberOfNumaNodes();
         verifyNoMoreInteractions(collector);

@@ -54,10 +54,11 @@ public class MemoryStat extends BasePojo implements TimeStampedPojo {
     private long commitLimit;
 
     public MemoryStat() {
-        super();
+        super(null);
     }
 
-    public MemoryStat(long timeStamp, long total, long free, long buffers, long cached, long swapTotal, long swapFree, long commitLimit) {
+    public MemoryStat(String writerId, long timeStamp, long total, long free, long buffers, long cached, long swapTotal, long swapFree, long commitLimit) {
+        super(writerId);
         this.timeStamp = timeStamp;
         this.total = total;
         this.free = free;

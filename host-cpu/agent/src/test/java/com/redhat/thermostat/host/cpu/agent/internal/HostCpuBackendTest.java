@@ -54,6 +54,7 @@ import org.mockito.ArgumentCaptor;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
 import com.redhat.thermostat.host.cpu.common.model.CpuStat;
+import com.redhat.thermostat.storage.core.WriterID;
 
 public class HostCpuBackendTest {
     
@@ -67,8 +68,9 @@ public class HostCpuBackendTest {
         cpuStatDao = mock(CpuStatDAO.class);
         Version version = mock(Version.class);
         when(version.getVersionNumber()).thenReturn("0.0.0");
+        WriterID id = mock(WriterID.class);
         
-        backend = new HostCpuBackend(executor, cpuStatDao, version);
+        backend = new HostCpuBackend(executor, cpuStatDao, version, id);
     }
 
     @Test

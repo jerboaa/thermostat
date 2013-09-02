@@ -45,7 +45,7 @@ public class NumaStatTest {
 
     @Test
     public void testDefaults() {
-        NumaStat numaStat = new NumaStat();
+        NumaStat numaStat = new NumaStat("foo");
         assertEquals(-1, numaStat.getTimeStamp());
         assertNotNull(numaStat.getNodeStats());
         assertEquals(0, numaStat.getNodeStats().length);
@@ -53,7 +53,7 @@ public class NumaStatTest {
 
     @Test
     public void testGetSetValues() {
-        NumaStat numaStat = new NumaStat();
+        NumaStat numaStat = new NumaStat("bar");
         numaStat.setTimeStamp(12345);
         NumaNodeStat nodeStat1 = new NumaNodeStat();
         NumaNodeStat nodeStat2 = new NumaNodeStat();
@@ -64,6 +64,16 @@ public class NumaStatTest {
         assertEquals(2, numaStat.getNodeStats().length);
         assertSame(nodeStat1, numaStat.getNodeStats()[0]);
         assertSame(nodeStat2, numaStat.getNodeStats()[1]);
+    }
+    
+    @Test
+    public void testBasicInstantiation() {
+        try {
+            // pojo converters use this
+            NumaStat.class.newInstance();
+        } catch (Exception e) {
+            fail("should be able to instantiate using no-arg constructor");
+        }
     }
 }
 

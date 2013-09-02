@@ -37,6 +37,7 @@
 package com.redhat.thermostat.numa.common;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
@@ -44,9 +45,20 @@ public class NumaHostInfoTest {
 
     @Test
     public void testGetterSetter() {
-        NumaHostInfo numaHostInfo = new NumaHostInfo();
+        NumaHostInfo numaHostInfo = new NumaHostInfo("foo");
         numaHostInfo.setNumNumaNodes(42);
         assertEquals(42, numaHostInfo.getNumNumaNodes());
+        assertEquals("foo", numaHostInfo.getAgentId());
+    }
+    
+    @Test
+    public void testBasicInstantiation() {
+        try {
+            // pojo converters use this
+            NumaHostInfo.class.newInstance();
+        } catch (Exception e) {
+            fail("should be able to instantiate using no-arg constructor");
+        }
     }
 }
 

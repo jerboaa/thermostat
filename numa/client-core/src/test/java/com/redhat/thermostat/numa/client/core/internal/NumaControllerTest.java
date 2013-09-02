@@ -40,7 +40,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doNothing;
@@ -121,8 +120,7 @@ public class NumaControllerTest {
         NumaNodeStat nodeStat13 = new NumaNodeStat();
         nodeStat13.setNumaHit(70);
         nodeStat13.setNumaMiss(30);
-        NumaStat stat1 = new NumaStat();
-        stat1.setAgentId("fluff");
+        NumaStat stat1 = new NumaStat("fluff");
         stat1.setTimeStamp(123);
         stat1.setNodeStats(new NumaNodeStat[] {nodeStat11, nodeStat12, nodeStat13 });
         NumaNodeStat nodeStat21 = new NumaNodeStat();
@@ -134,8 +132,7 @@ public class NumaControllerTest {
         NumaNodeStat nodeStat23 = new NumaNodeStat();
         nodeStat23.setNumaHit(80);
         nodeStat23.setNumaMiss(20);
-        NumaStat stat2 = new NumaStat();
-        stat2.setAgentId("fluff");
+        NumaStat stat2 = new NumaStat("fluff");
         stat2.setTimeStamp(234);
         stat2.setNodeStats(new NumaNodeStat[] {nodeStat21, nodeStat22, nodeStat23 });
         List<NumaStat> stats = Arrays.asList(stat1, stat2);

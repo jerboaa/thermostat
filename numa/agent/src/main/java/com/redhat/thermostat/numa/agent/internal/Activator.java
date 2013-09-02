@@ -49,18 +49,22 @@ import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.numa.common.NumaDAO;
+import com.redhat.thermostat.storage.core.WriterID;
 
 public class Activator implements BundleActivator {
     
     private MultipleServiceTracker tracker;
     private NumaBackend backend;
-    private ServiceRegistration reg;
+    private ServiceRegistration<Backend> reg;
     
     @Override
     public void start(final BundleContext context) throws Exception {
 
         Class<?>[] deps = new Class<?>[] {
-                BackendService.class, NumaDAO.class, ApplicationService.class
+                BackendService.class,
+                NumaDAO.class,
+                ApplicationService.class,
+                WriterID.class, // numa backend uses it
         };
         tracker = new MultipleServiceTracker(context, deps, new Action() {
             
@@ -69,9 +73,10 @@ public class Activator implements BundleActivator {
                 ApplicationService appService = (ApplicationService) services.get(ApplicationService.class.getName());
                 NumaDAO numaDAO = (NumaDAO) services.get(NumaDAO.class.getName());
                 Version version = new Version(context.getBundle());
+                WriterID writerId = (WriterID) services.get(WriterID.class.getName());
                 NumaCollector collector = new NumaCollector();
-                backend = new NumaBackend(appService, numaDAO, collector, version);
-                reg = context.registerService(Backend.class.getName(), backend, null);
+                backend = new NumaBackend(appService, numaDAO, collector, version, writerId);
+                reg = context.registerService(Backend.class, backend, null);
             }
 
             @Override

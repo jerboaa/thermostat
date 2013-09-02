@@ -45,6 +45,7 @@ import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.host.memory.common.model.MemoryStat;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.utils.ProcDataSource;
 
 /**
@@ -65,9 +66,11 @@ public class MemoryStatBuilder {
     private static final Logger logger = LoggingUtils.getLogger(MemoryStatBuilder.class);
 
     private final ProcDataSource dataSource;
+    private final WriterID writerId;
 
-    public MemoryStatBuilder(ProcDataSource dataSource) {
+    public MemoryStatBuilder(ProcDataSource dataSource, WriterID writerId) {
         this.dataSource = dataSource;
+        this.writerId = writerId;
     }
 
     protected MemoryStat build() {
@@ -108,8 +111,8 @@ public class MemoryStatBuilder {
         } catch (IOException ioe) {
             logger.log(Level.WARNING, "unable to read memory info");
         }
-
-        return new MemoryStat(timestamp, total, free, buffers, cached, swapTotal, swapFree, commitLimit);
+        String wId = writerId.getWriterID();
+        return new MemoryStat(wId, timestamp, total, free, buffers, cached, swapTotal, swapFree, commitLimit);
     }
 
     private long getValue(String rawValue) {

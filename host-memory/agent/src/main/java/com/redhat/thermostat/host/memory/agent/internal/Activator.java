@@ -50,13 +50,14 @@ import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
+import com.redhat.thermostat.storage.core.WriterID;
 
 public class Activator implements BundleActivator {
     
     private ScheduledExecutorService executor;
     private MultipleServiceTracker tracker;
     private HostMemoryBackend backend;
-    private ServiceRegistration reg;
+    private ServiceRegistration<?> reg;
     
     @Override
     public void start(final BundleContext context) throws Exception {
@@ -64,7 +65,8 @@ public class Activator implements BundleActivator {
 
         Class<?>[] deps = new Class<?>[] {
                 BackendService.class,
-                MemoryStatDAO.class
+                MemoryStatDAO.class,
+                WriterID.class, // host memory backen uses it
         };
         tracker = new MultipleServiceTracker(context, deps, new Action() {
             
@@ -72,7 +74,8 @@ public class Activator implements BundleActivator {
             public void dependenciesAvailable(Map<String, Object> services) {
                 MemoryStatDAO memoryStatDao = (MemoryStatDAO) services.get(MemoryStatDAO.class.getName());
                 Version version = new Version(context.getBundle());
-                backend = new HostMemoryBackend(executor, memoryStatDao, version);
+                WriterID id = (WriterID) services.get(WriterID.class.getName());
+                backend = new HostMemoryBackend(executor, memoryStatDao, version, id);
                 reg = context.registerService(Backend.class.getName(), backend, null);
             }
 

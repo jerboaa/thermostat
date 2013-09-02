@@ -36,48 +36,19 @@
 
 package com.redhat.thermostat.host.cpu.common.model;
 
-import com.redhat.thermostat.storage.core.Entity;
-import com.redhat.thermostat.storage.core.Persist;
-import com.redhat.thermostat.storage.model.BasePojo;
-import com.redhat.thermostat.storage.model.TimeStampedPojo;
+import static org.junit.Assert.fail;
 
-@Entity
-public class CpuStat extends BasePojo implements TimeStampedPojo {
+import org.junit.Test;
 
-    public static final double INVALID_LOAD = Double.MIN_VALUE;
+public class CpuStatTest {
 
-    private long timeStamp;
-    private double[] perProcessorUsage;
-
-    public CpuStat() {
-        this(null, -1, null);
-    }
-
-    public CpuStat(String writerId, long timestamp, double[] perProcessorUsage) {
-        super(writerId);
-        this.timeStamp = timestamp;
-        this.perProcessorUsage = perProcessorUsage;
-    }
-
-    @Persist
-    public double[] getPerProcessorUsage() {
-        return perProcessorUsage;
-    }
-
-    @Persist
-    public void setPerProcessorUsage(double[] perProcessorUsage) {
-        this.perProcessorUsage = perProcessorUsage;
-    }
-
-    @Persist
-    @Override
-    public long getTimeStamp() {
-        return timeStamp;
-    }
-
-    @Persist
-    public void setTimeStamp(long timeStamp) {
-        this.timeStamp = timeStamp;
+    @Test
+    public void testBasicInstantiation() {
+        try {
+            // pojo converters use this
+            CpuStat.class.newInstance();
+        } catch (Exception e) {
+            fail("should be able to instantiate using no-arg constructor");
+        }
     }
 }
-

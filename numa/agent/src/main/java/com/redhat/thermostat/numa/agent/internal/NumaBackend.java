@@ -48,8 +48,10 @@ import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.numa.common.NumaDAO;
+import com.redhat.thermostat.numa.common.NumaHostInfo;
 import com.redhat.thermostat.numa.common.NumaNodeStat;
 import com.redhat.thermostat.numa.common.NumaStat;
+import com.redhat.thermostat.storage.core.WriterID;
 
 public class NumaBackend extends BaseBackend {
 
@@ -57,13 +59,14 @@ public class NumaBackend extends BaseBackend {
 
     private static final long NUMA_CHECK_INTERVAL_SECONDS = 1;
     
-    private NumaDAO numaDAO;
-    private ApplicationService appService;
+    private final NumaDAO numaDAO;
+    private final ApplicationService appService;
+    private final NumaCollector numaCollector;
+    private final WriterID writerId;
     private boolean started;
-    private NumaCollector numaCollector;
     private Timer timer;
 
-    public NumaBackend(ApplicationService appService, NumaDAO numaDAO, NumaCollector numaCollector, Version version) {
+    public NumaBackend(ApplicationService appService, NumaDAO numaDAO, NumaCollector numaCollector, Version version, WriterID writerID) {
         super("NUMA Backend",
                 "Gathers NUMA statistics about a host",
                 "Red Hat, Inc.",
@@ -71,12 +74,14 @@ public class NumaBackend extends BaseBackend {
         this.appService = appService;
         this.numaDAO = numaDAO;
         this.numaCollector = numaCollector;
+        this.writerId = writerID;
     }
 
     @Override
     public boolean activate() {
         int numNodes = numaCollector.getNumberOfNumaNodes();
-        numaDAO.putNumberOfNumaNodes(numNodes);
+        NumaHostInfo info = buildNumaHostInfo(numNodes);
+        numaDAO.putNumberOfNumaNodes(info);
 
         TimerFactory timerFactory = appService.getTimerFactory();
         timer = timerFactory.createTimer();
@@ -91,7 +96,8 @@ public class NumaBackend extends BaseBackend {
                 NumaNodeStat[] stats;
                 try {
                     stats = numaCollector.collectData();
-                    NumaStat numaStat = new NumaStat();
+                    String wId = writerId.getWriterID();
+                    NumaStat numaStat = new NumaStat(wId);
                     numaStat.setTimeStamp(System.currentTimeMillis());
                     numaStat.setNodeStats(stats);
                     numaDAO.putNumaStat(numaStat);
@@ -104,6 +110,14 @@ public class NumaBackend extends BaseBackend {
         started = true;
 
         return true;
+    }
+
+    // package private for testing
+    NumaHostInfo buildNumaHostInfo(int numNodes) {
+        String wId = writerId.getWriterID();
+        NumaHostInfo info = new NumaHostInfo(wId);
+        info.setNumNumaNodes(numNodes);
+        return info;
     }
 
     @Override

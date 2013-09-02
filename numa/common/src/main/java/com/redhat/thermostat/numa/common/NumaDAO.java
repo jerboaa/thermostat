@@ -52,7 +52,7 @@ public interface NumaDAO {
 
     static final Category<NumaHostInfo> numaHostCategory = new Category<>("numa-host-info", NumaHostInfo.class, Key.AGENT_ID, hostNumNumaNodes);
 
-    void putNumberOfNumaNodes(int numNodes);
+    void putNumberOfNumaNodes(NumaHostInfo info);
     int getNumberOfNumaNodes(HostRef ref);
 
     void putNumaStat(NumaStat stat);

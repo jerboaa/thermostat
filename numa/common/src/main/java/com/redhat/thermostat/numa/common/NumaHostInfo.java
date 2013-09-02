@@ -42,6 +42,14 @@ import com.redhat.thermostat.storage.model.BasePojo;
 
 @Entity
 public class NumaHostInfo extends BasePojo {
+    
+    public NumaHostInfo() {
+        this(null);
+    }
+    
+    public NumaHostInfo(String writerId) {
+        super(writerId);
+    }
 
     private int numNumaNodes;
 

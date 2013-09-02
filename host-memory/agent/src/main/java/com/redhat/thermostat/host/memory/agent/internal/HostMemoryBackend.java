@@ -42,6 +42,7 @@ import java.util.concurrent.TimeUnit;
 import com.redhat.thermostat.backend.BaseBackend;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.utils.ProcDataSource;
 
 public class HostMemoryBackend extends BaseBackend {
@@ -53,7 +54,7 @@ public class HostMemoryBackend extends BaseBackend {
     private ScheduledExecutorService executor;
     private boolean started;
 
-    public HostMemoryBackend(ScheduledExecutorService executor, MemoryStatDAO memoryStatDAO, Version version) {
+    public HostMemoryBackend(ScheduledExecutorService executor, MemoryStatDAO memoryStatDAO, Version version, final WriterID writerId) {
         super("Host Memory Backend",
                 "Gathers memory statistics about a host",
                 "Red Hat, Inc.",
@@ -62,7 +63,7 @@ public class HostMemoryBackend extends BaseBackend {
         this.memoryStats = memoryStatDAO;
 
         ProcDataSource source = new ProcDataSource();
-        memoryStatBuilder = new MemoryStatBuilder(source);
+        memoryStatBuilder = new MemoryStatBuilder(source, writerId);
     }
 
     @Override

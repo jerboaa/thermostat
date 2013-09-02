@@ -85,10 +85,8 @@ public class NumaDAOImpl implements NumaDAO {
     }
 
     @Override
-    public void putNumberOfNumaNodes(int numNodes) {
+    public void putNumberOfNumaNodes(NumaHostInfo numaHostInfo) {
         Add<NumaHostInfo> replace = storage.createAdd(numaHostCategory);
-        NumaHostInfo numaHostInfo = new NumaHostInfo();
-        numaHostInfo.setNumNumaNodes(numNodes);
         replace.setPojo(numaHostInfo);
         replace.apply();
     }

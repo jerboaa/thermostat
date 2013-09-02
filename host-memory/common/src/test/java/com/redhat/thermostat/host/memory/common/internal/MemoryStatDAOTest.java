@@ -92,7 +92,8 @@ public class MemoryStatDAOTest {
     @Test
     public void testGetLatestMemoryStats() throws DescriptorParsingException, StatementExecutionException {
 
-        MemoryStat memStat1 = new MemoryStat(TIMESTAMP, TOTAL, FREE, BUFFERS, CACHED, SWAP_TOTAL, SWAP_FREE, COMMIT_LIMIT);
+        String agentId = "system";
+        MemoryStat memStat1 = new MemoryStat(agentId, TIMESTAMP, TOTAL, FREE, BUFFERS, CACHED, SWAP_TOTAL, SWAP_FREE, COMMIT_LIMIT);
 
         @SuppressWarnings("unchecked")
         Cursor<MemoryStat> cursor = mock(Cursor.class);
@@ -106,7 +107,7 @@ public class MemoryStatDAOTest {
         when(stmt.executeQuery()).thenReturn(cursor);
 
         HostRef hostRef = mock(HostRef.class);
-        when(hostRef.getAgentId()).thenReturn("system");
+        when(hostRef.getAgentId()).thenReturn(agentId);
 
         MemoryStatDAO dao = new MemoryStatDAOImpl(storage);
         List<MemoryStat> memoryStats = dao.getLatestMemoryStats(hostRef, Long.MIN_VALUE);
@@ -142,7 +143,7 @@ public class MemoryStatDAOTest {
         Add<MemoryStat> add = mock(Add.class);
         when(storage.createAdd(eq(MemoryStatDAO.memoryStatCategory))).thenReturn(add);
 
-        MemoryStat stat = new MemoryStat(TIMESTAMP, TOTAL, FREE, BUFFERS, CACHED, SWAP_TOTAL, SWAP_FREE, COMMIT_LIMIT);
+        MemoryStat stat = new MemoryStat("foo", TIMESTAMP, TOTAL, FREE, BUFFERS, CACHED, SWAP_TOTAL, SWAP_FREE, COMMIT_LIMIT);
         MemoryStatDAO dao = new MemoryStatDAOImpl(storage);
         dao.putMemoryStat(stat);
 

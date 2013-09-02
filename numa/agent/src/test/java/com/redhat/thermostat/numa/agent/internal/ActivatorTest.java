@@ -54,6 +54,7 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.numa.common.NumaDAO;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class ActivatorTest {
@@ -63,6 +64,7 @@ public class ActivatorTest {
     private BackendService backendService;
     private NumaDAO numaDAO;
     private ApplicationService appService;
+    private WriterID writerId;
 
     @Before
     public void setUp() {
@@ -78,6 +80,7 @@ public class ActivatorTest {
         backendService = mock(BackendService.class);
         numaDAO = mock(NumaDAO.class);
         appService = mock(ApplicationService.class);
+        writerId = mock(WriterID.class);
         TimerFactory timerFactory = mock(TimerFactory.class);
         Timer timer = mock(Timer.class);
         when(timerFactory.createTimer()).thenReturn(timer);
@@ -93,7 +96,7 @@ public class ActivatorTest {
         activator.start(context);
 
         assertEquals(0, context.getAllServices().size());
-        assertEquals(3, context.getServiceListeners().size());
+        assertEquals(4, context.getServiceListeners().size());
 
         activator.stop(context);
     }
@@ -123,6 +126,7 @@ public class ActivatorTest {
         context.registerService(BackendService.class, backendService, null);
         context.registerService(NumaDAO.class, numaDAO, null);
         context.registerService(ApplicationService.class, appService, null);
+        context.registerService(WriterID.class, writerId, null);
 
         Activator activator = new Activator();
 
@@ -139,7 +143,7 @@ public class ActivatorTest {
         assertFalse(backend.isActive());
 
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(3, context.getAllServices().size());
+        assertEquals(4, context.getAllServices().size());
     }
 }
 

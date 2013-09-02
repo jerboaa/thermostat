@@ -47,7 +47,6 @@ import static org.mockito.Mockito.when;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.numa.common.NumaDAO;
 import com.redhat.thermostat.numa.common.NumaHostInfo;
@@ -106,7 +105,7 @@ public class NumaDAOImplTest {
         stat.setLocalNode(6);
         stat.setOtherNode(7);
 
-        NumaStat numaStat = new NumaStat();
+        NumaStat numaStat = new NumaStat("agentId");
         numaStat.setTimeStamp(12345);
         numaStat.setNodeStats(new NumaNodeStat[] { stat });
         numaDAO.putNumaStat(numaStat);
@@ -118,6 +117,7 @@ public class NumaDAOImplTest {
         verify(add).setPojo(numaStat);
         verify(add).apply();
         verifyNoMoreInteractions(add);
+        assertEquals("agentId", numaStat.getAgentId());
     }
     
     @Test
@@ -129,13 +129,12 @@ public class NumaDAOImplTest {
 
         NumaDAOImpl dao = new NumaDAOImpl(storage);
 
-        dao.putNumberOfNumaNodes(4);
+        NumaHostInfo info = new NumaHostInfo("foo");
+        info.setNumNumaNodes(4);
+        dao.putNumberOfNumaNodes(info);
 
         verify(storage).createAdd(NumaDAO.numaHostCategory);
-        ArgumentCaptor<NumaHostInfo> captor = ArgumentCaptor.forClass(NumaHostInfo.class);
-        verify(add).setPojo(captor.capture());
-        NumaHostInfo info = captor.getValue();
-        assertEquals(4, info.getNumNumaNodes());
+        verify(add).setPojo(info);
         verify(add).apply();
     }
     

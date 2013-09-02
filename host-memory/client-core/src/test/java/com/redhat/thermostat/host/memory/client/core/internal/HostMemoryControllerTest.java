@@ -71,11 +71,11 @@ public class HostMemoryControllerTest {
     @Test
     public void testUpdate() {
         final long TOTAL_MEMORY = 512;
-        HostInfo hostInfo = new HostInfo("someHost", "someOS", "linux_0.0.1", "lreally_fast_cpu", 2, TOTAL_MEMORY);
+        HostInfo hostInfo = new HostInfo("foo-agent", "someHost", "someOS", "linux_0.0.1", "lreally_fast_cpu", 2, TOTAL_MEMORY);
         HostInfoDAO hostInfoDAO = mock(HostInfoDAO.class);
         when(hostInfoDAO.getHostInfo(any(HostRef.class))).thenReturn(hostInfo);
 
-        MemoryStat memoryStat = new MemoryStat(1, 2, 3, 4, 5, 6, 7, 8);
+        MemoryStat memoryStat = new MemoryStat("foo", 1, 2, 3, 4, 5, 6, 7, 8);
         List<MemoryStat> memoryStats = new LinkedList<>();
         memoryStats.add(memoryStat);
         MemoryStatDAO memoryStatDAO = mock(MemoryStatDAO.class);

@@ -90,7 +90,7 @@ public class CpuStatDAOTest {
         CpuStatDAO dao = new CpuStatDAOImpl(storage);
 
         Double LOAD = 5.0;
-        CpuStat cpuStat = new CpuStat(1234L, new double[] { LOAD });
+        CpuStat cpuStat = new CpuStat("foo", 1234L, new double[] { LOAD });
 
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(cpuStat);
@@ -130,7 +130,7 @@ public class CpuStatDAOTest {
 
         CpuStatDAO dao = new CpuStatDAOImpl(storage);
 
-        CpuStat cpuStat = new CpuStat(1234L, new double[] { 5.0 });
+        CpuStat cpuStat = new CpuStat("foo", 1234L, new double[] { 5.0 });
 
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(cpuStat);
@@ -156,7 +156,7 @@ public class CpuStatDAOTest {
         Add<CpuStat> add = mock(Add.class);
         when(storage.createAdd(eq(CpuStatDAO.cpuStatCategory))).thenReturn(add);
         
-        CpuStat stat = new CpuStat(1,  new double[] {5.0, 10.0, 15.0});
+        CpuStat stat = new CpuStat("foo", 1,  new double[] {5.0, 10.0, 15.0});
         CpuStatDAO dao = new CpuStatDAOImpl(storage);
         dao.putCpuStat(stat);
 

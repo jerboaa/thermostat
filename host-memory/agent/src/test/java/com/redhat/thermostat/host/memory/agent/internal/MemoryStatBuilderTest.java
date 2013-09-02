@@ -46,18 +46,27 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.io.StringReader;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.host.memory.common.model.MemoryStat;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.utils.ProcDataSource;
 
 public class MemoryStatBuilderTest {
 
     private static final int KILOBYTES_TO_BYTES = 1024;
+    
+    private WriterID writerId;
+    
+    @Before
+    public void setup() {
+        writerId = mock(WriterID.class);
+    }
 
     @Test
     public void testSimpleBuild() {
-        MemoryStat stat = new MemoryStatBuilder(new ProcDataSource()).build();
+        MemoryStat stat = new MemoryStatBuilder(new ProcDataSource(), writerId).build();
         assertNotNull(stat);
     }
 
@@ -68,7 +77,7 @@ public class MemoryStatBuilderTest {
         ProcDataSource dataSource = mock(ProcDataSource.class);
         when(dataSource.getMemInfoReader()).thenReturn(memoryReader);
 
-        MemoryStat stat = new MemoryStatBuilder(dataSource).build();
+        MemoryStat stat = new MemoryStatBuilder(dataSource, writerId).build();
         assertNotNull(stat);
         verify(dataSource).getMemInfoReader();
     }
@@ -97,7 +106,7 @@ public class MemoryStatBuilderTest {
         ProcDataSource dataSource = mock(ProcDataSource.class);
         when(dataSource.getMemInfoReader()).thenReturn(memoryReader);
 
-        MemoryStat stat = new MemoryStatBuilder(dataSource).build();
+        MemoryStat stat = new MemoryStatBuilder(dataSource, writerId).build();
 
         assertEquals(BUFFERS * KILOBYTES_TO_BYTES, stat.getBuffers());
         assertEquals(CACHED * KILOBYTES_TO_BYTES, stat.getCached());

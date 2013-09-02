@@ -48,6 +48,14 @@ public class NumaStat extends BasePojo implements TimeStampedPojo{
     private long timeStamp = -1;
     private NumaNodeStat[] nodeStats = new NumaNodeStat[0];
 
+    public NumaStat() {
+        this(null);
+    }
+    
+    public NumaStat(String writerId) {
+        super(writerId);
+    }
+    
     @Override
     @Persist
     public long getTimeStamp() {
