@@ -36,74 +36,61 @@
 
 package com.redhat.thermostat.storage.internal.statement;
 
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.redhat.thermostat.storage.core.IllegalPatchException;
+import com.redhat.thermostat.storage.core.PreparedParameter;
 
 /**
- * 
- * Represents an {@link Unfinished} node in the where expressions parse tree
- * of prepared statements.
- * 
- * @see Patchable
+ * Represents a set list of a prepared write statement.
  *
  */
-class UnfinishedValueNode extends AbstractUnfinished {
+class SetList implements Patchable, Printable {
 
-    private int parameterIndex = -1;
-    // determines if this patched value is a LHS or if false a RHS of a
-    // binary comparison.
-    private boolean isLHS;
-    // Specifies the expected type of this free parameter.
-    private Class<?> type;
-
-    Class<?> getType() {
-        return type;
-    }
-
-    void setType(Class<?> type) {
-        this.type = type;
-    }
-
-    boolean isLHS() {
-        return isLHS;
-    }
-
-    void setLHS(boolean isLHS) {
-        this.isLHS = isLHS;
-    }
-
-    @Override
-    public int getParameterIndex() {
-        return parameterIndex;
-    }
-
-    @Override
-    public void setParameterIndex(int parameterIndex) {
-        this.parameterIndex = parameterIndex;
+    private List<SetListValue> values = new ArrayList<>();
+    
+    void addValue(SetListValue newValue) {
+        values.add(newValue);
     }
     
-    @Override
-    public String toString() {
-        return "Unfinished value (" + getParameterIndex() + ") " + getType() +
-                                 ":" + ( isLHS ? "LHS" : "RHS" );
+    List<SetListValue> getValues() {
+        return values;
     }
-    
+
     @Override
-    public boolean equals(Object other) {
-        boolean basics = super.equals(other);
-        if (!basics) {
-            return false;
+    public void print(int level) {
+        System.out.println("SET:");
+        for (SetListValue val: getValues()) {
+            val.print(level);
         }
-        if (!(other instanceof UnfinishedValueNode)) {
-            return false;
-        }
-        UnfinishedValueNode o = (UnfinishedValueNode)other;
-        return basics && Objects.equals(isLHS(), o.isLHS) &&
-                Objects.equals(getType(), o.getType());
-    }
-    
-    @Override
-    public int hashCode() {
-        return Objects.hash(getParameterIndex(), isLHS(), getType());
     }
 
+    @Override
+    public PatchedSetList patch(PreparedParameter[] params)
+            throws IllegalPatchException {
+        List<PatchedSetListMember> patchedSetList = new ArrayList<>();
+        for (SetListValue val: getValues()) {
+            PatchedSetListMemberExpression memberExp = val.patch(params);
+            patchedSetList.add(memberExp.getSetListMember());
+        }
+        PatchedSetListMember[] members = patchedSetList.toArray(new PatchedSetListMember[0]);
+        PatchedSetListImpl setList = new PatchedSetListImpl(members);
+        return setList;
+    }
+    
+    private static class PatchedSetListImpl implements PatchedSetList {
+
+        private final PatchedSetListMember[] members;
+        
+        private PatchedSetListImpl(PatchedSetListMember[] members) {
+            this.members = members;
+        }
+        
+        @Override
+        public PatchedSetListMember[] getSetListMembers() {
+            return members;
+        }
+        
+    }
 }

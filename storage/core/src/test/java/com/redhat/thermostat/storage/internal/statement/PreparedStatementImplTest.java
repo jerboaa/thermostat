@@ -37,20 +37,30 @@
 package com.redhat.thermostat.storage.internal.statement;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.Test;
 
+import com.redhat.thermostat.common.Pair;
+import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.BackingStorage;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.Remove;
+import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
+import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.BinaryComparisonExpression;
 import com.redhat.thermostat.storage.query.BinaryComparisonOperator;
@@ -95,7 +105,7 @@ public class PreparedStatementImplTest {
         String queryString = "QUERY foo WHERE 'a' = ?s";
         @SuppressWarnings("unchecked")
         StatementDescriptor<Pojo> desc = (StatementDescriptor<Pojo>) mock(StatementDescriptor.class);
-        when(desc.getQueryDescriptor()).thenReturn(queryString);
+        when(desc.getDescriptor()).thenReturn(queryString);
         @SuppressWarnings("unchecked")
         Category<Pojo> mockCategory = (Category<Pojo>) mock(Category.class);
         when(desc.getCategory()).thenReturn(mockCategory);
@@ -115,11 +125,144 @@ public class PreparedStatementImplTest {
     }
     
     @Test
+    public void canDoParsingPatchingAndExecutionForAdd() throws Exception {
+        String addString = "ADD foo-table SET 'foo' = ?s";
+        @SuppressWarnings("unchecked")
+        StatementDescriptor<FooPojo> desc = (StatementDescriptor<FooPojo>) mock(StatementDescriptor.class);
+        when(desc.getDescriptor()).thenReturn(addString);
+        @SuppressWarnings("unchecked")
+        Category<FooPojo> mockCategory = (Category<FooPojo>) mock(Category.class);
+        when(desc.getCategory()).thenReturn(mockCategory);
+        when(mockCategory.getDataClass()).thenReturn(FooPojo.class);
+        when(mockCategory.getName()).thenReturn("foo-table");
+        BackingStorage storage = mock(BackingStorage.class);
+        TestAdd add = new TestAdd();
+        when(storage.createAdd(mockCategory)).thenReturn(add);
+        PreparedStatement<FooPojo> preparedStatement = new PreparedStatementImpl<FooPojo>(storage, desc);
+        preparedStatement.setString(0, "foo-val");
+        assertFalse(add.executed);
+        try {
+            // this should call add.apply();
+            preparedStatement.execute();
+        } catch (StatementExecutionException e) {
+            fail(e.getMessage());
+        }
+        assertTrue(add.pojo != null);
+        assertTrue(add.pojo instanceof FooPojo);
+        assertTrue(add.executed);
+        FooPojo fooPojo = (FooPojo)add.pojo;
+        assertEquals("foo-val", fooPojo.getFoo());
+    }
+    
+    @Test
+    public void canDoParsingPatchingAndExecutionForUpdate() throws Exception {
+        String addString = "UPDATE foo-table SET 'foo' = ?s WHERE 'foo' = ?s";
+        @SuppressWarnings("unchecked")
+        StatementDescriptor<FooPojo> desc = (StatementDescriptor<FooPojo>) mock(StatementDescriptor.class);
+        when(desc.getDescriptor()).thenReturn(addString);
+        @SuppressWarnings("unchecked")
+        Category<FooPojo> mockCategory = (Category<FooPojo>) mock(Category.class);
+        when(desc.getCategory()).thenReturn(mockCategory);
+        when(mockCategory.getDataClass()).thenReturn(FooPojo.class);
+        when(mockCategory.getName()).thenReturn("foo-table");
+        BackingStorage storage = mock(BackingStorage.class);
+        TestUpdate update = new TestUpdate();
+        when(storage.createUpdate(mockCategory)).thenReturn(update);
+        PreparedStatement<FooPojo> preparedStatement = new PreparedStatementImpl<FooPojo>(storage, desc);
+        preparedStatement.setString(0, "foo-val");
+        preparedStatement.setString(1, "nice");
+        assertFalse(update.executed);
+        try {
+            // this should call apply();
+            preparedStatement.execute();
+        } catch (StatementExecutionException e) {
+            fail(e.getMessage());
+        }
+        assertTrue(update.executed);
+        assertEquals(1, update.updates.size());
+        Pair<Key<Object>, Object> item = update.updates.get(0);
+        assertEquals(new Key<>("foo"), item.getFirst());
+        assertEquals("foo-val", item.getSecond());
+        LiteralExpression<Key<String>> o1 = new LiteralExpression<>(new Key<String>("foo"));
+        LiteralExpression<String> o2 = new LiteralExpression<>("nice"); 
+        BinaryComparisonExpression<String> binComp = new BinaryComparisonExpression<>(
+                o1, BinaryComparisonOperator.EQUALS, o2);
+        assertEquals(binComp, update.where);
+    }
+    
+    @Test
+    public void canDoParsingPatchingAndExecutionForReplace() throws Exception {
+        String addString = "REPLACE foo-table SET 'foo' = ?s WHERE 'foo' = ?s";
+        @SuppressWarnings("unchecked")
+        StatementDescriptor<FooPojo> desc = (StatementDescriptor<FooPojo>) mock(StatementDescriptor.class);
+        when(desc.getDescriptor()).thenReturn(addString);
+        @SuppressWarnings("unchecked")
+        Category<FooPojo> mockCategory = (Category<FooPojo>) mock(Category.class);
+        when(desc.getCategory()).thenReturn(mockCategory);
+        when(mockCategory.getDataClass()).thenReturn(FooPojo.class);
+        when(mockCategory.getName()).thenReturn("foo-table");
+        BackingStorage storage = mock(BackingStorage.class);
+        TestReplace replace = new TestReplace();
+        when(storage.createReplace(mockCategory)).thenReturn(replace);
+        PreparedStatement<FooPojo> preparedStatement = new PreparedStatementImpl<FooPojo>(storage, desc);
+        preparedStatement.setString(0, "foo-val");
+        preparedStatement.setString(1, "bar");
+        assertFalse(replace.executed);
+        try {
+            // this should call apply();
+            preparedStatement.execute();
+        } catch (StatementExecutionException e) {
+            fail(e.getMessage());
+        }
+        assertTrue(replace.pojo != null);
+        assertTrue(replace.pojo instanceof FooPojo);
+        assertTrue(replace.executed);
+        FooPojo fooPojo = (FooPojo)replace.pojo;
+        assertEquals("foo-val", fooPojo.getFoo());
+        LiteralExpression<Key<String>> o1 = new LiteralExpression<>(new Key<String>("foo"));
+        LiteralExpression<String> o2 = new LiteralExpression<>("bar"); 
+        BinaryComparisonExpression<String> binComp = new BinaryComparisonExpression<>(
+                o1, BinaryComparisonOperator.EQUALS, o2);
+        assertEquals(binComp, replace.where);
+    }
+    
+    @Test
+    public void canDoParsingPatchingAndExecutionForRemove() throws Exception {
+        String addString = "REMOVE foo-table WHERE 'fooRem' = ?s";
+        @SuppressWarnings("unchecked")
+        StatementDescriptor<FooPojo> desc = (StatementDescriptor<FooPojo>) mock(StatementDescriptor.class);
+        when(desc.getDescriptor()).thenReturn(addString);
+        @SuppressWarnings("unchecked")
+        Category<FooPojo> mockCategory = (Category<FooPojo>) mock(Category.class);
+        when(desc.getCategory()).thenReturn(mockCategory);
+        when(mockCategory.getDataClass()).thenReturn(FooPojo.class);
+        when(mockCategory.getName()).thenReturn("foo-table");
+        BackingStorage storage = mock(BackingStorage.class);
+        TestRemove remove = new TestRemove();
+        when(storage.createRemove(mockCategory)).thenReturn(remove);
+        PreparedStatement<FooPojo> preparedStatement = new PreparedStatementImpl<FooPojo>(storage, desc);
+        preparedStatement.setString(0, "bar");
+        assertFalse(remove.executed);
+        try {
+            // this should call apply();
+            preparedStatement.execute();
+        } catch (StatementExecutionException e) {
+            fail(e.getMessage());
+        }
+        assertTrue(remove.executed);
+        LiteralExpression<Key<String>> o1 = new LiteralExpression<>(new Key<String>("fooRem"));
+        LiteralExpression<String> o2 = new LiteralExpression<>("bar"); 
+        BinaryComparisonExpression<String> binComp = new BinaryComparisonExpression<>(
+                o1, BinaryComparisonOperator.EQUALS, o2);
+        assertEquals(binComp, remove.where);
+    }
+    
+    @Test
     public void failExecutionWithWronglyTypedParams() throws Exception {
         String queryString = "QUERY foo WHERE 'a' = ?b";
         @SuppressWarnings("unchecked")
         StatementDescriptor<Pojo> desc = (StatementDescriptor<Pojo>) mock(StatementDescriptor.class);
-        when(desc.getQueryDescriptor()).thenReturn(queryString);
+        when(desc.getDescriptor()).thenReturn(queryString);
         @SuppressWarnings("unchecked")
         Category<Pojo> mockCategory = (Category<Pojo>) mock(Category.class);
         when(desc.getCategory()).thenReturn(mockCategory);
@@ -135,6 +278,105 @@ public class PreparedStatementImplTest {
         } catch (StatementExecutionException e) {
             // pass
             assertTrue(e.getMessage().contains("invalid type when attempting to patch"));
+        }
+    }
+    
+    private static class TestAdd implements Add<FooPojo> {
+
+        private Pojo pojo;
+        private boolean executed = false;
+        
+        @Override
+        public void setPojo(Pojo pojo) {
+            this.pojo = pojo;
+        }
+
+        @Override
+        public int apply() {
+            executed = true;
+            return 0;
+        }
+
+    }
+    
+    private static class TestReplace implements Replace<FooPojo> {
+
+        private Pojo pojo;
+        private boolean executed = false;
+        private Expression where;
+        
+        @Override
+        public void setPojo(Pojo pojo) {
+            this.pojo = pojo;
+        }
+
+        @Override
+        public void where(Expression expression) {
+            this.where = expression;
+        }
+
+        @Override
+        public int apply() {
+            this.executed = true;
+            return 0;
+        }
+        
+    }
+    
+    private static class TestUpdate implements Update<FooPojo> {
+
+        private Expression where;
+        private List<Pair<Key<Object>, Object>> updates = new ArrayList<>();
+        private boolean executed = false;
+        
+        @Override
+        public void where(Expression expr) {
+            this.where = expr;
+        }
+
+        @Override
+        public <S> void set(Key<S> key, S value) {
+            @SuppressWarnings("unchecked")
+            Pair<Key<Object>, Object> item = new Pair<>((Key<Object>) key, (Object)value);
+            updates.add(item);
+        }
+
+        @Override
+        public int apply() {
+            this.executed = true;
+            return 0;
+        }
+        
+    }
+    
+    private static class TestRemove implements Remove<FooPojo> {
+
+        private Expression where;
+        private boolean executed = false;
+        
+        @Override
+        public void where(Expression where) {
+            this.where = where;
+        }
+
+        @Override
+        public int apply() {
+            this.executed = true;
+            return 0;
+        }
+        
+    }
+    
+    public static class FooPojo implements Pojo {
+        
+        String foo;
+        
+        public void setFoo(String foo) {
+            this.foo = foo;
+        }
+        
+        public String getFoo() {
+            return this.foo;
         }
     }
     

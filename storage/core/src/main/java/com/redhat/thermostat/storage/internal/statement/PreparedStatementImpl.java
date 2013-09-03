@@ -153,6 +153,6 @@ final public class PreparedStatementImpl<T extends Pojo> implements PreparedStat
 
     @Override
     public String toString() {
-        return desc.getQueryDescriptor();
+        return desc.getDescriptor();
     }
 }

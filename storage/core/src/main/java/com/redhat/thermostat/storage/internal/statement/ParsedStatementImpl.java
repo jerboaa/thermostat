@@ -36,11 +36,17 @@
 
 package com.redhat.thermostat.storage.internal.statement;
 
+import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.IllegalPatchException;
+import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.ParsedStatement;
 import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.Remove;
+import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.Statement;
+import com.redhat.thermostat.storage.core.Update;
+import com.redhat.thermostat.storage.internal.statement.PatchedSetListPojoConverter.IllegalPojoException;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
 
@@ -53,12 +59,15 @@ import com.redhat.thermostat.storage.query.Expression;
  */
 class ParsedStatementImpl<T extends Pojo> implements ParsedStatement<T> {
 
+    private final Statement<T> statement;
+    private final Class<T> dataClass; 
     private int numParams;
     private SuffixExpression suffixExpn;
-    private final Statement<T> statement;
+    private SetList setList;
 
-    ParsedStatementImpl(Statement<T> statement) {
+    ParsedStatementImpl(Statement<T> statement, Class<T> dataClass) {
         this.statement = statement;
+        this.dataClass = dataClass;
     }
     
     @Override
@@ -78,12 +87,52 @@ class ParsedStatementImpl<T extends Pojo> implements ParsedStatement<T> {
             IllegalStateException expn = new IllegalStateException(msg);
             throw new IllegalPatchException(expn);
         }
+        patchSetList(params);
         patchWhere(params);
         patchSort(params);
         patchLimit(params);
         // TODO count actual patches and throw an exception if not all vars
         // have been patched up.
         return statement;
+    }
+
+    private void patchSetList(PreparedParameter[] params) throws IllegalPatchException {
+        if (setList.getValues().size() == 0) {
+            // no set list, nothing to do
+            return;
+        }
+        // do the patching
+        PatchedSetList patchedSetList = setList.patch(params);
+        // set the values
+        if (statement instanceof Add) {
+            T pojo = convertToPojo(patchedSetList);
+            Add<T> add = (Add<T>)statement;
+            add.setPojo(pojo);
+        }
+        if (statement instanceof Replace) {
+            T pojo = convertToPojo(patchedSetList);
+            Replace<T> replace = (Replace<T>)statement;
+            replace.setPojo(pojo);
+        }
+        if (statement instanceof Update) {
+            Update<T> update = (Update<T>)statement;
+            for (PatchedSetListMember mem: patchedSetList.getSetListMembers()) {
+                @SuppressWarnings("unchecked")
+                Key<Object> key = (Key<Object>)mem.getKey();
+                update.set(key, mem.getValue());
+            }
+        }
+    }
+    
+    private T convertToPojo(PatchedSetList setList) throws IllegalPatchException {
+        PatchedSetListPojoConverter<T> converter = new PatchedSetListPojoConverter<>(setList, dataClass);
+        T pojo = null;
+        try {
+            pojo = converter.convertToPojo();
+        } catch (IllegalPojoException e) {
+            throw new IllegalPatchException(e);
+        }
+        return pojo; 
     }
 
     private void patchLimit(PreparedParameter[] params) throws IllegalPatchException {
@@ -97,7 +146,7 @@ class ParsedStatementImpl<T extends Pojo> implements ParsedStatement<T> {
             Query<T> query = (Query<T>) statement;
             query.limit(patchedExp.getLimitValue());
         } else {
-            String msg = "Patching of non-query types not (yet) supported! Class was:"
+            String msg = "Patching 'limit' of non-query types not supported! Class was:"
                     + statement.getClass().getName();
             IllegalStateException invalid = new IllegalStateException(msg);
             throw new IllegalPatchException(invalid);
@@ -118,7 +167,7 @@ class ParsedStatementImpl<T extends Pojo> implements ParsedStatement<T> {
                 query.sort(members[i].getSortKey(), members[i].getDirection());
             }
         } else {
-            String msg = "Patching of non-query types not (yet) supported! Class was:"
+            String msg = "Patching 'sort' of non-query types not supported! Class was:"
                     + statement.getClass().getName();
             IllegalStateException invalid = new IllegalStateException(msg);
             throw new IllegalPatchException(invalid);
@@ -138,8 +187,17 @@ class ParsedStatementImpl<T extends Pojo> implements ParsedStatement<T> {
         if (statement instanceof Query) {
             Query<T> query = (Query<T>) statement;
             query.where(whereClause);
+        } else if (statement instanceof Replace) {
+            Replace<T> replace = (Replace<T>) statement;
+            replace.where(whereClause);
+        } else if (statement instanceof Update) {
+            Update<T> update = (Update<T>) statement;
+            update.where(whereClause);
+        } else if (statement instanceof Remove) {
+            Remove<T> remove = (Remove<T>) statement;
+            remove.where(whereClause);
         } else {
-            String msg = "Patching of non-query types not (yet) supported! Class was:"
+            String msg = "Patching of where clause not supported! Class was:"
                     + statement.getClass().getName();
             IllegalStateException invalid = new IllegalStateException(msg);
             throw new IllegalPatchException(invalid);
@@ -156,6 +214,14 @@ class ParsedStatementImpl<T extends Pojo> implements ParsedStatement<T> {
 
     SuffixExpression getSuffixExpression() {
         return suffixExpn;
+    }
+
+    SetList getSetList() {
+        return setList;
+    }
+
+    void setSetList(SetList setList) {
+        this.setList = setList;
     }
 
 }

@@ -97,3 +97,22 @@ interface PatchedLimitExpression extends PatchedExpression {
     int getLimitValue();
     
 }
+
+interface PatchedSetListMemberExpression extends PatchedExpression {
+    
+    /**
+     * 
+     * @return The patched set list member.
+     */
+    PatchedSetListMember getSetListMember();
+}
+
+interface PatchedSetList extends PatchedExpression {
+    
+    /**
+     * @return The patched set list
+     * 
+     */
+    PatchedSetListMember[] getSetListMembers();
+    
+}

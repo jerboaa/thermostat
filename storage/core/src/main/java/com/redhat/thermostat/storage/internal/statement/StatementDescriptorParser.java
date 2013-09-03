@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.AggregateQuery.AggregateFunction;
 import com.redhat.thermostat.storage.core.BackingStorage;
 import com.redhat.thermostat.storage.core.Category;
@@ -48,7 +49,11 @@ import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.ParsedStatement;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.SortDirection;
+import com.redhat.thermostat.storage.core.Remove;
+import com.redhat.thermostat.storage.core.Replace;
+import com.redhat.thermostat.storage.core.Statement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.BinaryComparisonOperator;
 import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
@@ -57,13 +62,28 @@ import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
  * A parser for the string representation of {@link StatementDescriptor}s.
  * Tokens have to be separated by whitespace.
  * 
- * This parser implements the following simple grammar for statement descriptors
- * (currently it only supports QUERY statement types):
+ * This parser implements the following simple grammar for statement descriptors.
+ * It supports the following statement types:
+ * <ul>
+ * <li>QUERY (read)</li>
+ * <li>QUERY-COUNT (read)</li>
+ * <li>ADD (write)</li>
+ * <li>UPDATE (write)</li>
+ * <li>REPLACE (write)</li>
+ * <li>REMOVE (write)</li>
+ * </ul>
  * 
+ * <p><strong>Grammar:</strong></p>
  * <pre>
- * statementDesc := statementType category suffix
- * statementType := 'QUERY' | 'QUERY-COUNT'
- * category      := literal
+ * statementDesc := statementType category setList suffix
+ * statementType := 'QUERY' | 'QUERY-COUNT' |
+ *                  'ADD' | 'REPLACE' | 'UPDATE' |
+ *                  'REMOVE'
+ * category      := string
+ * setList       := 'SET' setValues | \empty
+ * setValues     := valuePair valueList
+ * valuePair     := term '=' term
+ * valueList     := ',' setValues | \empty
  * suffix        := 'WHERE' where |
  *                  'SORT' sortCond |
  *                  'LIMIT' term | \empty
@@ -72,7 +92,7 @@ import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
  * orCond        := 'OR' whereExp | \empty
  * sort          := 'SORT' sortCond | \empty
  * sortCond      := sortPair sortList
- * sortPair      := literal sortModifier
+ * sortPair      := term sortModifier
  * sortModifier  := 'ASC' | 'DSC'
  * sortList      := ',' sortCond | \empty
  * limit         := 'LIMIT' term | \empty
@@ -86,9 +106,11 @@ import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
  * sQuote        := \'
  * boolean       := &lt;true&gt; | &lt;false&gt;
  * int           := &lt;literal-int&gt;
- * long          := &lt;literal-long&gt;
+ * long          := &lt;literal-long&gt;longPostFix
+ * longPostFix   := 'l' | 'L'
  * string        := &lt;literal-string-value&gt;
- * compExpRHS    := '!=' term | '=' term | '&lt;=' term | '&gt;=' term | '&lt;' term | '&gt;' term
+ * compExpRHS    := '!=' term | '=' term | '&lt;=' term | '&gt;=' term | 
+ *                  '&lt;' term | '&gt;' term
  * </pre>
  *
  * This implements the following logic precedence rules (in this order of
@@ -105,10 +127,18 @@ import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
 class StatementDescriptorParser<T extends Pojo> {
 
     private static final String TOKEN_DELIMS = " \t\r\n\f";
+    private static final short IDX_QUERY = 0;
+    private static final short IDX_QUERY_COUNT = 1;
+    private static final short IDX_ADD = 2;
+    private static final short IDX_REPLACE = 3;
+    private static final short IDX_UPDATE = 4;
+    private static final short IDX_REMOVE = 5;
     private static final String[] KNOWN_STATEMENT_TYPES = new String[] {
-        "QUERY", "QUERY-COUNT"
+        "QUERY", "QUERY-COUNT", "ADD", "REPLACE", "UPDATE", "REMOVE"
     };
     private static final String SORTLIST_SEP = ",";
+    private static final String SETLIST_SEP = SORTLIST_SEP;
+    private static final String KEYWORD_SET = "SET";
     private static final String KEYWORD_WHERE = "WHERE";
     private static final String KEYWORD_SORT = "SORT";
     private static final String KEYWORD_LIMIT = "LIMIT";
@@ -124,9 +154,10 @@ class StatementDescriptorParser<T extends Pojo> {
     // the parsed statement
     private ParsedStatementImpl<T> parsedStatement;
     private SuffixExpression tree;
+    private SetList setList;
     
     StatementDescriptorParser(BackingStorage storage, StatementDescriptor<T> desc) {
-        this.tokens = getTokens(desc.getQueryDescriptor());
+        this.tokens = getTokens(desc.getDescriptor());
         this.currTokenIndex = 0;
         this.placeHolderCount = 0;
         this.desc = desc;
@@ -147,14 +178,124 @@ class StatementDescriptorParser<T extends Pojo> {
         matchCategory();
         // matched so far, create the raw statement
         createStatement();
+        this.setList = new SetList();
+        matchSetList(setList);
         this.tree = new SuffixExpression();
         matchSuffix();
         if (currTokenIndex != tokens.length) {
             throw new DescriptorParsingException("Incomplete parse");
         }
         parsedStatement.setNumFreeParams(placeHolderCount);
+        parsedStatement.setSetList(setList);
         parsedStatement.setSuffixExpression(tree);
+        doSemanticAnalysis();
         return parsedStatement;
+    }
+
+    private void doSemanticAnalysis() throws DescriptorParsingException {
+        // TODO:
+        // - Check that ADD/REPLACE specifies all keys judging by the Pojo
+        //   model class. Not sure if good idea though, as this would likely
+        //   introduce dep on beanutils.
+        Statement<T> stmt = parsedStatement.getRawStatement();
+        if (stmt == null) {
+            // should never be null
+            throw new NullPointerException();
+        }
+        if (stmt instanceof Add && tree.getWhereExpn() != null) {
+            String msg = "WHERE clause not allowed for ADD";
+            throw new DescriptorParsingException(msg);
+        }
+        if (stmt instanceof Replace && tree.getWhereExpn() == null) {
+            String msg = "WHERE clause required for REPLACE";
+            throw new DescriptorParsingException(msg);
+        }
+        if (stmt instanceof Update) {
+            if (tree.getWhereExpn() == null) {
+                // WHERE required for UPDATE
+                String msg = "WHERE clause required for UPDATE";
+                throw new DescriptorParsingException(msg);
+            }
+            if (setList.getValues().size() == 0) {
+                // SET required for UPDATE
+                String msg = "SET list required for UPDATE";
+                throw new DescriptorParsingException(msg);
+            }
+        }
+        if (stmt instanceof Remove && setList.getValues().size() > 0) {
+            String msg = "SET not allowed for REMOVE";
+            throw new DescriptorParsingException(msg);
+        }
+        if (stmt instanceof Query) {
+            if (setList.getValues().size() > 0) {
+                // Must not have SET for QUERYs
+                String msg = "SET not allowed for QUERY/QUERY-COUNT";
+                throw new DescriptorParsingException(msg);
+            }
+        } else {
+            // only queries can have sort/limit expressions
+            if (this.tree.getLimitExpn() != null || this.tree.getSortExpn() != null) {
+                String msg = "LIMIT/SORT only allowed for QUERY/QUERY-COUNT";
+                throw new DescriptorParsingException(msg);
+            }
+        }
+    }
+
+    /*
+     * Match set list for DML statements.
+     */
+    private void matchSetList(final SetList setList) throws DescriptorParsingException {
+        if (tokens.length == currTokenIndex) {
+            // no set list
+            return;
+        }
+        if (tokens[currTokenIndex].equals(KEYWORD_SET)) {
+            currTokenIndex++; // SET
+            matchSetValues(setList);
+        }
+        // empty, proceed with suffix
+    }
+
+    /*
+     * Match list of values in a SET expression 
+     */
+    private void matchSetValues(SetList setList) throws DescriptorParsingException {
+        matchValuePair(setList);
+        matchValueList(setList);
+    }
+
+    /*
+     * Match more value pairs in a SET list
+     */
+    private void matchValueList(SetList setList) throws DescriptorParsingException {
+        if (currTokenIndex == tokens.length) {
+            // empty
+            return;
+        }
+        if (tokens[currTokenIndex].equals(SETLIST_SEP)) {
+            currTokenIndex++; // ,
+            matchSetValues(setList);
+        }
+    }
+
+    /*
+     * Match one pair of values in a 
+     */
+    private void matchValuePair(SetList setList) throws DescriptorParsingException {
+        SetListValue value = new SetListValue();
+        TerminalNode lval = new TerminalNode(null);
+        matchTerm(lval, true);
+        value.setKey(lval);
+        if (tokens[currTokenIndex].equals("=")) {
+            currTokenIndex++; // =
+        } else {
+            String msg = "Expected '=' after SET value LHS. Token was ->" + tokens[currTokenIndex] + "<-";
+            throw new DescriptorParsingException(msg);
+        }
+        TerminalNode rval = new TerminalNode(null);
+        matchTerm(rval, false);
+        value.setValue(rval);
+        setList.addValue(value);
     }
 
     /*
@@ -579,23 +720,42 @@ class StatementDescriptorParser<T extends Pojo> {
     }
 
     private void createStatement() {
-        if (tokens[0].equals(KNOWN_STATEMENT_TYPES[0])) {
+        // matchStatementType and matchCategory advanced currTokenIndex,
+        // lets use idx of 0 here.
+        final String statementType = tokens[0];
+        Class<T> dataClass = desc.getCategory().getDataClass();
+        if (statementType.equals(KNOWN_STATEMENT_TYPES[IDX_QUERY])) {
             // regular query case
             Query<T> query = storage.createQuery(desc.getCategory());
-            this.parsedStatement = new ParsedStatementImpl<>(query);
-        } else if (tokens[0].equals(KNOWN_STATEMENT_TYPES[1])) {
+            this.parsedStatement = new ParsedStatementImpl<>(query, dataClass);
+        } else if (statementType.equals(KNOWN_STATEMENT_TYPES[IDX_QUERY_COUNT])) {
             // create aggregate count query
             Query<T> query = storage.createAggregateQuery(AggregateFunction.COUNT, desc.getCategory());
-            this.parsedStatement = new ParsedStatementImpl<>(query);
-        }
-        else {
-            throw new IllegalStateException("Don't know how to create statement type '" + tokens[0] + "'");
+            this.parsedStatement = new ParsedStatementImpl<>(query, dataClass);
+        } else if (statementType.equals(KNOWN_STATEMENT_TYPES[IDX_ADD])) {
+            // create add
+            Add<T> add = storage.createAdd(desc.getCategory());
+            this.parsedStatement = new ParsedStatementImpl<>(add, dataClass);
+        } else if (statementType.equals(KNOWN_STATEMENT_TYPES[IDX_REPLACE])) {
+            // create replace
+            Replace<T> replace = storage.createReplace(desc.getCategory());
+            this.parsedStatement = new ParsedStatementImpl<>(replace, dataClass);
+        } else if (statementType.equals(KNOWN_STATEMENT_TYPES[IDX_UPDATE])) {
+            // create replace
+            Update<T> update = storage.createUpdate(desc.getCategory());
+            this.parsedStatement = new ParsedStatementImpl<>(update, dataClass);
+        } else if (statementType.equals(KNOWN_STATEMENT_TYPES[IDX_REMOVE])) {
+            // create remove
+            Remove<T> remove = storage.createRemove(desc.getCategory());
+            this.parsedStatement = new ParsedStatementImpl<>(remove, dataClass);
+        } else {
+            throw new IllegalStateException("Don't know how to create statement type '" + statementType + "'");
         }
     }
 
     private void matchCategory() throws DescriptorParsingException {
         if (currTokenIndex >= tokens.length) {
-            throw new DescriptorParsingException("Missing category name in descriptor: '" + desc.getQueryDescriptor() + "'");
+            throw new DescriptorParsingException("Missing category name in descriptor: '" + desc.getDescriptor() + "'");
         }
         Category<?> category = desc.getCategory();
         if (!tokens[currTokenIndex].equals(category.getName())) {
@@ -609,10 +769,23 @@ class StatementDescriptorParser<T extends Pojo> {
     }
 
     private void matchStatementType() throws DescriptorParsingException {
-        // matches 'QUERY' and 'QUERY-COUNT' only at this point
-        if (tokens[currTokenIndex].equals(KNOWN_STATEMENT_TYPES[0])) {
+        if (tokens[currTokenIndex].equals(KNOWN_STATEMENT_TYPES[IDX_QUERY])) {
+            // QUERY
             currTokenIndex++;
-        } else if (tokens[currTokenIndex].equals(KNOWN_STATEMENT_TYPES[1])) {
+        } else if (tokens[currTokenIndex].equals(KNOWN_STATEMENT_TYPES[IDX_QUERY_COUNT])) {
+            // QUERY-COUNT
+            currTokenIndex++;
+        } else if (tokens[currTokenIndex].equals(KNOWN_STATEMENT_TYPES[IDX_ADD])) {
+            // ADD
+            currTokenIndex++;
+        } else if (tokens[currTokenIndex].equals(KNOWN_STATEMENT_TYPES[IDX_REPLACE])) {
+            // REPLACE
+            currTokenIndex++;
+        } else if (tokens[currTokenIndex].equals(KNOWN_STATEMENT_TYPES[IDX_UPDATE])) {
+            // UPDATE
+            currTokenIndex++;
+        } else if (tokens[currTokenIndex].equals(KNOWN_STATEMENT_TYPES[IDX_REMOVE])) {
+            // REMOVE
             currTokenIndex++;
         } else {
             throw new DescriptorParsingException("Unknown statement type: '" + tokens[currTokenIndex] + "'");

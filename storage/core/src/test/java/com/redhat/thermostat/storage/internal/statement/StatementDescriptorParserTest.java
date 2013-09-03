@@ -41,7 +41,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -53,32 +52,23 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.AggregateQuery;
+import com.redhat.thermostat.storage.core.AggregateQuery.AggregateFunction;
 import com.redhat.thermostat.storage.core.BackingStorage;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.AggregateQuery.AggregateFunction;
 import com.redhat.thermostat.storage.core.Query.SortDirection;
+import com.redhat.thermostat.storage.core.Remove;
+import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.AggregateCount;
-import com.redhat.thermostat.storage.internal.statement.BinaryExpressionNode;
-import com.redhat.thermostat.storage.internal.statement.LimitExpression;
-import com.redhat.thermostat.storage.internal.statement.NotBooleanExpressionNode;
-import com.redhat.thermostat.storage.internal.statement.ParsedStatementImpl;
-import com.redhat.thermostat.storage.internal.statement.SortExpression;
-import com.redhat.thermostat.storage.internal.statement.SortMember;
-import com.redhat.thermostat.storage.internal.statement.StatementDescriptorParser;
-import com.redhat.thermostat.storage.internal.statement.SuffixExpression;
-import com.redhat.thermostat.storage.internal.statement.TerminalNode;
-import com.redhat.thermostat.storage.internal.statement.UnfinishedLimitValue;
-import com.redhat.thermostat.storage.internal.statement.UnfinishedSortKey;
-import com.redhat.thermostat.storage.internal.statement.UnfinishedValueNode;
-import com.redhat.thermostat.storage.internal.statement.WhereExpression;
 import com.redhat.thermostat.storage.query.BinaryComparisonOperator;
 import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
 
@@ -87,19 +77,39 @@ public class StatementDescriptorParserTest {
     private BackingStorage storage;
     private Query<AgentInformation> mockQuery;
     private StatementDescriptorParser<AgentInformation> parser;
+    private Add<AgentInformation> mockAdd;
+    private Update<AgentInformation> mockUpdate;
+    private Replace<AgentInformation> mockReplace;
+    private Remove<AgentInformation> mockRemove;
     
     @SuppressWarnings("unchecked")
     @Before
     public void setup() {
         storage = mock(BackingStorage.class);
         mockQuery = mock(Query.class);
-        when(storage.createQuery(any(AgentInfoDAO.CATEGORY.getClass()))).thenReturn(mockQuery);
+        when(storage.createQuery(eq(AgentInfoDAO.CATEGORY))).thenReturn(mockQuery);
+        // setup for ADD
+        mockAdd = mock(Add.class);
+        when(storage.createAdd(eq(AgentInfoDAO.CATEGORY))).thenReturn(mockAdd);
+        // setup for UPDATE
+        mockUpdate = mock(Update.class);
+        when(storage.createUpdate(eq(AgentInfoDAO.CATEGORY))).thenReturn(mockUpdate);
+        // setup for REMOVE
+        mockRemove = mock(Remove.class);
+        when(storage.createRemove(eq(AgentInfoDAO.CATEGORY))).thenReturn(mockRemove);
+        // setup for REPLACE
+        mockReplace = mock(Replace.class);
+        when(storage.createReplace(eq(AgentInfoDAO.CATEGORY))).thenReturn(mockReplace);
     }
     
     @After
     public void teardown() {
         storage = null;
         mockQuery = null;
+        mockUpdate = null;
+        mockReplace = null;
+        mockAdd = null;
+        mockRemove = null;
     }
     
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -1270,6 +1280,124 @@ public class StatementDescriptorParserTest {
     }
     
     @Test
+    public void testParseAddBasic() throws DescriptorParsingException {
+        String descString = "ADD " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = 'b' , 'c' = ?s";
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        ParsedStatementImpl<AgentInformation> statement = null; 
+        try {
+            statement = (ParsedStatementImpl<AgentInformation>)parser.parse();
+        } catch (DescriptorParsingException e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+        assertTrue(statement.getRawStatement() instanceof Add);
+        SuffixExpression suffix = statement.getSuffixExpression();
+        assertNotNull(suffix);
+        WhereExpression where = suffix.getWhereExpn();
+        LimitExpression limit = suffix.getLimitExpn();
+        SortExpression sort = suffix.getSortExpn();
+        assertNull(where);
+        assertNull(limit);
+        assertNull(sort);
+        SetList setList = statement.getSetList();
+        assertNotNull(setList);
+        List<SetListValue> valuesList = setList.getValues();
+        assertEquals(2, valuesList.size());
+        SetListValue first = valuesList.get(0);
+        SetListValue second = valuesList.get(1);
+        TerminalNode a = new TerminalNode(null);
+        a.setValue(new Key<>("a"));
+        TerminalNode b = new TerminalNode(null);
+        b.setValue("b");
+        SetListValue firstExpected = new SetListValue();
+        firstExpected.setKey(a);
+        firstExpected.setValue(b);
+        assertEquals(firstExpected, first);
+        TerminalNode c = new TerminalNode(null);
+        c.setValue(new Key<>("c"));
+        UnfinishedValueNode dVal = new UnfinishedValueNode();
+        dVal.setType(String.class);
+        dVal.setLHS(false);
+        dVal.setParameterIndex(0);
+        TerminalNode d = new TerminalNode(null);
+        d.setValue(dVal);
+        SetListValue secondExpected = new SetListValue();
+        secondExpected.setKey(c);
+        secondExpected.setValue(d);
+        assertEquals(secondExpected, second);
+    }
+    
+    @Test
+    public void testParseUpdateBasic() throws DescriptorParsingException {
+        String descString = "UPDATE " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = 'b' , 'c' = ?s WHERE 'foo' != ?i";
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        ParsedStatementImpl<AgentInformation> statement = null; 
+        try {
+            statement = (ParsedStatementImpl<AgentInformation>)parser.parse();
+        } catch (DescriptorParsingException e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+        assertTrue(statement.getRawStatement() instanceof Update);
+        SuffixExpression suffix = statement.getSuffixExpression();
+        assertNotNull(suffix);
+        WhereExpression where = suffix.getWhereExpn();
+        LimitExpression limit = suffix.getLimitExpn();
+        SortExpression sort = suffix.getSortExpn();
+        assertNotNull(where);
+        assertNull(limit);
+        assertNull(sort);
+        SetList setList = statement.getSetList();
+        assertNotNull(setList);
+        List<SetListValue> valuesList = setList.getValues();
+        assertEquals(2, valuesList.size());
+        SetListValue first = valuesList.get(0);
+        SetListValue second = valuesList.get(1);
+        TerminalNode a = new TerminalNode(null);
+        a.setValue(new Key<>("a"));
+        TerminalNode b = new TerminalNode(null);
+        b.setValue("b");
+        SetListValue firstExpected = new SetListValue();
+        firstExpected.setKey(a);
+        firstExpected.setValue(b);
+        assertEquals(firstExpected, first);
+        TerminalNode c = new TerminalNode(null);
+        c.setValue(new Key<>("c"));
+        UnfinishedValueNode dVal = new UnfinishedValueNode();
+        dVal.setType(String.class);
+        dVal.setLHS(false);
+        dVal.setParameterIndex(0);
+        TerminalNode d = new TerminalNode(null);
+        d.setValue(dVal);
+        SetListValue secondExpected = new SetListValue();
+        secondExpected.setKey(c);
+        secondExpected.setValue(d);
+        assertEquals(secondExpected, second);
+        // Build expected where expn
+        WhereExpression expectedWhere = new WhereExpression();
+        BinaryExpressionNode equality = new BinaryExpressionNode(expectedWhere.getRoot());
+        expectedWhere.getRoot().setValue(equality);
+        equality.setOperator(BinaryComparisonOperator.NOT_EQUAL_TO);
+        TerminalNode foo = new TerminalNode(equality);
+        @SuppressWarnings("rawtypes")
+        Key fooKey = new Key("foo");
+        foo.setValue(fooKey);
+        equality.setLeftChild(foo);
+        TerminalNode fooVal = new TerminalNode(equality);
+        UnfinishedValueNode node = new UnfinishedValueNode();
+        node.setParameterIndex(1);
+        node.setLHS(false);
+        node.setType(Integer.class);
+        fooVal.setValue(node);
+        equality.setRightChild(fooVal);
+        assertTrue(WhereExpressions.equals(expectedWhere, where));
+    }
+    
+    // TODO: Add basic parse tests for REMOVE/REPLACE
+    
+    @Test
     public void rejectLongValAsIntType() throws DescriptorParsingException {
         // 30000000003 > Integer.MAX_VALUE; needs to be preceded by 'l/L'
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' != 30000000003";
@@ -1481,5 +1609,154 @@ public class StatementDescriptorParserTest {
             assertTrue(e.getMessage().contains("Expected string value"));
         }
     }
+    
+    @Test
+    public void rejectAddWithInvalidSetList() throws DescriptorParsingException {
+        String descString = "ADD " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = , 'c' = 'd'";
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        try {
+            parser.parse();
+            fail("Invalid SET values list.");
+        } catch (DescriptorParsingException e) {
+            // pass
+            assertEquals("Illegal terminal type. Token was ->,<-", e.getMessage());
+        }
+    }
+    
+    @Test
+    public void rejectAddWithWhere() throws DescriptorParsingException {
+        String descString = "ADD " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = 'b' , 'c' = 'd' WHERE 'a' = 'b'";
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        try {
+            parser.parse();
+            fail("ADD operation does not support WHERE clauses!");
+        } catch (DescriptorParsingException e) {
+            // pass
+            assertTrue(e.getMessage().contains("WHERE clause not allowed for ADD"));
+        }
+    }
+    
+    @Test
+    public void rejectReplaceWithoutWhere() throws DescriptorParsingException {
+        String descString = "REPLACE " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = 'b' , 'c' = 'd'";
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        try {
+            parser.parse();
+            fail("REPLACE operation requires WHERE clause, and should not parse!");
+        } catch (DescriptorParsingException e) {
+            // pass
+            assertTrue(e.getMessage().contains("WHERE clause required for REPLACE"));
+        }
+    }
+    
+    @Test
+    public void rejectUpdateWithoutWhere() throws DescriptorParsingException {
+        String descString = "UPDATE " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = 'b' , 'c' = 'd'";
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        try {
+            parser.parse();
+            fail("UPDATE operation requires WHERE clause, and should not parse!");
+        } catch (DescriptorParsingException e) {
+            // pass
+            assertTrue(e.getMessage().contains("WHERE clause required for UPDATE"));
+        }
+    }
+    
+    @Test
+    public void rejectRemoveWithSetList() throws DescriptorParsingException {
+        String descString = "REMOVE " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = 'b' WHERE 'a' = 'b'";
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        try {
+            parser.parse();
+            fail("REMOVE does not allow SET list, and should not parse!");
+        } catch (DescriptorParsingException e) {
+            // pass
+            assertTrue(e.getMessage().contains("SET not allowed for REMOVE"));
+        }
+    }
+    
+    @Test
+    public void rejectQueryWithSetList() throws DescriptorParsingException {
+        String descString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = 'b' WHERE 'a' = 'b'";
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        try {
+            parser.parse();
+            fail("QUERY does not allow SET list, and should not parse!");
+        } catch (DescriptorParsingException e) {
+            // pass
+            assertTrue(e.getMessage().contains("SET not allowed for QUERY"));
+        }
+    }
+    
+    
+    private void doRejectWriteSortLimitTest(String descString, String failmsg) {
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        try {
+            parser.parse();
+            fail(failmsg);
+        } catch (DescriptorParsingException e) {
+            // pass
+            assertEquals("LIMIT/SORT only allowed for QUERY/QUERY-COUNT", e.getMessage());
+        }
+    }
+    
+    @Test
+    public void rejectWritesWithSortLimit() throws DescriptorParsingException {
+        // Update rejects
+        String descString = "UPDATE " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = 'b' WHERE 'a' = 'b' SORT 'a' DSC";
+        String failmsg = "SORT in UPDATE is not allowed, and should not parse!";
+        doRejectWriteSortLimitTest(descString, failmsg);
+        descString = "UPDATE " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = 'b' WHERE 'a' = 'b' LIMIT 1";
+        failmsg = "LIMIT in UPDATE is not allowed, and should not parse!";
+        doRejectWriteSortLimitTest(descString, failmsg);
+        
+        // Remove rejects
+        descString = "REMOVE " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' = 'b' LIMIT 1";
+        failmsg = "LIMIT in REMOVE is not allowed, and should not parse!";
+        doRejectWriteSortLimitTest(descString, failmsg);
+        descString = "REMOVE " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' = 'b' SORT 'a' ASC";
+        failmsg = "SORT in REMOVE is not allowed, and should not parse!";
+        doRejectWriteSortLimitTest(descString, failmsg);
+        
+        // Replace rejects
+        descString = "REPLACE " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = 'b' WHERE 'a' = 'b' LIMIT 1";
+        failmsg = "LIMIT in REPLACE is not allowed, and should not parse!";
+        doRejectWriteSortLimitTest(descString, failmsg);
+        descString = "REPLACE " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = 'b' WHERE 'a' = 'b' SORT 'a' ASC";
+        failmsg = "SORT in REPLACE is not allowed, and should not parse!";
+        doRejectWriteSortLimitTest(descString, failmsg);
+        
+        // Add rejects
+        descString = "ADD " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = 'b' LIMIT 1";
+        failmsg = "LIMIT in ADD is not allowed, and should not parse!";
+        doRejectWriteSortLimitTest(descString, failmsg);
+        descString = "ADD " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = 'b' SORT 'a' ASC";
+        failmsg = "SORT in ADD is not allowed, and should not parse!";
+        doRejectWriteSortLimitTest(descString, failmsg);
+    }
+    
+    @Test
+    public void rejectUpdateWithoutSet() throws DescriptorParsingException {
+        String descString = "UPDATE " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' = 'b'";
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        try {
+            parser.parse();
+            fail("UPDATE requires SET list, and should not parse!");
+        } catch (DescriptorParsingException e) {
+            // pass
+            assertEquals("SET list required for UPDATE", e.getMessage());
+        }
+    }
+    
+    // TODO: add tests where set list does not match all props of Pojo class for
+    // add/replace
     
 }

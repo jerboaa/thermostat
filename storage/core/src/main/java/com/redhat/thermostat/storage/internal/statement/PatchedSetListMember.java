@@ -36,74 +36,27 @@
 
 package com.redhat.thermostat.storage.internal.statement;
 
-import java.util.Objects;
+import com.redhat.thermostat.storage.core.Key;
 
 /**
- * 
- * Represents an {@link Unfinished} node in the where expressions parse tree
- * of prepared statements.
- * 
- * @see Patchable
+ * Data structure representing patched SET lists members.
  *
  */
-class UnfinishedValueNode extends AbstractUnfinished {
+class PatchedSetListMember {
 
-    private int parameterIndex = -1;
-    // determines if this patched value is a LHS or if false a RHS of a
-    // binary comparison.
-    private boolean isLHS;
-    // Specifies the expected type of this free parameter.
-    private Class<?> type;
-
-    Class<?> getType() {
-        return type;
-    }
-
-    void setType(Class<?> type) {
-        this.type = type;
-    }
-
-    boolean isLHS() {
-        return isLHS;
-    }
-
-    void setLHS(boolean isLHS) {
-        this.isLHS = isLHS;
-    }
-
-    @Override
-    public int getParameterIndex() {
-        return parameterIndex;
-    }
-
-    @Override
-    public void setParameterIndex(int parameterIndex) {
-        this.parameterIndex = parameterIndex;
-    }
+    private final Key<?> key;
+    private final Object value;
     
-    @Override
-    public String toString() {
-        return "Unfinished value (" + getParameterIndex() + ") " + getType() +
-                                 ":" + ( isLHS ? "LHS" : "RHS" );
-    }
-    
-    @Override
-    public boolean equals(Object other) {
-        boolean basics = super.equals(other);
-        if (!basics) {
-            return false;
-        }
-        if (!(other instanceof UnfinishedValueNode)) {
-            return false;
-        }
-        UnfinishedValueNode o = (UnfinishedValueNode)other;
-        return basics && Objects.equals(isLHS(), o.isLHS) &&
-                Objects.equals(getType(), o.getType());
-    }
-    
-    @Override
-    public int hashCode() {
-        return Objects.hash(getParameterIndex(), isLHS(), getType());
+    PatchedSetListMember(Key<?> key, Object value) {
+        this.key = key;
+        this.value = value;
     }
 
+    Key<?> getKey() {
+        return key;
+    }
+
+    Object getValue() {
+        return value;
+    }
 }

@@ -325,9 +325,9 @@ public class WebStorageEndPoint extends HttpServlet {
         }
         StatementDescriptor<T> desc = new StatementDescriptor<>(cat, queryDescrParam);
         // Check if descriptor is trusted (i.e. known)
-        if (!knownStatementDescriptors.contains(desc.getQueryDescriptor())) {
+        if (!knownStatementDescriptors.contains(desc.getDescriptor())) {
             String msg = "Attempted to prepare a statement descriptor which we " +
-            		"don't trust! Descriptor was: ->" + desc.getQueryDescriptor() + "<-";
+            		"don't trust! Descriptor was: ->" + desc.getDescriptor() + "<-";
             logger.log(Level.WARNING, msg);
             response.setStatementId(WebPreparedStatementResponse.ILLEGAL_STATEMENT);
             writeResponse(resp, response, WebPreparedStatementResponse.class);
@@ -682,8 +682,8 @@ public class WebStorageEndPoint extends HttpServlet {
         }
         
         StatementDescriptor<T> desc = targetStmtHolder.getStatementDescriptor();
-        StatementDescriptorMetadataFactory factory = descMetadataFactories.get(desc.getQueryDescriptor());
-        DescriptorMetadata actualMetadata = factory.getDescriptorMetadata(desc.getQueryDescriptor(), params);
+        StatementDescriptorMetadataFactory factory = descMetadataFactories.get(desc.getDescriptor());
+        DescriptorMetadata actualMetadata = factory.getDescriptorMetadata(desc.getDescriptor(), params);
         
         UserPrincipal userPrincipal = getUserPrincipal(req);
         targetQuery = getQueryForPrincipal(userPrincipal, targetQuery, desc, actualMetadata);

@@ -770,7 +770,7 @@ public class WebStorage implements Storage, SecureStorage {
     @Override
     public <T extends Pojo> PreparedStatement<T> prepareStatement(StatementDescriptor<T> desc)
             throws DescriptorParsingException {
-        String strDesc = desc.getQueryDescriptor();
+        String strDesc = desc.getDescriptor();
         int categoryId = getCategoryId(desc.getCategory());
         NameValuePair nameParam = new BasicNameValuePair("query-descriptor",
                 strDesc);
@@ -788,7 +788,7 @@ public class WebStorage implements Storage, SecureStorage {
                 // we've got a descriptor the endpoint doesn't know about or
                 // refuses to accept for security reasons.
                 String msg = "Unknown query descriptor which endpoint of " + WebStorage.class.getName() + " refused to accept!";
-                throw new IllegalDescriptorException(msg, desc.getQueryDescriptor());
+                throw new IllegalDescriptorException(msg, desc.getDescriptor());
             } else if (statementId == WebPreparedStatementResponse.DESCRIPTOR_PARSE_FAILED) {
                 String msg = "Statement descriptor failed to parse. " +
                              "Please check server logs for details!";

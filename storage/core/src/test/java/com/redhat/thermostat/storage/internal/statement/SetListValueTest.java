@@ -36,74 +36,44 @@
 
 package com.redhat.thermostat.storage.internal.statement;
 
-import java.util.Objects;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-/**
- * 
- * Represents an {@link Unfinished} node in the where expressions parse tree
- * of prepared statements.
- * 
- * @see Patchable
- *
- */
-class UnfinishedValueNode extends AbstractUnfinished {
+import org.junit.Test;
 
-    private int parameterIndex = -1;
-    // determines if this patched value is a LHS or if false a RHS of a
-    // binary comparison.
-    private boolean isLHS;
-    // Specifies the expected type of this free parameter.
-    private Class<?> type;
+public class SetListValueTest {
 
-    Class<?> getType() {
-        return type;
-    }
-
-    void setType(Class<?> type) {
-        this.type = type;
-    }
-
-    boolean isLHS() {
-        return isLHS;
-    }
-
-    void setLHS(boolean isLHS) {
-        this.isLHS = isLHS;
-    }
-
-    @Override
-    public int getParameterIndex() {
-        return parameterIndex;
-    }
-
-    @Override
-    public void setParameterIndex(int parameterIndex) {
-        this.parameterIndex = parameterIndex;
+    @Test
+    public void testEqualsHashCodeEmpty() {
+        SetListValue value = new SetListValue();
+        assertTrue(value.equals(value));
+        SetListValue value2 = new SetListValue();
+        assertTrue(value.equals(value2));
+        assertEquals(value.hashCode(), value2.hashCode());
     }
     
-    @Override
-    public String toString() {
-        return "Unfinished value (" + getParameterIndex() + ") " + getType() +
-                                 ":" + ( isLHS ? "LHS" : "RHS" );
+    @Test
+    public void testEqualsHashCodeNonEmpty() {
+        TerminalNode keyNode = new TerminalNode(null);
+        keyNode.setValue("foo");
+        TerminalNode valNode = new TerminalNode(null);
+        valNode.setValue("bar-val");
+        SetListValue value = new SetListValue();
+        value.setKey(keyNode);
+        value.setValue(valNode);
+        assertTrue(value.equals(value));
+        SetListValue value2 = new SetListValue();
+        TerminalNode keyNode2 = new TerminalNode(null);
+        keyNode2.setValue("foo");
+        TerminalNode valNode2 = new TerminalNode(null);
+        valNode2.setValue("bar-val");
+        value2.setKey(keyNode2);
+        value2.setValue(valNode2);
+        assertEquals(valNode, valNode2);
+        assertEquals(keyNode, keyNode2);
+        assertTrue(value.equals(value2));
+        assertEquals(value.hashCode(), value2.hashCode());
+        assertFalse(value.equals("something-else"));
     }
-    
-    @Override
-    public boolean equals(Object other) {
-        boolean basics = super.equals(other);
-        if (!basics) {
-            return false;
-        }
-        if (!(other instanceof UnfinishedValueNode)) {
-            return false;
-        }
-        UnfinishedValueNode o = (UnfinishedValueNode)other;
-        return basics && Objects.equals(isLHS(), o.isLHS) &&
-                Objects.equals(getType(), o.getType());
-    }
-    
-    @Override
-    public int hashCode() {
-        return Objects.hash(getParameterIndex(), isLHS(), getType());
-    }
-
 }

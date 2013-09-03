@@ -43,7 +43,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.Cursor;
@@ -78,6 +77,19 @@ public class AgentInfoDAOImpl extends BaseCountable implements AgentInfoDAO {
     static final String QUERY_ALIVE_AGENTS = "QUERY "
             + CATEGORY.getName() + " WHERE '" 
             + ALIVE_KEY.getName() + "' = ?b";
+    
+    // ADD agent-config SET
+    //                     'agentId' = ?s , \
+    //                     'startTime' = ?l , \
+    //                     'stopTime' = ?l , \
+    //                     'alive' = ?b , \
+    //                     'configListenAddress' = ?s
+    static final String DESC_ADD_AGENT_INFO = "ADD " + CATEGORY.getName() + " SET " +
+            "'" + Key.AGENT_ID.getName() + "' = ?s , " +
+            "'" + AgentInfoDAOImpl.START_TIME_KEY.getName() + "' = ?l , " +
+            "'" + AgentInfoDAOImpl.STOP_TIME_KEY.getName() + "' = ?l , " +
+            "'" + AgentInfoDAOImpl.ALIVE_KEY.getName() + "' = ?b , " +
+            "'" + AgentInfoDAOImpl.CONFIG_LISTEN_ADDRESS.getName() + "' = ?s";
     
     private final Storage storage;
     private final Category<AggregateCount> aggregateCategory;
@@ -182,9 +194,21 @@ public class AgentInfoDAOImpl extends BaseCountable implements AgentInfoDAO {
 
     @Override
     public void addAgentInformation(AgentInformation agentInfo) {
-        Add<AgentInformation> replace = storage.createAdd(CATEGORY);
-        replace.setPojo(agentInfo);
-        replace.apply();
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(CATEGORY, DESC_ADD_AGENT_INFO);
+        PreparedStatement<AgentInformation> prepared;
+        try {
+            prepared = storage.prepareStatement(desc);
+            prepared.setString(0, agentInfo.getAgentId());
+            prepared.setLong(1, agentInfo.getStartTime());
+            prepared.setLong(2, agentInfo.getStopTime());
+            prepared.setBoolean(3, agentInfo.isAlive());
+            prepared.setString(4, agentInfo.getConfigListenAddress());
+            prepared.execute();
+        } catch (DescriptorParsingException e) {
+            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
+        } catch (StatementExecutionException e) {
+            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+        }
     }
 
     @Override

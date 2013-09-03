@@ -48,18 +48,23 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.Pair;
+import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DataModifyingStatement;
 import com.redhat.thermostat.storage.core.IllegalPatchException;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.SortDirection;
+import com.redhat.thermostat.storage.core.Replace;
+import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.BinaryComparisonExpression;
 import com.redhat.thermostat.storage.query.BinaryComparisonOperator;
 import com.redhat.thermostat.storage.query.BinaryLogicalExpression;
 import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
 import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.storage.query.LiteralExpression;
 
 public class ParsedStatementImplTest {
@@ -79,10 +84,11 @@ public class ParsedStatementImplTest {
     @Test
     public void canPatchWhereAndExpr() throws IllegalPatchException {
         // create the parsedStatementImpl we are going to use
-        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement);
+        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement, null);
         SuffixExpression suffixExpn = new SuffixExpression();
         suffixExpn.setLimitExpn(null);
         suffixExpn.setSortExpn(null);
+        parsedStmt.setSetList(new SetList());
         // WHERE a = ? AND c = ?
         WhereExpression expn = new WhereExpression();
         BinaryExpressionNode and = new BinaryExpressionNode(expn.getRoot());
@@ -152,10 +158,11 @@ public class ParsedStatementImplTest {
     @Test
     public void canPatchBasicWhereEquals() throws IllegalPatchException {
         // create the parsedStatementImpl we are going to use
-        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement);
+        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement, null);
         SuffixExpression suffixExpn = new SuffixExpression();
         suffixExpn.setLimitExpn(null);
         suffixExpn.setSortExpn(null);
+        parsedStmt.setSetList(new SetList());
         // WHERE a = ?
         WhereExpression expn = new WhereExpression();
         BinaryExpressionNode and = new BinaryExpressionNode(expn.getRoot());
@@ -215,10 +222,11 @@ public class ParsedStatementImplTest {
     @Test
     public void canPatchBasicWhereEqualsLHSKeyAndRHSValue() throws IllegalPatchException {
         // create the parsedStatementImpl we are going to use
-        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement);
+        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement, null);
         SuffixExpression suffixExpn = new SuffixExpression();
         suffixExpn.setLimitExpn(null);
         suffixExpn.setSortExpn(null);
+        parsedStmt.setSetList(new SetList());
         // WHERE ?s = ?b
         WhereExpression expn = new WhereExpression();
         BinaryExpressionNode and = new BinaryExpressionNode(expn.getRoot());
@@ -284,7 +292,8 @@ public class ParsedStatementImplTest {
     @Test
     public void canPatchBasicLimit() throws IllegalPatchException {
         // create the parsedStatementImpl we are going to use
-        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement);
+        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement, null);
+        parsedStmt.setSetList(new SetList());
         SuffixExpression suffixExpn = new SuffixExpression();
         LimitExpression limitExpnToPatch = new LimitExpression();
         UnfinishedLimitValue unfinished = new UnfinishedLimitValue();
@@ -305,10 +314,221 @@ public class ParsedStatementImplTest {
         assertEquals(3, q.limitVal);
     }
     
+    private SetList buildSetList() {
+        // Build this set list, which corresponds to the TestPojo below
+        // SET 'writerId' = ?s , 'fooTimeStamp' = ?l
+        SetList setList = new SetList();
+        SetListValue writerId = new SetListValue();
+        TerminalNode writerKey = new TerminalNode(null);
+        writerKey.setValue(new Key<>("writerId"));
+        TerminalNode writerValue = new TerminalNode(null);
+        UnfinishedValueNode unfinishedWriter = new UnfinishedValueNode();
+        unfinishedWriter.setParameterIndex(0);
+        unfinishedWriter.setType(String.class);
+        unfinishedWriter.setLHS(false);
+        writerValue.setValue(unfinishedWriter);
+        writerId.setKey(writerKey);
+        writerId.setValue(writerValue);
+        setList.addValue(writerId);
+        SetListValue fooTimeStamp = new SetListValue();
+        TerminalNode timeStampKey = new TerminalNode(null);
+        timeStampKey.setValue(new Key<>("fooTimeStamp"));
+        fooTimeStamp.setKey(timeStampKey);
+        TerminalNode timeStampVal = new TerminalNode(null);
+        UnfinishedValueNode timeStampUnfinished = new UnfinishedValueNode();
+        timeStampUnfinished.setLHS(false);
+        timeStampUnfinished.setParameterIndex(1);
+        timeStampUnfinished.setType(Long.class);
+        timeStampVal.setValue(timeStampUnfinished);
+        fooTimeStamp.setValue(timeStampVal);
+        setList.addValue(fooTimeStamp);
+        return setList;
+    }
+    
+    /*
+     * Test for patching of:
+     *  "ADD something SET 'writerId' = ?s, 'fooTimeStamp' = ?l"
+     */
+    @Test
+    public void canPatchBasicSetListAdd() throws IllegalPatchException {
+        // create the parsedStatementImpl we are going to use
+        DataModifyingStatement<TestPojo> stmt = new TestAdd();
+        ParsedStatementImpl<TestPojo> parsedStmt = new ParsedStatementImpl<>(stmt, TestPojo.class);
+        SuffixExpression suffixExpn = new SuffixExpression();
+        SetList setList = buildSetList();
+        suffixExpn.setLimitExpn(null);
+        suffixExpn.setSortExpn(null);
+        suffixExpn.setWhereExpn(null);
+        parsedStmt.setSuffixExpression(suffixExpn);
+        assertEquals(2, setList.getValues().size());
+        parsedStmt.setSetList(setList);
+        PreparedStatementImpl<Pojo> preparedStatement = new PreparedStatementImpl<>(2);
+        preparedStatement.setString(0, "foo-writer");
+        preparedStatement.setLong(1, Long.MAX_VALUE);
+        PreparedParameter[] params = preparedStatement.getParams();
+        // finally test the patching
+        Add<TestPojo> add = (Add<TestPojo>)parsedStmt.patchStatement(params);
+        assertTrue(add instanceof TestAdd);
+        TestAdd q = (TestAdd)add;
+        Pojo testPojo = q.pojo;
+        assertTrue(testPojo instanceof TestPojo);
+        TestPojo tPojo = (TestPojo)testPojo;
+        assertEquals("foo-writer", tPojo.getWriterId());
+        assertEquals(Long.MAX_VALUE, tPojo.getFooTimeStamp());
+    }
+    
+    /*
+     * Test for patching of:
+     *  "REPLACE something SET ?s = 'foo-bar', 'fooTimeStamp' = ?l WHERE 'foo' = ?i"
+     */
+    @Test
+    public void canPatchBasicSetListReplace() throws IllegalPatchException {
+        DataModifyingStatement<TestPojo> stmt = new TestReplace();
+        ParsedStatementImpl<TestPojo> parsedStmt = new ParsedStatementImpl<>(stmt, TestPojo.class);
+        SuffixExpression suffixExpn = new SuffixExpression();
+        
+        // Build this set list, which corresponds to the TestPojo below
+        // SET ?s = 'foo-bar' , 'fooTimeStamp' = ?l
+        SetList setList = new SetList();
+        SetListValue writerId = new SetListValue();
+        TerminalNode writerKey = new TerminalNode(null);
+        UnfinishedValueNode unfinishedWriterKey = new UnfinishedValueNode();
+        unfinishedWriterKey.setParameterIndex(0);
+        unfinishedWriterKey.setType(String.class);
+        unfinishedWriterKey.setLHS(true);
+        writerKey.setValue(unfinishedWriterKey);
+        writerId.setKey(writerKey);
+        TerminalNode writerValue = new TerminalNode(null);
+        writerValue.setValue("foo-bar");
+        writerId.setValue(writerValue);
+        setList.addValue(writerId);
+        SetListValue fooTimeStamp = new SetListValue();
+        TerminalNode timeStampKey = new TerminalNode(null);
+        timeStampKey.setValue(new Key<>("fooTimeStamp"));
+        fooTimeStamp.setKey(timeStampKey);
+        TerminalNode timeStampVal = new TerminalNode(null);
+        UnfinishedValueNode timeStampUnfinished = new UnfinishedValueNode();
+        timeStampUnfinished.setLHS(false);
+        timeStampUnfinished.setParameterIndex(1);
+        timeStampUnfinished.setType(Long.class);
+        timeStampVal.setValue(timeStampUnfinished);
+        fooTimeStamp.setValue(timeStampVal);
+        setList.addValue(fooTimeStamp);
+        suffixExpn.setLimitExpn(null);
+        suffixExpn.setSortExpn(null);
+        
+        // WHERE 'foo' = ?i
+        WhereExpression where = new WhereExpression();
+        BinaryExpressionNode equals = new BinaryExpressionNode(where.getRoot());
+        where.getRoot().setValue(equals);
+        equals.setOperator(BinaryComparisonOperator.EQUALS);
+        TerminalNode fooPatch = new TerminalNode(equals);
+        UnfinishedValueNode patch2 = new UnfinishedValueNode();
+        patch2.setLHS(false);
+        patch2.setType(Integer.class);
+        patch2.setParameterIndex(2);
+        fooPatch.setValue(patch2);
+        TerminalNode foo = new TerminalNode(equals);
+        foo.setValue(new Key<>("foo"));
+        equals.setLeftChild(foo);
+        equals.setRightChild(fooPatch);
+        suffixExpn.setWhereExpn(where);
+        
+        parsedStmt.setSuffixExpression(suffixExpn);
+        assertEquals(2, setList.getValues().size());
+        parsedStmt.setSetList(setList);
+        PreparedStatementImpl<Pojo> preparedStatement = new PreparedStatementImpl<>(3);
+        preparedStatement.setString(0, "writerId");
+        preparedStatement.setLong(1, Long.MAX_VALUE);
+        preparedStatement.setInt(2, -400);
+        PreparedParameter[] params = preparedStatement.getParams();
+        // finally test the patching
+        Replace<TestPojo> replace = (Replace<TestPojo>)parsedStmt.patchStatement(params);
+        assertTrue(replace instanceof TestReplace);
+        TestReplace q = (TestReplace)replace;
+        Pojo testPojo = q.pojo;
+        assertTrue(testPojo instanceof TestPojo);
+        TestPojo tPojo = (TestPojo)testPojo;
+        assertEquals("foo-bar", tPojo.getWriterId());
+        assertEquals(Long.MAX_VALUE, tPojo.getFooTimeStamp());
+        
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expectedExpression = factory.equalTo(new Key<>("foo"), -400);
+        assertEquals(expectedExpression, q.where);
+    }
+    
+    /*
+     * Test for patching of:
+     *  "UPDATE something SET 'writerId' = ?s WHERE 'foo' = ?i"
+     */
+    @Test
+    public void canPatchBasicSetListUpdate() throws IllegalPatchException {
+        DataModifyingStatement<TestPojo> stmt = new TestUpdate();
+        ParsedStatementImpl<TestPojo> parsedStmt = new ParsedStatementImpl<>(stmt, TestPojo.class);
+        SuffixExpression suffixExpn = new SuffixExpression();
+        
+        // Build this set list, which corresponds to the TestPojo below
+        // SET 'writerId' = ?s
+        SetList setList = new SetList();
+        SetListValue writerId = new SetListValue();
+        TerminalNode writerKey = new TerminalNode(null);
+        writerKey.setValue(new Key<>("writerId"));
+        TerminalNode writerValue = new TerminalNode(null);
+        UnfinishedValueNode unfinishedWriterValue = new UnfinishedValueNode();
+        unfinishedWriterValue.setParameterIndex(0);
+        unfinishedWriterValue.setType(String.class);
+        unfinishedWriterValue.setLHS(false);
+        writerValue.setValue(unfinishedWriterValue);
+        writerId.setKey(writerKey);
+        writerId.setValue(writerValue);
+        setList.addValue(writerId);
+        suffixExpn.setLimitExpn(null);
+        suffixExpn.setSortExpn(null);
+        
+        // WHERE 'foo' = ?i
+        WhereExpression where = new WhereExpression();
+        BinaryExpressionNode equals = new BinaryExpressionNode(where.getRoot());
+        where.getRoot().setValue(equals);
+        equals.setOperator(BinaryComparisonOperator.EQUALS);
+        TerminalNode fooPatch = new TerminalNode(equals);
+        UnfinishedValueNode patch2 = new UnfinishedValueNode();
+        patch2.setLHS(false);
+        patch2.setType(Integer.class);
+        patch2.setParameterIndex(1);
+        fooPatch.setValue(patch2);
+        TerminalNode foo = new TerminalNode(equals);
+        foo.setValue(new Key<>("foo"));
+        equals.setLeftChild(foo);
+        equals.setRightChild(fooPatch);
+        suffixExpn.setWhereExpn(where);
+        
+        parsedStmt.setSuffixExpression(suffixExpn);
+        assertEquals(1, setList.getValues().size());
+        parsedStmt.setSetList(setList);
+        PreparedStatementImpl<Pojo> preparedStatement = new PreparedStatementImpl<>(2);
+        preparedStatement.setString(0, "foobar-writer-id");
+        preparedStatement.setInt(1, -400);
+        PreparedParameter[] params = preparedStatement.getParams();
+        // finally test the patching
+        Update<TestPojo> replace = (Update<TestPojo>)parsedStmt.patchStatement(params);
+        assertTrue(replace instanceof TestUpdate);
+        TestUpdate q = (TestUpdate)replace;
+        List<Pair<Object, Object>> updates = q.updates;
+        assertEquals(1, updates.size());
+        Pair<Object, Object> update = updates.get(0);
+        assertEquals(new Key<>("writerId"), update.getFirst());
+        assertEquals("foobar-writer-id", update.getSecond());
+        
+        ExpressionFactory factory = new ExpressionFactory();
+        Expression expectedExpression = factory.equalTo(new Key<>("foo"), -400);
+        assertEquals(expectedExpression, q.where);
+    }
+    
     @Test
     public void canPatchBasicSort() throws IllegalPatchException {
         // create the parsedStatementImpl we are going to use
-        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement);
+        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement, null);
+        parsedStmt.setSetList(new SetList());
         SuffixExpression suffixExpn = new SuffixExpression();
         // SORT ? ASC, b DSC
         SortExpression sortExpn = new SortExpression();
@@ -349,9 +569,63 @@ public class ParsedStatementImplTest {
     }
     
     @Test
+    public void failPatchSetListAddWrongType() throws IllegalPatchException {
+        // create the parsedStatementImpl we are going to use
+        DataModifyingStatement<TestPojo> stmt = new TestAdd();
+        ParsedStatementImpl<TestPojo> parsedStmt = new ParsedStatementImpl<>(stmt, TestPojo.class);
+        SuffixExpression suffixExpn = new SuffixExpression();
+        SetList setList = buildSetList();
+        suffixExpn.setLimitExpn(null);
+        suffixExpn.setSortExpn(null);
+        suffixExpn.setWhereExpn(null);
+        parsedStmt.setSuffixExpression(suffixExpn);
+        assertEquals(2, setList.getValues().size());
+        parsedStmt.setSetList(setList);
+        // set the value for the one unfinished param
+        PreparedStatementImpl<Pojo> preparedStatement = new PreparedStatementImpl<>(2);
+        preparedStatement.setLong(0, -1);
+        preparedStatement.setString(1, "foobar");
+        PreparedParameter[] params = preparedStatement.getParams();
+        // this should fail since types don't match
+        try {
+            parsedStmt.patchStatement(params);
+            fail("Should have failed to patch, due to type mismatch");
+        } catch (IllegalPatchException e) {
+            assertTrue(e.getMessage().contains("Expected " + String.class.getName()));
+            // pass
+        }
+    }
+    
+    @Test
+    public void failPatchSetListAddInsufficientParams() throws IllegalPatchException {
+        // create the parsedStatementImpl we are going to use
+        DataModifyingStatement<TestPojo> stmt = new TestAdd();
+        ParsedStatementImpl<TestPojo> parsedStmt = new ParsedStatementImpl<>(stmt, TestPojo.class);
+        SuffixExpression suffixExpn = new SuffixExpression();
+        SetList setList = buildSetList();
+        suffixExpn.setLimitExpn(null);
+        suffixExpn.setSortExpn(null);
+        suffixExpn.setWhereExpn(null);
+        parsedStmt.setSuffixExpression(suffixExpn);
+        assertEquals(2, setList.getValues().size());
+        parsedStmt.setSetList(setList);
+        // set the value for the one unfinished param
+        PreparedStatementImpl<Pojo> preparedStatement = new PreparedStatementImpl<>(0);
+        PreparedParameter[] params = preparedStatement.getParams();
+        // this should fail since types don't match
+        try {
+            parsedStmt.patchStatement(params);
+            fail("Should have failed to patch, due to type mismatch");
+        } catch (IllegalPatchException e) {
+            // pass
+        }
+    }
+    
+    @Test
     public void failPatchWithWrongType() throws IllegalPatchException {
         // create the parsedStatementImpl we are going to use
-        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement);
+        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement, null);
+        parsedStmt.setSetList(new SetList());
         SuffixExpression suffixExpn = new SuffixExpression();
         suffixExpn.setLimitExpn(null);
         suffixExpn.setSortExpn(null);
@@ -408,10 +682,11 @@ public class ParsedStatementImplTest {
     @Test
     public void failPatchBasicEqualsIfIndexOutofBounds() {
         // create the parsedStatementImpl we are going to use
-        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement);
+        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement, null);
         SuffixExpression suffixExpn = new SuffixExpression();
         suffixExpn.setLimitExpn(null);
         suffixExpn.setSortExpn(null);
+        parsedStmt.setSetList(new SetList());
         // WHERE a = ?
         WhereExpression expn = new WhereExpression();
         BinaryExpressionNode and = new BinaryExpressionNode(expn.getRoot());
@@ -470,14 +745,100 @@ public class ParsedStatementImplTest {
         @Override
         public Cursor<Pojo> execute() {
             // Not implemented
-            return null;
+            throw new AssertionError();
         }
 
         @Override
         public Expression getWhereExpression() {
             // Not implemented
-            return null;
+            throw new AssertionError();
         }
+        
+    }
+    
+    private static class TestAdd implements Add<TestPojo> {
+        
+        private Pojo pojo; 
+
+        @Override
+        public void setPojo(Pojo pojo) {
+            this.pojo = pojo;
+        }
+
+        @Override
+        public int apply() {
+            // not implemented
+            throw new AssertionError();
+        }
+        
+    }
+    
+    private static class TestReplace implements Replace<TestPojo> {
+
+        private Expression where;
+        private Pojo pojo;
+        
+        @Override
+        public void setPojo(Pojo pojo) {
+            this.pojo = pojo;
+        }
+
+        @Override
+        public void where(Expression expression) {
+            where = expression;
+        }
+
+        @Override
+        public int apply() {
+            // not implemented
+            throw new AssertionError();
+        }
+        
+    }
+    
+    private static class TestUpdate implements Update<TestPojo> {
+
+        private Expression where;
+        private List<Pair<Object, Object>> updates = new ArrayList<>();
+        
+        @Override
+        public void where(Expression expr) {
+            this.where = expr;
+        }
+
+        @SuppressWarnings({ "rawtypes", "unchecked" })
+        @Override
+        public <S> void set(Key<S> key, S value) {
+            Pair update = new Pair<>(key, value);
+            updates.add(update);
+        }
+
+        @Override
+        public int apply() {
+            // not implemented
+            throw new AssertionError();
+        }
+        
+    }
+    
+    public static class TestPojo implements Pojo {
+        
+        private String writerId;
+        private long fooTimeStamp;
+        
+        public String getWriterId() {
+            return writerId;
+        }
+        public void setWriterId(String writerId) {
+            this.writerId = writerId;
+        }
+        public long getFooTimeStamp() {
+            return fooTimeStamp;
+        }
+        public void setFooTimeStamp(long fooTimeStamp) {
+            this.fooTimeStamp = fooTimeStamp;
+        }
+        
         
     }
 }

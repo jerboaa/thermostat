@@ -51,8 +51,9 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 
-import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
@@ -102,6 +103,12 @@ public class AgentInfoDAOTest {
         assertEquals(expectedAliveAgents, AgentInfoDAOImpl.QUERY_ALIVE_AGENTS);
         String aggregateAllAgents = "QUERY-COUNT agent-config";
         assertEquals(aggregateAllAgents, AgentInfoDAOImpl.AGGREGATE_COUNT_ALL_AGENTS);
+        String addAgentInfo = "ADD agent-config SET 'agentId' = ?s , " +
+                                                   "'startTime' = ?l , " +
+                                                   "'stopTime' = ?l , " +
+                                                   "'alive' = ?b , " +
+                                                   "'configListenAddress' = ?s";
+        assertEquals(addAgentInfo, AgentInfoDAOImpl.DESC_ADD_AGENT_INFO);
     }
     
     @Test
@@ -256,20 +263,30 @@ public class AgentInfoDAOTest {
         assertSame(expected, computed);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
-    public void verifyAddAgentInformation() {
+    public void verifyAddAgentInformation() throws StatementExecutionException, DescriptorParsingException {
         Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        Add<AgentInformation> add = mock(Add.class);
-        when(storage.createAdd(eq(AgentInfoDAO.CATEGORY))).thenReturn(add);
+        PreparedStatement<AgentInformation> add = mock(PreparedStatement.class);
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(add);
 
         AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
 
         dao.addAgentInformation(agentInfo1);
 
-        verify(storage).createAdd(AgentInfoDAO.CATEGORY);
-        verify(add).setPojo(agentInfo1);
-        verify(add).apply();
+        @SuppressWarnings("rawtypes")
+        ArgumentCaptor<StatementDescriptor> captor = ArgumentCaptor.forClass(StatementDescriptor.class);
+        
+        verify(storage).prepareStatement(captor.capture());
+        StatementDescriptor<?> desc = captor.getValue();
+        assertEquals(AgentInfoDAOImpl.DESC_ADD_AGENT_INFO, desc.getDescriptor());
+        verify(add).setString(0, agentInfo1.getAgentId());
+        verify(add).setLong(1, agentInfo1.getStartTime());
+        verify(add).setLong(2, agentInfo1.getStopTime());
+        verify(add).setBoolean(3, agentInfo1.isAlive());
+        verify(add).setString(4, agentInfo1.getConfigListenAddress());
+        verify(add).execute();
+        Mockito.verifyNoMoreInteractions(add);
     }
 
     @Test

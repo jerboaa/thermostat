@@ -21,7 +21,7 @@ public class StatementDescriptor<T extends Pojo> {
      * 
      * @return The statement descriptor.
      */
-    public String getQueryDescriptor() {
+    public String getDescriptor() {
         return desc;
     }
     
