@@ -76,7 +76,7 @@
 
     <jdktools.version>1.7.0</jdktools.version>
     <jfreechart.version>1.0.14</jfreechart.version>
-    <mongo-driver.version>2.7.3</mongo-driver.version>
+    <mongo-driver.version>2.11.2</mongo-driver.version>
     <commons-beanutils.version>1.8.3</commons-beanutils.version>
     <commons-cli.version>1.2</commons-cli.version>
     <commons-io.version>2.4</commons-io.version>
