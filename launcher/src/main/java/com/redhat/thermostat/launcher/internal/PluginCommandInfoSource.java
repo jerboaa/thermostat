@@ -144,7 +144,6 @@ public class PluginCommandInfoSource implements CommandInfoSource {
                     usage,
                     command.getOptions(),
                     command.getEnvironments(),
-                    Collections.<String>emptyList(),
                     command.getBundles());
 
             allNewCommands.put(commandName, info);
@@ -158,16 +157,15 @@ public class PluginCommandInfoSource implements CommandInfoSource {
             Map.Entry<String, List<BundleInformation>> entry = iter.next();
             if (allNewCommands.containsKey(entry.getKey())) {
                 BasicCommandInfo old = allNewCommands.get(entry.getKey());
-                List<BundleInformation> updatedResources = new ArrayList<>();
-                updatedResources.addAll(old.getBundles());
-                updatedResources.addAll(entry.getValue());
+                List<BundleInformation> updatedBundles = new ArrayList<>();
+                updatedBundles.addAll(old.getBundles());
+                updatedBundles.addAll(entry.getValue());
                 BasicCommandInfo updated = new BasicCommandInfo(old.getName(),
                         old.getDescription(),
                         old.getUsage(),
                         old.getOptions(),
                         old.getEnvironments(),
-                        Collections.<String>emptyList(),
-                        updatedResources);
+                        updatedBundles);
                 allNewCommands.put(entry.getKey(), updated);
                 iter.remove();
             }
@@ -181,7 +179,7 @@ public class PluginCommandInfoSource implements CommandInfoSource {
         }
         List<BundleInformation> bundles = additionalBundlesForExistingCommands.get(name);
         if (bundles != null) {
-            return new BasicCommandInfo(name, null, null, null, null, Collections.<String>emptyList(), bundles);
+            return new BasicCommandInfo(name, null, null, null, null, bundles);
         }
         throw new CommandInfoNotFoundException(name);
     }
@@ -191,7 +189,7 @@ public class PluginCommandInfoSource implements CommandInfoSource {
         List<CommandInfo> result = new ArrayList<>();
         result.addAll(allNewCommands.values());
         for (Entry<String, List<BundleInformation>> entry : additionalBundlesForExistingCommands.entrySet()) {
-            result.add(new BasicCommandInfo(entry.getKey(), null, null, null, null, Collections.<String>emptyList(), entry.getValue()));
+            result.add(new BasicCommandInfo(entry.getKey(), null, null, null, null, entry.getValue()));
         }
         return result;
     }

@@ -65,7 +65,7 @@ public class BundleInformation {
 
     @Override
     public String toString() {
-        return "Bundle[" + name + "=" + version + "]";
+        return "Bundle['" + name + "'='" + version + "']";
     }
 
     @Override

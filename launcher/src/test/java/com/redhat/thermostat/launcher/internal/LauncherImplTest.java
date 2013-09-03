@@ -76,6 +76,7 @@ import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.tools.ApplicationState;
+import com.redhat.thermostat.launcher.BundleInformation;
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.internal.DisallowSystemExitSecurityManager.ExitException;
 import com.redhat.thermostat.launcher.internal.LauncherImpl.LoggingInitializer;
@@ -212,7 +213,7 @@ public class LauncherImplTest {
         CommandInfo helpCommandInfo = mock(CommandInfo.class);
         when(helpCommandInfo.getName()).thenReturn("help");
         when(helpCommandInfo.getDescription()).thenReturn("print help information");
-        when(helpCommandInfo.getDependencyResourceNames()).thenReturn(new ArrayList<String>());
+        when(helpCommandInfo.getBundles()).thenReturn(new ArrayList<BundleInformation>());
         when(helpCommandInfo.getOptions()).thenReturn(new Options());
         when(helpCommandInfo.getUsage()).thenReturn("thermostat help");
         when(helpCommandInfo.getEnvironments()).thenReturn(EnumSet.of(Environment.SHELL, Environment.CLI));

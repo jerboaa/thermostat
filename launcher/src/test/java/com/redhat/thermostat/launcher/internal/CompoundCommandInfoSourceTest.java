@@ -49,6 +49,8 @@ import org.apache.commons.cli.Options;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.launcher.BundleInformation;
+
 
 public class CompoundCommandInfoSourceTest {
 
@@ -101,19 +103,19 @@ public class CompoundCommandInfoSourceTest {
         String DESCRIPTION = "test-description";
         String USAGE = "test-usage";
         Options OPTIONS = new Options();
-        List<String> DEPS1 = Arrays.asList("1test1", "1test2");
-        List<String> DEPS2 = Arrays.asList("2test1");
+        List<BundleInformation> DEPS1 = Arrays.asList(new BundleInformation("1test1", "1"), new BundleInformation("1test2", "1"));
+        List<BundleInformation> DEPS2 = Arrays.asList(new BundleInformation("2test1", "1"));
 
         CommandInfo cmdInfo1 = mock(CommandInfo.class);
         when(cmdInfo1.getName()).thenReturn(NAME);
         when(cmdInfo1.getDescription()).thenReturn(DESCRIPTION);
         when(cmdInfo1.getUsage()).thenReturn(USAGE);
         when(cmdInfo1.getOptions()).thenReturn(OPTIONS);
-        when(cmdInfo1.getDependencyResourceNames()).thenReturn(DEPS1);
+        when(cmdInfo1.getBundles()).thenReturn(DEPS1);
 
         CommandInfo cmdInfo2 = mock(CommandInfo.class);
         when(cmdInfo2.getName()).thenReturn(NAME);
-        when(cmdInfo2.getDependencyResourceNames()).thenReturn(DEPS2);
+        when(cmdInfo2.getBundles()).thenReturn(DEPS2);
 
         when(source1.getCommandInfo(NAME)).thenReturn(cmdInfo1);
         when(source2.getCommandInfo(NAME)).thenReturn(cmdInfo2);
@@ -124,9 +126,9 @@ public class CompoundCommandInfoSourceTest {
         assertEquals(USAGE, result.getUsage());
         assertEquals(OPTIONS, result.getOptions());
 
-        ArrayList<String> combined = new ArrayList<>(DEPS1);
+        ArrayList<BundleInformation> combined = new ArrayList<>(DEPS1);
         combined.addAll(DEPS2);
-        assertEquals(combined, result.getDependencyResourceNames());
+        assertEquals(combined, result.getBundles());
     }
 
     @Test

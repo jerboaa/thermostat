@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -75,15 +73,15 @@ public class BuiltInCommandInfo implements CommandInfo {
     private String name, description, usage;
     private Options options;
     private EnumSet<Environment> environment;
-    private List<String> dependencies;
+    private List<BundleInformation> dependencies;
 
-    BuiltInCommandInfo(String commandName, Properties properties, String libRoot) {
+    BuiltInCommandInfo(String commandName, Properties properties) {
         options = new Options();
         this.name = commandName;
         for (Entry<Object,Object> entry: properties.entrySet()) {
             String key = (String) entry.getKey();
             if (key.equals(PROPERTY_BUNDLES)) {
-                learnDependencies((String) entry.getValue(), libRoot);
+                learnDependencies((String) entry.getValue());
             } else if (key.equals(PROPERTY_DESC)) {
                 description = properties.getProperty(key);
             } else if (key.equals(PROPERTY_USAGE)) {
@@ -96,7 +94,7 @@ public class BuiltInCommandInfo implements CommandInfo {
         }
     }
 
-    private void learnDependencies(String bundlesValue, String libRoot) {
+    private void learnDependencies(String bundlesValue) {
         List<String> resourceNames = Arrays.asList(bundlesValue.split(","));
         dependencies = new ArrayList<>(resourceNames.size());
         for (String value : resourceNames) {
@@ -104,23 +102,17 @@ public class BuiltInCommandInfo implements CommandInfo {
             if (resource.length() == 0) {
                 continue;
             }
-            File file = new File(libRoot, value.trim());
-            try {
-                String path = file.getCanonicalFile().toURI().toString();
-                if (!file.exists()) {
-                    logger.severe("Bundle " + path + " required by " + getName() +
-                            " command does not exist in the filesystem.  This will cause" +
-                            " osgi wiring issue when attempting to run this command.");
-                    // Allow to proceed because this command may never be called.
-                } else {
-                    dependencies.add(path);
-                }
-            } catch (IOException e) {
-                logger.severe("Bundle " + file + " required by " + getName() +
-                        " command does not exist in the filesystem.  This will cause" +
-                        " osgi wiring issue when attempting to run this command.");
-                // Allow to proceed because this command may never be called.
+            String[] parts = value.split("=");
+            String name = parts[0].trim();
+            String version = parts[1].trim();
+            // FIXME hack to convert maven-style "-SNAPSHOT" versions to OSGi-style ".SNAPSHOT".
+            // This is because we use ${project.version} for bundle version in our properties file
+            // and that's the maven version, not the OSGi version.
+            if (version != null && version.contains("-")) {
+                version = version.replace("-", ".");
             }
+            BundleInformation info = new BundleInformation(name, version);
+            dependencies.add(info);
         }
     }
 
@@ -388,13 +380,9 @@ public class BuiltInCommandInfo implements CommandInfo {
         return environment;
     }
 
-    public List<String> getDependencyResourceNames() {
-        return dependencies;
-    }
-
     @Override
     public List<BundleInformation> getBundles() {
-        return Collections.emptyList();
+        return dependencies;
     }
 }
 

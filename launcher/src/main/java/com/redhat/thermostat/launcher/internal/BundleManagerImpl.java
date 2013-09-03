@@ -163,8 +163,8 @@ public class BundleManagerImpl extends BundleManager {
         loadBundlesByPath(paths);
     }
 
-    @Override
-    public void loadBundlesByPath(List<String> requiredBundles) throws BundleException, IOException {
+    /* package private for testing only */
+    void loadBundlesByPath(List<String> requiredBundles) throws BundleException, IOException {
         Framework framework = getFramework(this.getClass());
         BundleContext context = framework.getBundleContext();
 

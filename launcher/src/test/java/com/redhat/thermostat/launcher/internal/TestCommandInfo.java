@@ -102,11 +102,6 @@ public class TestCommandInfo implements CommandInfo {
     }
 
     @Override
-    public List<String> getDependencyResourceNames() {
-        return Collections.emptyList();
-    }
-
-    @Override
     public List<BundleInformation> getBundles() {
         return Collections.emptyList();
     }

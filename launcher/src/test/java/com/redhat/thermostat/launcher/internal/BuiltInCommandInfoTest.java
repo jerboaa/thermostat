@@ -57,46 +57,16 @@ import org.apache.commons.cli.Options;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.launcher.BundleInformation;
 import com.redhat.thermostat.shared.locale.Translate;
 
 public class BuiltInCommandInfoTest {
-
-    private Path tempThermostatHome, someJarName1, someJarName2, missingJarName;
-    private File tempLibs;
-
-    @Before
-    public void setUp() throws IOException {
-        tempThermostatHome = Files.createTempDirectory("test");
-        tempThermostatHome.toFile().deleteOnExit();
-        System.setProperty("THERMOSTAT_HOME", tempThermostatHome.toString());
-
-        tempLibs = new File(tempThermostatHome.toFile(), "libs");
-        tempLibs.mkdirs();
-        tempLibs.deleteOnExit();
-
-        File someJar1 = new File(tempLibs, "thermostat-osgi-fluff1.jar");
-        someJar1.createNewFile();
-        someJar1.deleteOnExit();
-        someJarName1 = someJar1.toPath();
-        
-        File someJar2 = new File(tempLibs, "thermostat-osgi-fluff2.jar");
-        someJar2.createNewFile();
-        someJar2.deleteOnExit();
-        someJarName2 = someJar2.toPath();
-
-        File missingJar = new File(tempLibs, "thisjar_noexist.jar");
-        missingJarName = missingJar.toPath();
-    }
-
-    private String resolvedJar(Path jar) {
-        return "file:" + jar.toString();
-    }
 
     @Test
     public void verifyGetName() {
         Properties props = new Properties();
         String name = "name";
-        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props, "");
+        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props);
 
         String commandName = info.getName();
         assertEquals(name, commandName);
@@ -105,38 +75,26 @@ public class BuiltInCommandInfoTest {
     @Test
     public void verifySingleResource() {
         Properties props = new Properties();
-        props.setProperty("bundles", someJarName1.getFileName().toString());
+        props.setProperty("bundles", "bundle1=1");
         String name = "name";
-        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props, tempLibs.toString());
+        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props);
 
-        List<String> resources = info.getDependencyResourceNames();
+        List<BundleInformation> resources = info.getBundles();
         assertEquals(1, resources.size());
-        assertTrue(resources.contains(resolvedJar(someJarName1)));
+        assertTrue(resources.contains(new BundleInformation("bundle1", "1")));
     }
 
     @Test
     public void verifyMultipleResources() {
         Properties props = new Properties();
-        props.setProperty("bundles", someJarName1.getFileName() + "," + someJarName2.getFileName());
+        props.setProperty("bundles", "bundle1=1,bundle2=2");
         String name = "name";
-        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props, tempLibs.toString());
+        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props);
 
-        List<String> resources = info.getDependencyResourceNames();
+        List<BundleInformation> resources = info.getBundles();
         assertEquals(2, resources.size());
-        assertTrue(resources.contains(resolvedJar(someJarName1)));
-        assertTrue(resources.contains(resolvedJar(someJarName2)));
-    }
-
-    @Test
-    public void verifyMissingResource() {
-        Properties props = new Properties();
-        props.setProperty("bundles", missingJarName.getFileName().toString());
-        String name = "name";
-        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props, tempLibs.toString());
-
-        List<String> resources = info.getDependencyResourceNames();
-        assertEquals(0, resources.size());
-        assertFalse(resources.contains(resolvedJar(missingJarName)));
+        assertTrue(resources.contains(new BundleInformation("bundle1", "1")));
+        assertTrue(resources.contains(new BundleInformation("bundle2", "2")));
     }
 
     @Test
@@ -145,7 +103,7 @@ public class BuiltInCommandInfoTest {
         String name = "name";
         String desc = "desc";
         props.put("description", desc);
-        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props, tempLibs.toString());
+        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props);
 
         String commandDesc = info.getDescription();
         assertEquals(desc, commandDesc);
@@ -157,7 +115,7 @@ public class BuiltInCommandInfoTest {
         String name = "name";
         String usage = "some sort of usage message";
         props.put("usage", usage);
-        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props, tempLibs.toString());
+        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props);
 
         String commandUsage = info.getUsage();
         assertEquals(usage, commandUsage);
@@ -178,7 +136,7 @@ public class BuiltInCommandInfoTest {
         props.put("bar.hasarg", "FALSE");
         props.put("bar.required", "this will evaluate as false");
         props.put("bar.description", "the bar option");
-        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props, tempLibs.toString());
+        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props);
 
         Options options = info.getOptions();
         Option foo = options.getOption("foo");
@@ -202,7 +160,7 @@ public class BuiltInCommandInfoTest {
         Properties props = new Properties();
         String name = "name";
         props.put("options", "AUTO_DB_OPTIONS");
-        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props, tempLibs.toString());
+        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props);
 
         Options options = info.getOptions();
         assertTrue(options.hasOption(CommonOptions.DB_URL_ARG));
@@ -220,7 +178,7 @@ public class BuiltInCommandInfoTest {
         String name = "name";
         props.put("options", "AUTO_DB_OPTIONS, dbUrl");
         props.put("dbUrl.required", "true");
-        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props, tempLibs.toString());
+        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props);
 
         Options options = info.getOptions();
         assertTrue(options.hasOption(CommonOptions.DB_URL_ARG));
@@ -238,7 +196,7 @@ public class BuiltInCommandInfoTest {
         Properties props = new Properties();
         String name = "name";
         props.put("options", "AUTO_LOG_OPTION");
-        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props, tempLibs.toString());
+        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props);
 
         Options options = info.getOptions();
         assertTrue(options.hasOption(CommonOptions.LOG_LEVEL_ARG));
@@ -252,7 +210,7 @@ public class BuiltInCommandInfoTest {
         props.put("options", "foo|bar");
         props.put("foo.short", "f");
         props.put("bar.short", "b");
-        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props, tempLibs.toString());
+        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props);
 
         Options options = info.getOptions();
         Option foo = options.getOption("f");
@@ -274,7 +232,7 @@ public class BuiltInCommandInfoTest {
         props.put("bar.short", "b");
         props.put("baz.short", "b");
         @SuppressWarnings("unused")
-        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props, tempLibs.toString());
+        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props);
     }
 
     @Test(expected=RuntimeException.class)
@@ -285,7 +243,7 @@ public class BuiltInCommandInfoTest {
         props.put("bar.long", "ba");
         props.put("baz.long", "ba");
         @SuppressWarnings("unused")
-        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props, tempLibs.toString());
+        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props);
     }
 
     @Test(expected=RuntimeException.class)
@@ -296,7 +254,7 @@ public class BuiltInCommandInfoTest {
         props.put("bar.short", "b");
         props.put("baz.short", "b");
         @SuppressWarnings("unused")
-        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props, tempLibs.toString());
+        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props);
     }
 
     @Test(expected=RuntimeException.class)
@@ -308,7 +266,7 @@ public class BuiltInCommandInfoTest {
         props.put("bar.short", "b");
         props.put("baz.short", "b");
         @SuppressWarnings("unused")
-        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props, tempLibs.toString());
+        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props);
     }
 
     @Test(expected=RuntimeException.class)
@@ -320,7 +278,7 @@ public class BuiltInCommandInfoTest {
         props.put("dbUrl.long", "dbUrl");
         props.put("dbUrl.required", "true");
         @SuppressWarnings("unused")
-        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props, tempLibs.toString());
+        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props);
     }
 
     @Test(expected=RuntimeException.class)
@@ -332,7 +290,7 @@ public class BuiltInCommandInfoTest {
         props.put("dbUrl.long", "notDbUrl");
         props.put("dbUrl.required", "true");
         @SuppressWarnings("unused")
-        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props, tempLibs.toString());
+        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props);
     }
 
     @Test(expected=RuntimeException.class)
@@ -343,7 +301,7 @@ public class BuiltInCommandInfoTest {
         props.put("dbUrl.description", "An attempt to cause confusion.");
         props.put("dbUrl.required", "true");
         @SuppressWarnings("unused")
-        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props, tempLibs.toString());
+        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props);
     }
 
     @Test
@@ -352,7 +310,7 @@ public class BuiltInCommandInfoTest {
         String name = "name";
         String env = "cli, shell";
         props.put("environments", env);
-        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props, tempLibs.toString());
+        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props);
 
         Set<Environment> commandEnv = info.getEnvironments();
         assertTrue(commandEnv.contains(Environment.CLI));

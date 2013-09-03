@@ -62,13 +62,6 @@ public abstract class BundleManager {
      */
     public abstract void loadBundlesByName(List<BundleInformation> bundles) throws BundleException, IOException;
 
-    /**
-     * Load and start bundles using file locations
-     *
-     * @param uriPaths a list of URI strings that represent on-disk locations of bundles
-     */
-    public abstract void loadBundlesByPath(List<String> uriPaths) throws BundleException, IOException;
-
     public static void preLoadBundles(Framework framework, List<String> bundleLocations,
             boolean printOSGiInfo) throws BundleException {
         BundleLoader loader = new BundleLoader(printOSGiInfo);

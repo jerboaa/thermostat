@@ -134,15 +134,12 @@ public class CompoundCommandInfoSource implements CommandInfoSource {
         String usage = selectBest(info1.getUsage(), info2.getUsage());
         Options options = selectBest(info1.getOptions(), info2.getOptions());
         Set<Environment> environment = selectBest(info1.getEnvironments(), info2.getEnvironments());
-        List<String> resources = new ArrayList<>();
-        resources.addAll(info1.getDependencyResourceNames());
-        resources.addAll(info2.getDependencyResourceNames());
         List<BundleInformation> bundles = new ArrayList<>();
         bundles.addAll(info1.getBundles());
         bundles.addAll(info2.getBundles());
 
 
-        return new BasicCommandInfo(name, description, usage, options, environment, resources, bundles);
+        return new BasicCommandInfo(name, description, usage, options, environment, bundles);
     }
 
     private <T> T selectBest(T first, T second) {

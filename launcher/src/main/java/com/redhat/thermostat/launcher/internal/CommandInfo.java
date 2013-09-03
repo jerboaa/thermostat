@@ -75,11 +75,5 @@ public interface CommandInfo {
 
     List<BundleInformation> getBundles();
 
-    /**
-     * Returns a list of jar that this command depends on
-     * @return a list of strings containing the URIs of jars-on-disk
-     */
-    List<String> getDependencyResourceNames();
-
 }
 

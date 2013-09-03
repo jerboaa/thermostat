@@ -58,18 +58,17 @@ public class BasicCommandInfoTest {
         final String USAGE = "some-usage";
         final Options OPTIONS = new Options();
         final Set<Environment> ENVIRONMENT = EnumSet.noneOf(Environment.class);
-        final List<String> RESOURCES = Collections.emptyList();
         final List<BundleInformation> BUNDLES = Collections.emptyList();
 
-        BasicCommandInfo info = new BasicCommandInfo(NAME, DESCRIPTION, USAGE, OPTIONS, ENVIRONMENT, RESOURCES);
+        BasicCommandInfo info = new BasicCommandInfo(NAME, DESCRIPTION, USAGE, OPTIONS, ENVIRONMENT, BUNDLES);
 
         assertEquals(NAME, info.getName());
         assertEquals(DESCRIPTION, info.getDescription());
         assertEquals(USAGE, info.getUsage());
         assertEquals(OPTIONS, info.getOptions());
-        assertEquals(RESOURCES, info.getDependencyResourceNames());
+        assertEquals(BUNDLES, info.getBundles());
 
-        assertEquals(String.format("%s (description='%s', dependencies='%s', bundles='%s')", NAME, DESCRIPTION, RESOURCES.toString(), BUNDLES.toString()),
+        assertEquals(String.format("%s (description='%s', dependencies='%s')", NAME, DESCRIPTION, BUNDLES.toString()),
                 info.toString());
     }
 }

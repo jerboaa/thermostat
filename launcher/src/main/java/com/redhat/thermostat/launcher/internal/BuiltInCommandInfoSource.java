@@ -79,7 +79,7 @@ public class BuiltInCommandInfoSource implements CommandInfoSource {
                     logger.warning("Issue loading properties file: " + file.getPath());
                 }
                 String commandName = deduceCommandName(file.getName());
-                commands.put(commandName, new BuiltInCommandInfo(commandName, commandProps, libRoot));
+                commands.put(commandName, new BuiltInCommandInfo(commandName, commandProps));
             }
         } else {
             logger.warning("Command configuration directory not found or not a directory: " + dir.getPath());

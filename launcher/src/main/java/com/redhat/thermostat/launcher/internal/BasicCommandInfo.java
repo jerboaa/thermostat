@@ -51,26 +51,14 @@ public class BasicCommandInfo implements CommandInfo {
     private final String usage;
     private final Options options;
     private final Set<Environment> environments;
-    private final List<String> resources;
     private final List<BundleInformation> bundles;
 
-    public BasicCommandInfo(String name, String description, String usage, Options options, Set<Environment> environments, List<String> resources) {
+    public BasicCommandInfo(String name, String description, String usage, Options options, Set<Environment> environments, List<BundleInformation> bundles) {
         this.name = name;
         this.description = description;
         this.usage = usage;
         this.options = options;
         this.environments = environments;
-        this.resources = resources;
-        this.bundles = Collections.emptyList();
-    }
-
-    public BasicCommandInfo(String name, String description, String usage, Options options, Set<Environment> environments, List<String> resources, List<BundleInformation> bundles) {
-        this.name = name;
-        this.description = description;
-        this.usage = usage;
-        this.options = options;
-        this.environments = environments;
-        this.resources = resources;
         this.bundles = bundles;
     }
 
@@ -100,17 +88,12 @@ public class BasicCommandInfo implements CommandInfo {
     }
 
     @Override
-    public List<String> getDependencyResourceNames() {
-        return resources;
-    }
-
-    @Override
     public List<BundleInformation> getBundles() {
         return bundles;
     }
 
     @Override
     public String toString() {
-        return String.format("%s (description='%s', dependencies='%s', bundles='%s')", name, description, resources.toString(), bundles.toString());
+        return String.format("%s (description='%s', dependencies='%s')", name, description, bundles.toString());
     }
 }
