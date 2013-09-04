@@ -119,8 +119,8 @@
       <url>file://${eclipse-root}/jfreechart-p2-repository/target/repository/</url>
     </repository>
     <repository>
-      <id>maven.eclipse.org</id>
-      <url>http://maven.eclipse.org/nexus/content/groups/public/</url>
+      <id>eclipse.org</id>
+      <url>http://repo.eclipse.org/nexus/content/groups/public/</url>
     </repository>
   </repositories>
   
