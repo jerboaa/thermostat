@@ -79,7 +79,7 @@
         <bundle><symbolic-name>com.redhat.thermostat.storage.mongodb</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.web.common</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.web.client</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>com.mongodb</symbolic-name><version>${mongo-driver.version}</version></bundle>
+        <bundle><symbolic-name>org.mongodb.mongo-java-driver</symbolic-name><version>${mongo-driver.osgi-version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.beanutils</symbolic-name><version>${commons-beanutils.version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.codec</symbolic-name><version>${commons-codec.osgi-version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.collections</symbolic-name><version>${commons-collections.version}</version></bundle>
@@ -132,7 +132,7 @@
         <bundle><symbolic-name>com.redhat.thermostat.storage.mongodb</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.web.common</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.web.client</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>com.mongodb</symbolic-name><version>${mongo-driver.version}</version></bundle>
+        <bundle><symbolic-name>org.mongodb.mongo-java-driver</symbolic-name><version>${mongo-driver.osgi-version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.beanutils</symbolic-name><version>${commons-beanutils.version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.codec</symbolic-name><version>${commons-codec.osgi-version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.collections</symbolic-name><version>${commons-collections.version}</version></bundle>
@@ -188,7 +188,7 @@
         <bundle><symbolic-name>com.redhat.thermostat.storage.mongodb</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.web.common</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.web.client</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>com.mongodb</symbolic-name><version>${mongo-driver.version}</version></bundle>
+        <bundle><symbolic-name>org.mongodb.mongo-java-driver</symbolic-name><version>${mongo-driver.osgi-version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.beanutils</symbolic-name><version>${commons-beanutils.version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.codec</symbolic-name><version>${commons-codec.osgi-version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.collections</symbolic-name><version>${commons-collections.version}</version></bundle>
@@ -238,7 +238,7 @@
         <bundle><symbolic-name>com.redhat.thermostat.storage.mongodb</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.web.common</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.web.client</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>com.mongodb</symbolic-name><version>${mongo-driver.version}</version></bundle>
+        <bundle><symbolic-name>org.mongodb.mongo-java-driver</symbolic-name><version>${mongo-driver.osgi-version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.beanutils</symbolic-name><version>${commons-beanutils.version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.codec</symbolic-name><version>${commons-codec.osgi-version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.collections</symbolic-name><version>${commons-collections.version}</version></bundle>
@@ -288,7 +288,7 @@
         <bundle><symbolic-name>com.redhat.thermostat.storage.mongodb</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.web.common</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.web.client</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>com.mongodb</symbolic-name><version>${mongo-driver.version}</version></bundle>
+        <bundle><symbolic-name>org.mongodb.mongo-java-driver</symbolic-name><version>${mongo-driver.osgi-version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.beanutils</symbolic-name><version>${commons-beanutils.version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.codec</symbolic-name><version>${commons-codec.osgi-version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.collections</symbolic-name><version>${commons-collections.version}</version></bundle>
@@ -338,7 +338,7 @@
         <bundle><symbolic-name>com.redhat.thermostat.storage.mongodb</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.web.common</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.web.client</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>com.mongodb</symbolic-name><version>${mongo-driver.version}</version></bundle>
+        <bundle><symbolic-name>org.mongodb.mongo-java-driver</symbolic-name><version>${mongo-driver.osgi-version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.beanutils</symbolic-name><version>${commons-beanutils.version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.codec</symbolic-name><version>${commons-codec.osgi-version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.collections</symbolic-name><version>${commons-collections.version}</version></bundle>
@@ -381,7 +381,7 @@
         <bundle><symbolic-name>com.redhat.thermostat.storage.mongodb</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.web.common</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.web.client</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>com.mongodb</symbolic-name><version>${mongo-driver.version}</version></bundle>
+        <bundle><symbolic-name>org.mongodb.mongo-java-driver</symbolic-name><version>${mongo-driver.osgi-version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.beanutils</symbolic-name><version>${commons-beanutils.version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.codec</symbolic-name><version>${commons-codec.osgi-version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.collections</symbolic-name><version>${commons-collections.version}</version></bundle>

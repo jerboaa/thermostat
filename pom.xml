@@ -76,13 +76,16 @@
 
     <jdktools.version>1.7.0</jdktools.version>
     <jfreechart.version>1.0.14</jfreechart.version>
-    <mongo-driver.version>2.7.3</mongo-driver.version>
+    <mongo-driver.version>2.11.2</mongo-driver.version>
+    <!-- the OSGi Bundle-Version; should match the manifest in the jar -->
+    <mongo-driver.osgi-version>2.11.2.RELEASE</mongo-driver.osgi-version>
     <commons-beanutils.version>1.8.3</commons-beanutils.version>
     <commons-cli.version>1.2</commons-cli.version>
     <commons-io.version>2.4</commons-io.version>
     <commons-collections.version>3.2.1</commons-collections.version>
     <commons-logging.version>1.1.3</commons-logging.version>
     <commons-codec.version>1.7</commons-codec.version>
+    <!-- the OSGi Bundle-Version; should match the manifest in the jar -->
     <commons-codec.osgi-version>1.7.0</commons-codec.osgi-version>
     <commons-fileupload.version>1.2.2</commons-fileupload.version>
 

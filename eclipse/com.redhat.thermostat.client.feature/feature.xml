@@ -131,6 +131,13 @@ to do so, delete this exception statement from your version.
          download-size="0"
          install-size="0"
          version="0.0.0"
+         unpack="false"/>33
+
+   <plugin
+         id="org.mongodb.mongo-java-driver"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
          unpack="false"/>
 
    <plugin
