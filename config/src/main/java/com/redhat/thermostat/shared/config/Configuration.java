@@ -38,9 +38,6 @@ package com.redhat.thermostat.shared.config;
 
 import java.io.File;
 
-import com.redhat.thermostat.shared.locale.LocaleResources;
-import com.redhat.thermostat.shared.locale.Translate;
-
 /**
  * Contains locations to various files and directories used by thermostat
  * components.
@@ -56,19 +53,40 @@ import com.redhat.thermostat.shared.locale.Translate;
  * <p>
  * The directories are split according to functionality, along the lines of
  * Filesystem Hierarchy Standard (FHS).
+ * <p>
+ * The behaviour of this class is affected by the following environment
+ * variables:
+ * <dl>
+ *   <di>{@code THERMOSTAT_HOME}</di>
+ *   <dd>Specifies the location thermostat uses for it's read-only data,
+ *     such as jars.</dd>
+ *   <di>{@code THERMOSTAT_SYSTEM_USER}</di>
+ *   <dd>If set, indicates that thermostat is running as a system user.
+ *     In this mode, it reads configuration from system paths and places
+ *     data in system writeable locations.</dd>
+ *   <di>{@code USER_THERMOSTAT_HOME}</di>
+ *   <dd>The meaning of this varies depending on whether thermostat is
+ *     running as a system user or not. In normal mode, this controls
+ *     where thermostat places it's data and where configuration files
+ *     are searched for. In system mode, this is treated as a prefix
+ *     writing system data.</dd>
+ * </dl>
  */
 public class Configuration {
 
     // Note: these paths are used by the integration tests too. Please update
     // them whenever you change this class.
 
+    // environment variables (also system properties for convenience):
     private static final String THERMOSTAT_HOME = "THERMOSTAT_HOME";
     private static final String USER_THERMOSTAT_HOME = "USER_THERMOSTAT_HOME";
+    private static final String THERMOSTAT_SYSTEM_USER = "THERMOSTAT_SYSTEM_USER";
+
+
     private static final String THERMOSTAT_USER_DIR = ".thermostat";
-    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
     private final String home;
-    private final File userHome;
+    private final UserDirectories userDirectories;
 
     private boolean printOsgiInfo = false;
 
@@ -79,27 +97,26 @@ public class Configuration {
         if (home == null) {
             home = System.getenv(THERMOSTAT_HOME);
         }
-        
+
         if (home == null) {
             throw new InvalidConfigurationException(THERMOSTAT_HOME + " not defined...");
         }
         this.home = home;
 
-        // allow this to be specified also as a special property, meant for tests
-        String userHome = System.getProperty(USER_THERMOSTAT_HOME);
-        if (userHome == null) {
-            userHome = System.getenv(USER_THERMOSTAT_HOME);
+        String systemUser = System.getProperty(THERMOSTAT_SYSTEM_USER);
+        if (systemUser == null) {
+            systemUser = System.getenv(THERMOSTAT_SYSTEM_USER);
         }
-        if (userHome == null) {
-            userHome = System.getProperty("user.home") + File.separatorChar + THERMOSTAT_USER_DIR;
+
+        if (systemUser != null) {
+            userDirectories = new SystemUserDirectories();
+        } else {
+            userDirectories = new UnprivilegedUserDirectories();
         }
-        this.userHome = new File(userHome);
     }
 
     /*
      * Overall hierarchy
-     *
-     * TODO: these might have to be different for 'root' or 'thermostat' users
      */
 
     public File getSystemThermostatHome() throws InvalidConfigurationException {
@@ -107,7 +124,7 @@ public class Configuration {
     }
 
     public File getUserThermostatHome() throws InvalidConfigurationException {
-        return userHome;
+        return userDirectories.getSystemRoot();
     }
 
     public File getSystemPluginRoot() throws InvalidConfigurationException {
@@ -117,7 +134,7 @@ public class Configuration {
     public File getSystemLibRoot() throws InvalidConfigurationException {
         return new File(home, "libs");
     }
-    
+
     public File getSystemNativeLibsRoot() throws InvalidConfigurationException {
         return new File(getSystemLibRoot(), "native");
     }
@@ -127,32 +144,32 @@ public class Configuration {
     }
 
     public File getUserConfigurationDirectory() throws InvalidConfigurationException {
-        return new File(getUserThermostatHome(), "etc");
+        return userDirectories.getUserConfigurationDirectory();
     }
 
     /** A location that contains data that is persisted */
     public File getUserPersistentDataDirectory() throws InvalidConfigurationException {
-        File dataDir = new File(getUserThermostatHome(), "data");
-        return dataDir;
+        return userDirectories.getUserPersistentDataDirectory();
     }
 
-    /** Contains data that is only useful for the duration that thermostat is running */
+    /**
+     * Contains data that is only useful for the duration that thermostat is
+     * running
+     */
     public File getUserRuntimeDataDirectory() throws InvalidConfigurationException {
-        File runDir = new File(getUserThermostatHome(), "run");
-        return runDir;
+        return userDirectories.getUserRuntimeDataDirectory();
     }
 
     public File getUserLogDirectory() throws InvalidConfigurationException {
-        File logDir = new File(getUserThermostatHome(), "logs");
-        return logDir;
+        return userDirectories.getUserLogDirectory();
+
     }
 
     public File getUserCacheDirectory() throws InvalidConfigurationException {
-        File cacheDir = new File(getUserThermostatHome(), "cache");
-        return cacheDir;
+        return userDirectories.getUserCacheDirectory();
     }
 
-    /* Specific files and directories */
+    /* Specific files and directories. All these methods should use the directories defined above */
 
     public File getUserStorageDirectory() throws InvalidConfigurationException {
         return new File(getUserPersistentDataDirectory(), "db");
@@ -204,7 +221,7 @@ public class Configuration {
 
     // TODO add logging files here (see LoggingUtils)
     // TODO add ssl.properties file here (see SSLConfiguration)
-    
+
     public boolean getPrintOSGiInfo() {
         return printOsgiInfo;
     }
@@ -213,5 +230,121 @@ public class Configuration {
         printOsgiInfo = newValue;
     }
 
-}
+    private interface UserDirectories {
 
+        public File getSystemRoot();
+
+        public File getUserConfigurationDirectory();
+
+        public File getUserPersistentDataDirectory();
+
+        public File getUserRuntimeDataDirectory();
+
+        public File getUserLogDirectory();
+
+        public File getUserCacheDirectory();
+
+    }
+
+    /*
+     * We need two different implementations because the paths are different. We
+     * can't get clean paths by simply changing the prefix.
+     *
+     * user path:   $USER/.thermostat/{etc,log,...}
+     * system path: /{etc,var/log,var/lib}/thermostat
+     *
+     * Notice how 'thermostat' comes first in one set of paths and later in the second set.
+     */
+
+    private static class UnprivilegedUserDirectories implements UserDirectories {
+
+        private File userHome;
+
+        public UnprivilegedUserDirectories() {
+            // allow this to be specified also as a special property, meant for tests
+            String userHome = System.getProperty(USER_THERMOSTAT_HOME);
+            if (userHome == null) {
+                userHome = System.getenv(USER_THERMOSTAT_HOME);
+            }
+            if (userHome == null) {
+                userHome = System.getProperty("user.home") + File.separatorChar + THERMOSTAT_USER_DIR;
+            }
+            this.userHome = new File(userHome);
+        }
+
+        public File getSystemRoot() throws InvalidConfigurationException {
+            return userHome;
+        }
+
+
+        public File getUserConfigurationDirectory() throws InvalidConfigurationException {
+            return new File(getSystemRoot(), "etc");
+        }
+
+        public File getUserPersistentDataDirectory() throws InvalidConfigurationException {
+            File dataDir = new File(getSystemRoot(), "data");
+            return dataDir;
+        }
+
+        public File getUserRuntimeDataDirectory() throws InvalidConfigurationException {
+            File runDir = new File(getSystemRoot(), "run");
+            return runDir;
+        }
+
+        public File getUserLogDirectory() throws InvalidConfigurationException {
+            File logDir = new File(getSystemRoot(), "logs");
+            return logDir;
+        }
+
+        public File getUserCacheDirectory() throws InvalidConfigurationException {
+            File cacheDir = new File(getSystemRoot(), "cache");
+            return cacheDir;
+        }
+    }
+
+    private static class SystemUserDirectories implements UserDirectories {
+
+        private File prefix;
+
+        public SystemUserDirectories() {
+            // allow this to be specified also as a special property, meant for tests
+            String userHome = System.getProperty(USER_THERMOSTAT_HOME);
+            if (userHome == null) {
+                userHome = System.getenv(USER_THERMOSTAT_HOME);
+            }
+            if (userHome == null) {
+                userHome = "/";
+            }
+            this.prefix = new File(userHome);
+        }
+
+        public File getSystemRoot() throws InvalidConfigurationException {
+            return prefix;
+        }
+
+
+        public File getUserConfigurationDirectory() throws InvalidConfigurationException {
+            return new File(getSystemRoot(), "etc/thermostat");
+        }
+
+        public File getUserPersistentDataDirectory() throws InvalidConfigurationException {
+            File dataDir = new File(getSystemRoot(), "var/lib/thermostat");
+            return dataDir;
+        }
+
+        public File getUserRuntimeDataDirectory() throws InvalidConfigurationException {
+            File runDir = new File(getSystemRoot(), "var/run/thermostat");
+            return runDir;
+        }
+
+        public File getUserLogDirectory() throws InvalidConfigurationException {
+            File logDir = new File(getSystemRoot(), "var/log/thermostat");
+            return logDir;
+        }
+
+        public File getUserCacheDirectory() throws InvalidConfigurationException {
+            File cacheDir = new File(getSystemRoot(), "var/cache/thermostat");
+            return cacheDir;
+        }
+    }
+}
