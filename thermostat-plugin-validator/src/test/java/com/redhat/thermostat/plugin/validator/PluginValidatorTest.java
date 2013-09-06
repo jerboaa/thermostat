@@ -37,7 +37,7 @@
 package com.redhat.thermostat.plugin.validator;
 
 
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -46,15 +46,16 @@ import java.io.IOException;
 
 import org.junit.Test;
 
-public class PluginValidatorTest {
 
+public class PluginValidatorTest {
+    
     @Test
     public void validateEmptyConfiguration() throws IOException {
         String config = "<?xml version=\"1.0\"?>\n";
         File testFile = createFile("testSystemId", config);
         PluginValidator validator = new PluginValidator();
         try {
-            validator.validate(testFile, false);
+            validator.validate(testFile);
             fail("should not come here");
         } catch (PluginConfigurationValidatorException e) {
             //pass
@@ -75,43 +76,20 @@ public class PluginValidatorTest {
                     "    <extension>\n" +
                     "      <name>test</name>\n" +
                     "      <bundles>\n" +
-                    "        <bundle>foo</bundle>\n" +
-                    "        <bundle>bar</bundle>\n" +
-                    "        <bundle>baz</bundle>\n" +
+                    "        <bundle><symbolic-name>foo</symbolic-name><version>1</version></bundle>\n" +
+                    "        <bundle><symbolic-name>bar</symbolic-name><version>2</version></bundle>\n" +
+                    "        <bundle><symbolic-name>baz</symbolic-name><version>3</version></bundle>\n" +
                     "      </bundles>\n" +
-                    "      <dependencies>\n" +
-                    "        <dependency>thermostat-foo</dependency>\n" +
-                    "      </dependencies>\n" +
                     "    </extension>\n" +
                     "  </extensions>\n" +
                     "</plugin>";
             File testFile = createFile("testSystemId", config);
             PluginValidator validator = new PluginValidator();
-            validator.validate(testFile, false);
+            validator.validate(testFile);
+            
+            //  Second validation on the same file
+            validator.validate(testFile);
             testFile.delete();
-        
-            config = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                    "<plugin xmlns=\"http://icedtea.classpath.org/thermostat/plugins/v1.0\"\n" +
-                    " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
-                    " xsi:schemaLocation=\"http://icedtea.classpath.org/thermostat/plugins/v1.0 thermostat-plugin.xsd\">\n" +
-                    "  <extensions>\n" +
-                    "    <extension>\n" +
-                    "      <name>test</name>\n" +
-                    "      <bundles>\n" +
-                    "        <bundle>foo</bundle>\n" +
-                    "        <bundle>bar</bundle>\n" +
-                    "        <bundle>baz</bundle>\n" +
-                    "      </bundles>\n" +
-                    "      <dependencies>\n" +
-                    "        <dependency>thermostat-foo</dependency>\n" +
-                    "      </dependencies>\n" +
-                    "    </extension>\n" +
-                    "  </extensions>\n" +
-                    "</plugin>";
-            File testFile2 = createFile("testSystemId", config);
-            PluginValidator validator2 = new PluginValidator();
-            validator2.validate(testFile, false);
-            testFile2.delete();
         } catch (PluginConfigurationValidatorException e) {
            fail("should not reach here, plugin.xml should be validated according to schema");
         }
@@ -123,18 +101,18 @@ public class PluginValidatorTest {
                 "<plugin xmlns=\"http://icedtea.classpath.org/thermostat/plugins/v1.0\"\n" +
                 " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
                 " xsi:schemaLocation=\"http://icedtea.classpath.org/thermostat/plugins/v1.0 thermostat-plugin.xsd\">\n" +
-                "  <extensions>\n" +
+                "  <extensions>\n" +      
                 "    <something>\n" +    // Error line
                 "    <extension>\n" +
                 "      <name>test</name>\n" +
                 "      <bundles>\n" +
-                "        <bundle>foo</bundle>\n" +
-                "        <bundle>bar</bundle>\n" +
-                "        <bundle>baz</bundle>\n" +
+                "        <bundle>foo</bundle>\n" +   // Error line
+                "        <bundle><symbolic-name>bar</symbolic-name><version>2</version></bundle>\n" +
+                "        <bundle><symbolic-name>baz</symbolic-name></bundle>\n" +   // Error line
                 "      </bundles>\n" +
-                "      <dependencies>\n" +
-                "        <dependency>thermostat-foo</dependency>\n" +
-                "      </dependencies>\n" +
+                "      <dependencies>\n" +   // Error line
+                "        <dependency>thermostat-foo</dependency>\n" +   // Error line
+                "      </dependencies>\n" +   // Error line
                 "    </extension>\n" +
                 "  </extensions>\n" +
                 "</plugin>";
@@ -142,7 +120,7 @@ public class PluginValidatorTest {
         File testFile = createFile("testSystemId", config);
         PluginValidator validator = new PluginValidator();
         try {
-            validator.validate(testFile, false);
+            validator.validate(testFile);
             fail("plugin.xml should not validate according to schema");
         } catch (PluginConfigurationValidatorException e) {
             //pass
@@ -191,13 +169,10 @@ public class PluginValidatorTest {
                 "        <environment>cli</environment>\n" +
                 "      </environments>\n" +
                 "      <bundles>\n" +
-                "        <bundle>\n \t  \nfoo\t \n \n</bundle>\n" +
-                "        <bundle>\tbar  baz\n</bundle>\n" +
-                "        <bundle>buzz</bundle>\n" +
+                "        <bundle><symbolic-name>foo</symbolic-name><version>1</version></bundle>\n" +
+                "        <bundle><symbolic-name>bar</symbolic-name><version>2</version></bundle>\n" +
+                "        <bundle><symbolic-name>baz</symbolic-name><version>3</version></bundle>\n" +
                 "      </bundles>\n" +
-                "      <dependencies>\n\t\n\t \t\t\n" +
-                "        <dependency>\t\t\t  thermostat-foo\n\t\t\n</dependency>\n" +
-                "      </dependencies>\n" +
                 "    </command>\n" +
                 "  </commands>\n" +
                 "</plugin>";
@@ -205,9 +180,9 @@ public class PluginValidatorTest {
         File testFile = createFile("testSystemId", config);
         PluginValidator validator = new PluginValidator();
         try {
-            validator.validate(testFile, false);
+            validator.validate(testFile);
         } catch (PluginConfigurationValidatorException e) {
-           fail("should not reach here, plugin.xml should be validated according to schema");
+            fail("should not reach here, plugin.xml should be validated according to schema");
         } finally {
             testFile.delete();
         }

@@ -52,27 +52,61 @@ import org.xml.sax.SAXException;
 
 import com.redhat.thermostat.plugin.validator.internal.ConfigurationValidatorErrorHandler;
 
-
+/**
+ * Validates thermostat-plugin.xml files against its schema.
+ * 
+ */
 public class PluginValidator {
-
-    public void validate(File pluginXml, boolean isCommand) throws PluginConfigurationValidatorException, FileNotFoundException {
+    
+    /**
+     * The method validates a thermostat-plugin.xml file against the thermostat
+     * plug-in schema
+     * 
+     * @param pluginXml
+     *            The file to be validated
+     * @throws PluginConfigurationValidatorException
+     *             If any kind of schema validation error occurs. This exception
+     *             contains details about the issues which occurred. 
+     * @throws FileNotFoundException
+     *             if the file does not exist, is a directory rather than a
+     *             regular file, or for some other reason cannot be opened for
+     *             reading.
+     *             
+     *  @see PluginConfigurationValidatorException
+     *  @see ValidationErrorsFormatter
+     */
+    public void validate(File pluginXml) throws PluginConfigurationValidatorException, FileNotFoundException {
         URL schemaUrl = PluginValidator.class.getResource("/thermostat-plugin.xsd");
         SchemaFactory schemaFactory = 
                 SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+        ConfigurationValidatorErrorHandler handler = new ConfigurationValidatorErrorHandler(pluginXml);
         
         try (FileInputStream fis = new FileInputStream(pluginXml)) {
             Schema schema = schemaFactory.newSchema(schemaUrl);
             Validator validator = schema.newValidator();
-            validator.setErrorHandler(new ConfigurationValidatorErrorHandler(pluginXml, isCommand));
+            validator.setErrorHandler(handler);
             validator.validate(new StreamSource(fis));
         } catch (SAXException exception) {
-            throw new PluginConfigurationValidatorException
-            (pluginXml.getAbsolutePath(), exception.getLocalizedMessage(), exception);
+            throw new PluginConfigurationValidatorException(
+                    "thermostat-plugin.xml not well-formed XML", pluginXml,
+                    handler.getErrors(), handler.getWarnings(),
+                    handler.getFatalErrors(), exception);
         } catch (FileNotFoundException fnfe) {
             throw fnfe;
         } catch (IOException ioe) {
-            throw new  PluginConfigurationValidatorException(ioe.getLocalizedMessage(), ioe.getMessage());
-        } 
+            throw new PluginConfigurationValidatorException(
+                    ioe.getLocalizedMessage(), pluginXml, handler.getErrors(),
+                    handler.getWarnings(), handler.getFatalErrors(), ioe);
+        }
+        
+        // We've registered an exception handler, so validation issues do not throw
+        // exceptions unless the xml file itself is not valid. Let's ask the handler
+        // if there were issues so we can throw an exception accordingly.
+        if (handler.hasValidationIssues()) {
+            throw new PluginConfigurationValidatorException(
+                    "Failed to validate thermostat-plugin.xml", pluginXml,
+                    handler.getErrors(), handler.getWarnings(),
+                    handler.getFatalErrors());
+        }
     }
-
 }

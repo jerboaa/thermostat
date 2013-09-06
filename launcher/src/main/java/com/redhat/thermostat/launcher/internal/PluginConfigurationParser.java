@@ -205,7 +205,7 @@ public class PluginConfigurationParser {
     
     public PluginConfiguration parse(File configurationFile) throws FileNotFoundException, PluginConfigurationValidatorException {
         PluginValidator validator = new PluginValidator();
-        validator.validate(configurationFile, false);
+        validator.validate(configurationFile);
         PluginConfiguration config = null;
         try (FileInputStream fis = new FileInputStream(configurationFile)) {
             config = parse(configurationFile.getParentFile().getName(), fis);

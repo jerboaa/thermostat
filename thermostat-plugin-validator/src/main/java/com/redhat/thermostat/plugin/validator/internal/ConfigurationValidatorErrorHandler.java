@@ -36,127 +36,77 @@
 
 package com.redhat.thermostat.plugin.validator.internal;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Logger;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
-import com.redhat.thermostat.plugin.validator.locale.LocaleResources;
-import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.plugin.validator.ValidationIssue;
 
 public class ConfigurationValidatorErrorHandler implements ErrorHandler {
 
-    private static final Logger logger = LoggingUtils.getLogger(ConfigurationValidatorErrorHandler.class);
-    private int warningsErrorsCounter = 0;
-    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     private final File pluginXML;
-    private boolean isCommand;
-    
-    private enum ErrorType {
-        WARNING,
-        ERROR,
-        FATAL_ERROR;
-    }
-    
-    public ConfigurationValidatorErrorHandler(File pluginXML, boolean isCommand) {
+    private final List<ValidationIssue> warnings;
+    private final List<ValidationIssue> errors;
+    private final List<ValidationIssue> fatalErrors;
+
+    public ConfigurationValidatorErrorHandler(File pluginXML) {
         this.pluginXML = pluginXML;
-        this.isCommand = isCommand;
+        warnings = new ArrayList<>();
+        errors = new ArrayList<>();
+        fatalErrors = new ArrayList<>();
     }
 
     @Override
     public void warning(SAXParseException exception) throws SAXException {
-        warningsErrorsCounter++;
-        printInfo(exception, ErrorType.WARNING);
+        Warning newWarning = new Warning(exception.getLineNumber(), 
+                                         exception.getColumnNumber(),
+                                         exception.getLocalizedMessage(),
+                                         pluginXML);
+        warnings.add(newWarning);
     }
 
     @Override
     public void error(SAXParseException exception) throws SAXParseException {
-        warningsErrorsCounter++;
-        printInfo(exception, ErrorType.ERROR);
+        Error newError = new Error(exception.getLineNumber(), 
+                                   exception.getColumnNumber(),
+                                   exception.getLocalizedMessage(),
+                                   pluginXML);
+        errors.add(newError);
     }
     
     @Override
     public void fatalError(SAXParseException exception) throws SAXParseException {
-        if (warningsErrorsCounter == 0) {
-            printInfo(exception, ErrorType.FATAL_ERROR);
-            logger.info("XML not well formed");
+        //  Fatal errors will be reported just when no validation warnings and errors happened. 
+        //  In this way we avoid wrong messages of bad form for files that have wrong tags not closed properly
+        if (errors.size() == 0 && warnings.size() == 0) {
+            FatalError newFatalError = new FatalError(exception.getLineNumber(), 
+                                                      exception.getColumnNumber(),
+                                                      exception.getLocalizedMessage(),
+                                                      pluginXML);
+            fatalErrors.add(newFatalError);
         }
     }
 
-    private void printInfo(SAXParseException e, ErrorType type) {
-        int columnNumber = e.getColumnNumber();
-        int lineNumber = e.getLineNumber();
-        
-        StringBuilder builder = new StringBuilder();
-        
-        String LS = System.getProperty("line.separator");
-        String firstLine = null;
-        String secondLine = null;
-        String thirdLine = null;
-        String errorLine = null;
-        String pointer = "";
-        String absolutePath = pluginXML.getAbsolutePath();
-        
-        Map<ErrorType,LocaleResources> translateKeys = new HashMap<>();
-        translateKeys.put(ErrorType.ERROR, LocaleResources.VALIDATION_ERROR);
-        translateKeys.put(ErrorType.WARNING, LocaleResources.VALIDATION_WARNING);
-        translateKeys.put(ErrorType.FATAL_ERROR, LocaleResources.VALIDATION_FATAL_ERROR);
-        
-        try {
-            BufferedReader br = new BufferedReader(new FileReader(absolutePath));
-            for (int i = 1; i < lineNumber-3; i++) {
-                br.readLine();
-            }
-            firstLine = br.readLine();
-            secondLine = br.readLine();
-            thirdLine = br.readLine();
-            errorLine = br.readLine();
-            
-            for (int j = 1; j < columnNumber-1; j++) {
-                pointer = pointer.concat(" ");
-            }
-            pointer = pointer.concat("^");
-            br.close();
-        } catch (IOException exception) {
-            // if br fails to close
-        }
-        
-        builder.append(translator.localize(
-                translateKeys.get(type),
-                absolutePath, 
-                Integer.toString(lineNumber), 
-                Integer.toString(columnNumber)).getContents());
-                    
-        builder.append(formatMessage(e.getLocalizedMessage())).append(LS).append(LS);
-        builder.append(firstLine).append(LS);
-        builder.append(secondLine).append(LS);
-        builder.append(thirdLine).append(LS);
-        builder.append(errorLine).append(LS);
-        builder.append(pointer).append(LS);
-        
-        if (isCommand) {
-            System.out.println(builder.toString());
-        } else {
-            logger.info(builder.toString());
-        }
-        
+    public List<ValidationIssue> getWarnings() {
+        return warnings;
     }
-    
-    private static String formatMessage(String message) {
-        String[] arguments = message.split("\"http://icedtea.classpath.org/thermostat/plugins/v1.0\":");
-        int size = arguments.length;
-        String output = "";
-        for (int i = 0; i < size; i++) {
-            output=output.concat(arguments[i]);
-        }
-        return output;
+
+    public List<ValidationIssue> getErrors() {
+        return errors;
     }
+
+    public List<ValidationIssue> getFatalErrors() {
+        return fatalErrors;
+    }
+
+    public boolean hasValidationIssues() {
+        return errors.size() > 0 ||
+                warnings.size() > 0 ||
+                fatalErrors.size() > 0;
+    }
+
 }

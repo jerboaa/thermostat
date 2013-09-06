@@ -36,7 +36,8 @@
 
 package com.redhat.thermostat.validate.command;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -95,11 +96,10 @@ public class ValidateCommandTest {
         list.add(fileName);
         
         cmd.run(ctxt);
+        String errorOutput = new String(errorBaos.toByteArray());
+        String validateOutput = buildErrorMessage();
         
-        String actual = new String(errorBaos.toByteArray());
-        String expected = "Validation failed for file " + fileName + "\n\n";
-        assertEquals(expected, actual);
-
+        assertEquals(validateOutput, errorOutput);
         assertEquals("", new String(outputBaos.toByteArray()));
     }
 
@@ -142,6 +142,48 @@ public class ValidateCommandTest {
     @Test
     public void testStorageRequired() {
         assertFalse(cmd.isStorageRequired());
+    }
+    
+    private String buildErrorMessage() {
+        String LS = System.getProperty("line.separator");
+        StringBuilder builder = new StringBuilder();
+        
+        
+        builder.append("Error in file ").append(fileName).append(":10.60").append(LS);
+        builder.append("cvc-complex-type.2.4.b: The content of element 'bundle' is not complete. One of '{version}' is expected.").append(LS).append(LS);
+
+        builder.append("      <name>test</name>").append(LS);
+        builder.append("      <bundles>").append(LS);
+        builder.append("        <bundle><symbolic-name>foo</symbolic-name><version>1</version></bundle>").append(LS);
+        builder.append("        <bundle><symbolic-name>bar</symbolic-name></bundle>").append(LS);
+        builder.append("                                                          ^").append(LS);
+        builder.append("Error in file ").append(fileName).append(":11.29").append(LS);
+        builder.append("cvc-complex-type.2.3: Element 'bundle' cannot have character [children], because the type's content type is element-only.").append(LS).append(LS);
+
+        builder.append("      <bundles>").append(LS);
+        builder.append("        <bundle><symbolic-name>foo</symbolic-name><version>1</version></bundle>").append(LS);
+        builder.append("        <bundle><symbolic-name>bar</symbolic-name></bundle>").append(LS);
+        builder.append("        <bundle>baz</bundle>").append(LS);
+        builder.append("                           ^").append(LS);
+        builder.append("Error in file ").append(fileName).append(":11.29").append(LS);
+        builder.append("cvc-complex-type.2.4.b: The content of element 'bundle' is not complete. One of '{symbolic-name}' is expected.").append(LS).append(LS);
+
+        builder.append("      <bundles>").append(LS);
+        builder.append("        <bundle><symbolic-name>foo</symbolic-name><version>1</version></bundle>").append(LS);
+        builder.append("        <bundle><symbolic-name>bar</symbolic-name></bundle>").append(LS);
+        builder.append("        <bundle>baz</bundle>").append(LS);
+        builder.append("                           ^").append(LS);
+        builder.append("Error in file ").append(fileName).append(":13.21").append(LS);
+        builder.append("cvc-complex-type.2.4.d: Invalid content was found starting with element 'dependencies'. No child element is expected at this point.").append(LS).append(LS);
+
+        builder.append("        <bundle><symbolic-name>bar</symbolic-name></bundle>").append(LS);
+        builder.append("        <bundle>baz</bundle>").append(LS);
+        builder.append("      </bundles>").append(LS);
+        builder.append("      <dependencies>").append(LS);
+        builder.append("                   ^").append(LS).append(LS);
+        builder.append("Validation failed for file ").append(fileName).append(LS).append(LS);
+
+        return builder.toString();
     }
 
 }

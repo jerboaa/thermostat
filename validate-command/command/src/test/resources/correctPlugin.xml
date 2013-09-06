@@ -6,13 +6,10 @@ xsi:schemaLocation="http://icedtea.classpath.org/thermostat/plugins/v1.0 thermos
     <extension>
       <name>test</name>
       <bundles>
-        <bundle>foo</bundle>
-        <bundle>bar</bundle>
-        <bundle>baz</bundle>
+        <bundle><symbolic-name>foo</symbolic-name><version>1</version></bundle>
+        <bundle><symbolic-name>bar</symbolic-name><version>2</version></bundle>
+        <bundle><symbolic-name>baz</symbolic-name><version>3</version></bundle>
       </bundles>
-      <dependencies>
-        <dependency>thermostat-foo</dependency>
-      </dependencies>
     </extension>
   </extensions>
 </plugin>

@@ -3,12 +3,11 @@
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://icedtea.classpath.org/thermostat/plugins/v1.0 thermostat-plugin.xsd">
   <extensions>
-    <something>
     <extension>
       <name>test</name>
       <bundles>
-        <bundle>foo</bundle>
-        <bundle>bar</bundle>
+        <bundle><symbolic-name>foo</symbolic-name><version>1</version></bundle>
+        <bundle><symbolic-name>bar</symbolic-name></bundle>
         <bundle>baz</bundle>
       </bundles>
       <dependencies>

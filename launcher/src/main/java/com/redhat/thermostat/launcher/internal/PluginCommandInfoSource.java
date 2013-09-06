@@ -40,7 +40,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -55,6 +54,7 @@ import com.redhat.thermostat.launcher.BundleInformation;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandExtensions;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.NewCommand;
 import com.redhat.thermostat.plugin.validator.PluginConfigurationValidatorException;
+import com.redhat.thermostat.plugin.validator.ValidationErrorsFormatter;
 
 /**
  * Searches for plugins under <code>$THERMOSTAT_HOME/plugins/</code> and
@@ -95,10 +95,15 @@ public class PluginCommandInfoSource implements CommandInfoSource {
                 File configurationFile = new File(pluginDir, PLUGIN_CONFIG_FILE);
                 PluginConfiguration pluginConfig = parser.parse(configurationFile);
                 loadNewAndExtendedCommands(internalJarRoot, pluginDir, pluginConfig);
+                
             } catch (PluginConfigurationParseException exception) {
                 logger.log(Level.WARNING, "unable to parse plugin configuration", exception);
-            } catch (PluginConfigurationValidatorException exception) {
-                logger.log(Level.INFO, "unable to validate " + exception.getFilePath() + " file\n");
+                
+            } catch (PluginConfigurationValidatorException pcve) {
+                ValidationErrorsFormatter formatter = new ValidationErrorsFormatter();
+                logger.log(Level.INFO, formatter.format(pcve.getAllErrors()));
+                logger.log(Level.INFO, "unable to validate " + pcve.getXmlFile().getAbsolutePath() + " file\n");
+                
             } catch (FileNotFoundException exception) {
                 logger.log(Level.INFO, "file not found", exception);
             }

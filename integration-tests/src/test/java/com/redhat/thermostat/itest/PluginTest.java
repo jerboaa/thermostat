@@ -121,22 +121,22 @@ public class PluginTest extends IntegrationTest {
                     "    <command>" +
                     "      <name>" + command + "</name>" +
                     "      <description>" + description + "</description>" +
-                    "      <environments>" +
-                    "        <environment>shell</environment>" +
-                    "        <environment>cli</environment>" +
-                    "      </environments>" +
                     "      <options>" +
                     "        <option>" +
                     "         <long>aaaaa</long>" +
                     "         <short>a</short>" +
                     "        </option>" +
                     "      </options>" +
+                    "      <environments>" +
+                    "        <environment>shell</environment>" +
+                    "        <environment>cli</environment>" +
+                    "      </environments>" +
                     "      <bundles>" +
-                    "        <bundle>bar</bundle>" +
+                    "        <bundle>" +
+                    "          <symbolic-name>bar</symbolic-name>" +
+                    "          <version>0.1.0</version>" +
+                    "        </bundle>" +
                     "      </bundles>" +
-                    "      <dependencies>" +
-                    "        <dependency>foo</dependency>" +
-                    "      </dependencies>" +
                     "    </command>" +
                     "  </commands>" +
                     "</plugin>";
@@ -191,11 +191,11 @@ public class PluginTest extends IntegrationTest {
                     "    <extension>" +
                     "      <name>" + command + "</name>" +
                     "      <bundles>" +
-                    "        <bundle>bar</bundle>" +
+                    "        <bundle>" +
+                    "          <symbolic-name>bar</symbolic-name>" +
+                    "          <version>0.1.0</version>" +
+                    "        </bundle>" +
                     "      </bundles>" +
-                    "      <dependencies>" +
-                    "        <dependency>foo</dependency>" +
-                    "      </dependencies>" +
                     "    </extension>" +
                     "  </extensions>" +
                     "</plugin>";

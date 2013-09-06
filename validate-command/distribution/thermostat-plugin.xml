@@ -53,7 +53,7 @@
       <bundles>
         <bundle><symbolic-name>com.redhat.thermostat.validate.command</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.common.core</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>com.redhat.thermostat.shared.config</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.configuration</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.plugin.validator</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
     </command>

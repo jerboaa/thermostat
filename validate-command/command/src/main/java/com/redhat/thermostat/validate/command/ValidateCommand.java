@@ -38,7 +38,6 @@ package com.redhat.thermostat.validate.command;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.Command;
@@ -47,28 +46,32 @@ import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.CommandLineArgumentParseException;
 import com.redhat.thermostat.plugin.validator.PluginConfigurationValidatorException;
 import com.redhat.thermostat.plugin.validator.PluginValidator;
+import com.redhat.thermostat.plugin.validator.ValidationErrorsFormatter;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.validate.command.locale.LocaleResources;
 
 public class ValidateCommand implements Command {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+    private PluginValidator validator;
 
     public void run(CommandContext ctx) throws CommandException {
         Arguments args = ctx.getArguments();
-        PluginValidator validator = new PluginValidator();
+        validator = new PluginValidator();
         File pluginFile = null;
         String argString = null;
         
             try {
                 argString = args.getNonOptionArguments().get(0);
                 pluginFile = new File(argString);
-                validator.validate(pluginFile, true);
+                validator.validate(pluginFile);
                 ctx.getConsole().getOutput().println(translator.localize(
                                 LocaleResources.VALIDATION_SUCCESSFUL, pluginFile.getAbsolutePath())
                                 .getContents());
                 
             } catch (PluginConfigurationValidatorException e) {
+                ValidationErrorsFormatter formatter = new ValidationErrorsFormatter();
+                ctx.getConsole().getError().println(formatter.format(e.getAllErrors()));
                 ctx.getConsole().getError().println(translator.localize(
                                 LocaleResources.VALIDATION_FAILED, pluginFile.getAbsolutePath())
                                .getContents());

@@ -36,34 +36,113 @@
 
 package com.redhat.thermostat.plugin.validator;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
+/**
+ * Thrown if there were schema validation issues or other problems in a
+ * thermostat-plugin.xml
+ * 
+ */
 public class PluginConfigurationValidatorException extends Exception {
-    
+
     private static final long serialVersionUID = 1L;
-    private String filePath;
-    
+    private final File xmlFile;
+    private final List<ValidationIssue> warnings;
+    private final List<ValidationIssue> errors;
+    private final List<ValidationIssue> fatals;
+
     /**
-     * Constructor of PluginConfigurationValidatorException
-     * @param filePath The absolute path to the file which failed to validate.
-     * @param message the detailed message
+     * Constructor.
+     * 
+     * Calls
+     * {@link #PluginConfigurationValidatorException(String, File, List, List, List, Throwable)}
+     * with a null cause.
      */
-    public PluginConfigurationValidatorException(String filePath, String message) {
+    public PluginConfigurationValidatorException(String message, File xmlFile,
+            List<ValidationIssue> errors, List<ValidationIssue> warnings,
+            List<ValidationIssue> fatals) {
+        this(message, xmlFile, errors, warnings, fatals, null);
+    }
+
+    /**
+     * Constructor.
+     * 
+     * @param message
+     *            A descriptive message.
+     * @param xmlFile
+     *            The thermostat-plugin.xml file which caused this exception to
+     *            be thrown.
+     * @param errors
+     *            The list of schema validation errors.
+     * @param warnings
+     *            The list of (validation) warnings.
+     * @param fatals
+     *            The list of fatal (validation) errors.
+     * @param cause
+     *            The underlying exception. May be null.
+     */
+    public PluginConfigurationValidatorException(String message, File xmlFile,
+            List<ValidationIssue> errors, List<ValidationIssue> warnings,
+            List<ValidationIssue> fatals, Throwable cause) {
         super(message);
-        this.filePath = filePath;
+        this.xmlFile = xmlFile;
+        this.warnings = warnings;
+        this.errors = errors;
+        this.fatals = fatals;
     }
-    
+
     /**
-     * Constructor of PluginConfigurationValidatorException
-     * @param filePath The absolute path to the file which failed to validate.
-     * @param message the detailed message
+     * 
+     * @return The list of all validation issues.
      */
-    public PluginConfigurationValidatorException(String filePath, String message, Throwable cause) {
-        super(message, cause);
-        this.filePath = filePath;
+    public List<ValidationIssue> getAllErrors() {
+        List<ValidationIssue> errorsList = new ArrayList<>();
+        errorsList.addAll(warnings);
+        errorsList.addAll(errors);
+        errorsList.addAll(fatals);
+        return errorsList;
     }
-    
-    public String getFilePath() {
-        return filePath;
+
+    /**
+     * 
+     * @return The thermostat-plugin.xml file which failed validation.
+     */
+    public File getXmlFile() {
+        return xmlFile;
     }
-    
+
+    /**
+     * Conditions that are not errors or fatal errors as defined by the XML
+     * recommendation.
+     * 
+     * @return The list of (validation) warnings.
+     */
+    public List<ValidationIssue> getWarnings() {
+        return warnings;
+    }
+
+    /**
+     * Each validation issue corresponds to the definition of "error" in section
+     * 1.2 of the W3C XML 1.0 Recommendation.
+     * 
+     * @return The list of violations of schema validity constraints.
+     */
+    public List<ValidationIssue> getErrors() {
+        return errors;
+    }
+
+    /**
+     * Each validation issue corresponds to the definition of "fatal error" in
+     * section 1.2 of the W3C XML 1.0 Recommendation.
+     * 
+     * @return The list of fatal (i.e. non-recoverable) errors. Fatal issues may
+     *         occur if the thermostat-plugin.xml violates well-formedness
+     *         constraints.
+     */
+    public List<ValidationIssue> getFatals() {
+        return fatals;
+    }
+
 }
