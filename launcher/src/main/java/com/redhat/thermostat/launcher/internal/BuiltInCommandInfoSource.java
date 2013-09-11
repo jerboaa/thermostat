@@ -37,7 +37,7 @@
 package com.redhat.thermostat.launcher.internal;
 
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Collection;
@@ -72,7 +72,7 @@ public class BuiltInCommandInfoSource implements CommandInfoSource {
             for (File file : commandPropertyFiles) {
                 Properties commandProps = new Properties();
                 try {
-                    commandProps.load(new FileReader(file));
+                    commandProps.load(new FileInputStream(file));
                 } catch (IOException ignore) {
                     // This means the command won't work, if it has dependencies it
                     // needs to load.  Also, it will not appear in help listing.

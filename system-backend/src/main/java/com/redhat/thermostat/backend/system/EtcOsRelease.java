@@ -37,16 +37,12 @@
 package com.redhat.thermostat.backend.system;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import com.redhat.thermostat.common.utils.LoggingUtils;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 
 public class EtcOsRelease implements DistributionInformationSource {
-
-    private static final Logger logger = LoggingUtils.getLogger(EtcOsRelease.class);
 
     private static final String OS_RELEASE = "/etc/os-release";
 
@@ -60,18 +56,8 @@ public class EtcOsRelease implements DistributionInformationSource {
     }
 
     public DistributionInformation getFromOsRelease(String releaseFile) throws IOException {
-        BufferedReader reader = null;
-        try {
-            reader = new BufferedReader(new FileReader(releaseFile));
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(releaseFile), StandardCharsets.UTF_8))) {
             return getFromOsRelease(reader);
-        } finally {
-            try {
-                if (reader != null) {
-                    reader.close();
-                }
-            } catch (IOException e) {
-                logger.log(Level.WARNING, "unable to close input stream", e);
-            }
         }
     }
 

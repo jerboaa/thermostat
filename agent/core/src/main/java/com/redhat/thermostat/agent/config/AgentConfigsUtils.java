@@ -38,8 +38,10 @@ package com.redhat.thermostat.agent.config;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Properties;
 
@@ -115,7 +117,7 @@ public class AgentConfigsUtils {
         if (authFile.canRead() && authFile.isFile()) {
             long length = authFile.length();
             char[] authData = null;
-            try (FileReader reader = new FileReader(authFile)) {
+            try (Reader reader = new InputStreamReader(new FileInputStream(authFile), StandardCharsets.US_ASCII)) {
                 if (length > Integer.MAX_VALUE || length < 0L) {
                     throw new InvalidConfigurationException(t.localize(LocaleResources.FILE_NOT_VALID, authFile.getCanonicalPath()));
                 }
