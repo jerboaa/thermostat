@@ -39,7 +39,6 @@ package com.redhat.thermostat.vm.classstat.common.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -49,8 +48,8 @@ import java.util.Collection;
 import java.util.List;
 
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -69,6 +68,15 @@ public class VmClassStatDAOTest {
     private static final String VM_ID = "vmId";
     private static final Long LOADED_CLASSES = 12345L;
 
+    @Test
+    public void testStatementDescriptorsAreSane() {
+        String addVmClassStat = "ADD vm-class-stats SET 'agentId' = ?s , " +
+                                                "'vmId' = ?s , " +
+                                                "'timeStamp' = ?l , " +
+                                                "'loadedClasses' = ?l";
+        assertEquals(addVmClassStat, VmClassStatDAOImpl.DESC_ADD_VM_CLASS_STAT);
+    }
+    
     @Test
     public void testCategory() {
         assertEquals("vm-class-stats", VmClassStatDAO.vmClassStatsCategory.getName());
@@ -129,21 +137,31 @@ public class VmClassStatDAOTest {
         return new VmClassStat("foo-agent", VM_ID, TIMESTAMP, LOADED_CLASSES);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
-    public void testPutVmClassStat() {
+    public void testPutVmClassStat() throws DescriptorParsingException, StatementExecutionException {
 
         Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        Add<VmClassStat> add = mock(Add.class);
-        when(storage.createAdd(eq(VmClassStatDAO.vmClassStatsCategory))).thenReturn(add);
+        PreparedStatement<VmClassStat> add = mock(PreparedStatement.class);
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(add);
 
         VmClassStat stat = new VmClassStat("foo-agent", VM_ID, TIMESTAMP, LOADED_CLASSES);
         VmClassStatDAO dao = new VmClassStatDAOImpl(storage);
         dao.putVmClassStat(stat);
+        
+        @SuppressWarnings("rawtypes")
+        ArgumentCaptor<StatementDescriptor> captor = ArgumentCaptor.forClass(StatementDescriptor.class);
+        
+        verify(storage).prepareStatement(captor.capture());
+        StatementDescriptor<?> desc = captor.getValue();
+        assertEquals(VmClassStatDAOImpl.DESC_ADD_VM_CLASS_STAT, desc.getDescriptor());
 
-        verify(storage).createAdd(VmClassStatDAO.vmClassStatsCategory);
-        verify(add).setPojo(stat);
-        verify(add).apply();
+        verify(add).setString(0, stat.getAgentId());
+        verify(add).setString(1, stat.getVmId());
+        verify(add).setLong(2, stat.getTimeStamp());
+        verify(add).setLong(3, stat.getLoadedClasses());
+        verify(add).execute();
+        verifyNoMoreInteractions(add);
     }
 }
 

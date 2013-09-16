@@ -41,7 +41,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -50,21 +49,19 @@ import static org.mockito.Mockito.when;
 import java.util.NoSuchElementException;
 
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 
-import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
@@ -86,6 +83,39 @@ public class ThreadDaoImplTest {
         assertEquals(expectedQueryThreadInfo, ThreadDaoImpl.QUERY_THREAD_INFO);
         String expectedQueryThreadLatestDeadlockInfo = "QUERY vm-deadlock-data WHERE 'agentId' = ?s AND 'vmId' = ?s SORT 'timeStamp' DSC LIMIT 1";
         assertEquals(expectedQueryThreadLatestDeadlockInfo, ThreadDaoImpl.QUERY_LATEST_DEADLOCK_INFO);
+        String addThreadSummary = "ADD vm-thread-summary SET 'agentId' = ?s , " +
+                                            "'vmId' = ?s , " +
+                                            "'currentLiveThreads' = ?l , " +
+                                            "'currentDaemonThreads' = ?l , " +
+                                            "'timeStamp' = ?l";
+        assertEquals(addThreadSummary, ThreadDaoImpl.DESC_ADD_THREAD_SUMMARY);
+        String addThreadHarvesting = "ADD vm-thread-harvesting SET 'agentId' = ?s , " +
+                                                    "'vmId' = ?s , " +
+                                                    "'timeStamp' = ?l , " +
+                                                    "'harvesting' = ?b";
+        assertEquals(addThreadHarvesting, ThreadDaoImpl.DESC_ADD_THREAD_HARVESTING_STATUS);
+        String addThreadInfo = "ADD vm-thread-info SET 'agentId' = ?s , " +
+                                    "'vmId' = ?s , " +
+                                    "'threadName' = ?s , " +
+                                    "'threadId' = ?l , " +
+                                    "'threadState' = ?s , " +
+                                    "'allocatedBytes' = ?l , " +
+                                    "'timeStamp' = ?l , " +
+                                    "'threadCpuTime' = ?l , " +
+                                    "'threadUserTime' = ?l , " +
+                                    "'threadBlockedCount' = ?l , " +
+                                    "'threadWaitCount' = ?l";
+        assertEquals(addThreadInfo, ThreadDaoImpl.DESC_ADD_THREAD_INFO);
+        String addDeadlockData = "ADD vm-deadlock-data SET 'agentId' = ?s , " +
+                                    "'vmId' = ?s , " +
+                                    "'timeStamp' = ?l , " +
+                                    "'deadLockDescription' = ?s";
+        assertEquals(addDeadlockData, ThreadDaoImpl.DESC_ADD_THREAD_DEADLOCK_DATA);
+        String replaceThreadCaps = "REPLACE vm-thread-capabilities SET 'agentId' = ?s , "+
+                                        "'vmId' = ?s , " +
+                                        "'supportedFeaturesList' = ?s[" +
+                                    " WHERE 'agentId' = ?s AND 'vmId' = ?s";
+        assertEquals(replaceThreadCaps, ThreadDaoImpl.DESC_REPLACE_THREAD_CAPS);
     }
     
     @Test
@@ -178,18 +208,13 @@ public class ThreadDaoImplTest {
         assertEquals(null, caps);
     }
 
-    /*
-     * Tests saving of VMCapabilities when agentId has been explicitly set
-     * in thread capabilities model class. Every model class is required
-     * to set this explicitly.
-     */
+    @SuppressWarnings("unchecked")
     @Test
-    public void testSaveVMCapabilities() {
+    public void testSaveVMCapabilities() throws DescriptorParsingException, StatementExecutionException {
         String agentId = "fooAgent";
         Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        Replace<VMThreadCapabilities> replace = mock(Replace.class);
-        when(storage.createReplace(eq(ThreadDao.THREAD_CAPABILITIES))).thenReturn(replace);
+        PreparedStatement<AgentInformation> replace = mock(PreparedStatement.class);
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(replace);
         
         String vmId = "VM42";
         VMThreadCapabilities caps = new VMThreadCapabilities(agentId);
@@ -203,19 +228,24 @@ public class ThreadDaoImplTest {
         assertTrue(caps.supportCPUTime());
         assertTrue(caps.supportThreadAllocatedMemory());
         caps.setVmId(vmId);
+        
         ThreadDaoImpl dao = new ThreadDaoImpl(storage);
         dao.saveCapabilities(caps);
         
-        ExpressionFactory factory = new ExpressionFactory();
-        Expression agentExpr = factory.equalTo(Key.AGENT_ID, agentId);
-        Expression vmExpr = factory.equalTo(Key.VM_ID, vmId);
-        Expression expected = factory.and(agentExpr, vmExpr);
+        @SuppressWarnings("rawtypes")
+        ArgumentCaptor<StatementDescriptor> captor = ArgumentCaptor.forClass(StatementDescriptor.class);
         
-        verify(storage).createReplace(ThreadDao.THREAD_CAPABILITIES);
-        verify(replace).setPojo(caps);
-        verify(replace).where(expected);
-        verify(replace).apply();
-        assertEquals(agentId, caps.getAgentId());
+        verify(storage).prepareStatement(captor.capture());
+        StatementDescriptor<?> desc = captor.getValue();
+        assertEquals(ThreadDaoImpl.DESC_REPLACE_THREAD_CAPS, desc.getDescriptor());
+        
+        verify(replace).setString(0, caps.getAgentId());
+        verify(replace).setString(1, caps.getVmId());
+        verify(replace).setStringList(2, caps.getSupportedFeaturesList());
+        verify(replace).setString(3, caps.getAgentId());
+        verify(replace).setString(4, caps.getVmId());
+        verify(replace).execute();
+        verifyNoMoreInteractions(replace);
     }
 
     @Test
@@ -251,24 +281,36 @@ public class ThreadDaoImplTest {
         verifyNoMoreInteractions(stmt);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
-    public void testSaveDeadLockStatus() {
+    public void testSaveDeadLockStatus() throws DescriptorParsingException, StatementExecutionException {
         Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        Add<VmDeadLockData> add = mock(Add.class);
-        when(storage.createAdd(ThreadDaoImpl.DEADLOCK_INFO)).thenReturn(add);
+        PreparedStatement<VmDeadLockData> add = mock(PreparedStatement.class);
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(add);
 
         VmDeadLockData status = mock(VmDeadLockData.class);
 
         ThreadDaoImpl dao = new ThreadDaoImpl(storage);
         dao.saveDeadLockStatus(status);
+        
+        @SuppressWarnings("rawtypes")
+        ArgumentCaptor<StatementDescriptor> captor = ArgumentCaptor.forClass(StatementDescriptor.class);
+        
+        verify(storage).prepareStatement(captor.capture());
+        StatementDescriptor<VmDeadLockData> desc = captor.getValue();
+        assertEquals(ThreadDaoImpl.DESC_ADD_THREAD_DEADLOCK_DATA, desc.getDescriptor());
 
-        verify(add).setPojo(status);
-        verify(add).apply();
+        verify(add).setString(0, status.getAgentId());
+        verify(add).setString(1, status.getVmId());
+        verify(add).setLong(2, status.getTimeStamp());
+        verify(add).setString(3, status.getDeadLockDescription());
+        verify(add).execute();
+        Mockito.verifyNoMoreInteractions(add);
     }
 
     @Test
-    public void testGetLatestHarvestingStatus() throws DescriptorParsingException, StatementExecutionException {
+    public void testGetLatestHarvestingStatus()
+            throws DescriptorParsingException, StatementExecutionException {
         VmRef vm = mock(VmRef.class);
         when(vm.getVmId()).thenReturn("VM42");
 
@@ -300,20 +342,31 @@ public class ThreadDaoImplTest {
         assertSame(status, result);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
-    public void testSetHarvestingStatus() {
+    public void testAddHarvestingStatus() throws DescriptorParsingException, StatementExecutionException {
         Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        Add<ThreadHarvestingStatus> add = mock(Add.class);
-        when(storage.createAdd(ThreadDaoImpl.THREAD_HARVESTING_STATUS)).thenReturn(add);
+        PreparedStatement<ThreadHarvestingStatus> add = mock(PreparedStatement.class);
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(add);
 
         ThreadHarvestingStatus status = mock(ThreadHarvestingStatus.class);
 
         ThreadDaoImpl dao = new ThreadDaoImpl(storage);
         dao.saveHarvestingStatus(status);
+        
+        @SuppressWarnings("rawtypes")
+        ArgumentCaptor<StatementDescriptor> captor = ArgumentCaptor.forClass(StatementDescriptor.class);
+        
+        verify(storage).prepareStatement(captor.capture());
+        StatementDescriptor<VmDeadLockData> desc = captor.getValue();
+        assertEquals(ThreadDaoImpl.DESC_ADD_THREAD_HARVESTING_STATUS, desc.getDescriptor());
 
-        verify(add).setPojo(status);
-        verify(add).apply();
+        verify(add).setString(0, status.getAgentId());
+        verify(add).setString(1, status.getVmId());
+        verify(add).setLong(2, status.getTimeStamp());
+        verify(add).setBoolean(3, status.isHarvesting());
+        verify(add).execute();
+        verifyNoMoreInteractions(add);
     }
 }
 

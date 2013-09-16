@@ -37,8 +37,15 @@
 package com.redhat.thermostat.vm.cpu.common.internal;
 
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import com.redhat.thermostat.storage.core.Add;
+import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
+import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.PreparedStatement;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.VmRef;
@@ -46,7 +53,19 @@ import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
 
 public class VmCpuStatDAOImpl implements VmCpuStatDAO {
-
+    
+    private static final Logger logger = LoggingUtils.getLogger(VmCpuStatDAOImpl.class);
+    // ADD vm-cpu-stats SET 'agentId' = ?s , \
+    //                      'vmId' = ?s , \
+    //                      'timeStamp' = ?l , \
+    //                      'cpuLoad' = ?d
+    static final String DESC_ADD_VM_CPU_STAT = "ADD " + vmCpuStatCategory.getName() +
+            " SET '" + Key.AGENT_ID.getName() + "' = ?s , " +
+                 "'" + Key.VM_ID.getName() + "' = ?s , " +
+                 "'" + Key.TIMESTAMP.getName() + "' = ?l , " +
+                 "'" + vmCpuLoadKey.getName() + "' = ?d";
+    
+    
     private final Storage storage;
     private final VmLatestPojoListGetter<VmCpuStat> getter;
 
@@ -63,9 +82,20 @@ public class VmCpuStatDAOImpl implements VmCpuStatDAO {
 
     @Override
     public void putVmCpuStat(VmCpuStat stat) {
-        Add<VmCpuStat> add = storage.createAdd(vmCpuStatCategory);
-        add.setPojo(stat);
-        add.apply();
+        StatementDescriptor<VmCpuStat> desc = new StatementDescriptor<>(vmCpuStatCategory, DESC_ADD_VM_CPU_STAT);
+        PreparedStatement<VmCpuStat> prepared;
+        try {
+            prepared = storage.prepareStatement(desc);
+            prepared.setString(0, stat.getAgentId());
+            prepared.setString(1, stat.getVmId());
+            prepared.setLong(2, stat.getTimeStamp());
+            prepared.setDouble(3, stat.getCpuLoad());
+            prepared.execute();
+        } catch (DescriptorParsingException e) {
+            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
+        } catch (StatementExecutionException e) {
+            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+        }
     }
 }
 

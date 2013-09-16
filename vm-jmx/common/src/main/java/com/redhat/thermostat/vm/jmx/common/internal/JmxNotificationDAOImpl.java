@@ -43,7 +43,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
@@ -59,7 +58,7 @@ import com.redhat.thermostat.vm.jmx.common.JmxNotificationStatus;
 
 public class JmxNotificationDAOImpl implements JmxNotificationDAO {
 
-    private static final Key<Boolean> NOTIFICATIONS_ENABLED = new Key<>("notififcationsEnabled");
+    private static final Key<Boolean> NOTIFICATIONS_ENABLED = new Key<>("enabled");
     private static final Logger logger = LoggingUtils.getLogger(JmxNotificationDAOImpl.class);
 
     static final Category<JmxNotificationStatus> NOTIFICATION_STATUS =
@@ -74,7 +73,9 @@ public class JmxNotificationDAOImpl implements JmxNotificationDAO {
             new Category<>("vm-jmx-notification", JmxNotification.class,
                     Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP,
                     SOURCE_BACKEND, SOURCE_DETAILS, CONTENTS);
-
+    
+    // Query descriptors
+            
     static final String QUERY_LATEST_NOTIFICATION_STATUS = "QUERY "
             + NOTIFICATION_STATUS.getName() + " WHERE '"
             + Key.AGENT_ID.getName() + "' = ?s AND '" 
@@ -86,6 +87,31 @@ public class JmxNotificationDAOImpl implements JmxNotificationDAO {
             + Key.VM_ID.getName() + "' = ?s AND '"
             + Key.TIMESTAMP.getName() + "' > ?l";
     
+    // Write descriptors
+    
+    // ADD vm-jmx-notification-status SET 'agentId' = ?s , \
+    //                                    'vmId' = ?s , \
+    //                                    'timeStamp' = ?l , \
+    //                                    'enabled' = ?b
+    static final String DESC_ADD_NOTIFICATION_STATUS = "ADD " + NOTIFICATION_STATUS.getName() +
+            " SET '" + Key.AGENT_ID.getName() + "' = ?s , " +
+                 "'" + Key.VM_ID.getName() + "' = ?s , " +
+                 "'" + Key.TIMESTAMP.getName() + "' = ?l , " +
+                 "'" + NOTIFICATIONS_ENABLED.getName() + "' = ?b";
+    // ADD vm-jmx-notification SET 'agentId' = ?s , \
+    //                             'vmId' = ?s , \
+    //                             'timeStamp' = ?l , \
+    //                             'contents' = ?s , \
+    //                             'sourceDetails' = ?s , \
+    //                             'sourceBackend' = ?s
+    static final String DESC_ADD_NOTIFICATION = "ADD " + NOTIFICATIONS.getName() +
+            " SET '" + Key.AGENT_ID.getName() + "' = ?s , " +
+                 "'" + Key.VM_ID.getName() + "' = ?s , " +
+                 "'" + Key.TIMESTAMP.getName() + "' = ?l , " +
+                 "'" + CONTENTS.getName() + "' = ?s , " +
+                 "'" + SOURCE_DETAILS.getName() + "' = ?s , " +
+                 "'" + SOURCE_BACKEND.getName() + "' = ?s";
+    
     private Storage storage;
 
     public JmxNotificationDAOImpl(Storage storage) {
@@ -96,9 +122,20 @@ public class JmxNotificationDAOImpl implements JmxNotificationDAO {
 
     @Override
     public void addNotificationStatus(JmxNotificationStatus status) {
-        Add<JmxNotificationStatus> add = storage.createAdd(NOTIFICATION_STATUS);
-        add.setPojo(status);
-        add.apply();
+        StatementDescriptor<JmxNotificationStatus> desc = new StatementDescriptor<>(NOTIFICATION_STATUS, DESC_ADD_NOTIFICATION_STATUS);
+        PreparedStatement<JmxNotificationStatus> prepared;
+        try {
+            prepared = storage.prepareStatement(desc);
+            prepared.setString(0, status.getAgentId());
+            prepared.setString(1, status.getVmId());
+            prepared.setLong(2, status.getTimeStamp());
+            prepared.setBoolean(3, status.isEnabled());
+            prepared.execute();
+        } catch (DescriptorParsingException e) {
+            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
+        } catch (StatementExecutionException e) {
+            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+        }
     }
 
     @Override
@@ -132,9 +169,22 @@ public class JmxNotificationDAOImpl implements JmxNotificationDAO {
 
     @Override
     public void addNotification(JmxNotification notification) {
-        Add<JmxNotification> add = storage.createAdd(NOTIFICATIONS);
-        add.setPojo(notification);
-        add.apply();
+        StatementDescriptor<JmxNotification> desc = new StatementDescriptor<>(NOTIFICATIONS, DESC_ADD_NOTIFICATION);
+        PreparedStatement<JmxNotification> prepared;
+        try {
+            prepared = storage.prepareStatement(desc);
+            prepared.setString(0, notification.getAgentId());
+            prepared.setString(1, notification.getVmId());
+            prepared.setLong(2, notification.getTimeStamp());
+            prepared.setString(3, notification.getContents());
+            prepared.setString(4, notification.getSourceDetails());
+            prepared.setString(5, notification.getSourceBackend());
+            prepared.execute();
+        } catch (DescriptorParsingException e) {
+            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
+        } catch (StatementExecutionException e) {
+            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+        }
     }
 
     @Override

@@ -44,7 +44,6 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.numa.common.NumaDAO;
 import com.redhat.thermostat.numa.common.NumaHostInfo;
 import com.redhat.thermostat.numa.common.NumaStat;
-import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostLatestPojoListGetter;
@@ -61,6 +60,18 @@ public class NumaDAOImpl implements NumaDAO {
     static final String QUERY_NUMA_INFO = "QUERY "
             + numaHostCategory.getName() + " WHERE '" 
             + Key.AGENT_ID.getName() + "' = ?s LIMIT 1";
+    // ADD numa-stat SET 'agentId' = ?s , \
+    //                   'timeStamp' = ?l , \
+    //                   'nodeStats' = ?p[
+    static final String DESC_ADD_NUMA_STAT = "ADD " + numaStatCategory.getName() +
+            " SET '" + Key.AGENT_ID.getName() + "' = ?s , " +
+                 "'" + Key.TIMESTAMP.getName() + "' = ?l , " +
+                 "'" + nodeStats.getName() + "' = ?p[";
+    // ADD numa-host-info SET 'agentId' = ?s , \
+    //                        'numNumaNodes' = ?i
+    static final String DESC_ADD_NUMA_HOST_INFO = "ADD " + numaHostCategory.getName() +
+            " SET '" + Key.AGENT_ID.getName() + "' = ?s , " +
+                 "'" + hostNumNumaNodes.getName() + "' = ?i";
     
     private final Storage storage;
     private final HostLatestPojoListGetter<NumaStat> getter;
@@ -74,9 +85,19 @@ public class NumaDAOImpl implements NumaDAO {
 
     @Override
     public void putNumaStat(NumaStat stat) {
-        Add<NumaStat> add = storage.createAdd(numaStatCategory);
-        add.setPojo(stat);
-        add.apply();
+        StatementDescriptor<NumaStat> desc = new StatementDescriptor<>(numaStatCategory, DESC_ADD_NUMA_STAT);
+        PreparedStatement<NumaStat> prepared;
+        try {
+            prepared = storage.prepareStatement(desc);
+            prepared.setString(0, stat.getAgentId());
+            prepared.setLong(1, stat.getTimeStamp());
+            prepared.setPojoList(2, stat.getNodeStats());
+            prepared.execute();
+        } catch (DescriptorParsingException e) {
+            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
+        } catch (StatementExecutionException e) {
+            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+        }
     }
 
     @Override
@@ -86,9 +107,18 @@ public class NumaDAOImpl implements NumaDAO {
 
     @Override
     public void putNumberOfNumaNodes(NumaHostInfo numaHostInfo) {
-        Add<NumaHostInfo> replace = storage.createAdd(numaHostCategory);
-        replace.setPojo(numaHostInfo);
-        replace.apply();
+        StatementDescriptor<NumaHostInfo> desc = new StatementDescriptor<>(numaHostCategory, DESC_ADD_NUMA_HOST_INFO);
+        PreparedStatement<NumaHostInfo> prepared;
+        try {
+            prepared = storage.prepareStatement(desc);
+            prepared.setString(0, numaHostInfo.getAgentId());
+            prepared.setInt(1, numaHostInfo.getNumNumaNodes());
+            prepared.execute();
+        } catch (DescriptorParsingException e) {
+            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
+        } catch (StatementExecutionException e) {
+            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+        }
     }
 
     @Override

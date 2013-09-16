@@ -39,8 +39,6 @@ package com.redhat.thermostat.storage.internal.dao;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -52,29 +50,24 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.InOrder;
+import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.storage.model.BackendInformation;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class BackendInfoDAOTest {
 
     private BackendInformation backendInfo1;
     private BackendInformation backend1;
-    private ExpressionFactory factory;
 
     @Before
     public void setUp() {
@@ -95,14 +88,21 @@ public class BackendInfoDAOTest {
         backend1.setObserveNewJvm(true);
         backend1.setPids(new int[] { -1, 0, 1});
         backend1.setOrderValue(100);
-        
-        factory = new ExpressionFactory();
     }
     
     @Test
     public void preparedQueryDescriptorsAreSane() {
         String expectedBackendInfo = "QUERY backend-info WHERE 'agentId' = ?s";
         assertEquals(expectedBackendInfo, BackendInfoDAOImpl.QUERY_BACKEND_INFO);
+        String addBackendInfo = "ADD backend-info SET " +
+                                        "'agentId' = ?s , " +
+                                        "'name' = ?s , " +
+                                        "'description' = ?s , " +
+                                        "'observeNewJvm' = ?b , " +
+                                        "'pids' = ?i[ , " +
+                                        "'active' = ?b , " +
+                                        "'orderValue' = ?i";
+        assertEquals(addBackendInfo, BackendInfoDAOImpl.DESC_ADD_BACKEND_INFO);
     }
 
     @Test
@@ -125,20 +125,34 @@ public class BackendInfoDAOTest {
         assertTrue(keys.contains(BackendInfoDAO.ORDER_VALUE));
     }
 
+    @SuppressWarnings("unchecked")
     @Test
-    public void verifyAddBackendInformation() {
+    public void verifyAddBackendInformation()
+            throws DescriptorParsingException, StatementExecutionException {
         Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        Add<BackendInformation> add = mock(Add.class);
-        when(storage.createAdd(eq(BackendInfoDAO.CATEGORY))).thenReturn(add);
+        PreparedStatement<BackendInformation> add = mock(PreparedStatement.class);
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(add);
 
         BackendInfoDAO dao = new BackendInfoDAOImpl(storage);
 
         dao.addBackendInformation(backendInfo1);
+        
+        @SuppressWarnings("rawtypes")
+        ArgumentCaptor<StatementDescriptor> captor = ArgumentCaptor.forClass(StatementDescriptor.class);
+        
+        verify(storage).prepareStatement(captor.capture());
+        StatementDescriptor<?> desc = captor.getValue();
+        assertEquals(BackendInfoDAOImpl.DESC_ADD_BACKEND_INFO, desc.getDescriptor());
 
-        verify(storage).createAdd(BackendInfoDAO.CATEGORY);
-        verify(add).setPojo(backendInfo1);
-        verify(add).apply();
+        verify(add).setString(0, backendInfo1.getAgentId());
+        verify(add).setString(1, backendInfo1.getName());
+        verify(add).setString(2, backendInfo1.getDescription());
+        verify(add).setBoolean(3, backendInfo1.isObserveNewJvm());
+        verify(add).setIntList(4, backendInfo1.getPids());
+        verify(add).setBoolean(5, backendInfo1.isActive());
+        verify(add).setInt(6, backendInfo1.getOrderValue());
+        verify(add).execute();
+        verifyNoMoreInteractions(add);
     }
 
     @Test
@@ -175,20 +189,28 @@ public class BackendInfoDAOTest {
         return (StatementDescriptor<BackendInformation>) any(StatementDescriptor.class);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
-    public void verifyRemoveBackendInformation() {
-        @SuppressWarnings("unchecked")
-        Remove<BackendInformation> remove = mock(Remove.class);
+    public void verifyRemoveBackendInformation()
+            throws DescriptorParsingException, StatementExecutionException {
         Storage storage = mock(Storage.class);
-        when(storage.createRemove(eq(BackendInfoDAO.CATEGORY))).thenReturn(remove);
+        PreparedStatement<BackendInformation> remove = mock(PreparedStatement.class);
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(remove);
+        
         BackendInfoDAO dao = new BackendInfoDAOImpl(storage);
 
         dao.removeBackendInformation(backendInfo1);
+        
+        @SuppressWarnings("rawtypes")
+        ArgumentCaptor<StatementDescriptor> captor = ArgumentCaptor.forClass(StatementDescriptor.class);
+        
+        verify(storage).prepareStatement(captor.capture());
+        StatementDescriptor<?> desc = captor.getValue();
+        assertEquals(BackendInfoDAOImpl.DESC_REMOVE_BACKEND_INFO, desc.getDescriptor());
 
-        InOrder inOrder = inOrder(remove);
-        Expression expr = factory.equalTo(BackendInfoDAO.BACKEND_NAME, "backend-name");
-        inOrder.verify(remove).where(eq(expr));
-        inOrder.verify(remove).apply();
+        verify(remove).setString(0, backendInfo1.getName());
+        verify(remove).execute();
+        verifyNoMoreInteractions(remove);
     }
 
 }

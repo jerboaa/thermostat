@@ -39,7 +39,6 @@ package com.redhat.thermostat.storage.internal.dao;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -49,20 +48,18 @@ import java.util.Collection;
 import java.util.List;
 
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class NetworkInterfaceInfoDAOTest {
 
@@ -87,6 +84,12 @@ public class NetworkInterfaceInfoDAOTest {
     public void preparedQueryDescriptorsAreSane() {
         String expectedNetworkInfo = "QUERY network-info WHERE 'agentId' = ?s";
         assertEquals(expectedNetworkInfo, NetworkInterfaceInfoDAOImpl.QUERY_NETWORK_INFO);
+        String replaceNetworkInfo = "REPLACE network-info SET 'agentId' = ?s , " +
+            "'interfaceName' = ?s , " +
+            "'ip4Addr' = ?s , " +
+            "'ip6Addr' = ?s WHERE " +
+            "'agentId' = ?s AND 'interfaceName' = ?s";
+        assertEquals(replaceNetworkInfo, NetworkInterfaceInfoDAOImpl.DESC_REPLACE_NETWORK_INFO);
     }
 
     @Test
@@ -132,29 +135,38 @@ public class NetworkInterfaceInfoDAOTest {
         return (StatementDescriptor<NetworkInterfaceInfo>) any(StatementDescriptor.class);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
-    public void testPutNetworkInterfaceInfo() {
+    public void testPutNetworkInterfaceInfo()
+            throws DescriptorParsingException, StatementExecutionException {
         String agentId = "fooAgent";
         Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        Replace<NetworkInterfaceInfo> replace = mock(Replace.class);
-        when(storage.createReplace(eq(NetworkInterfaceInfoDAO.networkInfoCategory))).thenReturn(replace);
+        PreparedStatement<NetworkInterfaceInfo> replace = mock(PreparedStatement.class);
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(replace);
 
-        NetworkInterfaceInfo info = new NetworkInterfaceInfo("foo-agent", INTERFACE_NAME);
+        NetworkInterfaceInfo info = new NetworkInterfaceInfo(agentId, INTERFACE_NAME);
         info.setIp4Addr(IPV4_ADDR);
         info.setIp6Addr(IPV6_ADDR);
-        info.setAgentId(agentId);
-        ExpressionFactory factory = new ExpressionFactory();
-        Expression left = factory.equalTo(Key.AGENT_ID, agentId);
-        Expression right = factory.equalTo(NetworkInterfaceInfoDAO.ifaceKey, INTERFACE_NAME);
-        Expression expected = factory.and(left, right);
+        
         NetworkInterfaceInfoDAO dao = new NetworkInterfaceInfoDAOImpl(storage);
         dao.putNetworkInterfaceInfo(info);
 
-        verify(storage).createReplace(NetworkInterfaceInfoDAO.networkInfoCategory);
-        verify(replace).setPojo(info);
-        verify(replace).where(expected);
-        verify(replace).apply();
+        @SuppressWarnings("rawtypes")
+        ArgumentCaptor<StatementDescriptor> captor = ArgumentCaptor.forClass(StatementDescriptor.class);
+        
+        verify(storage).prepareStatement(captor.capture());
+        
+        StatementDescriptor<?> desc = captor.getValue();
+        assertEquals(NetworkInterfaceInfoDAOImpl.DESC_REPLACE_NETWORK_INFO, desc.getDescriptor());
+        
+        verify(replace).setString(0, info.getAgentId());
+        verify(replace).setString(1, info.getInterfaceName());
+        verify(replace).setString(2, info.getIp4Addr());
+        verify(replace).setString(3, info.getIp6Addr());
+        verify(replace).setString(4, info.getAgentId());
+        verify(replace).setString(5, info.getInterfaceName());
+        verify(replace).execute();
+        verifyNoMoreInteractions(replace);
     }
     
 }

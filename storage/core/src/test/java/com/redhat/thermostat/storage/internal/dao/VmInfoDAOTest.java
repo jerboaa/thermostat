@@ -40,7 +40,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -53,8 +52,8 @@ import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -63,13 +62,11 @@ import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.DAOException;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.VmInfo;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class VmInfoDAOTest {
 
@@ -122,6 +119,27 @@ public class VmInfoDAOTest {
         assertEquals(expectedAllVms, VmInfoDAOImpl.QUERY_ALL_VMS);
         String aggregateAllVms = "QUERY-COUNT vm-info";
         assertEquals(aggregateAllVms, VmInfoDAOImpl.AGGREGATE_COUNT_ALL_VMS);
+        String addVmInfo = "ADD vm-info SET 'agentId' = ?s , " +
+                                            "'vmId' = ?s , " +
+                                            "'vmPid' = ?i , " +
+                                            "'startTimeStamp' = ?l , " +
+                                            "'stopTimeStamp' = ?l , " +
+                                            "'javaVersion' = ?s , " +
+                                            "'javaHome' = ?s , " +
+                                            "'mainClass' = ?s , " +
+                                            "'javaCommandLine' = ?s , " +
+                                            "'vmName' = ?s , " +
+                                            "'vmArguments' = ?s , " +
+                                            "'vmInfo' = ?s , " +
+                                            "'vmVersion' = ?s , " +
+                                            "'propertiesAsArray' = ?p[ , " +
+                                            "'environmentAsArray' = ?p[ , " +
+                                            "'loadedNativeLibraries' = ?s[ , " +
+                                            "'uid' = ?l , " +
+                                            "'username' = ?s";
+        assertEquals(addVmInfo, VmInfoDAOImpl.DESC_ADD_VM_INFO);
+        String updateVmStopTime = "UPDATE vm-info SET 'stopTimeStamp' = ?l WHERE 'vmId' = ?s";
+        assertEquals(updateVmStopTime, VmInfoDAOImpl.DESC_UPDATE_VM_STOP_TIME);
     }
 
     @Test
@@ -311,41 +329,70 @@ public class VmInfoDAOTest {
         assertEquals(2, dao.getCount());
     }
 
+    @SuppressWarnings("unchecked")
     @Test
-    public void testPutVmInfo() {
-
+    public void testPutVmInfo() throws DescriptorParsingException, StatementExecutionException {
         Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        Add<VmInfo> add = mock(Add.class);
-        when(storage.createAdd(eq(VmInfoDAO.vmInfoCategory))).thenReturn(add);
-
+        PreparedStatement<VmInfo> add = mock(PreparedStatement.class);
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(add);
+        
         VmInfo info = new VmInfo("foo-agent", vmId, vmPid, startTime, stopTime, jVersion, jHome,
                 mainClass, commandLine, vmName, vmInfo, vmVersion, vmArgs,
                 props, env, libs, uid, username);
         VmInfoDAO dao = new VmInfoDAOImpl(storage);
         dao.putVmInfo(info);
+        
+        @SuppressWarnings("rawtypes")
+        ArgumentCaptor<StatementDescriptor> captor = ArgumentCaptor.forClass(StatementDescriptor.class);
+        
+        verify(storage).prepareStatement(captor.capture());
+        StatementDescriptor<?> desc = captor.getValue();
+        assertEquals(VmInfoDAOImpl.DESC_ADD_VM_INFO, desc.getDescriptor());
 
-        verify(storage).createAdd(VmInfoDAO.vmInfoCategory);
-        verify(add).setPojo(info);
-        verify(add).apply();
+        verify(add).setString(0, info.getAgentId());
+        verify(add).setString(1, info.getVmId());
+        verify(add).setInt(2, info.getVmPid());
+        verify(add).setLong(3, info.getStartTimeStamp());
+        verify(add).setLong(4, info.getStopTimeStamp());
+        verify(add).setString(5, info.getJavaVersion());
+        verify(add).setString(6, info.getJavaHome());
+        verify(add).setString(7, info.getMainClass());
+        verify(add).setString(8, info.getJavaCommandLine());
+        verify(add).setString(9, info.getVmName());
+        verify(add).setString(10, info.getVmArguments());
+        verify(add).setString(11, info.getVmInfo());
+        verify(add).setString(12, info.getVmVersion());
+        verify(add).setPojoList(13, info.getPropertiesAsArray());
+        verify(add).setPojoList(14, info.getEnvironmentAsArray());
+        verify(add).setStringList(15, info.getLoadedNativeLibraries());
+        verify(add).setLong(16, info.getUid());
+        verify(add).setString(17, info.getUsername());
+        verify(add).execute();
+        verifyNoMoreInteractions(add);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
-    public void testPutVmStoppedTime() {
-        @SuppressWarnings("unchecked")
-        Update<VmInfo> mockUpdate = mock(Update.class);
+    public void testPutVmStoppedTime() throws DescriptorParsingException,
+            StatementExecutionException {
         Storage storage = mock(Storage.class);
-        when(storage.createUpdate(eq(VmInfoDAO.vmInfoCategory))).thenReturn(mockUpdate);
+        PreparedStatement<VmInfo> update = mock(PreparedStatement.class);
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(update);
 
         VmInfoDAO dao = new VmInfoDAOImpl(storage);
         dao.putVmStoppedTime(vmId, stopTime);
 
-        verify(storage).createUpdate(VmInfoDAO.vmInfoCategory);
-        ExpressionFactory factory = new ExpressionFactory();
-        verify(mockUpdate).where(factory.equalTo(Key.VM_ID, "vmId"));
-        verify(mockUpdate).set(VmInfoDAO.stopTimeKey, 3L);
-        verify(mockUpdate).apply();
-        verifyNoMoreInteractions(mockUpdate);
+        @SuppressWarnings("rawtypes")
+        ArgumentCaptor<StatementDescriptor> captor = ArgumentCaptor.forClass(StatementDescriptor.class);
+        
+        verify(storage).prepareStatement(captor.capture());
+        StatementDescriptor<?> desc = captor.getValue();
+        assertEquals(VmInfoDAOImpl.DESC_UPDATE_VM_STOP_TIME, desc.getDescriptor());
+        
+        verify(update).setLong(0, stopTime);
+        verify(update).setString(1, vmId);
+        verify(update).execute();
+        verifyNoMoreInteractions(update);
     }
 }
 

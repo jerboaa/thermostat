@@ -40,7 +40,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -50,8 +49,9 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 
-import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -96,6 +96,14 @@ public class HostInfoDAOTest {
         assertEquals(expectedAllHosts, HostInfoDAOImpl.QUERY_ALL_HOSTS);
         String aggregateAllHosts = "QUERY-COUNT host-info";
         assertEquals(aggregateAllHosts, HostInfoDAOImpl.AGGREGATE_COUNT_ALL_HOSTS);
+        String addHostInfo = "ADD host-info SET 'agentId' = ?s , " +
+                                                  "'hostname' = ?s , " +
+                                                  "'osName' = ?s , " +
+                                                  "'osKernel' = ?s , " +
+                                                  "'cpuModel' = ?s , " +
+                                                  "'cpuCount' = ?i , " +
+                                                  "'totalMemory' = ?l";
+        assertEquals(addHostInfo, HostInfoDAOImpl.DESC_ADD_HOST_INFO);
     }
     
     @Test
@@ -205,22 +213,36 @@ public class HostInfoDAOTest {
         return storage;
     }
 
+    @SuppressWarnings("unchecked")
     @Test
-    public void testPutHostInfo() {
+    public void testPutHostInfo() throws DescriptorParsingException,
+            StatementExecutionException {
         Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        Add<HostInfo> add = mock(Add.class);
-        when(storage.createAdd(eq(HostInfoDAO.hostInfoCategory))).thenReturn(add);
+        PreparedStatement<HostInfo> add = mock(PreparedStatement.class);
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(add);
 
         AgentInfoDAO agentInfo = mock(AgentInfoDAO.class);
 
         HostInfo info = new HostInfo("foo-agent", HOST_NAME, OS_NAME, OS_KERNEL, CPU_MODEL, CPU_NUM, MEMORY_TOTAL);
         HostInfoDAO dao = new HostInfoDAOImpl(storage, agentInfo);
         dao.putHostInfo(info);
+        
+        @SuppressWarnings("rawtypes")
+        ArgumentCaptor<StatementDescriptor> captor = ArgumentCaptor.forClass(StatementDescriptor.class);
 
-        verify(storage).createAdd(HostInfoDAO.hostInfoCategory);
-        verify(add).setPojo(info);
-        verify(add).apply();
+        verify(storage).prepareStatement(captor.capture());
+        StatementDescriptor<?> desc = captor.getValue();
+        assertEquals(HostInfoDAOImpl.DESC_ADD_HOST_INFO, desc.getDescriptor());
+        
+        verify(add).setString(0, info.getAgentId());
+        verify(add).setString(1, info.getHostname());
+        verify(add).setString(2, info.getOsName());
+        verify(add).setString(3, info.getOsKernel());
+        verify(add).setString(4, info.getCpuModel());
+        verify(add).setInt(5, info.getCpuCount());
+        verify(add).setLong(6, info.getTotalMemory());
+        verify(add).execute();
+        Mockito.verifyNoMoreInteractions(add);
     }
 
     @Test

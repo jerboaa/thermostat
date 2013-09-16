@@ -40,7 +40,6 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -52,10 +51,10 @@ import java.util.Collection;
 import java.util.List;
 
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
 import com.redhat.thermostat.host.cpu.common.model.CpuStat;
-import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -66,6 +65,14 @@ import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 
 public class CpuStatDAOTest {
+    
+    @Test
+    public void testStatementDescriptorsAreSane() {
+        String addCpuStat = "ADD cpu-stats SET 'agentId' = ?s , " +
+                "'perProcessorUsage' = ?d[ , " +
+                "'timeStamp' = ?l";
+        assertEquals(addCpuStat, CpuStatDAOImpl.DESC_ADD_CPU_STAT);
+    }
 
     @Test
     public void testCategory() {
@@ -149,20 +156,30 @@ public class CpuStatDAOTest {
         verifyNoMoreInteractions(stmt);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
-    public void testPutCpuStat() {
+    public void testPutCpuStat() throws DescriptorParsingException,
+            StatementExecutionException {
         Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        Add<CpuStat> add = mock(Add.class);
-        when(storage.createAdd(eq(CpuStatDAO.cpuStatCategory))).thenReturn(add);
+        PreparedStatement<CpuStat> add = mock(PreparedStatement.class);
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(add);
         
         CpuStat stat = new CpuStat("foo", 1,  new double[] {5.0, 10.0, 15.0});
         CpuStatDAO dao = new CpuStatDAOImpl(storage);
         dao.putCpuStat(stat);
+        
+        @SuppressWarnings("rawtypes")
+        ArgumentCaptor<StatementDescriptor> captor = ArgumentCaptor.forClass(StatementDescriptor.class);
+        
+        verify(storage).prepareStatement(captor.capture());
+        StatementDescriptor<?> desc = captor.getValue();
+        assertEquals(CpuStatDAOImpl.DESC_ADD_CPU_STAT, desc.getDescriptor());
 
-        verify(storage).createAdd(CpuStatDAO.cpuStatCategory);
-        verify(add).setPojo(stat);
-        verify(add).apply();
+        verify(add).setString(0, stat.getAgentId());
+        verify(add).setDoubleList(1, stat.getPerProcessorUsage());
+        verify(add).setLong(2, stat.getTimeStamp());
+        verify(add).execute();
+        verifyNoMoreInteractions(add);
     }
 }
 

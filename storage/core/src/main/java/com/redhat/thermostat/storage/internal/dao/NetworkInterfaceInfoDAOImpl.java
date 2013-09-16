@@ -48,14 +48,11 @@ import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
 
@@ -63,6 +60,21 @@ public class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
     static final String QUERY_NETWORK_INFO = "QUERY "
             + networkInfoCategory.getName() + " WHERE '"
             + Key.AGENT_ID.getName() + "' = ?s";
+    // REPLACE network-info SET 'agentId' = ?s , \
+    //                          'interfaceName' = ?s , \
+    //                          'ip4Addr' = ?s , \
+    //                          'ip6Addr' = ?s
+    //                      WHERE 'agentId' = ?s AND 'interfaceName' = ?s
+    static final String DESC_REPLACE_NETWORK_INFO = "REPLACE " +
+                            networkInfoCategory.getName() +
+                 " SET " +
+                    "'" + Key.AGENT_ID.getName() + "' = ?s , " +
+                    "'" + ifaceKey.getName() + "' = ?s , " +
+                    "'" + ip4AddrKey.getName() + "' = ?s , " +
+                    "'" + ip6AddrKey.getName() + "' = ?s " +
+                 "WHERE '" + Key.AGENT_ID.getName() + "' = ?s AND " +
+                       "'" + ifaceKey.getName() + "' = ?s"; 
+                                
 
     private final Storage storage;
 
@@ -100,15 +112,24 @@ public class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
 
     @Override
     public void putNetworkInterfaceInfo(NetworkInterfaceInfo info) {
-        Replace<NetworkInterfaceInfo> replace = storage.createReplace(networkInfoCategory);
-        ExpressionFactory factory = new ExpressionFactory();
-        String agentId = info.getAgentId();
-        Expression left = factory.equalTo(Key.AGENT_ID, agentId);
-        Expression right = factory.equalTo(NetworkInterfaceInfoDAO.ifaceKey, info.getInterfaceName());
-        Expression expression = factory.and(left, right); 
-        replace.setPojo(info);
-        replace.where(expression);
-        replace.apply();
+        StatementDescriptor<NetworkInterfaceInfo> desc = new StatementDescriptor<>(networkInfoCategory, DESC_REPLACE_NETWORK_INFO);
+        PreparedStatement<NetworkInterfaceInfo> prepared;
+        try {
+            prepared = storage.prepareStatement(desc);
+            // SET params.
+            prepared.setString(0, info.getAgentId());
+            prepared.setString(1, info.getInterfaceName());
+            prepared.setString(2, info.getIp4Addr());
+            prepared.setString(3, info.getIp6Addr());
+            // WHERE params.
+            prepared.setString(4, info.getAgentId());
+            prepared.setString(5, info.getInterfaceName());
+            prepared.execute();
+        } catch (DescriptorParsingException e) {
+            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
+        } catch (StatementExecutionException e) {
+            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+        }
     }
 
 }

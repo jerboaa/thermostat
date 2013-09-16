@@ -38,7 +38,6 @@ package com.redhat.thermostat.numa.common.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -47,12 +46,13 @@ import static org.mockito.Mockito.when;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 
 import com.redhat.thermostat.numa.common.NumaDAO;
 import com.redhat.thermostat.numa.common.NumaHostInfo;
 import com.redhat.thermostat.numa.common.NumaNodeStat;
 import com.redhat.thermostat.numa.common.NumaStat;
-import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -82,6 +82,13 @@ public class NumaDAOImplTest {
     public void preparedQueryDescriptorsAreSane() {
         String expectedQueryNumaInfo = "QUERY numa-host-info WHERE 'agentId' = ?s LIMIT 1";
         assertEquals(expectedQueryNumaInfo, NumaDAOImpl.QUERY_NUMA_INFO);
+        String addNumaStat = "ADD numa-stat SET 'agentId' = ?s , " +
+                                "'timeStamp' = ?l , " +
+                                "'nodeStats' = ?p[";
+        assertEquals(addNumaStat, NumaDAOImpl.DESC_ADD_NUMA_STAT);
+        String addNumaHostInfo = "ADD numa-host-info SET 'agentId' = ?s , " +
+                                                    "'numNumaNodes' = ?i";
+        assertEquals(addNumaHostInfo, NumaDAOImpl.DESC_ADD_NUMA_HOST_INFO);
     }
 
     @Test
@@ -89,12 +96,13 @@ public class NumaDAOImplTest {
         verify(storage).registerCategory(NumaDAO.numaStatCategory);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
-    public void testPutNumaStat() {
+    public void testPutNumaStat() throws DescriptorParsingException,
+            StatementExecutionException {
 
-        @SuppressWarnings("unchecked")
-        Add<NumaStat> add = mock(Add.class);
-        when(storage.createAdd(NumaDAO.numaStatCategory)).thenReturn(add);
+        PreparedStatement<NumaStat> add = mock(PreparedStatement.class);
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(add);
 
         NumaNodeStat stat = new NumaNodeStat();
         stat.setNodeId(1);
@@ -108,24 +116,35 @@ public class NumaDAOImplTest {
         NumaStat numaStat = new NumaStat("agentId");
         numaStat.setTimeStamp(12345);
         numaStat.setNodeStats(new NumaNodeStat[] { stat });
+        
         numaDAO.putNumaStat(numaStat);
 
+        @SuppressWarnings("rawtypes")
+        ArgumentCaptor<StatementDescriptor> captor = ArgumentCaptor.forClass(StatementDescriptor.class);
+        
+        verify(storage).prepareStatement(captor.capture());
+        StatementDescriptor<?> desc = captor.getValue();
+        assertEquals(NumaDAOImpl.DESC_ADD_NUMA_STAT, desc.getDescriptor());
+        
         verify(storage).registerCategory(NumaDAO.numaStatCategory);
         verify(storage).registerCategory(NumaDAO.numaHostCategory);
-        verify(storage).createAdd(NumaDAO.numaStatCategory);
         verifyNoMoreInteractions(storage);
-        verify(add).setPojo(numaStat);
-        verify(add).apply();
+        
+        verify(add).setString(0, numaStat.getAgentId());
+        verify(add).setLong(1, numaStat.getTimeStamp());
+        verify(add).setPojoList(2, numaStat.getNodeStats());
+        verify(add).execute();
         verifyNoMoreInteractions(add);
         assertEquals("agentId", numaStat.getAgentId());
     }
     
+    @SuppressWarnings("unchecked")
     @Test
-    public void testPutNumberOfNumaNodes() {
+    public void testPutNumberOfNumaNodes() throws DescriptorParsingException,
+            StatementExecutionException {
         Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        Add<NumaHostInfo> add = mock(Add.class);
-        when(storage.createAdd(eq(NumaDAO.numaHostCategory))).thenReturn(add);
+        PreparedStatement<NumaStat> add = mock(PreparedStatement.class);
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(add);
 
         NumaDAOImpl dao = new NumaDAOImpl(storage);
 
@@ -133,9 +152,17 @@ public class NumaDAOImplTest {
         info.setNumNumaNodes(4);
         dao.putNumberOfNumaNodes(info);
 
-        verify(storage).createAdd(NumaDAO.numaHostCategory);
-        verify(add).setPojo(info);
-        verify(add).apply();
+        @SuppressWarnings("rawtypes")
+        ArgumentCaptor<StatementDescriptor> captor = ArgumentCaptor.forClass(StatementDescriptor.class);
+        
+        verify(storage).prepareStatement(captor.capture());
+        StatementDescriptor<?> desc = captor.getValue();
+        assertEquals(NumaDAOImpl.DESC_ADD_NUMA_HOST_INFO, desc.getDescriptor());
+        
+        verify(add).setString(0, info.getAgentId());
+        verify(add).setInt(1, info.getNumNumaNodes());
+        verify(add).execute();
+        Mockito.verifyNoMoreInteractions(add);
     }
     
     @Test

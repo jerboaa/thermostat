@@ -48,9 +48,8 @@ import java.util.Collection;
 import java.util.List;
 
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.storage.core.Add;
-import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -70,6 +69,17 @@ public class VmGcStatDAOTest {
     private static final String COLLECTOR = "collector1";
     private static final Long RUN_COUNT = 10L;
     private static final Long WALL_TIME = 9L;
+    
+    @Test
+    public void verifyDescriptorsAreSane() {
+        String addVmGcStat = "ADD vm-gc-stats SET 'agentId' = ?s , " +
+                                    "'vmId' = ?s , " +
+                                    "'timeStamp' = ?l , " +
+                                    "'collectorName' = ?s , " +
+                                    "'runCount' = ?l , " +
+                                    "'wallTime' = ?l";
+        assertEquals(addVmGcStat, VmGcStatDAOImpl.DESC_ADD_VM_GC_STAT);
+    }
 
     @Test
     public void testCategory() {
@@ -131,19 +141,33 @@ public class VmGcStatDAOTest {
         return (StatementDescriptor<VmGcStat>) any(StatementDescriptor.class);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
-    public void testPutVmGcStat() {
+    public void testPutVmGcStat() throws DescriptorParsingException,
+            StatementExecutionException {
         Storage storage = mock(Storage.class);
-        Add add = mock(Add.class);
-        when(storage.createAdd(any(Category.class))).thenReturn(add);
+        PreparedStatement<VmGcStat> add = mock(PreparedStatement.class);
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(add);
         
         VmGcStat stat = new VmGcStat("foo-agent", VM_ID, TIMESTAMP, COLLECTOR, RUN_COUNT, WALL_TIME);
         VmGcStatDAO dao = new VmGcStatDAOImpl(storage);
         dao.putVmGcStat(stat);
+        
+        @SuppressWarnings("rawtypes")
+        ArgumentCaptor<StatementDescriptor> captor = ArgumentCaptor.forClass(StatementDescriptor.class);
+        
+        verify(storage).prepareStatement(captor.capture());
+        StatementDescriptor<?> desc = captor.getValue();
+        assertEquals(VmGcStatDAOImpl.DESC_ADD_VM_GC_STAT, desc.getDescriptor());
 
-        verify(storage).createAdd(VmGcStatDAO.vmGcStatCategory);
-        verify(add).setPojo(stat);
-        verify(add).apply();
+        verify(add).setString(0, stat.getAgentId());
+        verify(add).setString(1, stat.getVmId());
+        verify(add).setLong(2, stat.getTimeStamp());
+        verify(add).setString(3, stat.getCollectorName());
+        verify(add).setLong(4, stat.getRunCount());
+        verify(add).setLong(5, stat.getWallTime());
+        verify(add).execute();
+        verifyNoMoreInteractions(add);
     }
 }
 

@@ -44,7 +44,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.Cursor;
@@ -55,14 +54,11 @@ import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.DAOException;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.VmInfo;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class VmInfoDAOImpl extends BaseCountable implements VmInfoDAO {
     
@@ -76,9 +72,52 @@ public class VmInfoDAOImpl extends BaseCountable implements VmInfoDAO {
             + Key.AGENT_ID.getName() + "' = ?s";
     static final String QUERY_ALL_VMS = "QUERY " + vmInfoCategory.getName();
     static final String AGGREGATE_COUNT_ALL_VMS = "QUERY-COUNT " + vmInfoCategory.getName();
+    // ADD vm-info SET 'agentId' = ?s , \
+    //                 'vmId' = ?s , \
+    //                 'vmPid' = ?i , \
+    //                 'startTimeStamp' = ?l , \
+    //                 'stopTimeStamp' = ?l , \
+    //                 'javaVersion' = ?s , \
+    //                 'javaHome' = ?s , \
+    //                 'mainClass' = ?s , \
+    //                 'javaCommandLine' = ?s , \
+    //                 'vmName' = ?s , \
+    //                 'vmArguments' = ?s , \
+    //                 'vmInfo' = ?s , \
+    //                 'vmVersion' = ?s , \
+    //                 'propertiesAsArray' = ?p[ , \
+    //                 'environmentAsArray' = ?p[ , \
+    //                 'loadedNativeLibraries' = ?s[ , \
+    //                 'uid' = ?l , \
+    //                 'username' = ?s
+    static final String DESC_ADD_VM_INFO = "ADD " + vmInfoCategory.getName() + " SET " +
+                        "'" + Key.AGENT_ID.getName() + "' = ?s , " +
+                        "'" + Key.VM_ID.getName() + "' = ?s , " +
+                        "'" + vmPidKey.getName() + "' = ?i , " +
+                        "'" + startTimeKey.getName() + "' = ?l , " +
+                        "'" + stopTimeKey.getName() + "' = ?l , " +
+                        "'" + runtimeVersionKey.getName() + "' = ?s , " +
+                        "'" + javaHomeKey.getName() + "' = ?s , " +
+                        "'" + mainClassKey.getName() + "' = ?s , " +
+                        "'" + commandLineKey.getName() + "' = ?s , " +
+                        "'" + vmNameKey.getName() + "' = ?s , " +
+                        "'" + vmArgumentsKey.getName() + "' = ?s , " +
+                        "'" + vmInfoKey.getName() + "' = ?s , " +
+                        "'" + vmVersionKey.getName() + "' = ?s , " +
+                        // The following two get persisted as pojo arrays.
+                        // There is no direct key representation for what gets
+                        // persisted.
+                        "'propertiesAsArray' = ?p[ , " +
+                        "'environmentAsArray' = ?p[ , " +
+                        "'" + librariesKey.getName() + "' = ?s[ , " +
+                        "'" + uidKey.getName() + "' = ?l , " +
+                        "'" + usernameKey.getName() + "' = ?s";
+    // UPDATE vm-info SET 'stopTimeStamp' = ?l WHERE 'vmId' = ?s
+    static final String DESC_UPDATE_VM_STOP_TIME = "UPDATE " + vmInfoCategory.getName() +
+            " SET '" + VmInfoDAO.stopTimeKey.getName() + "' = ?l" +
+            " WHERE '" + Key.VM_ID.getName() + "' = ?s";
     
     private final Storage storage;
-    private final ExpressionFactory factory;
     private final Category<AggregateCount> aggregateCategory;
 
     public VmInfoDAOImpl(Storage storage) {
@@ -88,7 +127,6 @@ public class VmInfoDAOImpl extends BaseCountable implements VmInfoDAO {
         this.aggregateCategory = adapter.getAdapted(AggregateCount.class);
         storage.registerCategory(vmInfoCategory);
         storage.registerCategory(aggregateCategory);
-        factory = new ExpressionFactory();
     }
 
     @Override
@@ -173,18 +211,50 @@ public class VmInfoDAOImpl extends BaseCountable implements VmInfoDAO {
 
     @Override
     public void putVmInfo(VmInfo info) {
-        Add<VmInfo> replace = storage.createAdd(vmInfoCategory);
-        replace.setPojo(info);
-        replace.apply();
+        StatementDescriptor<VmInfo> desc = new StatementDescriptor<>(vmInfoCategory, DESC_ADD_VM_INFO);
+        PreparedStatement<VmInfo> prepared;
+        try {
+            prepared = storage.prepareStatement(desc);
+            prepared.setString(0, info.getAgentId());
+            prepared.setString(1, info.getVmId());
+            prepared.setInt(2, info.getVmPid());
+            prepared.setLong(3, info.getStartTimeStamp());
+            prepared.setLong(4, info.getStopTimeStamp());
+            prepared.setString(5, info.getJavaVersion());
+            prepared.setString(6, info.getJavaHome());
+            prepared.setString(7, info.getMainClass());
+            prepared.setString(8, info.getJavaCommandLine());
+            prepared.setString(9, info.getVmName());
+            prepared.setString(10, info.getVmArguments());
+            prepared.setString(11, info.getVmInfo());
+            prepared.setString(12, info.getVmVersion());
+            prepared.setPojoList(13, info.getPropertiesAsArray());
+            prepared.setPojoList(14, info.getEnvironmentAsArray());
+            prepared.setStringList(15, info.getLoadedNativeLibraries());
+            prepared.setLong(16, info.getUid());
+            prepared.setString(17, info.getUsername());
+            prepared.execute();
+        } catch (DescriptorParsingException e) {
+            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
+        } catch (StatementExecutionException e) {
+            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+        }
     }
 
     @Override
     public void putVmStoppedTime(String vmId, long timestamp) {
-        Update<VmInfo> update = storage.createUpdate(vmInfoCategory);
-        Expression expr = factory.equalTo(Key.VM_ID, vmId);
-        update.where(expr);
-        update.set(VmInfoDAO.stopTimeKey, timestamp);
-        update.apply();
+        StatementDescriptor<VmInfo> desc = new StatementDescriptor<>(vmInfoCategory, DESC_UPDATE_VM_STOP_TIME);
+        PreparedStatement<VmInfo> prepared;
+        try {
+            prepared = storage.prepareStatement(desc);
+            prepared.setLong(0, timestamp);
+            prepared.setString(1, vmId);
+            prepared.execute();
+        } catch (DescriptorParsingException e) {
+            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
+        } catch (StatementExecutionException e) {
+            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+        }
     }
 
 }

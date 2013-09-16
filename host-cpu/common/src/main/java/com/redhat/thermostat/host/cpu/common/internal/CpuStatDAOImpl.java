@@ -37,16 +37,32 @@
 package com.redhat.thermostat.host.cpu.common.internal;
 
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import com.redhat.thermostat.storage.core.Add;
-import com.redhat.thermostat.storage.core.HostLatestPojoListGetter;
-import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
 import com.redhat.thermostat.host.cpu.common.model.CpuStat;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
+import com.redhat.thermostat.storage.core.HostLatestPojoListGetter;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.PreparedStatement;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 
 class CpuStatDAOImpl implements CpuStatDAO {
 
+    private static final Logger logger = LoggingUtils.getLogger(CpuStatDAOImpl.class);
+    // ADD cpu-stats SET 'agentId' = ?s , \
+    //                   'perProcessorUsage' = ?d[ , \
+    //                   'timeStamp' = ?l
+    static final String DESC_ADD_CPU_STAT = "ADD " + cpuStatCategory.getName() +
+                           " SET '" + Key.AGENT_ID.getName() + "' = ?s , " +
+                                "'" + cpuLoadKey.getName() + "' = ?d[ , " +
+                                "'" + Key.TIMESTAMP.getName() + "' = ?l";
+    
     private final Storage storage;
 
     private final HostLatestPojoListGetter<CpuStat> getter;
@@ -64,9 +80,19 @@ class CpuStatDAOImpl implements CpuStatDAO {
 
     @Override
     public void putCpuStat(CpuStat stat) {
-        Add<CpuStat> add = storage.createAdd(cpuStatCategory);
-        add.setPojo(stat);
-        add.apply();
+        StatementDescriptor<CpuStat> desc = new StatementDescriptor<>(cpuStatCategory, DESC_ADD_CPU_STAT);
+        PreparedStatement<CpuStat> prepared;
+        try {
+            prepared = storage.prepareStatement(desc);
+            prepared.setString(0, stat.getAgentId());
+            prepared.setDoubleList(1, stat.getPerProcessorUsage());
+            prepared.setLong(2, stat.getTimeStamp());
+            prepared.execute();
+        } catch (DescriptorParsingException e) {
+            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
+        } catch (StatementExecutionException e) {
+            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+        }
     }
 }
 

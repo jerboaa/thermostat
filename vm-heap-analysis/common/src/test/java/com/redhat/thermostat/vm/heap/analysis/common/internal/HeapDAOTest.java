@@ -62,7 +62,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
@@ -85,23 +84,14 @@ public class HeapDAOTest {
 
     private HeapDAO dao;
     private Storage storage;
-    private Add<HeapInfo> add;
     private HeapInfo heapInfo;
     private File heapDumpData;
     private ObjectHistogram histogram;
     private InputStream histogramData;
 
-    private PreparedStatement<HeapInfo> stmt;
-
-    @SuppressWarnings("unchecked")
     @Before
     public void setUp() throws IOException, DescriptorParsingException, StatementExecutionException {
         storage = mock(Storage.class);
-        add = mock(Add.class);
-        when(storage.createAdd(any(Category.class))).thenReturn(add);
-
-        stmt = (PreparedStatement<HeapInfo>) mock(PreparedStatement.class); 
-        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
 
         dao = new HeapDAOImpl(storage);
         
@@ -114,7 +104,14 @@ public class HeapDAOTest {
         out.close();
         histogramData = createHistogramData();
 
-        Cursor<HeapInfo> cursor = (Cursor<HeapInfo>) mock(Cursor.class);
+        // Setup for reading heapdump data.
+        when(storage.loadFile("test-heap")).thenReturn(new ByteArrayInputStream(data));
+        when(storage.loadFile("test-histo")).thenReturn(histogramData);
+    }
+
+    private Cursor<HeapInfo> getMockCursor(String writerId) {
+        @SuppressWarnings("unchecked")
+        Cursor<HeapInfo> cursor = mock(Cursor.class);
         HeapInfo info1 = new HeapInfo(writerId, "vm2", 12345L);
         info1.setAgentId("123");
         info1.setHeapId("testheap1");
@@ -129,14 +126,7 @@ public class HeapDAOTest {
 
         when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(info1).thenReturn(info2).thenReturn(null);
-        when(stmt.executeQuery()).thenReturn(cursor);
-
-        // Setup for reading heapdump data.
-        when(storage.loadFile("test-heap")).thenReturn(new ByteArrayInputStream(data));
-        when(storage.loadFile("test-histo")).thenReturn(histogramData);
-
-        // We dont check for AGENT_ID. That's enforced/added/checked by Storage
-
+        return cursor;
     }
 
     @SuppressWarnings("unchecked")
@@ -173,7 +163,6 @@ public class HeapDAOTest {
 
     @After
     public void tearDown() {
-        stmt = null;
         histogramData = null;
         histogram = null;
         heapDumpData.delete();
@@ -181,7 +170,6 @@ public class HeapDAOTest {
         heapInfo = null;
         dao = null;
         storage = null;
-        add = null;
     }
     
     @Test
@@ -190,6 +178,14 @@ public class HeapDAOTest {
         assertEquals(expectedQueryHeapInfo, HeapDAOImpl.QUERY_HEAP_INFO);
         String expectedQueryAllHeaps = "QUERY vm-heap-info WHERE 'agentId' = ?s AND 'vmId' = ?s";
         assertEquals(expectedQueryAllHeaps, HeapDAOImpl.QUERY_ALL_HEAPS);
+        
+        String addHeapInfo = "ADD vm-heap-info SET 'agentId' = ?s , " +
+                                                "'vmId' = ?s , " +
+                                                "'timeStamp' = ?l , " +
+                                                "'heapId' = ?s , " +
+                                                "'heapDumpId' = ?s , " +
+                                                "'histogramId' = ?s";
+        assertEquals(addHeapInfo, HeapDAOImpl.DESC_ADD_VM_HEAP_INFO);
     }
 
     @Test
@@ -206,14 +202,38 @@ public class HeapDAOTest {
         assertTrue(keys.contains(new Key<>("heapDumpId")));
         assertTrue(keys.contains(new Key<>("histogramId")));
     }
+    
+    @SuppressWarnings("unchecked")
+    private void doAddHeapInfoVerifications(Storage storage,
+            PreparedStatement<?> add, HeapInfo info)
+            throws StatementExecutionException, DescriptorParsingException {
+        @SuppressWarnings("rawtypes")
+        ArgumentCaptor<StatementDescriptor> captor = ArgumentCaptor.forClass(StatementDescriptor.class);
+        
+        verify(storage).prepareStatement(captor.capture());
+        StatementDescriptor<?> desc = captor.getValue();
+        assertEquals(HeapDAOImpl.DESC_ADD_VM_HEAP_INFO, desc.getDescriptor());
+        
+        verify(add).setString(0, info.getAgentId());
+        verify(add).setString(1, info.getVmId());
+        verify(add).setLong(2, info.getTimeStamp());
+        verify(add).setString(3, info.getHeapId());
+        verify(add).setString(4, info.getHeapDumpId());
+        verify(add).setString(5, info.getHistogramId());
+        verify(add).execute();
+        verifyNoMoreInteractions(add);
+    }
 
     @Test
-    public void testPutHeapInfo() throws IOException {
+    public void testPutHeapInfo() throws IOException,
+            StatementExecutionException, DescriptorParsingException {
+        @SuppressWarnings("unchecked")
+        PreparedStatement<HeapInfo> add = mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(add);
+        
         dao.putHeapInfo(heapInfo, heapDumpData, histogram);
 
-        verify(storage).createAdd(HeapDAO.heapInfoCategory);
-        verify(add).setPojo(heapInfo);
-        verify(add).apply();
+        doAddHeapInfoVerifications(storage, add, heapInfo);
 
         ArgumentCaptor<InputStream> data = ArgumentCaptor.forClass(InputStream.class);
         verify(storage).saveFile(eq("heapdump-test-vm1-12345"), data.capture());
@@ -236,12 +256,15 @@ public class HeapDAOTest {
     }
 
     @Test
-    public void testPutHeapInfoWithoutDump() throws IOException {
+    public void testPutHeapInfoWithoutDump() throws IOException,
+            StatementExecutionException, DescriptorParsingException {
+        @SuppressWarnings("unchecked")
+        PreparedStatement<HeapInfo> add = mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(add);
+        
         dao.putHeapInfo(heapInfo, null, null);
 
-        verify(storage).createAdd(HeapDAO.heapInfoCategory);
-        verify(add).setPojo(heapInfo);
-        verify(add).apply();
+        doAddHeapInfoVerifications(storage, add, heapInfo);
 
         verify(storage, never()).saveFile(anyString(), any(InputStream.class));
         assertEquals("test-vm1-12345", heapInfo.getHeapId());
@@ -255,6 +278,14 @@ public class HeapDAOTest {
         
         HostRef host = new HostRef("123", "test-host");
         VmRef vm = new VmRef(host, "vm2", 234, "test-vm");
+        
+        @SuppressWarnings("unchecked")
+        PreparedStatement<HeapInfo> stmt = mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
+        
+        Cursor<HeapInfo> cursor = getMockCursor("foo-agent");
+        when(stmt.executeQuery()).thenReturn(cursor);
+        
         Collection<HeapInfo> heapInfos = dao.getAllHeapInfo(vm);
 
         verify(storage).prepareStatement(anyDescriptor());
@@ -281,6 +312,13 @@ public class HeapDAOTest {
     @Test
     public void testGetHeapInfo() throws DescriptorParsingException, StatementExecutionException {
         final String heapId = "testheap1";
+        
+        @SuppressWarnings("unchecked")
+        PreparedStatement<HeapInfo> stmt = mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
+        
+        Cursor<HeapInfo> cursor = getMockCursor("foo-agent");
+        when(stmt.executeQuery()).thenReturn(cursor);
         
         HeapInfo result = dao.getHeapInfo(heapId);
         
@@ -318,7 +356,11 @@ public class HeapDAOTest {
     }
 
     @Test
-    public void testInvalidHeapId() throws IOException, StatementExecutionException {
+    public void testInvalidHeapId() throws IOException,
+            StatementExecutionException, DescriptorParsingException {
+        @SuppressWarnings("unchecked")
+        PreparedStatement<HeapInfo> stmt = mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
         when(stmt.executeQuery()).thenThrow(new IllegalArgumentException("invalid ObjectId"));
         dao = new HeapDAOImpl(storage);
         heapInfo = dao.getHeapInfo("some-random-heap-id");

@@ -37,16 +37,44 @@
 package com.redhat.thermostat.host.memory.common.internal;
 
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
 import com.redhat.thermostat.host.memory.common.model.MemoryStat;
-import com.redhat.thermostat.storage.core.Add;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.PreparedStatement;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 
 public class MemoryStatDAOImpl implements MemoryStatDAO {
 
+    private static final Logger logger = LoggingUtils.getLogger(MemoryStatDAOImpl.class);
+    // ADD memory-stats SET 'agentId' = ?s , \
+    //                      'timeStamp' = ?l , \
+    //                      'total' = ?l , \
+    //                      'free' = ?l , \
+    //                      'buffers' = ?l , \
+    //                      'cached' = ?l , \
+    //                      'swapTotal' = ?l , \
+    //                      'swapFree' = ?l , \
+    //                      'commitLimit' = ?l
+    static final String DESC_ADD_MEMORY_STAT = "ADD " + memoryStatCategory.getName() +
+            " SET '" + Key.AGENT_ID.getName() + "' = ?s , " +
+                 "'" + Key.TIMESTAMP.getName() + "' = ?l , " +
+                 "'" + memoryTotalKey.getName() + "' = ?l , " +
+                 "'" + memoryFreeKey.getName() + "' = ?l , " +
+                 "'" + memoryBuffersKey.getName() + "' = ?l , " +
+                 "'" + memoryCachedKey.getName() + "' = ?l , " +
+                 "'" + memorySwapTotalKey.getName() + "' = ?l , " +
+                 "'" + memorySwapFreeKey.getName() + "' = ?l , " +
+                 "'" + memoryCommitLimitKey.getName() + "' = ?l";
+    
     private final Storage storage;
 
     private final HostLatestPojoListGetter<MemoryStat> getter;
@@ -64,9 +92,25 @@ public class MemoryStatDAOImpl implements MemoryStatDAO {
 
     @Override
     public void putMemoryStat(MemoryStat stat) {
-        Add<MemoryStat> add = storage.createAdd(memoryStatCategory);
-        add.setPojo(stat);
-        add.apply();
+        StatementDescriptor<MemoryStat> desc = new StatementDescriptor<>(memoryStatCategory, DESC_ADD_MEMORY_STAT);
+        PreparedStatement<MemoryStat> prepared;
+        try {
+            prepared = storage.prepareStatement(desc);
+            prepared.setString(0, stat.getAgentId());
+            prepared.setLong(1, stat.getTimeStamp());
+            prepared.setLong(2, stat.getTotal());
+            prepared.setLong(3, stat.getFree());
+            prepared.setLong(4, stat.getBuffers());
+            prepared.setLong(5, stat.getCached());
+            prepared.setLong(6, stat.getSwapTotal());
+            prepared.setLong(7, stat.getSwapFree());
+            prepared.setLong(8, stat.getCommitLimit());
+            prepared.execute();
+        } catch (DescriptorParsingException e) {
+            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
+        } catch (StatementExecutionException e) {
+            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+        }
     }
 
 }

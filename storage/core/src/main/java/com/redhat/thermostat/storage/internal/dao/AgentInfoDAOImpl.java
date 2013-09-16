@@ -50,16 +50,12 @@ import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.AggregateCount;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class AgentInfoDAOImpl extends BaseCountable implements AgentInfoDAO {
 
@@ -86,14 +82,29 @@ public class AgentInfoDAOImpl extends BaseCountable implements AgentInfoDAO {
     //                     'configListenAddress' = ?s
     static final String DESC_ADD_AGENT_INFO = "ADD " + CATEGORY.getName() + " SET " +
             "'" + Key.AGENT_ID.getName() + "' = ?s , " +
-            "'" + AgentInfoDAOImpl.START_TIME_KEY.getName() + "' = ?l , " +
-            "'" + AgentInfoDAOImpl.STOP_TIME_KEY.getName() + "' = ?l , " +
-            "'" + AgentInfoDAOImpl.ALIVE_KEY.getName() + "' = ?b , " +
-            "'" + AgentInfoDAOImpl.CONFIG_LISTEN_ADDRESS.getName() + "' = ?s";
+            "'" + START_TIME_KEY.getName() + "' = ?l , " +
+            "'" + STOP_TIME_KEY.getName() + "' = ?l , " +
+            "'" + ALIVE_KEY.getName() + "' = ?b , " +
+            "'" + CONFIG_LISTEN_ADDRESS.getName() + "' = ?s";
+    // REMOVE agent-config WHERE 'agentId' = ?s
+    static final String DESC_REMOVE_AGENT_INFO = "REMOVE " + CATEGORY.getName() +
+            " WHERE '" + Key.AGENT_ID.getName() + "' = ?s";
+    // UPDATE agent-config SET
+    //                       'startTime' = ?l , \
+    //                       'stopTime' = ?l , \
+    //                       'alive' = ?b , \
+    //                       'configListenAddress' = ?s
+    //                     WHERE 'agentId' = ?s
+    static final String DESC_UPDATE_AGENT_INFO = "UPDATE " + CATEGORY.getName() + " SET " +
+            "'" + START_TIME_KEY.getName() + "' = ?l , " +
+            "'" + STOP_TIME_KEY.getName() + "' = ?l , " +
+            "'" + ALIVE_KEY.getName() + "' = ?b , " +
+            "'" + CONFIG_LISTEN_ADDRESS.getName() + "' = ?s " +
+            "WHERE '" + Key.AGENT_ID.getName() + "' = ?s";
+                             
     
     private final Storage storage;
     private final Category<AggregateCount> aggregateCategory;
-    private final ExpressionFactory factory;
 
     public AgentInfoDAOImpl(Storage storage) {
         this.storage = storage;
@@ -102,7 +113,6 @@ public class AgentInfoDAOImpl extends BaseCountable implements AgentInfoDAO {
         this.aggregateCategory = adapter.getAdapted(AggregateCount.class);
         storage.registerCategory(CATEGORY);
         storage.registerCategory(aggregateCategory);
-        this.factory = new ExpressionFactory();
     }
 
     @Override
@@ -213,22 +223,36 @@ public class AgentInfoDAOImpl extends BaseCountable implements AgentInfoDAO {
 
     @Override
     public void removeAgentInformation(AgentInformation agentInfo) {
-        Expression expr = factory.equalTo(Key.AGENT_ID, agentInfo.getAgentId());
-        Remove<AgentInformation> remove = storage.createRemove(CATEGORY);
-        remove.where(expr);
-        remove.apply();
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(CATEGORY, DESC_REMOVE_AGENT_INFO);
+        PreparedStatement<AgentInformation> prepared;
+        try {
+            prepared = storage.prepareStatement(desc);
+            prepared.setString(0, agentInfo.getAgentId());
+            prepared.execute();
+        } catch (DescriptorParsingException e) {
+            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
+        } catch (StatementExecutionException e) {
+            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+        }
     }
 
     @Override
     public void updateAgentInformation(AgentInformation agentInfo) {
-        Update<AgentInformation> update = storage.createUpdate(CATEGORY);
-        Expression expr = factory.equalTo(Key.AGENT_ID, agentInfo.getAgentId());
-        update.where(expr);
-        update.set(START_TIME_KEY, agentInfo.getStartTime());
-        update.set(STOP_TIME_KEY, agentInfo.getStopTime());
-        update.set(ALIVE_KEY, agentInfo.isAlive());
-        update.set(CONFIG_LISTEN_ADDRESS, agentInfo.getConfigListenAddress());
-        update.apply();
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(CATEGORY, DESC_UPDATE_AGENT_INFO);
+        PreparedStatement<AgentInformation> prepared;
+        try {
+            prepared = storage.prepareStatement(desc);
+            prepared.setLong(0, agentInfo.getStartTime());
+            prepared.setLong(1, agentInfo.getStopTime());
+            prepared.setBoolean(2, agentInfo.isAlive());
+            prepared.setString(3, agentInfo.getConfigListenAddress());
+            prepared.setString(4, agentInfo.getAgentId());
+            prepared.execute();
+        } catch (DescriptorParsingException e) {
+            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
+        } catch (StatementExecutionException e) {
+            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+        }
     }
 
 }

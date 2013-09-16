@@ -43,20 +43,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
 import com.redhat.thermostat.thread.model.ThreadInfoData;
@@ -69,6 +65,7 @@ public class ThreadDaoImpl implements ThreadDao {
     private static final Logger logger = LoggingUtils.getLogger(ThreadDaoImpl.class);
     
     // Queries
+    
     static final String QUERY_THREAD_CAPS = "QUERY "
             + THREAD_CAPABILITIES.getName() + " WHERE '"
             + Key.AGENT_ID.getName() + "' = ?s AND '" 
@@ -100,6 +97,71 @@ public class ThreadDaoImpl implements ThreadDao {
             + Key.AGENT_ID.getName() + "' = ?s AND '" 
             + Key.VM_ID.getName() + "' = ?s SORT '" 
             + Key.TIMESTAMP.getName() + "' DSC LIMIT 1";
+    
+    // Data modifying descriptors
+    
+    // ADD vm-thread-summary SET 'agentId' = ?s , \
+    //                           'vmId' = ?s , \
+    //                           'currentLiveThreads' = ?l , \
+    //                           'currentDaemonThreads' = ?l , \
+    //                           'timeStamp' = ?l
+    static final String DESC_ADD_THREAD_SUMMARY = "ADD " + THREAD_SUMMARY.getName() +
+            " SET '" + Key.AGENT_ID.getName() + "' = ?s , " +
+                 "'" + Key.VM_ID.getName() + "' = ?s , " +
+                 "'" + LIVE_THREADS_KEY.getName() + "' = ?l , " +
+                 "'" + DAEMON_THREADS_KEY.getName() + "' = ?l , " +
+                 "'" + Key.TIMESTAMP.getName() + "' = ?l";
+    // ADD vm-thread-harvesting SET 'agentId' = ?s , \
+    //                              'vmId' = ?s , \
+    //                              'timeStamp' = ?l , \
+    //                              'harvesting' = ?b
+    static final String DESC_ADD_THREAD_HARVESTING_STATUS = "ADD " + THREAD_HARVESTING_STATUS.getName() +
+            " SET '" + Key.AGENT_ID.getName() + "' = ?s , " +
+                 "'" + Key.VM_ID.getName() + "' = ?s , " +
+                 "'" + Key.TIMESTAMP.getName() + "' = ?l , " +
+                 "'" + HARVESTING_STATUS_KEY.getName() + "' = ?b";
+    // ADD vm-thread-info SET 'agentId' = ?s , \
+    //                        'vmId' = ?s , \
+    //                        'threadName' = ?s , \
+    //                        'threadId' = ?l , \
+    //                        'threadState' = ?s , \
+    //                        'allocatedBytes' = ?l , \
+    //                        'timeStamp' = ?l , \
+    //                        'threadCpuTime' = ?l , \
+    //                        'threadUserTime' = ?l , \
+    //                        'threadBlockedCount' = ?l , \
+    //                        'threadWaitCount' = ?l
+    static final String DESC_ADD_THREAD_INFO = "ADD " + THREAD_INFO.getName() +
+            " SET '" + Key.AGENT_ID.getName() + "' = ?s , " +
+                 "'" + Key.VM_ID.getName() + "' = ?s , " +
+                 "'" + THREAD_NAME_KEY.getName() + "' = ?s , " +
+                 "'" + THREAD_ID_KEY.getName() + "' = ?l , " +
+                 "'" + THREAD_STATE_KEY.getName() + "' = ?s , " +
+                 "'" + THREAD_ALLOCATED_BYTES_KEY.getName() + "' = ?l , " +
+                 "'" + Key.TIMESTAMP.getName() + "' = ?l , " +
+                 "'" + THREAD_CPU_TIME_KEY.getName() + "' = ?l , " +
+                 "'" + THREAD_USER_TIME_KEY.getName() + "' = ?l , " +
+                 "'" + THREAD_BLOCKED_COUNT_KEY.getName() + "' = ?l , " +
+                 "'" + THREAD_WAIT_COUNT_KEY.getName() + "' = ?l";
+    // ADD vm-deadlock-data SET 'agentId' = ?s , \
+    //                          'vmId' = ?s , \
+    //                          'timeStamp' = ?l , \
+    //                          'deadLockDescription' = ?s
+    static final String DESC_ADD_THREAD_DEADLOCK_DATA = "ADD " + DEADLOCK_INFO.getName() +
+            " SET '" + Key.AGENT_ID.getName() + "' = ?s , " +
+                 "'" + Key.VM_ID.getName() + "' = ?s , " +
+                 "'" + Key.TIMESTAMP.getName() + "' = ?l , " +
+                 "'" + DEADLOCK_DESCRIPTION_KEY.getName() + "' = ?s";
+    // REPLACE vm-thread-capabilities SET 'agentId' = ?s , \
+    //                                    'vmId' = ?s , \
+    //                                    'supportedFeaturesList' = ?s[
+    //                                WHERE 'agentId' = ?s AND 'vmId' = ?s
+    static final String DESC_REPLACE_THREAD_CAPS = "REPLACE " + THREAD_CAPABILITIES.getName() + 
+            " SET '" + Key.AGENT_ID.getName() + "' = ?s , " +
+                 "'" + Key.VM_ID.getName() + "' = ?s , " +
+                 "'" + SUPPORTED_FEATURES_LIST_KEY.getName() + "' = ?s[" +
+            " WHERE '" + Key.AGENT_ID.getName() + "' = ?s AND " +
+                   "'" + Key.VM_ID.getName() + "' = ?s";
     
     private Storage storage;
     
@@ -138,24 +200,40 @@ public class ThreadDaoImpl implements ThreadDao {
     
     @Override
     public void saveCapabilities(VMThreadCapabilities caps) {
-        @SuppressWarnings("unchecked")
-        Replace<VMThreadCapabilities> replace = storage.createReplace(THREAD_CAPABILITIES);
-        ExpressionFactory factory = new ExpressionFactory();
-        String agentId = caps.getAgentId();
-        Expression agentKey = factory.equalTo(Key.AGENT_ID, agentId);
-        Expression vmKey = factory.equalTo(Key.VM_ID, caps.getVmId());
-        Expression and = factory.and(agentKey, vmKey);
-        replace.setPojo(caps);
-        replace.where(and);
-        replace.apply();
+        StatementDescriptor<VMThreadCapabilities> desc = new StatementDescriptor<>(THREAD_CAPABILITIES, DESC_REPLACE_THREAD_CAPS);
+        PreparedStatement<VMThreadCapabilities> prepared;
+        try {
+            prepared = storage.prepareStatement(desc);
+            prepared.setString(0, caps.getAgentId());
+            prepared.setString(1, caps.getVmId());
+            prepared.setStringList(2, caps.getSupportedFeaturesList());
+            prepared.setString(3, caps.getAgentId());
+            prepared.setString(4, caps.getVmId());
+            prepared.execute();
+        } catch (DescriptorParsingException e) {
+            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
+        } catch (StatementExecutionException e) {
+            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+        }
     }
     
     @Override
     public void saveSummary(ThreadSummary summary) {
-        @SuppressWarnings("unchecked")
-        Add<ThreadSummary> add = storage.createAdd(THREAD_SUMMARY);
-        add.setPojo(summary);
-        add.apply();
+        StatementDescriptor<ThreadSummary> desc = new StatementDescriptor<>(THREAD_SUMMARY, DESC_ADD_THREAD_SUMMARY);
+        PreparedStatement<ThreadSummary> prepared;
+        try {
+            prepared = storage.prepareStatement(desc);
+            prepared.setString(0, summary.getAgentId());
+            prepared.setString(1, summary.getVmId());
+            prepared.setLong(2, summary.getCurrentLiveThreads());
+            prepared.setLong(3, summary.getCurrentDaemonThreads());
+            prepared.setLong(4, summary.getTimeStamp());
+            prepared.execute();
+        } catch (DescriptorParsingException e) {
+            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
+        } catch (StatementExecutionException e) {
+            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+        }
     }
     
     @Override
@@ -209,10 +287,20 @@ public class ThreadDaoImpl implements ThreadDao {
 
     @Override
     public void saveHarvestingStatus(ThreadHarvestingStatus status) {
-        @SuppressWarnings("unchecked")
-        Add<ThreadHarvestingStatus> add = storage.createAdd(THREAD_HARVESTING_STATUS);
-        add.setPojo(status);
-        add.apply();
+        StatementDescriptor<ThreadHarvestingStatus> desc = new StatementDescriptor<>(THREAD_HARVESTING_STATUS, DESC_ADD_THREAD_HARVESTING_STATUS);
+        PreparedStatement<ThreadHarvestingStatus> prepared;
+        try {
+            prepared = storage.prepareStatement(desc);
+            prepared.setString(0, status.getAgentId());
+            prepared.setString(1, status.getVmId());
+            prepared.setLong(2, status.getTimeStamp());
+            prepared.setBoolean(3, status.isHarvesting());
+            prepared.execute();
+        } catch (DescriptorParsingException e) {
+            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
+        } catch (StatementExecutionException e) {
+            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+        }
     }
 
     @Override
@@ -241,10 +329,27 @@ public class ThreadDaoImpl implements ThreadDao {
 
     @Override
     public void saveThreadInfo(ThreadInfoData info) {
-        @SuppressWarnings("unchecked")
-        Add<ThreadInfoData> add = storage.createAdd(THREAD_INFO);
-        add.setPojo(info);
-        add.apply();
+        StatementDescriptor<ThreadInfoData> desc = new StatementDescriptor<>(THREAD_INFO, DESC_ADD_THREAD_INFO);
+        PreparedStatement<ThreadInfoData> prepared;
+        try {
+            prepared = storage.prepareStatement(desc);
+            prepared.setString(0, info.getAgentId());
+            prepared.setString(1, info.getVmId());
+            prepared.setString(2, info.getThreadName());
+            prepared.setLong(3, info.getThreadId());
+            prepared.setString(4, info.getThreadState());
+            prepared.setLong(5, info.getAllocatedBytes());
+            prepared.setLong(6, info.getTimeStamp());
+            prepared.setLong(7, info.getThreadCpuTime());
+            prepared.setLong(8, info.getThreadUserTime());
+            prepared.setLong(9, info.getThreadBlockedCount());
+            prepared.setLong(10, info.getThreadWaitCount());
+            prepared.execute();
+        } catch (DescriptorParsingException e) {
+            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
+        } catch (StatementExecutionException e) {
+            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+        }
     }
 
     @Override
@@ -298,10 +403,20 @@ public class ThreadDaoImpl implements ThreadDao {
 
     @Override
     public void saveDeadLockStatus(VmDeadLockData deadLockInfo) {
-        @SuppressWarnings("unchecked")
-        Add<VmDeadLockData> add = storage.createAdd(DEADLOCK_INFO);
-        add.setPojo(deadLockInfo);
-        add.apply();
+        StatementDescriptor<VmDeadLockData> desc = new StatementDescriptor<>(DEADLOCK_INFO, DESC_ADD_THREAD_DEADLOCK_DATA);
+        PreparedStatement<VmDeadLockData> prepared;
+        try {
+            prepared = storage.prepareStatement(desc);
+            prepared.setString(0, deadLockInfo.getAgentId());
+            prepared.setString(1, deadLockInfo.getVmId());
+            prepared.setLong(2, deadLockInfo.getTimeStamp());
+            prepared.setString(3, deadLockInfo.getDeadLockDescription());
+            prepared.execute();
+        } catch (DescriptorParsingException e) {
+            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
+        } catch (StatementExecutionException e) {
+            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+        }
     }
     
     private <T extends Pojo> PreparedStatement<T> prepareQuery(Category<T> category, String query, VmRef ref) {

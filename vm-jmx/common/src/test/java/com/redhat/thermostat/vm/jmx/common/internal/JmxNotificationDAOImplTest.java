@@ -49,8 +49,8 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -94,20 +94,46 @@ public class JmxNotificationDAOImplTest {
         assertEquals(expectedQueryLatestNotificationStatus, JmxNotificationDAOImpl.QUERY_LATEST_NOTIFICATION_STATUS);
         String expectedQueryNotifications = "QUERY vm-jmx-notification WHERE 'agentId' = ?s AND 'vmId' = ?s AND 'timeStamp' > ?l";
         assertEquals(expectedQueryNotifications, JmxNotificationDAOImpl.QUERY_NOTIFICATIONS);
+        String addNotificationStatus = "ADD vm-jmx-notification-status SET 'agentId' = ?s , " +
+                                            "'vmId' = ?s , " +
+                                            "'timeStamp' = ?l , " +
+                                            "'enabled' = ?b";
+        assertEquals(addNotificationStatus, JmxNotificationDAOImpl.DESC_ADD_NOTIFICATION_STATUS);
+        String addNotificationDesc = "ADD vm-jmx-notification SET 'agentId' = ?s , " +
+                                            "'vmId' = ?s , " +
+                                            "'timeStamp' = ?l , " +
+                                            "'contents' = ?s , " +
+                                            "'sourceDetails' = ?s , " +
+                                            "'sourceBackend' = ?s";
+        assertEquals(addNotificationDesc, JmxNotificationDAOImpl.DESC_ADD_NOTIFICATION);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
-    public void verifyAddNotificationStatus() {
-        @SuppressWarnings("unchecked")
-        Add<JmxNotificationStatus> add = mock(Add.class);
-        when(storage.createAdd(JmxNotificationDAOImpl.NOTIFICATION_STATUS)).thenReturn(add);
+    public void verifyAddNotificationStatus()
+            throws DescriptorParsingException, StatementExecutionException {
+        PreparedStatement<JmxNotificationStatus> add = mock(PreparedStatement.class);
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(add);
 
-        JmxNotificationStatus data = mock(JmxNotificationStatus.class);
+        JmxNotificationStatus data = new JmxNotificationStatus("foo-agent");
+        data.setVmId("foo-vmId");
+        data.setEnabled(true);
+        data.setTimeStamp(System.currentTimeMillis());
 
         dao.addNotificationStatus(data);
+        
+        @SuppressWarnings("rawtypes")
+        ArgumentCaptor<StatementDescriptor> captor = ArgumentCaptor.forClass(StatementDescriptor.class);
+        
+        verify(storage).prepareStatement(captor.capture());
+        StatementDescriptor<?> desc = captor.getValue();
+        assertEquals(JmxNotificationDAOImpl.DESC_ADD_NOTIFICATION_STATUS, desc.getDescriptor());
 
-        verify(add).setPojo(data);
-        verify(add).apply();
+        verify(add).setString(0, data.getAgentId());
+        verify(add).setString(1, data.getVmId());
+        verify(add).setLong(2, data.getTimeStamp());
+        verify(add).setBoolean(3, data.isEnabled());
+        verify(add).execute();
         verifyNoMoreInteractions(add);
     }
 
@@ -142,18 +168,36 @@ public class JmxNotificationDAOImplTest {
         return (StatementDescriptor<T>) any(StatementDescriptor.class);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
-    public void verfiyAddNotification() {
-        @SuppressWarnings("unchecked")
-        Add<JmxNotification> add = mock(Add.class);
-        when(storage.createAdd(JmxNotificationDAOImpl.NOTIFICATIONS)).thenReturn(add);
+    public void verfiyAddNotification() throws DescriptorParsingException,
+            StatementExecutionException {
+        PreparedStatement<JmxNotificationStatus> add = mock(PreparedStatement.class);
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(add);
 
-        JmxNotification data = mock(JmxNotification.class);
+        JmxNotification data = new JmxNotification("foo-agent");
+        data.setVmId("foo-vmId");
+        data.setContents("something-content");
+        data.setTimeStamp(System.currentTimeMillis());
+        data.setSourceBackend("foo-source-backend");
+        data.setSourceDetails("foo-source-details");
 
         dao.addNotification(data);
+        
+        @SuppressWarnings("rawtypes")
+        ArgumentCaptor<StatementDescriptor> captor = ArgumentCaptor.forClass(StatementDescriptor.class);
+        
+        verify(storage).prepareStatement(captor.capture());
+        StatementDescriptor<?> desc = captor.getValue();
+        assertEquals(JmxNotificationDAOImpl.DESC_ADD_NOTIFICATION, desc.getDescriptor());
 
-        verify(add).setPojo(data);
-        verify(add).apply();
+        verify(add).setString(0, data.getAgentId());
+        verify(add).setString(1, data.getVmId());
+        verify(add).setLong(2, data.getTimeStamp());
+        verify(add).setString(3, data.getContents());
+        verify(add).setString(4, data.getSourceDetails());
+        verify(add).setString(5, data.getSourceBackend());
+        verify(add).execute();
         verifyNoMoreInteractions(add);
     }
 

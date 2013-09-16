@@ -48,7 +48,7 @@ public interface NumaDAO {
     
     static final Category<NumaStat> numaStatCategory = new Category<>("numa-stat", NumaStat.class, Key.AGENT_ID, Key.TIMESTAMP, nodeStats);
 
-    static final Key<Integer> hostNumNumaNodes = new Key<>("hostNumNumaNodes");
+    static final Key<Integer> hostNumNumaNodes = new Key<>("numNumaNodes");
 
     static final Category<NumaHostInfo> numaHostCategory = new Category<>("numa-host-info", NumaHostInfo.class, Key.AGENT_ID, hostNumNumaNodes);
 

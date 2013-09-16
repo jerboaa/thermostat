@@ -39,7 +39,6 @@ package com.redhat.thermostat.vm.cpu.common.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -50,8 +49,8 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -75,6 +74,15 @@ public class VmCpuStatDAOTest {
     @Before
     public void setUp() {
         cpuStat = new VmCpuStat("foo-agent", TIMESTAMP, VM_ID, CPU_LOAD);
+    }
+    
+    @Test
+    public void verifyDescriptorsAreSane() {
+        String addCpuStat = "ADD vm-cpu-stats SET 'agentId' = ?s , " +
+                                                "'vmId' = ?s , " +
+                                                "'timeStamp' = ?l , " +
+                                                "'cpuLoad' = ?d";
+        assertEquals(addCpuStat, VmCpuStatDAOImpl.DESC_ADD_VM_CPU_STAT);
     }
 
     @Test
@@ -131,21 +139,30 @@ public class VmCpuStatDAOTest {
         return (StatementDescriptor<VmCpuStat>) any(StatementDescriptor.class);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
-    public void testPutVmCpuStat() {
+    public void testPutVmCpuStat() throws DescriptorParsingException, StatementExecutionException {
         Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        Add<VmCpuStat> add = mock(Add.class);
-        when(storage.createAdd(eq(VmCpuStatDAO.vmCpuStatCategory))).thenReturn(add);
+        PreparedStatement<VmCpuStat> add = mock(PreparedStatement.class);
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(add);
         
         VmCpuStat stat = new VmCpuStat("foo-agent", TIMESTAMP, VM_ID, CPU_LOAD);
         VmCpuStatDAO dao = new VmCpuStatDAOImpl(storage);
         dao.putVmCpuStat(stat);
+        
+        @SuppressWarnings("rawtypes")
+        ArgumentCaptor<StatementDescriptor> captor = ArgumentCaptor.forClass(StatementDescriptor.class);
+        
+        verify(storage).prepareStatement(captor.capture());
+        StatementDescriptor<?> desc = captor.getValue();
+        assertEquals(VmCpuStatDAOImpl.DESC_ADD_VM_CPU_STAT, desc.getDescriptor());
 
-        verify(storage).createAdd(VmCpuStatDAO.vmCpuStatCategory);
-        verify(add).setPojo(stat);
-        verify(add).apply();
-
+        verify(add).setString(0, stat.getAgentId());
+        verify(add).setString(1, stat.getVmId());
+        verify(add).setLong(2, stat.getTimeStamp());
+        verify(add).setDouble(3, stat.getCpuLoad());
+        verify(add).execute();
+        verifyNoMoreInteractions(add);
     }
 }
 

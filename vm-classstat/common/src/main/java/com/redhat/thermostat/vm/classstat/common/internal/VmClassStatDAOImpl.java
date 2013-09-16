@@ -37,8 +37,15 @@
 package com.redhat.thermostat.vm.classstat.common.internal;
 
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import com.redhat.thermostat.storage.core.Add;
+import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
+import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.PreparedStatement;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.VmRef;
@@ -46,6 +53,17 @@ import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
 import com.redhat.thermostat.vm.classstat.common.model.VmClassStat;
 
 class VmClassStatDAOImpl implements VmClassStatDAO {
+    
+    private static final Logger logger = LoggingUtils.getLogger(VmClassStatDAOImpl.class);
+    // ADD vm-class-stats SET 'agentId' = ?s , \
+    //                        'vmId' = ?s , \
+    //                        'timeStamp' = ?l , \ 
+    //                        'loadedClasses' = ?l
+    static final String DESC_ADD_VM_CLASS_STAT = "ADD " + vmClassStatsCategory.getName() +
+            " SET '" + Key.AGENT_ID.getName() + "' = ?s , " +
+                 "'" + Key.VM_ID.getName() + "' = ?s , " +
+                 "'" + Key.TIMESTAMP.getName() + "' = ?l , " +
+                 "'" + loadedClassesKey.getName() + "' = ?l";
 
     private final Storage storage;
     private final VmLatestPojoListGetter<VmClassStat> getter;
@@ -63,9 +81,20 @@ class VmClassStatDAOImpl implements VmClassStatDAO {
 
     @Override
     public void putVmClassStat(VmClassStat stat) {
-        Add<VmClassStat> add = storage.createAdd(vmClassStatsCategory);
-        add.setPojo(stat);
-        add.apply();
+        StatementDescriptor<VmClassStat> desc = new StatementDescriptor<>(vmClassStatsCategory, DESC_ADD_VM_CLASS_STAT);
+        PreparedStatement<VmClassStat> prepared;
+        try {
+            prepared = storage.prepareStatement(desc);
+            prepared.setString(0, stat.getAgentId());
+            prepared.setString(1, stat.getVmId());
+            prepared.setLong(2, stat.getTimeStamp());
+            prepared.setLong(3, stat.getLoadedClasses());
+            prepared.execute();
+        } catch (DescriptorParsingException e) {
+            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
+        } catch (StatementExecutionException e) {
+            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+        }
     }
 }
 

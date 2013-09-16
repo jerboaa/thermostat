@@ -53,11 +53,10 @@ public interface ThreadDao {
     static final String CPU_TIME = "thread-cpu-time";
     static final String CONTENTION_MONITOR = "thread-contention-monitor";
     static final String THREAD_ALLOCATED_MEMORY = "thread-allocated-memory";
+    
     static final String SUPPORTED_FEATURES_LIST = "supportedFeaturesList";
 
-    static final Key<Boolean> CPU_TIME_KEY = new Key<Boolean>(CPU_TIME);
-    static final Key<Boolean> CONTENTION_MONITOR_KEY = new Key<Boolean>(CONTENTION_MONITOR);
-    static final Key<Boolean> THREAD_ALLOCATED_MEMORY_KEY = new Key<Boolean>(THREAD_ALLOCATED_MEMORY);
+    static final Key<Long> THREAD_ALLOCATED_BYTES_KEY = new Key<Long>("allocatedBytes");
     static final Key<List<String>> SUPPORTED_FEATURES_LIST_KEY = new Key<List<String>>(SUPPORTED_FEATURES_LIST);
 
     static final Category<VMThreadCapabilities> THREAD_CAPABILITIES =
@@ -83,7 +82,7 @@ public interface ThreadDao {
     List<ThreadSummary> loadSummary(VmRef ref, long since);
 
     static final String HARVESTING_DATA = "harvesting";
-    static final Key<String> HARVESTING_STATUS_KEY = new Key<String> (HARVESTING_DATA);
+    static final Key<Boolean> HARVESTING_STATUS_KEY = new Key<Boolean>(HARVESTING_DATA);
     static final Category<ThreadHarvestingStatus> THREAD_HARVESTING_STATUS =
             new Category<>("vm-thread-harvesting", ThreadHarvestingStatus.class,
                     Key.AGENT_ID,
@@ -114,13 +113,14 @@ public interface ThreadDao {
                          Key.TIMESTAMP, THREAD_NAME_KEY, THREAD_ID_KEY,
                          THREAD_STATE_KEY,
                          THREAD_CPU_TIME_KEY,
+                         THREAD_ALLOCATED_BYTES_KEY,
                          THREAD_USER_TIME_KEY, THREAD_BLOCKED_COUNT_KEY,
                          THREAD_WAIT_COUNT_KEY);
     
     void saveThreadInfo(ThreadInfoData info);
     List<ThreadInfoData> loadThreadInfo(VmRef ref, long since);
 
-    static final String DEADLOCK_DESCRIPTION = "description";
+    static final String DEADLOCK_DESCRIPTION = "deadLockDescription";
     static final Key<String> DEADLOCK_DESCRIPTION_KEY = new Key<>(DEADLOCK_DESCRIPTION);
     static final Category<VmDeadLockData> DEADLOCK_INFO = new Category<>("vm-deadlock-data", VmDeadLockData.class,
             Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP,

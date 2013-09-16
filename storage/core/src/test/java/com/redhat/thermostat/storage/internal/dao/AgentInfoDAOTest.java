@@ -40,7 +40,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -60,22 +59,17 @@ import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.AggregateCount;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class AgentInfoDAOTest {
 
     private AgentInformation agentInfo1;
     private AgentInformation agent1;
-    private ExpressionFactory factory;
 
     @Before
     public void setUp() {
@@ -90,7 +84,6 @@ public class AgentInfoDAOTest {
         agent1.setConfigListenAddress("foobar:666");
         agent1.setStartTime(100);
         agent1.setStopTime(10);
-        factory = new ExpressionFactory();
     }
 
     @Test
@@ -109,6 +102,14 @@ public class AgentInfoDAOTest {
                                                    "'alive' = ?b , " +
                                                    "'configListenAddress' = ?s";
         assertEquals(addAgentInfo, AgentInfoDAOImpl.DESC_ADD_AGENT_INFO);
+        String removeAgentInfo = "REMOVE agent-config WHERE 'agentId' = ?s";
+        assertEquals(removeAgentInfo, AgentInfoDAOImpl.DESC_REMOVE_AGENT_INFO);
+        String updateAgentInfo = "UPDATE agent-config SET 'startTime' = ?l , " +
+                                                         "'stopTime' = ?l , " +
+                                                         "'alive' = ?b , " +
+                                                         "'configListenAddress' = ?s " +
+                                                      "WHERE 'agentId' = ?s";
+        assertEquals(updateAgentInfo, AgentInfoDAOImpl.DESC_UPDATE_AGENT_INFO);
     }
     
     @Test
@@ -289,42 +290,45 @@ public class AgentInfoDAOTest {
         Mockito.verifyNoMoreInteractions(add);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
-    public void verifyUpdateAgentInformation() {
-
-        @SuppressWarnings("unchecked")
-        Update<AgentInformation> mockUpdate = mock(Update.class);
+    public void verifyUpdateAgentInformation() throws DescriptorParsingException, StatementExecutionException {
         Storage storage = mock(Storage.class);
-        when(storage.createUpdate(eq(AgentInfoDAO.CATEGORY))).thenReturn(mockUpdate);
+        PreparedStatement<AgentInformation> update = mock(PreparedStatement.class);
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(update);
         AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
 
         dao.updateAgentInformation(agentInfo1);
 
-        verify(storage).createUpdate(AgentInfoDAO.CATEGORY);
-        Expression expr = factory.equalTo(Key.AGENT_ID, "1234");
-        verify(mockUpdate).where(eq(expr));
-        verify(mockUpdate).set(AgentInfoDAO.START_TIME_KEY, 100L);
-        verify(mockUpdate).set(AgentInfoDAO.STOP_TIME_KEY, 10L);
-        verify(mockUpdate).set(AgentInfoDAO.CONFIG_LISTEN_ADDRESS, "foobar:666");
-        verify(mockUpdate).set(AgentInfoDAO.ALIVE_KEY, true);
-        verify(mockUpdate).apply();
-        verifyNoMoreInteractions(mockUpdate);
-
+        @SuppressWarnings("rawtypes")
+        ArgumentCaptor<StatementDescriptor> captor = ArgumentCaptor.forClass(StatementDescriptor.class);
+        verify(storage).prepareStatement(captor.capture());
+        
+        StatementDescriptor<?> desc = captor.getValue();
+        assertEquals(AgentInfoDAO.CATEGORY, desc.getCategory());
+        assertEquals(AgentInfoDAOImpl.DESC_UPDATE_AGENT_INFO, desc.getDescriptor());
+        verify(update).setLong(0, agentInfo1.getStartTime());
+        verify(update).setLong(1, agentInfo1.getStopTime());
+        verify(update).setBoolean(2, agentInfo1.isAlive());
+        verify(update).setString(3, agentInfo1.getConfigListenAddress());
+        verify(update).setString(4, agentInfo1.getAgentId());
+        verify(update).execute();
+        verifyNoMoreInteractions(update);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
-    public void verifyRemoveAgentInformation() {
-        @SuppressWarnings("unchecked")
-        Remove<AgentInformation> mockRemove = mock(Remove.class);
+    public void verifyRemoveAgentInformation() throws DescriptorParsingException, StatementExecutionException {
         Storage storage = mock(Storage.class);
-        when(storage.createRemove(eq(AgentInfoDAO.CATEGORY))).thenReturn(mockRemove);
+        PreparedStatement<AgentInformation> remove = mock(PreparedStatement.class);
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(remove);
+        
         AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
 
         dao.removeAgentInformation(agentInfo1);
 
-        verify(mockRemove).apply();
-        Expression expr = factory.equalTo(Key.AGENT_ID, "1234");
-        verify(mockRemove).where(eq(expr));
+        verify(remove).setString(0, agentInfo1.getAgentId());
+        verify(remove).execute();
     }
 
 }

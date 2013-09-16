@@ -41,7 +41,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
@@ -62,6 +61,15 @@ class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
             + Key.AGENT_ID.getName() + "' = ?s AND '" 
             + Key.VM_ID.getName() + "' = ?s SORT '" 
             + Key.TIMESTAMP.getName() + "' DSC LIMIT 1";
+    // ADD vm-memory-stats SET 'agentId' = ?s , \
+    //                         'vmId' = ?s , \
+    //                         'timeStamp' = ?s , \
+    //                         'generations' = ?p[
+    static final String DESC_ADD_VM_MEMORY_STAT = "ADD " + vmMemoryStatsCategory.getName() +
+            " SET '" + Key.AGENT_ID.getName() + "' = ?s , " +
+                 "'" + Key.VM_ID.getName() + "' = ?s , " +
+                 "'" + Key.TIMESTAMP.getName() + "' = ?l , " +
+                 "'" + generationsKey.getName() + "' = ?p[";
     
     private final Storage storage;
     private final VmLatestPojoListGetter<VmMemoryStat> getter;
@@ -101,9 +109,20 @@ class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
 
     @Override
     public void putVmMemoryStat(VmMemoryStat stat) {
-        Add<VmMemoryStat> add = storage.createAdd(vmMemoryStatsCategory);
-        add.setPojo(stat);
-        add.apply();
+        StatementDescriptor<VmMemoryStat> desc = new StatementDescriptor<>(vmMemoryStatsCategory, DESC_ADD_VM_MEMORY_STAT);
+        PreparedStatement<VmMemoryStat> prepared;
+        try {
+            prepared = storage.prepareStatement(desc);
+            prepared.setString(0, stat.getAgentId());
+            prepared.setString(1, stat.getVmId());
+            prepared.setLong(2, stat.getTimeStamp());
+            prepared.setPojoList(3, stat.getGenerations());
+            prepared.execute();
+        } catch (DescriptorParsingException e) {
+            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
+        } catch (StatementExecutionException e) {
+            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+        }
     }
 
     @Override

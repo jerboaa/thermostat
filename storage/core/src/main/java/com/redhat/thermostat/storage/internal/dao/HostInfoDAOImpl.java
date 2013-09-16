@@ -44,7 +44,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.Cursor;
@@ -72,6 +71,21 @@ public class HostInfoDAOImpl extends BaseCountable implements HostInfoDAO {
     // only changes the data class. When executed we use the adapted
     // aggregate category.
     static final String AGGREGATE_COUNT_ALL_HOSTS = "QUERY-COUNT " + hostInfoCategory.getName();
+    // ADD host-info SET 'agentId' = ?s , \
+    //                   'hostname' = ?s , \
+    //                   'osName' = ?s , \
+    //                   'osKernel' = ?s , \
+    //                   'cpuModel' = ?s , \
+    //                   'cpuCount' = ?i , \
+    //                   'totalMemory' = ?l
+    static final String DESC_ADD_HOST_INFO = "ADD " + hostInfoCategory.getName() +
+            " SET '" + Key.AGENT_ID.getName() + "' = ?s , " +
+                 "'" + hostNameKey.getName() + "' = ?s , " +
+                 "'" + osNameKey.getName() + "' = ?s , " +
+                 "'" + osKernelKey.getName() + "' = ?s , " +
+                 "'" + cpuModelKey.getName() + "' = ?s , " +
+                 "'" + cpuCountKey.getName() + "' = ?i , " +
+                 "'" + hostMemoryTotalKey.getName() + "' = ?l";
 
     private final Storage storage;
     private final AgentInfoDAO agentInfoDao;
@@ -120,9 +134,23 @@ public class HostInfoDAOImpl extends BaseCountable implements HostInfoDAO {
 
     @Override
     public void putHostInfo(HostInfo info) {
-        Add<HostInfo> add = storage.createAdd(hostInfoCategory);
-        add.setPojo(info);
-        add.apply();
+        StatementDescriptor<HostInfo> desc = new StatementDescriptor<>(hostInfoCategory, DESC_ADD_HOST_INFO);
+        PreparedStatement<HostInfo> prepared;
+        try {
+            prepared = storage.prepareStatement(desc);
+            prepared.setString(0, info.getAgentId());
+            prepared.setString(1, info.getHostname());
+            prepared.setString(2, info.getOsName());
+            prepared.setString(3, info.getOsKernel());
+            prepared.setString(4, info.getCpuModel());
+            prepared.setInt(5, info.getCpuCount());
+            prepared.setLong(6, info.getTotalMemory());
+            prepared.execute();
+        } catch (DescriptorParsingException e) {
+            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
+        } catch (StatementExecutionException e) {
+            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+        }
     }
 
     @Override

@@ -51,7 +51,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
@@ -68,6 +67,9 @@ import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 public class HeapDAOImpl implements HeapDAO {
 
     private static final Logger log = LoggingUtils.getLogger(HeapDAOImpl.class);
+    
+    // Query descriptors
+    
     static final String QUERY_ALL_HEAPS = "QUERY "
             + heapInfoCategory.getName() + " WHERE '" 
             + Key.AGENT_ID.getName() + "' = ?s AND '" 
@@ -76,6 +78,22 @@ public class HeapDAOImpl implements HeapDAO {
             + heapInfoCategory.getName() + " WHERE '" 
             + heapIdKey.getName() + "' = ?s LIMIT 1";
 
+    // Write descriptors
+    
+    // ADD vm-heap-info SET 'agentId' = ?s , \
+    //                      'vmId' = ?s , \
+    //                      'timeStamp' = ?l , \
+    //                      'heapId' = ?s , \
+    //                      'heapDumpId' = ?s , \
+    //                      'histogramId' = ?s
+    static final String DESC_ADD_VM_HEAP_INFO = "ADD " + heapInfoCategory.getName() +
+            " SET '" + Key.AGENT_ID.getName() + "' = ?s , " +
+                 "'" + Key.VM_ID.getName() + "' = ?s , " +
+                 "'" + Key.TIMESTAMP.getName() + "' = ?l , " +
+                 "'" + heapIdKey.getName() + "' = ?s , " +
+                 "'" + heapDumpIdKey.getName() + "' = ?s , " +
+                 "'" + histogramIdKey.getName() + "' = ?s";
+    
     private final Storage storage;
 
     HeapDAOImpl(Storage storage) {
@@ -96,9 +114,7 @@ public class HeapDAOImpl implements HeapDAO {
         if (histogramData != null) {
             heapInfo.setHistogramId(histogramId);
         }
-        Add<HeapInfo> add = storage.createAdd(heapInfoCategory);
-        add.setPojo(heapInfo);
-        add.apply();
+        addHeapInfo(heapInfo);
 
         if (heapDumpData != null) {
             storage.saveFile(heapDumpId, new FileInputStream(heapDumpData));
@@ -114,6 +130,25 @@ public class HeapDAOImpl implements HeapDAO {
                 e.printStackTrace();
                 log.log(Level.SEVERE, "Unexpected error while writing histogram", e);
             }
+        }
+    }
+
+    private void addHeapInfo(HeapInfo heapInfo) {
+        StatementDescriptor<HeapInfo> desc = new StatementDescriptor<>(heapInfoCategory, DESC_ADD_VM_HEAP_INFO);
+        PreparedStatement<HeapInfo> prepared;
+        try {
+            prepared = storage.prepareStatement(desc);
+            prepared.setString(0, heapInfo.getAgentId());
+            prepared.setString(1, heapInfo.getVmId());
+            prepared.setLong(2, heapInfo.getTimeStamp());
+            prepared.setString(3, heapInfo.getHeapId());
+            prepared.setString(4, heapInfo.getHeapDumpId());
+            prepared.setString(5, heapInfo.getHistogramId());
+            prepared.execute();
+        } catch (DescriptorParsingException e) {
+            log.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
+        } catch (StatementExecutionException e) {
+            log.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
         }
     }
 

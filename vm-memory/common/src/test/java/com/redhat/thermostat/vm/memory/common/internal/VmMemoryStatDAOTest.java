@@ -39,7 +39,6 @@ package com.redhat.thermostat.vm.memory.common.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -52,8 +51,9 @@ import java.util.List;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 
-import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -116,6 +116,11 @@ public class VmMemoryStatDAOTest {
     public void preparedQueryDescriptorsAreSane() {
         String expectedQueryThreadCaps = "QUERY vm-memory-stats WHERE 'agentId' = ?s AND 'vmId' = ?s SORT 'timeStamp' DSC LIMIT 1";
         assertEquals(expectedQueryThreadCaps, VmMemoryStatDAOImpl.QUERY_LATEST);
+        String addVmMemoryStat = "ADD vm-memory-stats SET 'agentId' = ?s , " +
+                                        "'vmId' = ?s , " +
+                                        "'timeStamp' = ?l , " +
+                                        "'generations' = ?p[";
+        assertEquals(addVmMemoryStat, VmMemoryStatDAOImpl.DESC_ADD_VM_MEMORY_STAT);
     }
 
     @Test
@@ -171,8 +176,10 @@ public class VmMemoryStatDAOTest {
         assertTrue(latest == null);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
-    public void testPutVmMemoryStat() {
+    public void testPutVmMemoryStat() throws DescriptorParsingException,
+            StatementExecutionException {
 
         List<Generation> generations = new ArrayList<Generation>();
 
@@ -205,16 +212,25 @@ public class VmMemoryStatDAOTest {
         VmMemoryStat stat = new VmMemoryStat("foo-agent", 1, "vmId", generations.toArray(new Generation[generations.size()]));
 
         Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        Add<VmMemoryStat> add = mock(Add.class);
-        when(storage.createAdd(eq(VmMemoryStatDAO.vmMemoryStatsCategory))).thenReturn(add);
+        PreparedStatement<VmMemoryStat> add = mock(PreparedStatement.class);
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(add);
         
         VmMemoryStatDAO dao = new VmMemoryStatDAOImpl(storage);
         dao.putVmMemoryStat(stat);
+        
+        @SuppressWarnings("rawtypes")
+        ArgumentCaptor<StatementDescriptor> captor = ArgumentCaptor.forClass(StatementDescriptor.class);
+        
+        verify(storage).prepareStatement(captor.capture());
+        StatementDescriptor<?> desc = captor.getValue();
+        assertEquals(VmMemoryStatDAOImpl.DESC_ADD_VM_MEMORY_STAT, desc.getDescriptor());
 
-        verify(storage).createAdd(VmMemoryStatDAO.vmMemoryStatsCategory);
-        verify(add).setPojo(stat);
-        verify(add).apply();
+        verify(add).setString(0, stat.getAgentId());
+        verify(add).setString(1, stat.getVmId());
+        verify(add).setLong(2, stat.getTimeStamp());
+        verify(add).setPojoList(3, stat.getGenerations());
+        verify(add).execute();
+        Mockito.verifyNoMoreInteractions(add);
     }
     
 }

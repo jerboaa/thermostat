@@ -44,20 +44,16 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.OrderedComparator;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.storage.model.BackendInformation;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 public class BackendInfoDAOImpl implements BackendInfoDAO {
     
@@ -65,14 +61,31 @@ public class BackendInfoDAOImpl implements BackendInfoDAO {
     static final String QUERY_BACKEND_INFO = "QUERY "
             + CATEGORY.getName() + " WHERE '" 
             + Key.AGENT_ID.getName() + "' = ?s";
+    // ADD backend-info SET \
+    //                   'agentId' = ?s , \
+    //                   'name' = ?s , \
+    //                   'description' = ?s , \
+    //                   'observeNewJvm' = ?b , \
+    //                   'pids' = ?i[ , \
+    //                   'active' = ?b , \
+    //                   'orderValue' = ?i
+    static final String DESC_ADD_BACKEND_INFO = "ADD " + CATEGORY.getName() + " SET " +
+            "'" + Key.AGENT_ID.getName() + "' = ?s , " +
+            "'" + BACKEND_NAME.getName() + "' = ?s , " +
+            "'" + BACKEND_DESCRIPTION.getName() + "' = ?s , " +
+            "'" + SHOULD_MONITOR_NEW_PROCESSES.getName() + "' = ?b , " +
+            "'" + PIDS_TO_MONITOR.getName() + "' = ?i[ , " +
+            "'" + IS_ACTIVE.getName() + "' = ?b , " +
+            "'" + ORDER_VALUE.getName() + "' = ?i";
+    // REMOVE backend-info WHERE 'name' = ?s
+    static final String DESC_REMOVE_BACKEND_INFO = "REMOVE " + CATEGORY.getName() +
+            " WHERE '" + BACKEND_NAME.getName() + "' = ?s";
 
     private final Storage storage;
-    private final ExpressionFactory factory;
 
     public BackendInfoDAOImpl(Storage storage) {
         this.storage = storage;
         storage.registerCategory(CATEGORY);
-        factory = new ExpressionFactory();
     }
 
     @Override
@@ -108,17 +121,38 @@ public class BackendInfoDAOImpl implements BackendInfoDAO {
 
     @Override
     public void addBackendInformation(BackendInformation info) {
-        Add<BackendInformation> add = storage.createAdd(BackendInfoDAO.CATEGORY);
-        add.setPojo(info);
-        add.apply();
+        StatementDescriptor<BackendInformation> desc = new StatementDescriptor<>(CATEGORY, DESC_ADD_BACKEND_INFO);
+        PreparedStatement<BackendInformation> prepared;
+        try {
+            prepared = storage.prepareStatement(desc);
+            prepared.setString(0, info.getAgentId());
+            prepared.setString(1, info.getName());
+            prepared.setString(2, info.getDescription());
+            prepared.setBoolean(3, info.isObserveNewJvm());
+            prepared.setIntList(4, info.getPids());
+            prepared.setBoolean(5, info.isActive());
+            prepared.setInt(6, info.getOrderValue());
+            prepared.execute();
+        } catch (DescriptorParsingException e) {
+            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
+        } catch (StatementExecutionException e) {
+            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+        }
     }
 
     @Override
     public void removeBackendInformation(BackendInformation info) {
-        Expression expr = factory.equalTo(BACKEND_NAME, info.getName());
-        Remove<BackendInformation> remove = storage.createRemove(CATEGORY);
-        remove.where(expr);
-        remove.apply();
+        StatementDescriptor<BackendInformation> desc = new StatementDescriptor<>(CATEGORY, DESC_REMOVE_BACKEND_INFO);
+        PreparedStatement<BackendInformation> prepared;
+        try {
+            prepared = storage.prepareStatement(desc);
+            prepared.setString(0, info.getName());
+            prepared.execute();
+        } catch (DescriptorParsingException e) {
+            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
+        } catch (StatementExecutionException e) {
+            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+        }
     }
     
 }

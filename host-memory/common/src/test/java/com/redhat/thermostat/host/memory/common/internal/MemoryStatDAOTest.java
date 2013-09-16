@@ -38,7 +38,6 @@ package com.redhat.thermostat.host.memory.common.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -49,10 +48,10 @@ import java.util.Collection;
 import java.util.List;
 
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
 import com.redhat.thermostat.host.memory.common.model.MemoryStat;
-import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -72,6 +71,20 @@ public class MemoryStatDAOTest {
     private static long SWAP_TOTAL = 6;
     private static long SWAP_FREE = 7;
     private static long COMMIT_LIMIT = 8;
+    
+    @Test
+    public void testDescriptorsAreSane() {
+        String addMemoryStat = "ADD memory-stats SET 'agentId' = ?s , " +
+                "'timeStamp' = ?l , " +
+                "'total' = ?l , " +
+                "'free' = ?l , " +
+                "'buffers' = ?l , " +
+                "'cached' = ?l , " +
+                "'swapTotal' = ?l , " +
+                "'swapFree' = ?l , " +
+                "'commitLimit' = ?l";
+        assertEquals(addMemoryStat, MemoryStatDAOImpl.DESC_ADD_MEMORY_STAT);
+    }
 
     @Test
     public void testCategory() {
@@ -136,20 +149,34 @@ public class MemoryStatDAOTest {
         return (StatementDescriptor<MemoryStat>) any(StatementDescriptor.class);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
-    public void testPutMemoryStat() {
+    public void testPutMemoryStat() throws DescriptorParsingException, StatementExecutionException {
         Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        Add<MemoryStat> add = mock(Add.class);
-        when(storage.createAdd(eq(MemoryStatDAO.memoryStatCategory))).thenReturn(add);
+        PreparedStatement<MemoryStat> add = mock(PreparedStatement.class);
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(add);
 
         MemoryStat stat = new MemoryStat("foo", TIMESTAMP, TOTAL, FREE, BUFFERS, CACHED, SWAP_TOTAL, SWAP_FREE, COMMIT_LIMIT);
         MemoryStatDAO dao = new MemoryStatDAOImpl(storage);
         dao.putMemoryStat(stat);
 
-        verify(storage).createAdd(MemoryStatDAO.memoryStatCategory);
-        verify(add).setPojo(stat);
-        verify(add).apply();
+        @SuppressWarnings("rawtypes")
+        ArgumentCaptor<StatementDescriptor> captor = ArgumentCaptor.forClass(StatementDescriptor.class);
+        
+        verify(storage).prepareStatement(captor.capture());
+        StatementDescriptor<?> desc = captor.getValue();
+        assertEquals(MemoryStatDAOImpl.DESC_ADD_MEMORY_STAT, desc.getDescriptor());
+        verify(add).setString(0, stat.getAgentId());
+        verify(add).setLong(1, stat.getTimeStamp());
+        verify(add).setLong(2, stat.getTotal());
+        verify(add).setLong(3, stat.getFree());
+        verify(add).setLong(4, stat.getBuffers());
+        verify(add).setLong(5, stat.getCached());
+        verify(add).setLong(6, stat.getSwapTotal());
+        verify(add).setLong(7, stat.getSwapFree());
+        verify(add).setLong(8, stat.getCommitLimit());
+        verify(add).execute();
+        verifyNoMoreInteractions(add);
     }
     
 }
