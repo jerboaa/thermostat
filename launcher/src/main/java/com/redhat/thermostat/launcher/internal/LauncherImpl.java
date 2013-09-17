@@ -83,6 +83,8 @@ import com.redhat.thermostat.utils.keyring.Keyring;
  */
 public class LauncherImpl implements Launcher {
 
+    private static final String HELP_COMMAND_NAME = "help";
+
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     private Logger logger;
 
@@ -211,11 +213,11 @@ public class LauncherImpl implements Launcher {
     }
 
     private void runHelpCommand() {
-        runCommand("help", new String[0], null, false);
+        runCommand(HELP_COMMAND_NAME, new String[0], null, false);
     }
 
     private void runHelpCommandFor(String cmdName) {
-        runCommand("help", new String[] { "--", cmdName }, null, false);
+        runCommand(HELP_COMMAND_NAME, new String[] { "--", cmdName }, null, false);
     }
 
     private void runCommandFromArguments(String[] args, Collection<ActionListener<ApplicationState>> listeners, boolean inShell) {
@@ -223,6 +225,12 @@ public class LauncherImpl implements Launcher {
     }
 
     private void runCommand(String cmdName, String[] cmdArgs, Collection<ActionListener<ApplicationState>> listeners, boolean inShell) {
+        // treat 'foo --help' as 'help foo'
+        if (!cmdName.equals(HELP_COMMAND_NAME) && Arrays.asList(cmdArgs).contains("--help")) {
+            runCommand(HELP_COMMAND_NAME, new String[] { cmdName } , listeners, inShell);
+            return;
+        }
+
         try {
             parseArgsAndRunCommand(cmdName, cmdArgs, listeners, inShell);
         } catch (CommandException e) {

@@ -181,6 +181,21 @@ public class CliTest extends IntegrationTest {
     }
 
     @Test
+    public void testShellHelpArgument() throws Exception {
+        Spawn shell = spawnThermostat("shell", "--help");
+        shell.expectClose();
+
+        String stdOut = shell.getCurrentStandardOutContents();
+
+        String[] lines = stdOut.split("\n");
+        String usage = lines[0];
+        assertTrue(usage.matches("^usage: thermostat shell$"));
+        String description = lines[1];
+        assertTrue(description.matches("^\\s+launches the Thermostat interactive shell$"));
+        assertTrue(lines[3].matches("thermostat shell"));
+    }
+
+    @Test
     public void testShellUnrecognizedArgument() throws Exception {
         Spawn shell = spawnThermostat("shell", "--foo");
         shell.expectClose();
