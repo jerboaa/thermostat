@@ -34,56 +34,49 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common;
+package com.redhat.thermostat.storage.monitor.internal;
 
-import java.util.Collection;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.Timer;
+import com.redhat.thermostat.common.TimerFactory;
+import com.redhat.thermostat.storage.dao.HostInfoDAO;
+import com.redhat.thermostat.storage.monitor.NetworkMonitor;
 
-public class ActionNotifier<T extends Enum<?>> {
+public class NetworkMonitorImpl implements NetworkMonitor {
+    
+    public static final long DELAY = 1;
 
-    private static final Logger logger = LoggingUtils.getLogger(ActionNotifier.class);
-
-    public ActionNotifier(Object source) {
-        this.source = source;
-        listeners = new CopyOnWriteArrayList<ActionListener<T>>();
-    }
-
-    private final Collection<ActionListener<T>> listeners;
-
-    private final Object source;
-
-    public void addActionListener(ActionListener<T> listener) {
-        listeners.add(listener);
-    }
-
-    public void removeActionListener(ActionListener<T> listener) {
-        listeners.remove(listener);
-    }
-
-    public void fireAction(T actionId) {
-        fireAction(actionId, null);
-    }
-
-    public int listenersCount() {
-        return listeners.size();
+    protected final ActionNotifier<NetworkMonitor.Action> notifier;
+    
+    private Timer timer;
+    
+    public NetworkMonitorImpl(TimerFactory timerFactory, HostInfoDAO hostDAO) {
+        
+        notifier = new ActionNotifier<>(this);
+        
+        timer = timerFactory.createTimer();
+        timer.setTimeUnit(TimeUnit.SECONDS);
+        timer.setDelay(DELAY);
+        timer.setSchedulingType(Timer.SchedulingType.FIXED_RATE);
+        timer.setAction(new NetworkMonitorAction(notifier, hostDAO));
     }
     
-    public void fireAction(T actionId, Object payload) {
-        ActionEvent<T> action = new ActionEvent<>(source, actionId);
-        action.setPayload(payload);
-        for (ActionListener<T> listener : listeners) {
-            try {
-                listener.actionPerformed(action);
-            } catch (Exception e) {
-                // a listener throwing exception is BAD
-                // unfortunately, all we can do is make sure other listeners continue working
-                logger.log(Level.WARNING, "a listener threw an unexpected exception", e);
-            }
+    @Override
+    public void addNetworkChangeListener(ActionListener<Action> listener) {
+        notifier.addActionListener(listener);
+        if (notifier.listenersCount() == 1) {
+            timer.start();
+        }
+    }
+    
+    @Override
+    public void removeNetworkChangeListener(ActionListener<Action> listener) {
+        notifier.removeActionListener(listener);
+        if (notifier.listenersCount() == 0) {
+            timer.stop(); 
         }
     }
 }
-

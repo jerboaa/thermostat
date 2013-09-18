@@ -1,26 +1,26 @@
 /*
  * Copyright 2012, 2013 Red Hat, Inc.
- *
+ * 
  * This file is part of Thermostat.
- *
+ * 
  * Thermostat is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
  * by the Free Software Foundation; either version 2, or (at your
  * option) any later version.
- *
+ * 
  * Thermostat is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with Thermostat; see the file COPYING.  If not see
  * <http://www.gnu.org/licenses/>.
- *
+ * 
  * Linking this code with other modules is making a combined work
  * based on this code.  Thus, the terms and conditions of the GNU
  * General Public License cover the whole combination.
- *
+ * 
  * As a special exception, the copyright holders of this code give
  * you permission to link this code with independent modules to
  * produce an executable, regardless of the license terms of these
@@ -34,56 +34,52 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common;
+package com.redhat.thermostat.storage.monitor.internal;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.VmInfo;
+import com.redhat.thermostat.storage.monitor.HostMonitor;
+import com.redhat.thermostat.storage.monitor.HostMonitor.Action;
 
-public class ActionNotifier<T extends Enum<?>> {
+class HostMonitorAction extends MonitorAction<VmRef, HostMonitor.Action> {
 
-    private static final Logger logger = LoggingUtils.getLogger(ActionNotifier.class);
-
-    public ActionNotifier(Object source) {
-        this.source = source;
-        listeners = new CopyOnWriteArrayList<ActionListener<T>>();
+    private VmInfoDAO vmsDao;
+    private HostRef host;
+        
+    public HostMonitorAction(ActionNotifier<Action> notifier, VmInfoDAO vmsDao,
+                             HostRef host)
+    {
+        super(notifier);
+        this.host = host;
+        this.vmsDao = vmsDao;
     }
 
-    private final Collection<ActionListener<T>> listeners;
-
-    private final Object source;
-
-    public void addActionListener(ActionListener<T> listener) {
-        listeners.add(listener);
+    @Override
+    protected Action getAddAction() {
+        return HostMonitor.Action.VM_ADDED;
     }
 
-    public void removeActionListener(ActionListener<T> listener) {
-        listeners.remove(listener);
+    @Override
+    protected Action getRemoveAction() {
+        return HostMonitor.Action.VM_REMOVED;
     }
 
-    public void fireAction(T actionId) {
-        fireAction(actionId, null);
-    }
-
-    public int listenersCount() {
-        return listeners.size();
-    }
-    
-    public void fireAction(T actionId, Object payload) {
-        ActionEvent<T> action = new ActionEvent<>(source, actionId);
-        action.setPayload(payload);
-        for (ActionListener<T> listener : listeners) {
-            try {
-                listener.actionPerformed(action);
-            } catch (Exception e) {
-                // a listener throwing exception is BAD
-                // unfortunately, all we can do is make sure other listeners continue working
-                logger.log(Level.WARNING, "a listener threw an unexpected exception", e);
+    @Override
+    protected Collection<VmRef> getNewReferences() {
+        Collection<VmRef> vms = vmsDao.getVMs(host);
+        Collection<VmRef> livingVMS = new ArrayList<>();
+        for (VmRef vm : vms) {
+            VmInfo vmInfo = vmsDao.getVmInfo(vm);
+            if (vmInfo.isAlive()) {
+                livingVMS.add(vm);
             }
         }
+        return livingVMS;
     }
 }
-

@@ -40,9 +40,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.Timer;
+import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
@@ -55,6 +59,10 @@ import com.redhat.thermostat.storage.internal.dao.BackendInfoDAOImpl;
 import com.redhat.thermostat.storage.internal.dao.HostInfoDAOImpl;
 import com.redhat.thermostat.storage.internal.dao.NetworkInterfaceInfoDAOImpl;
 import com.redhat.thermostat.storage.internal.dao.VmInfoDAOImpl;
+import com.redhat.thermostat.storage.monitor.HostMonitor;
+import com.redhat.thermostat.storage.monitor.NetworkMonitor;
+import com.redhat.thermostat.storage.monitor.internal.HostMonitorImpl;
+import com.redhat.thermostat.storage.monitor.internal.NetworkMonitorImpl;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class ActivatorTest {
@@ -69,7 +77,7 @@ public class ActivatorTest {
 
         // WriterID should get registered unconditionally
         assertEquals("At least WriterID service must be registered", 1, context.getAllServices().size());
-        assertEquals(1, context.getServiceListeners().size());
+        assertEquals(2, context.getServiceListeners().size());
 
         activator.stop(context);
         assertEquals(0, context.getAllServices().size());
@@ -80,7 +88,15 @@ public class ActivatorTest {
     public void verifyActivatorRegistersServices() throws Exception {
         StubBundleContext context = new StubBundleContext();
         Storage storage = mock(Storage.class);
+        
+        ApplicationService appService = mock(ApplicationService.class);
+        TimerFactory timerFactory = mock(TimerFactory.class);
+        when(appService.getTimerFactory()).thenReturn(timerFactory);
+                
+        Timer timer = mock(Timer.class);
+        when(timerFactory.createTimer()).thenReturn(timer);
 
+        context.registerService(ApplicationService.class, appService, null);
         context.registerService(Storage.class, storage, null);
 
         Activator activator = new Activator();
@@ -98,7 +114,7 @@ public class ActivatorTest {
 
         assertEquals(0, context.getServiceListeners().size());
         
-        assertEquals(1, context.getAllServices().size());
+        assertEquals(2, context.getAllServices().size());
     }
 
     @Test
@@ -106,7 +122,15 @@ public class ActivatorTest {
         StubBundleContext context = new StubBundleContext();
         Storage storage = mock(Storage.class);
 
+        ApplicationService appService = mock(ApplicationService.class);
+        TimerFactory timerFactory = mock(TimerFactory.class);
+        when(appService.getTimerFactory()).thenReturn(timerFactory);
+                
+        Timer timer = mock(Timer.class);
+        when(timerFactory.createTimer()).thenReturn(timer);
+
         context.registerService(Storage.class, storage, null);
+        context.registerService(ApplicationService.class, appService, null);
 
         Activator activator = new Activator();
 
@@ -122,20 +146,30 @@ public class ActivatorTest {
         assertFalse(context.isServiceRegistered(WriterID.class.getName(), WriterIDImpl.class));
         
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(1, context.getAllServices().size());
+        assertEquals(2, context.getAllServices().size());
     }
     
     @Test
     public void verifyActivatorRegistersServicesMultipleTimes() throws Exception {
         StubBundleContext context = new StubBundleContext();
         Storage storage = mock(Storage.class);
+                
+        ApplicationService appService = mock(ApplicationService.class);
+        TimerFactory timerFactory = mock(TimerFactory.class);
+        when(appService.getTimerFactory()).thenReturn(timerFactory);        
+        Timer timer = mock(Timer.class);
+        when(timerFactory.createTimer()).thenReturn(timer);
 
         context.registerService(Storage.class, storage, null);
+        context.registerService(ApplicationService.class, appService, null);
 
         Activator activator = new Activator();
 
         activator.start(context);
 
+        assertTrue(context.isServiceRegistered(NetworkMonitor.class.getName(), NetworkMonitorImpl.class));
+        assertTrue(context.isServiceRegistered(HostMonitor.class.getName(), HostMonitorImpl.class));
+
         assertTrue(context.isServiceRegistered(HostInfoDAO.class.getName(), HostInfoDAOImpl.class));
         assertTrue(context.isServiceRegistered(NetworkInterfaceInfoDAO.class.getName(), NetworkInterfaceInfoDAOImpl.class));
         assertTrue(context.isServiceRegistered(VmInfoDAO.class.getName(), VmInfoDAOImpl.class));
@@ -146,10 +180,13 @@ public class ActivatorTest {
         activator.stop(context);
         
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(1, context.getAllServices().size());
+        assertEquals(2, context.getAllServices().size());
         
         activator.start(context);
 
+        assertTrue(context.isServiceRegistered(NetworkMonitor.class.getName(), NetworkMonitorImpl.class));
+        assertTrue(context.isServiceRegistered(HostMonitor.class.getName(), HostMonitorImpl.class));
+        
         assertTrue(context.isServiceRegistered(HostInfoDAO.class.getName(), HostInfoDAOImpl.class));
         assertTrue(context.isServiceRegistered(NetworkInterfaceInfoDAO.class.getName(), NetworkInterfaceInfoDAOImpl.class));
         assertTrue(context.isServiceRegistered(VmInfoDAO.class.getName(), VmInfoDAOImpl.class));
@@ -160,7 +197,8 @@ public class ActivatorTest {
         activator.stop(context);
 
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(1, context.getAllServices().size());
+        assertEquals(2, context.getAllServices().size());
+        
     }
 }
 

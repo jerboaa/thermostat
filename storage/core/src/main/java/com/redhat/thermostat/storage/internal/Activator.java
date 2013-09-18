@@ -38,14 +38,16 @@ package com.redhat.thermostat.storage.internal;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
 
+import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
@@ -58,12 +60,16 @@ import com.redhat.thermostat.storage.internal.dao.BackendInfoDAOImpl;
 import com.redhat.thermostat.storage.internal.dao.HostInfoDAOImpl;
 import com.redhat.thermostat.storage.internal.dao.NetworkInterfaceInfoDAOImpl;
 import com.redhat.thermostat.storage.internal.dao.VmInfoDAOImpl;
+import com.redhat.thermostat.storage.monitor.HostMonitor;
+import com.redhat.thermostat.storage.monitor.NetworkMonitor;
+import com.redhat.thermostat.storage.monitor.internal.HostMonitorImpl;
+import com.redhat.thermostat.storage.monitor.internal.NetworkMonitorImpl;
 
 public class Activator implements BundleActivator {
     
     private static final String WRITER_UUID = UUID.randomUUID().toString();
     
-    ServiceTracker<Storage, Storage> tracker;
+    MultipleServiceTracker tracker;
     List<ServiceRegistration<?>> regs;
     
     public Activator() {
@@ -71,44 +77,63 @@ public class Activator implements BundleActivator {
     }
 
     @Override
-    public void start(BundleContext context) throws Exception {
+    public void start(final BundleContext context) throws Exception {
+        Class<?>[] deps = new Class<?>[] {
+                Storage.class,
+                ApplicationService.class,
+        };
+
         // WriterID has to be registered unconditionally (at least not as part
         // of the Storage.class tracker, since that is only registered once
         // storage is connected).
         final WriterID writerID = new WriterIDImpl(WRITER_UUID);
-        ServiceRegistration<?> reg = context.registerService(WriterID.class, writerID, null);
+        final ServiceRegistration<?> reg = context.registerService(WriterID.class, writerID, null);
         regs.add(reg);
         
-        tracker = new ServiceTracker<Storage, Storage>(context, Storage.class, null) {
+        tracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
+
             @Override
-            public Storage addingService(ServiceReference<Storage> reference) {
-                Storage storage = (Storage) super.addingService(reference);
+            public void dependenciesAvailable(Map<String, Object> services) {
+                
+                Storage storage = (Storage) services.get(Storage.class.getName());          
                 AgentInfoDAO agentInfoDao = new AgentInfoDAOImpl(storage);
+                
                 ServiceRegistration<?> reg = context.registerService(AgentInfoDAO.class.getName(), agentInfoDao, null);
                 regs.add(reg);
+                
                 BackendInfoDAO backendInfoDao = new BackendInfoDAOImpl(storage);
                 reg = context.registerService(BackendInfoDAO.class.getName(), backendInfoDao, null);
                 regs.add(reg);
+                
                 HostInfoDAO hostInfoDao = new HostInfoDAOImpl(storage, agentInfoDao);
                 reg = context.registerService(HostInfoDAO.class.getName(), hostInfoDao, null);
                 regs.add(reg);
+                
                 NetworkInterfaceInfoDAO networkInfoDao = new NetworkInterfaceInfoDAOImpl(storage);
                 reg = context.registerService(NetworkInterfaceInfoDAO.class.getName(), networkInfoDao, null);
                 regs.add(reg);
+                
                 VmInfoDAO vmInfoDao = new VmInfoDAOImpl(storage);
                 reg = context.registerService(VmInfoDAO.class.getName(), vmInfoDao, null);
                 regs.add(reg);
-                return storage;
-            }
             
-            @Override
-            public void removedService(ServiceReference<Storage> reference,
-                    Storage service) {
-                unregisterServices();
-                super.removedService(reference, service);
+                ApplicationService appService = (ApplicationService) services.get(ApplicationService.class.getName());
+                TimerFactory timers = appService.getTimerFactory();
+                NetworkMonitor networkMonitor = new NetworkMonitorImpl(timers, hostInfoDao);
+                reg = context.registerService(NetworkMonitor.class.getName(), networkMonitor, null);
+                regs.add(reg);
+                                
+                HostMonitor hostMonitor = new HostMonitorImpl(timers, vmInfoDao);
+                reg = context.registerService(HostMonitor.class.getName(), hostMonitor, null);
+                regs.add(reg);
             }
-        };
         
+            @Override
+            public void dependenciesUnavailable() {
+                unregisterServices();
+            }
+        });
+
         tracker.open();
     }
 

@@ -34,56 +34,41 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common;
+package com.redhat.thermostat.storage.monitor.internal;
 
 import java.util.Collection;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.common.ActionNotifier;
 
-public class ActionNotifier<T extends Enum<?>> {
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.dao.HostInfoDAO;
 
-    private static final Logger logger = LoggingUtils.getLogger(ActionNotifier.class);
+import com.redhat.thermostat.storage.monitor.NetworkMonitor;
+import com.redhat.thermostat.storage.monitor.NetworkMonitor.Action;
 
-    public ActionNotifier(Object source) {
-        this.source = source;
-        listeners = new CopyOnWriteArrayList<ActionListener<T>>();
-    }
-
-    private final Collection<ActionListener<T>> listeners;
-
-    private final Object source;
-
-    public void addActionListener(ActionListener<T> listener) {
-        listeners.add(listener);
-    }
-
-    public void removeActionListener(ActionListener<T> listener) {
-        listeners.remove(listener);
-    }
-
-    public void fireAction(T actionId) {
-        fireAction(actionId, null);
-    }
-
-    public int listenersCount() {
-        return listeners.size();
-    }
+class NetworkMonitorAction extends MonitorAction<HostRef, NetworkMonitor.Action> {
     
-    public void fireAction(T actionId, Object payload) {
-        ActionEvent<T> action = new ActionEvent<>(source, actionId);
-        action.setPayload(payload);
-        for (ActionListener<T> listener : listeners) {
-            try {
-                listener.actionPerformed(action);
-            } catch (Exception e) {
-                // a listener throwing exception is BAD
-                // unfortunately, all we can do is make sure other listeners continue working
-                logger.log(Level.WARNING, "a listener threw an unexpected exception", e);
-            }
-        }
+    private HostInfoDAO hostDAO;
+    
+    public NetworkMonitorAction(ActionNotifier<NetworkMonitor.Action> notifier,
+                                HostInfoDAO hostDAO)
+    {
+        super(notifier);
+        this.hostDAO = hostDAO;
+    }
+
+    @Override
+    protected Action getAddAction() {
+        return NetworkMonitor.Action.HOST_ADDED;
+    }
+
+    @Override
+    protected Action getRemoveAction() {
+        return NetworkMonitor.Action.HOST_REMOVED;
+    }
+
+    @Override
+    protected Collection<HostRef> getNewReferences() {
+        return hostDAO.getAliveHosts();
     }
 }
-

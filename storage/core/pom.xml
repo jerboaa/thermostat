@@ -69,6 +69,7 @@
               com.redhat.thermostat.storage.model,
               com.redhat.thermostat.storage.dao,
               com.redhat.thermostat.storage.query,
+              com.redhat.thermostat.storage.monitor,
             </Export-Package>
             <!-- TODO: For the thread tab (i.e. thread plug-in) the web server
                  bundle requires model classes provided by said bundle. Since
@@ -84,6 +85,7 @@
               com.redhat.thermostat.storage.internal,
               com.redhat.thermostat.storage.internal.test,
               com.redhat.thermostat.storage.internal.statement,
+              com.redhat.thermostat.storage.monitor.internal,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
