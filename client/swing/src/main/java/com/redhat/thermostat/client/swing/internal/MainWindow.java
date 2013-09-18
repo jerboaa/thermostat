@@ -102,12 +102,12 @@ import com.redhat.thermostat.client.swing.components.SearchField;
 import com.redhat.thermostat.client.swing.components.SearchField.SearchAction;
 import com.redhat.thermostat.client.swing.components.ThermostatPopupMenu;
 import com.redhat.thermostat.client.swing.internal.components.DecoratedDefaultMutableTreeNode;
+import com.redhat.thermostat.client.swing.internal.components.ThermostatGlassPane;
 import com.redhat.thermostat.client.swing.internal.progress.AggregateNotificationPanel;
 import com.redhat.thermostat.client.swing.internal.progress.AggregateProgressBarOverlayLayout;
 import com.redhat.thermostat.client.swing.internal.progress.ProgressNotificationArea;
 import com.redhat.thermostat.client.swing.internal.progress.SwingProgressNotifier;
 import com.redhat.thermostat.client.swing.internal.progress.SwingProgressNotifier.PropertyChange;
-import com.redhat.thermostat.client.swing.internal.progress.ThermostatGlassPane;
 import com.redhat.thermostat.client.ui.ContextAction;
 import com.redhat.thermostat.client.ui.Decorator;
 import com.redhat.thermostat.client.ui.DecoratorProvider;
@@ -427,7 +427,7 @@ public class MainWindow extends JFrame implements MainView {
         AggregateNotificationPanel aggregateNotificationArea = new AggregateNotificationPanel();
         
         ProgressNotificationArea notificationArea = new ProgressNotificationArea();
-        notifier = new SwingProgressNotifier(aggregateNotificationArea, notificationArea, glassPane);
+        notifier = new SwingProgressNotifier(aggregateNotificationArea, notificationArea);
 
         statusBar.add(notificationArea, BorderLayout.CENTER);
 
@@ -436,22 +436,10 @@ public class MainWindow extends JFrame implements MainView {
         final OverlayPanel overlay = new OverlayPanel(title, false);
         glassPane.add(overlay);
 
-        glassPane.addHierarchyListener(new ComponentVisibleListener() {
-            @Override
-            public void componentShown(Component component) {
-                overlay.setOverlayVisible(true);
-            }
-
-            @Override
-            public void componentHidden(Component component) {
-                overlay.setOverlayVisible(false);
-            }
-        });
-
         overlay.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                glassPane.setVisible(false);
+                overlay.setOverlayVisible(false);
             }
         });
 
@@ -463,7 +451,7 @@ public class MainWindow extends JFrame implements MainView {
             public void actionPerformed(com.redhat.thermostat.common.
                                         ActionEvent<PropertyChange> actionEvent)
             {
-                glassPane.setVisible(false);
+                overlay.setOverlayVisible(false);
             }
         });
         
@@ -471,7 +459,9 @@ public class MainWindow extends JFrame implements MainView {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (notifier.hasTasks()) {
-                    glassPane.setVisible(!glassPane.isVisible());
+                    // ensure glasspane is visible
+                    glassPane.setVisible(true);
+                    overlay.setOverlayVisible(true);
                 }
             }
         });

@@ -34,7 +34,11 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.internal.progress;
+package com.redhat.thermostat.client.swing.internal.components;
+
+import java.awt.Component;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 
 import javax.swing.JPanel;
 
@@ -43,5 +47,27 @@ public class ThermostatGlassPane extends JPanel {
 
     public ThermostatGlassPane() {
         setOpaque(false);
+    }
+    
+    @Override
+    protected void addImpl(Component comp, Object constraints, int index) {
+        comp.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentHidden(ComponentEvent e) {
+                // check if every component has been made invisible
+                boolean keepVisible = false;
+                for (Component child : ThermostatGlassPane.this.getComponents()){
+                    if (child.isVisible()) {
+                        keepVisible = true;
+                        break;
+                    }
+                }
+                if (!keepVisible) {
+                    ThermostatGlassPane.this.setVisible(false);
+                }
+            }
+        });
+        
+        super.addImpl(comp, constraints, index);
     }
 }

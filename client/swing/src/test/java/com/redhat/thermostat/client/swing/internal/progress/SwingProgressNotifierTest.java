@@ -63,7 +63,6 @@ public class SwingProgressNotifierTest {
 
     private AggregateNotificationPanel aggregateNotificationArea;
     private ProgressNotificationArea notificationArea;
-    private ThermostatGlassPane glassPane;
     
     @BeforeClass
     public static void setUpOnce() {
@@ -78,7 +77,6 @@ public class SwingProgressNotifierTest {
     public void setUp() {
         aggregateNotificationArea = mock(AggregateNotificationPanel.class);
         notificationArea = mock(ProgressNotificationArea.class);
-        glassPane = mock(ThermostatGlassPane.class);
     }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -86,7 +84,7 @@ public class SwingProgressNotifierTest {
     public void testNotifierStartStop() throws InterruptedException {
         ProgressNotifier notifier =
                 new SwingProgressNotifier(aggregateNotificationArea,
-                                          notificationArea, glassPane, false);
+                                          notificationArea, false);
         
         ProgressHandle handle = mock(ProgressHandle.class);
         when(handle.getName()).thenReturn(LocalizedString.EMPTY_STRING);
@@ -135,7 +133,7 @@ public class SwingProgressNotifierTest {
     public void testHandleStatusChanges() throws InterruptedException {
         SwingProgressNotifier notifier =
                 new SwingProgressNotifier(aggregateNotificationArea,
-                                          notificationArea, glassPane, false);
+                                          notificationArea, false);
 
         JProgressBar progressBar = mock(JProgressBar.class);
         JLabel label = mock(JLabel.class);

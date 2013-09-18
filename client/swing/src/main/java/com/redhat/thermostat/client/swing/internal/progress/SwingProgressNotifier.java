@@ -44,6 +44,7 @@ import javax.swing.SwingUtilities;
 import com.redhat.thermostat.client.core.progress.ProgressHandle;
 import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.client.swing.internal.components.ThermostatGlassPane;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
@@ -75,10 +76,9 @@ public class SwingProgressNotifier implements ProgressNotifier, SwingComponent {
     private AggregateNotificationPanel aggregateNotificationArea;
     
     public SwingProgressNotifier(AggregateNotificationPanel aggregateNotificationArea,
-                                 ProgressNotificationArea notificationArea,
-                                 ThermostatGlassPane glassPane)
+                                 ProgressNotificationArea notificationArea)
     {
-        this(aggregateNotificationArea, notificationArea, glassPane, true);
+        this(aggregateNotificationArea, notificationArea, true);
     }
     
     /**
@@ -87,7 +87,7 @@ public class SwingProgressNotifier implements ProgressNotifier, SwingComponent {
      */
     SwingProgressNotifier(AggregateNotificationPanel aggregateNotificationArea,
                           ProgressNotificationArea notificationArea,
-                          ThermostatGlassPane glassPane, boolean runInEDT)
+                          boolean runInEDT)
     {
         this.notificationArea = notificationArea;
         this.aggregateNotificationArea = aggregateNotificationArea;
