@@ -144,6 +144,7 @@ class StatementDescriptorParser<T extends Pojo> {
     private static final String KEYWORD_LIMIT = "LIMIT";
     private static final String KEYWORD_ASC = "ASC";
     private static final String KEYWORD_DSC = "DSC";
+    private static final String POJO_FREE_PARAMETER_TYPE = "?p";
     private static final char PARAM_PLACEHOLDER = '?';
     
     private final String[] tokens;
@@ -284,7 +285,7 @@ class StatementDescriptorParser<T extends Pojo> {
     private void matchValuePair(SetList setList) throws DescriptorParsingException {
         SetListValue value = new SetListValue();
         TerminalNode lval = new TerminalNode(null);
-        matchTerm(lval, true);
+        matchTerm(lval, true, true);
         value.setKey(lval);
         if (tokens[currTokenIndex].equals("=")) {
             currTokenIndex++; // =
@@ -293,7 +294,7 @@ class StatementDescriptorParser<T extends Pojo> {
             throw new DescriptorParsingException(msg);
         }
         TerminalNode rval = new TerminalNode(null);
-        matchTerm(rval, false);
+        matchTerm(rval, false, true);
         value.setValue(rval);
         setList.addValue(value);
     }
@@ -499,6 +500,7 @@ class StatementDescriptorParser<T extends Pojo> {
         String term = getTerm();
         if (term.charAt(0) == PARAM_PLACEHOLDER) {
             assert(placeHolderCount > 0);
+            ensureValidType(term, "SORT");
             if (term.charAt(1) != 's') {
                 String msg = "Sort parameters only accept string types. Placeholder was: " + term;
                 throw new DescriptorParsingException(msg);
@@ -512,10 +514,32 @@ class StatementDescriptorParser<T extends Pojo> {
         member.setSortKey(stringTerm);
     }
     
+    /*
+     * Check if the free parameter type is valid in a given context. Currently,
+     * list and pojo free type parameters are invalid for LIMIT, SORT and WHERE.
+     *  
+     * Currently, no list types and no Pojo types are allowed.
+     */
+    private void ensureValidType(String term, String contextName) throws DescriptorParsingException {
+        if (term.length() > 2) {
+            // Don't allow list types for invalid contexts
+            // Only list type free variables have 3 characters
+            String format = "List free variable type not allowed in %s context";
+            String msg = String.format(format, contextName);
+            throw new DescriptorParsingException(msg);
+        }
+        if (term.equals(POJO_FREE_PARAMETER_TYPE)) {
+            String format = "Pojo free variable type not allowed in %s context";
+            String msg = String.format(format, contextName);
+            throw new DescriptorParsingException(msg);
+        }
+    }
+    
     private void matchTerm(LimitExpression expn) throws DescriptorParsingException {
         String term = getTerm();
         if (term.charAt(0) == PARAM_PLACEHOLDER) {
             assert(placeHolderCount > 0);
+            ensureValidType(term, "LIMIT");
             if (term.charAt(1) != 'i') {
                 String msg = "Limit parameters only accept integer types. Placeholder was: " + term;
                 throw new DescriptorParsingException(msg);
@@ -533,11 +557,40 @@ class StatementDescriptorParser<T extends Pojo> {
         }
         expn.setValue(limitVal);
     }
-
+    
+    /**
+     * Calls {@link #matchTerm(TerminalNode, boolean, boolean)} with a
+     * {@code false isSetListContext} parameter.
+     */
     private void matchTerm(TerminalNode node, boolean isLHS) throws DescriptorParsingException {
+        // default to false
+        matchTerm(node, isLHS, false);
+    }
+
+    /**
+     * Match a terminal in a TerminalNode context. Only where expression, and
+     * set list context take this code path.
+     * 
+     * @param node
+     *            The terminal node which is parsed at this point.
+     * @param isLHS
+     *            {@code true} if and only if the node is the left hand side of
+     *            a binary expression.
+     * @param isSetListContext
+     *            {@code true} if and only if the node is in a set list context
+     *            or conversely NOT in a where expression context.
+     * @throws DescriptorParsingException
+     *             If and error was encountered parsing the terminal string
+     *             token.
+     */
+    private void matchTerm(TerminalNode node, boolean isLHS,
+            boolean isSetListContext) throws DescriptorParsingException {
         String term = getTerm();
         if (term.charAt(0) == PARAM_PLACEHOLDER) {
             assert(placeHolderCount > 0);
+            if (!isSetListContext) {
+                ensureValidType(term, "WHERE");
+            }
             UnfinishedValueNode patchNode = new UnfinishedValueNode();
             patchNode.setParameterIndex(placeHolderCount - 1);
             patchNode.setLHS(isLHS);
@@ -611,16 +664,25 @@ class StatementDescriptorParser<T extends Pojo> {
             // illegal type
             return null;
         }
-        assert(term.equals("i") || term.equals("l") || term.equals("s") || term.equals("s[") || term.equals("b"));
+        // free variable types can have 1 or 2 characters.
+        assert(term.length() > 0 && term.length() < 3);
         char switchChar = term.charAt(0);
         Class<?> type = null;
         switch (switchChar) {
         case 'i': {
-            type = Integer.class;
+            if (term.length() == 1) {
+                type = Integer.class;
+            } else if (term.length() == 2 && term.charAt(1) == '[') {
+                type = Integer[].class;
+            }
             break;
         }
         case 'l': {
-            type = Long.class;
+            if (term.length() == 1) {
+                type = Long.class;
+            } else if (term.length() == 2 && term.charAt(1) == '[') {
+                type = Long[].class;
+            }
             break;
         }
         case 's': {
@@ -632,11 +694,31 @@ class StatementDescriptorParser<T extends Pojo> {
             break;
         }
         case 'b': {
-            type = Boolean.class;
+            if (term.length() == 1) {
+                type = Boolean.class;
+            } else if (term.length() == 2 && term.charAt(1) == '[') {
+                type = Boolean[].class;
+            }
+            break;
+        }
+        case 'd': {
+            if (term.length() == 1) {
+                type = Double.class;
+            } else if (term.length() == 2 && term.charAt(1) == '[') {
+                type = Double[].class;
+            }
+            break;
+        }
+        case 'p': {
+            if (term.length() == 1) {
+                type = Pojo.class;
+            } else if (term.length() == 2 && term.charAt(1) == '[') {
+                type = Pojo[].class;
+            }
             break;
         }
         default:
-            assert (type == null);
+            assert(type == null);
             break;
         }
         return type;

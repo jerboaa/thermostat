@@ -80,13 +80,28 @@ public class WebPreparedStatement<T extends Pojo> implements
     }
 
     @Override
+    public void setBooleanList(int paramIndex, boolean[] paramValue) {
+        params.setBooleanList(paramIndex, paramValue);
+    }
+
+    @Override
     public void setLong(int paramIndex, long paramValue) {
         params.setLong(paramIndex, paramValue);
     }
 
     @Override
+    public void setLongList(int paramIndex, long[] paramValue) {
+        params.setLongList(paramIndex, paramValue);
+    }
+
+    @Override
     public void setInt(int paramIndex, int paramValue) {
         params.setInt(paramIndex, paramValue);
+    }
+
+    @Override
+    public void setIntList(int paramIndex, int[] paramValue) {
+        params.setIntList(paramIndex, paramValue);
     }
 
     @Override
@@ -97,6 +112,26 @@ public class WebPreparedStatement<T extends Pojo> implements
     @Override
     public void setStringList(int paramIndex, String[] paramValue) {
         params.setStringList(paramIndex, paramValue);
+    }
+
+    @Override
+    public void setDouble(int paramIndex, double paramValue) {
+        params.setDouble(paramIndex, paramValue);
+    }
+
+    @Override
+    public void setDoubleList(int paramIndex, double[] paramValue) {
+        params.setDoubleList(paramIndex, paramValue);
+    }
+
+    @Override
+    public void setPojo(int paramIndex, Pojo paramValue) {
+        params.setPojo(paramIndex, paramValue);
+    }
+
+    @Override
+    public void setPojoList(int paramIndex, Pojo[] paramValue) {
+        params.setPojoList(paramIndex, paramValue);
     }
 
     @Override

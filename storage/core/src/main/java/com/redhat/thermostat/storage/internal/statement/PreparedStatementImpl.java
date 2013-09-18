@@ -89,8 +89,18 @@ final public class PreparedStatementImpl<T extends Pojo> implements PreparedStat
     }
 
     @Override
+    public void setLongList(int paramIndex, long[] paramValue) {
+        params.setLongList(paramIndex, paramValue);
+    }
+
+    @Override
     public void setInt(int paramIndex, int paramValue) {
         params.setInt(paramIndex, paramValue);
+    }
+
+    @Override
+    public void setIntList(int paramIndex, int[] paramValue) {
+        params.setIntList(paramIndex, paramValue);
     }
 
     @Override
@@ -101,6 +111,31 @@ final public class PreparedStatementImpl<T extends Pojo> implements PreparedStat
     @Override
     public void setBoolean(int paramIndex, boolean paramValue) {
         params.setBoolean(paramIndex, paramValue);
+    }
+
+    @Override
+    public void setBooleanList(int paramIndex, boolean[] paramValue) {
+        params.setBooleanList(paramIndex, paramValue);
+    }
+
+    @Override
+    public void setDouble(int paramIndex, double paramValue) {
+        params.setDouble(paramIndex, paramValue);
+    }
+
+    @Override
+    public void setDoubleList(int paramIndex, double[] paramValue) {
+        params.setDoubleList(paramIndex, paramValue);
+    }
+
+    @Override
+    public void setPojo(int paramIndex, Pojo paramValue) {
+        params.setPojo(paramIndex, paramValue);
+    }
+
+    @Override
+    public void setPojoList(int paramIndex, Pojo[] paramValue) {
+        params.setPojoList(paramIndex, paramValue);
     }
 
     @Override

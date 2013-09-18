@@ -45,6 +45,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.After;
@@ -69,6 +70,7 @@ import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.AggregateCount;
+import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.BinaryComparisonOperator;
 import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
 
@@ -223,6 +225,150 @@ public class StatementDescriptorParserTest {
         unfinished.setType(String.class);
         unfinished.setParameterIndex(0);
         doTestType(descrString, unfinished, 1);
+    }
+    
+    @Test
+    public void testParseDoubleTypeFreeVarInWhere() throws DescriptorParsingException {
+        String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' != ?d";
+        UnfinishedValueNode unfinished = new UnfinishedValueNode();
+        unfinished.setLHS(false);
+        unfinished.setType(Double.class);
+        unfinished.setParameterIndex(0);
+        doTestType(descrString, unfinished, 1);
+    }
+    
+    /*
+     * SET clauses allow for setting list types. Test that it works for a
+     * String list free variable type in ADD.
+     */
+    @Test
+    public void testParseStringListTypeFreeVarInSetlist() throws DescriptorParsingException {
+        // use ADD since WHERE should not support list types.
+        String descString = "ADD " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = ?s[";
+        UnfinishedValueNode unfinished = new UnfinishedValueNode();
+        unfinished.setLHS(false);
+        unfinished.setType(String[].class);
+        unfinished.setParameterIndex(0);
+        doListTypeTest(descString, unfinished);
+    }
+
+    /*
+     * SET clauses allow for setting list types. Test that it works for a
+     * integer list free variable type in ADD.
+     */
+    @Test
+    public void testParseDoubleListTypeFreeVarInSetlist() throws DescriptorParsingException {
+        // use ADD since WHERE should not support list types.
+        String descString = "ADD " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = ?d[";
+        UnfinishedValueNode unfinished = new UnfinishedValueNode();
+        unfinished.setLHS(false);
+        unfinished.setType(Double[].class);
+        unfinished.setParameterIndex(0);
+        doListTypeTest(descString, unfinished);
+    }
+    
+    /*
+     * SET clauses allow for setting list types. Test that it works for a
+     * double list free variable type in ADD.
+     */
+    @Test
+    public void testParseIntListTypeFreeVarInSetlist() throws DescriptorParsingException {
+        // use ADD since WHERE should not support list types.
+        String descString = "ADD " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = ?i[";
+        UnfinishedValueNode unfinished = new UnfinishedValueNode();
+        unfinished.setLHS(false);
+        unfinished.setType(Integer[].class);
+        unfinished.setParameterIndex(0);
+        doListTypeTest(descString, unfinished);
+    }
+    
+    /*
+     * SET clauses allow for setting list types. Test that it works for a
+     * boolean list free variable type in ADD.
+     */
+    @Test
+    public void testParseBooleanListTypeFreeVarInSetlist() throws DescriptorParsingException {
+        // use ADD since WHERE should not support list types.
+        String descString = "ADD " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = ?b[";
+        UnfinishedValueNode unfinished = new UnfinishedValueNode();
+        unfinished.setLHS(false);
+        unfinished.setType(Boolean[].class);
+        unfinished.setParameterIndex(0);
+        doListTypeTest(descString, unfinished);
+    }
+    
+    /*
+     * SET clauses allow for setting list types. Test that it works for a
+     * long list free variable type in ADD.
+     */
+    @Test
+    public void testParseLongListTypeFreeVarInSetlist() throws DescriptorParsingException {
+        // use ADD since WHERE should not support list types.
+        String descString = "ADD " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = ?l[";
+        UnfinishedValueNode unfinished = new UnfinishedValueNode();
+        unfinished.setLHS(false);
+        unfinished.setType(Long[].class);
+        unfinished.setParameterIndex(0);
+        doListTypeTest(descString, unfinished);
+    }
+    
+    /*
+     * SET clauses allow for setting list types. Test that it works for a
+     * long list free variable type in ADD.
+     */
+    @Test
+    public void testParsePojoTypeFreeVarInSetlist() throws DescriptorParsingException {
+        // use ADD since WHERE should not support pojo type.
+        String descString = "ADD " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = ?p";
+        UnfinishedValueNode unfinished = new UnfinishedValueNode();
+        unfinished.setLHS(false);
+        unfinished.setType(Pojo.class);
+        unfinished.setParameterIndex(0);
+        doListTypeTest(descString, unfinished);
+    }
+    
+    /*
+     * SET clauses allow for setting list types. Test that it works for a
+     * Pojo list free variable type in ADD.
+     */
+    @Test
+    public void testParsePojoListTypeFreeVarInSetlist() throws DescriptorParsingException {
+        // use ADD since WHERE should not support list types.
+        String descString = "ADD " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = ?p[";
+        UnfinishedValueNode unfinished = new UnfinishedValueNode();
+        unfinished.setLHS(false);
+        unfinished.setType(Pojo[].class);
+        unfinished.setParameterIndex(0);
+        doListTypeTest(descString, unfinished);
+    }
+
+    private void doListTypeTest(String descString, UnfinishedValueNode unfinished) {
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
+        parser = new StatementDescriptorParser<>(storage, desc);
+        ParsedStatementImpl<AgentInformation> statement = null; 
+        try {
+            statement = (ParsedStatementImpl<AgentInformation>)parser.parse();
+        } catch (DescriptorParsingException e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+        assertTrue(statement.getRawStatement() instanceof Add);
+        SuffixExpression suffix = statement.getSuffixExpression();
+        assertNotNull(suffix);
+        assertNull(suffix.getLimitExpn());
+        assertNull(suffix.getSortExpn());
+        assertNull(suffix.getWhereExpn());
+        SetList list = statement.getSetList();
+        assertNotNull(list);
+        List<SetListValue> mems = list.getValues();
+        assertEquals(1, mems.size());
+        SetListValue val = mems.get(0);
+        TerminalNode aKey = new TerminalNode(null);
+        aKey.setValue(new Key<>("a"));
+        assertEquals(aKey, val.getKey());
+        TerminalNode aVal = new TerminalNode(null);
+        aVal.setValue(unfinished);
+        assertEquals(aVal, val.getValue());
     }
     
     @Test
@@ -1437,6 +1583,102 @@ public class StatementDescriptorParserTest {
         } catch (DescriptorParsingException e) {
             // pass
             assertTrue(e.getMessage().contains("Expected string value. Got term ->a<-"));
+        }
+    }
+    
+    /*
+     * At this point list types don't make sense in WHERE.
+     *   What should "'a' != [ 'a', 'b' ]" evaluate to?
+     *   How about this? "'key' > [ 1, 2 ]"
+     * 
+     * The only reasonable use case in WHERE would be 'a' IN [ 'a', 'b' ... ].
+     * We don't support this in a prepared context at this point. Should this
+     * change in future, this test needs to be carefully re-crafted. 
+     */
+    @Test
+    public void rejectListTypesAsFreeVarInInvalidContext() throws DescriptorParsingException {
+        List<String> illegalDescs = new ArrayList<>();
+
+        // Where should not support list types/Pojos.
+        String[] illegalWheres = new String[] {
+                " WHERE 'a' = ?s[",
+                " WHERE 'a' = ?i[",
+                " WHERE 'a' = ?p[",
+                " WHERE 'a' = ?d[",
+        };
+        
+        // Make sure we test for QUERY, QUERY-COUNT, REPLACE, UPDATE, REMOVE
+        // i.e. all that accept a WHERE.
+        String basicQuery = "QUERY " + AgentInfoDAO.CATEGORY.getName();
+        String basicQueryCount = "QUERY-COUNT " + AgentInfoDAO.CATEGORY.getName();
+        // note SET clause is legal
+        String basicUpdate = "UPDATE " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = ?s[";
+        // note SET clause is legal
+        String basicReplace = "REPLACE " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = ?i[";
+        String basicRemove = "REMOVE " + AgentInfoDAO.CATEGORY.getName();
+        for (String where: illegalWheres) {
+            illegalDescs.add(basicQuery + where);
+            illegalDescs.add(basicQueryCount + where);
+            illegalDescs.add(basicUpdate + where);
+            illegalDescs.add(basicReplace + where);
+            illegalDescs.add(basicRemove + where);
+        }
+        
+        // Test all illegal descs involving WHERE
+        doIllegalDescsTest(illegalDescs, "WHERE", "List");
+        
+        // Test limit too
+        illegalDescs.clear();
+        illegalDescs.add("QUERY " + AgentInfoDAO.CATEGORY.getName() + " LIMIT ?i[");
+        illegalDescs.add("QUERY " + AgentInfoDAO.CATEGORY.getName() + " LIMIT ?s[");
+        illegalDescs.add("QUERY " + AgentInfoDAO.CATEGORY.getName() + " LIMIT ?p[");
+        illegalDescs.add("QUERY " + AgentInfoDAO.CATEGORY.getName() + " LIMIT ?d[");
+        
+        doIllegalDescsTest(illegalDescs, "LIMIT", "List");
+        
+        // Test sort
+        illegalDescs.clear();
+        illegalDescs.add("QUERY " + AgentInfoDAO.CATEGORY.getName() + " SORT ?i[ ASC");
+        illegalDescs.add("QUERY " + AgentInfoDAO.CATEGORY.getName() + " SORT ?s[ ASC");
+        illegalDescs.add("QUERY " + AgentInfoDAO.CATEGORY.getName() + " SORT ?p[ ASC");
+        illegalDescs.add("QUERY " + AgentInfoDAO.CATEGORY.getName() + " SORT ?d[ ASC");
+        
+        doIllegalDescsTest(illegalDescs, "SORT", "List");
+    }
+    
+    /*
+     * Pojos don't make sense in a WHERE, LIMIT and SORT clause. This test makes
+     * sure we reject this right away.
+     * 
+     */
+    @Test
+    public void rejectPojoTypesAsFreeVarInInvalidContext() throws DescriptorParsingException {
+        List<String> illegalDescs = new ArrayList<>();
+        
+        illegalDescs.add("QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' = ?p");
+        doIllegalDescsTest(illegalDescs, "WHERE", "Pojo");
+        illegalDescs.clear();
+        
+        illegalDescs.add("QUERY " + AgentInfoDAO.CATEGORY.getName() + " LIMIT ?p");
+        doIllegalDescsTest(illegalDescs, "LIMIT", "Pojo");
+        illegalDescs.clear();
+        
+        illegalDescs.add("QUERY " + AgentInfoDAO.CATEGORY.getName() + " SORT ?p DSC");
+        doIllegalDescsTest(illegalDescs, "SORT", "Pojo");
+    }
+    
+    private void doIllegalDescsTest(List<String> descs, String errorMsgContext, String type) {
+        for (String strDesc : descs) {
+            StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, strDesc); 
+            parser = new StatementDescriptorParser<>(storage, desc);
+            try {
+                parser.parse();
+                fail(strDesc + " should not parse");
+            } catch (DescriptorParsingException e) {
+                // pass
+                assertEquals(strDesc + " did not provide correct error message.",
+                        type + " free variable type not allowed in " + errorMsgContext + " context", e.getMessage());
+            }
         }
     }
     

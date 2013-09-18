@@ -37,6 +37,7 @@
 package com.redhat.thermostat.storage.internal.statement;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -352,7 +353,7 @@ public class ParsedStatementImplTest {
     @Test
     public void canPatchBasicSetListAdd() throws IllegalPatchException {
         // create the parsedStatementImpl we are going to use
-        DataModifyingStatement<TestPojo> stmt = new TestAdd();
+        DataModifyingStatement<TestPojo> stmt = new TestAdd<>();
         ParsedStatementImpl<TestPojo> parsedStmt = new ParsedStatementImpl<>(stmt, TestPojo.class);
         SuffixExpression suffixExpn = new SuffixExpression();
         SetList setList = buildSetList();
@@ -369,12 +370,73 @@ public class ParsedStatementImplTest {
         // finally test the patching
         Add<TestPojo> add = (Add<TestPojo>)parsedStmt.patchStatement(params);
         assertTrue(add instanceof TestAdd);
-        TestAdd q = (TestAdd)add;
+        TestAdd<TestPojo> q = (TestAdd<TestPojo>)add;
         Pojo testPojo = q.pojo;
         assertTrue(testPojo instanceof TestPojo);
         TestPojo tPojo = (TestPojo)testPojo;
         assertEquals("foo-writer", tPojo.getWriterId());
         assertEquals(Long.MAX_VALUE, tPojo.getFooTimeStamp());
+    }
+    
+    /*
+     * Test for patching of:
+     *  "ADD something SET 'someList' = ?p["
+     */
+    @Test
+    public void canPatchSetListAddWithPojoList() throws IllegalPatchException {
+        // create the parsedStatementImpl we are going to use
+        DataModifyingStatement<FancyPojo> stmt = new TestAdd<>();
+        ParsedStatementImpl<FancyPojo> parsedStmt = new ParsedStatementImpl<>(stmt, FancyPojo.class);
+        SuffixExpression suffixExpn = new SuffixExpression();
+        SetList setList = new SetList();
+        parsedStmt.setSetList(setList);
+        TerminalNode someProperty = new TerminalNode(null);
+        someProperty.setValue(new Key<>("someList"));
+        TerminalNode somePropertyVal = new TerminalNode(null);
+        UnfinishedValueNode unfinishedPojoList = new UnfinishedValueNode();
+        unfinishedPojoList.setLHS(false);
+        unfinishedPojoList.setType(Pojo[].class);
+        unfinishedPojoList.setParameterIndex(0);
+        somePropertyVal.setValue(unfinishedPojoList);
+        SetListValue value = new SetListValue();
+        value.setKey(someProperty);
+        value.setValue(somePropertyVal);
+        setList.addValue(value);
+        suffixExpn.setLimitExpn(null);
+        suffixExpn.setSortExpn(null);
+        suffixExpn.setWhereExpn(null);
+        parsedStmt.setSuffixExpression(suffixExpn);
+        assertEquals(1, setList.getValues().size());
+        PreparedStatementImpl<Pojo> preparedStatement = new PreparedStatementImpl<>(1);
+        TestPojo elem1 = new TestPojo();
+        elem1.setFooTimeStamp(-300);
+        elem1.setWriterId("elem1");
+        TestPojo elem2 = new TestPojo();
+        elem2.setFooTimeStamp(-301);
+        elem2.setWriterId("elem2");
+        TestPojo[] elems = new TestPojo[] {
+                elem1, elem2
+        };
+        preparedStatement.setPojoList(0, elems);
+        PreparedParameter[] params = preparedStatement.getParams();
+        // finally test the patching
+        Add<FancyPojo> add = (Add<FancyPojo>)parsedStmt.patchStatement(params);
+        assertTrue(add instanceof TestAdd);
+        TestAdd<FancyPojo> q = (TestAdd<FancyPojo>)add;
+        Pojo testPojo = q.pojo;
+        assertTrue(testPojo instanceof FancyPojo);
+        FancyPojo tPojo = (FancyPojo)testPojo;
+        assertEquals(null, tPojo.getWriterId());
+        assertNotNull(tPojo.getSomeList());
+        assertEquals(2, tPojo.getSomeList().length);
+        TestPojo first = tPojo.getSomeList()[0];
+        TestPojo second = tPojo.getSomeList()[1];
+        assertEquals(elem1, first);
+        assertEquals(elem2, second);
+        assertEquals("elem1", first.getWriterId());
+        assertEquals(-300, first.getFooTimeStamp());
+        assertEquals("elem2", second.getWriterId());
+        assertEquals(-301, second.getFooTimeStamp());
     }
     
     /*
@@ -571,7 +633,7 @@ public class ParsedStatementImplTest {
     @Test
     public void failPatchSetListAddWrongType() throws IllegalPatchException {
         // create the parsedStatementImpl we are going to use
-        DataModifyingStatement<TestPojo> stmt = new TestAdd();
+        DataModifyingStatement<TestPojo> stmt = new TestAdd<>();
         ParsedStatementImpl<TestPojo> parsedStmt = new ParsedStatementImpl<>(stmt, TestPojo.class);
         SuffixExpression suffixExpn = new SuffixExpression();
         SetList setList = buildSetList();
@@ -599,7 +661,7 @@ public class ParsedStatementImplTest {
     @Test
     public void failPatchSetListAddInsufficientParams() throws IllegalPatchException {
         // create the parsedStatementImpl we are going to use
-        DataModifyingStatement<TestPojo> stmt = new TestAdd();
+        DataModifyingStatement<TestPojo> stmt = new TestAdd<>();
         ParsedStatementImpl<TestPojo> parsedStmt = new ParsedStatementImpl<>(stmt, TestPojo.class);
         SuffixExpression suffixExpn = new SuffixExpression();
         SetList setList = buildSetList();
@@ -756,7 +818,7 @@ public class ParsedStatementImplTest {
         
     }
     
-    private static class TestAdd implements Add<TestPojo> {
+    private static class TestAdd<T extends Pojo> implements Add<T> {
         
         private Pojo pojo; 
 
@@ -837,6 +899,20 @@ public class ParsedStatementImplTest {
         }
         public void setFooTimeStamp(long fooTimeStamp) {
             this.fooTimeStamp = fooTimeStamp;
+        }
+        
+    }
+    
+    public static class FancyPojo extends TestPojo {
+        
+        private TestPojo[] someList;
+
+        public TestPojo[] getSomeList() {
+            return someList;
+        }
+
+        public void setSomeList(TestPojo[] someList) {
+            this.someList = someList;
         }
         
         

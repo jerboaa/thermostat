@@ -136,7 +136,7 @@ public class PreparedStatementImplTest {
         when(mockCategory.getDataClass()).thenReturn(FooPojo.class);
         when(mockCategory.getName()).thenReturn("foo-table");
         BackingStorage storage = mock(BackingStorage.class);
-        TestAdd add = new TestAdd();
+        TestAdd<FooPojo> add = new TestAdd<>();
         when(storage.createAdd(mockCategory)).thenReturn(add);
         PreparedStatement<FooPojo> preparedStatement = new PreparedStatementImpl<FooPojo>(storage, desc);
         preparedStatement.setString(0, "foo-val");
@@ -152,6 +152,47 @@ public class PreparedStatementImplTest {
         assertTrue(add.executed);
         FooPojo fooPojo = (FooPojo)add.pojo;
         assertEquals("foo-val", fooPojo.getFoo());
+    }
+    
+    @Test
+    public void canDoParsingPatchingAndExecutionForAddInvolvingFancyPojo() throws Exception {
+        String addString = "ADD foo-table SET 'fancyFoo' = ?p[";
+        @SuppressWarnings("unchecked")
+        StatementDescriptor<FancyFoo> desc = (StatementDescriptor<FancyFoo>) mock(StatementDescriptor.class);
+        when(desc.getDescriptor()).thenReturn(addString);
+        @SuppressWarnings("unchecked")
+        Category<FancyFoo> mockCategory = (Category<FancyFoo>) mock(Category.class);
+        when(desc.getCategory()).thenReturn(mockCategory);
+        when(mockCategory.getDataClass()).thenReturn(FancyFoo.class);
+        when(mockCategory.getName()).thenReturn("foo-table");
+        BackingStorage storage = mock(BackingStorage.class);
+        TestAdd<FancyFoo> add = new TestAdd<>();
+        when(storage.createAdd(mockCategory)).thenReturn(add);
+        PreparedStatement<FancyFoo> preparedStatement = new PreparedStatementImpl<FancyFoo>(storage, desc);
+        FooPojo one = new FooPojo();
+        one.setFoo("one");
+        FooPojo two = new FooPojo();
+        two.setFoo("two");
+        FooPojo[] list = new FooPojo[] {
+                one, two
+        };
+        preparedStatement.setPojoList(0, list);
+        assertFalse(add.executed);
+        try {
+            // this should call add.apply();
+            preparedStatement.execute();
+        } catch (StatementExecutionException e) {
+            fail(e.getMessage());
+        }
+        assertTrue(add.pojo != null);
+        assertTrue(add.pojo instanceof FancyFoo);
+        assertTrue(add.executed);
+        FancyFoo fooPojo = (FancyFoo)add.pojo;
+        assertEquals(2, fooPojo.getFancyFoo().length);
+        FooPojo first = fooPojo.getFancyFoo()[0];
+        FooPojo second = fooPojo.getFancyFoo()[1];
+        assertEquals("one", first.getFoo());
+        assertEquals("two", second.getFoo());
     }
     
     @Test
@@ -281,7 +322,7 @@ public class PreparedStatementImplTest {
         }
     }
     
-    private static class TestAdd implements Add<FooPojo> {
+    private static class TestAdd<T extends Pojo> implements Add<T> {
 
         private Pojo pojo;
         private boolean executed = false;
@@ -378,6 +419,20 @@ public class PreparedStatementImplTest {
         public String getFoo() {
             return this.foo;
         }
+    }
+    
+    public static class FancyFoo extends FooPojo {
+        
+        private FooPojo[] fancyFoo;
+
+        public FooPojo[] getFancyFoo() {
+            return fancyFoo;
+        }
+
+        public void setFancyFoo(FooPojo[] fancyFoo) {
+            this.fancyFoo = fancyFoo;
+        }
+        
     }
     
     private static class StubQuery implements Query<Pojo> {

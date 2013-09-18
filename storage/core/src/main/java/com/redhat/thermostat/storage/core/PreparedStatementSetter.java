@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.storage.core;
 
+import com.redhat.thermostat.storage.model.Pojo;
+
 /**
  * Package private interface in order to ensure consistency of
  * setters between {@link PreparedStatement} and {@link PreparedParamenters}.
@@ -45,12 +47,26 @@ interface PreparedStatementSetter {
 
     void setBoolean(int paramIndex, boolean paramValue);
     
+    void setBooleanList(int paramIndex, boolean[] paramValue);
+    
     void setLong(int paramIndex, long paramValue);
     
+    void setLongList(int paramIndex, long[] paramValue);
+    
     void setInt(int paramIndex, int paramValue);
+    
+    void setIntList(int paramIndex, int[] paramValue);
     
     void setString(int paramIndex, String paramValue);
     
     void setStringList(int paramIndex, String[] paramValue);
+    
+    void setDouble(int paramIndex, double paramValue);
+    
+    void setDoubleList(int paramIndex, double[] paramValue);
+    
+    void setPojo(int paramIndex, Pojo paramValue);
+    
+    void setPojoList(int paramIndex, Pojo[] paramValue);
     
 }

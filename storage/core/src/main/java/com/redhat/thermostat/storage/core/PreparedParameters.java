@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.storage.core;
 
+import com.redhat.thermostat.storage.model.Pojo;
+
 /**
  * 
  * Shared class for setting prepared parameters.
@@ -60,23 +62,58 @@ public final class PreparedParameters implements PreparedStatementSetter {
     }
 
     @Override
+    public void setLongList(int paramIndex, long[] paramValue) {
+        setType(paramIndex, paramValue, Long[].class);
+    }
+
+    @Override
     public void setInt(int paramIndex, int paramValue) {
         setType(paramIndex, paramValue, Integer.class);
     }
 
     @Override
-    public void setStringList(int paramIndex, String[] paramValue) {
-        setType(paramIndex, paramValue, String[].class);
+    public void setIntList(int paramIndex, int[] paramValue) {
+        setType(paramIndex, paramValue, Integer[].class);
     }
-    
+
     @Override
     public void setBoolean(int paramIndex, boolean paramValue) {
         setType(paramIndex, paramValue, Boolean.class);
     }
 
     @Override
+    public void setBooleanList(int paramIndex, boolean[] paramValue) {
+        setType(paramIndex, paramValue, Boolean[].class);
+    }
+
+    @Override
     public void setString(int paramIndex, String paramValue) {
         setType(paramIndex, paramValue, String.class);
+    }
+
+    @Override
+    public void setStringList(int paramIndex, String[] paramValue) {
+        setType(paramIndex, paramValue, String[].class);
+    }
+
+    @Override
+    public void setDouble(int paramIndex, double paramValue) {
+        setType(paramIndex, paramValue, Double.class);
+    }
+
+    @Override
+    public void setDoubleList(int paramIndex, double[] paramValue) {
+        setType(paramIndex, paramValue, Double[].class);
+    }
+
+    @Override
+    public void setPojo(int paramIndex, Pojo paramValue) {
+        setType(paramIndex, paramValue, Pojo.class);
+    }
+
+    @Override
+    public void setPojoList(int paramIndex, Pojo[] paramValue) {
+        setType(paramIndex, paramValue, Pojo[].class);
     }
 
     private void setType(int paramIndex, Object paramValue, Class<?> paramType) {
