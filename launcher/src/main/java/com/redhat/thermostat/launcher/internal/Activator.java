@@ -84,7 +84,8 @@ public class Activator implements BundleActivator {
             CommandInfoSource builtInCommandSource =
                     new BuiltInCommandInfoSource(commandsDir, config.getSystemLibRoot().toString());
             CommandInfoSource pluginCommandSource = new PluginCommandInfoSource(
-                            config.getSystemLibRoot().toString(), config.getSystemPluginRoot().toString());
+                            config.getSystemLibRoot().toString(), config.getSystemPluginRoot().toString(),
+                            config.getUserPluginRoot().toString());
             CommandInfoSource commands = new CompoundCommandInfoSource(builtInCommandSource, pluginCommandSource);
 
             cmdInfoReg = context.registerService(CommandInfoSource.class, commands, null);

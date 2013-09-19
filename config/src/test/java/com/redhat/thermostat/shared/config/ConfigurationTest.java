@@ -102,6 +102,9 @@ public class ConfigurationTest {
                 config.getUserStoragePidFile().getCanonicalPath());
         Assert.assertEquals(userHome + s + "logs" + s + "db.log",
                 config.getUserStorageLogFile().getCanonicalPath());
+
+        Assert.assertEquals(userHome + s + "data" + s + "plugins",
+                config.getUserPluginRoot().getCanonicalPath());
     }
 
     @Test
@@ -120,6 +123,8 @@ public class ConfigurationTest {
         Assert.assertEquals("/var/lib/thermostat/db", config.getUserStorageDirectory().getCanonicalPath());
         Assert.assertEquals("/var/run/thermostat/db.pid", config.getUserStoragePidFile().getAbsolutePath());
         Assert.assertEquals("/var/log/thermostat/db.log", config.getUserStorageLogFile().getCanonicalPath());
+
+        Assert.assertEquals("/var/lib/thermostat/plugins", config.getUserPluginRoot().getCanonicalPath());
     }
 
     @Test
@@ -140,7 +145,10 @@ public class ConfigurationTest {
         Assert.assertEquals(prefix + "/var/lib/thermostat/db", config.getUserStorageDirectory().getCanonicalPath());
         Assert.assertEquals(prefix + "/var/run/thermostat/db.pid", config.getUserStoragePidFile().getAbsolutePath());
         Assert.assertEquals(prefix + "/var/log/thermostat/db.log", config.getUserStorageLogFile().getCanonicalPath());
+
+        Assert.assertEquals(prefix + "/var/lib/thermostat/plugins", config.getUserPluginRoot().getCanonicalPath());
     }
+
     @Test
     public void instantiationThrowsException() {
         try {

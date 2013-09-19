@@ -120,8 +120,8 @@ public class ActivatorTest {
         PluginCommandInfoSource source2 = mock(PluginCommandInfoSource.class);
         when(source2.getCommandInfos()).thenReturn(new ArrayList<CommandInfo>());
         whenNew(PluginCommandInfoSource.class)
-                .withParameterTypes(String.class, String.class)
-                .withArguments(anyString(), anyString())
+                .withParameterTypes(String.class, String.class, String.class)
+                .withArguments(anyString(), anyString(), anyString())
                 .thenReturn(source2);
 
         CompoundCommandInfoSource commands = mock(CompoundCommandInfoSource.class);

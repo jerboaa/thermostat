@@ -171,6 +171,10 @@ public class Configuration {
 
     /* Specific files and directories. All these methods should use the directories defined above */
 
+    public File getUserPluginRoot() throws InvalidConfigurationException {
+        return new File(getUserPersistentDataDirectory(), "plugins");
+    }
+
     public File getUserStorageDirectory() throws InvalidConfigurationException {
         return new File(getUserPersistentDataDirectory(), "db");
     }

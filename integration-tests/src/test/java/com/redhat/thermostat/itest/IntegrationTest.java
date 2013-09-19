@@ -93,7 +93,7 @@ public class IntegrationTest {
         return "../distribution/target/image";
     }
 
-    public static String getPluginHome() {
+    public static String getSystemPluginHome() {
         return getThermostatHome() + "/plugins";
     }
 

@@ -39,6 +39,7 @@ package com.redhat.thermostat.launcher.internal;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -77,20 +78,19 @@ public class PluginCommandInfoSource implements CommandInfoSource {
     private Map<String, BasicCommandInfo> allNewCommands = new HashMap<>();
     private Map<String, List<BundleInformation>> additionalBundlesForExistingCommands = new HashMap<>();
 
-    public PluginCommandInfoSource(String internalJarRoot, String pluginRootDir) {
-        this(new File(internalJarRoot), new File(pluginRootDir), new PluginConfigurationParser(), new UsageStringBuilder());
+    public PluginCommandInfoSource(String internalJarRoot, String systemPluginRootDir, String userPluginRootDir) {
+        this(new File(internalJarRoot), new File(systemPluginRootDir), new File(userPluginRootDir), new PluginConfigurationParser(), new UsageStringBuilder());
     }
 
-    PluginCommandInfoSource(File internalJarRoot, File pluginRootDir, PluginConfigurationParser parser, UsageStringBuilder usageBuilder) {
+    PluginCommandInfoSource(File internalJarRoot, File systemPluginRootDir, File userPluginRootDir, PluginConfigurationParser parser, UsageStringBuilder usageBuilder) {
         this.usageBuilder = usageBuilder;
 
-        File[] pluginDirs = pluginRootDir.listFiles();
-        if (pluginDirs == null) {
-            logger.log(Level.SEVERE, "plugin root dir " + pluginRootDir + " does not exist");
-            return;
-        }
+        List<File> pluginDirectories = new ArrayList<>();
 
-        for (File pluginDir : pluginDirs) {
+        addPluginDirectory(pluginDirectories, systemPluginRootDir);
+        addPluginDirectory(pluginDirectories, userPluginRootDir);
+
+        for (File pluginDir : pluginDirectories) {
             try {
                 File configurationFile = new File(pluginDir, PLUGIN_CONFIG_FILE);
                 PluginConfiguration pluginConfig = parser.parse(configurationFile);
@@ -111,8 +111,14 @@ public class PluginCommandInfoSource implements CommandInfoSource {
         combineCommands();
     }
     
-   
+    private void addPluginDirectory(List<File> allPluginDirectories, File aPluginRoot) {
+        File[] pluginDirs = aPluginRoot.listFiles();
 
+        if (pluginDirs != null) {
+            allPluginDirectories.addAll(Arrays.asList(pluginDirs));
+        }
+    }
+   
     private void loadNewAndExtendedCommands(File coreJarRoot, File pluginDir,
             PluginConfiguration pluginConfig) {
 

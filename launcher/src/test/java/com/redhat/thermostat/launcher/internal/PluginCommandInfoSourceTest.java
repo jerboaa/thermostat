@@ -72,7 +72,8 @@ public class PluginCommandInfoSourceTest {
 
     private Path testRoot;
     private Path jarRootDir;
-    private Path pluginRootDir;
+    private Path sysPluginRootDir;
+    private Path userPluginRootDir;
     private PluginConfigurationParser parser;
     private PluginConfiguration parserResult;
     private UsageStringBuilder usageBuilder;
@@ -85,8 +86,10 @@ public class PluginCommandInfoSourceTest {
         usageBuilder = mock(UsageStringBuilder.class);
 
         testRoot = Files.createTempDirectory("thermostat");
-        pluginRootDir = testRoot.resolve("plugins");
-        Files.createDirectory(pluginRootDir);
+        sysPluginRootDir = testRoot.resolve("plugins");
+        Files.createDirectory(sysPluginRootDir);
+        userPluginRootDir = testRoot.resolve("plugins-user");
+        Files.createDirectory(userPluginRootDir);
         jarRootDir = testRoot.resolve("libs");
         Files.createDirectories(jarRootDir);
     }
@@ -114,14 +117,14 @@ public class PluginCommandInfoSourceTest {
     @Test
     public void verifyParserIsInvokedOnAllConfigurationFiles() throws IOException, PluginConfigurationValidatorException {
         Path[] pluginDirs = new Path[] {
-                pluginRootDir.resolve("plugin1"),
-                pluginRootDir.resolve("plugin2"),
+                sysPluginRootDir.resolve("plugin1"),
+                sysPluginRootDir.resolve("plugin2"),
         };
         for (Path pluginDir : pluginDirs) {
             Files.createDirectory(pluginDir);
         }
 
-        new PluginCommandInfoSource(jarRootDir.toFile(), pluginRootDir.toFile(), parser, usageBuilder);
+        new PluginCommandInfoSource(jarRootDir.toFile(), sysPluginRootDir.toFile(), userPluginRootDir.toFile(), parser, usageBuilder);
 
         ArgumentCaptor<File> configFilesCaptor = ArgumentCaptor.forClass(File.class);
         verify(parser, times(pluginDirs.length)).parse(configFilesCaptor.capture());
@@ -137,12 +140,12 @@ public class PluginCommandInfoSourceTest {
     public void verifyMissingConfigurationFileIsHandledCorrectly() throws FileNotFoundException, PluginConfigurationValidatorException {
         when(parser.parse(isA(File.class))).thenThrow(new FileNotFoundException("test"));
 
-        new PluginCommandInfoSource(jarRootDir.toFile(), pluginRootDir.toFile(), parser, usageBuilder);
+        new PluginCommandInfoSource(jarRootDir.toFile(), sysPluginRootDir.toFile(), userPluginRootDir.toFile(), parser, usageBuilder);
     }
 
     @Test(expected = CommandInfoNotFoundException.class)
     public void verifyMissingCommandInfo() {
-        PluginCommandInfoSource source = new PluginCommandInfoSource(jarRootDir.toFile(), pluginRootDir.toFile(), parser, usageBuilder);
+        PluginCommandInfoSource source = new PluginCommandInfoSource(jarRootDir.toFile(), sysPluginRootDir.toFile(), userPluginRootDir.toFile(), parser, usageBuilder);
 
         source.getCommandInfo("TEST");
     }
@@ -151,7 +154,7 @@ public class PluginCommandInfoSourceTest {
     public void verifyCommandInfoObjectsToExtendExistingCommandsAreCreated() throws IOException {
         BundleInformation bundleInfo = new BundleInformation("plugin-bundle", "0.1");
 
-        Path pluginDir = pluginRootDir.resolve("plugin1");
+        Path pluginDir = sysPluginRootDir.resolve("plugin1");
         Files.createDirectory(pluginDir);
 
         CommandExtensions extensions = mock(CommandExtensions.class);
@@ -160,7 +163,7 @@ public class PluginCommandInfoSourceTest {
 
         when(parserResult.getExtendedCommands()).thenReturn(Arrays.asList(extensions));
 
-        PluginCommandInfoSource source = new PluginCommandInfoSource(jarRootDir.toFile(), pluginRootDir.toFile(), parser, usageBuilder);
+        PluginCommandInfoSource source = new PluginCommandInfoSource(jarRootDir.toFile(), sysPluginRootDir.toFile(), userPluginRootDir.toFile(), parser, usageBuilder);
 
         CommandInfo info = source.getCommandInfo("command-name");
         assertEquals("command-name", info.getName());
@@ -177,7 +180,7 @@ public class PluginCommandInfoSourceTest {
         final Set<Environment> ENVIRONMENTS = EnumSet.of(Environment.SHELL);
         BundleInformation bundleInfo = new BundleInformation("plugin-bundle", "0.1");
 
-        Path pluginDir = pluginRootDir.resolve("plugin1");
+        Path pluginDir = sysPluginRootDir.resolve("plugin1");
         Files.createDirectory(pluginDir);
 
         NewCommand cmd = mock(NewCommand.class);
@@ -190,7 +193,7 @@ public class PluginCommandInfoSourceTest {
 
         when(parserResult.getNewCommands()).thenReturn(Arrays.asList(cmd));
 
-        PluginCommandInfoSource source = new PluginCommandInfoSource(jarRootDir.toFile(), pluginRootDir.toFile(), parser, usageBuilder);
+        PluginCommandInfoSource source = new PluginCommandInfoSource(jarRootDir.toFile(), sysPluginRootDir.toFile(), userPluginRootDir.toFile(), parser, usageBuilder);
 
         CommandInfo result = source.getCommandInfo(NAME);
 

@@ -51,21 +51,27 @@ import expectj.Spawn;
 
 public class PluginTest extends IntegrationTest {
 
-    private static final String PLUGIN_HOME = getPluginHome();
+    private static final String PLUGIN_HOME = getSystemPluginHome();
 
-    private static NewCommandPlugin newPlugin = new NewCommandPlugin(PLUGIN_HOME + File.separator + "new");
+    private static NewCommandPlugin fooPlugin = new NewCommandPlugin("foo", "provides foo command", PLUGIN_HOME + File.separator + "new");
+    private static NewCommandPlugin userPlugin = new NewCommandPlugin(
+            "user",
+            "a plugin that is provided by the user",
+            getUserThermostatHome() + File.separator + "data" + File.separator + "plugins" + File.separator + "user");
     private static UnknownExtendsPlugin unknownExtension = new UnknownExtendsPlugin(PLUGIN_HOME + File.separator + "unknown");
 
     @BeforeClass
     public static void setUpOnce() {
-        newPlugin.install();
+        fooPlugin.install();
+        userPlugin.install();
         unknownExtension.install();
     }
 
     @AfterClass
     public static void tearDownOnce() {
         unknownExtension.uninstall();
-        newPlugin.uninstall();
+        userPlugin.uninstall();
+        fooPlugin.uninstall();
     }
 
     @Test
@@ -82,8 +88,10 @@ public class PluginTest extends IntegrationTest {
         assertTrue(stdOut.contains("ping"));
         assertTrue(stdOut.contains("shell"));
 
-        assertTrue(stdOut.contains(newPlugin.command));
-        assertTrue(stdOut.contains(newPlugin.description));
+        assertTrue(stdOut.contains(fooPlugin.command));
+        assertTrue(stdOut.contains(fooPlugin.description));
+
+        assertTrue(stdOut.contains(userPlugin.command));
 
         assertFalse(stdOut.contains(unknownExtension.command));
 
@@ -99,16 +107,16 @@ public class PluginTest extends IntegrationTest {
         private final String command;
         private final String description;
 
-        public NewCommandPlugin(String pluginLocation) {
+        public NewCommandPlugin(String command, String description, String pluginLocation) {
             this.pluginHome = pluginLocation;
 
-            this.command = "foo";
-            this.description = "foo plugin to foo bar";
+            this.command = command;
+            this.description = description;
         }
 
         private void install() {
             File home = new File(pluginHome);
-            if (!home.isDirectory() && !home.mkdir()) {
+            if (!home.isDirectory() && !home.mkdirs()) {
                 throw new AssertionError("could not create directory: " + pluginHome);
             }
 
