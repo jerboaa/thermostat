@@ -43,6 +43,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 
 import org.jboss.netty.bootstrap.ServerBootstrap;
@@ -71,7 +72,7 @@ public class ConfigurationServerImplTest {
     }
 
     @Test
-    public void testStartListening() {
+    public void testStartListening() throws IOException {
         ConfigurationServerImpl server = new ConfigurationServerImpl(ctx);
         server.startListening("127.0.0.1", 123);
 
@@ -92,7 +93,7 @@ public class ConfigurationServerImplTest {
         try {
             server.startListening("does-not-resolve.example.com", 123);
             fail("Should have thrown exception");
-        } catch (ChannelException e) {
+        } catch (IOException e) {
             // pass
         }
     }

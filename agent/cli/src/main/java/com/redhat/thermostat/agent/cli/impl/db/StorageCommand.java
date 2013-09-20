@@ -117,6 +117,9 @@ public class StorageCommand extends AbstractStateNotifyingCommand {
         } catch (InvalidConfigurationException e) {
             // rethrow
             throw e;
+        } catch (ApplicationException e) {
+            logger.log(Level.WARNING, e.getMessage());
+            getNotifier().fireAction(ApplicationState.FAIL, e);
         } catch (Exception e) {
             logger.log(Level.WARNING, e.getMessage(), e);
             getNotifier().fireAction(ApplicationState.FAIL, e);

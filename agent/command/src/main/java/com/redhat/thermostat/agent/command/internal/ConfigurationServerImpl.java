@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.agent.command.internal;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -56,7 +57,7 @@ class ConfigurationServerImpl implements ConfigurationServer {
     }
 
     @Override
-    public void startListening(String hostname, int port) {
+    public void startListening(String hostname, int port) throws IOException {
         ServerBootstrap bootstrap = (ServerBootstrap) ctx.getBootstrap();
 
         InetSocketAddress addr = new InetSocketAddress(hostname, port);
@@ -66,9 +67,7 @@ class ConfigurationServerImpl implements ConfigurationServer {
             // Bind and start to accept incoming connections.
             bootstrap.bind(addr);
         } catch (ChannelException e) {
-            logger.log(Level.SEVERE, "Failed to bind command channel server!", e);
-            // rethrow, in order to stop agent from continuing
-            throw e;
+            throw new IOException("Failed to bind command channel server (" + e.getMessage() + ")", e);
         }
         logger.log(Level.FINEST, "Bound command channel server to " + addr.toString());
     }

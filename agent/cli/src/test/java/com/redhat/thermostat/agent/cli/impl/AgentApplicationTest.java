@@ -48,6 +48,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
+import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -236,14 +237,18 @@ public class AgentApplicationTest {
             @Override
             public void run() {
                 // Finish when config server starts listening
-                doAnswer(new Answer<Void>() {
+                try {
+                    doAnswer(new Answer<Void>() {
 
-                    @Override
-                    public Void answer(InvocationOnMock invocation) throws Throwable {
-                        latch.countDown();
-                        return null;
-                    }
-                }).when(configServer).startListening(COMMAND_CHANNLE_BIND_HOST, COMMAND_CHANNEL_BIND_PORT);
+                        @Override
+                        public Void answer(InvocationOnMock invocation) throws Throwable {
+                            latch.countDown();
+                            return null;
+                        }
+                    }).when(configServer).startListening(COMMAND_CHANNLE_BIND_HOST, COMMAND_CHANNEL_BIND_PORT);
+                } catch (IOException e1) {
+                    fail("a mock should not throw an exception");
+                }
                 
                 try {
                     agent.run(commandContext);

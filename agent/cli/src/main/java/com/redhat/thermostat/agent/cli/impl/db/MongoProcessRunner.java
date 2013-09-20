@@ -143,16 +143,28 @@ public class MongoProcessRunner {
         return processIsRunning;
     }
     
+    /**
+     * Start the mongod process.
+     *
+     * @throws ApplicationException to signal an error starting the process. Callers should catch this and handle appropriately.
+     */
     public void startService() throws IOException, InterruptedException,
             ApplicationException, InvalidConfigurationException {
 
         if (isStorageRunning()) {
             LocalizedString message = translator.localize(LocaleResources.STORAGE_ALREADY_RUNNING_WITH_PID, String.valueOf(pid));
-            display(message);
             throw new StorageAlreadyRunningException(pid, message.getContents());
         }
         
-        String dbVersion = getDBVersion();
+        String dbVersion;
+        try {
+            dbVersion = getDBVersion();
+        } catch (IOException e) {
+            LocalizedString message = translator.localize(
+                    LocaleResources.CANNOT_EXECUTE_PROCESS, MONGO_PROCESS);
+            throw new ApplicationException(message.getContents(), e);
+
+        }
         List<String> commands = null;
         commands = getStartupCommand(dbVersion);
         
@@ -164,7 +176,6 @@ public class MongoProcessRunner {
             status = process.runAndReturnResult();
         } catch (ApplicationException ae) {
             LocalizedString message = translator.localize(LocaleResources.CANNOT_EXECUTE_PROCESS, MONGO_PROCESS);
-            display(message);
             throw ae;
         }
 
@@ -182,20 +193,23 @@ public class MongoProcessRunner {
             display(translator.localize(LocaleResources.PID_IS, String.valueOf(pid)));
             
         } else {
-            
+            // don't display anything when throwing an exception; whatever catches the exception will do so.
             LocalizedString message = translator.localize(LocaleResources.CANNOT_START_SERVER,
                              configuration.getDBPath().toString(),
                              String.valueOf(status));
-            display(message);
             throw new StorageStartException(configuration.getDBPath(), status, message.getContents());
         }
     }
     
+    /**
+     * Stop the mongod process.
+     *
+     * @throws ApplicationException to signal an error stopping the storage. Callers should catch this and handle appropriately.
+     */
     public void stopService() throws IOException, InterruptedException, InvalidConfigurationException, ApplicationException {
  
         if (!isStorageRunning()) {
             LocalizedString message = translator.localize(LocaleResources.STORAGE_NOT_RUNNING);
-            display(message);
             throw new StorageNotRunningException(message.getContents());
         }
         List<String> commands = new ArrayList<>(Arrays.asList(MONGO_SHUTDOWN_ARGS));
@@ -213,11 +227,10 @@ public class MongoProcessRunner {
                 // ignore
             }
         } else {
-            
+            // don't display anything when throwing an exception; whatever catches the exception will do so.
             LocalizedString message = translator.localize(LocaleResources.CANNOT_SHUTDOWN_SERVER,
                     configuration.getDBPath().toString(),
                     String.valueOf(status));
-            display(message);
             throw new StorageStopException(configuration.getDBPath(), status, message.getContents());
         }
     }
@@ -260,16 +273,7 @@ public class MongoProcessRunner {
     }
  
     private String getDBVersion() throws IOException {
-        Process process;
-        try {
-            process = new ProcessBuilder(Arrays.asList("mongod", "--version"))
-                    .start();
-        } catch (IOException e) {
-            LocalizedString message = translator.localize(
-                    LocaleResources.CANNOT_EXECUTE_PROCESS, MONGO_PROCESS);
-            display(message);
-            throw e;
-        }
+        Process process = new ProcessBuilder(Arrays.asList("mongod", "--version")).start();
         InputStream out = process.getInputStream();
         return doGetDBVersion(out);
     }

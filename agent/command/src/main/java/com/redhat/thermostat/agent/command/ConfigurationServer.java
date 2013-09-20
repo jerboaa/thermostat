@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.agent.command;
 
+import java.io.IOException;
+
 import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.common.command.Request;
 
@@ -52,8 +54,9 @@ public interface ConfigurationServer {
     /**
      * Starts the configuration server so it listens at the interface specified
      * by the {@code host} and {@code port}.
+     * @throws IOException if it fails to listen
      */
-    void startListening(String host, int port);
+    void startListening(String host, int port) throws IOException;
 
     /**
      * Shuts down the configuration server. No additional {@link Request}s will

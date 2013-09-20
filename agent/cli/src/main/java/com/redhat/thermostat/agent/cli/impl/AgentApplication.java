@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.agent.cli.impl;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
@@ -127,38 +128,46 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
             public Object addingService(ServiceReference reference) {
                 final ConfigurationServer configServer = (ConfigurationServer) super.addingService(reference);
                 String [] host = configuration.getConfigListenAddress().split(":");
-                configServer.startListening(host[0], Integer.valueOf(host[1]));
-                
-                ConnectionListener connectionListener = new ConnectionListener() {
-                    @Override
-                    public void changed(ConnectionStatus newStatus) {
-                        switch (newStatus) {
-                        case DISCONNECTED:
-                            logger.warning("Unexpected disconnect event.");
-                            break;
-                        case CONNECTING:
-                            logger.fine("Connecting to storage.");
-                            break;
-                        case CONNECTED:
-                            logger.fine("Connected to storage");
-                            handleConnected(configServer);
-                            break;
-                        case FAILED_TO_CONNECT:
-                            // ConnectionException will be thrown
-                            break;
-                        default:
-                            logger.warning("Unfamiliar ConnectionStatus value: " + newStatus.toString());
-                        }
-                    }
-                };
 
-                dbService.addConnectionListener(connectionListener);
-                logger.fine("Connecting to storage...");
-                
                 try {
+                    configServer.startListening(host[0], Integer.valueOf(host[1]));
+
+                    ConnectionListener connectionListener = new ConnectionListener() {
+                        @Override
+                        public void changed(ConnectionStatus newStatus) {
+                            switch (newStatus) {
+                            case DISCONNECTED:
+                                logger.warning("Unexpected disconnect event.");
+                                break;
+                            case CONNECTING:
+                                logger.fine("Connecting to storage.");
+                                break;
+                            case CONNECTED:
+                                logger.fine("Connected to storage");
+                                handleConnected(configServer);
+                                break;
+                            case FAILED_TO_CONNECT:
+                                // ConnectionException will be thrown
+                                break;
+                            default:
+                                logger.warning("Unfamiliar ConnectionStatus value: " + newStatus.toString());
+                            }
+                        }
+                    };
+
+                    dbService.addConnectionListener(connectionListener);
+                    logger.fine("Connecting to storage...");
+                
                     dbService.connect();
+                } catch (IOException e) {
+                    logger.log(Level.SEVERE, e.getMessage());
+                    // log stack trace as info only
+                    logger.log(Level.INFO, e.getMessage(), e);
+                    shutdown();
                 } catch (ConnectionException e) {
-                    logger.log(Level.SEVERE, "Could not connect to storage.", e);
+                    logger.log(Level.SEVERE, "Could not connect to storage (" + e.getMessage() + ")");
+                    // log stack trace as info only
+                    logger.log(Level.INFO, "Could nto connect to storage", e);
                     shutdown();
                 }
                 
