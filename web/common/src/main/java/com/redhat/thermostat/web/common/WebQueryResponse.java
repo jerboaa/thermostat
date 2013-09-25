@@ -47,9 +47,6 @@ import com.redhat.thermostat.storage.model.Pojo;
  */
 public class WebQueryResponse<T extends Pojo> {
     
-    public static final int SUCCESS = 0;
-    public static final int ILLEGAL_PATCH = -1;
-
     private int responseCode;
     private T[] resultList;
     

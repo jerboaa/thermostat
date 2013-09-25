@@ -61,6 +61,7 @@ public class VmMemoryStatDAOImplStatementDescriptorRegistration implements
                 VmMemoryStatDAO.vmMemoryStatsCategory.getName());
         descs.add(descriptor);
         descs.add(VmMemoryStatDAOImpl.QUERY_LATEST);
+        descs.add(VmMemoryStatDAOImpl.DESC_ADD_VM_MEMORY_STAT);
     }
 
     @Override

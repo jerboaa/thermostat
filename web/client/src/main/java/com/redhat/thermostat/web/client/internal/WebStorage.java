@@ -42,12 +42,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.SecureRandom;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -59,7 +57,6 @@ import java.util.logging.Logger;
 import javax.net.ssl.SSLContext;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -88,42 +85,29 @@ import com.redhat.thermostat.common.ssl.SslInitException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.config.AuthenticationConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
-import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.AuthToken;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Connection;
 import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.DataModifyingStatement;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.IllegalDescriptorException;
 import com.redhat.thermostat.storage.core.IllegalPatchException;
-import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.Remove;
-import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.SecureStorage;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageException;
-import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.Operator;
-import com.redhat.thermostat.web.common.ExpressionSerializer;
-import com.redhat.thermostat.web.common.OperatorSerializer;
 import com.redhat.thermostat.web.common.PreparedParameterSerializer;
+import com.redhat.thermostat.web.common.PreparedStatementResponseCode;
 import com.redhat.thermostat.web.common.ThermostatGSONConverter;
-import com.redhat.thermostat.web.common.WebAdd;
 import com.redhat.thermostat.web.common.WebPreparedStatement;
 import com.redhat.thermostat.web.common.WebPreparedStatementResponse;
 import com.redhat.thermostat.web.common.WebPreparedStatementSerializer;
 import com.redhat.thermostat.web.common.WebQueryResponse;
 import com.redhat.thermostat.web.common.WebQueryResponseSerializer;
-import com.redhat.thermostat.web.common.WebRemove;
-import com.redhat.thermostat.web.common.WebReplace;
-import com.redhat.thermostat.web.common.WebUpdate;
 
 public class WebStorage implements Storage, SecureStorage {
 
@@ -299,53 +283,6 @@ public class WebStorage implements Storage, SecureStorage {
 
     }
 
-    private class WebAddImpl<T extends Pojo> extends WebAdd<T> {
-
-        private WebAddImpl(int categoryId) {
-            super(categoryId);
-        }
-        
-        @Override
-        public int apply() {
-            return addImpl(this);
-        }
-        
-    }
-
-    private class WebReplaceImpl<T extends Pojo> extends WebReplace<T> {
-        
-        private WebReplaceImpl(int categoryId) {
-            super(categoryId);
-        }
-        
-        @Override
-        public int apply() {
-            return replaceImpl(this);
-        }
-        
-    }
-
-    private class WebUpdateImpl<T extends Pojo> extends WebUpdate<T> {
-    
-        @Override
-        public int apply() {
-            return updatePojo(this);
-        }
-    }
-    
-    private class WebRemoveImpl<T extends Pojo> extends WebRemove<T> {
-        
-        private WebRemoveImpl(int categoryId) {
-            super(categoryId);
-        }
-        
-        @Override
-        public int apply() {
-            return removePojo(this);
-        }
-        
-    }
-    
     private class WebPreparedStatementImpl<T extends Pojo> extends WebPreparedStatement<T> {
 
         // The type of the query result objects we'd get back upon
@@ -359,7 +296,7 @@ public class WebStorage implements Storage, SecureStorage {
         
         @Override
         public int execute() throws StatementExecutionException {
-            throw new IllegalStateException("Not yet implemented!");
+            return doWriteExecute(this);
         }
 
         @Override
@@ -396,9 +333,6 @@ public class WebStorage implements Storage, SecureStorage {
         categoryIds = new HashMap<>();
         gson = new GsonBuilder().registerTypeHierarchyAdapter(Pojo.class,
                         new ThermostatGSONConverter())
-                .registerTypeHierarchyAdapter(Expression.class,
-                        new ExpressionSerializer())
-                .registerTypeHierarchyAdapter(Operator.class, new OperatorSerializer())
                 .registerTypeAdapter(WebPreparedStatement.class, new WebPreparedStatementSerializer())
                 .registerTypeAdapter(WebQueryResponse.class, new WebQueryResponseSerializer<>())
                 .registerTypeAdapter(PreparedParameter.class, new PreparedParameterSerializer())
@@ -531,18 +465,6 @@ public class WebStorage implements Storage, SecureStorage {
         }
     }
 
-    @Override
-    public <T extends Pojo> Remove<T> createRemove(Category<T> category) {
-        return new WebRemoveImpl<>(categoryIds.get(category));
-    }
-
-    @Override
-    public <T extends Pojo> Update<T> createUpdate(Category<T> category) {
-        WebUpdateImpl<T> updateImpl = new WebUpdateImpl<>();
-        updateImpl.setCategoryId(categoryIds.get(category));
-        return updateImpl;
-    }
-
     /**
      * Executes a prepared query
      * 
@@ -569,10 +491,10 @@ public class WebStorage implements Storage, SecureStorage {
         } catch (Exception e) {
             throw new StatementExecutionException(e);
         }
-        if (qResp.getResponseCode() == WebQueryResponse.SUCCESS) {
+        if (qResp.getResponseCode() == PreparedStatementResponseCode.QUERY_SUCCESS) {
             T[] result = qResp.getResultList();
             return new WebCursor<T>(result);
-        } else if (qResp.getResponseCode() == WebQueryResponse.ILLEGAL_PATCH) {
+        } else if (qResp.getResponseCode() == PreparedStatementResponseCode.ILLEGAL_PATCH) {
             String msg = "Illegal statement argument. See server logs for details.";
             IllegalArgumentException iae = new IllegalArgumentException(msg);
             IllegalPatchException e = new IllegalPatchException(iae);
@@ -585,6 +507,38 @@ public class WebStorage implements Storage, SecureStorage {
             IllegalStateException ise = new IllegalStateException(msg);
             throw new StatementExecutionException(ise);
         }
+    }
+    
+    /**
+     * Executes a prepared write
+     * 
+     * @param stmt
+     *            The prepared statement to execute
+     * @return The response code of executing the underlying data modifying
+     *         statement.
+     * @throws StatementExecutionException
+     *             If execution of the statement failed. For example if the
+     *             values set as prepared parameters did not work or were
+     *             partially missing for the prepared statement.
+     */
+    private <T extends Pojo> int doWriteExecute(WebPreparedStatement<T> stmt)
+            throws StatementExecutionException {
+        NameValuePair queryParam = new BasicNameValuePair("prepared-stmt", gson.toJson(stmt, WebPreparedStatement.class));
+        List<NameValuePair> formparams = Arrays.asList(queryParam);
+        int responseCode = PreparedStatementResponseCode.WRITE_GENERIC_FAILURE;
+        try (CloseableHttpEntity entity = post(endpoint + "/write-execute", formparams)) {
+            Reader reader = getContentAsReader(entity);
+            responseCode = gson.fromJson(reader, int.class);
+        } catch (Exception e) {
+            throw new StatementExecutionException(e);
+        }
+        if (responseCode == PreparedStatementResponseCode.ILLEGAL_PATCH) {
+            String msg = "Illegal statement argument. See server logs for details.";
+            IllegalArgumentException iae = new IllegalArgumentException(msg);
+            IllegalPatchException e = new IllegalPatchException(iae);
+            throw new StatementExecutionException(e);
+        }
+        return responseCode;
     }
 
     @Override
@@ -626,80 +580,6 @@ public class WebStorage implements Storage, SecureStorage {
         NameValuePair agentIdParam = new BasicNameValuePair("agentId", agentId);
         List<NameValuePair> agentIdParams = Arrays.asList(agentIdParam);
         post(endpoint + "/purge", agentIdParams).close();
-    }
-
-    @Override
-    public <T extends Pojo> Add<T> createAdd(Category<T> into) {
-        int categoryId = getCategoryId(into);
-        WebAdd<T> add = new WebAddImpl<>(categoryId);
-        return add;
-    }
-
-    @Override
-    public <T extends Pojo> Replace<T> createReplace(Category<T> into) {
-        int categoryId = getCategoryId(into);
-        WebReplace<T> replace = new WebReplaceImpl<>(categoryId);
-        return replace;
-    }
-    
-    private int addImpl(final WebAdd<?> add) throws StorageException {
-        Pojo pojo = add.getPojo();
-        checkAgentIdIsSet(pojo);
-        NameValuePair pojoParam = new BasicNameValuePair("pojo",
-                gson.toJson(pojo));
-        NameValuePair addParam = new BasicNameValuePair("add",
-                gson.toJson(add));
-        List<NameValuePair> formParams = Arrays.asList(addParam, pojoParam);
-        post(endpoint + "/add-pojo", formParams).close();
-        return DataModifyingStatement.DEFAULT_STATUS_SUCCESS;
-    }
-
-    private int replaceImpl(final WebReplace<?> replace) throws StorageException {
-        Pojo pojo = replace.getPojo();
-        checkAgentIdIsSet(pojo);
-        NameValuePair replaceParam = new BasicNameValuePair("replace",
-                gson.toJson(replace));
-        NameValuePair pojoParam = new BasicNameValuePair("pojo",
-                gson.toJson(pojo));
-        List<NameValuePair> formParams = Arrays.asList(replaceParam, pojoParam);
-        post(endpoint + "/replace-pojo", formParams).close();
-        return DataModifyingStatement.DEFAULT_STATUS_SUCCESS;
-    }
-
-    private void checkAgentIdIsSet(final Pojo pojo) throws AssertionError {
-        try {
-            if (BeanUtils.getProperty(pojo, Key.AGENT_ID.getName()) == null) {
-                throw new AssertionError("agentId must be set!");
-            }
-        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-            throw new AssertionError("Pojo needs to have an agentId property");
-        }
-    }
-
-    private int removePojo(Remove<?> remove) throws StorageException {
-        NameValuePair removeParam = new BasicNameValuePair("remove",
-                gson.toJson(remove));
-        List<NameValuePair> formparams = Arrays.asList(removeParam);
-        post(endpoint + "/remove-pojo", formparams).close();
-        return DataModifyingStatement.DEFAULT_STATUS_SUCCESS;
-    }
-
-    private int updatePojo(Update<?> update) throws StorageException {
-        WebUpdate<?> webUp = (WebUpdate<?>) update;
-        List<WebUpdate.UpdateValue> updateValues = webUp.getUpdates();
-        List<Object> values = new ArrayList<>(updateValues.size());
-        for (WebUpdate.UpdateValue updateValue : updateValues) {
-            values.add(updateValue.getValue());
-        }
-
-        NameValuePair updateParam = new BasicNameValuePair("update",
-                gson.toJson(update));
-        NameValuePair valuesParam = new BasicNameValuePair("values",
-                gson.toJson(values));
-        List<NameValuePair> formparams = Arrays
-                .asList(updateParam, valuesParam);
-        post(endpoint + "/update-pojo", formparams).close();
-        return DataModifyingStatement.DEFAULT_STATUS_SUCCESS;
     }
 
     public void setEndpoint(String endpoint) {

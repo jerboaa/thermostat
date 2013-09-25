@@ -37,7 +37,9 @@
 package com.redhat.thermostat.web.common;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -46,6 +48,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.PreparedParameters;
+import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.model.Pojo;
 
 public class WebPreparedStatementSerializerTest {
 
@@ -56,6 +60,7 @@ public class WebPreparedStatementSerializerTest {
         gson = new GsonBuilder()
                 .registerTypeAdapter(WebPreparedStatement.class,
                         new WebPreparedStatementSerializer())
+                .registerTypeHierarchyAdapter(Pojo.class, new ThermostatGSONConverter())
                 .registerTypeAdapter(PreparedParameter.class,
                         new PreparedParameterSerializer()).create();
     }
@@ -81,15 +86,46 @@ public class WebPreparedStatementSerializerTest {
         assertEquals(Integer.class, parameters[0].getType());
         assertEquals("testing", parameters[1].getValue());
         assertEquals(String.class, parameters[1].getType());
+        assertFalse(parameters[1].isArrayType());
         assertEquals(222L, parameters[2].getValue());
         assertEquals(Long.class, parameters[2].getType());
+        assertFalse(parameters[2].isArrayType());
         String[] list = (String[])parameters[3].getValue();
         assertEquals(2, list.length);
         assertEquals("one", list[0]);
         assertEquals("two", list[1]);
-        assertEquals(String[].class, parameters[3].getType());
+        assertEquals(String.class, parameters[3].getType());
+        assertTrue(parameters[3].isArrayType());
         assertEquals(true, parameters[4].getValue());
         assertEquals(Boolean.class, parameters[4].getType());
+        assertFalse(parameters[4].isArrayType());
         assertEquals(WebPreparedStatementResponse.DESCRIPTOR_PARSE_FAILED, newStmt.getStatementId());
+    }
+    
+    /*
+     * Writes need Pojo support for serialization. This is a basic test we do
+     * get Pojos across the wire in a prepared context. 
+     */
+    @Test
+    public void canSerializeDeserializePojoParameters() {
+        PreparedParameters params = new PreparedParameters(2);
+        params.setIntList(0, new int[] { 0, 300 });
+        AgentInformation pojo1 = new AgentInformation("foo-agent");
+        AgentInformation pojo2 = new AgentInformation("foo-agent");
+        pojo2.setAlive(true);
+        pojo2.setConfigListenAddress("127.0.0.1:38822");
+        params.setPojoList(1, new AgentInformation[] { pojo1, pojo2 });
+        
+        WebPreparedStatement<?> stmt = new WebPreparedStatement<>();
+        stmt.setParams(params);
+        stmt.setStatementId(WebPreparedStatementResponse.DESCRIPTOR_PARSE_FAILED);
+        
+        String jsonString = gson.toJson(stmt, WebPreparedStatement.class);
+        assertNotNull(jsonString);
+        
+        WebPreparedStatement<?> result = gson.fromJson(jsonString, WebPreparedStatement.class);
+        assertEquals(WebPreparedStatementResponse.DESCRIPTOR_PARSE_FAILED, result.getStatementId());
+        assertNotNull(result.getParams());
+        
     }
 }

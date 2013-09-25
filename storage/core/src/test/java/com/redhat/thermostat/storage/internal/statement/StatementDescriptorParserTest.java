@@ -247,7 +247,8 @@ public class StatementDescriptorParserTest {
         String descString = "ADD " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = ?s[";
         UnfinishedValueNode unfinished = new UnfinishedValueNode();
         unfinished.setLHS(false);
-        unfinished.setType(String[].class);
+        unfinished.setType(String.class);
+        unfinished.setArrayType(true);
         unfinished.setParameterIndex(0);
         doListTypeTest(descString, unfinished);
     }
@@ -262,7 +263,8 @@ public class StatementDescriptorParserTest {
         String descString = "ADD " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = ?d[";
         UnfinishedValueNode unfinished = new UnfinishedValueNode();
         unfinished.setLHS(false);
-        unfinished.setType(Double[].class);
+        unfinished.setType(Double.class);
+        unfinished.setArrayType(true);
         unfinished.setParameterIndex(0);
         doListTypeTest(descString, unfinished);
     }
@@ -277,7 +279,8 @@ public class StatementDescriptorParserTest {
         String descString = "ADD " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = ?i[";
         UnfinishedValueNode unfinished = new UnfinishedValueNode();
         unfinished.setLHS(false);
-        unfinished.setType(Integer[].class);
+        unfinished.setType(Integer.class);
+        unfinished.setArrayType(true);
         unfinished.setParameterIndex(0);
         doListTypeTest(descString, unfinished);
     }
@@ -292,7 +295,8 @@ public class StatementDescriptorParserTest {
         String descString = "ADD " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = ?b[";
         UnfinishedValueNode unfinished = new UnfinishedValueNode();
         unfinished.setLHS(false);
-        unfinished.setType(Boolean[].class);
+        unfinished.setType(Boolean.class);
+        unfinished.setArrayType(true);
         unfinished.setParameterIndex(0);
         doListTypeTest(descString, unfinished);
     }
@@ -307,7 +311,8 @@ public class StatementDescriptorParserTest {
         String descString = "ADD " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = ?l[";
         UnfinishedValueNode unfinished = new UnfinishedValueNode();
         unfinished.setLHS(false);
-        unfinished.setType(Long[].class);
+        unfinished.setType(Long.class);
+        unfinished.setArrayType(true);
         unfinished.setParameterIndex(0);
         doListTypeTest(descString, unfinished);
     }
@@ -337,7 +342,8 @@ public class StatementDescriptorParserTest {
         String descString = "ADD " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = ?p[";
         UnfinishedValueNode unfinished = new UnfinishedValueNode();
         unfinished.setLHS(false);
-        unfinished.setType(Pojo[].class);
+        unfinished.setType(Pojo.class);
+        unfinished.setArrayType(true);
         unfinished.setParameterIndex(0);
         doListTypeTest(descString, unfinished);
     }

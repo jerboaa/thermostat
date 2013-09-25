@@ -72,12 +72,17 @@ public interface Roles {
      */
     final String GRANT_READ_ALL = "thermostat-grant-read-ALL";
 
+    /*
+     * TODO: Not sure if we still want to use the following 4 stop-gap roles. 
+     */
     final String APPEND = "thermostat-add";
     final String REPLACE = "thermostat-replace";
     final String UPDATE = "thermostat-update";
     final String DELETE = "thermostat-remove";
+    
     final String PREPARE_STATEMENT = "thermostat-prepare-statement";
     final String READ = "thermostat-query";
+    final String WRITE = "thermostat-write";
     final String LOAD_FILE = "thermostat-load-file";
     final String SAVE_FILE = "thermostat-save-file";
     final String PURGE = "thermostat-purge";

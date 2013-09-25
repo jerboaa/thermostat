@@ -395,7 +395,8 @@ public class ParsedStatementImplTest {
         TerminalNode somePropertyVal = new TerminalNode(null);
         UnfinishedValueNode unfinishedPojoList = new UnfinishedValueNode();
         unfinishedPojoList.setLHS(false);
-        unfinishedPojoList.setType(Pojo[].class);
+        unfinishedPojoList.setType(Pojo.class);
+        unfinishedPojoList.setArrayType(true);
         unfinishedPojoList.setParameterIndex(0);
         somePropertyVal.setValue(unfinishedPojoList);
         SetListValue value = new SetListValue();

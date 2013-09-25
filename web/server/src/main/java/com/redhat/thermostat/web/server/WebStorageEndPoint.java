@@ -69,17 +69,15 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonParser;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.Configuration;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
-import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Categories;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.Connection;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DataModifyingStatement;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.IllegalPatchException;
 import com.redhat.thermostat.storage.core.Key;
@@ -88,11 +86,8 @@ import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.PreparedParameters;
 import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Remove;
-import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorMetadataFactory;
 import com.redhat.thermostat.storage.model.AggregateResult;
@@ -100,21 +95,15 @@ import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.BinaryLogicalExpression;
 import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
 import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.Operator;
-import com.redhat.thermostat.web.common.ExpressionSerializer;
-import com.redhat.thermostat.web.common.OperatorSerializer;
 import com.redhat.thermostat.web.common.PreparedParameterSerializer;
+import com.redhat.thermostat.web.common.PreparedStatementResponseCode;
 import com.redhat.thermostat.web.common.StorageWrapper;
 import com.redhat.thermostat.web.common.ThermostatGSONConverter;
-import com.redhat.thermostat.web.common.WebAdd;
 import com.redhat.thermostat.web.common.WebPreparedStatement;
 import com.redhat.thermostat.web.common.WebPreparedStatementResponse;
 import com.redhat.thermostat.web.common.WebPreparedStatementSerializer;
 import com.redhat.thermostat.web.common.WebQueryResponse;
 import com.redhat.thermostat.web.common.WebQueryResponseSerializer;
-import com.redhat.thermostat.web.common.WebRemove;
-import com.redhat.thermostat.web.common.WebReplace;
-import com.redhat.thermostat.web.common.WebUpdate;
 import com.redhat.thermostat.web.server.auth.FilterResult;
 import com.redhat.thermostat.web.server.auth.Roles;
 import com.redhat.thermostat.web.server.auth.UserPrincipal;
@@ -174,10 +163,6 @@ public class WebStorageEndPoint extends HttpServlet {
         gson = new GsonBuilder()
                 .registerTypeHierarchyAdapter(Pojo.class,
                         new ThermostatGSONConverter())
-                .registerTypeHierarchyAdapter(Expression.class,
-                        new ExpressionSerializer())
-                .registerTypeHierarchyAdapter(Operator.class,
-                        new OperatorSerializer())
                 .registerTypeAdapter(WebQueryResponse.class, new WebQueryResponseSerializer<>())
                 .registerTypeAdapter(PreparedParameter.class, new PreparedParameterSerializer())
                 .registerTypeAdapter(WebPreparedStatement.class, new WebPreparedStatementSerializer())
@@ -237,16 +222,10 @@ public class WebStorageEndPoint extends HttpServlet {
             prepareStatement(req, resp);
         } else if (cmd.equals("query-execute")) {
             queryExecute(req, resp);
-        } else if (cmd.equals("add-pojo")) {
-            addPojo(req, resp);
-        } else if (cmd.equals("replace-pojo")) {
-            replacePojo(req, resp);
+        } else if (cmd.equals("write-execute")) {
+            writeExecute(req, resp);
         } else if (cmd.equals("register-category")) {
             registerCategory(req, resp);
-        } else if (cmd.equals("remove-pojo")) {
-            removePojo(req, resp);
-        } else if (cmd.equals("update-pojo")) {
-            updatePojo(req, resp);
         } else if (cmd.equals("save-file")) {
             saveFile(req, resp);
         } else if (cmd.equals("load-file")) {
@@ -559,102 +538,6 @@ public class WebStorageEndPoint extends HttpServlet {
         }
     }
 
-    @WebStoragePathHandler( path = "add-pojo" )
-    private void addPojo(HttpServletRequest req, HttpServletResponse resp) {
-        if (! isAuthorized(req, resp, Roles.APPEND)) {
-            return;
-        }
-        String addParam = req.getParameter("add");
-        WebAdd<?> add = gson.fromJson(addParam, WebAdd.class);
-        int categoryId = add.getCategoryId();
-        Category<?> category = getCategoryFromId(categoryId);
-        Add<?> targetAdd = storage.createAdd(category);
-        Class<? extends Pojo> pojoCls = category.getDataClass();
-        String pojoParam = req.getParameter("pojo");
-        Pojo pojo = gson.fromJson(pojoParam, pojoCls);
-        targetAdd.setPojo(pojo);
-        targetAdd.apply();
-        resp.setStatus(HttpServletResponse.SC_OK);
-    }
-    
-    @WebStoragePathHandler( path = "replace-pojo" )
-    private void replacePojo(HttpServletRequest req, HttpServletResponse resp) {
-        if (! isAuthorized(req, resp, Roles.REPLACE)) {
-            return;
-        }
-        String replaceParam = req.getParameter("replace");
-        WebReplace<?> replace = gson.fromJson(replaceParam, WebReplace.class);
-        int categoryId = replace.getCategoryId();
-        Category<?> category = getCategoryFromId(categoryId);
-        Replace<?> targetReplace = storage.createReplace(category);
-        Class<? extends Pojo> pojoCls = category.getDataClass();
-        String pojoParam = req.getParameter("pojo");
-        Pojo pojo = gson.fromJson(pojoParam, pojoCls);
-        targetReplace.setPojo(pojo);
-        Expression expr = replace.getWhereExpression();
-        targetReplace.where(expr);
-        targetReplace.apply();
-        resp.setStatus(HttpServletResponse.SC_OK);
-    }
-
-    @WebStoragePathHandler( path = "remove-pojo" )
-    private void removePojo(HttpServletRequest req, HttpServletResponse resp) {
-        if (! isAuthorized(req, resp, Roles.DELETE)) {
-            return;
-        }
-        
-        String removeParam = req.getParameter("remove");
-        WebRemove<?> remove = gson.fromJson(removeParam, WebRemove.class);
-        Category<?> targetCategory = getCategoryFromId(remove.getCategoryId());
-        Remove<?> targetRemove = storage.createRemove(targetCategory);
-        Expression expr = remove.getWhereExpression();
-        if (expr != null) {
-            targetRemove.where(expr);
-        }
-        targetRemove.apply();
-        resp.setStatus(HttpServletResponse.SC_OK);
-    }
-
-    @WebStoragePathHandler( path = "update-pojo" )
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    private void updatePojo(HttpServletRequest req, HttpServletResponse resp) {
-        if (! isAuthorized(req, resp, Roles.UPDATE)) {
-            return;
-        }
-        
-        try {
-            String updateParam = req.getParameter("update");
-            WebUpdate update = gson.fromJson(updateParam, WebUpdate.class);
-            Update targetUpdate = storage.createUpdate(getCategoryFromId(update.getCategoryId()));
-            Expression expr = update.getWhereExpression();
-            if (expr != null) {
-                targetUpdate.where(expr);
-            }
-            List<WebUpdate.UpdateValue> updates = update.getUpdates();
-            if (updates != null) {
-                String valuesParam = req.getParameter("values");
-                JsonParser parser = new JsonParser();
-                JsonArray jsonArray = parser.parse(valuesParam)
-                        .getAsJsonArray();
-                int index = 0;
-                for (WebUpdate.UpdateValue updateValue : updates) {
-                    Class valueClass = Class.forName(updateValue
-                            .getValueClass());
-                    Object value = gson.fromJson(jsonArray.get(index),
-                            valueClass);
-                    index++;
-                    Key key = updateValue.getKey();
-                    targetUpdate.set(key, value);
-                }
-            }
-            targetUpdate.apply();
-            resp.setStatus(HttpServletResponse.SC_OK);
-        } catch (ClassNotFoundException ex) {
-            ex.printStackTrace();
-            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        }
-    }
-
     @SuppressWarnings("unchecked")
     @WebStoragePathHandler( path = "query-execute" )
     private <T extends Pojo> void queryExecute(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -674,9 +557,10 @@ public class WebStorageEndPoint extends HttpServlet {
         WebQueryResponse<T> response = new WebQueryResponse<>();
         try {
             targetQuery = (Query<T>)parsed.patchStatement(params);
-            response.setResponseCode(WebQueryResponse.SUCCESS);
+            response.setResponseCode(PreparedStatementResponseCode.QUERY_SUCCESS);
         } catch (IllegalPatchException e) {
-            response.setResponseCode(WebQueryResponse.ILLEGAL_PATCH);
+            logger.log(Level.INFO, "Failed to execute query", e);
+            response.setResponseCode(PreparedStatementResponseCode.ILLEGAL_PATCH);
             writeResponse(resp, response, WebQueryResponse.class);
             return;
         }
@@ -697,6 +581,36 @@ public class WebStorageEndPoint extends HttpServlet {
         }
         response.setResultList(results);
         writeResponse(resp, response, WebQueryResponse.class);
+    }
+    
+    @SuppressWarnings("unchecked")
+    @WebStoragePathHandler( path = "write-execute" )
+    private <T extends Pojo> void writeExecute(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        if (! isAuthorized(req, resp, Roles.WRITE)) {
+            return;
+        }
+        String queryParam = req.getParameter("prepared-stmt");
+        WebPreparedStatement<T> stmt = gson.fromJson(queryParam, WebPreparedStatement.class);
+        
+        PreparedParameters p = stmt.getParams();
+        PreparedParameter[] params = p.getParams();
+        PreparedStatementHolder<T> targetStmtHolder = getStatementHolderFromId(stmt.getStatementId());
+        PreparedStatement<T> targetStmt = targetStmtHolder.getStmt();
+        ParsedStatement<T> parsed = targetStmt.getParsedStatement();
+        
+        DataModifyingStatement<T> targetStatement = null;
+        try {
+            // perform the patching of the target statement.
+            targetStatement = (DataModifyingStatement<T>)parsed.patchStatement(params);
+        } catch (IllegalPatchException e) {
+            logger.log(Level.INFO, "Failed to execute write", e);
+            writeResponse(resp, PreparedStatementResponseCode.ILLEGAL_PATCH, int.class);
+            return;
+        }
+        
+        // executes statement
+        int response = targetStatement.apply();
+        writeResponse(resp, response, int.class);
     }
     
     private UserPrincipal getUserPrincipal(HttpServletRequest req) {

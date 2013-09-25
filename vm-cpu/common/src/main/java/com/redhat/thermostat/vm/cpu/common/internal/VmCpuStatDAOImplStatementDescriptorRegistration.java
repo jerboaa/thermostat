@@ -59,6 +59,7 @@ public class VmCpuStatDAOImplStatementDescriptorRegistration implements
     @Override
     public Set<String> getStatementDescriptors() {
         Set<String> descs = new HashSet<>();
+        descs.add(VmCpuStatDAOImpl.DESC_ADD_VM_CPU_STAT);
         descs.add(descriptor);
         return descs;
     }

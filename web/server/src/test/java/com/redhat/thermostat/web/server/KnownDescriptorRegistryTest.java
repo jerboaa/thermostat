@@ -78,10 +78,10 @@ public class KnownDescriptorRegistryTest {
         KnownDescriptorRegistry reg = new KnownDescriptorRegistry();
         Set<String> trustedDescs = reg.getRegisteredDescriptors();
         assertNotNull(trustedDescs);
-        // storage-core registers 9 queries; this module has
+        // storage-core registers 22 descriptors; this module has
         // only storage-core as maven dep which registers queries.
         // see DAOImplStatementDescriptorRegistration
-        assertEquals(13, trustedDescs.size());
+        assertEquals(22, trustedDescs.size());
     }
     
     @Test

@@ -36,38 +36,33 @@
 
 package com.redhat.thermostat.web.common;
 
-import com.redhat.thermostat.storage.core.Remove;
-import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.storage.query.Expression;
+import com.redhat.thermostat.storage.core.PreparedStatement;
 
-public class WebRemove<T extends Pojo> implements Remove<T> {
+/**
+ * Common response codes for prepared statement responses.
+ *
+ */
+public interface PreparedStatementResponseCode {
 
-    private final int categoryId;
-    private Expression whereExpression;
-
-    public WebRemove(int categoryId) {
-        this.categoryId = categoryId;
-    }
-
-    @Override
-    public void where(Expression expr) {
-        whereExpression = expr;
-    }
-
-    public int getCategoryId() {
-        return categoryId;
-    }
-
-    public Expression getWhereExpression() {
-        return whereExpression;
-    }
-
-    @Override
-    public int apply() {
-        // This should never be called. Overridden by the actual
-        // implementation.
-        throw new IllegalStateException();
-    }
+    /**
+     * Response code for successful prepared queries.
+     */
+    public static final int QUERY_SUCCESS = 0;
+    
+    /**
+     * Response code if patching of a {@link PreparedStatement} failed during
+     * statement execution.
+     * <p>
+     * For example a patching failure could happen if there was a type mismatch
+     * between the descriptor and the parameter provided. Providing not all
+     * parameters and attempting execution of a {@link PreparedStatement} would
+     * be another example.
+     */
+    public static final int ILLEGAL_PATCH = -1;
+    
+    /**
+     * Failure to execute a prepared write statement for some unknown reason.
+     */
+    public static final int WRITE_GENERIC_FAILURE = -200;
     
 }
-

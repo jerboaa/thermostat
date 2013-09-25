@@ -45,6 +45,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.PreparedParameters;
+import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.model.Pojo;
 
 public class PreparedParametersSerializerTest {
 
@@ -52,13 +54,16 @@ public class PreparedParametersSerializerTest {
     
     @Before
     public void setup() {
-        gson = new GsonBuilder().registerTypeAdapter(
-                PreparedParameter.class,
-                new PreparedParameterSerializer()).create();
+        gson = new GsonBuilder()
+                .registerTypeHierarchyAdapter(Pojo.class,
+                        new ThermostatGSONConverter())
+                .registerTypeAdapter(
+                        PreparedParameter.class,
+                        new PreparedParameterSerializer()).create();
     }
     
     @Test
-    public void canSerializeDeserialize() {
+    public void canSerializeDeserializeBasic() {
         PreparedParameters params = new PreparedParameters(5);
         params.setBoolean(0, true);
         params.setInt(1, 2300);
@@ -83,6 +88,57 @@ public class PreparedParametersSerializerTest {
         String actualList[] = (String[])actual[4].getValue();
         for (int i = 0; i < list.length; i++) {
             assertEquals(list[i], actualList[i]);
+        }
+    }
+    
+    @Test
+    public void canSerializeDeserializeMixedTypesWithPojoList() {
+        AgentInformation info1 = new AgentInformation("foo-agent");
+        info1.setAlive(true);
+        AgentInformation info2 = new AgentInformation("foo-agent");
+        info2.setAlive(false);
+        info2.setStartTime(System.currentTimeMillis());
+        info2.setStopTime(System.currentTimeMillis());
+        info2.setConfigListenAddress("127.0.0.1:12000");
+        AgentInformation[] infos = new AgentInformation[] {
+                info1, info2
+        };
+        long[] longs = new long[] { 3000000000L, -3, 300 };
+        // String, long[], Pojo[]
+        PreparedParameters params = new PreparedParameters(3);
+        params.setString(0, "foo-param");
+        params.setLongList(1, longs);
+        params.setPojoList(2, infos);
+        
+        String jsonStr = gson.toJson(params, PreparedParameters.class);
+        PreparedParameters actualParams = gson.fromJson(jsonStr, PreparedParameters.class);
+        
+        PreparedParameter[] expected = params.getParams();
+        PreparedParameter[] actual = actualParams.getParams();
+        
+        assertEquals(expected.length, actual.length);
+        
+        PreparedParameter param1 = actual[0];
+        assertEquals("foo-param", param1.getValue());
+        assertEquals(String.class, param1.getType());
+        assertEquals(false, param1.isArrayType());
+        
+        PreparedParameter param2 = actual[1];
+        assertEquals(Long.class, param2.getType());
+        assertEquals(true, param2.isArrayType());
+        long[] twoActuals = (long[])param2.getValue();
+        assertEquals(3, twoActuals.length);
+        assertEquals(3000000000L, (long)twoActuals[0]);
+        assertEquals(-3, (long)twoActuals[1]);
+        assertEquals(300, (long)twoActuals[2]);
+        
+        PreparedParameter param3 = actual[2];
+        assertEquals(AgentInformation.class, param3.getType());
+        assertEquals(true, param3.isArrayType());
+        Pojo[] pojos = (Pojo[])param3.getValue();
+        assertEquals(2, pojos.length);
+        for (int i = 0; i < pojos.length; i++) {
+            assertEquals(infos[i], pojos[i]);
         }
     }
 }

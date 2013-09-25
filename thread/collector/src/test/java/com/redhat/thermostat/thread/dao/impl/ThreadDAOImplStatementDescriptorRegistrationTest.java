@@ -73,10 +73,10 @@ public class ThreadDAOImplStatementDescriptorRegistrationTest {
     }
     
     @Test
-    public void registersAllQueries() {
+    public void registersAllDescriptors() {
         ThreadDaoImplStatementDescriptorRegistration reg = new ThreadDaoImplStatementDescriptorRegistration();
         Set<String> descriptors = reg.getStatementDescriptors();
-        assertEquals(6, descriptors.size());
+        assertEquals(11, descriptors.size());
         assertFalse("null descriptor not allowed", descriptors.contains(null));
     }
     
@@ -104,7 +104,7 @@ public class ThreadDAOImplStatementDescriptorRegistrationTest {
         // storage-core + this module
         assertEquals(2, registrations.size());
         assertNotNull(threadDaoReg);
-        assertEquals(6, threadDaoReg.getStatementDescriptors().size());
+        assertEquals(11, threadDaoReg.getStatementDescriptors().size());
     }
     
     private Triple<String, String, PreparedParameter[]> setupForMetaDataTest() {

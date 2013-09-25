@@ -42,7 +42,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.same;
@@ -56,7 +55,6 @@ import static org.mockito.Mockito.when;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -69,8 +67,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
 
 
 public class QueuedStorageTest {
@@ -197,29 +193,19 @@ public class QueuedStorageTest {
     }
 
     private QueuedStorage queuedStorage;
-    private Storage delegateStorage;
-    private Add<?> delegateAdd;
-    private Replace<?> delegateReplace;
+    private BackingStorage delegateStorage;
 
     private TestExecutor executor;
     private TestExecutor fileExecutor;
 
     private InputStream expectedFile;
 
-    @SuppressWarnings("unchecked")
     @Before
     public void setUp() {
         executor = new TestExecutor();
         fileExecutor = new TestExecutor();
-        delegateStorage = mock(Storage.class);
+        delegateStorage = mock(BackingStorage.class);
 
-        delegateAdd = mock(Add.class);
-        delegateReplace = mock(Replace.class);
-
-        Remove<?> remove = mock(Remove.class);
-        when(delegateStorage.createAdd(any(Category.class))).thenReturn(delegateAdd);
-        when(delegateStorage.createReplace(any(Category.class))).thenReturn(delegateReplace);
-        when(delegateStorage.createRemove(any(Category.class))).thenReturn(remove);
         expectedFile = mock(InputStream.class);
         when(delegateStorage.loadFile(anyString())).thenReturn(expectedFile);
         queuedStorage = new QueuedStorage(delegateStorage, executor, fileExecutor);
@@ -232,56 +218,6 @@ public class QueuedStorageTest {
         delegateStorage = null;
         fileExecutor = null;
         executor = null;
-    }
-
-    @Test
-    public void testReplace() {
-        Category<?> category = mock(Category.class);
-        Pojo pojo = mock(Pojo.class);
-
-        Replace<?> replace = queuedStorage.createReplace(category);
-        replace.setPojo(pojo);
-        Expression expression = new ExpressionFactory().equalTo(Key.AGENT_ID, "foo");
-        replace.where(expression);
-        replace.apply();
-
-        Runnable r = executor.getTask();
-        assertNotNull(r);
-        verifyZeroInteractions(delegateStorage);
-        verifyZeroInteractions(delegateReplace);
-
-        r.run();
-        verify(delegateStorage).createReplace(category);
-        verify(delegateReplace).setPojo(pojo);
-        verify(delegateReplace).where(expression);
-        verify(delegateReplace).apply();
-        verifyNoMoreInteractions(delegateStorage);
-
-        assertNull(fileExecutor.getTask());
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test
-    public void testUpdatePojo() {
-        Update<?> delegateUpdate = mock(Update.class);
-        when(delegateStorage.createUpdate(any(Category.class))).thenReturn(delegateUpdate);
-
-        Category<?> category = mock(Category.class);
-
-        Update<?> update = queuedStorage.createUpdate(category);
-        verify(delegateStorage).createUpdate(category);
-        verifyNoMoreInteractions(delegateStorage);
-
-        update.apply();
-
-        Runnable r = executor.getTask();
-        assertNotNull(r);
-        verifyZeroInteractions(delegateUpdate);
-        r.run();
-        verify(delegateUpdate).apply();
-        verifyNoMoreInteractions(delegateUpdate);
-
-        assertNull(fileExecutor.getTask());
     }
 
     @Test
@@ -396,19 +332,7 @@ public class QueuedStorageTest {
         public Connection getConnection() {
             // not implemented
             throw new AssertionError();
-        }
-
-        @Override
-        public <T extends Pojo> Add<T> createAdd(Category<T> category) {
-            // not implemented
-            throw new AssertionError();
-        }
-
-        @Override
-        public <T extends Pojo> Replace<T> createReplace(Category<T> category) {
-            // not implemented
-            throw new AssertionError();
-        }
+        }        
 
         @Override
         public void purge(String agentId) {
@@ -425,18 +349,6 @@ public class QueuedStorageTest {
 
         @Override
         public InputStream loadFile(String filename) {
-            // not implemented
-            throw new AssertionError();
-        }
-
-        @Override
-        public <T extends Pojo> Update<T> createUpdate(Category<T> category) {
-            // not implemented
-            throw new AssertionError();
-        }
-
-        @Override
-        public <T extends Pojo> Remove<T> createRemove(Category<T> category) {
             // not implemented
             throw new AssertionError();
         }

@@ -40,9 +40,132 @@ import java.util.concurrent.ExecutorService;
 
 import com.redhat.thermostat.storage.core.AggregateQuery.AggregateFunction;
 import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.storage.query.Expression;
 
 public class QueuedBackingStorage extends QueuedStorage implements
         BackingStorage {
+    
+    private class QueuedReplace<T extends Pojo> implements Replace<T> {
+
+        private final Replace<T> delegateReplace;
+        
+        private QueuedReplace(Replace<T> delegateReplace) {
+            this.delegateReplace = delegateReplace;
+        }
+        
+        @Override
+        public int apply() {
+            executor.execute(new Runnable() {
+                
+                @Override
+                public void run() {
+                    delegateReplace.apply();
+                }
+
+            });
+            return DataModifyingStatement.DEFAULT_STATUS_SUCCESS;
+        }
+
+        @Override
+        public void where(Expression expression) {
+            delegateReplace.where(expression);
+        }
+
+        @Override
+        public void setPojo(Pojo pojo) {
+            delegateReplace.setPojo(pojo);
+        }
+        
+    }
+
+    private class QueuedAdd<T extends Pojo> implements Add<T> {
+        
+        private final Add<T> delegateAdd;
+        
+        private QueuedAdd(Add<T> delegateAdd) {
+            this.delegateAdd = delegateAdd;
+        }
+        
+        @Override
+        public int apply() {
+            executor.execute(new Runnable() {
+                
+                @Override
+                public void run() {
+                    delegateAdd.apply();
+                }
+
+            });
+            return DataModifyingStatement.DEFAULT_STATUS_SUCCESS;
+        }
+
+        @Override
+        public void setPojo(Pojo pojo) {
+            delegateAdd.setPojo(pojo);
+        }
+        
+    }
+
+    private class QueuedUpdate<T extends Pojo> implements Update<T> {
+        
+        private final Update<T> delegateUpdate;
+
+        private QueuedUpdate(Update<T> delegateUpdate) {
+            this.delegateUpdate = delegateUpdate;
+        }
+
+        @Override
+        public void where(Expression expr) {
+            delegateUpdate.where(expr);
+            
+        }
+
+        @Override
+        public <S> void set(Key<S> key, S value) {
+            delegateUpdate.set(key, value);
+        }
+
+        @Override
+        public int apply() {
+            executor.execute(new Runnable() {
+                
+                @Override
+                public void run() {
+                    delegateUpdate.apply();
+                }
+
+            });
+            return DataModifyingStatement.DEFAULT_STATUS_SUCCESS;
+        }
+
+    }
+    
+    private class QueuedRemove<T extends Pojo> implements Remove<T> {
+        
+        private final Remove<T> delegateRemove;
+        
+        private QueuedRemove(Remove<T> delegateRemove) {
+            this.delegateRemove = delegateRemove;
+        }
+
+        @Override
+        public void where(Expression where) {
+            delegateRemove.where(where);
+        }
+
+        @Override
+        public int apply() {
+            executor.execute(new Runnable() {
+                
+                @Override
+                public void run() {
+                    delegateRemove.apply();
+                }
+
+            });
+            return DataModifyingStatement.DEFAULT_STATUS_SUCCESS;
+        }
+    }
     
     public QueuedBackingStorage(BackingStorage delegate) {
         super(delegate);
@@ -75,6 +198,34 @@ public class QueuedBackingStorage extends QueuedStorage implements
     public <T extends Pojo> Query<T> createAggregateQuery(
             AggregateFunction function, Category<T> category) {
         return ((BackingStorage) delegate).createAggregateQuery(function, category);
+    }
+
+    @Override
+    public <T extends Pojo> Add<T> createAdd(Category<T> category) {
+        Add<T> delegateAdd = ((BackingStorage)delegate).createAdd(category);
+        QueuedAdd<T> add = new QueuedAdd<>(delegateAdd);
+        return add;
+    }
+
+    @Override
+    public <T extends Pojo> Replace<T> createReplace(Category<T> category) {
+        Replace<T> delegateReplace = ((BackingStorage)delegate).createReplace(category);
+        QueuedReplace<T> replace = new QueuedReplace<>(delegateReplace);
+        return replace;
+    }
+
+    @Override
+    public <T extends Pojo> Update<T> createUpdate(Category<T> category) {
+        Update<T> delegateUpdate = ((BackingStorage)delegate).createUpdate(category);
+        QueuedUpdate<T> update = new QueuedUpdate<>(delegateUpdate);
+        return update;
+    }
+
+    @Override
+    public <T extends Pojo> Remove<T> createRemove(Category<T> category) {
+        Remove<T> delegateRemove = ((BackingStorage) delegate).createRemove(category);
+        QueuedRemove<T> remove = new QueuedRemove<>(delegateRemove);
+        return remove;
     }
 
 }

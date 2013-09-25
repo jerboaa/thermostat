@@ -159,6 +159,7 @@ public class QueuedBackingStorageTest {
     private QueuedBackingStorage queuedStorage;
     private BackingStorage delegateStorage;
     private Query<TestPojo> delegateQuery;
+    private Replace<?> delegateReplace;
 
     private TestExecutor executor;
     private TestExecutor fileExecutor;
@@ -172,10 +173,12 @@ public class QueuedBackingStorageTest {
         fileExecutor = new TestExecutor();
         delegateStorage = mock(BackingStorage.class);
 
+        delegateReplace = mock(Replace.class);
         delegateQuery = (Query<TestPojo>) mock(Query.class);
         expectedResults = (Cursor<TestPojo>) mock(Cursor.class);
         when(delegateStorage.createQuery(any(Category.class))).thenReturn(delegateQuery);
         when(delegateQuery.execute()).thenReturn(expectedResults);
+        when(delegateStorage.createReplace(any(Category.class))).thenReturn(delegateReplace);
         
         queuedStorage = new QueuedBackingStorage(delegateStorage, executor, fileExecutor);
     }

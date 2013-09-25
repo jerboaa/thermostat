@@ -63,10 +63,10 @@ import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 public class VmMemoryStatDAOImplStatementDescriptorRegistrationTest {
 
     @Test
-    public void registersAllQueries() {
+    public void registersAllDescriptors() {
         VmMemoryStatDAOImplStatementDescriptorRegistration reg = new VmMemoryStatDAOImplStatementDescriptorRegistration();
         Set<String> descriptors = reg.getStatementDescriptors();
-        assertEquals(2, descriptors.size());
+        assertEquals(3, descriptors.size());
         assertFalse("null descriptor not allowed", descriptors.contains(null));
     }
     
@@ -94,7 +94,7 @@ public class VmMemoryStatDAOImplStatementDescriptorRegistrationTest {
         // storage-core + this module
         assertEquals(2, registrations.size());
         assertNotNull(vmMemoryDaoReg);
-        assertEquals(2, vmMemoryDaoReg.getStatementDescriptors().size());
+        assertEquals(3, vmMemoryDaoReg.getStatementDescriptors().size());
     }
     
     @Test

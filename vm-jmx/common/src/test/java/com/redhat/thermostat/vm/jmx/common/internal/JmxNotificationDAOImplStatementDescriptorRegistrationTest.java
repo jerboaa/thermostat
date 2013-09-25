@@ -61,10 +61,10 @@ import com.redhat.thermostat.storage.internal.dao.DAOImplStatementDescriptorRegi
 public class JmxNotificationDAOImplStatementDescriptorRegistrationTest {
 
     @Test
-    public void registersAllQueries() {
+    public void registersAllDescriptors() {
         JmxNotificationDAOImplStatementDescriptorRegistration reg = new JmxNotificationDAOImplStatementDescriptorRegistration();
         Set<String> descriptors = reg.getStatementDescriptors();
-        assertEquals(2, descriptors.size());
+        assertEquals(4, descriptors.size());
         assertFalse("null descriptor not allowed", descriptors.contains(null));
     }
     
@@ -92,7 +92,7 @@ public class JmxNotificationDAOImplStatementDescriptorRegistrationTest {
         // storage-core + this module
         assertEquals(2, registrations.size());
         assertNotNull(jmxDaoReg);
-        assertEquals(2, jmxDaoReg.getStatementDescriptors().size());
+        assertEquals(4, jmxDaoReg.getStatementDescriptors().size());
     }
     
     @Test

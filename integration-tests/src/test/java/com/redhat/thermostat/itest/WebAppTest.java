@@ -78,6 +78,7 @@ import com.redhat.thermostat.host.cpu.common.model.CpuStat;
 import com.redhat.thermostat.storage.config.ConnectionConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Add;
+import com.redhat.thermostat.storage.core.BackingStorage;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
@@ -97,6 +98,7 @@ import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.HostInfo;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.mongodb.internal.MongoStorage;
 import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.test.FreePortFinder;
@@ -151,7 +153,7 @@ public class WebAppTest extends IntegrationTest {
     private static final String KEY_AUTHORIZED_QUERY_NOT = "authorizedQueryNot";
     private static final String KEY_AUTHORIZED_QUERY_AND = "authorizedQueryAnd";
     private static final String KEY_AUTHORIZED_QUERY_OR = "authorizedQueryOr";
-    private static final String KEY_SET_DEFAULT_AGENT_ID = "setDefaultAgentID";
+    private static final String KEY_STORAGE_PURGE = "storagePurge";
     private static final String KEY_AUTHORIZED_FILTERED_QUERY = "authorizedFilteredQuerySubset";
     
     static {
@@ -167,7 +169,7 @@ public class WebAppTest extends IntegrationTest {
         descMap.put(KEY_AUTHORIZED_QUERY_NOT, "QUERY cpu-stats WHERE NOT 'timeStamp' > ?l SORT 'timeStamp' ASC");
         descMap.put(KEY_AUTHORIZED_QUERY_AND, "QUERY cpu-stats WHERE 'timeStamp' > 0 AND 'timeStamp' < ?l SORT 'timeStamp' ASC");
         descMap.put(KEY_AUTHORIZED_QUERY_OR, "QUERY cpu-stats WHERE 'timeStamp' > ?l OR 'timeStamp' < ?l SORT 'timeStamp' ASC");
-        descMap.put(KEY_SET_DEFAULT_AGENT_ID, "QUERY vm-cpu-stats");
+        descMap.put(KEY_STORAGE_PURGE, "QUERY vm-cpu-stats");
         Set<String> trustedDescriptors = new HashSet<>();
         Map<String, DescriptorMetadata> metadata = new HashMap<>();
         DescriptorMetadata descMetadata = new DescriptorMetadata();
@@ -289,6 +291,19 @@ public class WebAppTest extends IntegrationTest {
         Files.copy(backupUsers, new File(THERMOSTAT_USERS_FILE).toPath(), StandardCopyOption.REPLACE_EXISTING);
         Files.copy(backupRoles, new File(THERMOSTAT_ROLES_FILE).toPath(), StandardCopyOption.REPLACE_EXISTING);
     }
+    
+    /*
+     * Queries tests use write operations to put things into storage. For them
+     * we don't want to go through the hassles of using prepared writes. Instead
+     * use mongo-storage directly (which is a BackingStorage). 
+     */
+    private static BackingStorage getAndConnectBackingStorage() {
+        String url = "mongodb://127.0.0.1:27518";
+        StartupConfiguration config = new ConnectionConfiguration(url, "", "");
+        BackingStorage storage = new MongoStorage(config);
+        storage.getConnection().connect();
+        return storage;
+    }
 
     /*
      * Using the given username and password, set up a user for JAAS in the web app,
@@ -386,13 +401,7 @@ public class WebAppTest extends IntegrationTest {
     }
 
     private static void addCpuData(int numberOfItems) throws IOException {
-        String[] roleNames = new String[] {
-                Roles.REGISTER_CATEGORY,
-                Roles.ACCESS_REALM,
-                Roles.LOGIN,
-                Roles.APPEND
-        };
-        Storage storage = getAndConnectStorage(PREP_USER, PREP_PASSWORD, roleNames);
+        BackingStorage storage = getAndConnectBackingStorage();
         storage.registerCategory(CpuStatDAO.cpuStatCategory);
 
         for (int i = 0; i < numberOfItems; i++) {
@@ -406,13 +415,7 @@ public class WebAppTest extends IntegrationTest {
     }
     
     private static void addHostInfoData(int numberOfItems) throws IOException {
-        String[] roleNames = new String[] {
-                Roles.REGISTER_CATEGORY,
-                Roles.ACCESS_REALM,
-                Roles.LOGIN,
-                Roles.APPEND
-        };
-        Storage storage = getAndConnectStorage(PREP_USER, PREP_PASSWORD, roleNames);
+        BackingStorage storage = getAndConnectBackingStorage();
         storage.registerCategory(HostInfoDAO.hostInfoCategory);
 
         for (int i = 0; i < numberOfItems; i++) {
@@ -426,13 +429,7 @@ public class WebAppTest extends IntegrationTest {
     }
     
     private static void addAgentConfigData(List<AgentInformation> items) throws IOException {
-        String[] roleNames = new String[] {
-                Roles.REGISTER_CATEGORY,
-                Roles.ACCESS_REALM,
-                Roles.LOGIN,
-                Roles.APPEND
-        };
-        Storage storage = getAndConnectStorage(PREP_USER, PREP_PASSWORD, roleNames);
+        BackingStorage storage = getAndConnectBackingStorage();
         storage.registerCategory(AgentInfoDAO.CATEGORY);
 
         for (AgentInformation info: items) {
@@ -466,13 +463,7 @@ public class WebAppTest extends IntegrationTest {
     }
     
     private static void deleteAgentConfigData(List<AgentInformation> items) throws IOException {
-        String[] roleNames = new String[] {
-                Roles.REGISTER_CATEGORY,
-                Roles.ACCESS_REALM,
-                Roles.LOGIN,
-                Roles.DELETE
-        };
-        Storage storage = getAndConnectStorage(PREP_USER, PREP_PASSWORD, roleNames);
+        BackingStorage storage = getAndConnectBackingStorage();
         storage.registerCategory(AgentInfoDAO.CATEGORY);
         ExpressionFactory factory = new ExpressionFactory();
         Remove<AgentInformation> remove = storage.createRemove(AgentInfoDAO.CATEGORY);
@@ -503,45 +494,61 @@ public class WebAppTest extends IntegrationTest {
     }
 
     @Test
-    public void authorizedAdd() throws Exception {
+    public void authorizedPreparedAdd() throws Exception {
         String[] roleNames = new String[] {
                 Roles.REGISTER_CATEGORY,
-                Roles.ACCESS_REALM,
+                Roles.WRITE,
                 Roles.LOGIN,
-                Roles.APPEND
+                Roles.ACCESS_REALM,
+                Roles.PREPARE_STATEMENT,
         };
+        
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         webStorage.registerCategory(VmClassStatDAO.vmClassStatsCategory);
         
-        Add<VmClassStat> add = webStorage.createAdd(VmClassStatDAO.vmClassStatsCategory);
+        // This is the same descriptor as VmClassStatDAOImpl uses. It also
+        // gets registered automatically for that reason, no need to do it
+        // manually for this test.
+        String strDesc = "ADD vm-class-stats SET 'agentId' = ?s , " +
+                                "'vmId' = ?s , " +
+                                "'timeStamp' = ?l , " + 
+                                "'loadedClasses' = ?l";
+        StatementDescriptor<VmClassStat> desc = new StatementDescriptor<>(VmClassStatDAO.vmClassStatsCategory, strDesc);
         VmClassStat pojo = new VmClassStat();
         pojo.setAgentId("fluff");
         pojo.setLoadedClasses(12345);
         pojo.setTimeStamp(42);
         pojo.setVmId(VM_ID1);
-        add.setPojo(pojo);
-        add.apply();
+        PreparedStatement<VmClassStat> add;
+        add = webStorage.prepareStatement(desc);
+        addPreparedVmClassStat(pojo, add);
         
         // Add another couple of entries
-        add = webStorage.createAdd(VmClassStatDAO.vmClassStatsCategory);
         pojo = new VmClassStat();
         pojo.setAgentId("fluff");
         pojo.setLoadedClasses(67890);
         pojo.setTimeStamp(42);
         pojo.setVmId(VM_ID2);
-        add.setPojo(pojo);
-        add.apply();
+        addPreparedVmClassStat(pojo, add);
         
-        add = webStorage.createAdd(VmClassStatDAO.vmClassStatsCategory);
         pojo = new VmClassStat();
         pojo.setAgentId("fluff");
         pojo.setLoadedClasses(34567);
         pojo.setTimeStamp(42);
         pojo.setVmId(VM_ID3);
-        add.setPojo(pojo);
-        add.apply();
-
+        addPreparedVmClassStat(pojo, add);
+        
         webStorage.getConnection().disconnect();
+    }
+    
+    private void addPreparedVmClassStat(VmClassStat pojo,
+            PreparedStatement<VmClassStat> add)
+            throws StatementExecutionException {
+        add.setString(0, pojo.getAgentId());
+        add.setString(1, pojo.getVmId());
+        add.setLong(2, pojo.getTimeStamp());
+        add.setLong(3, pojo.getLoadedClasses());
+        add.execute();
     }
     
     /*
@@ -697,7 +704,9 @@ public class WebAppTest extends IntegrationTest {
             };
             Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
             Category<AggregateCount> adapted = new CategoryAdapter<HostInfo, AggregateCount>(HostInfoDAO.hostInfoCategory).getAdapted(AggregateCount.class);
-            // register adapted category.
+            // register non-adapted + adapted category in that order. Adapted
+            // category needs to be registered, since it gets it's own mapped id
+            webStorage.registerCategory(HostInfoDAO.hostInfoCategory);
             webStorage.registerCategory(adapted);
             
             // storage-core registers this descriptor. no need to do it in this
@@ -1021,29 +1030,29 @@ public class WebAppTest extends IntegrationTest {
 
     @Test
     public void storagePurge() throws Exception {
-        String[] roleNames = new String[] {
-                Roles.ACCESS_REALM,
-                Roles.LOGIN,
-                Roles.REGISTER_CATEGORY,
-                Roles.READ,
-                Roles.APPEND,
-                Roles.PURGE,
-                Roles.PREPARE_STATEMENT,
-                Roles.GRANT_READ_ALL
-        };
-        Storage storage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
+        // Add some data to purge (uses backing storage)
         UUID uuid = new UUID(42, 24);
-        storage.registerCategory(VmCpuStatDAO.vmCpuStatCategory);
         long timeStamp = 5;
         double cpuLoad = 0.15;
         VmCpuStat pojo = new VmCpuStat(uuid.toString(), timeStamp, VM_ID1, cpuLoad);
-        Add<VmCpuStat> add = storage.createAdd(VmCpuStatDAO.vmCpuStatCategory);
-        add.setPojo(pojo);
-        add.apply();
+        addVmCpuStat(pojo);
 
-        String strDesc = DESCRIPTOR_MAP.get(KEY_SET_DEFAULT_AGENT_ID);
+        String[] roleNames = new String[] {
+                Roles.ACCESS_REALM,
+                Roles.LOGIN,
+                Roles.PURGE,
+                Roles.PREPARE_STATEMENT,
+                Roles.READ,
+                Roles.GRANT_READ_ALL,
+                Roles.REGISTER_CATEGORY
+        };
+        
+        Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
+        webStorage.registerCategory(VmCpuStatDAO.vmCpuStatCategory);
+        
+        String strDesc = DESCRIPTOR_MAP.get(KEY_STORAGE_PURGE);
         StatementDescriptor<VmCpuStat> queryDesc = new StatementDescriptor<>(VmCpuStatDAO.vmCpuStatCategory, strDesc);
-        PreparedStatement<VmCpuStat> query = storage.prepareStatement(queryDesc);
+        PreparedStatement<VmCpuStat> query = webStorage.prepareStatement(queryDesc);
         Cursor<VmCpuStat> cursor = query.executeQuery();
         assertTrue(cursor.hasNext());
         pojo = cursor.next();
@@ -1054,6 +1063,15 @@ public class WebAppTest extends IntegrationTest {
         assertEquals(cpuLoad, pojo.getCpuLoad(), EQUALS_DELTA);
         assertEquals(uuid.toString(), pojo.getAgentId());
 
-        storage.purge(uuid.toString());
+        webStorage.purge(uuid.toString());
+    }
+
+    private void addVmCpuStat(VmCpuStat pojo) {
+        BackingStorage storage = getAndConnectBackingStorage();
+        storage.registerCategory(VmCpuStatDAO.vmCpuStatCategory);
+        Add<VmCpuStat> add = storage.createAdd(VmCpuStatDAO.vmCpuStatCategory);
+        add.setPojo(pojo);
+        add.apply();
+        storage.getConnection().disconnect();        
     }
 }

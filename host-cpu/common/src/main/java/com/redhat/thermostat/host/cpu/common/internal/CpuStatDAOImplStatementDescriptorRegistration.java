@@ -61,6 +61,7 @@ public class CpuStatDAOImplStatementDescriptorRegistration implements
     public Set<String> getStatementDescriptors() {
         Set<String> descs = new HashSet<>(1);
         descs.add(DESCRIPTOR);
+        descs.add(CpuStatDAOImpl.DESC_ADD_CPU_STAT);
         return descs;
     }
 

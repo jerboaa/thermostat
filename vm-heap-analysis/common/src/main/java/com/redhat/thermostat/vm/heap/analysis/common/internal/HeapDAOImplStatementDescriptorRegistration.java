@@ -56,6 +56,7 @@ public class HeapDAOImplStatementDescriptorRegistration implements
         Set<String> descs = new HashSet<>(2);
         descs.add(HeapDAOImpl.QUERY_ALL_HEAPS);
         descs.add(HeapDAOImpl.QUERY_HEAP_INFO);
+        descs.add(HeapDAOImpl.DESC_ADD_VM_HEAP_INFO);
         return descs;
     }
 

@@ -62,6 +62,8 @@ public class NumaDAOImplStatementDescriptorRegistration implements
                 NumaDAO.numaStatCategory.getName());
         descs.add(descriptor);
         descs.add(NumaDAOImpl.QUERY_NUMA_INFO);
+        descs.add(NumaDAOImpl.DESC_ADD_NUMA_HOST_INFO);
+        descs.add(NumaDAOImpl.DESC_ADD_NUMA_STAT);
     }
 
     @Override

@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.storage.core;
 
+import java.lang.reflect.Modifier;
+
 import com.redhat.thermostat.storage.model.Pojo;
 
 /**
@@ -58,69 +60,83 @@ public final class PreparedParameters implements PreparedStatementSetter {
     
     @Override
     public void setLong(int paramIndex, long paramValue) {
-        setType(paramIndex, paramValue, Long.class);
+        setType(paramIndex, paramValue, Long.class, false);
     }
 
     @Override
     public void setLongList(int paramIndex, long[] paramValue) {
-        setType(paramIndex, paramValue, Long[].class);
+        setType(paramIndex, paramValue, Long.class, true);
     }
 
     @Override
     public void setInt(int paramIndex, int paramValue) {
-        setType(paramIndex, paramValue, Integer.class);
+        setType(paramIndex, paramValue, Integer.class, false);
     }
 
     @Override
     public void setIntList(int paramIndex, int[] paramValue) {
-        setType(paramIndex, paramValue, Integer[].class);
+        setType(paramIndex, paramValue, Integer.class, true);
     }
 
     @Override
     public void setBoolean(int paramIndex, boolean paramValue) {
-        setType(paramIndex, paramValue, Boolean.class);
+        setType(paramIndex, paramValue, Boolean.class, false);
     }
 
     @Override
     public void setBooleanList(int paramIndex, boolean[] paramValue) {
-        setType(paramIndex, paramValue, Boolean[].class);
+        setType(paramIndex, paramValue, Boolean.class, true);
     }
 
     @Override
     public void setString(int paramIndex, String paramValue) {
-        setType(paramIndex, paramValue, String.class);
+        setType(paramIndex, paramValue, String.class, false);
     }
 
     @Override
     public void setStringList(int paramIndex, String[] paramValue) {
-        setType(paramIndex, paramValue, String[].class);
+        setType(paramIndex, paramValue, String.class, true);
     }
 
     @Override
     public void setDouble(int paramIndex, double paramValue) {
-        setType(paramIndex, paramValue, Double.class);
+        setType(paramIndex, paramValue, Double.class, false);
     }
 
     @Override
     public void setDoubleList(int paramIndex, double[] paramValue) {
-        setType(paramIndex, paramValue, Double[].class);
+        setType(paramIndex, paramValue, Double.class, true);
     }
 
     @Override
     public void setPojo(int paramIndex, Pojo paramValue) {
-        setType(paramIndex, paramValue, Pojo.class);
+        Class<?> runtimeType = paramValue.getClass();
+        performPojoChecks(runtimeType, "Type");
+        setType(paramIndex, paramValue, runtimeType, false);
     }
 
     @Override
     public void setPojoList(int paramIndex, Pojo[] paramValue) {
-        setType(paramIndex, paramValue, Pojo[].class);
+        Class<?> componentType = paramValue.getClass().getComponentType();
+        performPojoChecks(componentType, "Component type");
+        setType(paramIndex, paramValue, componentType, true);
+    }
+    
+    private void performPojoChecks(Class<?> type, String errorMsgPrefix) {
+        if (type.isInterface() || Modifier.isAbstract(type.getModifiers())) {
+            // Due to serealization we only allow concrete instantiable types.
+            // Instantiation would fail later in ThermostatGSONConverter for this
+            // reason anyway. Let's do this check early.            
+            throw new IllegalArgumentException(errorMsgPrefix + "'" +
+                        type.getName() + "' not instantiable!");
+        }
     }
 
-    private void setType(int paramIndex, Object paramValue, Class<?> paramType) {
+    private void setType(int paramIndex, Object paramValue, Class<?> paramType, boolean isArrayType) {
         if (paramIndex >= params.length) {
             throw new IllegalArgumentException("Parameter index '" + paramIndex + "' out of range.");
         }
-        PreparedParameter param = new PreparedParameter(paramValue, paramType);
+        PreparedParameter param = new PreparedParameter(paramValue, paramType, isArrayType);
         params[paramIndex] = param;
     }
     

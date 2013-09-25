@@ -38,85 +38,15 @@
 package com.redhat.thermostat.storage.core;
 
 import java.io.InputStream;
-import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.storage.query.Expression;
 
 public class QueuedStorage implements Storage {
 
     private static final int SHUTDOWN_TIMEOUT_SECONDS = 3;
-
-    private class QueuedReplace<T extends Pojo> extends AddReplaceHelper implements Replace<T> {
-
-        private Expression expression;
-        
-        private QueuedReplace(Category<?> category) {
-            super(category);
-        }
-        
-        @Override
-        public int apply() {
-            replaceImpl(getCategory(), getPojo(), expression);
-            return DataModifyingStatement.DEFAULT_STATUS_SUCCESS;
-        }
-
-        @Override
-        public void where(Expression expression) {
-            this.expression = Objects.requireNonNull(expression);
-        }
-        
-    }
-
-    private class QueuedAdd<T extends Pojo> extends AddReplaceHelper implements Add<T> {
-
-        private QueuedAdd(Category<?> category) {
-            super(category);
-        }
-        
-        @Override
-        public int apply() {
-            addImpl(getCategory(), getPojo());
-            return DataModifyingStatement.DEFAULT_STATUS_SUCCESS;
-        }
-        
-    }
-
-    private class QueuedUpdate<T extends Pojo> implements Update<T> {
-        private Update<T> delegateUpdate;
-
-        QueuedUpdate(Update<T> delegateUpdate) {
-            this.delegateUpdate = delegateUpdate;
-        }
-
-        @Override
-        public void where(Expression expr) {
-            delegateUpdate.where(expr);
-            
-        }
-
-        @Override
-        public <S> void set(Key<S> key, S value) {
-            delegateUpdate.set(key, value);
-        }
-
-        @Override
-        public int apply() {
-            executor.execute(new Runnable() {
-                
-                @Override
-                public void run() {
-                    delegateUpdate.apply();
-                }
-
-            });
-            return DataModifyingStatement.DEFAULT_STATUS_SUCCESS;
-        }
-
-    }
 
     protected final Storage delegate;
     protected final ExecutorService executor;
@@ -150,49 +80,6 @@ public class QueuedStorage implements Storage {
     }
 
     @Override
-    public <T extends Pojo> Add<T> createAdd(Category<T> into) {
-        QueuedAdd<T> add = new QueuedAdd<>(into);
-        return add;
-    }
-
-    @Override
-    public <T extends Pojo> Replace<T> createReplace(Category<T> into) {
-        QueuedReplace<T> replace = new QueuedReplace<>(into);
-        return replace;
-    }
-
-    private void replaceImpl(final Category<?> category, final Pojo pojo, final Expression expression) {
-        
-        executor.execute(new Runnable() {
-            
-            @Override
-            public void run() {
-                Replace<?> replace = delegate.createReplace(category);
-                replace.setPojo(pojo);
-                replace.where(expression);
-                replace.apply();
-            }
-
-        });
-
-    }
-
-    private void addImpl(final Category<?> category, final Pojo pojo) {
-        
-        executor.execute(new Runnable() {
-            
-            @Override
-            public void run() {
-                Add<?> add = delegate.createAdd(category);
-                add.setPojo(pojo);
-                add.apply();
-            }
-
-        });
-
-    }
-
-    @Override
     public void purge(final String agentId) {
 
         executor.execute(new Runnable() {
@@ -223,17 +110,6 @@ public class QueuedStorage implements Storage {
     @Override
     public InputStream loadFile(String filename) {
         return delegate.loadFile(filename);
-    }
-
-    @Override
-    public <T extends Pojo> Update<T> createUpdate(Category<T> category) {
-        QueuedUpdate<T> update = new QueuedUpdate<>(delegate.createUpdate(category));
-        return update;
-    }
-
-    @Override
-    public <T extends Pojo> Remove<T> createRemove(Category<T> category) {
-        return delegate.createRemove(category);
     }
 
     @Override

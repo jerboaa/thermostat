@@ -36,14 +36,15 @@
 
 package com.redhat.thermostat.web.common;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
@@ -52,8 +53,9 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.PreparedParameter;
-
+import com.redhat.thermostat.storage.model.Pojo;
 
 /**
  * GSON type adapter for {@link PreparedParameter}.
@@ -61,54 +63,49 @@ import com.redhat.thermostat.storage.core.PreparedParameter;
  */
 public class PreparedParameterSerializer implements JsonDeserializer<PreparedParameter>, JsonSerializer<PreparedParameter>{
 
+    private static final Logger logger = LoggingUtils.getLogger(PreparedParameterSerializer.class);
     private static final String PROP_TYPE = "type";
+    private static final String PROP_IS_ARRAY_TYPE = "isArray";
     private static final String PROP_VALUE = "value";
-    // The set of valid classes for types
-    private static final Set<String> VALID_CLASSNAMES;
+    private static final Set<Class<?>> WRAPPER_CLASSES;
+    // maps wrapper classes to primitives:
+    //    Integer.class => int.class , Double.class => double.class, etc.
+    private static final Map<Class<?>, Class<?>> TO_PRIMITIVE_ARRAY_MAP;
     
     static {
-        VALID_CLASSNAMES = new HashSet<>();
-        VALID_CLASSNAMES.add(String.class.getCanonicalName());
-        VALID_CLASSNAMES.add(String[].class.getCanonicalName());
-        VALID_CLASSNAMES.add(Integer.class.getCanonicalName());
-        VALID_CLASSNAMES.add(Long.class.getCanonicalName());
-        VALID_CLASSNAMES.add(Boolean.class.getCanonicalName());
+        WRAPPER_CLASSES = new HashSet<>();
+        TO_PRIMITIVE_ARRAY_MAP = new HashMap<>();
+        WRAPPER_CLASSES.add(Integer.class);
+        TO_PRIMITIVE_ARRAY_MAP.put(Integer.class, int.class);
+        WRAPPER_CLASSES.add(Long.class);
+        TO_PRIMITIVE_ARRAY_MAP.put(Long.class, long.class);
+        WRAPPER_CLASSES.add(Boolean.class);
+        TO_PRIMITIVE_ARRAY_MAP.put(Boolean.class, boolean.class);
+        WRAPPER_CLASSES.add(Double.class);
+        TO_PRIMITIVE_ARRAY_MAP.put(Double.class, double.class);
+        
     }
     
     @Override
     public JsonElement serialize(PreparedParameter param, Type type,
             JsonSerializationContext ctxt) {
         JsonObject result = new JsonObject();
-        JsonElement valueElem = serializeValue(param.getValue());
+        JsonElement valueElem = serializeValue(ctxt, param.getValue(), param.getType(), param.isArrayType());
         result.add(PROP_VALUE, valueElem);
-        JsonPrimitive typeElem = new JsonPrimitive(param.getType().getCanonicalName());
+        JsonPrimitive typeElem = new JsonPrimitive(param.getType().getName());
         result.add(PROP_TYPE, typeElem);
+        JsonPrimitive arrayType = new JsonPrimitive(param.isArrayType());
+        result.add(PROP_IS_ARRAY_TYPE, arrayType);
         return result;
     }
 
-    private JsonElement serializeValue(Object value) {
+    private JsonElement serializeValue(JsonSerializationContext ctxt, Object value, Class<?> compType, boolean isArray) {
         JsonElement element;
-        if (value instanceof Integer) {
-            int val = ((Integer)value).intValue();
-            element = new JsonPrimitive(val);
-        } else if (value instanceof Long) {
-            long val = ((Long)value).longValue();
-            element = new JsonPrimitive(val);
-        } else if (value instanceof String) {
-            String val = (String)value;
-            element = new JsonPrimitive(val);
-        } else if (value instanceof String[]) {
-            String[] val = (String[])value;
-            JsonArray array = new JsonArray();
-            for (int i = 0; i < val.length; i++) {
-                array.add(new JsonPrimitive(val[i]));
-            }
-            element = array;
-        } else if (value instanceof Boolean) {
-            Boolean val = (Boolean)value;
-            element = new JsonPrimitive(val.booleanValue());
+        if (isArray) {
+                Class<?> arrayType = Array.newInstance(compType, 0).getClass();
+                element = ctxt.serialize(value, arrayType);
         } else {
-            throw new IllegalStateException("Unexpected value for serialization '" + value + "'");
+            element = ctxt.serialize(value, compType);
         }
         return element;
     }
@@ -118,57 +115,62 @@ public class PreparedParameterSerializer implements JsonDeserializer<PreparedPar
             JsonDeserializationContext ctxt) throws JsonParseException {
         JsonElement typeElem = jsonElem.getAsJsonObject().get(PROP_TYPE);
         String className = typeElem.getAsString();
-        // perform some sanity checking on which classes we do forName() :)
-        validateSaneClassName(className);
+        // perform some sanity checking on the types of classes we actually
+        // de-serialize
         Class<?> typeVal = deserializeTypeVal(className);
+        validateSaneClassName(typeVal);
         JsonElement valueElement = jsonElem.getAsJsonObject().get(PROP_VALUE);
-        Object value = deserializeValue(ctxt, valueElement, typeVal);
+        JsonElement isArrayElement = jsonElem.getAsJsonObject().get(PROP_IS_ARRAY_TYPE);
+        boolean isArray = isArrayElement.getAsBoolean();
+        Object value = deserializeValue(ctxt, valueElement, typeVal, isArray);
         PreparedParameter param = new PreparedParameter();
         param.setType(typeVal);
         param.setValue(value);
+        param.setArrayType(isArray);
         return param;
     }
 
     private Class<?> deserializeTypeVal(String className) {
         Class<?> typeVal = null;
-        if (className.equals(String[].class.getCanonicalName())) {
-            typeVal = String[].class;
-        } else {
-            try {
-                typeVal = Class.forName(className);
-            } catch (ClassNotFoundException ignored) {
-                // we only load valid classes that way
-            };
+        try {
+            typeVal = Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            logger.log(Level.WARNING, "Failed to resolve class type for '"
+                    + className + "'.");
         }
+        ;
         return typeVal;
     }
 
     private Object deserializeValue(JsonDeserializationContext ctxt,
-            JsonElement valueElement, Class<?> valType) {
-        if (valueElement.isJsonPrimitive()) {
-            // By telling GSON the type, we get the rightly casted
+            JsonElement valueElement, Class<?> valType, boolean isArray) {
+        if (!isArray) {
+            // By telling GSON the type, we get the correctly casted
             // value back.
             return ctxt.deserialize(valueElement, valType);
-        } else if (valueElement.isJsonArray()) {
-            // Only string arrays are supported
-            List<String> values = new ArrayList<>();
-            JsonArray jsonArray = (JsonArray)valueElement;
-            Iterator<JsonElement> it = jsonArray.iterator();
-            while (it.hasNext()) {
-                JsonElement elem = it.next();
-                String strElem = ctxt.deserialize(elem, String.class);
-                values.add(strElem);
-            }
-            return values.toArray(new String[0]);
         } else {
-            throw new IllegalStateException("Illegal json for parameter value");
+            Class<?> arrayType = Array.newInstance(valType, 0).getClass();
+            Object array;
+            // Make sure we get primitive type arrays if this is an array type
+            // of one of the wrapped primitives.
+            if (WRAPPER_CLASSES.contains(valType)) {
+                Class<?> primType = Array.newInstance(TO_PRIMITIVE_ARRAY_MAP.get(valType), 0).getClass();
+                array = ctxt.deserialize(valueElement, primType);
+            } else {
+                array = ctxt.deserialize(valueElement, arrayType);
+            }
+            return array;
         }
     }
 
-    private void validateSaneClassName(String className) {
-        if (!VALID_CLASSNAMES.contains(className)) {
-            throw new IllegalStateException("Illegal type of parameter " + className);
+    // Allow wrapper classes, String + Pojo types, refuse everything else
+    private void validateSaneClassName(Class<?> clazz) {
+        if (WRAPPER_CLASSES.contains(clazz) ||
+                String.class == clazz ||
+                Pojo.class.isAssignableFrom(clazz)) {
+            return;
         }
+        throw new IllegalStateException("Illegal type of parameter " + clazz.getCanonicalName());
     }
 
 }

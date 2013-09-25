@@ -61,6 +61,7 @@ public class VmGcStatDAOImplStatementDescriptorRegistration implements
     public Set<String> getStatementDescriptors() {
         Set<String> descs = new HashSet<>();
         descs.add(descriptor);
+        descs.add(VmGcStatDAOImpl.DESC_ADD_VM_GC_STAT);
         return descs;
     }
 

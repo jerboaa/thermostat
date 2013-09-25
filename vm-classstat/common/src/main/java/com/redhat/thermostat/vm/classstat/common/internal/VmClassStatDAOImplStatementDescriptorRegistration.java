@@ -60,6 +60,7 @@ public class VmClassStatDAOImplStatementDescriptorRegistration implements
     public Set<String> getStatementDescriptors() {
         Set<String> descs = new HashSet<>(1);
         descs.add(QUERY);
+        descs.add(VmClassStatDAOImpl.DESC_ADD_VM_CLASS_STAT);
         return descs;
     }
 

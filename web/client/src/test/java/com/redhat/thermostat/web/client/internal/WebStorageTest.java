@@ -58,10 +58,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
 import javax.servlet.ServletException;
@@ -86,11 +84,7 @@ import org.mockito.Mockito;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
-import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.AuthToken;
 import com.redhat.thermostat.storage.core.Categories;
 import com.redhat.thermostat.storage.core.Category;
@@ -103,30 +97,19 @@ import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.PreparedParameters;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.Remove;
-import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
-import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.storage.query.ExpressionFactory;
-import com.redhat.thermostat.storage.query.Operator;
 import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
-import com.redhat.thermostat.web.common.ExpressionSerializer;
-import com.redhat.thermostat.web.common.OperatorSerializer;
 import com.redhat.thermostat.web.common.PreparedParameterSerializer;
+import com.redhat.thermostat.web.common.PreparedStatementResponseCode;
 import com.redhat.thermostat.web.common.ThermostatGSONConverter;
-import com.redhat.thermostat.web.common.WebAdd;
 import com.redhat.thermostat.web.common.WebPreparedStatement;
 import com.redhat.thermostat.web.common.WebPreparedStatementResponse;
 import com.redhat.thermostat.web.common.WebPreparedStatementSerializer;
 import com.redhat.thermostat.web.common.WebQueryResponse;
 import com.redhat.thermostat.web.common.WebQueryResponseSerializer;
-import com.redhat.thermostat.web.common.WebRemove;
-import com.redhat.thermostat.web.common.WebReplace;
-import com.redhat.thermostat.web.common.WebUpdate;
 
 public class WebStorageTest {
 
@@ -147,16 +130,13 @@ public class WebStorageTest {
 
     private static Category<TestObj> category;
     private static Key<String> key1;
-    private static Key<Integer> key2;
 
     private WebStorage storage;
 
-    private ExpressionFactory factory;
 
     @BeforeClass
     public static void setupCategory() {
         key1 = new Key<>("property1");
-        key2 = new Key<>("property2");
         category = new Category<>("test", TestObj.class, key1);
     }
 
@@ -188,7 +168,6 @@ public class WebStorageTest {
         storage.setEndpoint("http://localhost:" + port + "/");
         headers = new HashMap<>();
         registerCategory();
-        factory = new ExpressionFactory();
     }
 
     private void startServer(int port) throws Exception {
@@ -365,7 +344,7 @@ public class WebStorageTest {
         assertEquals(String.class, params.getParams()[0].getType());
         
         WebQueryResponse<TestObj> fakeQueryResponse = new WebQueryResponse<>();
-        fakeQueryResponse.setResponseCode(WebQueryResponse.SUCCESS);
+        fakeQueryResponse.setResponseCode(PreparedStatementResponseCode.QUERY_SUCCESS);
         fakeQueryResponse.setResultList(new TestObj[] { obj1, obj2 });
         prepareServer(gson.toJson(fakeQueryResponse));
         Cursor<TestObj> results = null;
@@ -392,181 +371,56 @@ public class WebStorageTest {
     }
     
     @Test
-    public void testAdd() throws IOException, JsonSyntaxException, ClassNotFoundException {
+    public void canPrepareAndExecuteWrite() {
+        TestObj obj1 = new TestObj();
+        obj1.setProperty1("fluffor1");
+        TestObj obj2 = new TestObj();
+        obj2.setProperty1("fluffor2");
+        Gson gson = new GsonBuilder().registerTypeAdapter(PreparedParameter.class, new PreparedParameterSerializer())
+                .registerTypeAdapter(WebPreparedStatement.class, new WebPreparedStatementSerializer())
+                .registerTypeHierarchyAdapter(Pojo.class, new ThermostatGSONConverter())
+                .create();
 
-        UUID agentId = new UUID(1, 2);
-        TestObj obj = new TestObj();
-        obj.setProperty1("fluff");
-        obj.setAgentId(agentId.toString());
-
-        Add<TestObj> add = storage.createAdd(category);
-        add.setPojo(obj);
-
-        prepareServer();
-        add.apply();
-
-        Gson gson = new Gson();
-        StringReader reader = new StringReader(requestBody);
-        BufferedReader bufRead = new BufferedReader(reader);
-        String line = URLDecoder.decode(bufRead.readLine(), "UTF-8");
-        String [] params = line.split("&");
-        assertEquals(2, params.length);
-        String[] parts = params[0].split("=");
-        assertEquals("add", parts[0]);
-        @SuppressWarnings("unchecked")
-        WebAdd<TestObj> add2 = gson.fromJson(parts[1], WebAdd.class);
-        assertEquals(42, add2.getCategoryId());
-
-        parts = params[1].split("=");
-        assertEquals(2, parts.length);
-        assertEquals("pojo", parts[0]);
-        Object resultObj = gson.fromJson(parts[1], TestObj.class);
-        assertEquals(obj, resultObj);
-    }
-
-    @Test
-    public void testReplace() throws IOException, JsonSyntaxException, ClassNotFoundException {
-
-        // We need an agentId, so that we can check automatic insert of agentId.
-        UUID agentId = new UUID(1, 2);
-        TestObj obj = new TestObj();
-        obj.setAgentId(agentId.toString());
-        obj.setProperty1("fluff");
-
-        Replace<TestObj> replace = storage.createReplace(category);
-        Expression expr = new ExpressionFactory().equalTo(key1, "fluff");
-        replace.setPojo(obj);
-        replace.where(expr);
-
-        prepareServer();
-        replace.apply();
-
-        Gson gson = new GsonBuilder()
-                .registerTypeHierarchyAdapter(Expression.class,
-                        new ExpressionSerializer())
-                .registerTypeHierarchyAdapter(Operator.class,
-                        new OperatorSerializer()).create();
-        StringReader reader = new StringReader(requestBody);
-        BufferedReader bufRead = new BufferedReader(reader);
-        String line = URLDecoder.decode(bufRead.readLine(), "UTF-8");
-        String [] params = line.split("&");
-        assertEquals(2, params.length);
-        String[] parts = params[0].split("=");
-        assertEquals("replace", parts[0]);
-        @SuppressWarnings("unchecked")
-        WebReplace<TestObj> insert = gson.fromJson(parts[1], WebReplace.class);
-        assertEquals(42, insert.getCategoryId());
-
-        parts = params[1].split("=");
-        assertEquals(2, parts.length);
-        assertEquals("pojo", parts[0]);
-        Object resultObj = gson.fromJson(parts[1], TestObj.class);
-        assertEquals(obj, resultObj);
-    }
-
-    @Test
-    public void testCreateRemove() {
-        WebRemove<?> remove = (WebRemove<?>) storage.createRemove(category);
-        assertEquals(42, remove.getCategoryId());
-        Expression expr = factory.equalTo(key1, "test");
-        remove.where(expr);
-        assertEquals(expr, remove.getWhereExpression());
-    }
-
-    @Test
-    public void testRemovePojo() throws UnsupportedEncodingException, IOException {
-        Expression expr = factory.equalTo(key1, "test");
-        Remove<?> remove = storage.createRemove(category);
-        remove.where(expr);
-
-        prepareServer();
-        remove.apply();
-
-        Gson gson = new GsonBuilder()
-                .registerTypeHierarchyAdapter(Expression.class,
-                        new ExpressionSerializer())
-                .registerTypeHierarchyAdapter(Operator.class,
-                        new OperatorSerializer()).create();
-        StringReader reader = new StringReader(requestBody);
-        BufferedReader bufRead = new BufferedReader(reader);
-        String line = URLDecoder.decode(bufRead.readLine(), "UTF-8");
-        String[] parts = line.split("=");
-        assertEquals("remove", parts[0]);
-        WebRemove<?> actualRemove = gson.fromJson(parts[1], WebRemove.class);
+        String strDesc = "ADD test SET 'property1' = ?s";
+        StatementDescriptor<TestObj> desc = new StatementDescriptor<>(category, strDesc);
+        PreparedStatement<TestObj> stmt = null;
         
-        assertEquals(42, actualRemove.getCategoryId());
-        assertEquals(expr, actualRemove.getWhereExpression());
-    }
-
-    @Test
-    public void testCreateUpdate() {
-        WebUpdate<?> update = (WebUpdate<?>) storage.createUpdate(category);
-        assertNotNull(update);
-        assertEquals(42, update.getCategoryId());
-
-        Expression expr = factory.equalTo(key1, "test");
-        update.where(expr);
-        assertEquals(expr, update.getWhereExpression());
-
-        update.set(key1, "fluff");
-        List<WebUpdate.UpdateValue> updates = update.getUpdates();
-        assertEquals(1, updates.size());
-        assertEquals("fluff", updates.get(0).getValue());
-        assertEquals(key1, updates.get(0).getKey());
-        assertEquals("java.lang.String", updates.get(0).getValueClass());
-    }
-
-    @Test
-    public void testUpdate() throws UnsupportedEncodingException, IOException, JsonSyntaxException, ClassNotFoundException {
-
-        Update<?> update = storage.createUpdate(category);
-        Expression expr = factory.equalTo(key1, "test");
-        update.where(expr);
-        update.set(key1, "fluff");
-        update.set(key2, 42);
-
-        prepareServer();
-        update.apply();
-
-        Gson gson = new GsonBuilder()
-                .registerTypeHierarchyAdapter(Expression.class,
-                        new ExpressionSerializer())
-                .registerTypeHierarchyAdapter(Operator.class,
-                        new OperatorSerializer()).create();
-        StringReader reader = new StringReader(requestBody);
-        BufferedReader bufRead = new BufferedReader(reader);
-        String line = URLDecoder.decode(bufRead.readLine(), "UTF-8");
-        String [] params = line.split("&");
-        assertEquals(2, params.length);
-        String[] parts = params[0].split("=");
-        assertEquals("update", parts[0]);
-        WebUpdate<?> receivedUpdate = gson.fromJson(parts[1], WebUpdate.class);
-        assertEquals(42, receivedUpdate.getCategoryId());
-
-        List<WebUpdate.UpdateValue> updates = receivedUpdate.getUpdates();
-        assertEquals(2, updates.size());
-
-        WebUpdate.UpdateValue update1 = updates.get(0);
-        assertEquals(key1, update1.getKey());
-        assertEquals("java.lang.String", update1.getValueClass());
-        assertNull(update1.getValue());
-
-        WebUpdate.UpdateValue update2 = updates.get(1);
-        assertEquals(key2, update2.getKey());
-        assertEquals("java.lang.Integer", update2.getValueClass());
-        assertNull(update2.getValue());
-
-        assertEquals(expr, receivedUpdate.getWhereExpression());
-
-        parts = params[1].split("=");
-        assertEquals(2, parts.length);
-        assertEquals("values", parts[0]);
-        JsonParser jsonParser = new JsonParser();
-        JsonArray jsonArray = jsonParser.parse(parts[1]).getAsJsonArray();
-        String value1 = gson.fromJson(jsonArray.get(0), String.class);
-        assertEquals("fluff", value1);
-        int value2 = gson.fromJson(jsonArray.get(1), Integer.class);
-        assertEquals(42, value2);
+        int fakePrepStmtId = 3;
+        WebPreparedStatementResponse fakeResponse = new WebPreparedStatementResponse();
+        fakeResponse.setNumFreeVariables(1);
+        fakeResponse.setStatementId(fakePrepStmtId);
+        prepareServer(gson.toJson(fakeResponse));
+        try {
+            stmt = storage.prepareStatement(desc);
+        } catch (DescriptorParsingException e) {
+            // descriptor should parse fine and is trusted
+            fail(e.getMessage());
+        }
+        assertTrue(stmt instanceof WebPreparedStatement);
+        WebPreparedStatement<TestObj> webStmt = (WebPreparedStatement<TestObj>)stmt;
+        assertEquals(fakePrepStmtId, webStmt.getStatementId());
+        PreparedParameters params = webStmt.getParams();
+        assertEquals(1, params.getParams().length);
+        assertNull(params.getParams()[0]);
+        
+        // now set a parameter
+        stmt.setString(0, "fluff");
+        assertEquals("fluff", params.getParams()[0].getValue());
+        assertEquals(String.class, params.getParams()[0].getType());
+        assertFalse(params.getParams()[0].isArrayType());
+        
+        prepareServer(gson.toJson(PreparedStatementResponseCode.WRITE_GENERIC_FAILURE));
+        
+        int response = Integer.MAX_VALUE;
+        try {
+            response = stmt.execute();
+        } catch (StatementExecutionException e) {
+            // should execute fine
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+        
+        assertEquals(PreparedStatementResponseCode.WRITE_GENERIC_FAILURE, response);
     }
 
     @Test

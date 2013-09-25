@@ -57,6 +57,8 @@ public class JmxNotificationDAOImplStatementDescriptorRegistration implements
         descs = new HashSet<>(2);
         descs.add(JmxNotificationDAOImpl.QUERY_LATEST_NOTIFICATION_STATUS);
         descs.add(JmxNotificationDAOImpl.QUERY_NOTIFICATIONS);
+        descs.add(JmxNotificationDAOImpl.DESC_ADD_NOTIFICATION);
+        descs.add(JmxNotificationDAOImpl.DESC_ADD_NOTIFICATION_STATUS);
     }
 
     @Override

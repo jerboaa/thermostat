@@ -59,15 +59,24 @@ public class DAOImplStatementDescriptorRegistration implements
         daoDescs.add(AgentInfoDAOImpl.QUERY_ALIVE_AGENTS);
         daoDescs.add(AgentInfoDAOImpl.QUERY_ALL_AGENTS);
         daoDescs.add(AgentInfoDAOImpl.AGGREGATE_COUNT_ALL_AGENTS);
+        daoDescs.add(AgentInfoDAOImpl.DESC_ADD_AGENT_INFO);
+        daoDescs.add(AgentInfoDAOImpl.DESC_REMOVE_AGENT_INFO);
+        daoDescs.add(AgentInfoDAOImpl.DESC_UPDATE_AGENT_INFO);
         daoDescs.add(BackendInfoDAOImpl.QUERY_BACKEND_INFO);
+        daoDescs.add(BackendInfoDAOImpl.DESC_ADD_BACKEND_INFO);
+        daoDescs.add(BackendInfoDAOImpl.DESC_REMOVE_BACKEND_INFO);
         daoDescs.add(HostInfoDAOImpl.QUERY_HOST_INFO);
         daoDescs.add(HostInfoDAOImpl.QUERY_ALL_HOSTS);
         daoDescs.add(HostInfoDAOImpl.AGGREGATE_COUNT_ALL_HOSTS);
+        daoDescs.add(HostInfoDAOImpl.DESC_ADD_HOST_INFO);
         daoDescs.add(NetworkInterfaceInfoDAOImpl.QUERY_NETWORK_INFO);
+        daoDescs.add(NetworkInterfaceInfoDAOImpl.DESC_REPLACE_NETWORK_INFO);
         daoDescs.add(VmInfoDAOImpl.QUERY_ALL_VMS_FOR_HOST);
         daoDescs.add(VmInfoDAOImpl.QUERY_ALL_VMS);
         daoDescs.add(VmInfoDAOImpl.QUERY_VM_INFO);
         daoDescs.add(VmInfoDAOImpl.AGGREGATE_COUNT_ALL_VMS);
+        daoDescs.add(VmInfoDAOImpl.DESC_ADD_VM_INFO);
+        daoDescs.add(VmInfoDAOImpl.DESC_UPDATE_VM_STOP_TIME);
         return daoDescs;
     }
 

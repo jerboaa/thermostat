@@ -109,10 +109,7 @@ import com.redhat.thermostat.storage.core.Persist;
 import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Remove;
-import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
 import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
@@ -124,23 +121,17 @@ import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.BinarySetMembershipExpression;
 import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.storage.query.ExpressionFactory;
-import com.redhat.thermostat.storage.query.Operator;
 import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
-import com.redhat.thermostat.web.common.ExpressionSerializer;
-import com.redhat.thermostat.web.common.OperatorSerializer;
 import com.redhat.thermostat.web.common.PreparedParameterSerializer;
+import com.redhat.thermostat.web.common.PreparedStatementResponseCode;
 import com.redhat.thermostat.web.common.StorageWrapper;
 import com.redhat.thermostat.web.common.ThermostatGSONConverter;
-import com.redhat.thermostat.web.common.WebAdd;
 import com.redhat.thermostat.web.common.WebPreparedStatement;
 import com.redhat.thermostat.web.common.WebPreparedStatementResponse;
 import com.redhat.thermostat.web.common.WebPreparedStatementSerializer;
 import com.redhat.thermostat.web.common.WebQueryResponse;
 import com.redhat.thermostat.web.common.WebQueryResponseSerializer;
-import com.redhat.thermostat.web.common.WebRemove;
-import com.redhat.thermostat.web.common.WebReplace;
-import com.redhat.thermostat.web.common.WebUpdate;
 import com.redhat.thermostat.web.server.auth.BasicRole;
 import com.redhat.thermostat.web.server.auth.RolePrincipal;
 import com.redhat.thermostat.web.server.auth.Roles;
@@ -192,7 +183,6 @@ public class WebStorageEndpointTest {
     private static Key<Integer> key2;
     private static Category<TestClass> category;
     private static String categoryName = "test";
-    private ExpressionFactory factory;
 
     @BeforeClass
     public static void setupCategory() {
@@ -221,8 +211,6 @@ public class WebStorageEndpointTest {
         
         mockStorage = mock(BackingStorage.class);
         StorageWrapper.setStorage(mockStorage);
-        
-        factory = new ExpressionFactory();
     }
 
     private void startServer(int port, LoginService loginService) throws Exception {
@@ -257,9 +245,8 @@ public class WebStorageEndpointTest {
         // manually maintained list of path handlers which should include
         // authorization checks
         final String[] authPaths = new String[] {
-                "prepare-statement", "query-execute", "add-pojo", "replace-pojo", "register-category", "remove-pojo",
-                "update-pojo", "save-file", "load-file",
-                "purge", "ping", "generate-token", "verify-token"
+                "prepare-statement", "query-execute", "write-execute", "register-category",
+                "save-file", "load-file", "purge", "ping", "generate-token", "verify-token"
         };
         Map<String, Boolean> checkedAutPaths = new HashMap<>();
         for (String path: authPaths) {
@@ -736,6 +723,110 @@ public class WebStorageEndpointTest {
         KnownDescriptorRegistryFactory.setKnownDescriptorRegistry(registry);
     }
     
+    @SuppressWarnings("unchecked")
+    @Test
+    public void authorizedPreparedWrite() throws Exception {
+        Category<TestClass> oldCategory = category;
+        String categoryName = "test-authorizedPreparedWrite";
+        // redefine category to include the agentId key in the category.
+        // undone via a the try-finally block.
+        category = new Category<>(categoryName, TestClass.class, key1, key2, Key.AGENT_ID);
+        try {
+            String strDescriptor = "ADD " + category.getName() + " SET '" +
+                    key1.getName() + "' = ?s , '" + key2.getName() + "' = ?s";
+            DescriptorMetadata metadata = new DescriptorMetadata();
+            setupTrustedStatementRegistry(strDescriptor, metadata);
+            
+            Set<BasicRole> roles = new HashSet<>();
+            roles.add(new RolePrincipal(Roles.REGISTER_CATEGORY));
+            roles.add(new RolePrincipal(Roles.PREPARE_STATEMENT));
+            roles.add(new RolePrincipal(Roles.WRITE));
+            roles.add(new RolePrincipal(Roles.ACCESS_REALM));
+            UserPrincipal testUser = new UserPrincipal("ignored1");
+            testUser.setRoles(roles);
+            
+            final LoginService loginService = new TestJAASLoginService(testUser);
+            port = FreePortFinder.findFreePort(new TryPort() {
+                
+                @Override
+                public void tryPort(int port) throws Exception {
+                    startServer(port, loginService);
+                }
+            });
+            // This makes register category work for the "test" category.
+            // Undone via @After
+            setupTrustedCategory(categoryName);
+            registerCategory("ignored1", "ignored2");
+            
+            // prepare-statement does this under the hood
+            Add<TestClass> mockMongoAdd = mock(Add.class);
+            
+            when(mockStorage.createAdd(eq(category))).thenReturn(mockMongoAdd);
+    
+            PreparedStatement<TestClass> mockPreparedQuery = mock(PreparedStatement.class);
+            when(mockStorage.prepareStatement(any(StatementDescriptor.class))).thenReturn(mockPreparedQuery);
+            
+            ParsedStatement<TestClass> mockParsedStatement = mock(ParsedStatement.class);
+            when(mockParsedStatement.getNumParams()).thenReturn(2);
+            when(mockParsedStatement.patchStatement(any(PreparedParameter[].class))).thenReturn(mockMongoAdd);
+            when(mockPreparedQuery.getParsedStatement()).thenReturn(mockParsedStatement);
+            
+            // The web layer
+            when(mockPreparedQuery.execute()).thenReturn(PreparedStatementResponseCode.WRITE_GENERIC_FAILURE);
+            // And the mongo layer
+            when(mockMongoAdd.apply()).thenReturn(PreparedStatementResponseCode.WRITE_GENERIC_FAILURE);
+    
+            String endpoint = getEndpoint();
+            URL url = new URL(endpoint + "/prepare-statement");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            sendAuthentication(conn, "ignored1", "ignored2");
+            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            conn.setDoInput(true);
+            conn.setDoOutput(true);
+            Gson gson = new GsonBuilder()
+                    .registerTypeHierarchyAdapter(Pojo.class, new ThermostatGSONConverter())
+                    .registerTypeAdapter(WebPreparedStatement.class, new WebPreparedStatementSerializer())
+                    .registerTypeAdapter(PreparedParameter.class, new PreparedParameterSerializer()).create();
+            OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
+            String body = "query-descriptor=" + URLEncoder.encode(strDescriptor, "UTF-8") + "&category-id=" + categoryId;
+            out.write(body + "\n");
+            out.flush();
+    
+            Reader in = new InputStreamReader(conn.getInputStream());
+            WebPreparedStatementResponse response = gson.fromJson(in, WebPreparedStatementResponse.class);
+            assertEquals(2, response.getNumFreeVariables());
+            assertEquals(0, response.getStatementId());
+            assertEquals("application/json; charset=UTF-8", conn.getContentType());
+            
+            
+            
+            // now execute the ADD we've just prepared
+            WebPreparedStatement<TestClass> stmt = new WebPreparedStatement<>(2, 0);
+            stmt.setString(0, "fluff");
+            stmt.setString(1, "test2");
+            
+            url = new URL(endpoint + "/write-execute");
+            HttpURLConnection conn2 = (HttpURLConnection) url.openConnection();
+            conn2.setRequestMethod("POST");
+            sendAuthentication(conn2, "ignored1", "ignored2");
+            conn2.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            conn2.setDoInput(true);
+            conn2.setDoOutput(true);
+            
+            out = new OutputStreamWriter(conn2.getOutputStream());
+            body = "prepared-stmt=" + gson.toJson(stmt, WebPreparedStatement.class);
+            out.write(body + "\n");
+            out.flush();
+    
+            in = new InputStreamReader(conn2.getInputStream());
+            int result = gson.fromJson(in, int.class);
+            assertEquals(PreparedStatementResponseCode.WRITE_GENERIC_FAILURE, result);
+        } finally {
+            category = oldCategory; 
+        }
+    }
+    
     @Test
     public void cannotRegisterCategoryWithoutRegistrationOnInit() throws Exception {
         // need this in order to pass basic permissions.
@@ -878,351 +969,10 @@ public class WebStorageEndpointTest {
         return id;
     }
 
-    @Test
-    public void authorizedReplacePojo() throws Exception {
-        String[] roleNames = new String[] {
-                Roles.REPLACE,
-                Roles.REGISTER_CATEGORY,
-                Roles.ACCESS_REALM
-        };
-        String testuser = "testuser";
-        String password = "testpassword";
-        final LoginService loginService = new TestLoginService(testuser, password, roleNames); 
-        port = FreePortFinder.findFreePort(new TryPort() {
-            
-            @Override
-            public void tryPort(int port) throws Exception {
-                startServer(port, loginService);
-            }
-        });
-        // This makes register category work for the "test" category.
-        // Undone via @After
-        setupTrustedCategory(categoryName);
-        registerCategory(testuser, password);
-        
-        @SuppressWarnings("unchecked")
-        Replace<TestClass> replace = mock(Replace.class);
-        when(mockStorage.createReplace(eq(category))).thenReturn(replace);
-
-        TestClass expected1 = new TestClass();
-        expected1.setKey1("fluff1");
-        expected1.setKey2(42);
-        Expression expectedExpression = new ExpressionFactory().equalTo(key1, "fluff1");
-
-        String endpoint = getEndpoint();
-
-        URL url = new URL(endpoint + "/replace-pojo");
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("POST");
-        sendAuthentication(conn, testuser, password);
-
-        conn.setDoOutput(true);
-        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        WebReplace<TestClass> webReplace = new WebReplace<>(categoryId);
-        webReplace.where(expectedExpression);
-        Gson gson = new GsonBuilder()
-            .registerTypeHierarchyAdapter(Expression.class,
-                    new ExpressionSerializer())
-            .registerTypeHierarchyAdapter(Operator.class,
-                    new OperatorSerializer()).create();
-        OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-        out.write("replace=");
-        gson.toJson(webReplace, out);
-        out.flush();
-        out.write("&pojo=");
-        gson.toJson(expected1, out);
-        out.write("\n");
-        out.flush();
-        assertEquals(200, conn.getResponseCode());
-        verify(mockStorage).createReplace(category);
-        verify(replace).setPojo(expected1);
-        verify(replace).where(eq(expectedExpression));
-        verify(replace).apply();
-    }    
-    
-    @Test
-    public void unauthorizedReplacePojo() throws Exception {
-        String[] insufficientRoleNames = new String[] {
-                Roles.REGISTER_CATEGORY,
-                Roles.ACCESS_REALM
-        };
-        String testuser = "testuser";
-        String password = "testpassword";
-        final LoginService loginService = new TestLoginService(testuser, password, insufficientRoleNames); 
-        port = FreePortFinder.findFreePort(new TryPort() {
-            
-            @Override
-            public void tryPort(int port) throws Exception {
-                startServer(port, loginService);
-            }
-        });
-        // This makes register category work for the "test" category.
-        // Undone via @After
-        setupTrustedCategory(categoryName);
-        registerCategory(testuser, password);
-        
-        String endpoint = getEndpoint();
-        URL url = new URL(endpoint + "/replace-pojo");
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("POST");
-        sendAuthentication(conn, testuser, password);
-        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        conn.setDoOutput(true);
-        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        WebReplace<TestClass> webReplace = new WebReplace<>(categoryId);
-        Gson gson = new GsonBuilder()
-            .registerTypeHierarchyAdapter(Expression.class,
-                new ExpressionSerializer())
-            .registerTypeHierarchyAdapter(Operator.class,
-                new OperatorSerializer()).create();
-        OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-        out.write("replace=");
-        gson.toJson(webReplace, out);
-        out.flush();
-        out.write("&pojo=");
-        TestClass expected1 = new TestClass();
-        gson.toJson(expected1, out);
-        out.write("\n");
-        out.flush();
-        
-        assertEquals("thermostat-replace role missing", HttpServletResponse.SC_FORBIDDEN, conn.getResponseCode());
-    }
-
-    @Test
-    public void authorizedAddPojo() throws Exception {
-        String[] roleNames = new String[] {
-                Roles.APPEND,
-                Roles.REGISTER_CATEGORY,
-                Roles.ACCESS_REALM
-        };
-        String testuser = "testuser";
-        String password = "testpassword";
-        final LoginService loginService = new TestLoginService(testuser, password, roleNames); 
-        port = FreePortFinder.findFreePort(new TryPort() {
-            
-            @Override
-            public void tryPort(int port) throws Exception {
-                startServer(port, loginService);
-            }
-        });
-        // This makes register category work for the "test" category.
-        // Undone via @After
-        setupTrustedCategory(categoryName);
-        registerCategory(testuser, password);
-        
-        @SuppressWarnings("unchecked")
-        Add<TestClass> insert = mock(Add.class);
-        when(mockStorage.createAdd(eq(category))).thenReturn(insert);
-
-        TestClass expected1 = new TestClass();
-        expected1.setKey1("fluff1");
-        expected1.setKey2(42);
-
-        String endpoint = getEndpoint();
-
-        URL url = new URL(endpoint + "/add-pojo");
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("POST");
-        sendAuthentication(conn, testuser, password);
-
-        conn.setDoOutput(true);
-        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        WebAdd<TestClass> ins = new WebAdd<>(categoryId);
-        Gson gson = new Gson();
-        OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-        out.write("add=");
-        gson.toJson(ins, out);
-        out.flush();
-        out.write("&pojo=");
-        gson.toJson(expected1, out);
-        out.write("\n");
-        out.flush();
-        assertEquals(200, conn.getResponseCode());
-        verify(mockStorage).createAdd(category);
-        verify(insert).setPojo(expected1);
-        verify(insert).apply();
-    }
-    
-    @Test
-    public void unauthorizedAddPojo() throws Exception {
-        String[] insufficientRoleNames = new String[] {
-                Roles.REGISTER_CATEGORY,
-                Roles.ACCESS_REALM
-        };
-        String testuser = "testuser";
-        String password = "testpassword";
-        final LoginService loginService = new TestLoginService(testuser, password, insufficientRoleNames); 
-        port = FreePortFinder.findFreePort(new TryPort() {
-            
-            @Override
-            public void tryPort(int port) throws Exception {
-                startServer(port, loginService);
-            }
-        });
-        // This makes register category work for the "test" category.
-        // Undone via @After
-        setupTrustedCategory(categoryName);
-        registerCategory(testuser, password);
-        
-        String endpoint = getEndpoint();
-        URL url = new URL(endpoint + "/add-pojo");
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("POST");
-        sendAuthentication(conn, testuser, password);
-        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        conn.setDoOutput(true);
-        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        WebAdd<TestClass> insert = new WebAdd<>(categoryId);
-        Gson gson = new Gson();
-        OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-        out.write("add=");
-        gson.toJson(insert, out);
-        out.flush();
-        out.write("&pojo=");
-        TestClass expected1 = new TestClass();
-        gson.toJson(expected1, out);
-        out.write("\n");
-        out.flush();
-        
-        assertEquals("thermostat-add role missing", HttpServletResponse.SC_FORBIDDEN, conn.getResponseCode());
-    }
-    
     private void sendAuthentication(HttpURLConnection conn, String username, String passwd) {
         String userpassword = username + ":" + passwd;
         String encodedAuthorization = Base64.encodeBase64String(userpassword.getBytes());
         conn.setRequestProperty("Authorization", "Basic "+ encodedAuthorization);
-    }
-
-    @Test
-    public void authorizedRemovePojo() throws Exception {
-        String[] roleNames = new String[] {
-                Roles.DELETE,
-                Roles.REGISTER_CATEGORY,
-                Roles.ACCESS_REALM
-        };
-        String testuser = "testuser";
-        String password = "testpassword";
-        final LoginService loginService = new TestLoginService(testuser, password, roleNames); 
-        port = FreePortFinder.findFreePort(new TryPort() {
-            
-            @Override
-            public void tryPort(int port) throws Exception {
-                startServer(port, loginService);
-            }
-        });
-        // This makes register category work for the "test" category.
-        // Undone via @After
-        setupTrustedCategory(categoryName);
-        registerCategory(testuser, password);
-        
-        
-        @SuppressWarnings("unchecked")
-        Remove<TestClass> mockRemove = mock(Remove.class);
-
-        when(mockStorage.createRemove(category)).thenReturn(mockRemove);
-
-        String endpoint = getEndpoint();
-
-        URL url = new URL(endpoint + "/remove-pojo");
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("POST");
-        sendAuthentication(conn, testuser, password);
-        conn.setDoOutput(true);
-        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        Expression expr = factory.equalTo(key1, "test");
-        WebRemove<?> remove = new WebRemove<>(categoryId);
-        remove.where(expr);
-        Gson gson = new GsonBuilder()
-                .registerTypeHierarchyAdapter(Expression.class,
-                        new ExpressionSerializer())
-                .registerTypeHierarchyAdapter(Operator.class,
-                        new OperatorSerializer()).create();
-        OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-        out.write("remove=");
-        gson.toJson(remove, out);
-        out.write("\n");
-        out.flush();
-
-        assertEquals(200, conn.getResponseCode());
-        verify(mockStorage).createRemove(eq(category));
-        verify(mockRemove).where(eq(expr));
-        verify(mockRemove).apply();
-    }
-    
-    @Test
-    public void unauthorizedRemovePojo() throws Exception {
-        String failMsg = "thermostat-remove role missing, expected Forbidden!";
-        doUnauthorizedTest("remove-pojo", failMsg);
-    }
-
-    @Test
-    public void authorizedUpdatePojo() throws Exception {
-        String[] roleNames = new String[] {
-                Roles.UPDATE,
-                Roles.REGISTER_CATEGORY,
-                Roles.ACCESS_REALM
-        };
-        String testuser = "testuser";
-        String password = "testpassword";
-        final LoginService loginService = new TestLoginService(testuser, password, roleNames); 
-        port = FreePortFinder.findFreePort(new TryPort() {
-            
-            @Override
-            public void tryPort(int port) throws Exception {
-                startServer(port, loginService);
-            }
-        });
-        // This makes register category work for the "test" category.
-        // Undone via @After
-        setupTrustedCategory(categoryName);
-        registerCategory(testuser, password);
-        
-        @SuppressWarnings("unchecked")
-        Update<TestClass> mockUpdate = mock(Update.class);
-        when(mockStorage.createUpdate(eq(category))).thenReturn(mockUpdate);
-
-        String endpoint = getEndpoint();
-
-        URL url = new URL(endpoint + "/update-pojo");
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("POST");
-        sendAuthentication(conn, testuser, password);
-        conn.setDoOutput(true);
-        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-
-        WebUpdate<?> update = new WebUpdate<>();
-        update.setCategoryId(categoryId);
-        Expression expr = factory.equalTo(key1, "test");
-        update.where(expr);
-        update.set(key1, "fluff");
-        update.set(key2, 42);
-
-        Gson gson = new GsonBuilder()
-                .registerTypeHierarchyAdapter(Expression.class,
-                        new ExpressionSerializer())
-                .registerTypeHierarchyAdapter(Operator.class,
-                        new OperatorSerializer()).create();
-        OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-        out.write("update=");
-        gson.toJson(update, out);
-        out.write("&values=");
-        gson.toJson(new Object[] {"fluff", 42 }, out);
-        out.write("\n");
-        out.flush();
-
-        assertEquals(200, conn.getResponseCode());
-        verify(mockStorage).createUpdate(category);
-        verify(mockUpdate).where(eq(expr));
-        verify(mockUpdate).set(key1, "fluff");
-        verify(mockUpdate).set(key2, 42);
-        verify(mockUpdate).apply();
-        verifyNoMoreInteractions(mockUpdate);
-    }
-    
-    @Test
-    public void unauthorizedUpdatePojo() throws Exception {
-        String failMsg = "thermostat-update role missing, expected Forbidden!";
-        doUnauthorizedTest("update-pojo", failMsg);
     }
 
     @Test

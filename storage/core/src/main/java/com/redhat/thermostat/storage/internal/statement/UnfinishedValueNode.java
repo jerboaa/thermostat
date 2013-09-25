@@ -52,8 +52,11 @@ class UnfinishedValueNode extends AbstractUnfinished {
     // determines if this patched value is a LHS or if false a RHS of a
     // binary comparison.
     private boolean isLHS;
-    // Specifies the expected type of this free parameter.
+    // Specifies the expected (component) type of this free parameter.
     private Class<?> type;
+    // Specifies if the free parameter is an array type. If so, the
+    // type instance variable represents the component type.
+    private boolean isArrayType;
 
     Class<?> getType() {
         return type;
@@ -81,6 +84,14 @@ class UnfinishedValueNode extends AbstractUnfinished {
         this.parameterIndex = parameterIndex;
     }
     
+    public boolean isArrayType() {
+        return isArrayType;
+    }
+
+    public void setArrayType(boolean isArrayType) {
+        this.isArrayType = isArrayType;
+    }
+
     @Override
     public String toString() {
         return "Unfinished value (" + getParameterIndex() + ") " + getType() +
@@ -98,12 +109,13 @@ class UnfinishedValueNode extends AbstractUnfinished {
         }
         UnfinishedValueNode o = (UnfinishedValueNode)other;
         return basics && Objects.equals(isLHS(), o.isLHS) &&
-                Objects.equals(getType(), o.getType());
+                Objects.equals(getType(), o.getType()) &&
+                        isArrayType() == o.isArrayType();
     }
     
     @Override
     public int hashCode() {
-        return Objects.hash(getParameterIndex(), isLHS(), getType());
+        return Objects.hash(getParameterIndex(), isLHS(), getType(), isArrayType());
     }
 
 }

@@ -153,7 +153,7 @@ public class MongoQueriesTest extends IntegrationTest {
     private static void addCpuData(int numberOfItems) throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
         ConnectionListener listener = new CountdownConnectionListener(ConnectionStatus.CONNECTED, latch);
-        Storage storage = getAndConnectStorage(listener);
+        BackingStorage storage = getAndConnectStorage(listener);
         latch.await();
         storage.getConnection().removeListener(listener);
         
@@ -161,7 +161,7 @@ public class MongoQueriesTest extends IntegrationTest {
 
         for (int i = 0; i < numberOfItems; i++) {
             CpuStat pojo = new CpuStat("test-agent-id", i, new double[] {i, i*2});
-            Add add = storage.createAdd(CpuStatDAO.cpuStatCategory);
+            Add<CpuStat> add = storage.createAdd(CpuStatDAO.cpuStatCategory);
             add.setPojo(pojo);
             add.apply();
         }
@@ -201,12 +201,12 @@ public class MongoQueriesTest extends IntegrationTest {
     public void testMongoAdd() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         ConnectionListener listener = new CountdownConnectionListener(ConnectionStatus.CONNECTED, latch);
-        Storage mongoStorage = getAndConnectStorage(listener);
+        BackingStorage mongoStorage = getAndConnectStorage(listener);
         latch.await();
         mongoStorage.getConnection().removeListener(listener);
         mongoStorage.registerCategory(VmClassStatDAO.vmClassStatsCategory);
         
-        Add add = mongoStorage.createAdd(VmClassStatDAO.vmClassStatsCategory);
+        Add<VmClassStat> add = mongoStorage.createAdd(VmClassStatDAO.vmClassStatsCategory);
         VmClassStat pojo = new VmClassStat();
         pojo.setAgentId("fluff");
         pojo.setLoadedClasses(12345);
@@ -513,7 +513,7 @@ public class MongoQueriesTest extends IntegrationTest {
         long timeStamp = 5;
         double cpuLoad = 0.15;
         VmCpuStat pojo = new VmCpuStat(uuid.toString(), timeStamp, VM_ID1, cpuLoad);
-        Add add = mongoStorage.createAdd(VmCpuStatDAO.vmCpuStatCategory);
+        Add<VmCpuStat> add = mongoStorage.createAdd(VmCpuStatDAO.vmCpuStatCategory);
         add.setPojo(pojo);
         add.apply();
 

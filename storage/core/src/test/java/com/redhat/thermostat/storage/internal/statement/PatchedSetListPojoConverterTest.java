@@ -36,13 +36,13 @@
 
 package com.redhat.thermostat.storage.internal.statement;
 
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import org.junit.Test;
 
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.internal.statement.PatchedSetListPojoConverter.IllegalPojoException;
@@ -64,6 +64,30 @@ public class PatchedSetListPojoConverterTest {
         TestMe instance = converter.convertToPojo();
         assertEquals("foo-val", instance.getFoo());
         assertEquals(Long.MAX_VALUE, instance.getBarKey());
+    }
+    
+    @Test
+    public void testConversionWithLists() throws IllegalPojoException {
+        PatchedSetListMember mem1 = new PatchedSetListMember(new Key<>("foo"), "foo-val");
+        PatchedSetListMember mem2 = new PatchedSetListMember(new Key<>("barKey"), Long.MAX_VALUE);
+        double[] list = new double[] {Math.PI, 3.3};
+        PatchedSetListMember mem3 = new PatchedSetListMember(new Key<>("doubleList"), list);
+        PatchedSetListMember[] members = new PatchedSetListMember[] {
+                mem1,
+                mem2,
+                mem3
+        };
+        PatchedSetList setList = mock(PatchedSetList.class);
+        when(setList.getSetListMembers()).thenReturn(members);
+        PatchedSetListPojoConverter<ListPojo> converter = new PatchedSetListPojoConverter<>(setList, ListPojo.class);
+        ListPojo instance = converter.convertToPojo();
+        assertEquals("foo-val", instance.getFoo());
+        assertEquals(Long.MAX_VALUE, instance.getBarKey());
+        double[] values = instance.getDoubleList();
+        assertEquals(2, values.length);
+        double delta = 0.002;
+        assertEquals(Math.PI, values[0], delta);
+        assertEquals(3.3, values[1], delta);
     }
     
     @Test
@@ -101,5 +125,18 @@ public class PatchedSetListPojoConverterTest {
         public void setBarKey(long barKey) {
             this.barKey = barKey;
         }
+    }
+    
+    public static class ListPojo extends TestMe {
+        
+        private double[] doubleList;
+        
+        public double[] getDoubleList() {
+            return doubleList;
+        }
+        public void setDoubleList(double[] doubleList) {
+            this.doubleList = doubleList;
+        }
+        
     }
 }

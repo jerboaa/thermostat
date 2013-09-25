@@ -75,9 +75,6 @@ public interface Storage {
      */
     Connection getConnection();
 
-    <T extends Pojo> Add<T> createAdd(Category<T> category);
-    <T extends Pojo> Replace<T> createReplace(Category<T> category);
-
     /**
      * Drop all data related to the specified agent.
      */
@@ -86,9 +83,6 @@ public interface Storage {
     void saveFile(String filename, InputStream data);
 
     InputStream loadFile(String filename);
-
-    <T extends Pojo> Update<T> createUpdate(Category<T> category);
-    <T extends Pojo> Remove<T> createRemove(Category<T> category);
 
     void shutdown();
 

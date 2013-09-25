@@ -75,7 +75,7 @@ public class WebQueryResponseSerializerTest {
         // create the query response
         WebQueryResponse<AgentInformation> response = new WebQueryResponse<>();
         response.setResultList(resultList);
-        response.setResponseCode(WebQueryResponse.ILLEGAL_PATCH);
+        response.setResponseCode(PreparedStatementResponseCode.ILLEGAL_PATCH);
         
         String jsonStr = gson.toJson(response);
         String expectedJson = "{\"payload\":[{\"startTime\":0,\"stopTime\":0,\"alive\":false,\"backends\":[],\"agentId\":\"testing\"}],\"errno\":-1}";
@@ -90,7 +90,7 @@ public class WebQueryResponseSerializerTest {
         
         AgentInformation[] actualList = actual.getResultList();
         
-        assertEquals(WebQueryResponse.ILLEGAL_PATCH, actual.getResponseCode());
+        assertEquals(PreparedStatementResponseCode.ILLEGAL_PATCH, actual.getResponseCode());
         assertEquals(1, actualList.length);
         AgentInformation actualInfo = actualList[0];
         assertEquals(true, actualInfo.isAlive());
@@ -109,7 +109,7 @@ public class WebQueryResponseSerializerTest {
         // create the query response
         WebQueryResponse<AgentInformation> response = new WebQueryResponse<>();
         response.setResultList(resultList);
-        response.setResponseCode(WebQueryResponse.ILLEGAL_PATCH);
+        response.setResponseCode(PreparedStatementResponseCode.ILLEGAL_PATCH);
         
         String jsonStr = gson.toJson(response);
 
@@ -120,7 +120,7 @@ public class WebQueryResponseSerializerTest {
         
         AgentInformation[] actualList = actual.getResultList();
         
-        assertEquals(WebQueryResponse.ILLEGAL_PATCH, actual.getResponseCode());
+        assertEquals(PreparedStatementResponseCode.ILLEGAL_PATCH, actual.getResponseCode());
         assertEquals(1, actualList.length);
         AgentInformation actualInfo = actualList[0];
         assertEquals(false, actualInfo.isAlive());
@@ -139,7 +139,7 @@ public class WebQueryResponseSerializerTest {
         // create the query response
         WebQueryResponse<AgentInformation> response = new WebQueryResponse<>();
         response.setResultList(resultList);
-        response.setResponseCode(WebQueryResponse.ILLEGAL_PATCH);
+        response.setResponseCode(PreparedStatementResponseCode.ILLEGAL_PATCH);
         
         String jsonStr = gson.toJson(response);
         String expectedJson = "{\"payload\":[{\"startTime\":0,\"stopTime\":0,\"alive\":false,\"backends\":[],\"agentId\":\"testing\"}],\"errno\":-1}";
@@ -152,7 +152,7 @@ public class WebQueryResponseSerializerTest {
         
         AgentInformation[] actualList = actual.getResultList();
         
-        assertEquals(WebQueryResponse.ILLEGAL_PATCH, actual.getResponseCode());
+        assertEquals(PreparedStatementResponseCode.ILLEGAL_PATCH, actual.getResponseCode());
         assertEquals(1, actualList.length);
         AgentInformation actualInfo = actualList[0];
         assertEquals(false, actualInfo.isAlive());
@@ -170,13 +170,13 @@ public class WebQueryResponseSerializerTest {
         
         WebQueryResponse<HostInfo> expected = new WebQueryResponse<>();
         expected.setResultList(hostInfoResults);
-        expected.setResponseCode(WebQueryResponse.SUCCESS);
+        expected.setResponseCode(PreparedStatementResponseCode.QUERY_SUCCESS);
         
         jsonStr = gson.toJson(expected);
         Type hostinfoQueryResponseType = new TypeToken<WebQueryResponse<HostInfo>>() {}.getType();
         WebQueryResponse<HostInfo> actualResp = gson.fromJson(jsonStr, hostinfoQueryResponseType);
         
-        assertEquals(WebQueryResponse.SUCCESS, actualResp.getResponseCode());
+        assertEquals(PreparedStatementResponseCode.QUERY_SUCCESS, actualResp.getResponseCode());
         HostInfo[] hostInfoList = actualResp.getResultList();
         assertEquals(1, hostInfoList.length);
         assertEquals("something", hostInfoList[0].getAgentId());

@@ -62,7 +62,7 @@ public class DAOImplStatementDescriptorRegistrationTest {
     public void registersAllQueries() {
         DAOImplStatementDescriptorRegistration reg = new DAOImplStatementDescriptorRegistration();
         Set<String> descriptors = reg.getStatementDescriptors();
-        assertEquals(13, descriptors.size());
+        assertEquals(22, descriptors.size());
         assertFalse(descriptors.contains(null));
     }
     
@@ -80,7 +80,7 @@ public class DAOImplStatementDescriptorRegistrationTest {
             registrations.add(r);
         }
         assertEquals(1, registrations.size());
-        assertEquals(13, registrations.get(0).getStatementDescriptors().size());
+        assertEquals(22, registrations.get(0).getStatementDescriptors().size());
     }
     
     @Test
@@ -98,9 +98,11 @@ public class DAOImplStatementDescriptorRegistrationTest {
         DAOImplStatementDescriptorRegistration factory = new DAOImplStatementDescriptorRegistration();
         List<String> errorList = new ArrayList<>();
         for (String desc: factory.getStatementDescriptors()) {
-            // should be able to get metadata for all descriptors
+            // should be able to get metadata for all query descriptors
             try {
-                factory.getDescriptorMetadata(desc, fakeParams);
+                if (desc.startsWith("QUERY")) {
+                    factory.getDescriptorMetadata(desc, fakeParams);
+                }
             } catch (IllegalArgumentException e) {
                 errorList.add(e.getMessage());
             }

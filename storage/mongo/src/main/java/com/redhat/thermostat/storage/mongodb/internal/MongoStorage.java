@@ -407,10 +407,9 @@ public class MongoStorage implements BackingStorage {
     @Override
     public <T extends Pojo> PreparedStatement<T> prepareStatement(StatementDescriptor<T> statementDesc)
             throws DescriptorParsingException {
-        // FIXME: Use some kind of cache in order to avoid parsing of
-        // descriptors each time this is called. At least if the descriptor
-        // class is the same we should be able to do something here.
-        return PreparedStatementFactory.getInstance(this, statementDesc);
+        // Queued storage decorator should override this. This should never
+        // be called.
+        throw new IllegalStateException();
     }
 
     @Override

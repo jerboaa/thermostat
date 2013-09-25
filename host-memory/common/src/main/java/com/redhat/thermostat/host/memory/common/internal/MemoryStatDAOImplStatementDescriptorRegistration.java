@@ -60,6 +60,7 @@ public class MemoryStatDAOImplStatementDescriptorRegistration implements
     public Set<String> getStatementDescriptors() {
         Set<String> descs = new HashSet<>(1);
         descs.add(descriptor);
+        descs.add(MemoryStatDAOImpl.DESC_ADD_MEMORY_STAT);
         return descs;
     }
 

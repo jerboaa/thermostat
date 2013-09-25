@@ -61,10 +61,10 @@ import com.redhat.thermostat.storage.internal.dao.DAOImplStatementDescriptorRegi
 public class VmGcStatDAOImplStatementDescriptorRegistrationTest {
 
     @Test
-    public void registersAllQueries() {
+    public void registersAllDescriptors() {
         VmGcStatDAOImplStatementDescriptorRegistration reg = new VmGcStatDAOImplStatementDescriptorRegistration();
         Set<String> descriptors = reg.getStatementDescriptors();
-        assertEquals(1, descriptors.size());
+        assertEquals(2, descriptors.size());
         assertFalse("null descriptor not allowed", descriptors.contains(null));
     }
     
@@ -92,7 +92,7 @@ public class VmGcStatDAOImplStatementDescriptorRegistrationTest {
         // storage-core + this module
         assertEquals(2, registrations.size());
         assertNotNull(vmGcStatReg);
-        assertEquals(1, vmGcStatReg.getStatementDescriptors().size());
+        assertEquals(2, vmGcStatReg.getStatementDescriptors().size());
     }
     
     @Test

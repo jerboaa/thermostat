@@ -63,10 +63,10 @@ import com.redhat.thermostat.storage.internal.dao.DAOImplStatementDescriptorRegi
 public class NumaDAOImplStatementDescriptorRegistrationTest {
 
     @Test
-    public void registersAllQueries() {
+    public void registersAllDescriptors() {
         NumaDAOImplStatementDescriptorRegistration reg = new NumaDAOImplStatementDescriptorRegistration();
         Set<String> descriptors = reg.getStatementDescriptors();
-        assertEquals(2, descriptors.size());
+        assertEquals(4, descriptors.size());
         assertFalse("null descriptor not allowed", descriptors.contains(null));
     }
     
@@ -94,7 +94,7 @@ public class NumaDAOImplStatementDescriptorRegistrationTest {
         // storage-core + this module
         assertEquals(2, registrations.size());
         assertNotNull(numaReg);
-        assertEquals(2, numaReg.getStatementDescriptors().size());
+        assertEquals(4, numaReg.getStatementDescriptors().size());
     }
     
     @Test

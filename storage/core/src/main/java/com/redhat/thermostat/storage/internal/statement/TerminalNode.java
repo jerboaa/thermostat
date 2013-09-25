@@ -41,6 +41,7 @@ import java.util.Objects;
 import com.redhat.thermostat.storage.core.IllegalPatchException;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedParameter;
+import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.LiteralExpression;
 
 /**
@@ -71,14 +72,8 @@ class TerminalNode extends Node {
             } catch (Exception e) {
                 throw new IllegalPatchException(e);
             }
-            if (param.getType() != patch.getType()) {
-                String msg = TerminalNode.class.getSimpleName()
-                        + " invalid type when attempting to patch. Expected "
-                        + patch.getType().getName() + " but was "
-                        + param.getType().getName();
-                IllegalArgumentException iae = new IllegalArgumentException(msg);
-                throw new IllegalPatchException(iae);
-            }
+            // Do some type sanity checking for free parameters
+            ensureTypeCompatibility(patch, param);
             if (patch.isLHS()) {
                 // LHS need to get patched to keys
                 Key<?> valueKey = new Key<>((String)param.getValue());
@@ -93,6 +88,39 @@ class TerminalNode extends Node {
         return new PatchedWhereExpressionImpl(literalExp);
     }
     
+    private void ensureTypeCompatibility(UnfinishedValueNode patch,
+            PreparedParameter param) throws IllegalPatchException {
+        if (patch.getType() == Pojo.class) {
+            // handle pojo case
+            if (Pojo.class.isAssignableFrom(param.getType()) &&
+                    patch.isArrayType() == param.isArrayType()) {
+                return; // pojo-type match: OK
+            }
+            // dead-end
+            IllegalArgumentException iae = constructIllegalArgumentException(patch, param);
+            throw new IllegalPatchException(iae);
+        } else {
+            // primitive types or primitive list types
+            if (param.getType() != patch.getType() || param.isArrayType() != patch.isArrayType()) {
+                IllegalArgumentException iae = constructIllegalArgumentException(patch, param);
+                throw new IllegalPatchException(iae);
+            }
+            // passed primitive (array) type check
+        }
+    }
+        
+    private IllegalArgumentException constructIllegalArgumentException(
+            UnfinishedValueNode patch, PreparedParameter param) {
+        String patchArrayPrefix = patch.isArrayType() ? "[" : "";
+        String paramArrayPrefix = param.isArrayType() ? "[" : "";
+        String msg = TerminalNode.class.getSimpleName()
+                + " invalid type when attempting to patch. Expected "
+                + patchArrayPrefix + patch.getType().getName() + " but was "
+                + paramArrayPrefix + param.getType().getName();
+        IllegalArgumentException iae = new IllegalArgumentException(msg);
+        return iae;
+    }
+
     @Override
     public boolean equals(Object other) {
         if (other == null) {

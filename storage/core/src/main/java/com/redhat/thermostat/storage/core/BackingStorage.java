@@ -55,6 +55,12 @@ public interface BackingStorage extends Storage {
     
     <T extends Pojo> Query<T> createAggregateQuery(AggregateFunction function, Category<T> category);
     
-    // TODO Move createUpdate and createRemove here
+    <T extends Pojo> Add<T> createAdd(Category<T> category);
+    
+    <T extends Pojo> Replace<T> createReplace(Category<T> category);
+    
+    <T extends Pojo> Update<T> createUpdate(Category<T> category);
+    
+    <T extends Pojo> Remove<T> createRemove(Category<T> category);
 
 }
