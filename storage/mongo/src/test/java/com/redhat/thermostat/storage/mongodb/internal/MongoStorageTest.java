@@ -56,6 +56,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
@@ -168,7 +169,7 @@ public class MongoStorageTest {
     private static final Key<String> key4 = new Key<>("key4");
     private static final Key<String> key5 = new Key<>("key5");
     private static final Category<TestClass> testCategory = new Category<>("MongoStorageTest", TestClass.class, key1, key2, key3, key4, key5);
-    private static final Category<TestClass> emptyTestCategory = new Category("MongoEmptyCategory", TestClass.class);
+    private static final Category<TestClass> emptyTestCategory = new Category<>("MongoEmptyCategory", TestClass.class);
 
     private StartupConfiguration conf;
     private Mongo m;
@@ -264,7 +265,7 @@ public class MongoStorageTest {
     @Test
     public void verifyFindAllReturnsCursor() throws Exception {
         MongoStorage storage = makeStorage();
-        Query query = storage.createQuery(testCategory);
+        Query<TestClass> query = storage.createQuery(testCategory);
         Cursor<TestClass> cursor = query.execute();
         assertNotNull(cursor);
     }
@@ -272,7 +273,7 @@ public class MongoStorageTest {
     @Test
     public void verifyFindAllCallsDBCollectionFind() throws Exception {
         MongoStorage storage = makeStorage();
-        Query query = storage.createQuery(testCategory);
+        Query<TestClass> query = storage.createQuery(testCategory);
         ExpressionFactory factory = new ExpressionFactory();
         Expression expr = factory.equalTo(key1, "fluff");
         query.where(expr);
@@ -284,7 +285,8 @@ public class MongoStorageTest {
     public void verifyFindAllCallsDBCollectionFindWithCorrectQuery() throws Exception {
         MongoStorage storage = makeStorage();
 
-        MongoQuery query = mock(MongoQuery.class);
+        @SuppressWarnings("unchecked")
+        MongoQuery<TestClass> query = mock(MongoQuery.class);
         when(query.hasClauses()).thenReturn(true);
         DBObject generatedQuery = mock(DBObject.class);
         when(query.getGeneratedQuery()).thenReturn(generatedQuery);
@@ -300,7 +302,7 @@ public class MongoStorageTest {
         MongoStorage storage = makeStorage();
         // TODO find a way to test this that isn't just testing MongoCursor
         // Because we mock the DBCollection, the contents of this query don't actually determine the result.
-        Query query = storage.createQuery(testCategory);
+        Query<TestClass> query = storage.createQuery(testCategory);
         Cursor<TestClass> cursor = query.execute();
 
         verifyDefaultCursor(cursor);
@@ -311,7 +313,7 @@ public class MongoStorageTest {
         MongoStorage storage = makeStorage();
         // TODO find a way to test this that isn't just testing MongoCursor
         // Because we mock the DBCollection, the contents of this query don't actually determine the result.
-        Query query = storage.createQuery(testCategory);
+        Query<TestClass> query = storage.createQuery(testCategory);
         query.sort(key1, Query.SortDirection.ASCENDING);
         query.limit(3);
 
@@ -328,7 +330,7 @@ public class MongoStorageTest {
     @Test
     public void verifyFindAllFromCategoryCallsDBCollectionFindAll() throws Exception {
         MongoStorage storage = makeStorage();
-        Query query = storage.createQuery(testCategory);
+        Query<TestClass> query = storage.createQuery(testCategory);
         query.execute();
         verify(testCollection).find();
     }
@@ -336,7 +338,7 @@ public class MongoStorageTest {
     @Test
     public void verifyFindAllFromCategoryReturnsCorrectCursor() throws Exception {
         MongoStorage storage = makeStorage();
-        Query query = storage.createQuery(testCategory);
+        Query<TestClass> query = storage.createQuery(testCategory);
         Cursor<TestClass> cursor = query.execute();
 
         verifyDefaultCursor(cursor);
@@ -377,31 +379,76 @@ public class MongoStorageTest {
         MongoStorage storage = makeStorage();
         TestClass pojo = new TestClass();
         pojo.setAgentId("123");
-        Add add = storage.createAdd(testCategory);
-        add.setPojo(pojo);
+        Add<TestClass> add = storage.createAdd(testCategory);
+        add.set(Key.AGENT_ID.getName(), pojo.getAgentId());
         add.apply();
         ArgumentCaptor<DBObject> dbobj = ArgumentCaptor.forClass(DBObject.class);
         verify(testCollection).insert(dbobj.capture());
         DBObject val = dbobj.getValue();
         assertEquals("123", val.get("agentId"));
     }
+    
+    /*
+     *  This test verifies if pojo types get converted correctly. This
+     *  add isn't really using the correct type parameter. It should be using
+     *  a pojo which has itself Pojo properties defined. For the sake of this
+     *  test this "hack" should be sufficient.
+     */
+    @Test
+    public void verifyPojoTypeGetsConverted() throws Exception {
+        MongoStorage storage = makeStorage();
+        TestClass pojo = new TestClass();
+        pojo.setKey1("val1");
+        pojo.setKey3("val3");
+        Add<?> add = storage.createAdd(testCategory);
+        add.set("agentId", "ignored");
+        add.set("foo-pojo-key", pojo);
+        add.apply();
+        ArgumentCaptor<DBObject> dbobj = ArgumentCaptor.forClass(DBObject.class);
+        verify(testCollection).insert(dbobj.capture());
+        DBObject val = dbobj.getValue();
+        assertTrue(val.get("foo-pojo-key") instanceof DBObject);
+        DBObject pojoVal = (DBObject)val.get("foo-pojo-key");
+        assertEquals("val1", pojoVal.get("key1"));
+        assertEquals("val3", pojoVal.get("key3"));
+    }
+    
+    @Test
+    public void verifyPojoListGetsConverted() throws Exception {
+        MongoStorage storage = makeStorage();
+        TestClass pojo = new TestClass();
+        pojo.setKey1("val1");
+        pojo.setKey3("val3");
+        TestClass[] list = new TestClass[] { pojo };
+        Add<?> add = storage.createAdd(testCategory);
+        add.set("agentId", "ignored");
+        add.set("foo-pojo-key", list);
+        add.apply();
+        ArgumentCaptor<DBObject> dbobj = ArgumentCaptor.forClass(DBObject.class);
+        verify(testCollection).insert(dbobj.capture());
+        DBObject val = dbobj.getValue();
+        assertTrue(val.get("foo-pojo-key") instanceof List);
+        @SuppressWarnings("unchecked")
+        List<DBObject> result = (List<DBObject>)val.get("foo-pojo-key");
+        assertEquals(1, result.size());
+        DBObject pojoVal = result.get(0);
+        assertEquals("val1", pojoVal.get("key1"));
+        assertEquals("val3", pojoVal.get("key3"));
+    }
 
     @Test
     public void verifyPutChunkDoesNotUseGlobalAgent() throws Exception {
         MongoStorage storage = makeStorage();
-        TestClass pojo = new TestClass();
-        Add add = storage.createAdd(testCategory);
-        add.setPojo(pojo);
+        Add<TestClass> add = storage.createAdd(testCategory);
         try {
             add.apply();
             fail("We do not allow null agentId");
         } catch (AssertionError e) {
             // pass
         }
-        Replace replace = storage.createReplace(testCategory);
+        Replace<TestClass> replace = storage.createReplace(testCategory);
         ExpressionFactory factory = new ExpressionFactory();
         Expression whereExp = factory.equalTo(Key.AGENT_ID, "foobar");
-        replace.setPojo(pojo);
         replace.where(whereExp);
         try {
             replace.apply();
@@ -431,10 +478,10 @@ public class MongoStorageTest {
     @Test
     public void verifySimpleUpdate() {
         MongoStorage storage = makeStorage();
-        Update update = storage.createUpdate(testCategory);
+        Update<TestClass> update = storage.createUpdate(testCategory);
         Expression expr = factory.equalTo(Key.AGENT_ID, "test1");
         update.where(expr);
-        update.set(key2, "test2");
+        update.set(key2.getName(), "test2");
         update.apply();
 
         ArgumentCaptor<DBObject> queryCaptor = ArgumentCaptor.forClass(DBObject.class);
@@ -457,11 +504,11 @@ public class MongoStorageTest {
     @Test
     public void verifyMultiFieldUpdate() {
         MongoStorage storage = makeStorage();
-        Update update = storage.createUpdate(testCategory);
+        Update<TestClass> update = storage.createUpdate(testCategory);
         Expression expr = factory.equalTo(Key.AGENT_ID, "test1");
         update.where(expr);
-        update.set(key2, "test2");
-        update.set(key3, "test3");
+        update.set(key2.getName(), "test2");
+        update.set(key3.getName(), "test3");
         update.apply();
 
         ArgumentCaptor<DBObject> queryCaptor = ArgumentCaptor.forClass(DBObject.class);
@@ -492,13 +539,18 @@ public class MongoStorageTest {
         pojo.setKey5("test5");
 
         MongoStorage storage = makeStorage();
-        Replace replace = storage.createReplace(testCategory);
+        Replace<TestClass> replace = storage.createReplace(testCategory);
         ExpressionFactory factory = new ExpressionFactory();
         Expression first = factory.equalTo(key1, "test1");
         Expression second = factory.equalTo(key2, "test2");
         Expression and = factory.and(first, second);
         replace.where(and);
-        replace.setPojo(pojo);
+        replace.set("key1", pojo.getKey1());
+        replace.set("key2", pojo.getKey2());
+        replace.set("key3", pojo.getKey3());
+        replace.set("key4", pojo.getKey4());
+        replace.set("key5", pojo.getKey5());
+        replace.set(Key.AGENT_ID.getName(), pojo.getAgentId());
         replace.apply();
 
         ArgumentCaptor<DBObject> queryCaptor = ArgumentCaptor.forClass(DBObject.class);

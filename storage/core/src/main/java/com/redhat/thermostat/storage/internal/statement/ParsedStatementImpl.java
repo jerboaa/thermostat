@@ -38,7 +38,6 @@ package com.redhat.thermostat.storage.internal.statement;
 
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.IllegalPatchException;
-import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.ParsedStatement;
 import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.Query;
@@ -46,7 +45,6 @@ import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.Statement;
 import com.redhat.thermostat.storage.core.Update;
-import com.redhat.thermostat.storage.internal.statement.PatchedSetListPojoConverter.IllegalPojoException;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
 
@@ -60,14 +58,12 @@ import com.redhat.thermostat.storage.query.Expression;
 class ParsedStatementImpl<T extends Pojo> implements ParsedStatement<T> {
 
     private final Statement<T> statement;
-    private final Class<T> dataClass; 
     private int numParams;
     private SuffixExpression suffixExpn;
     private SetList setList;
 
-    ParsedStatementImpl(Statement<T> statement, Class<T> dataClass) {
+    ParsedStatementImpl(Statement<T> statement) {
         this.statement = statement;
-        this.dataClass = dataClass;
     }
     
     @Override
@@ -105,34 +101,23 @@ class ParsedStatementImpl<T extends Pojo> implements ParsedStatement<T> {
         PatchedSetList patchedSetList = setList.patch(params);
         // set the values
         if (statement instanceof Add) {
-            T pojo = convertToPojo(patchedSetList);
             Add<T> add = (Add<T>)statement;
-            add.setPojo(pojo);
+            for (PatchedSetListMember member: patchedSetList.getSetListMembers()) {
+                add.set(member.getKey().getName(), member.getValue());
+            }
         }
         if (statement instanceof Replace) {
-            T pojo = convertToPojo(patchedSetList);
             Replace<T> replace = (Replace<T>)statement;
-            replace.setPojo(pojo);
+            for (PatchedSetListMember member: patchedSetList.getSetListMembers()) {
+                replace.set(member.getKey().getName(), member.getValue());
+            }
         }
         if (statement instanceof Update) {
             Update<T> update = (Update<T>)statement;
-            for (PatchedSetListMember mem: patchedSetList.getSetListMembers()) {
-                @SuppressWarnings("unchecked")
-                Key<Object> key = (Key<Object>)mem.getKey();
-                update.set(key, mem.getValue());
+            for (PatchedSetListMember member: patchedSetList.getSetListMembers()) {
+                update.set(member.getKey().getName(), member.getValue());
             }
         }
-    }
-    
-    private T convertToPojo(PatchedSetList setList) throws IllegalPatchException {
-        PatchedSetListPojoConverter<T> converter = new PatchedSetListPojoConverter<>(setList, dataClass);
-        T pojo = null;
-        try {
-            pojo = converter.convertToPojo();
-        } catch (IllegalPojoException e) {
-            throw new IllegalPatchException(e);
-        }
-        return pojo; 
     }
 
     private void patchLimit(PreparedParameter[] params) throws IllegalPatchException {

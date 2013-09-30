@@ -162,7 +162,9 @@ public class MongoQueriesTest extends IntegrationTest {
         for (int i = 0; i < numberOfItems; i++) {
             CpuStat pojo = new CpuStat("test-agent-id", i, new double[] {i, i*2});
             Add<CpuStat> add = storage.createAdd(CpuStatDAO.cpuStatCategory);
-            add.setPojo(pojo);
+            add.set(Key.AGENT_ID.getName(), pojo.getAgentId());
+            add.set(CpuStatDAO.cpuLoadKey.getName(), pojo.getPerProcessorUsage());
+            add.set(Key.TIMESTAMP.getName(), pojo.getTimeStamp());
             add.apply();
         }
 
@@ -212,8 +214,7 @@ public class MongoQueriesTest extends IntegrationTest {
         pojo.setLoadedClasses(12345);
         pojo.setTimeStamp(42);
         pojo.setVmId(VM_ID1);
-        add.setPojo(pojo);
-        add.apply();
+        addVmClassStat(add, pojo);
         
         // Add another couple of entries
         add = mongoStorage.createAdd(VmClassStatDAO.vmClassStatsCategory);
@@ -222,8 +223,7 @@ public class MongoQueriesTest extends IntegrationTest {
         pojo.setLoadedClasses(67890);
         pojo.setTimeStamp(42);
         pojo.setVmId(VM_ID2);
-        add.setPojo(pojo);
-        add.apply();
+        addVmClassStat(add, pojo);
         
         add = mongoStorage.createAdd(VmClassStatDAO.vmClassStatsCategory);
         pojo = new VmClassStat();
@@ -231,10 +231,17 @@ public class MongoQueriesTest extends IntegrationTest {
         pojo.setLoadedClasses(34567);
         pojo.setTimeStamp(42);
         pojo.setVmId(VM_ID3);
-        add.setPojo(pojo);
-        add.apply();
+        addVmClassStat(add, pojo);
 
         mongoStorage.getConnection().disconnect();
+    }
+
+    private void addVmClassStat(Add<VmClassStat> add, VmClassStat pojo) {
+        add.set(Key.AGENT_ID.getName(), pojo.getAgentId());
+        add.set(Key.VM_ID.getName(), pojo.getVmId());
+        add.set(Key.TIMESTAMP.getName(), pojo.getTimeStamp());
+        add.set(VmClassStatDAO.loadedClassesKey.getName(), pojo.getLoadedClasses());
+        add.apply();
     }
 
     @Test
@@ -514,7 +521,10 @@ public class MongoQueriesTest extends IntegrationTest {
         double cpuLoad = 0.15;
         VmCpuStat pojo = new VmCpuStat(uuid.toString(), timeStamp, VM_ID1, cpuLoad);
         Add<VmCpuStat> add = mongoStorage.createAdd(VmCpuStatDAO.vmCpuStatCategory);
-        add.setPojo(pojo);
+        add.set(Key.AGENT_ID.getName(), pojo.getAgentId());
+        add.set(Key.VM_ID.getName(), pojo.getVmId());
+        add.set(Key.TIMESTAMP.getName(), pojo.getTimeStamp());
+        add.set(VmCpuStatDAO.vmCpuLoadKey.getName(), pojo.getCpuLoad());
         add.apply();
 
         Query<VmCpuStat> query = mongoStorage.createQuery(VmCpuStatDAO.vmCpuStatCategory);

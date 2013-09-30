@@ -37,6 +37,7 @@
 package com.redhat.thermostat.storage.mongodb.internal;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,7 +59,6 @@ import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.AggregateQuery;
 import com.redhat.thermostat.storage.core.AggregateQuery.AggregateFunction;
 import com.redhat.thermostat.storage.core.BackingStorage;
-import com.redhat.thermostat.storage.core.AddReplaceHelper;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Connection;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
@@ -67,7 +67,6 @@ import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.PreparedStatementFactory;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Replace;
@@ -99,26 +98,70 @@ public class MongoStorage implements BackingStorage {
             return executeGetCount(category, (MongoQuery<T>)this.queryToAggregate);
         }
     }
+    
+    private static abstract class MongoSetter<T extends Pojo> {
+        
+        protected final DBObject values;
+        protected final Category<T> category;
+        
+        private MongoSetter(Category<T> category) {
+            this.category = category;
+            this.values = new BasicDBObject();
+        }
+        
+        private Object convertPojo(Object value) {
+            // convert pojo values to mongo DB objects if need be
+            if (value instanceof Pojo) {
+                Pojo pojo = (Pojo)value;
+                MongoPojoConverter converter = new MongoPojoConverter();
+                value = converter.convertPojoToMongo(pojo);
+            } else if (value instanceof Pojo[]) {
+                List<DBObject> pojos = new ArrayList<>();
+                MongoPojoConverter converter = new MongoPojoConverter();
+                Pojo[] list = (Pojo[])value;
+                for (Pojo p: list) {
+                    DBObject converted = converter.convertPojoToMongo(p);
+                    pojos.add(converted);
+                }
+                value = pojos;
+            }
+            return value;
+        }
+        
+        protected void set(String key, Object value) {
+            // convert Pojo/list of Pojos to DBObject/list of DBObjects
+            // if need be
+            value = convertPojo(value);
+            values.put(key, value);
+        }
+    }
 
-    private class MongoAdd<T extends Pojo> extends AddReplaceHelper implements Add<T> {
-
-        private MongoAdd(Category<?> category) {
+    private class MongoAdd<T extends Pojo> extends MongoSetter<T>
+            implements Add<T> {
+        
+        private MongoAdd(Category<T> category) {
             super(category);
         }
         
         @Override
         public int apply() {
-            return addImpl(getCategory(), getPojo());
+            return addImpl(category, values);
+        }
+
+        @Override
+        public void set(String key, Object value) {
+            super.set(key, value);
         }
         
     }
 
-    private class MongoReplace<T extends Pojo> extends AddReplaceHelper implements Replace<T> {
+    private class MongoReplace<T extends Pojo> extends MongoSetter<T>
+            implements Replace<T> {
         
         private DBObject query;
         private final MongoExpressionParser parser;
 
-        private MongoReplace(Category<?> category) {
+        private MongoReplace(Category<T> category) {
             super(category);
             this.parser = new MongoExpressionParser();
         }
@@ -130,28 +173,62 @@ public class MongoStorage implements BackingStorage {
                              "Please call where() before apply().";
                 throw new IllegalStateException(msg);
             }
-            return replaceImpl(getCategory(), getPojo(), query);
+            return replaceImpl(category, values, query);
         }
 
         @Override
         public void where(Expression expression) {
             this.query = parser.parse(Objects.requireNonNull(expression));
         }
+
+        @Override
+        public void set(String key, Object value) {
+            super.set(key, value);
+        }
         
+    }
+    
+    private class MongoUpdate<T extends Pojo> extends MongoSetter<T>
+            implements Update<T> {
+
+        private static final String SET_MODIFIER = "$set";
+
+        private DBObject query;
+        private final MongoExpressionParser parser;
+
+        private MongoUpdate(Category<T> category) {
+            super(category);
+            this.parser = new MongoExpressionParser();
+        }
+
+        @Override
+        public void where(Expression expr) {
+            query = parser.parse(expr);
+        }
+
+        @Override
+        public void set(String key, Object value) {
+            super.set(key, value);
+        }
+
+        @Override
+        public int apply() {
+            DBObject setValues = new BasicDBObject(SET_MODIFIER, values);
+            return updateImpl(category, setValues, query);
+        }
     }
     
     private class MongoRemove<T extends Pojo> implements Remove<T> {
 
-        @SuppressWarnings("rawtypes")
-        private final Category category;
+        private final Category<T> category;
         private DBObject query;
         private final MongoExpressionParser parser;
         
-        private MongoRemove(Category<?> category) {
+        private MongoRemove(Category<T> category) {
             this(category, new MongoExpressionParser());
         }
         
-        private MongoRemove(Category<?> category, MongoExpressionParser parser) {
+        private MongoRemove(Category<T> category, MongoExpressionParser parser) {
             this.parser = parser;
             this.category = category;
         }
@@ -229,17 +306,17 @@ public class MongoStorage implements BackingStorage {
         return replace;
     }
 
-    private int addImpl(final Category<?> cat, final Pojo pojo) {
+    private <T extends Pojo> int addImpl(final Category<T> cat, final DBObject values) {
         DBCollection coll = getCachedCollection(cat);
-        DBObject toInsert = preparePut(pojo);
-        WriteResult result = coll.insert(toInsert);
+        assertContainsWriterID(values);
+        WriteResult result = coll.insert(values);
         return numAffectedRecords(result);
     }
 
-    private int replaceImpl(final Category<?> cat, final Pojo pojo, final DBObject query) {
+    private <T extends Pojo> int replaceImpl(final Category<T> cat, final DBObject values, final DBObject query) {
         DBCollection coll = getCachedCollection(cat);
-        DBObject toInsert = preparePut(pojo);
-        WriteResult result = coll.update(query, toInsert, true, false);
+        assertContainsWriterID(values);
+        WriteResult result = coll.update(query, values, true, false);
         return numAffectedRecords(result);
     }
     
@@ -249,21 +326,14 @@ public class MongoStorage implements BackingStorage {
         return responseCode;
     }
 
-    private DBObject preparePut(final Pojo pojo) {
-        MongoPojoConverter converter = new MongoPojoConverter();
-        DBObject toInsert = converter.convertPojoToMongo(pojo);
-        if (toInsert.get(Key.AGENT_ID.getName()) == null) {
-            // FIXME: Remove
-            throw new AssertionError("agentID must be set");
+    private void assertContainsWriterID(final DBObject values) {
+        if (values.get(Key.AGENT_ID.getName()) == null) {
+            throw new AssertionError("agentId must be set");
         }
-        return toInsert;
     }
 
-    int updatePojo(MongoUpdate<?> mongoUpdate) {
-        Category<?> cat = mongoUpdate.getCategory();
-        DBCollection coll = getCachedCollection(cat);
-        DBObject query = mongoUpdate.getQuery();
-        DBObject values = mongoUpdate.getValues();
+    private <T extends Pojo> int updateImpl(Category<T> category, DBObject values, DBObject query) {
+        DBCollection coll = getCachedCollection(category);
         WriteResult result = coll.update(query, values);
         return numAffectedRecords(result);
     }
@@ -339,7 +409,7 @@ public class MongoStorage implements BackingStorage {
 
     @Override
     public <T extends Pojo> Update<T> createUpdate(Category<T> category) {
-        return new MongoUpdate<>(this, category);
+        return new MongoUpdate<>(category);
     }
 
     @Override

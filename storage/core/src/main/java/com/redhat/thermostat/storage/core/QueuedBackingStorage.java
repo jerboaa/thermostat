@@ -72,8 +72,8 @@ public class QueuedBackingStorage extends QueuedStorage implements
         }
 
         @Override
-        public void setPojo(Pojo pojo) {
-            delegateReplace.setPojo(pojo);
+        public void set(String key, Object value) {
+            delegateReplace.set(key, value);
         }
         
     }
@@ -100,8 +100,8 @@ public class QueuedBackingStorage extends QueuedStorage implements
         }
 
         @Override
-        public void setPojo(Pojo pojo) {
-            delegateAdd.setPojo(pojo);
+        public void set(String key, Object value) {
+            delegateAdd.set(key, value);
         }
         
     }
@@ -121,7 +121,7 @@ public class QueuedBackingStorage extends QueuedStorage implements
         }
 
         @Override
-        public <S> void set(Key<S> key, S value) {
+        public void set(String key, Object value) {
             delegateUpdate.set(key, value);
         }
 

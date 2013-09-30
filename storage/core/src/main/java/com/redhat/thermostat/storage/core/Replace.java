@@ -59,12 +59,16 @@ import com.redhat.thermostat.storage.query.Expression;
 public interface Replace<T extends Pojo> extends DataModifyingStatement<T> {
 
     /**
-     * Sets the POJO that will be used to replace the value in storage.
-     *
-     * @param pojo the pojo which describes the updated values or the new
-     *             record to be added to storage.
+     * Sets a field in a found record to the specified value. If the same key is
+     * set more than once, the latest value overrides the former value for that
+     * key.
+     * 
+     * @param key
+     *            the name of the field to update.
+     * @param value
+     *            the value with which to update the field.
      */
-    void setPojo(Pojo pojo);
+    void set(String key, Object value);
 
     /**
      * Specifies what criteria to use to find the record to replace

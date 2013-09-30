@@ -50,11 +50,16 @@ import com.redhat.thermostat.storage.model.Pojo;
 public interface Add<T extends Pojo> extends DataModifyingStatement<T> {
 
     /**
-     * Sets the POJO that is to be added into storage.
-     *
-     * @param pojo the pojo to be added into storage
+     * Sets a field to the specified value. If the same key is
+     * set more than once, the latest value overrides the former value for that
+     * key.
+     * 
+     * @param key
+     *            the name of the field to update.
+     * @param value
+     *            the value with which to update the field.
      */
-    void setPojo(Pojo pojo);
+    void set(String key, Object value);
 
     /**
      * Applies this {@code Add} operation to storage.

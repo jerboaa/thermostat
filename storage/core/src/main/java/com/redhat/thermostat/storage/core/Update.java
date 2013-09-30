@@ -61,14 +61,15 @@ public interface Update<T extends Pojo> extends DataModifyingStatement<T> {
 
     /**
      * Sets a field in a found record to the specified value. If the same key is
-     * set more than once, the latest values overrides the former values.
+     * set more than once, the latest value overrides the former value for that
+     * key.
      * 
      * @param key
-     *            the key of the field
+     *            the name of the field to update.
      * @param value
-     *            the value to set
+     *            the value with which to update the field.
      */
-    <S> void set(Key<S> key, S value);
+    void set(String key, Object value);
 
     /**
      * Applies this update operation.

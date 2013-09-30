@@ -44,7 +44,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Test;
 
@@ -147,11 +149,10 @@ public class PreparedStatementImplTest {
         } catch (StatementExecutionException e) {
             fail(e.getMessage());
         }
-        assertTrue(add.pojo != null);
-        assertTrue(add.pojo instanceof FooPojo);
+        assertFalse(add.values.isEmpty());
         assertTrue(add.executed);
-        FooPojo fooPojo = (FooPojo)add.pojo;
-        assertEquals("foo-val", fooPojo.getFoo());
+        assertEquals(1, add.values.keySet().size());
+        assertEquals("foo-val", add.values.get("foo"));
     }
     
     @Test
@@ -184,13 +185,13 @@ public class PreparedStatementImplTest {
         } catch (StatementExecutionException e) {
             fail(e.getMessage());
         }
-        assertTrue(add.pojo != null);
-        assertTrue(add.pojo instanceof FancyFoo);
+        assertFalse(add.values.isEmpty());
+        assertEquals(1, add.values.keySet().size());
         assertTrue(add.executed);
-        FancyFoo fooPojo = (FancyFoo)add.pojo;
-        assertEquals(2, fooPojo.getFancyFoo().length);
-        FooPojo first = fooPojo.getFancyFoo()[0];
-        FooPojo second = fooPojo.getFancyFoo()[1];
+        FooPojo[] fancyFoo = (FooPojo[])add.values.get("fancyFoo");
+        assertEquals(2, fancyFoo.length);
+        FooPojo first = fancyFoo[0];
+        FooPojo second = fancyFoo[1];
         assertEquals("one", first.getFoo());
         assertEquals("two", second.getFoo());
     }
@@ -221,8 +222,8 @@ public class PreparedStatementImplTest {
         }
         assertTrue(update.executed);
         assertEquals(1, update.updates.size());
-        Pair<Key<Object>, Object> item = update.updates.get(0);
-        assertEquals(new Key<>("foo"), item.getFirst());
+        Pair<String, Object> item = update.updates.get(0);
+        assertEquals("foo", item.getFirst());
         assertEquals("foo-val", item.getSecond());
         LiteralExpression<Key<String>> o1 = new LiteralExpression<>(new Key<String>("foo"));
         LiteralExpression<String> o2 = new LiteralExpression<>("nice"); 
@@ -255,11 +256,9 @@ public class PreparedStatementImplTest {
         } catch (StatementExecutionException e) {
             fail(e.getMessage());
         }
-        assertTrue(replace.pojo != null);
-        assertTrue(replace.pojo instanceof FooPojo);
+        assertFalse(replace.values.isEmpty());
         assertTrue(replace.executed);
-        FooPojo fooPojo = (FooPojo)replace.pojo;
-        assertEquals("foo-val", fooPojo.getFoo());
+        assertEquals("foo-val", replace.values.get("foo"));
         LiteralExpression<Key<String>> o1 = new LiteralExpression<>(new Key<String>("foo"));
         LiteralExpression<String> o2 = new LiteralExpression<>("bar"); 
         BinaryComparisonExpression<String> binComp = new BinaryComparisonExpression<>(
@@ -324,12 +323,12 @@ public class PreparedStatementImplTest {
     
     private static class TestAdd<T extends Pojo> implements Add<T> {
 
-        private Pojo pojo;
+        private Map<String, Object> values = new HashMap<>();
         private boolean executed = false;
         
         @Override
-        public void setPojo(Pojo pojo) {
-            this.pojo = pojo;
+        public void set(String key, Object value) {
+            values.put(key, value);
         }
 
         @Override
@@ -342,13 +341,13 @@ public class PreparedStatementImplTest {
     
     private static class TestReplace implements Replace<FooPojo> {
 
-        private Pojo pojo;
+        private Map<String, Object> values = new HashMap<>();
         private boolean executed = false;
         private Expression where;
         
         @Override
-        public void setPojo(Pojo pojo) {
-            this.pojo = pojo;
+        public void set(String key, Object value) {
+            values.put(key, value);
         }
 
         @Override
@@ -367,7 +366,7 @@ public class PreparedStatementImplTest {
     private static class TestUpdate implements Update<FooPojo> {
 
         private Expression where;
-        private List<Pair<Key<Object>, Object>> updates = new ArrayList<>();
+        private List<Pair<String, Object>> updates = new ArrayList<>();
         private boolean executed = false;
         
         @Override
@@ -376,9 +375,8 @@ public class PreparedStatementImplTest {
         }
 
         @Override
-        public <S> void set(Key<S> key, S value) {
-            @SuppressWarnings("unchecked")
-            Pair<Key<Object>, Object> item = new Pair<>((Key<Object>) key, (Object)value);
+        public void set(String key, Object value) {
+            Pair<String, Object> item = new Pair<>(key, value);
             updates.add(item);
         }
 

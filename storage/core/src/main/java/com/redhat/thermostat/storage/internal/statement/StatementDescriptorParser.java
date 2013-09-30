@@ -806,31 +806,30 @@ class StatementDescriptorParser<T extends Pojo> {
         // matchStatementType and matchCategory advanced currTokenIndex,
         // lets use idx of 0 here.
         final String statementType = tokens[0];
-        Class<T> dataClass = desc.getCategory().getDataClass();
         if (statementType.equals(KNOWN_STATEMENT_TYPES[IDX_QUERY])) {
             // regular query case
             Query<T> query = storage.createQuery(desc.getCategory());
-            this.parsedStatement = new ParsedStatementImpl<>(query, dataClass);
+            this.parsedStatement = new ParsedStatementImpl<>(query);
         } else if (statementType.equals(KNOWN_STATEMENT_TYPES[IDX_QUERY_COUNT])) {
             // create aggregate count query
             Query<T> query = storage.createAggregateQuery(AggregateFunction.COUNT, desc.getCategory());
-            this.parsedStatement = new ParsedStatementImpl<>(query, dataClass);
+            this.parsedStatement = new ParsedStatementImpl<>(query);
         } else if (statementType.equals(KNOWN_STATEMENT_TYPES[IDX_ADD])) {
             // create add
             Add<T> add = storage.createAdd(desc.getCategory());
-            this.parsedStatement = new ParsedStatementImpl<>(add, dataClass);
+            this.parsedStatement = new ParsedStatementImpl<>(add);
         } else if (statementType.equals(KNOWN_STATEMENT_TYPES[IDX_REPLACE])) {
             // create replace
             Replace<T> replace = storage.createReplace(desc.getCategory());
-            this.parsedStatement = new ParsedStatementImpl<>(replace, dataClass);
+            this.parsedStatement = new ParsedStatementImpl<>(replace);
         } else if (statementType.equals(KNOWN_STATEMENT_TYPES[IDX_UPDATE])) {
             // create replace
             Update<T> update = storage.createUpdate(desc.getCategory());
-            this.parsedStatement = new ParsedStatementImpl<>(update, dataClass);
+            this.parsedStatement = new ParsedStatementImpl<>(update);
         } else if (statementType.equals(KNOWN_STATEMENT_TYPES[IDX_REMOVE])) {
             // create remove
             Remove<T> remove = storage.createRemove(desc.getCategory());
-            this.parsedStatement = new ParsedStatementImpl<>(remove, dataClass);
+            this.parsedStatement = new ParsedStatementImpl<>(remove);
         } else {
             throw new IllegalStateException("Don't know how to create statement type '" + statementType + "'");
         }

@@ -407,7 +407,9 @@ public class WebAppTest extends IntegrationTest {
         for (int i = 0; i < numberOfItems; i++) {
             CpuStat pojo = new CpuStat("test-agent-id", i, new double[] {i, i*2});
             Add<CpuStat> add = storage.createAdd(CpuStatDAO.cpuStatCategory);
-            add.setPojo(pojo);
+            add.set(Key.AGENT_ID.getName(), pojo.getAgentId());
+            add.set(CpuStatDAO.cpuLoadKey.getName(), pojo.getPerProcessorUsage());
+            add.set(Key.TIMESTAMP.getName(), pojo.getTimeStamp());
             add.apply();
         }
 
@@ -421,7 +423,13 @@ public class WebAppTest extends IntegrationTest {
         for (int i = 0; i < numberOfItems; i++) {
             HostInfo hostInfo = new HostInfo("test-host-agent-id", "foo " + i, "linux " + i, "kernel", "t8", i, i * 1000);
             Add<HostInfo> add = storage.createAdd(HostInfoDAO.hostInfoCategory);
-            add.setPojo(hostInfo);
+            add.set(Key.AGENT_ID.getName(), hostInfo.getAgentId());
+            add.set(HostInfoDAO.hostNameKey.getName(), hostInfo.getHostname());
+            add.set(HostInfoDAO.cpuCountKey.getName(), hostInfo.getCpuCount());
+            add.set(HostInfoDAO.cpuModelKey.getName(), hostInfo.getCpuModel());
+            add.set(HostInfoDAO.hostMemoryTotalKey.getName(), hostInfo.getTotalMemory());
+            add.set(HostInfoDAO.osKernelKey.getName(), hostInfo.getOsKernel());
+            add.set(HostInfoDAO.osNameKey.getName(), hostInfo.getOsName());
             add.apply();
         }
 
@@ -434,7 +442,11 @@ public class WebAppTest extends IntegrationTest {
 
         for (AgentInformation info: items) {
             Add<AgentInformation> add = storage.createAdd(AgentInfoDAO.CATEGORY);
-            add.setPojo(info);
+            add.set(Key.AGENT_ID.getName(), info.getAgentId());
+            add.set(AgentInfoDAO.ALIVE_KEY.getName(), info.isAlive());
+            add.set(AgentInfoDAO.CONFIG_LISTEN_ADDRESS.getName(), info.getConfigListenAddress());
+            add.set(AgentInfoDAO.START_TIME_KEY.getName(), info.getStartTime());
+            add.set(AgentInfoDAO.STOP_TIME_KEY.getName(), info.getStopTime());
             add.apply();
         }
 
@@ -1070,7 +1082,10 @@ public class WebAppTest extends IntegrationTest {
         BackingStorage storage = getAndConnectBackingStorage();
         storage.registerCategory(VmCpuStatDAO.vmCpuStatCategory);
         Add<VmCpuStat> add = storage.createAdd(VmCpuStatDAO.vmCpuStatCategory);
-        add.setPojo(pojo);
+        add.set(Key.AGENT_ID.getName(), pojo.getAgentId());
+        add.set(Key.VM_ID.getName(), pojo.getVmId());
+        add.set(Key.TIMESTAMP.getName(), pojo.getTimeStamp());
+        add.set(VmCpuStatDAO.vmCpuLoadKey.getName(), pojo.getCpuLoad());
         add.apply();
         storage.getConnection().disconnect();        
     }

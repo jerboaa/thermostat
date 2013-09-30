@@ -42,7 +42,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
@@ -85,7 +87,7 @@ public class ParsedStatementImplTest {
     @Test
     public void canPatchWhereAndExpr() throws IllegalPatchException {
         // create the parsedStatementImpl we are going to use
-        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement, null);
+        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement);
         SuffixExpression suffixExpn = new SuffixExpression();
         suffixExpn.setLimitExpn(null);
         suffixExpn.setSortExpn(null);
@@ -159,7 +161,7 @@ public class ParsedStatementImplTest {
     @Test
     public void canPatchBasicWhereEquals() throws IllegalPatchException {
         // create the parsedStatementImpl we are going to use
-        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement, null);
+        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement);
         SuffixExpression suffixExpn = new SuffixExpression();
         suffixExpn.setLimitExpn(null);
         suffixExpn.setSortExpn(null);
@@ -223,7 +225,7 @@ public class ParsedStatementImplTest {
     @Test
     public void canPatchBasicWhereEqualsLHSKeyAndRHSValue() throws IllegalPatchException {
         // create the parsedStatementImpl we are going to use
-        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement, null);
+        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement);
         SuffixExpression suffixExpn = new SuffixExpression();
         suffixExpn.setLimitExpn(null);
         suffixExpn.setSortExpn(null);
@@ -293,7 +295,7 @@ public class ParsedStatementImplTest {
     @Test
     public void canPatchBasicLimit() throws IllegalPatchException {
         // create the parsedStatementImpl we are going to use
-        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement, null);
+        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement);
         parsedStmt.setSetList(new SetList());
         SuffixExpression suffixExpn = new SuffixExpression();
         LimitExpression limitExpnToPatch = new LimitExpression();
@@ -354,7 +356,7 @@ public class ParsedStatementImplTest {
     public void canPatchBasicSetListAdd() throws IllegalPatchException {
         // create the parsedStatementImpl we are going to use
         DataModifyingStatement<TestPojo> stmt = new TestAdd<>();
-        ParsedStatementImpl<TestPojo> parsedStmt = new ParsedStatementImpl<>(stmt, TestPojo.class);
+        ParsedStatementImpl<TestPojo> parsedStmt = new ParsedStatementImpl<>(stmt);
         SuffixExpression suffixExpn = new SuffixExpression();
         SetList setList = buildSetList();
         suffixExpn.setLimitExpn(null);
@@ -371,11 +373,10 @@ public class ParsedStatementImplTest {
         Add<TestPojo> add = (Add<TestPojo>)parsedStmt.patchStatement(params);
         assertTrue(add instanceof TestAdd);
         TestAdd<TestPojo> q = (TestAdd<TestPojo>)add;
-        Pojo testPojo = q.pojo;
-        assertTrue(testPojo instanceof TestPojo);
-        TestPojo tPojo = (TestPojo)testPojo;
-        assertEquals("foo-writer", tPojo.getWriterId());
-        assertEquals(Long.MAX_VALUE, tPojo.getFooTimeStamp());
+        Map<String, Object> vals = q.values;
+        assertEquals(2, vals.keySet().size());
+        assertEquals("foo-writer", vals.get("writerId"));
+        assertEquals(Long.MAX_VALUE, vals.get("fooTimeStamp"));
     }
     
     /*
@@ -386,7 +387,7 @@ public class ParsedStatementImplTest {
     public void canPatchSetListAddWithPojoList() throws IllegalPatchException {
         // create the parsedStatementImpl we are going to use
         DataModifyingStatement<FancyPojo> stmt = new TestAdd<>();
-        ParsedStatementImpl<FancyPojo> parsedStmt = new ParsedStatementImpl<>(stmt, FancyPojo.class);
+        ParsedStatementImpl<FancyPojo> parsedStmt = new ParsedStatementImpl<>(stmt);
         SuffixExpression suffixExpn = new SuffixExpression();
         SetList setList = new SetList();
         parsedStmt.setSetList(setList);
@@ -424,14 +425,16 @@ public class ParsedStatementImplTest {
         Add<FancyPojo> add = (Add<FancyPojo>)parsedStmt.patchStatement(params);
         assertTrue(add instanceof TestAdd);
         TestAdd<FancyPojo> q = (TestAdd<FancyPojo>)add;
-        Pojo testPojo = q.pojo;
-        assertTrue(testPojo instanceof FancyPojo);
-        FancyPojo tPojo = (FancyPojo)testPojo;
-        assertEquals(null, tPojo.getWriterId());
-        assertNotNull(tPojo.getSomeList());
-        assertEquals(2, tPojo.getSomeList().length);
-        TestPojo first = tPojo.getSomeList()[0];
-        TestPojo second = tPojo.getSomeList()[1];
+        Map<String, Object> vals = q.values;
+        assertEquals(1, vals.keySet().size());
+        assertEquals(null, vals.get("writerId"));
+        assertNotNull(vals.get("someList"));
+        Object someList = vals.get("someList");
+        assertTrue(someList instanceof TestPojo[]);
+        TestPojo[] tPojo = (TestPojo[])someList;
+        assertEquals(2, tPojo.length);
+        TestPojo first = tPojo[0];
+        TestPojo second = tPojo[1];
         assertEquals(elem1, first);
         assertEquals(elem2, second);
         assertEquals("elem1", first.getWriterId());
@@ -447,7 +450,7 @@ public class ParsedStatementImplTest {
     @Test
     public void canPatchBasicSetListReplace() throws IllegalPatchException {
         DataModifyingStatement<TestPojo> stmt = new TestReplace();
-        ParsedStatementImpl<TestPojo> parsedStmt = new ParsedStatementImpl<>(stmt, TestPojo.class);
+        ParsedStatementImpl<TestPojo> parsedStmt = new ParsedStatementImpl<>(stmt);
         SuffixExpression suffixExpn = new SuffixExpression();
         
         // Build this set list, which corresponds to the TestPojo below
@@ -509,11 +512,10 @@ public class ParsedStatementImplTest {
         Replace<TestPojo> replace = (Replace<TestPojo>)parsedStmt.patchStatement(params);
         assertTrue(replace instanceof TestReplace);
         TestReplace q = (TestReplace)replace;
-        Pojo testPojo = q.pojo;
-        assertTrue(testPojo instanceof TestPojo);
-        TestPojo tPojo = (TestPojo)testPojo;
-        assertEquals("foo-bar", tPojo.getWriterId());
-        assertEquals(Long.MAX_VALUE, tPojo.getFooTimeStamp());
+        Map<String, Object> vals = q.values;
+        assertEquals(2, vals.keySet().size());
+        assertEquals("foo-bar", vals.get("writerId"));
+        assertEquals(Long.MAX_VALUE, vals.get("fooTimeStamp"));
         
         ExpressionFactory factory = new ExpressionFactory();
         Expression expectedExpression = factory.equalTo(new Key<>("foo"), -400);
@@ -527,7 +529,7 @@ public class ParsedStatementImplTest {
     @Test
     public void canPatchBasicSetListUpdate() throws IllegalPatchException {
         DataModifyingStatement<TestPojo> stmt = new TestUpdate();
-        ParsedStatementImpl<TestPojo> parsedStmt = new ParsedStatementImpl<>(stmt, TestPojo.class);
+        ParsedStatementImpl<TestPojo> parsedStmt = new ParsedStatementImpl<>(stmt);
         SuffixExpression suffixExpn = new SuffixExpression();
         
         // Build this set list, which corresponds to the TestPojo below
@@ -579,7 +581,7 @@ public class ParsedStatementImplTest {
         List<Pair<Object, Object>> updates = q.updates;
         assertEquals(1, updates.size());
         Pair<Object, Object> update = updates.get(0);
-        assertEquals(new Key<>("writerId"), update.getFirst());
+        assertEquals("writerId", update.getFirst());
         assertEquals("foobar-writer-id", update.getSecond());
         
         ExpressionFactory factory = new ExpressionFactory();
@@ -590,7 +592,7 @@ public class ParsedStatementImplTest {
     @Test
     public void canPatchBasicSort() throws IllegalPatchException {
         // create the parsedStatementImpl we are going to use
-        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement, null);
+        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement);
         parsedStmt.setSetList(new SetList());
         SuffixExpression suffixExpn = new SuffixExpression();
         // SORT ? ASC, b DSC
@@ -635,7 +637,7 @@ public class ParsedStatementImplTest {
     public void failPatchSetListAddWrongType() throws IllegalPatchException {
         // create the parsedStatementImpl we are going to use
         DataModifyingStatement<TestPojo> stmt = new TestAdd<>();
-        ParsedStatementImpl<TestPojo> parsedStmt = new ParsedStatementImpl<>(stmt, TestPojo.class);
+        ParsedStatementImpl<TestPojo> parsedStmt = new ParsedStatementImpl<>(stmt);
         SuffixExpression suffixExpn = new SuffixExpression();
         SetList setList = buildSetList();
         suffixExpn.setLimitExpn(null);
@@ -663,7 +665,7 @@ public class ParsedStatementImplTest {
     public void failPatchSetListAddInsufficientParams() throws IllegalPatchException {
         // create the parsedStatementImpl we are going to use
         DataModifyingStatement<TestPojo> stmt = new TestAdd<>();
-        ParsedStatementImpl<TestPojo> parsedStmt = new ParsedStatementImpl<>(stmt, TestPojo.class);
+        ParsedStatementImpl<TestPojo> parsedStmt = new ParsedStatementImpl<>(stmt);
         SuffixExpression suffixExpn = new SuffixExpression();
         SetList setList = buildSetList();
         suffixExpn.setLimitExpn(null);
@@ -687,7 +689,7 @@ public class ParsedStatementImplTest {
     @Test
     public void failPatchWithWrongType() throws IllegalPatchException {
         // create the parsedStatementImpl we are going to use
-        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement, null);
+        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement);
         parsedStmt.setSetList(new SetList());
         SuffixExpression suffixExpn = new SuffixExpression();
         suffixExpn.setLimitExpn(null);
@@ -745,7 +747,7 @@ public class ParsedStatementImplTest {
     @Test
     public void failPatchBasicEqualsIfIndexOutofBounds() {
         // create the parsedStatementImpl we are going to use
-        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement, null);
+        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(statement);
         SuffixExpression suffixExpn = new SuffixExpression();
         suffixExpn.setLimitExpn(null);
         suffixExpn.setSortExpn(null);
@@ -821,11 +823,11 @@ public class ParsedStatementImplTest {
     
     private static class TestAdd<T extends Pojo> implements Add<T> {
         
-        private Pojo pojo; 
+        private Map<String, Object> values = new HashMap<>();
 
         @Override
-        public void setPojo(Pojo pojo) {
-            this.pojo = pojo;
+        public void set(String key, Object value) {
+            values.put(key, value);
         }
 
         @Override
@@ -839,11 +841,11 @@ public class ParsedStatementImplTest {
     private static class TestReplace implements Replace<TestPojo> {
 
         private Expression where;
-        private Pojo pojo;
+        private Map<String, Object> values = new HashMap<>();
         
         @Override
-        public void setPojo(Pojo pojo) {
-            this.pojo = pojo;
+        public void set(String key, Object value) {
+            values.put(key, value);
         }
 
         @Override
@@ -871,7 +873,7 @@ public class ParsedStatementImplTest {
 
         @SuppressWarnings({ "rawtypes", "unchecked" })
         @Override
-        public <S> void set(Key<S> key, S value) {
+        public void set(String key, Object value) {
             Pair update = new Pair<>(key, value);
             updates.add(update);
         }
