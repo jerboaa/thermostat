@@ -43,11 +43,14 @@ import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Paint;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.geom.RoundRectangle2D;
 
 import javax.swing.JComponent;
+
+import com.redhat.thermostat.client.ui.Palette;
 
 import sun.swing.SwingUtilities2;
 
@@ -67,9 +70,13 @@ public class GraphicsUtils {
     }
     
     public void drawStringWithShadow(JComponent component, Graphics2D graphics, String string, Color foreground, int x, int y) {
+        drawStringWithShadow(component, graphics, string, foreground,  new Color(0f, 0f, 0f, 0.1f), x, y);
+    }
+    
+    public void drawStringWithShadow(JComponent component, Graphics2D graphics, String string, Color foreground, Color shadow, int x, int y) {
         // paint it twice to give a subtle drop shadow effect
         
-        graphics.setColor(new Color(0f, 0f, 0f, 0.1f));
+        graphics.setColor(shadow);
         SwingUtilities2.drawString(component, graphics, string, x, y + 1);
         
         graphics.setColor(foreground);
@@ -96,6 +103,34 @@ public class GraphicsUtils {
     
     public Color deriveWithAlpha(Color color, int alpha) {
         return new Color(color.getRed(), color.getGreen(), color.getBlue(), alpha);
+    }
+    
+    public Color deriveWithAlpha(Color color, float alpha) {
+        float [] rgb = color.getComponents(null);
+        return new Color(rgb[0], rgb[1], rgb[2], alpha);
+    }
+        
+    public Color deriveWithAlpha(Palette color, int alpha) {
+        return deriveWithAlpha(color.getColor(), alpha);
+    }
+        
+    public Color deriveWithAlpha(Palette color, float alpha) {
+        return deriveWithAlpha(color.getColor(), alpha);
+    }
+        
+    public void deriveGraphicsAndFill(Color color, Graphics g) {
+        Graphics2D graphics = GraphicsUtils.getInstance().createAAGraphics(g); 
+            
+        graphics.setColor(color);
+            
+        Rectangle clip = graphics.getClipBounds();
+        graphics.fillRect(clip.x, clip.y, clip.width, clip.height);
+        
+        graphics.dispose();
+    }
+        
+    public void deriveGraphicsAndFill(Palette color, Graphics g) {
+        deriveGraphicsAndFill(color.getColor(), g);
     }
 }
 

@@ -1,26 +1,26 @@
 /*
  * Copyright 2012, 2013 Red Hat, Inc.
- *
+ * 
  * This file is part of Thermostat.
- *
+ * 
  * Thermostat is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
  * by the Free Software Foundation; either version 2, or (at your
  * option) any later version.
- *
+ * 
  * Thermostat is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with Thermostat; see the file COPYING.  If not see
  * <http://www.gnu.org/licenses/>.
- *
+ * 
  * Linking this code with other modules is making a combined work
  * based on this code.  Thus, the terms and conditions of the GNU
  * General Public License cover the whole combination.
- *
+ * 
  * As a special exception, the copyright holders of this code give
  * you permission to link this code with independent modules to
  * produce an executable, regardless of the license terms of these
@@ -34,64 +34,31 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.client.swing.internal.splitpane;
 
-import java.awt.Color;
+import java.awt.Component;
+import java.awt.Graphics;
+import java.awt.Insets;
 
-/**
- * A set of preselected colors suitable for using to draw custom
- * painting of charts graphs and figures.
- */
-public enum Palette {
+import com.redhat.thermostat.client.swing.components.DebugBorder;
 
-    THERMOSTAT_BLU(new Color(74, 93, 117)),
-    THERMOSTAT_RED(new Color(226, 46, 42)),
-    
-    RED(new Color(192, 0, 0)),
-    PALE_RED(new Color(192, 80, 77)),
-    
-    SKY_BLUE(new Color(79, 129, 189)),
-    AZUREUS(new Color(0, 176, 190)),
-    EGYPTIAN_BLUE(new Color(74, 144, 217)),
-    DIRTY_CYAN(new Color(75, 172, 198)),
-    PRUSSIAN_BLUE(new Color(0, 49, 83)),
-    
-    GREEN(new Color(146, 208, 80)),
-    TUNDRA_GREEN(new Color(155, 187, 89)),
+@SuppressWarnings("serial")
+class ThermostatSplitPaneUIDividerBorder extends DebugBorder {
 
-    POMP_AND_POWER_VIOLET(new Color(128, 100, 162)),
-    VIOLET(new Color(112, 48, 160)),
-
-    EARL_GRAY(new Color(128, 128, 128)),
-    
-    PALE_GRAY(new Color(235, 235, 235)),
-    LIGHT_GRAY(new Color(242, 242, 242)),
-    GRAY(new Color(216, 216, 216)),
-    DARK_GRAY(new Color(168, 172, 168)),
-
-    GRANITA_ORANGE(new Color(247,150,70)),
-    
-    BLACK(Color.BLACK),
-    WHITE(Color.WHITE),
-
-    DARK_BLUE(new Color(0x030A0C)),
-    ROYAL_BLUE(new Color(0x0A242D)),
-    ELEGANT_CYAN(new Color(0x39CAFF)),
-    ELEGANT_BLACK(new Color(0x34313A)),
-    ROYAL_BLACK(new Color(0x2E2B33)),
-    
-    DROID_BLACK(new Color(0x161616)),
-    DROID_GRAY(new Color(0x272627)),
-    
-    /* END */ ;
-    
-    private Color color;
-    Palette(Color color) {
-        this.color = color;
+    @Override
+    public void paintBorder(Component c, Graphics g, int x, int y, int width,
+                            int height)
+    {
     }
     
-    public Color getColor() {
-        return color;
+    @Override
+    public Insets getBorderInsets(Component c, Insets insets) {
+        
+        insets.top = 0;
+        insets.left = 0;
+        insets.right = 0;
+        insets.bottom = 0;
+        
+        return insets;
     }
 }
-
