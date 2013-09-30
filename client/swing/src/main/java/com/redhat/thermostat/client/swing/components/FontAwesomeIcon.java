@@ -65,6 +65,8 @@ public class FontAwesomeIcon extends Icon {
     
     private Font font;
     
+    private Color color;
+    
     static {
         try {
             InputStream stream =
@@ -77,6 +79,10 @@ public class FontAwesomeIcon extends Icon {
     }
     
     /**
+     * Creates a new {@link FontAwesomeIcon} painted in {@link Color#BLACK}.
+     * 
+     * <br /><br />
+     * 
      * Please, refer to:
      * <a href='http://fortawesome.github.io/Font-Awesome/cheatsheet/'>
      * Font-Awesome Website</a> for the actual
@@ -85,11 +91,28 @@ public class FontAwesomeIcon extends Icon {
      * @see {@link http://fortawesome.github.io/Font-Awesome/cheatsheet/}
      */
     public FontAwesomeIcon(char iconID, int size) {
+        this(iconID, size, Color.BLACK);
+    }
+
+    /**
+     * Creates a new {@link FontAwesomeIcon} painted in the given {@link Color}.
+     * 
+     * <br /><br />
+     * 
+     * Please, refer to:
+     * <a href='http://fortawesome.github.io/Font-Awesome/cheatsheet/'>
+     * Font-Awesome Website</a> for the actual
+     * values accepted as {@code iconID}.
+     * 
+     * @see {@link http://fortawesome.github.io/Font-Awesome/cheatsheet/}
+     */
+    public FontAwesomeIcon(char iconID, int size, Color color) {
         this.iconID = iconID;
         this.size = size;
         font = awesome.deriveFont(Font.PLAIN, size);
+        this.color = color;
     }
-
+    
     @Override
     public synchronized void paintIcon(Component c, Graphics g, int x, int y) {
         
@@ -100,9 +123,11 @@ public class FontAwesomeIcon extends Icon {
             Graphics2D graphics = (Graphics2D) buffer.getGraphics();
             graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                                       RenderingHints.VALUE_ANTIALIAS_ON);
-            
+            graphics.setRenderingHint(RenderingHints.KEY_RENDERING,
+                                      RenderingHints.VALUE_RENDER_QUALITY);
+
             graphics.setFont(font);
-            graphics.setColor(Color.BLACK);
+            graphics.setColor(color);
             
             int stringY = getIconHeight() - (getIconHeight()/4) + 1;
             graphics.drawString(String.valueOf(iconID), 0, stringY);

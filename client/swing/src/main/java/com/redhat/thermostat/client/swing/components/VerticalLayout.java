@@ -1,26 +1,26 @@
 /*
  * Copyright 2012, 2013 Red Hat, Inc.
- *
+ * 
  * This file is part of Thermostat.
- *
+ * 
  * Thermostat is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
  * by the Free Software Foundation; either version 2, or (at your
  * option) any later version.
- *
+ * 
  * Thermostat is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with Thermostat; see the file COPYING.  If not see
  * <http://www.gnu.org/licenses/>.
- *
+ * 
  * Linking this code with other modules is making a combined work
  * based on this code.  Thus, the terms and conditions of the GNU
  * General Public License cover the whole combination.
- *
+ * 
  * As a special exception, the copyright holders of this code give
  * you permission to link this code with independent modules to
  * produce an executable, regardless of the license terms of these
@@ -37,39 +37,38 @@
 package com.redhat.thermostat.client.swing.components;
 
 import java.awt.Component;
-import java.awt.Graphics;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.Rectangle;
 
 /**
- * A blank {@link Icon}.
+ * A layout that lays components in a vertical stack according to
+ * the component hierarchy preferred height.
  */
-@SuppressWarnings("serial")
-public class EmptyIcon extends Icon {
+public class VerticalLayout extends AbstractLayout {
+    
+    @Override
+    protected void doLayout(Container parent) {
+        Rectangle rect = new Rectangle();
+        for (Component component : parent.getComponents()) {
+            Dimension dim = component.getPreferredSize();
+            rect.width = parent.getWidth();
+            rect.height = dim.height;
+            component.setBounds(rect);
+            rect.y += dim.height;
+        }
+    }
 
-    private int width;
-    private int height;
-    
-    public EmptyIcon() {
-        this(16, 16);
-    }
-    
-    public EmptyIcon(int width, int height) {
-        this.width = width;
-        this.height = height;
-    }
-    
     @Override
-    public int getIconHeight() {
-        return height;
-    }
-    
-    @Override
-    public int getIconWidth() {
-        return width;
-    }
-    
-    @Override
-    public synchronized void paintIcon(Component c, Graphics g, int x, int y) {
-        // no-op
+    public Dimension preferredLayoutSize(Container parent) {
+        
+        Dimension size = new Dimension();
+        for (Component component : parent.getComponents()) {
+            Dimension dim = component.getPreferredSize();
+            size.width = Math.max(dim.width, size.width);
+            size.height += dim.height;
+        }
+        
+        return size;
     }
 }
-
