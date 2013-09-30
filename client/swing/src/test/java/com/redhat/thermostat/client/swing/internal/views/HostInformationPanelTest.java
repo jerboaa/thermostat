@@ -41,6 +41,8 @@ import java.lang.reflect.InvocationTargetException;
 import javax.swing.JFrame;
 import javax.swing.JTabbedPane;
 
+import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
+
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
 import org.fest.swing.edt.GuiActionRunner;
 import org.fest.swing.edt.GuiQuery;
@@ -50,12 +52,14 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.swing.TabbedPaneMatcher;
 import com.redhat.thermostat.client.swing.internal.views.HostInformationPanel;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 
+@RunWith(CacioFESTRunner.class)
 public class HostInformationPanelTest {
 
     private HostInformationPanel panel;
