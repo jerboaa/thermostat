@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.internal.progress;
+package com.redhat.thermostat.client.swing.internal.components;
 
 import java.awt.Component;
 import java.awt.Container;
@@ -44,42 +44,46 @@ import java.awt.Rectangle;
 import com.redhat.thermostat.client.swing.components.AbstractLayout;
 import com.redhat.thermostat.client.swing.components.OverlayPanel;
 
-public class AggregateProgressBarOverlayLayout extends AbstractLayout {
+public class ThermostatGlassPaneLayout extends AbstractLayout {
 
+    private static final int GRIP_SIZE = 16;
+    
     @Override
     protected void doLayout(Container parent) {
         Component[] children = parent.getComponents();
         for (Component _child : children) {
-            if (!(_child instanceof OverlayPanel)) {
-                continue;
-            }
-
-            OverlayPanel child = (OverlayPanel) _child;
-            if (!child.isVisible()) {
+            if (!_child.isVisible()) {
                 continue;
             }
             
-            // limit the size to some reasonable default so that
-            // the panel doesn't go offscreen if it grows too much
-            Dimension preferredSize = child.getPreferredSize();
-            if (preferredSize.height > 300) {
-                preferredSize.height = 300;
+            if (_child instanceof OverlayPanel) {
+                handleOverlay(parent, (OverlayPanel) _child);
             }
-            
-            // FIXME: the magic number is referred to StatusBar grip icon
-            // size. There's no way we can access it at the moment, so we
-            // just rely on the fact that we know it's a 16x16 icon...
-            // We should probably set this information somewhere so that
-            // the layout will still work in the unlikely case this icon should
-            // ever change
-            int x = parent.getWidth() - preferredSize.width +
-                    child.getInsets().left - 16 + 2;
-            int y = parent.getHeight() - preferredSize.height + 16;
-            Rectangle bounds =
-                    new Rectangle(x, y, preferredSize.width, preferredSize.height);
-
-            child.setSize(preferredSize);
-            child.setBounds(bounds);
         }
+    }
+    
+    private void handleOverlay(Container parent, OverlayPanel child) {
+        
+        // limit the size to some reasonable default so that
+        // the panel doesn't go offscreen if it grows too much
+        Dimension preferredSize = child.getPreferredSize();
+        if (preferredSize.height > 300) {
+            preferredSize.height = 300;
+        }
+        
+        // FIXME: the GRIP_SIZE magic number is referred to StatusBar grip icon
+        // size. There's no way we can access it at the moment, so we
+        // just rely on the fact that we know it's a 16x16 icon...
+        // We should probably set this information somewhere so that
+        // the layout will still work in the unlikely case this icon should
+        // ever change
+        int x = parent.getWidth() - preferredSize.width +
+                child.getInsets().left - GRIP_SIZE + 2;
+        int y = parent.getHeight() - preferredSize.height + GRIP_SIZE;
+        Rectangle bounds =
+                new Rectangle(x, y, preferredSize.width, preferredSize.height);
+
+        child.setSize(preferredSize);
+        child.setBounds(bounds);
     }
 }

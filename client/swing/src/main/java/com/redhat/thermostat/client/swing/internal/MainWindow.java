@@ -40,7 +40,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Graphics2D;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.InputEvent;
@@ -49,291 +48,70 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.image.BufferedImage;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.ByteBuffer;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 import javax.swing.BorderFactory;
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
-import javax.swing.ToolTipManager;
-import javax.swing.event.TreeExpansionEvent;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
-import javax.swing.event.TreeWillExpandListener;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeCellRenderer;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.TreeNode;
-import javax.swing.tree.TreePath;
-import javax.swing.tree.TreeSelectionModel;
 
 import sun.misc.Signal;
 
-import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.EdtHelper;
 import com.redhat.thermostat.client.swing.MenuHelper;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.OverlayPanel;
-import com.redhat.thermostat.client.swing.components.SearchField;
-import com.redhat.thermostat.client.swing.components.SearchField.SearchAction;
 import com.redhat.thermostat.client.swing.components.ThermostatPopupMenu;
-import com.redhat.thermostat.client.swing.internal.components.DecoratedDefaultMutableTreeNode;
+import com.redhat.thermostat.client.swing.internal.accordion.Accordion;
+import com.redhat.thermostat.client.swing.internal.accordion.AccordionModel;
 import com.redhat.thermostat.client.swing.internal.components.ThermostatGlassPane;
+import com.redhat.thermostat.client.swing.internal.components.ThermostatGlassPaneLayout;
 import com.redhat.thermostat.client.swing.internal.progress.AggregateNotificationPanel;
-import com.redhat.thermostat.client.swing.internal.progress.AggregateProgressBarOverlayLayout;
 import com.redhat.thermostat.client.swing.internal.progress.ProgressNotificationArea;
 import com.redhat.thermostat.client.swing.internal.progress.SwingProgressNotifier;
 import com.redhat.thermostat.client.swing.internal.progress.SwingProgressNotifier.PropertyChange;
+import com.redhat.thermostat.client.swing.internal.sidepane.ExpanderComponent;
+import com.redhat.thermostat.client.swing.internal.sidepane.ThermostatSidePanel;
+import com.redhat.thermostat.client.swing.internal.splitpane.ThermostatSplitPane;
+import com.redhat.thermostat.client.swing.internal.vmlist.HostTreeComponentFactory;
+import com.redhat.thermostat.client.swing.internal.vmlist.controller.DecoratorManager;
+import com.redhat.thermostat.client.swing.internal.vmlist.controller.HostTreeController;
 import com.redhat.thermostat.client.ui.ContextAction;
-import com.redhat.thermostat.client.ui.Decorator;
-import com.redhat.thermostat.client.ui.DecoratorProvider;
-import com.redhat.thermostat.client.ui.IconDescriptor;
 import com.redhat.thermostat.client.ui.MenuAction;
-import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.utils.StringUtils;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.HostsVMsLoader;
-import com.redhat.thermostat.storage.core.Ref;
 import com.redhat.thermostat.storage.core.VmRef;
 
-@SuppressWarnings("restriction")
+@SuppressWarnings({ "restriction", "serial" })
 public class MainWindow extends JFrame implements MainView {
     
     public static final String MAIN_WINDOW_NAME = "Thermostat_mainWindo_JFrame_parent#1";
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    /**
-     * Updates a TreeModel in the background in an Swing EDT-safe manner.
-     */
-    private static class BackgroundTreeModelWorker extends SwingWorker<DefaultMutableTreeNode, Void> {
-
-        private JTree tree;
-
-        private final DefaultTreeModel treeModel;
-        private DefaultMutableTreeNode treeRoot;
-        
-        private List<Filter<HostRef>> hostFilters;
-        private List<Filter<VmRef>> vmFilters;
-        private List<DecoratorProvider<HostRef>> hostDecorators;
-        private List<DecoratorProvider<VmRef>> vmDecorators;
-        
-        private HostsVMsLoader hostsVMsLoader;
-
-        public BackgroundTreeModelWorker(DefaultTreeModel model, DefaultMutableTreeNode root,
-                                         List<Filter<HostRef>> hostFilters, List<Filter<VmRef>> vmFilters,
-                                         List<DecoratorProvider<HostRef>> hostDecorators,
-                                         List<DecoratorProvider<VmRef>> vmDecorators,
-                                         HostsVMsLoader hostsVMsLoader, JTree tree)
-        {
-            this.hostFilters = hostFilters;
-            this.vmFilters = vmFilters;
-
-            this.vmDecorators = vmDecorators;
-            this.hostDecorators = hostDecorators;
-
-            this.treeModel = model;
-            this.treeRoot = root;
-            this.hostsVMsLoader = hostsVMsLoader;
-            this.tree = tree;
-        }
-
-        @Override
-        protected DefaultMutableTreeNode doInBackground() throws Exception {
-            DefaultMutableTreeNode root = new DefaultMutableTreeNode();
-            
-            Collection<HostRef> hostsInRemoteModel = hostsVMsLoader.getHosts();
-            buildHostSubTree(root, hostsInRemoteModel);
-            return root;
-        }
-
-        private boolean buildHostSubTree(DefaultMutableTreeNode parent, Collection<HostRef> objectsInRemoteModel) {
-            boolean subTreeMatches = false;
-            for (HostRef inRemoteModel : objectsInRemoteModel) {
-                DecoratedDefaultMutableTreeNode inTreeNode =
-                        new DecoratedDefaultMutableTreeNode(inRemoteModel);
-
-                boolean shouldInsert = false;
-                if (hostFilters == null) {
-                    shouldInsert = true;
-                } else {
-                    shouldInsert = true;
-                    for (Filter<HostRef> filter : hostFilters) {
-                        if (!filter.matches(inRemoteModel)) {
-                            shouldInsert = false;
-                            break;
-                        }
-                    }
-                }
-                
-                Collection<VmRef> children = hostsVMsLoader.getVMs(inRemoteModel);
-                boolean subtreeResult = buildVmSubTree(inTreeNode, children);
-                if (subtreeResult) {
-                    shouldInsert = true;
-                }
-
-                if (shouldInsert) {
-                    for (DecoratorProvider<HostRef> decorator : hostDecorators) {
-                        Filter<HostRef> filter = decorator.getFilter();
-                        if (filter != null && filter.matches(inRemoteModel)) {
-                            inTreeNode.addDecorator(decorator.getDecorator());
-                        }
-                    }
-                    
-                    parent.add(inTreeNode);
-                    subTreeMatches = true;
-                }
-            }
-            
-            return subTreeMatches;
-        }
-
-        private boolean buildVmSubTree(DefaultMutableTreeNode parent, Collection<VmRef> objectsInRemoteModel) {
-            boolean subTreeMatches = false;
-            for (VmRef inRemoteModel : objectsInRemoteModel) {
-                DecoratedDefaultMutableTreeNode inTreeNode =
-                        new DecoratedDefaultMutableTreeNode(inRemoteModel);
-
-                boolean shouldInsert = false;
-                if (vmFilters == null) {
-                    shouldInsert = true;
-                } else {
-                    shouldInsert = true;
-                    for (Filter<VmRef> filter : vmFilters) {
-                        if (!filter.matches(inRemoteModel)) {
-                            shouldInsert = false;
-                            break;
-                        }
-                    }
-                }
-
-                if (shouldInsert) {
-                    for (DecoratorProvider<VmRef> decorator : vmDecorators) {
-                        Filter<VmRef> filter = decorator.getFilter();
-                        if (filter != null && filter.matches(inRemoteModel)) {
-                            inTreeNode.addDecorator(decorator.getDecorator());
-                        }
-                    }
-
-                    parent.add(inTreeNode);
-                    subTreeMatches = true;
-                }
-            }
-
-            return subTreeMatches;
-        }
-
-        @Override
-        protected void done() {
-            DefaultMutableTreeNode sourceRoot;
-            try {
-                sourceRoot = get();
-                syncTree(sourceRoot, treeModel, treeRoot);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-            }
-        }
-
-        private void syncTree(DefaultMutableTreeNode sourceRoot, DefaultTreeModel targetModel, DefaultMutableTreeNode targetNode) {
-            
-            @SuppressWarnings("unchecked") // We know what we put into these trees.
-            List<DefaultMutableTreeNode> sourceChildren = Collections.list(sourceRoot.children());
-
-            @SuppressWarnings("unchecked")
-            List<DefaultMutableTreeNode> targetChildren = Collections.list(targetNode.children());
-            for (DefaultMutableTreeNode sourceChild : sourceChildren) {
-                Ref sourceRef = (Ref) sourceChild.getUserObject();
-                DefaultMutableTreeNode targetChild = null;
-                for (DefaultMutableTreeNode aChild : targetChildren) {
-                    Ref targetRef = (Ref) aChild.getUserObject();
-                    if (targetRef.equals(sourceRef)) {
-                        targetChild = aChild;
-                        if (sourceChild instanceof DecoratedDefaultMutableTreeNode) {
-                            DecoratedDefaultMutableTreeNode source = (DecoratedDefaultMutableTreeNode) sourceChild;
-                            ((DecoratedDefaultMutableTreeNode) targetChild).setDecorators(source.getDecorators());
-                        }
-                        break;
-                    }
-                }
-
-                if (targetChild == null) {
-                    targetChild = new DecoratedDefaultMutableTreeNode(sourceRef);
-                    if (sourceChild instanceof DecoratedDefaultMutableTreeNode) {
-                        DecoratedDefaultMutableTreeNode source = (DecoratedDefaultMutableTreeNode) sourceChild;
-                        ((DecoratedDefaultMutableTreeNode) targetChild).setDecorators(source.getDecorators());
-                    }
-                    targetModel.insertNodeInto(targetChild, targetNode, targetNode.getChildCount());
-                }
-
-                syncTree(sourceChild, targetModel, targetChild);
-            }
-
-            for (DefaultMutableTreeNode targetChild : targetChildren) {
-                Ref targetRef = (Ref) targetChild.getUserObject();
-                boolean matchFound = false;
-                for (DefaultMutableTreeNode sourceChild : sourceChildren) {
-                    Ref sourceRef = (Ref) sourceChild.getUserObject();
-                    if (targetRef.equals(sourceRef)) {
-                        matchFound = true;
-                        break;
-                    }
-                }
-
-                if (!matchFound) {
-                    targetModel.removeNodeFromParent(targetChild);
-                }
-            }
-            ensureRootIsExpanded(targetModel);
-        }
-
-        private void ensureRootIsExpanded(final DefaultTreeModel model) {
-            DefaultMutableTreeNode root = (DefaultMutableTreeNode) model.getRoot();
-            tree.expandPath(new TreePath(root.getPath()));
-        }
-
-    }
-
     private SwingProgressNotifier notifier;
     
-    private static final long serialVersionUID = 5608972421496808177L;
-
     private final JMenuBar mainMenuBar = new JMenuBar();
     private final MenuHelper mainMenuHelper = new MenuHelper(mainMenuBar);
     private JPanel contentArea = null;
-
-    private SearchField searchField = new SearchField();
-    private JTree agentVmTree = null;
-
+    
     private final ShutdownClient shutdownAction;
 
     private ActionNotifier<Action> actionNotifier = new ActionNotifier<>(this);
@@ -341,11 +119,11 @@ public class MainWindow extends JFrame implements MainView {
     private ThermostatPopupMenu contextMenu;
     private StatusBar statusBar;
     
-    private final DefaultMutableTreeNode publishedRoot =
-            new DefaultMutableTreeNode(translator.localize(LocaleResources.MAIN_WINDOW_TREE_ROOT_NAME).getContents());
-    private final DefaultTreeModel publishedTreeModel = new DefaultTreeModel(publishedRoot);
-
-    @SuppressWarnings("restriction")
+    private ThermostatSidePanel navigationPanel;
+    private Accordion<HostRef, VmRef> hostTree;
+    
+    private HostTreeController hostTreeController;
+    
     public MainWindow() {
         super();
 
@@ -353,50 +131,19 @@ public class MainWindow extends JFrame implements MainView {
         
         shutdownAction = new ShutdownClient();
 
-        searchField.addActionListener(new ActionListener<SearchAction>() {
-            @Override
-            public void actionPerformed(ActionEvent<SearchAction> actionEvent) {
-                switch (actionEvent.getActionId()) {
-                case TEXT_CHANGED:
-                    fireViewAction(Action.HOST_VM_TREE_FILTER);
-                    break;
-                }
-            }
-        });
-        agentVmTree = new JTree(publishedTreeModel);
-        agentVmTree.setName("agentVmTree");
-        agentVmTree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-        agentVmTree.setCellRenderer(new AgentVmTreeCellRenderer());
-        agentVmTree.addTreeWillExpandListener(new TreeWillExpandListener() {
-            @Override
-            public void treeWillExpand(TreeExpansionEvent event) throws ExpandVetoException {
-                /* Yup, tree will expand */
-            }
-
-            @Override
-            public void treeWillCollapse(TreeExpansionEvent event) throws ExpandVetoException {
-                if (new TreePath(publishedRoot.getPath()).equals(event.getPath())) {
-                    throw new ExpandVetoException(event, "root cant be collapsed");
-                }
-            }
-        });
-        ToolTipManager.sharedInstance().registerComponent(agentVmTree);
         contentArea = new JPanel(new BorderLayout());
 
+        ThermostatGlassPane glassPane = new ThermostatGlassPane();
+        glassPane.setLayout(new ThermostatGlassPaneLayout());
+
+        setGlassPane(glassPane);
+
         setupMenus();
-        setupPanels();
+        setupPanels(glassPane);
 
         this.setPreferredSize(new Dimension(800, 600));
 
-        agentVmTree.setSelectionPath(new TreePath(((DefaultMutableTreeNode) publishedTreeModel.getRoot()).getPath()));
-        
-        //agentVmTree.setLargeModel(true);
-        agentVmTree.setRowHeight(25);
-
         statusBar = new StatusBar();
-        
-        ThermostatGlassPane glassPane = new ThermostatGlassPane();
-        setGlassPane(glassPane);
         setupNotificationPane(statusBar, glassPane);
         
         getContentPane().add(statusBar, BorderLayout.SOUTH);
@@ -409,7 +156,6 @@ public class MainWindow extends JFrame implements MainView {
         Signal.handle(new Signal("INT"), shutdownAction);
         
         addComponentListener(new ComponentAdapter() {
-
             @Override
             public void componentShown(ComponentEvent e) {
                 fireViewAction(Action.VISIBLE);
@@ -431,7 +177,6 @@ public class MainWindow extends JFrame implements MainView {
 
         statusBar.add(notificationArea, BorderLayout.CENTER);
 
-        glassPane.setLayout(new AggregateProgressBarOverlayLayout());
         LocalizedString title = translator.localize(LocaleResources.PROGRESS_NOTIFICATION_AREA_TITLE);
         final OverlayPanel overlay = new OverlayPanel(title, false);
         glassPane.add(overlay);
@@ -535,51 +280,88 @@ public class MainWindow extends JFrame implements MainView {
         setJMenuBar(mainMenuBar);
     }
 
-    private void setupPanels() {
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        splitPane.setOneTouchExpandable(true);
-        
-        JPanel navigationPanel = new JPanel(new BorderLayout());
-
-        navigationPanel.add(searchField, BorderLayout.PAGE_START);
-
-        agentVmTree.addTreeSelectionListener(new TreeSelectionListener() {
-            @Override
-            public void valueChanged(TreeSelectionEvent e) {
-                if (e.isAddedPath()) {
-                    fireViewAction(Action.HOST_VM_SELECTION_CHANGED);
-                }
-            }
-        });
-        registerContextActionListener(agentVmTree);
-        
-        JScrollPane treeScrollPane = new JScrollPane(agentVmTree);
-        
-        navigationPanel.add(treeScrollPane);
-
-        JPanel detailsPanel = createDetailsPanel();
-
-        navigationPanel.setMinimumSize(new Dimension(200,500));
-        detailsPanel.setMinimumSize(new Dimension(500, 500));
-
-        splitPane.add(navigationPanel);
-        splitPane.add(detailsPanel);
-
+    private void setupPanels(final ThermostatGlassPane glassPane) {
+        final ThermostatSplitPane splitPane = new ThermostatSplitPane();
+        splitPane.setOneTouchExpandable(false);
         getContentPane().add(splitPane);
-    }
 
-    private void registerContextActionListener(JTree agentVmTree2) {
-        contextMenu = new ThermostatPopupMenu();
-        agentVmTree2.addMouseListener(new MouseAdapter() {
+        final JPanel detailsPanel = createDetailsPanel();
+        detailsPanel.setMinimumSize(new Dimension(500, 500));
+        splitPane.setRightComponent(detailsPanel);
+        
+        navigationPanel = new ThermostatSidePanel();
+        splitPane.setLeftComponent(navigationPanel);
+        
+        DecoratorManager decoratorManager = new DecoratorManager();
+        
+        hostTree = new Accordion<>(new HostTreeComponentFactory(decoratorManager));
+        hostTreeController = new HostTreeController(hostTree, decoratorManager);
+        navigationPanel.addContent(hostTree);
+        
+        final JPanel collapsedPanel = new JPanel();
+        collapsedPanel.setLayout(new BorderLayout());
+        
+        final ExpanderComponent expander = new ExpanderComponent();            
+                        
+        navigationPanel.setMinimumSize(new Dimension(300, 500));
+        navigationPanel.addPropertyChangeListener(ThermostatSidePanel.COLLAPSED,
+                                                  new PropertyChangeListener()
+        {
             @Override
-            public void mousePressed(MouseEvent e) {
-                if (e.isPopupTrigger()) {
-                    Ref ref = getSelectedHostOrVm();
-                    fireViewAction(Action.SHOW_HOST_VM_CONTEXT_MENU, e);
+            public void propertyChange(final PropertyChangeEvent evt) {
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (((Boolean) evt.getNewValue()).booleanValue()) {
+                            getContentPane().remove(splitPane);
+                            
+                            collapsedPanel.add(expander, BorderLayout.WEST);
+                            collapsedPanel.add(detailsPanel, BorderLayout.CENTER);    
+                            
+                            getContentPane().add(collapsedPanel);
+                            revalidate();
+                            repaint();
+                        }
+                    }
+                });
+            }
+        });
+        
+        expander.addPropertyChangeListener(ExpanderComponent.EXPANDED_PROPERTY,
+                                           new PropertyChangeListener()
+        {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                if (((Boolean) evt.getNewValue()).booleanValue()) {
+                    
+                    collapsedPanel.removeAll();
+                    
+                    getContentPane().remove(collapsedPanel);
+                    
+                    splitPane.setRightComponent(detailsPanel);
+                    splitPane.setLeftComponent(navigationPanel);
+                    
+                    getContentPane().add(splitPane);
+                    revalidate();
+                    repaint();
                 }
             }
         });
     }
+    
+    // TODO
+//    private void registerContextActionListener(JTree agentVmTree2) {
+//        contextMenu = new ThermostatPopupMenu();
+//        agentVmTree2.addMouseListener(new MouseAdapter() {
+//            @Override
+//            public void mousePressed(MouseEvent e) {
+//                if (e.isPopupTrigger()) {
+//                    Ref ref = getSelectedHostOrVm();
+//                    fireViewAction(Action.SHOW_HOST_VM_CONTEXT_MENU, e);
+//                }
+//            }
+//        });
+//    }
 
     @Override
     public void showContextActions(final List<ContextAction> actions, final MouseEvent e) {
@@ -642,97 +424,6 @@ public class MainWindow extends JFrame implements MainView {
 
     }
 
-    private static class AgentVmTreeCellRenderer extends DefaultTreeCellRenderer {
-        private static final long serialVersionUID = 4444642511815252481L;
-
-        @Override
-        public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
-            
-            Object node = ((DefaultMutableTreeNode) value).getUserObject();
-            setToolTipText(createToolTipText(node));
-            
-            Component component = super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
-            if (value instanceof DecoratedDefaultMutableTreeNode) {
-                DecoratedDefaultMutableTreeNode treeNode = (DecoratedDefaultMutableTreeNode) value;
-                setAnnotation(treeNode, node, component);
-            }
-
-            return component;
-        }
-        
-        // TODO: we can cache more, for example the full icon, not just the decoration
-        private Map<Decorator, ImageIcon> decoratorsCache = new HashMap<>();
-        private void setAnnotation(DecoratedDefaultMutableTreeNode treeNode, Object value, Component component) {
-
-            List<Decorator> decorators = treeNode.getDecorators();
-            for (Decorator dec : decorators) {
-                String newText = dec.getLabel(getText());
-                setText(newText);
-                setLabelFor(component);
-                
-                ImageIcon icon = decoratorsCache.get(dec);
-                if (icon == null) {
-                    //System.err.println("cache miss: " + dec);
-                    IconDescriptor iconDescriptor = dec.getIconDescriptor();
-                    if (iconDescriptor != null) {
-                        ByteBuffer data = iconDescriptor.getData();
-                        icon = new ImageIcon(data.array());
-                        decoratorsCache.put(dec, icon);
-                    }
-                }
-                
-                if (icon == null) {
-                    return;
-                }
-                
-                Icon currentIcon = getIcon();
-                switch (dec.getQuadrant()) {
-                case BOTTOM_LEFT:
-                    int y = currentIcon.getIconHeight() - icon.getIconHeight();
-                    paintCustomIcon(currentIcon, icon, y);
-                    break;
-                    
-                case TOP_LEFT:
-                    paintCustomIcon(currentIcon, icon, 0);
-                    break;
-                    
-                case MAIN:
-                default:
-                    setIcon(icon);
-                    break;
-                }
-            }
-        }
-        
-        private void paintCustomIcon(Icon currentIcon, ImageIcon icon, int y) {
-            BufferedImage image = new BufferedImage(currentIcon.getIconWidth(),
-                                                    currentIcon.getIconHeight(),
-                                                    BufferedImage.TYPE_INT_ARGB);
-            Graphics2D graphics = (Graphics2D) image.getGraphics();
-            
-            currentIcon.paintIcon(null, graphics, 0, 0);
-            graphics.drawImage(icon.getImage(), 0, y, null);
-            
-            setIcon(new ImageIcon(image));
-        }
-        
-        private String createToolTipText(Object value) {
-            if (value instanceof HostRef) {
-                HostRef hostRef = (HostRef) value;
-                String hostName = hostRef.getHostName();
-                String agentId = hostRef.getAgentId();
-                return translator.localize(LocaleResources.HOST_TOOLTIP, hostName, agentId).getContents();
-            } else if (value instanceof VmRef) {
-                VmRef vmRef = (VmRef) value;
-                String vmName = vmRef.getName();
-                String vmId = vmRef.getVmId();
-                return translator.localize(LocaleResources.VM_TOOLTIP, vmName, vmId).getContents();
-            } else {
-                return null;
-            }
-        }
-    }
-
     @Override
     public JFrame getTopFrame() {
         return this;
@@ -755,18 +446,6 @@ public class MainWindow extends JFrame implements MainView {
         actionNotifier.fireAction(action, payload);
     }
     
-    @Override
-    public void updateTree(List<Filter<HostRef>> hostFilters, List<Filter<VmRef>> vmFilters,
-            List<DecoratorProvider<HostRef>> hostDecorators,
-            List<DecoratorProvider<VmRef>> vmDecorators,
-            HostsVMsLoader hostsVMsLoader)
-    {
-        BackgroundTreeModelWorker worker =
-                new BackgroundTreeModelWorker(publishedTreeModel, publishedRoot,
-                                              hostFilters, vmFilters, hostDecorators, vmDecorators, hostsVMsLoader, agentVmTree);
-        worker.execute();
-    }
-
     @SuppressWarnings("unused") // Used for debugging but not in production code.
     private static void printTree(PrintStream out, TreeNode node, int depth) {
         out.println(StringUtils.repeat("  ", depth) + node.toString());
@@ -842,21 +521,9 @@ public class MainWindow extends JFrame implements MainView {
         mainMenuHelper.removeMenuAction(action);
     }
 
-    /**
-     * Returns null to indicate no Ref is selected
-     */
     @Override
-    public Ref getSelectedHostOrVm() {
-        TreePath path = agentVmTree.getSelectionPath();
-        if (path == null || path.getPathCount() == 1) {
-            return null;
-        }
-        return (Ref) ((DefaultMutableTreeNode) path.getLastPathComponent()).getUserObject();
-    }
-
-    @Override
-    public String getHostVmTreeFilterText() {
-        return searchField.getSearchText();
+    public HostTreeController getHostTreeController() {
+        return hostTreeController;
     }
 }
 

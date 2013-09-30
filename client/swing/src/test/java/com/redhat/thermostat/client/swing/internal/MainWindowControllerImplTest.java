@@ -39,22 +39,14 @@ package com.redhat.thermostat.client.swing.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.awt.event.MouseEvent;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
 import org.junit.After;
@@ -67,7 +59,6 @@ import org.osgi.framework.BundleException;
 import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.client.core.views.AgentInformationViewProvider;
-import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.ClientConfigViewProvider;
 import com.redhat.thermostat.client.core.views.HostInformationView;
 import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
@@ -75,8 +66,8 @@ import com.redhat.thermostat.client.core.views.SummaryView;
 import com.redhat.thermostat.client.core.views.SummaryViewProvider;
 import com.redhat.thermostat.client.core.views.VmInformationView;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
-import com.redhat.thermostat.client.ui.ContextAction;
-import com.redhat.thermostat.client.ui.DecoratorProvider;
+import com.redhat.thermostat.client.swing.internal.vmlist.controller.DecoratorProviderExtensionListener;
+import com.redhat.thermostat.client.swing.internal.vmlist.controller.HostTreeController;
 import com.redhat.thermostat.client.ui.HostContextAction;
 import com.redhat.thermostat.client.ui.MenuAction;
 import com.redhat.thermostat.client.ui.MenuRegistry;
@@ -87,25 +78,24 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry.Action;
 import com.redhat.thermostat.common.Timer;
-import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.HostsVMsLoader;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
-import com.redhat.thermostat.storage.model.VmInfo;
-import com.redhat.thermostat.test.Bug;
+import com.redhat.thermostat.storage.monitor.HostMonitor;
+import com.redhat.thermostat.storage.monitor.NetworkMonitor;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class MainWindowControllerImplTest {
 
     private ActionListener<MainView.Action> l;
-
+    private ActionListener<HostTreeController.ReferenceSelection> hostTreeListener;
+    
     private MainWindowControllerImpl controller;
 
     private MainView view;
@@ -125,18 +115,17 @@ public class MainWindowControllerImplTest {
     private VMTreeDecoratorRegistry vmDecoratorRegistry;
     private VMInformationRegistry vmInfoRegistry;
     private MenuRegistry menus;
-    
-    @SuppressWarnings("unused")
-    private ActionListener<ThermostatExtensionRegistry.Action> hostFiltersListener;
-    @SuppressWarnings("unused")
-    private ActionListener<ThermostatExtensionRegistry.Action> vmFiltersListener;
-    private ActionListener<ThermostatExtensionRegistry.Action> decoratorsListener;
 
     private StubBundleContext context;
     private CountDownLatch shutdown;
 
     private VmInformationView vmInfoView;
     private VmInformationViewProvider vmInfoViewProvider;
+    
+    private HostTreeController treeController;
+
+    private DecoratorProviderExtensionListener<HostRef> hostDecorators;
+    private DecoratorProviderExtensionListener<VmRef> vmDecorators;
     
     @BeforeClass
     public static void setUpOnce() {
@@ -190,11 +179,27 @@ public class MainWindowControllerImplTest {
         ClientConfigViewProvider clientConfigViewProvider = mock(ClientConfigViewProvider.class);
         context.registerService(ClientConfigViewProvider.class, clientConfigViewProvider, null);
 
+        HostMonitor hostMonitor = mock(HostMonitor.class);
+        context.registerService(HostMonitor.class, hostMonitor, null);
+        NetworkMonitor networkMonitor = mock(NetworkMonitor.class);
+        context.registerService(NetworkMonitor.class, networkMonitor, null);
+
         // Setup View
         view = mock(MainView.class);
         ArgumentCaptor<ActionListener> grabListener = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addActionListener(grabListener.capture());
         
+        hostDecorators = mock(DecoratorProviderExtensionListener.class);
+        vmDecorators = mock(DecoratorProviderExtensionListener.class);
+        
+        treeController = mock(HostTreeController.class);
+        ArgumentCaptor<ActionListener> hostTreeCaptor = ArgumentCaptor.forClass(ActionListener.class);
+        when(view.getHostTreeController()).thenReturn(treeController);
+        when(treeController.getHostDecoratorListener()).thenReturn(hostDecorators);
+        when(treeController.getVmDecoratorListener()).thenReturn(vmDecorators);
+        
+        doNothing().when(treeController).addReferenceSelectionChangeListener(hostTreeCaptor.capture());
+
         ProgressNotifier notifier = mock(ProgressNotifier.class);
         when(view.getNotifier()).thenReturn(notifier);
         
@@ -230,15 +235,14 @@ public class MainWindowControllerImplTest {
         setUpVMContextActions();
 
         controller = new MainWindowControllerImpl(context, appSvc, view, registryFactory, shutdown);
-        l = grabListener.getValue();
         
-        hostFiltersListener = grabHostFiltersListener.getValue();
-        vmFiltersListener = grabVmFiltersListener.getValue();
-        decoratorsListener = grabDecoratorsListener.getValue();
+        l = grabListener.getValue();
+        hostTreeListener = hostTreeCaptor.getValue();
     }
 
     private void setUpHostContextActions() {
         hostContextAction1 = mock(HostContextAction.class);
+        @SuppressWarnings("unchecked")
         Filter<HostRef> hostFilter1 = mock(Filter.class);
         when(hostFilter1.matches(isA(HostRef.class))).thenReturn(true);
 
@@ -249,6 +253,7 @@ public class MainWindowControllerImplTest {
         context.registerService(HostContextAction.class, hostContextAction1, null);
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     private void setUpVMContextActions() {
         vmContextAction1 = mock(VMContextAction.class);
         Filter action1Filter = mock(Filter.class);
@@ -280,144 +285,36 @@ public class MainWindowControllerImplTest {
         l = null;
     }
 
-    @SuppressWarnings("unchecked")
     @Test
-    public void verifyDecoratorsAdded() {
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public void verifyDecoratorsRegisteredAndStarted() {
 
-        List<DecoratorProvider<VmRef>> currentDecoratros = controller.getVmTreeDecorators();
-        assertEquals(0, currentDecoratros.size());
-        
-        ActionEvent<ThermostatExtensionRegistry.Action> event =
-                new ActionEvent<ThermostatExtensionRegistry.Action>(vmDecoratorRegistry,
-                        ThermostatExtensionRegistry.Action.SERVICE_ADDED);
-        
-        DecoratorProvider<VmRef> payload = mock(DecoratorProvider.class);
-        event.setPayload(payload);
-        
-        decoratorsListener.actionPerformed(event);
+        ArgumentCaptor<ActionListener> captor1 = ArgumentCaptor.forClass(ActionListener.class);
+        ArgumentCaptor<ActionListener> captor2 = ArgumentCaptor.forClass(ActionListener.class);
 
-        currentDecoratros = controller.getVmTreeDecorators();
-        assertEquals(1, currentDecoratros.size());
-        assertEquals(payload, currentDecoratros.get(0));
+        verify(view, atLeastOnce()).getHostTreeController();
+        verify(treeController).getHostDecoratorListener();
+        verify(treeController).getVmDecoratorListener();
         
-        verify(view).updateTree(any(List.class), isA(List.class), isA(List.class), any(List.class), any(HostsVMsLoader.class));
+        verify(hostDecoratorRegistry).addActionListener(captor1.capture());
+        verify(vmDecoratorRegistry).addActionListener(captor2.capture());
+        
+        verify(hostDecoratorRegistry).start();
+        verify(vmDecoratorRegistry).start();
+
+        ActionListener l1 = captor1.getValue();
+        ActionListener l2 = captor2.getValue();
+        
+        assertEquals(hostDecorators, l1);
+        assertEquals(vmDecorators, l2);
     }
     
-    @Test
-    public void verifyThatHiddenEventStopsController() {
-
-        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HIDDEN));
-
-        verify(mainWindowTimer).stop();
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test
-    public void verifyThatHostsVmsFilterChangeUpdatesTree() {
-
-        when(view.getHostVmTreeFilterText()).thenReturn("test");
-
-        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_TREE_FILTER));
-
-        verify(view).updateTree(isA(List.class), isA(List.class), isA(List.class), isA(List.class), isA(HostsVMsLoader.class));
-    }
-    
-    @Test
-    public void verifyTimerGetsStartedOnBecomingVisible() {
-        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.VISIBLE));
-
-        verify(mainWindowTimer).setDelay(3);
-        verify(mainWindowTimer).setTimeUnit(TimeUnit.SECONDS);
-        verify(mainWindowTimer).setSchedulingType(SchedulingType.FIXED_RATE);
-        verify(mainWindowTimer).start();
-    }
-
     @Test
     public void verifyShowMainWindowActuallyCallsView() {
         controller.showMainMainWindow();
         verify(view).showMainWindow();
     }
-
-    @Test
-    public void verifySubViewIsSetByDefault() throws InvocationTargetException, InterruptedException {
-        verify(view).setSubView(any(BasicView.class));
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test
-    public void verifyUpdateHostsVMsLoadsCorrectHosts() {
-
-        Collection<HostRef> expectedHosts = new ArrayList<>();
-        expectedHosts.add(new HostRef("123", "fluffhost1"));
-        expectedHosts.add(new HostRef("456", "fluffhost2"));
-
-        when(mockHostsDAO.getAliveHosts()).thenReturn(expectedHosts);
-
-        controller.doUpdateTreeAsync();
-
-        ArgumentCaptor<HostsVMsLoader> arg = ArgumentCaptor.forClass(HostsVMsLoader.class);
-        verify(view).updateTree(isA(List.class), isA(List.class), isA(List.class), isA(List.class), arg.capture());
-        HostsVMsLoader loader = arg.getValue();
-
-        Collection<HostRef> actualHosts = loader.getHosts();
-        assertEqualCollection(expectedHosts, actualHosts);
-    }
     
-    @SuppressWarnings("unchecked")
-    @Test
-    public void verifyHistoryModeUpdateHostsVMCorrectly() {
-
-        Collection<HostRef> liveHost = new ArrayList<>();
-        liveHost.add(new HostRef("123", "fluffhost1"));
-        liveHost.add(new HostRef("456", "fluffhost2"));
-
-        Collection<HostRef> allHosts = new ArrayList<>();
-        allHosts.addAll(liveHost);
-        allHosts.add(new HostRef("789", "fluffhost3"));
-
-        when(mockHostsDAO.getAliveHosts()).thenReturn(liveHost);
-        when(mockHostsDAO.getHosts()).thenReturn(allHosts);
-
-        controller.doUpdateTreeAsync();
-
-        ArgumentCaptor<HostsVMsLoader> arg = ArgumentCaptor.forClass(HostsVMsLoader.class);
-        verify(view).updateTree(isA(List.class), isA(List.class), isA(List.class), isA(List.class), arg.capture());
-        HostsVMsLoader loader = arg.getValue();
-
-        Collection<HostRef> actualHosts = loader.getHosts();
-        assertEqualCollection(liveHost, actualHosts);
-
-        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.SWITCH_HISTORY_MODE));
-        ArgumentCaptor<HostsVMsLoader> argCaptor = ArgumentCaptor.forClass(HostsVMsLoader.class);
-        // actionPerformed triggers updateTree
-        verify(view, times(2)).updateTree(isA(List.class), isA(List.class), isA(List.class), isA(List.class), argCaptor.capture());
-        loader = argCaptor.getValue();
-
-        actualHosts = loader.getHosts();
-        assertEqualCollection(allHosts, actualHosts);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test
-    public void verifyUpdateHostsVMsLoadsCorrectVMs() {
-
-        Collection<VmRef> expectedVMs = new ArrayList<>();
-        HostRef host = new HostRef("123", "fluffhost1");
-        expectedVMs.add(new VmRef(host, "321", 123, "vm1"));
-        expectedVMs.add(new VmRef(host, "654", 456, "vm2"));
-
-        when(mockVmsDAO.getVMs(any(HostRef.class))).thenReturn(expectedVMs);
-
-        controller.doUpdateTreeAsync();
-
-        ArgumentCaptor<HostsVMsLoader> arg = ArgumentCaptor.forClass(HostsVMsLoader.class);
-        verify(view).updateTree(isA(List.class), isA(List.class), isA(List.class), isA(List.class), arg.capture());
-        HostsVMsLoader loader = arg.getValue();
-
-        Collection<VmRef> actualVMs = loader.getVMs(host);
-        assertEqualCollection(expectedVMs, actualVMs);
-    }
-
     @Test
     public void verifyUpdateHostsVMsLoadsCorrectVMWithFilter() {
 
@@ -436,183 +333,183 @@ public class MainWindowControllerImplTest {
         assertFalse(filter.matches(ref2));
     }
     
-    private void assertEqualCollection(Collection<?> expected, Collection<?> actual) {
-        assertEquals(expected.size(), actual.size());
-        assertTrue(expected.containsAll(actual));
-    }
-
-    @Test
-    @Bug(id="954",
-         summary="Thermostat GUI client should remember my last panel selected",
-         url="http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=954")
-    public void verifyOpenSameHostVMTab() throws Exception {
-
-        VmRef vmRef = mock(VmRef.class);
-        when(vmRef.getName()).thenReturn("testvm");
-        when(vmRef.getVmId()).thenReturn("testvmid");
-        HostRef ref = mock(HostRef.class);
-        when(ref.getAgentId()).thenReturn("agentId");
-        when(vmRef.getHostRef()).thenReturn(ref);
-        
-        when(view.getSelectedHostOrVm()).thenReturn(vmRef);
-        
-        when(vmInfoView.getSelectedChildID()).thenReturn(3);
-        when(vmInfoView.selectChildID(anyInt())).thenReturn(true);
-        
-        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
-        
-        ArgumentCaptor<Integer> arg = ArgumentCaptor.forClass(Integer.class);
-        verify(vmInfoView).selectChildID(arg.capture());
-        verify(vmInfoView, times(0)).getSelectedChildID();
-
-        int id = arg.getValue();
-
-        assertEquals(0, id);
-
-        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
-
-        arg = ArgumentCaptor.forClass(Integer.class);
-        verify(vmInfoView, times(1)).getSelectedChildID();
-        verify(vmInfoView, times(2)).selectChildID(arg.capture());
-        id = arg.getValue();
-
-        assertEquals(3, id);
-    }
-    
-    @Test
-    public void verifyOpenSameHostVMTab2() {
-        
-        VmRef vmRef1 = mock(VmRef.class);
-        VmRef vmRef2 = mock(VmRef.class);
-        when(view.getSelectedHostOrVm()).thenReturn(vmRef1).thenReturn(vmRef1).thenReturn(vmRef2).thenReturn(vmRef1);
-
-        when(vmRef1.getName()).thenReturn("testvm");
-        when(vmRef1.getVmId()).thenReturn("testvmid");
-        HostRef ref = mock(HostRef.class);
-        when(ref.getAgentId()).thenReturn("agentId");
-        when(vmRef1.getHostRef()).thenReturn(ref);
-        
-        when(vmRef2.getName()).thenReturn("testvm");
-        when(vmRef2.getVmId()).thenReturn("testvmid");
-        when(vmRef2.getHostRef()).thenReturn(ref);
-        
-        VmInformationView vmInfoView2 = mock(VmInformationView.class);
-        
-        when(vmInfoView.getSelectedChildID()).thenReturn(2).thenReturn(2);
-        when(vmInfoView2.getSelectedChildID()).thenReturn(3);
-        
-        when(vmInfoView.selectChildID(0)).thenReturn(true);
-        when(vmInfoView.selectChildID(2)).thenReturn(true);
-        when(vmInfoView.selectChildID(3)).thenReturn(false);
-        
-        when(vmInfoView2.selectChildID(0)).thenReturn(true);
-        when(vmInfoView2.selectChildID(2)).thenReturn(true);
-        when(vmInfoView2.selectChildID(3)).thenReturn(true);
-        
-        when(vmInfoViewProvider.createView()).thenReturn(vmInfoView)
-                .thenReturn(vmInfoView2).thenReturn(vmInfoView2)
-                .thenReturn(vmInfoView);
-        
-        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
-
-        ArgumentCaptor<Integer> arg = ArgumentCaptor.forClass(Integer.class);
-        verify(vmInfoView).selectChildID(arg.capture());
-        verify(vmInfoView, times(0)).getSelectedChildID();
-
-        int id = arg.getValue();
-
-        assertEquals(0, id);
-
-        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
-
-        arg = ArgumentCaptor.forClass(Integer.class);
-        verify(vmInfoView).getSelectedChildID();
-        verify(vmInfoView2, times(1)).selectChildID(arg.capture());
-        id = arg.getValue();
-
-        assertEquals(2, id);
-        
-        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
-
-        arg = ArgumentCaptor.forClass(Integer.class);
-        verify(vmInfoView2, times(1)).getSelectedChildID();
-        verify(vmInfoView2, times(2)).selectChildID(arg.capture());
-        id = arg.getValue();
-
-        assertEquals(3, id);
-        
-        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
-
-        arg = ArgumentCaptor.forClass(Integer.class);
-        verify(vmInfoView2, times(2)).getSelectedChildID();
-        verify(vmInfoView, times(3)).selectChildID(arg.capture());
-        id = arg.getValue();
-
-        assertEquals(2, id);
-    }
-
-    @Test
-    public void verifyHostActionsAreShown() {
-        HostRef host = mock(HostRef.class);
-        when(view.getSelectedHostOrVm()).thenReturn(host);
-
-        MouseEvent uiEvent = mock(MouseEvent.class);
-        ActionEvent<MainView.Action> viewEvent = new ActionEvent<>(view, MainView.Action.SHOW_HOST_VM_CONTEXT_MENU);
-        viewEvent.setPayload(uiEvent);
-
-        l.actionPerformed(viewEvent);
-
-        List<ContextAction> actions = new ArrayList<>();
-        actions.add(hostContextAction1);
-
-        verify(view).showContextActions(actions, uiEvent);
-    }
-
-    @Test
-    public void verityVMActionsAreShown() {
-        VmInfo vmInfo = new VmInfo("foo", "123", 0, 1, 2, null, null, null, null, null, null, null, null, null, null, null, -1, null);
-        when(mockVmsDAO.getVmInfo(isA(VmRef.class))).thenReturn(vmInfo);
-
-        VmRef ref = mock(VmRef.class);
-        when(view.getSelectedHostOrVm()).thenReturn(ref);
-
-        MouseEvent uiEvent = mock(MouseEvent.class);
-        ActionEvent<MainView.Action> viewEvent = new ActionEvent<>(view, MainView.Action.SHOW_HOST_VM_CONTEXT_MENU);
-        viewEvent.setPayload(uiEvent);
-
-        l.actionPerformed(viewEvent);
-
-        List<ContextAction> actions = new ArrayList<>();
-        actions.add(vmContextAction1);
-
-        verify(view).showContextActions(actions, uiEvent);
-    }
-
-    @Test
-    public void verifyHostActionsAreExecuted() {
-        HostRef hostRef = mock(HostRef.class);
-        when(view.getSelectedHostOrVm()).thenReturn(hostRef);
-
-        ActionEvent<MainView.Action> event = new ActionEvent<>(view, MainView.Action.HOST_VM_CONTEXT_ACTION);
-        event.setPayload(hostContextAction1);
-        l.actionPerformed(event);
-
-        verify(hostContextAction1, times(1)).execute(hostRef);
-    }
-
-    @Test
-    public void verityVMActionsAreExecuted() {
-
-        VmRef vmRef = mock(VmRef.class);
-        when(view.getSelectedHostOrVm()).thenReturn(vmRef);
-
-        ActionEvent<MainView.Action> event = new ActionEvent<>(view, MainView.Action.HOST_VM_CONTEXT_ACTION);
-        event.setPayload(vmContextAction1);
-        l.actionPerformed(event);
-        
-        verify(vmContextAction1, times(1)).execute(any(VmRef.class));
-        verify(vmContextAction2, times(0)).execute(any(VmRef.class));
-    }
+//    private void assertEqualCollection(Collection<?> expected, Collection<?> actual) {
+//        assertEquals(expected.size(), actual.size());
+//        assertTrue(expected.containsAll(actual));
+//    }
+//
+//    @Test
+//    @Bug(id="954",
+//         summary="Thermostat GUI client should remember my last panel selected",
+//         url="http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=954")
+//    public void verifyOpenSameHostVMTab() throws Exception {
+//
+//        VmRef vmRef = mock(VmRef.class);
+//        when(vmRef.getName()).thenReturn("testvm");
+//        when(vmRef.getVmId()).thenReturn("testvmid");
+//        HostRef ref = mock(HostRef.class);
+//        when(ref.getAgentId()).thenReturn("agentId");
+//        when(vmRef.getHostRef()).thenReturn(ref);
+//        
+//        when(view.getSelectedHostOrVm()).thenReturn(vmRef);
+//        
+//        when(vmInfoView.getSelectedChildID()).thenReturn(3);
+//        when(vmInfoView.selectChildID(anyInt())).thenReturn(true);
+//        
+//        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
+//        
+//        ArgumentCaptor<Integer> arg = ArgumentCaptor.forClass(Integer.class);
+//        verify(vmInfoView).selectChildID(arg.capture());
+//        verify(vmInfoView, times(0)).getSelectedChildID();
+//
+//        int id = arg.getValue();
+//
+//        assertEquals(0, id);
+//
+//        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
+//
+//        arg = ArgumentCaptor.forClass(Integer.class);
+//        verify(vmInfoView, times(1)).getSelectedChildID();
+//        verify(vmInfoView, times(2)).selectChildID(arg.capture());
+//        id = arg.getValue();
+//
+//        assertEquals(3, id);
+//    }
+//    
+//    @Test
+//    public void verifyOpenSameHostVMTab2() {
+//        
+//        VmRef vmRef1 = mock(VmRef.class);
+//        VmRef vmRef2 = mock(VmRef.class);
+//        when(view.getSelectedHostOrVm()).thenReturn(vmRef1).thenReturn(vmRef1).thenReturn(vmRef2).thenReturn(vmRef1);
+//
+//        when(vmRef1.getName()).thenReturn("testvm");
+//        when(vmRef1.getVmId()).thenReturn("testvmid");
+//        HostRef ref = mock(HostRef.class);
+//        when(ref.getAgentId()).thenReturn("agentId");
+//        when(vmRef1.getHostRef()).thenReturn(ref);
+//        
+//        when(vmRef2.getName()).thenReturn("testvm");
+//        when(vmRef2.getVmId()).thenReturn("testvmid");
+//        when(vmRef2.getHostRef()).thenReturn(ref);
+//        
+//        VmInformationView vmInfoView2 = mock(VmInformationView.class);
+//        
+//        when(vmInfoView.getSelectedChildID()).thenReturn(2).thenReturn(2);
+//        when(vmInfoView2.getSelectedChildID()).thenReturn(3);
+//        
+//        when(vmInfoView.selectChildID(0)).thenReturn(true);
+//        when(vmInfoView.selectChildID(2)).thenReturn(true);
+//        when(vmInfoView.selectChildID(3)).thenReturn(false);
+//        
+//        when(vmInfoView2.selectChildID(0)).thenReturn(true);
+//        when(vmInfoView2.selectChildID(2)).thenReturn(true);
+//        when(vmInfoView2.selectChildID(3)).thenReturn(true);
+//        
+//        when(vmInfoViewProvider.createView()).thenReturn(vmInfoView)
+//                .thenReturn(vmInfoView2).thenReturn(vmInfoView2)
+//                .thenReturn(vmInfoView);
+//        
+//        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
+//
+//        ArgumentCaptor<Integer> arg = ArgumentCaptor.forClass(Integer.class);
+//        verify(vmInfoView).selectChildID(arg.capture());
+//        verify(vmInfoView, times(0)).getSelectedChildID();
+//
+//        int id = arg.getValue();
+//
+//        assertEquals(0, id);
+//
+//        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
+//
+//        arg = ArgumentCaptor.forClass(Integer.class);
+//        verify(vmInfoView).getSelectedChildID();
+//        verify(vmInfoView2, times(1)).selectChildID(arg.capture());
+//        id = arg.getValue();
+//
+//        assertEquals(2, id);
+//        
+//        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
+//
+//        arg = ArgumentCaptor.forClass(Integer.class);
+//        verify(vmInfoView2, times(1)).getSelectedChildID();
+//        verify(vmInfoView2, times(2)).selectChildID(arg.capture());
+//        id = arg.getValue();
+//
+//        assertEquals(3, id);
+//        
+//        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
+//
+//        arg = ArgumentCaptor.forClass(Integer.class);
+//        verify(vmInfoView2, times(2)).getSelectedChildID();
+//        verify(vmInfoView, times(3)).selectChildID(arg.capture());
+//        id = arg.getValue();
+//
+//        assertEquals(2, id);
+//    }
+//
+//    @Test
+//    public void verifyHostActionsAreShown() {
+//        HostRef host = mock(HostRef.class);
+//        when(view.getSelectedHostOrVm()).thenReturn(host);
+//
+//        MouseEvent uiEvent = mock(MouseEvent.class);
+//        ActionEvent<MainView.Action> viewEvent = new ActionEvent<>(view, MainView.Action.SHOW_HOST_VM_CONTEXT_MENU);
+//        viewEvent.setPayload(uiEvent);
+//
+//        l.actionPerformed(viewEvent);
+//
+//        List<ContextAction> actions = new ArrayList<>();
+//        actions.add(hostContextAction1);
+//
+//        verify(view).showContextActions(actions, uiEvent);
+//    }
+//
+//    @Test
+//    public void verityVMActionsAreShown() {
+//        VmInfo vmInfo = new VmInfo("foo", "123", 0, 1, 2, null, null, null, null, null, null, null, null, null, null, null, -1, null);
+//        when(mockVmsDAO.getVmInfo(isA(VmRef.class))).thenReturn(vmInfo);
+//
+//        VmRef ref = mock(VmRef.class);
+//        when(view.getSelectedHostOrVm()).thenReturn(ref);
+//
+//        MouseEvent uiEvent = mock(MouseEvent.class);
+//        ActionEvent<MainView.Action> viewEvent = new ActionEvent<>(view, MainView.Action.SHOW_HOST_VM_CONTEXT_MENU);
+//        viewEvent.setPayload(uiEvent);
+//
+//        l.actionPerformed(viewEvent);
+//
+//        List<ContextAction> actions = new ArrayList<>();
+//        actions.add(vmContextAction1);
+//
+//        verify(view).showContextActions(actions, uiEvent);
+//    }
+//
+//    @Test
+//    public void verifyHostActionsAreExecuted() {
+//        HostRef hostRef = mock(HostRef.class);
+//        when(view.getSelectedHostOrVm()).thenReturn(hostRef);
+//
+//        ActionEvent<MainView.Action> event = new ActionEvent<>(view, MainView.Action.HOST_VM_CONTEXT_ACTION);
+//        event.setPayload(hostContextAction1);
+//        l.actionPerformed(event);
+//
+//        verify(hostContextAction1, times(1)).execute(hostRef);
+//    }
+//
+//    @Test
+//    public void verityVMActionsAreExecuted() {
+//
+//        VmRef vmRef = mock(VmRef.class);
+//        when(view.getSelectedHostOrVm()).thenReturn(vmRef);
+//
+//        ActionEvent<MainView.Action> event = new ActionEvent<>(view, MainView.Action.HOST_VM_CONTEXT_ACTION);
+//        event.setPayload(vmContextAction1);
+//        l.actionPerformed(event);
+//        
+//        verify(vmContextAction1, times(1)).execute(any(VmRef.class));
+//        verify(vmContextAction2, times(0)).execute(any(VmRef.class));
+//    }
 
     @Test
     public void verifyMenuItems() {

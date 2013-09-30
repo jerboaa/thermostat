@@ -138,6 +138,7 @@
         <directory>src/main/resources</directory>
         <filtering>true</filtering>
         <excludes>
+          <exclude>**/*.jpg</exclude>
           <exclude>**/*.png</exclude>
           <exclude>**/*.ttf</exclude>
         </excludes>
@@ -146,6 +147,7 @@
         <directory>src/main/resources</directory>
         <filtering>false</filtering>
         <includes>
+          <include>**/*.jpg</include>
           <include>**/*.png</include>
           <include>**/*.ttf</include>
         </includes>
@@ -170,10 +172,15 @@
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.client.swing.internal,
+              com.redhat.thermostat.client.swing.internal.sidepane,
+              com.redhat.thermostat.client.swing.internal.splitpane,
               com.redhat.thermostat.client.swing.internal.progress,
               com.redhat.thermostat.client.swing.internal.components,
               com.redhat.thermostat.client.swing.internal.osgi,
               com.redhat.thermostat.client.swing.internal.views,
+              com.redhat.thermostat.client.swing.internal.vmlist,
+              com.redhat.thermostat.client.swing.internal.vmlist.controller,
+              com.redhat.thermostat.client.swing.internal.accordion,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>

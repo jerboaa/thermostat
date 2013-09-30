@@ -1,26 +1,26 @@
 /*
  * Copyright 2012, 2013 Red Hat, Inc.
- *
+ * 
  * This file is part of Thermostat.
- *
+ * 
  * Thermostat is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
  * by the Free Software Foundation; either version 2, or (at your
  * option) any later version.
- *
+ * 
  * Thermostat is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with Thermostat; see the file COPYING.  If not see
  * <http://www.gnu.org/licenses/>.
- *
+ * 
  * Linking this code with other modules is making a combined work
  * based on this code.  Thus, the terms and conditions of the GNU
  * General Public License cover the whole combination.
- *
+ * 
  * As a special exception, the copyright holders of this code give
  * you permission to link this code with independent modules to
  * produce an executable, regardless of the license terms of these
@@ -34,54 +34,34 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.components;
+package com.redhat.thermostat.client.swing.internal.vmlist;
 
-import java.awt.Graphics;
-import java.awt.Rectangle;
+import com.redhat.thermostat.client.swing.internal.accordion.AccordionComponent;
+import com.redhat.thermostat.client.swing.internal.accordion.AccordionComponentFactory;
+import com.redhat.thermostat.client.swing.internal.accordion.TitledPane;
+import com.redhat.thermostat.client.swing.internal.vmlist.controller.DecoratorManager;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.VmRef;
 
-import javax.swing.JButton;
-import javax.swing.JComponent;
-import javax.swing.plaf.basic.BasicScrollBarUI;
-
-import com.redhat.thermostat.client.ui.Palette;
-
-class SlimScrollBarUI extends BasicScrollBarUI  {
-
-    @Override
-    protected void installDefaults() {
-        super.installDefaults();
-        
-        scrollBarWidth = 3;
-        incrGap = 0;
-        decrGap = 0;        
+public class HostTreeComponentFactory implements AccordionComponentFactory<HostRef, VmRef>{
+    
+    private DecoratorManager decoratorManager;
+    
+    public HostTreeComponentFactory(DecoratorManager decoratorManager) {
+        this.decoratorManager = decoratorManager;
     }
-    
+
     @Override
-    protected JButton createIncreaseButton(int orientation) {
-    
-        return new JButton() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                
-                if (getModel().isPressed()) {
-                    g.setColor(Palette.GRANITA_ORANGE.getColor());
-                } else {
-                    g.setColor(Palette.EARL_GRAY.getColor());
-                }
-                g.fillRect(0, 0, getWidth() - 1, getHeight() - 1);
-            }
-        };
+    public TitledPane createHeader(HostRef header) {
+        ReferenceTitle pane = new ReferenceTitle(header);
+        decoratorManager.registerAndSetIcon(pane);
+        return pane;
     }
-    
+
     @Override
-    protected void paintThumb(Graphics g, JComponent c, Rectangle thumbBounds) {
-        g.setColor(Palette.GRANITA_ORANGE.getColor());
-        g.fillRect(thumbBounds.x, thumbBounds.y, thumbBounds.width - 1,
-                   thumbBounds.height - 1);
-    }
-    
-    @Override
-    protected JButton createDecreaseButton(int orientation) {
-        return createIncreaseButton(orientation);
+    public AccordionComponent createComponent(HostRef header, VmRef component) {
+        ReferenceComponent refComponent = new ReferenceComponent(component);
+        decoratorManager.registerAndSetIcon(refComponent);
+        return refComponent;
     }
 }

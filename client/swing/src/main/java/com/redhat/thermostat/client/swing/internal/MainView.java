@@ -41,17 +41,15 @@ import java.util.List;
 
 import javax.swing.JFrame;
 
-import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.swing.internal.vmlist.controller.HostTreeController;
 import com.redhat.thermostat.client.ui.ContextAction;
-import com.redhat.thermostat.client.ui.DecoratorProvider;
 import com.redhat.thermostat.client.ui.MenuAction;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.HostsVMsLoader;
 import com.redhat.thermostat.storage.core.Ref;
 import com.redhat.thermostat.storage.core.VmRef;
 
@@ -61,7 +59,6 @@ public interface MainView {
         VISIBLE,
         HIDDEN,
         HOST_VM_TREE_FILTER,
-        HOST_VM_SELECTION_CHANGED,
         SHOW_AGENT_CONFIG,
         SHOW_CLIENT_CONFIG,
         SWITCH_HISTORY_MODE,
@@ -72,20 +69,12 @@ public interface MainView {
     }
 
     void addActionListener(ActionListener<Action> capture);
-
-    void updateTree(List<Filter<HostRef>> hostFilters, List<Filter<VmRef>> vmFilters,
-            List<DecoratorProvider<HostRef>> hostDecorators, List<DecoratorProvider<VmRef>> vmDecorators,
-            HostsVMsLoader any);
-
-    String getHostVmTreeFilterText();
     
     void setWindowTitle(String title);
 
     void showMainWindow();
 
     void hideMainWindow();
-
-    Ref getSelectedHostOrVm();
 
     void setSubView(BasicView view);
 
@@ -123,5 +112,11 @@ public interface MainView {
     void showContextActions(List<ContextAction> actions, MouseEvent e);
     
     JFrame getTopFrame();
+
+    /**
+     * Returns the {@link HostTreeController} that handles the {@link Ref}s
+     * object tracked by this UI Client.
+     */
+    HostTreeController getHostTreeController();
 }
 

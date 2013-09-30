@@ -60,8 +60,8 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.redhat.thermostat.common.ssl.SSLContextFactory;
 import com.redhat.thermostat.common.ssl.SSLConfiguration;
+import com.redhat.thermostat.common.ssl.SSLContextFactory;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ SSLConfiguration.class, SSLContextFactory.class,

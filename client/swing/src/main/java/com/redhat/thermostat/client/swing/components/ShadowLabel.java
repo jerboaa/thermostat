@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.client.swing.components;
 
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 
@@ -52,9 +53,13 @@ import com.redhat.thermostat.shared.locale.LocalizedString;
 @SuppressWarnings("serial")
 public class ShadowLabel extends JLabel {
 
+    private Color shadowColor;
+    
     private ShadowLabel(String text, Icon icon) {
         super(text);
         this.setIcon(icon);
+        this.shadowColor = new Color(0f, 0f, 0f, 0.1f);
+        
         setUI(new ShadowLabelUI());
     }
     
@@ -76,8 +81,18 @@ public class ShadowLabel extends JLabel {
         protected void paintEnabledText(JLabel l, Graphics g, String s, int textX, int textY) {
             GraphicsUtils graphicsUtils = GraphicsUtils.getInstance();
             Graphics2D graphics = graphicsUtils.createAAGraphics(g);
-            graphicsUtils.drawStringWithShadow(l, graphics, s, ShadowLabel.this.getForeground(), textX, textY);
+            graphicsUtils.drawStringWithShadow(l, graphics, s, ShadowLabel.this.getForeground(),
+                                               ShadowLabel.this.getShadowColor(), textX, textY);
         }
+    }
+
+    public Color getShadowColor() {
+        return shadowColor;
+    }
+    
+    public void setShadowColor(Color shadowColor) {
+        this.shadowColor = shadowColor;
+        repaint();
     }
 }
 

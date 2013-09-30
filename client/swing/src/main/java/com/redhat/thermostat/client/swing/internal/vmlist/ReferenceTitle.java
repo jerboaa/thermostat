@@ -1,26 +1,26 @@
 /*
  * Copyright 2012, 2013 Red Hat, Inc.
- *
+ * 
  * This file is part of Thermostat.
- *
+ * 
  * Thermostat is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
  * by the Free Software Foundation; either version 2, or (at your
  * option) any later version.
- *
+ * 
  * Thermostat is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with Thermostat; see the file COPYING.  If not see
  * <http://www.gnu.org/licenses/>.
- *
+ * 
  * Linking this code with other modules is making a combined work
  * based on this code.  Thus, the terms and conditions of the GNU
  * General Public License cover the whole combination.
- *
+ * 
  * As a special exception, the copyright holders of this code give
  * you permission to link this code with independent modules to
  * produce an executable, regardless of the license terms of these
@@ -34,54 +34,29 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.components;
+package com.redhat.thermostat.client.swing.internal.vmlist;
 
-import java.awt.Graphics;
-import java.awt.Rectangle;
+import com.redhat.thermostat.client.swing.components.Icon;
+import com.redhat.thermostat.client.swing.internal.accordion.TitledPane;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.Ref;
 
-import javax.swing.JButton;
-import javax.swing.JComponent;
-import javax.swing.plaf.basic.BasicScrollBarUI;
-
-import com.redhat.thermostat.client.ui.Palette;
-
-class SlimScrollBarUI extends BasicScrollBarUI  {
-
-    @Override
-    protected void installDefaults() {
-        super.installDefaults();
-        
-        scrollBarWidth = 3;
-        incrGap = 0;
-        decrGap = 0;        
+@SuppressWarnings("serial")
+public class ReferenceTitle extends TitledPane implements ReferenceProvider {
+    
+    private HostRef ref;
+    
+    public ReferenceTitle(HostRef ref) {
+        super(ref.getHostName(), new ReferenceComponentPainter(), new ReferenceComponent(ref));
+        this.ref = ref;
     }
-    
+
     @Override
-    protected JButton createIncreaseButton(int orientation) {
-    
-        return new JButton() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                
-                if (getModel().isPressed()) {
-                    g.setColor(Palette.GRANITA_ORANGE.getColor());
-                } else {
-                    g.setColor(Palette.EARL_GRAY.getColor());
-                }
-                g.fillRect(0, 0, getWidth() - 1, getHeight() - 1);
-            }
-        };
+    public Ref getReference() {
+        return ref;
     }
-    
-    @Override
-    protected void paintThumb(Graphics g, JComponent c, Rectangle thumbBounds) {
-        g.setColor(Palette.GRANITA_ORANGE.getColor());
-        g.fillRect(thumbBounds.x, thumbBounds.y, thumbBounds.width - 1,
-                   thumbBounds.height - 1);
-    }
-    
-    @Override
-    protected JButton createDecreaseButton(int orientation) {
-        return createIncreaseButton(orientation);
+
+    public void setIcon(Icon icon) {
+        ((ReferenceComponent) getTitleComponent()).setIcon(icon);
     }
 }

@@ -36,10 +36,10 @@
 
 package com.redhat.thermostat.client.swing.internal.progress;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.verify;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import javax.swing.JLabel;
 import javax.swing.JProgressBar;

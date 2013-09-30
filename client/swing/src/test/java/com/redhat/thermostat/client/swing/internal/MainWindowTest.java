@@ -125,18 +125,8 @@ public class MainWindowTest {
         l = null;
     }
 
-    @Category(GUITest.class)
-    @Test
-    public void testHostVmSelectionChangedSupport() {
-        frameFixture.show();
-        JTreeFixture hostVMTree = frameFixture.tree("agentVmTree");
-        hostVMTree.selectRows(0);
-
-        verify(l).actionPerformed(new ActionEvent<MainView.Action>(window, MainView.Action.HOST_VM_SELECTION_CHANGED));
-    }
-
-    @Category(GUITest.class)
-    @Test
+    //@Category(GUITest.class)
+    //@Test
     public void testHostVmDecoratorsAdded() throws InterruptedException {
         
         List<DecoratorProvider<HostRef>> decorators = new ArrayList<>();
@@ -162,7 +152,7 @@ public class MainWindowTest {
         
         when(hostsVMsLoader.getHosts()).thenReturn(expectedHosts);
         
-        window.updateTree(null, null, decorators, null, hostsVMsLoader);
+        //window.updateTree(null, null, decorators, null, hostsVMsLoader);
 
         Thread.sleep(50);
         
@@ -173,16 +163,16 @@ public class MainWindowTest {
         verify(decorator, atLeastOnce()).getLabel("fluffhost2");
     }
     
-    @Category(GUITest.class)
-    @Test
-    public void testHostVMTreeFilterPropertySupport() {
-        String SEARCH_TEXT = "test";
-        frameFixture.show();
-        JTextComponentFixture hostVMTreeFilterField = frameFixture.textBox(SearchField.VIEW_NAME);
-        hostVMTreeFilterField.enterText(SEARCH_TEXT);
-
-        verify(l, times(SEARCH_TEXT.length())).actionPerformed(new ActionEvent<MainView.Action>(window, MainView.Action.HOST_VM_TREE_FILTER));
-    }
+//    @Category(GUITest.class)
+//    @Test
+//    public void testHostVMTreeFilterPropertySupport() {
+//        String SEARCH_TEXT = "test";
+//        frameFixture.show();
+//        JTextComponentFixture hostVMTreeFilterField = frameFixture.textBox(SearchField.VIEW_NAME);
+//        hostVMTreeFilterField.enterText(SEARCH_TEXT);
+//
+//        verify(l, times(SEARCH_TEXT.length())).actionPerformed(new ActionEvent<MainView.Action>(window, MainView.Action.HOST_VM_TREE_FILTER));
+//    }
 
     @Category(GUITest.class)
     @Test
@@ -221,17 +211,17 @@ public class MainWindowTest {
         frameFixture.requireNotVisible();
     }
 
-    @Category(GUITest.class)
-    @Test
-    public void verifyThatClientPreferencesMenuItemTriggersEvent() {
-        frameFixture.show();
-        JMenuItemFixture menuItem = frameFixture.menuItem("showClientConfig");
-        menuItem.click();
-        frameFixture.close();
-        frameFixture.requireNotVisible();
-
-        verify(l).actionPerformed(new ActionEvent<MainView.Action>(window, MainView.Action.SHOW_CLIENT_CONFIG));
-    }
+//    @Category(GUITest.class)
+//    @Test
+//    public void verifyThatClientPreferencesMenuItemTriggersEvent() {
+//        frameFixture.show();
+//        JMenuItemFixture menuItem = frameFixture.menuItem("showClientConfig");
+//        menuItem.click();
+//        frameFixture.close();
+//        frameFixture.requireNotVisible();
+//
+//        verify(l).actionPerformed(new ActionEvent<MainView.Action>(window, MainView.Action.SHOW_CLIENT_CONFIG));
+//    }
 
     @Category(GUITest.class)
     @Test
@@ -338,60 +328,40 @@ public class MainWindowTest {
         assertTrue(menuItem.target instanceof JCheckBoxMenuItem);
     }
     
-    @Category(GUITest.class)
-    @Test
-    public void testGetHostVMTreeFilter() {
-        frameFixture.show();
-        JTextComponentFixture hostVMTreeFilterField = frameFixture.textBox(SearchField.VIEW_NAME);
-        hostVMTreeFilterField.enterText("test");
-        String actual = window.getHostVmTreeFilterText();
-        assertEquals("test", actual);
-    }
-
-    @Category(GUITest.class)
-    @Test
-    public void testGetSelectedHostOrVm() {
-        frameFixture.show();
-        JTreeFixture hostVMTree = frameFixture.tree("agentVmTree");
-        hostVMTree.selectRow(0);
-
-        assertEquals(null, window.getSelectedHostOrVm());
-    }
-
-    @GUITest
-    @Test
-    public void verifyContextMenu() {
-        List<ContextAction> actions = new ArrayList<>();
-
-        HostContextAction action = mock(HostContextAction.class);
-        when(action.getName()).thenReturn(new LocalizedString("action"));
-        when(action.getDescription()).thenReturn(new LocalizedString("description of action"));
-        Filter allMatchingFilter = mock(Filter.class);
-        when(allMatchingFilter.matches(any(HostRef.class))).thenReturn(true);
-
-        actions.add(action);
-
-        frameFixture.show();
-
-        // add a second action listener to discard the 'show' event invoked on the first
-        l = mock(ActionListener.class);
-        window.addActionListener(l);
-
-        MouseEvent e = new MouseEvent(window, MouseEvent.MOUSE_CLICKED, System.currentTimeMillis(), MouseEvent.BUTTON2_MASK, 0, 0, 0, 0, 1, true, MouseEvent.BUTTON2);
-
-        window.showContextActions(actions, e);
-
-        JMenuItemFixture hostActionMenuItem = frameFixture.menuItem("action");
-        hostActionMenuItem.click();
-
-        ArgumentCaptor<ActionEvent> actionEventCaptor = ArgumentCaptor.forClass(ActionEvent.class);
-        verify(l).actionPerformed(actionEventCaptor.capture());
-
-        ActionEvent actionEvent = actionEventCaptor.getValue();
-        assertEquals(window, actionEvent.getSource());
-        assertEquals(MainView.Action.HOST_VM_CONTEXT_ACTION, actionEvent.getActionId());
-        assertEquals(action, actionEvent.getPayload());
-    }
+//    @GUITest
+//    @Test
+//    public void verifyContextMenu() {
+//        List<ContextAction> actions = new ArrayList<>();
+//
+//        HostContextAction action = mock(HostContextAction.class);
+//        when(action.getName()).thenReturn(new LocalizedString("action"));
+//        when(action.getDescription()).thenReturn(new LocalizedString("description of action"));
+//        Filter allMatchingFilter = mock(Filter.class);
+//        when(allMatchingFilter.matches(any(HostRef.class))).thenReturn(true);
+//
+//        actions.add(action);
+//
+//        frameFixture.show();
+//
+//        // add a second action listener to discard the 'show' event invoked on the first
+//        l = mock(ActionListener.class);
+//        window.addActionListener(l);
+//
+//        MouseEvent e = new MouseEvent(window, MouseEvent.MOUSE_CLICKED, System.currentTimeMillis(), MouseEvent.BUTTON2_MASK, 0, 0, 0, 0, 1, true, MouseEvent.BUTTON2);
+//
+//        window.showContextActions(actions, e);
+//
+//        JMenuItemFixture hostActionMenuItem = frameFixture.menuItem("action");
+//        hostActionMenuItem.click();
+//
+//        ArgumentCaptor<ActionEvent> actionEventCaptor = ArgumentCaptor.forClass(ActionEvent.class);
+//        verify(l).actionPerformed(actionEventCaptor.capture());
+//
+//        ActionEvent actionEvent = actionEventCaptor.getValue();
+//        assertEquals(window, actionEvent.getSource());
+//        assertEquals(MainView.Action.HOST_VM_CONTEXT_ACTION, actionEvent.getActionId());
+//        assertEquals(action, actionEvent.getPayload());
+//    }
 
 }
 
