@@ -50,39 +50,35 @@ import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 
 public interface ThreadDao {
 
+    /*
+     * User-facing string-constants used to represent VM thread capabilities.
+     */
     static final String CPU_TIME = "thread-cpu-time";
     static final String CONTENTION_MONITOR = "thread-contention-monitor";
     static final String THREAD_ALLOCATED_MEMORY = "thread-allocated-memory";
     
-    static final String SUPPORTED_FEATURES_LIST = "supportedFeaturesList";
-
-    static final Key<Long> THREAD_ALLOCATED_BYTES_KEY = new Key<Long>("allocatedBytes");
-    static final Key<List<String>> SUPPORTED_FEATURES_LIST_KEY = new Key<List<String>>(SUPPORTED_FEATURES_LIST);
-
+    /*
+     * vm-thread-capabilities schema
+     */
+    static final Key<List<String>> SUPPORTED_FEATURES_LIST_KEY = new Key<List<String>>("supportedFeaturesList");
     static final Category<VMThreadCapabilities> THREAD_CAPABILITIES =
             new Category<>("vm-thread-capabilities", VMThreadCapabilities.class, Key.AGENT_ID, Key.VM_ID,
                          SUPPORTED_FEATURES_LIST_KEY);
 
-
-    VMThreadCapabilities loadCapabilities(VmRef ref);
-    void saveCapabilities(VMThreadCapabilities caps);
-
-    static final String LIVE_THREADS = "currentLiveThreads";
-    static final Key<Long> LIVE_THREADS_KEY = new Key<Long>(LIVE_THREADS);
-    static final String DAEMON_THREADS = "currentDaemonThreads";
-    static final Key<Long> DAEMON_THREADS_KEY = new Key<Long>(DAEMON_THREADS);
-    
+    /*
+     * vm-thread-summary schema
+     */
+    static final Key<Long> LIVE_THREADS_KEY = new Key<Long>("currentLiveThreads");
+    static final Key<Long> DAEMON_THREADS_KEY = new Key<Long>("currentDaemonThreads");
     static final Category<ThreadSummary> THREAD_SUMMARY =
             new Category<>("vm-thread-summary", ThreadSummary.class, Key.AGENT_ID, Key.VM_ID,
                          Key.TIMESTAMP,
                          LIVE_THREADS_KEY, DAEMON_THREADS_KEY);
     
-    void saveSummary(ThreadSummary summary);
-    ThreadSummary loadLastestSummary(VmRef ref);
-    List<ThreadSummary> loadSummary(VmRef ref, long since);
-
-    static final String HARVESTING_DATA = "harvesting";
-    static final Key<Boolean> HARVESTING_STATUS_KEY = new Key<Boolean>(HARVESTING_DATA);
+    /*
+     * vm-thread-harvesting schema
+     */
+    static final Key<Boolean> HARVESTING_STATUS_KEY = new Key<Boolean>("harvesting");
     static final Category<ThreadHarvestingStatus> THREAD_HARVESTING_STATUS =
             new Category<>("vm-thread-harvesting", ThreadHarvestingStatus.class,
                     Key.AGENT_ID,
@@ -90,24 +86,17 @@ public interface ThreadDao {
                     Key.TIMESTAMP,
                     HARVESTING_STATUS_KEY);
 
-    ThreadHarvestingStatus getLatestHarvestingStatus(VmRef vm);
-    void saveHarvestingStatus(ThreadHarvestingStatus status);
-
-    static final String THREAD_STATE = "threadState";
-    static final Key<String> THREAD_STATE_KEY = new Key<String>(THREAD_STATE);
-    static final String THREAD_ID = "threadId";
-    static final Key<Long> THREAD_ID_KEY = new Key<Long>(THREAD_ID);
-    static final String THREAD_NAME = "threadName";
-    static final Key<String> THREAD_NAME_KEY = new Key<String>(THREAD_NAME);
-    static final String THREAD_CPU_TIME = "threadCpuTime";
-    static final Key<Long> THREAD_CPU_TIME_KEY = new Key<Long>(THREAD_CPU_TIME);
-    static final String THREAD_USER_TIME = "threadUserTime";
-    static final Key<Long> THREAD_USER_TIME_KEY = new Key<Long>(THREAD_USER_TIME);
-    static final String THREAD_BLOCKED_COUNT = "threadBlockedCount";
-    static final Key<Long> THREAD_BLOCKED_COUNT_KEY = new Key<Long>(THREAD_BLOCKED_COUNT);
-    static final String THREAD_WAIT_COUNT = "threadWaitCount";
-    static final Key<Long> THREAD_WAIT_COUNT_KEY = new Key<Long>(THREAD_WAIT_COUNT);
-    
+    /*
+     * vm-thread-info schema
+     */
+    static final Key<String> THREAD_STATE_KEY = new Key<String>("threadState");
+    static final Key<Long> THREAD_ID_KEY = new Key<Long>("threadId");
+    static final Key<Long> THREAD_ALLOCATED_BYTES_KEY = new Key<Long>("allocatedBytes");
+    static final Key<String> THREAD_NAME_KEY = new Key<String>("threadName");
+    static final Key<Long> THREAD_CPU_TIME_KEY = new Key<Long>("threadCpuTime");
+    static final Key<Long> THREAD_USER_TIME_KEY = new Key<Long>("threadUserTime");
+    static final Key<Long> THREAD_BLOCKED_COUNT_KEY = new Key<Long>("threadBlockedCount");
+    static final Key<Long> THREAD_WAIT_COUNT_KEY = new Key<Long>("threadWaitCount");
     static final Category<ThreadInfoData> THREAD_INFO =
             new Category<>("vm-thread-info", ThreadInfoData.class, Key.AGENT_ID, Key.VM_ID,
                          Key.TIMESTAMP, THREAD_NAME_KEY, THREAD_ID_KEY,
@@ -117,18 +106,30 @@ public interface ThreadDao {
                          THREAD_USER_TIME_KEY, THREAD_BLOCKED_COUNT_KEY,
                          THREAD_WAIT_COUNT_KEY);
     
-    void saveThreadInfo(ThreadInfoData info);
-    List<ThreadInfoData> loadThreadInfo(VmRef ref, long since);
-
-    static final String DEADLOCK_DESCRIPTION = "deadLockDescription";
-    static final Key<String> DEADLOCK_DESCRIPTION_KEY = new Key<>(DEADLOCK_DESCRIPTION);
+    /*
+     * vm-deadlock-data schema
+     */
+    static final Key<String> DEADLOCK_DESCRIPTION_KEY = new Key<>("deadLockDescription");
     static final Category<VmDeadLockData> DEADLOCK_INFO = new Category<>("vm-deadlock-data", VmDeadLockData.class,
             Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP,
             DEADLOCK_DESCRIPTION_KEY);
 
+    /*
+     * API methods
+     */
+    
+    void saveSummary(ThreadSummary summary);
+    ThreadSummary loadLastestSummary(VmRef ref);
+    List<ThreadSummary> loadSummary(VmRef ref, long since);
+    void saveThreadInfo(ThreadInfoData info);
+    List<ThreadInfoData> loadThreadInfo(VmRef ref, long since);
+    ThreadHarvestingStatus getLatestHarvestingStatus(VmRef vm);
+    void saveHarvestingStatus(ThreadHarvestingStatus status);
+    VMThreadCapabilities loadCapabilities(VmRef ref);
+    void saveCapabilities(VMThreadCapabilities caps);
     void saveDeadLockStatus(VmDeadLockData deadLockInfo);
     VmDeadLockData loadLatestDeadLockStatus(VmRef ref);
-    
     Storage getStorage();
+    
 }
 
