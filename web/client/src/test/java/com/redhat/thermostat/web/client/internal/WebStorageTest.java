@@ -90,6 +90,7 @@ import com.redhat.thermostat.storage.core.Categories;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
+import com.redhat.thermostat.storage.core.BackingStorage;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.IllegalDescriptorException;
@@ -254,6 +255,12 @@ public class WebStorageTest {
         responseBody = gson.toJson(42);
 
         storage.registerCategory(category);
+    }
+    
+    // WebStorage is a proxy storage, no backing storage
+    @Test
+    public void isNoBackingStorage() {
+        assertFalse(storage instanceof BackingStorage);
     }
     
     @Test

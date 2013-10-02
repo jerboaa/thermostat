@@ -39,12 +39,15 @@ package com.redhat.thermostat.storage.core;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.same;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -65,7 +68,9 @@ import java.util.concurrent.TimeoutException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
+import com.redhat.thermostat.storage.core.QueuedStorage.QueuedPreparedStatement;
 import com.redhat.thermostat.storage.model.Pojo;
 
 
@@ -193,8 +198,8 @@ public class QueuedStorageTest {
     }
 
     private QueuedStorage queuedStorage;
-    private BackingStorage delegateStorage;
-
+    private Storage delegateStorage;
+    
     private TestExecutor executor;
     private TestExecutor fileExecutor;
 
@@ -204,7 +209,7 @@ public class QueuedStorageTest {
     public void setUp() {
         executor = new TestExecutor();
         fileExecutor = new TestExecutor();
-        delegateStorage = mock(BackingStorage.class);
+        delegateStorage = mock(Storage.class);
 
         expectedFile = mock(InputStream.class);
         when(delegateStorage.loadFile(anyString())).thenReturn(expectedFile);
@@ -219,7 +224,7 @@ public class QueuedStorageTest {
         fileExecutor = null;
         executor = null;
     }
-
+    
     @Test
     public void testPurge() {
 
@@ -259,6 +264,87 @@ public class QueuedStorageTest {
 
         assertNull(executor.getTask());
         assertNull(fileExecutor.getTask());
+    }
+    
+    @Test
+    public void testPrepareStatement() throws DescriptorParsingException, StatementExecutionException {
+        @SuppressWarnings("unchecked")
+        PreparedStatement<Pojo> statement = (PreparedStatement<Pojo>)mock(PreparedStatement.class);
+        when(delegateStorage.prepareStatement(anyStatementDescriptor())).thenReturn(statement);
+        
+        @SuppressWarnings("unchecked")
+        StatementDescriptor<Pojo> desc = mock(StatementDescriptor.class);
+        PreparedStatement<Pojo> decorated = queuedStorage.prepareStatement(desc);
+        assertNotNull(decorated);
+        assertTrue(decorated instanceof QueuedPreparedStatement);
+        assertNotSame(decorated, statement);
+        assertNull(executor.getTask());
+        
+        // make sure execution queues a runnable
+        decorated.execute();
+        assertNotNull(executor.getTask());
+    }
+    
+    /*
+     * QueuedStorage decorates PreparedStatement, which may throw a
+     * StatementExecution exception on stmt.execute(). All the decorator can do
+     * is to log the exception and continue. As such, the decorated
+     * PreparedStatement should never throw that exception. It can't since it
+     * solely submits a runnable for execution.
+     */
+    @Test
+    public void testExecutePreparedStatementFails()
+            throws DescriptorParsingException, StatementExecutionException {
+        @SuppressWarnings("unchecked")
+        PreparedStatement<Pojo> statement = (PreparedStatement<Pojo>)mock(PreparedStatement.class);
+        
+        // make sure the delegate throws a StatementExecutionException
+        Mockito.doThrow(StatementExecutionException.class).when(statement).execute();
+        when(delegateStorage.prepareStatement(anyStatementDescriptor())).thenReturn(statement);
+        
+        @SuppressWarnings("unchecked")
+        StatementDescriptor<Pojo> desc = mock(StatementDescriptor.class);
+        PreparedStatement<Pojo> decorated = queuedStorage.prepareStatement(desc);
+        assertNotNull(decorated);
+        assertTrue(decorated instanceof QueuedPreparedStatement);
+        assertNotSame(decorated, statement);
+        assertNull(executor.getTask());
+        
+        // this should not throw the exception the decoratee throws.
+        try {
+            decorated.execute();
+            // pass
+        } catch (StatementExecutionException e) {
+            fail("decorator should only submit task and continue");
+        }
+        assertNotNull(executor.getTask());
+        try {
+            executor.getTask().run();
+            // pass
+        } catch (Exception e) {
+            fail("delegate's StatementExecutionException should have been caught");
+        }
+    }
+    
+    @Test
+    public void testPrepareStatementDescriptorParseFailure() throws DescriptorParsingException, StatementExecutionException {
+        
+        Mockito.doThrow(DescriptorParsingException.class).when(delegateStorage).prepareStatement(anyStatementDescriptor());
+        
+        @SuppressWarnings("unchecked")
+        StatementDescriptor<Pojo> desc = mock(StatementDescriptor.class);
+        
+        try {
+            queuedStorage.prepareStatement(desc);
+            fail("should have thrown descptor parsing exception!");
+        } catch (DescriptorParsingException e) {
+            // pass
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    private <T extends Pojo> StatementDescriptor<T> anyStatementDescriptor() {
+        return any(StatementDescriptor.class);
     }
 
     @Test

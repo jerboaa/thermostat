@@ -44,7 +44,6 @@ import static org.mockito.Mockito.when;
 import org.junit.Test;
 
 import com.redhat.thermostat.storage.config.StartupConfiguration;
-import com.redhat.thermostat.storage.core.BackingStorage;
 import com.redhat.thermostat.storage.core.QueuedStorage;
 import com.redhat.thermostat.storage.core.SecureStorage;
 import com.redhat.thermostat.storage.core.Storage;
@@ -60,7 +59,6 @@ public class MongoStorageProviderTest {
         provider.setConfig(config);
         Storage result = provider.createStorage();
         assertTrue(result instanceof QueuedStorage);
-        assertTrue(result instanceof BackingStorage);
         assertFalse(result instanceof SecureStorage);
     }
 }

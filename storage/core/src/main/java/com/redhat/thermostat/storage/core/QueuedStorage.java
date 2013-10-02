@@ -38,14 +38,19 @@
 package com.redhat.thermostat.storage.core;
 
 import java.io.InputStream;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.model.Pojo;
 
 public class QueuedStorage implements Storage {
-
+    
+    private static final Logger logger = LoggingUtils.getLogger(QueuedStorage.class);
     private static final int SHUTDOWN_TIMEOUT_SECONDS = 3;
 
     protected final Storage delegate;
@@ -53,10 +58,115 @@ public class QueuedStorage implements Storage {
     protected final ExecutorService fileExecutor;
 
     /*
-     * NOTE: We intentially use single-thread executor. All updates are put into a queue, from which
-     * a single dispatch thread calls the underlying storage. Using multiple dispatch threads
-     * could cause out-of-order issues, e.g. a VM death being reported before its VM start, which
-     * could confuse the heck out of clients.
+     * Decorates PreparedStatement.execute() so that executions of writes
+     * are queued.
+     */
+    class QueuedPreparedStatement<T extends Pojo> implements PreparedStatement<T> {
+        
+        private final PreparedStatement<T> delegate;
+        
+        private QueuedPreparedStatement(PreparedStatement<T> delegate) {
+            this.delegate = Objects.requireNonNull(delegate);
+        }
+
+        @Override
+        public void setBooleanList(int paramIndex, boolean[] paramValue) {
+            delegate.setBooleanList(paramIndex, paramValue);
+        }
+
+        @Override
+        public void setLongList(int paramIndex, long[] paramValue) {
+            delegate.setLongList(paramIndex, paramValue);
+        }
+
+        @Override
+        public void setIntList(int paramIndex, int[] paramValue) {
+            delegate.setIntList(paramIndex, paramValue);
+        }
+
+        @Override
+        public void setDouble(int paramIndex, double paramValue) {
+            delegate.setDouble(paramIndex, paramValue);
+        }
+
+        @Override
+        public void setDoubleList(int paramIndex, double[] paramValue) {
+            delegate.setDoubleList(paramIndex, paramValue);
+        }
+
+        @Override
+        public void setPojo(int paramIndex, Pojo paramValue) {
+            delegate.setPojo(paramIndex, paramValue);
+        }
+
+        @Override
+        public void setPojoList(int paramIndex, Pojo[] paramValue) {
+            delegate.setPojoList(paramIndex, paramValue);
+        }
+
+        @Override
+        public void setBoolean(int paramIndex, boolean paramValue) {
+            delegate.setBoolean(paramIndex, paramValue);
+        }
+
+        @Override
+        public void setLong(int paramIndex, long paramValue) {
+            delegate.setLong(paramIndex, paramValue);
+        }
+
+        @Override
+        public void setInt(int paramIndex, int paramValue) {
+            delegate.setInt(paramIndex, paramValue);
+        }
+
+        @Override
+        public void setString(int paramIndex, String paramValue) {
+            delegate.setString(paramIndex, paramValue);
+        }
+
+        @Override
+        public void setStringList(int paramIndex, String[] paramValue) {
+            delegate.setStringList(paramIndex, paramValue);
+        }
+
+        @Override
+        public int execute() throws StatementExecutionException {
+            executor.execute(new Runnable() {
+
+                @Override
+                public void run() {
+                    try {
+                        // TODO log return code of delegate, time execution?
+                        delegate.execute();
+                    } catch (StatementExecutionException e) {
+                        // There isn't much we can do in case of invalid
+                        // patch or the likes. Log it and move on.
+                        logger.log(Level.WARNING, "Failed to execute statement", e);
+                    }
+                }
+                
+            });
+            return DataModifyingStatement.DEFAULT_STATUS_SUCCESS;
+        }
+
+        @Override
+        public Cursor<T> executeQuery() throws StatementExecutionException {
+            return delegate.executeQuery();
+        }
+
+        @Override
+        public ParsedStatement<T> getParsedStatement() {
+            return delegate.getParsedStatement();
+        }
+        
+    }
+    
+    /*
+     * NOTE: We intentially use single-thread executor. All updates are put into
+     * a queue, from which a single dispatch thread calls the underlying
+     * storage. Using multiple dispatch threads could cause out-of-order issues,
+     * e.g. a VM death being reported before its VM start, which could confuse
+     * the heck out of clients.
      */
     public QueuedStorage(Storage delegate) {
         this(delegate, Executors.newSingleThreadExecutor(), Executors.newSingleThreadExecutor());
@@ -120,7 +230,8 @@ public class QueuedStorage implements Storage {
     @Override
     public <T extends Pojo> PreparedStatement<T> prepareStatement(final StatementDescriptor<T> desc)
             throws DescriptorParsingException {
-        return delegate.prepareStatement(desc);
+        PreparedStatement<T> decoratee = delegate.prepareStatement(desc);
+        return new QueuedPreparedStatement<>(decoratee);
     }
 
     @Override

@@ -84,6 +84,7 @@ import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Add;
+import com.redhat.thermostat.storage.core.BackingStorage;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.Cursor;
@@ -248,6 +249,12 @@ public class MongoStorageTest {
         testCollection = null;
         emptyTestCollection = null;
         cursor = null;
+    }
+    
+    @Test
+    public void isBackingStorage() {
+        MongoStorage storage = new MongoStorage(conf);
+        assertTrue(storage instanceof BackingStorage);
     }
     
     @Test

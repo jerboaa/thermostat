@@ -67,6 +67,7 @@ import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
+import com.redhat.thermostat.storage.core.PreparedStatementFactory;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Replace;
@@ -474,12 +475,17 @@ public class MongoStorage implements BackingStorage {
         }
     }
 
+    /*
+     *  QueuedStorage decorator uses this method and "wraps" the returned
+     *  PreparedStatement so that it executes in a queued fashion.
+     */
     @Override
     public <T extends Pojo> PreparedStatement<T> prepareStatement(StatementDescriptor<T> statementDesc)
             throws DescriptorParsingException {
-        // Queued storage decorator should override this. This should never
-        // be called.
-        throw new IllegalStateException();
+        // FIXME: Use some kind of cache in order to avoid parsing of
+        // descriptors each time this is called. At least if the descriptor
+        // class is the same we should be able to do something here.
+        return PreparedStatementFactory.getInstance(this, statementDesc);
     }
 
     @Override
