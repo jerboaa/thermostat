@@ -58,13 +58,11 @@ public class TerminalNodeTest {
         unfinished.setLHS(false);
         unfinished.setParameterIndex(0);
         unfinished.setType(String.class);
-        unfinished.setArrayType(false);
         
         node.setValue(unfinished);
         
         PreparedParameter p = new PreparedParameter();
         p.setType(String.class);
-        p.setArrayType(false);
         p.setValue("foo-bar");
         
         PatchedWhereExpression expn = null;
@@ -86,13 +84,11 @@ public class TerminalNodeTest {
         unfinished.setLHS(false);
         unfinished.setParameterIndex(0);
         unfinished.setType(Pojo.class);
-        unfinished.setArrayType(false);
         
         node.setValue(unfinished);
         
         PreparedParameter p = new PreparedParameter();
         p.setType(AgentInformation.class);
-        p.setArrayType(false);
         AgentInformation info = new AgentInformation("foo-bar");
         p.setValue(info);
         
@@ -115,13 +111,11 @@ public class TerminalNodeTest {
         unfinished.setLHS(false);
         unfinished.setParameterIndex(0);
         unfinished.setType(String.class);
-        unfinished.setArrayType(false);
         
         node.setValue(unfinished);
         
         PreparedParameter p = new PreparedParameter();
-        p.setType(String.class);
-        p.setArrayType(true);
+        p.setType(String[].class);
         p.setValue(new String[] { "foo-bar" });
         
         try {
@@ -140,13 +134,11 @@ public class TerminalNodeTest {
         unfinished.setLHS(false);
         unfinished.setParameterIndex(0);
         unfinished.setType(Pojo.class);
-        unfinished.setArrayType(false);
         
         node.setValue(unfinished);
         
         PreparedParameter p = new PreparedParameter();
         p.setType(AgentInformation.class);
-        p.setArrayType(true);
         AgentInformation info = new AgentInformation("testing");
         p.setValue(new AgentInformation[] { info });
         
@@ -165,14 +157,12 @@ public class TerminalNodeTest {
         UnfinishedValueNode unfinished = new UnfinishedValueNode();
         unfinished.setLHS(false);
         unfinished.setParameterIndex(0);
-        unfinished.setType(Integer.class);
-        unfinished.setArrayType(false);
+        unfinished.setType(int.class);
         
         node.setValue(unfinished);
         
         PreparedParameter p = new PreparedParameter();
-        p.setType(String.class);
-        p.setArrayType(true);
+        p.setType(String[].class);
         p.setValue(new String[] { "foo-bar" });
         
         try {

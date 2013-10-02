@@ -44,16 +44,13 @@ package com.redhat.thermostat.storage.core;
 public class PreparedParameter {
 
     private Object value;
-    // The simple type of value. Even if value is an array.
+    // The type of the value field. This is the instantiable component type for
+    // Pojo array values.
     private Class<?> type;
-    // true if and only if value is an array of simple types
-    // as specified by the type instance variable.
-    private boolean isArrayType;
     
-    PreparedParameter(Object value, Class<?> type, boolean isArrayType) {
+    PreparedParameter(Object value, Class<?> type) {
         this.value = value;
         this.type = type;
-        this.isArrayType = isArrayType;
     }
     
     public PreparedParameter() {
@@ -74,13 +71,5 @@ public class PreparedParameter {
 
     public void setType(Class<?> type) {
         this.type = type;
-    }
-
-    public boolean isArrayType() {
-        return isArrayType;
-    }
-
-    public void setArrayType(boolean isArrayType) {
-        this.isArrayType = isArrayType;
     }
 }

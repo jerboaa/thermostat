@@ -544,12 +544,11 @@ class BasicDescriptorParser<T extends Pojo> implements StatementDescriptorParser
             patchNode.setParameterIndex(placeHolderCount - 1);
             patchNode.setLHS(isLHS);
             // figure out the expected type
-            FreeVarTypeToken expectedType = getType(term.substring(1));
+            Class<?> expectedType = getType(term.substring(1));
             if (expectedType == null) {
                 throw new DescriptorParsingException("Unknown type of free parameter: '" + term + "'");
             }
-            patchNode.setType(expectedType.componentType);
-            patchNode.setArrayType(expectedType.isArrayType);
+            patchNode.setType(expectedType);
             node.setValue(patchNode);
             return;
         }
@@ -609,7 +608,7 @@ class BasicDescriptorParser<T extends Pojo> implements StatementDescriptorParser
         return term.substring(1, term.length() - 1);
     }
 
-    private FreeVarTypeToken getType(String term) {
+    private Class<?> getType(String term) {
         if (term.equals("")) {
             // illegal type
             return null;
@@ -617,53 +616,53 @@ class BasicDescriptorParser<T extends Pojo> implements StatementDescriptorParser
         // free variable types can have 1 or 2 characters.
         assert(term.length() > 0 && term.length() < 3);
         char switchChar = term.charAt(0);
-        FreeVarTypeToken typeToken = null;
+        Class<?> typeToken = null;
         switch (switchChar) {
         case 'i': {
             if (term.length() == 1) {
-                typeToken = new FreeVarTypeToken(Integer.class, false);
+                typeToken = int.class;
             } else if (term.length() == 2 && term.charAt(1) == '[') {
-                typeToken = new FreeVarTypeToken(Integer.class, true);
+                typeToken = int[].class;
             }
             break;
         }
         case 'l': {
             if (term.length() == 1) {
-                typeToken = new FreeVarTypeToken(Long.class, false);
+                typeToken = long.class;
             } else if (term.length() == 2 && term.charAt(1) == '[') {
-                typeToken = new FreeVarTypeToken(Long.class, true);
+                typeToken = long[].class;
             }
             break;
         }
         case 's': {
             if (term.length() == 1) {
-                typeToken = new FreeVarTypeToken(String.class, false);
+                typeToken = String.class;
             } else if (term.length() == 2 && term.charAt(1) == '[') {
-                typeToken = new FreeVarTypeToken(String.class, true);
+                typeToken = String[].class;
             }
             break;
         }
         case 'b': {
             if (term.length() == 1) {
-                typeToken = new FreeVarTypeToken(Boolean.class, false);
+                typeToken = boolean.class;
             } else if (term.length() == 2 && term.charAt(1) == '[') {
-                typeToken = new FreeVarTypeToken(Boolean.class, true);
+                typeToken = boolean[].class;
             }
             break;
         }
         case 'd': {
             if (term.length() == 1) {
-                typeToken = new FreeVarTypeToken(Double.class, false);
+                typeToken = double.class;
             } else if (term.length() == 2 && term.charAt(1) == '[') {
-                typeToken = new FreeVarTypeToken(Double.class, true);
+                typeToken = double[].class;
             }
             break;
         }
         case 'p': {
             if (term.length() == 1) {
-                typeToken = new FreeVarTypeToken(Pojo.class, false);
+                typeToken = Pojo.class;
             } else if (term.length() == 2 && term.charAt(1) == '[') {
-                typeToken = new FreeVarTypeToken(Pojo.class, true);
+                typeToken = Pojo[].class;
             }
             break;
         }
@@ -820,17 +819,6 @@ class BasicDescriptorParser<T extends Pojo> implements StatementDescriptorParser
             currTokenIndex++;
         } else {
             throw new DescriptorParsingException("Unknown statement type: '" + tokens[currTokenIndex] + "'");
-        }
-    }
-    
-    private static class FreeVarTypeToken {
-        
-        private final boolean isArrayType;
-        private final Class<?> componentType;
-        
-        private FreeVarTypeToken(Class<?> componentType, boolean isArrayType) {
-            this.isArrayType = isArrayType;
-            this.componentType = componentType;
         }
     }
 }

@@ -37,7 +37,6 @@
 package com.redhat.thermostat.web.common;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -69,50 +68,124 @@ public class PreparedParameterSerializerTest {
     @Test
     public void canDeserializeBasic() {
         // String
-        String jsonStr = "{ \"type\": \"java.lang.String\" , \"value\": \"testing\" , \"isArray\": false}";
+        String jsonStr = "{ \"type\": \"java.lang.String\" , \"value\": \"testing\" }";
         PreparedParameter param = gson.fromJson(jsonStr, PreparedParameter.class);
         assertEquals(String.class, param.getType());
         assertEquals("testing", param.getValue());
-        assertFalse(param.isArrayType());
         // Integer
-        jsonStr = "{ \"type\": \"java.lang.Integer\" , \"value\": -1 , \"isArray\": false}";
+        jsonStr = "{ \"type\": \"int\" , \"value\": -1}";
         param = gson.fromJson(jsonStr, PreparedParameter.class);
-        assertEquals(Integer.class, param.getType());
-        assertTrue(param.getValue() instanceof Integer);
+        assertEquals(int.class, param.getType());
         assertEquals(-1, param.getValue());
-        assertFalse(param.isArrayType());
         // Long
-        jsonStr = "{ \"type\": \"java.lang.Long\" , \"value\": -10 , \"isArray\": false}";
+        jsonStr = "{ \"type\": \"long\" , \"value\": -10}";
         param = gson.fromJson(jsonStr, PreparedParameter.class);
-        assertEquals(Long.class, param.getType());
-        assertTrue(param.getValue() instanceof Long);
+        assertEquals(long.class, param.getType());
         assertEquals(-10L, param.getValue());
-        assertFalse(param.isArrayType());
-        jsonStr = "{ \"type\": \"java.lang.Long\" , \"value\": 30000000003 , \"isArray\": false}";
+        jsonStr = "{ \"type\": \"long\" , \"value\": 30000000003}";
         param = gson.fromJson(jsonStr, PreparedParameter.class);
-        assertEquals(Long.class, param.getType());
-        assertTrue(param.getValue() instanceof Long);
+        assertEquals(long.class, param.getType());
         assertEquals(30000000003L, param.getValue());
-        assertFalse(param.isArrayType());
         // Boolean
-        jsonStr = "{ \"type\": \"java.lang.Boolean\" , \"value\": true , \"isArray\": false}";
+        jsonStr = "{ \"type\": \"boolean\" , \"value\": true}";
         param = gson.fromJson(jsonStr, PreparedParameter.class);
-        assertEquals(Boolean.class, param.getType());
-        assertTrue(param.getValue() instanceof Boolean);
+        assertEquals(boolean.class, param.getType());
         assertEquals(true, param.getValue());
-        assertFalse(param.isArrayType());
         // String[]
         String strArrayVal = "[ \"testing1\", \"testing2\", \"3\" ]";
-        jsonStr = "{ \"type\": \"java.lang.String\" , \"value\": " + strArrayVal + " , \"isArray\": true}";
+        jsonStr = "{ \"type\": \"[Ljava.lang.String;\" , \"value\": " + strArrayVal + "}";
         param = gson.fromJson(jsonStr, PreparedParameter.class);
-        assertEquals(String.class, param.getType());
-        assertTrue(param.isArrayType());
+        assertEquals(String[].class, param.getType());
         assertTrue(param.getValue() instanceof String[]);
         String[] vals = (String[])param.getValue();
         assertEquals(3, vals.length);
         assertEquals("testing1", vals[0]);
         assertEquals("testing2", vals[1]);
         assertEquals("3", vals[2]);
+    }
+    
+    @Test
+    public void allowsBooleanListNullDeserialization() {
+        String jsonStr = "{ \"type\": \"[Z\" , \"value\": null}";
+        PreparedParameter p = gson.fromJson(jsonStr, PreparedParameter.class);
+        assertEquals(boolean[].class, p.getType());
+        assertEquals(null, p.getValue());
+    }
+    
+    @Test
+    public void allowsIntListNullDeserialization() {
+        String jsonStr = "{ \"type\": \"[I\" , \"value\": null}";
+        PreparedParameter p = gson.fromJson(jsonStr, PreparedParameter.class);
+        assertEquals(int[].class, p.getType());
+        assertEquals(null, p.getValue());
+    }
+    
+    @Test
+    public void allowsLongListNullDeserialization() {
+        String jsonStr = "{ \"type\": \"[J\" , \"value\": null}";
+        PreparedParameter p = gson.fromJson(jsonStr, PreparedParameter.class);
+        assertEquals(long[].class, p.getType());
+        assertEquals(null, p.getValue());
+    }
+    
+    @Test
+    public void allowsDoubleListNullDeserialization() {
+        String jsonStr = "{ \"type\": \"[D\" , \"value\": null}";
+        PreparedParameter p = gson.fromJson(jsonStr, PreparedParameter.class);
+        assertEquals(double[].class, p.getType());
+        assertEquals(null, p.getValue());
+    }
+    
+    @Test
+    public void allowsStringNullDeserialization() {
+        String jsonStr = "{ \"type\": \"java.lang.String\" , \"value\": null}";
+        PreparedParameter p = gson.fromJson(jsonStr, PreparedParameter.class);
+        assertEquals(String.class, p.getType());
+        assertEquals(null, p.getValue());
+    }
+    
+    @Test
+    public void allowsStringListNullDeserialization() {
+        String jsonStr = "{ \"type\": \"[Ljava.lang.String;\" , \"value\": null}";
+        PreparedParameter p = gson.fromJson(jsonStr, PreparedParameter.class);
+        assertEquals(String[].class, p.getType());
+        assertEquals(null, p.getValue());
+    }
+    
+    @Test
+    public void rejectNullForBooleanPrimitive() {
+        String jsonStr = "{ \"type\": \"boolean\" , \"value\": null}";
+        doPrimitiveNullTest(jsonStr, "boolean");
+    }
+    
+    @Test
+    public void rejectNullForIntPrimitive() {
+        String jsonStr = "{ \"type\": \"int\" , \"value\": null}";
+        doPrimitiveNullTest(jsonStr, "int");
+    }
+    
+    @Test
+    public void rejectNullForDoublePrimitive() {
+        String jsonStr = "{ \"type\": \"double\" , \"value\": null}";
+        doPrimitiveNullTest(jsonStr, "double");
+    }
+    
+    @Test
+    public void rejectNullForLongPrimitive() {
+        String jsonStr = "{ \"type\": \"long\" , \"value\": null}";
+        doPrimitiveNullTest(jsonStr, "long");
+    }
+    
+    private void doPrimitiveNullTest(String jsonStr, String typeName) {
+        try {
+            gson.fromJson(jsonStr, PreparedParameter.class);
+            // The Java language spec does not permit this
+            fail(typeName + " null primitive should not deserialize");
+        } catch (Exception e) {
+            // pass
+            Throwable cause = e.getCause();
+            assertEquals(typeName + " primitive does not accept a null value!", cause.getMessage());
+        }
     }
     
     @Test
@@ -129,41 +202,88 @@ public class PreparedParameterSerializerTest {
     }
     
     @Test
+    public void failsDeserializationIfStringForInt() {
+        String jsonStr = "{ \"type\": \"int\" , \"value\":\"testing\"}";
+        try {
+            gson.fromJson(jsonStr, PreparedParameter.class);
+            fail("should have failed to serialize");
+        } catch (Exception e) {
+            // pass
+            Throwable cause = e.getCause();
+            assertTrue(cause instanceof NumberFormatException);
+        }
+    }
+    
+    @Test
+    public void failsDeserializationIfBooleanForInt() {
+        String jsonStr = "{ \"type\": \"int\" , \"value\": true}";
+        try {
+            gson.fromJson(jsonStr, PreparedParameter.class);
+            fail("should have failed to serialize");
+        } catch (Exception e) {
+            // pass
+            Throwable cause = e.getCause();
+            assertTrue(cause instanceof IllegalStateException);
+        }
+    }
+    
+    @Test
+    public void failsDeserializationIfIntForIntList() {
+        String jsonStr = "{ \"type\": \"[I\" , \"value\": -1}";
+        try {
+            gson.fromJson(jsonStr, PreparedParameter.class);
+            fail("should have failed to serialize");
+        } catch (Exception e) {
+            // pass
+            Throwable cause = e.getCause();
+            assertTrue(cause instanceof IllegalStateException);
+        }
+    }
+    
+    @Test
+    public void failsDeserializationIfDoubleForInt() {
+        String jsonStr = "{ \"type\": \"int\" , \"value\": -1.3}";
+        try {
+            gson.fromJson(jsonStr, PreparedParameter.class);
+            fail("should have failed to serialize");
+        } catch (Exception e) {
+            // pass
+            Throwable cause = e.getCause();
+            assertTrue(cause instanceof NumberFormatException);
+        }
+    }
+    
+    @Test
     public void canSerializeBasic() {
         // String
-        String expected = "{\"value\":\"testing\",\"type\":\"java.lang.String\",\"isArray\":false}";
+        String expected = "{\"value\":\"testing\",\"type\":\"java.lang.String\"}";
         PreparedParameter param = new PreparedParameter();
         param.setType(String.class);
         param.setValue("testing");
-        param.setArrayType(false);
         String actual = gson.toJson(param);
         assertEquals(expected, actual);
         // Integer
-        expected = "{\"value\":-1,\"type\":\"java.lang.Integer\",\"isArray\":false}";
-        param.setType(Integer.class);
+        expected = "{\"value\":-1,\"type\":\"int\"}";
+        param.setType(int.class);
         param.setValue(-1);
-        param.setArrayType(false);
         actual = gson.toJson(param);
         assertEquals(expected, actual);
         // Long
-        expected = "{\"value\":30000000003,\"type\":\"java.lang.Long\",\"isArray\":false}";
-        param.setType(Long.class);
+        expected = "{\"value\":30000000003,\"type\":\"long\"}";
+        param.setType(long.class);
         param.setValue(30000000003L);
-        param.setArrayType(false);
         actual = gson.toJson(param);
         assertEquals(expected, actual);
         // boolean
-        expected = "{\"value\":true,\"type\":\"java.lang.Boolean\",\"isArray\":false}";
-        param.setType(Boolean.class);
+        expected = "{\"value\":true,\"type\":\"boolean\"}";
+        param.setType(boolean.class);
         param.setValue(true);
-        param.setArrayType(false);
         actual = gson.toJson(param);
         assertEquals(expected, actual);
         // String[]
         String strArrayVal = "[\"testing1\",\"testing2\",\"3\"]";
-        expected = "{\"value\":" + strArrayVal + ",\"type\":\"java.lang.String\",\"isArray\":true}";
-        param.setType(String.class);
-        param.setArrayType(true);
+        expected = "{\"value\":" + strArrayVal + ",\"type\":\"[Ljava.lang.String;\"}";
+        param.setType(String[].class);
         String[] array = new String[] {
                 "testing1", "testing2", "3"
         };
@@ -175,9 +295,8 @@ public class PreparedParameterSerializerTest {
     @Test
     public void canSerializeDeserializeInteger() {
         PreparedParameter expected = new PreparedParameter();
-        expected.setType(Integer.class);
+        expected.setType(int.class);
         expected.setValue(3);
-        expected.setArrayType(false);
         String jsonStr = gson.toJson(expected, PreparedParameter.class);
         assertParameterEquals(expected, jsonStr);
     }
@@ -185,13 +304,8 @@ public class PreparedParameterSerializerTest {
     @Test
     public void canSerializeDeserializeIntegerArray() {
         PreparedParameter expected = new PreparedParameter();
-        expected.setType(Integer.class);
-        // it's important for the expected type to be of primitive array type,
-        // rather than Integer[]. we want the serializer to deserialize to
-        // primitive types if possible. asserted in method assertParameterEquals()
-        // Note that model classes use primitive array types as well.
+        expected.setType(int[].class);
         expected.setValue(new int[] { 0, 3, 20 });
-        expected.setArrayType(true);
         String jsonStr = gson.toJson(expected, PreparedParameter.class);
         assertParameterEquals(expected, jsonStr);
     }
@@ -199,9 +313,8 @@ public class PreparedParameterSerializerTest {
     @Test
     public void canSerializeDeserializeDouble() {
         PreparedParameter expected = new PreparedParameter();
-        expected.setType(Double.class);
+        expected.setType(double.class);
         expected.setValue(Math.E);
-        expected.setArrayType(false);
         String jsonStr = gson.toJson(expected, PreparedParameter.class);
         assertParameterEquals(expected, jsonStr);
     }
@@ -209,13 +322,8 @@ public class PreparedParameterSerializerTest {
     @Test
     public void canSerializeDeserializeDoubleArray() {
         PreparedParameter expected = new PreparedParameter();
-        expected.setType(Double.class);
-        // it's important for the expected type to be of primitive array type,
-        // rather than Double[]. we want the serializer to deserialize to
-        // primitive types if possible. asserted in method assertParameterEquals()
-        // Note that model classes use primitive array types as well.
+        expected.setType(double[].class);
         expected.setValue(new double[] { 3.3, 1.0, Math.PI });
-        expected.setArrayType(true);
         String jsonStr = gson.toJson(expected, PreparedParameter.class);
         assertParameterEquals(expected, jsonStr);
     }
@@ -223,9 +331,8 @@ public class PreparedParameterSerializerTest {
     @Test
     public void canSerializeDeserializeLong() {
         PreparedParameter expected = new PreparedParameter();
-        expected.setType(Long.class);
+        expected.setType(long.class);
         expected.setValue(30000000003L);
-        expected.setArrayType(false);
         String jsonStr = gson.toJson(expected, PreparedParameter.class);
         assertParameterEquals(expected, jsonStr);
     }
@@ -233,13 +340,8 @@ public class PreparedParameterSerializerTest {
     @Test
     public void canSerializeDeserializeLongArray() {
         PreparedParameter expected = new PreparedParameter();
-        expected.setType(Long.class);
-        // it's important for the expected type to be of primitive array type,
-        // rather than Long[]. we want the serializer to deserialize to
-        // primitive types if possible. asserted in method assertParameterEquals()
-        // Note that model classes use primitive array types as well.
+        expected.setType(long[].class);
         expected.setValue(new long[] { 3000000000L, 3, 20 });
-        expected.setArrayType(true);
         String jsonStr = gson.toJson(expected, PreparedParameter.class);
         assertParameterEquals(expected, jsonStr);
     }
@@ -249,7 +351,6 @@ public class PreparedParameterSerializerTest {
         PreparedParameter expected = new PreparedParameter();
         expected.setType(String.class);
         expected.setValue("testing");
-        expected.setArrayType(false);
         String jsonStr = gson.toJson(expected, PreparedParameter.class);
         assertParameterEquals(expected, jsonStr);
     }
@@ -257,8 +358,7 @@ public class PreparedParameterSerializerTest {
     @Test
     public void canSerializeDeserializeStringArray() {
         PreparedParameter expected = new PreparedParameter();
-        expected.setType(String.class);
-        expected.setArrayType(true);
+        expected.setType(String[].class);
         String[] expectedArray = new String[] {
                 "one", "two", "three"      
         };
@@ -270,13 +370,13 @@ public class PreparedParameterSerializerTest {
     @Test
     public void canSerializeDeserializeBoolean() {
         PreparedParameter expected = new PreparedParameter();
-        expected.setType(Boolean.class);
+        expected.setType(boolean.class);
         expected.setValue(false);
         String jsonStr = gson.toJson(expected, PreparedParameter.class);
         assertParameterEquals(expected, jsonStr);
         
         expected = new PreparedParameter();
-        expected.setType(Boolean.class);
+        expected.setType(boolean.class);
         expected.setValue(true);
         jsonStr = gson.toJson(expected, PreparedParameter.class);
         assertParameterEquals(expected, jsonStr);
@@ -285,13 +385,8 @@ public class PreparedParameterSerializerTest {
     @Test
     public void canSerializeDeserializeBooleanArray() {
         PreparedParameter expected = new PreparedParameter();
-        expected.setType(Boolean.class);
-        // it's important for the expected type to be of primitive array type,
-        // rather than Boolean[]. we want the serializer to deserialize to
-        // primitive types if possible. asserted in method assertParameterEquals()
-        // Note that model classes use primitive array types as well.
+        expected.setType(boolean[].class);
         expected.setValue(new boolean[] { true, false, false, true });
-        expected.setArrayType(true);
         String jsonStr = gson.toJson(expected, PreparedParameter.class);
         assertParameterEquals(expected, jsonStr);
     }
@@ -303,7 +398,6 @@ public class PreparedParameterSerializerTest {
         AgentInformation info = new AgentInformation("foo-writer");
         expected.setType(info.getClass());
         expected.setValue(info);
-        expected.setArrayType(false);
         String jsonStr = gson.toJson(expected, PreparedParameter.class);
         assertParameterEquals(expected, jsonStr);
         
@@ -315,7 +409,13 @@ public class PreparedParameterSerializerTest {
         expected = new PreparedParameter();
         expected.setType(info.getClass());
         expected.setValue(info);
-        expected.setArrayType(false);
+        jsonStr = gson.toJson(expected, PreparedParameter.class);
+        assertParameterEquals(expected, jsonStr);
+        
+        // null pojo
+        expected = new PreparedParameter();
+        expected.setType(AgentInformation.class);
+        expected.setValue(null);
         jsonStr = gson.toJson(expected, PreparedParameter.class);
         assertParameterEquals(expected, jsonStr);
     }
@@ -328,13 +428,11 @@ public class PreparedParameterSerializerTest {
         pair.setValue("bar");
         expected.setType(pair.getClass());
         expected.setValue(pair);
-        expected.setArrayType(false);
         String jsonStr = gson.toJson(expected, PreparedParameter.class);
         
         PreparedParameter actual = gson.fromJson(jsonStr, PreparedParameter.class);
         
         assertEquals(expected.getType(), actual.getType());
-        assertTrue(expected.isArrayType() == actual.isArrayType());
         assertTrue(actual.getValue() instanceof KeyValuePair);
         KeyValuePair actualPair = (KeyValuePair)actual.getValue();
         assertEquals(pair.getKey(), actualPair.getKey());
@@ -353,7 +451,6 @@ public class PreparedParameterSerializerTest {
                 info1, info2
         };
         PreparedParameter param = new PreparedParameter();
-        param.setArrayType(true);
         param.setType(AgentInformation.class);
         param.setValue(infos);
         String jsonStr = gson.toJson(param, PreparedParameter.class);
@@ -364,17 +461,15 @@ public class PreparedParameterSerializerTest {
             String jsonStr) {
         PreparedParameter actual = gson.fromJson(jsonStr, PreparedParameter.class);
         assertEquals(expected.getType(), actual.getType());
-        assertEquals(expected.isArrayType(), actual.isArrayType());
-        if (actual.isArrayType()) {
+        if (actual.getValue() != null && actual.getValue().getClass().isArray()) {
             // compare element by element
             Object values = actual.getValue();
             Object expectedVals = expected.getValue();
-            Class<?> expectedType = expectedVals.getClass();
             int expectedLength = Array.getLength(expectedVals);
             int actualLength = Array.getLength(values);
             assertEquals(expectedLength, actualLength);
             // Make sure the deserialized array is of the correct expected type
-            assertTrue(values.getClass() == expectedType);
+            assertEquals(expectedVals.getClass(), values.getClass());
             for (int i = 0; i < expectedLength; i++) {
                 Object exp = Array.get(expectedVals, i);
                 Object act = Array.get(values, i);

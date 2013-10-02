@@ -37,6 +37,7 @@
 package com.redhat.thermostat.storage.core;
 
 import java.lang.reflect.Modifier;
+import java.util.Objects;
 
 import com.redhat.thermostat.storage.model.Pojo;
 
@@ -60,66 +61,72 @@ public final class PreparedParameters implements PreparedStatementSetter {
     
     @Override
     public void setLong(int paramIndex, long paramValue) {
-        setType(paramIndex, paramValue, Long.class, false);
+        setType(paramIndex, paramValue, long.class);
     }
 
     @Override
     public void setLongList(int paramIndex, long[] paramValue) {
-        setType(paramIndex, paramValue, Long.class, true);
+        setType(paramIndex, paramValue, long[].class);
     }
 
     @Override
     public void setInt(int paramIndex, int paramValue) {
-        setType(paramIndex, paramValue, Integer.class, false);
+        setType(paramIndex, paramValue, int.class);
     }
 
     @Override
     public void setIntList(int paramIndex, int[] paramValue) {
-        setType(paramIndex, paramValue, Integer.class, true);
+        setType(paramIndex, paramValue, int[].class);
     }
 
     @Override
     public void setBoolean(int paramIndex, boolean paramValue) {
-        setType(paramIndex, paramValue, Boolean.class, false);
+        setType(paramIndex, paramValue, boolean.class);
     }
 
     @Override
     public void setBooleanList(int paramIndex, boolean[] paramValue) {
-        setType(paramIndex, paramValue, Boolean.class, true);
+        setType(paramIndex, paramValue, boolean[].class);
     }
 
     @Override
     public void setString(int paramIndex, String paramValue) {
-        setType(paramIndex, paramValue, String.class, false);
+        setType(paramIndex, paramValue, String.class);
     }
 
     @Override
     public void setStringList(int paramIndex, String[] paramValue) {
-        setType(paramIndex, paramValue, String.class, true);
+        setType(paramIndex, paramValue, String[].class);
     }
 
     @Override
     public void setDouble(int paramIndex, double paramValue) {
-        setType(paramIndex, paramValue, Double.class, false);
+        setType(paramIndex, paramValue, double.class);
     }
 
     @Override
     public void setDoubleList(int paramIndex, double[] paramValue) {
-        setType(paramIndex, paramValue, Double.class, true);
+        setType(paramIndex, paramValue, double[].class);
     }
 
     @Override
     public void setPojo(int paramIndex, Pojo paramValue) {
+        // null Pojo value would make array and non-array types
+        // indistinguishable for serialization
+        Objects.requireNonNull(paramValue);
         Class<?> runtimeType = paramValue.getClass();
         performPojoChecks(runtimeType, "Type");
-        setType(paramIndex, paramValue, runtimeType, false);
+        setType(paramIndex, paramValue, runtimeType);
     }
 
     @Override
     public void setPojoList(int paramIndex, Pojo[] paramValue) {
+        // null Pojo value would make array and non-array types
+        // indistinguishable for serialization
+        Objects.requireNonNull(paramValue);
         Class<?> componentType = paramValue.getClass().getComponentType();
         performPojoChecks(componentType, "Component type");
-        setType(paramIndex, paramValue, componentType, true);
+        setType(paramIndex, paramValue, componentType);
     }
     
     private void performPojoChecks(Class<?> type, String errorMsgPrefix) {
@@ -132,11 +139,11 @@ public final class PreparedParameters implements PreparedStatementSetter {
         }
     }
 
-    private void setType(int paramIndex, Object paramValue, Class<?> paramType, boolean isArrayType) {
+    private void setType(int paramIndex, Object paramValue, Class<?> paramType) {
         if (paramIndex >= params.length) {
             throw new IllegalArgumentException("Parameter index '" + paramIndex + "' out of range.");
         }
-        PreparedParameter param = new PreparedParameter(paramValue, paramType, isArrayType);
+        PreparedParameter param = new PreparedParameter(paramValue, paramType);
         params[paramIndex] = param;
     }
     

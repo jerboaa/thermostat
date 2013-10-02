@@ -37,6 +37,7 @@
 package com.redhat.thermostat.web.common;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -121,11 +122,9 @@ public class PreparedParametersSerializerTest {
         PreparedParameter param1 = actual[0];
         assertEquals("foo-param", param1.getValue());
         assertEquals(String.class, param1.getType());
-        assertEquals(false, param1.isArrayType());
         
         PreparedParameter param2 = actual[1];
-        assertEquals(Long.class, param2.getType());
-        assertEquals(true, param2.isArrayType());
+        assertEquals(long[].class, param2.getType());
         long[] twoActuals = (long[])param2.getValue();
         assertEquals(3, twoActuals.length);
         assertEquals(3000000000L, (long)twoActuals[0]);
@@ -134,7 +133,7 @@ public class PreparedParametersSerializerTest {
         
         PreparedParameter param3 = actual[2];
         assertEquals(AgentInformation.class, param3.getType());
-        assertEquals(true, param3.isArrayType());
+        assertTrue(param3.getValue().getClass().isArray());
         Pojo[] pojos = (Pojo[])param3.getValue();
         assertEquals(2, pojos.length);
         for (int i = 0; i < pojos.length; i++) {

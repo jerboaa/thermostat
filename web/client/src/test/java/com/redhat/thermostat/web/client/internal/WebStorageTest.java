@@ -414,7 +414,6 @@ public class WebStorageTest {
         stmt.setString(0, "fluff");
         assertEquals("fluff", params.getParams()[0].getValue());
         assertEquals(String.class, params.getParams()[0].getType());
-        assertFalse(params.getParams()[0].isArrayType());
         
         prepareServer(gson.toJson(PreparedStatementResponseCode.WRITE_GENERIC_FAILURE));
         

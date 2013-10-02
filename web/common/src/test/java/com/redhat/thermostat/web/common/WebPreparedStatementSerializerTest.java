@@ -37,9 +37,7 @@
 package com.redhat.thermostat.web.common;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -83,22 +81,18 @@ public class WebPreparedStatementSerializerTest {
         PreparedParameter[] parameters = newParams.getParams();
         assertEquals(5, parameters.length);
         assertEquals(2, parameters[0].getValue());
-        assertEquals(Integer.class, parameters[0].getType());
+        assertEquals(int.class, parameters[0].getType());
         assertEquals("testing", parameters[1].getValue());
         assertEquals(String.class, parameters[1].getType());
-        assertFalse(parameters[1].isArrayType());
         assertEquals(222L, parameters[2].getValue());
-        assertEquals(Long.class, parameters[2].getType());
-        assertFalse(parameters[2].isArrayType());
+        assertEquals(long.class, parameters[2].getType());
         String[] list = (String[])parameters[3].getValue();
         assertEquals(2, list.length);
         assertEquals("one", list[0]);
         assertEquals("two", list[1]);
-        assertEquals(String.class, parameters[3].getType());
-        assertTrue(parameters[3].isArrayType());
+        assertEquals(String[].class, parameters[3].getType());
         assertEquals(true, parameters[4].getValue());
-        assertEquals(Boolean.class, parameters[4].getType());
-        assertFalse(parameters[4].isArrayType());
+        assertEquals(boolean.class, parameters[4].getType());
         assertEquals(WebPreparedStatementResponse.DESCRIPTOR_PARSE_FAILED, newStmt.getStatementId());
     }
     

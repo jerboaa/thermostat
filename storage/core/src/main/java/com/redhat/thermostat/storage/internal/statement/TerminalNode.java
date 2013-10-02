@@ -92,16 +92,24 @@ class TerminalNode extends Node {
             PreparedParameter param) throws IllegalPatchException {
         if (patch.getType() == Pojo.class) {
             // handle pojo case
+            Object value = param.getValue();
             if (Pojo.class.isAssignableFrom(param.getType()) &&
-                    patch.isArrayType() == param.isArrayType()) {
+                    value != null && !value.getClass().isArray()) {
                 return; // pojo-type match: OK
             }
             // dead-end
             IllegalArgumentException iae = constructIllegalArgumentException(patch, param);
             throw new IllegalPatchException(iae);
+        } else if (patch.getType() == Pojo[].class) {
+            // handle pojo list case
+            Object value = param.getValue();
+            if (Pojo.class.isAssignableFrom(param.getType()) && value != null
+                    && value.getClass().isArray()) {
+                return; // pojo-list type match: OK
+            }
         } else {
             // primitive types or primitive list types
-            if (param.getType() != patch.getType() || param.isArrayType() != patch.isArrayType()) {
+            if (param.getType() != patch.getType()) {
                 IllegalArgumentException iae = constructIllegalArgumentException(patch, param);
                 throw new IllegalPatchException(iae);
             }
@@ -111,11 +119,14 @@ class TerminalNode extends Node {
         
     private IllegalArgumentException constructIllegalArgumentException(
             UnfinishedValueNode patch, PreparedParameter param) {
-        String patchArrayPrefix = patch.isArrayType() ? "[" : "";
-        String paramArrayPrefix = param.isArrayType() ? "[" : "";
+        Object value = param.getValue();
+        String paramArrayPrefix = "";
+        if (value != null && value.getClass().isArray()) {
+            paramArrayPrefix = "[";
+        }
         String msg = TerminalNode.class.getSimpleName()
                 + " invalid type when attempting to patch. Expected "
-                + patchArrayPrefix + patch.getType().getName() + " but was "
+                + patch.getType().getName() + " but was "
                 + paramArrayPrefix + param.getType().getName();
         IllegalArgumentException iae = new IllegalArgumentException(msg);
         return iae;

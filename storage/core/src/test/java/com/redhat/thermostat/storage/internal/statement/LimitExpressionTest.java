@@ -62,8 +62,7 @@ public class LimitExpressionTest {
     @Test
     public void canPatchWithInt() {
         PreparedParameter p = new PreparedParameter();
-        p.setType(Integer.class);
-        p.setArrayType(false);
+        p.setType(int.class);
         p.setValue(3);
         
         PatchedLimitExpression pLimit = null;
@@ -80,8 +79,7 @@ public class LimitExpressionTest {
     @Test
     public void rejectPatchWithIntList() {
         PreparedParameter p = new PreparedParameter();
-        p.setType(Integer.class);
-        p.setArrayType(true);
+        p.setType(int[].class);
         p.setValue(new int[] { 3 });
         
         try {
@@ -97,7 +95,6 @@ public class LimitExpressionTest {
     public void rejectPatchWithString() {
         PreparedParameter p = new PreparedParameter();
         p.setType(String.class);
-        p.setArrayType(false);
         p.setValue("foo");
         
         try {

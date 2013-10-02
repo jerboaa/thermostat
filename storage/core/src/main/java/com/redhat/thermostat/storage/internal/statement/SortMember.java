@@ -82,7 +82,7 @@ class SortMember implements Printable, Patchable {
                 Unfinished unfinished = (Unfinished)getSortKey();
                 PreparedParameter p = params[unfinished.getParameterIndex()];
                 // Should only allow patching of ?s type NOT ?s[
-                if (p.getType() != String.class || p.isArrayType()) {
+                if (p.getType() != String.class) {
                     String msg = "Illegal parameter type for index "
                             + unfinished.getParameterIndex()
                             + ". Expected String!";

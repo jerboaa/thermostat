@@ -221,7 +221,7 @@ public class BasicDescriptorParserTest {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' != ?d";
         UnfinishedValueNode unfinished = new UnfinishedValueNode();
         unfinished.setLHS(false);
-        unfinished.setType(Double.class);
+        unfinished.setType(double.class);
         unfinished.setParameterIndex(0);
         doTestType(descrString, unfinished, 1);
     }
@@ -236,8 +236,7 @@ public class BasicDescriptorParserTest {
         String descString = "ADD " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = ?s[";
         UnfinishedValueNode unfinished = new UnfinishedValueNode();
         unfinished.setLHS(false);
-        unfinished.setType(String.class);
-        unfinished.setArrayType(true);
+        unfinished.setType(String[].class);
         unfinished.setParameterIndex(0);
         doListTypeTest(descString, unfinished);
     }
@@ -252,8 +251,7 @@ public class BasicDescriptorParserTest {
         String descString = "ADD " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = ?d[";
         UnfinishedValueNode unfinished = new UnfinishedValueNode();
         unfinished.setLHS(false);
-        unfinished.setType(Double.class);
-        unfinished.setArrayType(true);
+        unfinished.setType(double[].class);
         unfinished.setParameterIndex(0);
         doListTypeTest(descString, unfinished);
     }
@@ -268,8 +266,7 @@ public class BasicDescriptorParserTest {
         String descString = "ADD " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = ?i[";
         UnfinishedValueNode unfinished = new UnfinishedValueNode();
         unfinished.setLHS(false);
-        unfinished.setType(Integer.class);
-        unfinished.setArrayType(true);
+        unfinished.setType(int[].class);
         unfinished.setParameterIndex(0);
         doListTypeTest(descString, unfinished);
     }
@@ -284,8 +281,7 @@ public class BasicDescriptorParserTest {
         String descString = "ADD " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = ?b[";
         UnfinishedValueNode unfinished = new UnfinishedValueNode();
         unfinished.setLHS(false);
-        unfinished.setType(Boolean.class);
-        unfinished.setArrayType(true);
+        unfinished.setType(boolean[].class);
         unfinished.setParameterIndex(0);
         doListTypeTest(descString, unfinished);
     }
@@ -300,8 +296,7 @@ public class BasicDescriptorParserTest {
         String descString = "ADD " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = ?l[";
         UnfinishedValueNode unfinished = new UnfinishedValueNode();
         unfinished.setLHS(false);
-        unfinished.setType(Long.class);
-        unfinished.setArrayType(true);
+        unfinished.setType(long[].class);
         unfinished.setParameterIndex(0);
         doListTypeTest(descString, unfinished);
     }
@@ -331,8 +326,7 @@ public class BasicDescriptorParserTest {
         String descString = "ADD " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = ?p[";
         UnfinishedValueNode unfinished = new UnfinishedValueNode();
         unfinished.setLHS(false);
-        unfinished.setType(Pojo.class);
-        unfinished.setArrayType(true);
+        unfinished.setType(Pojo[].class);
         unfinished.setParameterIndex(0);
         doListTypeTest(descString, unfinished);
     }
@@ -371,7 +365,7 @@ public class BasicDescriptorParserTest {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' != ?i";
         UnfinishedValueNode unfinished = new UnfinishedValueNode();
         unfinished.setLHS(false);
-        unfinished.setType(Integer.class);
+        unfinished.setType(int.class);
         unfinished.setParameterIndex(0);
         doTestType(descrString, unfinished, 1);
     }
@@ -381,7 +375,7 @@ public class BasicDescriptorParserTest {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' != ?l";
         UnfinishedValueNode unfinished = new UnfinishedValueNode();
         unfinished.setLHS(false);
-        unfinished.setType(Long.class);
+        unfinished.setType(long.class);
         unfinished.setParameterIndex(0);
         doTestType(descrString, unfinished, 1);
     }
@@ -391,7 +385,7 @@ public class BasicDescriptorParserTest {
         String descrString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " WHERE 'a' != ?b";
         UnfinishedValueNode unfinished = new UnfinishedValueNode();
         unfinished.setLHS(false);
-        unfinished.setType(Boolean.class);
+        unfinished.setType(boolean.class);
         unfinished.setParameterIndex(0);
         doTestType(descrString, unfinished, 1);
     }
@@ -540,7 +534,7 @@ public class BasicDescriptorParserTest {
         lessThan.setLeftChild(e);
         UnfinishedValueNode f = new UnfinishedValueNode();
         f.setParameterIndex(0);
-        f.setType(Integer.class);
+        f.setType(int.class);
         f.setLHS(false);
         TerminalNode fReal = new TerminalNode(lessThan);
         fReal.setValue(f);
@@ -668,7 +662,7 @@ public class BasicDescriptorParserTest {
         lessThan.setLeftChild(e);
         UnfinishedValueNode f = new UnfinishedValueNode();
         f.setParameterIndex(0);
-        f.setType(Integer.class);
+        f.setType(int.class);
         f.setLHS(false);
         TerminalNode fReal = new TerminalNode(lessThan);
         fReal.setValue(f);
@@ -1029,7 +1023,7 @@ public class BasicDescriptorParserTest {
         UnfinishedValueNode patch2 = new UnfinishedValueNode();
         patch2.setParameterIndex(1);
         patch2.setLHS(false);
-        patch2.setType(Integer.class);
+        patch2.setType(int.class);
         TerminalNode y = new TerminalNode(greaterEqual);
         y.setValue(patch2);
         greaterEqual.setRightChild(y);
@@ -1227,7 +1221,7 @@ public class BasicDescriptorParserTest {
         UnfinishedValueNode patch2 = new UnfinishedValueNode();
         patch2.setLHS(false);
         patch2.setParameterIndex(2);
-        patch2.setType(Boolean.class);
+        patch2.setType(boolean.class);
         TerminalNode y = new TerminalNode(lessThan);
         y.setValue(patch2);
         lessThan.setRightChild(y);
@@ -1530,7 +1524,7 @@ public class BasicDescriptorParserTest {
         UnfinishedValueNode node = new UnfinishedValueNode();
         node.setParameterIndex(1);
         node.setLHS(false);
-        node.setType(Integer.class);
+        node.setType(int.class);
         fooVal.setValue(node);
         equality.setRightChild(fooVal);
         assertTrue(WhereExpressions.equals(expectedWhere, where));

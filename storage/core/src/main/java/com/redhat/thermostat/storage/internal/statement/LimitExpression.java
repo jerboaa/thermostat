@@ -68,7 +68,7 @@ class LimitExpression implements Printable, Patchable {
             try {
                 PreparedParameter param = params[unfinished.getParameterIndex()];
                 Class<?> typeClass = param.getType();
-                if (typeClass != Integer.class || param.isArrayType()) {
+                if (typeClass != int.class) {
                     String msg = "Invalid parameter type for limit expression. Expected integer!";
                     IllegalArgumentException e = new IllegalArgumentException(msg);
                     throw e;

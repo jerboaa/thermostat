@@ -66,7 +66,6 @@ public class SortMemberTest {
     public void testPatchWithString() {
         PreparedParameter p = new PreparedParameter();
         p.setType(String.class);
-        p.setArrayType(false);
         p.setValue("foo");
         PatchedSortMemberExpression expn = null;
         try {
@@ -83,8 +82,7 @@ public class SortMemberTest {
     @Test
     public void rejectPatchWithStringList() {
         PreparedParameter p = new PreparedParameter();
-        p.setType(String.class);
-        p.setArrayType(true);
+        p.setType(String[].class);
         p.setValue(new String[] { "foo" });
         try {
             member.patch(new PreparedParameter[] { p });
@@ -98,8 +96,7 @@ public class SortMemberTest {
     @Test
     public void rejectPatchWithNumber() {
         PreparedParameter p = new PreparedParameter();
-        p.setType(Integer.class);
-        p.setArrayType(false);
+        p.setType(int.class);
         p.setValue(1);
         try {
             member.patch(new PreparedParameter[] { p });

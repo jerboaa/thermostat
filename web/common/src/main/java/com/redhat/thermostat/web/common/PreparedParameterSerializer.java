@@ -65,47 +65,56 @@ public class PreparedParameterSerializer implements JsonDeserializer<PreparedPar
 
     private static final Logger logger = LoggingUtils.getLogger(PreparedParameterSerializer.class);
     private static final String PROP_TYPE = "type";
-    private static final String PROP_IS_ARRAY_TYPE = "isArray";
     private static final String PROP_VALUE = "value";
-    private static final Set<Class<?>> WRAPPER_CLASSES;
-    // maps wrapper classes to primitives:
-    //    Integer.class => int.class , Double.class => double.class, etc.
-    private static final Map<Class<?>, Class<?>> TO_PRIMITIVE_ARRAY_MAP;
+    private static final Set<Class<?>> VALID_CLASSES;
+    private static final Set<Class<?>> PRIMITIVES_NOT_ALLOWING_NULL_VAL;
+    // maps type names to classes:
+    //    "int" => int.class , "double" => double.class, "[I" => int[].class
+    //    and so on.
+    private static final Map<String, Class<?>> CLASSES_LOOKUP_TABLE;
     
     static {
-        WRAPPER_CLASSES = new HashSet<>();
-        TO_PRIMITIVE_ARRAY_MAP = new HashMap<>();
-        WRAPPER_CLASSES.add(Integer.class);
-        TO_PRIMITIVE_ARRAY_MAP.put(Integer.class, int.class);
-        WRAPPER_CLASSES.add(Long.class);
-        TO_PRIMITIVE_ARRAY_MAP.put(Long.class, long.class);
-        WRAPPER_CLASSES.add(Boolean.class);
-        TO_PRIMITIVE_ARRAY_MAP.put(Boolean.class, boolean.class);
-        WRAPPER_CLASSES.add(Double.class);
-        TO_PRIMITIVE_ARRAY_MAP.put(Double.class, double.class);
-        
+        VALID_CLASSES = new HashSet<>();
+        CLASSES_LOOKUP_TABLE = new HashMap<>();
+        CLASSES_LOOKUP_TABLE.put(int.class.getName(), int.class);
+        CLASSES_LOOKUP_TABLE.put(long.class.getName(), long.class);
+        CLASSES_LOOKUP_TABLE.put(boolean.class.getName(), boolean.class);
+        CLASSES_LOOKUP_TABLE.put(double.class.getName(), double.class);
+        CLASSES_LOOKUP_TABLE.put(String.class.getName(), String.class);
+        CLASSES_LOOKUP_TABLE.put(int[].class.getName(), int[].class);
+        CLASSES_LOOKUP_TABLE.put(long[].class.getName(), long[].class);
+        CLASSES_LOOKUP_TABLE.put(boolean[].class.getName(), boolean[].class);
+        CLASSES_LOOKUP_TABLE.put(double[].class.getName(), double[].class);
+        CLASSES_LOOKUP_TABLE.put(String[].class.getName(), String[].class);
+        VALID_CLASSES.addAll(CLASSES_LOOKUP_TABLE.values());
+        PRIMITIVES_NOT_ALLOWING_NULL_VAL = new HashSet<>();
+        PRIMITIVES_NOT_ALLOWING_NULL_VAL.add(int.class);
+        PRIMITIVES_NOT_ALLOWING_NULL_VAL.add(long.class);
+        PRIMITIVES_NOT_ALLOWING_NULL_VAL.add(boolean.class);
+        PRIMITIVES_NOT_ALLOWING_NULL_VAL.add(double.class);
     }
     
     @Override
     public JsonElement serialize(PreparedParameter param, Type type,
             JsonSerializationContext ctxt) {
         JsonObject result = new JsonObject();
-        JsonElement valueElem = serializeValue(ctxt, param.getValue(), param.getType(), param.isArrayType());
+        JsonElement valueElem = serializeValue(ctxt, param.getValue(), param.getType());
         result.add(PROP_VALUE, valueElem);
         JsonPrimitive typeElem = new JsonPrimitive(param.getType().getName());
         result.add(PROP_TYPE, typeElem);
-        JsonPrimitive arrayType = new JsonPrimitive(param.isArrayType());
-        result.add(PROP_IS_ARRAY_TYPE, arrayType);
         return result;
     }
 
-    private JsonElement serializeValue(JsonSerializationContext ctxt, Object value, Class<?> compType, boolean isArray) {
+    private JsonElement serializeValue(JsonSerializationContext ctxt, Object value, Class<?> type) {
         JsonElement element;
-        if (isArray) {
-                Class<?> arrayType = Array.newInstance(compType, 0).getClass();
-                element = ctxt.serialize(value, arrayType);
+        // Special case pojo list types: the value class is of array type for
+        // them, but the type is the component type.
+        if (value != null && value.getClass().isArray() && !type.isArray()) {
+            assert(Pojo.class.isAssignableFrom(type));
+            Class<?> arrayType = Array.newInstance(type, 0).getClass();
+            element = ctxt.serialize(value, arrayType);
         } else {
-            element = ctxt.serialize(value, compType);
+            element = ctxt.serialize(value, type);
         }
         return element;
     }
@@ -120,53 +129,60 @@ public class PreparedParameterSerializer implements JsonDeserializer<PreparedPar
         Class<?> typeVal = deserializeTypeVal(className);
         validateSaneClassName(typeVal);
         JsonElement valueElement = jsonElem.getAsJsonObject().get(PROP_VALUE);
-        JsonElement isArrayElement = jsonElem.getAsJsonObject().get(PROP_IS_ARRAY_TYPE);
-        boolean isArray = isArrayElement.getAsBoolean();
-        Object value = deserializeValue(ctxt, valueElement, typeVal, isArray);
+        Object value = deserializeValue(ctxt, valueElement, typeVal);
         PreparedParameter param = new PreparedParameter();
         param.setType(typeVal);
         param.setValue(value);
-        param.setArrayType(isArray);
         return param;
     }
 
     private Class<?> deserializeTypeVal(String className) {
         Class<?> typeVal = null;
-        try {
-            typeVal = Class.forName(className);
-        } catch (ClassNotFoundException e) {
-            logger.log(Level.WARNING, "Failed to resolve class type for '"
-                    + className + "'.");
+        if (CLASSES_LOOKUP_TABLE.containsKey(className)) {
+            typeVal = CLASSES_LOOKUP_TABLE.get(className);
+        } else {
+            try {
+                // We need this for Pojo + Pojo list type params. For pojo
+                // lists the name we get passed is the component type of the
+                // array.
+                typeVal = Class.forName(className);
+            } catch (ClassNotFoundException e) {
+                logger.log(Level.WARNING, "Failed to resolve class type for '"
+                        + className + "'.");
+            }
         }
-        ;
         return typeVal;
     }
 
     private Object deserializeValue(JsonDeserializationContext ctxt,
-            JsonElement valueElement, Class<?> valType, boolean isArray) {
-        if (!isArray) {
-            // By telling GSON the type, we get the correctly casted
-            // value back.
-            return ctxt.deserialize(valueElement, valType);
-        } else {
+            JsonElement valueElement, Class<?> valType) {
+        // special case for Pojo/Pojo list types. In that case, the valType
+        // is the component type for arrays. In order to distinguish pojo
+        // lists from pojos, we use JSON's array info about the value element.
+        if (valueElement != null && valueElement.isJsonArray() && !valType.isArray()) {
+            assert(Pojo.class.isAssignableFrom(valType));
             Class<?> arrayType = Array.newInstance(valType, 0).getClass();
-            Object array;
-            // Make sure we get primitive type arrays if this is an array type
-            // of one of the wrapped primitives.
-            if (WRAPPER_CLASSES.contains(valType)) {
-                Class<?> primType = Array.newInstance(TO_PRIMITIVE_ARRAY_MAP.get(valType), 0).getClass();
-                array = ctxt.deserialize(valueElement, primType);
-            } else {
-                array = ctxt.deserialize(valueElement, arrayType);
-            }
-            return array;
+            return ctxt.deserialize(valueElement, arrayType);
+        } else {
+            Object value = ctxt.deserialize(valueElement, valType);
+            validatePrimitivesForNull(value, valType);
+            return value;
         }
     }
 
-    // Allow wrapper classes, String + Pojo types, refuse everything else
+    private void validatePrimitivesForNull(Object value, Class<?> valType) {
+        if (PRIMITIVES_NOT_ALLOWING_NULL_VAL.contains(valType) && value == null) {
+            // illegal value for primitive type. according to JLS spec they all
+            // have default values and are never null.
+            throw new IllegalStateException( valType + " primitive" +
+                                            " does not accept a null value!");
+        }
+    }
+
+    // Allow valid classes + Pojo types, refuse everything else
     private void validateSaneClassName(Class<?> clazz) {
-        if (WRAPPER_CLASSES.contains(clazz) ||
-                String.class == clazz ||
+        // isAssignableFrom throws NPE if clazz is null.
+        if (VALID_CLASSES.contains(clazz) ||
                 Pojo.class.isAssignableFrom(clazz)) {
             return;
         }

@@ -54,9 +54,6 @@ class UnfinishedValueNode extends AbstractUnfinished {
     private boolean isLHS;
     // Specifies the expected (component) type of this free parameter.
     private Class<?> type;
-    // Specifies if the free parameter is an array type. If so, the
-    // type instance variable represents the component type.
-    private boolean isArrayType;
 
     Class<?> getType() {
         return type;
@@ -83,14 +80,6 @@ class UnfinishedValueNode extends AbstractUnfinished {
     public void setParameterIndex(int parameterIndex) {
         this.parameterIndex = parameterIndex;
     }
-    
-    public boolean isArrayType() {
-        return isArrayType;
-    }
-
-    public void setArrayType(boolean isArrayType) {
-        this.isArrayType = isArrayType;
-    }
 
     @Override
     public String toString() {
@@ -109,13 +98,12 @@ class UnfinishedValueNode extends AbstractUnfinished {
         }
         UnfinishedValueNode o = (UnfinishedValueNode)other;
         return basics && Objects.equals(isLHS(), o.isLHS) &&
-                Objects.equals(getType(), o.getType()) &&
-                        isArrayType() == o.isArrayType();
+                Objects.equals(getType(), o.getType());
     }
     
     @Override
     public int hashCode() {
-        return Objects.hash(getParameterIndex(), isLHS(), getType(), isArrayType());
+        return Objects.hash(getParameterIndex(), isLHS(), getType());
     }
 
 }

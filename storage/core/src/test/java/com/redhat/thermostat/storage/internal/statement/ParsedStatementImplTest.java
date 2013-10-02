@@ -119,7 +119,7 @@ public class ParsedStatementImplTest {
         TerminalNode d = new TerminalNode(rightEqual);
         UnfinishedValueNode dPatch = new UnfinishedValueNode();
         dPatch.setParameterIndex(1);
-        dPatch.setType(Integer.class);
+        dPatch.setType(int.class);
         d.setValue(dPatch);
         rightEqual.setRightChild(d);
         suffixExpn.setWhereExpn(expn);
@@ -176,7 +176,7 @@ public class ParsedStatementImplTest {
         TerminalNode b = new TerminalNode(and);
         UnfinishedValueNode bPatch = new UnfinishedValueNode();
         bPatch.setParameterIndex(0);
-        bPatch.setType(Boolean.class);
+        bPatch.setType(boolean.class);
         b.setValue(bPatch);
         and.setLeftChild(a);
         and.setRightChild(b);
@@ -244,7 +244,7 @@ public class ParsedStatementImplTest {
         TerminalNode b = new TerminalNode(and);
         UnfinishedValueNode bPatch = new UnfinishedValueNode();
         bPatch.setParameterIndex(1);
-        bPatch.setType(Boolean.class);
+        bPatch.setType(boolean.class);
         b.setValue(bPatch);
         and.setLeftChild(a);
         and.setRightChild(b);
@@ -341,7 +341,7 @@ public class ParsedStatementImplTest {
         UnfinishedValueNode timeStampUnfinished = new UnfinishedValueNode();
         timeStampUnfinished.setLHS(false);
         timeStampUnfinished.setParameterIndex(1);
-        timeStampUnfinished.setType(Long.class);
+        timeStampUnfinished.setType(long.class);
         timeStampVal.setValue(timeStampUnfinished);
         fooTimeStamp.setValue(timeStampVal);
         setList.addValue(fooTimeStamp);
@@ -396,8 +396,7 @@ public class ParsedStatementImplTest {
         TerminalNode somePropertyVal = new TerminalNode(null);
         UnfinishedValueNode unfinishedPojoList = new UnfinishedValueNode();
         unfinishedPojoList.setLHS(false);
-        unfinishedPojoList.setType(Pojo.class);
-        unfinishedPojoList.setArrayType(true);
+        unfinishedPojoList.setType(Pojo[].class);
         unfinishedPojoList.setParameterIndex(0);
         somePropertyVal.setValue(unfinishedPojoList);
         SetListValue value = new SetListValue();
@@ -476,7 +475,7 @@ public class ParsedStatementImplTest {
         UnfinishedValueNode timeStampUnfinished = new UnfinishedValueNode();
         timeStampUnfinished.setLHS(false);
         timeStampUnfinished.setParameterIndex(1);
-        timeStampUnfinished.setType(Long.class);
+        timeStampUnfinished.setType(long.class);
         timeStampVal.setValue(timeStampUnfinished);
         fooTimeStamp.setValue(timeStampVal);
         setList.addValue(fooTimeStamp);
@@ -491,7 +490,7 @@ public class ParsedStatementImplTest {
         TerminalNode fooPatch = new TerminalNode(equals);
         UnfinishedValueNode patch2 = new UnfinishedValueNode();
         patch2.setLHS(false);
-        patch2.setType(Integer.class);
+        patch2.setType(int.class);
         patch2.setParameterIndex(2);
         fooPatch.setValue(patch2);
         TerminalNode foo = new TerminalNode(equals);
@@ -558,7 +557,7 @@ public class ParsedStatementImplTest {
         TerminalNode fooPatch = new TerminalNode(equals);
         UnfinishedValueNode patch2 = new UnfinishedValueNode();
         patch2.setLHS(false);
-        patch2.setType(Integer.class);
+        patch2.setType(int.class);
         patch2.setParameterIndex(1);
         fooPatch.setValue(patch2);
         TerminalNode foo = new TerminalNode(equals);
