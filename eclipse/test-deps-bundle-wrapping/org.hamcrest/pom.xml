@@ -43,7 +43,7 @@
     <parent>
       <groupId>com.redhat.thermostat.eclipse.parent</groupId>
       <artifactId>thermostat-eclipse-test-deps</artifactId>
-      <version>0.14.0-SNAPSHOT</version>
+      <version>0.16.0-SNAPSHOT</version>
     </parent>
 
     <groupId>org.hamcrest</groupId>

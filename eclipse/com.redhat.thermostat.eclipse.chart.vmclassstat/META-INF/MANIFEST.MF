@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Thermostat VM Classes View
 Bundle-SymbolicName: com.redhat.thermostat.eclipse.chart.vmclassstat;singleton:=true
-Bundle-Version: 0.14.0.qualifier
+Bundle-Version: 0.16.0.qualifier
 Bundle-Activator: com.redhat.thermostat.eclipse.chart.vmclassstat.Activator
 Bundle-Vendor: Red Hat Inc.
 Require-Bundle: org.eclipse.ui,

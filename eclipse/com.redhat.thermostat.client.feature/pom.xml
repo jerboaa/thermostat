@@ -5,11 +5,11 @@
   <parent>
     <artifactId>thermostat-eclipse-parent</artifactId>
     <groupId>com.redhat.thermostat.eclipse.parent</groupId>
-    <version>0.14.0-SNAPSHOT</version>
+    <version>0.16.0-SNAPSHOT</version>
   </parent>
   <groupId>com.redhat.thermostat.eclipse.parent</groupId>
   <artifactId>com.redhat.thermostat.client.feature</artifactId>
-  <version>0.14.0-SNAPSHOT</version>
+  <version>0.16.0-SNAPSHOT</version>
 
   <name>Thermostat Client Feature</name>
 
@@ -21,62 +21,62 @@
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-client-core</artifactId>
-      <version>0.14.0-SNAPSHOT</version>
+      <version>0.16.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-host-overview-client-core</artifactId>
-      <version>0.14.0-SNAPSHOT</version>
+      <version>0.16.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-host-cpu-client-core</artifactId>
-      <version>0.14.0-SNAPSHOT</version>
+      <version>0.16.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-host-memory-client-core</artifactId>
-      <version>0.14.0-SNAPSHOT</version>
+      <version>0.16.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-vm-cpu-client-core</artifactId>
-      <version>0.14.0-SNAPSHOT</version>
+      <version>0.16.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-vm-memory-client-core</artifactId>
-      <version>0.14.0-SNAPSHOT</version>
+      <version>0.16.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-vm-gc-client-core</artifactId>
-      <version>0.14.0-SNAPSHOT</version>
+      <version>0.16.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-vm-classstat-client-core</artifactId>
-      <version>0.14.0-SNAPSHOT</version>
+      <version>0.16.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-web-client</artifactId>
-      <version>0.14.0-SNAPSHOT</version>
+      <version>0.16.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-web-common</artifactId>
-      <version>0.14.0-SNAPSHOT</version>
+      <version>0.16.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-storage-mongodb</artifactId>
-      <version>0.14.0-SNAPSHOT</version>
+      <version>0.16.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-storage-core</artifactId>
-      <version>0.14.0-SNAPSHOT</version>
+      <version>0.16.0-SNAPSHOT</version>
     </dependency>
   </dependencies>
 
