@@ -124,7 +124,7 @@ import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
  * 
  * NOTE: Comparison expressions have equal precedence.
  */
-class StatementDescriptorParser<T extends Pojo> {
+class BasicDescriptorParser<T extends Pojo> {
 
     private static final String TOKEN_DELIMS = " \t\r\n\f";
     private static final short IDX_QUERY = 0;
@@ -157,7 +157,7 @@ class StatementDescriptorParser<T extends Pojo> {
     private SuffixExpression tree;
     private SetList setList;
     
-    StatementDescriptorParser(BackingStorage storage, StatementDescriptor<T> desc) {
+    BasicDescriptorParser(BackingStorage storage, StatementDescriptor<T> desc) {
         this.tokens = getTokens(desc.getDescriptor());
         this.currTokenIndex = 0;
         this.placeHolderCount = 0;

@@ -49,7 +49,7 @@ import com.redhat.thermostat.storage.internal.statement.WhereExpression;
 /**
  * Helper class for comparing where expression trees.
  *
- * @see StatementDescriptorParserTest
+ * @see BasicDescriptorParserTest
  */
 public class WhereExpressions {
 

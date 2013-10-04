@@ -65,7 +65,7 @@ final public class PreparedStatementImpl<T extends Pojo> implements PreparedStat
     
     public PreparedStatementImpl(BackingStorage storage, StatementDescriptor<T> desc) throws DescriptorParsingException {
         this.desc = desc;
-        StatementDescriptorParser<T> parser = new StatementDescriptorParser<>(storage, desc);
+        BasicDescriptorParser<T> parser = new BasicDescriptorParser<>(storage, desc);
         this.parsedStatement = (ParsedStatementImpl<T>)parser.parse();
         int numParams = parsedStatement.getNumParams();
         params = new PreparedParameters(numParams);

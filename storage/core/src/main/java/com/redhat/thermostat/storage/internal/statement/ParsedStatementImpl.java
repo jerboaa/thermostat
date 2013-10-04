@@ -49,7 +49,7 @@ import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
 
 /**
- * Result object as returned by {@link StatementDescriptorParser#parse()}.
+ * Result object as returned by {@link BasicDescriptorParser#parse()}.
  * An instance of this plus a list of {@link PreparedParameter} should
  * be sufficient to patch up a prepared statement with its real values.
  *

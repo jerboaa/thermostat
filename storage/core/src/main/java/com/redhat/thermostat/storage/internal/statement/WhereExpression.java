@@ -44,7 +44,7 @@ import com.redhat.thermostat.storage.core.PreparedParameter;
  *
  * @see Node
  * @see SuffixExpression
- * @see StatementDescriptorParser
+ * @see BasicDescriptorParser
  */
 class WhereExpression implements Printable, Patchable {
 
