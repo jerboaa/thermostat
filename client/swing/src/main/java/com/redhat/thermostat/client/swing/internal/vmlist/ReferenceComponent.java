@@ -67,11 +67,14 @@ public class ReferenceComponent extends JPanel implements AccordionComponent, Re
     private Icon selectedIcon;
     private Icon icon;
     
+    private ReferenceComponentPainter painter;
+    
     private Ref vm;
     
     public ReferenceComponent(Ref vm) {
         
         this.vm = vm;
+        this.painter = new ReferenceComponentPainter();
         
         setLayout(new BorderLayout());
 
@@ -120,26 +123,7 @@ public class ReferenceComponent extends JPanel implements AccordionComponent, Re
     
     @Override
     protected void paintComponent(Graphics g) {
-        
-        super.paintComponent(g);
-        
-        UIDefaults palette = UIDefaults.getInstance();
-
-        GraphicsUtils utils = GraphicsUtils.getInstance();
-        Graphics2D graphics = utils.createAAGraphics(g);
-        if (isSelected()) {
-
-            Color start = utils.deriveWithAlpha(palette.getSelectedComponentBGColor(), 0.6f);
-            Color stop = utils.deriveWithAlpha(palette.getSelectedComponentBGColor(), 0.80f);
-            utils.setGradientPaint(graphics, 0, getHeight(), start, stop);
-        
-        } else {
-            graphics.setColor(getBackground());
-        }
-
-        Rectangle bounds = graphics.getClipBounds();
-        graphics.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);            
-        graphics.dispose();
+        painter.paint((Graphics2D) g, this, getWidth(), getHeight());
     }
     
     public void setIcon(Icon icon) {

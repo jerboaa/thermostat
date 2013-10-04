@@ -43,11 +43,11 @@ import java.util.logging.Logger;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.plaf.nimbus.NimbusLookAndFeel;
 
+import com.redhat.thermostat.client.ui.Palette;
 import com.redhat.thermostat.internal.utils.laf.gtk.GTKThemeUtils;
 
 public class ThemeManager {
@@ -144,12 +144,22 @@ public class ThemeManager {
             utils.setNimbusColours();
         }
         
+        // TODO: document those or place them into a proper UI class
+        UIManager.put("thermostat-fg-color", Palette.DROID_BLACK);
+        UIManager.put("thermostat-selection-fg-color", Palette.THERMOSTAT_BLU);        
+        UIManager.put("thermostat-selection-bg-color", Palette.LIGHT_GRAY);
         if (nimbusBased) {
             // very internal and very secret for now, should be moved
             // to a proper location but first needs to be appropriately tested
             // on multiple different look and feel
             Color color = UIManager.getDefaults().getColor("nimbusSelectionBackground");
             UIManager.put("thermostat-selection-bg-color", color);
+            
+            color = UIManager.getDefaults().getColor("textHighlightText");
+            UIManager.put("thermostat-selection-fg-color", color);
+            
+            color = UIManager.getDefaults().getColor("text");
+            UIManager.put("thermostat-fg-color", color);            
         }
     }
 }

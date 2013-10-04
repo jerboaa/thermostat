@@ -63,10 +63,7 @@ public class ReferenceComponentPainter implements TitledPanePainter {
         GraphicsUtils utils = GraphicsUtils.getInstance();
         Graphics2D graphics = utils.createAAGraphics(g);
         if (component.isSelected()) {
-
-            Color start = utils.deriveWithAlpha(palette.getSelectedComponentBGColor(), 0.6f);
-            Color stop = utils.deriveWithAlpha(palette.getSelectedComponentBGColor(), 0.80f);
-            utils.setGradientPaint(graphics, 0, component.getUiComponent().getHeight(), start, stop);
+            graphics.setColor(palette.getSelectedComponentBGColor());
         } else {
             graphics.setColor(component.getUiComponent().getBackground());
         }

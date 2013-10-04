@@ -121,8 +121,20 @@ public class GTKThemeUtils {
         
         initialized = true;
         
-        // if we at least have the bg colour we can try the rest,
-        // otherwise, just skip everything and use nimbus defaults
+        // if we at least have the fg colour we can try the rest,
+        // otherwise, just skip everything and use nimbus defaults        
+        if (hasColor("fg_color")) {
+            int fgColor = getColor("fg_color");
+            Color text = new Color(fgColor);
+            UIManager.put("text", text);
+            if (hasColor("selected_fg_color")) {
+                fgColor = getColor("selected_fg_color");
+                text = new Color(fgColor);
+                UIManager.put("textHighlightText", text);
+            }
+        }
+
+        // same as before, but with bg colours
         if (hasColor("bg_color")) {
             
             // Those numbers are some kind of magic, they represent the
@@ -158,5 +170,6 @@ public class GTKThemeUtils {
                 UIManager.put("Menu.background", nimbusFocus);
             }
         }
+        
     }
 }

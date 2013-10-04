@@ -38,6 +38,8 @@ package com.redhat.thermostat.client.swing.internal.vmlist;
 
 import java.awt.Color;
 
+import javax.swing.UIManager;
+
 import com.redhat.thermostat.client.ui.Palette;
 
 /**
@@ -50,15 +52,18 @@ public class UIDefaults {
     }
     
     public Color getSelectedComponentFGColor() {
-        return Palette.DROID_GRAY.getColor();
+        Color color = (Color) UIManager.get("thermostat-selection-fg-color");
+        return color != null ? color : Palette.LIGHT_GRAY.getColor();        
     }
 
     public Color getComponentFGColor() {
-        return Palette.DROID_BLACK.getColor();
+        Color color = (Color) UIManager.get("thermostat-fg-color");
+        return color != null ? color : Palette.DROID_BLACK.getColor();            
     }
 
     public Color getSelectedComponentBGColor() {
-        return Palette.AZUREUS.getColor();
+        Color color = (Color) UIManager.get("thermostat-selection-bg-color");
+        return color != null ? color : Palette.THERMOSTAT_BLU.getColor();
     }
 
     public int getIconSize() {
