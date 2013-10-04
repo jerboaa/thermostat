@@ -61,12 +61,12 @@ final public class PreparedStatementImpl<T extends Pojo> implements PreparedStat
     private Query<T> query;
     private DataModifyingStatement<T> dmlStatement;
     private final PreparedParameters params;
-    private final ParsedStatementImpl<T> parsedStatement;
+    private final ParsedStatement<T> parsedStatement;
     
     public PreparedStatementImpl(BackingStorage storage, StatementDescriptor<T> desc) throws DescriptorParsingException {
         this.desc = desc;
-        BasicDescriptorParser<T> parser = new BasicDescriptorParser<>(storage, desc);
-        this.parsedStatement = (ParsedStatementImpl<T>)parser.parse();
+        StatementDescriptorParser<T> parser = new SemanticsEnabledDescriptorParser<>(storage, desc);
+        this.parsedStatement = parser.parse();
         int numParams = parsedStatement.getNumParams();
         params = new PreparedParameters(numParams);
         Statement<T> statement = parsedStatement.getRawStatement();

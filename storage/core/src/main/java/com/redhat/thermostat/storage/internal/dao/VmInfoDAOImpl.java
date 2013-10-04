@@ -104,11 +104,8 @@ public class VmInfoDAOImpl extends BaseCountable implements VmInfoDAO {
                         "'" + vmArgumentsKey.getName() + "' = ?s , " +
                         "'" + vmInfoKey.getName() + "' = ?s , " +
                         "'" + vmVersionKey.getName() + "' = ?s , " +
-                        // The following two get persisted as pojo arrays.
-                        // There is no direct key representation for what gets
-                        // persisted.
-                        "'propertiesAsArray' = ?p[ , " +
-                        "'environmentAsArray' = ?p[ , " +
+                        "'" + propertiesKey.getName() + "' = ?p[ , " +
+                        "'" + environmentKey.getName() + "' = ?p[ , " +
                         "'" + librariesKey.getName() + "' = ?s[ , " +
                         "'" + uidKey.getName() + "' = ?l , " +
                         "'" + usernameKey.getName() + "' = ?s";

@@ -37,8 +37,6 @@
 package com.redhat.thermostat.storage.dao;
 
 import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.storage.core.Category;
@@ -47,6 +45,7 @@ import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.VmInfo;
+import com.redhat.thermostat.storage.model.VmInfo.KeyValuePair;
 
 @Service
 public interface VmInfoDAO extends Countable {
@@ -60,9 +59,9 @@ public interface VmInfoDAO extends Countable {
     static final Key<String> vmNameKey = new Key<>("vmName");
     static final Key<String> vmInfoKey = new Key<>("vmInfo");
     static final Key<String> vmVersionKey = new Key<>("vmVersion");
-    static final Key<Map<String, String>> propertiesKey = new Key<>("properties");
-    static final Key<Map<String, String>> environmentKey = new Key<>("environment");
-    static final Key<List<String>> librariesKey = new Key<>("loadedNativeLibraries");
+    static final Key<KeyValuePair[]> propertiesKey = new Key<>("propertiesAsArray");
+    static final Key<KeyValuePair[]> environmentKey = new Key<>("environmentAsArray");
+    static final Key<String[]> librariesKey = new Key<>("loadedNativeLibraries");
     static final Key<Long> startTimeKey = new Key<>("startTimeStamp");
     static final Key<Long> stopTimeKey = new Key<>("stopTimeStamp");
     static final Key<Long> uidKey = new Key<>("uid");

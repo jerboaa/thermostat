@@ -47,7 +47,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.junit.Before;
@@ -67,6 +66,7 @@ import com.redhat.thermostat.storage.dao.DAOException;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.VmInfo;
+import com.redhat.thermostat.storage.model.VmInfo.KeyValuePair;
 
 public class VmInfoDAOTest {
 
@@ -157,9 +157,9 @@ public class VmInfoDAOTest {
         assertTrue(keys.contains(new Key<String>("vmName")));
         assertTrue(keys.contains(new Key<String>("vmInfo")));
         assertTrue(keys.contains(new Key<String>("vmVersion")));
-        assertTrue(keys.contains(new Key<Map<String, String>>("properties")));
-        assertTrue(keys.contains(new Key<Map<String, String>>("environment")));
-        assertTrue(keys.contains(new Key<List<String>>("loadedNativeLibraries")));
+        assertTrue(keys.contains(new Key<KeyValuePair[]>("propertiesAsArray")));
+        assertTrue(keys.contains(new Key<KeyValuePair[]>("environmentAsArray")));
+        assertTrue(keys.contains(new Key<String[]>("loadedNativeLibraries")));
         assertTrue(keys.contains(new Key<Long>("startTimeStamp")));
         assertTrue(keys.contains(new Key<Long>("stopTimeStamp")));
         assertTrue(keys.contains(new Key<Long>("uid")));

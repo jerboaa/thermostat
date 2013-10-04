@@ -45,8 +45,10 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.Test;
 
@@ -103,7 +105,7 @@ public class PreparedStatementImplTest {
     }
     
     @Test
-    public void canDoParsingPatchingAndExecution() throws Exception {
+    public void canDoParsingPatchingAndExecutionQuery() throws Exception {
         String queryString = "QUERY foo WHERE 'a' = ?s";
         @SuppressWarnings("unchecked")
         StatementDescriptor<Pojo> desc = (StatementDescriptor<Pojo>) mock(StatementDescriptor.class);
@@ -135,6 +137,9 @@ public class PreparedStatementImplTest {
         @SuppressWarnings("unchecked")
         Category<FooPojo> mockCategory = (Category<FooPojo>) mock(Category.class);
         when(desc.getCategory()).thenReturn(mockCategory);
+        Set<Key<?>> categoryKeys = new HashSet<>();
+        categoryKeys.add(new Key<>("foo"));
+        when(mockCategory.getKeys()).thenReturn(categoryKeys);
         when(mockCategory.getDataClass()).thenReturn(FooPojo.class);
         when(mockCategory.getName()).thenReturn("foo-table");
         BackingStorage storage = mock(BackingStorage.class);
@@ -164,6 +169,9 @@ public class PreparedStatementImplTest {
         @SuppressWarnings("unchecked")
         Category<FancyFoo> mockCategory = (Category<FancyFoo>) mock(Category.class);
         when(desc.getCategory()).thenReturn(mockCategory);
+        Set<Key<?>> categoryKeys = new HashSet<>();
+        categoryKeys.add(new Key<>("fancyFoo"));
+        when(mockCategory.getKeys()).thenReturn(categoryKeys);
         when(mockCategory.getDataClass()).thenReturn(FancyFoo.class);
         when(mockCategory.getName()).thenReturn("foo-table");
         BackingStorage storage = mock(BackingStorage.class);
@@ -204,6 +212,9 @@ public class PreparedStatementImplTest {
         when(desc.getDescriptor()).thenReturn(addString);
         @SuppressWarnings("unchecked")
         Category<FooPojo> mockCategory = (Category<FooPojo>) mock(Category.class);
+        Set<Key<?>> categoryKeys = new HashSet<>();
+        categoryKeys.add(new Key<>("foo"));
+        when(mockCategory.getKeys()).thenReturn(categoryKeys);
         when(desc.getCategory()).thenReturn(mockCategory);
         when(mockCategory.getDataClass()).thenReturn(FooPojo.class);
         when(mockCategory.getName()).thenReturn("foo-table");
@@ -240,6 +251,9 @@ public class PreparedStatementImplTest {
         when(desc.getDescriptor()).thenReturn(addString);
         @SuppressWarnings("unchecked")
         Category<FooPojo> mockCategory = (Category<FooPojo>) mock(Category.class);
+        Set<Key<?>> categoryKeys = new HashSet<>();
+        categoryKeys.add(new Key<>("foo"));
+        when(mockCategory.getKeys()).thenReturn(categoryKeys);
         when(desc.getCategory()).thenReturn(mockCategory);
         when(mockCategory.getDataClass()).thenReturn(FooPojo.class);
         when(mockCategory.getName()).thenReturn("foo-table");

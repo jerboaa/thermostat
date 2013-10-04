@@ -51,7 +51,6 @@ import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.SortDirection;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Replace;
-import com.redhat.thermostat.storage.core.Statement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.model.Pojo;
@@ -124,7 +123,7 @@ import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
  * 
  * NOTE: Comparison expressions have equal precedence.
  */
-class BasicDescriptorParser<T extends Pojo> {
+class BasicDescriptorParser<T extends Pojo> implements StatementDescriptorParser<T> {
 
     private static final String TOKEN_DELIMS = " \t\r\n\f";
     private static final short IDX_QUERY = 0;
@@ -148,14 +147,14 @@ class BasicDescriptorParser<T extends Pojo> {
     private static final char PARAM_PLACEHOLDER = '?';
     
     private final String[] tokens;
-    private final StatementDescriptor<T> desc;
+    protected final StatementDescriptor<T> desc;
     private final BackingStorage storage;
     private int currTokenIndex;
     private int placeHolderCount;
     // the parsed statement
     private ParsedStatementImpl<T> parsedStatement;
-    private SuffixExpression tree;
-    private SetList setList;
+    protected SuffixExpression tree;
+    protected SetList setList;
     
     BasicDescriptorParser(BackingStorage storage, StatementDescriptor<T> desc) {
         this.tokens = getTokens(desc.getDescriptor());
@@ -189,57 +188,7 @@ class BasicDescriptorParser<T extends Pojo> {
         parsedStatement.setNumFreeParams(placeHolderCount);
         parsedStatement.setSetList(setList);
         parsedStatement.setSuffixExpression(tree);
-        doSemanticAnalysis();
         return parsedStatement;
-    }
-
-    private void doSemanticAnalysis() throws DescriptorParsingException {
-        // TODO:
-        // - Check that ADD/REPLACE specifies all keys judging by the Pojo
-        //   model class. Not sure if good idea though, as this would likely
-        //   introduce dep on beanutils.
-        Statement<T> stmt = parsedStatement.getRawStatement();
-        if (stmt == null) {
-            // should never be null
-            throw new NullPointerException();
-        }
-        if (stmt instanceof Add && tree.getWhereExpn() != null) {
-            String msg = "WHERE clause not allowed for ADD";
-            throw new DescriptorParsingException(msg);
-        }
-        if (stmt instanceof Replace && tree.getWhereExpn() == null) {
-            String msg = "WHERE clause required for REPLACE";
-            throw new DescriptorParsingException(msg);
-        }
-        if (stmt instanceof Update) {
-            if (tree.getWhereExpn() == null) {
-                // WHERE required for UPDATE
-                String msg = "WHERE clause required for UPDATE";
-                throw new DescriptorParsingException(msg);
-            }
-            if (setList.getValues().size() == 0) {
-                // SET required for UPDATE
-                String msg = "SET list required for UPDATE";
-                throw new DescriptorParsingException(msg);
-            }
-        }
-        if (stmt instanceof Remove && setList.getValues().size() > 0) {
-            String msg = "SET not allowed for REMOVE";
-            throw new DescriptorParsingException(msg);
-        }
-        if (stmt instanceof Query) {
-            if (setList.getValues().size() > 0) {
-                // Must not have SET for QUERYs
-                String msg = "SET not allowed for QUERY/QUERY-COUNT";
-                throw new DescriptorParsingException(msg);
-            }
-        } else {
-            // only queries can have sort/limit expressions
-            if (this.tree.getLimitExpn() != null || this.tree.getSortExpn() != null) {
-                String msg = "LIMIT/SORT only allowed for QUERY/QUERY-COUNT";
-                throw new DescriptorParsingException(msg);
-            }
-        }
     }
 
     /*
