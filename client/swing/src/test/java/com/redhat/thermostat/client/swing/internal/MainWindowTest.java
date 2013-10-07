@@ -211,17 +211,17 @@ public class MainWindowTest {
         frameFixture.requireNotVisible();
     }
 
-//    @Category(GUITest.class)
-//    @Test
-//    public void verifyThatClientPreferencesMenuItemTriggersEvent() {
-//        frameFixture.show();
-//        JMenuItemFixture menuItem = frameFixture.menuItem("showClientConfig");
-//        menuItem.click();
-//        frameFixture.close();
-//        frameFixture.requireNotVisible();
-//
-//        verify(l).actionPerformed(new ActionEvent<MainView.Action>(window, MainView.Action.SHOW_CLIENT_CONFIG));
-//    }
+    @Category(GUITest.class)
+    @Test
+    public void verifyThatClientPreferencesMenuItemTriggersEvent() {
+        frameFixture.show();
+        JMenuItemFixture menuItem = frameFixture.menuItem("showClientConfig");
+        menuItem.click();
+        frameFixture.close();
+        frameFixture.requireNotVisible();
+
+        verify(l).actionPerformed(new ActionEvent<MainView.Action>(window, MainView.Action.SHOW_CLIENT_CONFIG));
+    }
 
     @Category(GUITest.class)
     @Test
@@ -236,8 +236,9 @@ public class MainWindowTest {
     }
 
 
-    @Category(GUITest.class)
-    @Test
+    // FIXME: re-add when history mode is back
+    //@Category(GUITest.class)
+    //@Test
     public void verifyThatHistorySwitchTriggersEvent() {
         frameFixture.show();
         JMenuItemFixture menuItem = frameFixture.menuItem("historyModeSwitch");

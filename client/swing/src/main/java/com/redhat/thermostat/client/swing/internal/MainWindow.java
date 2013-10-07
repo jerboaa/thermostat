@@ -76,7 +76,6 @@ import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.OverlayPanel;
 import com.redhat.thermostat.client.swing.components.ThermostatPopupMenu;
 import com.redhat.thermostat.client.swing.internal.accordion.Accordion;
-import com.redhat.thermostat.client.swing.internal.accordion.AccordionModel;
 import com.redhat.thermostat.client.swing.internal.components.ThermostatGlassPane;
 import com.redhat.thermostat.client.swing.internal.components.ThermostatGlassPaneLayout;
 import com.redhat.thermostat.client.swing.internal.progress.AggregateNotificationPanel;
@@ -242,16 +241,18 @@ public class MainWindow extends JFrame implements MainView {
         editMenu.add(configureClientMenuItem);
 
         editMenu.addSeparator();
-        JMenuItem historyModeMenuItem = new JCheckBoxMenuItem(translator.localize(LocaleResources.MENU_EDIT_ENABLE_HISTORY_MODE).getContents());
-        historyModeMenuItem.setName("historyModeSwitch");
-        historyModeMenuItem.setSelected(false);
-        historyModeMenuItem.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                fireViewAction(Action.SWITCH_HISTORY_MODE);
-            }
-        });
-        editMenu.add(historyModeMenuItem);
+        
+        // FIXME: re-add this when ready
+//        JMenuItem historyModeMenuItem = new JCheckBoxMenuItem(translator.localize(LocaleResources.MENU_EDIT_ENABLE_HISTORY_MODE).getContents());
+//        historyModeMenuItem.setName("historyModeSwitch");
+//        historyModeMenuItem.setSelected(false);
+//        historyModeMenuItem.addActionListener(new java.awt.event.ActionListener() {
+//            @Override
+//            public void actionPerformed(java.awt.event.ActionEvent e) {
+//                fireViewAction(Action.SWITCH_HISTORY_MODE);
+//            }
+//        });
+//        editMenu.add(historyModeMenuItem);
 
         JMenu viewMenu = new JMenu(translator.localize(LocaleResources.MENU_VIEW).getContents());
         mainMenuBar.add(viewMenu);
