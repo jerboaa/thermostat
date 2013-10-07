@@ -38,7 +38,7 @@ package com.redhat.thermostat.client.filter.vm.swing;
 
 import java.io.IOException;
 
-import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.client.filter.vm.core.LivingVMFilter;
 import com.redhat.thermostat.client.swing.IconResource;
 import com.redhat.thermostat.client.ui.Decorator;

@@ -39,6 +39,7 @@ package com.redhat.thermostat.client.core;
 import java.util.Objects;
 
 import com.redhat.thermostat.storage.core.Ref;
+import com.redhat.thermostat.common.Filter;
 
 /**
  * A {@link Filter} that checks if the name of a {@link Ref} contains

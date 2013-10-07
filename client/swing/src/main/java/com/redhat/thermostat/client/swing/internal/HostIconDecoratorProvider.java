@@ -38,7 +38,7 @@ package com.redhat.thermostat.client.swing.internal;
 
 import java.io.IOException;
 
-import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.client.core.NameMatchingRefFilter;
 import com.redhat.thermostat.client.swing.IconResource;
 import com.redhat.thermostat.client.ui.Decorator;

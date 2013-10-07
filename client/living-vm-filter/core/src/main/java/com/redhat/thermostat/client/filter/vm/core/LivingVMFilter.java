@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.client.filter.vm.core;
 
-import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;

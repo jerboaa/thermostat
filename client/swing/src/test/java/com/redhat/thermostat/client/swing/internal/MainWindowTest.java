@@ -75,7 +75,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.client.swing.components.SearchField;
 import com.redhat.thermostat.client.ui.ContextAction;
 import com.redhat.thermostat.client.ui.Decorator;

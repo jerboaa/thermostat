@@ -37,7 +37,7 @@
 package com.redhat.thermostat.client.ui;
 
 import com.redhat.thermostat.annotations.ExtensionPoint;
-import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.core.HostRef;
 

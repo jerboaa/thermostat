@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.core;
+package com.redhat.thermostat.common;
 
 /**
  * A {@link Filter} decides if some information matches what this

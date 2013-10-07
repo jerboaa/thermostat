@@ -56,7 +56,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.osgi.framework.BundleException;
 
-import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.client.core.views.AgentInformationViewProvider;
 import com.redhat.thermostat.client.core.views.ClientConfigViewProvider;

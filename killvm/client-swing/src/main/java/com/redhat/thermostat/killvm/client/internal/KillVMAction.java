@@ -40,7 +40,7 @@ import java.net.InetSocketAddress;
 import java.util.Objects;
 
 import com.redhat.thermostat.client.command.RequestQueue;
-import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.client.ui.VMContextAction;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;

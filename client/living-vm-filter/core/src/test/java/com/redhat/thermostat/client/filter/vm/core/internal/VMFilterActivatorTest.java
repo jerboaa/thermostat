@@ -43,7 +43,7 @@ import org.junit.Test;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.client.filter.vm.core.LivingVMFilter;
 import com.redhat.thermostat.client.filter.vm.core.internal.VMFilterActivator;
 import com.redhat.thermostat.client.ui.MenuAction;

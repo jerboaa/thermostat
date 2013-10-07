@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.client.ui;
 
-import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.storage.core.Ref;
 
 /**

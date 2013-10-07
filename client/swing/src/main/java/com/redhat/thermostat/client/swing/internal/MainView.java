@@ -49,9 +49,7 @@ import com.redhat.thermostat.client.ui.MenuAction;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.shared.locale.LocalizedString;
-import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Ref;
-import com.redhat.thermostat.storage.core.VmRef;
 
 public interface MainView {
 
