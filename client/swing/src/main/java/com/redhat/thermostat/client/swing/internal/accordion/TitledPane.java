@@ -68,7 +68,10 @@ import com.redhat.thermostat.client.ui.Palette;
  */
 @SuppressWarnings("serial")
 public class TitledPane extends JPanel implements AccordionComponent {
-
+    
+    // TODO: move in UIDefault or something class
+    protected static final int EXPANDER_ICON_SIZE = 12;
+    
     public static final Color SELECTED_FG = Palette.EARL_GRAY.getColor();
     public static final Color UNSELECTED_FG = Palette.DARK_GRAY.getColor();
     
@@ -161,12 +164,11 @@ public class TitledPane extends JPanel implements AccordionComponent {
 
         expanded = false;
         
-        // TODO: move in UIDefault or something class
-        int iconSize = 24;
+        int iconSize = EXPANDER_ICON_SIZE;
         
         emptyIcon = new EmptyIcon(iconSize, iconSize);
 
-        // TODO: move in UIDefault too, especially the constants
+        // TODO: move in UIDefault, especially the constants
         expandedIcon = new FontAwesomeIcon('\uf107', iconSize, unselectedColor);
         expandedSelectedIcon = new FontAwesomeIcon('\uf107', iconSize, selectedColor);
         
@@ -174,7 +176,6 @@ public class TitledPane extends JPanel implements AccordionComponent {
         collapsedIconSelectedIcon = new FontAwesomeIcon('\uf105', iconSize, selectedColor);
 
         iconLabel = new JLabel(emptyIcon);
-        iconLabel.setText(" ");
         iconLabel.setHorizontalTextPosition(SwingConstants.LEFT);
         
         iconLabel.setName(title + "_ExpanderIcon");
@@ -184,7 +185,6 @@ public class TitledPane extends JPanel implements AccordionComponent {
                 setExpanded(!isExpanded());
             }
         });
-
         titlePane.add(iconLabel, BorderLayout.WEST);
         titlePane.add(this.titleComponent.getUiComponent(), BorderLayout.CENTER);
         

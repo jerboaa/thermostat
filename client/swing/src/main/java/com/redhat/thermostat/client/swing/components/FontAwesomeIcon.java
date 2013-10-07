@@ -40,6 +40,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
 import java.awt.FontFormatException;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -119,7 +120,7 @@ public class FontAwesomeIcon extends Icon {
         if (buffer == null) {
             buffer = new BufferedImage(getIconWidth(), getIconHeight(),
                                        BufferedImage.TYPE_INT_ARGB);
-            
+                        
             Graphics2D graphics = (Graphics2D) buffer.getGraphics();
             graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                                       RenderingHints.VALUE_ANTIALIAS_ON);
@@ -129,9 +130,12 @@ public class FontAwesomeIcon extends Icon {
             graphics.setFont(font);
             graphics.setColor(color);
             
+            FontMetrics metrics = graphics.getFontMetrics(font);
+            int width = metrics.charWidth(iconID);
+
+            int stringX = (int) (getIconWidth()/2 - width/2 + .5);
             int stringY = getIconHeight() - (getIconHeight()/4) + 1;
-            graphics.drawString(String.valueOf(iconID), 0, stringY);
-            
+            graphics.drawString(String.valueOf(iconID), stringX, stringY);            
             graphics.dispose();
         }
         

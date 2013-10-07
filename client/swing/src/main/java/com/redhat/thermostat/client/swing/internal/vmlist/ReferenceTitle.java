@@ -44,10 +44,12 @@ import com.redhat.thermostat.storage.core.Ref;
 @SuppressWarnings("serial")
 public class ReferenceTitle extends TitledPane implements ReferenceProvider {
     
+    public static final int ICON_GAP = EXPANDER_ICON_SIZE;
+    
     private HostRef ref;
     
     public ReferenceTitle(HostRef ref) {
-        super(ref.getHostName(), new ReferenceComponentPainter(), new ReferenceComponent(ref));
+        super(ref.getHostName(), new ReferenceComponentPainter(), new ReferenceComponent(ref, false));
         this.ref = ref;
     }
 

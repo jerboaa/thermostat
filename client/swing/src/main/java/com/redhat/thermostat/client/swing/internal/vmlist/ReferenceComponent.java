@@ -37,16 +37,15 @@
 package com.redhat.thermostat.client.swing.internal.vmlist;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Rectangle;
 
+import javax.swing.Box;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import com.redhat.thermostat.client.swing.GraphicsUtils;
 import com.redhat.thermostat.client.swing.components.CompositeIcon;
 import com.redhat.thermostat.client.swing.components.Icon;
 import com.redhat.thermostat.client.swing.components.ShadowLabel;
@@ -58,7 +57,6 @@ import com.redhat.thermostat.storage.core.Ref;
 public class ReferenceComponent extends JPanel implements AccordionComponent, ReferenceProvider {
 
     private ShadowLabel mainLabel;
-    private JLabel iconLabel;
     
     private boolean highlight;
     
@@ -72,6 +70,10 @@ public class ReferenceComponent extends JPanel implements AccordionComponent, Re
     private Ref vm;
     
     public ReferenceComponent(Ref vm) {
+        this(vm, true);
+    }
+    
+    public ReferenceComponent(Ref vm, boolean addGap) {
         
         this.vm = vm;
         this.painter = new ReferenceComponentPainter();
@@ -80,12 +82,14 @@ public class ReferenceComponent extends JPanel implements AccordionComponent, Re
 
         mainLabel = new ShadowLabel();
         mainLabel.setForeground(Palette.DROID_GRAY.getColor());
-
         mainLabel.setText(vm.getName());
         add(mainLabel, BorderLayout.CENTER);
-        iconLabel = new JLabel();
-        iconLabel.setText(" ");
-        add(iconLabel, BorderLayout.WEST);
+
+        if (addGap) {
+            int gapSize = ReferenceTitle.ICON_GAP;
+            Component gap = Box.createRigidArea(new Dimension(gapSize, gapSize));
+            add(gap, BorderLayout.WEST);
+        }
     }
 
     @Override

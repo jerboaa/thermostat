@@ -108,13 +108,16 @@ public class DecoratorManager {
             
             switch (decorator.getQuadrant()) {
             case MAIN:
+                canvas = createCustomIcon(canvas, icon);
+                break;
+                
             case TOP_LEFT:
-                canvas = createCustomIcon(canvas, icon, 0);
+                canvas = createCustomIcon(canvas, icon, 0, 0);
                 break;
 
             case BOTTOM_LEFT:
                 int y = canvas.getIconHeight() - icon.getIconHeight();
-                canvas = createCustomIcon(canvas, icon, y);
+                canvas = createCustomIcon(canvas, icon, 0, y);
                 break;
                 
             default:
@@ -138,14 +141,27 @@ public class DecoratorManager {
         }
         return icon;
     }
+  
+    private Icon createCustomIcon(Icon source, Icon newIcon) {
+        float v1 = source.getIconWidth() / 2;
+        float v2 = newIcon.getIconWidth() / 2; 
+        
+        int x = (int) (v1 - v2 + 0.5);;
+        
+        v1 = source.getIconHeight() / 2;
+        v2 = newIcon.getIconHeight() / 2; 
+        
+        int y = (int) (v1 - v2 + 0.5);
+        return createCustomIcon(source, newIcon, x, y);
+    }
     
-    private Icon createCustomIcon(Icon source, Icon newIcon, int y) {
+    private Icon createCustomIcon(Icon source, Icon newIcon, int x, int y) {
         BufferedImage image = new BufferedImage(source.getIconWidth(),
                                                 source.getIconHeight(),
                                                 BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = (Graphics2D) image.getGraphics();
         source.paintIcon(null, graphics, 0, 0);
-        graphics.drawImage(newIcon.getImage(), 0, y, null);
+        graphics.drawImage(newIcon.getImage(), x, y, null);
         
         return new Icon(image);
     }
