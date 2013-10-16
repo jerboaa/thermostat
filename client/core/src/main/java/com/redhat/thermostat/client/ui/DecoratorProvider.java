@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.client.ui;
 
+import com.redhat.thermostat.annotations.ExtensionPoint;
 import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.storage.core.Ref;
 
@@ -48,6 +49,7 @@ import com.redhat.thermostat.storage.core.Ref;
  * Active {@link Decorator}s are first queried against their filters
  * and then installed into the view if the filter passes. 
  */
+@ExtensionPoint
 public interface DecoratorProvider<T extends Ref> {
 
     Decorator getDecorator();
