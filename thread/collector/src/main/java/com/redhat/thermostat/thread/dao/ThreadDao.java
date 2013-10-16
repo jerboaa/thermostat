@@ -38,15 +38,15 @@ package com.redhat.thermostat.thread.dao;
 
 import java.util.List;
 
+import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.thread.model.VmDeadLockData;
-import com.redhat.thermostat.thread.model.ThreadInfoData;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
+import com.redhat.thermostat.thread.model.ThreadInfoData;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
+import com.redhat.thermostat.thread.model.VmDeadLockData;
 
 public interface ThreadDao {
 
@@ -121,15 +121,24 @@ public interface ThreadDao {
     void saveSummary(ThreadSummary summary);
     ThreadSummary loadLastestSummary(VmRef ref);
     List<ThreadSummary> loadSummary(VmRef ref, long since);
+
+    /** Save the specified thread info */
     void saveThreadInfo(ThreadInfoData info);
+    /** Get the time interval for the entire data */
+    Range<Long> getThreadInfoTimeRange(VmRef ref);
+    /** Get the thread info data with a timestamp greated than the one specified */
     List<ThreadInfoData> loadThreadInfo(VmRef ref, long since);
+    /** Get the thread info data with a timestamp in the given time range (inclusive) */
+    List<ThreadInfoData> loadThreadInfo(VmRef ref, Range<Long> time);
+
     ThreadHarvestingStatus getLatestHarvestingStatus(VmRef vm);
     void saveHarvestingStatus(ThreadHarvestingStatus status);
+
     VMThreadCapabilities loadCapabilities(VmRef ref);
     void saveCapabilities(VMThreadCapabilities caps);
+
     void saveDeadLockStatus(VmDeadLockData deadLockInfo);
     VmDeadLockData loadLatestDeadLockStatus(VmRef ref);
-    Storage getStorage();
     
 }
 

@@ -76,7 +76,7 @@ public class ThreadDAOImplStatementDescriptorRegistrationTest {
     public void registersAllDescriptors() {
         ThreadDaoImplStatementDescriptorRegistration reg = new ThreadDaoImplStatementDescriptorRegistration();
         Set<String> descriptors = reg.getStatementDescriptors();
-        assertEquals(11, descriptors.size());
+        assertEquals(14, descriptors.size());
         assertFalse("null descriptor not allowed", descriptors.contains(null));
     }
     
@@ -104,7 +104,7 @@ public class ThreadDAOImplStatementDescriptorRegistrationTest {
         // storage-core + this module
         assertEquals(2, registrations.size());
         assertNotNull(threadDaoReg);
-        assertEquals(11, threadDaoReg.getStatementDescriptors().size());
+        assertEquals(14, threadDaoReg.getStatementDescriptors().size());
     }
     
     private Triple<String, String, PreparedParameter[]> setupForMetaDataTest() {
@@ -165,11 +165,38 @@ public class ThreadDAOImplStatementDescriptorRegistrationTest {
     }
     
     @Test
-    public void canGetMetadataThreadInfoQuery() {
+    public void canGetMetadataOldestThreadInfo() {
         Triple<String, String, PreparedParameter[]> triple = setupForMetaDataTest(); 
-        
+
         StatementDescriptorMetadataFactory factory = new ThreadDaoImplStatementDescriptorRegistration();
-        DescriptorMetadata data = factory.getDescriptorMetadata(ThreadDaoImpl.QUERY_THREAD_INFO, triple.third);
+        DescriptorMetadata data = factory.getDescriptorMetadata(ThreadDaoImpl.QUERY_OLDEST_THREAD_INFO, triple.third);
+        assertThreadMetadata(triple, data);
+    }
+
+    @Test
+    public void canGetMetadataLatestThreadInfo() {
+        Triple<String, String, PreparedParameter[]> triple = setupForMetaDataTest();
+
+        StatementDescriptorMetadataFactory factory = new ThreadDaoImplStatementDescriptorRegistration();
+        DescriptorMetadata data = factory.getDescriptorMetadata(ThreadDaoImpl.QUERY_LATEST_THREAD_INFO, triple.third);
+        assertThreadMetadata(triple, data);
+    }
+
+    @Test
+    public void canGetMetadataThreadInfoQuerySince() {
+        Triple<String, String, PreparedParameter[]> triple = setupForMetaDataTest();
+
+        StatementDescriptorMetadataFactory factory = new ThreadDaoImplStatementDescriptorRegistration();
+        DescriptorMetadata data = factory.getDescriptorMetadata(ThreadDaoImpl.QUERY_THREAD_INFO_SINCE, triple.third);
+        assertThreadMetadata(triple, data);
+    }
+
+    @Test
+    public void canGetMetadataThreadInfoQueryInterval() {
+        Triple<String, String, PreparedParameter[]> triple = setupForMetaDataTest();
+
+        StatementDescriptorMetadataFactory factory = new ThreadDaoImplStatementDescriptorRegistration();
+        DescriptorMetadata data = factory.getDescriptorMetadata(ThreadDaoImpl.QUERY_THREAD_INFO_INTERVAL, triple.third);
         assertThreadMetadata(triple, data);
     }
     
