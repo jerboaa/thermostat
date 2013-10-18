@@ -55,14 +55,14 @@ import java.awt.event.AdjustmentListener;
 import java.awt.event.HierarchyBoundsListener;
 import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.concurrent.TimeUnit;
 
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JPanel;
 
 import com.redhat.thermostat.client.swing.components.EventTimelineModel.Event;
+import com.redhat.thermostat.client.swing.components.TimelineIntervalMouseHandler.TimeIntervalSelectorTarget;
 import com.redhat.thermostat.client.swing.components.timeline.Timeline;
 import com.redhat.thermostat.client.swing.internal.LocaleResources;
 import com.redhat.thermostat.common.model.LongRangeNormalizer;
@@ -306,23 +306,15 @@ public class BasicEventTimelineUI extends EventTimelineUI {
         }
     }
 
-    private class OverviewPanel extends JPanel {
+    private class OverviewPanel extends JPanel implements TimeIntervalSelectorTarget {
 
         private int MOUSE_MARGIN = 10;
 
         private int left;
         private int right;
 
-        private boolean moving = false;
-        private boolean movingLeft = false;
-        private boolean movingRight = false;
-
-        private int oldX = -1;
-        private int oldLeft = -1;
-        private int oldRight = -1;
-
         public OverviewPanel() {
-            OverviewMotionListener chartMotionListener = new OverviewMotionListener();
+            TimelineIntervalMouseHandler chartMotionListener = new TimelineIntervalMouseHandler(this);
             addMouseMotionListener(chartMotionListener);
             addMouseListener(chartMotionListener);
         }
@@ -399,67 +391,29 @@ public class BasicEventTimelineUI extends EventTimelineUI {
             g.dispose();
         }
 
-        class OverviewMotionListener extends MouseAdapter {
-            @Override
-            public void mouseMoved(MouseEvent e) {
-                if (Math.abs(e.getX() - left) < MOUSE_MARGIN) {
-                    setCursor(Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR));
-                } else if (Math.abs(e.getX() - right) < MOUSE_MARGIN) {
-                    setCursor(Cursor.getPredefinedCursor(Cursor.E_RESIZE_CURSOR));
-                } else if ((e.getX() > MOUSE_MARGIN + left) && (e.getX() < right - MOUSE_MARGIN)) {
-                    setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
-                } else {
-                    setCursor(Cursor.getDefaultCursor());
-                }
+        @Override
+        public int getSelectionMargin() {
+            return MOUSE_MARGIN;
+        }
 
-            }
+        @Override
+        public int getLeftSelectionPosition() {
+            return left;
+        }
 
-            @Override
-            public void mouseDragged(MouseEvent e) {
-                if (moving || movingLeft || movingRight) {
+        @Override
+        public int getRightSelectionPosition() {
+            return right;
+        }
 
-                    int newLeft = oldLeft;
-                    int newRight = oldRight;
-                    if (movingLeft) {
-                        newLeft = e.getX();
-                    } else if (movingRight) {
-                        newRight = e.getX();
-                    } else if (moving) {
-                        long delta = e.getX() - oldX;
-                        newLeft += delta;
-                        newRight += delta;
-                    }
-
-                    Range<Long> range = new Range<Long>(positionToTimeStamp(newLeft), positionToTimeStamp(newRight));
-
-                    eventTimeline.getModel().setDetailRange(range);
-
-                    refresh();
-                }
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                moving = movingLeft = movingRight = false;
-                oldLeft = oldRight = oldX = -1;
-            }
-
-            @Override
-            public void mousePressed(MouseEvent e) {
-                if (Math.abs(e.getX() - left) < MOUSE_MARGIN) {
-                    movingLeft = true;
-                } else if (Math.abs(e.getX() - right) < MOUSE_MARGIN) {
-                    movingRight = true;
-                } else if ((e.getX() > left + MOUSE_MARGIN) && (e.getX() < right - MOUSE_MARGIN)) {
-                    moving = true;
-                }
-                Range<Long> range = eventTimeline.getModel().getDetailRange();
-                oldLeft = timeStampToPosition(range.getMin());
-                oldRight = timeStampToPosition(range.getMax());
-                oldX = e.getX();
-            }
-
-            // TODO implement wheel scrolling
+        @Override
+        public void updateSelectionPosition(int newLeft, int newRight) {
+            left = newLeft;
+            right = newRight;
+            Range<Long> range = new Range<Long>(positionToTimeStamp(left), positionToTimeStamp(right));
+            eventTimeline.getModel().setDetailRange(range);
+            refresh();
         }
     }
+
 }
