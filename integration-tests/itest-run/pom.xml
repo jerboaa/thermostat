@@ -128,7 +128,6 @@
         <artifactId>maven-jar-plugin</artifactId>
         <executions>
           <execution>
-            <phase>package</phase>
             <goals>
               <goal>test-jar</goal>
             </goals>
