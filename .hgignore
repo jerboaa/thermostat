@@ -1,4 +1,7 @@
 /target/
+# standalone integration-test's shade plugin seems to generate this
+# pom. As it's derivable, hgignore it :)
+integration-tests/standalone/dependency-reduced-pom.xml
 
 syntax: regexp
 # Ignore all {.classpath,.project,.settings/*} files except for folders in 
