@@ -65,12 +65,12 @@ class SemanticsEnabledDescriptorParser<T extends Pojo> extends
     }
     
     public ParsedStatement<T> parse() throws DescriptorParsingException {
-        ParsedStatement<T> parsed = super.parse();
+        ParsedStatementImpl<T> parsed = (ParsedStatementImpl<T>)super.parse();
         doSemanticAnalysis(parsed);
         return parsed;
     }
     
-    private void doSemanticAnalysis(ParsedStatement<T> parsed) throws DescriptorParsingException {
+    private void doSemanticAnalysis(ParsedStatementImpl<T> parsed) throws DescriptorParsingException {
         Statement<T> stmt = parsed.getRawStatement();
         // statement should never be null
         Objects.requireNonNull(stmt);

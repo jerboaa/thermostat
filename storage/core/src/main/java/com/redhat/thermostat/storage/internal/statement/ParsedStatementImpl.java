@@ -72,11 +72,6 @@ class ParsedStatementImpl<T extends Pojo> implements ParsedStatement<T> {
     }
 
     @Override
-    public Statement<T> getRawStatement() {
-        return statement;
-    }
-    
-    @Override
     public Statement<T> patchStatement(PreparedParameter[] params) throws IllegalPatchException {
         if (suffixExpn == null) {
             String msg = "Suffix expression must be set before patching!";
@@ -187,6 +182,10 @@ class ParsedStatementImpl<T extends Pojo> implements ParsedStatement<T> {
             IllegalStateException invalid = new IllegalStateException(msg);
             throw new IllegalPatchException(invalid);
         }
+    }
+    
+    Statement<T> getRawStatement() {
+        return statement;
     }
 
     void setNumFreeParams(int num) {

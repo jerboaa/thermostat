@@ -40,7 +40,7 @@ import com.redhat.thermostat.storage.model.Pojo;
 
 /**
  * An intermediary representation of a {@link PreparedStatement}.
- *
+ * 
  */
 public interface ParsedStatement<T extends Pojo> {
 
@@ -56,16 +56,12 @@ public interface ParsedStatement<T extends Pojo> {
      */
     Statement<T> patchStatement(PreparedParameter[] params)
             throws IllegalPatchException;
-    
+
     /**
      * 
-     * @return The number of free variables.
+     * @return The number of free variables which the original prepared
+     *         statement string descriptor contained.
      */
     int getNumParams();
-    
-    /**
-     * 
-     * @return The raw statement.
-     */
-    Statement<T> getRawStatement();
+
 }
