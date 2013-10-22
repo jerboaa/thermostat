@@ -32,6 +32,8 @@
 
 package com.redhat.thermostat.storage.core;
 
+import java.util.Objects;
+
 import com.redhat.thermostat.storage.model.Pojo;
 
 public class StatementDescriptor<T extends Pojo> {
@@ -40,8 +42,8 @@ public class StatementDescriptor<T extends Pojo> {
     private final String desc;
     
     public StatementDescriptor(Category<T> category, String desc) {
-        this.category = category;
-        this.desc = desc;
+        this.category = Objects.requireNonNull(category);
+        this.desc = Objects.requireNonNull(desc);
     }
 
     /**
@@ -64,6 +66,26 @@ public class StatementDescriptor<T extends Pojo> {
     @Override
     public String toString() {
         return desc;
+    }
+    
+    @Override
+    public int hashCode() {
+        /*
+         * Note that category's hash code gets generated on de-facto-immutable
+         * values. Hence, it is safe to use it here.
+         */
+        return Objects.hash(desc, category);
+    }
+    
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof StatementDescriptor)) {
+            return false;
+        }
+        @SuppressWarnings("rawtypes")
+        StatementDescriptor o = (StatementDescriptor)other;
+        return desc.equals(o.desc)
+                && category.equals(o.category);
     }
     
 }
