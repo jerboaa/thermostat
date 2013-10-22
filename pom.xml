@@ -47,6 +47,98 @@
   <name>Thermostat</name>
   <url>${thermostat.url}</url>
 
+  <profiles>
+    <!-- Main build profile -->
+    <profile>
+      <id>main-profile</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <modules>
+        <module>annotations</module>
+        <module>assembly</module>
+        <module>distribution</module>
+        <module>main</module>
+        <module>launcher</module>
+        <module>common</module>
+        <module>agent</module>
+        <module>client</module>
+        <module>unix-process-handler</module>
+        <module>keyring</module>
+        <module>thread</module>
+        <module>killvm</module>
+        <module>web</module>
+        <module>system-backend</module>
+        <module>storage</module>
+        <module>host-overview</module>
+        <module>host-cpu</module>
+        <module>host-memory</module>
+        <module>vm-overview</module>
+        <module>vm-cpu</module>
+        <module>vm-gc</module>
+        <module>vm-classstat</module>
+        <module>vm-memory</module>
+        <module>vm-heap-analysis</module>
+        <module>vm-jmx</module>
+        <module>numa</module>
+        <module>laf-utils</module>
+        <module>thermostat-plugin-validator</module>
+        <module>validate-command</module>
+        <module>config</module>
+        <!-- development related modules -->
+        <module>integration-tests</module>
+        <module>dev</module>
+      </modules>
+    </profile>
+    <!-- Build profile activated if maven.test.skip=true property is set.
+         This does not build/run integration-tests. In other words, the
+         list of modules specified should be the same as for the main
+         profile minus "integration-tests", which builds and runs
+         integration-tests plus creates an itest standalone jar. -->
+    <profile>
+      <id>test-skipped-module</id>
+      <activation>
+        <property>
+          <name>maven.test.skip</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <modules>
+        <module>annotations</module>
+        <module>assembly</module>
+        <module>distribution</module>
+        <module>main</module>
+        <module>launcher</module>
+        <module>common</module>
+        <module>agent</module>
+        <module>client</module>
+        <module>unix-process-handler</module>
+        <module>keyring</module>
+        <module>thread</module>
+        <module>killvm</module>
+        <module>web</module>
+        <module>system-backend</module>
+        <module>storage</module>
+        <module>host-overview</module>
+        <module>host-cpu</module>
+        <module>host-memory</module>
+        <module>vm-overview</module>
+        <module>vm-cpu</module>
+        <module>vm-gc</module>
+        <module>vm-classstat</module>
+        <module>vm-memory</module>
+        <module>vm-heap-analysis</module>
+        <module>vm-jmx</module>
+        <module>numa</module>
+        <module>laf-utils</module>
+        <module>thermostat-plugin-validator</module>
+        <module>validate-command</module>
+        <module>config</module>
+        <module>dev</module>
+      </modules>
+    </profile>
+  </profiles>
+
   <properties>
   
     <main.basedir>${project.basedir}</main.basedir>  
@@ -116,41 +208,6 @@
     </repository>
   </repositories>
 
-  <modules>
-    <module>annotations</module>
-    <module>assembly</module>
-    <module>distribution</module>
-    <module>main</module>
-    <module>launcher</module>
-    <module>common</module>
-    <module>agent</module>
-    <module>client</module>
-    <module>unix-process-handler</module>
-    <module>keyring</module>
-    <module>thread</module>
-    <module>killvm</module>
-    <module>web</module>
-    <module>system-backend</module>
-    <module>storage</module>
-    <module>host-overview</module>
-    <module>host-cpu</module>
-    <module>host-memory</module>
-    <module>vm-overview</module>
-    <module>vm-cpu</module>
-    <module>vm-gc</module>
-    <module>vm-classstat</module>
-    <module>vm-memory</module>
-    <module>vm-heap-analysis</module>
-    <module>vm-jmx</module>
-    <module>numa</module>
-    <module>laf-utils</module>
-    <module>thermostat-plugin-validator</module>
-    <module>validate-command</module>
-    <module>config</module>
-    <!-- development related modules -->
-    <module>integration-tests</module>
-    <module>dev</module>
-  </modules>
 
   <build>
     <directory>${thermostat.build.directory}</directory>
