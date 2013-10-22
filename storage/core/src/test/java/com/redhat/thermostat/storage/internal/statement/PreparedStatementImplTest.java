@@ -62,6 +62,7 @@ import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Replace;
+import com.redhat.thermostat.storage.core.Statement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Update;
@@ -351,6 +352,12 @@ public class PreparedStatementImplTest {
             return 0;
         }
 
+        @Override
+        public Statement<T> getRawDuplicate() {
+            // we don't duplicate for this test
+            return this;
+        }
+
     }
     
     private static class TestReplace implements Replace<FooPojo> {
@@ -373,6 +380,12 @@ public class PreparedStatementImplTest {
         public int apply() {
             this.executed = true;
             return 0;
+        }
+
+        @Override
+        public Statement<FooPojo> getRawDuplicate() {
+            // we don't duplicate for this test
+            return this;
         }
         
     }
@@ -399,6 +412,12 @@ public class PreparedStatementImplTest {
             this.executed = true;
             return 0;
         }
+
+        @Override
+        public Statement<FooPojo> getRawDuplicate() {
+            // we don't duplicate for this test
+            return this;
+        }
         
     }
     
@@ -416,6 +435,12 @@ public class PreparedStatementImplTest {
         public int apply() {
             this.executed = true;
             return 0;
+        }
+
+        @Override
+        public Statement<FooPojo> getRawDuplicate() {
+            // we don't duplicate for this test
+            return this;
         }
         
     }
@@ -477,6 +502,12 @@ public class PreparedStatementImplTest {
         public Expression getWhereExpression() {
             // not implemented
             return null;
+        }
+
+        @Override
+        public Statement<Pojo> getRawDuplicate() {
+            // For this test, we don't duplicate
+            return this;
         }
         
     }

@@ -86,6 +86,7 @@ import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.PreparedParameters;
 import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.Statement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
@@ -824,6 +825,12 @@ public class WebStorageEndPoint extends HttpServlet {
 
             @Override
             public Expression getWhereExpression() {
+                // must not be called.
+                throw new IllegalStateException();
+            }
+
+            @Override
+            public Statement<T> getRawDuplicate() {
                 // must not be called.
                 throw new IllegalStateException();
             }

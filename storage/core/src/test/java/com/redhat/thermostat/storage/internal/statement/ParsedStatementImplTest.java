@@ -38,8 +38,12 @@ package com.redhat.thermostat.storage.internal.statement;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -60,6 +64,7 @@ import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.SortDirection;
 import com.redhat.thermostat.storage.core.Replace;
+import com.redhat.thermostat.storage.core.Statement;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.BinaryComparisonExpression;
@@ -82,6 +87,25 @@ public class ParsedStatementImplTest {
     @After
     public void tearDown() {
         statement = null;
+    }
+    
+    @Test
+    public void patchingDuplicatesStatement() throws IllegalPatchException {
+        @SuppressWarnings("unchecked")
+        Statement<Pojo> stmt = (Statement<Pojo>)mock(Statement.class);
+        @SuppressWarnings("unchecked")
+        Statement<Pojo> mock2 = mock(Statement.class);
+        when(stmt.getRawDuplicate()).thenReturn(mock2);
+        ParsedStatementImpl<Pojo> parsedStmt = new ParsedStatementImpl<>(stmt);
+        SuffixExpression suffixExpn = new SuffixExpression();
+        suffixExpn.setLimitExpn(null);
+        suffixExpn.setSortExpn(null);
+        parsedStmt.setSetList(new SetList());
+        parsedStmt.setSuffixExpression(suffixExpn);
+        
+        Statement<Pojo> result = parsedStmt.patchStatement(new PreparedParameter[] {});
+        assertNotSame("Statement should get duplicated on patching", stmt, result);
+        assertSame(mock2, result);
     }
     
     @Test
@@ -817,6 +841,11 @@ public class ParsedStatementImplTest {
             // Not implemented
             throw new AssertionError();
         }
+
+        @Override
+        public Statement<Pojo> getRawDuplicate() {
+            return new TestQuery();
+        }
         
     }
     
@@ -833,6 +862,11 @@ public class ParsedStatementImplTest {
         public int apply() {
             // not implemented
             throw new AssertionError();
+        }
+
+        @Override
+        public Statement<T> getRawDuplicate() {
+            return new TestAdd<>();
         }
         
     }
@@ -856,6 +890,11 @@ public class ParsedStatementImplTest {
         public int apply() {
             // not implemented
             throw new AssertionError();
+        }
+
+        @Override
+        public Statement<TestPojo> getRawDuplicate() {
+            return new TestReplace();
         }
         
     }
@@ -881,6 +920,11 @@ public class ParsedStatementImplTest {
         public int apply() {
             // not implemented
             throw new AssertionError();
+        }
+
+        @Override
+        public Statement<TestPojo> getRawDuplicate() {
+            return new TestUpdate();
         }
         
     }

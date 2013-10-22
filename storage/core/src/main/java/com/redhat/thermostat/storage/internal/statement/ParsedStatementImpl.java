@@ -78,16 +78,23 @@ class ParsedStatementImpl<T extends Pojo> implements ParsedStatement<T> {
             IllegalStateException expn = new IllegalStateException(msg);
             throw new IllegalPatchException(expn);
         }
-        patchSetList(params);
-        patchWhere(params);
-        patchSort(params);
-        patchLimit(params);
+        
+        /*
+         * Statements may not be stateless and hence, we need to create a
+         * duplicate prior every patch + execution.
+         */
+        Statement<T> stmt = statement.getRawDuplicate();
+        
+        patchSetList(stmt, params);
+        patchWhere(stmt, params);
+        patchSort(stmt, params);
+        patchLimit(stmt, params);
         // TODO count actual patches and throw an exception if not all vars
         // have been patched up.
-        return statement;
+        return stmt;
     }
 
-    private void patchSetList(PreparedParameter[] params) throws IllegalPatchException {
+    private void patchSetList(Statement<T> stmt, PreparedParameter[] params) throws IllegalPatchException {
         if (setList.getValues().size() == 0) {
             // no set list, nothing to do
             return;
@@ -95,66 +102,66 @@ class ParsedStatementImpl<T extends Pojo> implements ParsedStatement<T> {
         // do the patching
         PatchedSetList patchedSetList = setList.patch(params);
         // set the values
-        if (statement instanceof Add) {
-            Add<T> add = (Add<T>)statement;
+        if (stmt instanceof Add) {
+            Add<T> add = (Add<T>)stmt;
             for (PatchedSetListMember member: patchedSetList.getSetListMembers()) {
                 add.set(member.getKey().getName(), member.getValue());
             }
         }
-        if (statement instanceof Replace) {
-            Replace<T> replace = (Replace<T>)statement;
+        if (stmt instanceof Replace) {
+            Replace<T> replace = (Replace<T>)stmt;
             for (PatchedSetListMember member: patchedSetList.getSetListMembers()) {
                 replace.set(member.getKey().getName(), member.getValue());
             }
         }
-        if (statement instanceof Update) {
-            Update<T> update = (Update<T>)statement;
+        if (stmt instanceof Update) {
+            Update<T> update = (Update<T>)stmt;
             for (PatchedSetListMember member: patchedSetList.getSetListMembers()) {
                 update.set(member.getKey().getName(), member.getValue());
             }
         }
     }
 
-    private void patchLimit(PreparedParameter[] params) throws IllegalPatchException {
+    private void patchLimit(Statement<T> stmt, PreparedParameter[] params) throws IllegalPatchException {
         LimitExpression expn = suffixExpn.getLimitExpn();
         if (expn == null) {
             // no limit expn, nothing to do
             return;
         }
         PatchedLimitExpression patchedExp = expn.patch(params);
-        if (statement instanceof Query) {
-            Query<T> query = (Query<T>) statement;
+        if (stmt instanceof Query) {
+            Query<T> query = (Query<T>) stmt;
             query.limit(patchedExp.getLimitValue());
         } else {
             String msg = "Patching 'limit' of non-query types not supported! Class was:"
-                    + statement.getClass().getName();
+                    + stmt.getClass().getName();
             IllegalStateException invalid = new IllegalStateException(msg);
             throw new IllegalPatchException(invalid);
         }
     }
 
-    private void patchSort(PreparedParameter[] params) throws IllegalPatchException {
+    private void patchSort(Statement<T> stmt, PreparedParameter[] params) throws IllegalPatchException {
         SortExpression expn = suffixExpn.getSortExpn();
         if (expn == null) {
             // no sort expn, nothing to do
             return;
         }
         PatchedSortExpression patchedExp = expn.patch(params);
-        if (statement instanceof Query) {
-            Query<T> query = (Query<T>) statement;
+        if (stmt instanceof Query) {
+            Query<T> query = (Query<T>) stmt;
             PatchedSortMember[] members = patchedExp.getSortMembers();
             for (int i = 0; i < members.length; i++) {
                 query.sort(members[i].getSortKey(), members[i].getDirection());
             }
         } else {
             String msg = "Patching 'sort' of non-query types not supported! Class was:"
-                    + statement.getClass().getName();
+                    + stmt.getClass().getName();
             IllegalStateException invalid = new IllegalStateException(msg);
             throw new IllegalPatchException(invalid);
         }
     }
 
-    private void patchWhere(PreparedParameter[] params) throws IllegalPatchException {
+    private void patchWhere(Statement<T> stmt, PreparedParameter[] params) throws IllegalPatchException {
         WhereExpression expn = suffixExpn.getWhereExpn();
         if (expn == null) {
             // no where, nothing to do
@@ -164,21 +171,21 @@ class ParsedStatementImpl<T extends Pojo> implements ParsedStatement<T> {
         // the way.
         PatchedWhereExpression patchedExp = expn.patch(params);
         Expression whereClause = patchedExp.getExpression();
-        if (statement instanceof Query) {
-            Query<T> query = (Query<T>) statement;
+        if (stmt instanceof Query) {
+            Query<T> query = (Query<T>) stmt;
             query.where(whereClause);
-        } else if (statement instanceof Replace) {
-            Replace<T> replace = (Replace<T>) statement;
+        } else if (stmt instanceof Replace) {
+            Replace<T> replace = (Replace<T>) stmt;
             replace.where(whereClause);
-        } else if (statement instanceof Update) {
-            Update<T> update = (Update<T>) statement;
+        } else if (stmt instanceof Update) {
+            Update<T> update = (Update<T>) stmt;
             update.where(whereClause);
-        } else if (statement instanceof Remove) {
-            Remove<T> remove = (Remove<T>) statement;
+        } else if (stmt instanceof Remove) {
+            Remove<T> remove = (Remove<T>) stmt;
             remove.where(whereClause);
         } else {
             String msg = "Patching of where clause not supported! Class was:"
-                    + statement.getClass().getName();
+                    + stmt.getClass().getName();
             IllegalStateException invalid = new IllegalStateException(msg);
             throw new IllegalPatchException(invalid);
         }

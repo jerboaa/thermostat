@@ -71,6 +71,7 @@ import com.redhat.thermostat.storage.core.PreparedStatementFactory;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Replace;
+import com.redhat.thermostat.storage.core.Statement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.model.AggregateCount;
@@ -97,6 +98,12 @@ public class MongoStorage implements BackingStorage {
         @Override
         public Cursor<T> execute() {
             return executeGetCount(category, (MongoQuery<T>)this.queryToAggregate);
+        }
+
+        @Override
+        public Statement<T> getRawDuplicate() {
+            MongoQuery<T> query = (MongoQuery<T>) this.queryToAggregate;
+            return new MongoCountQuery<>(query, category);
         }
     }
     
@@ -153,6 +160,11 @@ public class MongoStorage implements BackingStorage {
         public void set(String key, Object value) {
             super.set(key, value);
         }
+
+        @Override
+        public Statement<T> getRawDuplicate() {
+            return new MongoAdd<>(category);
+        }
         
     }
 
@@ -186,6 +198,11 @@ public class MongoStorage implements BackingStorage {
         public void set(String key, Object value) {
             super.set(key, value);
         }
+
+        @Override
+        public Statement<T> getRawDuplicate() {
+            return new MongoReplace<>(category);
+        }
         
     }
     
@@ -217,6 +234,11 @@ public class MongoStorage implements BackingStorage {
             DBObject setValues = new BasicDBObject(SET_MODIFIER, values);
             return updateImpl(category, setValues, query);
         }
+
+        @Override
+        public Statement<T> getRawDuplicate() {
+            return new MongoUpdate<>(category);
+        }
     }
     
     private class MongoRemove<T extends Pojo> implements Remove<T> {
@@ -242,6 +264,11 @@ public class MongoStorage implements BackingStorage {
         @Override
         public int apply() {
             return removePojo(category, query);
+        }
+
+        @Override
+        public Statement<T> getRawDuplicate() {
+            return new MongoRemove<>(category);
         }
         
     }

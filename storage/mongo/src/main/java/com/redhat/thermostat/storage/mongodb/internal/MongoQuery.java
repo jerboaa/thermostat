@@ -43,6 +43,7 @@ import com.mongodb.DBObject;
 import com.redhat.thermostat.storage.core.AbstractQuery;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.Statement;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
 
@@ -119,6 +120,11 @@ public class MongoQuery<T extends Pojo> extends AbstractQuery<T> {
     @Override
     public Expression getWhereExpression() {
         return expression;
+    }
+
+    @Override
+    public Statement<T> getRawDuplicate() {
+        return new MongoQuery<>(storage, category);
     }
 
 }
