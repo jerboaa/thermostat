@@ -48,7 +48,7 @@ import com.redhat.thermostat.storage.model.Pojo;
  * @param <T> The source data type.
  * @param <S> The target data type after adaptation.
  */
-public class CategoryAdapter<T extends Pojo, S extends Pojo> {
+public final class CategoryAdapter<T extends Pojo, S extends Pojo> {
 
     private final Category<T> sourceCategory;
     

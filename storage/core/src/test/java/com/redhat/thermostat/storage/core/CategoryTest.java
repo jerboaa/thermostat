@@ -38,9 +38,12 @@ package com.redhat.thermostat.storage.core;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -115,6 +118,71 @@ public class CategoryTest {
         keys.put(key1.getName(), key1);
         int expectedHash = Objects.hash("testHashCode", keys, TestObj.class);
         assertEquals(expectedHash, category.hashCode());
+    }
+    
+    /**
+     * If a Category instance gets serialized we only set the dataClassName.
+     * However, getting the dataClass from the name must still work.
+     */
+    @Test
+    public void testGetDataClassByName() {
+        Category<TestObj> category = new Category<>("testGetDataClassByName", null);
+        // set dataClassName via reflection
+        try {
+            Field dataClassName = Category.class.getDeclaredField("dataClassName");
+            dataClassName.setAccessible(true);
+            dataClassName.set(category, TestObj.class.getName());
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+        // now we should be able to get the dataclass itself
+        Class<TestObj> dataClass = category.getDataClass();
+        assertNotNull(dataClass);
+        assertEquals(TestObj.class, dataClass);
+    }
+    
+    @Test
+    public void testHashCodeWithDataClassNotSet() {
+        Category<TestObj> category = new Category<>("testHashCodeWithDataClassNotSet", null);
+        // set dataClassName via reflection
+        try {
+            Field dataClassName = Category.class.getDeclaredField("dataClassName");
+            dataClassName.setAccessible(true);
+            dataClassName.set(category, TestObj.class.getName());
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+        // hash code must not change if dataclass gets set internally
+        int firstHashCode = category.hashCode();
+        Class<TestObj> dataClass = category.getDataClass();
+        // hashCode should have initialized dataClass
+        assertNotNull(dataClass);
+        assertEquals(TestObj.class, dataClass);
+        assertEquals(firstHashCode, category.hashCode());
+    }
+    
+    @Test
+    public void getKeysNull() {
+        Category<TestObj> cat = new Category<>();
+        // this must not throw NPE
+        Collection<Key<?>> keys = cat.getKeys();
+        assertTrue(keys.isEmpty());
+        try {
+            keys.add(new Key<>());
+            fail("empty keys must be immutable");
+        } catch (UnsupportedOperationException e) {
+            // pass
+        }
+    }
+    
+    @Test
+    public void getKeyByNameNull() {
+        Category<TestObj> cat = new Category<>();
+        // This must not throw a NPE
+        Key<?> key = cat.getKey("foo-key-not-there");
+        assertNull(key);
     }
 }
 

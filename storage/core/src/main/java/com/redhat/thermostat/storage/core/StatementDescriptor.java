@@ -36,7 +36,7 @@ import java.util.Objects;
 
 import com.redhat.thermostat.storage.model.Pojo;
 
-public class StatementDescriptor<T extends Pojo> {
+public final class StatementDescriptor<T extends Pojo> {
     
     private final Category<T> category;
     private final String desc;

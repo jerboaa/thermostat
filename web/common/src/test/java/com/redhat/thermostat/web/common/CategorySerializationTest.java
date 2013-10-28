@@ -34,44 +34,53 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.internal;
+package com.redhat.thermostat.web.common;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import org.junit.Before;
+import org.junit.Test;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.model.AggregateResult;
 import com.redhat.thermostat.storage.model.Pojo;
 
-/**
- * An adapted category. This facilitates aggregate queries for which the data
- * class type changes.
- *
- * @param <T> The type to adapt a category to.
- * @param <S> The source type to adapt things from.
- */
-public final class AdaptedCategory<T extends Pojo, S extends Pojo> extends Category<T> {
+public class CategorySerializationTest {
+    
+    private static class TestObj implements Pojo {
+        // Dummy class for testing.
+    }
 
-    /**
-     * Constructor used by CategoryAdapter which has just
-     * performed a registration check. That means only categories
-     * constructed via public Category constructors can get adapted.
-     *  
-     */
-    public AdaptedCategory(Category<S> category, Class<T> dataClass) {
-        this.name = category.getName();
-        Map<String, Key<?>> mappedKeys = new HashMap<>();
-        for (Key<?> key: category.getKeys()) {
-            mappedKeys.put(key.getName(), key);
-        }
-        this.keys = Collections.unmodifiableMap(mappedKeys);
-        if (!AggregateResult.class.isAssignableFrom(dataClass)) {
-            String msg = "Can only adapt to aggregate results!";
-            throw new IllegalArgumentException(msg);
-        }
-        this.dataClassName = dataClass.getName();
+    private Gson gson;
+    
+    @Before
+    public void setup() {
+        gson = new GsonBuilder().create();
     }
     
+    @Test
+    public void canSerializeDeserializeCategory() {
+        Key<Boolean> barKey = new Key<>("bar-key");
+        Category<TestObj> cat = new Category<>("foo-category", TestObj.class, barKey);
+        String str = gson.toJson(cat, Category.class);
+        @SuppressWarnings("unchecked")
+        Category<TestObj> cat2 = (Category<TestObj>)gson.fromJson(str, Category.class);
+        assertNotSame(cat, cat2);
+        assertTrue(cat.equals(cat2));
+        assertEquals(cat.hashCode(), cat2.hashCode());
+        try {
+            cat2.getKeys().add(new Key<>("testme"));
+            fail("keys must be immutable after deserialization");
+        } catch (UnsupportedOperationException e) {
+            // pass
+        }
+        assertEquals(TestObj.class, cat2.getDataClass());
+        assertEquals("foo-category", cat2.getName());
+        assertEquals(barKey, cat2.getKey("bar-key"));
+    }
 }

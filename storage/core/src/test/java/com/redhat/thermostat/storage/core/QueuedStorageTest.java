@@ -196,6 +196,8 @@ public class QueuedStorageTest {
             }
         }
     }
+    
+    private static final Category<FooPojo> TEST_CATEGORY = new Category<>("foo-table", FooPojo.class);
 
     private QueuedStorage queuedStorage;
     private Storage delegateStorage;
@@ -272,9 +274,9 @@ public class QueuedStorageTest {
         PreparedStatement<Pojo> statement = (PreparedStatement<Pojo>)mock(PreparedStatement.class);
         when(delegateStorage.prepareStatement(anyStatementDescriptor())).thenReturn(statement);
         
-        @SuppressWarnings("unchecked")
-        StatementDescriptor<Pojo> desc = mock(StatementDescriptor.class);
-        PreparedStatement<Pojo> decorated = queuedStorage.prepareStatement(desc);
+        
+        StatementDescriptor<FooPojo> desc = new StatementDescriptor<>(TEST_CATEGORY, "QUERY foo-table");
+        PreparedStatement<FooPojo> decorated = queuedStorage.prepareStatement(desc);
         assertNotNull(decorated);
         assertTrue(decorated instanceof QueuedPreparedStatement);
         assertNotSame(decorated, statement);
@@ -302,9 +304,8 @@ public class QueuedStorageTest {
         Mockito.doThrow(StatementExecutionException.class).when(statement).execute();
         when(delegateStorage.prepareStatement(anyStatementDescriptor())).thenReturn(statement);
         
-        @SuppressWarnings("unchecked")
-        StatementDescriptor<Pojo> desc = mock(StatementDescriptor.class);
-        PreparedStatement<Pojo> decorated = queuedStorage.prepareStatement(desc);
+        StatementDescriptor<FooPojo> desc = new StatementDescriptor<>(TEST_CATEGORY, "QUERY foo-table");
+        PreparedStatement<FooPojo> decorated = queuedStorage.prepareStatement(desc);
         assertNotNull(decorated);
         assertTrue(decorated instanceof QueuedPreparedStatement);
         assertNotSame(decorated, statement);
@@ -331,8 +332,7 @@ public class QueuedStorageTest {
         
         Mockito.doThrow(DescriptorParsingException.class).when(delegateStorage).prepareStatement(anyStatementDescriptor());
         
-        @SuppressWarnings("unchecked")
-        StatementDescriptor<Pojo> desc = mock(StatementDescriptor.class);
+        StatementDescriptor<FooPojo> desc = new StatementDescriptor<>(TEST_CATEGORY, "QUERY foo-table");
         
         try {
             queuedStorage.prepareStatement(desc);
@@ -457,6 +457,10 @@ public class QueuedStorageTest {
             return null;
         }
         
+    }
+    
+    private static class FooPojo implements Pojo {
+       // Dummy class for testing 
     }
 }
 

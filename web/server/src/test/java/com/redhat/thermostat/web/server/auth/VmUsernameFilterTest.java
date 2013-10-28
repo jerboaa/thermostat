@@ -40,8 +40,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -62,7 +60,7 @@ import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.web.server.auth.FilterResult.ResultType;
 
 public class VmUsernameFilterTest {
-
+    
     @Test
     public void testReadAll() {
         Set<BasicRole> roles = new HashSet<>();
@@ -97,9 +95,7 @@ public class VmUsernameFilterTest {
         roles.add(vmUsernameRole);
         
         DescriptorMetadata metadata = new DescriptorMetadata();
-        @SuppressWarnings("unchecked")
-        StatementDescriptor<VmInfo> desc = mock(StatementDescriptor.class);
-        when(desc.getCategory()).thenReturn(VmInfoDAO.vmInfoCategory);
+        StatementDescriptor<VmInfo> desc = new StatementDescriptor<>(VmInfoDAO.vmInfoCategory, "QUERY " + VmInfoDAO.vmInfoCategory.getName());
         
         Set<String> usernames = new HashSet<>();
         usernames.add(testUsername);
@@ -121,9 +117,7 @@ public class VmUsernameFilterTest {
         roles.add(vmUsernameRole);
         
         DescriptorMetadata metadata = new DescriptorMetadata();
-        @SuppressWarnings("unchecked")
-        StatementDescriptor<VmInfo> desc = mock(StatementDescriptor.class);
-        when(desc.getCategory()).thenReturn(VmInfoDAO.vmInfoCategory);
+        StatementDescriptor<VmInfo> desc = new StatementDescriptor<>(VmInfoDAO.vmInfoCategory, "QUERY " + VmInfoDAO.vmInfoCategory.getName());
         
         Set<String> usernames = new HashSet<>();
         usernames.add(testUsername);
@@ -145,9 +139,7 @@ public class VmUsernameFilterTest {
         Set<BasicRole> roles = new HashSet<>();
         
         DescriptorMetadata metadata = new DescriptorMetadata();
-        @SuppressWarnings("unchecked")
-        StatementDescriptor<AgentInformation> desc = mock(StatementDescriptor.class);
-        when(desc.getCategory()).thenReturn(AgentInfoDAO.CATEGORY);
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, "QUERY " + AgentInfoDAO.CATEGORY.getName());
         
         VmUsernameFilter<AgentInformation> filter = new VmUsernameFilter<>(roles);
         FilterResult result = filter.applyFilter(desc, metadata, null);
@@ -160,9 +152,7 @@ public class VmUsernameFilterTest {
         Set<BasicRole> roles = new HashSet<>();
         
         DescriptorMetadata metadata = new DescriptorMetadata();
-        @SuppressWarnings("unchecked")
-        StatementDescriptor<AgentInformation> desc = mock(StatementDescriptor.class);
-        when(desc.getCategory()).thenReturn(AgentInfoDAO.CATEGORY);
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, "QUERY " + AgentInfoDAO.CATEGORY.getName());
         
         ExpressionFactory factory = new ExpressionFactory();
         Expression parentExpression = factory.equalTo(Key.AGENT_ID, "testKey");

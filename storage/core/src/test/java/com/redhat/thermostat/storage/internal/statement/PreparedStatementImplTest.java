@@ -45,10 +45,8 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.junit.Test;
 
@@ -73,7 +71,19 @@ import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.storage.query.LiteralExpression;
 
 public class PreparedStatementImplTest {
-
+    
+    private static int counter = 0;
+    
+    /*
+     * Category names need to be unique. In order to prevent IllegalStateExceptions
+     * create a new category name each time this is called.
+     */
+    private synchronized String getNextCategoryName() {
+        String name = "foo-table-" + counter;
+        counter++;
+        return name;
+    }
+    
     @Test
     public void failToSetIndexOutOfBounds() {
         PreparedStatementImpl<?> preparedStatement = new PreparedStatementImpl<>(2);
@@ -107,18 +117,14 @@ public class PreparedStatementImplTest {
     
     @Test
     public void canDoParsingPatchingAndExecutionQuery() throws Exception {
-        String queryString = "QUERY foo WHERE 'a' = ?s";
-        @SuppressWarnings("unchecked")
-        StatementDescriptor<Pojo> desc = (StatementDescriptor<Pojo>) mock(StatementDescriptor.class);
-        when(desc.getDescriptor()).thenReturn(queryString);
-        @SuppressWarnings("unchecked")
-        Category<Pojo> mockCategory = (Category<Pojo>) mock(Category.class);
-        when(desc.getCategory()).thenReturn(mockCategory);
-        when(mockCategory.getName()).thenReturn("foo");
+        String categoryName = getNextCategoryName();
+        String queryString = "QUERY " + categoryName + " WHERE 'a' = ?s";
+        Category<FooPojo> fooCategory = new Category<>(categoryName, FooPojo.class, new Key<String>("a"));
+        StatementDescriptor<FooPojo> desc = new StatementDescriptor<>(fooCategory, queryString);
         BackingStorage storage = mock(BackingStorage.class);
-        StubQuery stmt = new StubQuery();
-        when(storage.createQuery(mockCategory)).thenReturn(stmt);
-        PreparedStatementImpl<Pojo> preparedStatement = new PreparedStatementImpl<>(storage, desc);
+        StubQuery<FooPojo> stmt = new StubQuery<>();
+        when(storage.createQuery(fooCategory)).thenReturn(stmt);
+        PreparedStatementImpl<FooPojo> preparedStatement = new PreparedStatementImpl<>(storage, desc);
         preparedStatement.setString(0, "foo");
         preparedStatement.executeQuery();
         assertTrue(stmt.called);
@@ -131,21 +137,13 @@ public class PreparedStatementImplTest {
     
     @Test
     public void canDoParsingPatchingAndExecutionForAdd() throws Exception {
-        String addString = "ADD foo-table SET 'foo' = ?s";
-        @SuppressWarnings("unchecked")
-        StatementDescriptor<FooPojo> desc = (StatementDescriptor<FooPojo>) mock(StatementDescriptor.class);
-        when(desc.getDescriptor()).thenReturn(addString);
-        @SuppressWarnings("unchecked")
-        Category<FooPojo> mockCategory = (Category<FooPojo>) mock(Category.class);
-        when(desc.getCategory()).thenReturn(mockCategory);
-        Set<Key<?>> categoryKeys = new HashSet<>();
-        categoryKeys.add(new Key<>("foo"));
-        when(mockCategory.getKeys()).thenReturn(categoryKeys);
-        when(mockCategory.getDataClass()).thenReturn(FooPojo.class);
-        when(mockCategory.getName()).thenReturn("foo-table");
+        String categoryName = getNextCategoryName();
+        String addString = "ADD " + categoryName +" SET 'foo' = ?s";
+        Category<FooPojo> fooCategory = new Category<>(categoryName, FooPojo.class, new Key<String>("foo"));
+        StatementDescriptor<FooPojo> desc = new StatementDescriptor<>(fooCategory, addString);
         BackingStorage storage = mock(BackingStorage.class);
         TestAdd<FooPojo> add = new TestAdd<>();
-        when(storage.createAdd(mockCategory)).thenReturn(add);
+        when(storage.createAdd(fooCategory)).thenReturn(add);
         PreparedStatement<FooPojo> preparedStatement = new PreparedStatementImpl<FooPojo>(storage, desc);
         preparedStatement.setString(0, "foo-val");
         assertFalse(add.executed);
@@ -163,21 +161,13 @@ public class PreparedStatementImplTest {
     
     @Test
     public void canDoParsingPatchingAndExecutionForAddInvolvingFancyPojo() throws Exception {
-        String addString = "ADD foo-table SET 'fancyFoo' = ?p[";
-        @SuppressWarnings("unchecked")
-        StatementDescriptor<FancyFoo> desc = (StatementDescriptor<FancyFoo>) mock(StatementDescriptor.class);
-        when(desc.getDescriptor()).thenReturn(addString);
-        @SuppressWarnings("unchecked")
-        Category<FancyFoo> mockCategory = (Category<FancyFoo>) mock(Category.class);
-        when(desc.getCategory()).thenReturn(mockCategory);
-        Set<Key<?>> categoryKeys = new HashSet<>();
-        categoryKeys.add(new Key<>("fancyFoo"));
-        when(mockCategory.getKeys()).thenReturn(categoryKeys);
-        when(mockCategory.getDataClass()).thenReturn(FancyFoo.class);
-        when(mockCategory.getName()).thenReturn("foo-table");
+        String categoryName = getNextCategoryName();
+        String addString = "ADD " + categoryName + " SET 'fancyFoo' = ?p[";
+        Category<FancyFoo> fooCategory = new Category<>(categoryName, FancyFoo.class, new Key<String>("fancyFoo"));
+        StatementDescriptor<FancyFoo> desc = new StatementDescriptor<>(fooCategory, addString);
         BackingStorage storage = mock(BackingStorage.class);
         TestAdd<FancyFoo> add = new TestAdd<>();
-        when(storage.createAdd(mockCategory)).thenReturn(add);
+        when(storage.createAdd(fooCategory)).thenReturn(add);
         PreparedStatement<FancyFoo> preparedStatement = new PreparedStatementImpl<FancyFoo>(storage, desc);
         FooPojo one = new FooPojo();
         one.setFoo("one");
@@ -207,21 +197,13 @@ public class PreparedStatementImplTest {
     
     @Test
     public void canDoParsingPatchingAndExecutionForUpdate() throws Exception {
-        String addString = "UPDATE foo-table SET 'foo' = ?s WHERE 'foo' = ?s";
-        @SuppressWarnings("unchecked")
-        StatementDescriptor<FooPojo> desc = (StatementDescriptor<FooPojo>) mock(StatementDescriptor.class);
-        when(desc.getDescriptor()).thenReturn(addString);
-        @SuppressWarnings("unchecked")
-        Category<FooPojo> mockCategory = (Category<FooPojo>) mock(Category.class);
-        Set<Key<?>> categoryKeys = new HashSet<>();
-        categoryKeys.add(new Key<>("foo"));
-        when(mockCategory.getKeys()).thenReturn(categoryKeys);
-        when(desc.getCategory()).thenReturn(mockCategory);
-        when(mockCategory.getDataClass()).thenReturn(FooPojo.class);
-        when(mockCategory.getName()).thenReturn("foo-table");
+        String categoryName = getNextCategoryName();
+        String addString = "UPDATE " + categoryName + " SET 'foo' = ?s WHERE 'foo' = ?s";
+        Category<FooPojo> fooCategory = new Category<>(categoryName, FooPojo.class, new Key<String>("foo"));
+        StatementDescriptor<FooPojo> desc = new StatementDescriptor<>(fooCategory, addString);
         BackingStorage storage = mock(BackingStorage.class);
         TestUpdate update = new TestUpdate();
-        when(storage.createUpdate(mockCategory)).thenReturn(update);
+        when(storage.createUpdate(fooCategory)).thenReturn(update);
         PreparedStatement<FooPojo> preparedStatement = new PreparedStatementImpl<FooPojo>(storage, desc);
         preparedStatement.setString(0, "foo-val");
         preparedStatement.setString(1, "nice");
@@ -246,21 +228,13 @@ public class PreparedStatementImplTest {
     
     @Test
     public void canDoParsingPatchingAndExecutionForReplace() throws Exception {
-        String addString = "REPLACE foo-table SET 'foo' = ?s WHERE 'foo' = ?s";
-        @SuppressWarnings("unchecked")
-        StatementDescriptor<FooPojo> desc = (StatementDescriptor<FooPojo>) mock(StatementDescriptor.class);
-        when(desc.getDescriptor()).thenReturn(addString);
-        @SuppressWarnings("unchecked")
-        Category<FooPojo> mockCategory = (Category<FooPojo>) mock(Category.class);
-        Set<Key<?>> categoryKeys = new HashSet<>();
-        categoryKeys.add(new Key<>("foo"));
-        when(mockCategory.getKeys()).thenReturn(categoryKeys);
-        when(desc.getCategory()).thenReturn(mockCategory);
-        when(mockCategory.getDataClass()).thenReturn(FooPojo.class);
-        when(mockCategory.getName()).thenReturn("foo-table");
+        String categoryName = getNextCategoryName();
+        String addString = "REPLACE " + categoryName + " SET 'foo' = ?s WHERE 'foo' = ?s";
+        Category<FooPojo> fooCategory = new Category<>(categoryName, FooPojo.class, new Key<String>("foo"));
+        StatementDescriptor<FooPojo> desc = new StatementDescriptor<>(fooCategory, addString);
         BackingStorage storage = mock(BackingStorage.class);
-        TestReplace replace = new TestReplace();
-        when(storage.createReplace(mockCategory)).thenReturn(replace);
+        TestReplace<FooPojo> replace = new TestReplace<>();
+        when(storage.createReplace(fooCategory)).thenReturn(replace);
         PreparedStatement<FooPojo> preparedStatement = new PreparedStatementImpl<FooPojo>(storage, desc);
         preparedStatement.setString(0, "foo-val");
         preparedStatement.setString(1, "bar");
@@ -283,18 +257,13 @@ public class PreparedStatementImplTest {
     
     @Test
     public void canDoParsingPatchingAndExecutionForRemove() throws Exception {
-        String addString = "REMOVE foo-table WHERE 'fooRem' = ?s";
-        @SuppressWarnings("unchecked")
-        StatementDescriptor<FooPojo> desc = (StatementDescriptor<FooPojo>) mock(StatementDescriptor.class);
-        when(desc.getDescriptor()).thenReturn(addString);
-        @SuppressWarnings("unchecked")
-        Category<FooPojo> mockCategory = (Category<FooPojo>) mock(Category.class);
-        when(desc.getCategory()).thenReturn(mockCategory);
-        when(mockCategory.getDataClass()).thenReturn(FooPojo.class);
-        when(mockCategory.getName()).thenReturn("foo-table");
+        String categoryName = getNextCategoryName();
+        String addString = "REMOVE " + categoryName + " WHERE 'fooRem' = ?s";
+        Category<FooPojo> fooCategory = new Category<>(categoryName, FooPojo.class, new Key<String>("foo"));
+        StatementDescriptor<FooPojo> desc = new StatementDescriptor<>(fooCategory, addString);
         BackingStorage storage = mock(BackingStorage.class);
-        TestRemove remove = new TestRemove();
-        when(storage.createRemove(mockCategory)).thenReturn(remove);
+        TestRemove<FooPojo> remove = new TestRemove<>();
+        when(storage.createRemove(fooCategory)).thenReturn(remove);
         PreparedStatement<FooPojo> preparedStatement = new PreparedStatementImpl<FooPojo>(storage, desc);
         preparedStatement.setString(0, "bar");
         assertFalse(remove.executed);
@@ -314,18 +283,14 @@ public class PreparedStatementImplTest {
     
     @Test
     public void failExecutionWithWronglyTypedParams() throws Exception {
-        String queryString = "QUERY foo WHERE 'a' = ?b";
-        @SuppressWarnings("unchecked")
-        StatementDescriptor<Pojo> desc = (StatementDescriptor<Pojo>) mock(StatementDescriptor.class);
-        when(desc.getDescriptor()).thenReturn(queryString);
-        @SuppressWarnings("unchecked")
-        Category<Pojo> mockCategory = (Category<Pojo>) mock(Category.class);
-        when(desc.getCategory()).thenReturn(mockCategory);
-        when(mockCategory.getName()).thenReturn("foo");
+        String categoryName = getNextCategoryName();
+        String queryString = "QUERY " + categoryName + " WHERE 'a' = ?b";
+        Category<FooPojo> fooCategory = new Category<>(categoryName, FooPojo.class, new Key<String>("a"));
+        StatementDescriptor<FooPojo> desc = new StatementDescriptor<>(fooCategory, queryString);
         BackingStorage storage = mock(BackingStorage.class);
-        StubQuery stmt = new StubQuery();
-        when(storage.createQuery(mockCategory)).thenReturn(stmt);
-        PreparedStatementImpl<Pojo> preparedStatement = new PreparedStatementImpl<>(storage, desc);
+        StubQuery<FooPojo> stmt = new StubQuery<>();
+        when(storage.createQuery(fooCategory)).thenReturn(stmt);
+        PreparedStatementImpl<FooPojo> preparedStatement = new PreparedStatementImpl<>(storage, desc);
         preparedStatement.setString(0, "foo");
         try {
             preparedStatement.executeQuery();
@@ -360,7 +325,7 @@ public class PreparedStatementImplTest {
 
     }
     
-    private static class TestReplace implements Replace<FooPojo> {
+    private static class TestReplace<T extends Pojo> implements Replace<T> {
 
         private Map<String, Object> values = new HashMap<>();
         private boolean executed = false;
@@ -383,7 +348,7 @@ public class PreparedStatementImplTest {
         }
 
         @Override
-        public Statement<FooPojo> getRawDuplicate() {
+        public Statement<T> getRawDuplicate() {
             // we don't duplicate for this test
             return this;
         }
@@ -421,7 +386,7 @@ public class PreparedStatementImplTest {
         
     }
     
-    private static class TestRemove implements Remove<FooPojo> {
+    private static class TestRemove<T extends Pojo> implements Remove<T> {
 
         private Expression where;
         private boolean executed = false;
@@ -438,7 +403,7 @@ public class PreparedStatementImplTest {
         }
 
         @Override
-        public Statement<FooPojo> getRawDuplicate() {
+        public Statement<T> getRawDuplicate() {
             // we don't duplicate for this test
             return this;
         }
@@ -472,7 +437,7 @@ public class PreparedStatementImplTest {
         
     }
     
-    private static class StubQuery implements Query<Pojo> {
+    private static class StubQuery<T extends Pojo> implements Query<T> {
 
         private Expression expr;
         private boolean called = false;
@@ -493,7 +458,7 @@ public class PreparedStatementImplTest {
         }
 
         @Override
-        public Cursor<Pojo> execute() {
+        public Cursor<T> execute() {
             called = true;
             return null;
         }
@@ -505,7 +470,7 @@ public class PreparedStatementImplTest {
         }
 
         @Override
-        public Statement<Pojo> getRawDuplicate() {
+        public Statement<T> getRawDuplicate() {
             // For this test, we don't duplicate
             return this;
         }

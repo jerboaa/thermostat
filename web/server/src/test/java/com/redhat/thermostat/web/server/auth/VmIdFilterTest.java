@@ -41,9 +41,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -55,6 +52,7 @@ import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
+import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.BinaryLogicalExpression;
 import com.redhat.thermostat.storage.query.BinarySetMembershipExpression;
 import com.redhat.thermostat.storage.query.Expression;
@@ -62,6 +60,21 @@ import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.web.server.auth.FilterResult.ResultType;
 
 public class VmIdFilterTest {
+    
+    private static class FooPojo implements Pojo {
+        // Dummy class for testing
+    }
+    
+    private static final Category<FooPojo> TEST_NON_NULL_CATEGORY = new Category<>("foo-vmid-filter-test", FooPojo.class, Key.VM_ID);
+    private static final Category<FooPojo> TEST_NULL_CATEGORY = new Category<>("foo-vmid-filter-test-null", FooPojo.class);
+    /**
+     * A query descriptor which will return a non-null Key for the "vmId" name.
+     */
+    private static final StatementDescriptor<FooPojo> TEST_DESC_NON_NULL_VM_ID = new StatementDescriptor<>(TEST_NON_NULL_CATEGORY, "QUERY foo");
+    /**
+     * A query descriptor which will return a null Key for the "vmId" name.
+     */
+    private static final StatementDescriptor<FooPojo> TEST_DESC_NULL_VM_ID = new StatementDescriptor<>(TEST_NULL_CATEGORY, "QUERY foo-null");
 
     @Test
     public void testReadAll() {
@@ -89,7 +102,6 @@ public class VmIdFilterTest {
         assertEquals(parentExpression, result.getFilterExpression());
     }
     
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
     public void addsVmIdInQuery() {
         String vmId = UUID.randomUUID().toString();
@@ -97,14 +109,8 @@ public class VmIdFilterTest {
         RolePrincipal vmIdRole = new RolePrincipal(VmIdFilter.VMS_BY_VM_ID_GRANT_ROLE_PREFIX + vmId);
         roles.add(vmIdRole);
         DescriptorMetadata metadata = new DescriptorMetadata();
-        StatementDescriptor desc = mock(StatementDescriptor.class);
-        Category category = mock(Category.class);
-        Key<?> vmIdKey = mock(Key.class);
-        // any non-null key for vmId will do
-        when(category.getKey(eq(Key.VM_ID.getName()))).thenReturn(vmIdKey);
-        when(desc.getCategory()).thenReturn(category);
-        VmIdFilter<?> filter = new VmIdFilter<>(roles);
-        FilterResult result = filter.applyFilter(desc, metadata, null);
+        VmIdFilter<FooPojo> filter = new VmIdFilter<>(roles);
+        FilterResult result = filter.applyFilter(TEST_DESC_NON_NULL_VM_ID, metadata, null);
         assertEquals(ResultType.QUERY_EXPRESSION, result.getType());
         assertNotNull(result.getFilterExpression());
         Expression actual = result.getFilterExpression();
@@ -115,7 +121,6 @@ public class VmIdFilterTest {
         assertEquals(expected, actual);
     }
     
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
     public void addsVmIdInQueryAndParentExpression() {
         String vmId = UUID.randomUUID().toString();
@@ -123,16 +128,10 @@ public class VmIdFilterTest {
         RolePrincipal vmIdRole = new RolePrincipal(VmIdFilter.VMS_BY_VM_ID_GRANT_ROLE_PREFIX + vmId);
         roles.add(vmIdRole);
         DescriptorMetadata metadata = new DescriptorMetadata();
-        StatementDescriptor desc = mock(StatementDescriptor.class);
-        Category category = mock(Category.class);
-        Key<?> vmIdKey = mock(Key.class);
-        // any non-null key for vmId will do
-        when(category.getKey(eq(Key.VM_ID.getName()))).thenReturn(vmIdKey);
-        when(desc.getCategory()).thenReturn(category);
-        VmIdFilter<?> filter = new VmIdFilter<>(roles);
+        VmIdFilter<FooPojo> filter = new VmIdFilter<>(roles);
         ExpressionFactory factory = new ExpressionFactory();
         Expression parentExpression = factory.equalTo(Key.AGENT_ID, "testKey");
-        FilterResult result = filter.applyFilter(desc, metadata, parentExpression);
+        FilterResult result = filter.applyFilter(TEST_DESC_NON_NULL_VM_ID, metadata, parentExpression);
         assertEquals(ResultType.QUERY_EXPRESSION, result.getType());
         assertNotNull(result.getFilterExpression());
         Expression actual = result.getFilterExpression();
@@ -145,7 +144,6 @@ public class VmIdFilterTest {
         assertEquals(expected, actual);
     }
     
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
     public void addsVmIdInQuery2() {
         String vmId = UUID.randomUUID().toString();
@@ -156,14 +154,8 @@ public class VmIdFilterTest {
         roles.add(vm1Role);
         roles.add(vm2Role);
         DescriptorMetadata metadata = new DescriptorMetadata();
-        StatementDescriptor desc = mock(StatementDescriptor.class);
-        Category category = mock(Category.class);
-        Key<?> vmIdKey = mock(Key.class);
-        // any non-null key for vmId will do
-        when(category.getKey(eq(Key.VM_ID.getName()))).thenReturn(vmIdKey);
-        when(desc.getCategory()).thenReturn(category);
-        VmIdFilter<?> filter = new VmIdFilter<>(roles);
-        FilterResult result = filter.applyFilter(desc, metadata, null);
+        VmIdFilter<FooPojo> filter = new VmIdFilter<>(roles);
+        FilterResult result = filter.applyFilter(TEST_DESC_NON_NULL_VM_ID, metadata, null);
         assertEquals(ResultType.QUERY_EXPRESSION, result.getType());
         assertNotNull(result.getFilterExpression());
         Expression actual = result.getFilterExpression();
@@ -175,7 +167,6 @@ public class VmIdFilterTest {
         assertEquals(expected, actual);
     }
     
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
     public void returnsEmptyIfVmIdDoesNotMatch() {
         String vmId = UUID.randomUUID().toString();
@@ -187,39 +178,27 @@ public class VmIdFilterTest {
         assertFalse(vmId.equals(wrongVmId));
         
         DescriptorMetadata metadata = new DescriptorMetadata(null, wrongVmId);
-        StatementDescriptor desc = mock(StatementDescriptor.class);
-        Category category = mock(Category.class);
-        Key<?> vmIdKey = mock(Key.class);
-        // any non-null key for vmId will do
-        when(category.getKey(eq(Key.VM_ID.getName()))).thenReturn(vmIdKey);
-        when(desc.getCategory()).thenReturn(category);
         assertTrue(metadata.hasVmId());
-        VmIdFilter<?> filter = new VmIdFilter<>(roles);
-        FilterResult result = filter.applyFilter(desc, metadata, null);
+        VmIdFilter<FooPojo> filter = new VmIdFilter<>(roles);
+        FilterResult result = filter.applyFilter(TEST_DESC_NON_NULL_VM_ID, metadata, null);
         assertEquals(ResultType.EMPTY, result.getType());
         assertNull(result.getFilterExpression());
     }
     
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
     public void returnsAllForUnrelatedQuery() {
         Set<BasicRole> roles = new HashSet<>();
         
         DescriptorMetadata metadata = new DescriptorMetadata();
-        StatementDescriptor desc = mock(StatementDescriptor.class);
-        Category category = mock(Category.class);
-        // want to have a null retval of vmId
-        when(category.getKey(eq(Key.VM_ID.getName()))).thenReturn(null);
-        when(desc.getCategory()).thenReturn(category);
         assertFalse(metadata.hasAgentId());
         assertFalse(metadata.hasVmId());
-        VmIdFilter<?> filter = new VmIdFilter<>(roles);
-        FilterResult result = filter.applyFilter(desc, metadata, null);
+        VmIdFilter<FooPojo> filter = new VmIdFilter<>(roles);
+        // want to have a null retval of vmId
+        FilterResult result = filter.applyFilter(TEST_DESC_NULL_VM_ID, metadata, null);
         assertEquals(ResultType.ALL, result.getType());
         assertNull(result.getFilterExpression());
     }
     
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
     public void returnsParentExpressionForUnrelatedQuery() {
         Set<BasicRole> roles = new HashSet<>();
@@ -227,15 +206,11 @@ public class VmIdFilterTest {
         ExpressionFactory factory = new ExpressionFactory();
         Expression parentExpression = factory.equalTo(Key.AGENT_ID, "testKey");
         DescriptorMetadata metadata = new DescriptorMetadata();
-        StatementDescriptor desc = mock(StatementDescriptor.class);
-        Category category = mock(Category.class);
-        // want to have a null retval of vmId
-        when(category.getKey(eq(Key.VM_ID.getName()))).thenReturn(null);
-        when(desc.getCategory()).thenReturn(category);
         assertFalse(metadata.hasAgentId());
         assertFalse(metadata.hasVmId());
-        VmIdFilter<?> filter = new VmIdFilter<>(roles);
-        FilterResult result = filter.applyFilter(desc, metadata, parentExpression);
+        VmIdFilter<FooPojo> filter = new VmIdFilter<>(roles);
+        // want to have a null retval of vmId
+        FilterResult result = filter.applyFilter(TEST_DESC_NULL_VM_ID, metadata, parentExpression);
         assertEquals(ResultType.QUERY_EXPRESSION, result.getType());
         assertNotNull(result.getFilterExpression());
         assertEquals(parentExpression, result.getFilterExpression());

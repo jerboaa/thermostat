@@ -42,9 +42,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.security.Principal;
 import java.util.HashSet;
@@ -59,12 +57,17 @@ import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.HostInfo;
+import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.web.server.auth.FilterResult.ResultType;
 
 public class UserPrincipalTest {
+    
+    private static class FooPojo implements Pojo {
+        // empty dummy pojo.
+    }
 
     @Test(expected = NullPointerException.class)
     public void testConstructor() {
@@ -148,9 +151,7 @@ public class UserPrincipalTest {
         assertFalse(roles.contains(VmUsernameFilter.GRANT_VMS_USERNAME_READ_ALL));
         SimplePrincipal testMe = new SimplePrincipal("test me");
         testMe.setRoles(roles);
-        @SuppressWarnings("unchecked")
-        StatementDescriptor<VmInfo> desc = mock(StatementDescriptor.class);
-        when(desc.getCategory()).thenReturn(VmInfoDAO.vmInfoCategory);
+        StatementDescriptor<VmInfo> desc = new StatementDescriptor<>(VmInfoDAO.vmInfoCategory, "QUERY " + VmInfoDAO.vmInfoCategory.getName());
         
         // fake a query for a category with agentId attributes and vmId
         // attributes present, but no specific agentId/vmId present.
@@ -178,7 +179,6 @@ public class UserPrincipalTest {
         assertEquals(expected, actual);
     }
     
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
     public void testEntireFilterChainSpecificAgentIdVmId() {
         String agentId = "someAgentID";
@@ -198,15 +198,13 @@ public class UserPrincipalTest {
         assertTrue(roles.contains(VmUsernameFilter.GRANT_VMS_USERNAME_READ_ALL));
         SimplePrincipal testMe = new SimplePrincipal("test me");
         testMe.setRoles(roles);
-        StatementDescriptor desc = mock(StatementDescriptor.class);
-        Category mockCategory = mock(Category.class);
-        Key<?> agentKey = mock(Key.class);
-        // want for the agent id key to be present in category
-        when(mockCategory.getKey(eq(Key.AGENT_ID.getName()))).thenReturn(agentKey);
-        Key<?> vmKey = mock(Key.class);
-        // want for the vm id key to be present in category
-        when(mockCategory.getKey(eq(Key.VM_ID.getName()))).thenReturn(vmKey);
-        when(desc.getCategory()).thenReturn(mockCategory);
+        
+        // want for the agent/vm id key to be present in category
+        Key<?>[] keys = new Key[] {
+             Key.AGENT_ID, Key.VM_ID
+        };
+        Category<FooPojo> agentAndVmIdCat = new Category<>("agentAndVmIdCat", FooPojo.class, keys);
+        StatementDescriptor<FooPojo> desc = new StatementDescriptor<>(agentAndVmIdCat, "QUERY agentAndVmIdCat");
         
         // fake a query for a category with agentId attributes and vmId
         // attributes present and also specific agentId/vmId present.
@@ -222,7 +220,6 @@ public class UserPrincipalTest {
         assertNull(result.getFilterExpression());
     }
     
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
     public void testEntireFilterChainSpecificAgentIdVmIdPlusHostname() {
         String agentId = "someAgentID";
@@ -244,15 +241,7 @@ public class UserPrincipalTest {
         assertTrue(roles.contains(VmUsernameFilter.GRANT_VMS_USERNAME_READ_ALL));
         SimplePrincipal testMe = new SimplePrincipal("test me");
         testMe.setRoles(roles);
-        StatementDescriptor<HostInfo> desc = mock(StatementDescriptor.class);
-        Category mockCategory = mock(Category.class);
-        when(desc.getCategory()).thenReturn(HostInfoDAO.hostInfoCategory);
-        Key<?> agentKey = mock(Key.class);
-        // want for the agent id key to be present in category
-        when(mockCategory.getKey(eq(Key.AGENT_ID.getName()))).thenReturn(agentKey);
-        Key<?> vmKey = mock(Key.class);
-        // want for the vm id key to be present in category
-        when(mockCategory.getKey(eq(Key.VM_ID.getName()))).thenReturn(vmKey);
+        StatementDescriptor<HostInfo> desc = new StatementDescriptor<>(HostInfoDAO.hostInfoCategory, "QUERY " + HostInfoDAO.hostInfoCategory.getName());
         
         // fake a query for a category with agentId attributes and vmId
         // attributes present and also specific agentId/vmId present.
@@ -296,9 +285,7 @@ public class UserPrincipalTest {
         assertFalse(roles.contains(VmUsernameFilter.GRANT_VMS_USERNAME_READ_ALL));
         SimplePrincipal testMe = new SimplePrincipal("test me");
         testMe.setRoles(roles);
-        @SuppressWarnings("unchecked")
-        StatementDescriptor<VmInfo> desc = mock(StatementDescriptor.class);
-        when(desc.getCategory()).thenReturn(VmInfoDAO.vmInfoCategory);
+        StatementDescriptor<VmInfo> desc = new StatementDescriptor<>(VmInfoDAO.vmInfoCategory, "QUERY " + VmInfoDAO.vmInfoCategory.getName());
         
         // fake a query for a category with agentId attributes and vmId
         // attributes present and also specific agentId/vmId present.

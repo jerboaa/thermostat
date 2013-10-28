@@ -40,8 +40,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -97,9 +95,7 @@ public class HostnameFilterTest {
         roles.add(hostnameRole);
         
         DescriptorMetadata metadata = new DescriptorMetadata();
-        @SuppressWarnings("unchecked")
-        StatementDescriptor<HostInfo> desc = mock(StatementDescriptor.class);
-        when(desc.getCategory()).thenReturn(HostInfoDAO.hostInfoCategory);
+        StatementDescriptor<HostInfo> desc = new StatementDescriptor<>(HostInfoDAO.hostInfoCategory, "QUERY " + HostInfoDAO.hostInfoCategory.getName());
         
         Set<String> hostnames = new HashSet<>();
         hostnames.add(testHostname);
@@ -121,9 +117,7 @@ public class HostnameFilterTest {
         roles.add(hostnameRole);
         
         DescriptorMetadata metadata = new DescriptorMetadata();
-        @SuppressWarnings("unchecked")
-        StatementDescriptor<HostInfo> desc = mock(StatementDescriptor.class);
-        when(desc.getCategory()).thenReturn(HostInfoDAO.hostInfoCategory);
+        StatementDescriptor<HostInfo> desc = new StatementDescriptor<>(HostInfoDAO.hostInfoCategory, "QUERY " + HostInfoDAO.hostInfoCategory.getName());
         
         Set<String> hostnames = new HashSet<>();
         hostnames.add(testHostname);
@@ -146,9 +140,7 @@ public class HostnameFilterTest {
         
         DescriptorMetadata metadata = new DescriptorMetadata();
 
-        @SuppressWarnings("unchecked")
-        StatementDescriptor<AgentInformation> desc = mock(StatementDescriptor.class);
-        when(desc.getCategory()).thenReturn(AgentInfoDAO.CATEGORY);
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, "QUERY " + AgentInfoDAO.CATEGORY.getName());
         
         HostnameFilter<AgentInformation> filter = new HostnameFilter<>(roles);
         FilterResult result = filter.applyFilter(desc, metadata, null);
@@ -161,9 +153,7 @@ public class HostnameFilterTest {
         Set<BasicRole> roles = new HashSet<>();
         
         DescriptorMetadata metadata = new DescriptorMetadata();
-        @SuppressWarnings("unchecked")
-        StatementDescriptor<AgentInformation> desc = mock(StatementDescriptor.class);
-        when(desc.getCategory()).thenReturn(AgentInfoDAO.CATEGORY);
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, "QUERY " + AgentInfoDAO.CATEGORY.getName());
         
         ExpressionFactory factory = new ExpressionFactory();
         Expression parentExpression = factory.equalTo(Key.AGENT_ID, "testKey");

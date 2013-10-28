@@ -39,12 +39,13 @@ package com.redhat.thermostat.storage.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
-import com.redhat.thermostat.storage.internal.AdaptedCategory;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.AggregateResult;
@@ -63,10 +64,28 @@ public class AdaptedCategoryTest {
     }
     
     @Test
+    public void testHashCode() {
+        AdaptedCategory<AggregateCount, AgentInformation> cat = new AdaptedCategory<>(AgentInfoDAO.CATEGORY, AggregateCount.class);
+        assertTrue("Adapted and original must have different hash code",
+                cat.hashCode() != AgentInfoDAO.CATEGORY.hashCode());
+    }
+    
+    @Test
     public void getDataClass() {
         AdaptedCategory<AggregateCount, AgentInformation> cat = new AdaptedCategory<>(AgentInfoDAO.CATEGORY, AggregateCount.class);
         assertEquals(AggregateCount.class, cat.getDataClass());
         assertTrue(AggregateResult.class.isAssignableFrom(cat.getDataClass()));
+    }
+    
+    @Test
+    public void keysAreImmutable() {
+        AdaptedCategory<AggregateCount, AgentInformation> cat = new AdaptedCategory<>(AgentInfoDAO.CATEGORY, AggregateCount.class);
+        try {
+            cat.getKeys().add(new Key<>("foo"));
+            fail("keys need to be immutable");
+        } catch (UnsupportedOperationException e) {
+            // pass
+        }
     }
     
     @Test
