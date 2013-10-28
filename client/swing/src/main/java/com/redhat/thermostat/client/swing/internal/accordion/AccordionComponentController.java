@@ -83,4 +83,8 @@ class AccordionComponentController {
             }
         }
     }
+    
+    AccordionComponent getSelectedComponent() {
+        return selectedComponent;
+    }
 }

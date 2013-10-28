@@ -36,16 +36,21 @@
 
 package com.redhat.thermostat.storage.monitor.internal;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.monitor.HostMonitor;
 
@@ -66,6 +71,18 @@ public class HostMonitorImpl implements HostMonitor {
     
     Map<HostRef, Pair<Timer, ActionNotifier<HostMonitor.Action>>> getListeners() {
         return listeners;
+    }
+    
+    @Override
+    public List<VmRef> getVirtualMachines(HostRef host, Filter<VmRef> matcher) {
+        List<VmRef> vms = new ArrayList<>();
+        Collection<VmRef> _vms = vmDao.getVMs(host);
+        for (VmRef vm : _vms) {
+            if (matcher.matches(vm)) {
+                vms.add(vm);
+            }
+        }
+        return vms;
     }
     
     @Override

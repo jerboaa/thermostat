@@ -58,6 +58,7 @@ public class DecoratorProviderExtensionListener<T extends Ref> implements Action
     public enum Action {
         DECORATOR_ADDED,
         DECORATOR_REMOVED,
+        DECORATION_CHANGED,
     }
     
     private final ActionNotifier<Action> decoratorChangeNotifier;
@@ -111,5 +112,9 @@ public class DecoratorProviderExtensionListener<T extends Ref> implements Action
     
     CopyOnWriteArrayList<DecoratorProvider<T>> getDecorators() {
         return decorators;
+    }
+
+    public void decorationChanged() {
+        decoratorChangeNotifier.fireAction(Action.DECORATION_CHANGED);
     }
 }

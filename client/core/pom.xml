@@ -125,7 +125,8 @@
               com.redhat.thermostat.client.core,
               com.redhat.thermostat.client.core.progress,
               com.redhat.thermostat.client.core.controllers,
-              com.redhat.thermostat.client.core.views
+              com.redhat.thermostat.client.core.views,
+              com.redhat.thermostat.client.core.vmlist
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.client.core.internal

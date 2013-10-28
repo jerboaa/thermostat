@@ -44,6 +44,7 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.common.Filter;
+import com.redhat.thermostat.client.core.vmlist.VMFilter;
 import com.redhat.thermostat.client.filter.vm.core.LivingVMFilter;
 import com.redhat.thermostat.client.filter.vm.core.internal.VMFilterActivator;
 import com.redhat.thermostat.client.ui.MenuAction;
@@ -66,7 +67,7 @@ public class VMFilterActivatorTest {
         activator.vmInfoDaoTracker.addingService(ref);
         
         assertTrue(ctx.isServiceRegistered(MenuAction.class.getName(), LivingVMFilterMenuAction.class));
-        assertTrue(ctx.isServiceRegistered(Filter.class.getName(), LivingVMFilter.class));
+        assertTrue(ctx.isServiceRegistered(VMFilter.class.getName(), LivingVMFilter.class));
     }
 
 }

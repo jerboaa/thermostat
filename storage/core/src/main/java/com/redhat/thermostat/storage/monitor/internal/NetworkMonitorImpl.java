@@ -36,12 +36,17 @@
 
 package com.redhat.thermostat.storage.monitor.internal;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
+import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.monitor.NetworkMonitor;
 
@@ -52,9 +57,12 @@ public class NetworkMonitorImpl implements NetworkMonitor {
     protected final ActionNotifier<NetworkMonitor.Action> notifier;
     
     private Timer timer;
+    private HostInfoDAO hostDAO;
     
     public NetworkMonitorImpl(TimerFactory timerFactory, HostInfoDAO hostDAO) {
         
+        this.hostDAO = hostDAO;
+
         notifier = new ActionNotifier<>(this);
         
         timer = timerFactory.createTimer();
@@ -62,6 +70,18 @@ public class NetworkMonitorImpl implements NetworkMonitor {
         timer.setDelay(DELAY);
         timer.setSchedulingType(Timer.SchedulingType.FIXED_RATE);
         timer.setAction(new NetworkMonitorAction(notifier, hostDAO));
+    }
+    
+    @Override
+    public List<HostRef> getHosts(Filter<HostRef> matcher) {
+        List<HostRef> hosts = new ArrayList<>();
+        Collection<HostRef> _hosts = hostDAO.getHosts();
+        for (HostRef host : _hosts) {
+            if (matcher.matches(host)) {
+                hosts.add(host);
+            }
+        }
+        return hosts;
     }
     
     @Override

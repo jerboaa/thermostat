@@ -36,12 +36,12 @@
 
 package com.redhat.thermostat.client.filter.vm.core;
 
-import com.redhat.thermostat.common.Filter;
+import com.redhat.thermostat.client.core.vmlist.VMFilter;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
 
-public class LivingVMFilter implements Filter<VmRef> {
+public class LivingVMFilter extends VMFilter {
 
     volatile boolean filterActive = true;
     
@@ -61,7 +61,11 @@ public class LivingVMFilter implements Filter<VmRef> {
     }
 
     public void setActive(boolean active) {
+        boolean oldActive = this.filterActive;
         this.filterActive = active;
+        if (oldActive != filterActive) {
+            notify(FilterEvent.FILTER_CHANGED);
+        }
     }
 
     public boolean isActive() {

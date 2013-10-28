@@ -45,6 +45,8 @@ import static org.mockito.Mockito.times;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -53,10 +55,13 @@ import org.junit.Test;
 
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.AllPassFilter;
+import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.monitor.HostMonitor;
 
@@ -64,11 +69,66 @@ public class HostMonitorImplTest {
 
     private VmInfoDAO vmDao;
     private TimerFactory timerFactory;
+    private Timer timer1;
     
     @Before
     public void setup() {
         vmDao = mock(VmInfoDAO.class);
         timerFactory = mock(TimerFactory.class);
+        timer1 = mock(Timer.class);
+        when(timerFactory.createTimer()).thenReturn(timer1);
+    }
+    
+    @Test
+    public void testGetVirtualMachines() {
+        List<VmRef> testData = new ArrayList<>(); 
+        List<VmRef> testData2 = new ArrayList<>(); 
+
+        HostRef host0 = new HostRef("0", "0");
+        HostRef host1 = new HostRef("1", "1");
+        
+        VmRef vm0 = new VmRef(host0, "0", 0, "0");
+        VmRef vm1 = new VmRef(host0, "1", 1, "2");
+        VmRef vm2 = new VmRef(host0, "2", 2, "3");
+        VmRef vm3 = new VmRef(host0, "3", 3, "3");
+        VmRef vm4 = new VmRef(host0, "4", 4, "4");
+        VmRef vm5 = new VmRef(host0, "5", 5, "5");
+    
+        testData.add(vm0);
+        testData.add(vm1);
+        testData.add(vm2);
+        testData.add(vm3);
+        testData.add(vm4);
+        testData.add(vm5);
+        
+        when(vmDao.getVMs(host0)).thenReturn(testData);
+        when(vmDao.getVMs(host1)).thenReturn(testData2);
+
+        HostMonitor monitor = new HostMonitorImpl(timerFactory, vmDao);
+        List<VmRef> vms = monitor.getVirtualMachines(host0, new AllPassFilter<VmRef>());
+        assertEquals(testData.size(), vms.size());
+        for (VmRef ref : testData) {
+            assertTrue(vms.contains(ref));
+        }
+        
+        vms = monitor.getVirtualMachines(host1, new AllPassFilter<VmRef>());
+        assertEquals(0, vms.size());
+
+        Filter<VmRef> bandFilter = new Filter<VmRef>() {
+            @Override
+            public boolean matches(VmRef toMatch) {
+                return toMatch.getName().equals("1") ||
+                       toMatch.getName().equals("2") ||
+                       toMatch.getName().equals("3");
+            }
+        };
+        
+        vms = monitor.getVirtualMachines(host0, bandFilter);
+        assertEquals(3, vms.size());
+        
+        assertTrue(vms.contains(vm1));
+        assertTrue(vms.contains(vm2));
+        assertTrue(vms.contains(vm3));
     }
     
     @SuppressWarnings("unchecked")
@@ -77,9 +137,6 @@ public class HostMonitorImplTest {
         ActionListener<HostMonitor.Action> listener1 = mock(ActionListener.class);
         ActionListener<HostMonitor.Action> listener2 = mock(ActionListener.class);
 
-        Timer timer1 = mock(Timer.class);
-        when(timerFactory.createTimer()).thenReturn(timer1);
-        
         HostRef host1 = new HostRef("0", "0");
 
         HostMonitor monitor = new HostMonitorImpl(timerFactory, vmDao);

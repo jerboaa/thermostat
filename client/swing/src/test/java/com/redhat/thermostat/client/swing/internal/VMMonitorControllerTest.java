@@ -95,13 +95,13 @@ public class VMMonitorControllerTest {
         
         networkListener.actionPerformed(event);
         
-        verify(treeController).addHost(host1);
+        verify(treeController).registerHost(host1);
         
         event = new ActionEvent<NetworkMonitor.Action>(networkMonitor,
                                                        Action.HOST_REMOVED);
         event.setPayload(host1);
         networkListener.actionPerformed(event);
 
-        verify(treeController).removeHost(host1);
+        verify(treeController).updateHostStatus(host1);
     }
 }

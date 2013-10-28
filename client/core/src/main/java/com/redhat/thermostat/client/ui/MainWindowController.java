@@ -39,9 +39,6 @@ package com.redhat.thermostat.client.ui;
 
 public interface MainWindowController {
 
-    public void setHostVmTreeFilter(String filter);
-
     public void showMainMainWindow();
-
 }
 

@@ -40,7 +40,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -48,9 +47,7 @@ import java.util.logging.Logger;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 
-import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.client.core.InformationService;
-import com.redhat.thermostat.client.core.NameMatchingRefFilter;
 import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.client.core.views.AgentInformationDisplayView;
 import com.redhat.thermostat.client.core.views.AgentInformationViewProvider;
@@ -64,12 +61,12 @@ import com.redhat.thermostat.client.swing.internal.osgi.HostContextActionService
 import com.redhat.thermostat.client.swing.internal.osgi.InformationServiceTracker;
 import com.redhat.thermostat.client.swing.internal.osgi.VMContextActionServiceTracker;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.DecoratorProviderExtensionListener;
+import com.redhat.thermostat.client.swing.internal.vmlist.controller.FilterManager;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.HostTreeController;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.HostTreeController.ReferenceSelection;
 import com.redhat.thermostat.client.ui.AgentInformationDisplayController;
 import com.redhat.thermostat.client.ui.AgentInformationDisplayModel;
 import com.redhat.thermostat.client.ui.ClientConfigurationController;
-import com.redhat.thermostat.client.ui.DecoratorProvider;
 import com.redhat.thermostat.client.ui.HostInformationController;
 import com.redhat.thermostat.client.ui.MainWindowController;
 import com.redhat.thermostat.client.ui.MenuAction;
@@ -78,6 +75,7 @@ import com.redhat.thermostat.client.ui.SummaryController;
 import com.redhat.thermostat.client.ui.VmInformationController;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.AllPassFilter;
 import com.redhat.thermostat.common.ApplicationInfo;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.MultipleServiceTracker;
@@ -101,9 +99,6 @@ public class MainWindowControllerImpl implements MainWindowController {
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     
     private static final Logger logger = LoggingUtils.getLogger(MainWindowControllerImpl.class);
-
-    private final CopyOnWriteArrayList<Filter<HostRef>> hostFilters = new CopyOnWriteArrayList<>();
-    private final CopyOnWriteArrayList<Filter<VmRef>> vmFilters = new CopyOnWriteArrayList<>();
 
     private final ApplicationInfo appInfo = new ApplicationInfo();
 
@@ -162,14 +157,6 @@ public class MainWindowControllerImpl implements MainWindowController {
         }
     };
 
-    private NameMatchingRefFilter<HostRef> hostFilter;
-    private NameMatchingRefFilter<VmRef> vmFilter;
-    private VmFilterRegistry vmFilterRegistry;
-    private HostFilterRegistry hostFilterRegistry;
-
-    private ActionListener<ThermostatExtensionRegistry.Action> hostFilterListener = new FilterExtensionListener<HostRef>(hostFilters);
-    private ActionListener<ThermostatExtensionRegistry.Action> vmFilterListener = new FilterExtensionListener<VmRef>(vmFilters);
-
     private HostTreeDecoratorRegistry hostDecoratorRegistry;
     private VMTreeDecoratorRegistry vmDecoratorRegistry;
 
@@ -181,11 +168,14 @@ public class MainWindowControllerImpl implements MainWindowController {
                                     actionEvent)
         {
             // TODO
-            //updateView();
+            // System.err.println(actionEvent.getPayload());
         };
     };
 
     private VmInformationControllerProvider vmInfoControllerProvider;
+    private VmFilterRegistry vmFilterRegistry;
+    private HostFilterRegistry hostFilterRegistry;
+    private FilterManager filterManager;
     
     public MainWindowControllerImpl(BundleContext context, ApplicationService appSvc,
             CountDownLatch shutdown) {
@@ -195,12 +185,16 @@ public class MainWindowControllerImpl implements MainWindowController {
     MainWindowControllerImpl(final BundleContext context, ApplicationService appSvc,
             final MainView view,
             RegistryFactory registryFactory,
-            final CountDownLatch shutdown) {
+            final CountDownLatch shutdown)
+    {
         this.appSvc = appSvc;
         this.view = view;
+       
         try {
+            
             vmFilterRegistry = registryFactory.createVmFilterRegistry();
             hostFilterRegistry = registryFactory.createHostFilterRegistry();
+            
             hostDecoratorRegistry = registryFactory.createHostTreeDecoratorRegistry();
             vmDecoratorRegistry = registryFactory.createVMTreeDecoratorRegistry();
             menuRegistry = registryFactory.createMenuRegistry();
@@ -209,13 +203,7 @@ public class MainWindowControllerImpl implements MainWindowController {
         } catch (InvalidSyntaxException e) {
             throw new RuntimeException(e);
         }
-
-        hostFilter = new NameMatchingRefFilter<>();
-        vmFilter = new NameMatchingRefFilter<>();
-        
-        hostFilters.add(hostFilter);
-        vmFilters.add(vmFilter);
-        
+                
         this.infoServiceTracker = new InformationServiceTracker(context);
         this.infoServiceTracker.open();
         
@@ -272,11 +260,11 @@ public class MainWindowControllerImpl implements MainWindowController {
                 initView();
 
                 vmInfoControllerProvider = new VmInformationControllerProvider();
-
-                vmMonitor = initMonitors();
-                vmMonitor.start();
                 
                 installListenersAndStartRegistries();
+                
+                vmMonitor = initMonitors();
+                vmMonitor.start();
                 
                 registerProgressNotificator(context);
             }
@@ -299,19 +287,6 @@ public class MainWindowControllerImpl implements MainWindowController {
         return vmMonitor;
     }
     
-    /*
-     * This method is for testing purposes only
-     */
-    Filter<HostRef> getHostFilter() {
-        return hostFilter;
-    }
-    /*
-     * This also is for testing purposes.
-     */
-    Filter<VmRef> getVmFilter() {
-        return vmFilter;
-    }
-    
     /**
      * This method is for testing purposes only
      */
@@ -319,15 +294,27 @@ public class MainWindowControllerImpl implements MainWindowController {
         return menuListener;
     }
     
-    @Override
-    public void setHostVmTreeFilter(String filter) {
-        this.hostFilter.setPattern(filter);
-        this.vmFilter.setPattern(filter);
-    }
-
-    private void initView() {        
-        view.setWindowTitle(appInfo.getName());
+    private void initHostVMTree() {
+        HostTreeController hostController = view.getHostTreeController();
         
+        // initially fill out with all known host and vms
+        List<HostRef> hosts = networkMonitor.getHosts(new AllPassFilter<HostRef>());
+        AllPassFilter<VmRef> vmFilter = new AllPassFilter<>();
+        for (HostRef host : hosts) {
+            hostController.registerHost(host);
+
+            // get the vm for this host
+            List<VmRef> vms = hostMonitor.getVirtualMachines(host, vmFilter);
+            for (VmRef vm : vms) {
+                hostController.registerVM(vm);
+            }
+        }
+    }
+    
+    private void initView() {
+        view.setWindowTitle(appInfo.getName());
+
+        initHostVMTree();
         view.getHostTreeController().addReferenceSelectionChangeListener(new
                 ActionListener<HostTreeController.ReferenceSelection>() {
             @Override
@@ -347,20 +334,11 @@ public class MainWindowControllerImpl implements MainWindowController {
                 case VISIBLE:
                     break;
                     
-                case HOST_VM_TREE_FILTER:
-                    // TODO
-//                    String filter = view.getHostVmTreeFilterText();
-//                    setHostVmTreeFilter(filter);
-                    break;
                 case SHOW_AGENT_CONFIG:
                     showAgentConfiguration();
                     break;
                 case SHOW_CLIENT_CONFIG:
                     showConfigureClientPreferences();
-                    break;
-                case SWITCH_HISTORY_MODE:
-                    // TODO
-                    //switchHistoryMode();
                     break;
                 case SHOW_ABOUT_DIALOG:
                     showAboutDialog();
@@ -375,6 +353,7 @@ public class MainWindowControllerImpl implements MainWindowController {
                     // Main will call shutdownApplication
                     shutdown.countDown();
                     break;
+                    
                 default:
                     throw new IllegalStateException("unhandled action");
                 }
@@ -403,13 +382,11 @@ public class MainWindowControllerImpl implements MainWindowController {
         menuRegistry.addActionListener(menuListener);
         menuRegistry.start();
 
-        hostFilterRegistry.addActionListener(hostFilterListener);
-        hostFilterRegistry.start();
-
-        vmFilterRegistry.addActionListener(vmFilterListener);
-        vmFilterRegistry.start();
-
         HostTreeController hostTreeController = view.getHostTreeController();
+        filterManager = new FilterManager(vmFilterRegistry, hostFilterRegistry,
+                                          hostTreeController);
+
+        filterManager.start();
         
         DecoratorProviderExtensionListener<HostRef> hostDecoratorListener =
                 hostTreeController.getHostDecoratorListener();
@@ -435,14 +412,8 @@ public class MainWindowControllerImpl implements MainWindowController {
         menuListener = null;
         menuRegistry.stop();
 
-        hostFilterRegistry.removeActionListener(hostFilterListener);
-        hostFilterListener = null;
-        hostFilterRegistry.stop();
-
-        vmFilterRegistry.removeActionListener(vmFilterListener);
-        vmFilterListener = null;
-        vmFilterRegistry.stop();
-
+        filterManager.stop();
+        
         HostTreeController hostTreeController = view.getHostTreeController();
         
         DecoratorProviderExtensionListener<HostRef> hostDecoratorListener =
@@ -556,48 +527,6 @@ public class MainWindowControllerImpl implements MainWindowController {
                     vmRef.getName(), vmRef.getVmId(), vmRef.getHostRef().getHostName()));
         } else {
             throw new IllegalArgumentException("unknown type of ref");
-        }
-    }
-
-    private class FilterExtensionListener<T> implements ActionListener<ThermostatExtensionRegistry.Action> {
-
-        private final CopyOnWriteArrayList<Filter<T>> extensionList;
-
-        public FilterExtensionListener(CopyOnWriteArrayList<Filter<T>> addRemoveExtensionsFrom) {
-            this.extensionList = addRemoveExtensionsFrom;
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public void actionPerformed(ActionEvent<ThermostatExtensionRegistry.Action> actionEvent) {
-
-            Object payload = actionEvent.getPayload();
-            Filter<T> filter = null;
-
-            try {
-                filter = (Filter<T>) payload;
-            } catch (ClassCastException cce) {
-                throw new IllegalArgumentException("unexpected payload type. " +
-                            payload.getClass().getName() + " not allowed here.", cce);
-            }
-        
-
-            switch (actionEvent.getActionId()) {
-            case SERVICE_ADDED:
-                extensionList.add(filter);
-                //doUpdateTreeAsync();
-                break;
-
-            case SERVICE_REMOVED:
-                extensionList.remove(filter);
-                //doUpdateTreeAsync();
-                break;
-
-            default:
-                logger.log(Level.WARNING, "received unknown event from ExtensionRegistry: " +
-                                           actionEvent.getActionId());
-                break;
-            }
         }
     }
 

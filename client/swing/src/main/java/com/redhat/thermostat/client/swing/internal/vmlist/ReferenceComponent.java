@@ -43,7 +43,6 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 
 import javax.swing.Box;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import com.redhat.thermostat.client.swing.components.CompositeIcon;

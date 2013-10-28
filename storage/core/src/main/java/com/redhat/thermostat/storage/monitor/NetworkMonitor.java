@@ -36,7 +36,10 @@
 
 package com.redhat.thermostat.storage.monitor;
 
+import java.util.List;
+
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.storage.core.HostRef;
 
 /**
@@ -48,7 +51,12 @@ public interface NetworkMonitor {
         HOST_ADDED,
         HOST_REMOVED,
     }
-     
+
+    /**
+     * Returns all the {@link HostRef} tracked matching the given {@link Filter}.
+     */
+    List<HostRef> getHosts(Filter<HostRef> matcher);
+    
     void addNetworkChangeListener(ActionListener<Action> listener);
     void removeNetworkChangeListener(ActionListener<Action> listener);
 }

@@ -315,23 +315,23 @@ public class MainWindowControllerImplTest {
         verify(view).showMainWindow();
     }
     
-    @Test
-    public void verifyUpdateHostsVMsLoadsCorrectVMWithFilter() {
-
-        VmRef ref1 = mock(VmRef.class);
-        when(ref1.getStringID()).thenReturn("test1");
-        when(ref1.getName()).thenReturn("test1");
-        
-        VmRef ref2 = mock(VmRef.class);
-        when(ref2.getStringID()).thenReturn("test2");
-        when(ref2.getName()).thenReturn("test2");
-        
-        controller.setHostVmTreeFilter("test1");
-                
-        Filter<VmRef> filter = controller.getVmFilter();
-        assertTrue(filter.matches(ref1));
-        assertFalse(filter.matches(ref2));
-    }
+//    @Test
+//    public void verifyUpdateHostsVMsLoadsCorrectVMWithFilter() {
+//
+//        VmRef ref1 = mock(VmRef.class);
+//        when(ref1.getStringID()).thenReturn("test1");
+//        when(ref1.getName()).thenReturn("test1");
+//        
+//        VmRef ref2 = mock(VmRef.class);
+//        when(ref2.getStringID()).thenReturn("test2");
+//        when(ref2.getName()).thenReturn("test2");
+//        
+//        controller.setHostVmTreeFilter("test1");
+//                
+//        Filter<VmRef> filter = controller.getVmFilter();
+//        assertTrue(filter.matches(ref1));
+//        assertFalse(filter.matches(ref2));
+//    }
     
 //    private void assertEqualCollection(Collection<?> expected, Collection<?> actual) {
 //        assertEquals(expected.size(), actual.size());

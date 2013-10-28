@@ -36,10 +36,8 @@
 
 package com.redhat.thermostat.client.swing.internal;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.atLeastOnce;
@@ -48,7 +46,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -65,25 +62,19 @@ import org.fest.swing.edt.GuiTask;
 import org.fest.swing.exception.ComponentLookupException;
 import org.fest.swing.fixture.FrameFixture;
 import org.fest.swing.fixture.JMenuItemFixture;
-import org.fest.swing.fixture.JTextComponentFixture;
-import org.fest.swing.fixture.JTreeFixture;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.common.Filter;
-import com.redhat.thermostat.client.swing.components.SearchField;
-import com.redhat.thermostat.client.ui.ContextAction;
 import com.redhat.thermostat.client.ui.Decorator;
 import com.redhat.thermostat.client.ui.DecoratorProvider;
-import com.redhat.thermostat.client.ui.HostContextAction;
 import com.redhat.thermostat.client.ui.MenuAction;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.HostsVMsLoader;
@@ -163,17 +154,6 @@ public class MainWindowTest {
         verify(decorator, atLeastOnce()).getLabel("fluffhost2");
     }
     
-//    @Category(GUITest.class)
-//    @Test
-//    public void testHostVMTreeFilterPropertySupport() {
-//        String SEARCH_TEXT = "test";
-//        frameFixture.show();
-//        JTextComponentFixture hostVMTreeFilterField = frameFixture.textBox(SearchField.VIEW_NAME);
-//        hostVMTreeFilterField.enterText(SEARCH_TEXT);
-//
-//        verify(l, times(SEARCH_TEXT.length())).actionPerformed(new ActionEvent<MainView.Action>(window, MainView.Action.HOST_VM_TREE_FILTER));
-//    }
-
     @Category(GUITest.class)
     @Test
     public void verifyThatCloseFiresShutdownEvent() {
@@ -233,20 +213,6 @@ public class MainWindowTest {
         frameFixture.requireNotVisible();
 
         verify(l).actionPerformed(new ActionEvent<MainView.Action>(window, MainView.Action.SHOW_AGENT_CONFIG));
-    }
-
-
-    // FIXME: re-add when history mode is back
-    //@Category(GUITest.class)
-    //@Test
-    public void verifyThatHistorySwitchTriggersEvent() {
-        frameFixture.show();
-        JMenuItemFixture menuItem = frameFixture.menuItem("historyModeSwitch");
-        menuItem.click();
-        frameFixture.close();
-        frameFixture.requireNotVisible();
-
-        verify(l).actionPerformed(new ActionEvent<MainView.Action>(window, MainView.Action.SWITCH_HISTORY_MODE));
     }
 
     @Category(GUITest.class)

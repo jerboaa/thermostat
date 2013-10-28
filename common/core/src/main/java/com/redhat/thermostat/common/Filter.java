@@ -36,13 +36,67 @@
 
 package com.redhat.thermostat.common;
 
+import com.redhat.thermostat.annotations.ExtensionPoint;
+
 /**
  * A {@link Filter} decides if some information matches what this
- * {@link Filter} is designed to work with.
+ * filter is designed to work with. The exact meaning of the
+ * word "match" depends on the context this filter is applied.
+ * 
+ * <br /><br />
+ * 
+ * For example, a {@link String} filter that match for all the input containing
+ * the word "test" would return {@code true} for both "a test" or "testing",
+ * but {@code false} for the mispelled word "tesst". This example filter could
+ * then be used to implement a search function, by testing various strings
+ * and only showing the ones that match this filter.
+ * 
+ * <br /><br />
+ * 
+ * Filters may change their behavior due to external events in a certain
+ * context. In such cases, the filter managers specific to those context should
+ * register as {@link FilterEvent} listeners and the {@link Filter}
+ * implementation should notify of {@link FilterEvent#FILTER_CHANGED} events.
+ * 
+ * <br /><br />
+ * 
+ * As an example let's take again our {@link String} filter. If such filter
+ * was used in a search context, the filter could react to user input and
+ * change the string to be used as matcher. At each matcher change, it should
+ * notify its listeners that such change occurred in order to allow correct
+ * re-processing of the filter.
  */
-public interface Filter<T> {
+@ExtensionPoint
+public abstract class Filter<T> {
 
-    boolean matches(T toMatch);
+    public enum FilterEvent {
+        FILTER_CHANGED,
+    }
+    
+    private final ActionNotifier<FilterEvent> notifier;
+    public Filter() {
+        notifier = new ActionNotifier<>(this);
+    }
+    
+    /**
+     * Return {@code true} if this filter match the given input, {@code false}
+     * otherwise. 
+     */
+    public abstract boolean matches(T toMatch);
 
+    public void addFilterEventListener(ActionListener<FilterEvent> listener) {
+        notifier.addActionListener(listener);
+    }
+    
+    public void removeFilterEventListener(ActionListener<FilterEvent> listener) {
+        notifier.removeActionListener(listener);
+    }
+    
+    /**
+     * Notify all the listeners that a change occurred in this filter.
+     */
+    protected void notify(FilterEvent action) {
+        notifier.fireAction(action);
+    }    
 }
 

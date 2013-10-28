@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.client.swing.internal.vmlist;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.redhat.thermostat.client.swing.internal.accordion.AccordionComponent;
 import com.redhat.thermostat.client.swing.internal.accordion.AccordionComponentFactory;
 import com.redhat.thermostat.client.swing.internal.accordion.TitledPane;
@@ -45,16 +48,23 @@ import com.redhat.thermostat.storage.core.VmRef;
 
 public class HostTreeComponentFactory implements AccordionComponentFactory<HostRef, VmRef>{
     
+    private Map<VmRef, AccordionComponent> components;
+    private Map<HostRef, ReferenceTitle> headers;
+    
     private DecoratorManager decoratorManager;
     
     public HostTreeComponentFactory(DecoratorManager decoratorManager) {
         this.decoratorManager = decoratorManager;
+        components = new HashMap<>();
+        headers = new HashMap<>();
     }
 
     @Override
     public TitledPane createHeader(HostRef header) {
         ReferenceTitle pane = new ReferenceTitle(header);
         decoratorManager.registerAndSetIcon(pane);
+        headers.put(header, pane);
+
         return pane;
     }
 
@@ -62,6 +72,16 @@ public class HostTreeComponentFactory implements AccordionComponentFactory<HostR
     public AccordionComponent createComponent(HostRef header, VmRef component) {
         ReferenceComponent refComponent = new ReferenceComponent(component);
         decoratorManager.registerAndSetIcon(refComponent);
+        components.put(component, refComponent);
+
         return refComponent;
+    }
+    
+    public AccordionComponent getAccordionComponent(VmRef vm) {
+        return components.get(vm);
+    }
+    
+    public ReferenceTitle getTitledPane(HostRef host) {
+        return headers.get(host);
     }
 }

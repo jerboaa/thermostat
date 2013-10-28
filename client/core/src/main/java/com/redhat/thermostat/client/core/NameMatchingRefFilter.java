@@ -45,12 +45,12 @@ import com.redhat.thermostat.common.Filter;
  * A {@link Filter} that checks if the name of a {@link Ref} contains
  * the supplied character substring. This is case sensitive.
  */
-public class NameMatchingRefFilter<T extends Ref> implements Filter<T> {
+public class NameMatchingRefFilter<T extends Ref> extends Filter<T> {
 
     private String pattern;
 
     public NameMatchingRefFilter() {
-        this(null);
+        this("");
     }
 
     public NameMatchingRefFilter(String pattern) {
@@ -67,7 +67,11 @@ public class NameMatchingRefFilter<T extends Ref> implements Filter<T> {
     }
 
     public void setPattern(String pattern) {
+        String oldPattern = this.pattern;
         this.pattern = pattern;
+        if (!Objects.equals(oldPattern, this.pattern)) {
+            notify(FilterEvent.FILTER_CHANGED);
+        }
     }
 
     public String getPattern() {

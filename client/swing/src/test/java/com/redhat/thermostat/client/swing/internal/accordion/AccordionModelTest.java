@@ -36,11 +36,90 @@
 
 package com.redhat.thermostat.client.swing.internal.accordion;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import java.util.List;
 
 import org.junit.Test;
 
 public class AccordionModelTest {
+    
+    @Test
+    public void testAccessHeader() {
+        AccordionModel<String, String> testModel = new AccordionModel<>();
+        testModel.addComponent("test0", "testComponent0");
+        testModel.addComponent("test0", "testComponent1");
+        testModel.addComponent("test0", "testComponent2");
+        testModel.addComponent("test1", "testComponent3");
+        testModel.addHeader("test2");
+        
+        List<String> result = testModel.getHeaders();
+        assertEquals(3, result.size());
+
+        assertTrue(result.contains("test0"));
+        assertTrue(result.contains("test1"));
+        assertTrue(result.contains("test2"));
+        
+        testModel.addHeader("test3");
+        testModel.addHeader("test4");
+        testModel.addHeader("test5");
+
+        result = testModel.getHeaders();
+        assertEquals(6, result.size());
+
+        assertTrue(result.contains("test0"));
+        assertTrue(result.contains("test1"));
+        assertTrue(result.contains("test2"));
+        assertTrue(result.contains("test3"));
+        assertTrue(result.contains("test4"));
+        assertTrue(result.contains("test5"));
+        
+        testModel.removeHeader("test0");
+        
+        result = testModel.getHeaders();
+        assertEquals(5, result.size());
+        assertFalse(result.contains("test0"));
+    }
+
+    @Test
+    public void testAccessComponents() {
+        AccordionModel<String, String> testModel = new AccordionModel<>();
+        testModel.addComponent("test0", "testComponent0");
+        testModel.addComponent("test0", "testComponent1");
+        testModel.addComponent("test0", "testComponent2");
+        testModel.addComponent("test1", "testComponent3");
+        testModel.addComponent("test1", "testComponent4");
+        
+        List<String> result = testModel.getComponents("test0");
+        assertEquals(3, result.size());
+        
+        assertTrue(result.contains("testComponent0"));
+        assertTrue(result.contains("testComponent1"));
+        assertTrue(result.contains("testComponent2"));
+        
+        result = testModel.getComponents("test1");
+        assertEquals(2, result.size());
+        
+        assertTrue(result.contains("testComponent3"));
+        assertTrue(result.contains("testComponent4"));
+        
+        result = testModel.getComponents("test2");
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        
+        testModel.addComponent("test1", "testComponent5");
+        result = testModel.getComponents("test1");
+        assertEquals(3, result.size());
+        
+        testModel.removeComponent("test0", "testComponent1");
+        
+        result = testModel.getComponents("test0");
+        assertEquals(2, result.size());
+        assertFalse(result.contains("testComponent1"));
+    }
     
     @Test
     public void testAddRemove() {

@@ -111,7 +111,7 @@ public class KillVMAction implements VMContextAction {
         return new LocalAndAliveFilter();
     }
 
-    private class LocalAndAliveFilter implements Filter<VmRef> {
+    private class LocalAndAliveFilter extends Filter<VmRef> {
 
         @Override
         public boolean matches(VmRef ref) {

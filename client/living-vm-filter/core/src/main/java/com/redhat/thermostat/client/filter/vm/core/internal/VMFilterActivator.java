@@ -38,8 +38,6 @@ package com.redhat.thermostat.client.filter.vm.core.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Dictionary;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 
@@ -49,39 +47,36 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 
-import com.redhat.thermostat.common.Filter;
+import com.redhat.thermostat.client.core.vmlist.VMFilter;
 import com.redhat.thermostat.client.filter.vm.core.LivingVMFilter;
 import com.redhat.thermostat.client.ui.MenuAction;
-import com.redhat.thermostat.common.Constants;
-import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 
 public class VMFilterActivator implements BundleActivator {
 
+    @SuppressWarnings("rawtypes")
     private final List<ServiceRegistration> registeredServices = Collections.synchronizedList(new ArrayList<ServiceRegistration>());
 
+    @SuppressWarnings("rawtypes")
     ServiceTracker vmInfoDaoTracker;
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public void start(BundleContext context) throws Exception {
         
         vmInfoDaoTracker = new ServiceTracker(context, VmInfoDAO.class.getName(), null) {
             @Override
             public Object addingService(ServiceReference reference) {
+                ServiceRegistration registration = null;
+
                 VmInfoDAO dao = (VmInfoDAO) context.getService(reference);
 
                 LivingVMFilter filter = new LivingVMFilter(dao);
+                registration = context.registerService(VMFilter.class.getName(), filter, null);
                 
                 LivingVMFilterMenuAction menu = new LivingVMFilterMenuAction(filter);
 
-                ServiceRegistration registration = null;
-                
                 registration = context.registerService(MenuAction.class.getName(), menu, null);
-                registeredServices.add(registration);
-
-                Dictionary<String, String> properties = new Hashtable<>();
-                properties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
-                registration = context.registerService(Filter.class.getName(), filter, properties);
                 registeredServices.add(registration);
 
                 return super.addingService(reference);
@@ -103,6 +98,7 @@ public class VMFilterActivator implements BundleActivator {
         vmInfoDaoTracker.open();
     }
     
+    @SuppressWarnings("rawtypes")
     @Override
     public void stop(BundleContext context) throws Exception {
         vmInfoDaoTracker.close();

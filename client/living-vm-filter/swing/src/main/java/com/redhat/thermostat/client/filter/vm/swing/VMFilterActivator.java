@@ -56,23 +56,26 @@ import com.redhat.thermostat.storage.dao.VmInfoDAO;
 
 public class VMFilterActivator implements BundleActivator {
 
+    @SuppressWarnings("rawtypes")
     private final List<ServiceRegistration> registeredServices = Collections.synchronizedList(new ArrayList<ServiceRegistration>());
 
+    @SuppressWarnings("rawtypes")
     ServiceTracker vmInfoDaoTracker;
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public void start(BundleContext context) throws Exception {
         
         vmInfoDaoTracker = new ServiceTracker(context, VmInfoDAO.class.getName(), null) {
             @Override
             public Object addingService(ServiceReference reference) {
-                VmInfoDAO dao = (VmInfoDAO) context.getService(reference);
+                ServiceRegistration registration = null;
 
+                VmInfoDAO dao = (VmInfoDAO) context.getService(reference);
+                
                 LivingVMDecoratorProvider decorator = new LivingVMDecoratorProvider(dao);
                 DeadVMDecoratorProvider deadDecorator = new DeadVMDecoratorProvider(dao);
                 
-                ServiceRegistration registration = null;
-
                 Dictionary<String, String> decoratorProperties = new Hashtable<>();
                 decoratorProperties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
                 
@@ -101,6 +104,7 @@ public class VMFilterActivator implements BundleActivator {
         vmInfoDaoTracker.open();
     }
     
+    @SuppressWarnings("rawtypes")
     @Override
     public void stop(BundleContext context) throws Exception {
         vmInfoDaoTracker.close();

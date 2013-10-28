@@ -34,21 +34,16 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.internal;
+package com.redhat.thermostat.client.core.vmlist;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.InvalidSyntaxException;
+import com.redhat.thermostat.annotations.ExtensionPoint;
+import com.redhat.thermostat.common.Filter;
+import com.redhat.thermostat.storage.core.HostRef;
 
-import com.redhat.thermostat.client.core.vmlist.VMFilter;
-import com.redhat.thermostat.common.ThermostatExtensionRegistry;
-
-public class VmFilterRegistry extends ThermostatExtensionRegistry<VMFilter> {
-
-    private static final String FILTER = "(&(" + Constants.OBJECTCLASS + "=" +
-            VMFilter.class.getName() + "))";
-
-    public VmFilterRegistry(BundleContext context) throws InvalidSyntaxException {
-        super(context, FILTER, VMFilter.class);
-    }
+/**
+ * Filter that controls if {@link HostRef}erences can be shown in the
+ * reference tree of this Swing Client.
+ */
+@ExtensionPoint
+public abstract class HostFilter extends Filter<HostRef>{
 }

@@ -36,7 +36,10 @@
 
 package com.redhat.thermostat.storage.monitor;
 
+import java.util.List;
+
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 
@@ -59,4 +62,10 @@ public interface HostMonitor {
      * Removes the listener to the given {@link HostRef}
      */
     void removeHostChangeListener(HostRef host, ActionListener<Action> listener);
+
+    /**
+     * Returns all the {@link VmRef} tracked by the given host and matching the
+     * given {@link Filter}.
+     */
+    List<VmRef> getVirtualMachines(HostRef host, Filter<VmRef> matcher);
 }

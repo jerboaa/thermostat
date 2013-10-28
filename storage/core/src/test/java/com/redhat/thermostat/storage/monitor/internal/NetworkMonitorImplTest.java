@@ -40,15 +40,22 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.times;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.AllPassFilter;
+import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
+import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.monitor.NetworkMonitor;
 import com.redhat.thermostat.storage.monitor.NetworkMonitor.Action;
@@ -57,11 +64,58 @@ public class NetworkMonitorImplTest {
 
     private HostInfoDAO hostDao;
     private TimerFactory timerFactory;
-    
+    private Timer timer;
+
     @Before
     public void setup() {
         hostDao = mock(HostInfoDAO.class);
         timerFactory = mock(TimerFactory.class);
+        timer = mock(Timer.class);
+        when(timerFactory.createTimer()).thenReturn(timer);
+    }
+    
+    @Test
+    public void testGetHost() {
+        List<HostRef> testData = new ArrayList<>();
+        HostRef ref0 = new HostRef("0", "test#0");
+        HostRef ref1 = new HostRef("1", "test#1");
+        HostRef ref2 = new HostRef("2", "test#2");
+        HostRef ref3 = new HostRef("3", "test#3");
+        HostRef ref4 = new HostRef("4", "test#4");
+        HostRef ref5 = new HostRef("5", "test#5");
+        
+        testData.add(ref0);
+        testData.add(ref1);
+        testData.add(ref2);
+        testData.add(ref3);
+        testData.add(ref4);
+        testData.add(ref5);
+        
+        when(hostDao.getHosts()).thenReturn(testData);
+        
+        NetworkMonitor monitor = new NetworkMonitorImpl(timerFactory, hostDao);
+        List<HostRef> hosts = monitor.getHosts(new AllPassFilter<HostRef>());
+        assertEquals(testData.size(), hosts.size());
+        
+        for (HostRef ref : testData) {
+            assertTrue(hosts.contains(ref));
+        }
+        
+        Filter<HostRef> bandFilter = new Filter<HostRef>() {
+            @Override
+            public boolean matches(HostRef toMatch) {
+                return toMatch.getName().equals("test#1") ||
+                       toMatch.getName().equals("test#2") ||
+                       toMatch.getName().equals("test#3");
+            }
+        };
+        
+        hosts = monitor.getHosts(bandFilter);
+        assertEquals(3, hosts.size());
+        
+        assertTrue(hosts.contains(ref1));
+        assertTrue(hosts.contains(ref2));
+        assertTrue(hosts.contains(ref3));
     }
     
     @SuppressWarnings("unchecked")
@@ -70,9 +124,6 @@ public class NetworkMonitorImplTest {
         
         ActionListener<Action> listener1 = mock(ActionListener.class);
         ActionListener<Action> listener2 = mock(ActionListener.class);
-
-        Timer timer = mock(Timer.class);
-        when(timerFactory.createTimer()).thenReturn(timer);
         
         NetworkMonitor monitor = new NetworkMonitorImpl(timerFactory, hostDao);
         monitor.addNetworkChangeListener(listener1);

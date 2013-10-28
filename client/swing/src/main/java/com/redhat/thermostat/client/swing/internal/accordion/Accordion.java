@@ -204,6 +204,8 @@ public class Accordion<H, C> extends JPanel {
             JComponent content = pane.getContent();
             content.remove(contentUnit);
             content.revalidate();
+            
+            Accordion.this.contentPane.revalidate();
         }
 
         @Override
@@ -223,5 +225,24 @@ public class Accordion<H, C> extends JPanel {
     
     public void removeAccordionItemSelectedChangeListener(AccordionItemSelectedChangeListener l) {
         componentController.removeAccordionItemSelectedChangeListener(l);
+    }
+    
+    public AccordionComponent getSelectedComponent() {
+        return componentController.getSelectedComponent();
+    }
+
+    public void setSelectedComponent(AccordionComponent component) {
+        componentController.setSelectedItem(component);
+    }
+    
+    public boolean isExpanded(H header) {
+        return !panes.containsKey(header) || panes.get(header).isExpanded();
+    }
+    
+    public void setExpanded(H header, boolean expanded) {
+        if (panes.containsKey(header)) {
+            panes.get(header).setExpanded(expanded);
+            repaint();
+        }
     }
 }

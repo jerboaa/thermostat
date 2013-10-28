@@ -56,10 +56,8 @@ public interface MainView {
     enum Action {
         VISIBLE,
         HIDDEN,
-        HOST_VM_TREE_FILTER,
         SHOW_AGENT_CONFIG,
         SHOW_CLIENT_CONFIG,
-        SWITCH_HISTORY_MODE,
         SHOW_ABOUT_DIALOG,
         SHUTDOWN,
         SHOW_HOST_VM_CONTEXT_MENU,

@@ -295,8 +295,10 @@ public class MainWindow extends JFrame implements MainView {
         
         DecoratorManager decoratorManager = new DecoratorManager();
         
-        hostTree = new Accordion<>(new HostTreeComponentFactory(decoratorManager));
-        hostTreeController = new HostTreeController(hostTree, decoratorManager);
+        HostTreeComponentFactory hostFactory = new HostTreeComponentFactory(decoratorManager);
+        hostTree = new Accordion<>(hostFactory);
+        hostTreeController = new HostTreeController(hostTree, decoratorManager,
+                                                    hostFactory);
         navigationPanel.addContent(hostTree);
         
         final JPanel collapsedPanel = new JPanel();

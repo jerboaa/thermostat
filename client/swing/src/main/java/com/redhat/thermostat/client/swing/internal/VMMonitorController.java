@@ -72,12 +72,12 @@ class VMMonitorController {
             HostRef host = (HostRef) actionEvent.getPayload();
             switch (actionEvent.getActionId()) {
             case HOST_ADDED:
-                view.getHostTreeController().addHost(host);
+                view.getHostTreeController().registerHost(host);
                 hostMonitor.addHostChangeListener(host, hostListener);
                 break;
 
             case HOST_REMOVED:
-                view.getHostTreeController().removeHost(host);
+                view.getHostTreeController().updateHostStatus(host);
                 hostMonitor.removeHostChangeListener(host, hostListener);
                 break;
                 
@@ -95,11 +95,11 @@ class VMMonitorController {
             VmRef vm = (VmRef) actionEvent.getPayload();
             switch (actionEvent.getActionId()) {
             case VM_ADDED:
-                view.getHostTreeController().addVM(vm);
+                view.getHostTreeController().registerVM(vm);
                 break;
             
             case VM_REMOVED:
-                view.getHostTreeController().removeVM(vm);
+                view.getHostTreeController().updateVMStatus(vm);
                 
             default:
                 break;
