@@ -43,6 +43,9 @@ public enum LocaleResources {
     SHOW_DEAD_VM_NAME,
     SHOW_DEAD_VM_DESC,
 
+    SHOW_DEAD_HOST_NAME,
+    SHOW_DEAD_HOST_DESC,
+    
     EDIT_MENU,
     ;
 

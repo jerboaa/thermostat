@@ -59,6 +59,7 @@ import com.redhat.thermostat.client.swing.internal.accordion.AccordionModel;
 import com.redhat.thermostat.client.swing.internal.vmlist.HostTreeComponentFactory;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.test.Bug;
 
 public class HostTreeControllerTest {
 
@@ -252,5 +253,51 @@ public class HostTreeControllerTest {
         waitForSwing();
         
         verify(hostDecoratorListener).decorationChanged();
+    }
+    
+    @Test
+    public void testFilteredHostFiltersVMToo() {
+        HostTreeController controller =
+                new HostTreeController(accordion, decoratorManager,
+                                       componentFactory);
+        HostRef host0 = new HostRef("0", "0");
+        HostRef host1 = new HostRef("1", "1");
+        
+        VmRef vm0 = new VmRef(host0, "0", 0, "vm0");
+        VmRef vm1 = new VmRef(host1, "1", 1, "vm1");
+        VmRef vm2 = new VmRef(host1, "2", 2, "vm2");
+
+        TestHostFilter filter = new TestHostFilter() {
+            @Override
+            protected boolean matchesImpl(HostRef toMatch) {
+                return (toMatch.getName().equals("0"));
+            }
+        };
+        
+        // enabled the filter
+        filter.toggle();
+
+        controller.registerHost(host0);
+        controller.registerHost(host1);
+        
+        waitForSwing();
+        
+        // filter out host 0, then add the vms
+        controller.addHostFilter(filter);
+        
+        waitForSwing();
+        
+        controller.registerVM(vm0);
+        controller.registerVM(vm1);
+        controller.registerVM(vm2);
+        
+        waitForSwing();
+
+        List<VmRef> components  = proxyModel.getComponents(host0);
+        assertEquals(1, components.size());
+        assertTrue(components.contains(vm0));
+        
+        components  = proxyModel.getComponents(host1);
+        assertEquals(0, components.size());
     }
 }

@@ -40,18 +40,15 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import org.junit.Test;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.common.Filter;
+import com.redhat.thermostat.client.core.vmlist.HostFilter;
 import com.redhat.thermostat.client.core.vmlist.VMFilter;
+import com.redhat.thermostat.client.filter.vm.core.LivingHostFilter;
 import com.redhat.thermostat.client.filter.vm.core.LivingVMFilter;
-import com.redhat.thermostat.client.filter.vm.core.internal.VMFilterActivator;
 import com.redhat.thermostat.client.ui.MenuAction;
+import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.testutils.StubBundleContext;
-import com.redhat.thermostat.testutils.StubServiceReference;
-import com.redhat.thermostat.testutils.StubServiceRegistration;
 
 public class VMFilterActivatorTest {
     
@@ -61,13 +58,15 @@ public class VMFilterActivatorTest {
         VMFilterActivator activator = new VMFilterActivator();
         activator.start(ctx);
         
-        VmInfoDAO dao = mock(VmInfoDAO.class);
-        ServiceRegistration reg = ctx.registerService(VmInfoDAO.class, dao, null);
-        ServiceReference ref = reg.getReference();
-        activator.vmInfoDaoTracker.addingService(ref);
+        VmInfoDAO vmDao = mock(VmInfoDAO.class);
+        ctx.registerService(VmInfoDAO.class, vmDao, null);
         
+        HostInfoDAO hostDao = mock(HostInfoDAO.class);
+        ctx.registerService(HostInfoDAO.class, hostDao, null);
+
         assertTrue(ctx.isServiceRegistered(MenuAction.class.getName(), LivingVMFilterMenuAction.class));
         assertTrue(ctx.isServiceRegistered(VMFilter.class.getName(), LivingVMFilter.class));
+        assertTrue(ctx.isServiceRegistered(HostFilter.class.getName(), LivingHostFilter.class));
     }
 
 }

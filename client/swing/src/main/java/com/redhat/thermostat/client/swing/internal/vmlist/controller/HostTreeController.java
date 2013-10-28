@@ -197,7 +197,17 @@ public class HostTreeController {
             @Override
             public void run() {
                 fullModel.addComponent(vm.getHostRef(), vm);
-                if (filter(vmFilters, vm)) {
+                
+                // adding a vm may add an host, so we need to be sure
+                // the host is not filtered before checking the vm itself
+                if (filter(hostFilters, vm.getHostRef())) {
+                    
+                    // this will also remove all the vm, so we can skip the
+                    // next filtering step
+                    proxyModel.removeHeader(vm.getHostRef());
+                    
+                } else
+                    if (filter(vmFilters, vm)) {
                     proxyModel.removeComponent(vm.getHostRef(), vm);
                 }
             }

@@ -80,5 +80,11 @@ public interface HostInfoDAO extends Countable {
      * @return A collection of alive hosts which may be empty.
      */
     Collection<HostRef> getAliveHosts();
+    
+    /**
+     * 
+     * @return if this host is alive.
+     */
+    boolean isAlive(HostRef ref);
 }
 

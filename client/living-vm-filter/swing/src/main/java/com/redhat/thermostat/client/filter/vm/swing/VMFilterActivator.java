@@ -42,16 +42,17 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.client.ui.DecoratorProvider;
 import com.redhat.thermostat.common.Constants;
+import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 
 public class VMFilterActivator implements BundleActivator {
@@ -59,56 +60,58 @@ public class VMFilterActivator implements BundleActivator {
     @SuppressWarnings("rawtypes")
     private final List<ServiceRegistration> registeredServices = Collections.synchronizedList(new ArrayList<ServiceRegistration>());
 
+    private MultipleServiceTracker tracker;
+
     @SuppressWarnings("rawtypes")
-    ServiceTracker vmInfoDaoTracker;
-
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
-    public void start(BundleContext context) throws Exception {
+    public void start(final BundleContext context) throws Exception {
         
-        vmInfoDaoTracker = new ServiceTracker(context, VmInfoDAO.class.getName(), null) {
+        Class<?> [] services =  new Class<?> [] {
+                VmInfoDAO.class,
+                HostInfoDAO.class,
+            };
+        
+        tracker = new MultipleServiceTracker(context, services, new MultipleServiceTracker.Action() {
+            
             @Override
-            public Object addingService(ServiceReference reference) {
-                ServiceRegistration registration = null;
-
-                VmInfoDAO dao = (VmInfoDAO) context.getService(reference);
-                
-                LivingVMDecoratorProvider decorator = new LivingVMDecoratorProvider(dao);
-                DeadVMDecoratorProvider deadDecorator = new DeadVMDecoratorProvider(dao);
-                
-                Dictionary<String, String> decoratorProperties = new Hashtable<>();
-                decoratorProperties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
-                
-                registration = context.registerService(DecoratorProvider.class.getName(), deadDecorator, decoratorProperties);
-                registeredServices.add(registration);
-
-                registration = context.registerService(DecoratorProvider.class.getName(), decorator, decoratorProperties);
-                registeredServices.add(registration);
-
-                return super.addingService(reference);
-            }
-
-            @Override
-            public void removedService(ServiceReference reference, Object service) {
+            public void dependenciesUnavailable() {
                 Iterator<ServiceRegistration> iterator = registeredServices.iterator();
                 while(iterator.hasNext()) {
                     ServiceRegistration registration = iterator.next();
                     registration.unregister();
                     iterator.remove();
                 }
-
-                context.ungetService(reference);
-                super.removedService(reference, service);
             }
-        };
-        vmInfoDaoTracker.open();
+            
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                ServiceRegistration registration = null;
+
+                VmInfoDAO vmDao = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
+                HostInfoDAO hostDao = (HostInfoDAO) services.get(HostInfoDAO.class.getName());
+
+                LivingVMDecoratorProvider decorator = new LivingVMDecoratorProvider(vmDao, hostDao);
+                DeadVMDecoratorProvider deadDecorator = new DeadVMDecoratorProvider(vmDao);
+                
+                Dictionary<String, String> decoratorProperties = new Hashtable<>();
+                decoratorProperties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
+                
+                registration = context.registerService(DecoratorProvider.class.getName(),
+                                                       deadDecorator, decoratorProperties);
+                registeredServices.add(registration);
+
+                registration = context.registerService(DecoratorProvider.class.getName(),
+                                                       decorator, decoratorProperties);
+                registeredServices.add(registration);
+            }
+        });
+        tracker.open();
     }
     
     @SuppressWarnings("rawtypes")
     @Override
     public void stop(BundleContext context) throws Exception {
-        vmInfoDaoTracker.close();
-        
+        tracker.close();
         for (ServiceRegistration registration : registeredServices) {
             registration.unregister();
         }

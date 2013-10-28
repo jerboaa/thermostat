@@ -34,52 +34,45 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.filter.vm.core;
+package com.redhat.thermostat.client.filter.vm.core.internal;
 
-import com.redhat.thermostat.client.core.vmlist.VMFilter;
-import com.redhat.thermostat.storage.core.VmRef;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import org.junit.Test;
+
+import com.redhat.thermostat.client.filter.vm.core.LivingHostFilter;
+import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
-import com.redhat.thermostat.storage.dao.VmInfoDAO;
-import com.redhat.thermostat.storage.model.VmInfo;
 
-public class LivingVMFilter extends VMFilter {
+public class LivingHostFilterTest {
 
-    volatile boolean filterActive = true;
-    
-    private VmInfoDAO vmDao;
-    private HostInfoDAO hostDao;
-    
-    public LivingVMFilter(VmInfoDAO vmDao, HostInfoDAO hostDao) {
-        this.hostDao = hostDao;
-        this.vmDao = vmDao;
-    }
-    
-    @Override
-    public boolean matches(VmRef ref) {
-        if (!filterActive)
-            return true;
+    @Test
+    public void testFilter() {
+        HostInfoDAO hostDao = mock(HostInfoDAO.class);
+        HostRef hostRef1 = mock(HostRef.class);
+        HostRef hostRef2 = mock(HostRef.class);
 
-        // if the parent host if not alive, we don't want to hide this
-        boolean match = true;
+        when(hostDao.isAlive(hostRef1)).thenReturn(false).thenReturn(false).thenReturn(false);
+        when(hostDao.isAlive(hostRef2)).thenReturn(true).thenReturn(true).thenReturn(true);
+
+        LivingHostFilter filter = new LivingHostFilter(hostDao);
+        LivingHostFilterMenuAction action = new LivingHostFilterMenuAction(filter);
+
+        assertFalse(filter.matches(hostRef1));
+        assertTrue(filter.matches(hostRef2));
         
-        if (hostDao.isAlive(ref.getHostRef())) {
-            VmInfo vmInfo = vmDao.getVmInfo(ref);
-            match = vmInfo.isAlive();
-        }
+        action.execute();
 
-        return match;
+        assertTrue(filter.matches(hostRef1));
+        assertTrue(filter.matches(hostRef2));
+        
+        action.execute();
+
+        assertFalse(filter.matches(hostRef1));
+        assertTrue(filter.matches(hostRef2));
     }
 
-    public void setActive(boolean active) {
-        boolean oldActive = this.filterActive;
-        this.filterActive = active;
-        if (oldActive != filterActive) {
-            notify(FilterEvent.FILTER_CHANGED);
-        }
-    }
-
-    public boolean isActive() {
-        return filterActive;
-    }
 }
-

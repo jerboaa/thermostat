@@ -34,52 +34,44 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.filter.vm.core;
+package com.redhat.thermostat.client.filter.vm.core.internal;
 
-import com.redhat.thermostat.client.core.vmlist.VMFilter;
-import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.dao.HostInfoDAO;
-import com.redhat.thermostat.storage.dao.VmInfoDAO;
-import com.redhat.thermostat.storage.model.VmInfo;
+import com.redhat.thermostat.client.filter.vm.core.LivingHostFilter;
+import com.redhat.thermostat.client.ui.MenuAction;
+import com.redhat.thermostat.shared.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.Translate;
 
-public class LivingVMFilter extends VMFilter {
+public class LivingHostFilterMenuAction implements MenuAction {
 
-    volatile boolean filterActive = true;
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
+    private LivingHostFilter filter;
     
-    private VmInfoDAO vmDao;
-    private HostInfoDAO hostDao;
-    
-    public LivingVMFilter(VmInfoDAO vmDao, HostInfoDAO hostDao) {
-        this.hostDao = hostDao;
-        this.vmDao = vmDao;
+    public LivingHostFilterMenuAction(LivingHostFilter filter) {
+        this.filter = filter;
     }
     
     @Override
-    public boolean matches(VmRef ref) {
-        if (!filterActive)
-            return true;
-
-        // if the parent host if not alive, we don't want to hide this
-        boolean match = true;
-        
-        if (hostDao.isAlive(ref.getHostRef())) {
-            VmInfo vmInfo = vmDao.getVmInfo(ref);
-            match = vmInfo.isAlive();
-        }
-
-        return match;
+    public LocalizedString getName() {
+        return t.localize(LocaleResources.SHOW_DEAD_HOST_NAME);
     }
 
-    public void setActive(boolean active) {
-        boolean oldActive = this.filterActive;
-        this.filterActive = active;
-        if (oldActive != filterActive) {
-            notify(FilterEvent.FILTER_CHANGED);
-        }
+    @Override
+    public LocalizedString getDescription() {
+        return t.localize(LocaleResources.SHOW_DEAD_HOST_DESC);
     }
 
-    public boolean isActive() {
-        return filterActive;
+    @Override
+    public void execute() {
+        filter.setActive(!filter.isActive());
+    }
+
+    @Override
+    public Type getType() {
+        return Type.CHECK;
+    }
+
+    @Override
+    public LocalizedString[] getPath() {
+        return new LocalizedString[] { t.localize(LocaleResources.EDIT_MENU), getName() };
     }
 }
-

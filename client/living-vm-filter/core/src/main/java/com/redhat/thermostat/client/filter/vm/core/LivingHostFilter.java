@@ -1,26 +1,26 @@
 /*
  * Copyright 2012, 2013 Red Hat, Inc.
- *
+ * 
  * This file is part of Thermostat.
- *
+ * 
  * Thermostat is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
  * by the Free Software Foundation; either version 2, or (at your
  * option) any later version.
- *
+ * 
  * Thermostat is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with Thermostat; see the file COPYING.  If not see
  * <http://www.gnu.org/licenses/>.
- *
+ * 
  * Linking this code with other modules is making a combined work
  * based on this code.  Thus, the terms and conditions of the GNU
  * General Public License cover the whole combination.
- *
+ * 
  * As a special exception, the copyright holders of this code give
  * you permission to link this code with independent modules to
  * produce an executable, regardless of the license terms of these
@@ -36,38 +36,25 @@
 
 package com.redhat.thermostat.client.filter.vm.core;
 
-import com.redhat.thermostat.client.core.vmlist.VMFilter;
-import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.client.core.vmlist.HostFilter;
+import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
-import com.redhat.thermostat.storage.dao.VmInfoDAO;
-import com.redhat.thermostat.storage.model.VmInfo;
 
-public class LivingVMFilter extends VMFilter {
+public class LivingHostFilter extends HostFilter {
 
     volatile boolean filterActive = true;
     
-    private VmInfoDAO vmDao;
-    private HostInfoDAO hostDao;
+    private HostInfoDAO dao;
     
-    public LivingVMFilter(VmInfoDAO vmDao, HostInfoDAO hostDao) {
-        this.hostDao = hostDao;
-        this.vmDao = vmDao;
+    public LivingHostFilter(HostInfoDAO dao) {
+        this.dao = dao;
     }
     
     @Override
-    public boolean matches(VmRef ref) {
+    public boolean matches(HostRef ref) {
         if (!filterActive)
             return true;
-
-        // if the parent host if not alive, we don't want to hide this
-        boolean match = true;
-        
-        if (hostDao.isAlive(ref.getHostRef())) {
-            VmInfo vmInfo = vmDao.getVmInfo(ref);
-            match = vmInfo.isAlive();
-        }
-
-        return match;
+       return dao.isAlive(ref);
     }
 
     public void setActive(boolean active) {
@@ -82,4 +69,3 @@ public class LivingVMFilter extends VMFilter {
         return filterActive;
     }
 }
-

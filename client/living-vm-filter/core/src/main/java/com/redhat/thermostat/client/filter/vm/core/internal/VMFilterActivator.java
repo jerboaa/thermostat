@@ -40,69 +40,83 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
 
+import com.redhat.thermostat.client.core.vmlist.HostFilter;
 import com.redhat.thermostat.client.core.vmlist.VMFilter;
+import com.redhat.thermostat.client.filter.vm.core.LivingHostFilter;
 import com.redhat.thermostat.client.filter.vm.core.LivingVMFilter;
 import com.redhat.thermostat.client.ui.MenuAction;
+import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 
 public class VMFilterActivator implements BundleActivator {
 
     @SuppressWarnings("rawtypes")
-    private final List<ServiceRegistration> registeredServices = Collections.synchronizedList(new ArrayList<ServiceRegistration>());
+    private final List<ServiceRegistration> registeredServices =
+        Collections.synchronizedList(new ArrayList<ServiceRegistration>());
 
-    @SuppressWarnings("rawtypes")
-    ServiceTracker vmInfoDaoTracker;
+    private MultipleServiceTracker tracker;
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public void start(BundleContext context) throws Exception {
+    public void start(final BundleContext context) throws Exception {
         
-        vmInfoDaoTracker = new ServiceTracker(context, VmInfoDAO.class.getName(), null) {
+        Class<?> [] services =  new Class<?> [] {
+            VmInfoDAO.class,
+            HostInfoDAO.class,
+        };
+        
+        tracker = new MultipleServiceTracker(context, services, new MultipleServiceTracker.Action() {
             @Override
-            public Object addingService(ServiceReference reference) {
+            public void dependenciesAvailable(Map<String, Object> services) {
+                @SuppressWarnings("rawtypes")
                 ServiceRegistration registration = null;
-
-                VmInfoDAO dao = (VmInfoDAO) context.getService(reference);
-
-                LivingVMFilter filter = new LivingVMFilter(dao);
-                registration = context.registerService(VMFilter.class.getName(), filter, null);
                 
-                LivingVMFilterMenuAction menu = new LivingVMFilterMenuAction(filter);
+                VmInfoDAO vmDao = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
+                HostInfoDAO hostDao = (HostInfoDAO) services.get(HostInfoDAO.class.getName());
 
-                registration = context.registerService(MenuAction.class.getName(), menu, null);
+                LivingHostFilter hostFilter = new LivingHostFilter(hostDao);
+                registration = context.registerService(HostFilter.class.getName(), hostFilter, null);
                 registeredServices.add(registration);
 
-                return super.addingService(reference);
-            }
+                LivingVMFilter vmFilter = new LivingVMFilter(vmDao, hostDao);
+                registration = context.registerService(VMFilter.class.getName(), vmFilter, null);
+                registeredServices.add(registration);
 
+                LivingVMFilterMenuAction vmMenu = new LivingVMFilterMenuAction(vmFilter);
+                registration = context.registerService(MenuAction.class.getName(), vmMenu, null);                
+                registeredServices.add(registration);
+                
+                LivingHostFilterMenuAction hostMenu = new LivingHostFilterMenuAction(hostFilter);
+                registration = context.registerService(MenuAction.class.getName(), hostMenu, null);                
+                registeredServices.add(registration);
+            }
+            
             @Override
-            public void removedService(ServiceReference reference, Object service) {
+            public void dependenciesUnavailable() {
+                @SuppressWarnings("rawtypes")
                 Iterator<ServiceRegistration> iterator = registeredServices.iterator();
                 while(iterator.hasNext()) {
+                    
+                    @SuppressWarnings("rawtypes")
                     ServiceRegistration registration = iterator.next();
                     registration.unregister();
                     iterator.remove();
                 }
-
-                context.ungetService(reference);
-                super.removedService(reference, service);
             }
-        };
-        vmInfoDaoTracker.open();
+        });
+        tracker.open();
     }
     
     @SuppressWarnings("rawtypes")
     @Override
     public void stop(BundleContext context) throws Exception {
-        vmInfoDaoTracker.close();
-        
+        tracker.close();
         for (ServiceRegistration registration : registeredServices) {
             registration.unregister();
         }

@@ -39,12 +39,15 @@ package com.redhat.thermostat.client.filter.vm.swing;
 import java.io.IOException;
 
 import com.redhat.thermostat.common.Filter;
+import com.redhat.thermostat.client.filter.vm.core.LivingVMFilter;
 import com.redhat.thermostat.client.swing.IconResource;
 import com.redhat.thermostat.client.ui.Decorator;
 import com.redhat.thermostat.client.ui.DecoratorProvider;
 import com.redhat.thermostat.client.ui.IconDescriptor;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -77,9 +80,9 @@ public class LivingVMDecoratorProvider implements DecoratorProvider<VmRef> {
     private com.redhat.thermostat.client.filter.vm.core.LivingVMFilter decoratorFilter;
     private LivingVMDecorator decorator;
     
-    public LivingVMDecoratorProvider(VmInfoDAO dao) {
+    public LivingVMDecoratorProvider(VmInfoDAO vmDao, HostInfoDAO hostDao) {
         decorator = new LivingVMDecorator();
-        decoratorFilter = new com.redhat.thermostat.client.filter.vm.core.LivingVMFilter(dao);
+        decoratorFilter = new LivingVMFilter(vmDao, hostDao);
     }
     
     @Override
