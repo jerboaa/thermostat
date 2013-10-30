@@ -84,8 +84,8 @@
         <bundle><symbolic-name>org.apache.commons.codec</symbolic-name><version>${commons-codec.osgi-version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.collections</symbolic-name><version>${commons-collections.version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
-        <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.version}</version></bundle>
-        <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
         <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
       </bundles>
@@ -137,8 +137,8 @@
         <bundle><symbolic-name>org.apache.commons.codec</symbolic-name><version>${commons-codec.osgi-version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.collections</symbolic-name><version>${commons-collections.version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
-        <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.version}</version></bundle>
-        <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
         <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
       </bundles>
@@ -193,8 +193,8 @@
         <bundle><symbolic-name>org.apache.commons.codec</symbolic-name><version>${commons-codec.osgi-version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.collections</symbolic-name><version>${commons-collections.version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
-        <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.version}</version></bundle>
-        <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
         <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
       </bundles>
@@ -243,8 +243,8 @@
         <bundle><symbolic-name>org.apache.commons.codec</symbolic-name><version>${commons-codec.osgi-version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.collections</symbolic-name><version>${commons-collections.version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
-        <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.version}</version></bundle>
-        <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
         <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
       </bundles>
@@ -293,8 +293,8 @@
         <bundle><symbolic-name>org.apache.commons.codec</symbolic-name><version>${commons-codec.osgi-version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.collections</symbolic-name><version>${commons-collections.version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
-        <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.version}</version></bundle>
-        <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
         <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
       </bundles>
@@ -343,8 +343,8 @@
         <bundle><symbolic-name>org.apache.commons.codec</symbolic-name><version>${commons-codec.osgi-version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.collections</symbolic-name><version>${commons-collections.version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
-        <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.version}</version></bundle>
-        <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
         <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
       </bundles>
@@ -386,8 +386,8 @@
         <bundle><symbolic-name>org.apache.commons.codec</symbolic-name><version>${commons-codec.osgi-version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.collections</symbolic-name><version>${commons-collections.version}</version></bundle>
         <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
-        <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.version}</version></bundle>
-        <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
         <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
       </bundles>
