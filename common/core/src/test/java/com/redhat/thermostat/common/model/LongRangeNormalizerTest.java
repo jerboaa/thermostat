@@ -81,8 +81,9 @@ public class LongRangeNormalizerTest {
                 
         Assert.assertEquals(150, model.getValueNormalized(5));
         
-        range.setMax(100l);
-        range.setMin(0l);
+        range = new Range<>(0l, 100l);
+
+        model = new LongRangeNormalizer(range);
         
         model.setMaxNormalized(1);
         model.setMinNormalized(0);

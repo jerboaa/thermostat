@@ -89,6 +89,10 @@ public abstract class TimelineRulerHeader extends GradientPanel {
         return range;
     }
 
+    public void setRange(Range<Long> range) {
+        this.range = range;
+    }
+
     @Override
     public int getHeight() {
         return DEFAULT_HEIGHT;
@@ -187,5 +191,6 @@ public abstract class TimelineRulerHeader extends GradientPanel {
             increment++;
         }
     }
+
 }
 

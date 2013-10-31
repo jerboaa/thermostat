@@ -97,10 +97,10 @@ public class ThreadTimelineController extends CommonController {
                             timeline.add(info);
 
                             if (range.getMin() > timestamp) {
-                                range.setMin(timestamp);
+                                range = new Range<>(timestamp, range.getMax());
                             }
                             if (range.getMax() < timestamp) {
-                                range.setMax(timestamp);
+                                range = new Range<>(range.getMin(), timestamp);
                             }
                         }
                         timelines.add(timeline);

@@ -146,7 +146,8 @@ public class SwingThreadTimelineView extends ThreadTimelineView implements Swing
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                range.setMax(range.getMax() + (int) (2 * header.getUnitIncrementInMillis()));
+                Range<Long> dataTimeRange = new Range<>(range.getMax(),
+                        range.getMax() + (int) (2 * header.getUnitIncrementInMillis()));
                 chartModel.removeAllElements();
                 for (Timeline timeline : timelines) {
                     
@@ -156,8 +157,7 @@ public class SwingThreadTimelineView extends ThreadTimelineView implements Swing
                     
                     chartModel.addElement(timelineComp);
                 }
-                header.getRange().setMin(range.getMin());
-                header.getRange().setMax(range.getMax());
+                header.setRange(range);
                 
                 handleScrollBar();
             }

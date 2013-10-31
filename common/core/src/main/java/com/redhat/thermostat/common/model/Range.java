@@ -43,11 +43,13 @@ import java.util.Objects;
  * 
  * The units and the meaning of the range are left to the user, including the
  * fact that the range are inclusive or exclusive of the extremes.
+ * <p>
+ * This class is immutable and thread safe.
  */
 public class Range<T extends Number> {
 
-    T min;
-    T max;
+    final T min;
+    final T max;
     
     /**
      * Creates a new Range that span from min to max.
@@ -57,16 +59,8 @@ public class Range<T extends Number> {
         this.max = max;
     }
     
-    public void setMax(T max) {
-        this.max = max;
-    }
-    
     public T getMax() {
         return max;
-    }
-    
-    public void setMin(T min) {
-        this.min = min;
     }
     
     public T getMin() {
