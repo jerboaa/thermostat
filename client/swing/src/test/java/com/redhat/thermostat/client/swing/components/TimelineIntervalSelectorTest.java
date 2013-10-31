@@ -34,9 +34,12 @@ package com.redhat.thermostat.client.swing.components;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.concurrent.TimeUnit;
 
 import javax.swing.BorderFactory;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
@@ -52,7 +55,6 @@ public class TimelineIntervalSelectorTest {
                 JFrame mainWindow = new JFrame();
 
                 final TimelineIntervalSelector intervalSelector = new TimelineIntervalSelector();
-
                 long now = System.currentTimeMillis();
 
                 intervalSelector.getModel().addChangeListener(new ChangeListener() {
@@ -73,6 +75,16 @@ public class TimelineIntervalSelectorTest {
                 intervalSelector.getModel().setSelectedMinimum(now);
                 intervalSelector.getModel().setSelectedMaximum(now + TimeUnit.MINUTES.toMillis(10));
 
+                final JCheckBox enable = new JCheckBox("Enabled");
+                enable.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        intervalSelector.setEnabled(enable.isSelected());
+                    }
+                });
+                enable.setSelected(true);
+
+                mainWindow.add(enable, BorderLayout.NORTH);
                 mainWindow.add(intervalSelector, BorderLayout.CENTER);
                 mainWindow.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 

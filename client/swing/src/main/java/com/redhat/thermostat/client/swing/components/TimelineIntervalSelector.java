@@ -32,6 +32,8 @@
 
 package com.redhat.thermostat.client.swing.components;
 
+import java.awt.Paint;
+
 import javax.swing.JComponent;
 import javax.swing.UIManager;
 
@@ -43,6 +45,10 @@ public class TimelineIntervalSelector extends JComponent {
     private static final String uiClassID = "TimelineIntervalSelectorUI";
 
     private TimelineIntervalSelectorModel model;
+
+    private Paint linePaint;
+
+    private Paint fillPaint;
 
     public TimelineIntervalSelector() {
         model = new TimelineIntervalSelectorModel();
@@ -76,4 +82,19 @@ public class TimelineIntervalSelector extends JComponent {
         return uiClassID;
     }
 
+    public void setSelectionLinePaint(Paint paint) {
+        this.linePaint = paint;
+    }
+
+    public Paint getSelectionLinePaint() {
+        return this.linePaint;
+    }
+
+    public void setSelectionFillPaint(Paint paint) {
+        this.fillPaint = paint;
+    }
+
+    public Paint getSelectionFillPaint() {
+        return this.fillPaint;
+    }
 }

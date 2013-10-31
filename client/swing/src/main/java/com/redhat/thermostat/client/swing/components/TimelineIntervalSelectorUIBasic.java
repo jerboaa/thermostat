@@ -38,6 +38,9 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Paint;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -77,6 +80,20 @@ public class TimelineIntervalSelectorUIBasic extends TimelineIntervalSelectorUI 
             timeline.setRange(new Range<>(model.getTotalMinimum(), model.getTotalMaximum()));
         }
     };
+    private PropertyChangeListener enabledListener = new PropertyChangeListener() {
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+            if (evt.getPropertyName().equals("enabled")) {
+                boolean enabled = (Boolean) evt.getNewValue();
+                timeline.setEnabled(enabled);
+                if (enabled) {
+                    addUserInputListeners();
+                } else {
+                    removeUserInputListeners();
+                }
+            }
+        }
+    };
 
     @Override
     public void installUI(JComponent c) {
@@ -93,6 +110,8 @@ public class TimelineIntervalSelectorUIBasic extends TimelineIntervalSelectorUI 
     protected void installDefaults() {
         component.setLayout(new BoxLayout(component, BoxLayout.PAGE_AXIS));
         component.setBorder(new EmptyBorder(5,5,5,5));
+
+        component.setSelectionLinePaint(Color.BLACK);
     }
 
     protected void installComponents() {
@@ -109,9 +128,9 @@ public class TimelineIntervalSelectorUIBasic extends TimelineIntervalSelectorUI 
         component.getModel().addChangeListener(timelineSelectionPainter);
         component.getModel().addChangeListener(timelineRangeUpdater);
 
-        component.addMouseListener(mouseListener);
-        component.addMouseMotionListener(mouseListener);
-        component.addMouseWheelListener(mouseListener);
+        component.addPropertyChangeListener(enabledListener);
+
+        addUserInputListeners();
     }
 
     @Override
@@ -133,16 +152,28 @@ public class TimelineIntervalSelectorUIBasic extends TimelineIntervalSelectorUI 
     }
 
     protected void uninstallListeners() {
-        component.removeMouseWheelListener(mouseListener);
-        component.removeMouseMotionListener(mouseListener);
-        component.removeMouseListener(mouseListener);
+        removeUserInputListeners();
 
         component.getModel().removeChangeListener(timelineRangeUpdater);
         component.getModel().removeChangeListener(timelineSelectionPainter);
     }
 
     protected void uninstallDefaults() {
+        component.setSelectionLinePaint(null);
+
         component.setLayout(null);
+    }
+
+    private void removeUserInputListeners() {
+        component.removeMouseWheelListener(mouseListener);
+        component.removeMouseMotionListener(mouseListener);
+        component.removeMouseListener(mouseListener);
+    }
+
+    private void addUserInputListeners() {
+        component.addMouseListener(mouseListener);
+        component.addMouseMotionListener(mouseListener);
+        component.addMouseWheelListener(mouseListener);
     }
 
     @Override
@@ -205,8 +236,22 @@ public class TimelineIntervalSelectorUIBasic extends TimelineIntervalSelectorUI 
             int startX = domainToX(component.getModel().getSelectedMinimum());
             int endX = domainToX(component.getModel().getSelectedMaximum());
 
-            g2.fillRect(startX, 0, (endX - startX), getHeight());
+            boolean enabled = component.isEnabled();
+            if (enabled) {
+                g2.setPaint(component.getSelectionLinePaint());
+            } else {
+                g2.setPaint(Color.LIGHT_GRAY);
+            }
 
+            // g2.fillRect(startX, 0, (endX - startX), getHeight());
+
+            g2.drawLine(0, getHeight(), 0, getHeight()/2);
+            g2.drawLine(0, getHeight()/2, startX, getHeight()/2);
+            g2.drawLine(startX, getHeight()/2, startX, 0);
+
+            g2.drawLine(getWidth()-1, getHeight(), getWidth()-1, getHeight()/2);
+            g2.drawLine(getWidth()-1, getHeight()/2, endX, getHeight()/2);
+            g2.drawLine(endX, getHeight()/2, endX, 0);
             g2.dispose();
         }
     }

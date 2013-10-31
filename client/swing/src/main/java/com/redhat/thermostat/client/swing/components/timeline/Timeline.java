@@ -134,7 +134,11 @@ public class Timeline extends GradientPanel {
         
         drawTicks(graphics, bounds, timeUnitForTicks);
 
-        graphics.setColor(Palette.THERMOSTAT_BLU.getColor());
+        if (isEnabled()) {
+            graphics.setColor(Palette.THERMOSTAT_BLU.getColor());
+        } else {
+            graphics.setColor(Color.GRAY);
+        }
         graphics.drawLine(bounds.x, bounds.height - 1, bounds.width, bounds.height - 1);
 
         graphics.dispose();
@@ -211,11 +215,15 @@ public class Timeline extends GradientPanel {
         for (long i = start; i < end; i += deltaInMilliseconds) {
             int x = (int) normalizer.getValueNormalized(i);
 
-            graphics.setColor(Palette.THERMOSTAT_BLU.getColor());
+            if (isEnabled()) {
+                graphics.setColor(Palette.THERMOSTAT_BLU.getColor());
+            } else {
+                graphics.setColor(Color.GRAY);
+            }
+
             graphics.drawLine(x, 0, x, bounds.height);
 
             graphics.setPaint(gradient);
-
             String value = df.format(new Date(i));
 
             int stringWidth = (int) font.getStringBounds(value,
@@ -225,7 +233,12 @@ public class Timeline extends GradientPanel {
             graphics.fillRect(x + 1, bounds.y + 5, stringWidth + 4, stringHeight +
                     4);
 
-            graphics.setColor(Color.BLACK /* Palette.THERMOSTAT_BLU.getColor() */);
+            if (isEnabled()) {
+                graphics.setColor(Color.BLACK /* Palette.THERMOSTAT_BLU.getColor() */);
+            } else {
+                graphics.setColor(Color.GRAY);
+            }
+
             graphics.drawString(value, x + 1, bounds.y + stringHeight + 5);
         }
     }

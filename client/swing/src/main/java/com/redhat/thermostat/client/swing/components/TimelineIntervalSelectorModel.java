@@ -33,6 +33,7 @@
 package com.redhat.thermostat.client.swing.components;
 
 import java.util.EventListener;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.event.EventListenerList;
 
@@ -44,17 +45,22 @@ public class TimelineIntervalSelectorModel {
 
     private final EventListenerList listeners = new EventListenerList();
 
-    private long totalMinimum = 0;
-    private long totalMaximum = 100;
+    private final long CREATION_TIME = System.currentTimeMillis();
 
-    private long selectedMinimum = 0;
-    private long selectedMaximum = 10;
+    private long totalMinimum = CREATION_TIME;
+    private long totalMaximum = CREATION_TIME + TimeUnit.HOURS.toMillis(1);
+
+    private long selectedMinimum = CREATION_TIME;
+    private long selectedMaximum = CREATION_TIME + TimeUnit.MINUTES.toMillis(10);
 
     public long getTotalMinimum() {
         return totalMinimum;
     }
 
     public void setTotalMinimum(long totalMinimum) {
+        setTotalMinimum(totalMinimum, true);
+    }
+    public void setTotalMinimum(long totalMinimum, boolean notify) {
         if (this.totalMinimum != totalMinimum) {
             this.totalMinimum = totalMinimum;
 
@@ -70,7 +76,9 @@ public class TimelineIntervalSelectorModel {
                 this.selectedMinimum = this.totalMinimum;
             }
 
-            fireModelChanged();
+            if (notify) {
+                fireModelChanged();
+            }
         }
     }
 
@@ -79,6 +87,10 @@ public class TimelineIntervalSelectorModel {
     }
 
     public void setTotalMaximum(long totalMaximum) {
+        setTotalMaximum(totalMaximum, true);
+    }
+
+    public void setTotalMaximum(long totalMaximum, boolean notify) {
         if (this.totalMaximum != totalMaximum) {
             this.totalMaximum = totalMaximum;
 
@@ -94,7 +106,9 @@ public class TimelineIntervalSelectorModel {
                 this.selectedMinimum = this.totalMaximum;
             }
 
-            fireModelChanged();
+            if (notify) {
+                fireModelChanged();
+            }
         }
     }
 
@@ -103,9 +117,15 @@ public class TimelineIntervalSelectorModel {
     }
 
     public void setSelectedMinimum(long selectedMinimum) {
+        setSelectedMinimum(selectedMinimum, true);
+    }
+
+    public void setSelectedMinimum(long selectedMinimum, boolean notify) {
         if(this.selectedMinimum != selectedMinimum) {
             this.selectedMinimum = selectedMinimum;
-            fireModelChanged();
+            if (notify) {
+                fireModelChanged();
+            }
         }
     }
 
@@ -114,9 +134,15 @@ public class TimelineIntervalSelectorModel {
     }
 
     public void setSelectedMaximum(long selectedMaximum) {
+        setSelectedMaximum(selectedMaximum, true);
+    }
+
+    public void setSelectedMaximum(long selectedMaximum, boolean notify) {
         if (this.selectedMaximum != selectedMaximum) {
             this.selectedMaximum = selectedMaximum;
-            fireModelChanged();
+            if (notify) {
+                fireModelChanged();
+            }
         }
     }
 
