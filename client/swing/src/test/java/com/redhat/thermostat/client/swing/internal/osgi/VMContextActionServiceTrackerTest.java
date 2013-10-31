@@ -58,13 +58,13 @@ public class VMContextActionServiceTrackerTest {
         VMContextActionServiceTracker tracker = new VMContextActionServiceTracker(bundleContext);
         tracker.open();
         
-        assertTrue(tracker.getVmContextActions().contains(vmAction));
+        assertTrue(tracker.getActions().contains(vmAction));
 
         registration.unregister();
 
         tracker.close();
 
-        assertFalse(tracker.getVmContextActions().contains(vmAction));
+        assertFalse(tracker.getActions().contains(vmAction));
     }
 
 }

@@ -56,7 +56,6 @@ import java.util.Collections;
 import java.util.List;
 
 import javax.swing.BorderFactory;
-import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -74,7 +73,6 @@ import com.redhat.thermostat.client.swing.EdtHelper;
 import com.redhat.thermostat.client.swing.MenuHelper;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.OverlayPanel;
-import com.redhat.thermostat.client.swing.components.ThermostatPopupMenu;
 import com.redhat.thermostat.client.swing.internal.accordion.Accordion;
 import com.redhat.thermostat.client.swing.internal.components.ThermostatGlassPane;
 import com.redhat.thermostat.client.swing.internal.components.ThermostatGlassPaneLayout;
@@ -86,9 +84,9 @@ import com.redhat.thermostat.client.swing.internal.sidepane.ExpanderComponent;
 import com.redhat.thermostat.client.swing.internal.sidepane.ThermostatSidePanel;
 import com.redhat.thermostat.client.swing.internal.splitpane.ThermostatSplitPane;
 import com.redhat.thermostat.client.swing.internal.vmlist.HostTreeComponentFactory;
+import com.redhat.thermostat.client.swing.internal.vmlist.controller.ContextActionController;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.DecoratorManager;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.HostTreeController;
-import com.redhat.thermostat.client.ui.ContextAction;
 import com.redhat.thermostat.client.ui.MenuAction;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
@@ -115,13 +113,13 @@ public class MainWindow extends JFrame implements MainView {
 
     private ActionNotifier<Action> actionNotifier = new ActionNotifier<>(this);
 
-    private ThermostatPopupMenu contextMenu;
     private StatusBar statusBar;
     
     private ThermostatSidePanel navigationPanel;
     private Accordion<HostRef, VmRef> hostTree;
     
     private HostTreeController hostTreeController;
+    private ContextActionController contextActionController;
     
     public MainWindow() {
         super();
@@ -241,18 +239,6 @@ public class MainWindow extends JFrame implements MainView {
         editMenu.add(configureClientMenuItem);
 
         editMenu.addSeparator();
-        
-        // FIXME: re-add this when ready
-//        JMenuItem historyModeMenuItem = new JCheckBoxMenuItem(translator.localize(LocaleResources.MENU_EDIT_ENABLE_HISTORY_MODE).getContents());
-//        historyModeMenuItem.setName("historyModeSwitch");
-//        historyModeMenuItem.setSelected(false);
-//        historyModeMenuItem.addActionListener(new java.awt.event.ActionListener() {
-//            @Override
-//            public void actionPerformed(java.awt.event.ActionEvent e) {
-//                fireViewAction(Action.SWITCH_HISTORY_MODE);
-//            }
-//        });
-//        editMenu.add(historyModeMenuItem);
 
         JMenu viewMenu = new JMenu(translator.localize(LocaleResources.MENU_VIEW).getContents());
         mainMenuBar.add(viewMenu);
@@ -294,8 +280,10 @@ public class MainWindow extends JFrame implements MainView {
         splitPane.setLeftComponent(navigationPanel);
         
         DecoratorManager decoratorManager = new DecoratorManager();
+        contextActionController = new ContextActionController();
         
-        HostTreeComponentFactory hostFactory = new HostTreeComponentFactory(decoratorManager);
+        HostTreeComponentFactory hostFactory =
+                new HostTreeComponentFactory(decoratorManager, contextActionController);
         hostTree = new Accordion<>(hostFactory);
         hostTreeController = new HostTreeController(hostTree, decoratorManager,
                                                     hostFactory);
@@ -352,51 +340,6 @@ public class MainWindow extends JFrame implements MainView {
         });
     }
     
-    // TODO
-//    private void registerContextActionListener(JTree agentVmTree2) {
-//        contextMenu = new ThermostatPopupMenu();
-//        agentVmTree2.addMouseListener(new MouseAdapter() {
-//            @Override
-//            public void mousePressed(MouseEvent e) {
-//                if (e.isPopupTrigger()) {
-//                    Ref ref = getSelectedHostOrVm();
-//                    fireViewAction(Action.SHOW_HOST_VM_CONTEXT_MENU, e);
-//                }
-//            }
-//        });
-//    }
-
-    @Override
-    public void showContextActions(final List<ContextAction> actions, final MouseEvent e) {
-        SwingUtilities.invokeLater(new Runnable() {
-
-            @Override
-            public void run() {
-                contextMenu.removeAll();
-
-                for (final ContextAction action: actions) {
-                    JMenuItem contextAction = new JMenuItem();
-                    contextAction.setText(action.getName().getContents());
-                    contextAction.setToolTipText(action.getDescription().getContents());
-
-                    contextAction.addActionListener(new java.awt.event.ActionListener() {
-                        @Override
-                        public void actionPerformed(java.awt.event.ActionEvent e) {
-                            fireViewAction(Action.HOST_VM_CONTEXT_ACTION, action);
-                        }
-                    });
-
-                    // the component name is for unit tests only
-                    contextAction.setName(action.getName().getContents());
-
-                    contextMenu.add(contextAction);
-                }
-
-                contextMenu.show((Component)e.getSource(), e.getX(), e.getY());
-            }
-        });
-    }
-    
     private JPanel createDetailsPanel() {
         JPanel result = new JPanel(new BorderLayout());
         result.add(contentArea, BorderLayout.CENTER);
@@ -444,11 +387,7 @@ public class MainWindow extends JFrame implements MainView {
     private void fireViewAction(Action action) {
         actionNotifier.fireAction(action);
     }
-    
-    private void fireViewAction(Action action, Object payload) {
-        actionNotifier.fireAction(action, payload);
-    }
-    
+        
     @SuppressWarnings("unused") // Used for debugging but not in production code.
     private static void printTree(PrintStream out, TreeNode node, int depth) {
         out.println(StringUtils.repeat("  ", depth) + node.toString());
@@ -527,6 +466,11 @@ public class MainWindow extends JFrame implements MainView {
     @Override
     public HostTreeController getHostTreeController() {
         return hostTreeController;
+    }
+
+    @Override
+    public ContextActionController getContextActionController() {
+        return contextActionController;
     }
 }
 

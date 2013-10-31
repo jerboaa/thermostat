@@ -63,7 +63,7 @@ import com.redhat.thermostat.storage.core.HostRef;
  * @see VMContextAction
  */
 @ExtensionPoint
-public interface HostContextAction extends ContextAction {
+public interface HostContextAction extends ReferenceContextAction<HostRef> {
 
     /**
      * A user-visible name for this {@code HostContextAction}. This should be
@@ -78,19 +78,5 @@ public interface HostContextAction extends ContextAction {
      */
     @Override
     LocalizedString getDescription();
-
-    /**
-     * Invoked when the user selects this {@code HostContextAction}.
-     *
-     * @param reference the host on which this {@code HostContextAction} was
-     * invoked on.
-     */
-    void execute(HostRef reference);
-
-    /**
-     * The {@link Filter} returned by this method is used to select what VMs
-     * this {@code HostContextAction} is applicable to.
-     */
-    Filter<HostRef> getFilter();
 }
 

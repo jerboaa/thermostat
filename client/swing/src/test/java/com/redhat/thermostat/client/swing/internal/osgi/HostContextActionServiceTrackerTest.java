@@ -58,13 +58,13 @@ public class HostContextActionServiceTrackerTest {
         HostContextActionServiceTracker tracker = new HostContextActionServiceTracker(bundleContext);
         tracker.open();
         
-        assertTrue(tracker.getHostContextActions().contains(hostAction));
+        assertTrue(tracker.getActions().contains(hostAction));
 
         registration.unregister();
 
         tracker.close();
 
-        assertFalse(tracker.getHostContextActions().contains(hostAction));
+        assertFalse(tracker.getActions().contains(hostAction));
     }
 
 }

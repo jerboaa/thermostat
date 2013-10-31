@@ -39,6 +39,7 @@ package com.redhat.thermostat.client.swing.internal.vmlist.controller;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
@@ -59,7 +60,6 @@ import com.redhat.thermostat.client.swing.internal.accordion.AccordionModel;
 import com.redhat.thermostat.client.swing.internal.vmlist.HostTreeComponentFactory;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.test.Bug;
 
 public class HostTreeControllerTest {
 

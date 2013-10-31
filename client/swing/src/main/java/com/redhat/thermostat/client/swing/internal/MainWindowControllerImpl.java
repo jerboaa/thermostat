@@ -56,10 +56,11 @@ import com.redhat.thermostat.client.core.views.ClientConfigurationView;
 import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
 import com.redhat.thermostat.client.core.views.SummaryViewProvider;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
-import com.redhat.thermostat.client.swing.internal.MainView.Action;
 import com.redhat.thermostat.client.swing.internal.osgi.HostContextActionServiceTracker;
 import com.redhat.thermostat.client.swing.internal.osgi.InformationServiceTracker;
 import com.redhat.thermostat.client.swing.internal.osgi.VMContextActionServiceTracker;
+import com.redhat.thermostat.client.swing.internal.vmlist.controller.ContextActionController;
+import com.redhat.thermostat.client.swing.internal.vmlist.controller.ContextHandler;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.DecoratorProviderExtensionListener;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.FilterManager;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.HostTreeController;
@@ -343,12 +344,6 @@ public class MainWindowControllerImpl implements MainWindowController {
                 case SHOW_ABOUT_DIALOG:
                     showAboutDialog();
                     break;
-                case SHOW_HOST_VM_CONTEXT_MENU:
-                    showContextMenu(evt);
-                    break;
-                case HOST_VM_CONTEXT_ACTION:
-                    handleVMHooks(evt);
-                    break;
                 case SHUTDOWN:
                     // Main will call shutdownApplication
                     shutdown.countDown();
@@ -400,8 +395,20 @@ public class MainWindowControllerImpl implements MainWindowController {
 
         vmInfoRegistry.addActionListener(vmInfoRegistryListener);
         vmInfoRegistry.start();
+
+        setUpActionControllers();
     }
 
+    private void setUpActionControllers() {
+        ContextActionController contextController =
+                view.getContextActionController();
+        ContextHandler handler =
+                new ContextHandler(hostContextActionTracker,
+                                   vmContextActionTracker);
+        contextController.addContextActionListener(handler);
+        handler.addContextHandlerActionListener(contextController);
+    }
+    
     private void registerProgressNotificator(BundleContext context) {
         ProgressNotifier notifier = view.getNotifier();
         context.registerService(ProgressNotifier.class, notifier, null);
@@ -429,51 +436,6 @@ public class MainWindowControllerImpl implements MainWindowController {
         vmInfoRegistry.removeActionListener(vmInfoRegistryListener);
         vmInfoRegistryListener = null;
         vmInfoRegistry.stop();
-    }
-
-    private void showContextMenu(ActionEvent<Action> evt) {
-        // TODO
-//        List<ContextAction> toShow = new ArrayList<>();
-//
-//        Ref ref = view.getSelectedHostOrVm();
-//        if (ref instanceof HostRef) {
-//            HostRef vm = (HostRef) ref;
-//
-//            logger.log(Level.INFO, "registering applicable HostContextActions actions to show");
-//
-//            for (HostContextAction action : hostContextActionTracker.getHostContextActions()) {
-//                if (action.getFilter().matches(vm)) {
-//                    toShow.add(action);
-//                }
-//            }
-//        } else if (ref instanceof VmRef) {
-//            VmRef vm = (VmRef) ref;
-//
-//            logger.log(Level.INFO, "registering applicable VMContextActions actions to show");
-//
-//            for (VMContextAction action : vmContextActionTracker.getVmContextActions()) {
-//                if (action.getFilter().matches(vm)) {
-//                    toShow.add(action);
-//                }
-//            }
-//        }
-//
-//        view.showContextActions(toShow, (MouseEvent) evt.getPayload());
-    }
-
-    private void handleVMHooks(ActionEvent<MainView.Action> event) {
-//        Object payload = event.getPayload();
-//        try {
-//            if (payload instanceof HostContextAction) {
-//                HostContextAction action = (HostContextAction) payload;
-//                action.execute((HostRef) view.getSelectedHostOrVm());
-//            } else if (payload instanceof VMContextAction) {
-//                VMContextAction action = (VMContextAction) payload;
-//                action.execute((VmRef) view.getSelectedHostOrVm());
-//            }
-//        } catch (Throwable error) {
-//            logger.log(Level.SEVERE, "error invocating context action", error);
-//        }
     }
 
     @Override

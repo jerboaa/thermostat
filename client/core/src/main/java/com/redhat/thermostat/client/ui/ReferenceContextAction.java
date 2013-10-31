@@ -1,26 +1,26 @@
 /*
  * Copyright 2012, 2013 Red Hat, Inc.
- *
+ * 
  * This file is part of Thermostat.
- *
+ * 
  * Thermostat is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
  * by the Free Software Foundation; either version 2, or (at your
  * option) any later version.
- *
+ * 
  * Thermostat is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with Thermostat; see the file COPYING.  If not see
  * <http://www.gnu.org/licenses/>.
- *
+ * 
  * Linking this code with other modules is making a combined work
  * based on this code.  Thus, the terms and conditions of the GNU
  * General Public License cover the whole combination.
- *
+ * 
  * As a special exception, the copyright holders of this code give
  * you permission to link this code with independent modules to
  * produce an executable, regardless of the license terms of these
@@ -36,48 +36,26 @@
 
 package com.redhat.thermostat.client.ui;
 
-import com.redhat.thermostat.annotations.ExtensionPoint;
 import com.redhat.thermostat.common.Filter;
-import com.redhat.thermostat.shared.locale.LocalizedString;
-import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.core.Ref;
 
 /**
- * {@code VMContextAction}s provide actions that are associated with Java
- * Virtual Machines and can be invoked by users. The exact position and
- * appearance of these {@code VMContextAction}s varies based on the client
- * implementation.
- * <p>
- * Plugins can register implementation of this interface as OSGi services to
- * provide additional {@code VMContextAction}s.
- * <p>
- * <h2>Implementation Note</h2>
- * <p>
- * The following information is specific to the current release and may change
- * in a future release.
- * <p>
- * The swing client uses instances of this class to provide menu items in the
- * Host/VM tree. The menu is shown when a user right-clicks a VM in the Host/VM
- * tree. A menu item for every {@link VMContextAction} is added, if the
- * {@code Filter} matches, to this menu. Selecting a menu item invokes the
- * corresponding {@code VMContextAction}.
- *
- * @see HostContextAction
+ * A common interface for {@link ContextAction} that can execute commands
+ * based on {@link Ref}erences.
  */
-@ExtensionPoint
-public interface VMContextAction extends ReferenceContextAction<VmRef> {
+public interface ReferenceContextAction<R extends Ref> extends ContextAction {
 
     /**
-     * A user-visible name for this {@code VMContextAction}. Should be
-     * localized.
+     * Invoked when the user selects this {@code ReferenceAction}.
+     *
+     * @param reference the host on which this {@code ReferenceAction} was
+     * invoked on.
      */
-    @Override
-    public LocalizedString getName();
-
+    void execute(R reference);
+    
     /**
-     * A user-visible description for {@code VMContextAction}. Should be
-     * localized.
+     * The {@link Filter} returned by this method is used to select what
+     * {@link Ref} this {@code ReferenceAction} is applicable to.
      */
-    @Override
-    public LocalizedString getDescription();
+    Filter<R> getFilter();
 }
-

@@ -34,50 +34,13 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.client.swing.internal.osgi;
 
-import com.redhat.thermostat.annotations.ExtensionPoint;
-import com.redhat.thermostat.common.Filter;
-import com.redhat.thermostat.shared.locale.LocalizedString;
-import com.redhat.thermostat.storage.core.VmRef;
+import java.util.List;
 
-/**
- * {@code VMContextAction}s provide actions that are associated with Java
- * Virtual Machines and can be invoked by users. The exact position and
- * appearance of these {@code VMContextAction}s varies based on the client
- * implementation.
- * <p>
- * Plugins can register implementation of this interface as OSGi services to
- * provide additional {@code VMContextAction}s.
- * <p>
- * <h2>Implementation Note</h2>
- * <p>
- * The following information is specific to the current release and may change
- * in a future release.
- * <p>
- * The swing client uses instances of this class to provide menu items in the
- * Host/VM tree. The menu is shown when a user right-clicks a VM in the Host/VM
- * tree. A menu item for every {@link VMContextAction} is added, if the
- * {@code Filter} matches, to this menu. Selecting a menu item invokes the
- * corresponding {@code VMContextAction}.
- *
- * @see HostContextAction
- */
-@ExtensionPoint
-public interface VMContextAction extends ReferenceContextAction<VmRef> {
+import com.redhat.thermostat.client.ui.ReferenceContextAction;
 
-    /**
-     * A user-visible name for this {@code VMContextAction}. Should be
-     * localized.
-     */
-    @Override
-    public LocalizedString getName();
-
-    /**
-     * A user-visible description for {@code VMContextAction}. Should be
-     * localized.
-     */
-    @Override
-    public LocalizedString getDescription();
+public interface ReferenceContextActionProvider {
+    
+    public List<? extends ReferenceContextAction> getActions();
 }
-

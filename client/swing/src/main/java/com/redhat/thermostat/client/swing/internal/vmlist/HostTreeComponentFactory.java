@@ -42,6 +42,7 @@ import java.util.Map;
 import com.redhat.thermostat.client.swing.internal.accordion.AccordionComponent;
 import com.redhat.thermostat.client.swing.internal.accordion.AccordionComponentFactory;
 import com.redhat.thermostat.client.swing.internal.accordion.TitledPane;
+import com.redhat.thermostat.client.swing.internal.vmlist.controller.ContextActionController;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.DecoratorManager;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
@@ -52,9 +53,14 @@ public class HostTreeComponentFactory implements AccordionComponentFactory<HostR
     private Map<HostRef, ReferenceTitle> headers;
     
     private DecoratorManager decoratorManager;
+    private ContextActionController contextActionController;
     
-    public HostTreeComponentFactory(DecoratorManager decoratorManager) {
+    public HostTreeComponentFactory(DecoratorManager decoratorManager,
+                                    ContextActionController contextActionController)
+    {
         this.decoratorManager = decoratorManager;
+        this.contextActionController = contextActionController;
+        
         components = new HashMap<>();
         headers = new HashMap<>();
     }
@@ -63,6 +69,7 @@ public class HostTreeComponentFactory implements AccordionComponentFactory<HostR
     public TitledPane createHeader(HostRef header) {
         ReferenceTitle pane = new ReferenceTitle(header);
         decoratorManager.registerAndSetIcon(pane);
+        contextActionController.register(pane, pane);
         headers.put(header, pane);
 
         return pane;
@@ -72,6 +79,7 @@ public class HostTreeComponentFactory implements AccordionComponentFactory<HostR
     public AccordionComponent createComponent(HostRef header, VmRef component) {
         ReferenceComponent refComponent = new ReferenceComponent(component);
         decoratorManager.registerAndSetIcon(refComponent);
+        contextActionController.register(refComponent, refComponent);
         components.put(component, refComponent);
 
         return refComponent;

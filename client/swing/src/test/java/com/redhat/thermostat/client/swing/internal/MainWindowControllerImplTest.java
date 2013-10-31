@@ -37,14 +37,14 @@
 package com.redhat.thermostat.client.swing.internal;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.any;
 
 import java.util.concurrent.CountDownLatch;
 
@@ -66,6 +66,8 @@ import com.redhat.thermostat.client.core.views.SummaryView;
 import com.redhat.thermostat.client.core.views.SummaryViewProvider;
 import com.redhat.thermostat.client.core.views.VmInformationView;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
+import com.redhat.thermostat.client.swing.internal.vmlist.controller.ContextActionController;
+import com.redhat.thermostat.client.swing.internal.vmlist.controller.ContextHandler;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.DecoratorProviderExtensionListener;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.HostTreeController;
 import com.redhat.thermostat.client.ui.HostContextAction;
@@ -127,6 +129,8 @@ public class MainWindowControllerImplTest {
     private DecoratorProviderExtensionListener<HostRef> hostDecorators;
     private DecoratorProviderExtensionListener<VmRef> vmDecorators;
     
+    private ContextActionController contextController;
+    
     @BeforeClass
     public static void setUpOnce() {
         // TODO remove when controller uses mocked objects rather than real swing objects
@@ -137,7 +141,7 @@ public class MainWindowControllerImplTest {
     @Before
     public void setUp() throws Exception {
         context = new StubBundleContext();
-        
+                
         // Setup timers
         mainWindowTimer = mock(Timer.class);
         Timer otherTimer = mock(Timer.class); // FIXME needed for SummaryView; remove later
@@ -188,6 +192,9 @@ public class MainWindowControllerImplTest {
         view = mock(MainView.class);
         ArgumentCaptor<ActionListener> grabListener = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addActionListener(grabListener.capture());
+        
+        contextController = mock(ContextActionController.class);
+        when(view.getContextActionController()).thenReturn(contextController);
         
         hostDecorators = mock(DecoratorProviderExtensionListener.class);
         vmDecorators = mock(DecoratorProviderExtensionListener.class);
@@ -307,6 +314,8 @@ public class MainWindowControllerImplTest {
         
         assertEquals(hostDecorators, l1);
         assertEquals(vmDecorators, l2);
+        
+        verify(contextController).addContextActionListener(any(ContextHandler.class));
     }
     
     @Test
@@ -314,30 +323,7 @@ public class MainWindowControllerImplTest {
         controller.showMainMainWindow();
         verify(view).showMainWindow();
     }
-    
-//    @Test
-//    public void verifyUpdateHostsVMsLoadsCorrectVMWithFilter() {
-//
-//        VmRef ref1 = mock(VmRef.class);
-//        when(ref1.getStringID()).thenReturn("test1");
-//        when(ref1.getName()).thenReturn("test1");
-//        
-//        VmRef ref2 = mock(VmRef.class);
-//        when(ref2.getStringID()).thenReturn("test2");
-//        when(ref2.getName()).thenReturn("test2");
-//        
-//        controller.setHostVmTreeFilter("test1");
-//                
-//        Filter<VmRef> filter = controller.getVmFilter();
-//        assertTrue(filter.matches(ref1));
-//        assertFalse(filter.matches(ref2));
-//    }
-    
-//    private void assertEqualCollection(Collection<?> expected, Collection<?> actual) {
-//        assertEquals(expected.size(), actual.size());
-//        assertTrue(expected.containsAll(actual));
-//    }
-//
+
 //    @Test
 //    @Bug(id="954",
 //         summary="Thermostat GUI client should remember my last panel selected",
@@ -446,69 +432,6 @@ public class MainWindowControllerImplTest {
 //        id = arg.getValue();
 //
 //        assertEquals(2, id);
-//    }
-//
-//    @Test
-//    public void verifyHostActionsAreShown() {
-//        HostRef host = mock(HostRef.class);
-//        when(view.getSelectedHostOrVm()).thenReturn(host);
-//
-//        MouseEvent uiEvent = mock(MouseEvent.class);
-//        ActionEvent<MainView.Action> viewEvent = new ActionEvent<>(view, MainView.Action.SHOW_HOST_VM_CONTEXT_MENU);
-//        viewEvent.setPayload(uiEvent);
-//
-//        l.actionPerformed(viewEvent);
-//
-//        List<ContextAction> actions = new ArrayList<>();
-//        actions.add(hostContextAction1);
-//
-//        verify(view).showContextActions(actions, uiEvent);
-//    }
-//
-//    @Test
-//    public void verityVMActionsAreShown() {
-//        VmInfo vmInfo = new VmInfo("foo", "123", 0, 1, 2, null, null, null, null, null, null, null, null, null, null, null, -1, null);
-//        when(mockVmsDAO.getVmInfo(isA(VmRef.class))).thenReturn(vmInfo);
-//
-//        VmRef ref = mock(VmRef.class);
-//        when(view.getSelectedHostOrVm()).thenReturn(ref);
-//
-//        MouseEvent uiEvent = mock(MouseEvent.class);
-//        ActionEvent<MainView.Action> viewEvent = new ActionEvent<>(view, MainView.Action.SHOW_HOST_VM_CONTEXT_MENU);
-//        viewEvent.setPayload(uiEvent);
-//
-//        l.actionPerformed(viewEvent);
-//
-//        List<ContextAction> actions = new ArrayList<>();
-//        actions.add(vmContextAction1);
-//
-//        verify(view).showContextActions(actions, uiEvent);
-//    }
-//
-//    @Test
-//    public void verifyHostActionsAreExecuted() {
-//        HostRef hostRef = mock(HostRef.class);
-//        when(view.getSelectedHostOrVm()).thenReturn(hostRef);
-//
-//        ActionEvent<MainView.Action> event = new ActionEvent<>(view, MainView.Action.HOST_VM_CONTEXT_ACTION);
-//        event.setPayload(hostContextAction1);
-//        l.actionPerformed(event);
-//
-//        verify(hostContextAction1, times(1)).execute(hostRef);
-//    }
-//
-//    @Test
-//    public void verityVMActionsAreExecuted() {
-//
-//        VmRef vmRef = mock(VmRef.class);
-//        when(view.getSelectedHostOrVm()).thenReturn(vmRef);
-//
-//        ActionEvent<MainView.Action> event = new ActionEvent<>(view, MainView.Action.HOST_VM_CONTEXT_ACTION);
-//        event.setPayload(vmContextAction1);
-//        l.actionPerformed(event);
-//        
-//        verify(vmContextAction1, times(1)).execute(any(VmRef.class));
-//        verify(vmContextAction2, times(0)).execute(any(VmRef.class));
 //    }
 
     @Test

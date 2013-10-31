@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.swing.internal.osgi;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -46,14 +47,14 @@ import org.osgi.util.tracker.ServiceTracker;
 import com.redhat.thermostat.client.ui.VMContextAction;
 
 @SuppressWarnings("rawtypes")
-public class VMContextActionServiceTracker extends ServiceTracker {
+public class VMContextActionServiceTracker extends ServiceTracker implements ReferenceContextActionProvider {
 
     private List<VMContextAction> vmContextActions;
 
     @SuppressWarnings("unchecked")
     public VMContextActionServiceTracker(BundleContext context) {
         super(context, VMContextAction.class.getName(), null);
-        this.vmContextActions = new ArrayList<>();
+        this.vmContextActions = new CopyOnWriteArrayList<>();
     }
 
     @Override
@@ -71,7 +72,8 @@ public class VMContextActionServiceTracker extends ServiceTracker {
         super.removedService(reference, service);
     }
     
-    public List<VMContextAction> getVmContextActions() {
+    @Override
+    public List<VMContextAction> getActions() {
         return new ArrayList<>(vmContextActions);
     }
 }

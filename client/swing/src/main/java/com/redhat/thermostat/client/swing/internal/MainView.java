@@ -36,17 +36,13 @@
 
 package com.redhat.thermostat.client.swing.internal;
 
-import java.awt.event.MouseEvent;
-import java.util.List;
-
 import javax.swing.JFrame;
 
 import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.swing.internal.vmlist.controller.ContextActionController;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.HostTreeController;
-import com.redhat.thermostat.client.ui.ContextAction;
 import com.redhat.thermostat.client.ui.MenuAction;
-import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.core.Ref;
@@ -60,8 +56,6 @@ public interface MainView {
         SHOW_CLIENT_CONFIG,
         SHOW_ABOUT_DIALOG,
         SHUTDOWN,
-        SHOW_HOST_VM_CONTEXT_MENU,
-        HOST_VM_CONTEXT_ACTION,
     }
 
     void addActionListener(ActionListener<Action> capture);
@@ -92,21 +86,7 @@ public interface MainView {
      * non-zero length) and the menu already exists.
      */
     void removeMenu(MenuAction action);
-    
-    /**
-     * Shows a popup context menu created from the list of supplied context
-     * actions. When an item in the popup menu is selected, an
-     * {@link ActionEvent} is fired with the id
-     * {@link Action#HOST_VM_CONTEXT_ACTION} and the user-selected
-     * {@link ContextAction} as the payload.
-     *
-     * @param actions the {@link ContextAction}s available to the user.
-     * Normally classes implementing sub-interfaces of {@link ContextAction} are used here.
-     * @param e the mouse event that triggered the context action. Used to
-     * position the context menu.
-     */
-    void showContextActions(List<ContextAction> actions, MouseEvent e);
-    
+
     JFrame getTopFrame();
 
     /**
@@ -114,5 +94,11 @@ public interface MainView {
      * object tracked by this UI Client.
      */
     HostTreeController getHostTreeController();
+
+    /**
+     * Returns the {@link ContextActionController} that handles the context
+     * actions in the UI Client.
+     */
+    ContextActionController getContextActionController();
 }
 
