@@ -32,13 +32,15 @@
 
 package com.redhat.thermostat.client.swing.components;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Paint;
+import java.awt.geom.Rectangle2D;
+import java.awt.geom.RoundRectangle2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
@@ -47,16 +49,19 @@ import javax.swing.BoxLayout;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
 
 import com.redhat.thermostat.client.swing.components.TimelineIntervalMouseHandler.TimeIntervalSelectorTarget;
 import com.redhat.thermostat.client.swing.components.TimelineIntervalSelectorModel.ChangeListener;
 import com.redhat.thermostat.client.swing.components.timeline.Timeline;
+import com.redhat.thermostat.client.ui.Palette;
 import com.redhat.thermostat.common.model.Range;
 
 public class TimelineIntervalSelectorUIBasic extends TimelineIntervalSelectorUI implements TimeIntervalSelectorTarget {
 
-    private static final int PREF_HEIGHT = 20; /* pixels */
+    private static final int SIDE_PADDING = 10;
+
+    // the extra gap below the timeline header itself
+    private static final int GAP_BELOW = 15; /* pixels */
 
     private TimelineIntervalSelector component;
 
@@ -95,6 +100,11 @@ public class TimelineIntervalSelectorUIBasic extends TimelineIntervalSelectorUI 
         }
     };
 
+    public TimelineIntervalSelectorUIBasic() {
+        customPaintingPanel.setLayout(new BorderLayout());
+        customPaintingPanel.setBorder(new EmptyBorder(0, SIDE_PADDING, 0, SIDE_PADDING));
+    }
+
     @Override
     public void installUI(JComponent c) {
         super.installUI(c);
@@ -109,7 +119,6 @@ public class TimelineIntervalSelectorUIBasic extends TimelineIntervalSelectorUI 
 
     protected void installDefaults() {
         component.setLayout(new BoxLayout(component, BoxLayout.PAGE_AXIS));
-        component.setBorder(new EmptyBorder(5,5,5,5));
 
         component.setSelectionLinePaint(Color.BLACK);
     }
@@ -118,8 +127,9 @@ public class TimelineIntervalSelectorUIBasic extends TimelineIntervalSelectorUI 
         topGlue = Box.createVerticalGlue();
         bottomGlue = Box.createVerticalGlue();
 
+        customPaintingPanel.add(timeline, BorderLayout.CENTER);
+
         component.add(topGlue);
-        component.add(timeline);
         component.add(customPaintingPanel);
         component.add(bottomGlue);
     }
@@ -145,9 +155,10 @@ public class TimelineIntervalSelectorUIBasic extends TimelineIntervalSelectorUI 
     }
 
     protected void uninstallComponents() {
+        customPaintingPanel.remove(timeline);
+
         component.remove(bottomGlue);
         component.remove(customPaintingPanel);
-        component.remove(timeline);
         component.remove(topGlue);
     }
 
@@ -209,22 +220,22 @@ public class TimelineIntervalSelectorUIBasic extends TimelineIntervalSelectorUI 
     private int domainToX(long domainValue) {
         long domainMin = component.getModel().getTotalMinimum();
         long domainMax = component.getModel().getTotalMaximum();
-        int width = component.getWidth();
-        return (int) (1.0 * (domainValue - domainMin) / (domainMax - domainMin) * width);
+        int width = timeline.getWidth();
+        return (int) (1.0 * (domainValue - domainMin) / (domainMax - domainMin) * (width - 1));
     }
 
     private long xToDomain(int x) {
         long domainMin = component.getModel().getTotalMinimum();
         long domainMax = component.getModel().getTotalMaximum();
-        int width = component.getWidth();
-        return (long) ((1.0 * x / (width) * (domainMax - domainMin)) + domainMin);
+        int width = timeline.getWidth();
+        return (long) ((1.0 * x / (width - 1) * (domainMax - domainMin)) + domainMin);
     }
 
     private class CustomPaintPanel extends JPanel {
 
         @Override
         public Dimension getPreferredSize() {
-            return new Dimension(super.getPreferredSize().height, PREF_HEIGHT);
+            return new Dimension(super.getPreferredSize().width, timeline.getPreferredSize().height + GAP_BELOW);
         }
 
         @Override
@@ -233,8 +244,10 @@ public class TimelineIntervalSelectorUIBasic extends TimelineIntervalSelectorUI 
 
             Graphics2D g2 = (Graphics2D) g.create();
 
-            int startX = domainToX(component.getModel().getSelectedMinimum());
-            int endX = domainToX(component.getModel().getSelectedMaximum());
+            int left = domainToX(component.getModel().getSelectedMinimum()) + SIDE_PADDING ;
+            int right = domainToX(component.getModel().getSelectedMaximum()) + SIDE_PADDING;
+            int height = getHeight();
+            int width = getWidth() - 1;
 
             boolean enabled = component.isEnabled();
             if (enabled) {
@@ -243,16 +256,37 @@ public class TimelineIntervalSelectorUIBasic extends TimelineIntervalSelectorUI 
                 g2.setPaint(Color.LIGHT_GRAY);
             }
 
-            // g2.fillRect(startX, 0, (endX - startX), getHeight());
+            int pinchHeight = getHeight() - (GAP_BELOW / 2);
 
-            g2.drawLine(0, getHeight(), 0, getHeight()/2);
-            g2.drawLine(0, getHeight()/2, startX, getHeight()/2);
-            g2.drawLine(startX, getHeight()/2, startX, 0);
+            g2.drawLine(0, height, 0, pinchHeight);
+            g2.drawLine(0, pinchHeight, left, pinchHeight);
+            g2.drawLine(left, pinchHeight, left, 0);
+            paintHandle(g2, left, pinchHeight/2);
 
-            g2.drawLine(getWidth()-1, getHeight(), getWidth()-1, getHeight()/2);
-            g2.drawLine(getWidth()-1, getHeight()/2, endX, getHeight()/2);
-            g2.drawLine(endX, getHeight()/2, endX, 0);
+            g2.drawLine(width, height, width, pinchHeight);
+            g2.drawLine(width, pinchHeight, right, pinchHeight);
+            g2.drawLine(right, pinchHeight, right, 0);
+            paintHandle(g2, right, pinchHeight/2);
+
             g2.dispose();
+        }
+
+        private void paintHandle(Graphics2D g, int x, int y) {
+            g = (Graphics2D) g.create();
+            g.translate(x, y);
+
+            g.setColor(Palette.LIGHT_GRAY.getColor());
+            g.fill(new RoundRectangle2D.Float(-2, -10, 4, 20, 2, 2));
+
+            if (component.isEnabled()) {
+                g.setPaint(component.getSelectionLinePaint());
+            } else {
+                g.setPaint(Color.LIGHT_GRAY);
+            }
+
+            g.draw(new RoundRectangle2D.Float(-2, -10, 4, 20, 2, 2));
+
+            g.dispose();
         }
     }
 }

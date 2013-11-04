@@ -34,6 +34,10 @@ package com.redhat.thermostat.client.swing.components;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Insets;
+import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.concurrent.TimeUnit;
@@ -41,8 +45,10 @@ import java.util.concurrent.TimeUnit;
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
+import javax.swing.border.EmptyBorder;
 
 import com.redhat.thermostat.client.swing.components.TimelineIntervalSelectorModel.ChangeListener;
 
@@ -84,13 +90,33 @@ public class TimelineIntervalSelectorTest {
                 });
                 enable.setSelected(true);
 
-                mainWindow.add(enable, BorderLayout.NORTH);
-                mainWindow.add(intervalSelector, BorderLayout.CENTER);
+                PlaceHolder actualComponent = new PlaceHolder();
+                actualComponent.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
+
+                mainWindow.getRootPane().setBorder(new EmptyBorder(new Insets(10,10,10,10)));
+                mainWindow.add(intervalSelector, BorderLayout.NORTH);
+                mainWindow.add(actualComponent, BorderLayout.CENTER);
+                mainWindow.add(enable, BorderLayout.SOUTH);
                 mainWindow.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
                 mainWindow.setVisible(true);
 
             }
         });
+    }
+
+    private static class PlaceHolder extends JPanel {
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(Color.BLACK);
+
+            g2.drawLine(0, 0, getWidth(), getHeight());
+            g2.drawLine(getWidth(), 0, 0, getHeight());
+
+            g2.dispose();
+        }
     }
 }

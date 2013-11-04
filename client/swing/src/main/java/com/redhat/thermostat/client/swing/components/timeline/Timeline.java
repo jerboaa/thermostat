@@ -234,7 +234,7 @@ public class Timeline extends GradientPanel {
                     4);
 
             if (isEnabled()) {
-                graphics.setColor(Color.BLACK /* Palette.THERMOSTAT_BLU.getColor() */);
+                graphics.setColor(Palette.THERMOSTAT_BLU.getColor());
             } else {
                 graphics.setColor(Color.GRAY);
             }
