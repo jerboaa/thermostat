@@ -102,7 +102,7 @@ public class ThreadPoolTimerFactory implements TimerFactory {
 
         @Override
         public void setAction(Runnable action) {
-            this.action = action;
+            this.action = new ExceptionPrintingRunnable(action);
         }
 
         @Override
@@ -128,6 +128,30 @@ public class ThreadPoolTimerFactory implements TimerFactory {
             this.timeUnit = timeUnit;
         }
         
+    }
+
+    /**
+     * A decorator for another Runnable object that ensures all exceptions are
+     * printed. Needed because scheduled executors remain silent on failures.
+     */
+    private static class ExceptionPrintingRunnable implements Runnable {
+
+        private final Runnable original;
+
+        public ExceptionPrintingRunnable(Runnable original) {
+            this.original = original;
+        }
+
+        @Override
+        public void run() {
+            try {
+                original.run();
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw e;
+            }
+        }
+
     }
 
     private ScheduledExecutorService timerThreadPool;
