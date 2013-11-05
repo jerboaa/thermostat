@@ -38,6 +38,7 @@ package com.redhat.thermostat.thread.dao.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -418,6 +419,26 @@ public class ThreadDaoImplTest {
         verify(add).setLong(10, WAIT_COUNT);
         verify(add).execute();
         verifyNoMoreInteractions(add);
+    }
+
+    @Test
+    public void testThreadInfoTimeRangeWithNoDataAvailable() throws Exception {
+        Cursor<ThreadInfoData> oldestThreadQueryCursor = mock(Cursor.class);
+        when(oldestThreadQueryCursor.hasNext()).thenReturn(false);
+        when(oldestThreadQueryCursor.next()).thenThrow(IllegalStateException.class);
+
+        PreparedStatement<ThreadInfoData> oldestThreadQueryStatement = mock(PreparedStatement.class);
+        when(oldestThreadQueryStatement.executeQuery()).thenReturn(oldestThreadQueryCursor);
+
+        Storage storage = mock(Storage.class);
+        when(storage.prepareStatement(any(StatementDescriptor.class)))
+            .thenReturn(oldestThreadQueryStatement);
+
+        ThreadDaoImpl dao = new ThreadDaoImpl(storage);
+
+        Range<Long> result = dao.getThreadInfoTimeRange(vmRef);
+
+        assertNull(result);
     }
 
     @Test

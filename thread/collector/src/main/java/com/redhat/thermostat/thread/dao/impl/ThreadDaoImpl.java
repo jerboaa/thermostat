@@ -320,6 +320,10 @@ public class ThreadDaoImpl implements ThreadDao {
 
         stmt = prepareQuery(THREAD_INFO, QUERY_OLDEST_THREAD_INFO, ref);
         ThreadInfoData oldestData = getFirstResult(stmt);
+        if (oldestData == null) {
+            return null;
+        }
+
         long oldestTimeStamp = oldestData.getTimeStamp();
 
         stmt = prepareQuery(THREAD_INFO, QUERY_LATEST_THREAD_INFO, ref);

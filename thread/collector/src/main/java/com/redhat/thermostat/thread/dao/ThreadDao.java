@@ -124,8 +124,15 @@ public interface ThreadDao {
 
     /** Save the specified thread info */
     void saveThreadInfo(ThreadInfoData info);
-    /** Get the time interval for the entire data */
+
+    /**
+     * Get the time interval for the entire data
+     *
+     * @returns a {@link Range} of timestamps (in milliseconds) or null if there
+     * is no valid data.
+     */
     Range<Long> getThreadInfoTimeRange(VmRef ref);
+
     /** Get the thread info data with a timestamp greated than the one specified */
     List<ThreadInfoData> loadThreadInfo(VmRef ref, long since);
     /** Get the thread info data with a timestamp in the given time range (inclusive) */
