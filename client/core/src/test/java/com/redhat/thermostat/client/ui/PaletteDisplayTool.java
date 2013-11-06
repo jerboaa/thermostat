@@ -47,8 +47,11 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
 
-
+/**
+ * Display the {@link Palette}
+ */
 public class PaletteDisplayTool {
 
     public static void main(String[] args) {
@@ -57,11 +60,13 @@ public class PaletteDisplayTool {
             @Override
             public void run() {
                 JFrame mainWindow = new JFrame();
+                mainWindow.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+
                 JPanel colorGrid = new JPanel(new GridLayout(0, 2));
 
                 for (Palette p : Palette.values()) {
-                    colorGrid.add(new JLabel(p.name()));
                     colorGrid.add(new ColorBox(p.getColor()));
+                    colorGrid.add(new JLabel(p.name()));
                 }
 
                 JScrollPane scrollPane = new JScrollPane(colorGrid);
@@ -70,7 +75,6 @@ public class PaletteDisplayTool {
 
                 mainWindow.pack();
                 mainWindow.setVisible(true);
-
             }
         });
     }
