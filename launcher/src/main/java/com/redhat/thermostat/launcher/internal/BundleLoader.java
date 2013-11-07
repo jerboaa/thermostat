@@ -61,6 +61,16 @@ public class BundleLoader {
         this.printOSGiInfo = printOSGiInfo;
     }
 
+    /**
+     * Install and start bundles in one step (solving any interdependencies).
+     *
+     * @param framework the {@link Framework} to use for installing and starting
+     * the bundles.
+     * @param bundleLocations a {@link List} of {@link String}s where each
+     * {@code String} is a URL of the bundle to load
+     * @return a {@link List} of {@link Bundle}s that were started.
+     * @throws BundleException
+     */
     public List<Bundle> installAndStartBundles(Framework framework,
             List<String> bundleLocations) throws BundleException {
         List<Bundle> bundles = new ArrayList<>();

@@ -58,6 +58,17 @@ public abstract class BundleManager {
     public abstract void setPrintOSGiInfo(boolean printOSGiInfo);
 
     /**
+     * Indicates that versions in thermostat-specific config files (including
+     * thermostat-plugin.xml files) should be ignored and the latest version
+     * used.
+     * <p>
+     * This does not change OSGi's requirements; if OSGi bundles need specific
+     * versions and the latest version is not within the asked range, things
+     * will break.
+     */
+    public abstract void setIgnoreVersions(boolean ignore);
+
+    /**
      * Load and start bundles using the metadata about a bundle.
      */
     public abstract void loadBundlesByName(List<BundleInformation> bundles) throws BundleException, IOException;

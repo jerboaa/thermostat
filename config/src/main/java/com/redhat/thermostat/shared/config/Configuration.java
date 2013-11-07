@@ -89,6 +89,7 @@ public class Configuration {
     private final UserDirectories userDirectories;
 
     private boolean printOsgiInfo = false;
+    private boolean ignoreVersions = false;
 
     public Configuration() throws InvalidConfigurationException {
         // allow this to be specified also as a property, especially for
@@ -234,6 +235,14 @@ public class Configuration {
         printOsgiInfo = newValue;
     }
 
+    public void setIgnoreVersions(boolean ignore) {
+        this.ignoreVersions  = ignore;
+    }
+
+    public boolean getIgnoreVersions() {
+        return ignoreVersions;
+    }
+
     private interface UserDirectories {
 
         public File getSystemRoot();
@@ -351,4 +360,5 @@ public class Configuration {
             return cacheDir;
         }
     }
+
 }

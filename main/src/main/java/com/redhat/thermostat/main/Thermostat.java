@@ -57,8 +57,12 @@ public class Thermostat {
         Iterator<String> iter = toProcess.iterator();
         while (iter.hasNext()) {
             String arg = iter.next();
-            if (("--print-osgi-info").equals(arg)) {
+            if ("--print-osgi-info".equals(arg)) {
                 config.setPrintOSGiInfo(true);
+                iter.remove();
+            }
+            if ("--ignore-bundle-versions".equals(arg)) {
+                config.setIgnoreVersions(true);
                 iter.remove();
             }
         }

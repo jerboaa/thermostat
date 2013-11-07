@@ -40,19 +40,25 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
@@ -65,6 +71,7 @@ import org.osgi.framework.launch.Framework;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import com.redhat.thermostat.launcher.BundleInformation;
 import com.redhat.thermostat.shared.config.Configuration;
 
 @RunWith(PowerMockRunner.class)
@@ -141,8 +148,9 @@ public class BundleManagerImplTest {
             }
         });
     }
+
     @Test
-    public void testInstallAndStartBundles() throws Exception {
+    public void verifyInstallAndStartBundles() throws Exception {
         Bundle theBundle = b2;
         when(theContext.getBundles()).thenReturn(new Bundle[] {});
         when(theBundle.getBundleContext()).thenReturn(theContext);
@@ -154,6 +162,95 @@ public class BundleManagerImplTest {
         BundleManagerImpl registry = new BundleManagerImpl(conf);
         registry.loadBundlesByPath(bundleLocs);
         verify(loader).installAndStartBundles(any(Framework.class), eq(bundleLocs));
+    }
+
+    @Test
+    public void verifyLoadBundleByNameAndVersionWithBundleNotFound() throws Exception {
+        Bundle theBundle = b2;
+        when(theContext.getBundles()).thenReturn(new Bundle[] {});
+        when(theBundle.getBundleContext()).thenReturn(theContext);
+
+        mockStatic(FrameworkUtil.class);
+
+        when(FrameworkUtil.getBundle(any(Class.class))).thenReturn(theBundle);
+
+        BundleManagerImpl registry = new BundleManagerImpl(conf);
+        Map<BundleInformation, Path> bundleToPath = new HashMap<>();
+
+        registry.setKnownBundles(bundleToPath);
+
+        registry.loadBundlesByName(Arrays.asList(new BundleInformation("foo", "1.0")));
+
+        verify(loader).installAndStartBundles(theFramework, Arrays.<String>asList());
+    }
+
+    @Test
+    public void verifyLoadBundleByNameAndVersion() throws Exception {
+
+        Bundle theBundle = b2;
+        when(theContext.getBundles()).thenReturn(new Bundle[] {});
+        when(theBundle.getBundleContext()).thenReturn(theContext);
+
+        mockStatic(FrameworkUtil.class);
+
+        when(FrameworkUtil.getBundle(any(Class.class))).thenReturn(theBundle);
+
+        BundleManagerImpl registry = new BundleManagerImpl(conf);
+        Map<BundleInformation, Path> bundleToPath = new HashMap<>();
+        bundleToPath.put(new BundleInformation("foo", "1.0"), Paths.get(jar1Name));
+        registry.setKnownBundles(bundleToPath);
+
+        registry.loadBundlesByName(Arrays.asList(new BundleInformation("foo", "1.0")));
+
+        verify(loader).installAndStartBundles(theFramework, Arrays.asList(new File(jar1Name).toURI().toURL().toString()));
+    }
+
+    @Test
+    public void verifyLoadBundleByNameAndLatestVersion() throws Exception {
+
+        Bundle theBundle = b2;
+        when(theContext.getBundles()).thenReturn(new Bundle[] {});
+        when(theBundle.getBundleContext()).thenReturn(theContext);
+
+        mockStatic(FrameworkUtil.class);
+
+        when(FrameworkUtil.getBundle(any(Class.class))).thenReturn(theBundle);
+
+        when(conf.getIgnoreVersions()).thenReturn(true);
+
+        BundleManagerImpl registry = new BundleManagerImpl(conf);
+        Map<BundleInformation, Path> bundleToPath = new HashMap<>();
+        bundleToPath.put(new BundleInformation("foo", "1.0"), Paths.get(jar1Name));
+        bundleToPath.put(new BundleInformation("foo", "2.0"), Paths.get(jar2Name));
+
+        registry.setKnownBundles(bundleToPath);
+
+        registry.loadBundlesByName(Arrays.asList(new BundleInformation("foo", "3.0")));
+
+        verify(loader).installAndStartBundles(theFramework, Arrays.asList(new File(jar2Name).toURI().toURL().toString()));
+    }
+
+    @Test
+    public void verifyLoadBundleByNameAndLatestVersionWithoutSupportForLatestVersion() throws Exception {
+
+        Bundle theBundle = b2;
+        when(theContext.getBundles()).thenReturn(new Bundle[] {});
+        when(theBundle.getBundleContext()).thenReturn(theContext);
+
+        mockStatic(FrameworkUtil.class);
+
+        when(FrameworkUtil.getBundle(any(Class.class))).thenReturn(theBundle);
+
+        BundleManagerImpl registry = new BundleManagerImpl(conf);
+        Map<BundleInformation, Path> bundleToPath = new HashMap<>();
+        bundleToPath.put(new BundleInformation("foo", "1.0"), Paths.get(jar1Name));
+        bundleToPath.put(new BundleInformation("foo", "2.0"), Paths.get(jar2Name));
+
+        registry.setKnownBundles(bundleToPath);
+
+        registry.loadBundlesByName(Arrays.asList(new BundleInformation("foo", "3.0")));
+
+        verify(loader).installAndStartBundles(theFramework, new ArrayList<String>());
     }
 
     @Test
@@ -170,7 +267,7 @@ public class BundleManagerImplTest {
 
         BundleManagerImpl registry = new BundleManagerImpl(conf);
         registry.loadBundlesByPath(bundleLocs);
-        verify(loader).installAndStartBundles(any(Framework.class), eq(Arrays.asList(jar3Name)));
+        verify(loader).installAndStartBundles(theFramework, Arrays.asList(jar3Name));
     }
 
     @Test

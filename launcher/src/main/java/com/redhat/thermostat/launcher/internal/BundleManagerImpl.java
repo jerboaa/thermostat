@@ -61,6 +61,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.Version;
 import org.osgi.framework.launch.Framework;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -143,6 +144,14 @@ public class BundleManagerImpl extends BundleManager {
         }
     }
 
+    /** For TESTS only: explicitly specify known bundles */
+    void setKnownBundles(Map<BundleInformation,Path> knownData) {
+        known.clear();
+        for (Entry<BundleInformation, Path> entry : knownData.entrySet()) {
+            known.put(entry.getKey(), entry.getValue());
+        }
+    }
+
     @Override
     public void setPrintOSGiInfo(boolean printOSGiInfo) {
         configuration.setPrintOSGiInfo(printOSGiInfo);
@@ -150,10 +159,22 @@ public class BundleManagerImpl extends BundleManager {
     }
 
     @Override
+    public void setIgnoreVersions(boolean ignore) {
+        configuration.setIgnoreVersions(ignore);
+    }
+
+    @Override
     public void loadBundlesByName(List<BundleInformation> bundles) throws BundleException, IOException {
         List<String> paths = new ArrayList<>();
         for (BundleInformation info : bundles) {
-            Path bundlePath = known.get(info);
+            Path bundlePath = null;
+
+            if (configuration.getIgnoreVersions()) {
+                bundlePath = findLatestVersion(info.getName());
+            } else {
+                bundlePath = known.get(info);
+            }
+
             if (bundlePath == null) {
                 logger.warning("no known bundle matching " + info.toString());
                 continue;
@@ -161,6 +182,30 @@ public class BundleManagerImpl extends BundleManager {
             paths.add(bundlePath.toFile().getCanonicalFile().toURI().toString());
         }
         loadBundlesByPath(paths);
+    }
+
+    private Path findLatestVersion(String bundleSymbolicName) {
+        BundleInformation bestBundleInformation = null;
+        Version bestVersion = null;
+
+        Path bundlePath = null;
+
+        for (Entry<BundleInformation, Path> entry: known.entrySet()) {
+            if (bundleSymbolicName.equals(entry.getKey().getName())) {
+                Version version = Version.parseVersion(entry.getKey().getVersion());
+                if (bestVersion == null || version.compareTo(bestVersion) > 0) {
+                    bestVersion = version;
+                    bestBundleInformation = entry.getKey();
+                }
+            }
+        }
+        if (bestBundleInformation != null) {
+            bundlePath = known.get(bestBundleInformation);
+        }
+
+        logger.fine("Best match for " + bundleSymbolicName + " is " + bestBundleInformation);
+
+        return bundlePath;
     }
 
     /* package private for testing only */

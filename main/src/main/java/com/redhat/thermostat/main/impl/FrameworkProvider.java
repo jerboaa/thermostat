@@ -72,12 +72,14 @@ public class FrameworkProvider {
 
     private Configuration configuration;
     private boolean printOSGiInfo;
+    private boolean ignoreVersions;
     // The framework cache location; Must not be shared between apps!
     private Path osgiCacheStorage;
 
     public FrameworkProvider(Configuration config) {
         this.configuration = config;
         printOSGiInfo = config.getPrintOSGiInfo();
+        ignoreVersions = config.getIgnoreVersions();
     }
 
     // This is our ticket into OSGi land. Unfortunately, we to use a bit of reflection here.
@@ -89,6 +91,7 @@ public class FrameworkProvider {
             prepareFramework(framework);
             loadBootstrapBundles(framework);
             setLoaderVerbosity(framework);
+            setIgnoreBundleVersions(framework);
             runLauncher(framework, args);
         } catch (InterruptedException | BundleException | IOException e) {
             throw new RuntimeException("Could not start framework.", e);
@@ -225,6 +228,11 @@ public class FrameworkProvider {
     private void setLoaderVerbosity(Framework framework) throws InterruptedException {
         Object loader = getService(framework, BundleManager.class.getName());
         callVoidReflectedMethod(loader, "setPrintOSGiInfo", printOSGiInfo);
+    }
+
+    private void setIgnoreBundleVersions(Framework framework) throws InterruptedException {
+        Object loader = getService(framework, BundleManager.class.getName());
+        callVoidReflectedMethod(loader, "setIgnoreVersions", ignoreVersions);
     }
 
     private void runLauncher(Framework framework, String[] args) throws InterruptedException {
