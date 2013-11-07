@@ -168,6 +168,10 @@
 
     <jdktools.version>1.7.0</jdktools.version>
     <jfreechart.version>1.0.14</jfreechart.version>
+    <!-- This should match the version jfreechart pulls in (if any).
+         See the main thermostat bash script where this property is
+         used. -->
+    <jcommon.version>1.0.17</jcommon.version>
     <mongo-driver.version>2.11.2</mongo-driver.version>
     <!-- the OSGi Bundle-Version; should match the manifest in the jar -->
     <mongo-driver.osgi-version>2.11.2.RELEASE</mongo-driver.osgi-version>
@@ -376,6 +380,9 @@
         <version>${netty.version}</version>
       </dependency>
 
+      <!-- Note that jfreechart pulls in jcommon as a dep.
+           The jcommon jar is used explicitly in the main
+           boot script (SERVICE_CLASSPATH). -->
       <dependency>
         <groupId>org.jfree</groupId>
         <artifactId>jfreechart</artifactId>

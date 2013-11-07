@@ -54,10 +54,17 @@ THERMOSTAT_LIBS="${THERMOSTAT_HOME}/libs"
 # need tools from the JVM
 TOOLS_JAR="@java.home@/../lib/tools.jar"
 
-# plus the main services we use and export
-SERVICE_CLASSPATH="${THERMOSTAT_LIBS}/*"
-
+# This is the minimal boot classpath thermostat needs. Other dependencies
+# will get started by the OSGi framework once that's up.
+SERVICE_CLASSPATH="${THERMOSTAT_LIBS}/org.apache.felix.framework-@felix.framework.version@.jar"
+SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-launcher-@project.version@.jar"
+SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-main-@project.version@.jar"
+SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-shared-config-@project.version@.jar"
+# FIXME: Remove once jfreechart is a real OSGi bundle upstream
+SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_LIBS}/jfreechart-@jfreechart.version@.jar"
+SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_LIBS}/jcommon-@jcommon.version@.jar"
 SERVICE_CLASSPATH="${TOOLS_JAR}:${SERVICE_CLASSPATH}"
+
 THERMOSTAT_MAIN="com.redhat.thermostat.main.Thermostat"
 
 function usage() {
