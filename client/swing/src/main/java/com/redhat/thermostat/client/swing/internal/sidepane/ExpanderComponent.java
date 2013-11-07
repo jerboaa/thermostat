@@ -37,12 +37,7 @@
 package com.redhat.thermostat.client.swing.internal.sidepane;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Insets;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
@@ -51,54 +46,18 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
-import com.redhat.thermostat.client.swing.GraphicsUtils;
-import com.redhat.thermostat.client.swing.components.DebugBorder;
 import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.client.swing.components.Icon;
-import com.redhat.thermostat.client.swing.internal.splitpane.ThermostatSplitPane;
-import com.redhat.thermostat.client.ui.Palette;
 
 @SuppressWarnings("serial")
 public class ExpanderComponent extends JPanel {
     
     public static int ICON_WIDTH = 20;
     public static final String EXPANDED_PROPERTY = "ExpanderComponent_EXPANDED_PROPERTY";
-
-    private class ExpanderComponentBorder extends DebugBorder {
-        @Override
-        public void paintBorder(Component c, Graphics g, int x, int y,
-                                int width, int height)
-        {
-            Graphics2D graphics = GraphicsUtils.getInstance().createAAGraphics(g);
-            Insets insets = getBorderInsets(c);
-            
-            int xStart = x + width - insets.right;
-            graphics.translate(xStart, y);
-            
-            graphics.setColor(Palette.LIGHT_GRAY.getColor());
-            graphics.fillRect(0, y, width, height);
-            
-            ThermostatSplitPane.paint(graphics, insets.right, height, Palette.LIGHT_GRAY.getColor());
-            graphics.dispose();            
-        }
-        
-        @Override
-        public Insets getBorderInsets(Component c, Insets insets) {
-            insets.top = 0;
-            insets.left = 0;
-            insets.right = 5;
-            insets.bottom = 1;
-            
-            return insets;
-        }
-    }
     
     public ExpanderComponent() {
         
-        setBackground(Color.BLACK);
         setLayout(new BorderLayout());
-
-        setBorder(new ExpanderComponentBorder());
         
         final Icon mainIcon = new FontAwesomeIcon('\uf101', ICON_WIDTH, TopSidePane.FG_COLOR);
         final Icon hover = new FontAwesomeIcon('\uf101', ICON_WIDTH, ThermostatSidePanel.FG_TEXT_COLOR);

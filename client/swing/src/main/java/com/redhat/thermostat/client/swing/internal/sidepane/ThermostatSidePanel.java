@@ -38,10 +38,6 @@ package com.redhat.thermostat.client.swing.internal.sidepane;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Rectangle;
-import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
@@ -66,7 +62,6 @@ public class ThermostatSidePanel extends JPanel {
     public ThermostatSidePanel() {
         
         setLayout(new BorderLayout());
-        setBackground(Color.BLACK);
         
         top = new TopSidePane();
         top.addPropertyChangeListener(TopSidePane.COLLAPSED_PROPERTY,

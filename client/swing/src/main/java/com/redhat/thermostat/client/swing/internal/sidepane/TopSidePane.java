@@ -65,7 +65,7 @@ class TopSidePane extends JPanel {
     private Color currentFGColor = ThermostatSidePanel.FG_COLOR;
     
     public TopSidePane() {
-        setBackground(Color.BLACK);
+        setBackground(Color.WHITE);
         setLayout(new BorderLayout());
                 
         final Icon mainIcon = new FontAwesomeIcon('\uf100', ICON_WIDTH, FG_COLOR);

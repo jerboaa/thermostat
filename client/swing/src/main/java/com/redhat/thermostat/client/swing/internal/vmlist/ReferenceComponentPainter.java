@@ -41,6 +41,7 @@ import java.awt.Graphics2D;
 import java.awt.Rectangle;
 
 import com.redhat.thermostat.client.swing.GraphicsUtils;
+import com.redhat.thermostat.client.swing.internal.accordion.Accordion;
 import com.redhat.thermostat.client.swing.internal.accordion.AccordionComponent;
 import com.redhat.thermostat.client.swing.internal.accordion.TitledPanePainter;
 
@@ -65,7 +66,7 @@ public class ReferenceComponentPainter implements TitledPanePainter {
         if (component.isSelected()) {
             graphics.setColor(palette.getSelectedComponentBGColor());
         } else {
-            graphics.setColor(component.getUiComponent().getBackground());
+            graphics.setColor(Accordion.BASE_COLOR);
         }
 
         Rectangle bounds = graphics.getClipBounds();

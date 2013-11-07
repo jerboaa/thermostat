@@ -37,6 +37,7 @@
 package com.redhat.thermostat.client.swing.internal.accordion;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
@@ -50,6 +51,7 @@ import javax.swing.JScrollPane;
 
 import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 import com.redhat.thermostat.client.swing.components.VerticalLayout;
+import com.redhat.thermostat.client.ui.Palette;
 
 /**
  * An Accordion widget. H and C types represent Header and Component and are
@@ -64,6 +66,8 @@ import com.redhat.thermostat.client.swing.components.VerticalLayout;
  */
 @SuppressWarnings("serial")
 public class Accordion<H, C> extends JPanel {
+    
+    public static final Color BASE_COLOR = Palette.WHITE.getColor();
     
     public static final int ICON_SIZE = 24;
     
@@ -84,12 +88,15 @@ public class Accordion<H, C> extends JPanel {
     
     public Accordion(AccordionComponentFactory<H, C> componentFactory) {
         
+        setBackground(BASE_COLOR);
+        
         this.componentFactory = componentFactory;
         componentController = new AccordionComponentController();
         
         setLayout(new BorderLayout());
 
         contentPane = new AccordionContentPane();
+        contentPane.setBackground(BASE_COLOR);
         contentPane.setLayout(new VerticalLayout());
         
         model = new AccordionModel<>();
