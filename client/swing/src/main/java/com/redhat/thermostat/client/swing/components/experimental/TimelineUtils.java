@@ -34,12 +34,35 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.components;
+package com.redhat.thermostat.client.swing.components.experimental;
 
-import com.redhat.thermostat.common.model.Range;
+import java.awt.Font;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
 
-public interface EventTimelineRangeChangeListener {
+import com.redhat.thermostat.client.ui.Palette;
 
-    void rangeChanged(Range<Long> overview, Range<Long> detail);
+public class TimelineUtils {
+    public static final Font FONT = new Font("SansSerif", Font.PLAIN, 10);
+ 
+    public static void drawMarks(Graphics2D graphics, Rectangle bounds,
+                                 int currentValue, boolean darkerTop, int increment)
+    {
+        int inc = currentValue % increment;
+        int x = (bounds.x - inc);
+        
+        graphics.setColor(Palette.GRAY.getColor());
+        int upperBound = (bounds.x + bounds.width);
+
+        for (int i = x; i < upperBound; i += increment) {
+            graphics.drawLine(i, 0, i, bounds.height);
+            if (darkerTop) {
+                graphics.setColor(Palette.DARK_GRAY.getColor());
+                graphics.drawLine(i, 0, i, 5);
+                graphics.setColor(Palette.GRAY.getColor());
+            }
+        }
+    }
 
 }
+

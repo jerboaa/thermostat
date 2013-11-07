@@ -37,6 +37,8 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.client.swing.components.experimental.TimelineIntervalSelectorModel;
+
 public class TimelineIntervalSelectorModelTest {
 
     @Test

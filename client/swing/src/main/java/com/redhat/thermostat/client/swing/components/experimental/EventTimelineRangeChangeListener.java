@@ -34,38 +34,12 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.components;
+package com.redhat.thermostat.client.swing.components.experimental;
 
-import javax.swing.JComponent;
-import javax.swing.plaf.ComponentUI;
+import com.redhat.thermostat.common.model.Range;
 
-public abstract class EventTimelineUI extends ComponentUI {
+public interface EventTimelineRangeChangeListener {
 
-    public void installUI(JComponent c) {
-        EventTimeline zc = (EventTimeline) c;
-        installComponents(zc);
-        installDefaults(zc);
-        installListeners(zc);
-    }
-
-    protected void installComponents(EventTimeline c) {}
-
-    protected void installDefaults(EventTimeline c) {}
-
-    protected void installListeners(EventTimeline c) {}
-
-    public void uninstallUI(JComponent c) {
-        EventTimeline zc = (EventTimeline) c;
-
-        uninstallListeners(zc);
-        uninstallDefaults(zc);
-        uninstallComponents(zc);
-    }
-
-    protected void uninstallListeners(EventTimeline c) {}
-
-    protected void uninstallDefaults(EventTimeline c) {}
-
-    protected void uninstallComponents(EventTimeline c) {}
+    void rangeChanged(Range<Long> overview, Range<Long> detail);
 
 }

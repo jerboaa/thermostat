@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.components.timeline;
+package com.redhat.thermostat.client.swing.components.experimental;
 
 import java.awt.Dimension;
 import java.awt.Font;

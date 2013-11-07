@@ -52,7 +52,7 @@ import com.redhat.thermostat.client.swing.GraphicsUtils;
 import com.redhat.thermostat.client.swing.components.CompositeIcon;
 import com.redhat.thermostat.client.swing.components.Icon;
 import com.redhat.thermostat.client.swing.components.ShadowLabel;
-import com.redhat.thermostat.client.swing.components.timeline.TimelineUtils;
+import com.redhat.thermostat.client.swing.components.experimental.TimelineUtils;
 import com.redhat.thermostat.client.ui.Palette;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapIconResources;

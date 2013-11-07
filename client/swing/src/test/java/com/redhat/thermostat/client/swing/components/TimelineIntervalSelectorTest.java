@@ -50,7 +50,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 import javax.swing.border.EmptyBorder;
 
-import com.redhat.thermostat.client.swing.components.TimelineIntervalSelectorModel.ChangeListener;
+import com.redhat.thermostat.client.swing.components.experimental.TimelineIntervalSelector;
+import com.redhat.thermostat.client.swing.components.experimental.TimelineIntervalSelectorModel.ChangeListener;
 
 public class TimelineIntervalSelectorTest {
 

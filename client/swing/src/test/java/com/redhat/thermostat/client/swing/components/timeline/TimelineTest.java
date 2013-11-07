@@ -46,6 +46,7 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
+import com.redhat.thermostat.client.swing.components.experimental.Timeline;
 import com.redhat.thermostat.common.model.Range;
 
 public class TimelineTest {

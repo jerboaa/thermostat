@@ -51,7 +51,7 @@ import javax.swing.event.ChangeListener;
 
 import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.SwingComponent;
-import com.redhat.thermostat.client.swing.components.timeline.TimelineRulerHeader;
+import com.redhat.thermostat.client.swing.components.experimental.TimelineRulerHeader;
 import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.thread.client.common.Timeline;
 import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;

@@ -47,7 +47,10 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.client.swing.components.EventTimelineModel.Event;
+import com.redhat.thermostat.client.swing.components.experimental.EventTimelineDataChangeListener;
+import com.redhat.thermostat.client.swing.components.experimental.EventTimelineModel;
+import com.redhat.thermostat.client.swing.components.experimental.EventTimelineRangeChangeListener;
+import com.redhat.thermostat.client.swing.components.experimental.EventTimelineModel.Event;
 import com.redhat.thermostat.common.model.Range;
 
 public class EventTimelineModelTest {

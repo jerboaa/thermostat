@@ -50,7 +50,7 @@ import javax.swing.JScrollPane;
 
 import com.redhat.thermostat.client.swing.GraphicsUtils;
 import com.redhat.thermostat.client.swing.components.GradientPanel;
-import com.redhat.thermostat.client.swing.components.timeline.TimelineUtils;
+import com.redhat.thermostat.client.swing.components.experimental.TimelineUtils;
 import com.redhat.thermostat.client.ui.Palette;
 import com.redhat.thermostat.common.model.LongRangeNormalizer;
 import com.redhat.thermostat.common.model.Range;

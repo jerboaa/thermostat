@@ -34,10 +34,38 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.components;
+package com.redhat.thermostat.client.swing.components.experimental;
 
-public interface EventTimelineDataChangeListener {
+import javax.swing.JComponent;
+import javax.swing.plaf.ComponentUI;
 
-    void dataChanged();
+public abstract class EventTimelineUI extends ComponentUI {
+
+    public void installUI(JComponent c) {
+        EventTimeline zc = (EventTimeline) c;
+        installComponents(zc);
+        installDefaults(zc);
+        installListeners(zc);
+    }
+
+    protected void installComponents(EventTimeline c) {}
+
+    protected void installDefaults(EventTimeline c) {}
+
+    protected void installListeners(EventTimeline c) {}
+
+    public void uninstallUI(JComponent c) {
+        EventTimeline zc = (EventTimeline) c;
+
+        uninstallListeners(zc);
+        uninstallDefaults(zc);
+        uninstallComponents(zc);
+    }
+
+    protected void uninstallListeners(EventTimeline c) {}
+
+    protected void uninstallDefaults(EventTimeline c) {}
+
+    protected void uninstallComponents(EventTimeline c) {}
 
 }

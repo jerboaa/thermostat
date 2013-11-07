@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.components;
+package com.redhat.thermostat.client.swing.components.experimental;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -61,9 +61,8 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 
-import com.redhat.thermostat.client.swing.components.EventTimelineModel.Event;
-import com.redhat.thermostat.client.swing.components.TimelineIntervalMouseHandler.TimeIntervalSelectorTarget;
-import com.redhat.thermostat.client.swing.components.timeline.Timeline;
+import com.redhat.thermostat.client.swing.components.experimental.EventTimelineModel.Event;
+import com.redhat.thermostat.client.swing.components.experimental.TimelineIntervalMouseHandler.TimeIntervalSelectorTarget;
 import com.redhat.thermostat.client.swing.internal.LocaleResources;
 import com.redhat.thermostat.common.model.LongRangeNormalizer;
 import com.redhat.thermostat.common.model.Range;

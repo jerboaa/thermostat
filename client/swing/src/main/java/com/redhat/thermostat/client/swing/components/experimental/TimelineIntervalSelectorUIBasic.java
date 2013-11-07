@@ -30,7 +30,7 @@
  * exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.components;
+package com.redhat.thermostat.client.swing.components.experimental;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -50,9 +50,8 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
-import com.redhat.thermostat.client.swing.components.TimelineIntervalMouseHandler.TimeIntervalSelectorTarget;
-import com.redhat.thermostat.client.swing.components.TimelineIntervalSelectorModel.ChangeListener;
-import com.redhat.thermostat.client.swing.components.timeline.Timeline;
+import com.redhat.thermostat.client.swing.components.experimental.TimelineIntervalMouseHandler.TimeIntervalSelectorTarget;
+import com.redhat.thermostat.client.swing.components.experimental.TimelineIntervalSelectorModel.ChangeListener;
 import com.redhat.thermostat.client.ui.Palette;
 import com.redhat.thermostat.common.model.Range;
 

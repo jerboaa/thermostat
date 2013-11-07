@@ -30,7 +30,7 @@
  * exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.components;
+package com.redhat.thermostat.client.swing.components.experimental;
 
 import java.util.EventListener;
 import java.util.concurrent.TimeUnit;

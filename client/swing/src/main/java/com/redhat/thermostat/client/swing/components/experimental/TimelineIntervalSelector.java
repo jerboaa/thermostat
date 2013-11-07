@@ -30,10 +30,71 @@
  * exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.components;
+package com.redhat.thermostat.client.swing.components.experimental;
 
-import javax.swing.plaf.ComponentUI;
+import java.awt.Paint;
 
-public class TimelineIntervalSelectorUI extends ComponentUI {
-    // a marker class
+import javax.swing.JComponent;
+import javax.swing.UIManager;
+
+/**
+ * A component that allows specifying a time range to select
+ */
+public class TimelineIntervalSelector extends JComponent {
+
+    private static final String uiClassID = "TimelineIntervalSelectorUI";
+
+    private TimelineIntervalSelectorModel model;
+
+    private Paint linePaint;
+
+    private Paint fillPaint;
+
+    public TimelineIntervalSelector() {
+        model = new TimelineIntervalSelectorModel();
+
+        updateUI();
+    }
+
+    public TimelineIntervalSelectorModel getModel() {
+        return model;
+    }
+
+    public void setUI(TimelineIntervalSelectorUI ui) {
+        super.setUI(ui);
+    }
+
+    @Override
+    public void updateUI() {
+        if (UIManager.get(getUIClassID()) != null) {
+            setUI((TimelineIntervalSelectorUI) UIManager.getUI(this));
+        } else {
+            setUI(new TimelineIntervalSelectorUIBasic());
+        }
+    }
+
+    public TimelineIntervalSelectorUI getUI() {
+        return (TimelineIntervalSelectorUI) ui;
+    }
+
+    @Override
+    public String getUIClassID() {
+        return uiClassID;
+    }
+
+    public void setSelectionLinePaint(Paint paint) {
+        this.linePaint = paint;
+    }
+
+    public Paint getSelectionLinePaint() {
+        return this.linePaint;
+    }
+
+    public void setSelectionFillPaint(Paint paint) {
+        this.fillPaint = paint;
+    }
+
+    public Paint getSelectionFillPaint() {
+        return this.fillPaint;
+    }
 }

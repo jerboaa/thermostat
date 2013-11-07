@@ -38,7 +38,7 @@ package com.redhat.thermostat.thread.client.swing.impl.timeline;
 
 import javax.swing.JScrollPane;
 
-import com.redhat.thermostat.client.swing.components.timeline.TimelineRulerHeader;
+import com.redhat.thermostat.client.swing.components.experimental.TimelineRulerHeader;
 import com.redhat.thermostat.common.model.Range;
 
 /**
