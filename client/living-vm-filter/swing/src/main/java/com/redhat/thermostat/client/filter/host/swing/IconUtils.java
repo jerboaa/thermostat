@@ -43,8 +43,8 @@ import com.redhat.thermostat.client.swing.components.EmptyIcon;
 import com.redhat.thermostat.client.swing.components.Icon;
 
 public class IconUtils {
-    public static Icon resizeIcon(Icon source) {
-        Icon canvas = new EmptyIcon(32, 32);
+    public static Icon resizeIcon(Icon source, int size) {
+        Icon canvas = new EmptyIcon(size, size);
         
         float v1 = canvas.getIconWidth() / 2;
         float v0 = source.getIconWidth() / 2; 

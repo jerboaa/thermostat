@@ -47,12 +47,12 @@ import com.redhat.thermostat.storage.core.VmRef;
 
 public class VMIconDecorator implements ReferenceFieldIconDecorator {
 
-    private static final Icon ICON = IconUtils.resizeIcon(IconResource.JAVA_APPLICATION_24.getIcon());
+    private static final Icon ICON = IconUtils.resizeIcon(IconResource.JAVA_APPLICATION_24.getIcon(), 32);
     private static final Icon SELECTED = CompositeIcon.createDefaultComposite(ICON, true);
 
     @Override
     public int getOrderValue() {
-        return ORDER_DEFAULT_GROUP;
+        return ORDER_FIRST;
     }
     
     @Override

@@ -36,9 +36,60 @@
 
 package com.redhat.thermostat.client.swing;
 
-public enum ReferenceFieldDecoratorLayout {    
+import com.redhat.thermostat.client.ui.Decorator;
+import com.redhat.thermostat.client.ui.PlatformIcon;
+import com.redhat.thermostat.client.ui.ReferenceFieldIconDecorator;
+import com.redhat.thermostat.client.ui.ReferenceFieldLabelDecorator;
+import com.redhat.thermostat.storage.core.Ref;
+
+/**
+ * This {@link Enum} marks {@link Decorator} target for
+ * {@link ReferenceFieldLabelDecorator}s and
+ * {@link ReferenceFieldIconDecorator}s. Each of those entry point represent
+ * a visual element in the reference list component for the Swing based client.
+ */
+public enum ReferenceFieldDecoratorLayout {
+    
+    /**
+     * Represents the main label portion to be decorated by
+     * {@link ReferenceFieldLabelDecorator}s.
+     * 
+     * <br /><br />
+     * 
+     * The main label is the top most field for each entry in the
+     * {@link Ref}eference list, usually containing by default the name of
+     * the reference.
+     * 
+     * <br /><br />
+     * 
+     * An example use for this field is the name of the target reference. 
+     */
     LABEL_MAIN,
+    
+    /**
+     * Represents the secondary label portion to be decorated by
+     * {@link ReferenceFieldLabelDecorator}.
+     * 
+     * <br /><br />
+     * 
+     * This label is usually a smaller and less obvious visual component that
+     * helps better define the actual entry. It should not contain too much
+     * information to avoid cluttering the UI.
+     * 
+     * <br /><br />
+     * 
+     * An example use of this field is an unique ID of some kind.
+     */
     LABEL_INFO,
     
+    /**
+     * Represents the main {@link PlatformIcon} portion of the entry to be
+     * decorated by {@link ReferenceFieldIconDecorator}s.
+     * 
+     * <br /><br />
+     * 
+     * This icon is the main icon characterising the component being shown,
+     * for example representing a particular application or device.
+     */
     ICON_MAIN,
 }

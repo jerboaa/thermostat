@@ -58,7 +58,7 @@ public class DeadHostIconDecorator implements ReferenceFieldIconDecorator {
     
     @Override
     public int getOrderValue() {
-        return ORDER_DEFAULT_GROUP + 100;
+        return ORDER_FIRST + 100;
     }
     
     @Override

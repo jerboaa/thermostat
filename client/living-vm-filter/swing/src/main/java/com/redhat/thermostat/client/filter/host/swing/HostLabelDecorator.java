@@ -54,7 +54,7 @@ public class HostLabelDecorator implements ReferenceFieldLabelDecorator {
     
     @Override
     public int getOrderValue() {
-        return ORDER_DEFAULT_GROUP;
+        return ORDER_FIRST;
     }
     
     @Override

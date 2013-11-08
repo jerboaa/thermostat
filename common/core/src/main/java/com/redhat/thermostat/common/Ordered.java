@@ -79,6 +79,16 @@ public interface Ordered {
     public static final int ORDER_USER_GROUP = 5000;
 
     /**
+     * Order group for services that should be executed first. 
+     */
+    public static final int ORDER_FIRST = ORDER_DEFAULT_GROUP;
+    
+    /**
+     * Order group for services that should be executed last. 
+     */
+    public static final int ORDER_LAST = Integer.MAX_VALUE;
+
+    /**
      * Defines a value to be used for assigning an order to
      * services. A service with a lower order value will
      * be processed before a service of a higher order value. This

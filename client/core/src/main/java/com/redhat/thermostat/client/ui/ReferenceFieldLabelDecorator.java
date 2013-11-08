@@ -36,18 +36,29 @@
 
 package com.redhat.thermostat.client.ui;
 
-import com.redhat.thermostat.common.Ordered;
+import com.redhat.thermostat.annotations.ExtensionPoint;
+import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Ref;
 
 /**
- *
+ * Implementations of this interface have the ability to decorate the specific
+ * targets by changing or replacing the target {@link String}. The {@link Ref}
+ * is passed to which the label belongs so that implementations can filter or
+ * change their behavior according to the reference being passed or its status.
+ * 
+ * <br /><br />
+ * 
+ * For example, a decorator may decide to only decorate some specific type of
+ * {@link Ref}, like {@link HostRef} that currently don't have an agent
+ * connected. The code would then check for the actual type of the reference
+ * and check the state before passing on the updated {@link String}.
  */
-public interface ReferenceFieldLabelDecorator extends Ordered {
+@ExtensionPoint
+public interface ReferenceFieldLabelDecorator extends Decorator {
 
-    public static final String ID = "ReferenceFieldLabelDecorator_ID";
-    
     /**
-     * The passed label my be null, indicating no plugin has set the label.
+     * The passed label my be null, indicating no plugin has set the label so
+     * far.
      */
     String getLabel(String originalLabel, Ref reference);
 }

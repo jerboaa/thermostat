@@ -36,12 +36,25 @@
 
 package com.redhat.thermostat.client.ui;
 
-import com.redhat.thermostat.common.Ordered;
+import com.redhat.thermostat.annotations.ExtensionPoint;
+import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Ref;
 
-public interface ReferenceFieldIconDecorator extends Ordered {
-
-    public static final String ID = "ReferenceFieldIconDecorator_ID";
+/**
+ * Implementations of this interface have the ability to decorate the specific
+ * targets by changing or replacing the target {@link PlatformIcon}. The {@link Ref}
+ * is passed to which the icon belong so that implementations can filter or
+ * change their behavior according to the reference being passed or its status.
+ * 
+ * <br /><br />
+ * 
+ * For example, a decorator may decide to only decorate some specific type of
+ * {@link Ref}, like {@link HostRef} that currently don't have an agent
+ * connected. The code would then check for the actual type of the reference
+ * and check the state before passing on the updated icon.
+ */
+@ExtensionPoint
+public interface ReferenceFieldIconDecorator extends Decorator {
     
     /**
      * The passed {@link PlatformIcon} my be null, indicating no plugin has
