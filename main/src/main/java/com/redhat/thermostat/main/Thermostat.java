@@ -51,23 +51,25 @@ public class Thermostat {
      */
     public static void main(String[] args) {
 
-        Configuration config = new Configuration();
+        boolean printOSGiInfo = false;
+        boolean ignoreBundleVersions = false;
 
         List<String> toProcess = new ArrayList<>(Arrays.asList(args));
         Iterator<String> iter = toProcess.iterator();
         while (iter.hasNext()) {
             String arg = iter.next();
             if ("--print-osgi-info".equals(arg)) {
-                config.setPrintOSGiInfo(true);
+                printOSGiInfo = true;
                 iter.remove();
             }
             if ("--ignore-bundle-versions".equals(arg)) {
-                config.setIgnoreVersions(true);
+                ignoreBundleVersions = true;
                 iter.remove();
             }
         }
 
-        FrameworkProvider frameworkProvider = new FrameworkProvider(config);
+        Configuration config = new Configuration();
+        FrameworkProvider frameworkProvider = new FrameworkProvider(config, printOSGiInfo, ignoreBundleVersions);
         frameworkProvider.start(toProcess.toArray(new String[0]));
     }
 

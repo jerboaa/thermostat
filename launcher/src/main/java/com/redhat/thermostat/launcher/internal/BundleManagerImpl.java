@@ -81,13 +81,15 @@ public class BundleManagerImpl extends BundleManager {
     // http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=1514
     private final Map<BundleInformation, Path> known;
     private Configuration configuration;
+    private boolean printOSGiInfo = false;
+    private boolean ignoreBundleVersions = false;
     private BundleLoader loader;
 
     BundleManagerImpl(Configuration configuration) throws ConfigurationException, FileNotFoundException, IOException {
         known = new HashMap<>();
 
         this.configuration = configuration;
-        loader = new BundleLoader(configuration.getPrintOSGiInfo());
+        loader = new BundleLoader();
 
         scanForBundles();
     }
@@ -134,7 +136,7 @@ public class BundleManagerImpl extends BundleManager {
         }
 
         long t2 = System.nanoTime();
-        if (configuration.getPrintOSGiInfo()) {
+        if (printOSGiInfo) {
             logger.fine("Found: " + known.size() + " bundles");
             logger.fine("Took " + (t2 -t1) + "ns");
         }
@@ -152,15 +154,24 @@ public class BundleManagerImpl extends BundleManager {
         }
     }
 
-    @Override
+    /* Used via reflection from launcher */
     public void setPrintOSGiInfo(boolean printOSGiInfo) {
-        configuration.setPrintOSGiInfo(printOSGiInfo);
+        this.printOSGiInfo = printOSGiInfo;
         loader.setPrintOSGiInfo(printOSGiInfo);
     }
 
-    @Override
-    public void setIgnoreVersions(boolean ignore) {
-        configuration.setIgnoreVersions(ignore);
+    /**
+     * Indicates that versions in thermostat-specific config files (including
+     * thermostat-plugin.xml files) should be ignored and the latest version
+     * used.
+     * <p>
+     * This does not change OSGi's requirements; if OSGi bundles need specific
+     * versions and the latest version is not within the asked range, things
+     * will break.
+     */
+    /* Used via reflection from launcher */
+    public void setIgnoreBundleVersions(boolean ignore) {
+        this.ignoreBundleVersions = ignore;
     }
 
     @Override
@@ -169,7 +180,7 @@ public class BundleManagerImpl extends BundleManager {
         for (BundleInformation info : bundles) {
             Path bundlePath = null;
 
-            if (configuration.getIgnoreVersions()) {
+            if (ignoreBundleVersions) {
                 bundlePath = findLatestVersion(info.getName());
             } else {
                 bundlePath = known.get(info);

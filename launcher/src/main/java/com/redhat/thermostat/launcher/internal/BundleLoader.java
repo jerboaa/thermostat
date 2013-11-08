@@ -49,12 +49,7 @@ public class BundleLoader {
 
     private boolean printOSGiInfo = false;
 
-    BundleLoader() {
-        this(false);
-    }
-
-    public BundleLoader(boolean printOSGiInfo) {
-        setPrintOSGiInfo(printOSGiInfo);
+    public BundleLoader() {
     }
 
     public void setPrintOSGiInfo(boolean printOSGiInfo) {

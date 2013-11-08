@@ -88,9 +88,6 @@ public class Configuration {
     private final String home;
     private final UserDirectories userDirectories;
 
-    private boolean printOsgiInfo = false;
-    private boolean ignoreVersions = false;
-
     public Configuration() throws InvalidConfigurationException {
         // allow this to be specified also as a property, especially for
         // tests, this overrides the env setting
@@ -226,22 +223,6 @@ public class Configuration {
 
     // TODO add logging files here (see LoggingUtils)
     // TODO add ssl.properties file here (see SSLConfiguration)
-
-    public boolean getPrintOSGiInfo() {
-        return printOsgiInfo;
-    }
-
-    public void setPrintOSGiInfo(boolean newValue) {
-        printOsgiInfo = newValue;
-    }
-
-    public void setIgnoreVersions(boolean ignore) {
-        this.ignoreVersions  = ignore;
-    }
-
-    public boolean getIgnoreVersions() {
-        return ignoreVersions;
-    }
 
     private interface UserDirectories {
 

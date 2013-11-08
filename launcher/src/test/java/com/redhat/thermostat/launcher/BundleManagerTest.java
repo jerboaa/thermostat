@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.launcher;
 
-import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
@@ -61,8 +60,9 @@ public class BundleManagerTest {
         Framework framework = mock(Framework.class);
         ArrayList<String> bundleLocations = new ArrayList<>();
         BundleLoader loader = mock(BundleLoader.class);
-        whenNew(BundleLoader.class).withParameterTypes(Boolean.TYPE).
-                withArguments(any()).thenReturn(loader);
+        whenNew(BundleLoader.class)
+            .withNoArguments()
+            .thenReturn(loader);
 
         BundleManager.preLoadBundles(framework, bundleLocations, true);
         verify(loader).installAndStartBundles(framework, bundleLocations);
