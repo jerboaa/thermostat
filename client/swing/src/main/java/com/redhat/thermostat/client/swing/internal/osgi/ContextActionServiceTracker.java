@@ -34,50 +34,46 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.client.swing.internal.osgi;
 
-import com.redhat.thermostat.annotations.ExtensionPoint;
-import com.redhat.thermostat.common.Filter;
-import com.redhat.thermostat.shared.locale.LocalizedString;
-import com.redhat.thermostat.storage.core.VmRef;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
-/**
- * {@code VMContextAction}s provide actions that are associated with Java
- * Virtual Machines and can be invoked by users. The exact position and
- * appearance of these {@code VMContextAction}s varies based on the client
- * implementation.
- * <p>
- * Plugins can register implementation of this interface as OSGi services to
- * provide additional {@code VMContextAction}s.
- * <p>
- * <h2>Implementation Note</h2>
- * <p>
- * The following information is specific to the current release and may change
- * in a future release.
- * <p>
- * The swing client uses instances of this class to provide menu items in the
- * Host/VM tree. The menu is shown when a user right-clicks a VM in the Host/VM
- * tree. A menu item for every {@link VMContextAction} is added, if the
- * {@code Filter} matches, to this menu. Selecting a menu item invokes the
- * corresponding {@code VMContextAction}.
- *
- * @see HostContextAction
- */
-@ExtensionPoint
-public interface VMContextAction extends ReferenceContextAction<VmRef> {
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
 
-    /**
-     * A user-visible name for this {@code VMContextAction}. Should be
-     * localized.
-     */
+import com.redhat.thermostat.client.ui.ReferenceContextAction;
+
+@SuppressWarnings("rawtypes")
+public class ContextActionServiceTracker extends ServiceTracker {
+    
+    private List<ReferenceContextAction> hostContextActions;
+
+    @SuppressWarnings("unchecked")
+    public ContextActionServiceTracker(BundleContext context) {
+        super(context, ReferenceContextAction.class.getName(), null);
+        this.hostContextActions = new CopyOnWriteArrayList<>();
+    }
+
     @Override
-    public LocalizedString getName();
+    public Object addingService(ServiceReference reference) {
+        @SuppressWarnings("unchecked")
+        ReferenceContextAction service = (ReferenceContextAction) super.addingService(reference);
+        hostContextActions.add(service);
+        return service;
+    }
 
-    /**
-     * A user-visible description for {@code VMContextAction}. Should be
-     * localized.
-     */
+    @SuppressWarnings("unchecked")
     @Override
-    public LocalizedString getDescription();
+    public void removedService(ServiceReference reference, Object service) {
+        hostContextActions.remove((ReferenceContextAction)service);
+        super.removedService(reference, service);
+    }
+
+    public List<ReferenceContextAction> getActions() {
+        return new ArrayList<>(hostContextActions);
+    }
 }
 

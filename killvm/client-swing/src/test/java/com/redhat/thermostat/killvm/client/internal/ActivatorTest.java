@@ -44,7 +44,7 @@ import static org.mockito.Mockito.mock;
 import org.junit.Test;
 
 import com.redhat.thermostat.client.command.RequestQueue;
-import com.redhat.thermostat.client.ui.VMContextAction;
+import com.redhat.thermostat.client.ui.ReferenceContextAction;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.testutils.StubBundleContext;
@@ -80,7 +80,7 @@ public class ActivatorTest {
 
         activator.start(context);
 
-        assertTrue(context.isServiceRegistered(VMContextAction.class.getName(), KillVMAction.class));
+        assertTrue(context.isServiceRegistered(ReferenceContextAction.class.getName(), KillVMAction.class));
 
         activator.stop(context);
 

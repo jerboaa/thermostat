@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.client.swing.internal;
 
-import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
@@ -66,21 +65,17 @@ import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
 import com.redhat.thermostat.client.swing.internal.registry.decorator.DecoratorRegistryController;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.ContextActionController;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.HostTreeController;
-import com.redhat.thermostat.client.ui.HostContextAction;
 import com.redhat.thermostat.client.ui.MenuAction;
 import com.redhat.thermostat.client.ui.MenuRegistry;
-import com.redhat.thermostat.client.ui.VMContextAction;
+import com.redhat.thermostat.client.ui.ReferenceContextAction;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry.Action;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.shared.locale.LocalizedString;
-import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
@@ -102,10 +97,6 @@ public class MainWindowControllerImplTest {
 
     private HostInfoDAO mockHostsDAO;
     private VmInfoDAO mockVmsDAO;
-
-    private HostContextAction hostContextAction1;
-    private VMContextAction vmContextAction1;
-    private VMContextAction vmContextAction2;
 
     private HostFilterRegistry hostFilterRegistry;
     private VmFilterRegistry vmFilterRegistry;
@@ -223,48 +214,9 @@ public class MainWindowControllerImplTest {
         ArgumentCaptor<ActionListener> grabInfoRegistry = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(vmInfoRegistry).addActionListener(grabInfoRegistry.capture());
 
-        setUpHostContextActions();
-        setUpVMContextActions();
-
         controller = new MainWindowControllerImpl(context, appSvc, view, registryFactory, shutdown);
         
         l = grabListener.getValue();
-    }
-
-    private void setUpHostContextActions() {
-        hostContextAction1 = mock(HostContextAction.class);
-        @SuppressWarnings("unchecked")
-        Filter<HostRef> hostFilter1 = mock(Filter.class);
-        when(hostFilter1.matches(isA(HostRef.class))).thenReturn(true);
-
-        when(hostContextAction1.getName()).thenReturn(new LocalizedString("action1"));
-        when(hostContextAction1.getDescription()).thenReturn(new LocalizedString("action1desc"));
-        when(hostContextAction1.getFilter()).thenReturn(hostFilter1);
-
-        context.registerService(HostContextAction.class, hostContextAction1, null);
-    }
-
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    private void setUpVMContextActions() {
-        vmContextAction1 = mock(VMContextAction.class);
-        Filter action1Filter = mock(Filter.class);
-        when(action1Filter.matches(isA(VmRef.class))).thenReturn(true);
-
-        when(vmContextAction1.getName()).thenReturn(new LocalizedString("action1"));
-        when(vmContextAction1.getDescription()).thenReturn(new LocalizedString("action1desc"));
-        when(vmContextAction1.getFilter()).thenReturn(action1Filter);
-        
-        context.registerService(VMContextAction.class, vmContextAction1, null);
-        
-        vmContextAction2 = mock(VMContextAction.class);
-        Filter action2Filter = mock(Filter.class);
-        when(action2Filter.matches(isA(VmRef.class))).thenReturn(false);
-
-        when(vmContextAction2.getName()).thenReturn(new LocalizedString("action2"));
-        when(vmContextAction2.getDescription()).thenReturn(new LocalizedString("action2desc"));
-        when(vmContextAction2.getFilter()).thenReturn(action2Filter);
-        
-        context.registerService(VMContextAction.class, vmContextAction2, null);
     }
 
     @After

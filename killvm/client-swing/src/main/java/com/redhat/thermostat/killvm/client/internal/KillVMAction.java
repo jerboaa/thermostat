@@ -41,13 +41,14 @@ import java.util.Objects;
 
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.Filter;
-import com.redhat.thermostat.client.ui.VMContextAction;
+import com.redhat.thermostat.client.ui.ReferenceContextAction;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.killvm.client.locale.LocaleResources;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.storage.core.Ref;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
@@ -57,7 +58,7 @@ import com.redhat.thermostat.storage.model.VmInfo;
  * Implements the {@link VMContextAction} entry point to provide a kill switch
  * for the currently selected Virtual Machine. 
  */
-public class KillVMAction implements VMContextAction {
+public class KillVMAction implements ReferenceContextAction {
 
     private static final String RECEIVER = "com.redhat.thermostat.killvm.agent.internal.KillVmReceiver";
     private static final String CMD_CHANNEL_ACTION_NAME = "killvm";
@@ -87,7 +88,14 @@ public class KillVMAction implements VMContextAction {
     }
 
     @Override
-    public void execute(VmRef reference) {
+    public void execute(Ref ref) {
+        
+        if (!(ref instanceof VmRef)) {
+            return;
+        }
+        
+        VmRef reference = (VmRef) ref;
+        
         String address = agentDao.getAgentInformation(reference.getHostRef()).getConfigListenAddress();
         
         String [] host = address.split(":");
@@ -107,16 +115,22 @@ public class KillVMAction implements VMContextAction {
     }
 
     @Override
-    public Filter<VmRef> getFilter() {
+    public Filter<Ref> getFilter() {
         return new LocalAndAliveFilter();
     }
 
-    private class LocalAndAliveFilter extends Filter<VmRef> {
-
+    private class LocalAndAliveFilter extends Filter<Ref> {
         @Override
-        public boolean matches(VmRef ref) {
-            VmInfo vmInfo = vmDao.getVmInfo(ref);
-            return vmInfo.isAlive();
+        public boolean matches(Ref ref) {
+            boolean match = false;
+            
+            if (ref instanceof VmRef) {
+                VmRef reference = (VmRef) ref;
+                VmInfo vmInfo = vmDao.getVmInfo(reference);
+                match = vmInfo.isAlive();
+            }
+            
+            return match;
         }
 
     }

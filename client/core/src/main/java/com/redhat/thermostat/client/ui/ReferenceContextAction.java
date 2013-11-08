@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.client.ui;
 
+import com.redhat.thermostat.annotations.ExtensionPoint;
 import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.storage.core.Ref;
 
@@ -43,7 +44,8 @@ import com.redhat.thermostat.storage.core.Ref;
  * A common interface for {@link ContextAction} that can execute commands
  * based on {@link Ref}erences.
  */
-public interface ReferenceContextAction<R extends Ref> extends ContextAction {
+@ExtensionPoint
+public interface ReferenceContextAction extends ContextAction {
 
     /**
      * Invoked when the user selects this {@code ReferenceAction}.
@@ -51,11 +53,11 @@ public interface ReferenceContextAction<R extends Ref> extends ContextAction {
      * @param reference the host on which this {@code ReferenceAction} was
      * invoked on.
      */
-    void execute(R reference);
+    void execute(Ref reference);
     
     /**
      * The {@link Filter} returned by this method is used to select what
      * {@link Ref} this {@code ReferenceAction} is applicable to.
      */
-    Filter<R> getFilter();
+    Filter<Ref> getFilter();
 }

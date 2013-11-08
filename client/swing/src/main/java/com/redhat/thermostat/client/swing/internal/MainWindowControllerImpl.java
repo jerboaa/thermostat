@@ -56,9 +56,8 @@ import com.redhat.thermostat.client.core.views.ClientConfigurationView;
 import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
 import com.redhat.thermostat.client.core.views.SummaryViewProvider;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
-import com.redhat.thermostat.client.swing.internal.osgi.HostContextActionServiceTracker;
+import com.redhat.thermostat.client.swing.internal.osgi.ContextActionServiceTracker;
 import com.redhat.thermostat.client.swing.internal.osgi.InformationServiceTracker;
-import com.redhat.thermostat.client.swing.internal.osgi.VMContextActionServiceTracker;
 import com.redhat.thermostat.client.swing.internal.registry.decorator.DecoratorRegistryController;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.ContextActionController;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.ContextHandler;
@@ -120,8 +119,7 @@ public class MainWindowControllerImpl implements MainWindowController {
     private ClientConfigViewProvider clientConfigViewProvider;
 
     private InformationServiceTracker infoServiceTracker;
-    private HostContextActionServiceTracker hostContextActionTracker;
-    private VMContextActionServiceTracker vmContextActionTracker;
+    private ContextActionServiceTracker contextActionTracker;
     private MultipleServiceTracker depTracker;
     
     private CountDownLatch shutdown;
@@ -206,11 +204,8 @@ public class MainWindowControllerImpl implements MainWindowController {
         this.infoServiceTracker = new InformationServiceTracker(context);
         this.infoServiceTracker.open();
         
-        this.hostContextActionTracker = new HostContextActionServiceTracker(context);
-        this.hostContextActionTracker.open();
-
-        this.vmContextActionTracker = new VMContextActionServiceTracker(context);
-        this.vmContextActionTracker.open();
+        this.contextActionTracker = new ContextActionServiceTracker(context);
+        this.contextActionTracker.open();
         
         this.shutdown = shutdown;
 
@@ -367,8 +362,7 @@ public class MainWindowControllerImpl implements MainWindowController {
         
         depTracker.close();
         infoServiceTracker.close();
-        hostContextActionTracker.close();
-        vmContextActionTracker.close();
+        contextActionTracker.close();
     }
 
     private void installListenersAndStartRegistries() {
@@ -394,9 +388,7 @@ public class MainWindowControllerImpl implements MainWindowController {
     private void setUpActionControllers() {
         ContextActionController contextController =
                 view.getContextActionController();
-        ContextHandler handler =
-                new ContextHandler(hostContextActionTracker,
-                                   vmContextActionTracker);
+        ContextHandler handler = new ContextHandler(contextActionTracker);
         contextController.addContextActionListener(handler);
         handler.addContextHandlerActionListener(contextController);
     }

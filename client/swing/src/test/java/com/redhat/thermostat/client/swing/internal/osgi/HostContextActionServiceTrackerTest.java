@@ -43,7 +43,7 @@ import static org.mockito.Mockito.mock;
 import org.junit.Test;
 import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.client.ui.HostContextAction;
+import com.redhat.thermostat.client.ui.ReferenceContextAction;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class HostContextActionServiceTrackerTest {
@@ -52,10 +52,10 @@ public class HostContextActionServiceTrackerTest {
     public void verifyHostActionIsAddedToAndRemovedFromUiModel() {
         StubBundleContext bundleContext = new StubBundleContext();
 
-        HostContextAction hostAction = mock(HostContextAction.class);
-        ServiceRegistration registration = bundleContext.registerService(HostContextAction.class, hostAction, null);
+        ReferenceContextAction hostAction = mock(ReferenceContextAction.class);
+        ServiceRegistration registration = bundleContext.registerService(ReferenceContextAction.class, hostAction, null);
 
-        HostContextActionServiceTracker tracker = new HostContextActionServiceTracker(bundleContext);
+        ContextActionServiceTracker tracker = new ContextActionServiceTracker(bundleContext);
         tracker.open();
         
         assertTrue(tracker.getActions().contains(hostAction));

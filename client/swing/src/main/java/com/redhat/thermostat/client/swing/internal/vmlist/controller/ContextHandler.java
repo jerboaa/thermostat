@@ -42,26 +42,24 @@ import javax.swing.JMenuItem;
 import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.swing.components.ThermostatPopupMenu;
-import com.redhat.thermostat.client.swing.internal.osgi.HostContextActionServiceTracker;
-import com.redhat.thermostat.client.swing.internal.osgi.VMContextActionServiceTracker;
+import com.redhat.thermostat.client.swing.internal.osgi.ContextActionServiceTracker;
 import com.redhat.thermostat.client.ui.ReferenceContextAction;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Ref;
 
 /**
  *
  */
-public class ContextHandler implements ActionListener<ContextActionController.ContextAction>{
+public class ContextHandler implements ActionListener<ContextActionController.ContextAction> {
 
     public enum ContextHandlerAction {
         ACTION_PERFORMED,
     }
 
-    public static class Payload<R extends Ref> {
-        ReferenceContextAction<R> action;
+    public static class Payload {
+        ReferenceContextAction action;
         Ref reference;
     }
     
@@ -69,14 +67,10 @@ public class ContextHandler implements ActionListener<ContextActionController.Co
     
     private ThermostatPopupMenu contextMenu;
     
-    private HostContextActionServiceTracker hostContextActionTracker;
-    private VMContextActionServiceTracker vmContextActionTracker;
+    private ContextActionServiceTracker contextActionTracker;
     
-    public ContextHandler(HostContextActionServiceTracker hostContextActionTracker,
-                          VMContextActionServiceTracker vmContextActionTracker)
-    {
-        this.hostContextActionTracker = hostContextActionTracker;
-        this.vmContextActionTracker = vmContextActionTracker;
+    public ContextHandler(ContextActionServiceTracker contextActionTracker) {
+        this.contextActionTracker = contextActionTracker;
         notifier = new ActionNotifier<>(this);
     }
 
@@ -84,7 +78,6 @@ public class ContextHandler implements ActionListener<ContextActionController.Co
     public void actionPerformed(final ActionEvent<ContextActionController.ContextAction> actionEvent) {
         SwingUtilities.invokeLater(new Runnable() {
             
-            @SuppressWarnings({ "rawtypes", "unchecked" })
             @Override
             public void run() {
                 if (contextMenu == null) {
@@ -94,13 +87,8 @@ public class ContextHandler implements ActionListener<ContextActionController.Co
                 final ContextActionController.Payload payload =
                         (ContextActionController.Payload) actionEvent.getPayload();
                 
-                List<? extends ReferenceContextAction> actions = null;
-                if (payload.ref instanceof HostRef) {
-                    actions = hostContextActionTracker.getActions();
-                } else {
-                    actions = vmContextActionTracker.getActions();
-                }
-
+                List<? extends ReferenceContextAction> actions =
+                        contextActionTracker.getActions();
                 contextMenu.removeAll();
                 
                 boolean showPopup = false;

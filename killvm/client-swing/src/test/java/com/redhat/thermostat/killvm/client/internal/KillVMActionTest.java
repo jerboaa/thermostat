@@ -55,6 +55,7 @@ import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.Ref;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
@@ -63,6 +64,33 @@ import com.redhat.thermostat.storage.model.VmInfo;
 
 public class KillVMActionTest {
 
+    @Test
+    public void killVMFilterDiscardHost() {
+        AgentInfoDAO agentDao = mock(AgentInfoDAO.class);
+        VmInfoDAO vmInfoDao = mock(VmInfoDAO.class);
+
+        VmRef matching = mock(VmRef.class);
+        HostRef notMatching = mock(HostRef.class);
+
+        VmInfo vmInfo = mock(VmInfo.class);
+        when(vmInfoDao.getVmInfo(matching)).thenReturn(vmInfo);
+
+        RequestQueue queue = mock(RequestQueue.class);
+        RequestResponseListener listener = mock(RequestResponseListener.class);
+
+        KillVMAction action = new KillVMAction(agentDao, vmInfoDao, queue, listener);
+
+        Filter<Ref> filter = action.getFilter();
+
+        assertFalse(filter.matches(notMatching));
+        
+        when(vmInfo.isAlive()).thenReturn(true);
+        assertTrue(filter.matches(matching));
+
+        when(vmInfo.isAlive()).thenReturn(false);
+        assertFalse(filter.matches(matching));
+    }
+    
     @Test
     public void killVMFilterOnlyMatchesLiveVMs() {
         AgentInfoDAO agentDao = mock(AgentInfoDAO.class);
@@ -78,7 +106,7 @@ public class KillVMActionTest {
 
         KillVMAction action = new KillVMAction(agentDao, vmInfoDao, queue, listener);
 
-        Filter<VmRef> filter = action.getFilter();
+        Filter<Ref> filter = action.getFilter();
 
         when(vmInfo.isAlive()).thenReturn(true);
         assertTrue(filter.matches(matching));

@@ -44,7 +44,6 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.doNothing;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -65,23 +64,22 @@ import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.client.swing.components.ThermostatPopupMenu;
 import com.redhat.thermostat.client.swing.internal.accordion.AccordionComponent;
-import com.redhat.thermostat.client.swing.internal.osgi.HostContextActionServiceTracker;
-import com.redhat.thermostat.client.swing.internal.osgi.VMContextActionServiceTracker;
+import com.redhat.thermostat.client.swing.internal.osgi.ContextActionServiceTracker;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.ContextHandler.ContextHandlerAction;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.ContextHandler.Payload;
-import com.redhat.thermostat.client.ui.HostContextAction;
+import com.redhat.thermostat.client.ui.ReferenceContextAction;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.Ref;
 
 /**
  *
  */
 public class ContextHandlerTest {
 
-    private HostContextActionServiceTracker hostContextActionTracker;
-    private VMContextActionServiceTracker vmContextActionTracker;
+    private ContextActionServiceTracker contextActionTracker;
     private ActionEvent actionEvent;
     
     @BeforeClass
@@ -116,8 +114,7 @@ public class ContextHandlerTest {
     
     @Before
     public void setUp() {
-        hostContextActionTracker = mock(HostContextActionServiceTracker.class);
-        vmContextActionTracker = mock(VMContextActionServiceTracker.class);
+        contextActionTracker = mock(ContextActionServiceTracker.class);
         actionEvent = mock(ActionEvent.class);
     }
     
@@ -155,7 +152,7 @@ public class ContextHandlerTest {
 
         TestActionListener testListener = new TestActionListener();
         
-        ContextHandler handler = new ContextHandler(hostContextActionTracker, vmContextActionTracker) {
+        ContextHandler handler = new ContextHandler(contextActionTracker) {
             @Override
             ThermostatPopupMenu createContextPopMenu() {
                 invocations[0]++;
@@ -177,8 +174,7 @@ public class ContextHandlerTest {
         assertEquals(1, invocations[0]);
         assertEquals(0, invocations[1]);
         
-        verify(hostContextActionTracker).getActions();
-        verify(vmContextActionTracker, times(0)).getActions();
+        verify(contextActionTracker).getActions();
         
         // verify the popup is built from scratch
         verify(popup).removeAll();
@@ -188,13 +184,13 @@ public class ContextHandlerTest {
         // *** test two actions, no filter
         
         // no reason to change the event, but add actions
-        Filter<HostRef> hostFilter = mock(Filter.class);
+        Filter<Ref> hostFilter = mock(Filter.class);
         when(hostFilter.matches(host0)).thenReturn(true).thenReturn(true);
         
         LocalizedString name0 = new LocalizedString("actionName0");
         LocalizedString des0 = new LocalizedString("actionDesc0");
 
-        HostContextAction hostAction0 = mock(HostContextAction.class);
+        ReferenceContextAction hostAction0 = mock(ReferenceContextAction.class);
         when(hostAction0.getFilter()).thenReturn(hostFilter);
         when(hostAction0.getName()).thenReturn(name0);
         when(hostAction0.getDescription()).thenReturn(des0);
@@ -202,16 +198,16 @@ public class ContextHandlerTest {
         LocalizedString name1 = new LocalizedString("actionName1");
         LocalizedString des1 = new LocalizedString("actionDesc1");
         
-        HostContextAction hostAction1 = mock(HostContextAction.class);
+        ReferenceContextAction hostAction1 = mock(ReferenceContextAction.class);
         when(hostAction1.getFilter()).thenReturn(hostFilter);
         when(hostAction1.getName()).thenReturn(name1);
         when(hostAction1.getDescription()).thenReturn(des1);
         
-        List<HostContextAction> hostActions = new ArrayList<>();
+        List<ReferenceContextAction> hostActions = new ArrayList<>();
         hostActions.add(hostAction0);
         hostActions.add(hostAction1);
         
-        when(hostContextActionTracker.getActions()).thenReturn(hostActions);
+        when(contextActionTracker.getActions()).thenReturn(hostActions);
         
         handler.actionPerformed(actionEvent);
         waitForSwing();
