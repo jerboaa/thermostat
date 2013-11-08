@@ -41,8 +41,10 @@ import static org.mockito.Mockito.mock;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.client.filter.host.swing.DeadHostIconDecorator;
+import com.redhat.thermostat.client.filter.host.swing.HostIconDecorator;
 import com.redhat.thermostat.client.filter.host.swing.HostLabelDecorator;
-import com.redhat.thermostat.client.ui.DecoratorProvider;
+import com.redhat.thermostat.client.ui.ReferenceFieldIconDecorator;
 import com.redhat.thermostat.client.ui.ReferenceFieldLabelDecorator;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
@@ -65,10 +67,14 @@ public class VMFilterActivatorTest {
         ctx.registerService(HostInfoDAO.class, hostDao, null);
         ctx.registerService(NetworkInterfaceInfoDAO.class, netDao, null);
 
-        assertTrue(ctx.isServiceRegistered(DecoratorProvider.class.getName(), LivingVMDecoratorProvider.class));
-        assertTrue(ctx.isServiceRegistered(DecoratorProvider.class.getName(), DeadVMDecoratorProvider.class));
-        
         assertTrue(ctx.isServiceRegistered(ReferenceFieldLabelDecorator.class.getName(), VMLabelDecorator.class));
         assertTrue(ctx.isServiceRegistered(ReferenceFieldLabelDecorator.class.getName(), HostLabelDecorator.class));
+        assertTrue(ctx.isServiceRegistered(ReferenceFieldIconDecorator.class.getName(), HostIconDecorator.class));
+        assertTrue(ctx.isServiceRegistered(ReferenceFieldIconDecorator.class.getName(), DeadHostIconDecorator.class));
+
+        assertTrue(ctx.isServiceRegistered(ReferenceFieldIconDecorator.class.getName(), VMIconDecorator.class));
+        assertTrue(ctx.isServiceRegistered(ReferenceFieldIconDecorator.class.getName(), DeadVMIconDecorator.class));
+
+        
     }
 }

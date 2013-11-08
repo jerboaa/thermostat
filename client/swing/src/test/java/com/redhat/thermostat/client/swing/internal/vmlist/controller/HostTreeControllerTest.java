@@ -37,6 +37,7 @@
 package com.redhat.thermostat.client.swing.internal.vmlist.controller;
 
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 
@@ -58,6 +59,8 @@ import com.redhat.thermostat.client.core.vmlist.VMFilter;
 import com.redhat.thermostat.client.swing.internal.accordion.Accordion;
 import com.redhat.thermostat.client.swing.internal.accordion.AccordionModel;
 import com.redhat.thermostat.client.swing.internal.vmlist.HostTreeComponentFactory;
+import com.redhat.thermostat.client.ui.ReferenceFieldIconDecorator;
+import com.redhat.thermostat.client.ui.ReferenceFieldLabelDecorator;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 
@@ -67,8 +70,11 @@ public class HostTreeControllerTest {
     private DecoratorManager decoratorManager;
     private HostTreeComponentFactory componentFactory;
     private AccordionModel<HostRef, VmRef> proxyModel;
-    private DecoratorProviderExtensionListener hostDecoratorListener;
-    private DecoratorProviderExtensionListener vmDecoratorListener;
+
+    private DecoratorListener<ReferenceFieldLabelDecorator> mainLabelDecorators;
+    private DecoratorListener<ReferenceFieldLabelDecorator> infoLabelDecorators;
+    
+    private DecoratorListener<ReferenceFieldIconDecorator> iconDecorators;
     
     @BeforeClass
     public static void setUpOnce() {
@@ -87,10 +93,13 @@ public class HostTreeControllerTest {
         proxyModel = new AccordionModel<>();
         when(accordion.getModel()).thenReturn(proxyModel);
         
-        hostDecoratorListener = mock(DecoratorProviderExtensionListener.class);
-        vmDecoratorListener = mock(DecoratorProviderExtensionListener.class);
-        when(decoratorManager.getVmDecoratorListener()).thenReturn(vmDecoratorListener);
-        when(decoratorManager.getHostDecoratorListener()).thenReturn(hostDecoratorListener);
+        mainLabelDecorators = mock(DecoratorListener.class);
+        infoLabelDecorators = mock(DecoratorListener.class);
+        iconDecorators = mock(DecoratorListener.class);
+        
+        when(decoratorManager.getMainLabelDecoratorListener()).thenReturn(mainLabelDecorators);
+        when(decoratorManager.getInfoLabelDecoratorListener()).thenReturn(infoLabelDecorators);
+        when(decoratorManager.getIconDecoratorListener()).thenReturn(iconDecorators);
     }
     
     private void waitForSwing() {
@@ -246,13 +255,17 @@ public class HostTreeControllerTest {
         
         waitForSwing();
 
-        verify(vmDecoratorListener).decorationChanged();
-        
+        verify(mainLabelDecorators).fireDecorationChanged();
+        verify(infoLabelDecorators).fireDecorationChanged();
+        verify(iconDecorators).fireDecorationChanged();
+
         controller.updateHostStatus(host0);
 
         waitForSwing();
         
-        verify(hostDecoratorListener).decorationChanged();
+        verify(mainLabelDecorators, times(2)).fireDecorationChanged();
+        verify(infoLabelDecorators, times(2)).fireDecorationChanged();
+        verify(iconDecorators, times(2)).fireDecorationChanged();
     }
     
     @Test

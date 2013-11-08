@@ -53,6 +53,11 @@ public class HostLabelDecorator implements ReferenceFieldLabelDecorator {
     }
     
     @Override
+    public int getOrderValue() {
+        return ORDER_DEFAULT_GROUP;
+    }
+    
+    @Override
     public String getLabel(String originalLabel, Ref reference) {
         
         if (!(reference instanceof HostRef)) {

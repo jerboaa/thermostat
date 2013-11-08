@@ -34,26 +34,41 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.internal;
+package com.redhat.thermostat.client.filter.host.swing;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.InvalidSyntaxException;
-
-import com.redhat.thermostat.client.ui.DecoratorProvider;
-import com.redhat.thermostat.common.ThermostatExtensionRegistry;
+import com.redhat.thermostat.client.swing.IconResource;
+import com.redhat.thermostat.client.swing.components.CompositeIcon;
+import com.redhat.thermostat.client.swing.components.Icon;
+import com.redhat.thermostat.client.ui.PlatformIcon;
+import com.redhat.thermostat.client.ui.ReferenceFieldIconDecorator;
 import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.Ref;
 
-@SuppressWarnings("rawtypes")
-class HostTreeDecoratorRegistry extends ThermostatExtensionRegistry<DecoratorProvider> {
+public class HostIconDecorator implements ReferenceFieldIconDecorator {
+    
+    private static final Icon ICON = IconUtils.resizeIcon(IconResource.HOST_24.getIcon());
+    private static final Icon SELECTED = CompositeIcon.createDefaultComposite(ICON, true);
 
-    private static final String FILTER = "(&(" + Constants.OBJECTCLASS + "=" +
-            DecoratorProvider.class.getName() + ")(" +
-            com.redhat.thermostat.common.Constants.GENERIC_SERVICE_CLASSNAME + "=" +
-            HostRef.class.getName() + "))";
-
-    public HostTreeDecoratorRegistry(BundleContext context) throws InvalidSyntaxException {
-        super(context, FILTER, DecoratorProvider.class);
+    @Override
+    public int getOrderValue() {
+        return ORDER_DEFAULT_GROUP;
+    }
+    
+    @Override
+    public PlatformIcon getIcon(PlatformIcon originalIcon, Ref reference) {
+        if (reference instanceof HostRef) {
+            return ICON;
+        } else {
+            return originalIcon;
+        }
+    }
+    
+    @Override
+    public PlatformIcon getSelectedIcon(PlatformIcon originalIcon, Ref reference) {
+        if (reference instanceof HostRef) {
+            return SELECTED;
+        } else {
+            return originalIcon;
+        }
     }
 }
-

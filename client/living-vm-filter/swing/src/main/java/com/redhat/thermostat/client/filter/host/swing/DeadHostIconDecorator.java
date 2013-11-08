@@ -1,26 +1,26 @@
 /*
  * Copyright 2012, 2013 Red Hat, Inc.
- * 
+ *
  * This file is part of Thermostat.
- * 
+ *
  * Thermostat is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
  * by the Free Software Foundation; either version 2, or (at your
  * option) any later version.
- * 
+ *
  * Thermostat is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with Thermostat; see the file COPYING.  If not see
  * <http://www.gnu.org/licenses/>.
- * 
+ *
  * Linking this code with other modules is making a combined work
  * based on this code.  Thus, the terms and conditions of the GNU
  * General Public License cover the whole combination.
- * 
+ *
  * As a special exception, the copyright holders of this code give
  * you permission to link this code with independent modules to
  * produce an executable, regardless of the license terms of these
@@ -34,66 +34,56 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.internal.vmlist;
+package com.redhat.thermostat.client.filter.host.swing;
 
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.Paint;
-import java.awt.image.BufferedImage;
-import java.beans.Transient;
-
-import com.redhat.thermostat.client.swing.GraphicsUtils;
+import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.client.swing.components.Icon;
+import com.redhat.thermostat.client.ui.Palette;
+import com.redhat.thermostat.client.ui.PlatformIcon;
+import com.redhat.thermostat.client.ui.ReferenceFieldIconDecorator;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.Ref;
+import com.redhat.thermostat.storage.dao.HostInfoDAO;
 
-@SuppressWarnings("serial")
-class BaseIcon extends Icon {
+public class DeadHostIconDecorator implements ReferenceFieldIconDecorator {
 
-    private boolean selected;
-    private Icon source;
+    public static final Icon UNCONNECTED = new FontAwesomeIcon('\uf127', 12, Palette.THERMOSTAT_RED.getColor());
+    public static final Icon UNCONNECTED_SELECTED = new FontAwesomeIcon('\uf127', 12, Palette.THERMOSTAT_RED.getColor());
+
+    private HostInfoDAO dao;
     
-    public BaseIcon(boolean selected, Icon source) {
-        this.selected = selected;
-        this.source = source;
+    public DeadHostIconDecorator(HostInfoDAO dao) {
+        this.dao = dao;
     }
     
     @Override
-    public synchronized void paintIcon(Component c, Graphics g, int x, int y) {
-        GraphicsUtils utils = GraphicsUtils.getInstance();
-        Graphics2D graphics = utils.createAAGraphics(g);
-        graphics.setPaint(getPaint());
-        graphics.fillRect(x, y, getIconWidth(), getIconHeight());
-        graphics.dispose();
+    public int getOrderValue() {
+        return ORDER_DEFAULT_GROUP + 100;
     }
     
     @Override
-    public int getIconHeight() {
-        return source.getIconHeight();
+    public PlatformIcon getIcon(PlatformIcon originalIcon, Ref reference) {
+        return doOverlay(originalIcon, reference, UNCONNECTED);
     }
     
     @Override
-    public int getIconWidth() {
-        return source.getIconWidth();
+    public PlatformIcon getSelectedIcon(PlatformIcon originalIcon, Ref reference) {
+        return doOverlay(originalIcon, reference, UNCONNECTED_SELECTED);
     }
     
-    private Paint getPaint() {
-        UIDefaults palette = UIDefaults.getInstance();
-        Color color = palette.getComponentFGColor();
-        if (selected) {
-            color = palette.getSelectedComponentFGColor();
+    public PlatformIcon doOverlay(PlatformIcon originalIcon, Ref reference, Icon overlay) {
+        
+        if (!(reference instanceof HostRef)) {
+            return originalIcon;
         }
-        return color;
-    }
-    
-    @Override
-    @Transient
-    public Image getImage() {
-        BufferedImage image = new BufferedImage(getIconWidth(), getIconHeight(), BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g = (Graphics2D) image.getGraphics();
-        paintIcon(null, g, 0, 0);
-        g.dispose();
-        return image;
+        
+        if (dao.isAlive((HostRef) reference)) {
+            return originalIcon;
+        }
+        
+        Icon canvas = (Icon) originalIcon;
+        int y = canvas.getIconHeight() - overlay.getIconHeight();
+        
+        return IconUtils.overlay(canvas, overlay, 0, y);
     }
 }

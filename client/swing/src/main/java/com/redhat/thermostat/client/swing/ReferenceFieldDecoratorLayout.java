@@ -40,7 +40,5 @@ public enum ReferenceFieldDecoratorLayout {
     LABEL_MAIN,
     LABEL_INFO,
     
-    ICON_TOP,
     ICON_MAIN,
-    ICON_BOTTOM;
 }

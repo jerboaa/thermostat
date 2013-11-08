@@ -36,15 +36,13 @@
 
 package com.redhat.thermostat.client.swing.internal;
 
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.times;
 
 import java.util.concurrent.CountDownLatch;
 
@@ -56,7 +54,6 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.osgi.framework.BundleException;
 
-import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.client.core.views.AgentInformationViewProvider;
 import com.redhat.thermostat.client.core.views.ClientConfigViewProvider;
@@ -68,8 +65,6 @@ import com.redhat.thermostat.client.core.views.VmInformationView;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
 import com.redhat.thermostat.client.swing.internal.registry.decorator.DecoratorRegistryController;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.ContextActionController;
-import com.redhat.thermostat.client.swing.internal.vmlist.controller.ContextHandler;
-import com.redhat.thermostat.client.swing.internal.vmlist.controller.DecoratorProviderExtensionListener;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.HostTreeController;
 import com.redhat.thermostat.client.ui.HostContextAction;
 import com.redhat.thermostat.client.ui.MenuAction;
@@ -78,6 +73,7 @@ import com.redhat.thermostat.client.ui.VMContextAction;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry.Action;
 import com.redhat.thermostat.common.Timer;
@@ -113,8 +109,7 @@ public class MainWindowControllerImplTest {
 
     private HostFilterRegistry hostFilterRegistry;
     private VmFilterRegistry vmFilterRegistry;
-    private HostTreeDecoratorRegistry hostDecoratorRegistry;
-    private VMTreeDecoratorRegistry vmDecoratorRegistry;
+
     private VMInformationRegistry vmInfoRegistry;
     private MenuRegistry menus;
 
@@ -126,9 +121,6 @@ public class MainWindowControllerImplTest {
     
     private HostTreeController treeController;
     private DecoratorRegistryController decoratorController;
-
-    private DecoratorProviderExtensionListener<HostRef> hostDecorators;
-    private DecoratorProviderExtensionListener<VmRef> vmDecorators;
     
     private ContextActionController contextController;
     
@@ -197,14 +189,9 @@ public class MainWindowControllerImplTest {
         contextController = mock(ContextActionController.class);
         when(view.getContextActionController()).thenReturn(contextController);
         
-        hostDecorators = mock(DecoratorProviderExtensionListener.class);
-        vmDecorators = mock(DecoratorProviderExtensionListener.class);
-        
         treeController = mock(HostTreeController.class);
         ArgumentCaptor<ActionListener> hostTreeCaptor = ArgumentCaptor.forClass(ActionListener.class);
         when(view.getHostTreeController()).thenReturn(treeController);
-        when(treeController.getHostDecoratorListener()).thenReturn(hostDecorators);
-        when(treeController.getVmDecoratorListener()).thenReturn(vmDecorators);
         
         doNothing().when(treeController).addReferenceSelectionChangeListener(hostTreeCaptor.capture());
 
@@ -214,8 +201,7 @@ public class MainWindowControllerImplTest {
         RegistryFactory registryFactory = mock(RegistryFactory.class);
         hostFilterRegistry = mock(HostFilterRegistry.class);
         vmFilterRegistry = mock(VmFilterRegistry.class);
-        hostDecoratorRegistry = mock(HostTreeDecoratorRegistry.class);
-        vmDecoratorRegistry = mock(VMTreeDecoratorRegistry.class);
+
         vmInfoRegistry = mock(VMInformationRegistry.class);
         menus = mock(MenuRegistry.class);
         shutdown = mock(CountDownLatch.class);
@@ -223,8 +209,6 @@ public class MainWindowControllerImplTest {
         decoratorController = mock(DecoratorRegistryController.class);
         
         when(registryFactory.createMenuRegistry()).thenReturn(menus);
-        when(registryFactory.createHostTreeDecoratorRegistry()).thenReturn(hostDecoratorRegistry);
-        when(registryFactory.createVMTreeDecoratorRegistry()).thenReturn(vmDecoratorRegistry);
         when(registryFactory.createHostFilterRegistry()).thenReturn(hostFilterRegistry);
         when(registryFactory.createVmFilterRegistry()).thenReturn(vmFilterRegistry);
         when(registryFactory.createVMInformationRegistry()).thenReturn(vmInfoRegistry);
@@ -235,9 +219,6 @@ public class MainWindowControllerImplTest {
 
         ArgumentCaptor<ActionListener> grabVmFiltersListener = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(vmFilterRegistry).addActionListener(grabVmFiltersListener.capture());
-
-        ArgumentCaptor<ActionListener> grabDecoratorsListener = ArgumentCaptor.forClass(ActionListener.class);
-        doNothing().when(vmDecoratorRegistry).addActionListener(grabDecoratorsListener.capture());
         
         ArgumentCaptor<ActionListener> grabInfoRegistry = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(vmInfoRegistry).addActionListener(grabInfoRegistry.capture());
@@ -304,32 +285,6 @@ public class MainWindowControllerImplTest {
         verify(decoratorController, times(1)).init(treeController);
         verify(decoratorController, times(1)).start();
         verify(decoratorController, times(1)).stop();
-    }
-    
-    @Test
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    public void verifyDecoratorsRegisteredAndStarted() {
-
-        ArgumentCaptor<ActionListener> captor1 = ArgumentCaptor.forClass(ActionListener.class);
-        ArgumentCaptor<ActionListener> captor2 = ArgumentCaptor.forClass(ActionListener.class);
-
-        verify(view, atLeastOnce()).getHostTreeController();
-        verify(treeController).getHostDecoratorListener();
-        verify(treeController).getVmDecoratorListener();
-        
-        verify(hostDecoratorRegistry).addActionListener(captor1.capture());
-        verify(vmDecoratorRegistry).addActionListener(captor2.capture());
-        
-        verify(hostDecoratorRegistry).start();
-        verify(vmDecoratorRegistry).start();
-
-        ActionListener l1 = captor1.getValue();
-        ActionListener l2 = captor2.getValue();
-        
-        assertEquals(hostDecorators, l1);
-        assertEquals(vmDecorators, l2);
-        
-        verify(contextController).addContextActionListener(any(ContextHandler.class));
     }
     
     @Test

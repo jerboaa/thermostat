@@ -38,17 +38,9 @@ package com.redhat.thermostat.client.swing.internal;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.isA;
-import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JRadioButtonMenuItem;
@@ -69,15 +61,10 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
-import com.redhat.thermostat.client.ui.Decorator;
-import com.redhat.thermostat.client.ui.DecoratorProvider;
 import com.redhat.thermostat.client.ui.MenuAction;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.shared.locale.LocalizedString;
-import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.HostsVMsLoader;
 
 @RunWith(CacioFESTRunner.class)
 public class MainWindowTest {
@@ -116,44 +103,6 @@ public class MainWindowTest {
         l = null;
     }
 
-    //@Category(GUITest.class)
-    //@Test
-    public void testHostVmDecoratorsAdded() throws InterruptedException {
-        
-        List<DecoratorProvider<HostRef>> decorators = new ArrayList<>();
-        @SuppressWarnings("unchecked")
-        DecoratorProvider<HostRef> refDecorator = mock(DecoratorProvider.class);
-        final Decorator decorator = mock(Decorator.class);
-        when(decorator.getLabel(anyString())).thenReturn("fluff");
-        
-        when(refDecorator.getDecorator()).thenReturn(decorator);
-        
-        @SuppressWarnings("unchecked")
-        Filter<HostRef> filter = mock(Filter.class);
-        when(filter.matches(isA(HostRef.class))).thenReturn(false).thenReturn(true);
-
-        when(refDecorator.getFilter()).thenReturn(filter);
-        
-        decorators.add(refDecorator);
-        
-        HostsVMsLoader hostsVMsLoader = mock(HostsVMsLoader.class);
-        Collection<HostRef> expectedHosts = new ArrayList<>();
-        expectedHosts.add(new HostRef("123", "fluffhost1"));
-        expectedHosts.add(new HostRef("456", "fluffhost2"));
-        
-        when(hostsVMsLoader.getHosts()).thenReturn(expectedHosts);
-        
-        //window.updateTree(null, null, decorators, null, hostsVMsLoader);
-
-        Thread.sleep(50);
-        
-        frameFixture.show();
-        frameFixture.requireVisible();
-        
-        verify(decorator, times(0)).getLabel("fluffhost1");
-        verify(decorator, atLeastOnce()).getLabel("fluffhost2");
-    }
-    
     @Category(GUITest.class)
     @Test
     public void verifyThatCloseFiresShutdownEvent() {

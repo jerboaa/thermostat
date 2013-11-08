@@ -43,6 +43,7 @@ import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.core.vmlist.HostFilter;
 import com.redhat.thermostat.client.core.vmlist.VMFilter;
+
 import com.redhat.thermostat.client.swing.internal.accordion.Accordion;
 import com.redhat.thermostat.client.swing.internal.accordion.AccordionComponent;
 import com.redhat.thermostat.client.swing.internal.accordion.AccordionComponentEvent;
@@ -51,13 +52,17 @@ import com.redhat.thermostat.client.swing.internal.accordion.AccordionItemSelect
 import com.redhat.thermostat.client.swing.internal.accordion.AccordionModel;
 import com.redhat.thermostat.client.swing.internal.accordion.AccordionModelChangeListener;
 import com.redhat.thermostat.client.swing.internal.accordion.ItemSelectedEvent;
+
 import com.redhat.thermostat.client.swing.internal.vmlist.HostTreeComponentFactory;
 import com.redhat.thermostat.client.swing.internal.vmlist.ReferenceProvider;
+
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
+
 import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.common.Filter.FilterEvent;
+
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Ref;
 import com.redhat.thermostat.storage.core.VmRef;
@@ -159,8 +164,7 @@ public class HostTreeController {
             public void run() {
                 if (filter(hostFilters, host)) {
                     proxyModel.removeHeader(host);
-                }                
-                decoratorManager.getHostDecoratorListener().decorationChanged();
+                }
                 fireDecoratorChanged();
             }
         });
@@ -274,7 +278,6 @@ public class HostTreeController {
                 if (filter(vmFilters, vm)) {
                     proxyModel.removeComponent(vm.getHostRef(), vm);
                 }
-                decoratorManager.getVmDecoratorListener().decorationChanged();
                 fireDecoratorChanged();
             }
         });
@@ -283,6 +286,7 @@ public class HostTreeController {
     private void fireDecoratorChanged() {
         decoratorManager.getInfoLabelDecoratorListener().fireDecorationChanged();
         decoratorManager.getMainLabelDecoratorListener().fireDecorationChanged();
+        decoratorManager.getIconDecoratorListener().fireDecorationChanged();
     }
             
     public void addHostFilter(HostFilter filter) {
@@ -379,20 +383,8 @@ public class HostTreeController {
     }
     
     // decorator accessors
-    
-    public DecoratorProviderExtensionListener<HostRef> getHostDecoratorListener() {
-        return decoratorManager.getHostDecoratorListener();
-    }
-    
-    public DecoratorProviderExtensionListener<VmRef> getVmDecoratorListener() {
-        return decoratorManager.getVmDecoratorListener();
-    }
 
-    public LabelDecoratorListener getInfoLabelDecoratorListener() {
-        return decoratorManager.getInfoLabelDecoratorListener();
-    }
-    
-    public LabelDecoratorListener getMainLabelDecoratorListener() {
-        return decoratorManager.getMainLabelDecoratorListener();
+    public DecoratorManager getDecoratorManager() {
+        return decoratorManager;
     }
 }

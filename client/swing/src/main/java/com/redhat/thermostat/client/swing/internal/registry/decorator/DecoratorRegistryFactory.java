@@ -53,4 +53,8 @@ public class DecoratorRegistryFactory {
     MainLabelDecoratorRegistry createMainLabelDecoratorRegistry() throws InvalidSyntaxException {
         return new MainLabelDecoratorRegistry(context);
     }
+    
+    IconDecoratorRegistry createIconDecoratorRegistry() throws InvalidSyntaxException {
+        return new IconDecoratorRegistry(context);
+    }
 }

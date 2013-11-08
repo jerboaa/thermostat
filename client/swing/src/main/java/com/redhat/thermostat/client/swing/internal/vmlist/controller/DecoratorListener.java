@@ -36,45 +36,49 @@
 
 package com.redhat.thermostat.client.swing.internal.vmlist.controller;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.client.ui.ReferenceFieldLabelDecorator;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.Ordered;
+import com.redhat.thermostat.common.OrderedComparator;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry.Action;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.Ref;
 
 /**
  *
  */
-public class LabelDecoratorListener extends DecoratorNotifier
+public class DecoratorListener<D extends Ordered> extends DecoratorNotifier
     implements ActionListener<ThermostatExtensionRegistry.Action>
 {
     private static final Logger logger =
-            LoggingUtils.getLogger(LabelDecoratorListener.class);
+            LoggingUtils.getLogger(DecoratorListener.class);
     
-    private CopyOnWriteArrayList<ReferenceFieldLabelDecorator> decorators;
+    private CopyOnWriteArrayList<D> decorators;
+    private Class<D> type;
     
-    public LabelDecoratorListener() {
+    public DecoratorListener(Class<D> type) {
         decorators = new CopyOnWriteArrayList<>();
+        this.type = type;
     }
     
     @Override
     public void actionPerformed(ActionEvent<Action> actionEvent) {
         Object payload = actionEvent.getPayload();
-        if (! (payload instanceof ReferenceFieldLabelDecorator)) {
+        if (!type.isAssignableFrom(payload.getClass())) {
             // be permissive, but log this
             logger.log(Level.WARNING, "Dropping unexpected payload type: " +
                                       payload.getClass().getName());
         } else {
+            
             @SuppressWarnings("unchecked")
-            ReferenceFieldLabelDecorator labelDecorator =
-                    (ReferenceFieldLabelDecorator) payload;
+            D labelDecorator = (D) payload;
             decorators.add(labelDecorator);
             
             switch (actionEvent.getActionId()) {
@@ -93,7 +97,10 @@ public class LabelDecoratorListener extends DecoratorNotifier
         }
     }
 
-    public List<ReferenceFieldLabelDecorator> getDecorators() {
-        return decorators;
+    public List<D> getDecorators() {
+        
+        List<D> result = new ArrayList<>(decorators);
+        Collections.sort(result, new OrderedComparator<D>());
+        return result;
     }
 }

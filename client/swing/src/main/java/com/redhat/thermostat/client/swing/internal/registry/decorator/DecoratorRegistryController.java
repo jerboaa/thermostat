@@ -38,27 +38,29 @@ package com.redhat.thermostat.client.swing.internal.registry.decorator;
 
 import org.osgi.framework.InvalidSyntaxException;
 
+import com.redhat.thermostat.client.swing.internal.vmlist.controller.DecoratorManager;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.HostTreeController;
 
 public class DecoratorRegistryController {
 
     private DecoratorRegistryFactory registryFactory;
-    private HostTreeController hostController;
+    private DecoratorManager decoratorManager;
 
     private InfoLabelDecoratorRegistry infoLabel;
     private MainLabelDecoratorRegistry mainLabel;
-    
+    private IconDecoratorRegistry iconDecorator;
+
     public DecoratorRegistryController(DecoratorRegistryFactory registryFactory) {
         this.registryFactory = registryFactory;
     }
 
     public void init(HostTreeController hostController) {
-        this.hostController = hostController;
+        this.decoratorManager = hostController.getDecoratorManager();
         
         try {
-           
             infoLabel = registryFactory.createInfoLabelDecoratorRegistry();
             mainLabel = registryFactory.createMainLabelDecoratorRegistry();
+            iconDecorator = registryFactory.createIconDecoratorRegistry();
             
         } catch (InvalidSyntaxException e) {
             throw new RuntimeException(e);
@@ -66,18 +68,24 @@ public class DecoratorRegistryController {
     }
     
     public void start() {
-        infoLabel.addActionListener(hostController.getInfoLabelDecoratorListener());
+        infoLabel.addActionListener(decoratorManager.getInfoLabelDecoratorListener());
         infoLabel.start();
         
-        mainLabel.addActionListener(hostController.getMainLabelDecoratorListener());
+        mainLabel.addActionListener(decoratorManager.getMainLabelDecoratorListener());
         mainLabel.start();
+        
+        iconDecorator.addActionListener(decoratorManager.getIconDecoratorListener());
+        iconDecorator.start();
     }
 
     public void stop() {
-        infoLabel.removeActionListener(hostController.getInfoLabelDecoratorListener());
+        infoLabel.removeActionListener(decoratorManager.getInfoLabelDecoratorListener());
         infoLabel.stop();
         
-        mainLabel.removeActionListener(hostController.getMainLabelDecoratorListener());
+        mainLabel.removeActionListener(decoratorManager.getMainLabelDecoratorListener());
         mainLabel.stop();
+        
+        iconDecorator.removeActionListener(decoratorManager.getIconDecoratorListener());
+        iconDecorator.stop();
     }
 }

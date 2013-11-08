@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.client.swing.internal.vmlist;
 
-import com.redhat.thermostat.client.swing.components.Icon;
 import com.redhat.thermostat.client.swing.internal.accordion.TitledPane;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Ref;
@@ -56,10 +55,6 @@ public class ReferenceTitle extends TitledPane implements ReferenceProvider {
     @Override
     public Ref getReference() {
         return ref;
-    }
-
-    public void setIcon(Icon icon) {
-        ((ReferenceComponent) getTitleComponent()).setIcon(icon);
     }
     
     public ReferenceComponent getReferenceComponent() {

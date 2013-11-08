@@ -46,7 +46,6 @@ import javax.swing.Box;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import com.redhat.thermostat.client.swing.components.CompositeIcon;
 import com.redhat.thermostat.client.swing.components.Icon;
 import com.redhat.thermostat.client.swing.components.ShadowLabel;
 
@@ -108,6 +107,8 @@ public class ReferenceComponent extends JPanel implements AccordionComponent, Re
             Component gap = Box.createRigidArea(new Dimension(gapSize, gapSize));
             add(gap, BorderLayout.WEST);
         }
+        
+        setState();
     }
 
     @Override
@@ -166,14 +167,18 @@ public class ReferenceComponent extends JPanel implements AccordionComponent, Re
         painter.paint((Graphics2D) g, this, getWidth(), getHeight());
     }
     
-    public void setIcon(Icon icon) {
+    public void setIcon(Icon icon, Icon selectedIcon) {
         this.icon = icon;
-        this.selectedIcon = new CompositeIcon(icon, new BaseIcon(true, icon));
+        this.selectedIcon = selectedIcon;
         setState();
     }
 
     public Icon getIcon() {
         return icon;
+    }
+
+    public Icon getSelectedIcon() {
+        return selectedIcon;
     }
     
     private class PainterPanel extends JPanel {

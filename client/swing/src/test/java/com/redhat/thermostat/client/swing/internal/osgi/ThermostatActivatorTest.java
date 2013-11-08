@@ -46,13 +46,11 @@ import com.redhat.thermostat.client.core.views.ClientConfigViewProvider;
 import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
 import com.redhat.thermostat.client.core.views.SummaryViewProvider;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
-import com.redhat.thermostat.client.swing.internal.HostIconDecoratorProvider;
 import com.redhat.thermostat.client.swing.internal.views.SwingAgentInformationViewProvider;
 import com.redhat.thermostat.client.swing.internal.views.SwingClientConfigurationViewProvider;
 import com.redhat.thermostat.client.swing.internal.views.SwingHostInformationViewProvider;
 import com.redhat.thermostat.client.swing.internal.views.SwingSummaryViewProvider;
 import com.redhat.thermostat.client.swing.internal.views.SwingVmInformationViewProvider;
-import com.redhat.thermostat.client.ui.DecoratorProvider;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class ThermostatActivatorTest {
@@ -65,14 +63,13 @@ public class ThermostatActivatorTest {
 
         activator.start(ctx);
 
-        assertTrue(ctx.isServiceRegistered(DecoratorProvider.class.getName(), HostIconDecoratorProvider.class));
         assertTrue(ctx.isServiceRegistered(SummaryViewProvider.class.getName(), SwingSummaryViewProvider.class));
         assertTrue(ctx.isServiceRegistered(HostInformationViewProvider.class.getName(), SwingHostInformationViewProvider.class));
         assertTrue(ctx.isServiceRegistered(VmInformationViewProvider.class.getName(), SwingVmInformationViewProvider.class));
         assertTrue(ctx.isServiceRegistered(AgentInformationViewProvider.class.getName(), SwingAgentInformationViewProvider.class));
         assertTrue(ctx.isServiceRegistered(ClientConfigViewProvider.class.getName(), SwingClientConfigurationViewProvider.class));
         
-        assertEquals(6, ctx.getAllServices().size());
+        assertEquals(5, ctx.getAllServices().size());
 
         // FIXME add more tests for the service tracker used by ThermostatActivator
     }

@@ -43,6 +43,7 @@ import java.awt.FontFormatException;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -142,6 +143,11 @@ public class FontAwesomeIcon extends Icon {
         g.drawImage(buffer, x, y, null);
     }
 
+    @Override
+    public Image getImage() {
+        return super.getImage();
+    }
+    
     @Override
     public int getIconHeight() {
         return size;

@@ -34,26 +34,42 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.client.filter.vm.swing;
 
-import com.redhat.thermostat.annotations.ExtensionPoint;
-import com.redhat.thermostat.common.Filter;
+import com.redhat.thermostat.client.filter.host.swing.IconUtils;
+import com.redhat.thermostat.client.swing.IconResource;
+import com.redhat.thermostat.client.swing.components.CompositeIcon;
+import com.redhat.thermostat.client.swing.components.Icon;
+import com.redhat.thermostat.client.ui.PlatformIcon;
+import com.redhat.thermostat.client.ui.ReferenceFieldIconDecorator;
 import com.redhat.thermostat.storage.core.Ref;
+import com.redhat.thermostat.storage.core.VmRef;
 
-/**
- * This interface allows plugins to install a custom {@link Decorator} into
- * the Reference List view.
- * 
- * <br /><br />
- * 
- * Active {@link Decorator}s are first queried against their filters
- * and then installed into the view if the filter passes. 
- */
-@ExtensionPoint
-public interface DecoratorProvider<T extends Ref> {
+public class VMIconDecorator implements ReferenceFieldIconDecorator {
 
-    Decorator getDecorator();
-    Filter<T> getFilter();
+    private static final Icon ICON = IconUtils.resizeIcon(IconResource.JAVA_APPLICATION_24.getIcon());
+    private static final Icon SELECTED = CompositeIcon.createDefaultComposite(ICON, true);
 
+    @Override
+    public int getOrderValue() {
+        return ORDER_DEFAULT_GROUP;
+    }
+    
+    @Override
+    public PlatformIcon getIcon(PlatformIcon originalIcon, Ref reference) {
+        if (reference instanceof VmRef) {
+            return ICON;
+        } else {
+            return originalIcon;
+        }
+    }
+    
+    @Override
+    public PlatformIcon getSelectedIcon(PlatformIcon originalIcon, Ref reference) {
+        if (reference instanceof VmRef) {
+            return SELECTED;
+        } else {
+            return originalIcon;
+        }
+    }
 }
-

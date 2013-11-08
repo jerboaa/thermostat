@@ -1,26 +1,26 @@
 /*
  * Copyright 2012, 2013 Red Hat, Inc.
- *
+ * 
  * This file is part of Thermostat.
- *
+ * 
  * Thermostat is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
  * by the Free Software Foundation; either version 2, or (at your
  * option) any later version.
- *
+ * 
  * Thermostat is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with Thermostat; see the file COPYING.  If not see
  * <http://www.gnu.org/licenses/>.
- *
+ * 
  * Linking this code with other modules is making a combined work
  * based on this code.  Thus, the terms and conditions of the GNU
  * General Public License cover the whole combination.
- *
+ * 
  * As a special exception, the copyright holders of this code give
  * you permission to link this code with independent modules to
  * produce an executable, regardless of the license terms of these
@@ -34,65 +34,56 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.filter.vm.swing;
+package com.redhat.thermostat.client.swing.components;
 
-import java.io.IOException;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.Paint;
+import java.awt.image.BufferedImage;
+import java.beans.Transient;
 
-import com.redhat.thermostat.common.Filter;
-import com.redhat.thermostat.client.ui.Decorator;
-import com.redhat.thermostat.client.ui.DecoratorProvider;
-import com.redhat.thermostat.client.ui.IconDescriptor;
-import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.dao.VmInfoDAO;
-import com.redhat.thermostat.storage.model.VmInfo;
+import com.redhat.thermostat.client.swing.GraphicsUtils;
+import com.redhat.thermostat.client.swing.internal.vmlist.UIDefaults;
 
-public class DeadVMDecoratorProvider implements DecoratorProvider<VmRef> {
+@SuppressWarnings("serial")
+class BaseIcon extends Icon {
+
+    private boolean selected;
+    private Icon source;
     
-    private class DeadVMDecorator implements Decorator {
-        @Override
-        public IconDescriptor getIconDescriptor() {
-            try {
-                return IconDescriptor.loadIcon(getClass().getClassLoader(), "deadvm.png");
-            } catch (IOException e) {
-                e.printStackTrace();
-                return null;
-            }
-        }
-        
-        @Override
-        public String getLabel(String originalLabel) {
-            return "[not running] " + originalLabel;
-        }
-        
-        @Override
-        public Quadrant getQuadrant() {
-            return Quadrant.BOTTOM_LEFT;
-        }
-    }
-
-    private Filter<VmRef> decoratorFilter;
-    private DeadVMDecorator decorator;
-    
-    public DeadVMDecoratorProvider(final VmInfoDAO dao) {
-        decorator = new DeadVMDecorator();
-        decoratorFilter = new Filter<VmRef>() {
-            @Override
-            public boolean matches(VmRef vm) {
-                VmInfo vmInfo = dao.getVmInfo(vm);
-
-                return !vmInfo.isAlive();
-            }
-        };
+    public BaseIcon(boolean selected, Icon source) {
+        this.selected = selected;
+        this.source = source;
     }
     
     @Override
-    public Decorator getDecorator() {
-        return decorator;
+    public synchronized void paintIcon(Component c, Graphics g, int x, int y) {
+        GraphicsUtils utils = GraphicsUtils.getInstance();
+        Graphics2D graphics = utils.createAAGraphics(g);
+        graphics.setPaint(getPaint());
+        graphics.fillRect(x, y, getIconWidth(), getIconHeight());
+        graphics.dispose();
     }
     
     @Override
-    public Filter<VmRef> getFilter() {
-        return decoratorFilter;
+    public int getIconHeight() {
+        return source.getIconHeight();
+    }
+    
+    @Override
+    public int getIconWidth() {
+        return source.getIconWidth();
+    }
+    
+    private Paint getPaint() {
+        UIDefaults palette = UIDefaults.getInstance();
+        Color color = palette.getComponentFGColor();
+        if (selected) {
+            color = palette.getSelectedComponentFGColor();
+        }
+        return color;
     }
 }
-

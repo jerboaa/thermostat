@@ -37,14 +37,20 @@
 package com.redhat.thermostat.client.swing.components;
 
 import com.redhat.thermostat.client.ui.IconDescriptor;
+import com.redhat.thermostat.client.ui.PlatformIcon;
+
 import javax.swing.ImageIcon;
+
 import java.awt.Dimension;
+import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.beans.Transient;
 
 /**
  */
 @SuppressWarnings("serial")
-public class Icon extends ImageIcon {
+public class Icon extends ImageIcon implements PlatformIcon {
 
     public Icon(IconDescriptor descriptor) {
         super(descriptor.getData().array());
@@ -60,6 +66,16 @@ public class Icon extends ImageIcon {
     
     public Icon(Image image) {
         super(image);
+    }
+    
+    @Override
+    @Transient
+    public Image getImage() {
+        BufferedImage image = new BufferedImage(getIconWidth(), getIconHeight(), BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = (Graphics2D) image.getGraphics();
+        paintIcon(null, g, 0, 0);
+        g.dispose();
+        return image;
     }
     
     /**

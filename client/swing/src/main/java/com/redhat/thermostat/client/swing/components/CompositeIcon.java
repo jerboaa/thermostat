@@ -40,7 +40,9 @@ import java.awt.AlphaComposite;
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.image.BufferedImage;
+import java.beans.Transient;
 
 import com.redhat.thermostat.client.swing.GraphicsUtils;
 import com.redhat.thermostat.client.ui.IconDescriptor;
@@ -89,5 +91,13 @@ public class CompositeIcon extends Icon {
 
         graphics.drawImage(imageBuffer, x, y, null);
         graphics.dispose();
+    }
+     
+    /**
+     * Creates a default composite icon suitable for highlight.
+     * The default colours are defined based on the underlying look and feel. 
+     */
+    public static Icon createDefaultComposite(Icon source, boolean selected) {
+        return new CompositeIcon(source, new BaseIcon(true, source));
     }
 }

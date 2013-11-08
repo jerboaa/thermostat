@@ -44,8 +44,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.InvalidSyntaxException;
 
+import com.redhat.thermostat.client.swing.internal.vmlist.controller.DecoratorManager;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.HostTreeController;
-import com.redhat.thermostat.client.swing.internal.vmlist.controller.LabelDecoratorListener;
+import com.redhat.thermostat.client.swing.internal.vmlist.controller.DecoratorListener;
 
 /**
  *
@@ -55,29 +56,41 @@ public class DecoratorRegistryControllerTest {
     private DecoratorRegistryFactory registryFactory;
     private HostTreeController hostController;
 
-    private LabelDecoratorListener l0;
-    private LabelDecoratorListener l1;
-    
+    private DecoratorListener l0;
+    private DecoratorListener l1;
+    private DecoratorListener l2;
+
     private InfoLabelDecoratorRegistry infoLabel;
     private MainLabelDecoratorRegistry mainLabel;
+    private IconDecoratorRegistry icon;
 
+    private DecoratorManager manager;
+    
     @Before
     public void setUp() throws InvalidSyntaxException {
         
+        manager = mock(DecoratorManager.class);
+        
         infoLabel = mock(InfoLabelDecoratorRegistry.class);
         mainLabel = mock(MainLabelDecoratorRegistry.class);
-       
+        icon = mock(IconDecoratorRegistry.class);
+
         registryFactory = mock(DecoratorRegistryFactory.class);
         
         when(registryFactory.createInfoLabelDecoratorRegistry()).thenReturn(infoLabel);
         when(registryFactory.createMainLabelDecoratorRegistry()).thenReturn(mainLabel);
-        
-        l0 = mock(LabelDecoratorListener.class);
-        l1 = mock(LabelDecoratorListener.class);
-        
+        when(registryFactory.createIconDecoratorRegistry()).thenReturn(icon);
+
+        l0 = mock(DecoratorListener.class);
+        l1 = mock(DecoratorListener.class);
+        l2 = mock(DecoratorListener.class);
+
         hostController = mock(HostTreeController.class);
-        when(hostController.getInfoLabelDecoratorListener()).thenReturn(l0);
-        when(hostController.getMainLabelDecoratorListener()).thenReturn(l1);
+        when(hostController.getDecoratorManager()).thenReturn(manager);
+        
+        when(manager.getInfoLabelDecoratorListener()).thenReturn(l0);
+        when(manager.getMainLabelDecoratorListener()).thenReturn(l1);
+        when(manager.getIconDecoratorListener()).thenReturn(l2);
     }
     
     @Test
@@ -88,6 +101,8 @@ public class DecoratorRegistryControllerTest {
         
         verify(registryFactory).createInfoLabelDecoratorRegistry();
         verify(registryFactory).createMainLabelDecoratorRegistry();
+        verify(registryFactory).createIconDecoratorRegistry();
+
     }
 
     @Test
@@ -109,6 +124,9 @@ public class DecoratorRegistryControllerTest {
         
         verify(mainLabel).addActionListener(l1);
         verify(mainLabel).start();
+        
+        verify(icon).addActionListener(l2);
+        verify(icon).start();
     }
 
     @Test
@@ -133,5 +151,8 @@ public class DecoratorRegistryControllerTest {
         
         verify(mainLabel).removeActionListener(l1);
         verify(mainLabel).stop();
+        
+        verify(icon).removeActionListener(l2);
+        verify(icon).stop();
     } 
 }

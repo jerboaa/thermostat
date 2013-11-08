@@ -1,26 +1,26 @@
 /*
  * Copyright 2012, 2013 Red Hat, Inc.
- *
+ * 
  * This file is part of Thermostat.
- *
+ * 
  * Thermostat is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
  * by the Free Software Foundation; either version 2, or (at your
  * option) any later version.
- *
+ * 
  * Thermostat is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with Thermostat; see the file COPYING.  If not see
  * <http://www.gnu.org/licenses/>.
- *
+ * 
  * Linking this code with other modules is making a combined work
  * based on this code.  Thus, the terms and conditions of the GNU
  * General Public License cover the whole combination.
- *
+ * 
  * As a special exception, the copyright holders of this code give
  * you permission to link this code with independent modules to
  * produce an executable, regardless of the license terms of these
@@ -37,23 +37,10 @@
 package com.redhat.thermostat.client.ui;
 
 /**
- * A {@link Decorator} allows plugins to install special visual clues on
- * selected components.
- * 
- * <br /><br />
- * 
- * A {@link Decorator} itself is not an entry point.
+ * An opaque type representing an Icon in the underlying UI toolkit.
+ * Plugins can cast this type to the concrete implementation provided by each
+ * client implementation. 
  */
-public interface Decorator {
+public interface PlatformIcon {
 
-    public static enum Quadrant {
-        TOP_LEFT,
-        BOTTOM_LEFT,
-        MAIN
-    }
-    
-    String getLabel(String originalLabel);
-    IconDescriptor getIconDescriptor();
-    Quadrant getQuadrant();
 }
-

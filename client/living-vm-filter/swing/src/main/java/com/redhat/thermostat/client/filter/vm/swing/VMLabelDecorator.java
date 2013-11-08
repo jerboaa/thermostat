@@ -37,7 +37,6 @@
 package com.redhat.thermostat.client.filter.vm.swing;
 
 import com.redhat.thermostat.client.ui.ReferenceFieldLabelDecorator;
-import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Ref;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
@@ -52,6 +51,11 @@ public class VMLabelDecorator implements ReferenceFieldLabelDecorator {
     
     public VMLabelDecorator(VmInfoDAO dao) {
         this.dao = dao;
+    }
+    
+    @Override
+    public int getOrderValue() {
+        return ORDER_CPU_GROUP;
     }
     
     @Override

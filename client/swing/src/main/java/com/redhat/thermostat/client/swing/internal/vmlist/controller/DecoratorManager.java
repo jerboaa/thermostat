@@ -36,93 +36,40 @@
 
 package com.redhat.thermostat.client.swing.internal.vmlist.controller;
 
-import java.awt.Graphics2D;
-import java.awt.image.BufferedImage;
-import java.util.HashMap;
-import java.util.Map;
-
-import com.redhat.thermostat.client.swing.components.EmptyIcon;
 import com.redhat.thermostat.client.swing.components.Icon;
 import com.redhat.thermostat.client.swing.internal.vmlist.ReferenceComponent;
 import com.redhat.thermostat.client.swing.internal.vmlist.ReferenceTitle;
-import com.redhat.thermostat.client.swing.internal.vmlist.UIDefaults;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.DecoratorNotifier.DecorationEvent;
-import com.redhat.thermostat.client.swing.internal.vmlist.controller.DecoratorProviderExtensionListener.Action;
-import com.redhat.thermostat.client.ui.Decorator;
-import com.redhat.thermostat.client.ui.DecoratorProvider;
-import com.redhat.thermostat.client.ui.IconDescriptor;
+import com.redhat.thermostat.client.ui.ReferenceFieldIconDecorator;
 import com.redhat.thermostat.client.ui.ReferenceFieldLabelDecorator;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Ref;
-import com.redhat.thermostat.storage.core.VmRef;
 
 public class DecoratorManager {
 
-    private DecoratorProviderExtensionListener<HostRef> hostDecorator = new DecoratorProviderExtensionListener<>();
-    private DecoratorProviderExtensionListener<VmRef> vmDecorator = new DecoratorProviderExtensionListener<>();
-    
-    private LabelDecoratorListener infoLabelDecorator = new LabelDecoratorListener();
-    private LabelDecoratorListener mainLabelDecorator = new LabelDecoratorListener();
-    
-    private Map<Decorator, Icon> decoratorsCache = new HashMap<>();
-    
-    public void registerAndSetIcon(final ReferenceComponent component) {
-        VmRef ref = (VmRef) component.getReference();
-        component.setIcon(createIcon(vmDecorator, ref));
-        component.setInfoLabelText(createComponentLabel(infoLabelDecorator, ref,
-                                                        component.getInfoLabelText()));
-        component.setMainLabelText(createComponentLabel(mainLabelDecorator, ref,
-                                                        component.getMainLabelText()));
-        
-        // FIXME: this is a leak
-        vmDecorator.addDecoratorChangeListener(new ActionListener<DecoratorProviderExtensionListener.Action>() {
-            @Override
-            public void actionPerformed(ActionEvent<Action> actionEvent) {
-                VmRef ref = (VmRef) component.getReference();
-                component.setIcon(createIcon(vmDecorator, ref));
-            }
-        });
-        
-        // FIXME: this is a leak
-        infoLabelDecorator.addDecoratorChangeListener(new ActionListener<DecoratorNotifier.DecorationEvent>() {
-            @Override
-            public void actionPerformed(ActionEvent<DecorationEvent> actionEvent) {
-                VmRef ref = (VmRef) component.getReference();
-                component.setInfoLabelText(createComponentLabel(infoLabelDecorator, ref,
-                                                                component.getInfoLabelText()));
-            }
-        });
-        mainLabelDecorator.addDecoratorChangeListener(new ActionListener<DecoratorNotifier.DecorationEvent>() {
-            @Override
-            public void actionPerformed(ActionEvent<DecorationEvent> actionEvent) {
-                VmRef ref = (VmRef) component.getReference();
-                component.setMainLabelText(createComponentLabel(mainLabelDecorator, ref,
-                                                                component.getMainLabelText()));
-            }
-        });
+    private class Icons {
+        Icon main;
+        Icon selected;
     }
+    
+    private DecoratorListener<ReferenceFieldLabelDecorator> infoLabelDecorator =
+            new DecoratorListener<>(ReferenceFieldLabelDecorator.class);
+    private DecoratorListener<ReferenceFieldLabelDecorator> mainLabelDecorator =
+            new DecoratorListener<>(ReferenceFieldLabelDecorator.class);
 
-    public void registerAndSetIcon(final ReferenceTitle pane) {
-        
-        HostRef ref = (HostRef) pane.getReference();
-        final ReferenceComponent component = pane.getReferenceComponent();
-        
-        pane.setIcon(createIcon(hostDecorator, ref));
+    private DecoratorListener<ReferenceFieldIconDecorator> iconDecorator =
+            new DecoratorListener<>(ReferenceFieldIconDecorator.class);
+
+    public void registerAndSetIcon(final ReferenceComponent component) {
+        Ref ref = component.getReference();
         component.setInfoLabelText(createComponentLabel(infoLabelDecorator, ref,
                                                         component.getInfoLabelText()));
         component.setMainLabelText(createComponentLabel(mainLabelDecorator, ref,
                                                         component.getMainLabelText()));
+        setIcons(component);
         
         // FIXME: this is a leak
-        hostDecorator.addDecoratorChangeListener(new ActionListener<DecoratorProviderExtensionListener.Action>() {
-            @Override
-            public void actionPerformed(ActionEvent<Action> actionEvent) {
-                pane.setIcon(createIcon(hostDecorator, (HostRef) pane.getReference()));
-            }
-        });
-        
         infoLabelDecorator.addDecoratorChangeListener(new ActionListener<DecoratorNotifier.DecorationEvent>() {
             @Override
             public void actionPerformed(ActionEvent<DecorationEvent> actionEvent) {
@@ -139,9 +86,39 @@ public class DecoratorManager {
                                                                 component.getMainLabelText()));
             }
         });
+        iconDecorator.addDecoratorChangeListener(new ActionListener<DecoratorNotifier.DecorationEvent>() {
+            @Override
+            public void actionPerformed(ActionEvent<DecorationEvent> actionEvent) {
+                setIcons(component);
+            }
+        });
+    }
+
+    private void setIcons(final ReferenceComponent component) {
+        Icons icons = new Icons();
+        icons.main = component.getIcon();
+        icons.selected = component.getSelectedIcon();
+        icons = createComponentIcon(iconDecorator, component.getReference(), icons);
+        
+        component.setIcon(icons.main, icons.selected);
     }
     
-    private <R extends Ref> String createComponentLabel(LabelDecoratorListener listener,
+    public void registerAndSetIcon(final ReferenceTitle pane) {
+        registerAndSetIcon(pane.getReferenceComponent());
+    }
+    
+    private <R extends Ref> Icons createComponentIcon(DecoratorListener<ReferenceFieldIconDecorator> listener,
+                                                      R reference,
+                                                      Icons originalIcons)
+    {
+        for (ReferenceFieldIconDecorator decorator : listener.getDecorators()) {
+            originalIcons.main = (Icon) decorator.getIcon(originalIcons.main, reference);
+            originalIcons.selected = (Icon) decorator.getSelectedIcon(originalIcons.selected, reference);
+        }
+        return originalIcons;
+    }
+
+    private <R extends Ref> String createComponentLabel(DecoratorListener<ReferenceFieldLabelDecorator> listener,
                                                         R reference,
                                                         String label)
     {        
@@ -151,102 +128,15 @@ public class DecoratorManager {
         return label;
     }
     
-    private <R extends Ref> Icon createIcon(DecoratorProviderExtensionListener<R> listener, R ref)
-    {
-        UIDefaults uiDefaults = UIDefaults.getInstance();
-        int size = uiDefaults.getIconSize();
-        Icon canvas = new EmptyIcon(size, size);
-        
-        // FIXME: this logic is broken, since we simply iterate over
-        // icon locations, instead we need to at least sort them
-        // in painter's order
-        for (DecoratorProvider<R> provider : listener.getDecorators()) {
-            
-            if (!provider.getFilter().matches(ref)) {
-                continue;
-            }
-            
-            Decorator decorator = provider.getDecorator();
-            Icon icon = getIconFromCache(decorator);
-            if (icon == null) {
-                continue;
-            }
-            
-            switch (decorator.getQuadrant()) {
-            case MAIN:
-                canvas = createCustomIcon(canvas, icon);
-                break;
-                
-            case TOP_LEFT:
-                canvas = createCustomIcon(canvas, icon, 0, 0);
-                break;
-
-            case BOTTOM_LEFT:
-                int y = canvas.getIconHeight() - icon.getIconHeight();
-                canvas = createCustomIcon(canvas, icon, 0, y);
-                break;
-                
-            default:
-                // FIXME: log me?
-                break;
-            }
-
-        }
-        
-        return canvas;
-    }
-    
-    Icon getIconFromCache(Decorator decorator) {
-        Icon icon = decoratorsCache.get(decorator);
-        if (icon == null) {
-            IconDescriptor iconDescriptor = decorator.getIconDescriptor();
-            if (iconDescriptor != null) {
-                icon = new Icon(iconDescriptor);
-                decoratorsCache.put(decorator, icon);
-            }
-        }
-        return icon;
-    }
-  
-    private Icon createCustomIcon(Icon source, Icon newIcon) {
-        float v1 = source.getIconWidth() / 2;
-        float v2 = newIcon.getIconWidth() / 2; 
-        
-        int x = (int) (v1 - v2 + 0.5);;
-        
-        v1 = source.getIconHeight() / 2;
-        v2 = newIcon.getIconHeight() / 2; 
-        
-        int y = (int) (v1 - v2 + 0.5);
-        return createCustomIcon(source, newIcon, x, y);
-    }
-    
-    private Icon createCustomIcon(Icon source, Icon newIcon, int x, int y) {
-        BufferedImage image = new BufferedImage(source.getIconWidth(),
-                                                source.getIconHeight(),
-                                                BufferedImage.TYPE_INT_ARGB);
-        Graphics2D graphics = (Graphics2D) image.getGraphics();
-        source.paintIcon(null, graphics, 0, 0);
-        graphics.drawImage(newIcon.getImage(), x, y, null);
-        
-        return new Icon(image);
-    }
-    
-    @Deprecated
-    DecoratorProviderExtensionListener<HostRef> getHostDecoratorListener() {
-        return hostDecorator;
-    }
-    
-    @Deprecated
-    DecoratorProviderExtensionListener<VmRef> getVmDecoratorListener() {
-        return vmDecorator;
-    }
-
-    public LabelDecoratorListener getInfoLabelDecoratorListener() {
+    public DecoratorListener<ReferenceFieldLabelDecorator> getInfoLabelDecoratorListener() {
         return infoLabelDecorator;
     }
 
-    public LabelDecoratorListener getMainLabelDecoratorListener() {
+    public DecoratorListener<ReferenceFieldLabelDecorator> getMainLabelDecoratorListener() {
         return mainLabelDecorator;
+    }
+    
+    public DecoratorListener<ReferenceFieldIconDecorator> getIconDecoratorListener() {
+        return iconDecorator;
     }
 }

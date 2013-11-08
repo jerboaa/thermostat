@@ -67,6 +67,12 @@
     </dependency>
 
     <dependency>
+      <groupId>net.java.openjdk.cacio</groupId>
+      <artifactId>cacio-tta</artifactId>
+      <scope>test</scope>
+    </dependency>
+    
+    <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-common-core</artifactId>
       <version>${project.version}</version>

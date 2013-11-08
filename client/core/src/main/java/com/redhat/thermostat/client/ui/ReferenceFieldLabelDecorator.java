@@ -36,14 +36,18 @@
 
 package com.redhat.thermostat.client.ui;
 
+import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.storage.core.Ref;
 
 /**
  *
  */
-public interface ReferenceFieldLabelDecorator {
+public interface ReferenceFieldLabelDecorator extends Ordered {
 
     public static final String ID = "ReferenceFieldLabelDecorator_ID";
     
+    /**
+     * The passed label my be null, indicating no plugin has set the label.
+     */
     String getLabel(String originalLabel, Ref reference);
 }
