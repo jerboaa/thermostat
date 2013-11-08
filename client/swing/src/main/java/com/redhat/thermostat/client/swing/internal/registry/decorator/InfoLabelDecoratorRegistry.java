@@ -34,35 +34,25 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.internal.vmlist;
+package com.redhat.thermostat.client.swing.internal.registry.decorator;
 
-import com.redhat.thermostat.client.swing.components.Icon;
-import com.redhat.thermostat.client.swing.internal.accordion.TitledPane;
-import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.Ref;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.InvalidSyntaxException;
 
-@SuppressWarnings("serial")
-public class ReferenceTitle extends TitledPane implements ReferenceProvider {
-    
-    public static final int ICON_GAP = EXPANDER_ICON_SIZE;
-    
-    private HostRef ref;
-    
-    public ReferenceTitle(HostRef ref) {
-        super(ref.getHostName(), new ReferenceComponentPainter(), new ReferenceComponent(ref, false));
-        this.ref = ref;
-    }
+import com.redhat.thermostat.client.swing.ReferenceFieldDecoratorLayout;
+import com.redhat.thermostat.client.ui.ReferenceFieldLabelDecorator;
+import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 
-    @Override
-    public Ref getReference() {
-        return ref;
-    }
+public class InfoLabelDecoratorRegistry extends ThermostatExtensionRegistry<ReferenceFieldLabelDecorator> {
 
-    public void setIcon(Icon icon) {
-        ((ReferenceComponent) getTitleComponent()).setIcon(icon);
-    }
-    
-    public ReferenceComponent getReferenceComponent() {
-        return (ReferenceComponent) getTitleComponent();
+    private static final String FILTER = "(&(" +
+            Constants.OBJECTCLASS + "=" + ReferenceFieldLabelDecorator.class.getName() +
+            ")(" +
+            ReferenceFieldLabelDecorator.ID + "=" + ReferenceFieldDecoratorLayout.LABEL_INFO +
+            "))";
+
+    public InfoLabelDecoratorRegistry(BundleContext context) throws InvalidSyntaxException {
+        super(context, FILTER, ReferenceFieldLabelDecorator.class);
     }
 }

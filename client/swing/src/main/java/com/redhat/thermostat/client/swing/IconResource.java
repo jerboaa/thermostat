@@ -51,8 +51,14 @@ public class IconResource {
     
     private boolean fromFileSytem = false;
        
+    public static final IconResource JAVA_APPLICATION_32 = new IconResource("java_application_identifier_32.png");
+    public static final IconResource JAVA_APPLICATION_24 = new IconResource("java_application_identifier_24.png");
     public static final IconResource JAVA_APPLICATION = new IconResource("java_application_identifier.png");
+    
+    public static final IconResource HOST_32 = new IconResource("computer_32.png");
+    public static final IconResource HOST_24 = new IconResource("computer_24.png");
     public static final IconResource HOST = new IconResource("computer.png");
+    
     public static final IconResource SEARCH = new IconResource("search.png");
     public static final IconResource RECORD = new IconResource("record.png");
     public static final IconResource SAMPLE = new IconResource("sample.png");

@@ -58,7 +58,7 @@ public class LivingVMDecoratorProvider implements DecoratorProvider<VmRef> {
         public IconDescriptor getIconDescriptor() {
             IconDescriptor icon = null;
             try {
-                icon = IconResource.JAVA_APPLICATION.toIconDescriptor();
+                icon = IconResource.JAVA_APPLICATION_24.toIconDescriptor();
             } catch (IOException ioe) {
                 ioe.printStackTrace();
                 Logger.getLogger(LivingVMDecoratorProvider.class.getName()).log(Level.SEVERE, ioe.getMessage(), ioe);

@@ -34,35 +34,16 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.internal.vmlist;
+package com.redhat.thermostat.client.ui;
 
-import com.redhat.thermostat.client.swing.components.Icon;
-import com.redhat.thermostat.client.swing.internal.accordion.TitledPane;
-import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Ref;
 
-@SuppressWarnings("serial")
-public class ReferenceTitle extends TitledPane implements ReferenceProvider {
-    
-    public static final int ICON_GAP = EXPANDER_ICON_SIZE;
-    
-    private HostRef ref;
-    
-    public ReferenceTitle(HostRef ref) {
-        super(ref.getHostName(), new ReferenceComponentPainter(), new ReferenceComponent(ref, false));
-        this.ref = ref;
-    }
+/**
+ *
+ */
+public interface ReferenceFieldLabelDecorator {
 
-    @Override
-    public Ref getReference() {
-        return ref;
-    }
-
-    public void setIcon(Icon icon) {
-        ((ReferenceComponent) getTitleComponent()).setIcon(icon);
-    }
+    public static final String ID = "ReferenceFieldLabelDecorator_ID";
     
-    public ReferenceComponent getReferenceComponent() {
-        return (ReferenceComponent) getTitleComponent();
-    }
+    String getLabel(String originalLabel, Ref reference);
 }

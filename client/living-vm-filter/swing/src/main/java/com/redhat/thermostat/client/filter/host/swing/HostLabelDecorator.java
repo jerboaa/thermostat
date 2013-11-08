@@ -34,35 +34,46 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.internal.vmlist;
+package com.redhat.thermostat.client.filter.host.swing;
 
-import com.redhat.thermostat.client.swing.components.Icon;
-import com.redhat.thermostat.client.swing.internal.accordion.TitledPane;
+import java.util.List;
+
+import com.redhat.thermostat.client.ui.ReferenceFieldLabelDecorator;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Ref;
+import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
+import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
 
-@SuppressWarnings("serial")
-public class ReferenceTitle extends TitledPane implements ReferenceProvider {
+public class HostLabelDecorator implements ReferenceFieldLabelDecorator {
+
+    private NetworkInterfaceInfoDAO dao;
     
-    public static final int ICON_GAP = EXPANDER_ICON_SIZE;
-    
-    private HostRef ref;
-    
-    public ReferenceTitle(HostRef ref) {
-        super(ref.getHostName(), new ReferenceComponentPainter(), new ReferenceComponent(ref, false));
-        this.ref = ref;
+    public HostLabelDecorator(NetworkInterfaceInfoDAO  dao) {
+        this.dao = dao;
     }
-
+    
     @Override
-    public Ref getReference() {
-        return ref;
-    }
-
-    public void setIcon(Icon icon) {
-        ((ReferenceComponent) getTitleComponent()).setIcon(icon);
-    }
-    
-    public ReferenceComponent getReferenceComponent() {
-        return (ReferenceComponent) getTitleComponent();
+    public String getLabel(String originalLabel, Ref reference) {
+        
+        if (!(reference instanceof HostRef)) {
+            return originalLabel;
+        }
+        
+        List<NetworkInterfaceInfo> infos =
+                dao.getNetworkInterfaces((HostRef) reference);
+        StringBuilder result = new StringBuilder();
+        
+        for (NetworkInterfaceInfo info : infos) {
+            // filter out the loopbak
+            if (!info.getInterfaceName().equals("lo")) {
+                if (info.getIp4Addr() != null) {
+                    result.append(info.getIp4Addr()).append("; ");
+                } else if (info.getIp6Addr() != null) {
+                    result.append(info.getIp6Addr()).append("; ");
+                }
+            }
+        }
+        result.deleteCharAt(result.length() - 2);
+        return result.toString();
     }
 }

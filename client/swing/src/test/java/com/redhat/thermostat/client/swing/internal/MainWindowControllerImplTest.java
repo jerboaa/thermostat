@@ -37,7 +37,6 @@
 package com.redhat.thermostat.client.swing.internal;
 
 import static org.junit.Assert.assertEquals;
-
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
@@ -45,6 +44,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.times;
 
 import java.util.concurrent.CountDownLatch;
 
@@ -66,6 +66,7 @@ import com.redhat.thermostat.client.core.views.SummaryView;
 import com.redhat.thermostat.client.core.views.SummaryViewProvider;
 import com.redhat.thermostat.client.core.views.VmInformationView;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
+import com.redhat.thermostat.client.swing.internal.registry.decorator.DecoratorRegistryController;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.ContextActionController;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.ContextHandler;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.DecoratorProviderExtensionListener;
@@ -96,7 +97,6 @@ import com.redhat.thermostat.utils.keyring.Keyring;
 public class MainWindowControllerImplTest {
 
     private ActionListener<MainView.Action> l;
-    private ActionListener<HostTreeController.ReferenceSelection> hostTreeListener;
     
     private MainWindowControllerImpl controller;
 
@@ -125,6 +125,7 @@ public class MainWindowControllerImplTest {
     private VmInformationViewProvider vmInfoViewProvider;
     
     private HostTreeController treeController;
+    private DecoratorRegistryController decoratorController;
 
     private DecoratorProviderExtensionListener<HostRef> hostDecorators;
     private DecoratorProviderExtensionListener<VmRef> vmDecorators;
@@ -219,12 +220,15 @@ public class MainWindowControllerImplTest {
         menus = mock(MenuRegistry.class);
         shutdown = mock(CountDownLatch.class);
 
+        decoratorController = mock(DecoratorRegistryController.class);
+        
         when(registryFactory.createMenuRegistry()).thenReturn(menus);
         when(registryFactory.createHostTreeDecoratorRegistry()).thenReturn(hostDecoratorRegistry);
         when(registryFactory.createVMTreeDecoratorRegistry()).thenReturn(vmDecoratorRegistry);
         when(registryFactory.createHostFilterRegistry()).thenReturn(hostFilterRegistry);
         when(registryFactory.createVmFilterRegistry()).thenReturn(vmFilterRegistry);
         when(registryFactory.createVMInformationRegistry()).thenReturn(vmInfoRegistry);
+        when(registryFactory.createDecoratorController()).thenReturn(decoratorController);
         
         ArgumentCaptor<ActionListener> grabHostFiltersListener = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(hostFilterRegistry).addActionListener(grabHostFiltersListener.capture());
@@ -244,7 +248,6 @@ public class MainWindowControllerImplTest {
         controller = new MainWindowControllerImpl(context, appSvc, view, registryFactory, shutdown);
         
         l = grabListener.getValue();
-        hostTreeListener = hostTreeCaptor.getValue();
     }
 
     private void setUpHostContextActions() {
@@ -292,6 +295,17 @@ public class MainWindowControllerImplTest {
         l = null;
     }
 
+    @Test
+    public void verifyDecoratorsControllerRegisteredAndStarted() {
+        
+        controller.shutdownApplication();
+
+        verify(view, atLeastOnce()).getHostTreeController();
+        verify(decoratorController, times(1)).init(treeController);
+        verify(decoratorController, times(1)).start();
+        verify(decoratorController, times(1)).stop();
+    }
+    
     @Test
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public void verifyDecoratorsRegisteredAndStarted() {

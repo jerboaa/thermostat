@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.client.swing.internal;
 
+import com.redhat.thermostat.client.swing.internal.registry.decorator.DecoratorRegistryController;
+import com.redhat.thermostat.client.swing.internal.registry.decorator.DecoratorRegistryFactory;
 import com.redhat.thermostat.client.ui.MenuRegistry;
 
 import org.osgi.framework.BundleContext;
@@ -70,6 +72,12 @@ class RegistryFactory {
     
     VMInformationRegistry createVMInformationRegistry() throws InvalidSyntaxException {
         return new VMInformationRegistry(context);
+    }
+
+    DecoratorRegistryController createDecoratorController() {
+        DecoratorRegistryFactory decoratorRegistryFactory =
+                new DecoratorRegistryFactory(context);
+        return new DecoratorRegistryController(decoratorRegistryFactory);
     }
 }
 

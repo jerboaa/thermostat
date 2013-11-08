@@ -34,35 +34,50 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.internal.vmlist;
+package com.redhat.thermostat.client.swing.internal.registry.decorator;
 
-import com.redhat.thermostat.client.swing.components.Icon;
-import com.redhat.thermostat.client.swing.internal.accordion.TitledPane;
-import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.Ref;
+import org.osgi.framework.InvalidSyntaxException;
 
-@SuppressWarnings("serial")
-public class ReferenceTitle extends TitledPane implements ReferenceProvider {
+import com.redhat.thermostat.client.swing.internal.vmlist.controller.HostTreeController;
+
+public class DecoratorRegistryController {
+
+    private DecoratorRegistryFactory registryFactory;
+    private HostTreeController hostController;
+
+    private InfoLabelDecoratorRegistry infoLabel;
+    private MainLabelDecoratorRegistry mainLabel;
     
-    public static final int ICON_GAP = EXPANDER_ICON_SIZE;
-    
-    private HostRef ref;
-    
-    public ReferenceTitle(HostRef ref) {
-        super(ref.getHostName(), new ReferenceComponentPainter(), new ReferenceComponent(ref, false));
-        this.ref = ref;
+    public DecoratorRegistryController(DecoratorRegistryFactory registryFactory) {
+        this.registryFactory = registryFactory;
     }
 
-    @Override
-    public Ref getReference() {
-        return ref;
-    }
-
-    public void setIcon(Icon icon) {
-        ((ReferenceComponent) getTitleComponent()).setIcon(icon);
+    public void init(HostTreeController hostController) {
+        this.hostController = hostController;
+        
+        try {
+           
+            infoLabel = registryFactory.createInfoLabelDecoratorRegistry();
+            mainLabel = registryFactory.createMainLabelDecoratorRegistry();
+            
+        } catch (InvalidSyntaxException e) {
+            throw new RuntimeException(e);
+        }
     }
     
-    public ReferenceComponent getReferenceComponent() {
-        return (ReferenceComponent) getTitleComponent();
+    public void start() {
+        infoLabel.addActionListener(hostController.getInfoLabelDecoratorListener());
+        infoLabel.start();
+        
+        mainLabel.addActionListener(hostController.getMainLabelDecoratorListener());
+        mainLabel.start();
+    }
+
+    public void stop() {
+        infoLabel.removeActionListener(hostController.getInfoLabelDecoratorListener());
+        infoLabel.stop();
+        
+        mainLabel.removeActionListener(hostController.getMainLabelDecoratorListener());
+        mainLabel.stop();
     }
 }

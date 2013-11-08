@@ -67,7 +67,7 @@ public class HostIconDecoratorProvider implements DecoratorProvider<HostRef> {
         public IconDecorator() {
             IconDescriptor icon = null;
             try {
-                icon = IconResource.HOST.toIconDescriptor();
+                icon = IconResource.HOST_24.toIconDescriptor();
             } catch (IOException ioe) {
                 ioe.printStackTrace();
             }

@@ -48,11 +48,16 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
+import com.redhat.thermostat.client.filter.host.swing.HostLabelDecorator;
+import com.redhat.thermostat.client.swing.ReferenceFieldDecoratorLayout;
 import com.redhat.thermostat.client.ui.DecoratorProvider;
+import com.redhat.thermostat.client.ui.ReferenceFieldLabelDecorator;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
+import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 
 public class VMFilterActivator implements BundleActivator {
@@ -69,7 +74,8 @@ public class VMFilterActivator implements BundleActivator {
         Class<?> [] services =  new Class<?> [] {
                 VmInfoDAO.class,
                 HostInfoDAO.class,
-            };
+                NetworkInterfaceInfoDAO.class,
+        };
         
         tracker = new MultipleServiceTracker(context, services, new MultipleServiceTracker.Action() {
             
@@ -102,6 +108,25 @@ public class VMFilterActivator implements BundleActivator {
 
                 registration = context.registerService(DecoratorProvider.class.getName(),
                                                        decorator, decoratorProperties);
+                registeredServices.add(registration);
+                
+                VMLabelDecorator vmLabelDecorator = new VMLabelDecorator(vmDao);
+                decoratorProperties = new Hashtable<>();
+                decoratorProperties.put(ReferenceFieldLabelDecorator.ID, ReferenceFieldDecoratorLayout.LABEL_INFO.name());
+
+                registration = context.registerService(ReferenceFieldLabelDecorator.class.getName(),
+                        vmLabelDecorator, decoratorProperties);
+                
+                NetworkInterfaceInfoDAO networkDao = (NetworkInterfaceInfoDAO)
+                            services.get(NetworkInterfaceInfoDAO.class.getName());
+                
+                HostLabelDecorator hostLabelDecorator = new HostLabelDecorator(networkDao);
+                decoratorProperties = new Hashtable<>();
+                decoratorProperties.put(ReferenceFieldLabelDecorator.ID, ReferenceFieldDecoratorLayout.LABEL_INFO.name());
+                
+                registration = context.registerService(ReferenceFieldLabelDecorator.class.getName(),
+                        hostLabelDecorator, decoratorProperties);
+                
                 registeredServices.add(registration);
             }
         });

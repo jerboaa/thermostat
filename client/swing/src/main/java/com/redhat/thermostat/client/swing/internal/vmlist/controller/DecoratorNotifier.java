@@ -34,35 +34,44 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.internal.vmlist;
+package com.redhat.thermostat.client.swing.internal.vmlist.controller;
 
-import com.redhat.thermostat.client.swing.components.Icon;
-import com.redhat.thermostat.client.swing.internal.accordion.TitledPane;
-import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.Ref;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ActionNotifier;
 
-@SuppressWarnings("serial")
-public class ReferenceTitle extends TitledPane implements ReferenceProvider {
-    
-    public static final int ICON_GAP = EXPANDER_ICON_SIZE;
-    
-    private HostRef ref;
-    
-    public ReferenceTitle(HostRef ref) {
-        super(ref.getHostName(), new ReferenceComponentPainter(), new ReferenceComponent(ref, false));
-        this.ref = ref;
-    }
-
-    @Override
-    public Ref getReference() {
-        return ref;
-    }
-
-    public void setIcon(Icon icon) {
-        ((ReferenceComponent) getTitleComponent()).setIcon(icon);
+/**
+ *
+ */
+public class DecoratorNotifier {
+    public enum DecorationEvent {
+        DECORATION_ADDED,
+        DECORATION_CHANGED,
+        DECORATION_REMOVED;
     }
     
-    public ReferenceComponent getReferenceComponent() {
-        return (ReferenceComponent) getTitleComponent();
+    private final ActionNotifier<DecorationEvent> notifier;
+    
+    public DecoratorNotifier() {
+        notifier = new ActionNotifier<>(this);
+    }
+    
+    public void addDecoratorChangeListener(ActionListener<DecorationEvent> listener) {
+        notifier.addActionListener(listener);
+    }
+    
+    public void removeDecoratorChangeListener(ActionListener<DecorationEvent> listener) {
+        notifier.removeActionListener(listener);
+    }
+    
+    public void fireDecorationRemoved() {
+        notifier.fireAction(DecorationEvent.DECORATION_REMOVED);
+    }
+    
+    public void fireDecorationAdded() {
+        notifier.fireAction(DecorationEvent.DECORATION_ADDED);
+    }
+    
+    public void fireDecorationChanged() {
+        notifier.fireAction(DecorationEvent.DECORATION_CHANGED);
     }
 }

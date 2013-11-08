@@ -50,11 +50,12 @@ import com.redhat.thermostat.storage.core.Ref;
 /*
  * Provide an implementation of a listener for Registry update. This listener
  * is only to be used to listen for DecoratorProvider changes and its sole
- * purpouse is to re-route the generic VmRef or HostRef DecoratorProvider
+ * purpose is to re-route the generic VmRef or HostRef DecoratorProvider
  * changes to the actual Decoration Manager.
  */
+@Deprecated
 public class DecoratorProviderExtensionListener<T extends Ref> implements ActionListener<ThermostatExtensionRegistry.Action>
-{   
+{
     public enum Action {
         DECORATOR_ADDED,
         DECORATOR_REMOVED,
@@ -89,7 +90,7 @@ public class DecoratorProviderExtensionListener<T extends Ref> implements Action
         if (! (payload instanceof DecoratorProvider)) {
             throw new IllegalArgumentException("unexpected payload type. " +
                                                payload.getClass().getName() +
-                                               "not allowed here.");
+                                               " not allowed here.");
         }
 
         decorators.add((DecoratorProvider<T>) payload);

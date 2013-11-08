@@ -59,6 +59,7 @@ import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
 import com.redhat.thermostat.client.swing.internal.osgi.HostContextActionServiceTracker;
 import com.redhat.thermostat.client.swing.internal.osgi.InformationServiceTracker;
 import com.redhat.thermostat.client.swing.internal.osgi.VMContextActionServiceTracker;
+import com.redhat.thermostat.client.swing.internal.registry.decorator.DecoratorRegistryController;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.ContextActionController;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.ContextHandler;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.DecoratorProviderExtensionListener;
@@ -177,6 +178,8 @@ public class MainWindowControllerImpl implements MainWindowController {
     private VmFilterRegistry vmFilterRegistry;
     private HostFilterRegistry hostFilterRegistry;
     private FilterManager filterManager;
+
+    private DecoratorRegistryController decoratorController;
     
     public MainWindowControllerImpl(BundleContext context, ApplicationService appSvc,
             CountDownLatch shutdown) {
@@ -191,14 +194,16 @@ public class MainWindowControllerImpl implements MainWindowController {
         this.appSvc = appSvc;
         this.view = view;
        
+        decoratorController = registryFactory.createDecoratorController();
+
         try {
-            
             vmFilterRegistry = registryFactory.createVmFilterRegistry();
             hostFilterRegistry = registryFactory.createHostFilterRegistry();
             
             hostDecoratorRegistry = registryFactory.createHostTreeDecoratorRegistry();
             vmDecoratorRegistry = registryFactory.createVMTreeDecoratorRegistry();
             menuRegistry = registryFactory.createMenuRegistry();
+            
             vmInfoRegistry = registryFactory.createVMInformationRegistry();
             
         } catch (InvalidSyntaxException e) {
@@ -374,6 +379,7 @@ public class MainWindowControllerImpl implements MainWindowController {
     }
 
     private void installListenersAndStartRegistries() {
+        
         menuRegistry.addActionListener(menuListener);
         menuRegistry.start();
 
@@ -397,6 +403,9 @@ public class MainWindowControllerImpl implements MainWindowController {
         vmInfoRegistry.start();
 
         setUpActionControllers();
+
+        decoratorController.init(hostTreeController);
+        decoratorController.start();
     }
 
     private void setUpActionControllers() {
@@ -433,6 +442,8 @@ public class MainWindowControllerImpl implements MainWindowController {
         vmDecoratorRegistry.removeActionListener(vmDecoratorListener);
         vmDecoratorRegistry.stop();
 
+        decoratorController.stop();
+        
         vmInfoRegistry.removeActionListener(vmInfoRegistryListener);
         vmInfoRegistryListener = null;
         vmInfoRegistry.stop();

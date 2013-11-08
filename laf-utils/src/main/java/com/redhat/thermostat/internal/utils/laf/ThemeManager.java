@@ -145,9 +145,10 @@ public class ThemeManager {
         }
         
         // TODO: document those or place them into a proper UI class
-        UIManager.put("thermostat-fg-color", Palette.DROID_BLACK);
-        UIManager.put("thermostat-selection-fg-color", Palette.THERMOSTAT_BLU);        
-        UIManager.put("thermostat-selection-bg-color", Palette.LIGHT_GRAY);
+        UIManager.put("thermostat-fg-color", Palette.DROID_BLACK.getColor());
+        UIManager.put("thermostat-bg-color", Palette.PALE_GRAY.getColor());
+        UIManager.put("thermostat-selection-fg-color", Palette.THERMOSTAT_BLU.getColor());        
+        UIManager.put("thermostat-selection-bg-color", Palette.LIGHT_GRAY.getColor());
         if (nimbusBased) {
             // very internal and very secret for now, should be moved
             // to a proper location but first needs to be appropriately tested
@@ -159,7 +160,10 @@ public class ThemeManager {
             UIManager.put("thermostat-selection-fg-color", color);
             
             color = UIManager.getDefaults().getColor("text");
-            UIManager.put("thermostat-fg-color", color);            
+            UIManager.put("thermostat-fg-color", color);
+            
+            color = UIManager.getDefaults().getColor("control");
+            UIManager.put("thermostat-bg-color", color);
         }
     }
 }

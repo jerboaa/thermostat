@@ -41,8 +41,11 @@ import static org.mockito.Mockito.mock;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.client.filter.host.swing.HostLabelDecorator;
 import com.redhat.thermostat.client.ui.DecoratorProvider;
+import com.redhat.thermostat.client.ui.ReferenceFieldLabelDecorator;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
+import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
@@ -56,11 +59,16 @@ public class VMFilterActivatorTest {
         
         VmInfoDAO vmDao = mock(VmInfoDAO.class);
         HostInfoDAO hostDao = mock(HostInfoDAO.class);
-       
+        NetworkInterfaceInfoDAO netDao = mock(NetworkInterfaceInfoDAO.class);
+
         ctx.registerService(VmInfoDAO.class, vmDao, null);
         ctx.registerService(HostInfoDAO.class, hostDao, null);
+        ctx.registerService(NetworkInterfaceInfoDAO.class, netDao, null);
 
         assertTrue(ctx.isServiceRegistered(DecoratorProvider.class.getName(), LivingVMDecoratorProvider.class));
         assertTrue(ctx.isServiceRegistered(DecoratorProvider.class.getName(), DeadVMDecoratorProvider.class));
+        
+        assertTrue(ctx.isServiceRegistered(ReferenceFieldLabelDecorator.class.getName(), VMLabelDecorator.class));
+        assertTrue(ctx.isServiceRegistered(ReferenceFieldLabelDecorator.class.getName(), HostLabelDecorator.class));
     }
 }

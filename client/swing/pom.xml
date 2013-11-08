@@ -182,6 +182,7 @@
               com.redhat.thermostat.client.swing.internal.vmlist,
               com.redhat.thermostat.client.swing.internal.vmlist.controller,
               com.redhat.thermostat.client.swing.internal.accordion,
+              com.redhat.thermostat.client.swing.internal.registry.decorator,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>

@@ -66,7 +66,11 @@ public class UIDefaults {
         return color != null ? color : Palette.THERMOSTAT_BLU.getColor();
     }
 
+    public Color getComponentSecondaryFGColor() {
+        return Palette.DARK_GRAY.getColor();
+    }
+
     public int getIconSize() {
-        return 24;
+        return 32;
     }
 }

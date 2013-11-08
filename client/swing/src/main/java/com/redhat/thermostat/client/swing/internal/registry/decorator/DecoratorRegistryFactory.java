@@ -34,35 +34,23 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.internal.vmlist;
+package com.redhat.thermostat.client.swing.internal.registry.decorator;
 
-import com.redhat.thermostat.client.swing.components.Icon;
-import com.redhat.thermostat.client.swing.internal.accordion.TitledPane;
-import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.Ref;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.InvalidSyntaxException;
 
-@SuppressWarnings("serial")
-public class ReferenceTitle extends TitledPane implements ReferenceProvider {
+public class DecoratorRegistryFactory {
     
-    public static final int ICON_GAP = EXPANDER_ICON_SIZE;
-    
-    private HostRef ref;
-    
-    public ReferenceTitle(HostRef ref) {
-        super(ref.getHostName(), new ReferenceComponentPainter(), new ReferenceComponent(ref, false));
-        this.ref = ref;
+    private BundleContext context;
+    public DecoratorRegistryFactory(BundleContext context) {
+        this.context = context;
     }
 
-    @Override
-    public Ref getReference() {
-        return ref;
+    InfoLabelDecoratorRegistry createInfoLabelDecoratorRegistry() throws InvalidSyntaxException {
+        return new InfoLabelDecoratorRegistry(context);
     }
 
-    public void setIcon(Icon icon) {
-        ((ReferenceComponent) getTitleComponent()).setIcon(icon);
-    }
-    
-    public ReferenceComponent getReferenceComponent() {
-        return (ReferenceComponent) getTitleComponent();
+    MainLabelDecoratorRegistry createMainLabelDecoratorRegistry() throws InvalidSyntaxException {
+        return new MainLabelDecoratorRegistry(context);
     }
 }

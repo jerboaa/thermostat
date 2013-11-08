@@ -43,30 +43,33 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 
 import javax.swing.Box;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import com.redhat.thermostat.client.swing.components.CompositeIcon;
 import com.redhat.thermostat.client.swing.components.Icon;
 import com.redhat.thermostat.client.swing.components.ShadowLabel;
+
 import com.redhat.thermostat.client.swing.internal.accordion.AccordionComponent;
-import com.redhat.thermostat.client.ui.Palette;
+
 import com.redhat.thermostat.storage.core.Ref;
 
 @SuppressWarnings("serial")
 public class ReferenceComponent extends JPanel implements AccordionComponent, ReferenceProvider {
 
     private ShadowLabel mainLabel;
-    
-    private boolean highlight;
-    
-    private boolean selected;
-    
+    private ShadowLabel infoLabel;
+
+    private JLabel iconLabel;
+
     private Icon selectedIcon;
     private Icon icon;
     
     private ReferenceComponentPainter painter;
-    
     private Ref vm;
+
+    private boolean highlight;
+    private boolean selected;
     
     public ReferenceComponent(Ref vm) {
         this(vm, true);
@@ -79,11 +82,27 @@ public class ReferenceComponent extends JPanel implements AccordionComponent, Re
         
         setLayout(new BorderLayout());
 
-        mainLabel = new ShadowLabel();
-        mainLabel.setForeground(Palette.DROID_GRAY.getColor());
-        mainLabel.setText(vm.getName());
-        add(mainLabel, BorderLayout.CENTER);
+        PainterPanel labelsPane = new PainterPanel();
+        labelsPane.setLayout(new BorderLayout());
 
+        PainterPanel contentPane = new PainterPanel();
+        contentPane.setLayout(new BorderLayout());
+
+        iconLabel = new JLabel();
+        contentPane.add(iconLabel, BorderLayout.WEST);
+        contentPane.add(labelsPane);
+        
+        mainLabel = new ShadowLabel();
+        mainLabel.setText(vm.getName());
+        
+        infoLabel = new ShadowLabel();
+        infoLabel.setFont(infoLabel.getFont().deriveFont(8.0f));
+        infoLabel.setText(vm.getStringID());
+        
+        labelsPane.add(mainLabel, BorderLayout.CENTER);
+        labelsPane.add(infoLabel, BorderLayout.SOUTH);
+        
+        add(contentPane, BorderLayout.CENTER);
         if (addGap) {
             int gapSize = ReferenceTitle.ICON_GAP;
             Component gap = Box.createRigidArea(new Dimension(gapSize, gapSize));
@@ -101,17 +120,35 @@ public class ReferenceComponent extends JPanel implements AccordionComponent, Re
         this.selected = selected;
         setState();
     }
-
+    
+    public void setMainLabelText(String text) {
+        mainLabel.setText(text);
+    }
+    
+    public String getMainLabelText() {
+        return mainLabel.getText();
+    }
+    
+    public void setInfoLabelText(String text) {
+        infoLabel.setText(text);
+    }
+    
+    public String getInfoLabelText() {
+        return infoLabel.getText();
+    }
+    
     private void setState() {
         UIDefaults palette = UIDefaults.getInstance();
         if (selected) {
             mainLabel.setForeground(palette.getSelectedComponentFGColor());
-            mainLabel.setIcon(selectedIcon);
+            infoLabel.setForeground(palette.getSelectedComponentFGColor());
+            iconLabel.setIcon(selectedIcon);
         } else if (!highlight) {
             mainLabel.setForeground(palette.getComponentFGColor());
-            mainLabel.setIcon(icon);
+            infoLabel.setForeground(palette.getComponentSecondaryFGColor());
+            iconLabel.setIcon(icon);
         }
-        repaint();        
+        repaint();
     }
     
     @Override
@@ -137,5 +174,12 @@ public class ReferenceComponent extends JPanel implements AccordionComponent, Re
 
     public Icon getIcon() {
         return icon;
+    }
+    
+    private class PainterPanel extends JPanel {
+        @Override
+        protected void paintComponent(Graphics g) {
+            painter.paint((Graphics2D) g, ReferenceComponent.this, getWidth(), getHeight());
+        }
     }
 }

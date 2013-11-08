@@ -161,6 +161,7 @@ public class HostTreeController {
                     proxyModel.removeHeader(host);
                 }                
                 decoratorManager.getHostDecoratorListener().decorationChanged();
+                fireDecoratorChanged();
             }
         });
     }
@@ -274,18 +275,16 @@ public class HostTreeController {
                     proxyModel.removeComponent(vm.getHostRef(), vm);
                 }
                 decoratorManager.getVmDecoratorListener().decorationChanged();
+                fireDecoratorChanged();
             }
         });
     }
-
-    public DecoratorProviderExtensionListener<HostRef> getHostDecoratorListener() {
-        return decoratorManager.getHostDecoratorListener();
+            
+    private void fireDecoratorChanged() {
+        decoratorManager.getInfoLabelDecoratorListener().fireDecorationChanged();
+        decoratorManager.getMainLabelDecoratorListener().fireDecorationChanged();
     }
-    
-    public DecoratorProviderExtensionListener<VmRef> getVmDecoratorListener() {
-        return decoratorManager.getVmDecoratorListener();
-    }
-
+            
     public void addHostFilter(HostFilter filter) {
         hostFilters.add(filter);
         filter.addFilterEventListener(filterListener);
@@ -377,5 +376,23 @@ public class HostTreeController {
     private class RefPayload<R extends Ref> {
         R reference;
         boolean expanded;
+    }
+    
+    // decorator accessors
+    
+    public DecoratorProviderExtensionListener<HostRef> getHostDecoratorListener() {
+        return decoratorManager.getHostDecoratorListener();
+    }
+    
+    public DecoratorProviderExtensionListener<VmRef> getVmDecoratorListener() {
+        return decoratorManager.getVmDecoratorListener();
+    }
+
+    public LabelDecoratorListener getInfoLabelDecoratorListener() {
+        return decoratorManager.getInfoLabelDecoratorListener();
+    }
+    
+    public LabelDecoratorListener getMainLabelDecoratorListener() {
+        return decoratorManager.getMainLabelDecoratorListener();
     }
 }
