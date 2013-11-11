@@ -59,5 +59,5 @@ public interface ReferenceContextAction extends ContextAction {
      * The {@link Filter} returned by this method is used to select what
      * {@link Ref} this {@code ReferenceAction} is applicable to.
      */
-    Filter<Ref> getFilter();
+    ReferenceFilter getFilter();
 }

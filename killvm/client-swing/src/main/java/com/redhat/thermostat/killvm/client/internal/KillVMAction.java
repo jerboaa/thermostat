@@ -40,8 +40,8 @@ import java.net.InetSocketAddress;
 import java.util.Objects;
 
 import com.redhat.thermostat.client.command.RequestQueue;
-import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.client.ui.ReferenceContextAction;
+import com.redhat.thermostat.client.ui.ReferenceFilter;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.RequestResponseListener;
@@ -115,16 +115,22 @@ public class KillVMAction implements ReferenceContextAction {
     }
 
     @Override
-    public Filter<Ref> getFilter() {
+    public ReferenceFilter getFilter() {
         return new LocalAndAliveFilter();
     }
 
-    private class LocalAndAliveFilter extends Filter<Ref> {
+    private class LocalAndAliveFilter extends ReferenceFilter {
+        
+        @Override
+        public boolean applies(Ref reference) {
+            return (reference instanceof VmRef);
+        }
+        
         @Override
         public boolean matches(Ref ref) {
             boolean match = false;
             
-            if (ref instanceof VmRef) {
+            if (applies(ref)) {
                 VmRef reference = (VmRef) ref;
                 VmInfo vmInfo = vmDao.getVmInfo(reference);
                 match = vmInfo.isAlive();

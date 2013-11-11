@@ -44,6 +44,7 @@ import javax.swing.SwingUtilities;
 import com.redhat.thermostat.client.swing.components.ThermostatPopupMenu;
 import com.redhat.thermostat.client.swing.internal.osgi.ContextActionServiceTracker;
 import com.redhat.thermostat.client.ui.ReferenceContextAction;
+import com.redhat.thermostat.client.ui.ReferenceFilter;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
@@ -93,31 +94,30 @@ public class ContextHandler implements ActionListener<ContextActionController.Co
                 
                 boolean showPopup = false;
                 for (final ReferenceContextAction action : actions) {
-                    
-                    if (!action.getFilter().matches(payload.ref))  {
-                        continue;
+                    ReferenceFilter filter = action.getFilter();
+                    if (filter.applies(payload.ref) && filter.matches(payload.ref))  {
+                     
+                        showPopup = true;
+                        
+                        JMenuItem contextAction = createContextMenuItem();
+                        contextAction.setText(action.getName().getContents());
+                        contextAction.setToolTipText(action.getDescription().getContents());
+                        contextAction.addActionListener(new java.awt.event.ActionListener() {
+                            @Override
+                            public void actionPerformed(java.awt.event.ActionEvent e) {
+                                Payload actionPayload = new Payload();
+                                actionPayload.reference = payload.ref;
+                                actionPayload.action = action;
+                                
+                                notifier.fireAction(ContextHandlerAction.ACTION_PERFORMED, actionPayload);
+                            }
+                        });
+                        
+                        // the component name is for unit tests only
+                        contextAction.setName(action.getName().getContents());
+                        
+                        contextMenu.add(contextAction);
                     }
-                    
-                    showPopup = true;
-                    
-                    JMenuItem contextAction = createContextMenuItem();
-                    contextAction.setText(action.getName().getContents());
-                    contextAction.setToolTipText(action.getDescription().getContents());
-                    contextAction.addActionListener(new java.awt.event.ActionListener() {
-                        @Override
-                        public void actionPerformed(java.awt.event.ActionEvent e) {
-                            Payload actionPayload = new Payload();
-                            actionPayload.reference = payload.ref;
-                            actionPayload.action = action;
-                            
-                            notifier.fireAction(ContextHandlerAction.ACTION_PERFORMED, actionPayload);
-                        }
-                    });
-
-                    // the component name is for unit tests only
-                    contextAction.setName(action.getName().getContents());
-
-                    contextMenu.add(contextAction);
                 }
                 
                 if (showPopup) {

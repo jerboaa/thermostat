@@ -68,6 +68,7 @@ import com.redhat.thermostat.client.swing.internal.osgi.ContextActionServiceTrac
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.ContextHandler.ContextHandlerAction;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.ContextHandler.Payload;
 import com.redhat.thermostat.client.ui.ReferenceContextAction;
+import com.redhat.thermostat.client.ui.ReferenceFilter;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.shared.locale.LocalizedString;
@@ -116,6 +117,59 @@ public class ContextHandlerTest {
     public void setUp() {
         contextActionTracker = mock(ContextActionServiceTracker.class);
         actionEvent = mock(ActionEvent.class);
+    }
+    
+    @Test
+    public void testFilterEvaluatedOnlyIfApplies() {
+        
+        final ThermostatPopupMenu popup = mock(ThermostatPopupMenu.class);
+        
+        ContextActionController.Payload payload =
+                new ContextActionController.Payload();
+        
+        HostRef host0 = new HostRef("0", "0");
+        
+        payload.ref = host0;
+        
+        ReferenceFilter hostFilter0 = mock(ReferenceFilter.class);
+        when(hostFilter0.applies(host0)).thenReturn(false);
+        when(hostFilter0.matches(host0)).thenReturn(true);
+        
+        ReferenceFilter hostFilter1 = mock(ReferenceFilter.class);
+        when(hostFilter1.applies(host0)).thenReturn(true);
+        when(hostFilter1.matches(host0)).thenReturn(false);
+        
+        ReferenceContextAction hostAction0 = mock(ReferenceContextAction.class);
+        when(hostAction0.getFilter()).thenReturn(hostFilter0);
+        
+        ReferenceContextAction hostAction1 = mock(ReferenceContextAction.class);
+        when(hostAction1.getFilter()).thenReturn(hostFilter1);
+        
+        when(actionEvent.getPayload()).thenReturn(payload);
+        
+        List<ReferenceContextAction> hostActions = new ArrayList<>();
+        hostActions.add(hostAction0);
+        hostActions.add(hostAction1);
+        
+        when(contextActionTracker.getActions()).thenReturn(hostActions);
+        
+        ContextHandler handler = new ContextHandler(contextActionTracker) {
+            @Override
+            ThermostatPopupMenu createContextPopMenu() {
+                return popup;
+            }
+        };
+        
+        handler.actionPerformed(actionEvent);
+        waitForSwing();
+
+        verify(hostFilter0).applies(host0);
+        verify(hostFilter0, times(0)).matches(host0);
+
+        verifyNoMoreInteractions(hostFilter0);
+        
+        verify(hostFilter1).applies(host0);
+        verify(hostFilter1).matches(host0);
     }
     
     @Test
@@ -184,9 +238,10 @@ public class ContextHandlerTest {
         // *** test two actions, no filter
         
         // no reason to change the event, but add actions
-        Filter<Ref> hostFilter = mock(Filter.class);
+        ReferenceFilter hostFilter = mock(ReferenceFilter.class);
         when(hostFilter.matches(host0)).thenReturn(true).thenReturn(true);
-        
+        when(hostFilter.applies(host0)).thenReturn(true).thenReturn(true);
+
         LocalizedString name0 = new LocalizedString("actionName0");
         LocalizedString des0 = new LocalizedString("actionDesc0");
 
