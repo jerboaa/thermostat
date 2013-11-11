@@ -36,10 +36,8 @@
 
 package com.redhat.thermostat.client.swing.internal.vmlist.controller;
 
-import com.redhat.thermostat.client.core.vmlist.HostFilter;
-import com.redhat.thermostat.client.core.vmlist.VMFilter;
-import com.redhat.thermostat.client.swing.internal.HostFilterRegistry;
-import com.redhat.thermostat.client.swing.internal.VmFilterRegistry;
+import com.redhat.thermostat.client.swing.internal.ReferenceFilterRegistry;
+import com.redhat.thermostat.client.ui.ReferenceFilter;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry;
@@ -47,57 +45,36 @@ import com.redhat.thermostat.common.ThermostatExtensionRegistry.Action;
 
 public class FilterManager {
     
-    private ActionListener<ThermostatExtensionRegistry.Action> hostFilterListener;
-    private ActionListener<ThermostatExtensionRegistry.Action> vmFilterListener;
+    private ActionListener<ThermostatExtensionRegistry.Action> filterListener;
 
-    private VmFilterRegistry vmFilterRegistry;
-    private HostFilterRegistry hostFilterRegistry;
+    private ReferenceFilterRegistry filterRegistry;
     
-    public FilterManager(VmFilterRegistry vmFilterRegistry,
-                         HostFilterRegistry hostFilterRegistry,
+    public FilterManager(ReferenceFilterRegistry filterRegistry,
                          final HostTreeController hostController)
     {
         
-        hostFilterListener = new ActionListener<ThermostatExtensionRegistry.Action>() {
+        filterListener = new ActionListener<ThermostatExtensionRegistry.Action>() {
             @Override
             public void actionPerformed(ActionEvent<Action> actionEvent) {
                 if (actionEvent.getActionId() == Action.SERVICE_ADDED){
-                    hostController.addHostFilter((HostFilter) actionEvent.getPayload());
+                    hostController.addFilter((ReferenceFilter) actionEvent.getPayload());
                 } else {
-                    hostController.removeHostFilter((HostFilter) actionEvent.getPayload());
-                }
-            }
-        };
-        vmFilterListener = new  ActionListener<ThermostatExtensionRegistry.Action>() {
-            @Override
-            public void actionPerformed(ActionEvent<Action> actionEvent) {
-                if (actionEvent.getActionId() == Action.SERVICE_ADDED){
-                    hostController.addVMFilter((VMFilter) actionEvent.getPayload());
-                } else {
-                    hostController.removeVMFilter((VMFilter) actionEvent.getPayload());
+                    hostController.removeFilter((ReferenceFilter) actionEvent.getPayload());
                 }
             }
         };
         
-        this.vmFilterRegistry = vmFilterRegistry;
-        this.hostFilterRegistry = hostFilterRegistry;
+        this.filterRegistry = filterRegistry;
     }
     
     public void start() {
-        hostFilterRegistry.addActionListener(hostFilterListener);
-        hostFilterRegistry.start();
-
-        vmFilterRegistry.addActionListener(vmFilterListener);
-        vmFilterRegistry.start();
+        filterRegistry.addActionListener(filterListener);
+        filterRegistry.start();
     }
     
     public void stop() {
-        hostFilterRegistry.removeActionListener(hostFilterListener);
-        hostFilterListener = null;
-        hostFilterRegistry.stop();
-
-        vmFilterRegistry.removeActionListener(vmFilterListener);
-        vmFilterListener = null;
-        vmFilterRegistry.stop();
+        filterRegistry.removeActionListener(filterListener);
+        filterListener = null;
+        filterRegistry.stop();
     }
 }

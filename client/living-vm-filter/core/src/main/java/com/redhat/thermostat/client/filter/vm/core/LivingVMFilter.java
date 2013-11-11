@@ -36,13 +36,14 @@
 
 package com.redhat.thermostat.client.filter.vm.core;
 
-import com.redhat.thermostat.client.core.vmlist.VMFilter;
+import com.redhat.thermostat.client.ui.ReferenceFilter;
+import com.redhat.thermostat.storage.core.Ref;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
 
-public class LivingVMFilter extends VMFilter {
+public class LivingVMFilter extends ReferenceFilter {
 
     volatile boolean filterActive = true;
     
@@ -55,15 +56,25 @@ public class LivingVMFilter extends VMFilter {
     }
     
     @Override
-    public boolean matches(VmRef ref) {
-        if (!filterActive)
+    public boolean applies(Ref reference) {
+        return (reference instanceof VmRef);
+    }
+    
+    @Override
+    public boolean matches(Ref ref) {
+        if (!filterActive) {
             return true;
-
+        }
+        
+        if (!applies(ref)) {
+            return false;
+        }
+        
         // if the parent host if not alive, we don't want to hide this
         boolean match = true;
         
-        if (hostDao.isAlive(ref.getHostRef())) {
-            VmInfo vmInfo = vmDao.getVmInfo(ref);
+        if (hostDao.isAlive(((VmRef) ref).getHostRef())) {
+            VmInfo vmInfo = vmDao.getVmInfo((VmRef) ref);
             match = vmInfo.isAlive();
         }
 

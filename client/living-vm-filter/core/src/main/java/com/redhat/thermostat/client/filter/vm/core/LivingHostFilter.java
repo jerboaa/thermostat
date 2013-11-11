@@ -36,11 +36,12 @@
 
 package com.redhat.thermostat.client.filter.vm.core;
 
-import com.redhat.thermostat.client.core.vmlist.HostFilter;
+import com.redhat.thermostat.client.ui.ReferenceFilter;
 import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.Ref;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 
-public class LivingHostFilter extends HostFilter {
+public class LivingHostFilter extends ReferenceFilter {
 
     volatile boolean filterActive = true;
     
@@ -51,10 +52,16 @@ public class LivingHostFilter extends HostFilter {
     }
     
     @Override
-    public boolean matches(HostRef ref) {
+    public boolean applies(Ref reference) {
+        return (reference instanceof HostRef);
+    }
+    
+    @Override
+    public boolean matches(Ref ref) {
         if (!filterActive)
             return true;
-       return dao.isAlive(ref);
+        
+        return applies(ref) && dao.isAlive((HostRef) ref);
     }
 
     public void setActive(boolean active) {

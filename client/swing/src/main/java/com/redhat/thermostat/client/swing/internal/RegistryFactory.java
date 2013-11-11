@@ -50,12 +50,8 @@ class RegistryFactory {
         this.context = context;
     }
 
-    HostFilterRegistry createHostFilterRegistry() throws InvalidSyntaxException {
-        return new HostFilterRegistry(context);
-    }
-
-    VmFilterRegistry createVmFilterRegistry() throws InvalidSyntaxException {
-        return new VmFilterRegistry(context);
+    ReferenceFilterRegistry createFilterRegistry() throws InvalidSyntaxException {
+        return new ReferenceFilterRegistry(context);
     }
     
     MenuRegistry createMenuRegistry() throws InvalidSyntaxException {

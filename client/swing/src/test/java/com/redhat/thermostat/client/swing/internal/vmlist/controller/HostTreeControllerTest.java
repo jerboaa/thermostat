@@ -40,7 +40,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
@@ -54,14 +53,14 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.redhat.thermostat.client.core.vmlist.HostFilter;
-import com.redhat.thermostat.client.core.vmlist.VMFilter;
 import com.redhat.thermostat.client.swing.internal.accordion.Accordion;
 import com.redhat.thermostat.client.swing.internal.accordion.AccordionModel;
 import com.redhat.thermostat.client.swing.internal.vmlist.HostTreeComponentFactory;
 import com.redhat.thermostat.client.ui.ReferenceFieldIconDecorator;
 import com.redhat.thermostat.client.ui.ReferenceFieldLabelDecorator;
+import com.redhat.thermostat.client.ui.ReferenceFilter;
 import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.Ref;
 import com.redhat.thermostat.storage.core.VmRef;
 
 public class HostTreeControllerTest {
@@ -115,16 +114,22 @@ public class HostTreeControllerTest {
         }
     }
     
-    private abstract class TestHostFilter extends HostFilter {
+    private abstract class TestHostFilter extends ReferenceFilter {
         boolean filter;
         @Override
-        public final boolean matches(HostRef toMatch) {
+        public final boolean matches(Ref toMatch) {
+            
             if (!filter) return true;
             
             return matchesImpl(toMatch);
         }
         
-        protected abstract boolean matchesImpl(HostRef toMatch);
+        @Override
+        public boolean applies(Ref reference) {
+            return (reference instanceof HostRef);
+        }
+        
+        protected abstract boolean matchesImpl(Ref toMatch);
         
         public void toggle() {
             filter = !this.filter;
@@ -132,21 +137,15 @@ public class HostTreeControllerTest {
         }
     }
     
-    private abstract class TestVMFilter extends VMFilter {
+    private abstract class TestVMFilter extends TestHostFilter {
         boolean filter;
+        
         @Override
-        public final boolean matches(VmRef toMatch) {
-            if (!filter) return true;
-            
-            return matchesImpl(toMatch);
+        public boolean applies(Ref reference) {
+            return (reference instanceof VmRef);
         }
-        
-        protected abstract boolean matchesImpl(VmRef toMatch);
-        
-        public void toggle() {
-            filter = !this.filter;
-            notify(FilterEvent.FILTER_CHANGED);
-        }
+
+        protected abstract boolean matchesImpl(Ref toMatch);
     }
     
     @Test
@@ -175,14 +174,14 @@ public class HostTreeControllerTest {
         
         TestHostFilter filter1 = new TestHostFilter() {
             @Override
-            protected boolean matchesImpl(HostRef toMatch) {
+            protected boolean matchesImpl(Ref toMatch) {
                 return (toMatch.getName().equals("0"));
             }
         };
         // enable the filter first
         filter1.toggle();
         
-        controller.addHostFilter(filter1);
+        controller.addFilter(filter1);
         
         waitForSwing();
         
@@ -206,12 +205,12 @@ public class HostTreeControllerTest {
         // now on with vms, filter not enabled at first
         TestVMFilter filter2 = new TestVMFilter() {
             @Override
-            protected boolean matchesImpl(VmRef toMatch) {
+            protected boolean matchesImpl(Ref toMatch) {
                 return (toMatch.getName().equals("vm0"));
             }
         };
         
-        controller.addVMFilter(filter2);
+        controller.addFilter(filter2);
         
         waitForSwing();
         
@@ -249,6 +248,9 @@ public class HostTreeControllerTest {
         components  = proxyModel.getComponents(host1);
         assertTrue(components.isEmpty());
         
+        headers = proxyModel.getHeaders();
+        assertEquals(2, headers.size());
+        
         // now test if controller reacts to updates
         
         controller.updateVMStatus(vm0);
@@ -282,7 +284,7 @@ public class HostTreeControllerTest {
 
         TestHostFilter filter = new TestHostFilter() {
             @Override
-            protected boolean matchesImpl(HostRef toMatch) {
+            protected boolean matchesImpl(Ref toMatch) {
                 return (toMatch.getName().equals("0"));
             }
         };
@@ -296,7 +298,7 @@ public class HostTreeControllerTest {
         waitForSwing();
         
         // filter out host 0, then add the vms
-        controller.addHostFilter(filter);
+        controller.addFilter(filter);
         
         waitForSwing();
         

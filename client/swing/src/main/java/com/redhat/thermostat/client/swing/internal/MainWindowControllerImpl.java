@@ -169,8 +169,7 @@ public class MainWindowControllerImpl implements MainWindowController {
     };
 
     private VmInformationControllerProvider vmInfoControllerProvider;
-    private VmFilterRegistry vmFilterRegistry;
-    private HostFilterRegistry hostFilterRegistry;
+    private ReferenceFilterRegistry filterRegistry;
     private FilterManager filterManager;
 
     private DecoratorRegistryController decoratorController;
@@ -191,8 +190,7 @@ public class MainWindowControllerImpl implements MainWindowController {
         decoratorController = registryFactory.createDecoratorController();
 
         try {
-            vmFilterRegistry = registryFactory.createVmFilterRegistry();
-            hostFilterRegistry = registryFactory.createHostFilterRegistry();
+            filterRegistry = registryFactory.createFilterRegistry();
             
             menuRegistry = registryFactory.createMenuRegistry();
             vmInfoRegistry = registryFactory.createVMInformationRegistry();
@@ -371,8 +369,7 @@ public class MainWindowControllerImpl implements MainWindowController {
         menuRegistry.start();
 
         HostTreeController hostTreeController = view.getHostTreeController();
-        filterManager = new FilterManager(vmFilterRegistry, hostFilterRegistry,
-                                          hostTreeController);
+        filterManager = new FilterManager(filterRegistry, hostTreeController);
 
         filterManager.start();
         

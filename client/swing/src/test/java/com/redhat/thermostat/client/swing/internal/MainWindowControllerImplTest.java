@@ -98,8 +98,7 @@ public class MainWindowControllerImplTest {
     private HostInfoDAO mockHostsDAO;
     private VmInfoDAO mockVmsDAO;
 
-    private HostFilterRegistry hostFilterRegistry;
-    private VmFilterRegistry vmFilterRegistry;
+    private ReferenceFilterRegistry hostFilterRegistry;
 
     private VMInformationRegistry vmInfoRegistry;
     private MenuRegistry menus;
@@ -190,8 +189,7 @@ public class MainWindowControllerImplTest {
         when(view.getNotifier()).thenReturn(notifier);
         
         RegistryFactory registryFactory = mock(RegistryFactory.class);
-        hostFilterRegistry = mock(HostFilterRegistry.class);
-        vmFilterRegistry = mock(VmFilterRegistry.class);
+        hostFilterRegistry = mock(ReferenceFilterRegistry.class);
 
         vmInfoRegistry = mock(VMInformationRegistry.class);
         menus = mock(MenuRegistry.class);
@@ -200,17 +198,13 @@ public class MainWindowControllerImplTest {
         decoratorController = mock(DecoratorRegistryController.class);
         
         when(registryFactory.createMenuRegistry()).thenReturn(menus);
-        when(registryFactory.createHostFilterRegistry()).thenReturn(hostFilterRegistry);
-        when(registryFactory.createVmFilterRegistry()).thenReturn(vmFilterRegistry);
+        when(registryFactory.createFilterRegistry()).thenReturn(hostFilterRegistry);
         when(registryFactory.createVMInformationRegistry()).thenReturn(vmInfoRegistry);
         when(registryFactory.createDecoratorController()).thenReturn(decoratorController);
         
         ArgumentCaptor<ActionListener> grabHostFiltersListener = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(hostFilterRegistry).addActionListener(grabHostFiltersListener.capture());
 
-        ArgumentCaptor<ActionListener> grabVmFiltersListener = ArgumentCaptor.forClass(ActionListener.class);
-        doNothing().when(vmFilterRegistry).addActionListener(grabVmFiltersListener.capture());
-        
         ArgumentCaptor<ActionListener> grabInfoRegistry = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(vmInfoRegistry).addActionListener(grabInfoRegistry.capture());
 

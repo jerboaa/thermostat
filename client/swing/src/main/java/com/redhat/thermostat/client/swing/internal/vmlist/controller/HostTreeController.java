@@ -41,9 +41,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.swing.SwingUtilities;
 
-import com.redhat.thermostat.client.core.vmlist.HostFilter;
-import com.redhat.thermostat.client.core.vmlist.VMFilter;
-
 import com.redhat.thermostat.client.swing.internal.accordion.Accordion;
 import com.redhat.thermostat.client.swing.internal.accordion.AccordionComponent;
 import com.redhat.thermostat.client.swing.internal.accordion.AccordionComponentEvent;
@@ -52,17 +49,14 @@ import com.redhat.thermostat.client.swing.internal.accordion.AccordionItemSelect
 import com.redhat.thermostat.client.swing.internal.accordion.AccordionModel;
 import com.redhat.thermostat.client.swing.internal.accordion.AccordionModelChangeListener;
 import com.redhat.thermostat.client.swing.internal.accordion.ItemSelectedEvent;
-
 import com.redhat.thermostat.client.swing.internal.vmlist.HostTreeComponentFactory;
 import com.redhat.thermostat.client.swing.internal.vmlist.ReferenceProvider;
-
+import com.redhat.thermostat.client.ui.ReferenceFilter;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
-
 import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.common.Filter.FilterEvent;
-
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Ref;
 import com.redhat.thermostat.storage.core.VmRef;
@@ -78,8 +72,7 @@ public class HostTreeController {
     
     private final ActionNotifier<ReferenceSelection> referenceNotifier;
 
-    private CopyOnWriteArrayList<Filter<HostRef>> hostFilters;
-    private CopyOnWriteArrayList<Filter<VmRef>> vmFilters;
+    private CopyOnWriteArrayList<ReferenceFilter> filters;
     
     private FilterListener filterListener;
     
@@ -120,8 +113,7 @@ public class HostTreeController {
         
         filterListener = new FilterListener();
         
-        hostFilters = new CopyOnWriteArrayList<>();
-        vmFilters = new CopyOnWriteArrayList<>();
+        filters = new CopyOnWriteArrayList<>();
         
         fullModel = new AccordionModel<>();
         fullModel.addAccordionModelChangeListener(new AccordionModelProxy());
@@ -151,7 +143,7 @@ public class HostTreeController {
             @Override
             public void run() {
                 fullModel.addHeader(host);
-                if (filter(hostFilters, host)) {
+                if (filter(filters, host)) {
                     proxyModel.removeHeader(host);
                 }
             }
@@ -162,7 +154,7 @@ public class HostTreeController {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                if (filter(hostFilters, host)) {
+                if (filter(filters, host)) {
                     proxyModel.removeHeader(host);
                 }
                 fireDecoratorChanged();
@@ -205,24 +197,26 @@ public class HostTreeController {
                 
                 // adding a vm may add an host, so we need to be sure
                 // the host is not filtered before checking the vm itself
-                if (filter(hostFilters, vm.getHostRef())) {
+                if (filter(filters, vm.getHostRef())) {
                     
                     // this will also remove all the vm, so we can skip the
                     // next filtering step
                     proxyModel.removeHeader(vm.getHostRef());
                     
                 } else
-                    if (filter(vmFilters, vm)) {
+                    if (filter(filters, vm)) {
                     proxyModel.removeComponent(vm.getHostRef(), vm);
                 }
             }
         });
     }
 
-    private <R> boolean filter(CopyOnWriteArrayList<Filter<R>> filters, R ref) {
-        for (Filter<R> filter : filters) {
-            if (!filter.matches(ref)) {
-                return true;
+    private boolean filter(CopyOnWriteArrayList<ReferenceFilter> filters, Ref ref) {
+        for (ReferenceFilter filter : filters) {
+            if (filter.applies(ref)) {
+                if (!filter.matches(ref)) {
+                    return true;
+                }
             }
         }
         return false;
@@ -275,7 +269,7 @@ public class HostTreeController {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                if (filter(vmFilters, vm)) {
+                if (filter(filters, vm)) {
                     proxyModel.removeComponent(vm.getHostRef(), vm);
                 }
                 fireDecoratorChanged();
@@ -287,30 +281,6 @@ public class HostTreeController {
         decoratorManager.getInfoLabelDecoratorListener().fireDecorationChanged();
         decoratorManager.getMainLabelDecoratorListener().fireDecorationChanged();
         decoratorManager.getIconDecoratorListener().fireDecorationChanged();
-    }
-            
-    public void addHostFilter(HostFilter filter) {
-        hostFilters.add(filter);
-        filter.addFilterEventListener(filterListener);
-        rebuildTree();
-    }
-
-    public void removeHostFilter(HostFilter filter) {
-        hostFilters.remove(filter);
-        filter.removeFilterEventListener(filterListener);
-        rebuildTree();
-    }
-
-    public void addVMFilter(VMFilter filter) {
-        vmFilters.add(filter);
-        filter.addFilterEventListener(filterListener);
-        rebuildTree();
-    }
-
-    public void removeVMFilter(VMFilter filter) {
-        vmFilters.remove(filter);
-        filter.removeFilterEventListener(filterListener);
-        rebuildTree();
     }
     
     private synchronized void rebuildTree() {
@@ -328,7 +298,7 @@ public class HostTreeController {
         AccordionModel<RefPayload<HostRef>, RefPayload<VmRef>> _model = new AccordionModel<>();
         List<HostRef> hosts = fullModel.getHeaders();
         for (HostRef host : hosts) {
-            if (!filter(hostFilters, host)) {
+            if (!filter(filters, host)) {
                 
                 RefPayload<HostRef> hostPayload = new RefPayload<>(); 
                 hostPayload.reference = host;
@@ -337,7 +307,7 @@ public class HostTreeController {
                 _model.addHeader(hostPayload);
                 List<VmRef> vms = fullModel.getComponents(host);
                 for (VmRef vm : vms) {
-                    if (!filter(vmFilters, vm)) {
+                    if (!filter(filters, vm)) {
                         
                         RefPayload<VmRef> vmPayload = new RefPayload<>(); 
                         vmPayload.reference = vm;                        
@@ -386,5 +356,17 @@ public class HostTreeController {
 
     public DecoratorManager getDecoratorManager() {
         return decoratorManager;
+    }
+
+    public void addFilter(ReferenceFilter filter) {
+        filters.add(filter);
+        filter.addFilterEventListener(filterListener);
+        rebuildTree();
+    }
+
+    public void removeFilter(ReferenceFilter filter) {
+        filters.remove(filter);
+        filter.removeFilterEventListener(filterListener);
+        rebuildTree();
     }
 }

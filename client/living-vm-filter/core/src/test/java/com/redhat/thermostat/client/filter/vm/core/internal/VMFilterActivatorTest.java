@@ -41,11 +41,10 @@ import static org.mockito.Mockito.mock;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.client.core.vmlist.HostFilter;
-import com.redhat.thermostat.client.core.vmlist.VMFilter;
 import com.redhat.thermostat.client.filter.vm.core.LivingHostFilter;
 import com.redhat.thermostat.client.filter.vm.core.LivingVMFilter;
 import com.redhat.thermostat.client.ui.MenuAction;
+import com.redhat.thermostat.client.ui.ReferenceFilter;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.testutils.StubBundleContext;
@@ -65,8 +64,8 @@ public class VMFilterActivatorTest {
         ctx.registerService(HostInfoDAO.class, hostDao, null);
 
         assertTrue(ctx.isServiceRegistered(MenuAction.class.getName(), LivingVMFilterMenuAction.class));
-        assertTrue(ctx.isServiceRegistered(VMFilter.class.getName(), LivingVMFilter.class));
-        assertTrue(ctx.isServiceRegistered(HostFilter.class.getName(), LivingHostFilter.class));
+        assertTrue(ctx.isServiceRegistered(ReferenceFilter.class.getName(), LivingVMFilter.class));
+        assertTrue(ctx.isServiceRegistered(ReferenceFilter.class.getName(), LivingHostFilter.class));
     }
 
 }

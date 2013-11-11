@@ -46,11 +46,10 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.client.core.vmlist.HostFilter;
-import com.redhat.thermostat.client.core.vmlist.VMFilter;
 import com.redhat.thermostat.client.filter.vm.core.LivingHostFilter;
 import com.redhat.thermostat.client.filter.vm.core.LivingVMFilter;
 import com.redhat.thermostat.client.ui.MenuAction;
+import com.redhat.thermostat.client.ui.ReferenceFilter;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
@@ -81,11 +80,11 @@ public class VMFilterActivator implements BundleActivator {
                 HostInfoDAO hostDao = (HostInfoDAO) services.get(HostInfoDAO.class.getName());
 
                 LivingHostFilter hostFilter = new LivingHostFilter(hostDao);
-                registration = context.registerService(HostFilter.class.getName(), hostFilter, null);
+                registration = context.registerService(ReferenceFilter.class.getName(), hostFilter, null);
                 registeredServices.add(registration);
 
                 LivingVMFilter vmFilter = new LivingVMFilter(vmDao, hostDao);
-                registration = context.registerService(VMFilter.class.getName(), vmFilter, null);
+                registration = context.registerService(ReferenceFilter.class.getName(), vmFilter, null);
                 registeredServices.add(registration);
 
                 LivingVMFilterMenuAction vmMenu = new LivingVMFilterMenuAction(vmFilter);
