@@ -189,6 +189,8 @@
       <artifactId>thermostat-distribution</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
+      <!-- thermostat-distribution has packaging type pom -->
+      <type>pom</type>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
