@@ -60,6 +60,8 @@ public interface Remove<T extends Pojo> extends DataModifyingStatement<T> {
     
     /**
      * Applies this remove operation.
+     *
+     * @throws StorageException if this operation fails
      */
     int apply();
 

@@ -30,6 +30,9 @@ public interface PreparedStatement<T extends Pojo> extends PreparedStatementSett
      * 
      * @throws StatementExecutionException
      *             If the prepared statement wasn't valid for execution.
+     * @throws StorageException
+     *             If the underlying storage throws an exception while executing
+     *             this statement
      */
     int execute() throws StatementExecutionException;
 
@@ -40,6 +43,9 @@ public interface PreparedStatement<T extends Pojo> extends PreparedStatementSett
      * 
      * @throws StatementExecutionException
      *             If the prepared statement wasn't valid for execution.
+     * @throws StorageException
+     *             If the underlying storage throws an exception while executing
+     *             this query
      */
     Cursor<T> executeQuery() throws StatementExecutionException;
     

@@ -49,6 +49,14 @@ import com.redhat.thermostat.storage.model.Pojo;
 @Service
 public interface Storage {
 
+    /**
+     * Register the category into the Storage. A Category must be registered
+     * into storage (normally handled by the Category's constructor) before it
+     * can be used.
+     *
+     * @throws StorageException
+     *             If the category can not be registered for some reason
+     */
     void registerCategory(Category<?> category);
     
     /**
@@ -77,13 +85,36 @@ public interface Storage {
 
     /**
      * Drop all data related to the specified agent.
+     *
+     * @param agentId
+     *            The id of the agent
+     * @throws StorageException
+     *            If the purge operation fails
      */
     void purge(String agentId);
 
+    /**
+     * Save the contents of the input stream as the given name.
+     *
+     * @throws StorageException
+     *            If the save operation fails
+     */
     void saveFile(String filename, InputStream data);
 
+    /**
+     * Load the file with the given name and return the data as an InputStream.
+     *
+     * @throws StorageException
+     *            If the load operation fails
+     */
     InputStream loadFile(String filename);
 
+    /**
+     * Shutdown the storage
+     *
+     * @throws StorageException
+     *            If the shutdown operation fails
+     */
     void shutdown();
 
 }

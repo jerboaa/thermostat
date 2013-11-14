@@ -77,6 +77,8 @@ public interface Replace<T extends Pojo> extends DataModifyingStatement<T> {
 
     /**
      * Applies this {@code Replace} operation to the storage.
+     *
+     * @throws StorageException If the operation fails
      */
     int apply();
 

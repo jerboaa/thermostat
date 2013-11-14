@@ -73,6 +73,8 @@ public interface Update<T extends Pojo> extends DataModifyingStatement<T> {
 
     /**
      * Applies this update operation.
+     *
+     * @throws StorageException if this operation fails
      */
     int apply();
 }

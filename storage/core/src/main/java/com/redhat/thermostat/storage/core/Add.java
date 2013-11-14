@@ -63,6 +63,8 @@ public interface Add<T extends Pojo> extends DataModifyingStatement<T> {
 
     /**
      * Applies this {@code Add} operation to storage.
+     *
+     * @throws StorageException if the operation fails
      */
     int apply();
 }

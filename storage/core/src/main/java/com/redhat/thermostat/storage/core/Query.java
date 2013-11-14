@@ -65,6 +65,12 @@ public interface Query<T extends Pojo> extends Statement<T> {
 
     void limit(int n);
 
+    /**
+     * @throws StorageException
+     *             If the operation fails
+     *
+     * @return a {@link Cursor} that can be used to iterate over the results.
+     */
     Cursor<T> execute();
     
     Expression getWhereExpression();

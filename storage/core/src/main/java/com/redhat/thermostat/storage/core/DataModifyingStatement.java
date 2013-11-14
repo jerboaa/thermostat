@@ -23,6 +23,8 @@ public interface DataModifyingStatement<T extends Pojo> extends Statement<T> {
     
     /**
      * Executes this statement.
+     *
+     * @throws StorageException if this statement fails to apply
      * 
      * @return a number greater than or equal to zero on success. A negative
      *         failure code otherwise.
