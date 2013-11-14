@@ -95,10 +95,7 @@ public class DecoratorManager {
     }
 
     private void setIcons(final ReferenceComponent component) {
-        Icons icons = new Icons();
-        icons.main = component.getIcon();
-        icons.selected = component.getSelectedIcon();
-        icons = createComponentIcon(iconDecorator, component.getReference(), icons);
+        Icons icons = createComponentIcon(iconDecorator, component.getReference());
         
         component.setIcon(icons.main, icons.selected);
     }
@@ -108,9 +105,10 @@ public class DecoratorManager {
     }
     
     private <R extends Ref> Icons createComponentIcon(DecoratorListener<ReferenceFieldIconDecorator> listener,
-                                                      R reference,
-                                                      Icons originalIcons)
+                                                      R reference)
     {
+        Icons originalIcons = new Icons();
+        
         for (ReferenceFieldIconDecorator decorator : listener.getDecorators()) {
             originalIcons.main = (Icon) decorator.getIcon(originalIcons.main, reference);
             originalIcons.selected = (Icon) decorator.getSelectedIcon(originalIcons.selected, reference);

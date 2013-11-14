@@ -36,8 +36,11 @@
 
 package com.redhat.thermostat.client.filter.vm.swing;
 
+import java.awt.Paint;
+
 import com.redhat.thermostat.client.filter.host.swing.IconUtils;
 import com.redhat.thermostat.client.swing.IconResource;
+import com.redhat.thermostat.client.swing.UIDefaults;
 import com.redhat.thermostat.client.swing.components.CompositeIcon;
 import com.redhat.thermostat.client.swing.components.Icon;
 import com.redhat.thermostat.client.ui.PlatformIcon;
@@ -47,9 +50,30 @@ import com.redhat.thermostat.storage.core.VmRef;
 
 public class VMIconDecorator implements ReferenceFieldIconDecorator {
 
-    private static final Icon ICON = IconUtils.resizeIcon(IconResource.JAVA_APPLICATION_24.getIcon(), 32);
-    private static final Icon SELECTED = CompositeIcon.createDefaultComposite(ICON, true);
+    private static Icon ICON;
+    private static Icon SELECTED;
 
+    private static VMIconDecorator theInstance;
+    public static synchronized VMIconDecorator getInstance(UIDefaults uiDefaults) {
+        
+        if (theInstance == null) {            
+            int size = uiDefaults.getReferenceFieldDefaultIconSize();
+            Paint fg = uiDefaults.getReferenceFieldIconColor();
+            Paint selected = uiDefaults.getReferenceFieldIconSelectedColor();
+            
+            Icon vmIcon = IconUtils.resizeIcon(IconResource.JAVA_APPLICATION_24.getIcon(), size);
+            
+            ICON = CompositeIcon.createDefaultComposite(vmIcon, fg);
+            SELECTED = CompositeIcon.createDefaultComposite(vmIcon, selected);
+            
+            theInstance = new VMIconDecorator();
+        }
+        
+        return theInstance;
+    }
+    
+    private VMIconDecorator() {}
+    
     @Override
     public int getOrderValue() {
         return ORDER_FIRST;

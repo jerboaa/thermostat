@@ -41,6 +41,7 @@ import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.Paint;
 import java.awt.image.BufferedImage;
 import java.beans.Transient;
 
@@ -97,7 +98,7 @@ public class CompositeIcon extends Icon {
      * Creates a default composite icon suitable for highlight.
      * The default colours are defined based on the underlying look and feel. 
      */
-    public static Icon createDefaultComposite(Icon source, boolean selected) {
-        return new CompositeIcon(source, new BaseIcon(true, source));
+    public static Icon createDefaultComposite(Icon source, Paint paint) {
+        return new CompositeIcon(source, new BaseIcon(paint, source));
     }
 }

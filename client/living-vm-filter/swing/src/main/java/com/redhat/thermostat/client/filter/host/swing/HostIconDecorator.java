@@ -36,7 +36,10 @@
 
 package com.redhat.thermostat.client.filter.host.swing;
 
+import java.awt.Paint;
+
 import com.redhat.thermostat.client.swing.IconResource;
+import com.redhat.thermostat.client.swing.UIDefaults;
 import com.redhat.thermostat.client.swing.components.CompositeIcon;
 import com.redhat.thermostat.client.swing.components.Icon;
 import com.redhat.thermostat.client.ui.PlatformIcon;
@@ -46,9 +49,30 @@ import com.redhat.thermostat.storage.core.Ref;
 
 public class HostIconDecorator implements ReferenceFieldIconDecorator {
     
-    private static final Icon ICON = IconUtils.resizeIcon(IconResource.HOST_24.getIcon(), 32);
-    private static final Icon SELECTED = CompositeIcon.createDefaultComposite(ICON, true);
+    private static Icon ICON;
+    private static Icon SELECTED;
 
+    private static HostIconDecorator theInstance;
+    public static synchronized HostIconDecorator getInstance(UIDefaults uiDefaults) {
+        
+        if (theInstance == null) {            
+            int size = uiDefaults.getReferenceFieldDefaultIconSize();
+            Paint fg = uiDefaults.getReferenceFieldIconColor();
+            Paint selected = uiDefaults.getReferenceFieldIconSelectedColor();
+            
+            Icon hostIcon = IconUtils.resizeIcon(IconResource.HOST_24.getIcon(), size);
+            
+            ICON = CompositeIcon.createDefaultComposite(hostIcon, fg);
+            SELECTED = CompositeIcon.createDefaultComposite(hostIcon, selected);
+            
+            theInstance = new HostIconDecorator();
+        }
+        
+        return theInstance;
+    }
+    
+    private HostIconDecorator() {}
+    
     @Override
     public int getOrderValue() {
         return ORDER_FIRST;

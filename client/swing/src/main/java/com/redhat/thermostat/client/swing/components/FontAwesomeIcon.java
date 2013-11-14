@@ -44,6 +44,7 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.Paint;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -67,7 +68,7 @@ public class FontAwesomeIcon extends Icon {
     
     private Font font;
     
-    private Color color;
+    private Paint color;
     
     static {
         try {
@@ -97,7 +98,7 @@ public class FontAwesomeIcon extends Icon {
     }
 
     /**
-     * Creates a new {@link FontAwesomeIcon} painted in the given {@link Color}.
+     * Creates a new {@link FontAwesomeIcon} painted in the given {@link Paint}.
      * 
      * <br /><br />
      * 
@@ -108,7 +109,7 @@ public class FontAwesomeIcon extends Icon {
      * 
      * @see {@link http://fortawesome.github.io/Font-Awesome/cheatsheet/}
      */
-    public FontAwesomeIcon(char iconID, int size, Color color) {
+    public FontAwesomeIcon(char iconID, int size, Paint color) {
         this.iconID = iconID;
         this.size = size;
         font = awesome.deriveFont(Font.PLAIN, size);
@@ -129,7 +130,7 @@ public class FontAwesomeIcon extends Icon {
                                       RenderingHints.VALUE_RENDER_QUALITY);
 
             graphics.setFont(font);
-            graphics.setColor(color);
+            graphics.setPaint(color);
             
             FontMetrics metrics = graphics.getFontMetrics(font);
             int width = metrics.charWidth(iconID);

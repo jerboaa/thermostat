@@ -36,26 +36,21 @@
 
 package com.redhat.thermostat.client.swing.components;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Image;
 import java.awt.Paint;
-import java.awt.image.BufferedImage;
-import java.beans.Transient;
 
 import com.redhat.thermostat.client.swing.GraphicsUtils;
-import com.redhat.thermostat.client.swing.internal.vmlist.UIDefaults;
 
 @SuppressWarnings("serial")
 class BaseIcon extends Icon {
 
-    private boolean selected;
+    private Paint paint;
     private Icon source;
     
-    public BaseIcon(boolean selected, Icon source) {
-        this.selected = selected;
+    public BaseIcon(Paint paint, Icon source) {
+        this.paint = paint;
         this.source = source;
     }
     
@@ -63,7 +58,7 @@ class BaseIcon extends Icon {
     public synchronized void paintIcon(Component c, Graphics g, int x, int y) {
         GraphicsUtils utils = GraphicsUtils.getInstance();
         Graphics2D graphics = utils.createAAGraphics(g);
-        graphics.setPaint(getPaint());
+        graphics.setPaint(paint);
         graphics.fillRect(x, y, getIconWidth(), getIconHeight());
         graphics.dispose();
     }
@@ -76,14 +71,5 @@ class BaseIcon extends Icon {
     @Override
     public int getIconWidth() {
         return source.getIconWidth();
-    }
-    
-    private Paint getPaint() {
-        UIDefaults palette = UIDefaults.getInstance();
-        Color color = palette.getComponentFGColor();
-        if (selected) {
-            color = palette.getSelectedComponentFGColor();
-        }
-        return color;
     }
 }

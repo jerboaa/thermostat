@@ -52,6 +52,8 @@ import com.redhat.thermostat.client.swing.components.DebugBorder;
 import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.client.swing.components.Icon;
 
+import com.redhat.thermostat.client.swing.internal.vmlist.UIDefaultsImpl;
+
 @SuppressWarnings("serial")
 class TopSidePane extends JPanel {
 
@@ -59,7 +61,7 @@ class TopSidePane extends JPanel {
     
     static int ICON_WIDTH = 24;
 
-    static Color ICON_BG_COLOR = ThermostatSidePanel.FG_TEXT_COLOR;
+    static Color ICON_BG_COLOR = UIDefaultsImpl.getInstance().getReferenceFieldIconColor();
     
     static Color FG_COLOR = ThermostatSidePanel.FG_COLOR;
     private Color currentFGColor = ThermostatSidePanel.FG_COLOR;
@@ -67,7 +69,7 @@ class TopSidePane extends JPanel {
     public TopSidePane() {
         setBackground(Color.WHITE);
         setLayout(new BorderLayout());
-                
+        
         final Icon mainIcon = new FontAwesomeIcon('\uf100', ICON_WIDTH, FG_COLOR);
         final Icon hover = new FontAwesomeIcon('\uf100', ICON_WIDTH, ICON_BG_COLOR);
         

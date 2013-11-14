@@ -49,17 +49,17 @@ public class ReferenceComponentPainter implements TitledPanePainter {
 
     @Override
     public Color getSelectedForeground() {
-        return UIDefaults.getInstance().getSelectedComponentFGColor();
+        return UIDefaultsImpl.getInstance().getSelectedComponentFGColor();
     }
     
     @Override
     public Color getUnselectedForeground() {
-        return UIDefaults.getInstance().getComponentFGColor();
+        return UIDefaultsImpl.getInstance().getComponentFGColor();
     }
 
     @Override
     public void paint(Graphics2D g, AccordionComponent component, int width, int height) {
-        UIDefaults palette = UIDefaults.getInstance();
+        UIDefaultsImpl palette = UIDefaultsImpl.getInstance();
 
         GraphicsUtils utils = GraphicsUtils.getInstance();
         Graphics2D graphics = utils.createAAGraphics(g);

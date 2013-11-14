@@ -49,7 +49,7 @@ import com.redhat.thermostat.client.ui.Palette;
 @SuppressWarnings("serial")
 public class ThermostatSidePanel extends JPanel {
     
-    public static final Color BG_COLOR = Palette.DROID_GRAY.getColor(); 
+    public static final Color BG_COLOR = Palette.DROID_GRAY.getColor();
     
     public static final Color FG_COLOR = Palette.EARL_GRAY.getColor();
     public static final Color FG_TEXT_COLOR = Palette.LIGHT_GRAY.getColor();

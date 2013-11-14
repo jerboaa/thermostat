@@ -44,44 +44,49 @@ import java.awt.Color;
  */
 public enum Palette {
 
-    THERMOSTAT_BLU(new Color(74, 93, 117)),
-    THERMOSTAT_RED(new Color(226, 46, 42)),
+    WHITE(Color.WHITE),
     
-    RED(new Color(192, 0, 0)),
-    PALE_RED(new Color(192, 80, 77)),
-    
-    SKY_BLUE(new Color(79, 129, 189)),
-    AZUREUS(new Color(0, 176, 190)),
-    EGYPTIAN_BLUE(new Color(74, 144, 217)),
-    DIRTY_CYAN(new Color(75, 172, 198)),
-    PRUSSIAN_BLUE(new Color(0, 49, 83)),
-    
-    GREEN(new Color(146, 208, 80)),
-    TUNDRA_GREEN(new Color(155, 187, 89)),
-
-    POMP_AND_POWER_VIOLET(new Color(128, 100, 162)),
-    VIOLET(new Color(112, 48, 160)),
-
-    EARL_GRAY(new Color(128, 128, 128)),
-    
-    PALE_GRAY(new Color(235, 235, 235)),
     LIGHT_GRAY(new Color(242, 242, 242)),
+    PALE_GRAY(new Color(235, 235, 235)),
     GRAY(new Color(216, 216, 216)),
     DARK_GRAY(new Color(168, 172, 168)),
+    EARL_GRAY(new Color(128, 128, 128)),
 
-    GRANITA_ORANGE(new Color(247,150,70)),
-    
-    BLACK(Color.BLACK),
-    WHITE(Color.WHITE),
-
-    DARK_BLUE(new Color(0x030A0C)),
-    ROYAL_BLUE(new Color(0x0A242D)),
-    ELEGANT_CYAN(new Color(0x39CAFF)),
     ELEGANT_BLACK(new Color(0x34313A)),
     ROYAL_BLACK(new Color(0x2E2B33)),
     
-    DROID_BLACK(new Color(0x161616)),
     DROID_GRAY(new Color(0x272627)),
+    DROID_BLACK(new Color(0x161616)),
+    
+    DARK_BLUE(new Color(0x030A0C)),
+    BLACK(Color.BLACK),
+    
+    PALE_RED(new Color(192, 80, 77)),
+    THERMOSTAT_RED(new Color(226, 46, 42)),    
+    RED(new Color(192, 0, 0)),
+    
+    GRANITA_ORANGE(new Color(247,150,70)),
+
+    GREEN(new Color(146, 208, 80)),
+    TUNDRA_GREEN(new Color(155, 187, 89)),
+
+    AZUREUS(new Color(0, 176, 190)),
+    DIRTY_CYAN(new Color(75, 172, 198)),
+
+    ELEGANT_CYAN(new Color(0x39CAFF)),
+
+    CLEAN_BLU(new Color(0x007AFF)),
+    EGYPTIAN_BLUE(new Color(74, 144, 217)),
+
+    ADWAITA_BLU(new Color(0x3980CB)),
+    SKY_BLUE(new Color(79, 129, 189)),
+
+    THERMOSTAT_BLU(new Color(74, 93, 117)),
+    PRUSSIAN_BLUE(new Color(0, 49, 83)),
+    ROYAL_BLUE(new Color(0x0A242D)),
+    
+    VIOLET(new Color(112, 48, 160)),
+    POMP_AND_POWER_VIOLET(new Color(128, 100, 162)),
     
     /* END */ ;
     

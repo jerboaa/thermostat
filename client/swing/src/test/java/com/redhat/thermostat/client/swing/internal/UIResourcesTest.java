@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing;
+package com.redhat.thermostat.client.swing.internal;
 
 import java.awt.Color;
 import java.awt.Font;

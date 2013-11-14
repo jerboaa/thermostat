@@ -59,7 +59,6 @@ import javax.swing.SwingWorker;
 import javax.swing.border.TitledBorder;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.swing.UIResources;
 import com.redhat.thermostat.common.ApplicationInfo;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.locale.Translate;

@@ -50,7 +50,9 @@ import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.client.core.views.ClientConfigurationView;
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.swing.UIDefaults;
 import com.redhat.thermostat.client.swing.internal.views.ClientConfigurationSwing;
+import com.redhat.thermostat.client.swing.internal.vmlist.UIDefaultsImpl;
 import com.redhat.thermostat.client.ui.ClientConfigReconnector;
 import com.redhat.thermostat.client.ui.ClientConfigurationController;
 import com.redhat.thermostat.common.ApplicationService;
@@ -115,6 +117,11 @@ public class Main {
             public void run() {
                 ThemeManager themeManager = ThemeManager.getInstance();
                 themeManager.setLAF();
+                
+                // this needs to be done after setting the laf, otherwise
+                // we will not get consistent colours
+                UIDefaults uiDefaults = UIDefaultsImpl.getInstance();
+                context.registerService(UIDefaults.class, uiDefaults, null);
             }
 
         });

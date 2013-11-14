@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.client.swing;
 
+import com.redhat.thermostat.client.swing.components.Icon;
 import com.redhat.thermostat.client.ui.Decorator;
 import com.redhat.thermostat.client.ui.PlatformIcon;
 import com.redhat.thermostat.client.ui.ReferenceFieldIconDecorator;
@@ -62,7 +63,7 @@ public enum ReferenceFieldDecoratorLayout {
      * 
      * <br /><br />
      * 
-     * An example use for this field is the name of the target reference. 
+     * An example use for this field is the name of the target reference.
      */
     LABEL_MAIN,
     
@@ -90,6 +91,17 @@ public enum ReferenceFieldDecoratorLayout {
      * 
      * This icon is the main icon characterising the component being shown,
      * for example representing a particular application or device.
+     *
+     * <br /><br />
+     * 
+     * Decorators registered for this entry point can cast PlatformIcon into
+     * {@link Icon}.
+     * 
+     * <br /><br />
+     * 
+     * <strong>Note</strong>: since this client doesn't provide a default icon,
+     * plugins that apply for this decoration should check for a
+     * <code>null</code> PlatformIcon before using the input parameter. 
      */
     ICON_MAIN,
 }

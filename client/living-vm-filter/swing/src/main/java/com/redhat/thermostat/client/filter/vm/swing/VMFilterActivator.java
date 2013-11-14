@@ -51,12 +51,15 @@ import org.osgi.framework.ServiceRegistration;
 import com.redhat.thermostat.client.filter.host.swing.DeadHostIconDecorator;
 import com.redhat.thermostat.client.filter.host.swing.HostIconDecorator;
 import com.redhat.thermostat.client.filter.host.swing.HostLabelDecorator;
+
 import com.redhat.thermostat.client.swing.ReferenceFieldDecoratorLayout;
+import com.redhat.thermostat.client.swing.UIDefaults;
+
 import com.redhat.thermostat.client.ui.ReferenceFieldIconDecorator;
 import com.redhat.thermostat.client.ui.ReferenceFieldLabelDecorator;
-import com.redhat.thermostat.common.Constants;
+
 import com.redhat.thermostat.common.MultipleServiceTracker;
-import com.redhat.thermostat.storage.core.VmRef;
+
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
@@ -76,6 +79,7 @@ public class VMFilterActivator implements BundleActivator {
                 VmInfoDAO.class,
                 HostInfoDAO.class,
                 NetworkInterfaceInfoDAO.class,
+                UIDefaults.class,
         };
         
         tracker = new MultipleServiceTracker(context, services, new MultipleServiceTracker.Action() {
@@ -94,6 +98,8 @@ public class VMFilterActivator implements BundleActivator {
             public void dependenciesAvailable(Map<String, Object> services) {
                 ServiceRegistration registration = null;
 
+                UIDefaults uiDefaults = (UIDefaults) services.get(UIDefaults.class.getName());
+                
                 VmInfoDAO vmDao = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
                 HostInfoDAO hostDao = (HostInfoDAO) services.get(HostInfoDAO.class.getName());
 
@@ -119,7 +125,7 @@ public class VMFilterActivator implements BundleActivator {
                                                        hostLabelDecorator, decoratorProperties);
                 registeredServices.add(registration);
                 
-                HostIconDecorator hostIconDecorator = new HostIconDecorator();
+                HostIconDecorator hostIconDecorator = HostIconDecorator.getInstance(uiDefaults);
                 decoratorProperties = new Hashtable<>();
                 decoratorProperties.put(ReferenceFieldIconDecorator.ID, ReferenceFieldDecoratorLayout.ICON_MAIN.name());
                 
@@ -127,7 +133,7 @@ public class VMFilterActivator implements BundleActivator {
                                                        hostIconDecorator, decoratorProperties);
                 registeredServices.add(registration);
                 
-                DeadHostIconDecorator deadHostIconDecorator = new DeadHostIconDecorator(hostDao);
+                DeadHostIconDecorator deadHostIconDecorator = DeadHostIconDecorator.getInstance(hostDao, uiDefaults);
                 decoratorProperties = new Hashtable<>();
                 decoratorProperties.put(ReferenceFieldIconDecorator.ID, ReferenceFieldDecoratorLayout.ICON_MAIN.name());
                 
@@ -135,7 +141,7 @@ public class VMFilterActivator implements BundleActivator {
                                                        deadHostIconDecorator, decoratorProperties);
                 registeredServices.add(registration);
                 
-                VMIconDecorator livingVMIconDecorator = new VMIconDecorator();
+                VMIconDecorator livingVMIconDecorator = VMIconDecorator.getInstance(uiDefaults);
                 decoratorProperties = new Hashtable<>();
                 decoratorProperties.put(ReferenceFieldIconDecorator.ID, ReferenceFieldDecoratorLayout.ICON_MAIN.name());
                 
@@ -143,7 +149,7 @@ public class VMFilterActivator implements BundleActivator {
                                                        livingVMIconDecorator, decoratorProperties);
                 registeredServices.add(registration);
                 
-                DeadVMIconDecorator deadVMIconDecorator = new DeadVMIconDecorator(vmDao, hostDao);
+                DeadVMIconDecorator deadVMIconDecorator = DeadVMIconDecorator.getInstance(vmDao, hostDao, uiDefaults);
                 decoratorProperties = new Hashtable<>();
                 decoratorProperties.put(ReferenceFieldIconDecorator.ID, ReferenceFieldDecoratorLayout.ICON_MAIN.name());
                 

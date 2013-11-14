@@ -36,10 +36,12 @@
 
 package com.redhat.thermostat.client.filter.vm.swing;
 
+import java.awt.Paint;
+
 import com.redhat.thermostat.client.filter.host.swing.IconUtils;
+import com.redhat.thermostat.client.swing.UIDefaults;
 import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.client.swing.components.Icon;
-import com.redhat.thermostat.client.ui.Palette;
 import com.redhat.thermostat.client.ui.PlatformIcon;
 import com.redhat.thermostat.client.ui.ReferenceFieldIconDecorator;
 import com.redhat.thermostat.storage.core.Ref;
@@ -50,16 +52,35 @@ import com.redhat.thermostat.storage.model.VmInfo;
 
 public class DeadVMIconDecorator implements ReferenceFieldIconDecorator {
 
-    public static final Icon DEAD = new FontAwesomeIcon('\uf00d', 12, Palette.THERMOSTAT_RED.getColor());
-    public static final Icon DEAD_SELECTED = new FontAwesomeIcon('\uf00d', 12, Palette.THERMOSTAT_RED.getColor());
-
-    private VmInfoDAO vmDao;
-    private HostInfoDAO hostDao;
+    private static VmInfoDAO vmDao;
+    private static HostInfoDAO hostDao;
     
-    public DeadVMIconDecorator(VmInfoDAO vmDao, HostInfoDAO hostDao) {
-        this.vmDao = vmDao;
-        this.hostDao = hostDao;
+    public static Icon DEAD;
+    public static Icon DEAD_SELECTED;
+    
+    private static DeadVMIconDecorator theInstance;
+    
+    public static synchronized DeadVMIconDecorator getInstance(VmInfoDAO vmDao,
+                                                               HostInfoDAO hostDao,
+                                                               UIDefaults uiDefaults)
+    {
+        if (theInstance == null) {
+            DeadVMIconDecorator.vmDao = vmDao;
+            DeadVMIconDecorator.hostDao = hostDao;
+
+            int size = uiDefaults.getIconDecorationSize();
+            Paint color = uiDefaults.getDecorationIconColor();
+
+            DEAD = new FontAwesomeIcon('\uf00d', size, color);
+            DEAD_SELECTED = new FontAwesomeIcon('\uf00d', size, color);
+            
+            theInstance = new DeadVMIconDecorator();
+        }
+        
+        return theInstance;
     }
+    
+    private DeadVMIconDecorator() {}
     
     @Override
     public int getOrderValue() {

@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing;
+package com.redhat.thermostat.client.swing.internal;
 
 import com.redhat.thermostat.client.ui.IconDescriptor;
 import java.awt.Color;
@@ -49,7 +49,7 @@ import javax.swing.plaf.ColorUIResource;
 /**
  * Encapsulates a standard selection of colors and fonts.
  */
-public class UIResources {
+class UIResources {
 
     private static final UIResources resource = new UIResources();
     

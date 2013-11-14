@@ -42,12 +42,10 @@ import javax.swing.UIManager;
 
 import com.redhat.thermostat.client.ui.Palette;
 
-/**
- *
- */
-public class UIDefaults {
-    private static final UIDefaults palette = new UIDefaults();
-    public static UIDefaults getInstance() {
+public class UIDefaultsImpl implements com.redhat.thermostat.client.swing.UIDefaults {
+    
+    private static final UIDefaultsImpl palette = new UIDefaultsImpl();
+    public static UIDefaultsImpl getInstance() {
         return palette;
     }
     
@@ -70,7 +68,44 @@ public class UIDefaults {
         return Palette.DARK_GRAY.getColor();
     }
 
+    @Override
     public int getIconSize() {
+        return 16;
+    }
+    
+    @Override
+    public Color getComponentBGColor() {
+        Color color = (Color) UIManager.get("thermostat-bg-color");
+        return color != null ? color : Palette.LIGHT_GRAY.getColor();
+    }
+
+    @Override
+    public int getReferenceFieldDefaultIconSize() {
         return 32;
+    }
+
+    @Override
+    public int getIconDecorationSize() {
+        return 12;
+    }
+    
+    @Override
+    public Color getDecorationIconColor() {
+        return Palette.THERMOSTAT_RED.getColor();
+    }
+    
+    @Override
+    public Color getIconColor() {
+        return Palette.EARL_GRAY.getColor();
+    }
+    
+    @Override
+    public Color getReferenceFieldIconColor() {
+        return getSelectedComponentBGColor();
+    }
+    
+    @Override
+    public Color getReferenceFieldIconSelectedColor() {
+        return getSelectedComponentFGColor();
     }
 }

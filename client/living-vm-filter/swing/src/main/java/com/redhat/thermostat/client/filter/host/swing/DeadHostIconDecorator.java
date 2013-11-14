@@ -36,9 +36,11 @@
 
 package com.redhat.thermostat.client.filter.host.swing;
 
+import java.awt.Paint;
+
+import com.redhat.thermostat.client.swing.UIDefaults;
 import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.client.swing.components.Icon;
-import com.redhat.thermostat.client.ui.Palette;
 import com.redhat.thermostat.client.ui.PlatformIcon;
 import com.redhat.thermostat.client.ui.ReferenceFieldIconDecorator;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -47,14 +49,31 @@ import com.redhat.thermostat.storage.dao.HostInfoDAO;
 
 public class DeadHostIconDecorator implements ReferenceFieldIconDecorator {
 
-    public static final Icon UNCONNECTED = new FontAwesomeIcon('\uf127', 12, Palette.THERMOSTAT_RED.getColor());
-    public static final Icon UNCONNECTED_SELECTED = new FontAwesomeIcon('\uf127', 12, Palette.THERMOSTAT_RED.getColor());
+    private static Icon UNCONNECTED;
+    private static Icon UNCONNECTED_SELECTED;
 
-    private HostInfoDAO dao;
+    private static HostInfoDAO dao;
     
-    public DeadHostIconDecorator(HostInfoDAO dao) {
-        this.dao = dao;
+    private static DeadHostIconDecorator theInstance;
+    
+    public static synchronized DeadHostIconDecorator getInstance(HostInfoDAO dao, UIDefaults uiDefaults) {
+        
+        if (theInstance == null) {
+            DeadHostIconDecorator.dao = dao;
+            
+            int size = uiDefaults.getIconDecorationSize();
+            Paint color = uiDefaults.getDecorationIconColor();
+
+            UNCONNECTED = new FontAwesomeIcon('\uf127', size, color);
+            UNCONNECTED_SELECTED = new FontAwesomeIcon('\uf127', size, color);
+            
+            theInstance = new DeadHostIconDecorator();
+        }
+        
+        return theInstance;
     }
+    
+    private DeadHostIconDecorator() {}
     
     @Override
     public int getOrderValue() {

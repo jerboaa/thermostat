@@ -139,7 +139,7 @@ public class ReferenceComponent extends JPanel implements AccordionComponent, Re
     }
     
     private void setState() {
-        UIDefaults palette = UIDefaults.getInstance();
+        UIDefaultsImpl palette = UIDefaultsImpl.getInstance();
         if (selected) {
             mainLabel.setForeground(palette.getSelectedComponentFGColor());
             infoLabel.setForeground(palette.getSelectedComponentFGColor());

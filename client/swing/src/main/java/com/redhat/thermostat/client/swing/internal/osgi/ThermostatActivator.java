@@ -46,6 +46,7 @@ import com.redhat.thermostat.client.core.views.ClientConfigViewProvider;
 import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
 import com.redhat.thermostat.client.core.views.SummaryViewProvider;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
+
 import com.redhat.thermostat.client.swing.internal.GUIClientCommand;
 import com.redhat.thermostat.client.swing.internal.Main;
 import com.redhat.thermostat.client.swing.internal.views.SwingAgentInformationViewProvider;
@@ -53,11 +54,14 @@ import com.redhat.thermostat.client.swing.internal.views.SwingClientConfiguratio
 import com.redhat.thermostat.client.swing.internal.views.SwingHostInformationViewProvider;
 import com.redhat.thermostat.client.swing.internal.views.SwingSummaryViewProvider;
 import com.redhat.thermostat.client.swing.internal.views.SwingVmInformationViewProvider;
+
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
+
 import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class ThermostatActivator implements BundleActivator {

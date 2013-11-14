@@ -60,7 +60,7 @@ public class ExpanderComponent extends JPanel {
         setLayout(new BorderLayout());
         
         final Icon mainIcon = new FontAwesomeIcon('\uf101', ICON_WIDTH, TopSidePane.FG_COLOR);
-        final Icon hover = new FontAwesomeIcon('\uf101', ICON_WIDTH, ThermostatSidePanel.FG_TEXT_COLOR);
+        final Icon hover = new FontAwesomeIcon('\uf101', ICON_WIDTH, TopSidePane.ICON_BG_COLOR);
         
         final JLabel expander = new JLabel(mainIcon);
         expander.setHorizontalTextPosition(SwingConstants.LEFT);
