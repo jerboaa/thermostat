@@ -42,6 +42,7 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
+import com.redhat.thermostat.agent.VmBlacklist;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendService;
 import com.redhat.thermostat.backend.system.SystemBackend;
@@ -75,7 +76,8 @@ public class SystemBackendActivator implements BundleActivator {
                 NetworkInterfaceInfoDAO.class,
                 VmInfoDAO.class,
                 UserNameUtil.class,
-                WriterID.class // system backend uses it
+                WriterID.class, // system backend uses it
+                VmBlacklist.class,
         };
         tracker = new MultipleServiceTracker(context, deps, new Action() {
             @Override
@@ -87,7 +89,9 @@ public class SystemBackendActivator implements BundleActivator {
                 UserNameUtil userNameUtil = (UserNameUtil) services.get(UserNameUtil.class.getName());
                 Version version = new Version(context.getBundle());
                 WriterID id = (WriterID) services.get(WriterID.class.getName());
-                backend = new SystemBackend(hostInfoDAO, netInfoDAO, vmInfoDAO, version, notifier, userNameUtil, id);
+                VmBlacklist blacklist = (VmBlacklist) services.get(VmBlacklist.class.getName());
+                backend = new SystemBackend(hostInfoDAO, netInfoDAO, vmInfoDAO, version, notifier, 
+                        userNameUtil, id, blacklist);
                 reg = context.registerService(Backend.class, backend, null);
             }
             

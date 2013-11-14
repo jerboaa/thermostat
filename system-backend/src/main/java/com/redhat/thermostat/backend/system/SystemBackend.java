@@ -42,19 +42,20 @@ import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.osgi.framework.BundleContext;
-
 import sun.jvmstat.monitor.HostIdentifier;
 import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredHost;
 
+import com.redhat.thermostat.agent.VmBlacklist;
 import com.redhat.thermostat.backend.BaseBackend;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.HostInfo;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
 import com.redhat.thermostat.utils.ProcDataSource;
 import com.redhat.thermostat.utils.username.UserNameUtil;
@@ -65,6 +66,7 @@ public class SystemBackend extends BaseBackend {
 
     private HostInfoDAO hostInfos;
     private NetworkInterfaceInfoDAO networkInterfaces;
+    private VmInfoDAO vmInfoDAO;
 
     private long procCheckInterval = 1000; // TODO make this configurable.
 
@@ -76,21 +78,29 @@ public class SystemBackend extends BaseBackend {
 
     private final NetworkInfoBuilder networkInfoBuilder;
     private final HostInfoBuilder hostInfoBuilder;
-
+    private final ProcessUserInfoBuilder userInfoBuilder;
+    private final VmStatusChangeNotifier notifier;
+    private final WriterID writerId;
+    private final VmBlacklist blacklist;
 
     public SystemBackend(HostInfoDAO hostInfoDAO, NetworkInterfaceInfoDAO netInfoDAO, VmInfoDAO vmInfoDAO,
-            Version version, VmStatusChangeNotifier notifier, UserNameUtil userNameUtil, WriterID writerId) {
+            Version version, VmStatusChangeNotifier notifier, UserNameUtil userNameUtil, WriterID writerId,
+            VmBlacklist blacklist) {
         super("System Backend",
                 "Gathers basic information from the system",
                 "Red Hat, Inc.",
                 version.getVersionNumber(), true);
         this.hostInfos = hostInfoDAO;
         this.networkInterfaces = netInfoDAO;
+        this.vmInfoDAO = vmInfoDAO;
+        this.notifier = notifier;
+        this.writerId = writerId;
+        this.blacklist = blacklist;
 
         ProcDataSource source = new ProcDataSource();
         hostInfoBuilder = new HostInfoBuilder(source, writerId);
-        hostListener = new JvmStatHostListener(vmInfoDAO, notifier, new ProcessUserInfoBuilder(source, userNameUtil), writerId);
         networkInfoBuilder = new NetworkInfoBuilder(writerId);
+        userInfoBuilder = new ProcessUserInfoBuilder(source, userNameUtil);
     }
 
     @Override
@@ -102,7 +112,8 @@ public class SystemBackend extends BaseBackend {
         if (!getObserveNewJvm()) {
             logger.fine("not monitoring new vms");
         }
-        hostInfos.putHostInfo(hostInfoBuilder.build());
+        HostInfo hostInfo = hostInfoBuilder.build();
+        hostInfos.putHostInfo(hostInfo);
 
         timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
@@ -116,6 +127,9 @@ public class SystemBackend extends BaseBackend {
 
         try {
             hostId = new HostIdentifier((String) null);
+            HostRef hostRef = new HostRef(hostInfo.getAgentId(), hostInfo.getHostname());
+            hostListener = new JvmStatHostListener(vmInfoDAO, notifier, 
+                    userInfoBuilder, writerId, hostRef, blacklist);
             host = MonitoredHost.getMonitoredHost(hostId);
             host.addHostListener(hostListener);
         } catch (MonitorException me) {

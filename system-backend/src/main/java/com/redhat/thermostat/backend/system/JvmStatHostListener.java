@@ -52,10 +52,13 @@ import sun.jvmstat.monitor.event.HostEvent;
 import sun.jvmstat.monitor.event.HostListener;
 import sun.jvmstat.monitor.event.VmStatusChangeEvent;
 
+import com.redhat.thermostat.agent.VmBlacklist;
 import com.redhat.thermostat.agent.VmStatusListener.Status;
 import com.redhat.thermostat.backend.system.ProcessUserInfoBuilder.ProcessUserInfo;
 import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
@@ -70,12 +73,18 @@ public class JvmStatHostListener implements HostListener {
     private final ProcessUserInfoBuilder userInfoBuilder;
     private final WriterID writerId;
     private Map<Integer, Pair<String, MonitoredVm>> monitoredVms  = new HashMap<>();
+    private final HostRef hostRef;
+    private final VmBlacklist blacklist;
 
-    JvmStatHostListener(VmInfoDAO vmInfoDAO, VmStatusChangeNotifier notifier, ProcessUserInfoBuilder userInfoBuilder, WriterID writerId) {
+    JvmStatHostListener(VmInfoDAO vmInfoDAO, VmStatusChangeNotifier notifier, 
+            ProcessUserInfoBuilder userInfoBuilder, WriterID writerId, HostRef hostRef,
+            VmBlacklist blacklist) {
         this.vmInfoDAO = vmInfoDAO;
         this.notifier = notifier;
         this.userInfoBuilder = userInfoBuilder;
         this.writerId = writerId;
+        this.hostRef = hostRef;
+        this.blacklist = blacklist;
     }
 
     @Override
@@ -93,9 +102,9 @@ public class JvmStatHostListener implements HostListener {
                 logger.fine("New vm: " + newVm);
                 sendNewVM(newVm, host);
             } catch (MonitorException e) {
-                logger.log(Level.WARNING, "error getting info for new vm" + newVm, e);
+                logger.log(Level.WARNING, "error getting info for new vm " + newVm, e);
             } catch (URISyntaxException e) {
-                logger.log(Level.WARNING, "error getting info for new vm" + newVm, e);
+                logger.log(Level.WARNING, "error getting info for new vm " + newVm, e);
             }
         }
 
@@ -104,36 +113,44 @@ public class JvmStatHostListener implements HostListener {
                 logger.fine("stopped vm: " + stoppedVm);
                 sendStoppedVM(stoppedVm, host);
             } catch (URISyntaxException e) {
-                logger.log(Level.WARNING, "error getting info for stopped vm" + stoppedVm, e);
+                logger.log(Level.WARNING, "error getting info for stopped vm " + stoppedVm, e);
             } catch (MonitorException e) {
-                logger.log(Level.WARNING, "error getting info for stopped vm" + stoppedVm, e);
+                logger.log(Level.WARNING, "error getting info for stopped vm " + stoppedVm, e);
             }
         }
     }
 
     private void sendNewVM(Integer vmPid, MonitoredHost host)
             throws MonitorException, URISyntaxException {
+        // Propagate any MonitorException, and do not notify Backends or remember
+        // VMs when we fail to extract the necessary information.
+        // http://icedtea.classpath.org/pipermail/thermostat/2013-November/008702.html
         MonitoredVm vm = host.getMonitoredVm(host.getHostIdentifier().resolve(
                 new VmIdentifier(vmPid.toString())));
         if (vm != null) {
             JvmStatDataExtractor extractor = new JvmStatDataExtractor(vm);
             String vmId = UUID.randomUUID().toString();
-            try {
-                long startTime = System.currentTimeMillis();
-                long stopTime = Long.MIN_VALUE;
-                recordVmInfo(vmId, vmPid, startTime, stopTime, extractor);
+            long startTime = System.currentTimeMillis();
+            long stopTime = Long.MIN_VALUE;
+            VmInfo info = createVmInfo(vmId, vmPid, startTime, stopTime, extractor);
+
+            // Check blacklist
+            VmRef vmRef = new VmRef(hostRef, vmId, vmPid, info.getMainClass());
+            if (!blacklist.isBlacklisted(vmRef)) {
+                vmInfoDAO.putVmInfo(info);
+
+                notifier.notifyVmStatusChange(Status.VM_STARTED, vmId, vmPid);
                 logger.finer("Sent VM_STARTED messsage");
-            } catch (MonitorException me) {
-                logger.log(Level.WARNING, "error getting vm info for " + vmId, me);
+
+                monitoredVms.put(vmPid, new Pair<>(vmId, vm));
             }
-
-            notifier.notifyVmStatusChange(Status.VM_STARTED, vmId, vmPid);
-
-            monitoredVms.put(vmPid, new Pair<>(vmId, vm));
+            else {
+                logger.info("Skipping VM: " + vmPid);
+            }
         }
     }
 
-    void recordVmInfo(String vmId, Integer vmPid, long startTime, long stopTime,
+    VmInfo createVmInfo(String vmId, Integer vmPid, long startTime, long stopTime,
             JvmStatDataExtractor extractor) throws MonitorException {
         Map<String, String> properties = new HashMap<String, String>();
         ProcDataSource dataSource = new ProcDataSource();
@@ -146,13 +163,13 @@ public class JvmStatHostListener implements HostListener {
                 extractor.getMainClass(), extractor.getCommandLine(),
                 extractor.getVmName(), extractor.getVmInfo(), extractor.getVmVersion(), extractor.getVmArguments(),
                 properties, environment, loadedNativeLibraries, userInfo.getUid(), userInfo.getUsername());
-        vmInfoDAO.putVmInfo(info);
+        return info;
     }
 
     private void sendStoppedVM(Integer vmPid, MonitoredHost host) throws URISyntaxException, MonitorException {
         
         VmIdentifier resolvedVmID = host.getHostIdentifier().resolve(new VmIdentifier(vmPid.toString()));
-        if (resolvedVmID != null) {
+        if (resolvedVmID != null && monitoredVms.containsKey(vmPid)) {
             Pair<String, MonitoredVm> vmData = monitoredVms.remove(vmPid);
             
             String vmId = vmData.getFirst();

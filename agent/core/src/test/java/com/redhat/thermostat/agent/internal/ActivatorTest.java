@@ -40,6 +40,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.agent.VmBlacklist;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl;
@@ -58,5 +59,6 @@ public class ActivatorTest {
 
         assertTrue(context.isServiceRegistered(MXBeanConnectionPool.class.getName(), MXBeanConnectionPoolImpl.class));
         assertTrue(context.isServiceRegistered(UserNameUtil.class.getName(), UserNameUtilImpl.class));
+        assertTrue(context.isServiceRegistered(VmBlacklist.class.getName(), VmBlacklistImpl.class));
     }
 }

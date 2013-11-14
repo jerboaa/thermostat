@@ -36,27 +36,40 @@
 
 package com.redhat.thermostat.agent.internal;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.redhat.thermostat.agent.VmBlacklist;
-import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
-import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl;
-import com.redhat.thermostat.utils.username.UserNameUtil;
-import com.redhat.thermostat.utils.username.internal.UserNameUtilImpl;
+import com.redhat.thermostat.common.Filter;
+import com.redhat.thermostat.storage.core.VmRef;
 
-public class Activator implements BundleActivator {
-
-    @Override
-    public void start(BundleContext context) throws Exception {
-        context.registerService(MXBeanConnectionPool.class, new MXBeanConnectionPoolImpl(), null);
-        context.registerService(UserNameUtil.class, new UserNameUtilImpl(), null);
-        context.registerService(VmBlacklist.class, new VmBlacklistImpl(), null);
+public class VmBlacklistImpl implements VmBlacklist {
+    
+    private final List<Filter<VmRef>> filters;
+    
+    public VmBlacklistImpl() {
+        this.filters = new CopyOnWriteArrayList<>();
     }
 
     @Override
-    public void stop(BundleContext context) throws Exception {
-        // Services automatically unregistered by framework
+    public void addVmFilter(Filter<VmRef> filter) {
+        filters.add(filter);
+    }
+
+    @Override
+    public void removeVmFilter(Filter<VmRef> filter) {
+        filters.remove(filter);
+    }
+
+    @Override
+    public boolean isBlacklisted(VmRef ref) {
+        boolean result = false;
+        for (Filter<VmRef> filter : filters) {
+            if (filter.matches(ref)) {
+                result = true;
+            }
+        }
+        return result;
     }
 
 }

@@ -45,6 +45,7 @@ import static org.mockito.Mockito.when;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.agent.VmBlacklist;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
@@ -70,7 +71,8 @@ public class SystemBackendTest {
         UserNameUtil util = mock(UserNameUtil.class);
 
         WriterID id = mock(WriterID.class);
-        b = new SystemBackend(hDAO, nDAO, vmInfoDAO, version, notifier, util, id);
+        VmBlacklist blacklist = mock(VmBlacklist.class);
+        b = new SystemBackend(hDAO, nDAO, vmInfoDAO, version, notifier, util, id, blacklist);
     }
 
     @Test

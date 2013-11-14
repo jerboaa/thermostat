@@ -34,29 +34,39 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.internal;
+package com.redhat.thermostat.agent;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
+import com.redhat.thermostat.common.Filter;
+import com.redhat.thermostat.storage.core.VmRef;
 
-import com.redhat.thermostat.agent.VmBlacklist;
-import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
-import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl;
-import com.redhat.thermostat.utils.username.UserNameUtil;
-import com.redhat.thermostat.utils.username.internal.UserNameUtilImpl;
-
-public class Activator implements BundleActivator {
-
-    @Override
-    public void start(BundleContext context) throws Exception {
-        context.registerService(MXBeanConnectionPool.class, new MXBeanConnectionPoolImpl(), null);
-        context.registerService(UserNameUtil.class, new UserNameUtilImpl(), null);
-        context.registerService(VmBlacklist.class, new VmBlacklistImpl(), null);
-    }
-
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        // Services automatically unregistered by framework
-    }
+/**
+ * Maintains a list of JVM processes that Thermostat should not
+ * monitor.
+ */
+public interface VmBlacklist {
+    
+    /**
+     * Adds a {@link Filter} to the blacklist. Virtual machines that
+     * match the filter will not be monitored.
+     * @param filter - a filter whose matching VMs should not be monitored
+     */
+    void addVmFilter(Filter<VmRef> filter);
+    
+    /**
+     * Removes a {@link Filter} from the blacklist. New virtual machines
+     * will no longer be tested against this filter for blacklisting.
+     * @param filter - a filter previously in the blacklist
+     */
+    void removeVmFilter(Filter<VmRef> filter);
+    
+    /**
+     * Returns whether the given virtual machine should be monitored
+     * by matching it against filters in the blacklist. If any filter
+     * matches, then this method will return true.
+     * @param ref - a reference to the virtual machine to be tested
+     *              against the blacklist
+     * @return true if blacklisted, false otherwise
+     */
+    boolean isBlacklisted(VmRef ref);
 
 }

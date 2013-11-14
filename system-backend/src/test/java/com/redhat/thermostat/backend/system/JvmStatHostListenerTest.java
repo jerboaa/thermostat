@@ -68,8 +68,11 @@ import sun.jvmstat.monitor.StringMonitor;
 import sun.jvmstat.monitor.VmIdentifier;
 import sun.jvmstat.monitor.event.VmStatusChangeEvent;
 
+import com.redhat.thermostat.agent.VmBlacklist;
 import com.redhat.thermostat.agent.VmStatusListener.Status;
 import com.redhat.thermostat.backend.system.ProcessUserInfoBuilder.ProcessUserInfo;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
@@ -94,6 +97,7 @@ public class JvmStatHostListenerTest {
     private JvmStatDataExtractor extractor;
     private VmInfoDAO vmInfoDAO;
     private VmStatusChangeNotifier notifier;
+    private VmBlacklist blacklist;
 
     @Before
     public void setup() throws MonitorException, URISyntaxException {
@@ -105,7 +109,9 @@ public class JvmStatHostListenerTest {
         when(userInfoBuilder.build(any(int.class))).thenReturn(userInfo);
 
         WriterID id = mock(WriterID.class);
-        hostListener = new JvmStatHostListener(vmInfoDAO, notifier, userInfoBuilder, id);
+        HostRef hostRef = mock(HostRef.class);
+        blacklist = mock(VmBlacklist.class);
+        hostListener = new JvmStatHostListener(vmInfoDAO, notifier, userInfoBuilder, id, hostRef, blacklist);
         
         host = mock(MonitoredHost.class);
         HostIdentifier hostId = mock(HostIdentifier.class);
@@ -152,6 +158,19 @@ public class JvmStatHostListenerTest {
         assertFalse(uuid1.equals(uuid2));
         
         verify(notifier, times(2)).notifyVmStatusChange(eq(Status.VM_STARTED), anyString(), (isA(Integer.class)));
+    }
+    
+    @Test
+    public void testNewVMBlackListed() throws InterruptedException, MonitorException {
+        when(blacklist.isBlacklisted(any(VmRef.class))).thenReturn(true).thenReturn(false);
+        startVMs();
+        
+        assertFalse(hostListener.getMonitoredVms().containsKey(1));
+        assertTrue(hostListener.getMonitoredVms().containsKey(2));
+        assertEquals(monitoredVm2, hostListener.getMonitoredVms().get(2).getSecond());
+        
+        UUID uuid = UUID.fromString(hostListener.getMonitoredVms().get(2).getFirst());
+        verify(notifier).notifyVmStatusChange(eq(Status.VM_STARTED), eq(uuid.toString()), (isA(Integer.class)));
     }
     
     @Test
@@ -227,20 +246,15 @@ public class JvmStatHostListenerTest {
         when(event.getStarted()).thenReturn(started);
         when(event.getTerminated()).thenReturn(Collections.emptySet());
         hostListener.vmStatusChanged(event);
-
-        verify(notifier, times(2)).notifyVmStatusChange(eq(Status.VM_STARTED), anyString(), isA(Integer.class));
     }
 
     @Test
-    public void testRecordVmInfo() throws MonitorException {
+    public void testCreateVmInfo() throws MonitorException {
         final String INFO_ID = "vmId";
         final int INFO_PID = 1;
         final long INFO_STARTTIME = Long.MIN_VALUE;
         final long INFO_STOPTIME = Long.MAX_VALUE;
-        hostListener.recordVmInfo(INFO_ID, INFO_PID, INFO_STARTTIME, INFO_STOPTIME, extractor);
-        ArgumentCaptor<VmInfo> captor = ArgumentCaptor.forClass(VmInfo.class);
-        verify(vmInfoDAO).putVmInfo(captor.capture());
-        VmInfo info = captor.getValue();
+        VmInfo info = hostListener.createVmInfo(INFO_ID, INFO_PID, INFO_STARTTIME, INFO_STOPTIME, extractor);
         
         assertEquals(INFO_PID, info.getVmPid());
         assertEquals(INFO_STARTTIME, info.getStartTimeStamp());
