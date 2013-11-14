@@ -47,7 +47,7 @@ import com.redhat.thermostat.client.swing.internal.vmlist.controller.DecoratorMa
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 
-public class HostTreeComponentFactory implements AccordionComponentFactory<HostRef, VmRef>{
+public class HostTreeComponentFactory implements AccordionComponentFactory<HostRef, VmRef> {
     
     private Map<VmRef, AccordionComponent> components;
     private Map<HostRef, ReferenceTitle> headers;
@@ -83,6 +83,23 @@ public class HostTreeComponentFactory implements AccordionComponentFactory<HostR
         components.put(component, refComponent);
 
         return refComponent;
+    }
+    
+    @Override
+    public void removeComponent(AccordionComponent accordionComponent,
+                                HostRef header, VmRef component)
+    {
+        ReferenceComponent refComponent = (ReferenceComponent)
+                components.remove(component);
+        decoratorManager.unregister(refComponent);
+        contextActionController.unregister(refComponent, refComponent);
+    }
+    
+    @Override
+    public void removeHeader(TitledPane pane, HostRef header) {
+        ReferenceTitle title = headers.remove(header);
+        decoratorManager.unregister(title);
+        contextActionController.unregister(title, title);
     }
     
     public AccordionComponent getAccordionComponent(VmRef vm) {

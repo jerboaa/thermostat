@@ -44,11 +44,11 @@ import com.redhat.thermostat.storage.core.Ref;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
 
-public class HostLabelDecorator implements ReferenceFieldLabelDecorator {
+public class HostInfoLabelDecorator implements ReferenceFieldLabelDecorator {
 
     private NetworkInterfaceInfoDAO dao;
     
-    public HostLabelDecorator(NetworkInterfaceInfoDAO  dao) {
+    public HostInfoLabelDecorator(NetworkInterfaceInfoDAO  dao) {
         this.dao = dao;
     }
     

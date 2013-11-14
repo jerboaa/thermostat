@@ -36,7 +36,10 @@
 
 package com.redhat.thermostat.client.swing.internal.vmlist.controller;
 
+import java.util.HashMap;
+
 import com.redhat.thermostat.client.swing.components.Icon;
+import com.redhat.thermostat.client.swing.internal.accordion.TitledPane;
 import com.redhat.thermostat.client.swing.internal.vmlist.ReferenceComponent;
 import com.redhat.thermostat.client.swing.internal.vmlist.ReferenceTitle;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.DecoratorNotifier.DecorationEvent;
@@ -53,54 +56,64 @@ public class DecoratorManager {
         Icon selected;
     }
     
-    private DecoratorListener<ReferenceFieldLabelDecorator> infoLabelDecorator =
-            new DecoratorListener<>(ReferenceFieldLabelDecorator.class);
-    private DecoratorListener<ReferenceFieldLabelDecorator> mainLabelDecorator =
-            new DecoratorListener<>(ReferenceFieldLabelDecorator.class);
+    private DecoratorListener<ReferenceFieldLabelDecorator> infoLabelDecorator;
+    private DecoratorListener<ReferenceFieldLabelDecorator> mainLabelDecorator;
 
-    private DecoratorListener<ReferenceFieldIconDecorator> iconDecorator =
-            new DecoratorListener<>(ReferenceFieldIconDecorator.class);
+    private DecoratorListener<ReferenceFieldIconDecorator> iconDecorator;
 
-    public void registerAndSetIcon(final ReferenceComponent component) {
-        Ref ref = component.getReference();
-        component.setInfoLabelText(createComponentLabel(infoLabelDecorator, ref,
-                                                        component.getInfoLabelText()));
-        component.setMainLabelText(createComponentLabel(mainLabelDecorator, ref,
-                                                        component.getMainLabelText()));
-        setIcons(component);
+    private HashMap<Ref, ListenerPayload> listeners;
+    
+    public DecoratorManager() {
+        mainLabelDecorator = new DecoratorListener<>(ReferenceFieldLabelDecorator.class);
+        infoLabelDecorator = new DecoratorListener<>(ReferenceFieldLabelDecorator.class);
+        iconDecorator = new DecoratorListener<>(ReferenceFieldIconDecorator.class);
         
-        // FIXME: this is a leak
-        infoLabelDecorator.addDecoratorChangeListener(new ActionListener<DecoratorNotifier.DecorationEvent>() {
-            @Override
-            public void actionPerformed(ActionEvent<DecorationEvent> actionEvent) {
-                component.setInfoLabelText(createComponentLabel(infoLabelDecorator,
-                                                                component.getReference(),
-                                                                component.getInfoLabelText()));
-            }
-        });
-        mainLabelDecorator.addDecoratorChangeListener(new ActionListener<DecoratorNotifier.DecorationEvent>() {
-            @Override
-            public void actionPerformed(ActionEvent<DecorationEvent> actionEvent) {
-                component.setMainLabelText(createComponentLabel(mainLabelDecorator,
-                                                                component.getReference(),
-                                                                component.getMainLabelText()));
-            }
-        });
-        iconDecorator.addDecoratorChangeListener(new ActionListener<DecoratorNotifier.DecorationEvent>() {
-            @Override
-            public void actionPerformed(ActionEvent<DecorationEvent> actionEvent) {
-                setIcons(component);
-            }
-        });
+        listeners = new HashMap<>();
     }
 
-    private void setIcons(final ReferenceComponent component) {
+    public void unregister(ReferenceComponent component) {
+        Ref ref = component.getReference();
+
+        ListenerPayload payload = listeners.remove(ref);
+        infoLabelDecorator.removeDecoratorChangeListener(payload.info);
+        mainLabelDecorator.removeDecoratorChangeListener(payload.main);
+        iconDecorator.removeDecoratorChangeListener(payload.icon);
+    }
+    
+    public void unregister(ReferenceTitle pane) {
+        unregister(pane.getReferenceComponent());
+    }
+    
+    public void registerAndSetIcon(ReferenceComponent component) {
+        Ref ref = component.getReference();
+        component.setInfoLabelText(createComponentLabel(infoLabelDecorator, ref, ""));
+        component.setMainLabelText(createComponentLabel(mainLabelDecorator, ref, ""));
+        setIcons(component);
+        
+        ListenerPayload payload = new ListenerPayload();
+
+        InfoLabelListener info = new InfoLabelListener(component);
+        infoLabelDecorator.addDecoratorChangeListener(info);
+        payload.info = info;
+        
+        MainLabelListener main = new MainLabelListener(component);
+        mainLabelDecorator.addDecoratorChangeListener(main);
+        payload.main = main;
+        
+        MainIconListener icon = new MainIconListener(component);
+        iconDecorator.addDecoratorChangeListener(icon);
+        payload.icon = icon;
+        
+        listeners.put(ref, payload);
+    }
+
+    private void setIcons(ReferenceComponent component) {
         Icons icons = createComponentIcon(iconDecorator, component.getReference());
         
         component.setIcon(icons.main, icons.selected);
     }
     
-    public void registerAndSetIcon(final ReferenceTitle pane) {
+    public void registerAndSetIcon(ReferenceTitle pane) {
         registerAndSetIcon(pane.getReferenceComponent());
     }
     
@@ -136,5 +149,54 @@ public class DecoratorManager {
     
     public DecoratorListener<ReferenceFieldIconDecorator> getIconDecoratorListener() {
         return iconDecorator;
+    }
+    
+    private class ListenerPayload {
+        ActionListener<DecoratorNotifier.DecorationEvent> main;
+        ActionListener<DecoratorNotifier.DecorationEvent> info;
+        ActionListener<DecoratorNotifier.DecorationEvent> icon;
+    }
+    
+    private class InfoLabelListener implements ActionListener<DecoratorNotifier.DecorationEvent> {
+        
+        private ReferenceComponent component;
+        InfoLabelListener(ReferenceComponent component) {
+            this.component = component;
+        }
+        
+        @Override
+        public void actionPerformed(ActionEvent<DecorationEvent> actionEvent) {
+            Ref ref = component.getReference();
+            String label = createComponentLabel(infoLabelDecorator, ref, "");
+            component.setInfoLabelText(label);
+        }
+    }
+    
+    private class MainLabelListener implements ActionListener<DecoratorNotifier.DecorationEvent> {
+        private ReferenceComponent component;
+
+        MainLabelListener(ReferenceComponent component) {
+            this.component = component;
+        }
+        
+        @Override
+        public void actionPerformed(ActionEvent<DecorationEvent> actionEvent) {
+            Ref ref = component.getReference();
+            String label = createComponentLabel(mainLabelDecorator, ref, "");
+            component.setMainLabelText(label);
+        }
+    }
+    
+    private class MainIconListener implements ActionListener<DecoratorNotifier.DecorationEvent> {
+        private ReferenceComponent component;
+        
+        MainIconListener(ReferenceComponent component) {
+            this.component = component;
+        }
+        
+        @Override
+        public void actionPerformed(ActionEvent<DecorationEvent> actionEvent) {
+            setIcons(component);
+        }
     }
 }

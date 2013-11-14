@@ -78,7 +78,7 @@ public class Accordion<H, C> extends JPanel {
     
     private AccordionModel<H, C> model;
     private HashMap<H, TitledPane> panes;
-    private HashMap<H, Map<C, Component>> components;
+    private HashMap<H, Map<C, AccordionComponent>> components;
     
     private AccordionComponentFactory<H, C> componentFactory;
     
@@ -188,12 +188,12 @@ public class Accordion<H, C> extends JPanel {
             content.add(contentUnit);
             content.revalidate();
             
-            Map<C, Component> componentsMap = components.get(header);
+            Map<C, AccordionComponent> componentsMap = components.get(header);
             if (componentsMap == null) {
                 componentsMap = new HashMap<>();
                 components.put(header, componentsMap);
             }
-            componentsMap.put(component, contentUnit);
+            componentsMap.put(component, comp);
         }
 
         @Override
@@ -201,16 +201,19 @@ public class Accordion<H, C> extends JPanel {
             C component = e.getComponent();
             H header = e.getHeader();
             
-            Map<C, Component> componentsMap = components.get(header);
-            Component contentUnit = componentsMap.remove(component);
+            Map<C, AccordionComponent> componentsMap = components.get(header);
             if (componentsMap.isEmpty()) {
                 components.remove(header);
             }
+
+            AccordionComponent contentUnit = componentsMap.remove(component);
             
             TitledPane pane = panes.get(header);
             JComponent content = pane.getContent();
-            content.remove(contentUnit);
+            content.remove(contentUnit.getUiComponent());
             content.revalidate();
+
+            componentFactory.removeComponent(contentUnit, header, component);
             
             Accordion.this.contentPane.revalidate();
         }
@@ -219,9 +222,17 @@ public class Accordion<H, C> extends JPanel {
         public void headerRemoved(AccordionHeaderEvent<H> e) {
             H header = e.getHeader();
             
-            components.remove(header);
             TitledPane pane = panes.remove(header);
             Accordion.this.contentPane.remove(pane);
+            
+            Map<C, AccordionComponent> componentsMap = components.remove(header);
+            if (componentsMap != null) {
+                for (C component : componentsMap.keySet()) {
+                    AccordionComponent contentUnit = componentsMap.get(component);
+                    componentFactory.removeComponent(contentUnit, header, component);
+                }
+            }
+            
             Accordion.this.contentPane.revalidate();
         }
     }

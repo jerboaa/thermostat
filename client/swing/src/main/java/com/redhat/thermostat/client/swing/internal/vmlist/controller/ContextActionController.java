@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.swing.internal.vmlist.controller;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -69,8 +70,23 @@ public class ContextActionController implements ActionListener<ContextHandler.Co
     
     private ActionNotifier<ContextAction> notifier;
     
+    private HashMap<Ref, MenuAction> actions;
+    
     public ContextActionController() {
         notifier = new ActionNotifier<>(this);
+        actions = new HashMap<>();
+    }
+    
+    public void unregister(final AccordionComponent pane,
+                           final ReferenceProvider provider)
+    {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                MenuAction action = actions.remove(provider.getReference());
+                pane.getUiComponent().removeMouseListener(action);
+            }
+        });
     }
     
     public void register(final AccordionComponent pane,
@@ -79,19 +95,9 @@ public class ContextActionController implements ActionListener<ContextHandler.Co
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                pane.getUiComponent().addMouseListener(new MouseAdapter() {
-                    @Override
-                    public void mousePressed(MouseEvent e) {                        
-                        if (e.isPopupTrigger()) {
-                            Payload payload = new Payload();
-                            payload.ref = provider.getReference();
-                            payload.component = pane;
-                            payload.x = e.getX();
-                            payload.y = e.getY();
-                            notifier.fireAction(ContextAction.SHOW_CONTEXT_MENU, payload);
-                      }
-                    }
-                });
+                MenuAction action = new MenuAction(pane, provider);
+                pane.getUiComponent().addMouseListener(action);
+                actions.put(provider.getReference(), action);
             }
         });
     }
@@ -104,7 +110,6 @@ public class ContextActionController implements ActionListener<ContextHandler.Co
         notifier.removeActionListener(l);
     }
     
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public void actionPerformed(ActionEvent<ContextHandler.ContextHandlerAction> event) {
         ContextHandler.Payload payload = (ContextHandler.Payload) event.getPayload();
@@ -113,6 +118,28 @@ public class ContextActionController implements ActionListener<ContextHandler.Co
             action.execute(payload.reference);
         } catch (Throwable error) {
             logger.log(Level.SEVERE, "error invocating context action", error);
+        }
+    }
+    
+    private class MenuAction extends MouseAdapter {
+        private AccordionComponent pane;
+        private ReferenceProvider provider;
+        
+        public MenuAction(AccordionComponent pane, ReferenceProvider provider) {
+            this.pane = pane;
+            this.provider = provider;
+        }
+    
+        @Override
+        public void mousePressed(MouseEvent e) {
+            if (e.isPopupTrigger()) {
+                Payload payload = new Payload();
+                payload.ref = provider.getReference();
+                payload.component = pane;
+                payload.x = e.getX();
+                payload.y = e.getY();
+                notifier.fireAction(ContextAction.SHOW_CONTEXT_MENU, payload);
+            }
         }
     }
 }

@@ -50,16 +50,13 @@ import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.client.filter.host.swing.DeadHostIconDecorator;
 import com.redhat.thermostat.client.filter.host.swing.HostIconDecorator;
-import com.redhat.thermostat.client.filter.host.swing.HostLabelDecorator;
-
+import com.redhat.thermostat.client.filter.host.swing.HostInfoLabelDecorator;
+import com.redhat.thermostat.client.filter.host.swing.HostVmMainLabelDecorator;
 import com.redhat.thermostat.client.swing.ReferenceFieldDecoratorLayout;
 import com.redhat.thermostat.client.swing.UIDefaults;
-
 import com.redhat.thermostat.client.ui.ReferenceFieldIconDecorator;
 import com.redhat.thermostat.client.ui.ReferenceFieldLabelDecorator;
-
 import com.redhat.thermostat.common.MultipleServiceTracker;
-
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
@@ -107,7 +104,8 @@ public class VMFilterActivator implements BundleActivator {
                 
                 VMLabelDecorator vmLabelDecorator = new VMLabelDecorator(vmDao);
                 decoratorProperties = new Hashtable<>();
-                decoratorProperties.put(ReferenceFieldLabelDecorator.ID, ReferenceFieldDecoratorLayout.LABEL_INFO.name());
+                decoratorProperties.put(ReferenceFieldLabelDecorator.ID,
+                                        ReferenceFieldDecoratorLayout.LABEL_INFO.name());
 
                 registration = context.registerService(ReferenceFieldLabelDecorator.class.getName(),
                         vmLabelDecorator, decoratorProperties);
@@ -117,25 +115,31 @@ public class VMFilterActivator implements BundleActivator {
                 NetworkInterfaceInfoDAO networkDao = (NetworkInterfaceInfoDAO)
                             services.get(NetworkInterfaceInfoDAO.class.getName());
                 
-                HostLabelDecorator hostLabelDecorator = new HostLabelDecorator(networkDao);
+                HostInfoLabelDecorator hostLabelDecorator =
+                            new HostInfoLabelDecorator(networkDao);
                 decoratorProperties = new Hashtable<>();
-                decoratorProperties.put(ReferenceFieldLabelDecorator.ID, ReferenceFieldDecoratorLayout.LABEL_INFO.name());
+                decoratorProperties.put(ReferenceFieldLabelDecorator.ID,
+                                        ReferenceFieldDecoratorLayout.LABEL_INFO.name());
                 
                 registration = context.registerService(ReferenceFieldLabelDecorator.class.getName(),
                                                        hostLabelDecorator, decoratorProperties);
                 registeredServices.add(registration);
                 
-                HostIconDecorator hostIconDecorator = HostIconDecorator.getInstance(uiDefaults);
+                HostIconDecorator hostIconDecorator =
+                            HostIconDecorator.getInstance(uiDefaults);
                 decoratorProperties = new Hashtable<>();
-                decoratorProperties.put(ReferenceFieldIconDecorator.ID, ReferenceFieldDecoratorLayout.ICON_MAIN.name());
+                decoratorProperties.put(ReferenceFieldIconDecorator.ID,
+                                        ReferenceFieldDecoratorLayout.ICON_MAIN.name());
                 
                 registration = context.registerService(ReferenceFieldIconDecorator.class.getName(),
                                                        hostIconDecorator, decoratorProperties);
                 registeredServices.add(registration);
                 
-                DeadHostIconDecorator deadHostIconDecorator = DeadHostIconDecorator.getInstance(hostDao, uiDefaults);
+                DeadHostIconDecorator deadHostIconDecorator =
+                            DeadHostIconDecorator.getInstance(hostDao, uiDefaults);
                 decoratorProperties = new Hashtable<>();
-                decoratorProperties.put(ReferenceFieldIconDecorator.ID, ReferenceFieldDecoratorLayout.ICON_MAIN.name());
+                decoratorProperties.put(ReferenceFieldIconDecorator.ID,
+                                        ReferenceFieldDecoratorLayout.ICON_MAIN.name());
                 
                 registration = context.registerService(ReferenceFieldIconDecorator.class.getName(),
                                                        deadHostIconDecorator, decoratorProperties);
@@ -143,19 +147,30 @@ public class VMFilterActivator implements BundleActivator {
                 
                 VMIconDecorator livingVMIconDecorator = VMIconDecorator.getInstance(uiDefaults);
                 decoratorProperties = new Hashtable<>();
-                decoratorProperties.put(ReferenceFieldIconDecorator.ID, ReferenceFieldDecoratorLayout.ICON_MAIN.name());
+                decoratorProperties.put(ReferenceFieldIconDecorator.ID,
+                                        ReferenceFieldDecoratorLayout.ICON_MAIN.name());
                 
                 registration = context.registerService(ReferenceFieldIconDecorator.class.getName(),
                                                        livingVMIconDecorator, decoratorProperties);
                 registeredServices.add(registration);
                 
-                DeadVMIconDecorator deadVMIconDecorator = DeadVMIconDecorator.getInstance(vmDao, hostDao, uiDefaults);
+                DeadVMIconDecorator deadVMIconDecorator =
+                            DeadVMIconDecorator.getInstance(vmDao, hostDao, uiDefaults);
                 decoratorProperties = new Hashtable<>();
-                decoratorProperties.put(ReferenceFieldIconDecorator.ID, ReferenceFieldDecoratorLayout.ICON_MAIN.name());
+                decoratorProperties.put(ReferenceFieldIconDecorator.ID,
+                                        ReferenceFieldDecoratorLayout.ICON_MAIN.name());
                 
                 registration = context.registerService(ReferenceFieldIconDecorator.class.getName(),
                                                        deadVMIconDecorator, decoratorProperties);
                 registeredServices.add(registration);
+                
+                HostVmMainLabelDecorator mainDecorator = new HostVmMainLabelDecorator();
+                decoratorProperties = new Hashtable<>();
+                decoratorProperties.put(ReferenceFieldLabelDecorator.ID,
+                                        ReferenceFieldDecoratorLayout.LABEL_MAIN.name());
+                
+                registration = context.registerService(ReferenceFieldLabelDecorator.class.getName(),
+                                                       mainDecorator, decoratorProperties);
             }
         });
         tracker.open();

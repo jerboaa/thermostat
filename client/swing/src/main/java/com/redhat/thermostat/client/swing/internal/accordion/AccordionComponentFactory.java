@@ -44,4 +44,7 @@ public interface AccordionComponentFactory<H, C> {
 
     TitledPane createHeader(H header);
     AccordionComponent createComponent(H header, C component);
+    
+    void removeHeader(TitledPane pane, H header);
+    void removeComponent(AccordionComponent accordionComponent, H header, C component);
 }

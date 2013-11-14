@@ -120,6 +120,14 @@ public class AccordionTest {
         public void setModel(AccordionModel<String, String> model) {
             this.model = model;
         }
+        
+        @Override
+        public void removeComponent(AccordionComponent accordionComponent,
+                                    String header, String component)
+        {}
+        
+        @Override
+        public void removeHeader(TitledPane pane, String header) {}
     }
     
     @BeforeClass
