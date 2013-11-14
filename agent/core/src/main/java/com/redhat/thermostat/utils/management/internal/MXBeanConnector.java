@@ -37,64 +37,38 @@
 package com.redhat.thermostat.utils.management.internal;
 
 import java.io.Closeable;
-import java.io.File;
 import java.io.IOException;
-import java.util.Properties;
+import java.rmi.RemoteException;
 
 import javax.management.MBeanServerConnection;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
-import com.redhat.thermostat.storage.core.VmRef;
-import com.sun.tools.attach.VirtualMachine;
+import com.redhat.thermostat.common.tools.ApplicationException;
 
 class MXBeanConnector implements Closeable {
-
-    private static final String CONNECTOR_ADDRESS_PROPERTY = "com.sun.management.jmxremote.localConnectorAddress";
-    private String connectorAddress;
     
-    private VirtualMachine vm;
+    private final AgentProxyClient client;
+    private final JMXConnectionCreator jmxCreator;
     
-    private boolean attached;
-    
-    private int pid;
-    
-    public MXBeanConnector(int pid) {
-        this.pid = pid;
+    public MXBeanConnector(RMIRegistry registry, int pid) throws IOException, ApplicationException {
+        this(new AgentProxyClient(registry, pid), new JMXConnectionCreator());
     }
     
-    public MXBeanConnector(VmRef reference) {
-        this.pid = reference.getPid();
+    MXBeanConnector(AgentProxyClient client, JMXConnectionCreator jmxCreator) throws IOException, ApplicationException {
+        this.client = client;
+        this.jmxCreator = jmxCreator;
+        client.createProxy();
     }
     
     public synchronized void attach() throws Exception {
-        if (attached)
-            throw new IOException("Already attached");
-        
-        vm = VirtualMachine.attach(String.valueOf(pid));
-        attached = true;
-        
-        Properties props = vm.getAgentProperties();
-        connectorAddress = props.getProperty(CONNECTOR_ADDRESS_PROPERTY);
-        if (connectorAddress == null) {
-           props = vm.getSystemProperties();
-           String home = props.getProperty("java.home");
-           String agent = home + File.separator + "lib" + File.separator + "management-agent.jar";
-           vm.loadAgent(agent);
-           
-           props = vm.getAgentProperties();
-           connectorAddress = props.getProperty(CONNECTOR_ADDRESS_PROPERTY);
-        }
+        client.attach();
     }
     
     public synchronized MXBeanConnectionImpl connect() throws IOException {
-        
-        if (!attached)
-            throw new IOException("Agent not attached to target VM");
-        
-        JMXServiceURL url = new JMXServiceURL(connectorAddress);
-        JMXConnector connection = JMXConnectorFactory.connect(url);
+        JMXServiceURL url = new JMXServiceURL(client.getConnectorAddress());
+        JMXConnector connection = jmxCreator.create(url);
         MBeanServerConnection mbsc = null;
         try {
             mbsc = connection.getMBeanServerConnection();
@@ -107,15 +81,18 @@ class MXBeanConnector implements Closeable {
         return new MXBeanConnectionImpl(connection, mbsc);
     }
     
-    public boolean isAttached() {
-        return attached;
+    public boolean isAttached() throws RemoteException {
+        return client.isAttached();
     }
     
     @Override
     public synchronized void close() throws IOException {
-        if (attached) {
-            vm.detach();
-            attached = false;
+        client.detach();
+    }
+
+    static class JMXConnectionCreator {
+        JMXConnector create(JMXServiceURL url) throws IOException {
+            return JMXConnectorFactory.connect(url);
         }
     }
 }

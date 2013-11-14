@@ -34,43 +34,28 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.internal;
+package com.redhat.thermostat.agent.proxy.common;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
 
-import com.redhat.thermostat.agent.VmBlacklist;
-import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
-import com.redhat.thermostat.utils.management.internal.AgentProxyFilter;
-import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl;
-import com.redhat.thermostat.utils.username.UserNameUtil;
-import com.redhat.thermostat.utils.username.internal.UserNameUtilImpl;
-
-public class Activator implements BundleActivator {
+public interface AgentProxyLogin extends Remote {
     
-    private final MXBeanConnectionPoolImpl pool;
+    /**
+     * By appending the PID of the target JVM, forms the name of
+     * the exported remote object implementing this interface for
+     * that JVM.
+     */
+    public static final String REMOTE_PREFIX = "AgentProxy";
+
+    /**
+     * Authenticates using the currently logged in system user, and
+     * if successful, returns an object to control the agent proxy.
+     * @return a control object for the agent proxy
+     * @throws RemoteException if this method fails for some reason
+     * @throws SecurityException if the currently logged in user
+     * is not authorized to log in
+     */
+    AgentProxyControl login() throws RemoteException, SecurityException;
     
-    public Activator() {
-        this(new MXBeanConnectionPoolImpl());
-    }
-    
-    Activator(MXBeanConnectionPoolImpl pool) {
-        this.pool = pool;
-    }
-
-    @Override
-    public void start(BundleContext context) throws Exception {
-        context.registerService(MXBeanConnectionPool.class, pool, null);
-        context.registerService(UserNameUtil.class, new UserNameUtilImpl(), null);
-        VmBlacklistImpl blacklist = new VmBlacklistImpl();
-        blacklist.addVmFilter(new AgentProxyFilter());
-        context.registerService(VmBlacklist.class, blacklist, null);
-    }
-
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        // Services automatically unregistered by framework
-        pool.shutdown();
-    }
-
 }

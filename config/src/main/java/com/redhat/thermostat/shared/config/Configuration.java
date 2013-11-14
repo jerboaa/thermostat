@@ -132,6 +132,10 @@ public class Configuration {
     public File getSystemLibRoot() throws InvalidConfigurationException {
         return new File(home, "libs");
     }
+    
+    public File getSystemBinRoot() throws InvalidConfigurationException {
+        return new File(home, "bin");
+    }
 
     public File getSystemNativeLibsRoot() throws InvalidConfigurationException {
         return new File(getSystemLibRoot(), "native");

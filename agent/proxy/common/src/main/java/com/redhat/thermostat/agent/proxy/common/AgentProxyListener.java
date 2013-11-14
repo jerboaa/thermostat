@@ -34,43 +34,37 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.internal;
+package com.redhat.thermostat.agent.proxy.common;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
 
-import com.redhat.thermostat.agent.VmBlacklist;
-import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
-import com.redhat.thermostat.utils.management.internal.AgentProxyFilter;
-import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl;
-import com.redhat.thermostat.utils.username.UserNameUtil;
-import com.redhat.thermostat.utils.username.internal.UserNameUtilImpl;
-
-public class Activator implements BundleActivator {
+/**
+ * Remote interface to allow an implementer of {@link AgentProxyControl}
+ * to notify clients when it is available.
+ */
+public interface AgentProxyListener extends Remote {
     
-    private final MXBeanConnectionPoolImpl pool;
+    /**
+     * By appending the PID of the target JVM, forms the name of
+     * the exported remote object implementing this interface for
+     * that JVM.
+     */
+    public static final String REMOTE_PREFIX = "AgentProxyListener";
     
-    public Activator() {
-        this(new MXBeanConnectionPoolImpl());
-    }
+    /**
+     * To be called when an implementer of {@link AgentProxyControl}
+     * has exported itself for use by clients.
+     * @throws RemoteException if this method fails for any reason
+     */
+    void serverStarted() throws RemoteException;
     
-    Activator(MXBeanConnectionPoolImpl pool) {
-        this.pool = pool;
-    }
-
-    @Override
-    public void start(BundleContext context) throws Exception {
-        context.registerService(MXBeanConnectionPool.class, pool, null);
-        context.registerService(UserNameUtil.class, new UserNameUtilImpl(), null);
-        VmBlacklistImpl blacklist = new VmBlacklistImpl();
-        blacklist.addVmFilter(new AgentProxyFilter());
-        context.registerService(VmBlacklist.class, blacklist, null);
-    }
-
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        // Services automatically unregistered by framework
-        pool.shutdown();
-    }
-
+    /**
+     * To be called when an implementer of {@link AgentProxyControl}
+     * has failed to start.
+     * @param error - the cause of the failure
+     * @throws RemoteException if this method fails for any reason
+     */
+    void serverFailedToStart(Exception error) throws RemoteException;
+    
 }

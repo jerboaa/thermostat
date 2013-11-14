@@ -36,37 +36,65 @@
 
 package com.redhat.thermostat.utils.management.internal;
 
+import java.io.IOException;
+import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.Pair;
+import com.redhat.thermostat.common.tools.ApplicationException;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.utils.management.MXBeanConnection;
 import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 
 public class MXBeanConnectionPoolImpl implements MXBeanConnectionPool {
 
+    private static final Logger logger = LoggingUtils.getLogger(MXBeanConnectionPoolImpl.class);
+    
     // pid -> (usageCount, actualObject)
     private Map<Integer, Pair<Integer, MXBeanConnectionImpl>> pool = new HashMap<>();
 
-    private ConnectorCreator creator;
+    private final ConnectorCreator creator;
+    private final RMIRegistry registry;
 
     public MXBeanConnectionPoolImpl() {
-        this(new ConnectorCreator());
+        this(new ConnectorCreator(), new RMIRegistry());
+    }
+    
+    // For testing purposes only
+    public MXBeanConnectionPoolImpl(RMIRegistry registry) {
+        this(new ConnectorCreator(), registry);
     }
 
-    MXBeanConnectionPoolImpl(ConnectorCreator connectorCreator) {
+    MXBeanConnectionPoolImpl(ConnectorCreator connectorCreator, RMIRegistry registry) {
         this.creator = connectorCreator;
+        this.registry = registry;
+        
+        // Start RMI registry
+        try {
+            registry.start();
+        } catch (RemoteException e) {
+            logger.log(Level.SEVERE, "Unable to start RMI registry", e);
+        }
     }
 
     @Override
     public synchronized MXBeanConnection acquire(int pid) throws Exception {
         Pair<Integer, MXBeanConnectionImpl> data = pool.get(pid);
         if (data == null) {
-            MXBeanConnector connector = creator.create(pid);
-            connector.attach();
-            MXBeanConnectionImpl connection = connector.connect();
-            connector.close();
-            data = new Pair<Integer, MXBeanConnectionImpl>(1, connection);
+            MXBeanConnector connector = null;
+            try {
+                connector = creator.create(registry, pid);
+                connector.attach();
+                MXBeanConnectionImpl connection = connector.connect();
+                data = new Pair<Integer, MXBeanConnectionImpl>(1, connection);
+            } finally {
+                if (connector != null) {
+                    connector.close();
+                }
+            }
         } else {
             data = new Pair<>(data.getFirst() + 1, data.getSecond());
         }
@@ -88,10 +116,19 @@ public class MXBeanConnectionPoolImpl implements MXBeanConnectionPool {
             pool.put(pid, data);
         }
     }
+    
+    public void shutdown() {
+        try {
+            registry.stop();
+        } catch (RemoteException e) {
+            logger.log(Level.SEVERE, "Unable to stop RMI registry", e);
+        }
+    }
 
     static class ConnectorCreator {
-        public MXBeanConnector create(int pid) {
-            return new MXBeanConnector(pid);
+        public MXBeanConnector create(RMIRegistry registry, int pid) throws IOException, ApplicationException {
+            MXBeanConnector connector = new MXBeanConnector(registry, pid);
+            return connector;
         }
     }
 }

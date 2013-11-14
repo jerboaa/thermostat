@@ -41,29 +41,42 @@
 
   <parent>
     <groupId>com.redhat.thermostat</groupId>
-    <artifactId>thermostat</artifactId>
+    <artifactId>thermostat-agent-proxy</artifactId>
     <version>0.16.0-SNAPSHOT</version>
   </parent>
+  
+  <artifactId>thermostat-agent-proxy-common</artifactId>
+  <name>Thermostat Agent Proxy Common</name>
+  <packaging>bundle</packaging>
 
-  <artifactId>thermostat-agent</artifactId>
-  <packaging>pom</packaging>
-
-  <name>Thermostat Agent</name>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
+            <Bundle-SymbolicName>com.redhat.thermostat.agent.proxy.common</Bundle-SymbolicName>
+            <Export-Package>
+              com.redhat.thermostat.agent.proxy.common,
+            </Export-Package>
+            <!-- Do not autogenerate uses clauses in Manifests -->
+            <_nouses>true</_nouses>
+          </instructions>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 
   <dependencies>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
+      <groupId>com.sun</groupId>
+      <artifactId>tools</artifactId>
+      <scope>system</scope>
+      <systemPath>${java.home}/../lib/tools.jar</systemPath>
+    </dependency>  
   </dependencies>
 
-  <modules>
-    <module>cli</module>
-    <module>core</module>
-    <module>command</module>
-    <module>proxy</module>
-  </modules>
-
 </project>
-

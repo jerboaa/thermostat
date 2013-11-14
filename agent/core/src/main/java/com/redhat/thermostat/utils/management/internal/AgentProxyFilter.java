@@ -34,43 +34,23 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.internal;
+package com.redhat.thermostat.utils.management.internal;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
+import com.redhat.thermostat.common.Filter;
+import com.redhat.thermostat.storage.core.VmRef;
 
-import com.redhat.thermostat.agent.VmBlacklist;
-import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
-import com.redhat.thermostat.utils.management.internal.AgentProxyFilter;
-import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl;
-import com.redhat.thermostat.utils.username.UserNameUtil;
-import com.redhat.thermostat.utils.username.internal.UserNameUtilImpl;
-
-public class Activator implements BundleActivator {
+/**
+ * Prevents Agent Proxies from being monitored, which would create
+ * an infinite chain of agent proxies being created.
+ */
+public class AgentProxyFilter extends Filter<VmRef> {
     
-    private final MXBeanConnectionPoolImpl pool;
-    
-    public Activator() {
-        this(new MXBeanConnectionPoolImpl());
-    }
-    
-    Activator(MXBeanConnectionPoolImpl pool) {
-        this.pool = pool;
-    }
+    private static final String AGENT_PROXY_CLASS = "com.redhat.thermostat.agent.proxy.server.AgentProxy";
 
     @Override
-    public void start(BundleContext context) throws Exception {
-        context.registerService(MXBeanConnectionPool.class, pool, null);
-        context.registerService(UserNameUtil.class, new UserNameUtilImpl(), null);
-        VmBlacklistImpl blacklist = new VmBlacklistImpl();
-        blacklist.addVmFilter(new AgentProxyFilter());
-        context.registerService(VmBlacklist.class, blacklist, null);
-    }
-
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        // Services automatically unregistered by framework
-        pool.shutdown();
+    public boolean matches(VmRef toMatch) {
+        String mainClass = toMatch.getName();
+        return AGENT_PROXY_CLASS.equals(mainClass);
     }
 
 }

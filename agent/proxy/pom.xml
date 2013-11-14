@@ -41,28 +41,18 @@
 
   <parent>
     <groupId>com.redhat.thermostat</groupId>
-    <artifactId>thermostat</artifactId>
+    <artifactId>thermostat-agent</artifactId>
     <version>0.16.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>thermostat-agent</artifactId>
+  <artifactId>thermostat-agent-proxy</artifactId>
   <packaging>pom</packaging>
 
-  <name>Thermostat Agent</name>
-
-  <dependencies>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
+  <name>Thermostat Agent Proxy</name>
 
   <modules>
-    <module>cli</module>
-    <module>core</module>
-    <module>command</module>
-    <module>proxy</module>
+    <module>common</module>
+    <module>server</module>
   </modules>
 
 </project>

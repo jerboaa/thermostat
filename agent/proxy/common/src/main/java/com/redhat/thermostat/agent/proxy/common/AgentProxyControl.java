@@ -34,43 +34,52 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.internal;
+package com.redhat.thermostat.agent.proxy.common;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
 
-import com.redhat.thermostat.agent.VmBlacklist;
-import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
-import com.redhat.thermostat.utils.management.internal.AgentProxyFilter;
-import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl;
-import com.redhat.thermostat.utils.username.UserNameUtil;
-import com.redhat.thermostat.utils.username.internal.UserNameUtilImpl;
+import com.sun.tools.attach.VirtualMachine;
 
-public class Activator implements BundleActivator {
+/**
+ * Remote interface to allow control of a JVM using the Hotspot attach
+ * mechanism.
+ * 
+ * This interface invokes remote methods of a delegate Java process
+ * which acts as a proxy between Thermostat and the target JVM. This
+ * delegate is necessary in order to assume the same user and group IDs
+ * as the target JVM.
+ */
+public interface AgentProxyControl extends Remote {
     
-    private final MXBeanConnectionPoolImpl pool;
+    /**
+     * Attach to the target JVM using {@link VirtualMachine#attach}.
+     * @throws RemoteException if the attach fails
+     */
+    void attach() throws RemoteException;
     
-    public Activator() {
-        this(new MXBeanConnectionPoolImpl());
-    }
+    /**
+     * @return whether the delegate is currently attached to the target
+     * JVM.
+     * @throws RemoteException if this method fails for any reason
+     */
+    boolean isAttached() throws RemoteException;
     
-    Activator(MXBeanConnectionPoolImpl pool) {
-        this.pool = pool;
-    }
-
-    @Override
-    public void start(BundleContext context) throws Exception {
-        context.registerService(MXBeanConnectionPool.class, pool, null);
-        context.registerService(UserNameUtil.class, new UserNameUtilImpl(), null);
-        VmBlacklistImpl blacklist = new VmBlacklistImpl();
-        blacklist.addVmFilter(new AgentProxyFilter());
-        context.registerService(VmBlacklist.class, blacklist, null);
-    }
-
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        // Services automatically unregistered by framework
-        pool.shutdown();
-    }
+    /**
+     * @return an address that can be used to establish a JMX connection
+     * to the target JVM.
+     * @throws RemoteException if the delegate is not attached to the target
+     * VM
+     */
+    String getConnectorAddress() throws RemoteException;
+    
+    /**
+     * Detaches from the target JVM that was attached previously using 
+     * {@link #attach()}, and terminates the remote connection to the
+     * delegate Java process.
+     * @throws RemoteException if the delegate failed to detach from the VM,
+     * or failed to terminate the remote connection
+     */
+    void detach() throws RemoteException;
 
 }
