@@ -54,6 +54,8 @@
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-distribution</artifactId>
+      <!-- distribution is packaged as pom -->
+      <type>pom</type>
       <version>${project.version}</version>
       <!-- exclude conflicting jars. Those cause problems for servlet
            containers and hence prevent the web archive to deploy
