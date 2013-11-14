@@ -39,15 +39,13 @@ package com.redhat.thermostat.client.swing.internal;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.times;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.client.swing.internal.VMMonitorController.NetworkChangeListener;
+import com.redhat.thermostat.client.swing.internal.search.ReferenceFieldSearchFilter;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.HostTreeController;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
@@ -62,7 +60,8 @@ public class VMMonitorControllerTest {
     private HostMonitor hostMonitor;
     private MainView view;
     private HostTreeController treeController;
-    
+    private ReferenceFieldSearchFilter searchFilter;
+
     @Before
     public void setUp() {
         networkMonitor = mock(NetworkMonitor.class);
@@ -70,6 +69,10 @@ public class VMMonitorControllerTest {
         view = mock(MainView.class);
         treeController = mock(HostTreeController.class);
         when(view.getHostTreeController()).thenReturn(treeController);
+        
+        searchFilter = mock(ReferenceFieldSearchFilter.class);
+        when(view.getSearchFilter()).thenReturn(searchFilter);
+
     }
     
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -96,7 +99,8 @@ public class VMMonitorControllerTest {
         networkListener.actionPerformed(event);
         
         verify(treeController).registerHost(host1);
-        
+        verify(searchFilter).addHost(host1);
+
         event = new ActionEvent<NetworkMonitor.Action>(networkMonitor,
                                                        Action.HOST_REMOVED);
         event.setPayload(host1);

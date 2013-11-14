@@ -196,7 +196,8 @@ public class HostTreeControllerTest {
         filter1.toggle();
         
         waitForSwing();
-        
+        waitForSwing();
+
         headers = proxyModel.getHeaders();
         assertEquals(2, headers.size());
         assertTrue(headers.contains(host0));
@@ -238,6 +239,7 @@ public class HostTreeControllerTest {
 
         filter2.toggle();
 
+        waitForSwing();
         waitForSwing();
 
         components  = proxyModel.getComponents(host0);

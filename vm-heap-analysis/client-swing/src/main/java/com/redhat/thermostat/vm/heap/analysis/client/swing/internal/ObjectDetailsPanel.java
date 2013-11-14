@@ -57,7 +57,7 @@ import javax.swing.JLabel;
 import com.redhat.thermostat.client.swing.EdtHelper;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.SearchField;
-import com.redhat.thermostat.client.swing.components.SearchField.SearchAction;
+import com.redhat.thermostat.client.ui.SearchProvider.SearchAction;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionNotifier;
@@ -70,6 +70,7 @@ import com.sun.tools.hat.internal.model.JavaHeapObject;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
+
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.event.MouseAdapter;
@@ -173,11 +174,11 @@ public class ObjectDetailsPanel extends ObjectDetailsView implements SwingCompon
                     .addContainerGap())
         );
 
-        searchField.addActionListener(new ActionListener<SearchAction>() {
+        searchField.addSearchListener(new ActionListener<SearchAction>() {
             @Override
             public void actionPerformed(ActionEvent<SearchAction> actionEvent) {
                 switch (actionEvent.getActionId()) {
-                case TEXT_CHANGED:
+                case PERFORM_SEARCH:
                     notifier.fireAction(ObjectAction.SEARCH);
                     break;
                 default:

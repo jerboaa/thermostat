@@ -40,6 +40,7 @@ import javax.swing.JFrame;
 
 import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.swing.internal.search.ReferenceFieldSearchFilter;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.ContextActionController;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.HostTreeController;
 import com.redhat.thermostat.client.ui.MenuAction;
@@ -100,5 +101,11 @@ public interface MainView {
      * actions in the UI Client.
      */
     ContextActionController getContextActionController();
+
+    /**
+     * Returns the filter used for searching references inside the reference
+     * tree.
+     */
+    ReferenceFieldSearchFilter getSearchFilter();
 }
 

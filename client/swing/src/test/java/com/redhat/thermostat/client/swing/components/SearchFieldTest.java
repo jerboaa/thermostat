@@ -200,16 +200,16 @@ public class SearchFieldTest {
 
         JTextComponentFixture textBox = frameFixture.textBox(SearchField.VIEW_NAME);
 
-        searchField.addActionListener(listener);
+        searchField.addSearchListener(listener);
 
         textBox.enterText(SEARCH_TEXT);
 
         verify(listener, times(SEARCH_TEXT.length())).actionPerformed(
-                new ActionEvent<SearchField.SearchAction>(searchField, SearchField.SearchAction.TEXT_CHANGED));
+                new ActionEvent<SearchField.SearchAction>(searchField, SearchField.SearchAction.PERFORM_SEARCH));
 
         textBox.enterText("\n");
 
-        verify(listener).actionPerformed(
+        verify(listener, times(SEARCH_TEXT.length() + 1)).actionPerformed(
                 new ActionEvent<SearchField.SearchAction>(searchField, SearchField.SearchAction.PERFORM_SEARCH));
 
     }

@@ -203,8 +203,7 @@ public class HostTreeController {
                     // next filtering step
                     proxyModel.removeHeader(vm.getHostRef());
                     
-                } else
-                    if (filter(filters, vm)) {
+                } else if (filter(filters, vm)) {
                     proxyModel.removeComponent(vm.getHostRef(), vm);
                 }
             }
@@ -343,7 +342,12 @@ public class HostTreeController {
     private class FilterListener implements ActionListener<Filter.FilterEvent> {
         @Override
         public void actionPerformed(ActionEvent<FilterEvent> actionEvent) {
-            rebuildTree();
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    rebuildTree();
+                }
+            });
         }
     }
     
@@ -368,5 +372,14 @@ public class HostTreeController {
         filters.remove(filter);
         filter.removeFilterEventListener(filterListener);
         rebuildTree();
+    }
+
+    public void expandNode(final HostRef reference) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                accordion.setExpanded(reference, true);
+            }
+        });
     }
 }

@@ -1,26 +1,26 @@
 /*
  * Copyright 2012, 2013 Red Hat, Inc.
- *
+ * 
  * This file is part of Thermostat.
- *
+ * 
  * Thermostat is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
  * by the Free Software Foundation; either version 2, or (at your
  * option) any later version.
- *
+ * 
  * Thermostat is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with Thermostat; see the file COPYING.  If not see
  * <http://www.gnu.org/licenses/>.
- *
+ * 
  * Linking this code with other modules is making a combined work
  * based on this code.  Thus, the terms and conditions of the GNU
  * General Public License cover the whole combination.
- *
+ * 
  * As a special exception, the copyright holders of this code give
  * you permission to link this code with independent modules to
  * produce an executable, regardless of the license terms of these
@@ -34,91 +34,99 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.internal.sidepane;
+package com.redhat.thermostat.client.swing.internal.search;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.Shape;
 
+import javax.swing.Box;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.border.EmptyBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
 
 import com.redhat.thermostat.client.swing.GraphicsUtils;
-import com.redhat.thermostat.client.swing.components.DebugBorder;
 import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.client.swing.components.Icon;
-import com.redhat.thermostat.client.swing.internal.vmlist.UIDefaultsImpl;
+import com.redhat.thermostat.client.ui.Palette;
 
 @SuppressWarnings("serial")
-class TopSidePane extends JPanel {
+public class SearchField extends BaseSearchProvider {
 
-    static final String COLLAPSED_PROPERTY = "collapsed";
+    private JTextField searchField;
     
-    static int ICON_WIDTH = 24;
-
-    static Color ICON_BG_COLOR = UIDefaultsImpl.getInstance().getReferenceFieldIconColor();
-    
-    static Color FG_COLOR = ThermostatSidePanel.FG_COLOR;
-    private Color currentFGColor = ThermostatSidePanel.FG_COLOR;
-    
-    public TopSidePane() {
-        setBackground(Color.WHITE);
+    public SearchField() {
+        setFocusable(true);
+        
         setLayout(new BorderLayout());
         
-        final Icon mainIcon = new FontAwesomeIcon('\uf100', ICON_WIDTH, FG_COLOR);
-        final Icon hover = new FontAwesomeIcon('\uf100', ICON_WIDTH, ICON_BG_COLOR);
+        final Icon searchIcon =
+                new FontAwesomeIcon('\uf002', 12, Palette.DARK_GRAY.getColor());
+                
+        searchField = new JTextField(20);
         
-        final JLabel expander = new JLabel(mainIcon);
-        expander.addMouseListener(new MouseAdapter() {
+        final JLabel searchLabel = new JLabel(searchIcon);
+
+        JPanel iconPanel = new JPanel();
+        iconPanel.setLayout(new BorderLayout());
+        iconPanel.add(searchLabel, BorderLayout.CENTER);
+        iconPanel.add(Box.createRigidArea(new Dimension(2, 5)), BorderLayout.WEST);
+
+        iconPanel.setOpaque(false);
+        
+        add(iconPanel, BorderLayout.WEST);
+        add(searchField, BorderLayout.CENTER);
+        
+        searchField.setBackground(Palette.WHITE.getColor());
+        searchField.setBorder(new EmptyBorder(0, 5, 0, 0));
+        searchField.setForeground(Palette.DARK_GRAY.getColor());
+        
+        searchField.getCaret().setBlinkRate(0);
+        searchField.setCaretColor(Palette.DARK_GRAY.getColor());
+
+        setOpaque(false);
+        setBorder(new EmptyBorder(0, 0, 0, 0));
+        
+        searchField.getDocument().addDocumentListener(new DocumentListener() {
             @Override
-            public void mouseEntered(MouseEvent e) {
-                setState(ICON_BG_COLOR, hover);
-            }
-            @Override
-            public void mouseExited(MouseEvent e) {
-                setState(FG_COLOR, mainIcon);
-            }
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                setState(FG_COLOR, mainIcon);
-                firePropertyChange(COLLAPSED_PROPERTY, false, true);
+            public void changedUpdate(DocumentEvent e) {
+                Document document = e.getDocument();
+                try {
+                    String text = document.getText(0, document.getLength());
+                    fireViewAction(SearchAction.PERFORM_SEARCH, text);
+                    
+                } catch (BadLocationException ignore) {}
             }
             
-            private void setState(Color color, Icon icon) {
-                currentFGColor = color;
-                expander.setIcon(icon);
-                repaint();
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                changedUpdate(e);
+            }
+            
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                changedUpdate(e);
             }
         });
-
-        add(expander, BorderLayout.EAST);
-    
-        setBorder(new TopSidePaneBorder());
     }
     
     @Override
     protected void paintComponent(Graphics g) {
-        
         GraphicsUtils utils = GraphicsUtils.getInstance();
         Graphics2D graphics = utils.createAAGraphics(g);
+
+        graphics.setPaint(Palette.WHITE.getColor());
         
-        graphics.setColor(getBackground());
-        graphics.fillRect(0, 0, getWidth(), getHeight());
+        Shape shape = utils.getRoundShape(getWidth(), getHeight());
+        graphics.fill(shape);
         
         graphics.dispose();
-    }
-    
-    private class TopSidePaneBorder extends DebugBorder {
-        @Override
-        public void paintBorder(Component c, Graphics g, int x, int y,
-                                int width, int height)
-        {
-            g.setColor(GraphicsUtils.getInstance().deriveWithAlpha(currentFGColor, 100));
-            g.drawLine(x, y + height - 1, x + width, y + height - 1);
-        }
     }
 }

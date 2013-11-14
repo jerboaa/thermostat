@@ -59,6 +59,7 @@ import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
 import com.redhat.thermostat.client.swing.internal.osgi.ContextActionServiceTracker;
 import com.redhat.thermostat.client.swing.internal.osgi.InformationServiceTracker;
 import com.redhat.thermostat.client.swing.internal.registry.decorator.DecoratorRegistryController;
+import com.redhat.thermostat.client.swing.internal.search.ReferenceFieldSearchFilter;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.ContextActionController;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.ContextHandler;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.FilterManager;
@@ -288,17 +289,20 @@ public class MainWindowControllerImpl implements MainWindowController {
     
     private void initHostVMTree() {
         HostTreeController hostController = view.getHostTreeController();
+        ReferenceFieldSearchFilter filter = view.getSearchFilter();
         
         // initially fill out with all known host and vms
         List<HostRef> hosts = networkMonitor.getHosts(new AllPassFilter<HostRef>());
         AllPassFilter<VmRef> vmFilter = new AllPassFilter<>();
         for (HostRef host : hosts) {
             hostController.registerHost(host);
-
+            filter.addHost(host);
+            
             // get the vm for this host
             List<VmRef> vms = hostMonitor.getVirtualMachines(host, vmFilter);
             for (VmRef vm : vms) {
                 hostController.registerVM(vm);
+                filter.addVM(vm);
             }
         }
     }

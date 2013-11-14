@@ -80,6 +80,8 @@ import com.redhat.thermostat.client.swing.internal.progress.AggregateNotificatio
 import com.redhat.thermostat.client.swing.internal.progress.ProgressNotificationArea;
 import com.redhat.thermostat.client.swing.internal.progress.SwingProgressNotifier;
 import com.redhat.thermostat.client.swing.internal.progress.SwingProgressNotifier.PropertyChange;
+import com.redhat.thermostat.client.swing.internal.search.ReferenceFieldSearchFilter;
+import com.redhat.thermostat.client.swing.internal.search.SearchField;
 import com.redhat.thermostat.client.swing.internal.sidepane.ExpanderComponent;
 import com.redhat.thermostat.client.swing.internal.sidepane.ThermostatSidePanel;
 import com.redhat.thermostat.client.swing.internal.splitpane.ThermostatSplitPane;
@@ -120,6 +122,8 @@ public class MainWindow extends JFrame implements MainView {
     
     private HostTreeController hostTreeController;
     private ContextActionController contextActionController;
+
+    private ReferenceFieldSearchFilter filter;
     
     public MainWindow() {
         super();
@@ -139,7 +143,7 @@ public class MainWindow extends JFrame implements MainView {
         setupPanels(glassPane);
 
         this.setPreferredSize(new Dimension(800, 600));
-
+        
         statusBar = new StatusBar();
         setupNotificationPane(statusBar, glassPane);
         
@@ -338,6 +342,17 @@ public class MainWindow extends JFrame implements MainView {
                 }
             }
         });
+
+        installSearchFiled();
+    }
+    
+    private void installSearchFiled() {
+        // install the search field in the sidepane for now
+        SearchField searchField = new SearchField();
+        navigationPanel.getTopPane().add(searchField);
+        
+        filter = new ReferenceFieldSearchFilter(searchField, hostTreeController);
+        hostTreeController.addFilter(filter);
     }
     
     private JPanel createDetailsPanel() {
@@ -471,6 +486,11 @@ public class MainWindow extends JFrame implements MainView {
     @Override
     public ContextActionController getContextActionController() {
         return contextActionController;
+    }
+    
+    @Override
+    public ReferenceFieldSearchFilter getSearchFilter() {
+        return filter;
     }
 }
 

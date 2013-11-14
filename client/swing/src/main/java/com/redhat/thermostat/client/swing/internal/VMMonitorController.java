@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.client.swing.internal;
 
+import com.redhat.thermostat.client.swing.internal.search.ReferenceFieldSearchFilter;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -73,11 +74,13 @@ class VMMonitorController {
             switch (actionEvent.getActionId()) {
             case HOST_ADDED:
                 view.getHostTreeController().registerHost(host);
+                view.getSearchFilter().addHost(host);
                 hostMonitor.addHostChangeListener(host, hostListener);
                 break;
 
             case HOST_REMOVED:
                 view.getHostTreeController().updateHostStatus(host);
+                view.getSearchFilter().removeHost(host);
                 hostMonitor.removeHostChangeListener(host, hostListener);
                 break;
                 
@@ -96,11 +99,12 @@ class VMMonitorController {
             switch (actionEvent.getActionId()) {
             case VM_ADDED:
                 view.getHostTreeController().registerVM(vm);
+                view.getSearchFilter().addVM(vm);
                 break;
             
             case VM_REMOVED:
                 view.getHostTreeController().updateVMStatus(vm);
-                
+                view.getSearchFilter().removeVM(vm);
             default:
                 break;
             }

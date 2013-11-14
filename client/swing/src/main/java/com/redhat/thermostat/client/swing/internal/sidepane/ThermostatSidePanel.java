@@ -60,7 +60,6 @@ public class ThermostatSidePanel extends JPanel {
     private JPanel bottom;
     
     public ThermostatSidePanel() {
-        
         setLayout(new BorderLayout());
         
         top = new TopSidePane();
@@ -92,5 +91,9 @@ public class ThermostatSidePanel extends JPanel {
     public void addContent(JComponent comp, Object contraints) {
         bottom.add(comp, contraints);
         repaint();
+    }
+    
+    public JPanel getTopPane() {
+        return top;
     }
 }

@@ -47,7 +47,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -56,8 +55,7 @@ import javax.swing.text.Document;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.swing.IconResource;
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.client.swing.internal.search.BaseSearchProvider;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 
@@ -67,19 +65,14 @@ import com.redhat.thermostat.shared.locale.Translate;
  * Similar to other swing components, this component should only be
  * modified on the swing EDT.
  */
-public class SearchField extends JPanel {
+@SuppressWarnings("serial")
+public class SearchField extends BaseSearchProvider {
 
     /** For use by tests only */
     public static final String VIEW_NAME = "searchField";
 
-    public enum SearchAction {
-        TEXT_CHANGED,
-        PERFORM_SEARCH,
-    }
-
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private final ActionNotifier<SearchAction> notifier = new ActionNotifier<>(this);
     private final JTextField searchField = new JTextField();
 
     private final AtomicReference<String> searchText = new AtomicReference<String>("");
@@ -87,7 +80,7 @@ public class SearchField extends JPanel {
     private final AtomicBoolean labelDisplayed = new AtomicBoolean(true);
 
     public SearchField() {
-        super(new BorderLayout());
+        setLayout(new BorderLayout());
 
         // TODO move this icon inside the search field
         JLabel searchIcon = new JLabel(IconResource.SEARCH.getIcon());
@@ -129,7 +122,7 @@ public class SearchField extends JPanel {
                     searchText.set(filter);
                     if (!(filter.equals(previousText))) {
                         previousText = filter;
-                        fireViewAction(SearchAction.TEXT_CHANGED);
+                        fireViewAction(SearchAction.PERFORM_SEARCH, searchText.get());
                     }
                 }
             }
@@ -161,7 +154,7 @@ public class SearchField extends JPanel {
         final java.awt.event.ActionListener searchActionListener = new java.awt.event.ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                fireViewAction(SearchAction.PERFORM_SEARCH);
+                fireViewAction(SearchAction.PERFORM_SEARCH, searchField.getText());
             }
         };
 
@@ -190,18 +183,6 @@ public class SearchField extends JPanel {
 
     public void setTooltip(final LocalizedString tooltip) {
         searchField.setToolTipText(tooltip.getContents());
-    }
-
-    public void addActionListener(ActionListener<SearchAction> listener) {
-        notifier.addActionListener(listener);
-    }
-
-    public void removeActionListener(ActionListener<SearchAction> listener) {
-        notifier.removeActionListener(listener);
-    }
-
-    private void fireViewAction(SearchAction action) {
-        notifier.fireAction(action);
     }
 }
 
