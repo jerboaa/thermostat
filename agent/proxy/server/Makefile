@@ -4,7 +4,6 @@ MYCFLAGS   = -c -Wall -fPIC
 MYLDFLAGS  = -fPIC -shared
 COPY       = cp -a
 
-JAVA_HOME = /usr/lib/jvm/java-1.7.0-openjdk
 CLASSPATH  = target/classes
 TARGET_DIR = target
 
