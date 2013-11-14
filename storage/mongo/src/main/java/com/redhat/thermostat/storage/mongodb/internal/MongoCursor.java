@@ -38,7 +38,9 @@ package com.redhat.thermostat.storage.mongodb.internal;
 
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import com.mongodb.MongoException;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.model.Pojo;
 
 class MongoCursor<T extends Pojo> implements Cursor<T> {
@@ -53,17 +55,25 @@ class MongoCursor<T extends Pojo> implements Cursor<T> {
 
     @Override
     public boolean hasNext() {
-        return cursor.hasNext();
+        try {
+            return cursor.hasNext();
+        } catch (MongoException me) {
+            throw new StorageException(me);
+        }
     }
 
     @Override
     public T next() {
-        DBObject next = cursor.next();
-        if (next == null) {
-            return null;
+        try {
+            DBObject next = cursor.next();
+            if (next == null) {
+                return null;
+            }
+            MongoPojoConverter converter = new MongoPojoConverter();
+            return converter.convertMongoToPojo(next, resultClass);
+        } catch (MongoException me) {
+            throw new StorageException(me);
         }
-        MongoPojoConverter converter = new MongoPojoConverter();
-        return converter.convertMongoToPojo(next, resultClass);
     }
 
 }

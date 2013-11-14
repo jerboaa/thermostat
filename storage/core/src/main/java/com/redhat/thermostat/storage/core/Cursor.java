@@ -43,8 +43,14 @@ import com.redhat.thermostat.storage.model.Pojo;
  */
 public interface Cursor<T extends Pojo> {
 
+    /**
+     * @throws StorageException
+     */
     boolean hasNext();
 
+    /**
+     * @throws StorageException
+     */
     T next();
 
 }

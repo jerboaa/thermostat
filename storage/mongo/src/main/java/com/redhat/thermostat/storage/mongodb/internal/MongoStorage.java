@@ -49,6 +49,7 @@ import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import com.mongodb.MongoException;
 import com.mongodb.WriteResult;
 import com.mongodb.gridfs.GridFS;
 import com.mongodb.gridfs.GridFSDBFile;
@@ -73,6 +74,7 @@ import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.Statement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.AggregateResult;
@@ -306,15 +308,19 @@ public class MongoStorage implements BackingStorage {
     }
 
     public <T extends Pojo> Cursor<T> executeGetCount(Category<T> category, MongoQuery<T> queryToAggregate) {
-        DBCollection coll = getCachedCollection(category);
-        long count = 0L;
-        DBObject query = queryToAggregate.getGeneratedQuery();
-        if (coll != null) {
-            count = coll.getCount(query);
+        try {
+            DBCollection coll = getCachedCollection(category);
+            long count = 0L;
+            DBObject query = queryToAggregate.getGeneratedQuery();
+            if (coll != null) {
+                count = coll.getCount(query);
+            }
+            AggregateCount result = new AggregateCount();
+            result.setCount(count);
+            return result.getCursor();
+        } catch (MongoException me) {
+            throw new StorageException(me);
         }
-        AggregateCount result = new AggregateCount();
-        result.setCount(count);
-        return result.getCursor();
     }
 
     @Override
@@ -335,17 +341,25 @@ public class MongoStorage implements BackingStorage {
     }
 
     private <T extends Pojo> int addImpl(final Category<T> cat, final DBObject values) {
-        DBCollection coll = getCachedCollection(cat);
-        assertContainsWriterID(values);
-        WriteResult result = coll.insert(values);
-        return numAffectedRecords(result);
+        try {
+            DBCollection coll = getCachedCollection(cat);
+            assertContainsWriterID(values);
+            WriteResult result = coll.insert(values);
+            return numAffectedRecords(result);
+        } catch (MongoException me) {
+            throw new StorageException(me);
+        }
     }
 
     private <T extends Pojo> int replaceImpl(final Category<T> cat, final DBObject values, final DBObject query) {
-        DBCollection coll = getCachedCollection(cat);
-        assertContainsWriterID(values);
-        WriteResult result = coll.update(query, values, true, false);
-        return numAffectedRecords(result);
+        try {
+            DBCollection coll = getCachedCollection(cat);
+            assertContainsWriterID(values);
+            WriteResult result = coll.update(query, values, true, false);
+            return numAffectedRecords(result);
+        } catch (MongoException me) {
+            throw new StorageException(me);
+        }
     }
     
     private int numAffectedRecords(WriteResult result) {
@@ -361,15 +375,23 @@ public class MongoStorage implements BackingStorage {
     }
 
     private <T extends Pojo> int updateImpl(Category<T> category, DBObject values, DBObject query) {
-        DBCollection coll = getCachedCollection(category);
-        WriteResult result = coll.update(query, values);
-        return numAffectedRecords(result);
+        try {
+            DBCollection coll = getCachedCollection(category);
+            WriteResult result = coll.update(query, values);
+            return numAffectedRecords(result);
+        } catch (MongoException me) {
+            throw new StorageException(me);
+        }
     }
 
     private int removePojo(Category<?> category, DBObject query) {
-        DBCollection coll = getCachedCollection(category);
-        WriteResult result = coll.remove(query);
-        return numAffectedRecords(result);
+        try {
+            DBCollection coll = getCachedCollection(category);
+            WriteResult result = coll.remove(query);
+            return numAffectedRecords(result);
+        } catch (MongoException me) {
+            throw new StorageException(me);
+        }
     }
 
     private DBCollection getCachedCollection(Category<?> category) {
@@ -391,43 +413,51 @@ public class MongoStorage implements BackingStorage {
 
     @Override
     public void purge(String agentId) {
-        BasicDBObject query = new BasicDBObject(Key.AGENT_ID.getName(), agentId);
-        for (String collectionName : db.getCollectionNames()) {
-            DBCollection coll = db.getCollectionFromString(collectionName);
-            coll.remove(query);
+        try {
+            BasicDBObject query = new BasicDBObject(Key.AGENT_ID.getName(), agentId);
+            for (String collectionName : db.getCollectionNames()) {
+                DBCollection coll = db.getCollectionFromString(collectionName);
+                coll.remove(query);
+            }
+        } catch (MongoException me) {
+            throw new StorageException(me);
         }
     }
     
     @Override
     public void registerCategory(Category<?> category) {
-        Class<?> dataClass = category.getDataClass();
-        if (AggregateResult.class.isAssignableFrom(dataClass)) {
-            // adapted aggregate category, no need to actually register
-            return;
-        }
-        String name = category.getName();
-        if (collectionCache.containsKey(name)) {
-            throw new IllegalStateException("Category may only be associated with one backend.");
-        }
-
-        // The db field is only set once we've got a connection
-        // established. Wait until we actually get notification
-        // this has happened. Without this sychronization we might
-        // get NPEs since the connection handshake might still be
-        // ongoing.
         try {
-            connectedLatch.await();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+            Class<?> dataClass = category.getDataClass();
+            if (AggregateResult.class.isAssignableFrom(dataClass)) {
+                // adapted aggregate category, no need to actually register
+                return;
+            }
+            String name = category.getName();
+            if (collectionCache.containsKey(name)) {
+                throw new IllegalStateException("Category may only be associated with one backend.");
+            }
 
-        DBCollection coll;
-        if (! db.collectionExists(name)) {
-            coll = db.createCollection(name, new BasicDBObject("capped", false));
-        } else {
-            coll = db.getCollection(name);
+            // The db field is only set once we've got a connection
+            // established. Wait until we actually get notification
+            // this has happened. Without this sychronization we might
+            // get NPEs since the connection handshake might still be
+            // ongoing.
+            try {
+                connectedLatch.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+
+            DBCollection coll;
+            if (! db.collectionExists(name)) {
+                coll = db.createCollection(name, new BasicDBObject("capped", false));
+            } else {
+                coll = db.getCollection(name);
+            }
+            collectionCache.put(name, coll);
+        } catch (MongoException me) {
+            throw new StorageException(me);
         }
-        collectionCache.put(name, coll);
     }
 
     @Override
@@ -446,15 +476,19 @@ public class MongoStorage implements BackingStorage {
     }
 
     <T extends Pojo> Cursor<T> findAllPojos(MongoQuery<T> mongoQuery, Class<T> resultClass) {
-        DBCollection coll = getCachedCollection(mongoQuery.getCategory());
-        DBCursor dbCursor;
-        if (mongoQuery.hasClauses()) {
-            dbCursor = coll.find(mongoQuery.getGeneratedQuery());
-        } else {
-            dbCursor = coll.find();
+        try {
+            DBCollection coll = getCachedCollection(mongoQuery.getCategory());
+            DBCursor dbCursor;
+            if (mongoQuery.hasClauses()) {
+                dbCursor = coll.find(mongoQuery.getGeneratedQuery());
+            } else {
+                dbCursor = coll.find();
+            }
+            dbCursor = applySortAndLimit(mongoQuery, dbCursor);
+            return new MongoCursor<T>(dbCursor, resultClass);
+        } catch (MongoException me) {
+            throw new StorageException(me);
         }
-        dbCursor = applySortAndLimit(mongoQuery, dbCursor);
-        return new MongoCursor<T>(dbCursor, resultClass);
     }
 
     private DBCursor applySortAndLimit(MongoQuery<?> query, DBCursor dbCursor) {
@@ -473,19 +507,27 @@ public class MongoStorage implements BackingStorage {
 
     @Override
     public void saveFile(String filename, InputStream data) {
-        GridFS gridFS = new GridFS(db);
-        GridFSInputFile inputFile = gridFS.createFile(data, filename);
-        inputFile.save();
+        try {
+            GridFS gridFS = new GridFS(db);
+            GridFSInputFile inputFile = gridFS.createFile(data, filename);
+            inputFile.save();
+        } catch (MongoException me) {
+            throw new StorageException(me);
+        }
     }
 
     @Override
     public InputStream loadFile(String filename) {
-        GridFS gridFS = new GridFS(db);
-        GridFSDBFile file = gridFS.findOne(filename);
-        if (file == null) {
-            return null;
-        } else {
-            return file.getInputStream();
+        try {
+            GridFS gridFS = new GridFS(db);
+            GridFSDBFile file = gridFS.findOne(filename);
+            if (file == null) {
+                return null;
+            } else {
+                return file.getInputStream();
+            }
+        } catch (MongoException me) {
+            throw new StorageException(me);
         }
     }
 
