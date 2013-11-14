@@ -145,6 +145,12 @@ public interface ThreadDao {
     void saveCapabilities(VMThreadCapabilities caps);
 
     void saveDeadLockStatus(VmDeadLockData deadLockInfo);
+
+    /**
+     * Returns the latest vm deadlock data
+     *
+     * @return the latest data or null if there is none
+     */
     VmDeadLockData loadLatestDeadLockStatus(VmRef ref);
     
 }

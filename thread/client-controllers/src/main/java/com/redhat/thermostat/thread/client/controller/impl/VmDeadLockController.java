@@ -121,6 +121,11 @@ public class VmDeadLockController {
 
     private void checkStorageForDeadLockData() {
         VmDeadLockData data = collector.getLatestDeadLockData();
+        if (data == null) {
+            // no deadlock data; so don't update anything
+            return;
+        }
+
         String description = data.getDeadLockDescription();
         if (description.equals(VmDeadLockData.NO_DEADLOCK)) {
             description = translate.localize(LocaleResources.NO_DEADLOCK_DETECTED).getContents();

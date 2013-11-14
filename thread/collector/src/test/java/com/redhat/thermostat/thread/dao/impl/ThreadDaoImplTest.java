@@ -260,14 +260,26 @@ public class ThreadDaoImplTest {
     }
 
     @Test
+    public void testLoadLatestDeadLockStatusWithNoData() throws Exception {
+        Storage storage = mock(Storage.class);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<VmDeadLockData> stmt = (PreparedStatement<VmDeadLockData>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor(VmDeadLockData.class))).thenReturn(stmt);
+        @SuppressWarnings("unchecked")
+        Cursor<VmDeadLockData> cursor = (Cursor<VmDeadLockData>) mock(Cursor.class);
+
+        when(cursor.hasNext()).thenReturn(false);
+        when(cursor.next()).thenThrow(new IllegalStateException("must not do this"));
+        when(stmt.executeQuery()).thenReturn(cursor);
+
+        ThreadDaoImpl dao = new ThreadDaoImpl(storage);
+        VmDeadLockData result = dao.loadLatestDeadLockStatus(vmRef);
+
+        assertNull(result);
+    }
+
+    @Test
     public void testLoadLatestDeadLockStatus() throws DescriptorParsingException, StatementExecutionException {
-        VmRef vm = mock(VmRef.class);
-        when(vm.getVmId()).thenReturn(VM_ID);
-
-        HostRef agent = mock(HostRef.class);
-        when(agent.getAgentId()).thenReturn(AGENT_ID);
-        when(vm.getHostRef()).thenReturn(agent);
-
         Storage storage = mock(Storage.class);
         @SuppressWarnings("unchecked")
         PreparedStatement<VmDeadLockData> stmt = (PreparedStatement<VmDeadLockData>) mock(PreparedStatement.class);
@@ -281,7 +293,7 @@ public class ThreadDaoImplTest {
         when(stmt.executeQuery()).thenReturn(cursor);
 
         ThreadDaoImpl dao = new ThreadDaoImpl(storage);
-        VmDeadLockData result = dao.loadLatestDeadLockStatus(vm);
+        VmDeadLockData result = dao.loadLatestDeadLockStatus(vmRef);
 
         assertSame(data, result);
 

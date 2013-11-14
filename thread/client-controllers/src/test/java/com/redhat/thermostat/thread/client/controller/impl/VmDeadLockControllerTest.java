@@ -36,10 +36,13 @@
 
 package com.redhat.thermostat.thread.client.controller.impl;
 
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.concurrent.TimeUnit;
@@ -174,5 +177,23 @@ public class VmDeadLockControllerTest {
         action.run();
 
         verify(view).setDeadLockInformation("No Deadlocks Detected.");
+    }
+
+    @Test
+    public void verifyTimerActionHandlesNoDataCorrectly() {
+        doThrow(new AssertionError()).when(collector).requestDeadLockCheck();
+
+        controller.initialize();
+
+        when(collector.getLatestDeadLockData()).thenReturn(null);
+
+        ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
+        verify(timer).setAction(runnableCaptor.capture());
+
+        Runnable action = runnableCaptor.getValue();
+
+        action.run();
+
+        // pass if no exceptions thrown
     }
 }
