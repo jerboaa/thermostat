@@ -47,80 +47,28 @@ fi
 # the same location.
 if [ x"$THERMOSTAT_HOME" = x ] ; then
   THERMOSTAT_HOME=${THERMOSTAT_INSTALL_DIR}
-  export THERMOSTAT_HOME
 fi
 THERMOSTAT_LIBS="${THERMOSTAT_HOME}/libs"
 
-# need tools from the JVM
+# Need tools from the JVM
 TOOLS_JAR="@java.home@/../lib/tools.jar"
 
-# This is the minimal boot classpath thermostat needs. Other dependencies
-# will get started by the OSGi framework once that's up.
-SERVICE_CLASSPATH="${THERMOSTAT_LIBS}/org.apache.felix.framework-@felix.framework.version@.jar"
-SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-launcher-@project.version@.jar"
-SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-main-@project.version@.jar"
+# JARs necessary for the server
+SERVICE_CLASSPATH="${THERMOSTAT_LIBS}/thermostat-common-core-@project.version@.jar"
 SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-shared-config-@project.version@.jar"
-# This needs to be on the classpath for the RMI registry to find it
 SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-proxy-common-@project.version@.jar"
-# FIXME: Remove once jfreechart is a real OSGi bundle upstream
-SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_LIBS}/jfreechart-@jfreechart.version@.jar"
-SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_LIBS}/jcommon-@jcommon.version@.jar"
+SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-proxy-server-@project.version@.jar"
 SERVICE_CLASSPATH="${TOOLS_JAR}:${SERVICE_CLASSPATH}"
 
-THERMOSTAT_MAIN="com.redhat.thermostat.main.Thermostat"
+AGENT_PROXY_CLASS="com.redhat.thermostat.agent.proxy.server.AgentProxy"
 
-function usage() {
-    echo "$0 [-J<java-opt>] [-Tbg PIDFILE] [THERMOSTAT_ARGS]" >&2
-    exit 1
-}
+JAAS_CONFIG="${THERMOSTAT_HOME}/etc/agent_proxy_jaas.conf"
 
-# start parsing arguments, we intercept jvm arguments vs thermostat specific
-# arguments
-JAVA_ARGS=()
-ARGS=()
-
-RUN_IN_BG=0
-PID_FILE=""
-
-i=0
-j=0
-
-while [ "$#" -gt "0" ];
-do
-    case "$1" in
-    -J*)
-        JAVA_ARGS[$i]="${1##-J}"
-        i=$((i+1))
-        shift
-        ;;
-    -Tbg)
-        shift
-        RUN_IN_BG=1
-        PID_FILE="$1"
-        shift
-        ;;
-    *)
-        ARGS[$j]="$1"
-        j=$((j+1))
-        shift
-        ;;
-    esac
-done
-
-# Finally run thermostat (optionally in the background)
-if [ $RUN_IN_BG -eq 1 ]; then
-    # The thermostat-agent-sysd script uses this.
-    if [ x"$PID_FILE" = "x" ]; then
-        usage 
-    else
-        ${JAVA} "${JAVA_ARGS[@]}" -cp ${SERVICE_CLASSPATH} ${THERMOSTAT_MAIN} "${ARGS[@]}" &
-        retval=$?
-        echo $! > $PID_FILE
-        retval=$(( $retval + $? ))
-    fi
-else
-    ${JAVA} "${JAVA_ARGS[@]}" -cp ${SERVICE_CLASSPATH} ${THERMOSTAT_MAIN} "${ARGS[@]}"
-    retval=$?
+# Set this to remote debug
+if [ x"$THERMOSTAT_DEBUG" != x ] ; then
+  DEBUG_OPTS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,address=1082"
 fi
-exit $retval
 
+# Start server
+${JAVA} -cp ${SERVICE_CLASSPATH} ${DEBUG_OPTS} "-Djava.security.auth.login.config=${JAAS_CONFIG}" \
+"-Djava.rmi.server.randomIDs=true" ${AGENT_PROXY_CLASS} "$1"
