@@ -37,6 +37,8 @@
 package com.redhat.thermostat.agent.internal;
 
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import org.junit.Test;
 
@@ -44,6 +46,7 @@ import com.redhat.thermostat.agent.VmBlacklist;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl;
+import com.redhat.thermostat.utils.management.internal.RMIRegistry;
 import com.redhat.thermostat.utils.username.UserNameUtil;
 import com.redhat.thermostat.utils.username.internal.UserNameUtilImpl;
 
@@ -53,12 +56,27 @@ public class ActivatorTest {
 
         StubBundleContext context = new StubBundleContext();
 
-        Activator activator = new Activator();
+        RMIRegistry registry = mock(RMIRegistry.class);
+        MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(registry);
+        Activator activator = new Activator(pool);
 
         activator.start(context);
 
         assertTrue(context.isServiceRegistered(MXBeanConnectionPool.class.getName(), MXBeanConnectionPoolImpl.class));
         assertTrue(context.isServiceRegistered(UserNameUtil.class.getName(), UserNameUtilImpl.class));
         assertTrue(context.isServiceRegistered(VmBlacklist.class.getName(), VmBlacklistImpl.class));
+    }
+    
+    @Test
+    public void verifyPoolShutdown() throws Exception {
+
+        StubBundleContext context = new StubBundleContext();
+
+        MXBeanConnectionPoolImpl pool = mock(MXBeanConnectionPoolImpl.class);
+        Activator activator = new Activator(pool);
+
+        activator.stop(context);
+
+        verify(pool).shutdown();
     }
 }

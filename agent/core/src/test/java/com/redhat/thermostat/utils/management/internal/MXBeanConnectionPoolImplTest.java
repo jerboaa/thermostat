@@ -38,6 +38,7 @@ package com.redhat.thermostat.utils.management.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -45,12 +46,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.utils.management.MXBeanConnection;
 import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl.ConnectorCreator;
-import com.redhat.thermostat.utils.management.internal.MXBeanConnector;
 
 public class MXBeanConnectionPoolImplTest {
 
@@ -60,10 +59,11 @@ public class MXBeanConnectionPoolImplTest {
         MXBeanConnector connector = mock(MXBeanConnector.class);
         ConnectorCreator creator = mock(ConnectorCreator.class);
 
-        when(creator.create(anyInt())).thenReturn(connector);
+        when(creator.create(any(RMIRegistry.class), anyInt())).thenReturn(connector);
         when(connector.connect()).thenReturn(toReturn);
 
-        MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(creator);
+        RMIRegistry registry = mock(RMIRegistry.class);
+        MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(creator, registry);
 
         MXBeanConnection connection = pool.acquire(0);
 
@@ -81,10 +81,11 @@ public class MXBeanConnectionPoolImplTest {
         MXBeanConnector connector = mock(MXBeanConnector.class);
         ConnectorCreator creator = mock(ConnectorCreator.class);
 
-        when(creator.create(anyInt())).thenReturn(connector);
+        when(creator.create(any(RMIRegistry.class), anyInt())).thenReturn(connector);
         when(connector.connect()).thenReturn(toReturn);
 
-        MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(creator);
+        RMIRegistry registry = mock(RMIRegistry.class);
+        MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(creator, registry);
 
         MXBeanConnection connection1 = pool.acquire(0);
 
@@ -106,10 +107,11 @@ public class MXBeanConnectionPoolImplTest {
         MXBeanConnector connector = mock(MXBeanConnector.class);
         ConnectorCreator creator = mock(ConnectorCreator.class);
 
-        when(creator.create(anyInt())).thenReturn(connector);
+        when(creator.create(any(RMIRegistry.class), anyInt())).thenReturn(connector);
         when(connector.connect()).thenReturn(actualConnection);
 
-        MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(creator);
+        RMIRegistry registry = mock(RMIRegistry.class);
+        MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(creator, registry);
 
         MXBeanConnection connection = pool.acquire(0);
 
@@ -126,10 +128,11 @@ public class MXBeanConnectionPoolImplTest {
         MXBeanConnector connector = mock(MXBeanConnector.class);
         ConnectorCreator creator = mock(ConnectorCreator.class);
 
-        when(creator.create(anyInt())).thenReturn(connector);
+        when(creator.create(any(RMIRegistry.class), anyInt())).thenReturn(connector);
         when(connector.connect()).thenReturn(actualConnection);
 
-        MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(creator);
+        RMIRegistry registry = mock(RMIRegistry.class);
+        MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(creator, registry);
 
         // connection1 == connection1 == actualConnection
         MXBeanConnection connection1 = pool.acquire(0);
@@ -143,5 +146,16 @@ public class MXBeanConnectionPoolImplTest {
 
         verify(actualConnection).close();
 
+    }
+    
+    @Test
+    public void testShutdown() throws Exception {
+        RMIRegistry registry = mock(RMIRegistry.class);
+        ConnectorCreator creator = mock(ConnectorCreator.class);
+        MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(creator, registry);
+        verify(registry).start();
+        
+        pool.shutdown();
+        verify(registry).stop();
     }
 }
