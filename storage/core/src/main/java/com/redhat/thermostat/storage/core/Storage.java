@@ -96,6 +96,13 @@ public interface Storage {
     /**
      * Save the contents of the input stream as the given name.
      *
+     * @param filename
+     *            the name to save this data stream as. This must be unique
+     *            across all machines and processes using the storage or it will
+     *            overwrite data.
+     * @param data
+     *            the data to save
+     *
      * @throws StorageException
      *            If the save operation fails
      */
@@ -103,6 +110,8 @@ public interface Storage {
 
     /**
      * Load the file with the given name and return the data as an InputStream.
+     *
+     * @return the data as an {@link InputStream} or {@code null} if not found.
      *
      * @throws StorageException
      *            If the load operation fails
