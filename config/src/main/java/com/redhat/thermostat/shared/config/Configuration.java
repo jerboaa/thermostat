@@ -85,10 +85,21 @@ public class Configuration {
 
     private static final String THERMOSTAT_USER_DIR = ".thermostat";
 
-    private final String home;
+    private final File systemHome;
     private final UserDirectories userDirectories;
 
+    private static File defaultSystemUserPrefix;
+
     public Configuration() throws InvalidConfigurationException {
+        this(makeDir(null, "/"));
+    }
+
+    Configuration(String altTestingPrefix) {
+        this(makeDir(null, altTestingPrefix));
+    }
+
+    private Configuration(File defaultPrefix) {
+        Configuration.defaultSystemUserPrefix = defaultPrefix;
         // allow this to be specified also as a property, especially for
         // tests, this overrides the env setting
         String home = System.getProperty(THERMOSTAT_HOME);
@@ -99,7 +110,13 @@ public class Configuration {
         if (home == null) {
             throw new InvalidConfigurationException(THERMOSTAT_HOME + " not defined...");
         }
-        this.home = home;
+        this.systemHome = new File(home);
+        if (!systemHome.exists()) {
+            systemHome.mkdirs();
+        }
+        if (!systemHome.isDirectory()) {
+            throw new InvalidConfigurationException(THERMOSTAT_HOME + " is not a directory: " + home);
+        }
 
         String systemUser = System.getProperty(THERMOSTAT_SYSTEM_USER);
         if (systemUser == null) {
@@ -118,7 +135,7 @@ public class Configuration {
      */
 
     public File getSystemThermostatHome() throws InvalidConfigurationException {
-        return new File(home);
+        return systemHome;
     }
 
     public File getUserThermostatHome() throws InvalidConfigurationException {
@@ -126,23 +143,23 @@ public class Configuration {
     }
 
     public File getSystemPluginRoot() throws InvalidConfigurationException {
-        return new File(home, "plugins");
+        return makeDir(systemHome, "plugins");
     }
 
     public File getSystemLibRoot() throws InvalidConfigurationException {
-        return new File(home, "libs");
+        return makeDir(systemHome, "libs");
     }
     
     public File getSystemBinRoot() throws InvalidConfigurationException {
-        return new File(home, "bin");
+        return makeDir(systemHome, "bin");
     }
 
     public File getSystemNativeLibsRoot() throws InvalidConfigurationException {
-        return new File(getSystemLibRoot(), "native");
+        return makeDir(getSystemLibRoot(), "native");
     }
 
     public File getSystemConfigurationDirectory() throws InvalidConfigurationException {
-        return new File(getSystemThermostatHome(), "etc");
+        return makeDir(getSystemThermostatHome(), "etc");
     }
 
     public File getUserConfigurationDirectory() throws InvalidConfigurationException {
@@ -178,7 +195,7 @@ public class Configuration {
     }
 
     public File getUserStorageDirectory() throws InvalidConfigurationException {
-        return new File(getUserPersistentDataDirectory(), "db");
+        return makeDir(getUserPersistentDataDirectory(), "db");
     }
 
     public File getSystemStorageConfigurationFile() throws InvalidConfigurationException {
@@ -244,6 +261,21 @@ public class Configuration {
 
     }
 
+    private static File makeDir(File parent, String name) {
+        File dir = new File(parent, name);
+        boolean exists = dir.exists();
+        if (!exists) {
+            exists = dir.mkdirs();
+        }
+        if (!exists) {
+            throw new InvalidConfigurationException("Directory could not be created: " + dir.getAbsolutePath());
+        }
+        if (!dir.isDirectory()) {
+            throw new InvalidConfigurationException("File already exists but is not a directory: " + dir.getAbsolutePath());
+        }
+        return dir;
+    }
+
     /*
      * We need two different implementations because the paths are different. We
      * can't get clean paths by simply changing the prefix.
@@ -267,7 +299,7 @@ public class Configuration {
             if (userHome == null) {
                 userHome = System.getProperty("user.home") + File.separatorChar + THERMOSTAT_USER_DIR;
             }
-            this.userHome = new File(userHome);
+            this.userHome = makeDir(null, userHome);
         }
 
         public File getSystemRoot() throws InvalidConfigurationException {
@@ -276,27 +308,23 @@ public class Configuration {
 
 
         public File getUserConfigurationDirectory() throws InvalidConfigurationException {
-            return new File(getSystemRoot(), "etc");
+            return makeDir(getSystemRoot(), "etc");
         }
 
         public File getUserPersistentDataDirectory() throws InvalidConfigurationException {
-            File dataDir = new File(getSystemRoot(), "data");
-            return dataDir;
+            return makeDir(getSystemRoot(), "data");
         }
 
         public File getUserRuntimeDataDirectory() throws InvalidConfigurationException {
-            File runDir = new File(getSystemRoot(), "run");
-            return runDir;
+            return makeDir(getSystemRoot(), "run");
         }
 
         public File getUserLogDirectory() throws InvalidConfigurationException {
-            File logDir = new File(getSystemRoot(), "logs");
-            return logDir;
+            return makeDir(getSystemRoot(), "logs");
         }
 
         public File getUserCacheDirectory() throws InvalidConfigurationException {
-            File cacheDir = new File(getSystemRoot(), "cache");
-            return cacheDir;
+            return makeDir(getSystemRoot(), "cache");
         }
     }
 
@@ -311,9 +339,10 @@ public class Configuration {
                 userHome = System.getenv(USER_THERMOSTAT_HOME);
             }
             if (userHome == null) {
-                userHome = "/";
+                this.prefix = defaultSystemUserPrefix;
+            } else {
+                this.prefix = makeDir(null, userHome);
             }
-            this.prefix = new File(userHome);
         }
 
         public File getSystemRoot() throws InvalidConfigurationException {
@@ -322,27 +351,23 @@ public class Configuration {
 
 
         public File getUserConfigurationDirectory() throws InvalidConfigurationException {
-            return new File(getSystemRoot(), "etc/thermostat");
+            return makeDir(getSystemRoot(), "etc/thermostat");
         }
 
         public File getUserPersistentDataDirectory() throws InvalidConfigurationException {
-            File dataDir = new File(getSystemRoot(), "var/lib/thermostat");
-            return dataDir;
+            return makeDir(getSystemRoot(), "var/lib/thermostat");
         }
 
         public File getUserRuntimeDataDirectory() throws InvalidConfigurationException {
-            File runDir = new File(getSystemRoot(), "var/run/thermostat");
-            return runDir;
+            return makeDir(getSystemRoot(), "var/run/thermostat");
         }
 
         public File getUserLogDirectory() throws InvalidConfigurationException {
-            File logDir = new File(getSystemRoot(), "var/log/thermostat");
-            return logDir;
+            return makeDir(getSystemRoot(), "var/log/thermostat");
         }
 
         public File getUserCacheDirectory() throws InvalidConfigurationException {
-            File cacheDir = new File(getSystemRoot(), "var/cache/thermostat");
-            return cacheDir;
+            return makeDir(getSystemRoot(), "var/cache/thermostat");
         }
     }
 

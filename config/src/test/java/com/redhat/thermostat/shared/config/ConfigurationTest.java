@@ -109,28 +109,28 @@ public class ConfigurationTest {
 
     @Test
     public void testPrivilegedUserLocations() throws InvalidConfigurationException, IOException {
-        String thermostatHome = "/tmp";
+        String thermostatHome = "/tmp/thermostat_test";
         System.setProperty("THERMOSTAT_HOME", thermostatHome);
         System.setProperty("THERMOSTAT_SYSTEM_USER", "");
-        Configuration config = new Configuration();
+        Configuration config = new Configuration(thermostatHome);
 
         // the paths are unix specific, but so are the paths in Configuration
 
-        Assert.assertEquals("/etc/thermostat/agent.properties", config.getUserAgentConfigurationFile().getCanonicalPath());
-        Assert.assertEquals("/etc/thermostat/agent.auth", config.getUserAgentAuthConfigFile().getCanonicalPath());
-        Assert.assertEquals("/etc/thermostat/db.properties", config.getUserStorageConfigurationFile().getCanonicalPath());
+        Assert.assertEquals("/tmp/thermostat_test/etc/thermostat/agent.properties", config.getUserAgentConfigurationFile().getCanonicalPath());
+        Assert.assertEquals("/tmp/thermostat_test/etc/thermostat/agent.auth", config.getUserAgentAuthConfigFile().getCanonicalPath());
+        Assert.assertEquals("/tmp/thermostat_test/etc/thermostat/db.properties", config.getUserStorageConfigurationFile().getCanonicalPath());
 
-        Assert.assertEquals("/var/lib/thermostat/db", config.getUserStorageDirectory().getCanonicalPath());
-        Assert.assertEquals("/var/run/thermostat/db.pid", config.getUserStoragePidFile().getAbsolutePath());
-        Assert.assertEquals("/var/log/thermostat/db.log", config.getUserStorageLogFile().getCanonicalPath());
+        Assert.assertEquals("/tmp/thermostat_test/var/lib/thermostat/db", config.getUserStorageDirectory().getCanonicalPath());
+        Assert.assertEquals("/tmp/thermostat_test/var/run/thermostat/db.pid", config.getUserStoragePidFile().getAbsolutePath());
+        Assert.assertEquals("/tmp/thermostat_test/var/log/thermostat/db.log", config.getUserStorageLogFile().getCanonicalPath());
 
-        Assert.assertEquals("/var/lib/thermostat/plugins", config.getUserPluginRoot().getCanonicalPath());
+        Assert.assertEquals("/tmp/thermostat_test/var/lib/thermostat/plugins", config.getUserPluginRoot().getCanonicalPath());
     }
 
     @Test
     public void testPrivilegedUserLocationsWithPrefix() throws InvalidConfigurationException, IOException {
         String thermostatHome = "/tmp";
-        String prefix = "/opt/custom/prefix";
+        String prefix = "/tmp/opt/custom/prefix";
         System.setProperty("THERMOSTAT_HOME", thermostatHome);
         System.setProperty("USER_THERMOSTAT_HOME", prefix);
         System.setProperty("THERMOSTAT_SYSTEM_USER", "");

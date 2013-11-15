@@ -38,4 +38,15 @@
   <security-role>
     <role-name>thermostat-realm</role-name>
   </security-role>
+
+  <!-- THERMOSTAT_HOME is set via the listener below -->
+  <context-param>
+    <param-name>THERMOSTAT_HOME</param-name>
+    <param-value>/tmp/test-thermostat-home</param-value>
+  </context-param>
+
+  <listener>
+    <listener-class>com.redhat.thermostat.web.server.PropertySettingServletContextListener</listener-class>
+  </listener>
+
 </web-app>
