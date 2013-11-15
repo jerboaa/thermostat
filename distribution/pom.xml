@@ -359,11 +359,6 @@
     </dependency>
     <dependency>
         <groupId>com.redhat.thermostat</groupId>
-        <artifactId>thermostat-web-cmd</artifactId>
-        <version>${project.version}</version>
-    </dependency>
-    <dependency>
-        <groupId>com.redhat.thermostat</groupId>
         <artifactId>thermostat-web-server</artifactId>
         <version>${project.version}</version>
     </dependency>

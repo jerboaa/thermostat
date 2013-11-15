@@ -54,7 +54,6 @@
     <module>common</module>
     <module>server</module>
     <module>client</module>
-    <module>cmd</module>
     <module>war</module>
   </modules>
 

@@ -1,0 +1,211 @@
+#!/bin/bash
+#
+# Copyright 2012, 2013 Red Hat, Inc.
+#
+# This file is part of Thermostat.
+#
+# Thermostat is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published
+# by the Free Software Foundation; either version 2, or (at your
+# option) any later version.
+#
+# Thermostat is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Thermostat; see the file COPYING.  If not see
+# <http://www.gnu.org/licenses/>.
+#
+# Linking this code with other modules is making a combined work
+# based on this code.  Thus, the terms and conditions of the GNU
+# General Public License cover the whole combination.
+#
+# As a special exception, the copyright holders of this code give
+# you permission to link this code with independent modules to
+# produce an executable, regardless of the license terms of these
+# independent modules, and to copy and distribute the resulting
+# executable under terms of your choice, provided that you also
+# meet, for each linked independent module, the terms and conditions
+# of the license of that module.  An independent module is a module
+# which is not derived from or based on this code.  If you modify
+# this code, you may extend this exception to your version of the
+# library, but you are not obligated to do so.  If you do not wish
+# to do so, delete this exception statement from your version.
+#
+#####################################################################
+#
+read -d '' help_text <<"END_OF_HELP"
+thermostat-webservice: A convenience script for starting and stopping
+tomcat with thermostat web storage application deployed.
+
+This script is intended to be an aid for developers to start up
+tomcat and deploy thermostat web storage app.  It is assumed that
+there is already a backing storage running that the web app can
+connect to, and that the web.xml file from the build image is
+correctly configured for this backing storage connection.  See
+the file:
+
+   web/war/target/thermostat-web-war-0.16.0-SNAPSHOT/WEB-INF/web.xml
+
+In addition, an appropriate user and role configuration must be
+present in the build image.  See the files:
+
+   distribution/target/image/etc/thermostat-users.properties
+   distribution/target/image/etc/thermostat-roles.properties
+
+An agent requires authentication configuration in order to connect
+to secured storage.  See the file:
+
+   ~/.thermostat/etc/agent.auth
+
+Possible contents of thermostat-users.properties:
+
+   agent-tester=tester
+   client-tester=tester
+
+Corresponding potential thermostat-roles.properties:
+
+   agent-tester=thermostat-agent, thermostat-files-grant-write-filename-ALL
+   client-tester=thermostat-client, thermostat-cmdc-allPrivs, \\
+                 thermostat-files-grant-read-filename-ALL
+   thermostat-agent=thermostat-write, thermostat-prepare-statement, \\
+                    thermostat-save-file, thermostat-purge, \\
+                    thermostat-register-category, thermostat-cmdc-verify, \\
+                    thermostat-login, thermostat-realm
+   thermostat-client=thermostat-agents-grant-read-agentId-ALL, \\
+                     thermostat-hosts-grant-read-hostname-ALL, \\
+                     thermostat-vms-grant-read-vmId-ALL, \\
+                     thermostat-vms-grant-read-username-ALL, thermostat-realm, \\
+                     thermostat-login, thermostat-query, \\
+                     thermostat-prepare-statement, thermostat-cmdc-generate, \\
+                     thermostat-load-file, thermostat-get-count, \\
+                     thermostat-register-category
+   thermostat-cmdc-allPrivs = thermostat-cmdc-grant-garbage-collect, \\
+                     thermostat-cmdc-grant-dump-heap, \\
+                     thermostat-cmdc-grant-thread-harvester, \\
+                     thermostat-cmdc-grant-killvm, \\
+                     thermostat-cmdc-grant-ping, \\
+                     thermostat-cmdc-grant-jmx-toggle-notifications
+
+Please be familiar with these privileges to decide whether this
+set of users and roles is appropriate for you or your testing.
+
+Contents of ~/.thermostat/etc/agent.auth that would be valid with the above:
+
+   username=agent-tester
+   password=tester
+
+Here is typical use of this script:
+
+   $ echo ${USER_FLUFF} > distribution/target/image/etc/thermostat-users.properties
+   $ echo ${ROLE_FLUFF} > distribution/target/image/etc/thermostat-roles.properties
+   $ echo ${AGENT_FLUFF} > ~/.thermostat/etc/agent.auth
+   $ ./distribution/target/image/bin/thermostat storage --start
+   $ ./distribution/target/image/bin/thermostat-webservice -t /path/to/tomcat start
+   $ ./distribution/target/image/bin/thermostat agent -d http://127.0.0.1:8080/thermostat/storage
+   $ ./distribution/target/image/bin/thermostat gui
+
+   ... and so forth.
+
+   ./distribution/target/image/bin/thermostat-webservice -t /path/to/tomcat stop
+   ./distribution/target/image/bin/thermostat storage --stop
+
+NOTE: Use of this script to start tomcat will blow away webapps/thermostat
+in your tomcat directory and replace it with the corresponding contents
+from your build image.
+
+NOTE2: If tomcat is already running, results of this script are undefined.
+
+.
+END_OF_HELP
+#
+
+TOMCAT_DIR=tomcat
+
+usage() {
+  echo "Usage: "
+  echo "   thermostat-webservice [-t <root of tomcat directory>] <start|stop>"
+}
+
+do_help() {
+  echo "$help_text"
+  usage
+}
+
+check_valid_args() {
+  if [ "x${FUNCTION}" = "x" ] ; then
+    echo "You must specify either start, stop, or help."
+    usage
+    exit 1
+  fi
+  if [ ! -d ${TOMCAT_DIR} ] ; then
+    echo "Tomcat directory does not exist: ${TOMCAT_DIR}"
+    usage
+    exit 1
+  fi
+}
+
+process_args() {
+  while [ $# -gt 0 ]; do
+    THIS_ARG=$1
+    shift
+    if [ $THIS_ARG = "-h" -o $THIS_ARG = "--help" -o $THIS_ARG = "help" ] ; then
+      do_help
+      exit
+      break
+    elif [ $THIS_ARG = "-t" ] ; then
+      TOMCAT_DIR=$1
+      shift
+    elif [ $THIS_ARG = "start" -o $THIS_ARG = "stop" ] ; then
+      FUNCTION=$THIS_ARG
+    else
+      echo "Unrecognized argument: $THIS_ARG"
+      exit 1
+    fi
+  done
+  check_valid_args
+}
+
+do_start() {
+  rm -rf webapps/thermostat
+  cp -r "$TH/web/war/target/thermostat-web-war-@project.version@" webapps/thermostat
+  JAVA_OPTS="-Djava.security.auth.login.config=${TH}/distribution/target/image/etc/thermostat_jaas.conf" ./bin/startup.sh
+}
+
+do_stop() {
+  ./bin/shutdown.sh
+}
+
+do_function() {
+  TH="$(pwd)"
+  cd ${TOMCAT_DIR}
+  case $1 in
+    start )
+      do_start
+      ;;
+    stop )
+      do_stop
+      ;;
+  esac
+  cd ${TH}
+}
+
+process_args $*
+do_function $FUNCTION
+
+# Please be familiar with these privileges to decide whether this
+# set of users and roles is appropriate for you or your testing.
+#
+#TH="$(pwd)"
+#cd path/to/tomcat
+#rm -rf webapps/thermostat
+#cp -r $TH/web/war/target/thermostat-web-war-0.16.0-SNAPSHOT webapps/thermostat
+#export JAVA_OPTS="-Djava.security.auth.login.config=${TH}/distribution/target/image/etc/thermostat_jaas.conf"
+#./bin/startup.sh
+#cd $TH
+#./distribution/target/image/bin/thermostat storage --start
+#mkdir -p ~/.thermostat/etc
+#echo -e "username=agent-tester\npassword=tester" > ~/.thermostat/etc/agent.auth
+#./distribution/target/image/bin/thermostat agent -d http://127.0.0.1:8080/thermostat/storage
