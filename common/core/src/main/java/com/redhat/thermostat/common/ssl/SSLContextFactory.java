@@ -64,6 +64,7 @@ import com.redhat.thermostat.common.internal.TrustManagerFactory;
 import com.redhat.thermostat.common.internal.DelegateSSLSocketFactory;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 
 public class SSLContextFactory {
 
@@ -82,12 +83,12 @@ public class SSLContextFactory {
      * @throws SslInitException
      * @throws InvalidConfigurationException
      */
-    public static SSLContext getServerContext() throws SslInitException,
+    public static SSLContext getServerContext(SSLConfiguration sslConf) throws SslInitException,
             InvalidConfigurationException {
         if (serverContext != null) {
             return serverContext;
         }
-        initServerContext();
+        initServerContext(sslConf);
         return serverContext;
     }
 
@@ -97,11 +98,11 @@ public class SSLContextFactory {
      *         registered.
      * @throws SslInitException if SSL initialization failed.
      */
-    public static SSLContext getClientContext() throws SslInitException {
+    public static SSLContext getClientContext(SSLConfiguration sslConf) throws SslInitException {
         if (clientContext != null) {
             return clientContext;
         }
-        initClientContext();
+        initClientContext(sslConf);
         return clientContext;
     }
     
@@ -131,24 +132,23 @@ public class SSLContextFactory {
         return params;
     }
 
-    private static void initClientContext() throws SslInitException {
+    private static void initClientContext(SSLConfiguration sslConf) throws SslInitException {
         SSLContext clientCtxt = null;
         try {
             clientCtxt = getContextInstance();
             // Don't need key managers for client mode
-            clientCtxt.init(null, getTrustManagers(), new SecureRandom());
+            clientCtxt.init(null, getTrustManagers(sslConf), new SecureRandom());
         } catch (KeyManagementException e) {
             throw new SslInitException(e);
         }
         clientContext = clientCtxt;
     }
 
-    private static void initServerContext() throws SslInitException,
+    private static void initServerContext(SSLConfiguration sslConf) throws SslInitException,
             InvalidConfigurationException {
         SSLContext serverCtxt = null;
-        File trustStoreFile = SSLConfiguration.getKeystoreFile();
-        String keyStorePassword = SSLConfiguration
-                .getKeyStorePassword();
+        File trustStoreFile = sslConf.getKeystoreFile();
+        String keyStorePassword = sslConf.getKeyStorePassword();
         KeyStore ks = KeyStoreProvider.getKeyStore(trustStoreFile,
                 keyStorePassword);
         if (ks == null) {
@@ -162,15 +162,15 @@ public class SSLContextFactory {
             serverCtxt = getContextInstance();
             // Initialize the SSLContext to work with our key and trust managers.
             serverCtxt.init(getKeyManagers(ks, keyStorePassword),
-                    getTrustManagers(), new SecureRandom());
+                    getTrustManagers(sslConf), new SecureRandom());
         } catch (GeneralSecurityException e) {
             throw new SslInitException(e);
         }
         serverContext = serverCtxt;
     }
     
-    private static TrustManager[] getTrustManagers() throws SslInitException {
-        TrustManager tm = TrustManagerFactory.getTrustManager();
+    private static TrustManager[] getTrustManagers(SSLConfiguration sslConf) throws SslInitException {
+        TrustManager tm = TrustManagerFactory.getTrustManager(sslConf);
         return new TrustManager[] { tm }; 
     }
     

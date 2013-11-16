@@ -53,9 +53,9 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
-import com.redhat.thermostat.common.ssl.SSLConfiguration;
 import com.redhat.thermostat.common.ssl.SslInitException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 
 /**
  * Custom X509TrustManager which first attempts to verify peer certificates
@@ -99,8 +99,8 @@ class CustomX509TrustManager implements X509TrustManager {
     /*
      * Main constructor, which uses ssl.properties as config if present.
      */
-    CustomX509TrustManager() throws SslInitException {
-        this(SSLConfiguration.getKeystoreFile(), SSLConfiguration.getKeyStorePassword());
+    CustomX509TrustManager(SSLConfiguration sslConf) throws SslInitException {
+        this(sslConf.getKeystoreFile(), sslConf.getKeyStorePassword());
     }
  
     private X509TrustManager getDefaultTrustManager() throws SslInitException {

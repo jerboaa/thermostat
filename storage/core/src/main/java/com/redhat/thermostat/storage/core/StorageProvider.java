@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.storage.core;
 
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 
 /**
@@ -56,8 +57,9 @@ public interface StorageProvider {
      * {@link StorageProvider#canHandleProtocol()}.
      * 
      * @param config
+     * @param sslConf
      */
-    void setConfig(StartupConfiguration config);
+    void setConfig(StartupConfiguration config, SSLConfiguration sslConf);
 
     /**
      * Method which determines if this StorageProvider can handle the given

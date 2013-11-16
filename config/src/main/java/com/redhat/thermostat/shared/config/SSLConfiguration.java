@@ -34,17 +34,50 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.command;
+package com.redhat.thermostat.shared.config;
 
-import org.jboss.netty.bootstrap.Bootstrap;
+import java.io.File;
 
-import com.redhat.thermostat.shared.config.SSLConfiguration;
+public interface SSLConfiguration {
 
-public interface ConfigurationCommandContext {
+    /**
+     * 
+     * @return The keystore file as specified in $THERMOSTAT_HOME/etc/ssl.properties
+     *         if any. null otherwise.
+     */
+    public File getKeystoreFile();
 
-    public Bootstrap getBootstrap();
+    /**
+     * 
+     * @return The keystore password as specified in $THERMOSTAT_HOME/etc/ssl.properties
+     *         if any, null otherwise.
+     */
+    public String getKeyStorePassword();
 
-    public SSLConfiguration getSSLConfiguration();
+    /**
+     * 
+     * @return true if and only if SSL should be enabled for command channel
+     *         communication between agent and client. I.e. if
+     *         $THERMOSTAT_HOME/etc/ssl.properties exists and proper config has
+     *         been added. false otherwise.
+     */
+    public boolean enableForCmdChannel();
+
+    /**
+     * 
+     * @return true if and only if SSL should be used for backing storage
+     *         connections. I.e. if $THERMOSTAT_HOME/etc/ssl.properties exists
+     *         and proper config has been added. false otherwise.
+     */
+    public boolean enableForBackingStorage();
+
+    /**
+     * 
+     * @return true if and only if host name verification should not be
+     *         performed during SSL handshake. In other words if
+     *         $THERMOSTAT_HOME/etc/ssl.properties exists and proper config has
+     *         been added. false otherwise.
+     */
+    public boolean disableHostnameVerification();
 
 }
-

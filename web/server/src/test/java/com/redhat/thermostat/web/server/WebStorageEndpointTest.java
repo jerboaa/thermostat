@@ -127,7 +127,6 @@ import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
 import com.redhat.thermostat.web.common.PreparedParameterSerializer;
 import com.redhat.thermostat.web.common.PreparedStatementResponseCode;
-import com.redhat.thermostat.web.common.StorageWrapper;
 import com.redhat.thermostat.web.common.ThermostatGSONConverter;
 import com.redhat.thermostat.web.common.WebPreparedStatement;
 import com.redhat.thermostat.web.common.WebPreparedStatementResponse;
@@ -230,7 +229,7 @@ public class WebStorageEndpointTest {
     public void setUp() throws Exception {
         
         mockStorage = mock(BackingStorage.class);
-        StorageWrapper.setStorage(mockStorage);
+        StorageFactory.setStorage(mockStorage);
     }
 
     private void startServer(int port, LoginService loginService) throws Exception {

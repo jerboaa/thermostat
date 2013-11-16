@@ -1,5 +1,5 @@
 /*
- * Copyright 2012, 2013 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,17 +34,30 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.command;
+package com.redhat.thermostat.shared.config.internal;
 
-import org.jboss.netty.bootstrap.Bootstrap;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import org.junit.Test;
 
 import com.redhat.thermostat.shared.config.SSLConfiguration;
+import com.redhat.thermostat.testutils.StubBundleContext;
 
-public interface ConfigurationCommandContext {
+public class ActivatorTest {
 
-    public Bootstrap getBootstrap();
+    @Test
+    public void verifyServiceRegistered() throws Exception {
+        StubBundleContext ctx = new StubBundleContext();
+        Activator activator = new Activator();
+        activator.start(ctx);
 
-    public SSLConfiguration getSSLConfiguration();
+        assertTrue(ctx.isServiceRegistered(SSLConfiguration.class.getName(),
+                SSLConfigurationImpl.class));
+        assertEquals(1, ctx.getAllServices().size());
 
+    }
+
+
+    
 }
-

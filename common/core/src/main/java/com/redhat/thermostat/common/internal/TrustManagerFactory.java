@@ -39,6 +39,7 @@ package com.redhat.thermostat.common.internal;
 import javax.net.ssl.X509TrustManager;
 
 import com.redhat.thermostat.common.ssl.SslInitException;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 
 
 /**
@@ -51,8 +52,8 @@ public class TrustManagerFactory {
      * @return the thermostat X509TrustManager.
      * @throws SslInitException if an error occured retrieving the trust manager.
      */
-    public static X509TrustManager getTrustManager() throws SslInitException {
-        return new CustomX509TrustManager();
+    public static X509TrustManager getTrustManager(SSLConfiguration sslConf) throws SslInitException {
+        return new CustomX509TrustManager(sslConf);
     }
 }
 

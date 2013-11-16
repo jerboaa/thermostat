@@ -46,25 +46,17 @@ import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.handler.ssl.SslHandler;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.agent.command.internal.ServerHandler.SSLHandshakeDoneListener;
-import com.redhat.thermostat.common.ssl.SSLConfiguration;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({ SSLConfiguration.class})
 public class ServerHandlerTest {
 
     @Test
     public void channelConnectedAddsSSLListener() throws Exception {
-        ServerHandler handler = new ServerHandler(null);
-        
-        // enable ssl
-        PowerMockito.mockStatic(SSLConfiguration.class);
-        when(SSLConfiguration.enableForCmdChannel()).thenReturn(true);
+        SSLConfiguration mockSSLConf = mock(SSLConfiguration.class);
+        when(mockSSLConf.enableForCmdChannel()).thenReturn(true);
+        ServerHandler handler = new ServerHandler(null, mockSSLConf);
         
         ChannelHandlerContext ctx = mock(ChannelHandlerContext.class);
         ChannelPipeline pipeline = mock(ChannelPipeline.class);

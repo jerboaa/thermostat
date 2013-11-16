@@ -51,11 +51,11 @@ import com.mongodb.MongoException;
 import com.mongodb.MongoOptions;
 import com.mongodb.ServerAddress;
 import com.redhat.thermostat.common.ssl.SSLContextFactory;
-import com.redhat.thermostat.common.ssl.SSLConfiguration;
 import com.redhat.thermostat.common.ssl.SslInitException;
 import com.redhat.thermostat.common.utils.HostPortPair;
 import com.redhat.thermostat.common.utils.HostPortsParser;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.config.AuthenticationConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Connection;
@@ -69,9 +69,11 @@ class MongoConnection extends Connection {
     private Mongo m = null;
     private DB db = null;
     private StartupConfiguration conf;
+    SSLConfiguration sslConf;
 
-    MongoConnection(StartupConfiguration conf) {
+    MongoConnection(StartupConfiguration conf, SSLConfiguration sslConf) {
         this.conf = conf;
+        this.sslConf = sslConf;
     }
 
     @Override
@@ -121,8 +123,9 @@ class MongoConnection extends Connection {
         return db;
     }
 
-    private void createConnection() throws MongoException, UnknownHostException {
-        if (SSLConfiguration.enableForBackingStorage()) {
+    // package visibility for testing purposes.
+    void createConnection() throws MongoException, UnknownHostException {
+        if (sslConf.enableForBackingStorage()) {
             logger.log(Level.FINE, "Using SSL socket for mongodb:// protocol");
             this.m = getSSLMongo();
         } else {
@@ -136,14 +139,14 @@ class MongoConnection extends Connection {
         MongoOptions opts = new MongoOptions();
         SSLContext ctxt = null;
         try {
-            ctxt = SSLContextFactory.getClientContext();
+            ctxt = SSLContextFactory.getClientContext(sslConf);
         } catch (SslInitException e) {
             logger.log(Level.WARNING, "Failed to get SSL context!", e);
             throw new MongoException(e.getMessage(), e);
         }
         SSLParameters params = SSLContextFactory.getSSLParameters(ctxt);
         // Perform HTTPS compatible host name checking.
-        if (!SSLConfiguration.disableHostnameVerification()) {
+        if (!sslConf.disableHostnameVerification()) {
             params.setEndpointIdentificationAlgorithm("HTTPS");
         }
         SSLSocketFactory factory = SSLContextFactory.wrapSSLFactory(

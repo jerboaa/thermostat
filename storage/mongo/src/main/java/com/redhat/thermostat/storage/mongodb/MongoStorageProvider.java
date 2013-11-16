@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.storage.mongodb;
 
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.QueuedStorage;
 import com.redhat.thermostat.storage.core.Storage;
@@ -45,14 +46,16 @@ import com.redhat.thermostat.storage.mongodb.internal.MongoStorage;
 public class MongoStorageProvider implements StorageProvider {
 
     private StartupConfiguration configuration;
+    private SSLConfiguration sslConf;
 
-    public void setConfig(StartupConfiguration configuration) {
+    public void setConfig(StartupConfiguration configuration, SSLConfiguration sslConf) {
         this.configuration = configuration;
+        this.sslConf = sslConf;
     }
 
     @Override
     public Storage createStorage() {
-        MongoStorage storage = new MongoStorage(configuration);
+        MongoStorage storage = new MongoStorage(configuration, sslConf);
         return new QueuedStorage(storage);
     }
 

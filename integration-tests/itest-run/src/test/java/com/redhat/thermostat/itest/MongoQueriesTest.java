@@ -55,6 +55,8 @@ import org.junit.Test;
 
 import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
 import com.redhat.thermostat.host.cpu.common.model.CpuStat;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
+import com.redhat.thermostat.shared.config.internal.SSLConfigurationImpl;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.BackingStorage;
@@ -142,7 +144,8 @@ public class MongoQueriesTest extends IntegrationTest {
             }
             
         };
-        BackingStorage storage = new MongoStorage(config);
+        SSLConfiguration sslConf = new SSLConfigurationImpl();
+        BackingStorage storage = new MongoStorage(config, sslConf);
         if (listener != null) {
             storage.getConnection().addListener(listener);
         }

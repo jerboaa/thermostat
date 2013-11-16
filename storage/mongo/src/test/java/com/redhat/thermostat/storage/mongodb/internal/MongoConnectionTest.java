@@ -41,6 +41,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -72,7 +74,7 @@ import com.mongodb.MongoOptions;
 import com.mongodb.MongoURI;
 import com.mongodb.ServerAddress;
 import com.redhat.thermostat.common.ssl.SSLContextFactory;
-import com.redhat.thermostat.common.ssl.SSLConfiguration;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
@@ -89,12 +91,16 @@ public class MongoConnectionTest {
 
     private MongoConnection conn;
     private ConnectionListener listener;
+    private SSLConfiguration mockSSLConf;
 
     @Before
     public void setUp() {
         StartupConfiguration conf = mock(StartupConfiguration.class);
+        mockSSLConf = mock(SSLConfiguration.class);
+        when(mockSSLConf.enableForBackingStorage()).thenReturn(false);
         when(conf.getDBConnectionString()).thenReturn("mongodb://127.0.0.1:27518");
-        conn = new MongoConnection(conf);
+        
+        conn = new MongoConnection(conf, mockSSLConf);
         listener = mock(ConnectionListener.class);
         conn.addListener(listener);
     }
@@ -165,17 +171,16 @@ public class MongoConnectionTest {
         assertTrue(exceptionThrown);
     }
     
-    @PrepareForTest({ MongoConnection.class, SSLConfiguration.class,
+    @PrepareForTest({ MongoConnection.class,
         SSLContextFactory.class, SSLContext.class, SSLSocketFactory.class })
     @Test
     public void verifySSLSocketFactoryUsedIfSSLEnabled() throws Exception {
-        PowerMockito.mockStatic(SSLConfiguration.class);
-        when(SSLConfiguration.enableForBackingStorage()).thenReturn(true);
+        when(mockSSLConf.enableForBackingStorage()).thenReturn(true);
         
         PowerMockito.mockStatic(SSLContextFactory.class);
         // SSL classes need to be mocked with PowerMockito
         SSLContext context = PowerMockito.mock(SSLContext.class);
-        when(SSLContextFactory.getClientContext()).thenReturn(context);
+        when(SSLContextFactory.getClientContext(isA(SSLConfiguration.class))).thenReturn(context);
         SSLSocketFactory factory = PowerMockito.mock(SSLSocketFactory.class);
         when(SSLContextFactory.wrapSSLFactory(any(SSLSocketFactory.class), any(SSLParameters.class))).thenReturn(factory);
         SSLParameters params = mock(SSLParameters.class);
@@ -198,14 +203,20 @@ public class MongoConnectionTest {
         assertEquals(factory, opts.socketFactory);
     }
     
-    @PrepareForTest({ SSLConfiguration.class,
-        SSLContextFactory.class, SSLContext.class, SSLSocketFactory.class })
+    @PrepareForTest({ MongoConnection.class, SSLContextFactory.class, SSLContext.class, SSLSocketFactory.class })
     @Test
     public void verifyNoSSLSocketFactoryUsedIfSSLDisabled() throws Exception {
-        PowerMockito.mockStatic(SSLConfiguration.class);
-        when(SSLConfiguration.enableForBackingStorage()).thenReturn(false);
-        
+        DBCollection collection = mock(DBCollection.class);
+        DB db = mock(DB.class);
+        when(db.getCollection("agent-config")).thenReturn(collection);
+        Mongo mockMongo = mock(Mongo.class);
+        when(mockMongo.getDB(MongoConnection.THERMOSTAT_DB_NAME)).thenReturn(db);
+        PowerMockito.whenNew(Mongo.class).withParameterTypes(ServerAddress.class)
+                .withArguments(any(ServerAddress.class)).thenReturn(mockMongo);
         MongoConnection connection = mock(MongoConnection.class);
+        doCallRealMethod().when(connection).connect();
+        doCallRealMethod().when(connection).createConnection();
+        connection.sslConf = mock(SSLConfiguration.class);
         connection.connect();
         verify(connection, Mockito.times(0)).getSSLMongo();
     }
@@ -219,7 +230,8 @@ public class MongoConnectionTest {
                 return "mongodb://127.0.1.1:23452";
             }
         };
-        MongoConnection connection = new MongoConnection(config);
+        SSLConfiguration sslConf = mock(SSLConfiguration.class);
+        MongoConnection connection = new MongoConnection(config, sslConf);
         ServerAddress addr = null;
         try {
             addr = connection.getServerAddress();
@@ -236,7 +248,7 @@ public class MongoConnectionTest {
                 return "fluff://willnotwork.com:23452";
             }
         };
-        connection = new MongoConnection(config);
+        connection = new MongoConnection(config, sslConf);
         try {
             connection.getServerAddress();
             fail("should not have been able to parse address");

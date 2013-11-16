@@ -41,30 +41,61 @@ import java.util.logging.Logger;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 import com.redhat.thermostat.agent.command.ConfigurationServer;
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 
 public class Activator implements BundleActivator {
 
     private static final Logger logger = LoggingUtils.getLogger(Activator.class);
 
+    @SuppressWarnings("rawtypes")
     private ServiceRegistration confServerRegistration;
     private ReceiverRegistry receivers;
+    @SuppressWarnings("rawtypes")
+    private ServiceTracker sslConfigTracker;
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
-    public void start(BundleContext context) throws Exception {    
+    public void start(final BundleContext context) throws Exception {
         logger.log(Level.INFO, "activating thermostat-agent-confserver");
         receivers = new ReceiverRegistry(context);
         receivers.registerReceiver(new PingReceiver());
-        ConfigurationServerImpl confServer = new ConfigurationServerImpl(new ConfigurationServerContext(context));
-        confServerRegistration = context.registerService(ConfigurationServer.class.getName(), confServer, null);
+        sslConfigTracker = new ServiceTracker(context, SSLConfiguration.class, new ServiceTrackerCustomizer() {
+
+            @Override
+            public Object addingService(ServiceReference reference) {
+                SSLConfiguration sslConf = (SSLConfiguration) context.getService(reference);
+                ConfigurationServerImpl confServer = new ConfigurationServerImpl(new ConfigurationServerContext(context, sslConf));
+                confServerRegistration = context.registerService(ConfigurationServer.class.getName(), confServer, null);
+                return confServer;
+            }
+
+            @Override
+            public void modifiedService(ServiceReference reference,
+                    Object service) {
+                // Do nothing
+            }
+
+            @Override
+            public void removedService(ServiceReference reference,
+                    Object service) {
+                confServerRegistration.unregister();
+                confServerRegistration = null;
+                context.ungetService(reference);
+            }});
+        sslConfigTracker.open();
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
+        sslConfigTracker.close();
         if (confServerRegistration != null) {
             confServerRegistration.unregister();
         }

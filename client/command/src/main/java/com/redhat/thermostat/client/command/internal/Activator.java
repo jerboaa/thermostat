@@ -38,11 +38,15 @@ package com.redhat.thermostat.client.command.internal;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.client.command.cli.PingCommand;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 
 public class Activator implements BundleActivator {
 
@@ -50,31 +54,73 @@ public class Activator implements BundleActivator {
     private ServiceRegistration queueRegistration;
     private ConfigurationRequestContext configContext;
     private CommandRegistryImpl reg;
-
-    public Activator() {
-        configContext = new ConfigurationRequestContext();
-        queue = new RequestQueueImpl(configContext);
-    }
+    private ServiceTracker queueDepsTracker;
 
     @Override
     public void start(BundleContext context) throws Exception {
-        queueRegistration = context.registerService(RequestQueue.class.getName(), queue, null);
-        queue.startProcessingRequests();
-
-        reg = new CommandRegistryImpl(context);
-        reg.registerCommand("ping", new PingCommand());
+        queueDepsTracker = new ServiceTracker(context, SSLConfiguration.class, new DepsCustomizer(context));
+        queueDepsTracker.open();
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        queue.stopProcessingRequests();
-        if (queueRegistration != null) {
-            queueRegistration.unregister();
+        if (queueDepsTracker != null) {
+            queueDepsTracker.close();
+            queueDepsTracker = null;
         }
-        configContext.getBootstrap().releaseExternalResources();
-
-        reg.unregisterCommands();
+        deactivate();
     }
 
+    private class DepsCustomizer implements ServiceTrackerCustomizer {
+
+        private BundleContext context;
+
+        DepsCustomizer(BundleContext context) {
+            this.context = context;
+        }
+
+        @Override
+        public Object addingService(ServiceReference reference) {
+            SSLConfiguration sslConf = (SSLConfiguration) context.getService(reference);
+            activate(sslConf, context);
+            return sslConf;
+        }
+
+        @Override
+        public void modifiedService(ServiceReference reference, Object service) {
+            // Do nothing
+        }
+
+        @Override
+        public void removedService(ServiceReference reference, Object service) {
+            deactivate();
+            context.ungetService(reference);
+        }
+    }
+
+    private synchronized void activate(SSLConfiguration sslConf, BundleContext context) {
+        configContext = new ConfigurationRequestContext(sslConf);
+        queue = new RequestQueueImpl(configContext);
+        queueRegistration = context.registerService(RequestQueue.class.getName(), queue, null);
+        queue.startProcessingRequests();
+        reg = new CommandRegistryImpl(context);
+        reg.registerCommand("ping", new PingCommand());
+    }
+
+    private synchronized void deactivate() {
+        if (reg != null) {
+            reg.unregisterCommands();
+            reg = null;
+        }
+        if (queue != null) {
+            queue.stopProcessingRequests();
+            queue = null;
+        }
+        if (queueRegistration != null) {
+            queueRegistration.unregister();
+            queueRegistration = null;
+        }
+        configContext.getBootstrap().releaseExternalResources();
+    }
 }
 

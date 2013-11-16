@@ -83,6 +83,7 @@ import com.google.gson.GsonBuilder;
 import com.redhat.thermostat.common.ssl.SSLContextFactory;
 import com.redhat.thermostat.common.ssl.SslInitException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.config.AuthenticationConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.AuthToken;
@@ -319,17 +320,19 @@ public class WebStorage implements Storage, SecureStorage {
     private WebConnection conn;
     
     // for testing
-    WebStorage(StartupConfiguration config, DefaultHttpClient client, ClientConnectionManager connManager) {
-        init(config, client, connManager);
+    WebStorage(StartupConfiguration config, DefaultHttpClient client,
+               ClientConnectionManager connManager, SSLConfiguration sslConf) {
+        init(config, client, connManager, sslConf);
     }
 
-    public WebStorage(StartupConfiguration config) throws StorageException {
+    public WebStorage(StartupConfiguration config, SSLConfiguration sslConf) throws StorageException {
         ClientConnectionManager connManager = new ThreadSafeClientConnManager();
         DefaultHttpClient client = new DefaultHttpClient(connManager);
-        init(config, client, connManager);
+        init(config, client, connManager, sslConf);
     }
     
-    private void init(StartupConfiguration config, DefaultHttpClient client, ClientConnectionManager connManager) {
+    private void init(StartupConfiguration config, DefaultHttpClient client,
+                      ClientConnectionManager connManager, SSLConfiguration sslConf) {
         categoryIds = new HashMap<>();
         gson = new GsonBuilder().registerTypeHierarchyAdapter(Pojo.class,
                         new ThermostatGSONConverter())
@@ -348,14 +351,14 @@ public class WebStorage implements Storage, SecureStorage {
         }
         // setup SSL if necessary
         if (config.getDBConnectionString().startsWith(HTTPS_PREFIX)) {
-            registerSSLScheme(connManager);
+            registerSSLScheme(connManager, sslConf);
         }
     }
 
-    private void registerSSLScheme(ClientConnectionManager conManager)
+    private void registerSSLScheme(ClientConnectionManager conManager, SSLConfiguration sslConf)
             throws StorageException {
         try {
-            SSLContext sc = SSLContextFactory.getClientContext();
+            SSLContext sc = SSLContextFactory.getClientContext(sslConf);
             SSLSocketFactory socketFactory = new SSLSocketFactory(sc);
             Scheme sch = new Scheme("https", 443, socketFactory);
             conManager.getSchemeRegistry().register(sch);

@@ -56,7 +56,7 @@ public class MongoStorageProviderTest {
         StartupConfiguration config = mock(StartupConfiguration.class);
         when(config.getDBConnectionString()).thenReturn("mongodb://something.com");
         MongoStorageProvider provider = new MongoStorageProvider();
-        provider.setConfig(config);
+        provider.setConfig(config, null);
         Storage result = provider.createStorage();
         assertTrue(result instanceof QueuedStorage);
         assertFalse(result instanceof SecureStorage);

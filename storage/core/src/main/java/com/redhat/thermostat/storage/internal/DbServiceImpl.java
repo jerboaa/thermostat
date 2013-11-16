@@ -47,6 +47,7 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.config.ConnectionConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
@@ -68,6 +69,7 @@ public class DbServiceImpl implements DbService {
     private Storage storage;
     private BundleContext context;
     private String dbUrl;
+    private static ServiceReference sslConfRef;
     
     DbServiceImpl(String username, String password, String dbUrl) throws StorageException {
         BundleContext context = FrameworkUtil.getBundle(DbService.class).getBundleContext();
@@ -103,10 +105,17 @@ public class DbServiceImpl implements DbService {
             // during connection handling.
             doSynchronousConnect();
         } catch (Exception cause) {
+            if (sslConfRef != null) {
+                context.ungetService(sslConfRef);
+            }
             throw new ConnectionException(cause);
         }
         // Connection didn't throw an exception. Now it is safe to register
-        // services.
+        // services for general consumption and unregister services used
+        // only while creating and connecting Storage.
+        if (sslConfRef != null) {
+            context.ungetService(sslConfRef);
+        }
         dbServiceReg = context.registerService(DbService.class, this, null);
         storageReg = context.registerService(Storage.class.getName(), this.storage, null);
     }
@@ -224,9 +233,14 @@ public class DbServiceImpl implements DbService {
             if (refs == null) {
                 throw new StorageException("No storage provider available");
             }
+            sslConfRef = context.getServiceReference(SSLConfiguration.class.getName());
+            if (sslConfRef == null) {
+                throw new StorageException("No SSL configuration available");
+            }
+            SSLConfiguration sslConf = (SSLConfiguration) context.getService(sslConfRef);
             for (int i = 0; i < refs.length; i++) {
                 StorageProvider prov = (StorageProvider) context.getService(refs[i]);
-                prov.setConfig(config);
+                prov.setConfig(config, sslConf);
                 if (prov.canHandleProtocol()) {
                     return prov;
                 }

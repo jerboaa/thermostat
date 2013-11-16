@@ -84,6 +84,7 @@ import org.mockito.Mockito;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.AuthToken;
 import com.redhat.thermostat.storage.core.Categories;
@@ -165,7 +166,8 @@ public class WebStorageTest {
                 return "http://fluff.example.org";
             }
         };
-        storage = new WebStorage(config);
+        SSLConfiguration sslConf = mock(SSLConfiguration.class);
+        storage = new WebStorage(config, sslConf);
         storage.setEndpoint("http://localhost:" + port + "/");
         headers = new HashMap<>();
         registerCategory();
@@ -534,7 +536,8 @@ public class WebStorageTest {
                 return "https://onlyHttpsPrefixUsed.example.com";
             }
         };
-        WebStorage storage = new WebStorage(config);
+        SSLConfiguration sslConf = mock(SSLConfiguration.class);
+        WebStorage storage = new WebStorage(config, sslConf);
         HttpClient client = storage.httpClient;
         SchemeRegistry schemeReg = client.getConnectionManager().getSchemeRegistry();
         Scheme scheme = schemeReg.getScheme("https");
@@ -603,7 +606,8 @@ public class WebStorageTest {
                 return "http://fluff.example.org";
             }
         };
-        storage = new WebStorage(config, client, connManager);
+        SSLConfiguration sslConf = mock(SSLConfiguration.class);
+        storage = new WebStorage(config, client, connManager, sslConf);
         storage.setEndpoint("http://localhost:" + port + "/");
         
         CountDownLatch latch = new CountDownLatch(1);

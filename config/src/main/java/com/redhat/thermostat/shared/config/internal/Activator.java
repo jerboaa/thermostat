@@ -1,5 +1,5 @@
 /*
- * Copyright 2012, 2013 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,17 +34,24 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.command;
+package com.redhat.thermostat.shared.config.internal;
 
-import org.jboss.netty.bootstrap.Bootstrap;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 
-public interface ConfigurationCommandContext {
+public class Activator implements BundleActivator {
 
-    public Bootstrap getBootstrap();
+    @Override
+    public void start(BundleContext context) throws Exception {
+        SSLConfiguration sslConf = new SSLConfigurationImpl();
+        context.registerService(SSLConfiguration.class.getName(), sslConf, null);
+    }
 
-    public SSLConfiguration getSSLConfiguration();
+    @Override
+    public void stop(BundleContext context) throws Exception {
+        // Nothing to do
+    }
 
 }
-

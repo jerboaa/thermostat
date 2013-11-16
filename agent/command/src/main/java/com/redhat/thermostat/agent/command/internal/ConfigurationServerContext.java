@@ -57,10 +57,10 @@ import org.osgi.framework.BundleContext;
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.common.command.ConfigurationCommandContext;
 import com.redhat.thermostat.common.ssl.SSLContextFactory;
-import com.redhat.thermostat.common.ssl.SSLConfiguration;
 import com.redhat.thermostat.common.ssl.SslInitException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 
 class ConfigurationServerContext implements ConfigurationCommandContext {
 
@@ -69,16 +69,23 @@ class ConfigurationServerContext implements ConfigurationCommandContext {
     private final ServerBootstrap bootstrap;
     private final ChannelGroup channels;
     private final BundleContext context;
+    private final SSLConfiguration sslConf;
 
-    ConfigurationServerContext(BundleContext context) {
+    ConfigurationServerContext(BundleContext context, SSLConfiguration sslConf) {
         bootstrap = createBootstrap();
         channels = createChannelGroup();
         this.context = context;
+        this.sslConf = sslConf;
     }
 
     @Override
     public Bootstrap getBootstrap() {
         return bootstrap;
+    }
+
+    @Override
+    public SSLConfiguration getSSLConfiguration() {
+        return sslConf;
     }
 
     private ChannelGroup createChannelGroup() {
@@ -108,10 +115,10 @@ class ConfigurationServerContext implements ConfigurationCommandContext {
         @Override
         public ChannelPipeline getPipeline() throws Exception {
             ChannelPipeline pipeline = Channels.pipeline();
-            if (SSLConfiguration.enableForCmdChannel()) {
+            if (sslConf.enableForCmdChannel()) {
                 SSLEngine engine = null;
                 try {
-                    SSLContext ctxt = SSLContextFactory.getServerContext();
+                    SSLContext ctxt = SSLContextFactory.getServerContext(sslConf);
                     engine = ctxt.createSSLEngine();
                     engine.setUseClientMode(false);
                 } catch (SslInitException | InvalidConfigurationException e) {
@@ -123,7 +130,7 @@ class ConfigurationServerContext implements ConfigurationCommandContext {
             }
             pipeline.addLast("decoder", new RequestDecoder());
             pipeline.addLast("encoder", new ResponseEncoder());
-            pipeline.addLast("handler", new ServerHandler(new ReceiverRegistry(context)));
+            pipeline.addLast("handler", new ServerHandler(new ReceiverRegistry(context), sslConf));
             return pipeline;
         }
         

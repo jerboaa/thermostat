@@ -53,8 +53,8 @@ import org.jboss.netty.handler.ssl.SslHandler;
 
 import com.redhat.thermostat.common.command.ConfigurationCommandContext;
 import com.redhat.thermostat.common.ssl.SSLContextFactory;
-import com.redhat.thermostat.common.ssl.SSLConfiguration;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 
 public class ConfigurationRequestContext implements ConfigurationCommandContext {
     
@@ -62,14 +62,21 @@ public class ConfigurationRequestContext implements ConfigurationCommandContext 
 
     private final ClientBootstrap bootstrap;
 
-    ConfigurationRequestContext() {
+    private final SSLConfiguration sslConf;
+
+    ConfigurationRequestContext(SSLConfiguration sslConf) {
+        this.sslConf = sslConf;
         this.bootstrap = createBootstrap();
     }
 
     @Override
-    public
-    Bootstrap getBootstrap() {
+    public Bootstrap getBootstrap() {
         return bootstrap;
+    }
+
+    @Override
+    public SSLConfiguration getSSLConfiguration() {
+        return sslConf;
     }
 
     private ClientBootstrap createBootstrap() {
@@ -95,8 +102,8 @@ public class ConfigurationRequestContext implements ConfigurationCommandContext 
         @Override
         public ChannelPipeline getPipeline() throws Exception {
             ChannelPipeline pipeline = Channels.pipeline();
-            if (SSLConfiguration.enableForCmdChannel()) {
-                SSLContext ctxt = SSLContextFactory.getClientContext();
+            if (sslConf.enableForCmdChannel()) {
+                SSLContext ctxt = SSLContextFactory.getClientContext(sslConf);
                 SSLEngine engine = ctxt.createSSLEngine();
                 engine.setUseClientMode(true);
                 // intentionally don't set the endpoint identification algo,

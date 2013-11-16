@@ -21,10 +21,14 @@
           <instructions>
             <Bundle-SymbolicName>com.redhat.thermostat.configuration</Bundle-SymbolicName>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
+            <Bundle-Activator>com.redhat.thermostat.shared.config.internal.Activator</Bundle-Activator>
             <Export-Package>
               com.redhat.thermostat.shared.locale,
               com.redhat.thermostat.shared.config,
             </Export-Package>
+            <Private-Package>
+              com.redhat.thermostat.shared.config.internal,
+            </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
           </instructions>
@@ -56,6 +60,12 @@
       <artifactId>thermostat-annotations</artifactId>
       <version>${project.version}</version>
       <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-common-test</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 </project>

@@ -51,6 +51,7 @@ import org.junit.Test;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.core.Connection;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
@@ -73,6 +74,8 @@ public class DbServiceImplTest {
     @Before
     public void setup() {
         context = new StubBundleContext();
+        SSLConfiguration sslConf = mock(SSLConfiguration.class);
+        context.registerService(SSLConfiguration.class.getName(), sslConf, null);
 
         storage = mock(Storage.class);
         when(storage.getConnection()).thenReturn(connection);

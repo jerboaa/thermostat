@@ -39,6 +39,7 @@ package com.redhat.thermostat.common.ssl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -62,9 +63,10 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.common.internal.TrustManagerFactory;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ SSLConfiguration.class, SSLContext.class, KeyManagerFactory.class, javax.net.ssl.TrustManagerFactory.class })
+@PrepareForTest({ SSLContext.class, KeyManagerFactory.class, javax.net.ssl.TrustManagerFactory.class })
 public class SSLContextFactoryTest {
 
     /*
@@ -83,10 +85,10 @@ public class SSLContextFactoryTest {
         File keystoreFile = new File(this.getClass()
                 .getResource("/cmdChanServer.keystore").getFile());
 
-        PowerMockito.mockStatic(SSLConfiguration.class);
-        when(SSLConfiguration.getKeystoreFile()).thenReturn(
+        SSLConfiguration sslConf = mock(SSLConfiguration.class);
+        when(sslConf.getKeystoreFile()).thenReturn(
                 keystoreFile);
-        when(SSLConfiguration.getKeyStorePassword()).thenReturn(
+        when(sslConf.getKeyStorePassword()).thenReturn(
                 "testpassword");
 
         PowerMockito.mockStatic(SSLContext.class);
@@ -106,7 +108,7 @@ public class SSLContextFactoryTest {
         when(mockTrustFactory.getTrustManagers()).thenReturn(new TrustManager[0]);
         when(javax.net.ssl.TrustManagerFactory.getInstance("SunX509", "SunJSSE")).thenReturn(mockTrustFactory);
         
-        SSLContextFactory.getServerContext();
+        SSLContextFactory.getServerContext(sslConf);
         verify(context).init(keymanagersCaptor.capture(),
                 tmsCaptor.capture(), any(SecureRandom.class));
         KeyManager[] kms = keymanagersCaptor.getValue();
@@ -128,10 +130,10 @@ public class SSLContextFactoryTest {
         File keystoreFile = new File(this.getClass()
                 .getResource("/cmdChanServer.keystore").getFile());
 
-        PowerMockito.mockStatic(SSLConfiguration.class);
-        when(SSLConfiguration.getKeystoreFile()).thenReturn(
+        SSLConfiguration sslConf = mock(SSLConfiguration.class);
+        when(sslConf.getKeystoreFile()).thenReturn(
                 keystoreFile);
-        when(SSLConfiguration.getKeyStorePassword()).thenReturn(
+        when(sslConf.getKeyStorePassword()).thenReturn(
                 "testpassword");
 
         PowerMockito.mockStatic(SSLContext.class);
@@ -144,7 +146,7 @@ public class SSLContextFactoryTest {
 
         ArgumentCaptor<TrustManager[]> tmsCaptor = ArgumentCaptor
                 .forClass(TrustManager[].class);
-        SSLContextFactory.getClientContext();
+        SSLContextFactory.getClientContext(sslConf);
         verify(context).init(any(KeyManager[].class), tmsCaptor.capture(),
                 any(SecureRandom.class));
         TrustManager[] tms = tmsCaptor.getValue();
@@ -157,6 +159,7 @@ public class SSLContextFactoryTest {
     @Test
     @PrepareForTest({TrustManagerFactory.class, SSLContext.class})
     public void verifyTLSVersionFallsBackProperlyToTLS11() throws Exception {
+        SSLConfiguration sslConf = mock(SSLConfiguration.class);
         PowerMockito.mockStatic(SSLContext.class);
         when(SSLContext.getInstance("TLSv1.2", "SunJSSE")).thenThrow(
                 NoSuchAlgorithmException.class);
@@ -164,8 +167,8 @@ public class SSLContextFactoryTest {
         when(SSLContext.getInstance("TLSv1.1", "SunJSSE")).thenReturn(context);
         PowerMockito.mockStatic(TrustManagerFactory.class);
         X509TrustManager tm = PowerMockito.mock(X509TrustManager.class);
-        when(TrustManagerFactory.getTrustManager()).thenReturn(tm);
-        SSLContextFactory.getClientContext();
+        when(TrustManagerFactory.getTrustManager(isA(SSLConfiguration.class))).thenReturn(tm);
+        SSLContextFactory.getClientContext(sslConf);
         verify(context).init(any(KeyManager[].class),
                 any(TrustManager[].class), any(SecureRandom.class));
     }
@@ -174,6 +177,7 @@ public class SSLContextFactoryTest {
     @Test
     @PrepareForTest({TrustManagerFactory.class, SSLContext.class})
     public void verifyTLSVersionFallsBackProperlyToTLS10() throws Exception {
+        SSLConfiguration sslConf = mock(SSLConfiguration.class);
         PowerMockito.mockStatic(SSLContext.class);
         when(SSLContext.getInstance("TLSv1.2", "SunJSSE")).thenThrow(
                 NoSuchAlgorithmException.class);
@@ -183,8 +187,8 @@ public class SSLContextFactoryTest {
         when(SSLContext.getInstance("TLSv1", "SunJSSE")).thenReturn(context);
         PowerMockito.mockStatic(TrustManagerFactory.class);
         X509TrustManager tm = PowerMockito.mock(X509TrustManager.class);
-        when(TrustManagerFactory.getTrustManager()).thenReturn(tm);
-        SSLContextFactory.getClientContext();
+        when(TrustManagerFactory.getTrustManager(isA(SSLConfiguration.class))).thenReturn(tm);
+        SSLContextFactory.getClientContext(sslConf);
         verify(context).init(any(KeyManager[].class),
                 any(TrustManager[].class), any(SecureRandom.class));
     }
@@ -194,6 +198,7 @@ public class SSLContextFactoryTest {
     @PrepareForTest({TrustManagerFactory.class, SSLContext.class})
     public void throwAssertionErrorIfNoReasonableTlsAvailable()
             throws Exception {
+        SSLConfiguration sslConf = mock(SSLConfiguration.class);
         PowerMockito.mockStatic(SSLContext.class);
         when(SSLContext.getInstance("TLSv1.2", "SunJSSE")).thenThrow(
                 NoSuchAlgorithmException.class);
@@ -202,7 +207,7 @@ public class SSLContextFactoryTest {
         when(SSLContext.getInstance("TLSv1", "SunJSSE")).thenThrow(
                 NoSuchAlgorithmException.class);
         try {
-            SSLContextFactory.getClientContext();
+            SSLContextFactory.getClientContext(sslConf);
             fail("No suitable algos available, which should trigger AssertionError");
         } catch (AssertionError e) {
             // pass

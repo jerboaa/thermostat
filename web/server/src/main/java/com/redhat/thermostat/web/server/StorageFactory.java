@@ -35,26 +35,30 @@
  */
 
 
-package com.redhat.thermostat.web.common;
+package com.redhat.thermostat.web.server;
 
+import com.redhat.thermostat.shared.config.SSLConfiguration;
+import com.redhat.thermostat.shared.config.internal.SSLConfigurationImpl;
 import com.redhat.thermostat.storage.config.ConnectionConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageProvider;
 import com.redhat.thermostat.storage.mongodb.MongoStorageProvider;
 
-public class StorageWrapper {
+class StorageFactory {
 
     private static Storage storage;
 
-    public static Storage getStorage(String storageClass, final String storageEndpoint, final String username, final String password) {
+    // Web server is not OSGi, this factory method is workaround.
+    static Storage getStorage(String storageClass, final String storageEndpoint, final String username, final String password) {
         if (storage != null) {
             return storage;
         }
-        StartupConfiguration conf = new ConnectionConfiguration(storageEndpoint, username, password);;
+        StartupConfiguration conf = new ConnectionConfiguration(storageEndpoint, username, password);
+        SSLConfiguration sslConf = new SSLConfigurationImpl();
         try {
             StorageProvider provider = (StorageProvider) Class.forName(storageClass).newInstance();
-            provider.setConfig(conf);
+            provider.setConfig(conf, sslConf);
             storage = provider.createStorage();
             storage.getConnection().connect();
             return storage;
@@ -65,13 +69,15 @@ public class StorageWrapper {
             System.err.println("could not instantiate provider: " + storageClass + ", falling back to MongoStorage");
             e.printStackTrace();
             StorageProvider provider = new MongoStorageProvider();
-            provider.setConfig(conf);
+            provider.setConfig(conf, sslConf);
             storage = provider.createStorage();
             return storage;
         }
     }
-    public static void setStorage(Storage storage) {
-        StorageWrapper.storage = storage;
+
+    // Testing hook used in WebStorageEndpointTest
+    static void setStorage(Storage storage) {
+        StorageFactory.storage = storage;
     }
 }
 

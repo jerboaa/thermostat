@@ -98,7 +98,6 @@ import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
 import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.web.common.PreparedParameterSerializer;
 import com.redhat.thermostat.web.common.PreparedStatementResponseCode;
-import com.redhat.thermostat.web.common.StorageWrapper;
 import com.redhat.thermostat.web.common.ThermostatGSONConverter;
 import com.redhat.thermostat.web.common.WebPreparedStatement;
 import com.redhat.thermostat.web.common.WebPreparedStatementResponse;
@@ -214,7 +213,7 @@ public class WebStorageEndPoint extends HttpServlet {
             String storageEndpoint = getServletConfig().getInitParameter(STORAGE_ENDPOINT);
             String username = getServletConfig().getInitParameter(STORAGE_USERNAME);
             String password = getServletConfig().getInitParameter(STORAGE_PASSWORD);
-            storage = StorageWrapper.getStorage(storageClass, storageEndpoint, username, password);
+            storage = StorageFactory.getStorage(storageClass, storageEndpoint, username, password);
         }
         String uri = req.getRequestURI();
         int lastPartIdx = uri.lastIndexOf("/");

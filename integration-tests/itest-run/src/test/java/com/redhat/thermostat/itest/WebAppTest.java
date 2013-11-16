@@ -75,6 +75,8 @@ import org.junit.Test;
 import com.redhat.thermostat.common.ApplicationInfo;
 import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
 import com.redhat.thermostat.host.cpu.common.model.CpuStat;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
+import com.redhat.thermostat.shared.config.internal.SSLConfigurationImpl;
 import com.redhat.thermostat.storage.config.ConnectionConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Add;
@@ -300,7 +302,35 @@ public class WebAppTest extends IntegrationTest {
     private static BackingStorage getAndConnectBackingStorage() {
         String url = "mongodb://127.0.0.1:27518";
         StartupConfiguration config = new ConnectionConfiguration(url, "", "");
-        BackingStorage storage = new MongoStorage(config);
+        SSLConfiguration sslConfig = new SSLConfiguration() {
+
+            @Override
+            public File getKeystoreFile() {
+                return null;
+            }
+
+            @Override
+            public String getKeyStorePassword() {
+                return null;
+            }
+
+            @Override
+            public boolean enableForCmdChannel() {
+                // Simple case.
+                return false;
+            }
+
+            @Override
+            public boolean enableForBackingStorage() {
+                return false;
+            }
+
+            @Override
+            public boolean disableHostnameVerification() {
+                return false;
+            }
+        };
+        BackingStorage storage = new MongoStorage(config, sslConfig);
         storage.getConnection().connect();
         return storage;
     }
@@ -327,7 +357,8 @@ public class WebAppTest extends IntegrationTest {
         setupJAASForUser(roleNames, username, password);
         String url = "http://localhost:" + port + "/thermostat/storage";
         StartupConfiguration config = new ConnectionConfiguration(url, username, password);
-        Storage storage = new WebStorage(config);
+        SSLConfiguration sslConf = new SSLConfigurationImpl();
+        Storage storage = new WebStorage(config, sslConf);
         if (listener != null) {
             storage.getConnection().addListener(listener);
         }

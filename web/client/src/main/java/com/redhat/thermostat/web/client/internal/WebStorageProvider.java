@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.web.client.internal;
 
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.config.AuthenticationConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.SecureQueuedStorage;
@@ -45,10 +46,11 @@ import com.redhat.thermostat.storage.core.StorageProvider;
 public class WebStorageProvider implements StorageProvider {
 
     private StartupConfiguration config;
+    private SSLConfiguration sslConf;
     
     @Override
     public Storage createStorage() {
-        WebStorage storage = new WebStorage(config);
+        WebStorage storage = new WebStorage(config, sslConf);
         storage.setEndpoint(config.getDBConnectionString());
         if (config instanceof AuthenticationConfiguration) {
             AuthenticationConfiguration authConf = (AuthenticationConfiguration) config;
@@ -58,8 +60,9 @@ public class WebStorageProvider implements StorageProvider {
     }
 
     @Override
-    public void setConfig(StartupConfiguration config) {
+    public void setConfig(StartupConfiguration config, SSLConfiguration sslConf) {
         this.config = config;
+        this.sslConf = sslConf;
     }
 
     @Override

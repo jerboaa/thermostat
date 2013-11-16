@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.ssl;
+package com.redhat.thermostat.shared.config.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -42,42 +42,50 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 
+import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.ssl.SSLConfiguration;
+import com.redhat.thermostat.shared.config.internal.SSLConfigurationImpl;
 
-public class SSLConfigurationTest {
+public class SSLConfigurationImplTest {
+
+    private SSLConfigurationImpl sslConf;
+
+    @Before
+    public void setUp() {
+        sslConf = new SSLConfigurationImpl();
+        File clientProps = new File(this.getClass().getResource("/client.properties").getFile());
+        sslConf.initClientProperties(clientProps);
+    }
 
     @Test
     public void canGetKeystoreFileFromProps() throws Exception {
-        File clientProps = new File(this.getClass().getResource("/client.properties").getFile());
-        SSLConfiguration.initClientProperties(clientProps);
         String keystorePath = "/path/to/thermostat.keystore";
         String keystorePwd = "some password";
-        assertEquals(keystorePath, SSLConfiguration.getKeystoreFile().getAbsolutePath());
-        assertEquals(keystorePwd, SSLConfiguration.getKeyStorePassword());
+        assertEquals(keystorePath, sslConf.getKeystoreFile().getAbsolutePath());
+        assertEquals(keystorePwd, sslConf.getKeyStorePassword());
     }
     
     @Test
     public void notExistingPropertiesFileReturnsNull() throws Exception {
+        SSLConfigurationImpl badSSLConf = new SSLConfigurationImpl();
         File clientProps = new File("i/am/not/there/file.txt");
-        SSLConfiguration.initClientProperties(clientProps);
-        assertTrue(SSLConfiguration.getKeystoreFile() == null);
-        assertEquals(null, SSLConfiguration.getKeyStorePassword());
+        badSSLConf.initClientProperties(clientProps);
+        assertTrue(badSSLConf.getKeystoreFile() == null);
+        assertEquals(null, badSSLConf.getKeyStorePassword());
     }
     
     @Test
     public void canGetSSLEnabledConfigs() {
-        File clientProps = new File(this.getClass().getResource("/client.properties").getFile());
-        SSLConfiguration.initClientProperties(clientProps);
-        assertTrue(SSLConfiguration.enableForCmdChannel());
-        assertTrue(SSLConfiguration.enableForBackingStorage());
-        assertTrue(SSLConfiguration.disableHostnameVerification());
-        clientProps = new File(this.getClass().getResource("/ssl.properties").getFile());
-        SSLConfiguration.initClientProperties(clientProps);
-        assertFalse(SSLConfiguration.enableForCmdChannel());
-        assertFalse(SSLConfiguration.enableForBackingStorage());
-        assertFalse(SSLConfiguration.disableHostnameVerification());
+        assertTrue(sslConf.enableForCmdChannel());
+        assertTrue(sslConf.enableForBackingStorage());
+        assertTrue(sslConf.disableHostnameVerification());
+        File disabledSSLProps = new File(this.getClass().getResource("/ssl.properties").getFile());
+        SSLConfigurationImpl disabledSSLConf = new SSLConfigurationImpl();
+        disabledSSLConf.initClientProperties(disabledSSLProps);
+        assertFalse(disabledSSLConf.enableForCmdChannel());
+        assertFalse(disabledSSLConf.enableForBackingStorage());
+        assertFalse(disabledSSLConf.disableHostnameVerification());
     }
 }
 

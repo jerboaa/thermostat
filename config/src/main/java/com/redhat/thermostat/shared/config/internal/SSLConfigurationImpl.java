@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.ssl;
+package com.redhat.thermostat.shared.config.internal;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -43,26 +43,22 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.Configuration;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 
-public class SSLConfiguration {
+public class SSLConfigurationImpl implements SSLConfiguration {
 
-    private static Properties clientProps = null;
+    private Properties clientProps = null;
     private static final String KEYSTORE_FILE_KEY = "KEYSTORE_FILE";
     private static final String KEYSTORE_FILE_PWD_KEY = "KEYSTORE_PASSWORD";
     private static final String CMD_CHANNEL_SSL_KEY = "COMMAND_CHANNEL_USE_SSL";
     private static final String BACKING_STORAGE_USE_SSL_KEY = "BACKING_STORAGE_CONNECTION_USE_SSL";
     private static final String DISABLE_HOSTNAME_VERIFICATION = "DISABLE_HOSTNAME_VERIFICATION";
-    private static final Logger logger = LoggingUtils.getLogger(SSLConfiguration.class);
+    private static final Logger logger = Logger.getLogger(SSLConfigurationImpl.class.getName());
 
-    /**
-     * 
-     * @return The keystore file as specified in $THERMOSTAT_HOME/etc/ssl.properties
-     *         if any. null otherwise.
-     */
-    public static File getKeystoreFile() {
+    @Override
+    public File getKeystoreFile() {
         try {
             loadClientProperties();
         } catch (InvalidConfigurationException e) {
@@ -78,12 +74,8 @@ public class SSLConfiguration {
         return null;
     }
 
-    /**
-     * 
-     * @return The keystore file as specified in $THERMOSTAT_HOME/etc/ssl.properties
-     *         if any, null otherwise.
-     */
-    public static String getKeyStorePassword() {
+    @Override
+    public String getKeyStorePassword() {
         try {
             loadClientProperties();
         } catch (InvalidConfigurationException e) {
@@ -94,40 +86,23 @@ public class SSLConfiguration {
         return pwd;
     }
     
-    /**
-     * 
-     * @return true if and only if SSL should be enabled for command channel
-     *         communication between agent and client. I.e. if
-     *         $THERMOSTAT_HOME/etc/ssl.properties exists and proper config has
-     *         been added. false otherwise.
-     */
-    public static boolean enableForCmdChannel() {
+    @Override
+    public boolean enableForCmdChannel() {
         return readBooleanProperty(CMD_CHANNEL_SSL_KEY);
     }
 
-    /**
-     * 
-     * @return true if and only if SSL should be used for backing storage
-     *         connections. I.e. if $THERMOSTAT_HOME/etc/ssl.properties exists
-     *         and proper config has been added. false otherwise.
-     */
-    public static boolean enableForBackingStorage() {
+    @Override
+    public boolean enableForBackingStorage() {
         return readBooleanProperty(BACKING_STORAGE_USE_SSL_KEY);
     }
     
-    /**
-     * 
-     * @return true if and only if host name verification should not be
-     *         performed during SSL handshake. In other words if
-     *         $THERMOSTAT_HOME/etc/ssl.properties exists and proper config has
-     *         been added. false otherwise.
-     */
-    public static boolean disableHostnameVerification() {
+    @Override
+    public boolean disableHostnameVerification() {
         return readBooleanProperty(DISABLE_HOSTNAME_VERIFICATION);
     }
 
     // testing hook
-    static void initClientProperties(File clientPropertiesFile) {
+    void initClientProperties(File clientPropertiesFile) {
         clientProps = new Properties();
         try {
             clientProps.load(new FileInputStream(clientPropertiesFile));
@@ -137,7 +112,7 @@ public class SSLConfiguration {
         }
     }
 
-    private static boolean readBooleanProperty(final String property) {
+    private boolean readBooleanProperty(final String property) {
         boolean result = false;
         try {
             loadClientProperties();
@@ -154,7 +129,7 @@ public class SSLConfiguration {
         return result;
     }
 
-    private static void loadClientProperties()
+    private void loadClientProperties()
             throws InvalidConfigurationException {
         if (clientProps == null) {
             File clientPropertiesFile = new File(new Configuration().getUserConfigurationDirectory(),

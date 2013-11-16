@@ -54,6 +54,7 @@ import com.mongodb.WriteResult;
 import com.mongodb.gridfs.GridFS;
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.AbstractQuery.Sort;
 import com.redhat.thermostat.storage.core.Add;
@@ -287,8 +288,8 @@ public class MongoStorage implements BackingStorage {
         this.conn = null;
     }
     
-    public MongoStorage(StartupConfiguration conf) {
-        conn = new MongoConnection(conf);
+    public MongoStorage(StartupConfiguration conf, SSLConfiguration sslConf) {
+        conn = new MongoConnection(conf, sslConf);
         connectedLatch = new CountDownLatch(1);
         conn.addListener(new ConnectionListener() {
             @Override

@@ -39,6 +39,7 @@ package com.redhat.thermostat.agent.command.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -60,20 +61,23 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.redhat.thermostat.common.ssl.SSLConfiguration;
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.common.ssl.SSLContextFactory;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ SSLConfiguration.class, SSLContextFactory.class,
+@PrepareForTest({ SSLContextFactory.class,
         SSLEngine.class, SSLContext.class })
 public class ConfigurationServerContextTest {
 
     ConfigurationServerContext ctx;
+    SSLConfiguration mockSSLConf;
 
     @Before
     public void setUp() {
         BundleContext bCtx = mock(BundleContext.class);
-        ctx = new ConfigurationServerContext(bCtx);
+        mockSSLConf = mock(SSLConfiguration.class);
+        when(mockSSLConf.enableForCmdChannel()).thenReturn(false);
+        ctx = new ConfigurationServerContext(bCtx, mockSSLConf);
     }
 
     @Test
@@ -113,12 +117,11 @@ public class ConfigurationServerContextTest {
     
     @Test
     public void testBootstrapSSL() throws Exception {
-        PowerMockito.mockStatic(SSLConfiguration.class);
-        when(SSLConfiguration.enableForCmdChannel()).thenReturn(true);
+        when(mockSSLConf.enableForCmdChannel()).thenReturn(true);
         PowerMockito.mockStatic(SSLContextFactory.class);
         // SSL classes need to be mocked with PowerMockito
         SSLContext context = PowerMockito.mock(SSLContext.class);
-        when(SSLContextFactory.getServerContext()).thenReturn(context);
+        when(SSLContextFactory.getServerContext(isA(SSLConfiguration.class))).thenReturn(context);
         SSLEngine engine = PowerMockito.mock(SSLEngine.class);
         when(context.createSSLEngine()).thenReturn(engine);
         

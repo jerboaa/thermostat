@@ -45,6 +45,7 @@ import static org.mockito.Mockito.when;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.config.AuthenticationConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.BackingStorage;
@@ -59,7 +60,8 @@ public class WebStorageProviderTest {
         WebStorageProvider provider = new WebStorageProvider();
         MockConfiguration config = mock(MockConfiguration.class);
         when(config.getDBConnectionString()).thenReturn("http://something");
-        provider.setConfig(config);
+        SSLConfiguration sslConf = mock(SSLConfiguration.class);
+        provider.setConfig(config, sslConf);
         Storage storage = provider.createStorage();
         assertTrue(storage instanceof SecureStorage);
         assertTrue(storage instanceof QueuedStorage);
