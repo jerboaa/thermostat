@@ -41,6 +41,8 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.Arrays;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -82,5 +84,28 @@ public class CategorySerializationTest {
         assertEquals(TestObj.class, cat2.getDataClass());
         assertEquals("foo-category", cat2.getName());
         assertEquals(barKey, cat2.getKey("bar-key"));
+    }
+
+    @Test
+    public void canSerializeDeserializeCategoryWithIndexedKeys() {
+        Key<Boolean> barKey = new Key<>("bar-key");
+        Category<TestObj> cat = new Category<>("foo-category2", TestObj.class,
+                Arrays.<Key<?>>asList(barKey), Arrays.<Key<?>>asList(barKey));
+        String str = gson.toJson(cat, Category.class);
+        @SuppressWarnings("unchecked")
+        Category<TestObj> cat2 = (Category<TestObj>)gson.fromJson(str, Category.class);
+        assertNotSame(cat, cat2);
+        assertTrue(cat.equals(cat2));
+        assertEquals(cat.hashCode(), cat2.hashCode());
+        try {
+            cat2.getKeys().add(new Key<>("testme"));
+            fail("keys must be immutable after deserialization");
+        } catch (UnsupportedOperationException e) {
+            // pass
+        }
+        assertEquals(TestObj.class, cat2.getDataClass());
+        assertEquals("foo-category2", cat2.getName());
+        assertEquals(barKey, cat2.getKey("bar-key"));
+        assertEquals(Arrays.asList(barKey), cat2.getIndexedKeys());
     }
 }

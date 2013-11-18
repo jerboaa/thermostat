@@ -71,6 +71,7 @@ public final class AdaptedCategory<T extends Pojo, S extends Pojo> extends Categ
             String msg = "Can only adapt to aggregate results!";
             throw new IllegalArgumentException(msg);
         }
+        this.indexedKeys = Collections.unmodifiableList(category.getIndexedKeys());
         this.dataClassName = dataClass.getName();
     }
     

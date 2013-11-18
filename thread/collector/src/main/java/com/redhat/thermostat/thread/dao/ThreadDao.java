@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.thread.dao;
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.redhat.thermostat.common.model.Range;
@@ -98,13 +99,20 @@ public interface ThreadDao {
     static final Key<Long> THREAD_BLOCKED_COUNT_KEY = new Key<Long>("threadBlockedCount");
     static final Key<Long> THREAD_WAIT_COUNT_KEY = new Key<Long>("threadWaitCount");
     static final Category<ThreadInfoData> THREAD_INFO =
-            new Category<>("vm-thread-info", ThreadInfoData.class, Key.AGENT_ID, Key.VM_ID,
-                         Key.TIMESTAMP, THREAD_NAME_KEY, THREAD_ID_KEY,
-                         THREAD_STATE_KEY,
-                         THREAD_CPU_TIME_KEY,
-                         THREAD_ALLOCATED_BYTES_KEY,
-                         THREAD_USER_TIME_KEY, THREAD_BLOCKED_COUNT_KEY,
-                         THREAD_WAIT_COUNT_KEY);
+            new Category<>("vm-thread-info", ThreadInfoData.class,
+                         Arrays.<Key<?>>asList(
+                                 Key.AGENT_ID,
+                                 Key.VM_ID,
+                                 Key.TIMESTAMP,
+                                 THREAD_NAME_KEY,
+                                 THREAD_ID_KEY,
+                                 THREAD_STATE_KEY,
+                                 THREAD_CPU_TIME_KEY,
+                                 THREAD_ALLOCATED_BYTES_KEY,
+                                 THREAD_USER_TIME_KEY,
+                                 THREAD_BLOCKED_COUNT_KEY,
+                                 THREAD_WAIT_COUNT_KEY),
+                         Arrays.<Key<?>>asList(Key.TIMESTAMP));
     
     /*
      * vm-deadlock-data schema

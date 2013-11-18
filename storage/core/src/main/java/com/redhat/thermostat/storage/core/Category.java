@@ -36,9 +36,11 @@
 
 package com.redhat.thermostat.storage.core;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -69,6 +71,17 @@ public class Category<T extends Pojo> {
      * This key map gets serialized via JSON.
      */
     protected Map<String, Key<?>> keys;
+
+    /*
+     * A de-facto unmodifiable list of keys to be indexed. All of these keys
+     * should be indexed by the storage (so sorting by this should be possible).
+     * Set via the constructor. Exceptions are AdaptedCategory and JSON
+     * serialization.
+     *
+     * This list gets serialized via JSON.
+     */
+    protected List<Key<?>> indexedKeys;
+
     /*
      * A de-facto immutable field, set via setDataClass() called by the
      * constructor. If null dataClassName must be set. This is to make Category
@@ -98,17 +111,43 @@ public class Category<T extends Pojo> {
      * 
      * @param name
      *            the name of the category
+     * @param dataClass
+     *            the Class object representing the data
+     * @param keys
+     *            an array of Key object which represent the data for this category
      * 
      * @throws IllegalArgumentException
      *             if a Category is created with a name that has been used
      *             before
      */
     public Category(String name, Class<T> dataClass, Key<?>... keys) {
+    	this(name, dataClass, Arrays.asList(keys), Collections.<Key<?>>emptyList());
+    }
+
+    /**
+     * Creates a new Category instance with the specified name.
+     *
+     * @param name
+     *            the name of the category
+     * @param dataClass
+     *            the Class object representing the data
+     * @param indexedKeys
+     *            the keys that will be used for sorting and should be indexed
+     *            (or otherwise optimized) by the storage
+     * @param keys
+     *            an array of Key object which represent the data for this category
+     *
+     * @throws IllegalArgumentException
+     *             if a Category is created with a name that has been used
+     *             before
+     */
+    public Category(String name, Class<T> dataClass, List<Key<?>> keys, List<Key<?>> indexedKeys) {
         Map<String, Key<?>> keysMap = new HashMap<String, Key<?>>();
         for (Key<?> key : keys) {
             keysMap.put(key.getName(), key);
         }
         this.keys = Collections.unmodifiableMap(keysMap);
+        this.indexedKeys = Collections.unmodifiableList(indexedKeys);
         setName(name);
         setDataClass(dataClass);
     }
@@ -180,6 +219,10 @@ public class Category<T extends Pojo> {
             return null;
         }
         return keys.get(name);
+    }
+
+    public List<Key<?>> getIndexedKeys() {
+    	return indexedKeys;
     }
 
     @Override
