@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.host.cpu.common;
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.redhat.thermostat.annotations.Service;
@@ -50,7 +51,7 @@ public interface CpuStatDAO {
     static Key<List<Double>> cpuLoadKey = new Key<>("perProcessorUsage");
 
     static final Category<CpuStat> cpuStatCategory = new Category<>("cpu-stats", CpuStat.class,
-            Key.AGENT_ID, Key.TIMESTAMP, cpuLoadKey);
+            Arrays.<Key<?>>asList(Key.AGENT_ID, Key.TIMESTAMP, cpuLoadKey), Arrays.<Key<?>>asList(Key.TIMESTAMP));
 
     List<CpuStat> getLatestCpuStats(HostRef ref, long since);
 

@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.host.memory.common;
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.redhat.thermostat.annotations.Service;
@@ -56,8 +57,9 @@ public interface MemoryStatDAO {
     static Key<Long> memoryCommitLimitKey = new Key<>("commitLimit");
 
     static final Category<MemoryStat> memoryStatCategory = new Category<>("memory-stats", MemoryStat.class,
-            Key.AGENT_ID, Key.TIMESTAMP, memoryTotalKey, memoryFreeKey, memoryBuffersKey,
-            memoryCachedKey, memorySwapTotalKey, memorySwapFreeKey, memoryCommitLimitKey);
+            Arrays.<Key<?>>asList(Key.AGENT_ID, Key.TIMESTAMP, memoryTotalKey, memoryFreeKey, memoryBuffersKey,
+            memoryCachedKey, memorySwapTotalKey, memorySwapFreeKey, memoryCommitLimitKey),
+            Arrays.<Key<?>>asList(Key.TIMESTAMP));
 
     public List<MemoryStat> getLatestMemoryStats(HostRef ref, long since);
 

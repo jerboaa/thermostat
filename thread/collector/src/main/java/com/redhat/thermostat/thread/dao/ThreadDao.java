@@ -72,9 +72,14 @@ public interface ThreadDao {
     static final Key<Long> LIVE_THREADS_KEY = new Key<Long>("currentLiveThreads");
     static final Key<Long> DAEMON_THREADS_KEY = new Key<Long>("currentDaemonThreads");
     static final Category<ThreadSummary> THREAD_SUMMARY =
-            new Category<>("vm-thread-summary", ThreadSummary.class, Key.AGENT_ID, Key.VM_ID,
-                         Key.TIMESTAMP,
-                         LIVE_THREADS_KEY, DAEMON_THREADS_KEY);
+            new Category<>("vm-thread-summary", ThreadSummary.class,
+                    Arrays.<Key<?>>asList(
+                            Key.AGENT_ID,
+                            Key.VM_ID,
+                            Key.TIMESTAMP,
+                            LIVE_THREADS_KEY,
+                            DAEMON_THREADS_KEY),
+                    Arrays.<Key<?>>asList(Key.TIMESTAMP));
     
     /*
      * vm-thread-harvesting schema
@@ -82,10 +87,12 @@ public interface ThreadDao {
     static final Key<Boolean> HARVESTING_STATUS_KEY = new Key<Boolean>("harvesting");
     static final Category<ThreadHarvestingStatus> THREAD_HARVESTING_STATUS =
             new Category<>("vm-thread-harvesting", ThreadHarvestingStatus.class,
-                    Key.AGENT_ID,
-                    Key.VM_ID,
-                    Key.TIMESTAMP,
-                    HARVESTING_STATUS_KEY);
+                    Arrays.<Key<?>>asList(
+                            Key.AGENT_ID,
+                            Key.VM_ID,
+                            Key.TIMESTAMP,
+                            HARVESTING_STATUS_KEY),
+                    Arrays.<Key<?>>asList(Key.TIMESTAMP));
 
     /*
      * vm-thread-info schema

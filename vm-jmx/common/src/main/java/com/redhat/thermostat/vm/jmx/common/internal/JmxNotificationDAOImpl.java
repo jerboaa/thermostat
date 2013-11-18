@@ -37,6 +37,7 @@
 package com.redhat.thermostat.vm.jmx.common.internal;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
@@ -71,8 +72,14 @@ public class JmxNotificationDAOImpl implements JmxNotificationDAO {
 
     static final Category<JmxNotification> NOTIFICATIONS =
             new Category<>("vm-jmx-notification", JmxNotification.class,
-                    Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP,
-                    SOURCE_BACKEND, SOURCE_DETAILS, CONTENTS);
+                    Arrays.<Key<?>>asList(
+                            Key.AGENT_ID,
+                            Key.VM_ID,
+                            Key.TIMESTAMP,
+                            SOURCE_BACKEND,
+                            SOURCE_DETAILS,
+                            CONTENTS),
+                    Arrays.<Key<?>>asList(Key.TIMESTAMP));
     
     // Query descriptors
             

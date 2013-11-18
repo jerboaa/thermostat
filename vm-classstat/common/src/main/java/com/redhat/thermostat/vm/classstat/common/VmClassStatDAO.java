@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.vm.classstat.common;
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.redhat.thermostat.annotations.Service;
@@ -50,7 +51,8 @@ public interface VmClassStatDAO {
     static final Key<Long> loadedClassesKey = new Key<>("loadedClasses");
 
     static final Category<VmClassStat> vmClassStatsCategory = new Category<>(
-            "vm-class-stats", VmClassStat.class, Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, loadedClassesKey);
+            "vm-class-stats", VmClassStat.class,
+            Arrays.<Key<?>>asList(Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, loadedClassesKey), Arrays.<Key<?>>asList(Key.TIMESTAMP));
 
     public List<VmClassStat> getLatestClassStats(VmRef ref, long since);
 

@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.vm.memory.common;
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.redhat.thermostat.annotations.Service;
@@ -51,7 +52,8 @@ public interface VmMemoryStatDAO {
     static final Key<Generation[]> generationsKey = new Key<>("generations");
 
     static final Category<VmMemoryStat> vmMemoryStatsCategory = new Category<>("vm-memory-stats", VmMemoryStat.class,
-            Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, generationsKey);
+            Arrays.<Key<?>>asList(Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, generationsKey),
+            Arrays.<Key<?>>asList(Key.TIMESTAMP));
 
     public VmMemoryStat getLatestMemoryStat(VmRef ref);
 

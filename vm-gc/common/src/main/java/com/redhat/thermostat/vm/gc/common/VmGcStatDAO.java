@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.vm.gc.common;
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.redhat.thermostat.annotations.Service;
@@ -53,8 +54,8 @@ public interface VmGcStatDAO {
     static final Key<Long> wallTimeKey = new Key<>("wallTime");
 
     static final Category<VmGcStat> vmGcStatCategory = new Category<>("vm-gc-stats", VmGcStat.class,
-            Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, collectorKey,
-            runCountKey, wallTimeKey);
+            Arrays.<Key<?>>asList(Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, collectorKey, runCountKey, wallTimeKey),
+            Arrays.<Key<?>>asList(Key.TIMESTAMP));
 
     public List<VmGcStat> getLatestVmGcStats(VmRef ref, long since);
 

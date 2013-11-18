@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.vm.cpu.common;
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.redhat.thermostat.annotations.Service;
@@ -50,7 +51,7 @@ public interface VmCpuStatDAO {
     static final Key<Double> vmCpuLoadKey = new Key<>("cpuLoad");
 
     static final Category<VmCpuStat> vmCpuStatCategory = new Category<>("vm-cpu-stats", VmCpuStat.class,
-            Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, vmCpuLoadKey);
+            Arrays.<Key<?>>asList(Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, vmCpuLoadKey), Arrays.<Key<?>>asList(Key.TIMESTAMP));
 
     public abstract List<VmCpuStat> getLatestVmCpuStats(VmRef ref, long since);
 
