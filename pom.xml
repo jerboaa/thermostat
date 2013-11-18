@@ -203,17 +203,6 @@
     <javax.servlet.version>2.5</javax.servlet.version>
   </properties>
 
-  <repositories>
-    <repository>
-      <id>repository.jboss.org</id>
-      <url>https://repository.jboss.org/nexus/content/repositories/releases/</url>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
-
-
   <build>
     <directory>${thermostat.build.directory}</directory>
     <pluginManagement>
