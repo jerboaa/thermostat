@@ -119,6 +119,17 @@ public class ClientConfigurationSwingTest {
         assertEquals("foobar", frame.getConnectionUrl());
     }
 
+
+    @Category(GUITest.class)
+    @GUITest
+    @Test
+    public void testEnterInConnectionUrlTextAcceptsPrompt() {
+        JTextComponentFixture textBox = frameFixture.textBox("connectionUrl");
+        textBox.enterText("foobar\n");
+
+        verify(l).actionPerformed(new ActionEvent<>(frame, ClientConfigurationView.Action.CLOSE_ACCEPT));
+    }
+
     @Category(GUITest.class)
     @Test
     public void testPasswordText() {
@@ -129,6 +140,17 @@ public class ClientConfigurationSwingTest {
         assertEquals("foobar", frame.getPassword());
     }
     
+
+    @Category(GUITest.class)
+    @GUITest
+    @Test
+    public void testEnterInPasswordTextAcceptsPrompt() {
+        JTextComponentFixture textBox = frameFixture.textBox("password");
+        textBox.enterText("foobar\n");
+
+        verify(l).actionPerformed(new ActionEvent<>(frame, ClientConfigurationView.Action.CLOSE_ACCEPT));
+    }
+
     @Category(GUITest.class)
     @Test
     public void testUsernameText() {
@@ -139,6 +161,17 @@ public class ClientConfigurationSwingTest {
         assertEquals("foobar", frame.getUserName());
     }
     
+
+    @Category(GUITest.class)
+    @GUITest
+    @Test
+    public void testEnterInUsernameTextAcceptsPrompt() {
+        JTextComponentFixture textBox = frameFixture.textBox("username");
+        textBox.enterText("foobar\n");
+
+        verify(l).actionPerformed(new ActionEvent<>(frame, ClientConfigurationView.Action.CLOSE_ACCEPT));
+    }
+
     @Category(GUITest.class)
     @Test
     public void testSaveEntitlements() {

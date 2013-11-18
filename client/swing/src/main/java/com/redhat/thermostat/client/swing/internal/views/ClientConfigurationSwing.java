@@ -47,6 +47,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
+import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
@@ -74,6 +75,23 @@ public class ClientConfigurationSwing implements ClientConfigurationView {
 
         windowClosingListener = new WindowClosingListener();
         configurationPanel = new ClientConfigurationPanel();
+
+        java.awt.event.ActionListener acceptOnEnterListener = new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent arg0) {
+                fireAction(new ActionEvent<>(ClientConfigurationSwing.this, Action.CLOSE_ACCEPT));
+            }
+        };
+
+        // handle 'enter' in text fields
+        JTextField[] fields = new JTextField[] {
+                configurationPanel.storageUrl,
+                configurationPanel.userName,
+                configurationPanel.password};
+
+        for (JTextField field: fields) {
+            field.addActionListener(acceptOnEnterListener);
+        }
         
         final JOptionPane optionPane = new JOptionPane(configurationPanel);
         optionPane.setOptionType(JOptionPane.OK_CANCEL_OPTION);
