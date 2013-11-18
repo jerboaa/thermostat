@@ -98,11 +98,11 @@ public class CommonPathsImpl implements CommonPaths {
     private static File defaultSystemUserPrefix;
 
     public CommonPathsImpl() throws InvalidConfigurationException {
-        this(makeDir(null, "/"));
+        this(new File("/"));
     }
 
     CommonPathsImpl(String altTestingPrefix) {
-        this(makeDir(null, altTestingPrefix));
+        this(new File(altTestingPrefix));
     }
 
     private CommonPathsImpl(File defaultPrefix) {
@@ -153,27 +153,27 @@ public class CommonPathsImpl implements CommonPaths {
 
     @Override
     public File getSystemPluginRoot() throws InvalidConfigurationException {
-        return makeDir(systemHome, "plugins");
+        return new File(systemHome, "plugins");
     }
 
     @Override
     public File getSystemLibRoot() throws InvalidConfigurationException {
-        return makeDir(systemHome, "libs");
+        return new File(systemHome, "libs");
     }
 
     @Override
     public File getSystemBinRoot() throws InvalidConfigurationException {
-        return makeDir(systemHome, "bin");
+        return new File(systemHome, "bin");
     }
 
     @Override
     public File getSystemNativeLibsRoot() throws InvalidConfigurationException {
-        return makeDir(getSystemLibRoot(), "native");
+        return new File(getSystemLibRoot(), "native");
     }
 
     @Override
     public File getSystemConfigurationDirectory() throws InvalidConfigurationException {
-        return makeDir(getSystemThermostatHome(), "etc");
+        return new File(getSystemThermostatHome(), "etc");
     }
 
     @Override
@@ -216,7 +216,7 @@ public class CommonPathsImpl implements CommonPaths {
 
     @Override
     public File getUserStorageDirectory() throws InvalidConfigurationException {
-        return makeDir(getUserPersistentDataDirectory(), "db");
+        return new File(getUserPersistentDataDirectory(), "db");
     }
 
     @Override
@@ -292,21 +292,6 @@ public class CommonPathsImpl implements CommonPaths {
 
     }
 
-    private static File makeDir(File parent, String name) {
-        File dir = new File(parent, name);
-        boolean exists = dir.exists();
-        if (!exists) {
-            exists = dir.mkdirs();
-        }
-        if (!exists) {
-            throw new InvalidConfigurationException("Directory could not be created: " + dir.getAbsolutePath());
-        }
-        if (!dir.isDirectory()) {
-            throw new InvalidConfigurationException(t.localize(LocaleResources.GENERAL_NOT_A_DIR, dir.getAbsolutePath()));
-        }
-        return dir;
-    }
-
     /*
      * We need two different implementations because the paths are different. We
      * can't get clean paths by simply changing the prefix.
@@ -330,7 +315,7 @@ public class CommonPathsImpl implements CommonPaths {
             if (userHome == null) {
                 userHome = System.getProperty("user.home") + File.separatorChar + THERMOSTAT_USER_DIR;
             }
-            this.userHome = makeDir(null, userHome);
+            this.userHome = new File(userHome);
         }
 
         public File getSystemRoot() throws InvalidConfigurationException {
@@ -339,23 +324,23 @@ public class CommonPathsImpl implements CommonPaths {
 
 
         public File getUserConfigurationDirectory() throws InvalidConfigurationException {
-            return makeDir(getSystemRoot(), "etc");
+            return new File(getSystemRoot(), "etc");
         }
 
         public File getUserPersistentDataDirectory() throws InvalidConfigurationException {
-            return makeDir(getSystemRoot(), "data");
+            return new File(getSystemRoot(), "data");
         }
 
         public File getUserRuntimeDataDirectory() throws InvalidConfigurationException {
-            return makeDir(getSystemRoot(), "run");
+            return new File(getSystemRoot(), "run");
         }
 
         public File getUserLogDirectory() throws InvalidConfigurationException {
-            return makeDir(getSystemRoot(), "logs");
+            return new File(getSystemRoot(), "logs");
         }
 
         public File getUserCacheDirectory() throws InvalidConfigurationException {
-            return makeDir(getSystemRoot(), "cache");
+            return new File(getSystemRoot(), "cache");
         }
     }
 
@@ -372,7 +357,7 @@ public class CommonPathsImpl implements CommonPaths {
             if (userHome == null) {
                 this.prefix = defaultSystemUserPrefix;
             } else {
-                this.prefix = makeDir(null, userHome);
+                this.prefix = new File(userHome);
             }
         }
 
@@ -382,23 +367,23 @@ public class CommonPathsImpl implements CommonPaths {
 
 
         public File getUserConfigurationDirectory() throws InvalidConfigurationException {
-            return makeDir(getSystemRoot(), "etc/thermostat");
+            return new File(getSystemRoot(), "etc/thermostat");
         }
 
         public File getUserPersistentDataDirectory() throws InvalidConfigurationException {
-            return makeDir(getSystemRoot(), "var/lib/thermostat");
+            return new File(getSystemRoot(), "var/lib/thermostat");
         }
 
         public File getUserRuntimeDataDirectory() throws InvalidConfigurationException {
-            return makeDir(getSystemRoot(), "var/run/thermostat");
+            return new File(getSystemRoot(), "var/run/thermostat");
         }
 
         public File getUserLogDirectory() throws InvalidConfigurationException {
-            return makeDir(getSystemRoot(), "var/log/thermostat");
+            return new File(getSystemRoot(), "var/log/thermostat");
         }
 
         public File getUserCacheDirectory() throws InvalidConfigurationException {
-            return makeDir(getSystemRoot(), "var/cache/thermostat");
+            return new File(getSystemRoot(), "var/cache/thermostat");
         }
     }
 

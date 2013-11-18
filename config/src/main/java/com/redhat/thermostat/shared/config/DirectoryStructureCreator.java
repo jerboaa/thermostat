@@ -34,33 +34,50 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.shared.config.internal;
+package com.redhat.thermostat.shared.config;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
+import java.io.File;
 
-import com.redhat.thermostat.shared.config.CommonPaths;
-import com.redhat.thermostat.shared.config.DirectoryStructureCreator;
-import com.redhat.thermostat.shared.config.SSLConfiguration;
-import com.redhat.thermostat.shared.config.NativeLibraryResolver;
+import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.shared.locale.internal.LocaleResources;
 
-public class Activator implements BundleActivator {
+public class DirectoryStructureCreator {
 
-    @Override
-    public void start(BundleContext context) throws Exception {
-        CommonPaths paths = new CommonPathsImpl();
-        DirectoryStructureCreator pathsCreator = new DirectoryStructureCreator(paths);
-        pathsCreator.createPaths();
-        // Prevents IllegalStateException when external dependencies attempt to resolve native libraries.
-        NativeLibraryResolver.setCommonPaths(paths);
-        context.registerService(CommonPaths.class.getName(), paths, null);
-        SSLConfiguration sslConf = new SSLConfigurationImpl(paths);
-        context.registerService(SSLConfiguration.class.getName(), sslConf, null);
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
+    private final CommonPaths paths;
+
+    public DirectoryStructureCreator(CommonPaths paths) {
+        this.paths = paths;
     }
 
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        NativeLibraryResolver.setCommonPaths(null);
+    public void createPaths() {
+        makeDir(paths.getSystemThermostatHome());
+        makeDir(paths.getSystemPluginRoot());
+        makeDir(paths.getSystemLibRoot());
+        makeDir(paths.getSystemNativeLibsRoot());
+        makeDir(paths.getSystemBinRoot());
+        makeDir(paths.getSystemConfigurationDirectory());
+        makeDir(paths.getUserThermostatHome());
+        makeDir(paths.getUserConfigurationDirectory());
+        makeDir(paths.getUserRuntimeDataDirectory());
+        makeDir(paths.getUserLogDirectory());
+        makeDir(paths.getUserCacheDirectory());
+        makeDir(paths.getUserPersistentDataDirectory());
+        makeDir(paths.getUserPluginRoot());
+        makeDir(paths.getUserStorageDirectory());
+
     }
 
+    private static void makeDir(File dir) {
+        boolean exists = dir.exists();
+        if (!exists) {
+            exists = dir.mkdirs();
+        }
+        if (!exists) {
+            throw new InvalidConfigurationException("Directory could not be created: " + dir.getAbsolutePath());
+        }
+        if (!dir.isDirectory()) {
+            throw new InvalidConfigurationException(t.localize(LocaleResources.GENERAL_NOT_A_DIR, dir.getAbsolutePath()));
+        }
+    }
 }

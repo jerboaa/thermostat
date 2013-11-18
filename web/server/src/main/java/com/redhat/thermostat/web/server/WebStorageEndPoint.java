@@ -71,6 +71,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.shared.config.DirectoryStructureCreator;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.config.internal.CommonPathsImpl;
 import com.redhat.thermostat.storage.core.Categories;
@@ -250,6 +251,7 @@ public class WebStorageEndPoint extends HttpServlet {
             // this throws config exception if neither the property
             // nor the env var is set
             paths = new CommonPathsImpl();
+            new DirectoryStructureCreator(paths).createPaths();
             return true;
         } catch (InvalidConfigurationException e) {
             return false;
