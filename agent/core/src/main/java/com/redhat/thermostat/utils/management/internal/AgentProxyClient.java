@@ -51,7 +51,6 @@ import com.redhat.thermostat.agent.proxy.common.AgentProxyLogin;
 import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.common.utils.LoggedExternalProcess;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.shared.config.Configuration;
 
 class AgentProxyClient implements AgentProxyListener {
     
@@ -62,22 +61,22 @@ class AgentProxyClient implements AgentProxyListener {
     private final RMIRegistry registry;
     private final int pid;
     private final ProcessCreator procCreator;
-    private final Configuration config;
+    private final File binPath;
     private final CountDownLatch started;
     
     private AgentProxyControl proxy;
     private Exception serverError;
     
-    AgentProxyClient(RMIRegistry registry, int pid) {
-        this(registry, pid, new Configuration(), new CountDownLatch(1), 
+    AgentProxyClient(RMIRegistry registry, int pid, File binPath) {
+        this(registry, pid, binPath, new CountDownLatch(1), 
                 new ProcessCreator());
     }
 
-    AgentProxyClient(RMIRegistry registry, int pid, Configuration config,
+    AgentProxyClient(RMIRegistry registry, int pid, File binPath,
             CountDownLatch started, ProcessCreator procCreator) {
         this.registry = registry;
         this.pid = pid;
-        this.config = config;
+        this.binPath = binPath;
         this.started = started;
         this.procCreator = procCreator;
     }
@@ -120,7 +119,7 @@ class AgentProxyClient implements AgentProxyListener {
     }
 
     private void startProcess() throws IOException, ApplicationException {
-        String serverPath = config.getSystemBinRoot() + File.separator + SERVER_NAME;
+        String serverPath = binPath + File.separator + SERVER_NAME;
         procCreator.createAndRunProcess(new String[] { serverPath, String.valueOf(pid) });
         try {
             boolean result = started.await(SERVER_TIMEOUT_MS, TimeUnit.MILLISECONDS);

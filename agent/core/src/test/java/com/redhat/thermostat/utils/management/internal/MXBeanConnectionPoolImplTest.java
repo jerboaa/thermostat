@@ -46,6 +46,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
+
 import org.junit.Test;
 
 import com.redhat.thermostat.utils.management.MXBeanConnection;
@@ -53,17 +55,19 @@ import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl.
 
 public class MXBeanConnectionPoolImplTest {
 
+    private File binDir = mock(File.class);
+
     @Test
     public void testAcquire() throws Exception {
         MXBeanConnectionImpl toReturn = mock(MXBeanConnectionImpl.class);
         MXBeanConnector connector = mock(MXBeanConnector.class);
         ConnectorCreator creator = mock(ConnectorCreator.class);
 
-        when(creator.create(any(RMIRegistry.class), anyInt())).thenReturn(connector);
+        when(creator.create(any(RMIRegistry.class), anyInt(), any(File.class))).thenReturn(connector);
         when(connector.connect()).thenReturn(toReturn);
 
         RMIRegistry registry = mock(RMIRegistry.class);
-        MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(creator, registry);
+        MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(creator, registry, binDir);
 
         MXBeanConnection connection = pool.acquire(0);
 
@@ -81,11 +85,11 @@ public class MXBeanConnectionPoolImplTest {
         MXBeanConnector connector = mock(MXBeanConnector.class);
         ConnectorCreator creator = mock(ConnectorCreator.class);
 
-        when(creator.create(any(RMIRegistry.class), anyInt())).thenReturn(connector);
+        when(creator.create(any(RMIRegistry.class), anyInt(), any(File.class))).thenReturn(connector);
         when(connector.connect()).thenReturn(toReturn);
 
         RMIRegistry registry = mock(RMIRegistry.class);
-        MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(creator, registry);
+        MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(creator, registry, binDir);
 
         MXBeanConnection connection1 = pool.acquire(0);
 
@@ -107,11 +111,11 @@ public class MXBeanConnectionPoolImplTest {
         MXBeanConnector connector = mock(MXBeanConnector.class);
         ConnectorCreator creator = mock(ConnectorCreator.class);
 
-        when(creator.create(any(RMIRegistry.class), anyInt())).thenReturn(connector);
+        when(creator.create(any(RMIRegistry.class), anyInt(), any(File.class))).thenReturn(connector);
         when(connector.connect()).thenReturn(actualConnection);
 
         RMIRegistry registry = mock(RMIRegistry.class);
-        MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(creator, registry);
+        MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(creator, registry, binDir);
 
         MXBeanConnection connection = pool.acquire(0);
 
@@ -128,11 +132,11 @@ public class MXBeanConnectionPoolImplTest {
         MXBeanConnector connector = mock(MXBeanConnector.class);
         ConnectorCreator creator = mock(ConnectorCreator.class);
 
-        when(creator.create(any(RMIRegistry.class), anyInt())).thenReturn(connector);
+        when(creator.create(any(RMIRegistry.class), anyInt(), any(File.class))).thenReturn(connector);
         when(connector.connect()).thenReturn(actualConnection);
 
         RMIRegistry registry = mock(RMIRegistry.class);
-        MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(creator, registry);
+        MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(creator, registry, binDir);
 
         // connection1 == connection1 == actualConnection
         MXBeanConnection connection1 = pool.acquire(0);
@@ -152,7 +156,7 @@ public class MXBeanConnectionPoolImplTest {
     public void testShutdown() throws Exception {
         RMIRegistry registry = mock(RMIRegistry.class);
         ConnectorCreator creator = mock(ConnectorCreator.class);
-        MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(creator, registry);
+        MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(creator, registry, binDir);
         verify(registry).start();
         
         pool.shutdown();

@@ -40,6 +40,8 @@ public interface CommandRegistry {
 
     public void registerCommand(String name, Command cmd);
 
+    public void unregisterCommand(String name);
+
     public void unregisterCommands();
 
 }

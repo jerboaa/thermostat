@@ -38,8 +38,12 @@ package com.redhat.thermostat.agent.internal;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.agent.VmBlacklist;
+
+import com.redhat.thermostat.agent.config.AgentConfigsUtils;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.utils.management.internal.AgentProxyFilter;
 import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl;
@@ -48,19 +52,18 @@ import com.redhat.thermostat.utils.username.internal.UserNameUtilImpl;
 
 public class Activator implements BundleActivator {
     
-    private final MXBeanConnectionPoolImpl pool;
-    
-    public Activator() {
-        this(new MXBeanConnectionPoolImpl());
-    }
-    
-    Activator(MXBeanConnectionPoolImpl pool) {
-        this.pool = pool;
-    }
+    private MXBeanConnectionPoolImpl pool;
 
     @Override
     public void start(BundleContext context) throws Exception {
+        ServiceReference<CommonPaths> pathsRef = context.getServiceReference(CommonPaths.class);
+        CommonPaths paths = context.getService(pathsRef);
+        pool = new MXBeanConnectionPoolImpl(paths.getSystemBinRoot());
         context.registerService(MXBeanConnectionPool.class, pool, null);
+        AgentConfigsUtils.setConfigFiles(paths.getSystemAgentConfigurationFile(), paths.getUserAgentConfigurationFile(),
+        		                   paths.getUserAgentAuthConfigFile());
+        paths = null;
+        context.ungetService(pathsRef);
         context.registerService(UserNameUtil.class, new UserNameUtilImpl(), null);
         VmBlacklistImpl blacklist = new VmBlacklistImpl();
         blacklist.addVmFilter(new AgentProxyFilter());
@@ -70,7 +73,15 @@ public class Activator implements BundleActivator {
     @Override
     public void stop(BundleContext context) throws Exception {
         // Services automatically unregistered by framework
-        pool.shutdown();
+        if (pool != null) {
+            pool.shutdown();
+            pool = null;
+        }
+    }
+
+    // Testing hook.
+    void setPool(MXBeanConnectionPoolImpl pool) {
+        this.pool = pool;
     }
 
 }

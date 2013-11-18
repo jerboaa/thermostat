@@ -37,90 +37,93 @@
 package com.redhat.thermostat.launcher.internal;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.Map;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
-import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 import com.redhat.thermostat.common.ExitStatus;
+import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.cli.CommandContextFactory;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
+import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.launcher.internal.CurrentEnvironment.CurrentEnvironmentChangeListener;
-import com.redhat.thermostat.shared.config.Configuration;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class Activator implements BundleActivator {
     
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    class RegisterLauncherCustomizer implements ServiceTrackerCustomizer {
+    @SuppressWarnings({ "rawtypes" })
+    class RegisterLauncherAction implements Action {
 
         private ServiceRegistration launcherReg;
         private ServiceRegistration bundleManReg;
         private ServiceRegistration cmdInfoReg;
         private ServiceRegistration exitStatusReg;
         private BundleContext context;
-        private BundleManager bundleService;
-        private CurrentEnvironment currentEnvironment;
+        private CurrentEnvironment env;
 
-        RegisterLauncherCustomizer(BundleContext context, BundleManager bundleService, CurrentEnvironment env) {
+        RegisterLauncherAction(BundleContext context, CurrentEnvironment env) {
             this.context = context;
-            this.bundleService = bundleService;
-            this.currentEnvironment = env;
+            this.env = env;
         }
 
         @Override
-        public Object addingService(ServiceReference reference) {
-            // keyring is now ready
-            Keyring keyring = (Keyring)context.getService(reference);
-            Configuration config = bundleService.getConfiguration();
+        public void dependenciesAvailable(Map<String, Object> services) {
+            CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
+            Keyring keyring = (Keyring) services.get(Keyring.class.getName());
+            ClientPreferences prefs = new ClientPreferences(keyring, paths);
 
-            String commandsDir = new File(config.getSystemConfigurationDirectory(), "commands").toString();
+            String commandsDir = new File(paths.getSystemConfigurationDirectory(), "commands").toString();
             CommandInfoSource builtInCommandSource =
-                    new BuiltInCommandInfoSource(commandsDir, config.getSystemLibRoot().toString());
+                    new BuiltInCommandInfoSource(commandsDir, paths.getSystemLibRoot().toString());
             CommandInfoSource pluginCommandSource = new PluginCommandInfoSource(
-                            config.getSystemLibRoot().toString(), config.getSystemPluginRoot().toString(),
-                            config.getUserPluginRoot().toString());
+                            paths.getSystemLibRoot().toString(), paths.getSystemPluginRoot().toString(),
+                            paths.getUserPluginRoot().toString());
             CommandInfoSource commands = new CompoundCommandInfoSource(builtInCommandSource, pluginCommandSource);
 
             cmdInfoReg = context.registerService(CommandInfoSource.class, commands, null);
 
+            BundleManager bundleService = null;
+            try {
+                bundleService = new BundleManagerImpl(paths);
+            } catch (IOException e) {
+                throw new RuntimeException("Could not initialize launcher.", e);
+            }
+
             // Register Launcher service since FrameworkProvider is waiting for it blockingly.
-            LauncherImpl launcher = new LauncherImpl(context,
-                    new CommandContextFactory(context), bundleService, commands, currentEnvironment);
+            LauncherImpl launcher = new LauncherImpl(context, new CommandContextFactory(context),
+                    bundleService, commands, env, prefs, paths);
             launcherReg = context.registerService(Launcher.class.getName(), launcher, null);
             bundleManReg = context.registerService(BundleManager.class, bundleService, null);
             ExitStatus exitStatus = new ExitStatusImpl(ExitStatus.EXIT_SUCCESS);
             exitStatusReg = context.registerService(ExitStatus.class, exitStatus, null);
-            return keyring;
         }
 
         @Override
-        public void modifiedService(ServiceReference reference, Object service) {
-            // nothing
-        }
-
-        @Override
-        public void removedService(ServiceReference reference, Object service) {
-            // Keyring is gone, remove launcher, et. al. as well
+        public void dependenciesUnavailable() {
+            // Keyring or CommonPaths are gone, remove launcher, et. al. as well
             launcherReg.unregister();
             bundleManReg.unregister();
             cmdInfoReg.unregister();
             exitStatusReg.unregister();
         }
-
+        
     }
 
-    @SuppressWarnings("rawtypes")
-    private ServiceTracker serviceTracker;
+    private MultipleServiceTracker launcherDepsTracker;
 
     private CommandRegistry registry;
 
+    @SuppressWarnings("rawtypes")
     private ServiceTracker commandInfoSourceTracker;
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -128,11 +131,13 @@ public class Activator implements BundleActivator {
     public void start(final BundleContext context) throws Exception {
         CurrentEnvironment environment = new CurrentEnvironment(Environment.CLI);
 
-        BundleManager bundleService = new BundleManagerImpl(new Configuration());
-        ServiceTrackerCustomizer customizer = new RegisterLauncherCustomizer(context, bundleService, environment);
-        serviceTracker = new ServiceTracker(context, Keyring.class, customizer);
-        // Track for Keyring service.
-        serviceTracker.open();
+        Class[] launcherDeps = new Class[]{
+            Keyring.class,
+            CommonPaths.class,
+        };
+        launcherDepsTracker = new MultipleServiceTracker(context, launcherDeps,
+                new RegisterLauncherAction(context, environment));
+        launcherDepsTracker.open();
 
         final HelpCommand helpCommand = new HelpCommand();
         environment.addListener(new CurrentEnvironmentChangeListener() {
@@ -165,10 +170,12 @@ public class Activator implements BundleActivator {
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        if (serviceTracker != null) {
-            serviceTracker.close();
+        if (launcherDepsTracker != null) {
+            launcherDepsTracker.close();
         }
-        commandInfoSourceTracker.close();
+        if (commandInfoSourceTracker != null) {
+            commandInfoSourceTracker.close();
+        }
         registry.unregisterCommands();
     }
 }

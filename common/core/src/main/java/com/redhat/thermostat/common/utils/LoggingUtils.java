@@ -48,7 +48,7 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.LogFormatter;
 import com.redhat.thermostat.common.locale.LocaleResources;
-import com.redhat.thermostat.shared.config.Configuration;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.locale.Translate;
 
@@ -124,15 +124,15 @@ public final class LoggingUtils {
         root.removeHandler(handler);
     }
 
-    public static void loadGlobalLoggingConfig() throws InvalidConfigurationException {
-        File systemConfigurationDir = new Configuration().getSystemConfigurationDirectory();
+    public static void loadGlobalLoggingConfig(CommonPaths paths) throws InvalidConfigurationException {
+        File systemConfigurationDir = paths.getSystemConfigurationDirectory();
         File loggingPropertiesFile = new File(systemConfigurationDir, "logging.properties");
         loadConfig(loggingPropertiesFile);
     }
     
 
-    public static void loadUserLoggingConfig() throws InvalidConfigurationException {
-        File userConfigurationDir = new Configuration().getUserConfigurationDirectory();
+    public static void loadUserLoggingConfig(CommonPaths paths) throws InvalidConfigurationException {
+        File userConfigurationDir = paths.getUserConfigurationDirectory();
         File loggingPropertiesFile = new File(userConfigurationDir, "logging.properties");
         loadConfig(loggingPropertiesFile);
     }

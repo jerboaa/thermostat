@@ -28,6 +28,7 @@
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.shared.config.internal,
+              com.redhat.thermostat.shared.locale.internal,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>

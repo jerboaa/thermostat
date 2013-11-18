@@ -39,14 +39,18 @@ package com.redhat.thermostat.agent.internal;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.io.File;
 
 import org.junit.Test;
 
 import com.redhat.thermostat.agent.VmBlacklist;
+import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.shared.config.NativeLibraryResolver;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl;
-import com.redhat.thermostat.utils.management.internal.RMIRegistry;
 import com.redhat.thermostat.utils.username.UserNameUtil;
 import com.redhat.thermostat.utils.username.internal.UserNameUtilImpl;
 
@@ -54,11 +58,16 @@ public class ActivatorTest {
     @Test
     public void verifyServiceIsRegistered() throws Exception {
 
-        StubBundleContext context = new StubBundleContext();
+    	CommonPaths paths = mock(CommonPaths.class);
+    	when(paths.getSystemNativeLibsRoot()).thenReturn(new File("target"));
+    	NativeLibraryResolver.setCommonPaths(paths);
 
-        RMIRegistry registry = mock(RMIRegistry.class);
-        MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(registry);
-        Activator activator = new Activator(pool);
+        StubBundleContext context = new StubBundleContext();
+        context.registerService(CommonPaths.class.getName(), paths, null);
+
+        //RMIRegistry registry = mock(RMIRegistry.class);
+        //MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(registry);
+        Activator activator = new Activator();
 
         activator.start(context);
 
@@ -73,7 +82,8 @@ public class ActivatorTest {
         StubBundleContext context = new StubBundleContext();
 
         MXBeanConnectionPoolImpl pool = mock(MXBeanConnectionPoolImpl.class);
-        Activator activator = new Activator(pool);
+        Activator activator = new Activator();
+        activator.setPool(pool);
 
         activator.stop(context);
 

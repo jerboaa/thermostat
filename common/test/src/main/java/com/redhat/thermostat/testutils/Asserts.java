@@ -41,12 +41,24 @@ import java.util.Hashtable;
 public class Asserts {
 
     public static void assertCommandIsRegistered(StubBundleContext context, String name, Class<?> klass) {
+        assertCommandRegistration(context, name, klass, true);
+    }
+
+    public static void assertCommandIsNotRegistered(StubBundleContext context, String name, Class<?> klass) {
+        assertCommandRegistration(context, name, klass, false);
+    }
+
+    private static void assertCommandRegistration(StubBundleContext context, String name, Class<?> klass, boolean wantRegistered) {
         // The Command class is not visible to this module, so we have to live
         // with hardcoding some details here
         Hashtable<String,String> props = new Hashtable<>();
         props.put("COMMAND_NAME", name);
-        if (!context.isServiceRegistered("com.redhat.thermostat.common.cli.Command", klass, props)) {
-            throw new AssertionError("Command " + name + " is not registered");
+        boolean isRegistered = context.isServiceRegistered("com.redhat.thermostat.common.cli.Command", klass, props);
+        if (!isRegistered && wantRegistered) {
+            throw new AssertionError("Command " + name + " is not registered but should be");
+        }
+        if (isRegistered && !wantRegistered) {
+            throw new AssertionError("Command " + name + " is registered but should not be");
         }
     }
 }

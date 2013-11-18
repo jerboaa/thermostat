@@ -39,22 +39,61 @@ package com.redhat.thermostat.shared.config.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.testutils.StubBundleContext;
+import com.redhat.thermostat.testutils.TestUtils;
 
 public class ActivatorTest {
 
+    private String originalThermostatHomeProperty;
+    private File testHome;
+
+    @Before
+    public void setUp() {
+        Path testHomePath = null;
+        try {
+            testHomePath = Files.createTempDirectory("ActivatorTest_THERMOSTAT_HOME");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        File testHome = testHomePath.toFile();
+        originalThermostatHomeProperty = System.getProperty("THERMOSTAT_HOME");
+        System.setProperty("THERMOSTAT_HOME", testHome.getAbsolutePath());
+    }
+
+    @After
+    public void tearDown() throws IOException {
+        if (testHome != null) {
+            TestUtils.deleteRecursively(testHome);
+        }
+        if (originalThermostatHomeProperty != null) {
+            System.setProperty("THERMOSTAT_HOME", originalThermostatHomeProperty);
+        } else {
+            System.clearProperty("THERMOSTAT_HOME");
+        }
+    }
+
     @Test
-    public void verifyServiceRegistered() throws Exception {
+    public void verifyServicesRegistered() throws Exception {
         StubBundleContext ctx = new StubBundleContext();
         Activator activator = new Activator();
         activator.start(ctx);
 
         assertTrue(ctx.isServiceRegistered(SSLConfiguration.class.getName(),
                 SSLConfigurationImpl.class));
-        assertEquals(1, ctx.getAllServices().size());
+        assertTrue(ctx.isServiceRegistered(CommonPaths.class.getName(),
+                CommonPathsImpl.class));
+        assertEquals(2, ctx.getAllServices().size());
 
     }
 

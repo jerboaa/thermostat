@@ -174,7 +174,7 @@ public class MainPreferencePage extends FieldEditorPreferencePage implements
         addField(passwordEditor);
         addField(saveEntitlementsEditor);
         updateMargins(generalGroup);
-        this.clientPrefs = new ClientPreferences(Activator.getDefault().getKeyring());
+        this.clientPrefs = new ClientPreferences(Activator.getDefault().getKeyring(), Activator.getDefault().getCommonPaths());
         synchronizeValues();
     }
     

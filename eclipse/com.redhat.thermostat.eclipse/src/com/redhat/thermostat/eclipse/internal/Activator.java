@@ -49,6 +49,7 @@ import org.osgi.util.tracker.ServiceTracker;
 import com.redhat.thermostat.eclipse.LoggerFacility;
 import com.redhat.thermostat.eclipse.internal.views.SWTHostOverviewViewProvider;
 import com.redhat.thermostat.host.overview.client.core.HostOverviewViewProvider;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.storage.core.ConnectionException;
 import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.utils.keyring.Keyring;
@@ -67,6 +68,10 @@ public class Activator extends AbstractUIPlugin {
     private Keyring keyring;
     @SuppressWarnings({ "rawtypes" })
     private ServiceTracker keyringTracker;
+
+    private CommonPaths paths;
+    @SuppressWarnings({ "rawtypes" })
+    private ServiceTracker pathsTracker;
 
     /**
      * The constructor
@@ -89,7 +94,7 @@ public class Activator extends AbstractUIPlugin {
         // Register ViewProvider
         context.registerService(HostOverviewViewProvider.class,
                 new SWTHostOverviewViewProvider(), null);
-        
+
         keyringTracker = new ServiceTracker(context, Keyring.class, null) {
             @Override
             public Object addingService(ServiceReference reference) {
@@ -105,8 +110,24 @@ public class Activator extends AbstractUIPlugin {
             }
             
         };
-        // Track for Keyring service.
+        pathsTracker = new ServiceTracker(context, CommonPaths.class, null) {
+            @Override
+            public Object addingService(ServiceReference reference) {
+                CommonPaths paths = (CommonPaths) context.getService(reference);
+                Activator.this.paths = paths;
+                return keyring;
+            }
+
+            @Override
+            public void removedService(ServiceReference reference, Object service) {
+                Activator.this.paths = null;
+                context.ungetService(reference);
+            }
+            
+        };
+        // Track Keyring and CommonPaths services.
         keyringTracker.open();
+        pathsTracker.open();
     }
 
     /*
@@ -197,5 +218,8 @@ public class Activator extends AbstractUIPlugin {
         return keyring;
     }
 
+    public CommonPaths getCommonPaths() {
+        return paths;
+    }
 }
 

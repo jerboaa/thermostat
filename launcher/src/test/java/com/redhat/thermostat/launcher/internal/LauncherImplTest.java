@@ -45,6 +45,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -80,6 +81,7 @@ import com.redhat.thermostat.launcher.BundleInformation;
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.internal.DisallowSystemExitSecurityManager.ExitException;
 import com.redhat.thermostat.launcher.internal.LauncherImpl.LoggingInitializer;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.storage.core.DbServiceFactory;
@@ -146,6 +148,9 @@ public class LauncherImplTest {
     private ActionNotifier<ApplicationState> notifier;
 
     private LauncherImpl launcher;
+
+    private CurrentEnvironment environment;
+    private CommonPaths paths;
 
     @Before
     public void setUp() throws CommandInfoNotFoundException, BundleException, IOException {
@@ -259,15 +264,20 @@ public class LauncherImplTest {
         when(appSvc.getApplicationExecutor()).thenReturn(exec);
         bundleContext.registerService(ApplicationService.class, appSvc, null);
 
-        CurrentEnvironment environment = mock(CurrentEnvironment.class);
+        environment = mock(CurrentEnvironment.class);
         loggingInitializer = mock(LoggingInitializer.class);
         dbServiceFactory = mock(DbServiceFactory.class);
         version = mock(Version.class);
 
-        launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext), environment, loggingInitializer, dbServiceFactory, version);
-
         Keyring keyring = mock(Keyring.class);
-        launcher.setPreferences(new ClientPreferences(keyring));
+        paths = mock(CommonPaths.class);
+        File userConfigFile = mock(File.class);
+        when(userConfigFile.isFile()).thenReturn(false);
+        when(paths.getUserClientConfigurationFile()).thenReturn(userConfigFile);
+        ClientPreferences prefs = new ClientPreferences(keyring, paths);
+
+        launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext),
+                environment, dbServiceFactory, version, prefs, paths, loggingInitializer);
     }
 
     private void setupCommandContextFactory() {
@@ -473,10 +483,12 @@ public class LauncherImplTest {
         when(prefs.getUserName()).thenReturn("user");
         when(prefs.getPassword()).thenReturn("password");
 
+        LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext),
+                environment, dbServiceFactory, version, prefs, paths, loggingInitializer);
+
         DbService dbService = mock(DbService.class);
         ArgumentCaptor<String> dbUrlCaptor = ArgumentCaptor.forClass(String.class);
         when(dbServiceFactory.createDbService(eq("user"), eq("password"), dbUrlCaptor.capture())).thenReturn(dbService);
-        launcher.setPreferences(prefs);
         wrappedRun(launcher, new String[] { "test3" }, false);
         verify(dbService).connect();
         verify(prefs).getConnectionUrl();
@@ -488,11 +500,12 @@ public class LauncherImplTest {
         ClientPreferences prefs = mock(ClientPreferences.class);
         String dbUrl = "mongo://fluff:12345";
         when(prefs.getConnectionUrl()).thenReturn(dbUrl);
+        LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext),
+                environment, dbServiceFactory, version, prefs, paths, loggingInitializer);
 
         DbService dbService = mock(DbService.class);
         ArgumentCaptor<String> dbUrlCaptor = ArgumentCaptor.forClass(String.class);
         when(dbServiceFactory.createDbService(eq("user"), eq("pass"), dbUrlCaptor.capture())).thenReturn(dbService);
-        launcher.setPreferences(prefs);
         ctxFactory.setInput("user\rpass\r");
         wrappedRun(launcher, new String[] { "test3" }, false);
         verify(dbService).connect();

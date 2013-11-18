@@ -97,7 +97,8 @@ public class HostsVmsTreeViewPart extends ViewPart {
     private Timer timer;
 
     public HostsVmsTreeViewPart() {
-        ClientPreferences clientPrefs = new ClientPreferences(Activator.getDefault().getKeyring());
+        ClientPreferences clientPrefs = new ClientPreferences(Activator.getDefault().getKeyring(),
+                                                              Activator.getDefault().getCommonPaths());
         ConnectionConfiguration configuration = new ConnectionConfiguration(
                 clientPrefs.getUserName(), clientPrefs.getPassword(),
                 clientPrefs.getConnectionUrl());

@@ -83,6 +83,7 @@ import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Ref;
@@ -107,6 +108,7 @@ public class MainWindowControllerImpl implements MainWindowController {
 
     private MainView view;
     private Keyring keyring;
+    private CommonPaths paths;
     
     private HostInfoDAO hostInfoDAO;
     private VmInfoDAO vmInfoDAO;
@@ -210,6 +212,7 @@ public class MainWindowControllerImpl implements MainWindowController {
 
         Class<?>[] deps = new Class<?>[] {
                 Keyring.class,
+                CommonPaths.class,
                 HostInfoDAO.class,
                 VmInfoDAO.class,
                 AgentInfoDAO.class,
@@ -228,6 +231,8 @@ public class MainWindowControllerImpl implements MainWindowController {
             public void dependenciesAvailable(Map<String, Object> services) {
                 keyring = (Keyring) services.get(Keyring.class.getName());
                 Objects.requireNonNull(keyring);
+                paths = (CommonPaths) services.get(CommonPaths.class.getName());
+                Objects.requireNonNull(paths);
                 hostInfoDAO = (HostInfoDAO) services.get(HostInfoDAO.class.getName());
                 Objects.requireNonNull(hostInfoDAO);
                 vmInfoDAO = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
@@ -438,7 +443,7 @@ public class MainWindowControllerImpl implements MainWindowController {
     }
 
     private void showConfigureClientPreferences() {
-        ClientPreferences prefs = new ClientPreferences(keyring);
+        ClientPreferences prefs = new ClientPreferences(keyring, paths);
         ClientConfigurationView view = clientConfigViewProvider.createView();
         ClientConfigurationController controller = new ClientConfigurationController(prefs, view);
         controller.showDialog();

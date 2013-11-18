@@ -36,31 +36,61 @@
 
 package com.redhat.thermostat.client.cli.internal;
 
+import java.util.Map;
+
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
+import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
+import com.redhat.thermostat.common.config.ClientPreferences;
+import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class Activator implements BundleActivator {
 
-    private CommandRegistry reg;
+    private CommandRegistry reg = null;
+    private MultipleServiceTracker tracker;
 
     @Override
-    public void start(BundleContext context) throws Exception {
+    public void start(final BundleContext context) throws Exception {
         reg = new CommandRegistryImpl(context);
 
         reg.registerCommand("list-vms", new ListVMsCommand());
-        reg.registerCommand("shell", new ShellCommand());
         reg.registerCommand("vm-info", new VMInfoCommand());
         reg.registerCommand("vm-stat", new VMStatCommand());
         reg.registerCommand("disconnect", new DisconnectCommand());
-        reg.registerCommand("connect", new ConnectCommand());
         reg.registerCommand("clean-data", new CleanDataCommand(context));
+
+        Class<?>[] classes = new Class[] {
+            Keyring.class,
+            CommonPaths.class,
+        };
+        tracker = new MultipleServiceTracker(context, classes, new Action() {
+
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                Keyring keyring = (Keyring) services.get(Keyring.class.getName());
+                CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
+                ClientPreferences prefs = new ClientPreferences(keyring, paths);
+                reg.registerCommand("connect", new ConnectCommand(prefs));
+                reg.registerCommand("shell", new ShellCommand(context, paths));
+            }
+
+            @Override
+            public void dependenciesUnavailable() {
+                reg.unregisterCommand("connect");
+            }
+            
+        });
+        tracker.open();
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
+        tracker.close();
         reg.unregisterCommands();
     }
 

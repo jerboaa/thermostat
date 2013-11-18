@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.utils.management.internal;
 
+import java.io.File;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.HashMap;
@@ -58,19 +59,21 @@ public class MXBeanConnectionPoolImpl implements MXBeanConnectionPool {
 
     private final ConnectorCreator creator;
     private final RMIRegistry registry;
+    private final File binPath;
 
-    public MXBeanConnectionPoolImpl() {
-        this(new ConnectorCreator(), new RMIRegistry());
+    public MXBeanConnectionPoolImpl(File binPath) {
+        this(new ConnectorCreator(), new RMIRegistry(), binPath);
     }
     
     // For testing purposes only
-    public MXBeanConnectionPoolImpl(RMIRegistry registry) {
-        this(new ConnectorCreator(), registry);
+    public MXBeanConnectionPoolImpl(RMIRegistry registry, File binPath) {
+        this(new ConnectorCreator(), registry, binPath);
     }
 
-    MXBeanConnectionPoolImpl(ConnectorCreator connectorCreator, RMIRegistry registry) {
+    MXBeanConnectionPoolImpl(ConnectorCreator connectorCreator, RMIRegistry registry, File binPath) {
         this.creator = connectorCreator;
         this.registry = registry;
+        this.binPath = binPath;
         
         // Start RMI registry
         try {
@@ -86,7 +89,7 @@ public class MXBeanConnectionPoolImpl implements MXBeanConnectionPool {
         if (data == null) {
             MXBeanConnector connector = null;
             try {
-                connector = creator.create(registry, pid);
+                connector = creator.create(registry, pid, binPath);
                 connector.attach();
                 MXBeanConnectionImpl connection = connector.connect();
                 data = new Pair<Integer, MXBeanConnectionImpl>(1, connection);
@@ -126,8 +129,8 @@ public class MXBeanConnectionPoolImpl implements MXBeanConnectionPool {
     }
 
     static class ConnectorCreator {
-        public MXBeanConnector create(RMIRegistry registry, int pid) throws IOException, ApplicationException {
-            MXBeanConnector connector = new MXBeanConnector(registry, pid);
+        public MXBeanConnector create(RMIRegistry registry, int pid, File binPath) throws IOException, ApplicationException {
+            MXBeanConnector connector = new MXBeanConnector(registry, pid, binPath);
             return connector;
         }
     }

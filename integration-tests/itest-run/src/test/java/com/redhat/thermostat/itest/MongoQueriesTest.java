@@ -42,6 +42,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -55,6 +56,8 @@ import org.junit.Test;
 
 import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
 import com.redhat.thermostat.host.cpu.common.model.CpuStat;
+import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.shared.config.internal.SSLConfigurationImpl;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
@@ -144,7 +147,129 @@ public class MongoQueriesTest extends IntegrationTest {
             }
             
         };
-        SSLConfiguration sslConf = new SSLConfigurationImpl();
+        SSLConfiguration sslConf = new SSLConfigurationImpl(new CommonPaths() {
+
+            @Override
+            public File getSystemThermostatHome() throws InvalidConfigurationException {
+                return null;
+            }
+
+            @Override
+            public File getUserThermostatHome() throws InvalidConfigurationException {
+                return null;
+            }
+
+            @Override
+            public File getSystemPluginRoot() throws InvalidConfigurationException {
+                return null;
+            }
+
+            @Override
+            public File getSystemLibRoot() throws InvalidConfigurationException {
+                return null;
+            }
+
+            @Override
+            public File getSystemNativeLibsRoot() throws InvalidConfigurationException {
+                return null;
+            }
+
+            @Override
+            public File getSystemBinRoot() throws InvalidConfigurationException {
+                return null;
+            }
+
+            @Override
+            public File getSystemConfigurationDirectory() throws InvalidConfigurationException { 
+                return null;
+            }
+
+            @Override
+            public File getUserConfigurationDirectory() throws InvalidConfigurationException {
+                return new File("/tmp");
+            }
+
+            @Override
+            public File getUserPersistentDataDirectory() throws InvalidConfigurationException {
+                return null;
+            }
+
+            @Override
+            public File getUserRuntimeDataDirectory() throws InvalidConfigurationException {
+                return null;
+            }
+
+            @Override
+            public File getUserLogDirectory() throws InvalidConfigurationException {
+                return null;
+            }
+
+            @Override
+            public File getUserCacheDirectory() throws InvalidConfigurationException {
+                return null;
+            }
+
+            @Override
+            public File getUserPluginRoot() throws InvalidConfigurationException {
+                return null;
+            }
+
+            @Override
+            public File getUserStorageDirectory() throws InvalidConfigurationException {
+                return null;
+            }
+
+            @Override
+            public File getSystemStorageConfigurationFile() throws InvalidConfigurationException {
+                return null;
+            }
+
+            @Override
+            public File getUserStorageConfigurationFile() throws InvalidConfigurationException {
+                return null;
+            }
+
+            @Override
+            public File getUserStorageLogFile() throws InvalidConfigurationException {
+                return null;
+            }
+
+            @Override
+            public File getUserStoragePidFile() throws InvalidConfigurationException {
+                return null;
+            }
+
+            @Override
+            public File getSystemAgentConfigurationFile() throws InvalidConfigurationException {
+                return null;
+            }
+
+            @Override
+            public File getUserAgentConfigurationFile() throws InvalidConfigurationException {
+                return null;
+            }
+
+            @Override
+            public File getSystemAgentAuthConfigFile() throws InvalidConfigurationException {
+                return null;
+            }
+
+            @Override
+            public File getUserAgentAuthConfigFile() throws InvalidConfigurationException {
+                return null;
+            }
+
+            @Override
+            public File getUserClientConfigurationFile() throws InvalidConfigurationException { 
+                return null;
+            }
+
+            @Override
+            public File getUserHistoryFile() throws InvalidConfigurationException {
+                return null;
+            }
+            
+        });
         BackingStorage storage = new MongoStorage(config, sslConf);
         if (listener != null) {
             storage.getConnection().addListener(listener);

@@ -50,7 +50,7 @@ import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.shared.config.Configuration;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.locale.Translate;
 
@@ -62,24 +62,24 @@ public class StorageCommand extends AbstractStateNotifyingCommand {
     private DBStartupConfiguration configuration;
     private DBOptionParser parser;
     private final ExitStatus exitStatus;
+    private final CommonPaths paths;
     
     private MongoProcessRunner runner;
     
-    public StorageCommand(ExitStatus exitStatus) {
+    public StorageCommand(ExitStatus exitStatus, CommonPaths paths) {
         this.exitStatus = exitStatus;
+        this.paths = paths;
     }
     
     private void parseArguments(Arguments args) throws InvalidConfigurationException {
-    
-        Configuration thermostatConfiguration = new Configuration();
-        File dbPath = thermostatConfiguration.getUserStorageDirectory();
-        File logFile = thermostatConfiguration.getUserStorageLogFile();
-        File pidFile = thermostatConfiguration.getUserStoragePidFile();
-        File systemPropertyFile = thermostatConfiguration.getSystemStorageConfigurationFile();
+        File dbPath = paths.getUserStorageDirectory();
+        File logFile = paths.getUserStorageLogFile();
+        File pidFile = paths.getUserStoragePidFile();
+        File systemPropertyFile = paths.getSystemStorageConfigurationFile();
         if (!systemPropertyFile.exists()) {
             throw new InvalidConfigurationException(t.localize(LocaleResources.MISSING_DB_CONFIG, systemPropertyFile.toString()));
         }
-        File userPropertyFile = thermostatConfiguration.getUserStorageConfigurationFile();
+        File userPropertyFile = paths.getUserStorageConfigurationFile();
         // read everything that is in the configs
         this.configuration = new DBStartupConfiguration(systemPropertyFile, userPropertyFile, dbPath, logFile, pidFile);
         parser = new DBOptionParser(configuration, args);

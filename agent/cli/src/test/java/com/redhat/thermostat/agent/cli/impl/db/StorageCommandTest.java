@@ -43,10 +43,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
-import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 
 import junit.framework.Assert;
@@ -63,7 +61,9 @@ import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.common.tools.ApplicationState;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
+import com.redhat.thermostat.shared.config.internal.CommonPathsImpl;
 import com.redhat.thermostat.testutils.TestUtils;
 
 public class StorageCommandTest {
@@ -74,6 +74,7 @@ public class StorageCommandTest {
 
     private String tmpDir;
     private ExitStatus exitStatus;
+    private CommonPaths paths;
     
     @Before
     public void setup() {
@@ -89,6 +90,27 @@ public class StorageCommandTest {
         } catch (IOException e) {
             Assert.fail("cannot setup tests: " + e);
         }
+
+        paths = mock(CommonPathsImpl.class);
+        File baseDir = new File(tmpDir);
+        File userRuntimeDir = new File(baseDir, "run");
+        File userDataDir = new File(baseDir, "data");
+        File logsDir = new File(baseDir, "logs");
+        File confDir = new File(baseDir, "etc");
+
+        when(paths.getUserThermostatHome()).thenReturn(baseDir);
+        when(paths.getUserRuntimeDataDirectory()).thenReturn(userRuntimeDir);
+        when(paths.getUserPersistentDataDirectory()).thenReturn(userDataDir);
+        when(paths.getUserConfigurationDirectory()).thenReturn(confDir);
+        when(paths.getUserStorageDirectory()).thenCallRealMethod();
+        when(paths.getUserStorageConfigurationFile()).thenCallRealMethod();
+        when(paths.getUserLogDirectory()).thenReturn(logsDir);
+        when(paths.getUserStorageLogFile()).thenCallRealMethod();
+        when(paths.getUserStoragePidFile()).thenCallRealMethod();
+
+        when(paths.getSystemThermostatHome()).thenReturn(baseDir);
+        when(paths.getSystemConfigurationDirectory()).thenCallRealMethod();
+        when(paths.getSystemStorageConfigurationFile()).thenCallRealMethod();
     }
     
     @After
@@ -105,7 +127,7 @@ public class StorageCommandTest {
         CommandContext ctx = mock(CommandContext.class);
         when(ctx.getArguments()).thenReturn(args);
 
-        StorageCommand service = new StorageCommand(exitStatus) {
+        StorageCommand service = new StorageCommand(exitStatus, paths) {
             @Override
             MongoProcessRunner createRunner() {
                 throw new AssertionError("dry run should never create an actual runner");
@@ -132,7 +154,7 @@ public class StorageCommandTest {
         // TODO: stop not tested yet, but be sure it's not called from the code
         doThrow(new ApplicationException("mock exception")).when(runner).stopService();
         
-        StorageCommand service = new StorageCommand(exitStatus) {
+        StorageCommand service = new StorageCommand(exitStatus, paths) {
             @Override
             MongoProcessRunner createRunner() {
                 return runner;

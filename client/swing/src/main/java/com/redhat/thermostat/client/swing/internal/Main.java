@@ -59,6 +59,7 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.internal.utils.laf.ThemeManager;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
@@ -77,35 +78,37 @@ public class Main {
     private ApplicationService appSvc;
     private DbServiceFactory dbServiceFactory;
     private Keyring keyring;
+    private CommonPaths paths;
     private CountDownLatch shutdown;
     private MainWindowControllerImpl mainController;
     private MainWindowRunnable mainWindowRunnable;
     
-    public Main(BundleContext context, Keyring keyring,
+    public Main(BundleContext context, Keyring keyring, CommonPaths paths,
             ApplicationService appSvc, String[] args) {
 
         DbServiceFactory dbServiceFactory = new DbServiceFactory();
         CountDownLatch shutdown = new CountDownLatch(1);
         MainWindowRunnable mainWindowRunnable = new MainWindowRunnable();
 
-        init(context, appSvc, dbServiceFactory, keyring, shutdown,
+        init(context, appSvc, dbServiceFactory, keyring, paths, shutdown,
                 mainWindowRunnable);
     }
 
     Main(BundleContext context, ApplicationService appSvc,
-            DbServiceFactory dbServiceFactory, Keyring keyring,
+            DbServiceFactory dbServiceFactory, Keyring keyring, CommonPaths paths,
             CountDownLatch shutdown, MainWindowRunnable mainWindowRunnable) {
-        init(context, appSvc, dbServiceFactory, keyring, shutdown,
+        init(context, appSvc, dbServiceFactory, keyring, paths, shutdown,
                 mainWindowRunnable);
     }
 
     private void init(BundleContext context, ApplicationService appSvc,
-            DbServiceFactory dbServiceFactory, Keyring keyring,
+            DbServiceFactory dbServiceFactory, Keyring keyring, CommonPaths paths,
             CountDownLatch shutdown, MainWindowRunnable mainWindowRunnable) {
         this.context = context;
         this.appSvc = appSvc;
         this.dbServiceFactory = dbServiceFactory;
         this.keyring = keyring;
+        this.paths = paths;
         this.shutdown = shutdown;
         this.mainWindowRunnable = mainWindowRunnable;
     }
@@ -151,7 +154,7 @@ public class Main {
 
     private void tryConnecting() {
         final ExecutorService service = appSvc.getApplicationExecutor();
-        ClientPreferences prefs = new ClientPreferences(keyring);
+        ClientPreferences prefs = new ClientPreferences(keyring, paths);
         connect(prefs, service);
     }
     
@@ -237,7 +240,7 @@ public class Main {
     }
     
     private void createPreferencesDialog(final ExecutorService service) {
-        ClientPreferences prefs = new ClientPreferences(keyring);
+        ClientPreferences prefs = new ClientPreferences(keyring, paths);
         ClientConfigurationView configDialog = new ClientConfigurationSwing();
         ClientConfigurationController controller =
                 new ClientConfigurationController(prefs, configDialog, new MainClientConfigReconnector(service));

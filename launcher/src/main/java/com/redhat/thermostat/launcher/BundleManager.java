@@ -44,7 +44,7 @@ import org.osgi.framework.launch.Framework;
 
 import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.launcher.internal.BundleLoader;
-import com.redhat.thermostat.shared.config.Configuration;
+import com.redhat.thermostat.shared.config.CommonPaths;
 
 /**
  * A Service that provides features to load bundles for given command names.
@@ -67,7 +67,7 @@ public abstract class BundleManager {
         loader.installAndStartBundles(framework, bundleLocations);
     }
 
-    public abstract Configuration getConfiguration();
+    public abstract CommonPaths getCommonPaths();
 
 }
 

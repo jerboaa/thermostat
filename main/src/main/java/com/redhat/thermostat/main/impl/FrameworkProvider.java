@@ -61,8 +61,7 @@ import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.Launcher;
-import com.redhat.thermostat.shared.config.Configuration;
-import com.redhat.thermostat.shared.config.InvalidConfigurationException;
+import com.redhat.thermostat.shared.config.CommonPaths;
 
 public class FrameworkProvider {
 
@@ -70,15 +69,15 @@ public class FrameworkProvider {
     private static final String PROPS_FILE = "/com/redhat/thermostat/main/impl/bootstrapbundles.properties";
     private static final String BUNDLELIST = "bundles";
 
-    private Configuration configuration;
+    private CommonPaths paths;
     private boolean printOSGiInfo;
     private boolean ignoreBundleVersions;
 
     // The framework cache location; Must not be shared between apps!
     private Path osgiCacheStorage;
 
-    public FrameworkProvider(Configuration config, boolean printOSGiInfo, boolean ignoreBundleVersions) {
-        this.configuration = config;
+    public FrameworkProvider(CommonPaths paths, boolean printOSGiInfo, boolean ignoreBundleVersions) {
+        this.paths = paths;
 
         this.printOSGiInfo = printOSGiInfo;
         this.ignoreBundleVersions = ignoreBundleVersions;
@@ -101,7 +100,7 @@ public class FrameworkProvider {
     }
 
     private String getOSGiPublicPackages() throws FileNotFoundException, IOException {
-        File osgiBundleDefinitions = new File(configuration.getSystemConfigurationDirectory(), "osgi-export.properties");
+        File osgiBundleDefinitions = new File(paths.getSystemConfigurationDirectory(), "osgi-export.properties");
 
         Properties bundles = new Properties();
         bundles.load(new FileInputStream(osgiBundleDefinitions));
@@ -167,7 +166,7 @@ public class FrameworkProvider {
     }
 
     private Framework makeFramework() throws FileNotFoundException, IOException {
-        File osgiCacheDir = new File(configuration.getUserCacheDirectory(), "osgi-cache");
+        File osgiCacheDir = new File(paths.getUserCacheDirectory(), "osgi-cache");
         if (!osgiCacheDir.isDirectory() && !osgiCacheDir.mkdirs()) {
             throw new RuntimeException("Unable to create " + osgiCacheDir);
         }
@@ -299,7 +298,7 @@ public class FrameworkProvider {
     // files across bootstrap and later code provide the same bundle symbolic
     // name version
     private String actualLocation(String resourceName) {
-        File file = new File(configuration.getSystemLibRoot(), resourceName);
+        File file = new File(paths.getSystemLibRoot(), resourceName);
         try {
             return file.getCanonicalFile().toURI().toString();
         } catch (IOException e) {

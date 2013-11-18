@@ -68,6 +68,7 @@ import com.redhat.thermostat.common.tools.StorageAuthInfoGetter;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.Launcher;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
@@ -76,7 +77,6 @@ import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.storage.core.DbServiceFactory;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageException;
-import com.redhat.thermostat.utils.keyring.Keyring;
 
 /**
  * This class is thread-safe.
@@ -98,20 +98,20 @@ public class LauncherImpl implements Launcher {
     private final CommandInfoSource commandInfoSource;
     private final CurrentEnvironment currentEnvironment;
 
-    /** MUST be mutated in a 'synchronized (this)' block */
-    private ClientPreferences prefs;
+    private final ClientPreferences prefs;
 
 
 
-    public LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory, BundleManager registry, CommandInfoSource infoSource, CurrentEnvironment env) {
-        this(context, cmdCtxFactory, registry, infoSource,
-                new CommandSource(context), env, new LoggingInitializer(), new DbServiceFactory(), new Version());
+    public LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory, BundleManager registry,
+            CommandInfoSource infoSource, CurrentEnvironment env, ClientPreferences prefs, CommonPaths paths) {
+        this(context, cmdCtxFactory, registry, infoSource, new CommandSource(context), env,
+                new DbServiceFactory(), new Version(), prefs, paths, new LoggingInitializer(paths));
     }
 
     LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory, BundleManager registry,
             CommandInfoSource commandInfoSource, CommandSource commandSource,
-            CurrentEnvironment currentEnvironment,
-            LoggingInitializer loggingInitializer, DbServiceFactory dbServiceFactory, Version version) {
+            CurrentEnvironment currentEnvironment, DbServiceFactory dbServiceFactory, Version version,
+            ClientPreferences prefs, CommonPaths paths, LoggingInitializer loggingInitializer) {
         this.context = context;
         this.cmdCtxFactory = cmdCtxFactory;
         this.registry = registry;
@@ -120,6 +120,7 @@ public class LauncherImpl implements Launcher {
         this.commandSource = commandSource;
         this.commandInfoSource = commandInfoSource;
         this.currentEnvironment = currentEnvironment;
+        this.prefs = prefs;
 
         loggingInitializer.initialize();
         logger = LoggingUtils.getLogger(LauncherImpl.class);
@@ -202,10 +203,6 @@ public class LauncherImpl implements Launcher {
         } catch (BundleException e) {
             throw (InternalError) new InternalError().initCause(e);
         }
-    }
-
-    synchronized void setPreferences(ClientPreferences prefs) {
-        this.prefs = prefs;
     }
 
     private boolean hasNoArguments(String[] args) {
@@ -333,16 +330,8 @@ public class LauncherImpl implements Launcher {
 
         CommandContext ctx = cmdCtxFactory.createContext(args);
         
-        synchronized (this) {
-            if (prefs == null) {
-                ServiceReference keyringReference = context.getServiceReference(Keyring.class);
-                @SuppressWarnings("unchecked")
-                Keyring keyring = (Keyring) context.getService(keyringReference);
-                prefs = new ClientPreferences(keyring);
-            }
-        }
-        
         if (cmd.isStorageRequired()) {
+
             ServiceReference dbServiceReference = context.getServiceReference(DbService.class);
             if (dbServiceReference == null) {
                 String dbUrl = ctx.getArguments().getArgument(CommonOptions.DB_URL_ARG);
@@ -389,14 +378,21 @@ public class LauncherImpl implements Launcher {
     }
 
     static class LoggingInitializer {
+
+        private CommonPaths paths;
+
+        LoggingInitializer(CommonPaths paths) {
+            this.paths = paths;
+        }
+
         public void initialize() {
             try {
-                LoggingUtils.loadGlobalLoggingConfig();
+                LoggingUtils.loadGlobalLoggingConfig(paths);
             } catch (InvalidConfigurationException e) {
                 System.err.println("WARNING: Could not read global Thermostat logging configuration.");
             }
             try {
-                LoggingUtils.loadUserLoggingConfig();
+                LoggingUtils.loadUserLoggingConfig(paths);
             } catch (InvalidConfigurationException e) {
                 // We intentionally ignore this.
             }

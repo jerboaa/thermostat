@@ -37,6 +37,7 @@
 
 package com.redhat.thermostat.web.server;
 
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.shared.config.internal.SSLConfigurationImpl;
 import com.redhat.thermostat.storage.config.ConnectionConfiguration;
@@ -50,12 +51,13 @@ class StorageFactory {
     private static Storage storage;
 
     // Web server is not OSGi, this factory method is workaround.
-    static Storage getStorage(String storageClass, final String storageEndpoint, final String username, final String password) {
+    static Storage getStorage(String storageClass, final String storageEndpoint, final String username,
+    		    final String password, final CommonPaths paths) {
         if (storage != null) {
             return storage;
         }
         StartupConfiguration conf = new ConnectionConfiguration(storageEndpoint, username, password);
-        SSLConfiguration sslConf = new SSLConfigurationImpl();
+        SSLConfiguration sslConf = new SSLConfigurationImpl(paths);
         try {
             StorageProvider provider = (StorageProvider) Class.forName(storageClass).newInstance();
             provider.setConfig(conf, sslConf);

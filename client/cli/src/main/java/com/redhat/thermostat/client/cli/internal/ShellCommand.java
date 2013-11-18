@@ -59,7 +59,7 @@ import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Console;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.Launcher;
-import com.redhat.thermostat.shared.config.Configuration;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.locale.Translate;
 
@@ -78,10 +78,17 @@ public class ShellCommand extends AbstractCommand {
     private BundleContext bundleContext;
     
     static class HistoryProvider {
+
+        private CommonPaths paths;
+
+        HistoryProvider(CommonPaths paths) {
+            this.paths = paths;
+        }
+
         public PersistentHistory get() {
             PersistentHistory history = null;
             try {
-                history = new FileHistory(new Configuration().getUserHistoryFile());
+                history = new FileHistory(paths.getUserHistoryFile());
             } catch (InvalidConfigurationException | IOException e) {
                 /* no history available */
             }
@@ -89,8 +96,8 @@ public class ShellCommand extends AbstractCommand {
         }
     }
 
-    public ShellCommand() {
-        this(FrameworkUtil.getBundle(ShellCommand.class).getBundleContext(), new Version(), new HistoryProvider());
+    public ShellCommand(BundleContext context, CommonPaths paths) {
+        this(context, new Version(), new HistoryProvider(paths));
     }
 
     ShellCommand(BundleContext context, Version version, HistoryProvider provider) {
@@ -171,6 +178,7 @@ public class ShellCommand extends AbstractCommand {
         if (launcherRef != null) {
             Launcher launcher = (Launcher) bundleContext.getService(launcherRef);
             launcher.run(parsed, true);
+            bundleContext.ungetService(launcherRef);
         } else {
             throw new CommandException(t.localize(LocaleResources.MISSING_LAUNCHER));
         }

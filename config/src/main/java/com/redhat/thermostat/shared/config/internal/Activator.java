@@ -39,19 +39,25 @@ package com.redhat.thermostat.shared.config.internal;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
+import com.redhat.thermostat.shared.config.NativeLibraryResolver;
 
 public class Activator implements BundleActivator {
 
     @Override
     public void start(BundleContext context) throws Exception {
-        SSLConfiguration sslConf = new SSLConfigurationImpl();
+        CommonPaths paths = new CommonPathsImpl();
+        // Prevents IllegalStateException when external dependencies attempt to resolve native libraries.
+        NativeLibraryResolver.setCommonPaths(paths);
+        context.registerService(CommonPaths.class.getName(), paths, null);
+        SSLConfiguration sslConf = new SSLConfigurationImpl(paths);
         context.registerService(SSLConfiguration.class.getName(), sslConf, null);
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        // Nothing to do
+        NativeLibraryResolver.setCommonPaths(null);
     }
 
 }

@@ -71,7 +71,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.launcher.BundleInformation;
-import com.redhat.thermostat.shared.config.Configuration;
+import com.redhat.thermostat.shared.config.CommonPaths;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({BundleManagerImpl.class, FrameworkUtil.class})
@@ -88,7 +88,7 @@ public class BundleManagerImplTest {
     private BundleContext theContext;
 
     private BundleLoader loader;
-    private Configuration conf;
+    private CommonPaths paths;
 
     private Path testRoot;
     
@@ -100,9 +100,9 @@ public class BundleManagerImplTest {
         Path jarRootDir = testRoot.resolve("libs");
         Files.createDirectories(jarRootDir);
 
-        conf = mock(Configuration.class);
-        when(conf.getSystemLibRoot()).thenReturn(jarRootDir.toFile());
-        when(conf.getSystemPluginRoot()).thenReturn(pluginRootDir.toFile());
+        paths = mock(CommonPaths.class);
+        when(paths.getSystemLibRoot()).thenReturn(jarRootDir.toFile());
+        when(paths.getSystemPluginRoot()).thenReturn(pluginRootDir.toFile());
 
         theContext = mock(BundleContext.class);
         theFramework = mock(Framework.class);
@@ -159,7 +159,7 @@ public class BundleManagerImplTest {
 
         when(FrameworkUtil.getBundle(any(Class.class))).thenReturn(theBundle);
 
-        BundleManagerImpl registry = new BundleManagerImpl(conf);
+        BundleManagerImpl registry = new BundleManagerImpl(paths);
         registry.loadBundlesByPath(bundleLocs);
         verify(loader).installAndStartBundles(any(Framework.class), eq(bundleLocs));
     }
@@ -174,7 +174,7 @@ public class BundleManagerImplTest {
 
         when(FrameworkUtil.getBundle(any(Class.class))).thenReturn(theBundle);
 
-        BundleManagerImpl registry = new BundleManagerImpl(conf);
+        BundleManagerImpl registry = new BundleManagerImpl(paths);
         Map<BundleInformation, Path> bundleToPath = new HashMap<>();
 
         registry.setKnownBundles(bundleToPath);
@@ -195,7 +195,7 @@ public class BundleManagerImplTest {
 
         when(FrameworkUtil.getBundle(any(Class.class))).thenReturn(theBundle);
 
-        BundleManagerImpl registry = new BundleManagerImpl(conf);
+        BundleManagerImpl registry = new BundleManagerImpl(paths);
         Map<BundleInformation, Path> bundleToPath = new HashMap<>();
         bundleToPath.put(new BundleInformation("foo", "1.0"), Paths.get(jar1Name));
         registry.setKnownBundles(bundleToPath);
@@ -216,7 +216,7 @@ public class BundleManagerImplTest {
 
         when(FrameworkUtil.getBundle(any(Class.class))).thenReturn(theBundle);
 
-        BundleManagerImpl registry = new BundleManagerImpl(conf);
+        BundleManagerImpl registry = new BundleManagerImpl(paths);
         registry.setIgnoreBundleVersions(true);
         Map<BundleInformation, Path> bundleToPath = new HashMap<>();
         bundleToPath.put(new BundleInformation("foo", "1.0"), Paths.get(jar1Name));
@@ -240,7 +240,7 @@ public class BundleManagerImplTest {
 
         when(FrameworkUtil.getBundle(any(Class.class))).thenReturn(theBundle);
 
-        BundleManagerImpl registry = new BundleManagerImpl(conf);
+        BundleManagerImpl registry = new BundleManagerImpl(paths);
         Map<BundleInformation, Path> bundleToPath = new HashMap<>();
         bundleToPath.put(new BundleInformation("foo", "1.0"), Paths.get(jar1Name));
         bundleToPath.put(new BundleInformation("foo", "2.0"), Paths.get(jar2Name));
@@ -264,7 +264,7 @@ public class BundleManagerImplTest {
         mockStatic(FrameworkUtil.class);
         when(FrameworkUtil.getBundle(any(Class.class))).thenReturn(theBundle);
 
-        BundleManagerImpl registry = new BundleManagerImpl(conf);
+        BundleManagerImpl registry = new BundleManagerImpl(paths);
         registry.loadBundlesByPath(bundleLocs);
         verify(loader).installAndStartBundles(theFramework, Arrays.asList(jar3Name));
     }
@@ -283,7 +283,7 @@ public class BundleManagerImplTest {
         mockStatic(FrameworkUtil.class);
         when(FrameworkUtil.getBundle(any(Class.class))).thenReturn(theBundle);
 
-        Object registry = new BundleManagerImpl(conf);
+        Object registry = new BundleManagerImpl(paths);
         Class<?> clazz = registry.getClass();
         Method m = clazz.getMethod("setPrintOSGiInfo", Boolean.TYPE);
         m.invoke(registry, true); // If this fails, then API has changed in ways that break FrameworkProvider.

@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Objects;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
@@ -125,5 +126,25 @@ public class StubServiceReference implements ServiceReference {
         return information;
     }
 
+    @Override
+    public int hashCode() {
+        Integer ranking = (Integer) getProperty(Constants.SERVICE_RANKING);
+        Integer serviceId = (Integer) getProperty(Constants.SERVICE_ID);
+        return Objects.hash(ranking, serviceId);
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if ((other == null) || !(other instanceof ServiceReference)) {
+            return false;
+        }
+        ServiceReference ref = (ServiceReference) other;
+
+        int myRanking = ((Integer) getProperty(Constants.SERVICE_RANKING)).intValue();
+        int otherRanking = ((Integer) ref.getProperty(Constants.SERVICE_RANKING)).intValue();
+        int myServiceId = ((Integer) getProperty(Constants.SERVICE_ID)).intValue();
+        int otherServiceId = ((Integer) ref.getProperty(Constants.SERVICE_ID)).intValue();
+        return myRanking == otherRanking && myServiceId == otherServiceId;
+    }
 }
 

@@ -47,6 +47,7 @@ import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.storage.core.WriterID;
 
 public class Activator implements BundleActivator {
@@ -61,6 +62,7 @@ public class Activator implements BundleActivator {
         
         Class<?>[] deps = new Class<?>[] {
                 ExitStatus.class,
+                CommonPaths.class,
                 WriterID.class // agent app uses it
         };
         tracker = new MultipleServiceTracker(context, deps, new Action() {
@@ -68,10 +70,11 @@ public class Activator implements BundleActivator {
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
                 ExitStatus exitStatus = (ExitStatus) services.get(ExitStatus.class.getName());
+                CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
                 WriterID writerID = (WriterID) services.get(WriterID.class.getName());
                 agentApplication = new AgentApplication(context, exitStatus, writerID);
                 reg.registerCommand("service", new ServiceCommand(context));
-                reg.registerCommand("storage", new StorageCommand(exitStatus));
+                reg.registerCommand("storage", new StorageCommand(exitStatus, paths));
                 reg.registerCommand("agent", agentApplication);
             }
 

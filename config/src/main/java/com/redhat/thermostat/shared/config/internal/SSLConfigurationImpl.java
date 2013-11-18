@@ -43,12 +43,13 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.shared.config.Configuration;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 
 public class SSLConfigurationImpl implements SSLConfiguration {
 
+    private CommonPaths paths;
     private Properties clientProps = null;
     private static final String KEYSTORE_FILE_KEY = "KEYSTORE_FILE";
     private static final String KEYSTORE_FILE_PWD_KEY = "KEYSTORE_PASSWORD";
@@ -56,6 +57,10 @@ public class SSLConfigurationImpl implements SSLConfiguration {
     private static final String BACKING_STORAGE_USE_SSL_KEY = "BACKING_STORAGE_CONNECTION_USE_SSL";
     private static final String DISABLE_HOSTNAME_VERIFICATION = "DISABLE_HOSTNAME_VERIFICATION";
     private static final Logger logger = Logger.getLogger(SSLConfigurationImpl.class.getName());
+
+    public SSLConfigurationImpl(CommonPaths paths) {
+        this.paths = paths;
+    }
 
     @Override
     public File getKeystoreFile() {
@@ -132,7 +137,7 @@ public class SSLConfigurationImpl implements SSLConfiguration {
     private void loadClientProperties()
             throws InvalidConfigurationException {
         if (clientProps == null) {
-            File clientPropertiesFile = new File(new Configuration().getUserConfigurationDirectory(),
+            File clientPropertiesFile = new File(paths.getUserConfigurationDirectory(),
                     "ssl.properties");
             initClientProperties(clientPropertiesFile);
         }

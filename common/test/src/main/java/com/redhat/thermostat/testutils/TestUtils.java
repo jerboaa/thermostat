@@ -49,6 +49,8 @@ import java.util.Random;
 // FIXME the methods in this class can probably be split more sanely
 public class TestUtils {
 
+	private static File agentConf, agentAuth;
+
     /**
      * @return the process id of the current process
      */
@@ -113,31 +115,62 @@ public class TestUtils {
         String tmpDir = System.getProperty("java.io.tmpdir") + File.separatorChar +
                 Math.abs(random.nextInt()) + File.separatorChar;
 
-        setupSystemAgentConfig(tmpDir, agentProperties);
+        System.setProperty("THERMOSTAT_HOME", tmpDir);
+        File etc = makeEtc(tmpDir);
+        setupSystemAgentConfig(etc, agentProperties);
         setupUserAgentConfig(tmpDir);
+        setupAgentAuth(etc);
 
         return tmpDir;
     }
 
-    private static void setupSystemAgentConfig(String root, Properties agentProperties) throws FileNotFoundException, IOException {
-        System.setProperty("THERMOSTAT_HOME", root);
+    public static File getAgentConfFile() {
+    	return agentConf;
+    }
 
+    public static File getAgentAuthFile() {
+    	return agentAuth;
+    }
+
+    public static void deleteRecursively(File root) throws IOException {
+        if (root.isFile()) {
+            root.delete();
+            return;
+        } else if (root.isDirectory()) {
+            File[] children = root.listFiles();
+            for (File child : children) {
+                deleteRecursively(child);
+            }
+            root.delete();
+            return;
+        } else {
+            throw new IOException("Asked to delete but not file or directory" + root.getPath());
+        }
+    }
+
+    private static File makeEtc(String root) {
         File etc = new File(root, "etc");
         etc.mkdirs();
-        File tmpConfigs = new File(etc, "agent.properties");
+        return etc;
+    }
 
-        try (OutputStream propsOutputStream = new FileOutputStream(tmpConfigs)) {
+    private static void setupSystemAgentConfig(File etc, Properties agentProperties) throws FileNotFoundException, IOException {
+        agentConf = new File(etc, "agent.properties");
+
+        try (OutputStream propsOutputStream = new FileOutputStream(agentConf)) {
             agentProperties.store(propsOutputStream, "thermostat agent test properties");
         }
+    }
 
-        File tmpAuth = new File(etc, "agent.auth");
-        FileWriter authWriter = new FileWriter(tmpAuth);
+    private static void setupAgentAuth(File etc) throws IOException {
+        agentAuth = new File(etc, "agent.auth");
+        FileWriter authWriter = new FileWriter(agentAuth);
         authWriter.append("username=user\npassword=pass\n");
         authWriter.flush();
         authWriter.close();
     }
 
-    private static void setupUserAgentConfig(String root) throws IOException {
+    private static File setupUserAgentConfig(String root) throws IOException {
         System.setProperty("USER_THERMOSTAT_HOME", root);
 
         File agent = new File(root, "agent");
@@ -145,6 +178,7 @@ public class TestUtils {
 
         new File(agent, "run").mkdirs();
         new File(agent, "logs").mkdirs();
+        return agent;
 
     }
 }

@@ -42,7 +42,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.redhat.thermostat.main.impl.FrameworkProvider;
-import com.redhat.thermostat.shared.config.Configuration;
+import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.shared.config.internal.CommonPathsImpl;
 
 public class Thermostat {
 
@@ -68,8 +69,8 @@ public class Thermostat {
             }
         }
 
-        Configuration config = new Configuration();
-        FrameworkProvider frameworkProvider = new FrameworkProvider(config, printOSGiInfo, ignoreBundleVersions);
+        CommonPaths paths = new CommonPathsImpl();
+        FrameworkProvider frameworkProvider = new FrameworkProvider(paths, printOSGiInfo, ignoreBundleVersions);
         frameworkProvider.start(toProcess.toArray(new String[0]));
     }
 

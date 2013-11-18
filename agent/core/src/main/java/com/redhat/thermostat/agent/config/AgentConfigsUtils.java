@@ -46,28 +46,29 @@ import java.util.Arrays;
 import java.util.Properties;
 
 import com.redhat.thermostat.agent.locale.LocaleResources;
-import com.redhat.thermostat.shared.config.Configuration;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.locale.Translate;
 
 public class AgentConfigsUtils {
 
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
+    private static File systemConfiguration, userConfiguration, agentAuthFile;
 
     private static char[] pw = {'p', 'a', 's', 's', 'w', 'o', 'r', 'd'};
     private static char[] user = {'u', 's', 'e', 'r', 'n', 'a', 'm', 'e'};
     private static String newLine = System.lineSeparator();
     private static char comment = '#';
 
+    public static void setConfigFiles(File systemConfigFile, File userConfigFile, File agentAuthFile) {
+        AgentConfigsUtils.systemConfiguration = systemConfigFile;
+        AgentConfigsUtils.userConfiguration = userConfigFile;
+        AgentConfigsUtils.agentAuthFile = agentAuthFile;
+    }
+
     public static AgentStartupConfiguration createAgentConfigs() throws InvalidConfigurationException {
         
         AgentStartupConfiguration config = new AgentStartupConfiguration();
-
-        Configuration mainConfig = new Configuration();
-        File systemConfiguration = mainConfig.getSystemAgentConfigurationFile();
-        File userConfiguration = mainConfig.getUserAgentConfigurationFile();
         readAndSetProperties(systemConfiguration, userConfiguration, config);
-        File agentAuthFile = mainConfig.getUserAgentAuthConfigFile();
         setAuthConfigFromFile(agentAuthFile, config);
         return config;
     }
@@ -76,17 +77,21 @@ public class AgentConfigsUtils {
             throws InvalidConfigurationException
     {
         Properties systemConfig = new Properties();
-        try {
-            systemConfig.load(new FileInputStream(systemConfigFile));
-        } catch (IOException e) {
-            throw new InvalidConfigurationException(e);
+        if (systemConfigFile != null) {
+            try {
+                systemConfig.load(new FileInputStream(systemConfigFile));
+            } catch (IOException e) {
+                throw new InvalidConfigurationException(e);
+            }
         }
 
         Properties properties = new Properties(systemConfig);
-        try {
-            properties.load(new FileInputStream(userConfigFile));
-        } catch (IOException e) {
-            // that's okay. just use system config
+        if (userConfigFile != null) {
+            try {
+                properties.load(new FileInputStream(userConfigFile));
+            } catch (IOException e) {
+                // that's okay. just use system config
+            }
         }
 
         String db = properties.getProperty(AgentProperties.DB_URL.name());
@@ -114,7 +119,7 @@ public class AgentConfigsUtils {
         // Default values will be enough if storage configured with not auth necessary.
         config.setUsername("");
         config.setPassword("");
-        if (authFile.canRead() && authFile.isFile()) {
+        if (authFile != null && authFile.canRead() && authFile.isFile()) {
             long length = authFile.length();
             char[] authData = null;
             try (Reader reader = new InputStreamReader(new FileInputStream(authFile), StandardCharsets.US_ASCII)) {

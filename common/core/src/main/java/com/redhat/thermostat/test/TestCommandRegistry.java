@@ -64,5 +64,10 @@ class TestCommandRegistry implements CommandRegistry {
         commands.clear();
     }
 
+    @Override
+    public void unregisterCommand(String name) {
+        commands.remove(name);
+    }
+
 }
 

@@ -76,6 +76,7 @@ import com.redhat.thermostat.common.ApplicationInfo;
 import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
 import com.redhat.thermostat.host.cpu.common.model.CpuStat;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
+import com.redhat.thermostat.shared.config.internal.CommonPathsImpl;
 import com.redhat.thermostat.shared.config.internal.SSLConfigurationImpl;
 import com.redhat.thermostat.storage.config.ConnectionConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
@@ -357,7 +358,7 @@ public class WebAppTest extends IntegrationTest {
         setupJAASForUser(roleNames, username, password);
         String url = "http://localhost:" + port + "/thermostat/storage";
         StartupConfiguration config = new ConnectionConfiguration(url, username, password);
-        SSLConfiguration sslConf = new SSLConfigurationImpl();
+        SSLConfiguration sslConf = new SSLConfigurationImpl(new CommonPathsImpl());
         Storage storage = new WebStorage(config, sslConf);
         if (listener != null) {
             storage.getConnection().addListener(listener);

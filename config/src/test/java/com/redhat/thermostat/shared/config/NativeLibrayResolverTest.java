@@ -42,6 +42,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.shared.config.internal.CommonPathsImpl;
+
 public class NativeLibrayResolverTest {
 
     private static final String THERMOSTAT_HOME = "THERMOSTAT_HOME";
@@ -51,6 +53,7 @@ public class NativeLibrayResolverTest {
     @Before
     public void setUp() {
         saved = System.setProperty(THERMOSTAT_HOME, "../foo/");
+        NativeLibraryResolver.setCommonPaths(new CommonPathsImpl());
     }
 
     @After

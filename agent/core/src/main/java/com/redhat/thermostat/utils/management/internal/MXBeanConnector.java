@@ -37,6 +37,7 @@
 package com.redhat.thermostat.utils.management.internal;
 
 import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
 import java.rmi.RemoteException;
 
@@ -52,8 +53,8 @@ class MXBeanConnector implements Closeable {
     private final AgentProxyClient client;
     private final JMXConnectionCreator jmxCreator;
     
-    public MXBeanConnector(RMIRegistry registry, int pid) throws IOException, ApplicationException {
-        this(new AgentProxyClient(registry, pid), new JMXConnectionCreator());
+    public MXBeanConnector(RMIRegistry registry, int pid, File binPath) throws IOException, ApplicationException {
+        this(new AgentProxyClient(registry, pid, binPath), new JMXConnectionCreator());
     }
     
     MXBeanConnector(AgentProxyClient client, JMXConnectionCreator jmxCreator) throws IOException, ApplicationException {

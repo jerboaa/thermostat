@@ -75,6 +75,7 @@ import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry.Action;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
@@ -135,6 +136,8 @@ public class MainWindowControllerImplTest {
 
         Keyring keyring = mock(Keyring.class);
         context.registerService(Keyring.class, keyring, null);
+        CommonPaths paths = mock(CommonPaths.class);
+        context.registerService(CommonPaths.class, paths, null);
         
         mockHostsDAO = mock(HostInfoDAO.class);
         context.registerService(HostInfoDAO.class, mockHostsDAO, null);

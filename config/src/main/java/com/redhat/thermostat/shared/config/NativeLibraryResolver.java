@@ -38,17 +38,26 @@ package com.redhat.thermostat.shared.config;
 
 import java.io.File;
 
+import com.redhat.thermostat.shared.config.internal.CommonPathsImpl;
+
 
 /**
  * Class which enables resolving of native libraries placed in
- * {@link Configuration#getNativeLibsRoot()}.
+ * {@link CommonPaths#getNativeLibsRoot()}.
  *
  */
 public class NativeLibraryResolver {
 
+    private static CommonPaths paths;
+
+    // Set in Activator.start() to prevent IllegalStateException below.
+    public static void setCommonPaths(CommonPaths paths) {
+        NativeLibraryResolver.paths = paths;
+    }
+
     /**
      * Gets the absolute path of a native library. The native library must be
-     * placed in directory as returned by {@link Configuration#getNativeLibsRoot()}.
+     * placed in directory as returned by {@link CommonPathsImpl#getNativeLibsRoot()}.
      * 
      * @param libraryName
      *            The name of the library. Specified in the same fashion as for
@@ -63,9 +72,11 @@ public class NativeLibraryResolver {
         if (nativeLibsRoot != null) {
             return doResolve(nativeLibsRoot, libraryName);
         }
+        if (paths == null) {
+            throw new IllegalStateException("NativeLibraryResolver does not yet know about CommonPaths.");
+        }
         try {
-            Configuration config = new Configuration();
-            nativeLibsRoot = config.getSystemNativeLibsRoot().getPath();
+            nativeLibsRoot = paths.getSystemNativeLibsRoot().getPath();
         } catch (InvalidConfigurationException e) {
             throw new AssertionError(e);
         }

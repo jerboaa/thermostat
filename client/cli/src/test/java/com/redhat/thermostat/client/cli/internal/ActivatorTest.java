@@ -37,21 +37,27 @@
 package com.redhat.thermostat.client.cli.internal;
 
 import static com.redhat.thermostat.testutils.Asserts.assertCommandIsRegistered;
+import static com.redhat.thermostat.testutils.Asserts.assertCommandIsNotRegistered;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceRegistration;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.testutils.StubBundleContext;
+import com.redhat.thermostat.utils.keyring.Keyring;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(FrameworkUtil.class)
@@ -68,6 +74,14 @@ public class ActivatorTest {
 
         StubBundleContext ctx = new StubBundleContext();
         when(mockBundle.getBundleContext()).thenReturn(ctx);
+
+        Keyring keyring = mock(Keyring.class);
+        ctx.registerService(Keyring.class, keyring, null);
+        CommonPaths paths = mock(CommonPaths.class);
+        File userConfig = mock(File.class);
+        when(userConfig.isFile()).thenReturn(false);
+        when(paths.getUserClientConfigurationFile()).thenReturn(userConfig);
+        ctx.registerService(CommonPaths.class, paths, null);
         
         Activator activator = new Activator();
         
@@ -79,10 +93,45 @@ public class ActivatorTest {
         assertCommandIsRegistered(ctx, "shell", ShellCommand.class);
         assertCommandIsRegistered(ctx, "vm-info", VMInfoCommand.class);
         assertCommandIsRegistered(ctx, "vm-stat", VMStatCommand.class);
-        
+
         activator.stop(ctx);
+
+        assertEquals(2, ctx.getAllServices().size());
+    }
+
+    @Test
+    public void testConnectCommandUnregisteredWhenDepsDisappear() throws Exception {
+        // Need to mock FrameworkUtil to avoid NPE in commands' no-arg constructors
+        PowerMockito.mockStatic(FrameworkUtil.class);
+        Bundle mockBundle = mock(Bundle.class);
+        when(FrameworkUtil.getBundle(any(Class.class))).thenReturn(mockBundle);
+        // When we call createFilter, we need a real return value
+        when(FrameworkUtil.createFilter(anyString())).thenCallRealMethod();
+
+        StubBundleContext ctx = new StubBundleContext();
+        when(mockBundle.getBundleContext()).thenReturn(ctx);
         
-        assertEquals(0, ctx.getAllServices().size());
+        Activator activator = new Activator();
+        
+        activator.start(ctx);
+        
+        assertCommandIsNotRegistered(ctx, "connect", ConnectCommand.class);
+
+        Keyring keyring = mock(Keyring.class);
+        ServiceRegistration keyringReg = ctx.registerService(Keyring.class, keyring, null);
+        CommonPaths paths = mock(CommonPaths.class);
+        File userConfig = mock(File.class);
+        when(userConfig.isFile()).thenReturn(false);
+        when(paths.getUserClientConfigurationFile()).thenReturn(userConfig);
+        ctx.registerService(CommonPaths.class, paths, null);
+
+        assertCommandIsRegistered(ctx, "connect", ConnectCommand.class);
+
+        keyringReg.unregister();
+
+        assertCommandIsNotRegistered(ctx, "connect", ConnectCommand.class);
+
+        activator.stop(ctx);
     }
 
 }

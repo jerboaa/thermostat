@@ -38,7 +38,6 @@ package com.redhat.thermostat.common.config;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,7 +46,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.shared.config.Configuration;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.utils.keyring.Credentials;
 import com.redhat.thermostat.utils.keyring.Keyring;
@@ -63,15 +62,20 @@ public class ClientPreferences {
     private static final Logger logger = LoggingUtils.getLogger(ClientPreferences.class);
     
     private Properties prefs;
-    
     private Keyring keyring;
+    private File userConfig;
     
     private Credentials userCredentials;
     
-    public ClientPreferences(Keyring keyring) {
+    public ClientPreferences(Keyring keyring, CommonPaths files) {
+        userConfig = files.getUserClientConfigurationFile();
         Properties props = new Properties();
+        loadPrefs(props);
+        init(props, keyring);
+    }
+
+    private void loadPrefs(Properties props) {
         try {
-            File userConfig = new Configuration().getUserClientConfigurationFile();
             if (userConfig.isFile()) {
                 try {
                     try (InputStream fis = new FileInputStream(userConfig)) {
@@ -84,7 +88,6 @@ public class ClientPreferences {
         } catch (InvalidConfigurationException e) {
             logger.log(Level.CONFIG, "unable to load configuration", e);
         }
-        init(props, keyring);
     }
 
     // Testing hook with injectable j.u.Properties
@@ -145,7 +148,7 @@ public class ClientPreferences {
     }
     
     public void flush() throws IOException {
-        prefs.store(new FileWriter(new Configuration().getUserClientConfigurationFile()), "");
+        prefs.store(new FileWriter(userConfig), "");
         userCredentials.setUserName(getUserName());
         if (getSaveEntitlements()) {
             keyring.loadPassword(userCredentials);

@@ -34,9 +34,14 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.shared.config;
+package com.redhat.thermostat.shared.config.internal;
 
 import java.io.File;
+
+import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.shared.config.InvalidConfigurationException;
+import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.shared.locale.internal.LocaleResources;
 
 /**
  * Contains locations to various files and directories used by thermostat
@@ -72,7 +77,7 @@ import java.io.File;
  *     writing system data.</dd>
  * </dl>
  */
-public class Configuration {
+public class CommonPathsImpl implements CommonPaths {
 
     // Note: these paths are used by the integration tests too. Please update
     // them whenever you change this class.
@@ -85,21 +90,23 @@ public class Configuration {
 
     private static final String THERMOSTAT_USER_DIR = ".thermostat";
 
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
+
     private final File systemHome;
     private final UserDirectories userDirectories;
 
     private static File defaultSystemUserPrefix;
 
-    public Configuration() throws InvalidConfigurationException {
+    public CommonPathsImpl() throws InvalidConfigurationException {
         this(makeDir(null, "/"));
     }
 
-    Configuration(String altTestingPrefix) {
+    CommonPathsImpl(String altTestingPrefix) {
         this(makeDir(null, altTestingPrefix));
     }
 
-    private Configuration(File defaultPrefix) {
-        Configuration.defaultSystemUserPrefix = defaultPrefix;
+    private CommonPathsImpl(File defaultPrefix) {
+        CommonPathsImpl.defaultSystemUserPrefix = defaultPrefix;
         // allow this to be specified also as a property, especially for
         // tests, this overrides the env setting
         String home = System.getProperty(THERMOSTAT_HOME);
@@ -108,14 +115,14 @@ public class Configuration {
         }
 
         if (home == null) {
-            throw new InvalidConfigurationException(THERMOSTAT_HOME + " not defined...");
+            throw new InvalidConfigurationException(t.localize(LocaleResources.SYSHOME_NO_HOME));
         }
         this.systemHome = new File(home);
         if (!systemHome.exists()) {
             systemHome.mkdirs();
         }
         if (!systemHome.isDirectory()) {
-            throw new InvalidConfigurationException(THERMOSTAT_HOME + " is not a directory: " + home);
+            throw new InvalidConfigurationException(t.localize(LocaleResources.SYSHOME_NOT_A_DIR, home));
         }
 
         String systemUser = System.getProperty(THERMOSTAT_SYSTEM_USER);
@@ -134,39 +141,48 @@ public class Configuration {
      * Overall hierarchy
      */
 
+    @Override
     public File getSystemThermostatHome() throws InvalidConfigurationException {
         return systemHome;
     }
 
+    @Override
     public File getUserThermostatHome() throws InvalidConfigurationException {
         return userDirectories.getSystemRoot();
     }
 
+    @Override
     public File getSystemPluginRoot() throws InvalidConfigurationException {
         return makeDir(systemHome, "plugins");
     }
 
+    @Override
     public File getSystemLibRoot() throws InvalidConfigurationException {
         return makeDir(systemHome, "libs");
     }
-    
+
+    @Override
     public File getSystemBinRoot() throws InvalidConfigurationException {
         return makeDir(systemHome, "bin");
     }
 
+    @Override
     public File getSystemNativeLibsRoot() throws InvalidConfigurationException {
         return makeDir(getSystemLibRoot(), "native");
     }
 
+    @Override
     public File getSystemConfigurationDirectory() throws InvalidConfigurationException {
         return makeDir(getSystemThermostatHome(), "etc");
     }
 
+    @Override
     public File getUserConfigurationDirectory() throws InvalidConfigurationException {
         return userDirectories.getUserConfigurationDirectory();
     }
 
     /** A location that contains data that is persisted */
+    @Override
     public File getUserPersistentDataDirectory() throws InvalidConfigurationException {
         return userDirectories.getUserPersistentDataDirectory();
     }
@@ -175,68 +191,83 @@ public class Configuration {
      * Contains data that is only useful for the duration that thermostat is
      * running
      */
+    @Override
     public File getUserRuntimeDataDirectory() throws InvalidConfigurationException {
         return userDirectories.getUserRuntimeDataDirectory();
     }
 
+    @Override
     public File getUserLogDirectory() throws InvalidConfigurationException {
         return userDirectories.getUserLogDirectory();
 
     }
 
+    @Override
     public File getUserCacheDirectory() throws InvalidConfigurationException {
         return userDirectories.getUserCacheDirectory();
     }
 
     /* Specific files and directories. All these methods should use the directories defined above */
 
+    @Override
     public File getUserPluginRoot() throws InvalidConfigurationException {
         return new File(getUserPersistentDataDirectory(), "plugins");
     }
 
+    @Override
     public File getUserStorageDirectory() throws InvalidConfigurationException {
         return makeDir(getUserPersistentDataDirectory(), "db");
     }
 
+    @Override
     public File getSystemStorageConfigurationFile() throws InvalidConfigurationException {
         return new File(getSystemConfigurationDirectory(), "db.properties");
     }
 
+    @Override
     public File getUserStorageConfigurationFile() throws InvalidConfigurationException {
         return new File(getUserConfigurationDirectory(), "db.properties");
     }
 
+    @Override
     public File getUserStorageLogFile() throws InvalidConfigurationException {
         File logFile = new File(getUserLogDirectory(), "db.log");
         return logFile;
     }
 
+    @Override
     public File getUserStoragePidFile() throws InvalidConfigurationException {
         File logFile = new File(getUserRuntimeDataDirectory(), "db.pid");
         return logFile;
     }
 
+    @Override
     public File getSystemAgentConfigurationFile() throws InvalidConfigurationException {
         return new File(getSystemConfigurationDirectory(), "agent.properties");
     }
 
+    @Override
     public File getUserAgentConfigurationFile() throws InvalidConfigurationException {
         return new File(getUserConfigurationDirectory(), "agent.properties");
     }
 
+    @Override
     public File getSystemAgentAuthConfigFile() throws InvalidConfigurationException {
         return new File(getSystemConfigurationDirectory(), "agent.auth");
     }
 
+    @Override
     public File getUserAgentAuthConfigFile() throws InvalidConfigurationException {
         return new File(getUserConfigurationDirectory(), "agent.auth");
     }
 
+    @Override
     public File getUserClientConfigurationFile() throws InvalidConfigurationException {
         File client = new File(getUserConfigurationDirectory(), "client.properties");
         return client;
     }
 
+    @Override
     public File getUserHistoryFile() throws InvalidConfigurationException {
         File history = new File(getUserPersistentDataDirectory(), "cli-history");
         return history;
@@ -271,7 +302,7 @@ public class Configuration {
             throw new InvalidConfigurationException("Directory could not be created: " + dir.getAbsolutePath());
         }
         if (!dir.isDirectory()) {
-            throw new InvalidConfigurationException("File already exists but is not a directory: " + dir.getAbsolutePath());
+            throw new InvalidConfigurationException(t.localize(LocaleResources.GENERAL_NOT_A_DIR, dir.getAbsolutePath()));
         }
         return dir;
     }

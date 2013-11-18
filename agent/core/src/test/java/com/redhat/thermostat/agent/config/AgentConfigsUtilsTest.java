@@ -63,6 +63,10 @@ public class AgentConfigsUtilsTest {
 
         try {
             TestUtils.setupAgentConfigs(agentProperties);
+            File agentConf = TestUtils.getAgentConfFile();
+            File agentAuth = TestUtils.getAgentAuthFile();
+            // By default system config == user config
+            AgentConfigsUtils.setConfigFiles(agentConf, agentConf, agentAuth);
         } catch (IOException e) {
             throw new AssertionError("Unable to create agent configuration", e);
         }
@@ -95,6 +99,8 @@ public class AgentConfigsUtilsTest {
         Assert.assertEquals("", config.getUsername());
         Assert.assertEquals("", config.getPassword());
     }
+
+    // TODO add test to ensure user agent config overrides system agent config.
 
     @Test
     public void testAuthConfigWithConfigCommentedOut() throws IOException {

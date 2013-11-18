@@ -48,7 +48,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -63,8 +62,6 @@ import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.security.Principal;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -184,37 +181,12 @@ public class WebStorageEndpointTest {
     private static Key<Integer> key2;
     private static Category<TestClass> category;
     private static String categoryName = "test";
-    private static String originalThermostatHome;
-
-    @BeforeClass
-    public static void setupThermostatHome() {
-        Path tempHomePath = null;
-        try {
-            tempHomePath = Files.createTempDirectory("WebStorageEndpointTest_THERMOSTAT_HOME");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        File fakeHome = tempHomePath.toFile();
-        fakeHome.deleteOnExit();
-        assertTrue(fakeHome.canRead());
-        originalThermostatHome = System.getProperty("THERMOSTAT_HOME");
-        System.setProperty("THERMOSTAT_HOME", fakeHome.getAbsolutePath());
-    }
 
     @BeforeClass
     public static void setupCategory() {
         key1 = new Key<>("key1");
         key2 = new Key<>("key2");
         category = new Category<>(categoryName, TestClass.class, key1, key2);
-    }
-
-    @AfterClass
-    public static void cleanupThermostatHome() {
-        if (originalThermostatHome != null) {
-            System.setProperty("THERMOSTAT_HOME", originalThermostatHome);
-        } else {
-            System.clearProperty("THERMOSTAT_HOME");
-        }
     }
 
     @AfterClass

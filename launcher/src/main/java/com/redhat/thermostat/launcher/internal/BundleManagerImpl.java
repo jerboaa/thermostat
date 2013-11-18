@@ -54,8 +54,6 @@ import java.util.jar.Manifest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.naming.ConfigurationException;
-
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -67,7 +65,7 @@ import org.osgi.framework.launch.Framework;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.BundleInformation;
 import com.redhat.thermostat.launcher.BundleManager;
-import com.redhat.thermostat.shared.config.Configuration;
+import com.redhat.thermostat.shared.config.CommonPaths;
 
 public class BundleManagerImpl extends BundleManager {
 
@@ -80,15 +78,15 @@ public class BundleManagerImpl extends BundleManager {
     // name/version. See
     // http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=1514
     private final Map<BundleInformation, Path> known;
-    private Configuration configuration;
+    private CommonPaths paths;
     private boolean printOSGiInfo = false;
     private boolean ignoreBundleVersions = false;
     private BundleLoader loader;
 
-    BundleManagerImpl(Configuration configuration) throws ConfigurationException, FileNotFoundException, IOException {
+    BundleManagerImpl(CommonPaths paths) throws FileNotFoundException, IOException {
         known = new HashMap<>();
 
-        this.configuration = configuration;
+        this.paths = paths;
         loader = new BundleLoader();
 
         scanForBundles();
@@ -98,7 +96,7 @@ public class BundleManagerImpl extends BundleManager {
         long t1 = System.nanoTime();
 
         try {
-            for (File root : new File[] { configuration.getSystemLibRoot(), configuration.getSystemPluginRoot() }) {
+            for (File root : new File[] { paths.getSystemLibRoot(), paths.getSystemPluginRoot() }) {
                 Files.walkFileTree(root.toPath(), new SimpleFileVisitor<Path>() {
                     @Override
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
@@ -245,8 +243,8 @@ public class BundleManagerImpl extends BundleManager {
     }
 
     @Override
-    public Configuration getConfiguration() {
-        return configuration;
+    public CommonPaths getCommonPaths() {
+        return paths;
     }
 }
 

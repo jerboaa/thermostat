@@ -53,7 +53,7 @@ public class SSLConfigurationImplTest {
 
     @Before
     public void setUp() {
-        sslConf = new SSLConfigurationImpl();
+        sslConf = new SSLConfigurationImpl(null);
         File clientProps = new File(this.getClass().getResource("/client.properties").getFile());
         sslConf.initClientProperties(clientProps);
     }
@@ -68,7 +68,7 @@ public class SSLConfigurationImplTest {
     
     @Test
     public void notExistingPropertiesFileReturnsNull() throws Exception {
-        SSLConfigurationImpl badSSLConf = new SSLConfigurationImpl();
+        SSLConfigurationImpl badSSLConf = new SSLConfigurationImpl(null);
         File clientProps = new File("i/am/not/there/file.txt");
         badSSLConf.initClientProperties(clientProps);
         assertTrue(badSSLConf.getKeystoreFile() == null);
@@ -81,7 +81,7 @@ public class SSLConfigurationImplTest {
         assertTrue(sslConf.enableForBackingStorage());
         assertTrue(sslConf.disableHostnameVerification());
         File disabledSSLProps = new File(this.getClass().getResource("/ssl.properties").getFile());
-        SSLConfigurationImpl disabledSSLConf = new SSLConfigurationImpl();
+        SSLConfigurationImpl disabledSSLConf = new SSLConfigurationImpl(null);
         disabledSSLConf.initClientProperties(disabledSSLProps);
         assertFalse(disabledSSLConf.enableForCmdChannel());
         assertFalse(disabledSSLConf.enableForBackingStorage());

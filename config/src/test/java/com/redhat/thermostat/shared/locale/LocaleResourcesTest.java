@@ -46,6 +46,8 @@ import java.util.Properties;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.shared.locale.internal.LocaleResources;
+
 public class LocaleResourcesTest {
     @Test
     public void testLocalizedStringsArePresent() throws IOException {

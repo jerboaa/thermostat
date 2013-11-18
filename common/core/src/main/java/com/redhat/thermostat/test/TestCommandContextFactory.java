@@ -115,6 +115,11 @@ public class TestCommandContextFactory extends CommandContextFactory {
     }
 
     public String getOutput() {
+        try {
+            out.flush();
+        } catch (IOException e) {
+            // ignore
+        }
         return new String(out.toByteArray());
     }
 

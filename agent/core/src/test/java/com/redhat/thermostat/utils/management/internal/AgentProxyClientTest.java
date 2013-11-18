@@ -61,7 +61,6 @@ import com.redhat.thermostat.agent.proxy.common.AgentProxyControl;
 import com.redhat.thermostat.agent.proxy.common.AgentProxyListener;
 import com.redhat.thermostat.agent.proxy.common.AgentProxyLogin;
 import com.redhat.thermostat.common.tools.ApplicationException;
-import com.redhat.thermostat.shared.config.Configuration;
 import com.redhat.thermostat.utils.management.internal.AgentProxyClient.ProcessCreator;
 
 public class AgentProxyClientTest {
@@ -70,11 +69,11 @@ public class AgentProxyClientTest {
     private RMIRegistry rmi;
     private Registry registry;
     private ProcessCreator procCreator;
-    private Configuration config;
     private CountDownLatch latch;
     private AgentProxyListener listenerStub;
     private AgentProxyLogin proxyLogin;
     private AgentProxyControl proxyControl;
+    private File binPath;
     
     @Before
     public void setup() throws Exception {
@@ -89,9 +88,7 @@ public class AgentProxyClientTest {
         when(proxyLogin.login()).thenReturn(proxyControl);
         
         procCreator = mock(ProcessCreator.class);
-        config = mock(Configuration.class);
-        String binPath = "/path/to/thermostat/bin";
-        when(config.getSystemBinRoot()).thenReturn(new File(binPath));
+        binPath = new File("/path/to/thermostat/bin");
         latch = mock(CountDownLatch.class);
     }
     
@@ -122,7 +119,7 @@ public class AgentProxyClientTest {
 
     private void createClient() throws InterruptedException, IOException,
             ApplicationException {
-        client = new AgentProxyClient(rmi, 0, config, latch, procCreator);
+        client = new AgentProxyClient(rmi, 0, binPath, latch, procCreator);
         
         doAnswer(new Answer<Boolean>() {
             @Override
@@ -138,7 +135,7 @@ public class AgentProxyClientTest {
     
     @Test
     public void testCreateProxyFailed() throws Exception {
-        client = new AgentProxyClient(rmi, 0, config, latch, procCreator);
+        client = new AgentProxyClient(rmi, 0, binPath, latch, procCreator);
         
         final Exception error = mock(Exception.class);
         doAnswer(new Answer<Boolean>() {
@@ -174,7 +171,7 @@ public class AgentProxyClientTest {
     @Test
     public void testCreateProxyTimeout() throws Exception {
         when(latch.await(any(Long.class), any(TimeUnit.class))).thenReturn(false);
-        client = new AgentProxyClient(rmi, 0, config, latch, procCreator);
+        client = new AgentProxyClient(rmi, 0, binPath, latch, procCreator);
         
         try {
             client.createProxy();

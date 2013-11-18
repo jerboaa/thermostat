@@ -53,7 +53,9 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -63,10 +65,8 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.launch.Framework;
-import org.osgi.util.tracker.ServiceTracker;
-import org.osgi.util.tracker.ServiceTrackerCustomizer;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -77,13 +77,12 @@ import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.Launcher;
-import com.redhat.thermostat.launcher.internal.Activator.RegisterLauncherCustomizer;
-import com.redhat.thermostat.shared.config.Configuration;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Activator.class, Activator.RegisterLauncherCustomizer.class, FrameworkUtil.class})
+@PrepareForTest({Activator.class, Activator.RegisterLauncherAction.class, FrameworkUtil.class})
 public class ActivatorTest {
 
     private StubBundleContext context;
@@ -107,9 +106,9 @@ public class ActivatorTest {
         props.put(Command.NAME, "help");
         context.registerService(Command.class, helpCommand, props);
 
-        Configuration config = mock(Configuration.class);
+        CommonPaths config = mock(CommonPaths.class);
         when(config.getSystemThermostatHome()).thenReturn(new File(""));
-        when(registryService.getConfiguration()).thenReturn(config);
+        when(registryService.getCommonPaths()).thenReturn(config);
 
         BuiltInCommandInfoSource source1 = mock(BuiltInCommandInfoSource.class);
         when(source1.getCommandInfos()).thenReturn(new ArrayList<CommandInfo>());
@@ -139,10 +138,12 @@ public class ActivatorTest {
 
     @Test
     public void testActivatorLifecycle() throws Exception {
-        ArgumentCaptor<RegisterLauncherCustomizer> customizerCaptor = ArgumentCaptor.forClass(RegisterLauncherCustomizer.class);
-        ServiceTracker mockTracker = mock(ServiceTracker.class);
-        whenNew(ServiceTracker.class).withParameterTypes(BundleContext.class, Class.class, ServiceTrackerCustomizer.class).withArguments(eq(context),
-                any(Keyring.class), customizerCaptor.capture()).thenReturn(mockTracker);
+        ArgumentCaptor<Action> actionCaptor = ArgumentCaptor.forClass(Action.class);
+        MultipleServiceTracker mockTracker = mock(MultipleServiceTracker.class);
+        whenNew(MultipleServiceTracker.class)
+                .withParameterTypes(BundleContext.class, Class[].class, Action.class)
+                .withArguments(eq(context), any(Class[].class), actionCaptor.capture())
+                .thenReturn(mockTracker);
         
         Activator activator = new Activator();
         activator.start(context);
@@ -151,8 +152,8 @@ public class ActivatorTest {
 
         verify(mockTracker).open();
         
-        RegisterLauncherCustomizer customizer = customizerCaptor.getValue();
-        assertNotNull(customizer);
+        Action action = actionCaptor.getValue();
+        assertNotNull(action);
         activator.stop(context);
         verify(mockTracker).close();
     }
@@ -160,10 +161,10 @@ public class ActivatorTest {
     @Test
     public void testServiceTrackerCustomizer() throws Exception {
         StubBundleContext context = new StubBundleContext();
-        ArgumentCaptor<RegisterLauncherCustomizer> customizerCaptor = ArgumentCaptor.forClass(RegisterLauncherCustomizer.class);
-        ServiceTracker mockTracker = mock(ServiceTracker.class);
-        whenNew(ServiceTracker.class).withParameterTypes(BundleContext.class, Class.class, ServiceTrackerCustomizer.class).withArguments(eq(context),
-                any(Keyring.class), customizerCaptor.capture()).thenReturn(mockTracker);
+        ArgumentCaptor<Action> actionCaptor = ArgumentCaptor.forClass(Action.class);
+        MultipleServiceTracker mockTracker = mock(MultipleServiceTracker.class);
+        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
+                any(Class[].class), actionCaptor.capture()).thenReturn(mockTracker);
         
         Activator activator = new Activator();
         context.registerService(Keyring.class, mock(Keyring.class), null);
@@ -171,19 +172,31 @@ public class ActivatorTest {
         
         assertTrue(context.isServiceRegistered(Command.class.getName(), HelpCommand.class));
         
-        RegisterLauncherCustomizer customizer = customizerCaptor.getValue();
-        assertNotNull(customizer);
+        Action action = actionCaptor.getValue();
+        assertNotNull(action);
         Keyring keyringService = mock(Keyring.class);
-        context.registerService(Keyring.class, keyringService, null);
-        ServiceReference ref = context.getServiceReference(Keyring.class);
-        customizer.addingService(ref);
+        CommonPaths paths = mock(CommonPaths.class);
+        when(paths.getSystemLibRoot()).thenReturn(new File(""));
+        when(paths.getSystemPluginRoot()).thenReturn(new File(""));
+        when(paths.getUserPluginRoot()).thenReturn(new File(""));
+        when(paths.getUserClientConfigurationFile()).thenReturn(new File(""));
+        @SuppressWarnings("rawtypes")
+        ServiceRegistration keyringReg = context.registerService(Keyring.class, keyringService, null);
+        @SuppressWarnings("rawtypes")
+        ServiceRegistration pathsReg = context.registerService(CommonPaths.class, paths, null);
+        Map<String, Object> services = new HashMap<>();
+        services.put(Keyring.class.getName(), keyringService);
+        services.put(CommonPaths.class.getName(), paths);
+        action.dependenciesAvailable(services);
         
         assertTrue(context.isServiceRegistered(CommandInfoSource.class.getName(), mock(CompoundCommandInfoSource.class).getClass()));
         assertTrue(context.isServiceRegistered(BundleManager.class.getName(), BundleManagerImpl.class));
         assertTrue(context.isServiceRegistered(Launcher.class.getName(), LauncherImpl.class));
         assertTrue(context.isServiceRegistered(ExitStatus.class.getName(), ExitStatusImpl.class));
 
-        customizer.removedService(null, null);
+        action.dependenciesUnavailable();
+        keyringReg.unregister();
+        pathsReg.unregister();
         
         assertFalse(context.isServiceRegistered(CommandInfoSource.class.getName(), CompoundCommandInfoSource.class));
         assertFalse(context.isServiceRegistered(BundleManager.class.getName(), BundleManagerImpl.class));

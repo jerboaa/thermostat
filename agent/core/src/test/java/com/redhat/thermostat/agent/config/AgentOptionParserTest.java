@@ -75,12 +75,14 @@ public class AgentOptionParserTest {
         SimpleArguments args = new SimpleArguments();
         args.addArgument("dbUrl", "testURL");
         
-        AgentStartupConfiguration configs = AgentConfigsUtils.createAgentConfigs();
+        AgentStartupConfiguration configs = new AgentStartupConfiguration();
+        configs.setDatabaseURL("Not the right URL");
+        configs.setPurge(true);
         AgentOptionParser parser = new AgentOptionParser(configs, args);
         parser.parse();
         
         Assert.assertEquals("testURL", configs.getDBConnectionString());
-        Assert.assertFalse(configs.purge());
+        Assert.assertTrue(configs.purge());
     }
     
     @Test

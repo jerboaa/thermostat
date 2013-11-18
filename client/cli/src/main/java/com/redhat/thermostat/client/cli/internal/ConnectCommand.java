@@ -48,6 +48,7 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.tools.StorageAuthInfoGetter;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.ConnectionException;
 import com.redhat.thermostat.storage.core.DbService;
@@ -73,13 +74,14 @@ public class ConnectCommand extends AbstractCommand {
     private BundleContext context;
     private DbServiceFactory dbServiceFactory;
 
-    public ConnectCommand() {
-        this(FrameworkUtil.getBundle(ConnectCommand.class).getBundleContext(), new DbServiceFactory());
+    public ConnectCommand(ClientPreferences prefs) {
+        this(FrameworkUtil.getBundle(ConnectCommand.class).getBundleContext(), new DbServiceFactory(), prefs);
     }
     
-    ConnectCommand(BundleContext context, DbServiceFactory dbServiceFactory) {
+    ConnectCommand(BundleContext context, DbServiceFactory dbServiceFactory, ClientPreferences prefs) {
         this.context = context;
         this.dbServiceFactory = dbServiceFactory;
+        this.prefs = prefs;
     }
 
     @Override
@@ -91,15 +93,6 @@ public class ConnectCommand extends AbstractCommand {
             context.ungetService(dbServiceRef);
             // Already connected, bail out
             throw new CommandException(translator.localize(LocaleResources.COMMAND_CONNECT_ALREADY_CONNECTED, connectionUrl));
-        }
-        if (prefs == null) {
-            ServiceReference keyringRef = context.getServiceReference(Keyring.class);
-            if (keyringRef == null) {
-                throw new CommandException(translator.localize(LocaleResources.COMMAND_CONNECT_NO_KEYRING));
-            }
-            Keyring keyring = (Keyring) context.getService(keyringRef);
-            prefs = new ClientPreferences(keyring);
-            context.ungetService(keyringRef);
         }
         String dbUrl = ctx.getArguments().getArgument(DB_URL_ARG);
         // This argument is considered "required" so option parsing should mean this is impossible.

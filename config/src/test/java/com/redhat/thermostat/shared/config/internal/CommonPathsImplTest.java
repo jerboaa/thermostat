@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.shared.config;
+package com.redhat.thermostat.shared.config.internal;
 
 import static org.junit.Assert.fail;
 
@@ -47,7 +47,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class ConfigurationTest {
+import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.shared.config.InvalidConfigurationException;
+
+public class CommonPathsImplTest {
 
     @Before
     public void setUp() {
@@ -70,7 +73,7 @@ public class ConfigurationTest {
 
         char s = File.separatorChar;
 
-        Configuration config = new Configuration();
+        CommonPaths config = new CommonPathsImpl();
 
         Assert.assertEquals(thermostatHome, config.getSystemThermostatHome().getCanonicalPath());
 
@@ -87,7 +90,7 @@ public class ConfigurationTest {
         System.setProperty("THERMOSTAT_HOME", thermostatHome);
         char s = File.separatorChar;
         String userHome = System.getProperty("user.home") + s + ".thermostat";
-        Configuration config = new Configuration();
+        CommonPaths config = new CommonPathsImpl();
 
         Assert.assertEquals(userHome + s + "etc" + s + "agent.properties",
                 config.getUserAgentConfigurationFile().getCanonicalPath());
@@ -112,7 +115,7 @@ public class ConfigurationTest {
         String thermostatHome = "/tmp/thermostat_test";
         System.setProperty("THERMOSTAT_HOME", thermostatHome);
         System.setProperty("THERMOSTAT_SYSTEM_USER", "");
-        Configuration config = new Configuration(thermostatHome);
+        CommonPaths config = new CommonPathsImpl(thermostatHome);
 
         // the paths are unix specific, but so are the paths in Configuration
 
@@ -134,7 +137,7 @@ public class ConfigurationTest {
         System.setProperty("THERMOSTAT_HOME", thermostatHome);
         System.setProperty("USER_THERMOSTAT_HOME", prefix);
         System.setProperty("THERMOSTAT_SYSTEM_USER", "");
-        Configuration config = new Configuration();
+        CommonPaths config = new CommonPathsImpl();
 
         // the paths are unix specific, but so are the paths in Configuration
 
@@ -152,7 +155,7 @@ public class ConfigurationTest {
     @Test
     public void instantiationThrowsException() {
         try {
-            new Configuration();
+            new CommonPathsImpl();
             // The web archive uses this. See WebStorageEndPoint#init();
             fail("Should have thrown InvalidConfigurationException");
         } catch (InvalidConfigurationException e) {

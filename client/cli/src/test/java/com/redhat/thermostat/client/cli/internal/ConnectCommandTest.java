@@ -38,11 +38,8 @@ package com.redhat.thermostat.client.cli.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -55,12 +52,12 @@ import org.osgi.framework.BundleContext;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
+import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.storage.core.DbServiceFactory;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.redhat.thermostat.testutils.StubBundleContext;
-import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class ConnectCommandTest {
 
@@ -78,7 +75,9 @@ public class ConnectCommandTest {
 
         context = new StubBundleContext();
         dbServiceFactory = mock(DbServiceFactory.class);
-        cmd = new ConnectCommand(context, dbServiceFactory);
+        ClientPreferences prefs = mock(ClientPreferences.class);
+        when(prefs.getConnectionUrl()).thenReturn("http://localhost");
+        cmd = new ConnectCommand(context, dbServiceFactory, prefs);
     }
 
     private void setupCommandContextFactory() {
@@ -86,7 +85,6 @@ public class ConnectCommandTest {
         bundleContext = mock(BundleContext.class);
         when(bundleContext.getBundle(0)).thenReturn(sysBundle);
         cmdCtxFactory = new TestCommandContextFactory(bundleContext);
-        
     }
 
     @After
@@ -97,8 +95,6 @@ public class ConnectCommandTest {
 
     @Test
     public void verifyConnectedThrowsExceptionWithDiagnosticMessage() {
-        Keyring keyring = mock(Keyring.class);
-        context.registerService(Keyring.class, keyring, null);
         String dbUrl = "fluff";
         DbService dbService = mock(DbService.class);
         when(dbService.getConnectionUrl()).thenReturn(dbUrl);
@@ -115,8 +111,6 @@ public class ConnectCommandTest {
     
     @Test
     public void verifyNotConnectedConnects() throws CommandException {
-        Keyring keyring = mock(Keyring.class);
-        context.registerService(Keyring.class, keyring, null);
         DbService dbService = mock(DbService.class);
 
         String username = "testuser";
@@ -129,25 +123,6 @@ public class ConnectCommandTest {
         cmdCtxFactory.setInput(username + '\r' + password + '\r');
         cmd.run(ctx);
         verify(dbService).connect();
-    }
-    
-    @Test
-    public void verifyNoKeyring() throws CommandException {
-        DbService dbService = mock(DbService.class);
-
-        String dbUrl = "mongodb://10.23.122.1:12578";
-        SimpleArguments args = new SimpleArguments();
-        args.addArgument("dbUrl", dbUrl);
-        CommandContext ctx = cmdCtxFactory.createContext(args);
-        
-        try {
-            cmd.run(ctx);
-            fail();
-        } catch (CommandException e) {
-            assertEquals(translator.localize(LocaleResources.COMMAND_CONNECT_NO_KEYRING).getContents(), e.getMessage());
-        }
-        
-        verify(dbService, never()).connect();
     }
     
     @Test

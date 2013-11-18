@@ -34,17 +34,20 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.shared.locale;
+package com.redhat.thermostat.shared.locale.internal;
 
 import com.redhat.thermostat.shared.locale.Translate;
 
 public enum LocaleResources {
 
-    ENV_NO_HOME,
+    SYSHOME_NO_HOME,
+    SYSHOME_NOT_A_DIR,
+    USERHOME_NOT_A_DIR,
+    GENERAL_NOT_A_DIR,
     ;
 
     public static final String RESOURCE_BUNDLE =
-            "com.redhat.thermostat.shared.locale.strings";
+            "com.redhat.thermostat.shared.locale.internal.strings";
     
     public static Translate<LocaleResources> createLocalizer() {
         return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);

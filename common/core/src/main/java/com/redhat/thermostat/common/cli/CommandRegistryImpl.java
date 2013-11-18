@@ -36,9 +36,9 @@
 
 package com.redhat.thermostat.common.cli;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Map;
 import java.util.Objects;
 
 import org.osgi.framework.BundleContext;
@@ -50,31 +50,39 @@ import org.osgi.framework.ServiceRegistration;
 public class CommandRegistryImpl implements CommandRegistry {
 
     private BundleContext context;
-    private Collection<ServiceRegistration<?>> myRegisteredCommands;
+    private Map<String, ServiceRegistration<?>> regMapping;
 
     public CommandRegistryImpl(BundleContext ctx) {
         context = ctx;
-        myRegisteredCommands = new ArrayList<>();
+        regMapping = new HashMap<>();
     }
 
     @Override
-    public void registerCommand(String name, Command cmd) {
+    public synchronized void registerCommand(String name, Command cmd) {
         Objects.requireNonNull(name);
         Objects.requireNonNull(cmd);
 
         Hashtable<String,String> props = new Hashtable<>();
         props.put(Command.NAME, name);
         ServiceRegistration<?> registration = context.registerService(Command.class.getName(), cmd, props);
-        myRegisteredCommands.add(registration);
+        regMapping.put(name, registration);
     }
 
     @Override
-    public void unregisterCommands() {
-        for (ServiceRegistration<?> reg : myRegisteredCommands) {
+    public synchronized void unregisterCommand(String name) {
+        Objects.requireNonNull(name);
+        ServiceRegistration reg = regMapping.remove(name);
+        if (reg != null) {
+             reg.unregister();
+         }
+     }
+
+    @Override
+    public synchronized void unregisterCommands() {
+        for (ServiceRegistration<?> reg : regMapping.values()) {
             reg.unregister();
         }
-        // we've just unregistered commands
-        myRegisteredCommands.clear();
+        regMapping.clear();
     }
 
 }

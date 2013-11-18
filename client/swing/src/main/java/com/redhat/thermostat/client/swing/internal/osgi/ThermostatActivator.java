@@ -61,7 +61,7 @@ import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
-
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class ThermostatActivator implements BundleActivator {
@@ -92,6 +92,7 @@ public class ThermostatActivator implements BundleActivator {
         
         Class<?>[] deps = new Class<?>[] {
                 Keyring.class,
+                CommonPaths.class,
                 ApplicationService.class,
         };
         dependencyTracker = new MultipleServiceTracker(context, deps, new Action() {
@@ -101,9 +102,10 @@ public class ThermostatActivator implements BundleActivator {
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
                 Keyring keyring = (Keyring) services.get(Keyring.class.getName());
+                CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
                 ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
                 cmdReg = new CommandRegistryImpl(context);
-                main = new Main(context, keyring, appSvc, new String[0]);
+                main = new Main(context, keyring, paths, appSvc, new String[0]);
                 
                 GUIClientCommand cmd = new GUIClientCommand(main);
                 cmdReg.registerCommand("gui", cmd);

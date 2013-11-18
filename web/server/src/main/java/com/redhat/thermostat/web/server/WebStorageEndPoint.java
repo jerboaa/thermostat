@@ -70,8 +70,9 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.shared.config.Configuration;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
+import com.redhat.thermostat.shared.config.internal.CommonPathsImpl;
 import com.redhat.thermostat.storage.core.Categories;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.CategoryAdapter;
@@ -128,6 +129,7 @@ public class WebStorageEndPoint extends HttpServlet {
 
     private Storage storage;
     private Gson gson;
+    private CommonPaths paths;
 
     public static final String STORAGE_ENDPOINT = "storage.endpoint";
     public static final String STORAGE_USERNAME = "storage.username";
@@ -158,6 +160,7 @@ public class WebStorageEndPoint extends HttpServlet {
         logger.log(Level.INFO, "Initializing web service");
         
         // check if thermostat home is set and readable
+        // Side effect: sets this.paths
         checkThermostatHome();
         
         gson = new GsonBuilder()
@@ -213,7 +216,7 @@ public class WebStorageEndPoint extends HttpServlet {
             String storageEndpoint = getServletConfig().getInitParameter(STORAGE_ENDPOINT);
             String username = getServletConfig().getInitParameter(STORAGE_USERNAME);
             String password = getServletConfig().getInitParameter(STORAGE_PASSWORD);
-            storage = StorageFactory.getStorage(storageClass, storageEndpoint, username, password);
+            storage = StorageFactory.getStorage(storageClass, storageEndpoint, username, password, paths);
         }
         String uri = req.getRequestURI();
         int lastPartIdx = uri.lastIndexOf("/");
@@ -240,18 +243,20 @@ public class WebStorageEndPoint extends HttpServlet {
             verifyToken(req, resp);
         }
     }
-    
+
+    // Side effect: sets this.paths
     private boolean isThermostatHomeSet() {
         try {
             // this throws config exception if neither the property
             // nor the env var is set
-            new Configuration();
+            paths = new CommonPathsImpl();
             return true;
         } catch (InvalidConfigurationException e) {
             return false;
         }
     }
-    
+
+    // Side effect: sets this.paths
     private void checkThermostatHome() {
         if (!isThermostatHomeSet()) {
             String msg = "THERMOSTAT_HOME context parameter not set!";
@@ -274,8 +279,7 @@ public class WebStorageEndPoint extends HttpServlet {
 
     private File getThermostatHome() {
         try {
-            Configuration config = new Configuration();
-            return config.getSystemThermostatHome();
+            return paths.getSystemThermostatHome();
         } catch (InvalidConfigurationException e) {
             // we should have just checked if this throws any exception
             logger.log(Level.SEVERE, "Illegal configuration!", e);
