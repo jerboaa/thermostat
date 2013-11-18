@@ -110,7 +110,9 @@ public class MainPreferencePage extends FieldEditorPreferencePage implements
         clientPrefs.setConnectionUrl(connectionUrlEditor.getStringValue());
         clientPrefs.setSaveEntitlements(saveEntitlementsEditor.getBooleanValue());
         if (saveEntitlementsEditor.getBooleanValue()) {
-            clientPrefs.setCredentials(usernameEditor.getStringValue(), passwordEditor.getStringValue());
+            // FIXME Eclipse "Text" doesn't have a widget to return a char[] password, yet.
+            // https://bugs.eclipse.org/bugs/show_bug.cgi?id=297412
+            clientPrefs.setCredentials(usernameEditor.getStringValue(), passwordEditor.getTextControl(getFieldEditorParent()).getText().toCharArray());
             try {
                 clientPrefs.flush();
             } catch (IOException e) {
@@ -190,8 +192,10 @@ public class MainPreferencePage extends FieldEditorPreferencePage implements
         IEclipsePreferences node = DefaultScope.INSTANCE.getNode(Activator.PLUGIN_ID);
         if (clientPrefs.getSaveEntitlements()) { 
             node.put(ThermostatConstants.USERNAME_PREF_NAME, clientPrefs.getUserName());
-            node.put(ThermostatConstants.PASSWORD_PREF_NAME, clientPrefs.getPassword());
-            passwordEditor.setStringValue(clientPrefs.getPassword());
+            // FIXME Need Eclipse prefs and widgets that supports char[]
+            String passString = new String(clientPrefs.getPassword());
+            node.put(ThermostatConstants.PASSWORD_PREF_NAME, passString);
+            passwordEditor.setStringValue(passString);
             usernameEditor.setStringValue(clientPrefs.getUserName());
         } else {
             try {

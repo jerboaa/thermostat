@@ -216,8 +216,9 @@ public class WebStorageEndPoint extends HttpServlet {
             String storageClass = getServletConfig().getInitParameter(STORAGE_CLASS);
             String storageEndpoint = getServletConfig().getInitParameter(STORAGE_ENDPOINT);
             String username = getServletConfig().getInitParameter(STORAGE_USERNAME);
+            // FIXME Password as string?  bad.
             String password = getServletConfig().getInitParameter(STORAGE_PASSWORD);
-            storage = StorageFactory.getStorage(storageClass, storageEndpoint, username, password, paths);
+            storage = StorageFactory.getStorage(storageClass, storageEndpoint, username, password == null ? null : password.toCharArray(), paths);
         }
         String uri = req.getRequestURI();
         int lastPartIdx = uri.lastIndexOf("/");

@@ -137,7 +137,7 @@ public class ClientConfigurationSwingTest {
         JTextComponentFixture textBox = frameFixture.textBox("password");
         textBox.enterText("foobar");
 
-        assertEquals("foobar", frame.getPassword());
+        assertEquals("foobar", new String(frame.getPassword()));
     }
     
 

@@ -36,23 +36,25 @@
 
 package com.redhat.thermostat.eclipse.internal.jobs;
 
+import java.util.Arrays;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 
+import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.eclipse.LoggerFacility;
 import com.redhat.thermostat.eclipse.internal.Activator;
-import com.redhat.thermostat.eclipse.internal.ConnectionConfiguration;
 import com.redhat.thermostat.storage.core.ConnectionException;
 import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.storage.core.DbServiceFactory;
 
 public class ConnectDbJob extends Job {
 
-    private ConnectionConfiguration configuration;
+    private ClientPreferences configuration;
     
-    public ConnectDbJob(String name, ConnectionConfiguration configuration) {
+    public ConnectDbJob(String name, ClientPreferences configuration) {
         super(name);
         this.configuration = configuration;
     }
@@ -60,7 +62,7 @@ public class ConnectDbJob extends Job {
     @Override
     protected IStatus run(IProgressMonitor monitor) {
         monitor.beginTask(
-                "Connecting to " + configuration.getDBConnectionString(),
+                "Connecting to " + configuration.getConnectionUrl(),
                 IProgressMonitor.UNKNOWN);
         try {
             connectToBackEnd();
@@ -76,11 +78,18 @@ public class ConnectDbJob extends Job {
      * Establish a DB connection.
      */
     private void connectToBackEnd() throws ConnectionException {
-        DbServiceFactory dbServiceFactory = new DbServiceFactory();
-        DbService dbService = dbServiceFactory.createDbService(configuration.getUsername(),
-                configuration.getPassword(), configuration.getDBConnectionString());
-        dbService.connect();
+        char[] password = null;
+        try {
+            DbServiceFactory dbServiceFactory = new DbServiceFactory();
+            password = configuration.getPassword();
+            DbService dbService = dbServiceFactory.createDbService(configuration.getUserName(),
+                    password, configuration.getConnectionUrl());
+            dbService.connect();
+        } finally {
+            if (password != null) {
+                Arrays.fill(password, '\0');
+            }
+        }
     }
-
 }
 

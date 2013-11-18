@@ -53,13 +53,13 @@ public interface ClientConfigurationView extends View, UIComponent {
     void removeListener(ActionListener<Action> listener);
 
     void setConnectionUrl(String url);
-    void setPassword(String password);
+    void setPassword(char[] password);
     void setUserName(String username);
     void setSaveEntitlemens(boolean save);
     
     boolean getSaveEntitlements();
     String getUserName();
-    String getPassword();
+    char[] getPassword();
     String getConnectionUrl();
 
     void showDialog();

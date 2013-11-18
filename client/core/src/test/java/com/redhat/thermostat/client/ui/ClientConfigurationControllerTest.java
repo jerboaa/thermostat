@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.ui;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -59,13 +60,13 @@ public class ClientConfigurationControllerTest {
     public void setUp() {
         model = mock(ClientPreferences.class);
         when(model.getConnectionUrl()).thenReturn("mock-connection-url");
-        when(model.getPassword()).thenReturn("mock-password");
+        when(model.getPassword()).thenReturn("mock-password".toCharArray());
         when(model.getUserName()).thenReturn("mock-username");
         when(model.getSaveEntitlements()).thenReturn(false);
 
         view = mock(ClientConfigurationView.class);
         when(view.getConnectionUrl()).thenReturn("mock-connection-url");
-        when(view.getPassword()).thenReturn("mock-password");
+        when(view.getPassword()).thenReturn("mock-password".toCharArray());
         when(view.getUserName()).thenReturn("mock-username");
         when(view.getSaveEntitlements()).thenReturn(true);
     }
@@ -84,7 +85,7 @@ public class ClientConfigurationControllerTest {
 
         verify(model).getConnectionUrl();
         verify(view).setConnectionUrl(eq("mock-connection-url"));
-        verify(view).setPassword(eq("mock-password"));
+        verify(view).setPassword(eq("mock-password".toCharArray()));
         verify(view).setUserName(eq("mock-username"));
         verify(view).setSaveEntitlemens(eq(false));
         verify(view).showDialog();
@@ -112,7 +113,7 @@ public class ClientConfigurationControllerTest {
 
     private void verifyCloseCancelCommon() {
         verify(model, times(0)).setConnectionUrl(any(String.class));
-        verify(model, times(0)).setCredentials(any(String.class), any(String.class));
+        verify(model, times(0)).setCredentials(any(String.class), isA(char[].class));
         
         verify(view, times(0)).getConnectionUrl();
         verify(view, times(0)).showDialog();
@@ -143,7 +144,7 @@ public class ClientConfigurationControllerTest {
 
     private void verifyCloseAcceptCommon() {
         verify(model).setConnectionUrl(eq("mock-connection-url"));
-        verify(model).setCredentials(eq("mock-username"), eq("mock-password"));
+        verify(model).setCredentials(eq("mock-username"), eq("mock-password".toCharArray()));
         verify(model).setSaveEntitlements(eq(true));
         
         verify(view).getConnectionUrl();

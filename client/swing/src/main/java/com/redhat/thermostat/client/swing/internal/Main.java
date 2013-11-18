@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.swing.internal;
 
 import java.awt.EventQueue;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Level;
@@ -79,6 +80,7 @@ public class Main {
     private DbServiceFactory dbServiceFactory;
     private Keyring keyring;
     private CommonPaths paths;
+    private ClientPreferences prefs;
     private CountDownLatch shutdown;
     private MainWindowControllerImpl mainController;
     private MainWindowRunnable mainWindowRunnable;
@@ -111,6 +113,7 @@ public class Main {
         this.paths = paths;
         this.shutdown = shutdown;
         this.mainWindowRunnable = mainWindowRunnable;
+        this.prefs = new ClientPreferences(keyring, paths);
     }
     
     public void run() {
@@ -199,7 +202,8 @@ public class Main {
         final ConnectionHandler reconnectionHandler = new ConnectionHandler(service);
         try {
             // create DbService with potentially modified parameters
-            final DbService dbService = dbServiceFactory.createDbService(prefs.getUserName(), prefs.getPassword(), prefs.getConnectionUrl());
+            final char[] password = prefs.getPassword();
+            final DbService dbService = dbServiceFactory.createDbService(prefs.getUserName(), password, prefs.getConnectionUrl());
             dbService.addConnectionListener(reconnectionHandler);
             service.execute(new Runnable() {
                 @Override
@@ -210,6 +214,10 @@ public class Main {
                         // Note: DbService fires a ConnectionListener event when it
                         // fails to connect. No need to notify our handler manually.
                         logger.log(Level.FINE, "connection attempt failed: ", t);
+                    } finally {
+                        if (password != null) {
+                            Arrays.fill(password, '\0');
+                        }
                     }
                 }
             });
@@ -240,7 +248,6 @@ public class Main {
     }
     
     private void createPreferencesDialog(final ExecutorService service) {
-        ClientPreferences prefs = new ClientPreferences(keyring, paths);
         ClientConfigurationView configDialog = new ClientConfigurationSwing();
         ClientConfigurationController controller =
                 new ClientConfigurationController(prefs, configDialog, new MainClientConfigReconnector(service));

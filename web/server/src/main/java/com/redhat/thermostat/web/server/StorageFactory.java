@@ -52,7 +52,7 @@ class StorageFactory {
 
     // Web server is not OSGi, this factory method is workaround.
     static Storage getStorage(String storageClass, final String storageEndpoint, final String username,
-    		    final String password, final CommonPaths paths) {
+                final char[] password, final CommonPaths paths) {
         if (storage != null) {
             return storage;
         }

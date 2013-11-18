@@ -339,13 +339,13 @@ public class LauncherImpl implements Launcher {
                     dbUrl = prefs.getConnectionUrl();
                 }
                 String username = prefs.getUserName();
-                String password = prefs.getPassword();
+                char[] password = prefs.getPassword();
                 if (username == null || password == null) {
                     Console console = ctx.getConsole();
                     try {
                         StorageAuthInfoGetter getUserPass = new StorageAuthInfoGetter(console);
                         username = getUserPass.getUserName(dbUrl);
-                        password = new String(getUserPass.getPassword(dbUrl));
+                        password = getUserPass.getPassword(dbUrl);
                     } catch (IOException ex) {
                         throw new CommandException(t.localize(LocaleResources.LAUNCHER_USER_AUTH_PROMPT_ERROR), ex);
                     }
@@ -362,6 +362,10 @@ public class LauncherImpl implements Launcher {
                     String message = ( error == null ? "" : " Error: " + error );
                     logger.log(Level.SEVERE, "Could not connect to: " + dbUrl + message, ex);
                     throw new CommandException(t.localize(LocaleResources.LAUNCHER_CONNECTION_ERROR, dbUrl), ex);
+                } finally {
+                    if (password != null) {
+                        Arrays.fill(password, '\0');
+                    }
                 }
             }
         }

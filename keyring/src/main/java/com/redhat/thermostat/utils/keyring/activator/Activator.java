@@ -40,17 +40,47 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.utils.keyring.Keyring;
-import com.redhat.thermostat.utils.keyring.KeyringProvider;
+import com.redhat.thermostat.utils.keyring.impl.KeyringImpl;
 
 public class Activator implements BundleActivator {
 
     @Override
     public void start(BundleContext context) throws Exception {
-        context.registerService(Keyring.class.getName(), KeyringProvider.getKeyring(), null);
+        Keyring theKeyring = null;
+        try {
+            theKeyring = new KeyringImpl();
+        } catch (UnsatisfiedLinkError e) {
+            theKeyring = new Keyring() {
+                /* Trivial implementation just to keep the world from blowing up.
+                 * Everything noop.
+                 */
+
+                @Override
+                public void savePassword(String url, String username,
+                        char[] password) {
+                    // NOOP
+                }
+
+                @Override
+                public char[] getPassword(String url, String username) {
+                    // NOOP
+                    return new char[]{};
+                }
+
+                @Override
+                public void clearPassword(String url, String username) {
+                    // NOOP
+                }
+                
+            };
+        }
+        context.registerService(Keyring.class.getName(), theKeyring, null);
+        
     }
     
     @Override
     public void stop(BundleContext context) throws Exception {
+        // Nothing to do
     }
 }
 

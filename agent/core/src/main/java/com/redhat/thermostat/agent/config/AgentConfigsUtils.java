@@ -118,7 +118,7 @@ public class AgentConfigsUtils {
             AgentStartupConfiguration config) {
         // Default values will be enough if storage configured with not auth necessary.
         config.setUsername("");
-        config.setPassword("");
+        config.setPassword(new char[]{});
         if (authFile != null && authFile.canRead() && authFile.isFile()) {
             long length = authFile.length();
             char[] authData = null;
@@ -160,9 +160,8 @@ public class AgentConfigsUtils {
             char[] value = getPassword(data, position);
             if (value != null) {
                 // Password
-                config.setPassword(new String(value));
+                config.setPassword(value);
                 position = nextLine(data, position);
-                Arrays.fill(value, '\0');
                 value = null;
                 continue;
             }

@@ -79,7 +79,7 @@ public class AgentConfigsUtilsTest {
         Assert.assertFalse(config.purge());
         Assert.assertEquals("42.42.42.42:42", config.getConfigListenAddress());
         Assert.assertEquals("user", config.getUsername());
-        Assert.assertEquals("pass", config.getPassword());
+        Assert.assertEquals("pass", new String(config.getPassword()));
     }
 
     @Test
@@ -88,7 +88,7 @@ public class AgentConfigsUtilsTest {
         AgentStartupConfiguration config = new AgentStartupConfiguration();
         AgentConfigsUtils.setAuthConfigFromFile(tmpAuth, config);
         Assert.assertEquals("user", config.getUsername());
-        Assert.assertEquals("pass", config.getPassword());
+        Assert.assertEquals("pass", new String(config.getPassword()));
     }
 
     @Test
@@ -97,7 +97,7 @@ public class AgentConfigsUtilsTest {
         AgentStartupConfiguration config = new AgentStartupConfiguration();
         AgentConfigsUtils.setAuthConfigFromFile(tmpAuth, config);
         Assert.assertEquals("", config.getUsername());
-        Assert.assertEquals("", config.getPassword());
+        Assert.assertEquals("", new String(config.getPassword()));
     }
 
     // TODO add test to ensure user agent config overrides system agent config.
@@ -108,7 +108,7 @@ public class AgentConfigsUtilsTest {
         AgentStartupConfiguration config = new AgentStartupConfiguration();
         AgentConfigsUtils.setAuthConfigFromFile(tmpAuth, config);
         Assert.assertEquals("", config.getUsername());
-        Assert.assertEquals("", config.getPassword());
+        Assert.assertEquals("", new String(config.getPassword()));
     }
 
     private File createTempAuthFile(String contents) throws IOException {
@@ -130,7 +130,7 @@ public class AgentConfigsUtilsTest {
         AgentStartupConfiguration config = new AgentStartupConfiguration();
         AgentConfigsUtils.parseAuthConfigFromData(authData, authData.length, config);
         Assert.assertEquals("user", config.getUsername());
-        Assert.assertEquals("pass", config.getPassword());
+        Assert.assertEquals("pass", new String(config.getPassword()));
     }
 
     @Test

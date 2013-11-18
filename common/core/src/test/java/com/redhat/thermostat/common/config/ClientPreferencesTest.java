@@ -39,6 +39,7 @@ package com.redhat.thermostat.common.config;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -49,7 +50,6 @@ import java.util.Properties;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.utils.keyring.Credentials;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class ClientPreferencesTest {
@@ -73,6 +73,7 @@ public class ClientPreferencesTest {
 
         Keyring keyring = mock(Keyring.class);
         Properties prefs = mock(Properties.class);
+        when(prefs.getProperty(eq(ClientPreferences.SAVE_ENTITLEMENTS), eq("false"))).thenReturn("true");
 
         ClientPreferences clientPrefs = new ClientPreferences(prefs, keyring);
         clientPrefs.setConnectionUrl("test");
@@ -88,10 +89,10 @@ public class ClientPreferencesTest {
         when(prefs.getProperty(eq(ClientPreferences.SAVE_ENTITLEMENTS), any(String.class))).thenReturn("true");
         
         ClientPreferences clientPrefs = new ClientPreferences(prefs, keyring);
-        clientPrefs.setCredentials("fluff", "fluffPassword");
+        clientPrefs.setCredentials("fluff", "fluffPassword".toCharArray());
 
         verify(prefs).put(eq(ClientPreferences.USERNAME), eq("fluff"));
-        verify(prefs, times(0)).put(eq(ClientPreferences.PASSWORD), any(String.class));
+        verify(keyring).savePassword( (String) any(), eq("fluff"), isA(char[].class));
     }
     
     @Test
@@ -99,11 +100,16 @@ public class ClientPreferencesTest {
         
         Keyring keyring = mock(Keyring.class);
         Properties prefs = mock(Properties.class);
+        when(prefs.getProperty(eq(ClientPreferences.CONNECTION_URL), any(String.class))).thenReturn("mock-url");
         when(prefs.getProperty(eq(ClientPreferences.USERNAME), any(String.class))).thenReturn("mock-value");
         
         ClientPreferences clientPrefs = new ClientPreferences(prefs, keyring);
         String username = clientPrefs.getUserName();
 
+        assertEquals("", username);
+
+        when(prefs.getProperty(eq(ClientPreferences.SAVE_ENTITLEMENTS), any(String.class))).thenReturn("true");
+        username = clientPrefs.getUserName();
         assertEquals("mock-value", username);
         verify(prefs, atLeastOnce()).getProperty(eq(ClientPreferences.USERNAME), any(String.class));
     }
@@ -116,17 +122,16 @@ public class ClientPreferencesTest {
         Properties prefs = mock(Properties.class);
         when(prefs.getProperty(eq(ClientPreferences.USERNAME), any(String.class))).thenReturn("mock-value");
         when(prefs.getProperty(eq(ClientPreferences.SAVE_ENTITLEMENTS), any(String.class))).
-            thenReturn("false").thenReturn("false").thenReturn("true");
+            thenReturn("false").thenReturn("true");
                 
         ClientPreferences clientPrefs = new ClientPreferences(prefs, keyring);
-        String password = clientPrefs.getPassword();
-        verify(prefs, times(0)).getProperty(eq(ClientPreferences.PASSWORD), any(String.class));
-        verify(keyring, times(0)).loadPassword(any(Credentials.class));
+        char[] password = clientPrefs.getPassword();
+        verify(keyring, times(0)).getPassword(any(String.class), any(String.class));
         
-        assertEquals("", password);
+        assertEquals(new String(password), "");
         
         clientPrefs.getPassword();
-        verify(keyring, atLeastOnce()).loadPassword(any(Credentials.class));
+        verify(keyring, atLeastOnce()).getPassword(any(String.class), any(String.class));
     }
     
     @Test

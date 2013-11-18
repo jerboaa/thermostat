@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.client.swing.internal;
 
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doAnswer;
@@ -110,7 +111,7 @@ public class MainTest {
         
         dbServiceFactory = mock(DbServiceFactory.class);
         dbService = mock(DbService.class);
-        when(dbServiceFactory.createDbService(anyString(), anyString(), anyString())).thenReturn(dbService);
+        when(dbServiceFactory.createDbService(anyString(), (char[]) any(), anyString())).thenReturn(dbService);
         
         connectionListenerCaptor = ArgumentCaptor.forClass(ConnectionListener.class);
         doNothing().when(dbService).addConnectionListener(connectionListenerCaptor.capture());

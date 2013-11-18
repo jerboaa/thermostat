@@ -75,7 +75,7 @@ public class DbServiceFactory {
      *             If no matching {@link StorageProvider} could be found for the
      *             given dbUrl.
      */
-    public DbService createDbService(String username, String password,
+    public DbService createDbService(String username, char[] password,
             String dbUrl) throws StorageException {
         return DbServiceImpl.create(username, password, dbUrl);
     }

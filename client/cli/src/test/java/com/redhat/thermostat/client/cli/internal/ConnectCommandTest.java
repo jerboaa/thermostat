@@ -116,7 +116,7 @@ public class ConnectCommandTest {
         String username = "testuser";
         String password = "testpassword";
         String dbUrl = "mongodb://10.23.122.1:12578";
-        when(dbServiceFactory.createDbService(eq(username), eq(password), eq(dbUrl))).thenReturn(dbService);
+        when(dbServiceFactory.createDbService(eq(username), eq(password.toCharArray()), eq(dbUrl))).thenReturn(dbService);
         SimpleArguments args = new SimpleArguments();
         args.addArgument("dbUrl", dbUrl);
         CommandContext ctx = cmdCtxFactory.createContext(args);

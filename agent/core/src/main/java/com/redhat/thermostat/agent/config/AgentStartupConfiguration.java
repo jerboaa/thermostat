@@ -40,13 +40,12 @@ import com.redhat.thermostat.storage.config.AuthenticationConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 
 public class AgentStartupConfiguration implements StartupConfiguration, AuthenticationConfiguration {
-    
-    private boolean debugConsole;
+
     private boolean purge;
     
     private String url;
     private String username;
-    private String password;
+    private char[] password;
 
     private long startTime;
     private String address;
@@ -89,12 +88,12 @@ public class AgentStartupConfiguration implements StartupConfiguration, Authenti
         return username;
     }
 
-    public void setPassword(String password) {
+    public void setPassword(char[] password) {
         this.password = password;
     }
 
     @Override
-    public String getPassword() {
+    public char[] getPassword() {
         return password;
     }
 

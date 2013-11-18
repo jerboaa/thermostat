@@ -71,13 +71,13 @@ public class DbServiceImpl implements DbService {
     private String dbUrl;
     private static ServiceReference sslConfRef;
     
-    DbServiceImpl(String username, String password, String dbUrl) throws StorageException {
+    DbServiceImpl(String username, char[] password, String dbUrl) throws StorageException {
         BundleContext context = FrameworkUtil.getBundle(DbService.class).getBundleContext();
         init(context, username, password, dbUrl);
     }
 
     // for testing
-    DbServiceImpl(BundleContext context, String username, String password, String dbUrl) {
+    DbServiceImpl(BundleContext context, String username, char[] password, String dbUrl) {
         init(context, username, password, dbUrl);
     }
     
@@ -87,7 +87,7 @@ public class DbServiceImpl implements DbService {
         this.storage = storage;
     }
     
-    private void init(BundleContext context, String username, String password, String dbUrl) {
+    private void init(BundleContext context, String username, char[] password, String dbUrl) {
         Storage storage = createStorage(context, username, password, dbUrl);
 
         this.storage = storage;
@@ -186,7 +186,7 @@ public class DbServiceImpl implements DbService {
      * @return a DbService instance
      * @throws StorageException if no storage provider exists for the given {@code dbUrl}.
      */
-    public static DbService create(String username, String password, String dbUrl) throws StorageException {
+    public static DbService create(String username, char[] password, String dbUrl) throws StorageException {
         return new DbServiceImpl(username, password, dbUrl);
     }
 
@@ -216,7 +216,7 @@ public class DbServiceImpl implements DbService {
         }
     }
 
-    private static Storage createStorage(BundleContext context, String username, String password, String dbUrl) throws StorageException {
+    private static Storage createStorage(BundleContext context, String username, char[] password, String dbUrl) throws StorageException {
         StartupConfiguration config = new ConnectionConfiguration(dbUrl, username, password);
         StorageProvider prov = getStorageProvider(context, config);
         if (prov == null) {

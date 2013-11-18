@@ -40,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -89,11 +90,9 @@ import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.redhat.thermostat.test.TestTimerFactory;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.utils.keyring.Keyring;
-import com.redhat.thermostat.utils.keyring.KeyringProvider;
 
 public class LauncherImplTest {
-    
-    private static String defaultKeyringProvider;
+
     private static final String name1 = "test1";
     private static final String name2 = "test2";
     private static final String name3 = "test3";
@@ -102,7 +101,6 @@ public class LauncherImplTest {
       
     @BeforeClass
     public static void beforeClassSetUp() {
-        defaultKeyringProvider = System.getProperty(KeyringProvider.KEYRING_FACTORY_PROPERTY);
         // Launcher calls System.exit(). This causes issues for unit testing.
         // We work around this by installing a security manager which disallows
         // System.exit() and throws an ExitException instead. This exception in
@@ -113,9 +111,6 @@ public class LauncherImplTest {
     
     @AfterClass
     public static void afterClassTearDown() {
-        if (defaultKeyringProvider != null) {
-            System.setProperty(KeyringProvider.KEYRING_FACTORY_PROPERTY, defaultKeyringProvider);
-        }
         System.setSecurityManager(secMan);
     }
     
@@ -481,14 +476,14 @@ public class LauncherImplTest {
         String dbUrl = "mongo://fluff:12345";
         when(prefs.getConnectionUrl()).thenReturn(dbUrl);
         when(prefs.getUserName()).thenReturn("user");
-        when(prefs.getPassword()).thenReturn("password");
+        when(prefs.getPassword()).thenReturn("password".toCharArray());
 
         LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext),
                 environment, dbServiceFactory, version, prefs, paths, loggingInitializer);
 
         DbService dbService = mock(DbService.class);
         ArgumentCaptor<String> dbUrlCaptor = ArgumentCaptor.forClass(String.class);
-        when(dbServiceFactory.createDbService(eq("user"), eq("password"), dbUrlCaptor.capture())).thenReturn(dbService);
+        when(dbServiceFactory.createDbService(eq("user"), eq("password".toCharArray()), dbUrlCaptor.capture())).thenReturn(dbService);
         wrappedRun(launcher, new String[] { "test3" }, false);
         verify(dbService).connect();
         verify(prefs).getConnectionUrl();
@@ -505,7 +500,7 @@ public class LauncherImplTest {
 
         DbService dbService = mock(DbService.class);
         ArgumentCaptor<String> dbUrlCaptor = ArgumentCaptor.forClass(String.class);
-        when(dbServiceFactory.createDbService(eq("user"), eq("pass"), dbUrlCaptor.capture())).thenReturn(dbService);
+        when(dbServiceFactory.createDbService(eq("user"), eq("pass".toCharArray()), dbUrlCaptor.capture())).thenReturn(dbService);
         ctxFactory.setInput("user\rpass\r");
         wrappedRun(launcher, new String[] { "test3" }, false);
         verify(dbService).connect();
@@ -515,6 +510,16 @@ public class LauncherImplTest {
 
     @Test
     public void verifyDbServiceConnectIsCalledForStorageCommand() throws Exception {
+        ClientPreferences prefs = mock(ClientPreferences.class);
+        String dbUrl = "mongo://fluff:12345";
+        String user = "user";
+        char[] password = new char[] {'1', '2', '3', '4', '5'};
+        when(prefs.getConnectionUrl()).thenReturn(dbUrl);
+        when(prefs.getUserName()).thenReturn(user);
+        when(prefs.getPassword()).thenReturn(password);
+        LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext),
+                environment, dbServiceFactory, version, prefs, paths, loggingInitializer);
+
         Command mockCmd = mock(Command.class);
         when(mockCmd.isStorageRequired()).thenReturn(true);
         
@@ -527,7 +532,7 @@ public class LauncherImplTest {
         when(infos.getCommandInfo("dummy")).thenReturn(cmdInfo);
 
         DbService dbService = mock(DbService.class);
-        when(dbServiceFactory.createDbService(anyString(), anyString(), anyString())).thenReturn(dbService);
+        when(dbServiceFactory.createDbService(anyString(), isA(char[].class), anyString())).thenReturn(dbService);
 
         wrappedRun(launcher, new String[] { "dummy" }, false);
         verify(dbService).connect();

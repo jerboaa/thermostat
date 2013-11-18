@@ -39,7 +39,6 @@ package com.redhat.thermostat.client.ui;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.prefs.BackingStoreException;
 
 import com.redhat.thermostat.client.core.views.ClientConfigurationView;
 import com.redhat.thermostat.client.core.views.ClientConfigurationView.Action;

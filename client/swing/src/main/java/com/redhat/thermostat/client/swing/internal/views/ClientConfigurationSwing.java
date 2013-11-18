@@ -37,11 +37,14 @@
 package com.redhat.thermostat.client.swing.internal.views;
 
 import java.awt.Frame;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -65,6 +68,8 @@ public class ClientConfigurationSwing implements ClientConfigurationView {
     private final WindowClosingListener windowClosingListener;
 
     private final ClientConfigurationPanel configurationPanel;
+    private char[] previousPassword = new char[]{};
+    private boolean userOverrodePassword = false;
 
     private final CopyOnWriteArrayList<ActionListener<Action>> listeners = new CopyOnWriteArrayList<>();
 
@@ -75,6 +80,24 @@ public class ClientConfigurationSwing implements ClientConfigurationView {
 
         windowClosingListener = new WindowClosingListener();
         configurationPanel = new ClientConfigurationPanel();
+        configurationPanel.password.addKeyListener(new KeyListener() {
+
+            @Override
+            public void keyPressed(KeyEvent arg0) {
+                // Ignore
+            }
+
+            @Override
+            public void keyReleased(KeyEvent arg0) {
+                // Ignore
+            }
+
+            @Override
+            public void keyTyped(KeyEvent arg0) {
+                userOverrodePassword = true;
+            }
+            
+        });
 
         java.awt.event.ActionListener acceptOnEnterListener = new java.awt.event.ActionListener() {
             @Override
@@ -197,18 +220,16 @@ public class ClientConfigurationSwing implements ClientConfigurationView {
     class WindowClosingListener extends WindowAdapter {
         @Override
         public void windowClosing(WindowEvent e) {
+            if (previousPassword != null) {
+                Arrays.fill(previousPassword, '\0');
+            }
             fireAction(new ActionEvent<>(ClientConfigurationSwing.this, Action.CLOSE_CANCEL));
         }
     }
 
     @Override
-    public void setPassword(final String password) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                configurationPanel.password.setText(password);
-            }
-        });
+    public void setPassword(final char[] password) {
+        this.previousPassword = password;
     }
     
     @Override
@@ -222,12 +243,15 @@ public class ClientConfigurationSwing implements ClientConfigurationView {
     };
     
     @Override
-    public String getPassword() {
+    public char[] getPassword() {
+        if (!userOverrodePassword) {
+            return previousPassword;
+        }
         try {
-            return new EdtHelper().callAndWait(new Callable<String>() {
+            return new EdtHelper().callAndWait(new Callable<char[]>() {
                 @Override
-                public String call() throws Exception {
-                    return configurationPanel.password.getText();
+                public char[] call() throws Exception {
+                    return configurationPanel.password.getPassword();
                 }
             });
         } catch (InvocationTargetException | InterruptedException e) {

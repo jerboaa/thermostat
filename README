@@ -146,22 +146,9 @@ bin/thermostat gui \
 
 3.1.2. GNOME KEYRING AND THERMOSTAT
 
-Thermostat includes experimental support to store user credentials in the
-Gnome Keyring daemon, this support is currently limited to passwords only.
-
-Runtime supports for the Keyring is optional and can be disabled via a system
-property:
-
- * -J-Dcom.redhat.thermostat.utils.keyring.provider=com.redhat.thermostat.utils.keyring.MemoryKeyring
-
-The memory keyring stores passwords in memory and not on disk. This means
-passwords don't persist across Thermostat sessions. A session is terminated by
-exiting the application.
-
-NOTE: thermostat keeps all the passwords in clear text memory during execution,
-the keyring is only used to securely store passwords on disk. The passwords are
-saved in the user session keychain and available to other applications that
-can access the keyring. 
+Thermostat includes support to store user credentials in the Gnome Keyring
+daemon, if the user wishes.  If this is not available at runtime, no credentials
+will be stored.
 
 --------------------------------------------------------------------------------
 3.2. RUNNING THERMOSTAT ECLIPSE

@@ -34,62 +34,117 @@
  * to do so, delete this exception statement from your version.
  */
 
-#include "com_redhat_thermostat_utils_keyring_GnomeKeyringLibraryNative.h"
+#include "com_redhat_thermostat_utils_keyring_impl_KeyringImpl.h"
 
 #include <jni.h>
 #include <glib.h>
 #include <gnome-keyring.h>
+#include <stdlib.h>
+#include <string.h>
+
+GnomeKeyringPasswordSchema thermostat_schema = {
+    GNOME_KEYRING_ITEM_GENERIC_SECRET,
+    {
+        { "username", GNOME_KEYRING_ATTRIBUTE_TYPE_STRING },
+        { "url", GNOME_KEYRING_ATTRIBUTE_TYPE_STRING },
+        { NULL, 0 }
+    }
+};
 
 static void init(void) {
     if (g_get_application_name() == NULL) {
-        g_set_application_name("");
+        g_set_application_name("Thermostat");
     }
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_redhat_thermostat_utils_keyring_GnomeKeyringLibraryNative_gnomeKeyringWrapperSetPasswordNative
-  (JNIEnv *env, jclass GnomeKeyringLibraryNativeClass, jstring juserName, jstring jpassword, jstring jdescription)
+Java_com_redhat_thermostat_utils_keyring_impl_KeyringImpl_gnomeKeyringWrapperSavePasswordNative
+  (JNIEnv *env, jclass GnomeKeyringLibraryNativeClass, jstring jurl, jstring juserName, jbyteArray jpassword, jstring jdescription)
 {
+    int passIndex;
+    const char *url = (*env)->GetStringUTFChars(env, jurl, NULL);
+    if (url == NULL) {
+        return JNI_FALSE;
+    }
     const char *userName = (*env)->GetStringUTFChars(env, juserName, NULL);
     if (userName == NULL) {
+        (*env)->ReleaseStringUTFChars(env, jurl, url);
         return JNI_FALSE;
     }
 
-    const char *password = (*env)->GetStringUTFChars(env, jpassword, NULL);
+    jsize passwordLength = (*env)->GetArrayLength(env, jpassword);
+    char *password = (*env)->GetByteArrayElements(env, jpassword, NULL);
     if (password == NULL) {
+        (*env)->ReleaseStringUTFChars(env, jurl, url);
         (*env)->ReleaseStringUTFChars(env, juserName, userName);
         return JNI_FALSE;
     }
+
+    /* Make into null terminated (g)char * to make gnome api happy */
+    gchar *gpassword = malloc(sizeof(gchar) * (passwordLength + 1));
+    if (gpassword == NULL) {
+        (*env)->ReleaseStringUTFChars(env, jurl, url);
+        (*env)->ReleaseStringUTFChars(env, juserName, userName);
+        for (passIndex = 0; passIndex < (int) passwordLength; passIndex++) {
+            password[passIndex] = '\0';
+        }
+        (*env)->ReleaseByteArrayElements(env, jpassword, password, JNI_ABORT);
+        return JNI_FALSE;
+    }
+    for (passIndex = 0; passIndex < passwordLength; passIndex++) {
+        gpassword[passIndex] = (gchar) (password[passIndex]);
+    }
+    gpassword[passwordLength] = (gchar) '\0';
+
+    /* Overwrite original array, release back to java-land. */
+    for (passIndex = 0; passIndex < (int) passwordLength; passIndex++) {
+        password[passIndex] = '\0';
+    }
+    (*env)->ReleaseByteArrayElements(env, jpassword, password, JNI_ABORT);
 
     const char *description = (*env)->GetStringUTFChars(env, jdescription, NULL);
     if (description == NULL) {
+    	(*env)->ReleaseStringUTFChars(env, jurl, url);
         (*env)->ReleaseStringUTFChars(env, juserName, userName);
-        (*env)->ReleaseStringUTFChars(env, jpassword, password);
+        for (passIndex = 0; passIndex < (int) passwordLength; passIndex++) {
+            gpassword[passIndex] = (gchar) '\0';
+        }
+        free(gpassword);
         return JNI_FALSE;
     }
 
     init();
-    GnomeKeyringResult res = gnome_keyring_store_password_sync(GNOME_KEYRING_NETWORK_PASSWORD,
+    GnomeKeyringResult res = gnome_keyring_store_password_sync(&thermostat_schema,
                                                                 GNOME_KEYRING_DEFAULT,
                                                                 description,
-                                                                password,
-                                                                "user", userName,
-                                                                "server", "gnome.org",
+                                                                gpassword,
+                                                                "username", userName,
+                                                                "url", url,
                                                                 NULL);
-
+    (*env)->ReleaseStringUTFChars(env, jurl, url);
     (*env)->ReleaseStringUTFChars(env, juserName, userName);
-    (*env)->ReleaseStringUTFChars(env, jpassword, password);
+    for (passIndex = 0; passIndex < (int) passwordLength; passIndex++) {
+        gpassword[passIndex] = '\0';
+    }
+    free(gpassword);
     (*env)->ReleaseStringUTFChars(env, jdescription, description);
 
     return (res == GNOME_KEYRING_RESULT_OK) ? JNI_TRUE : JNI_FALSE;
 }
 
-JNIEXPORT jstring JNICALL
-Java_com_redhat_thermostat_utils_keyring_GnomeKeyringLibraryNative_gnomeKeyringWrapperGetPasswordNative
-  (JNIEnv *env, jclass GnomeKeyringLibraryNative, jstring juserName)
+JNIEXPORT jbyteArray JNICALL
+Java_com_redhat_thermostat_utils_keyring_impl_KeyringImpl_gnomeKeyringWrapperGetPasswordNative
+  (JNIEnv *env, jclass GnomeKeyringLibraryNative, jstring jurl, jstring juserName)
 {
+	const char *url = (*env)->GetStringUTFChars(env, jurl, NULL);
+    if (url == NULL) {
+
+        return NULL;
+    }
+
     const char *userName = (*env)->GetStringUTFChars(env, juserName, NULL);
     if (userName == NULL) {
+    	(*env)->ReleaseStringUTFChars(env, jurl, url);
         return NULL;
     }
 
@@ -97,21 +152,48 @@ Java_com_redhat_thermostat_utils_keyring_GnomeKeyringLibraryNative_gnomeKeyringW
     GnomeKeyringResult res;
 
     init();
-    res = gnome_keyring_find_password_sync(GNOME_KEYRING_NETWORK_PASSWORD,
+    res = gnome_keyring_find_password_sync(&thermostat_schema,
                                            &password,
-                                           "user", userName,
-                                           "server", "gnome.org",
+                                           "username", userName,
+                                           "url", url,
                                            NULL);
 
+    (*env)->ReleaseStringUTFChars(env, jurl, url);
     (*env)->ReleaseStringUTFChars(env, juserName, userName);
 
     if (res == GNOME_KEYRING_RESULT_OK) {
-        jstring jpassword = (*env)->NewStringUTF(env, password);
+        jsize passwordLength = strlen(password);
+        jbyteArray jpassword = (*env)->NewByteArray(env, passwordLength);
+        (*env)->SetByteArrayRegion(env, jpassword, 0, passwordLength, password);
         gnome_keyring_free_password(password);
         return jpassword;
-
     } else {
         return NULL;
     }
 }
 
+JNIEXPORT jboolean JNICALL
+Java_com_redhat_thermostat_utils_keyring_impl_KeyringImpl_gnomeKeyringWrapperClearPasswordNative
+  (JNIEnv *env, jclass GnomeKeyringLibraryNative, jstring jurl, jstring juserName)
+{
+    const char *url = (*env)->GetStringUTFChars(env, jurl, NULL);
+    if (url == NULL) {
+        return JNI_FALSE;
+    }
+    const char *userName = (*env)->GetStringUTFChars(env, juserName, NULL);
+    if (userName == NULL) {
+        (*env)->ReleaseStringUTFChars(env, jurl, url);
+        return JNI_FALSE;
+    }
+
+    init();
+    GnomeKeyringResult res = gnome_keyring_delete_password_sync(&thermostat_schema,
+                                                                "username", userName,
+                                                                "url", url,
+                                                                NULL);
+
+    (*env)->ReleaseStringUTFChars(env, jurl, url);
+    (*env)->ReleaseStringUTFChars(env, juserName, userName);
+
+    return (res == GNOME_KEYRING_RESULT_OK) ? JNI_TRUE : JNI_FALSE;
+}

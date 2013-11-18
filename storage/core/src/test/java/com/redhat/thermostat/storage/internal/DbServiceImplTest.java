@@ -91,7 +91,7 @@ public class DbServiceImplTest {
         context = new StubBundleContext();
 
         try {
-            new DbServiceImpl(context, "ignore", "ignore", "http://ignored.example.com");
+            new DbServiceImpl(context, "ignore", "ignore".toCharArray(), "http://ignored.example.com");
             fail("exception expected");
         } catch (StorageException se) {
             assertEquals("No storage provider available", se.getMessage());
@@ -103,7 +103,7 @@ public class DbServiceImplTest {
         when(storageProvider.canHandleProtocol()).thenReturn(false);
 
         try {
-            new DbServiceImpl(context, "ignore", "ignore", "http://ignored.example.com");
+            new DbServiceImpl(context, "ignore", "ignore".toCharArray(), "http://ignored.example.com");
             fail("exception expected");
         } catch (StorageException se) {
             assertEquals("No storage found for URL http://ignored.example.com", se.getMessage());
@@ -181,7 +181,7 @@ public class DbServiceImplTest {
 
     @Test
     public void testConnectRegistersDbService() {
-        DbService dbService = new DbServiceImpl(context, "ignore", "ignore", "http://ignored.example.com");
+        DbService dbService = new DbServiceImpl(context, "ignore", "ignore".toCharArray(), "http://ignored.example.com");
 
         try {
             dbService.connect();
@@ -200,7 +200,7 @@ public class DbServiceImplTest {
     
     @Test
     public void testConnectRegistersStorage() {
-        DbService dbService = new DbServiceImpl(context, "ignore", "ignore", "http://ignored.example.com");
+        DbService dbService = new DbServiceImpl(context, "ignore", "ignore".toCharArray(), "http://ignored.example.com");
 
         try {
             dbService.connect();
@@ -220,7 +220,7 @@ public class DbServiceImplTest {
     @SuppressWarnings("rawtypes")
     @Test
     public void testConnectEnforcesPreCond() {
-        DbService dbService = new DbServiceImpl(context, "ignore", "ignore", "http://ignored.example.com");
+        DbService dbService = new DbServiceImpl(context, "ignore", "ignore".toCharArray(), "http://ignored.example.com");
 
         ServiceRegistration reg = context.registerService(DbService.class, dbService, null);
         try {
@@ -243,7 +243,7 @@ public class DbServiceImplTest {
     @SuppressWarnings("rawtypes")
     @Test
     public void testDisConnectEnforcesPreCond() {
-        DbService dbService = new DbServiceImpl(context, "ignore", "ignore", "http://ignored.example.com");
+        DbService dbService = new DbServiceImpl(context, "ignore", "ignore".toCharArray(), "http://ignored.example.com");
 
         ServiceRegistration reg = context.registerService(DbService.class, dbService, null);
         try {
@@ -267,7 +267,7 @@ public class DbServiceImplTest {
 
     @Test
     public void testDisconnect() {
-        DbService dbService = new DbServiceImpl(context, "ignore", "ignore", "http://ignored.example.com");
+        DbService dbService = new DbServiceImpl(context, "ignore", "ignore".toCharArray(), "http://ignored.example.com");
 
         try {
             dbService.connect();
@@ -285,7 +285,7 @@ public class DbServiceImplTest {
 
     @Test
     public void testDisconnectUnregistersDbService() {
-        DbService dbService = new DbServiceImpl(context, "ignore", "ignore", "http://ignored.example.com");
+        DbService dbService = new DbServiceImpl(context, "ignore", "ignore".toCharArray(), "http://ignored.example.com");
 
         try {
             dbService.connect();
@@ -305,7 +305,7 @@ public class DbServiceImplTest {
     
     @Test
     public void testDisconnectUnregistersStorage() {
-        DbService dbService = new DbServiceImpl(context, "ignore", "ignore", "http://ignored.example.com");
+        DbService dbService = new DbServiceImpl(context, "ignore", "ignore".toCharArray(), "http://ignored.example.com");
 
         try {
             dbService.connect();
@@ -328,7 +328,7 @@ public class DbServiceImplTest {
     public void canGetStorageUrl() {
         String connectionURL = "http://test.example.com:8082";
 
-        DbService dbService = new DbServiceImpl(context, "ignore", "ignore", connectionURL);
+        DbService dbService = new DbServiceImpl(context, "ignore", "ignore".toCharArray(), connectionURL);
         assertEquals(connectionURL, dbService.getConnectionUrl());
     }
     
@@ -337,7 +337,7 @@ public class DbServiceImplTest {
         ConnectionListener listener = mock(ConnectionListener.class);
         Connection connection = mock(Connection.class);
         when(storage.getConnection()).thenReturn(connection);
-        DbService dbService = new DbServiceImpl(context, "ignore", "ignore", "http://ignored.example.com");
+        DbService dbService = new DbServiceImpl(context, "ignore", "ignore".toCharArray(), "http://ignored.example.com");
 
         dbService.addConnectionListener(listener);
         verify(connection).addListener(listener);
@@ -346,7 +346,7 @@ public class DbServiceImplTest {
     @Test
     public void testListenerGetsEvent() {
         ConnectingConnectionListener listener = new ConnectingConnectionListener();
-        DbService dbService = new DbServiceImpl(context, "ignore", "ignore", "http://ignored.example.com");
+        DbService dbService = new DbServiceImpl(context, "ignore", "ignore".toCharArray(), "http://ignored.example.com");
 
         ConnectingConnection connection = new ConnectingConnection();
         when(storage.getConnection()).thenReturn(connection);
@@ -376,7 +376,7 @@ public class DbServiceImplTest {
         ConnectionListener listener = mock(ConnectionListener.class);
         Connection connection = mock(Connection.class);
         when(storage.getConnection()).thenReturn(connection);
-        DbService dbService = new DbServiceImpl(context, "ignore", "ignore", "http://ignored.example.com");
+        DbService dbService = new DbServiceImpl(context, "ignore", "ignore".toCharArray(), "http://ignored.example.com");
         dbService.removeConnectionListener(listener);
         verify(connection).removeListener(listener);
     }

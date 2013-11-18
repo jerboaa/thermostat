@@ -37,6 +37,7 @@
 package com.redhat.thermostat.client.cli.internal;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Objects;
 
 import org.osgi.framework.BundleContext;
@@ -98,7 +99,7 @@ public class ConnectCommand extends AbstractCommand {
         // This argument is considered "required" so option parsing should mean this is impossible.
         Objects.requireNonNull(dbUrl);
         String username = null;
-        String password = null;
+        char[] password = null;
         if (prefs.getConnectionUrl().equals(dbUrl)) {
             // Have we previously saved connection parameters for this Url?
             username = prefs.getUserName();
@@ -109,7 +110,7 @@ public class ConnectCommand extends AbstractCommand {
             try {
                 StorageAuthInfoGetter getUserPass = new StorageAuthInfoGetter(console);
                 username = getUserPass.getUserName(dbUrl);
-                password = new String(getUserPass.getPassword(dbUrl));
+                password = getUserPass.getPassword(dbUrl);
             } catch (IOException e) {
                 throw new CommandException(translator.localize(LocaleResources.COMMAND_CONNECT_USER_PROMPT_ERROR), e);
             }
@@ -124,6 +125,10 @@ public class ConnectCommand extends AbstractCommand {
             String error = ex.getMessage();
             String message = ( error == null ? "" : " " + translator.localize(LocaleResources.COMMAND_CONNECT_ERROR, error).getContents() );
             throw new CommandException(translator.localize(LocaleResources.COMMAND_CONNECT_FAILED_TO_CONNECT, dbUrl + message), ex);
+        } finally {
+            if (password != null) {
+                Arrays.fill(password, '\0');
+            }
         }
     }
 

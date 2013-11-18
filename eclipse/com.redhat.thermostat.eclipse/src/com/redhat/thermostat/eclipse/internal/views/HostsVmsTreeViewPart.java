@@ -63,7 +63,6 @@ import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.eclipse.internal.Activator;
-import com.redhat.thermostat.eclipse.internal.ConnectionConfiguration;
 import com.redhat.thermostat.eclipse.internal.controllers.ConnectDBAction;
 import com.redhat.thermostat.eclipse.internal.controllers.ConnectionJobListener;
 import com.redhat.thermostat.eclipse.internal.jobs.ConnectDbJob;
@@ -99,11 +98,8 @@ public class HostsVmsTreeViewPart extends ViewPart {
     public HostsVmsTreeViewPart() {
         ClientPreferences clientPrefs = new ClientPreferences(Activator.getDefault().getKeyring(),
                                                               Activator.getDefault().getCommonPaths());
-        ConnectionConfiguration configuration = new ConnectionConfiguration(
-                clientPrefs.getUserName(), clientPrefs.getPassword(),
-                clientPrefs.getConnectionUrl());
         Job connectJob = new ConnectDbJob(
-                "Connecting to Thermostat storage...", configuration);
+                "Connecting to Thermostat storage...", clientPrefs);
         connectJob.setSystem(true);
         connectAction = new ConnectDBAction(connectJob);
         connectAction.setImageDescriptor(Activator

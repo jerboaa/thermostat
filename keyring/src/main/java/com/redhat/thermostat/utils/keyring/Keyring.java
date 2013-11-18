@@ -39,36 +39,33 @@ package com.redhat.thermostat.utils.keyring;
 import com.redhat.thermostat.annotations.Service;
 
 /**
- * Manages sensitive data, like {@link Credentials}, securely.
- * <p>
- * An instance of this class can be obtained from OSGi as a service.
+ * Maps url/username to passwords, securely.  Implementations may support persisting
+ * this mapping across sessions.
  */
 @Service
 public interface Keyring {
 
     /**
-     * Loads the password into the given {@link Credentials}.
-     * 
-     * <br /><br />
-     * 
-     * A {@link NullPointerException} is thrown is {@link Credentials} is
-     * {@code null} or {@link Credentials#getUserName()} is {@code null}.
+     * Map the given password to the given url and username.
+     * @param url The url for this saved password
+     * @param username The username for this saved password
+     * @param password The password to be saved
      */
-    void loadPassword(Credentials credentials);
-    
-    /**
-     * Stores the password from the {@link Credentials} into the keyring.
-     * 
-     * <br /><br />
-     * 
-     * A {@link NullPointerException} is thrown is {@link Credentials} is
-     * {@code null} or {@link Credentials#getUserName()} is {@code null}. 
-     * 
-     * <br /><br />
-     * 
-     * If {@link Credentials#getPassword()} is {@code null}, an emtpy String
-     * password is saved in the keyring.
-     */
-    boolean savePassword(Credentials credentials);
-}
+    public void savePassword(String url, String username, char[] password);
 
+    /**
+     * Retrieve the password associated with the given url and username.
+     * @param url The url for the desired password
+     * @param username The username for the desired password
+     * @return The password mapped to the given url and username, if any.  Null otherwise
+     */
+    public char[] getPassword(String url, String username);
+
+    /**
+     * Clear the password associated with the given url and username, if any.
+     * @param url The url for the password to be cleared
+     * @param username The username for the password to be cleared
+     */
+    public void clearPassword(String url, String username);
+
+}

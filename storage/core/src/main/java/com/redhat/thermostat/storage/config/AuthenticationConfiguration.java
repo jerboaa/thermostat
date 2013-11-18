@@ -39,6 +39,6 @@ package com.redhat.thermostat.storage.config;
 public interface AuthenticationConfiguration {
 
     String getUsername();
-    String getPassword();
+    char[] getPassword();
 }
 

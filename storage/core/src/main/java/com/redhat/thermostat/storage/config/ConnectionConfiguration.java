@@ -40,9 +40,9 @@ public class ConnectionConfiguration implements StartupConfiguration, Authentica
 
     private String dbUrl;
     private String username;
-    private String password;
+    private char[] password;
 
-    public ConnectionConfiguration(String dbUrl, String username, String password) {
+    public ConnectionConfiguration(String dbUrl, String username, char[] password) {
         this.dbUrl = dbUrl;
         this.username = username;
         this.password = password;
@@ -59,7 +59,7 @@ public class ConnectionConfiguration implements StartupConfiguration, Authentica
     }
 
     @Override
-    public String getPassword() {
+    public char[] getPassword() {
         return password;
     }
 }

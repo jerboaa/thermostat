@@ -302,7 +302,7 @@ public class WebAppTest extends IntegrationTest {
      */
     private static BackingStorage getAndConnectBackingStorage() {
         String url = "mongodb://127.0.0.1:27518";
-        StartupConfiguration config = new ConnectionConfiguration(url, "", "");
+        StartupConfiguration config = new ConnectionConfiguration(url, "", new char[]{});
         SSLConfiguration sslConfig = new SSLConfiguration() {
 
             @Override
@@ -357,7 +357,7 @@ public class WebAppTest extends IntegrationTest {
                                                 ConnectionListener listener) throws IOException {
         setupJAASForUser(roleNames, username, password);
         String url = "http://localhost:" + port + "/thermostat/storage";
-        StartupConfiguration config = new ConnectionConfiguration(url, username, password);
+        StartupConfiguration config = new ConnectionConfiguration(url, username, password.toCharArray());
         SSLConfiguration sslConf = new SSLConfigurationImpl(new CommonPathsImpl());
         Storage storage = new WebStorage(config, sslConf);
         if (listener != null) {

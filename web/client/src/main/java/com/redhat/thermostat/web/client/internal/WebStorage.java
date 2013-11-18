@@ -315,7 +315,7 @@ public class WebStorage implements Storage, SecureStorage {
     // package private for testing
     DefaultHttpClient httpClient;
     private String username;
-    private String password;
+    private char[] password;
     private SecureRandom random;
     private WebConnection conn;
     
@@ -374,8 +374,9 @@ public class WebStorage implements Storage, SecureStorage {
             // TODO: Maybe also limit to realm like 'Thermostat Realm' or such?
             AuthScope scope = new AuthScope(endpointURL.getHost(),
                     endpointURL.getPort());
+            // FIXME Password as string?  bad.
             Credentials creds = new UsernamePasswordCredentials(username,
-                    password);
+                    new String(password));
             client.getCredentialsProvider().setCredentials(scope, creds);
         }
     }
@@ -589,7 +590,7 @@ public class WebStorage implements Storage, SecureStorage {
         this.endpoint = endpoint;
     }
 
-    public void setAuthConfig(String username, String password) {
+    public void setAuthConfig(String username, char[] password) {
         this.username = username;
         this.password = password;
     }
