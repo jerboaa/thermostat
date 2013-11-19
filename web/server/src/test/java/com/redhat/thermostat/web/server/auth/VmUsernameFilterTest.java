@@ -89,12 +89,20 @@ public class VmUsernameFilterTest {
     
     @Test
     public void addsVmUsernameInQueryForVmInfo() {
+        performVmInfoTest(new DescriptorMetadata());
+    }
+    
+    @Test
+    public void testMetadataNull() {
+        performVmInfoTest(null);
+    }
+    
+    private void performVmInfoTest(DescriptorMetadata metadata) {
         String testUsername = "fooBar";
         Set<BasicRole> roles = new HashSet<>();
         RolePrincipal vmUsernameRole = new RolePrincipal(VmUsernameFilter.VMS_BY_USERNAME_GRANT_ROLE_PREFIX + testUsername);
         roles.add(vmUsernameRole);
         
-        DescriptorMetadata metadata = new DescriptorMetadata();
         StatementDescriptor<VmInfo> desc = new StatementDescriptor<>(VmInfoDAO.vmInfoCategory, "QUERY " + VmInfoDAO.vmInfoCategory.getName());
         
         Set<String> usernames = new HashSet<>();

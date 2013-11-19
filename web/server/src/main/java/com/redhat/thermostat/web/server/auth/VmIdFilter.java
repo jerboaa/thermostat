@@ -70,7 +70,7 @@ class VmIdFilter<T extends Pojo> extends AbstractFilter<T> {
         // perform filtering on vmId
         Category<T> category = desc.getCategory();
         if (category.getKey(Key.VM_ID.getName()) != null) {
-            if (metaData.hasVmId()) {
+            if (metaData != null && metaData.hasVmId()) {
                 String vmId = metaData.getVmId();
                 RolePrincipal grantedByVmId = new RolePrincipal(VMS_BY_VM_ID_GRANT_ROLE_PREFIX + vmId);
                 if (!userRoles.contains(grantedByVmId)) {

@@ -41,6 +41,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -104,11 +105,27 @@ public class VmIdFilterTest {
     
     @Test
     public void addsVmIdInQuery() {
+        performVmIdQueryTest(new DescriptorMetadata());
+    }
+    
+    /*
+     * We should not throw a NPE when the descriptor meta data is null. That is
+     * optional for filtering anyway and not all plugins may supply us with one.
+     */
+    @Test
+    public void addsVmIdInQueryIfMetadataNull() {
+        try {
+            performVmIdQueryTest(null);
+        } catch (NullPointerException e) {
+            fail("Should not have thrown NPE");
+        }
+    }
+    
+    private void performVmIdQueryTest(DescriptorMetadata metadata) {
         String vmId = UUID.randomUUID().toString();
         Set<BasicRole> roles = new HashSet<>();
         RolePrincipal vmIdRole = new RolePrincipal(VmIdFilter.VMS_BY_VM_ID_GRANT_ROLE_PREFIX + vmId);
         roles.add(vmIdRole);
-        DescriptorMetadata metadata = new DescriptorMetadata();
         VmIdFilter<FooPojo> filter = new VmIdFilter<>(roles);
         FilterResult result = filter.applyFilter(TEST_DESC_NON_NULL_VM_ID, metadata, null);
         assertEquals(ResultType.QUERY_EXPRESSION, result.getType());

@@ -41,6 +41,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -124,11 +125,28 @@ public class AgentIdFilterTest {
     
     @Test
     public void addsAgentIdInQueryToParentExpression() {
+        performAgentIdQueryTest(new DescriptorMetadata());
+    }
+    
+    /*
+     * We shouldn't throw NPEs if no meta data is supplied by a plug-in. It's
+     * treated as if it was a query with no explicit agent/writer id in the
+     * descriptor.  
+     */
+    @Test
+    public void addsAgentIdInQueryWhenMetadataNull() {
+        try {
+            performAgentIdQueryTest(null);
+        } catch (NullPointerException e) {
+            fail("Should not have thrown NPE");
+        }
+    }
+    
+    private void performAgentIdQueryTest(DescriptorMetadata metadata) {
         String agentId = UUID.randomUUID().toString();
         Set<BasicRole> roles = new HashSet<>();
         RolePrincipal agent1Role = new RolePrincipal(AgentIdFilter.AGENTS_BY_AGENT_ID_GRANT_ROLE_PREFIX + agentId);
         roles.add(agent1Role);
-        DescriptorMetadata metadata = new DescriptorMetadata();
         AgentIdFilter<FooPojo> filter = new AgentIdFilter<>(roles);
         ExpressionFactory factory = new ExpressionFactory();
         Expression parentExpression = factory.equalTo(Key.AGENT_ID, "testKey");

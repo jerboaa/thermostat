@@ -40,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -89,12 +90,24 @@ public class HostnameFilterTest {
     
     @Test
     public void addsHostnameInQueryForHostInfo() {
+        performHostInfoTest(new DescriptorMetadata());
+    }
+    
+    @Test
+    public void testNullMetadata() {
+        try {
+            performHostInfoTest(null);
+        } catch (NullPointerException e) {
+            fail("Should not have thrown NPE for this test");
+        }
+    }
+    
+    private void performHostInfoTest(DescriptorMetadata metadata) {
         String testHostname = "testhost.example.com";
         Set<BasicRole> roles = new HashSet<>();
         RolePrincipal hostnameRole = new RolePrincipal(HostnameFilter.HOSTS_BY_HOSTNAME_GRANT_ROLE_PREFIX + testHostname);
         roles.add(hostnameRole);
         
-        DescriptorMetadata metadata = new DescriptorMetadata();
         StatementDescriptor<HostInfo> desc = new StatementDescriptor<>(HostInfoDAO.hostInfoCategory, "QUERY " + HostInfoDAO.hostInfoCategory.getName());
         
         Set<String> hostnames = new HashSet<>();

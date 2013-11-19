@@ -71,7 +71,7 @@ class AgentIdFilter<T extends Pojo> extends AbstractFilter<T> {
         Category<T> category = desc.getCategory();
         // user cannot read all agents
         if (category.getKey(Key.AGENT_ID.getName()) != null) {
-            if (metaData.hasAgentId()) {
+            if (metaData != null && metaData.hasAgentId()) {
                 // if given agent ID not in granted list, return empty
                 String agentId = Objects.requireNonNull(metaData.getAgentId());
                 RolePrincipal agentIdGrantRole = new RolePrincipal(AGENTS_BY_AGENT_ID_GRANT_ROLE_PREFIX + agentId);
