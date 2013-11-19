@@ -237,6 +237,8 @@ public class Category<T extends Pojo> {
          * created. This occurs either via JSON deserialization, the only public
          * constructor or AdaptedCategory.
          */
+
+        // ignore indexed keys intentionally
         return Objects.hash(name, keys, getDataClass());
     }
 
@@ -246,6 +248,7 @@ public class Category<T extends Pojo> {
             return false;
         }
         Category<?> other = (Category<?>) o;
+        // ignore indexed keys intentionally
         return Objects.equals(name, other.name) &&
                 Objects.equals(keys, other.keys) &&
                 Objects.equals(getDataClass(), other.getDataClass());
