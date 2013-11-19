@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Version: 0.16.0.qualifier
+Bundle-Version: 1.1.0.qualifier
 Bundle-Name: Eclipse client tests
 Bundle-Activator: com.redhat.thermostat.eclipse.test.Activator
 Bundle-SymbolicName: com.redhat.thermostat.eclipse.test;singleton:=true
