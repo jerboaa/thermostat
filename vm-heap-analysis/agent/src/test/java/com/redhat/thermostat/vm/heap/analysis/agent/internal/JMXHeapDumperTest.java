@@ -36,40 +36,39 @@
 
 package com.redhat.thermostat.vm.heap.analysis.agent.internal;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
+
+import org.junit.Test;
 
 import com.redhat.thermostat.utils.management.MXBeanConnection;
 import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 
-class JMXHeapDumper {
+public class JMXHeapDumperTest {
 
-    private MXBeanConnectionPool pool;
-    
-    JMXHeapDumper(MXBeanConnectionPool pool) {
-        this.pool = pool;
-    }
-
-    void dumpHeap(int pid, String filename) throws HeapDumpException {
-        try {
-            MXBeanConnection connection = pool.acquire(pid);
-            try {
-                doHeapDump(connection, filename);
-            } finally {
-                pool.release(pid, connection);
-            }
-        } catch (Exception ex) {
-            throw new HeapDumpException(ex);
-        }
-    }
-
-    private void doHeapDump(MXBeanConnection connection, String filename) throws Exception {
-        MBeanServerConnection mbsc = connection.get();
-        mbsc.invoke(new ObjectName("com.sun.management:type=HotSpotDiagnostic"),
+    @Test
+    public void testDumpHeap() throws Exception {
+        // Mock connections
+        MXBeanConnectionPool pool = mock(MXBeanConnectionPool.class);
+        MXBeanConnection mxBeanConn = mock(MXBeanConnection.class);
+        when(pool.acquire(9000)).thenReturn(mxBeanConn);
+        MBeanServerConnection mbsc = mock(MBeanServerConnection.class);
+        when(mxBeanConn.get()).thenReturn(mbsc);
+        
+        JMXHeapDumper dumper = new JMXHeapDumper(pool);
+        dumper.dumpHeap(9000, "/path/to/dump");
+        
+        // Verify pool used correctly, and dump command issued
+        verify(pool).acquire(9000);
+        verify(mbsc).invoke(new ObjectName("com.sun.management:type=HotSpotDiagnostic"),
                 "dumpHeap",
-                new Object[] { filename, Boolean.TRUE },
+                new Object[] { "/path/to/dump", Boolean.TRUE },
                 new String[] { String.class.getName(), boolean.class.getName() });
+        verify(pool).release(9000, mxBeanConn);
     }
 
 }
-

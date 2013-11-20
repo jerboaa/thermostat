@@ -84,6 +84,11 @@
 
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-agent-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-agent-command</artifactId>
       <version>${project.version}</version>
     </dependency>

@@ -48,6 +48,7 @@ import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.WriterID;
+import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.HistogramLoader;
 import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
@@ -65,8 +66,8 @@ public class HeapDumpReceiver implements RequestReceiver {
     private final HistogramLoader histogramLoader;
     private final WriterID writerId;
 
-    public HeapDumpReceiver(HeapDAO heapDao, WriterID writerId) {
-        this(heapDao, new JMXHeapDumper(), new JMapHeapDumper(), new HistogramLoader(), writerId);
+    public HeapDumpReceiver(HeapDAO heapDao, MXBeanConnectionPool pool, WriterID writerId) {
+        this(heapDao, new JMXHeapDumper(pool), new JMapHeapDumper(), new HistogramLoader(), writerId);
     }
 
     HeapDumpReceiver(HeapDAO heapDao, JMXHeapDumper jmxHeapDumper,

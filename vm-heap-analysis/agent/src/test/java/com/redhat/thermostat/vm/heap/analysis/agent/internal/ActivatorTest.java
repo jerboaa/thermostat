@@ -46,6 +46,7 @@ import org.junit.Test;
 import com.redhat.thermostat.agent.command.RequestReceiver;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.testutils.StubBundleContext;
+import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 
 public class ActivatorTest {
@@ -71,8 +72,10 @@ public class ActivatorTest {
         StubBundleContext ctx = new StubBundleContext();
 
         HeapDAO heapDao = mock(HeapDAO.class);
+        MXBeanConnectionPool pool = mock(MXBeanConnectionPool.class);
         WriterID writerId = mock(WriterID.class);
         ctx.registerService(HeapDAO.class, heapDao, null);
+        ctx.registerService(MXBeanConnectionPool.class, pool, null);
         ctx.registerService(WriterID.class, writerId, null);
 
         Activator activator = new Activator();
@@ -81,7 +84,7 @@ public class ActivatorTest {
 
         assertTrue(ctx.isServiceRegistered(RequestReceiver.class.getName(), HeapDumpReceiver.class));
 
-        assertEquals(2, ctx.getServiceListeners().size());
+        assertEquals(3, ctx.getServiceListeners().size());
 
         activator.stop(ctx);
 

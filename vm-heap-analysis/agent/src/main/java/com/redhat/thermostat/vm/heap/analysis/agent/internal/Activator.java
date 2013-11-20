@@ -42,6 +42,7 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
+import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.storage.core.WriterID;
@@ -61,6 +62,7 @@ public class Activator implements BundleActivator {
         
         Class<?>[] deps = new Class<?>[] {
                 HeapDAO.class,
+                MXBeanConnectionPool.class,
                 WriterID.class // heap dump receiver uses it.
         };
 
@@ -69,8 +71,9 @@ public class Activator implements BundleActivator {
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
                 HeapDAO service = (HeapDAO) services.get(HeapDAO.class.getName());
+                MXBeanConnectionPool pool = (MXBeanConnectionPool) services.get(MXBeanConnectionPool.class.getName());
                 WriterID writerId = (WriterID) services.get(WriterID.class.getName());
-                receiver = new HeapDumpReceiver(service, writerId);
+                receiver = new HeapDumpReceiver(service, pool, writerId);
                 receivers.registerReceiver(receiver);
             }
 
