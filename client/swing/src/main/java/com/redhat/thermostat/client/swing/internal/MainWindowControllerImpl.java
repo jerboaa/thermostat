@@ -465,7 +465,7 @@ public class MainWindowControllerImpl implements MainWindowController {
                     vmInfoControllerProvider.getVmInfoController(vmRef);
             view.setSubView(vmInformation.getView());
             view.setStatusBarPrimaryStatus(t.localize(LocaleResources.VM_PRIMARY_STATUS,
-                    vmRef.getName(), vmRef.getVmId(), vmRef.getHostRef().getHostName()));
+                    vmRef.getName(), String.valueOf(vmRef.getPid()), vmRef.getHostRef().getHostName()));
         } else {
             throw new IllegalArgumentException("unknown type of ref");
         }
