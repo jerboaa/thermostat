@@ -1,3 +1,5 @@
+JAVA            ?= java
+JAVAC           ?= javac
 MAVEN           ?= mvn
 SKIP_TESTS      ?= false
 REPO_LOC        ?= $(HOME)/.thermostat-build/mvn_repository/
@@ -6,6 +8,7 @@ USE_VNC         ?= false
 VNC             ?= vncserver
 VNC_DISPLAY     ?= :10
 VNC_FLAGS       ?= -SecurityTypes None
+XSLTPROC        ?= xsltproc
 
 #
 # Do not change anything below
@@ -82,5 +85,12 @@ clean-repo:
 echo-repo:
 	echo "Using private Maven repository: $(REPO_LOC)"
 
+plugin-docs: plugin_docs.html
+
+plugin_docs.html:
+	$(JAVAC) distribution/tools/MergePluginDocs.java
+	$(JAVA) -cp distribution/tools MergePluginDocs > merged-plugin-docs.xml
+	$(XSLTPROC) distribution/tools/plugin-docs-html.xslt merged-plugin-docs.xml > $@
+
 # We only have phony targets
-.PHONY:	all core core-install copy-core-natives eclipse-test eclipse-test-p2 eclipse-test-deps jfreechart-deps jfreechart-p2 eclipse create-repo-dir clean-repo echo-repo
+.PHONY:	all core core-install copy-core-natives eclipse-test eclipse-test-p2 eclipse-test-deps jfreechart-deps jfreechart-p2 eclipse create-repo-dir clean-repo echo-repo plugin-docs
