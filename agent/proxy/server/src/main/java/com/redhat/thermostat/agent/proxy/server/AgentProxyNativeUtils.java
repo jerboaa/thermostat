@@ -37,10 +37,13 @@
 package com.redhat.thermostat.agent.proxy.server;
 
 import com.redhat.thermostat.shared.config.NativeLibraryResolver;
+import com.redhat.thermostat.shared.config.internal.CommonPathsImpl;
 
 class AgentProxyNativeUtils {
     
     void loadLibrary() {
+        // TODO if this used OSGi, then we wouldn't need this line
+        NativeLibraryResolver.setCommonPaths(new CommonPathsImpl());
         String libPath = NativeLibraryResolver.getAbsoluteLibraryPath("AgentProxy");
         System.load(libPath);
     }
