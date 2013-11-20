@@ -2,6 +2,7 @@ JAVA            ?= java
 JAVAC           ?= javac
 MAVEN           ?= mvn
 SKIP_TESTS      ?= false
+BUILD_DOCS      ?= false
 REPO_LOC        ?= $(HOME)/.thermostat-build/mvn_repository/
 MAVEN_FLAGS     ?= 
 USE_VNC         ?= false
@@ -22,6 +23,10 @@ ifeq ($(SKIP_TESTS),true)
 	MAVEN_SKIP_TEST = -Dmaven.test.skip=true
 endif
 
+ifeq ($(BUILD_DOCS),true)
+    MAVEN_JAVADOC = javadoc:aggregate
+endif
+
 ifeq ($(USE_VNC),true)
 	DISPLAY = $(VNC_DISPLAY)
 endif
@@ -32,10 +37,10 @@ endif
 all: clean-repo eclipse eclipse-test
 
 core:
-	$(MAVEN) -f $(POM) $(MAVEN_FLAGS) $(MAVEN_SKIP_TEST) clean $(GOAL)
+	$(MAVEN) -f $(POM) $(MAVEN_FLAGS) $(MAVEN_SKIP_TEST) clean $(GOAL) $(MAVEN_JAVADOC)
 
 core-install: create-repo-dir
-	$(MAVEN) -f $(POM) $(MAVEN_FLAGS) $(REPO_FLAG) $(MAVEN_SKIP_TEST) clean install
+	$(MAVEN) -f $(POM) $(MAVEN_FLAGS) $(REPO_FLAG) $(MAVEN_SKIP_TEST) clean install $(MAVEN_JAVADOC)
 
 copy-core-natives: core-install
 	if [ "_$(ARCH)" = "_x86_64" ]; then \
