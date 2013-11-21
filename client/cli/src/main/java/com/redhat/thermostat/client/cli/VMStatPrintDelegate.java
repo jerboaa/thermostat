@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.cli;
 
 import java.util.List;
 
+import com.redhat.thermostat.annotations.ExtensionPoint;
 import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
@@ -46,6 +47,7 @@ import com.redhat.thermostat.storage.model.TimeStampedPojo;
  * This interface should be implemented by plug-ins that would like to
  * contribute data to the output of the vm-stat command.
  */
+@ExtensionPoint
 public interface VMStatPrintDelegate extends Ordered {
     
     /**

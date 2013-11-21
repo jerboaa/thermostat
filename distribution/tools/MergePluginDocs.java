@@ -67,7 +67,9 @@ public class MergePluginDocs {
         corePaths.add(Paths.get("launcher").toAbsolutePath().normalize());
         corePaths.add(Paths.get("client").toAbsolutePath().normalize());
         corePaths.add(Paths.get("common").toAbsolutePath().normalize());
+        corePaths.add(Paths.get("keyring").toAbsolutePath().normalize());
         corePaths.add(Paths.get("storage", "core").toAbsolutePath().normalize());
+        corePaths.add(Paths.get("config").toAbsolutePath().normalize());
 
         String startPath = ".";
         if (args.length > 0) {

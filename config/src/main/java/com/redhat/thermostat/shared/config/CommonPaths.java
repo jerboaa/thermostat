@@ -38,6 +38,8 @@ package com.redhat.thermostat.shared.config;
 
 import java.io.File;
 
+import com.redhat.thermostat.annotations.Service;
+
 /**
  * Contains locations to various files and directories used by thermostat
  * components.
@@ -54,6 +56,7 @@ import java.io.File;
  * The directories are split according to functionality, along the lines of
  * Filesystem Hierarchy Standard (FHS).
  */
+@Service
 public interface CommonPaths {
 
     public File getSystemThermostatHome() throws InvalidConfigurationException;
