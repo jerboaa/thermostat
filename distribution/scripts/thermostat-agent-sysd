@@ -50,7 +50,7 @@ fi
 
 export THERMOSTAT_HOME
 THERMOSTAT_BIN="$THERMOSTAT_HOME/bin/thermostat"
-AGENT_PID_FILE="$THERMOSTAT_HOME/agent/run/thermostat-agent.pid"
+AGENT_PID_FILE="$THERMOSTAT_HOME/run/thermostat-agent.pid"
 
 function start() {
     if [ -e "$AGENT_PID_FILE" ]; then

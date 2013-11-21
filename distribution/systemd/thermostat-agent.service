@@ -48,7 +48,7 @@ Type=forking
 EnvironmentFile=-/etc/sysconfig/thermostat
 ExecStart=@thermostat.home@/bin/thermostat-agent-sysd start
 ExecStop=@thermostat.home@/bin/thermostat-agent-sysd stop
-PIDFile=@thermostat.home@/agent/run/thermostat-agent.pid
+PIDFile=@thermostat.home@/run/thermostat-agent.pid
 User=@thermostat.system.user@
 Group=@thermostat.system.group@
 
