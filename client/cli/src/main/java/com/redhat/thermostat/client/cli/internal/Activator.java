@@ -74,8 +74,8 @@ public class Activator implements BundleActivator {
             public void dependenciesAvailable(Map<String, Object> services) {
                 Keyring keyring = (Keyring) services.get(Keyring.class.getName());
                 CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
-                ClientPreferences prefs = new ClientPreferences(keyring, paths);
-                reg.registerCommand("connect", new ConnectCommand(prefs));
+                ClientPreferences prefs = new ClientPreferences(paths);
+                reg.registerCommand("connect", new ConnectCommand(prefs, keyring));
                 reg.registerCommand("shell", new ShellCommand(context, paths));
             }
 

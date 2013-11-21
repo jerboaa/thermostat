@@ -61,10 +61,6 @@ public class DbServiceFactory {
      * a service, users are encouraged to use that instance for disconnecting
      * from storage.
      * 
-     * @param username
-     *            The username to use for the connection to storage.
-     * @param password
-     *            The password to use for the connection to storage.
      * @param dbUrl
      *            The URL to the storage endpoint. For example
      *            {@code mongodb://127.0.0.1:27518} or
@@ -75,9 +71,8 @@ public class DbServiceFactory {
      *             If no matching {@link StorageProvider} could be found for the
      *             given dbUrl.
      */
-    public DbService createDbService(String username, char[] password,
-            String dbUrl) throws StorageException {
-        return DbServiceImpl.create(username, password, dbUrl);
+    public DbService createDbService(String dbUrl) throws StorageException {
+        return DbServiceImpl.create(dbUrl);
     }
 }
 

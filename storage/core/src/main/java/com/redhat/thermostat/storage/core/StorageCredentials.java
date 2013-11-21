@@ -33,34 +33,12 @@
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
+package com.redhat.thermostat.storage.core;
 
-package com.redhat.thermostat.storage.config;
+public interface StorageCredentials {
 
-public class ConnectionConfiguration implements StartupConfiguration, AuthenticationConfiguration {
+    public String getUsername();
 
-    private String dbUrl;
-    private String username;
-    private char[] password;
+    public char[] getPassword();
 
-    public ConnectionConfiguration(String dbUrl, String username, char[] password) {
-        this.dbUrl = dbUrl;
-        this.username = username;
-        this.password = password;
-    }
-
-    @Override
-    public String getDBConnectionString() {
-        return dbUrl;
-    }
-
-    @Override
-    public String getUsername() {
-        return username;
-    }
-
-    @Override
-    public char[] getPassword() {
-        return password;
-    }
 }
-

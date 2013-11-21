@@ -294,7 +294,7 @@ public class ClientConfigurationSwing implements ClientConfigurationView {
     }
     
     @Override
-    public void setSaveEntitlemens(final boolean save) {
+    public void setSaveEntitlements(final boolean save) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {

@@ -78,8 +78,6 @@ import com.redhat.thermostat.host.cpu.common.model.CpuStat;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.shared.config.internal.CommonPathsImpl;
 import com.redhat.thermostat.shared.config.internal.SSLConfigurationImpl;
-import com.redhat.thermostat.storage.config.ConnectionConfiguration;
-import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.BackingStorage;
 import com.redhat.thermostat.storage.core.Category;
@@ -95,6 +93,7 @@ import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.model.AggregateCount;
@@ -301,8 +300,20 @@ public class WebAppTest extends IntegrationTest {
      * use mongo-storage directly (which is a BackingStorage). 
      */
     private static BackingStorage getAndConnectBackingStorage() {
-        String url = "mongodb://127.0.0.1:27518";
-        StartupConfiguration config = new ConnectionConfiguration(url, "", new char[]{});
+        final String url = "mongodb://127.0.0.1:27518";
+        StorageCredentials creds = new StorageCredentials() {
+
+            @Override
+            public String getUsername() {
+                return null;
+            }
+
+            @Override
+            public char[] getPassword() {
+                return null;
+            }
+            
+        };
         SSLConfiguration sslConfig = new SSLConfiguration() {
 
             @Override
@@ -331,7 +342,7 @@ public class WebAppTest extends IntegrationTest {
                 return false;
             }
         };
-        BackingStorage storage = new MongoStorage(config, sslConfig);
+        BackingStorage storage = new MongoStorage(url, creds, sslConfig);
         storage.getConnection().connect();
         return storage;
     }
@@ -352,14 +363,26 @@ public class WebAppTest extends IntegrationTest {
      * Storage object).  Before initiating the connection, add the ConnectionListener
      * to Storage.
      */
-    private static Storage getAndConnectStorage(String username, String password,
+    private static Storage getAndConnectStorage(final String username, final String password,
                                                 String[] roleNames,
                                                 ConnectionListener listener) throws IOException {
         setupJAASForUser(roleNames, username, password);
-        String url = "http://localhost:" + port + "/thermostat/storage";
-        StartupConfiguration config = new ConnectionConfiguration(url, username, password.toCharArray());
+        final String url = "http://localhost:" + port + "/thermostat/storage";
+        StorageCredentials creds = new StorageCredentials() {
+
+            @Override
+            public String getUsername() {
+                return username;
+            }
+
+            @Override
+            public char[] getPassword() {
+                return password.toCharArray();
+            }
+            
+        };
         SSLConfiguration sslConf = new SSLConfigurationImpl(new CommonPathsImpl());
-        Storage storage = new WebStorage(config, sslConf);
+        Storage storage = new WebStorage(url, creds, sslConf);
         if (listener != null) {
             storage.getConnection().addListener(listener);
         }

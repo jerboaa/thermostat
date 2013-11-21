@@ -40,9 +40,8 @@ package com.redhat.thermostat.web.server;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.shared.config.internal.SSLConfigurationImpl;
-import com.redhat.thermostat.storage.config.ConnectionConfiguration;
-import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.StorageProvider;
 import com.redhat.thermostat.storage.mongodb.MongoStorageProvider;
 
@@ -51,16 +50,15 @@ class StorageFactory {
     private static Storage storage;
 
     // Web server is not OSGi, this factory method is workaround.
-    static Storage getStorage(String storageClass, final String storageEndpoint, final String username,
-                final char[] password, final CommonPaths paths) {
+    static Storage getStorage(String storageClass, final String storageEndpoint, final CommonPaths paths,
+            final StorageCredentials creds) {
         if (storage != null) {
             return storage;
         }
-        StartupConfiguration conf = new ConnectionConfiguration(storageEndpoint, username, password);
         SSLConfiguration sslConf = new SSLConfigurationImpl(paths);
         try {
             StorageProvider provider = (StorageProvider) Class.forName(storageClass).newInstance();
-            provider.setConfig(conf, sslConf);
+            provider.setConfig(storageEndpoint, creds, sslConf);
             storage = provider.createStorage();
             storage.getConnection().connect();
             return storage;
@@ -71,7 +69,7 @@ class StorageFactory {
             System.err.println("could not instantiate provider: " + storageClass + ", falling back to MongoStorage");
             e.printStackTrace();
             StorageProvider provider = new MongoStorageProvider();
-            provider.setConfig(conf, sslConf);
+            provider.setConfig(storageEndpoint, creds, sslConf);
             storage = provider.createStorage();
             return storage;
         }

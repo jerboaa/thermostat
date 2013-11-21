@@ -1,5 +1,5 @@
 /*
- * Copyright 2012, 2013 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -33,45 +33,60 @@
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
-
 package com.redhat.thermostat.agent.config;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Properties;
+import java.util.Random;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.redhat.thermostat.shared.config.InvalidConfigurationException;
-import com.redhat.thermostat.testutils.TestUtils;
+public class AgentStorageCredentialsTest {
 
-public class AgentConfigsUtilsTest {
+    private static Random random;
 
     @BeforeClass
     public static void setUpOnce() {
-
-        Properties agentProperties = new Properties();
-        agentProperties.setProperty("SAVE_ON_EXIT", "true");
-        agentProperties.setProperty("CONFIG_LISTEN_ADDRESS", "42.42.42.42:42");
-
-        try {
-            TestUtils.setupAgentConfigs(agentProperties);
-            File agentConf = TestUtils.getAgentConfFile();
-            // By default system config == user config
-            AgentConfigsUtils.setConfigFiles(agentConf, agentConf);
-        } catch (IOException e) {
-            throw new AssertionError("Unable to create agent configuration", e);
-        }
+        random = new Random();
     }
-    
-    @Test
-    public void testCreateAgentConfigs() throws InvalidConfigurationException, IOException {
-        AgentStartupConfiguration config = AgentConfigsUtils.createAgentConfigs();        
 
-        Assert.assertFalse(config.purge());
-        Assert.assertEquals("42.42.42.42:42", config.getConfigListenAddress());
+    @Test
+    public void testAuthConfigFromFile() throws IOException {
+        File tmpAuth = createTempAuthFile("username=user\npassword=pass\n");
+        AgentStorageCredentials creds = new AgentStorageCredentials(tmpAuth);
+        Assert.assertEquals("user", creds.getUsername());
+        Assert.assertEquals("pass", new String(creds.getPassword()));
+    }
+
+    @Test
+    public void testAuthConfigFromEmptyFile() throws IOException {
+        File tmpAuth = createTempAuthFile("");
+        AgentStorageCredentials creds = new AgentStorageCredentials(tmpAuth);
+        Assert.assertNull(creds.getUsername());
+        Assert.assertNull(creds.getPassword());
+    }
+
+    @Test
+    public void testAuthConfigWithConfigCommentedOut() throws IOException {
+        File tmpAuth = createTempAuthFile("#username=user\n#password=pass\n");
+        AgentStorageCredentials creds = new AgentStorageCredentials(tmpAuth);
+        Assert.assertNull(creds.getUsername());
+        Assert.assertNull(creds.getPassword());
+    }
+
+    private File createTempAuthFile(String contents) throws IOException {
+        String tmpAuthLoc = System.getProperty("java.io.tmpdir") + File.separatorChar +
+                Math.abs(random.nextInt());
+        File tmpAuth = new File(tmpAuthLoc);
+        tmpAuth.deleteOnExit();
+        tmpAuth.createNewFile();
+        FileWriter authWriter = new FileWriter(tmpAuth);
+        authWriter.append(contents);
+        authWriter.flush();
+        authWriter.close();
+        return tmpAuth;
     }
 }
-

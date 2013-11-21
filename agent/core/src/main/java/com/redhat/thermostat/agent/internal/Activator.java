@@ -43,9 +43,11 @@ import org.osgi.framework.ServiceReference;
 import com.redhat.thermostat.agent.RMIRegistry;
 import com.redhat.thermostat.agent.VmBlacklist;
 import com.redhat.thermostat.agent.config.AgentConfigsUtils;
+import com.redhat.thermostat.agent.config.AgentStorageCredentials;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.agent.utils.username.UserNameUtil;
 import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.utils.management.internal.AgentProxyFilter;
 import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl;
 import com.redhat.thermostat.utils.username.internal.UserNameUtilImpl;
@@ -62,8 +64,9 @@ public class Activator implements BundleActivator {
         CommonPaths paths = context.getService(pathsRef);
         pool = new MXBeanConnectionPoolImpl(registry, paths.getSystemBinRoot());
         context.registerService(MXBeanConnectionPool.class, pool, null);
-        AgentConfigsUtils.setConfigFiles(paths.getSystemAgentConfigurationFile(), paths.getUserAgentConfigurationFile(),
-        		                   paths.getUserAgentAuthConfigFile());
+        StorageCredentials creds = new AgentStorageCredentials(paths.getUserAgentAuthConfigFile());
+        context.registerService(StorageCredentials.class, creds, null);
+        AgentConfigsUtils.setConfigFiles(paths.getSystemAgentConfigurationFile(), paths.getUserAgentConfigurationFile());
         paths = null;
         context.ungetService(pathsRef);
         context.registerService(UserNameUtil.class, new UserNameUtilImpl(), null);

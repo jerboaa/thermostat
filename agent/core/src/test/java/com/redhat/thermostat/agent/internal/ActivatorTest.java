@@ -61,6 +61,7 @@ public class ActivatorTest {
 
     	CommonPaths paths = mock(CommonPaths.class);
     	when(paths.getSystemNativeLibsRoot()).thenReturn(new File("target"));
+        when(paths.getUserAgentAuthConfigFile()).thenReturn(new File("not.exist.does.not.matter"));
     	NativeLibraryResolver.setCommonPaths(paths);
 
         StubBundleContext context = new StubBundleContext();

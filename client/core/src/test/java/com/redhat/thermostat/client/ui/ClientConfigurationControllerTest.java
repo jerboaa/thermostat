@@ -49,19 +49,19 @@ import org.junit.Test;
 
 import com.redhat.thermostat.client.core.views.ClientConfigurationView;
 import com.redhat.thermostat.common.ActionEvent;
-import com.redhat.thermostat.common.config.ClientPreferences;
+import com.redhat.thermostat.storage.core.StorageCredentials;
 
 public class ClientConfigurationControllerTest {
 
-    private ClientPreferences model;
+    private ClientPreferencesModel model;
     private ClientConfigurationView view;
 
     @Before
     public void setUp() {
-        model = mock(ClientPreferences.class);
+        model = mock(ClientPreferencesModel.class);
         when(model.getConnectionUrl()).thenReturn("mock-connection-url");
-        when(model.getPassword()).thenReturn("mock-password".toCharArray());
         when(model.getUserName()).thenReturn("mock-username");
+        when(model.getPassword()).thenReturn("mock-password".toCharArray());
         when(model.getSaveEntitlements()).thenReturn(false);
 
         view = mock(ClientConfigurationView.class);
@@ -87,7 +87,7 @@ public class ClientConfigurationControllerTest {
         verify(view).setConnectionUrl(eq("mock-connection-url"));
         verify(view).setPassword(eq("mock-password".toCharArray()));
         verify(view).setUserName(eq("mock-username"));
-        verify(view).setSaveEntitlemens(eq(false));
+        verify(view).setSaveEntitlements(eq(false));
         verify(view).showDialog();
     }
 
@@ -139,12 +139,12 @@ public class ClientConfigurationControllerTest {
         controller.actionPerformed(new ActionEvent<>(view, ClientConfigurationView.Action.CLOSE_ACCEPT));
 
         verifyCloseAcceptCommon();
-        verify(reconnector).reconnect(model);
+        verify(reconnector).reconnect(eq(model.getPreferences()), any(StorageCredentials.class));
     }
 
     private void verifyCloseAcceptCommon() {
         verify(model).setConnectionUrl(eq("mock-connection-url"));
-        verify(model).setCredentials(eq("mock-username"), eq("mock-password".toCharArray()));
+        verify(model).setCredentials(any(String.class), isA(char[].class));
         verify(model).setSaveEntitlements(eq(true));
         
         verify(view).getConnectionUrl();

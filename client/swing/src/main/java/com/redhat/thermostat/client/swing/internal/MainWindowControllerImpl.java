@@ -68,6 +68,7 @@ import com.redhat.thermostat.client.swing.internal.vmlist.controller.HostTreeCon
 import com.redhat.thermostat.client.ui.AgentInformationDisplayController;
 import com.redhat.thermostat.client.ui.AgentInformationDisplayModel;
 import com.redhat.thermostat.client.ui.ClientConfigurationController;
+import com.redhat.thermostat.client.ui.ClientPreferencesModel;
 import com.redhat.thermostat.client.ui.HostInformationController;
 import com.redhat.thermostat.client.ui.MainWindowController;
 import com.redhat.thermostat.client.ui.MenuAction;
@@ -446,9 +447,10 @@ public class MainWindowControllerImpl implements MainWindowController {
     }
 
     private void showConfigureClientPreferences() {
-        ClientPreferences prefs = new ClientPreferences(keyring, paths);
+        ClientPreferences prefs = new ClientPreferences(paths);
+        ClientPreferencesModel model = new ClientPreferencesModel(keyring, prefs);
         ClientConfigurationView view = clientConfigViewProvider.createView();
-        ClientConfigurationController controller = new ClientConfigurationController(prefs, view);
+        ClientConfigurationController controller = new ClientConfigurationController(model, view);
         controller.showDialog();
     }
 

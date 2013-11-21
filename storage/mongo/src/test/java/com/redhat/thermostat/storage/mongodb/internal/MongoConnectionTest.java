@@ -80,10 +80,10 @@ import com.redhat.thermostat.common.ssl.SSLContextFactory;
 import com.redhat.thermostat.common.utils.HostPortsParser;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
-import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.core.ConnectionException;
+import com.redhat.thermostat.storage.core.StorageCredentials;
 
 @RunWith(PowerMockRunner.class)
 // There is a bug (resolved as wontfix) in powermock which results in
@@ -100,12 +100,11 @@ public class MongoConnectionTest {
 
     @Before
     public void setUp() {
-        StartupConfiguration conf = mock(StartupConfiguration.class);
         mockSSLConf = mock(SSLConfiguration.class);
         when(mockSSLConf.enableForBackingStorage()).thenReturn(false);
-        when(conf.getDBConnectionString()).thenReturn("mongodb://127.0.0.1:27518");
+        StorageCredentials creds = mock(StorageCredentials.class);
         
-        conn = new MongoConnection(conf, mockSSLConf);
+        conn = new MongoConnection("mongodb://127.0.0.1:27518", creds, mockSSLConf);
         listener = mock(ConnectionListener.class);
         conn.addListener(listener);
     }
@@ -246,21 +245,16 @@ public class MongoConnectionTest {
         doCallRealMethod().when(connection).connect();
         doCallRealMethod().when(connection).createConnection();
         connection.sslConf = mock(SSLConfiguration.class);
+        connection.creds = mock(StorageCredentials.class);
         connection.connect();
         verify(connection, Mockito.times(0)).getSSLMongo();
     }
     
     @Test
     public void canGetServerAddress() {
-        StartupConfiguration config = new StartupConfiguration() {
-            
-            @Override
-            public String getDBConnectionString() {
-                return "mongodb://127.0.1.1:23452";
-            }
-        };
         SSLConfiguration sslConf = mock(SSLConfiguration.class);
-        MongoConnection connection = new MongoConnection(config, sslConf);
+        StorageCredentials creds = mock(StorageCredentials.class);
+        MongoConnection connection = new MongoConnection("mongodb://127.0.1.1:23452", creds, sslConf);
         ServerAddress addr = null;
         try {
             addr = connection.getServerAddress();
@@ -269,15 +263,8 @@ public class MongoConnectionTest {
         }
         assertEquals(23452, addr.getPort());
         assertEquals("127.0.1.1", addr.getHost());
-        
-        config = new StartupConfiguration() {
-            
-            @Override
-            public String getDBConnectionString() {
-                return "fluff://willnotwork.com:23452";
-            }
-        };
-        connection = new MongoConnection(config, sslConf);
+
+        connection = new MongoConnection("fluff://willnotwork.com:23452", creds, sslConf);
         try {
             connection.getServerAddress();
             fail("should not have been able to parse address");

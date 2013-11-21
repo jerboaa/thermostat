@@ -101,6 +101,7 @@ import com.redhat.thermostat.storage.core.PreparedParameters;
 import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
+import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
@@ -159,16 +160,9 @@ public class WebStorageTest {
             }
         });
 
-        StartupConfiguration config = new StartupConfiguration() {
-            
-            @Override
-            public String getDBConnectionString() {
-                return "http://fluff.example.org";
-            }
-        };
         SSLConfiguration sslConf = mock(SSLConfiguration.class);
-        storage = new WebStorage(config, sslConf);
-        storage.setEndpoint("http://localhost:" + port + "/");
+        storage = new WebStorage("http://localhost:" + port + "/", 
+                new TrivialStorageCredentials(null, null), sslConf);
         headers = new HashMap<>();
         registerCategory();
     }
@@ -537,7 +531,8 @@ public class WebStorageTest {
             }
         };
         SSLConfiguration sslConf = mock(SSLConfiguration.class);
-        WebStorage storage = new WebStorage(config, sslConf);
+        WebStorage storage = new WebStorage("https://onlyHttpsPrefixUsed.example.com",
+                new TrivialStorageCredentials(null, null), sslConf);
         HttpClient client = storage.httpClient;
         SchemeRegistry schemeReg = client.getConnectionManager().getSchemeRegistry();
         Scheme scheme = schemeReg.getScheme("https");
@@ -599,16 +594,9 @@ public class WebStorageTest {
         ClientConnectionManager connManager = mock(ClientConnectionManager.class);
         // this should make connect fail
         Mockito.doThrow(RuntimeException.class).when(client).getCredentialsProvider();
-        StartupConfiguration config = new StartupConfiguration() {
-            
-            @Override
-            public String getDBConnectionString() {
-                return "http://fluff.example.org";
-            }
-        };
         SSLConfiguration sslConf = mock(SSLConfiguration.class);
-        storage = new WebStorage(config, client, connManager, sslConf);
-        storage.setEndpoint("http://localhost:" + port + "/");
+        storage = new WebStorage("http://localhost:" + port + "/", new TrivialStorageCredentials(null, null),
+                client, connManager, sslConf);
         
         CountDownLatch latch = new CountDownLatch(1);
         MyListener listener = new MyListener(latch);
@@ -681,6 +669,23 @@ public class WebStorageTest {
                 disconnectEvent = true;
                 latch.countDown();
             }
+        }
+    }
+
+    private class TrivialStorageCredentials implements StorageCredentials {
+        private String user;
+        private char[] pw;
+        private TrivialStorageCredentials(String user, char[] password) {
+            this.user = user;
+            this.pw = password;
+        }
+        @Override
+        public String getUsername() {
+            return user;
+        }
+        @Override
+        public char[] getPassword() {
+            return pw;
         }
     }
 }

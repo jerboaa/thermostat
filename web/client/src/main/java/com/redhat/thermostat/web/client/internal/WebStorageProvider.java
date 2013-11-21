@@ -37,38 +37,34 @@
 package com.redhat.thermostat.web.client.internal;
 
 import com.redhat.thermostat.shared.config.SSLConfiguration;
-import com.redhat.thermostat.storage.config.AuthenticationConfiguration;
-import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.SecureQueuedStorage;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.StorageProvider;
 
 public class WebStorageProvider implements StorageProvider {
 
-    private StartupConfiguration config;
+    private String url;
+    private StorageCredentials creds;
     private SSLConfiguration sslConf;
     
     @Override
     public Storage createStorage() {
-        WebStorage storage = new WebStorage(config, sslConf);
-        storage.setEndpoint(config.getDBConnectionString());
-        if (config instanceof AuthenticationConfiguration) {
-            AuthenticationConfiguration authConf = (AuthenticationConfiguration) config;
-            storage.setAuthConfig(authConf.getUsername(), authConf.getPassword());
-        }
+        WebStorage storage = new WebStorage(url, creds, sslConf);
         return new SecureQueuedStorage(storage);
     }
 
     @Override
-    public void setConfig(StartupConfiguration config, SSLConfiguration sslConf) {
-        this.config = config;
+    public void setConfig(String connectionURL, StorageCredentials creds, SSLConfiguration sslConf) {
+        this.url = connectionURL;
+        this.creds = creds;
         this.sslConf = sslConf;
     }
 
     @Override
     public boolean canHandleProtocol() {
         // use http since this might be https at some point
-        return config.getDBConnectionString().startsWith("http");
+        return url.startsWith("http");
     }
 
 }

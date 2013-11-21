@@ -38,12 +38,9 @@ package com.redhat.thermostat.storage.mongodb.internal;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.QueuedStorage;
 import com.redhat.thermostat.storage.core.SecureStorage;
 import com.redhat.thermostat.storage.core.Storage;
@@ -53,12 +50,24 @@ public class MongoStorageProviderTest {
 
     @Test
     public void createStorageReturnsQueuedStorage() {
-        StartupConfiguration config = mock(StartupConfiguration.class);
-        when(config.getDBConnectionString()).thenReturn("mongodb://something.com");
         MongoStorageProvider provider = new MongoStorageProvider();
-        provider.setConfig(config, null);
+        provider.setConfig("mongodb://something.com", null, null);
         Storage result = provider.createStorage();
         assertTrue(result instanceof QueuedStorage);
         assertFalse(result instanceof SecureStorage);
+    }
+
+    @Test
+    public void canHandleMongoProtocol() {
+        MongoStorageProvider provider = new MongoStorageProvider();
+        provider.setConfig("mongodb://something.com", null, null);
+        assertTrue(provider.canHandleProtocol());
+    }
+
+    @Test
+    public void cannotHandleNotMongoProtocol() {
+        MongoStorageProvider provider = new MongoStorageProvider();
+        provider.setConfig("http://something.com", null, null);
+        assertFalse(provider.canHandleProtocol());
     }
 }

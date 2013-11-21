@@ -44,22 +44,22 @@ import com.redhat.thermostat.client.core.views.ClientConfigurationView;
 import com.redhat.thermostat.client.core.views.ClientConfigurationView.Action;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.StorageCredentials;
 
 public class ClientConfigurationController implements ActionListener<Action> {
 
     private static final Logger logger = LoggingUtils.getLogger(ClientConfigurationController.class);
 
     private final ClientConfigurationView view;
-    private final ClientPreferences model;
+    private final ClientPreferencesModel model;
     private final ClientConfigReconnector reconnector;
 
-    public ClientConfigurationController(ClientPreferences model, ClientConfigurationView view) {
+    public ClientConfigurationController(ClientPreferencesModel model, ClientConfigurationView view) {
         this(model, view, null);
     }
 
-    public ClientConfigurationController(ClientPreferences model, ClientConfigurationView view, ClientConfigReconnector reconnector) {
+    public ClientConfigurationController(ClientPreferencesModel model, ClientConfigurationView view, ClientConfigReconnector reconnector) {
         this.model = model;
         this.view = view;
         this.reconnector = reconnector;
@@ -72,7 +72,7 @@ public class ClientConfigurationController implements ActionListener<Action> {
     }
 
     private void updateViewFromModel() {
-        view.setSaveEntitlemens(model.getSaveEntitlements());
+        view.setSaveEntitlements(model.getSaveEntitlements());
         view.setConnectionUrl(model.getConnectionUrl());
         
         view.setPassword(model.getPassword());
@@ -84,7 +84,6 @@ public class ClientConfigurationController implements ActionListener<Action> {
         model.setConnectionUrl(view.getConnectionUrl());
         
         model.setCredentials(view.getUserName(), view.getPassword());
-        
         try {
             model.flush();
         } catch (IOException e) {
@@ -103,7 +102,7 @@ public class ClientConfigurationController implements ActionListener<Action> {
                 updateModelFromView();
                 view.hideDialog();
                 if (reconnector != null) {
-                    reconnector.reconnect(model);
+                    reconnector.reconnect(model.getPreferences(), new PreferencesModelStorageCredentials(model));
                 }
                 break;
             case CLOSE_CANCEL:
@@ -114,6 +113,25 @@ public class ClientConfigurationController implements ActionListener<Action> {
                 break;
         }
 
+    }
+
+    class PreferencesModelStorageCredentials implements StorageCredentials {
+
+        private ClientPreferencesModel model;
+
+        PreferencesModelStorageCredentials(ClientPreferencesModel model) {
+            this.model = model;
+        }
+
+        public String getUsername() {
+            return model.getUserName();
+        }
+
+        @Override
+        public char[] getPassword() {
+            return model.getPassword();
+        }
+        
     }
 }
 

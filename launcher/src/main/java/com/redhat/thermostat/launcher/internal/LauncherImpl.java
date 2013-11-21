@@ -48,6 +48,7 @@ import org.apache.commons.cli.Options;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
@@ -61,12 +62,11 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandContextFactory;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.CommandLineArgumentParseException;
-import com.redhat.thermostat.common.cli.Console;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.tools.ApplicationState;
-import com.redhat.thermostat.common.tools.StorageAuthInfoGetter;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.BundleManager;
+import com.redhat.thermostat.launcher.InteractiveStorageCredentials;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
@@ -76,7 +76,9 @@ import com.redhat.thermostat.storage.core.ConnectionException;
 import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.storage.core.DbServiceFactory;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.StorageException;
+import com.redhat.thermostat.utils.keyring.Keyring;
 
 /**
  * This class is thread-safe.
@@ -99,19 +101,18 @@ public class LauncherImpl implements Launcher {
     private final CurrentEnvironment currentEnvironment;
 
     private final ClientPreferences prefs;
-
-
+    private final Keyring keyring;
 
     public LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory, BundleManager registry,
-            CommandInfoSource infoSource, CurrentEnvironment env, ClientPreferences prefs, CommonPaths paths) {
+            CommandInfoSource infoSource, CurrentEnvironment env, ClientPreferences prefs, Keyring keyring, CommonPaths paths) {
         this(context, cmdCtxFactory, registry, infoSource, new CommandSource(context), env,
-                new DbServiceFactory(), new Version(), prefs, paths, new LoggingInitializer(paths));
+                new DbServiceFactory(), new Version(), prefs, keyring, paths, new LoggingInitializer(paths));
     }
 
     LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory, BundleManager registry,
             CommandInfoSource commandInfoSource, CommandSource commandSource,
             CurrentEnvironment currentEnvironment, DbServiceFactory dbServiceFactory, Version version,
-            ClientPreferences prefs, CommonPaths paths, LoggingInitializer loggingInitializer) {
+            ClientPreferences prefs, Keyring keyring, CommonPaths paths, LoggingInitializer loggingInitializer) {
         this.context = context;
         this.cmdCtxFactory = cmdCtxFactory;
         this.registry = registry;
@@ -121,6 +122,7 @@ public class LauncherImpl implements Launcher {
         this.commandInfoSource = commandInfoSource;
         this.currentEnvironment = currentEnvironment;
         this.prefs = prefs;
+        this.keyring = keyring;
 
         loggingInitializer.initialize();
         logger = LoggingUtils.getLogger(LauncherImpl.class);
@@ -338,21 +340,11 @@ public class LauncherImpl implements Launcher {
                 if (dbUrl == null) {
                     dbUrl = prefs.getConnectionUrl();
                 }
-                String username = prefs.getUserName();
-                char[] password = prefs.getPassword();
-                if (username == null || password == null) {
-                    Console console = ctx.getConsole();
-                    try {
-                        StorageAuthInfoGetter getUserPass = new StorageAuthInfoGetter(console);
-                        username = getUserPass.getUserName(dbUrl);
-                        password = getUserPass.getPassword(dbUrl);
-                    } catch (IOException ex) {
-                        throw new CommandException(t.localize(LocaleResources.LAUNCHER_USER_AUTH_PROMPT_ERROR), ex);
-                    }
-                }
+                StorageCredentials creds = new InteractiveStorageCredentials(prefs, keyring, dbUrl, ctx.getConsole());
+                ServiceRegistration credsReg = context.registerService(StorageCredentials.class, creds, null);
                 try {
                     // this may throw storage exception
-                    DbService service = dbServiceFactory.createDbService(username, password, dbUrl);
+                    DbService service = dbServiceFactory.createDbService(dbUrl);
                     // This registers the DbService if all goes well
                     service.connect();
                 } catch (StorageException ex) {
@@ -363,9 +355,7 @@ public class LauncherImpl implements Launcher {
                     logger.log(Level.SEVERE, "Could not connect to: " + dbUrl + message, ex);
                     throw new CommandException(t.localize(LocaleResources.LAUNCHER_CONNECTION_ERROR, dbUrl), ex);
                 } finally {
-                    if (password != null) {
-                        Arrays.fill(password, '\0');
-                    }
+                    credsReg.unregister();
                 }
             }
         }

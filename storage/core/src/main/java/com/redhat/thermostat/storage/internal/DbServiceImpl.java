@@ -48,13 +48,12 @@ import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
-import com.redhat.thermostat.storage.config.ConnectionConfiguration;
-import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.core.ConnectionException;
 import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.core.StorageProvider;
 
@@ -69,16 +68,17 @@ public class DbServiceImpl implements DbService {
     private Storage storage;
     private BundleContext context;
     private String dbUrl;
-    private static ServiceReference sslConfRef;
+    @SuppressWarnings("rawtypes")
+    private static ServiceReference sslConfRef, storageCredsRef;
     
-    DbServiceImpl(String username, char[] password, String dbUrl) throws StorageException {
+    DbServiceImpl(String dbUrl) throws StorageException {
         BundleContext context = FrameworkUtil.getBundle(DbService.class).getBundleContext();
-        init(context, username, password, dbUrl);
+        init(context, dbUrl);
     }
 
     // for testing
-    DbServiceImpl(BundleContext context, String username, char[] password, String dbUrl) {
-        init(context, username, password, dbUrl);
+    DbServiceImpl(BundleContext context, String dbUrl) {
+        init(context, dbUrl);
     }
     
     // For testing. Injects custom storage.
@@ -87,8 +87,8 @@ public class DbServiceImpl implements DbService {
         this.storage = storage;
     }
     
-    private void init(BundleContext context, String username, char[] password, String dbUrl) {
-        Storage storage = createStorage(context, username, password, dbUrl);
+    private void init(BundleContext context, String dbUrl) {
+        Storage storage = createStorage(context, dbUrl);
 
         this.storage = storage;
         this.context = context;
@@ -105,17 +105,19 @@ public class DbServiceImpl implements DbService {
             // during connection handling.
             doSynchronousConnect();
         } catch (Exception cause) {
+            throw new ConnectionException(cause);
+        } finally {
             if (sslConfRef != null) {
                 context.ungetService(sslConfRef);
+                sslConfRef = null;
             }
-            throw new ConnectionException(cause);
+            if (storageCredsRef != null) {
+                context.ungetService(storageCredsRef);
+                storageCredsRef = null;
+            }
         }
         // Connection didn't throw an exception. Now it is safe to register
-        // services for general consumption and unregister services used
-        // only while creating and connecting Storage.
-        if (sslConfRef != null) {
-            context.ungetService(sslConfRef);
-        }
+        // services for general consumption.
         dbServiceReg = context.registerService(DbService.class, this, null);
         storageReg = context.registerService(Storage.class.getName(), this.storage, null);
     }
@@ -186,8 +188,8 @@ public class DbServiceImpl implements DbService {
      * @return a DbService instance
      * @throws StorageException if no storage provider exists for the given {@code dbUrl}.
      */
-    public static DbService create(String username, char[] password, String dbUrl) throws StorageException {
-        return new DbServiceImpl(username, password, dbUrl);
+    public static DbService create(String dbUrl) throws StorageException {
+        return new DbServiceImpl(dbUrl);
     }
 
     @SuppressWarnings("rawtypes")
@@ -216,9 +218,8 @@ public class DbServiceImpl implements DbService {
         }
     }
 
-    private static Storage createStorage(BundleContext context, String username, char[] password, String dbUrl) throws StorageException {
-        StartupConfiguration config = new ConnectionConfiguration(dbUrl, username, password);
-        StorageProvider prov = getStorageProvider(context, config);
+    private static Storage createStorage(BundleContext context, String dbUrl) throws StorageException {
+        StorageProvider prov = getStorageProvider(context, dbUrl);
         if (prov == null) {
             // no suitable provider found
             throw new StorageException("No storage found for URL " + dbUrl);
@@ -227,12 +228,17 @@ public class DbServiceImpl implements DbService {
     }
     
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private static StorageProvider getStorageProvider(BundleContext context, StartupConfiguration config) {
+    private static StorageProvider getStorageProvider(BundleContext context, String url) {
         try {
             ServiceReference[] refs = context.getServiceReferences(StorageProvider.class.getName(), null);
             if (refs == null) {
                 throw new StorageException("No storage provider available");
             }
+            storageCredsRef = context.getServiceReference(StorageCredentials.class.getName());
+            if (storageCredsRef == null) {
+                throw new StorageException("No StorageCredentials available");
+            }
+            StorageCredentials creds = (StorageCredentials) context.getService(storageCredsRef);
             sslConfRef = context.getServiceReference(SSLConfiguration.class.getName());
             if (sslConfRef == null) {
                 throw new StorageException("No SSL configuration available");
@@ -240,7 +246,7 @@ public class DbServiceImpl implements DbService {
             SSLConfiguration sslConf = (SSLConfiguration) context.getService(sslConfRef);
             for (int i = 0; i < refs.length; i++) {
                 StorageProvider prov = (StorageProvider) context.getService(refs[i]);
-                prov.setConfig(config, sslConf);
+                prov.setConfig(url, creds, sslConf);
                 if (prov.canHandleProtocol()) {
                     return prov;
                 }

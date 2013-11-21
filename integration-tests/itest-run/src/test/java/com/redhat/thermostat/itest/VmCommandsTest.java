@@ -67,7 +67,6 @@ public class VmCommandsTest extends IntegrationTest {
     @Test
     public void testListVms() throws Exception {
         Spawn vmList = commandAgainstMongo("list-vms");
-        handleAuthPrompt(vmList, "mongodb://127.0.0.1:27518", "", "");
         vmList.expectClose();
         assertOutputEndsWith(vmList.getCurrentStandardOutContents(), "HOST_ID HOST VM_ID STATUS VM_NAME\n\n");
     }
@@ -76,7 +75,6 @@ public class VmCommandsTest extends IntegrationTest {
     public void testVmStat() throws Exception {
         Spawn vmStat = commandAgainstMongo("vm-stat");
         // TODO include required options to test meaningfully
-        //handleAuthPrompt(vmStat, "mongodb://127.0.0.1:27518", "", "");
         vmStat.expectClose();
 
         System.out.println(vmStat.getCurrentStandardOutContents());
@@ -127,10 +125,12 @@ public class VmCommandsTest extends IntegrationTest {
 
     @Test
     public void testNormalCommandAndPluginInShell() throws Exception {
+        String storageURL = "mongodb://127.0.0.1:27518";
         Spawn shell = spawnThermostat("shell");
 
         shell.expect(SHELL_PROMPT);
-        shell.send("list-vms\n");
+        shell.send("list-vms -d " + storageURL + "\n");
+        handleAuthPrompt(shell, storageURL, "", "");
 
         shell.expect(SHELL_PROMPT);
 

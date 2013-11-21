@@ -80,7 +80,7 @@ public class Activator implements BundleActivator {
         public void dependenciesAvailable(Map<String, Object> services) {
             CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
             Keyring keyring = (Keyring) services.get(Keyring.class.getName());
-            ClientPreferences prefs = new ClientPreferences(keyring, paths);
+            ClientPreferences prefs = new ClientPreferences(paths);
 
             String commandsDir = new File(paths.getSystemConfigurationDirectory(), "commands").toString();
             CommandInfoSource builtInCommandSource =
@@ -101,7 +101,7 @@ public class Activator implements BundleActivator {
 
             // Register Launcher service since FrameworkProvider is waiting for it blockingly.
             LauncherImpl launcher = new LauncherImpl(context, new CommandContextFactory(context),
-                    bundleService, commands, env, prefs, paths);
+                    bundleService, commands, env, prefs, keyring, paths);
             launcherReg = context.registerService(Launcher.class.getName(), launcher, null);
             bundleManReg = context.registerService(BundleManager.class, bundleService, null);
             ExitStatus exitStatus = new ExitStatusImpl(ExitStatus.EXIT_SUCCESS);

@@ -60,7 +60,6 @@ import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.shared.config.internal.SSLConfigurationImpl;
-import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.BackingStorage;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
@@ -68,6 +67,7 @@ import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.Query.SortDirection;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.mongodb.internal.MongoStorage;
@@ -139,11 +139,16 @@ public class MongoQueriesTest extends IntegrationTest {
      */
     private static BackingStorage getAndConnectStorage(ConnectionListener listener) {
         final String url = "mongodb://127.0.0.1:27518";
-        StartupConfiguration config = new StartupConfiguration() {
+        StorageCredentials creds = new StorageCredentials() {
 
             @Override
-            public String getDBConnectionString() {
-                return url;
+            public String getUsername() {
+                return null;
+            }
+
+            @Override
+            public char[] getPassword() {
+                return null;
             }
             
         };
@@ -270,7 +275,7 @@ public class MongoQueriesTest extends IntegrationTest {
             }
             
         });
-        BackingStorage storage = new MongoStorage(config, sslConf);
+        BackingStorage storage = new MongoStorage(url, creds, sslConf);
         if (listener != null) {
             storage.getConnection().addListener(listener);
         }

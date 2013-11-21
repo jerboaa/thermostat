@@ -52,7 +52,6 @@ import com.redhat.thermostat.common.utils.StreamUtils;
 import expectj.Executor;
 import expectj.ExpectJ;
 import expectj.Spawn;
-import expectj.TimeoutException;
 
 /**
  * Helper methods to support writing an integration test.
@@ -334,11 +333,10 @@ public class IntegrationTest {
         assertEquals(expectedOutput, endOfOut);
     }
 
-    public static void handleAuthPrompt(Spawn spawn, String url, String user, String password) throws IOException, TimeoutException {
-        spawn.expect("Please enter username for storage at " + url + ":");
+    public static void handleAuthPrompt(Spawn spawn, String url, String user, String password) throws IOException {
         spawn.send(user + "\r");
-        spawn.expect("Please enter password for storage at " + url + ":");
         spawn.send(password + "\r");
+        
     }
 
     private static class LocaleExecutor extends EnvironmentExecutor {

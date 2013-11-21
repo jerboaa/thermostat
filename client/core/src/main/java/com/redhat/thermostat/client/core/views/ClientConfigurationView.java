@@ -55,7 +55,7 @@ public interface ClientConfigurationView extends View, UIComponent {
     void setConnectionUrl(String url);
     void setPassword(char[] password);
     void setUserName(String username);
-    void setSaveEntitlemens(boolean save);
+    void setSaveEntitlements(boolean save);
     
     boolean getSaveEntitlements();
     String getUserName();

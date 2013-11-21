@@ -38,10 +38,11 @@
 package com.redhat.thermostat.client.ui;
 
 import com.redhat.thermostat.common.config.ClientPreferences;
+import com.redhat.thermostat.storage.core.StorageCredentials;
 
 public interface ClientConfigReconnector {
 
-    void reconnect(ClientPreferences prefs);
+    void reconnect(ClientPreferences prefs, StorageCredentials creds);
     void abort();
 }
 

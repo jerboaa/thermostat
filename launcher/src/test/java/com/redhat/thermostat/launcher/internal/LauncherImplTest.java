@@ -40,8 +40,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.isA;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -269,10 +267,10 @@ public class LauncherImplTest {
         File userConfigFile = mock(File.class);
         when(userConfigFile.isFile()).thenReturn(false);
         when(paths.getUserClientConfigurationFile()).thenReturn(userConfigFile);
-        ClientPreferences prefs = new ClientPreferences(keyring, paths);
+        ClientPreferences prefs = new ClientPreferences(paths);
 
         launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext),
-                environment, dbServiceFactory, version, prefs, paths, loggingInitializer);
+                environment, dbServiceFactory, version, prefs, keyring, paths, loggingInitializer);
     }
 
     private void setupCommandContextFactory() {
@@ -473,17 +471,17 @@ public class LauncherImplTest {
     @Test
     public void verifyPrefsAreUsed() {
         ClientPreferences prefs = mock(ClientPreferences.class);
+        Keyring keyring = mock(Keyring.class);
         String dbUrl = "mongo://fluff:12345";
         when(prefs.getConnectionUrl()).thenReturn(dbUrl);
         when(prefs.getUserName()).thenReturn("user");
-        when(prefs.getPassword()).thenReturn("password".toCharArray());
 
         LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext),
-                environment, dbServiceFactory, version, prefs, paths, loggingInitializer);
+                environment, dbServiceFactory, version, prefs, keyring, paths, loggingInitializer);
 
         DbService dbService = mock(DbService.class);
         ArgumentCaptor<String> dbUrlCaptor = ArgumentCaptor.forClass(String.class);
-        when(dbServiceFactory.createDbService(eq("user"), eq("password".toCharArray()), dbUrlCaptor.capture())).thenReturn(dbService);
+        when(dbServiceFactory.createDbService(dbUrlCaptor.capture())).thenReturn(dbService);
         wrappedRun(launcher, new String[] { "test3" }, false);
         verify(dbService).connect();
         verify(prefs).getConnectionUrl();
@@ -493,14 +491,15 @@ public class LauncherImplTest {
     @Test
     public void verifyUserInputUsedIfNoSavedAuthInfo() {
         ClientPreferences prefs = mock(ClientPreferences.class);
+        Keyring keyring = mock(Keyring.class);
         String dbUrl = "mongo://fluff:12345";
         when(prefs.getConnectionUrl()).thenReturn(dbUrl);
         LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext),
-                environment, dbServiceFactory, version, prefs, paths, loggingInitializer);
+                environment, dbServiceFactory, version, prefs, keyring, paths, loggingInitializer);
 
         DbService dbService = mock(DbService.class);
         ArgumentCaptor<String> dbUrlCaptor = ArgumentCaptor.forClass(String.class);
-        when(dbServiceFactory.createDbService(eq("user"), eq("pass".toCharArray()), dbUrlCaptor.capture())).thenReturn(dbService);
+        when(dbServiceFactory.createDbService(dbUrlCaptor.capture())).thenReturn(dbService);
         ctxFactory.setInput("user\rpass\r");
         wrappedRun(launcher, new String[] { "test3" }, false);
         verify(dbService).connect();
@@ -516,9 +515,10 @@ public class LauncherImplTest {
         char[] password = new char[] {'1', '2', '3', '4', '5'};
         when(prefs.getConnectionUrl()).thenReturn(dbUrl);
         when(prefs.getUserName()).thenReturn(user);
-        when(prefs.getPassword()).thenReturn(password);
+        Keyring keyring = mock(Keyring.class);
+        when(keyring.getPassword(dbUrl, user)).thenReturn(password);
         LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext),
-                environment, dbServiceFactory, version, prefs, paths, loggingInitializer);
+                environment, dbServiceFactory, version, prefs, keyring, paths, loggingInitializer);
 
         Command mockCmd = mock(Command.class);
         when(mockCmd.isStorageRequired()).thenReturn(true);
@@ -532,7 +532,7 @@ public class LauncherImplTest {
         when(infos.getCommandInfo("dummy")).thenReturn(cmdInfo);
 
         DbService dbService = mock(DbService.class);
-        when(dbServiceFactory.createDbService(anyString(), isA(char[].class), anyString())).thenReturn(dbService);
+        when(dbServiceFactory.createDbService(anyString())).thenReturn(dbService);
 
         wrappedRun(launcher, new String[] { "dummy" }, false);
         verify(dbService).connect();

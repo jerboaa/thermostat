@@ -84,8 +84,6 @@ import com.redhat.thermostat.common.ssl.SSLContextFactory;
 import com.redhat.thermostat.common.ssl.SslInitException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
-import com.redhat.thermostat.storage.config.AuthenticationConfiguration;
-import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.AuthToken;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Connection;
@@ -99,6 +97,7 @@ import com.redhat.thermostat.storage.core.SecureStorage;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.web.common.PreparedParameterSerializer;
@@ -314,24 +313,23 @@ public class WebStorage implements Storage, SecureStorage {
     private Gson gson;
     // package private for testing
     DefaultHttpClient httpClient;
-    private String username;
-    private char[] password;
+    private StorageCredentials creds;
     private SecureRandom random;
     private WebConnection conn;
     
     // for testing
-    WebStorage(StartupConfiguration config, DefaultHttpClient client,
+    WebStorage(String url, StorageCredentials creds, DefaultHttpClient client,
                ClientConnectionManager connManager, SSLConfiguration sslConf) {
-        init(config, client, connManager, sslConf);
+        init(url, creds, client, connManager, sslConf);
     }
 
-    public WebStorage(StartupConfiguration config, SSLConfiguration sslConf) throws StorageException {
+    public WebStorage(String url, StorageCredentials creds, SSLConfiguration sslConf) throws StorageException {
         ClientConnectionManager connManager = new ThreadSafeClientConnManager();
         DefaultHttpClient client = new DefaultHttpClient(connManager);
-        init(config, client, connManager, sslConf);
+        init(url, creds, client, connManager, sslConf);
     }
     
-    private void init(StartupConfiguration config, DefaultHttpClient client,
+    private void init(String url, StorageCredentials creds, DefaultHttpClient client,
                       ClientConnectionManager connManager, SSLConfiguration sslConf) {
         categoryIds = new HashMap<>();
         gson = new GsonBuilder().registerTypeHierarchyAdapter(Pojo.class,
@@ -344,13 +342,10 @@ public class WebStorage implements Storage, SecureStorage {
         random = new SecureRandom();
         conn = new WebConnection();
         
-        setEndpoint(config.getDBConnectionString());
-        if (config instanceof AuthenticationConfiguration) {
-            AuthenticationConfiguration authConfig = (AuthenticationConfiguration) config;
-            setAuthConfig(authConfig.getUsername(), authConfig.getPassword());
-        }
+        this.endpoint = url;
+        this.creds = creds;
         // setup SSL if necessary
-        if (config.getDBConnectionString().startsWith(HTTPS_PREFIX)) {
+        if (endpoint.startsWith(HTTPS_PREFIX)) {
             registerSSLScheme(connManager, sslConf);
         }
     }
@@ -369,14 +364,17 @@ public class WebStorage implements Storage, SecureStorage {
 
     private void initAuthentication(DefaultHttpClient client)
             throws MalformedURLException {
+        String username = creds.getUsername();
+        char[] password = creds.getPassword();
         if (username != null && password != null) {
             URL endpointURL = new URL(endpoint);
             // TODO: Maybe also limit to realm like 'Thermostat Realm' or such?
             AuthScope scope = new AuthScope(endpointURL.getHost(),
                     endpointURL.getPort());
-            // FIXME Password as string?  bad.
+            // FIXME Password as string?  BAD.  Limited by apache API here however.
             Credentials creds = new UsernamePasswordCredentials(username,
                     new String(password));
+            Arrays.fill(password, '\0');
             client.getCredentialsProvider().setCredentials(scope, creds);
         }
     }
@@ -584,15 +582,6 @@ public class WebStorage implements Storage, SecureStorage {
         NameValuePair agentIdParam = new BasicNameValuePair("agentId", agentId);
         List<NameValuePair> agentIdParams = Arrays.asList(agentIdParam);
         post(endpoint + "/purge", agentIdParams).close();
-    }
-
-    public void setEndpoint(String endpoint) {
-        this.endpoint = endpoint;
-    }
-
-    public void setAuthConfig(String username, char[] password) {
-        this.username = username;
-        this.password = password;
     }
 
     @Override

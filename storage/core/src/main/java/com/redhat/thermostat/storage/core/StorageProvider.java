@@ -59,7 +59,7 @@ public interface StorageProvider {
      * @param config
      * @param sslConf
      */
-    void setConfig(StartupConfiguration config, SSLConfiguration sslConf);
+    void setConfig(String url, StorageCredentials creds, SSLConfiguration sslConf);
 
     /**
      * Method which determines if this StorageProvider can handle the given

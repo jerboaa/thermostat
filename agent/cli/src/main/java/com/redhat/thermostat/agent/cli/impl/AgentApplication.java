@@ -118,7 +118,6 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
         
 
         final DbService dbService = dbServiceFactory.createDbService(
-                configuration.getUsername(), configuration.getPassword(),
                 configuration.getDBConnectionString());
         
         shutdownLatch = new CountDownLatch(1);

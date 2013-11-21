@@ -39,39 +39,48 @@ package com.redhat.thermostat.web.client.internal;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import com.redhat.thermostat.shared.config.SSLConfiguration;
-import com.redhat.thermostat.storage.config.AuthenticationConfiguration;
-import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.BackingStorage;
 import com.redhat.thermostat.storage.core.QueuedStorage;
 import com.redhat.thermostat.storage.core.SecureStorage;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.StorageCredentials;
 
 public class WebStorageProviderTest {
 
     @Test
     public void createStorageCreatesSecureStorage() {
         WebStorageProvider provider = new WebStorageProvider();
-        MockConfiguration config = mock(MockConfiguration.class);
-        when(config.getDBConnectionString()).thenReturn("http://something");
         SSLConfiguration sslConf = mock(SSLConfiguration.class);
-        provider.setConfig(config, sslConf);
+        StorageCredentials creds = mock(StorageCredentials.class);
+        provider.setConfig("http://something", creds, sslConf);
         Storage storage = provider.createStorage();
         assertTrue(storage instanceof SecureStorage);
         assertTrue(storage instanceof QueuedStorage);
         assertFalse(storage instanceof BackingStorage);
-        verify(config, Mockito.atLeastOnce()).getUsername();
-        verify(config, Mockito.atLeastOnce()).getPassword();
     }
-    
-    private abstract static class MockConfiguration implements
-            AuthenticationConfiguration, StartupConfiguration {
-        // no-op
+
+    @Test
+    public void canHandleHttpProtocol() {
+        WebStorageProvider provider = new WebStorageProvider();
+        provider.setConfig("http://something.com", null, null);
+        assertTrue(provider.canHandleProtocol());
+    }
+
+    @Test
+    public void canHandleHttpsProtocol() {
+        WebStorageProvider provider = new WebStorageProvider();
+        provider.setConfig("https://something.com", null, null);
+        assertTrue(provider.canHandleProtocol());
+    }
+
+    @Test
+    public void cannotHandleNotWebProtocol() {
+        WebStorageProvider provider = new WebStorageProvider();
+        provider.setConfig("ftp://something.com", null, null);
+        assertFalse(provider.canHandleProtocol());
     }
 }

@@ -38,7 +38,6 @@ package com.redhat.thermostat.client.swing.internal;
 
 import java.awt.EventQueue;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Level;
@@ -48,6 +47,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.client.core.views.ClientConfigurationView;
 import com.redhat.thermostat.client.locale.LocaleResources;
@@ -56,6 +56,7 @@ import com.redhat.thermostat.client.swing.internal.views.ClientConfigurationSwin
 import com.redhat.thermostat.client.swing.internal.vmlist.UIDefaultsImpl;
 import com.redhat.thermostat.client.ui.ClientConfigReconnector;
 import com.redhat.thermostat.client.ui.ClientConfigurationController;
+import com.redhat.thermostat.client.ui.ClientPreferencesModel;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -66,6 +67,7 @@ import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.storage.core.DbServiceFactory;
+import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
@@ -113,7 +115,7 @@ public class Main {
         this.paths = paths;
         this.shutdown = shutdown;
         this.mainWindowRunnable = mainWindowRunnable;
-        this.prefs = new ClientPreferences(keyring, paths);
+        this.prefs = new ClientPreferences(paths);
     }
     
     public void run() {
@@ -157,8 +159,9 @@ public class Main {
 
     private void tryConnecting() {
         final ExecutorService service = appSvc.getApplicationExecutor();
-        ClientPreferences prefs = new ClientPreferences(keyring, paths);
-        connect(prefs, service);
+        ClientPreferences prefs = new ClientPreferences(paths);
+        StorageCredentials creds = new KeyringStorageCredentials(keyring, prefs);
+        connect(prefs, creds, service);
     }
     
     private class ConnectionAttempt implements Runnable {
@@ -197,13 +200,16 @@ public class Main {
             }
         }
     }
+
     
-    private void connect(ClientPreferences prefs, ExecutorService service) {
+    
+    private void connect(ClientPreferences prefs, StorageCredentials creds, ExecutorService service) {
+        @SuppressWarnings("rawtypes")
+        final ServiceRegistration credsReg = context.registerService(StorageCredentials.class, creds, null);
         final ConnectionHandler reconnectionHandler = new ConnectionHandler(service);
         try {
             // create DbService with potentially modified parameters
-            final char[] password = prefs.getPassword();
-            final DbService dbService = dbServiceFactory.createDbService(prefs.getUserName(), password, prefs.getConnectionUrl());
+            final DbService dbService = dbServiceFactory.createDbService(prefs.getConnectionUrl());
             dbService.addConnectionListener(reconnectionHandler);
             service.execute(new Runnable() {
                 @Override
@@ -215,9 +221,7 @@ public class Main {
                         // fails to connect. No need to notify our handler manually.
                         logger.log(Level.FINE, "connection attempt failed: ", t);
                     } finally {
-                        if (password != null) {
-                            Arrays.fill(password, '\0');
-                        }
+                        credsReg.unregister();
                     }
                 }
             });
@@ -237,8 +241,8 @@ public class Main {
         }
         
         @Override
-        public void reconnect(ClientPreferences prefs) {
-            connect(prefs, service);
+        public void reconnect(ClientPreferences prefs, StorageCredentials creds) {
+            connect(prefs, creds, service);
         }
 
         @Override
@@ -250,7 +254,7 @@ public class Main {
     private void createPreferencesDialog(final ExecutorService service) {
         ClientConfigurationView configDialog = new ClientConfigurationSwing();
         ClientConfigurationController controller =
-                new ClientConfigurationController(prefs, configDialog, new MainClientConfigReconnector(service));
+                new ClientConfigurationController(new ClientPreferencesModel(keyring, prefs), configDialog, new MainClientConfigReconnector(service));
         
         controller.showDialog();
     }
@@ -301,6 +305,28 @@ public class Main {
             mainController = new MainWindowControllerImpl(context, appSvc, shutdown);
             mainController.showMainMainWindow();
         }
+    }
+
+    class KeyringStorageCredentials implements StorageCredentials {
+
+        private Keyring keyring;
+        private ClientPreferences prefs;
+
+        KeyringStorageCredentials(Keyring keyring, ClientPreferences prefs) {
+            this.keyring = keyring;
+            this.prefs = prefs;
+        }
+
+        @Override
+        public String getUsername() {
+            return prefs.getUserName();
+        }
+
+        @Override
+        public char[] getPassword() {
+            return keyring.getPassword(prefs.getConnectionUrl(), prefs.getUserName());
+        }
+        
     }
 }
 

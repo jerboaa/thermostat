@@ -83,7 +83,6 @@ import com.mongodb.gridfs.GridFS;
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
-import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.BackingStorage;
 import com.redhat.thermostat.storage.core.Category;
@@ -94,6 +93,7 @@ import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Persist;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Replace;
+import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.model.AggregateCount;
@@ -173,7 +173,8 @@ public class MongoStorageTest {
     private static final Category<TestClass> testCategory = new Category<>("MongoStorageTest", TestClass.class, key1, key2, key3, key4, key5);
     private static final Category<TestClass> emptyTestCategory = new Category<>("MongoEmptyCategory", TestClass.class);
 
-    private StartupConfiguration conf;
+    private String url;
+    private StorageCredentials creds;
     private SSLConfiguration sslConf;
     private Mongo m;
     private DB db;
@@ -182,7 +183,7 @@ public class MongoStorageTest {
     private ExpressionFactory factory;
 
     private MongoStorage makeStorage() {
-        MongoStorage storage = new MongoStorage(conf, sslConf);
+        MongoStorage storage = new MongoStorage(url, creds, sslConf);
         storage.mapCategoryToDBCollection(testCategory, testCollection);
         storage.mapCategoryToDBCollection(emptyTestCategory, emptyTestCollection);
         return storage;
@@ -190,8 +191,8 @@ public class MongoStorageTest {
 
     @Before
     public void setUp() throws Exception {
-        conf = mock(StartupConfiguration.class);
-        when(conf.getDBConnectionString()).thenReturn("mongodb://127.0.0.1:27518");
+        url = "mongodb://127.0.0.1:27518";
+        creds = mock(StorageCredentials.class);
         sslConf = mock(SSLConfiguration.class);
         db = PowerMockito.mock(DB.class);
         m = PowerMockito.mock(Mongo.class);
@@ -246,7 +247,7 @@ public class MongoStorageTest {
 
     @After
     public void tearDown() {
-        conf = null;
+        url = null;
         m = null;
         db = null;
         testCollection = null;
@@ -256,7 +257,7 @@ public class MongoStorageTest {
     
     @Test
     public void isBackingStorage() {
-        MongoStorage storage = new MongoStorage(conf, sslConf);
+        MongoStorage storage = new MongoStorage(url, creds, sslConf);
         assertTrue(storage instanceof BackingStorage);
     }
     
@@ -593,7 +594,7 @@ public class MongoStorageTest {
     public void verifyMongoCloseOnShutdown() throws Exception {
         Mongo mockMongo = mock(Mongo.class);
         when(db.getMongo()).thenReturn(mockMongo);
-        MongoStorage storage = new MongoStorage(conf, sslConf);
+        MongoStorage storage = new MongoStorage(url, creds, sslConf);
         setDbFieldInStorage(storage);
         storage.shutdown();
         verify(mockMongo).close();

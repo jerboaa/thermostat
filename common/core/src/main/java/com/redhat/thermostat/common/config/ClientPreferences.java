@@ -48,7 +48,6 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
-import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class ClientPreferences {
 
@@ -60,18 +59,16 @@ public class ClientPreferences {
     private static final Logger logger = LoggingUtils.getLogger(ClientPreferences.class);
 
     private Properties prefs;
-    private Keyring keyring;
     private File userConfig;
 
     private String url;
     private String username;
-    private char[] password;
 
-    public ClientPreferences(Keyring keyring, CommonPaths files) {
+    public ClientPreferences(CommonPaths files) {
         userConfig = files.getUserClientConfigurationFile();
         Properties props = new Properties();
         loadPrefs(props);
-        init(props, keyring);
+        init(props);
     }
 
     private void loadPrefs(Properties props) {
@@ -91,16 +88,14 @@ public class ClientPreferences {
     }
 
     // Testing hook with injectable j.u.Properties
-    ClientPreferences(Properties properties, Keyring keyring) {
-        init(properties, keyring);
+    ClientPreferences(Properties properties) {
+        init(properties);
     }
 
-    private void init(Properties properties, Keyring keyring) {
+    private void init(Properties properties) {
         this.prefs = properties;
-        this.keyring = keyring;
         this.url = DEFAULT_CONNECTION_URL;
         this.username = "";
-        this.password = new char[]{};
     }
 
     public boolean getSaveEntitlements() {
@@ -112,21 +107,10 @@ public class ClientPreferences {
     }
     
     public String getConnectionUrl() {
-        return prefs.getProperty(CONNECTION_URL, DEFAULT_CONNECTION_URL);
-    }
-
-    public char[] getPassword() {
         if (getSaveEntitlements()) {
-            return keyring.getPassword(getConnectionUrl(), getUserName());
+            return prefs.getProperty(CONNECTION_URL, DEFAULT_CONNECTION_URL);
         }
-        return password;
-    }
-
-    public String getUserName() {
-        if (getSaveEntitlements()) {
-            return prefs.getProperty(USERNAME, "");
-        }
-        return username;
+        return url;
     }
 
     public void setConnectionUrl(String url) {
@@ -136,21 +120,23 @@ public class ClientPreferences {
         }
     }
 
-    public void setCredentials(String userName, char[] password) {
+    public String getUserName() {
+        if (getSaveEntitlements()) {
+            return prefs.getProperty(USERNAME, "");
+        }
+        return username;
+    }
+
+    public void setUserName(String userName) {
         this.username = userName;
-        this.password = password;
 
         if (getSaveEntitlements()) {
             prefs.put(USERNAME, userName);
-            keyring.savePassword(getConnectionUrl(), userName, password);
         }
     }
     
     public void flush() throws IOException {
-        prefs.store(new FileWriter(userConfig), "");
-        if (getSaveEntitlements()) {
-            keyring.savePassword(getConnectionUrl(), username, password);
-        }
+        prefs.store(new FileWriter(userConfig), null);
     }
 }
 

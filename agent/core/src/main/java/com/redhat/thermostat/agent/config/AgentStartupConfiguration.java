@@ -36,16 +36,13 @@
 
 package com.redhat.thermostat.agent.config;
 
-import com.redhat.thermostat.storage.config.AuthenticationConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 
-public class AgentStartupConfiguration implements StartupConfiguration, AuthenticationConfiguration {
+public class AgentStartupConfiguration implements StartupConfiguration {
 
     private boolean purge;
     
     private String url;
-    private String username;
-    private char[] password;
 
     private long startTime;
     private String address;
@@ -77,24 +74,6 @@ public class AgentStartupConfiguration implements StartupConfiguration, Authenti
     
     public boolean purge() {
         return purge;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    @Override
-    public String getUsername() {
-        return username;
-    }
-
-    public void setPassword(char[] password) {
-        this.password = password;
-    }
-
-    @Override
-    public char[] getPassword() {
-        return password;
     }
 
     public void setConfigListenAddress(String address) {

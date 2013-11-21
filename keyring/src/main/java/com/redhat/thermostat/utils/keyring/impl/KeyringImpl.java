@@ -59,7 +59,11 @@ public class KeyringImpl implements Keyring {
         boolean success = false;
         try {
             String desc = DESC_PREFIX + username + "@" + url;
-            pwBytes = Charset.defaultCharset().encode(CharBuffer.wrap(password)).array();
+            if (password == null) {
+                pwBytes = new byte[]{};
+            } else {
+                pwBytes = Charset.defaultCharset().encode(CharBuffer.wrap(password)).array();
+            }
             success = gnomeKeyringWrapperSavePasswordNative(url, username, pwBytes, desc);
         } finally {
             if (pwBytes != null) {

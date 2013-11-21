@@ -38,6 +38,7 @@ package com.redhat.thermostat.storage.mongodb.internal;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -57,10 +58,9 @@ import com.redhat.thermostat.common.utils.HostPortsParser;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
-import com.redhat.thermostat.storage.config.AuthenticationConfiguration;
-import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Connection;
 import com.redhat.thermostat.storage.core.ConnectionException;
+import com.redhat.thermostat.storage.core.StorageCredentials;
 
 class MongoConnection extends Connection {
 
@@ -69,11 +69,13 @@ class MongoConnection extends Connection {
 
     private Mongo m = null;
     private DB db = null;
-    private StartupConfiguration conf;
+    private String url;
+    StorageCredentials creds;
     SSLConfiguration sslConf;
 
-    MongoConnection(StartupConfiguration conf, SSLConfiguration sslConf) {
-        this.conf = conf;
+    MongoConnection(String url, StorageCredentials creds, SSLConfiguration sslConf) {
+        this.url = url;
+        this.creds = creds;
         this.sslConf = sslConf;
     }
 
@@ -95,11 +97,15 @@ class MongoConnection extends Connection {
     }
 
     private void authenticateIfNecessary() {
-        if (conf instanceof AuthenticationConfiguration) {
-            AuthenticationConfiguration authConf = (AuthenticationConfiguration) conf;
-            String username = authConf.getUsername();
-            if (username != null && ! username.equals("")) {
-                authenticate(username, authConf.getPassword());
+        String username = creds.getUsername();
+        char[] password = creds.getPassword();
+        try {
+            if (username != null && password != null) {
+                authenticate(username, password);
+            }
+        } finally {
+            if (password != null) {
+                Arrays.fill(password, '\0');
             }
         }
     }
@@ -158,7 +164,6 @@ class MongoConnection extends Connection {
     }
 
     ServerAddress getServerAddress() throws InvalidConfigurationException, UnknownHostException {
-        String url = conf.getDBConnectionString();
         // Strip mongodb prefix: "mongodb://".length() == 10
         String hostPort = url.substring(10);
         HostPortsParser parser = new HostPortsParser(hostPort);

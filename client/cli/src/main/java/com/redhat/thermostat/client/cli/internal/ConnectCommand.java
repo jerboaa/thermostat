@@ -36,24 +36,23 @@
 
 package com.redhat.thermostat.client.cli.internal;
 
-import java.io.IOException;
-import java.util.Arrays;
 import java.util.Objects;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.config.ClientPreferences;
-import com.redhat.thermostat.common.tools.StorageAuthInfoGetter;
-import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.launcher.InteractiveStorageCredentials;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.ConnectionException;
 import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.storage.core.DbServiceFactory;
+import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
@@ -72,17 +71,19 @@ public class ConnectCommand extends AbstractCommand {
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private ClientPreferences prefs;
+    private Keyring keyring;
     private BundleContext context;
     private DbServiceFactory dbServiceFactory;
 
-    public ConnectCommand(ClientPreferences prefs) {
-        this(FrameworkUtil.getBundle(ConnectCommand.class).getBundleContext(), new DbServiceFactory(), prefs);
+    public ConnectCommand(ClientPreferences prefs, Keyring keyring) {
+        this(FrameworkUtil.getBundle(ConnectCommand.class).getBundleContext(), new DbServiceFactory(), prefs, keyring);
     }
     
-    ConnectCommand(BundleContext context, DbServiceFactory dbServiceFactory, ClientPreferences prefs) {
+    ConnectCommand(BundleContext context, DbServiceFactory dbServiceFactory, ClientPreferences prefs, Keyring keyring) {
         this.context = context;
         this.dbServiceFactory = dbServiceFactory;
         this.prefs = prefs;
+        this.keyring = keyring;
     }
 
     @Override
@@ -98,26 +99,12 @@ public class ConnectCommand extends AbstractCommand {
         String dbUrl = ctx.getArguments().getArgument(DB_URL_ARG);
         // This argument is considered "required" so option parsing should mean this is impossible.
         Objects.requireNonNull(dbUrl);
-        String username = null;
-        char[] password = null;
-        if (prefs.getConnectionUrl().equals(dbUrl)) {
-            // Have we previously saved connection parameters for this Url?
-            username = prefs.getUserName();
-            password = prefs.getPassword();
-        }
-        if (username == null || password == null) {
-            com.redhat.thermostat.common.cli.Console console = ctx.getConsole();
-            try {
-                StorageAuthInfoGetter getUserPass = new StorageAuthInfoGetter(console);
-                username = getUserPass.getUserName(dbUrl);
-                password = getUserPass.getPassword(dbUrl);
-            } catch (IOException e) {
-                throw new CommandException(translator.localize(LocaleResources.COMMAND_CONNECT_USER_PROMPT_ERROR), e);
-            }
-        }
+        StorageCredentials creds = new InteractiveStorageCredentials(prefs, keyring, dbUrl, ctx.getConsole());
+        ServiceRegistration credsReg = context.registerService(StorageCredentials.class, creds, null);
+
         try {
             // may throw StorageException if storage url is not supported
-            DbService service = dbServiceFactory.createDbService(username, password, dbUrl);
+            DbService service = dbServiceFactory.createDbService(dbUrl);
             service.connect();
         } catch (StorageException ex) {
             throw new CommandException(translator.localize(LocaleResources.COMMAND_CONNECT_INVALID_STORAGE, dbUrl));
@@ -126,9 +113,7 @@ public class ConnectCommand extends AbstractCommand {
             String message = ( error == null ? "" : " " + translator.localize(LocaleResources.COMMAND_CONNECT_ERROR, error).getContents() );
             throw new CommandException(translator.localize(LocaleResources.COMMAND_CONNECT_FAILED_TO_CONNECT, dbUrl + message), ex);
         } finally {
-            if (password != null) {
-                Arrays.fill(password, '\0');
-            }
+            credsReg.unregister();
         }
     }
 

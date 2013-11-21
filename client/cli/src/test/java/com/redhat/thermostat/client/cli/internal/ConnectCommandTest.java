@@ -58,6 +58,7 @@ import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.storage.core.DbServiceFactory;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.redhat.thermostat.testutils.StubBundleContext;
+import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class ConnectCommandTest {
 
@@ -76,8 +77,9 @@ public class ConnectCommandTest {
         context = new StubBundleContext();
         dbServiceFactory = mock(DbServiceFactory.class);
         ClientPreferences prefs = mock(ClientPreferences.class);
+        Keyring keyring = mock(Keyring.class);
         when(prefs.getConnectionUrl()).thenReturn("http://localhost");
-        cmd = new ConnectCommand(context, dbServiceFactory, prefs);
+        cmd = new ConnectCommand(context, dbServiceFactory, prefs, keyring);
     }
 
     private void setupCommandContextFactory() {
@@ -116,7 +118,7 @@ public class ConnectCommandTest {
         String username = "testuser";
         String password = "testpassword";
         String dbUrl = "mongodb://10.23.122.1:12578";
-        when(dbServiceFactory.createDbService(eq(username), eq(password.toCharArray()), eq(dbUrl))).thenReturn(dbService);
+        when(dbServiceFactory.createDbService(eq(dbUrl))).thenReturn(dbService);
         SimpleArguments args = new SimpleArguments();
         args.addArgument("dbUrl", dbUrl);
         CommandContext ctx = cmdCtxFactory.createContext(args);

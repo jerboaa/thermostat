@@ -91,6 +91,7 @@ import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Statement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorMetadataFactory;
 import com.redhat.thermostat.storage.model.AggregateResult;
@@ -215,10 +216,23 @@ public class WebStorageEndPoint extends HttpServlet {
         if (storage == null) {
             String storageClass = getServletConfig().getInitParameter(STORAGE_CLASS);
             String storageEndpoint = getServletConfig().getInitParameter(STORAGE_ENDPOINT);
-            String username = getServletConfig().getInitParameter(STORAGE_USERNAME);
+            final String username = getServletConfig().getInitParameter(STORAGE_USERNAME);
             // FIXME Password as string?  bad.
-            String password = getServletConfig().getInitParameter(STORAGE_PASSWORD);
-            storage = StorageFactory.getStorage(storageClass, storageEndpoint, username, password == null ? null : password.toCharArray(), paths);
+            final String password = getServletConfig().getInitParameter(STORAGE_PASSWORD);
+            StorageCredentials creds = new StorageCredentials() {
+
+                @Override
+                public String getUsername() {
+                    return username;
+                }
+
+                @Override
+                public char[] getPassword() {
+                    return password == null ? null : password.toCharArray();
+                }
+                
+            };
+            storage = StorageFactory.getStorage(storageClass, storageEndpoint, paths, creds);
         }
         String uri = req.getRequestURI();
         int lastPartIdx = uri.lastIndexOf("/");
