@@ -45,6 +45,7 @@ import java.io.File;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.agent.RMIRegistry;
 import com.redhat.thermostat.agent.VmBlacklist;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.NativeLibraryResolver;
@@ -71,6 +72,7 @@ public class ActivatorTest {
 
         activator.start(context);
 
+        assertTrue(context.isServiceRegistered(RMIRegistry.class.getName(), RMIRegistryImpl.class));
         assertTrue(context.isServiceRegistered(MXBeanConnectionPool.class.getName(), MXBeanConnectionPoolImpl.class));
         assertTrue(context.isServiceRegistered(UserNameUtil.class.getName(), UserNameUtilImpl.class));
         assertTrue(context.isServiceRegistered(VmBlacklist.class.getName(), VmBlacklistImpl.class));

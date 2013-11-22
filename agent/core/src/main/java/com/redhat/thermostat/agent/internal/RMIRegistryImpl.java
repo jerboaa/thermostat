@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.utils.management.internal;
+package com.redhat.thermostat.agent.internal;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -50,27 +50,28 @@ import java.rmi.server.RMISocketFactory;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.agent.RMIRegistry;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
-public class RMIRegistry {
+public class RMIRegistryImpl implements RMIRegistry {
     
-    private static final Logger logger = LoggingUtils.getLogger(RMIRegistry.class);
+    private static final Logger logger = LoggingUtils.getLogger(RMIRegistryImpl.class);
 
-    private RegistryCreator registryCreator;
+    private RegistryWrapper registryWrapper;
     private ServerSocketCreator serverSockCreator;
     private Registry registry;
     
-    public RMIRegistry() {
-        this(new RegistryCreator(), new ServerSocketCreator());
+    public RMIRegistryImpl() {
+        this(new RegistryWrapper(), new ServerSocketCreator());
     }
     
-    RMIRegistry(RegistryCreator registryCreator, ServerSocketCreator serverSockCreator) {
-        this.registryCreator = registryCreator;
+    RMIRegistryImpl(RegistryWrapper registryWrapper, ServerSocketCreator serverSockCreator) {
+        this.registryWrapper = registryWrapper;
         this.serverSockCreator = serverSockCreator;
     }
     
     public void start() throws RemoteException {
-        this.registry = registryCreator.createRegistry(Registry.REGISTRY_PORT /* TODO customize */,
+        this.registry = registryWrapper.createRegistry(Registry.REGISTRY_PORT /* TODO customize */,
                 RMISocketFactory.getDefaultSocketFactory(),
                 new RMIServerSocketFactory() {
                     
@@ -83,32 +84,35 @@ public class RMIRegistry {
         logger.fine("Starting RMI registry");
     }
     
+    @Override
     public Registry getRegistry() throws RemoteException {
         // We get a class loading problem when returning the local registry reference,
         // this returns a remote stub reference instead
-        return registryCreator.getRegistry();
+        return registryWrapper.getRegistry();
     }
     
     public void stop() throws RemoteException {
         if (registry != null) {
-            registryCreator.destroyRegistry(registry);
+            registryWrapper.destroyRegistry(registry);
             registry = null;
             logger.fine("Shutting down RMI registry");
         }
     }
     
+    @Override
     public Remote export(Remote obj) throws RemoteException {
         if (registry == null) {
             throw new RemoteException("RMI registry is not running");
         }
-        return UnicastRemoteObject.exportObject(obj, 0);
+        return registryWrapper.export(obj, 0);
     }
     
-    public void unexport(Remote obj) throws RemoteException {
+    @Override
+    public boolean unexport(Remote obj) throws RemoteException {
         if (registry == null) {
             throw new RemoteException("RMI registry is not running");
         }
-        UnicastRemoteObject.unexportObject(obj, true);
+        return registryWrapper.unexport(obj, true);
     }
     
     /*
@@ -118,7 +122,7 @@ public class RMIRegistry {
         return registry;
     }
     
-    static class RegistryCreator {
+    static class RegistryWrapper {
         Registry createRegistry(int port, RMIClientSocketFactory csf,
                 RMIServerSocketFactory ssf) throws RemoteException {
             return LocateRegistry.createRegistry(port, csf, ssf);
@@ -131,6 +135,14 @@ public class RMIRegistry {
         void destroyRegistry(Registry registry) throws NoSuchObjectException {
             // Shuts down RMI registry
             UnicastRemoteObject.unexportObject(registry, true);
+        }
+        
+        Remote export(Remote obj, int port) throws RemoteException {
+            return UnicastRemoteObject.exportObject(obj, 0);
+        }
+        
+        boolean unexport(Remote obj, boolean force) throws NoSuchObjectException {
+            return UnicastRemoteObject.unexportObject(obj, force);
         }
     }
     

@@ -50,6 +50,7 @@ import java.io.File;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.agent.internal.RMIRegistryImpl;
 import com.redhat.thermostat.utils.management.MXBeanConnection;
 import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl.ConnectorCreator;
 
@@ -63,10 +64,10 @@ public class MXBeanConnectionPoolImplTest {
         MXBeanConnector connector = mock(MXBeanConnector.class);
         ConnectorCreator creator = mock(ConnectorCreator.class);
 
-        when(creator.create(any(RMIRegistry.class), anyInt(), any(File.class))).thenReturn(connector);
+        when(creator.create(any(RMIRegistryImpl.class), anyInt(), any(File.class))).thenReturn(connector);
         when(connector.connect()).thenReturn(toReturn);
 
-        RMIRegistry registry = mock(RMIRegistry.class);
+        RMIRegistryImpl registry = mock(RMIRegistryImpl.class);
         MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(creator, registry, binDir);
 
         MXBeanConnection connection = pool.acquire(0);
@@ -85,10 +86,10 @@ public class MXBeanConnectionPoolImplTest {
         MXBeanConnector connector = mock(MXBeanConnector.class);
         ConnectorCreator creator = mock(ConnectorCreator.class);
 
-        when(creator.create(any(RMIRegistry.class), anyInt(), any(File.class))).thenReturn(connector);
+        when(creator.create(any(RMIRegistryImpl.class), anyInt(), any(File.class))).thenReturn(connector);
         when(connector.connect()).thenReturn(toReturn);
 
-        RMIRegistry registry = mock(RMIRegistry.class);
+        RMIRegistryImpl registry = mock(RMIRegistryImpl.class);
         MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(creator, registry, binDir);
 
         MXBeanConnection connection1 = pool.acquire(0);
@@ -111,10 +112,10 @@ public class MXBeanConnectionPoolImplTest {
         MXBeanConnector connector = mock(MXBeanConnector.class);
         ConnectorCreator creator = mock(ConnectorCreator.class);
 
-        when(creator.create(any(RMIRegistry.class), anyInt(), any(File.class))).thenReturn(connector);
+        when(creator.create(any(RMIRegistryImpl.class), anyInt(), any(File.class))).thenReturn(connector);
         when(connector.connect()).thenReturn(actualConnection);
 
-        RMIRegistry registry = mock(RMIRegistry.class);
+        RMIRegistryImpl registry = mock(RMIRegistryImpl.class);
         MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(creator, registry, binDir);
 
         MXBeanConnection connection = pool.acquire(0);
@@ -132,10 +133,10 @@ public class MXBeanConnectionPoolImplTest {
         MXBeanConnector connector = mock(MXBeanConnector.class);
         ConnectorCreator creator = mock(ConnectorCreator.class);
 
-        when(creator.create(any(RMIRegistry.class), anyInt(), any(File.class))).thenReturn(connector);
+        when(creator.create(any(RMIRegistryImpl.class), anyInt(), any(File.class))).thenReturn(connector);
         when(connector.connect()).thenReturn(actualConnection);
 
-        RMIRegistry registry = mock(RMIRegistry.class);
+        RMIRegistryImpl registry = mock(RMIRegistryImpl.class);
         MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(creator, registry, binDir);
 
         // connection1 == connection1 == actualConnection
@@ -154,7 +155,7 @@ public class MXBeanConnectionPoolImplTest {
     
     @Test
     public void testShutdown() throws Exception {
-        RMIRegistry registry = mock(RMIRegistry.class);
+        RMIRegistryImpl registry = mock(RMIRegistryImpl.class);
         ConnectorCreator creator = mock(ConnectorCreator.class);
         MXBeanConnectionPoolImpl pool = new MXBeanConnectionPoolImpl(creator, registry, binDir);
         verify(registry).start();

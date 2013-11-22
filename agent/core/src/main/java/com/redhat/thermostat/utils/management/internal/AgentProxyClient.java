@@ -45,6 +45,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.agent.RMIRegistry;
 import com.redhat.thermostat.agent.proxy.common.AgentProxyControl;
 import com.redhat.thermostat.agent.proxy.common.AgentProxyListener;
 import com.redhat.thermostat.agent.proxy.common.AgentProxyLogin;

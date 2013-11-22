@@ -40,8 +40,8 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
+import com.redhat.thermostat.agent.RMIRegistry;
 import com.redhat.thermostat.agent.VmBlacklist;
-
 import com.redhat.thermostat.agent.config.AgentConfigsUtils;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
@@ -56,9 +56,11 @@ public class Activator implements BundleActivator {
 
     @Override
     public void start(BundleContext context) throws Exception {
+        RMIRegistryImpl registry = new RMIRegistryImpl();
+        context.registerService(RMIRegistry.class, registry, null);
         ServiceReference<CommonPaths> pathsRef = context.getServiceReference(CommonPaths.class);
         CommonPaths paths = context.getService(pathsRef);
-        pool = new MXBeanConnectionPoolImpl(paths.getSystemBinRoot());
+        pool = new MXBeanConnectionPoolImpl(registry, paths.getSystemBinRoot());
         context.registerService(MXBeanConnectionPool.class, pool, null);
         AgentConfigsUtils.setConfigFiles(paths.getSystemAgentConfigurationFile(), paths.getUserAgentConfigurationFile(),
         		                   paths.getUserAgentAuthConfigFile());

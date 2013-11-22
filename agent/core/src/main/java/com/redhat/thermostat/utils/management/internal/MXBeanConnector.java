@@ -46,6 +46,7 @@ import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
+import com.redhat.thermostat.agent.RMIRegistry;
 import com.redhat.thermostat.common.tools.ApplicationException;
 
 class MXBeanConnector implements Closeable {

@@ -57,6 +57,7 @@ import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import com.redhat.thermostat.agent.internal.RMIRegistryImpl;
 import com.redhat.thermostat.agent.proxy.common.AgentProxyControl;
 import com.redhat.thermostat.agent.proxy.common.AgentProxyListener;
 import com.redhat.thermostat.agent.proxy.common.AgentProxyLogin;
@@ -66,7 +67,7 @@ import com.redhat.thermostat.utils.management.internal.AgentProxyClient.ProcessC
 public class AgentProxyClientTest {
     
     private AgentProxyClient client;
-    private RMIRegistry rmi;
+    private RMIRegistryImpl rmi;
     private Registry registry;
     private ProcessCreator procCreator;
     private CountDownLatch latch;
@@ -77,7 +78,7 @@ public class AgentProxyClientTest {
     
     @Before
     public void setup() throws Exception {
-        rmi = mock(RMIRegistry.class);
+        rmi = mock(RMIRegistryImpl.class);
         listenerStub = mock(AgentProxyListener.class);
         when(rmi.export(any(AgentProxyListener.class))).thenReturn(listenerStub);
         registry = mock(Registry.class);

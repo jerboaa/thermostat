@@ -44,6 +44,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.agent.RMIRegistry;
+import com.redhat.thermostat.agent.internal.RMIRegistryImpl;
 import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -58,19 +60,14 @@ public class MXBeanConnectionPoolImpl implements MXBeanConnectionPool {
     private Map<Integer, Pair<Integer, MXBeanConnectionImpl>> pool = new HashMap<>();
 
     private final ConnectorCreator creator;
-    private final RMIRegistry registry;
+    private final RMIRegistryImpl registry;
     private final File binPath;
 
-    public MXBeanConnectionPoolImpl(File binPath) {
-        this(new ConnectorCreator(), new RMIRegistry(), binPath);
-    }
-    
-    // For testing purposes only
-    public MXBeanConnectionPoolImpl(RMIRegistry registry, File binPath) {
+    public MXBeanConnectionPoolImpl(RMIRegistryImpl registry, File binPath) {
         this(new ConnectorCreator(), registry, binPath);
     }
 
-    MXBeanConnectionPoolImpl(ConnectorCreator connectorCreator, RMIRegistry registry, File binPath) {
+    MXBeanConnectionPoolImpl(ConnectorCreator connectorCreator, RMIRegistryImpl registry, File binPath) {
         this.creator = connectorCreator;
         this.registry = registry;
         this.binPath = binPath;
