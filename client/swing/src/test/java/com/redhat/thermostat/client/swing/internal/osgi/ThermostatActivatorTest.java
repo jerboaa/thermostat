@@ -44,7 +44,7 @@ import org.junit.Test;
 import com.redhat.thermostat.client.core.views.AgentInformationViewProvider;
 import com.redhat.thermostat.client.core.views.ClientConfigViewProvider;
 import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
-import com.redhat.thermostat.client.core.views.SummaryViewProvider;
+import com.redhat.thermostat.client.core.views.VersionAndInfoViewProvider;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
 import com.redhat.thermostat.client.swing.internal.views.SwingAgentInformationViewProvider;
 import com.redhat.thermostat.client.swing.internal.views.SwingClientConfigurationViewProvider;
@@ -63,7 +63,7 @@ public class ThermostatActivatorTest {
 
         activator.start(ctx);
 
-        assertTrue(ctx.isServiceRegistered(SummaryViewProvider.class.getName(), SwingSummaryViewProvider.class));
+        assertTrue(ctx.isServiceRegistered(VersionAndInfoViewProvider.class.getName(), SwingSummaryViewProvider.class));
         assertTrue(ctx.isServiceRegistered(HostInformationViewProvider.class.getName(), SwingHostInformationViewProvider.class));
         assertTrue(ctx.isServiceRegistered(VmInformationViewProvider.class.getName(), SwingVmInformationViewProvider.class));
         assertTrue(ctx.isServiceRegistered(AgentInformationViewProvider.class.getName(), SwingAgentInformationViewProvider.class));

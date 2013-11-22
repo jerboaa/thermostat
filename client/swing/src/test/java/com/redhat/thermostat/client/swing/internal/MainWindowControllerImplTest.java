@@ -58,8 +58,8 @@ import com.redhat.thermostat.client.core.views.AgentInformationViewProvider;
 import com.redhat.thermostat.client.core.views.ClientConfigViewProvider;
 import com.redhat.thermostat.client.core.views.HostInformationView;
 import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
-import com.redhat.thermostat.client.core.views.SummaryView;
-import com.redhat.thermostat.client.core.views.SummaryViewProvider;
+import com.redhat.thermostat.client.core.views.VersionAndInfoView;
+import com.redhat.thermostat.client.core.views.VersionAndInfoViewProvider;
 import com.redhat.thermostat.client.core.views.VmInformationView;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
 import com.redhat.thermostat.client.swing.internal.registry.decorator.DecoratorRegistryController;
@@ -149,9 +149,9 @@ public class MainWindowControllerImplTest {
         BackendInfoDAO backendInfoDAO = mock(BackendInfoDAO.class);
         context.registerService(BackendInfoDAO.class, backendInfoDAO, null);
         
-        SummaryViewProvider summaryViewProvider = mock(SummaryViewProvider.class);
-        context.registerService(SummaryViewProvider.class, summaryViewProvider, null);
-        SummaryView summaryView = mock(SummaryView.class);
+        VersionAndInfoViewProvider summaryViewProvider = mock(VersionAndInfoViewProvider.class);
+        context.registerService(VersionAndInfoViewProvider.class, summaryViewProvider, null);
+        VersionAndInfoView summaryView = mock(VersionAndInfoView.class);
         when(summaryViewProvider.createView()).thenReturn(summaryView);
         
         HostInformationViewProvider hostInfoViewProvider = mock(HostInformationViewProvider.class);

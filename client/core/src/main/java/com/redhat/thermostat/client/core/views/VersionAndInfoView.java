@@ -36,14 +36,13 @@
 
 package com.redhat.thermostat.client.core.views;
 
+import com.redhat.thermostat.common.ApplicationInfo;
+
 /**
  * A {@link View} that displays a summary of everything in thermostat.
  */
-public abstract class SummaryView extends BasicView implements UIComponent {
+public abstract class VersionAndInfoView extends BasicView implements UIComponent {
 
-    public abstract void setTotalHosts(String count);
-
-    public abstract void setTotalVms(String count);
-
+    public abstract void initialize(ApplicationInfo appInfo);
 }
 

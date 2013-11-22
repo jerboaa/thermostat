@@ -34,16 +34,32 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.internal.views;
+package com.redhat.thermostat.client.ui;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import org.junit.Test;
 
 import com.redhat.thermostat.client.core.views.VersionAndInfoView;
 import com.redhat.thermostat.client.core.views.VersionAndInfoViewProvider;
+import com.redhat.thermostat.common.ApplicationInfo;
 
-public class SwingSummaryViewProvider implements VersionAndInfoViewProvider {
+public class VersionAndInfoTest {
 
-    @Override
-    public VersionAndInfoView createView() {
-        return new VersionAndInfoPanel();
+    @Test
+    public void testViewIsInitialized() {
+        ApplicationInfo appInfo = mock(ApplicationInfo.class);
+
+        VersionAndInfoView view = mock(VersionAndInfoView.class);
+
+        VersionAndInfoViewProvider viewProvider = mock(VersionAndInfoViewProvider.class);
+        when(viewProvider.createView()).thenReturn(view);
+
+        new VersionAndInfoController(appInfo, viewProvider);
+
+        verify(view).initialize(appInfo);
     }
 
 }

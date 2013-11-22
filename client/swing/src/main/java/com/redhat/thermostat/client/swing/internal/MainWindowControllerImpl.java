@@ -54,7 +54,7 @@ import com.redhat.thermostat.client.core.views.AgentInformationViewProvider;
 import com.redhat.thermostat.client.core.views.ClientConfigViewProvider;
 import com.redhat.thermostat.client.core.views.ClientConfigurationView;
 import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
-import com.redhat.thermostat.client.core.views.SummaryViewProvider;
+import com.redhat.thermostat.client.core.views.VersionAndInfoViewProvider;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
 import com.redhat.thermostat.client.swing.internal.osgi.ContextActionServiceTracker;
 import com.redhat.thermostat.client.swing.internal.osgi.InformationServiceTracker;
@@ -72,7 +72,7 @@ import com.redhat.thermostat.client.ui.HostInformationController;
 import com.redhat.thermostat.client.ui.MainWindowController;
 import com.redhat.thermostat.client.ui.MenuAction;
 import com.redhat.thermostat.client.ui.MenuRegistry;
-import com.redhat.thermostat.client.ui.SummaryController;
+import com.redhat.thermostat.client.ui.VersionAndInfoController;
 import com.redhat.thermostat.client.ui.VmInformationController;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
@@ -115,7 +115,7 @@ public class MainWindowControllerImpl implements MainWindowController {
     private AgentInfoDAO agentInfoDAO;
     private BackendInfoDAO backendInfoDAO;
 
-    private SummaryViewProvider summaryViewProvider;
+    private VersionAndInfoViewProvider summaryViewProvider;
     private HostInformationViewProvider hostInfoViewProvider;
     private VmInformationViewProvider vmInfoViewProvider;
     private AgentInformationViewProvider agentInfoViewProvider;
@@ -217,7 +217,7 @@ public class MainWindowControllerImpl implements MainWindowController {
                 VmInfoDAO.class,
                 AgentInfoDAO.class,
                 BackendInfoDAO.class,
-                SummaryViewProvider.class,
+                VersionAndInfoViewProvider.class,
                 HostInformationViewProvider.class,
                 VmInformationViewProvider.class,
                 AgentInformationViewProvider.class,
@@ -241,7 +241,7 @@ public class MainWindowControllerImpl implements MainWindowController {
                 Objects.requireNonNull(agentInfoDAO);
                 backendInfoDAO = (BackendInfoDAO) services.get(BackendInfoDAO.class.getName());
                 Objects.requireNonNull(backendInfoDAO);
-                summaryViewProvider = (SummaryViewProvider) services.get(SummaryViewProvider.class.getName());
+                summaryViewProvider = (VersionAndInfoViewProvider) services.get(VersionAndInfoViewProvider.class.getName());
                 Objects.requireNonNull(summaryViewProvider);
                 hostInfoViewProvider = (HostInformationViewProvider) services.get(HostInformationViewProvider.class.getName());
                 Objects.requireNonNull(hostInfoViewProvider);
@@ -355,6 +355,9 @@ public class MainWindowControllerImpl implements MainWindowController {
             }
 
         });
+
+        updateView(null);
+
         initViewLatch.countDown();
     }
 
@@ -451,7 +454,7 @@ public class MainWindowControllerImpl implements MainWindowController {
 
     private void updateView(Ref ref) {
         if (ref == null) {
-            SummaryController controller = createSummaryController();
+            VersionAndInfoController controller = createSummaryController();
             view.setSubView(controller.getView());
         } else if (ref instanceof HostRef) {
             HostRef hostRef = (HostRef) ref;
@@ -494,8 +497,8 @@ public class MainWindowControllerImpl implements MainWindowController {
         }
     }
     
-    private SummaryController createSummaryController() {
-        return new SummaryController(appSvc, hostInfoDAO, vmInfoDAO, summaryViewProvider);
+    private VersionAndInfoController createSummaryController() {
+        return new VersionAndInfoController(appInfo, summaryViewProvider);
     }
 
     private HostInformationController createHostInformationController(HostRef ref) {

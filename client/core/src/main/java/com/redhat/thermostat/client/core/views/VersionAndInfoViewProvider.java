@@ -34,17 +34,12 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.internal.views;
+package com.redhat.thermostat.client.core.views;
 
-import com.redhat.thermostat.client.core.views.VersionAndInfoView;
-import com.redhat.thermostat.client.core.views.VersionAndInfoViewProvider;
-
-public class SwingSummaryViewProvider implements VersionAndInfoViewProvider {
+public interface VersionAndInfoViewProvider extends ViewProvider {
 
     @Override
-    public VersionAndInfoView createView() {
-        return new VersionAndInfoPanel();
-    }
+    public VersionAndInfoView createView();
 
 }
 

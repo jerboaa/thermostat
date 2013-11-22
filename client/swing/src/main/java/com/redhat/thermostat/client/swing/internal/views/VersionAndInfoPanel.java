@@ -34,12 +34,31 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.core.views;
+package com.redhat.thermostat.client.swing.internal.views;
 
-public interface SummaryViewProvider extends ViewProvider {
+import java.awt.BorderLayout;
+import java.awt.Component;
+
+import javax.swing.JPanel;
+
+import com.redhat.thermostat.client.core.views.VersionAndInfoView;
+import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.client.swing.internal.AboutPanel;
+import com.redhat.thermostat.common.ApplicationInfo;
+
+public class VersionAndInfoPanel extends VersionAndInfoView implements SwingComponent {
+
+    private JPanel visiblePanel;
 
     @Override
-    public SummaryView createView();
+    public void initialize(ApplicationInfo appInfo) {
+        visiblePanel = new JPanel(new BorderLayout());
+        visiblePanel.add(new AboutPanel(appInfo), BorderLayout.PAGE_START);
+    }
 
+    @Override
+    public Component getUiComponent() {
+        return visiblePanel;
+    }
 }
 
