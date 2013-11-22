@@ -52,20 +52,52 @@ public class ListExportedClasses {
     public static void main(String[] args) {
         if (args.length == 0) {
             System.out.println("Usage:");
-            System.out.println("\tjava ListExportedClass path/to/jar1 [path/to/jar2 [path/to/jar3 [...]]]");
+            System.out.println("\tjava ListExportedClass [options] path/to/jar1 [path/to/jar2 [path/to/jar3 [...]]]");
             System.out.println();
             System.out.println("Prints a list of OSGi-exported packages and public classes in those packages");
+            System.out.println();
+            System.out.println("Options:");
+            System.out.println("\t--private\t\tshow only OSGi-private packages");
+            System.out.println("\t--packages\t\tshow packages only");
         }
 
-        List<String> jarNames = Arrays.asList(args);
+        // whether to show public or private packages
+        boolean listPublicPackages = true;
+
+        boolean listPackagesOnly = false;
+
+        List<String> jarNames = new ArrayList<>(Arrays.asList(args));
+        for (String arg : args) {
+            if (arg.equals("--private")) {
+                listPublicPackages = false;
+                jarNames.remove(arg);
+            } else if (arg.equals("--packages")) {
+                listPackagesOnly = true;
+                jarNames.remove(arg);
+            }
+        }
+
         for (String jarName : jarNames) {
-            System.out.println(jarName);
+            if (!listPackagesOnly) {
+                System.out.println(jarName);
+            }
             try {
                 JarFile jarFile = new JarFile(jarName);
-                for (String exportedPackage : findOSGiExportedPackages(jarFile)) {
-                    System.out.println("\t" + exportedPackage);
-                    for (String exportedClass : findOSGiExportedClassesInPackage(jarFile, exportedPackage)) {
-                        System.out.println("\t\t" + exportedClass);
+                if (listPublicPackages) {
+                    for (String exportedPackage : findOSGiExportedPackages(jarFile)) {
+                        System.out.println("\t" + exportedPackage);
+                        if (!listPackagesOnly) {
+                            for (String exportedClass : findOSGiExportedClassesInPackage(jarFile, exportedPackage)) {
+                                System.out.println("\t\t" + exportedClass);
+                            }
+                        }
+                    }
+                } else {
+                    for (String privatePackage : findOSGiPrivatePackages(jarFile)) {
+                        System.out.println(privatePackage);
+                        if (!listPackagesOnly) {
+                            System.err.println("not implemented");
+                        }
                     }
                 }
             } catch (IOException ioe) {
@@ -172,21 +204,32 @@ public class ListExportedClasses {
 
     private static List<String> findOSGiExportedPackages(JarFile jarFile) throws IOException {
         Manifest manifest = jarFile.getManifest();
-        String exportedPackagesString = manifest.getMainAttributes().getValue("Export-Package");
-        if (exportedPackagesString == null) {
+        String exportedPackages = manifest.getMainAttributes().getValue("Export-Package");
+        return convertPackageStringToList(exportedPackages);
+    }
+
+    private static List<String> findOSGiPrivatePackages(JarFile jarFile) throws IOException {
+        Manifest manifest = jarFile.getManifest();
+        String privatePackages = manifest.getMainAttributes().getValue("Private-Package");
+        return convertPackageStringToList(privatePackages);
+    }
+
+    private static List<String> convertPackageStringToList(String packages) {
+        if (packages == null) {
             return new ArrayList<>();
         }
-        List<String> exportedPackages = Arrays.asList(exportedPackagesString.split(","));
-        for (int i = 0; i < exportedPackages.size(); i++) {
-            String exportedPackage = exportedPackages.get(i);
+        List<String> packagesList = Arrays.asList(packages.split(","));
+        for (int i = 0; i < packagesList.size(); i++) {
+            String exportedPackage = packagesList.get(i);
             // exports can have a ";uses.." part after the package name. remove it.
             int indexOfUses = exportedPackage.indexOf(";");
             if (indexOfUses != -1) {
                 exportedPackage = exportedPackage.substring(0, indexOfUses);
             }
-            exportedPackages.set(i, exportedPackage);
+            packagesList.set(i, exportedPackage);
         }
-        Collections.sort(exportedPackages);
-        return exportedPackages;
+        Collections.sort(packagesList);
+        return packagesList;
     }
+
 }
