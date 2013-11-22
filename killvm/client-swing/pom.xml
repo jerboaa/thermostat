@@ -20,8 +20,10 @@
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-Activator>com.redhat.thermostat.killvm.client.internal.Activator</Bundle-Activator>
             <Bundle-SymbolicName>com.redhat.thermostat.killvm.client</Bundle-SymbolicName>
-            <Export-Package>com.redhat.thermostat.killvm.client.locale</Export-Package>
-            <Private-Package>com.redhat.thermostat.killvm.client.internal</Private-Package>
+            <Private-Package>
+              com.redhat.thermostat.killvm.client.internal,
+              com.redhat.thermostat.killvm.client.locale,
+            </Private-Package>
           </instructions>
           <!-- Do not autogenerate uses clauses in Manifests -->
           <_nouses>true</_nouses>
