@@ -361,6 +361,16 @@ public class SWTHostOverviewView extends HostOverviewView implements
     }
 
     @Override
+    public void setMemoryPercentage(float percent) {
+        // TODO implement this
+    }
+
+    @Override
+    public void setCPUPercentage(float percent) {
+        // TODO implement this
+    }
+
+    @Override
     public void show() {
         notifier.fireAction(Action.VISIBLE);
     }
