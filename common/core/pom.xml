@@ -84,12 +84,12 @@
               com.redhat.thermostat.common,
               com.redhat.thermostat.common.config,
               com.redhat.thermostat.common.utils,
-              com.redhat.thermostat.common.locale,
               com.redhat.thermostat.common.ssl,
               com.redhat.thermostat.common.model,
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.test,
+              com.redhat.thermostat.common.locale,
               com.redhat.thermostat.common.internal,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
