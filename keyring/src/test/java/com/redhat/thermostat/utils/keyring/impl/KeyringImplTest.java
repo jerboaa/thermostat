@@ -40,10 +40,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class KeyringImplTest {
 
+    @Ignore // FIXME Hangs waiting for user to unlock keyring.
     @Test
     public void verifySavedPasswordIsRetrieveable() {
         String url = "www.example1.com";
@@ -57,6 +59,7 @@ public class KeyringImplTest {
         k.clearPassword(url, user);
     }
 
+    @Ignore // FIXME Hangs waiting for user to unlock keyring.
     @Test
     public void verifySavePasswordReplacesExisting() {
         String url = "www.example2.com";
@@ -73,6 +76,7 @@ public class KeyringImplTest {
         k.clearPassword(url, user);
     }
 
+    @Ignore // FIXME Hangs waiting for user to unlock keyring.
     @Test
     public void verifyClearedPasswordIsCleared() {
         String url = "www.example3.com";
@@ -85,6 +89,7 @@ public class KeyringImplTest {
         assertNull(k.getPassword(url, user));
     }
 
+    @Ignore // FIXME Hangs waiting for user to unlock keyring.
     @Test
     public void multipleServersSameUser() {
         String url1 = "www.example4.com";
@@ -104,6 +109,7 @@ public class KeyringImplTest {
         k.clearPassword(url2, user);
     }
 
+    @Ignore // FIXME Hangs waiting for user to unlock keyring.
     @Test
     public void multipleUsersSameServer() {
         String url = "www.example5.com";
