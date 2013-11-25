@@ -48,8 +48,19 @@ import java.lang.annotation.RetentionPolicy;
  * {@link BundleContext#getService(ServiceReference)} or
  * {@link OSGIUtils#getService(Class)}.
  * <p>
+ * The annotation is meant for service providers that wish to export a new
+ * service via OSGi and not consumers, hence consumers must not mark their
+ * classes or interfaces as {@code @Service}, nor directly extend the classes or
+ * implement the interfaces marked as @Service. Only the bundle(s) that
+ * publishes the service interface/class should do that.
+ * <p>
+ * Consumers wanting to extend functionality should make use of
+ * {@code @ExtensionPoint}s instead.
+ * <p>
  * This does not infer any behaviour on a class; this is for documentation
  * purposes only.
+ *
+ * @see ExtensionPoint
  */
 @Documented
 @Retention(RetentionPolicy.SOURCE)

@@ -49,6 +49,8 @@ import java.lang.annotation.RetentionPolicy;
  * {@link BundleContext#registerService}.
  * <p>
  * This is the whiteboard pattern.
+ *
+ * @see Service
  */
 @Documented
 @Retention(RetentionPolicy.SOURCE)
