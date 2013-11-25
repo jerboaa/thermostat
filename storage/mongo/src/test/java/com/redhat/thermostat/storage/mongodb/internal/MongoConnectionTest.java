@@ -40,9 +40,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -74,6 +77,8 @@ import com.mongodb.MongoOptions;
 import com.mongodb.MongoURI;
 import com.mongodb.ServerAddress;
 import com.redhat.thermostat.common.ssl.SSLContextFactory;
+import com.redhat.thermostat.common.utils.HostPortsParser;
+import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
@@ -171,6 +176,30 @@ public class MongoConnectionTest {
         assertTrue(exceptionThrown);
     }
     
+    @PrepareForTest({ MongoConnection.class, HostPortsParser.class })
+    @Test
+    public void testConnectInvalidConfigurationexception() throws Exception {
+        HostPortsParser failingParser = mock(HostPortsParser.class);
+        doThrow(new InvalidConfigurationException("let's pretend the configuration is invalid"))
+                .when(failingParser).parse();
+
+        PowerMockito
+            .whenNew(HostPortsParser.class)
+            .withParameterTypes(String.class)
+            .withArguments(anyString())
+            .thenReturn(failingParser);
+
+        boolean exceptionThrown = false;
+        try {
+            conn.connect();
+        } catch (ConnectionException ex) {
+            exceptionThrown = true;
+        }
+
+        verify(listener).changed(ConnectionStatus.FAILED_TO_CONNECT);
+        assertTrue(exceptionThrown);
+    }
+
     @PrepareForTest({ MongoConnection.class,
         SSLContextFactory.class, SSLContext.class, SSLSocketFactory.class })
     @Test

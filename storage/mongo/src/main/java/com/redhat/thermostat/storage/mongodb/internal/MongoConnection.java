@@ -55,6 +55,7 @@ import com.redhat.thermostat.common.ssl.SslInitException;
 import com.redhat.thermostat.common.utils.HostPortPair;
 import com.redhat.thermostat.common.utils.HostPortsParser;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.config.AuthenticationConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
@@ -85,7 +86,7 @@ class MongoConnection extends Connection {
             testConnection();
             connected = true;
 
-        } catch (IOException | MongoException | IllegalArgumentException e) {
+        } catch (IOException | MongoException | InvalidConfigurationException | IllegalArgumentException e) {
             logger.log(Level.WARNING, "Failed to connect to storage", e);
             fireChanged(ConnectionStatus.FAILED_TO_CONNECT);
             throw new ConnectionException(e.getMessage(), e);
@@ -124,7 +125,7 @@ class MongoConnection extends Connection {
     }
 
     // package visibility for testing purposes.
-    void createConnection() throws MongoException, UnknownHostException {
+    void createConnection() throws MongoException, InvalidConfigurationException, UnknownHostException {
         if (sslConf.enableForBackingStorage()) {
             logger.log(Level.FINE, "Using SSL socket for mongodb:// protocol");
             this.m = getSSLMongo();
@@ -156,7 +157,7 @@ class MongoConnection extends Connection {
         return new Mongo(getServerAddress(), opts);
     }
 
-    ServerAddress getServerAddress() throws UnknownHostException {
+    ServerAddress getServerAddress() throws InvalidConfigurationException, UnknownHostException {
         String url = conf.getDBConnectionString();
         // Strip mongodb prefix: "mongodb://".length() == 10
         String hostPort = url.substring(10);
