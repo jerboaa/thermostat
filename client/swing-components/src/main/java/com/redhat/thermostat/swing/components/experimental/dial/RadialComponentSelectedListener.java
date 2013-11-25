@@ -1,26 +1,26 @@
 /*
  * Copyright 2012, 2013 Red Hat, Inc.
- *
+ * 
  * This file is part of Thermostat.
- *
+ * 
  * Thermostat is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
  * by the Free Software Foundation; either version 2, or (at your
  * option) any later version.
- *
+ * 
  * Thermostat is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with Thermostat; see the file COPYING.  If not see
  * <http://www.gnu.org/licenses/>.
- *
+ * 
  * Linking this code with other modules is making a combined work
  * based on this code.  Thus, the terms and conditions of the GNU
  * General Public License cover the whole combination.
- *
+ * 
  * As a special exception, the copyright holders of this code give
  * you permission to link this code with independent modules to
  * produce an executable, regardless of the license terms of these
@@ -34,33 +34,13 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.host.overview.client.core;
+package com.redhat.thermostat.swing.components.experimental.dial;
 
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.UIComponent;
+import java.util.EventListener;
 
-
-public abstract class HostOverviewView extends BasicView implements UIComponent {
-
-    public abstract void setHostName(String newHostName);
-
-    public abstract void setCpuModel(String newCpuModel);
-
-    public abstract void setCpuCount(String newCpuCount);
-
-    public abstract void setTotalMemory(String newTotalMemory);
-
-    public abstract void setOsName(String newOsName);
-
-    public abstract void setOsKernel(String newOsKernel);
-
-    public abstract void setNetworkTableColumns(Object[] columns);
-
-    public abstract void setInitialNetworkTableData(Object[][] table);
-
-    public abstract void updateNetworkTableData(int row, int column, String data);
-    
-    public abstract void setCPUPercentage(float percentage);
-    public abstract void setMemoryPercentage(float percentage);
+/**
+ *
+ */
+interface RadialComponentSelectedListener extends EventListener {
+    public void componentSelected(RadialComponentSelectedEvent event);
 }
-

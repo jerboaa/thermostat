@@ -50,6 +50,8 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
+import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
 import com.redhat.thermostat.host.overview.client.core.HostOverviewService;
 import com.redhat.thermostat.host.overview.client.core.HostOverviewViewProvider;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -67,7 +69,9 @@ public class Activator implements BundleActivator {
             HostInfoDAO.class,
             NetworkInterfaceInfoDAO.class,
             ApplicationService.class,
-            HostOverviewViewProvider.class
+            HostOverviewViewProvider.class,
+            CpuStatDAO.class,
+            MemoryStatDAO.class,
         };
 
         tracker = new MultipleServiceTracker(context, deps, new Action() {
@@ -85,7 +89,16 @@ public class Activator implements BundleActivator {
                         .get(HostOverviewViewProvider.class.getName());
                 Objects.requireNonNull(viewProvider);
                 
-                HostOverviewService service = new HostOverviewServiceImpl(appSvc, hostInfoDAO, networkInfoDAO, viewProvider);
+                CpuStatDAO cpuDao = (CpuStatDAO) services.get(CpuStatDAO.class.getName());
+                Objects.requireNonNull(cpuDao);
+                
+                MemoryStatDAO memoryDao = (MemoryStatDAO) services.get(MemoryStatDAO.class.getName());
+                Objects.requireNonNull(memoryDao);
+                
+                HostOverviewService service =
+                        new HostOverviewServiceImpl(appSvc, hostInfoDAO,
+                                                    networkInfoDAO, cpuDao,
+                                                    memoryDao, viewProvider);
                 Dictionary<String, String> properties = new Hashtable<>();
                 properties.put(Constants.GENERIC_SERVICE_CLASSNAME, HostRef.class.getName());
                 properties.put(InformationService.KEY_SERVICE_ID, HostOverviewService.SERVICE_ID);

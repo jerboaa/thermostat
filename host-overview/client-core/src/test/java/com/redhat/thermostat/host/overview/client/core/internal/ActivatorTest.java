@@ -45,6 +45,8 @@ import org.junit.Test;
 
 import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
+import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
 import com.redhat.thermostat.host.overview.client.core.HostOverviewViewProvider;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
@@ -73,11 +75,15 @@ public class ActivatorTest {
         NetworkInterfaceInfoDAO networkInfoDAO = mock(NetworkInterfaceInfoDAO.class);
         ApplicationService appSvc = mock(ApplicationService.class);
         HostOverviewViewProvider viewProvider = mock(HostOverviewViewProvider.class);
+        CpuStatDAO cpuStat = mock(CpuStatDAO.class);
+        MemoryStatDAO memoryStat = mock(MemoryStatDAO.class);
 
         context.registerService(HostInfoDAO.class, hostInfoDAO, null);
         context.registerService(NetworkInterfaceInfoDAO.class, networkInfoDAO, null);
         context.registerService(ApplicationService.class, appSvc, null);
         context.registerService(HostOverviewViewProvider.class, viewProvider, null);
+        context.registerService(CpuStatDAO.class, cpuStat, null);
+        context.registerService(MemoryStatDAO.class, memoryStat, null);
 
         Activator activator = new Activator();
 
@@ -88,7 +94,7 @@ public class ActivatorTest {
         activator.stop(context);
 
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(4, context.getAllServices().size());
+        assertEquals(6, context.getAllServices().size());
     }
 
 }

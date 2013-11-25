@@ -60,9 +60,18 @@ import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.host.overview.client.core.HostOverviewView;
 import com.redhat.thermostat.host.overview.client.locale.LocaleResources;
 import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.swing.components.experimental.dial.RadialControl;
+import javax.swing.border.TitledBorder;
+import javax.swing.border.LineBorder;
+import java.awt.Color;
+import javax.swing.JLabel;
+import javax.swing.SwingConstants;
 
 public class HostOverviewPanel extends HostOverviewView implements SwingComponent {
 
+    RadialControl radialControl;
+    RadialControl radialControl_1;
+    
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private JPanel visiblePanel;
@@ -232,6 +241,7 @@ public class HostOverviewPanel extends HostOverviewView implements SwingComponen
 
     private void initializePanel() {
         visiblePanel = new JPanel();
+        visiblePanel.setBackground(Color.WHITE);
         SectionHeader overviewSection = new SectionHeader(translator.localize(LocaleResources.HOST_OVERVIEW_SECTION_BASICS));
         LabelField hostnameLabel = new LabelField(translator.localize(LocaleResources.HOST_INFO_HOSTNAME));
         SectionHeader hardwareSection = new SectionHeader(translator.localize(LocaleResources.HOST_OVERVIEW_SECTION_HARDWARE));
@@ -244,16 +254,20 @@ public class HostOverviewPanel extends HostOverviewView implements SwingComponen
         LabelField osKernelLabel = new LabelField(translator.localize(LocaleResources.HOST_INFO_OS_KERNEL));
 
         JPanel panel = new JPanel();
+        
+        JPanel radialSummaryPanel = new JPanel();
+        radialSummaryPanel.setBackground(Color.WHITE);
 
         GroupLayout gl_visiblePanel = new GroupLayout(visiblePanel);
         gl_visiblePanel.setHorizontalGroup(
             gl_visiblePanel.createParallelGroup(Alignment.LEADING)
-                .addGroup(gl_visiblePanel.createSequentialGroup()
+                .addGroup(Alignment.TRAILING, gl_visiblePanel.createSequentialGroup()
                     .addContainerGap()
-                    .addGroup(gl_visiblePanel.createParallelGroup(Alignment.LEADING)
-                        .addComponent(hardwareSection, GroupLayout.DEFAULT_SIZE, 620, Short.MAX_VALUE)
-                        .addComponent(overviewSection, GroupLayout.DEFAULT_SIZE, 620, Short.MAX_VALUE)
-                        .addGroup(gl_visiblePanel.createSequentialGroup()
+                    .addGroup(gl_visiblePanel.createParallelGroup(Alignment.TRAILING)
+                        .addComponent(radialSummaryPanel, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 647, Short.MAX_VALUE)
+                        .addComponent(hardwareSection, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 647, Short.MAX_VALUE)
+                        .addComponent(overviewSection, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 647, Short.MAX_VALUE)
+                        .addGroup(Alignment.LEADING, gl_visiblePanel.createSequentialGroup()
                             .addGroup(gl_visiblePanel.createParallelGroup(Alignment.TRAILING, false)
                                 .addGroup(gl_visiblePanel.createSequentialGroup()
                                     .addGap(12)
@@ -266,13 +280,13 @@ public class HostOverviewPanel extends HostOverviewView implements SwingComponen
                                     .addComponent(networkLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                             .addPreferredGap(ComponentPlacement.RELATED)
                             .addGroup(gl_visiblePanel.createParallelGroup(Alignment.LEADING)
-                                .addComponent(panel, GroupLayout.DEFAULT_SIZE, 462, Short.MAX_VALUE)
+                                .addComponent(panel, GroupLayout.DEFAULT_SIZE, 495, Short.MAX_VALUE)
                                 .addComponent(cpuCount, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addComponent(cpuModel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addComponent(hostname, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addComponent(totalMemory, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                        .addComponent(softwareSection, GroupLayout.DEFAULT_SIZE, 620, Short.MAX_VALUE)
-                        .addGroup(gl_visiblePanel.createSequentialGroup()
+                        .addComponent(softwareSection, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 647, Short.MAX_VALUE)
+                        .addGroup(Alignment.LEADING, gl_visiblePanel.createSequentialGroup()
                             .addGap(12)
                             .addGroup(gl_visiblePanel.createParallelGroup(Alignment.LEADING, false)
                                 .addComponent(osKernelLabel, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -320,8 +334,49 @@ public class HostOverviewPanel extends HostOverviewView implements SwingComponen
                     .addGroup(gl_visiblePanel.createParallelGroup(Alignment.LEADING)
                         .addComponent(osKernelLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
                         .addComponent(osKernel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-                    .addGap(128))
+                    .addGap(18)
+                    .addComponent(radialSummaryPanel, GroupLayout.DEFAULT_SIZE, 196, Short.MAX_VALUE)
+                    .addContainerGap())
         );
+        
+        radialControl = new RadialControl();
+        
+        radialControl_1 = new RadialControl();
+        
+        JLabel lblCpu = new JLabel("CPU");
+        lblCpu.setHorizontalAlignment(SwingConstants.CENTER);
+        
+        JLabel lblMemory = new JLabel("Memory");
+        lblMemory.setHorizontalAlignment(SwingConstants.CENTER);
+        GroupLayout gl_radialSummaryPanel = new GroupLayout(radialSummaryPanel);
+        gl_radialSummaryPanel.setHorizontalGroup(
+            gl_radialSummaryPanel.createParallelGroup(Alignment.LEADING)
+                .addGroup(gl_radialSummaryPanel.createSequentialGroup()
+                    .addContainerGap()
+                    .addGroup(gl_radialSummaryPanel.createParallelGroup(Alignment.TRAILING, false)
+                        .addGroup(gl_radialSummaryPanel.createSequentialGroup()
+                            .addGap(6)
+                            .addComponent(lblCpu, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(radialControl, Alignment.LEADING, GroupLayout.PREFERRED_SIZE, 361, GroupLayout.PREFERRED_SIZE))
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addGroup(gl_radialSummaryPanel.createParallelGroup(Alignment.LEADING, false)
+                        .addComponent(lblMemory, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(radialControl_1, GroupLayout.DEFAULT_SIZE, 361, Short.MAX_VALUE))
+                    .addContainerGap(32, Short.MAX_VALUE))
+        );
+        gl_radialSummaryPanel.setVerticalGroup(
+            gl_radialSummaryPanel.createParallelGroup(Alignment.LEADING)
+                .addGroup(gl_radialSummaryPanel.createSequentialGroup()
+                    .addGroup(gl_radialSummaryPanel.createParallelGroup(Alignment.LEADING)
+                        .addComponent(radialControl, GroupLayout.PREFERRED_SIZE, 331, GroupLayout.PREFERRED_SIZE)
+                        .addComponent(radialControl_1, GroupLayout.PREFERRED_SIZE, 331, GroupLayout.PREFERRED_SIZE))
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addGroup(gl_radialSummaryPanel.createParallelGroup(Alignment.BASELINE)
+                        .addComponent(lblCpu)
+                        .addComponent(lblMemory))
+                    .addContainerGap(23, Short.MAX_VALUE))
+        );
+        radialSummaryPanel.setLayout(gl_radialSummaryPanel);
 
         panel.setLayout(new BorderLayout(0, 0));
 
@@ -333,6 +388,25 @@ public class HostOverviewPanel extends HostOverviewView implements SwingComponen
         visiblePanel.setLayout(gl_visiblePanel);
 
         scrollPane = new JScrollPane(visiblePanel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+    }
+    
+    @Override
+    public void setCPUPercentage(final float percent) {
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                radialControl.setProgressPercentage(percent);
+            }
+        });
+    }
+    
+    @Override
+    public void setMemoryPercentage(final float percent) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                radialControl_1.setProgressPercentage(percent);
+            }
+        });
     }
 }
 

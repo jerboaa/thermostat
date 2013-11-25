@@ -40,6 +40,8 @@ import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.client.core.NameMatchingRefFilter;
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
+import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
 import com.redhat.thermostat.host.overview.client.core.HostOverviewService;
 import com.redhat.thermostat.host.overview.client.core.HostOverviewViewProvider;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -55,14 +57,22 @@ public class HostOverviewServiceImpl implements HostOverviewService {
     private HostInfoDAO hostInfoDAO;
     private NetworkInterfaceInfoDAO networkInfoDAO;
     private HostOverviewViewProvider viewProvider;
+    private CpuStatDAO cpuDao;
+    private MemoryStatDAO memoryDao;
     
     public HostOverviewServiceImpl(ApplicationService appSvc,
-            HostInfoDAO hostInfoDAO, NetworkInterfaceInfoDAO networkInfoDAO,
-            HostOverviewViewProvider viewProvider) {
+                                   HostInfoDAO hostInfoDAO,
+                                   NetworkInterfaceInfoDAO networkInfoDAO,
+                                   CpuStatDAO cpuDao,
+                                   MemoryStatDAO memoryDao,
+                                   HostOverviewViewProvider viewProvider)
+    {
         this.appSvc = appSvc;
         this.hostInfoDAO = hostInfoDAO;
         this.networkInfoDAO = networkInfoDAO;
         this.viewProvider = viewProvider;
+        this.cpuDao = cpuDao;
+        this.memoryDao = memoryDao;
     }
 
     @Override
@@ -71,9 +81,10 @@ public class HostOverviewServiceImpl implements HostOverviewService {
     }
 
     @Override
-    public InformationServiceController<HostRef> getInformationServiceController(
-            HostRef ref) {
-        return new HostOverviewController(appSvc, hostInfoDAO, networkInfoDAO, ref, viewProvider);
+    public InformationServiceController<HostRef> getInformationServiceController(HostRef ref)
+    {
+        return new HostOverviewController(appSvc, hostInfoDAO, networkInfoDAO,
+                                          cpuDao, memoryDao, ref, viewProvider);
     }
 
     @Override

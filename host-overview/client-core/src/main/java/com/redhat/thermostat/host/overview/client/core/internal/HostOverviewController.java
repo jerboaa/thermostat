@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.host.overview.client.core.internal;
 
+import java.lang.reflect.Member;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -51,6 +52,10 @@ import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
+import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
+import com.redhat.thermostat.host.cpu.common.model.CpuStat;
+import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
+import com.redhat.thermostat.host.memory.common.model.MemoryStat;
 import com.redhat.thermostat.host.overview.client.core.HostOverviewView;
 import com.redhat.thermostat.host.overview.client.core.HostOverviewViewProvider;
 import com.redhat.thermostat.host.overview.client.locale.LocaleResources;
@@ -70,11 +75,20 @@ public class HostOverviewController implements InformationServiceController<Host
     private final NetworkInterfaceInfoDAO networkInfoDAO;
 
     private final Timer backgroundUpdateTimer;
+    private final Timer statsTimer;
+
     private final List<String> knownNetworkIfaces = new ArrayList<>();
 
     private final HostOverviewView view;
 
-    public HostOverviewController(ApplicationService appSvc, HostInfoDAO hostInfoDAO, NetworkInterfaceInfoDAO networkInfoDAO, final HostRef ref, HostOverviewViewProvider provider) {
+    public HostOverviewController(ApplicationService appSvc,
+                                  HostInfoDAO hostInfoDAO,
+                                  NetworkInterfaceInfoDAO networkInfoDAO,
+                                  final CpuStatDAO cpuDao,
+                                  final MemoryStatDAO memoryDao,
+                                  final HostRef ref,
+                                  HostOverviewViewProvider provider)
+    {        
         this.hostInfoDAO = hostInfoDAO;
         this.networkInfoDAO = networkInfoDAO;
 
@@ -150,14 +164,57 @@ public class HostOverviewController implements InformationServiceController<Host
                 }
             }
         });
+        
+        statsTimer = appSvc.getTimerFactory().createTimer();
+        statsTimer.setDelay(500);
+        statsTimer.setInitialDelay(0);
+        statsTimer.setTimeUnit(TimeUnit.MILLISECONDS);
+        statsTimer.setSchedulingType(SchedulingType.FIXED_RATE);
+        statsTimer.setAction(new Runnable() {
+            @Override
+            public void run() {
+                List<CpuStat> cpuStats = cpuDao.getLatestCpuStats(ref, System.currentTimeMillis() - 5000);
+                if (!cpuStats.isEmpty()) {
+                    CpuStat stat = cpuStats.get(0);
+                    double [] cpuUsage = stat.getPerProcessorUsage();
+                    // dumb average
+                    int cpus = cpuUsage.length;
+                    double total = 0;
+                    for (double thisCPU : cpuUsage) {
+                        total += thisCPU;
+                    }
+                    total = total/cpus;
+                    view.setCPUPercentage((float) total);
+                }
+                
+                List<MemoryStat> memoryStats =
+                        memoryDao.getLatestMemoryStats(ref, System.currentTimeMillis() - 5000);
+                if (!memoryStats.isEmpty()) {
+                    MemoryStat stat = memoryStats.get(0);
+                    
+                    long total = stat.getTotal();
+                    long buffered = stat.getBuffers();
+                    long cached = stat.getCached();
+                    long free = stat.getFree();
+                    long used = total - free;
+                    
+                    long usedMemory =  (used - (buffered + cached));
+                    
+                    float usedMemoryPercent = (float) usedMemory/total*100;
+                    view.setMemoryPercentage(usedMemoryPercent);
+                }
+            }
+        });
     }
 
     private void start() {
         backgroundUpdateTimer.start();
+        statsTimer.start();
     }
 
     private void stop() {
         backgroundUpdateTimer.stop();
+        statsTimer.stop();
     }
 
     public UIComponent getView() {

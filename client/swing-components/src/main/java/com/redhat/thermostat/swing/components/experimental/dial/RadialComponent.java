@@ -34,33 +34,75 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.host.overview.client.core;
+package com.redhat.thermostat.swing.components.experimental.dial;
 
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.UIComponent;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.geom.Point2D;
+import java.awt.image.BufferedImage;
 
+import javax.swing.JComponent;
 
-public abstract class HostOverviewView extends BasicView implements UIComponent {
+import com.redhat.thermostat.client.swing.GraphicsUtils;
+import com.redhat.thermostat.client.ui.Palette;
 
-    public abstract void setHostName(String newHostName);
+@SuppressWarnings("serial")
+abstract class RadialComponent extends JComponent implements RadialOrder {
 
-    public abstract void setCpuModel(String newCpuModel);
-
-    public abstract void setCpuCount(String newCpuCount);
-
-    public abstract void setTotalMemory(String newTotalMemory);
-
-    public abstract void setOsName(String newOsName);
-
-    public abstract void setOsKernel(String newOsKernel);
-
-    public abstract void setNetworkTableColumns(Object[] columns);
-
-    public abstract void setInitialNetworkTableData(Object[][] table);
-
-    public abstract void updateNetworkTableData(int row, int column, String data);
+    protected BufferedImage mask;
+    protected BufferedImage buffer;
     
-    public abstract void setCPUPercentage(float percentage);
-    public abstract void setMemoryPercentage(float percentage);
-}
+    private int percentage;
+    private int zorder;
 
+    private Point2D.Float center;
+    
+    protected RadialComponent(int percentage, int zorder) {
+        this.percentage = percentage;
+        this.zorder = zorder;
+    }
+    
+    @Override
+    public int getOrderValue() {
+        return zorder;
+    }
+    
+    @Override
+    public int getAreaPercentage() {
+        return percentage;
+    }
+    
+    public void setRadialCenter(Point2D.Float center) {
+        this.center = center;
+    }
+    
+    public Point2D.Float getRadialCenter() {
+        return center;
+    }
+    
+    @Override
+    protected void paintComponent(Graphics g) {
+        
+        paintBackBufferAndMask();
+        
+        Graphics2D graphics = GraphicsUtils.getInstance().createAAGraphics(g);
+        
+        graphics.drawImage(buffer, 0, 0, null);
+        
+        graphics.dispose();
+    }
+    
+    protected abstract void paintBackBufferAndMask();
+    
+    protected boolean isTargetForEvents() {
+        return true;
+    }
+    
+    public BufferedImage getMask() {
+        paintBackBufferAndMask();
+        return mask;
+    }
+}

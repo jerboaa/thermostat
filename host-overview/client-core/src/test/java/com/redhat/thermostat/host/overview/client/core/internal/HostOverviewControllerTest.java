@@ -60,6 +60,8 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
+import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
+import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
 import com.redhat.thermostat.host.overview.client.core.HostOverviewView;
 import com.redhat.thermostat.host.overview.client.core.HostOverviewViewProvider;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -79,8 +81,10 @@ public class HostOverviewControllerTest {
     private static final String NETWORK_INTERFACE = "iface0";
     private static final String IPV4_ADDR = "0xcafef00d";
     private static final String IPV6_ADDR = "HOME_SWEET_HOME";
-
+    
     private Timer timer;
+    private Timer timer2;
+
     private Runnable timerAction;
     private HostOverviewView view;
     private ActionListener<HostOverviewView.Action> listener;
@@ -90,13 +94,18 @@ public class HostOverviewControllerTest {
     public void setUp() {
         // Setup timer
         timer = mock(Timer.class);
+        timer2 = mock(Timer.class);
+        
         ArgumentCaptor<Runnable> timerActionCaptor = ArgumentCaptor.forClass(Runnable.class);
         doNothing().when(timer).setAction(timerActionCaptor.capture());
-
+        
         TimerFactory timerFactory = mock(TimerFactory.class);
-        when(timerFactory.createTimer()).thenReturn(timer);
+        when(timerFactory.createTimer()).thenReturn(timer).thenReturn(timer2);
         ApplicationService appSvc = mock(ApplicationService.class);
         when(appSvc.getTimerFactory()).thenReturn(timerFactory);
+
+        CpuStatDAO cpuStat = mock(CpuStatDAO.class);
+        MemoryStatDAO memoryStat = mock(MemoryStatDAO.class);
 
         // Setup DAOs
         HostInfo hostInfo = new HostInfo("foo", HOST_NAME, OS_NAME, KERNEL_NAME, CPU_MODEL, CPU_COUNT, TOTAL_MEMORY);
@@ -123,7 +132,9 @@ public class HostOverviewControllerTest {
         when(viewProvider.createView()).thenReturn(view);
 
         @SuppressWarnings("unused")
-        HostOverviewController controller = new HostOverviewController(appSvc, hostInfoDao, networkInfoDao, ref, viewProvider);
+        HostOverviewController controller =
+            new HostOverviewController(appSvc, hostInfoDao, networkInfoDao,
+                                       cpuStat, memoryStat, ref, viewProvider);
 
         listener = listenerCaptor.getValue();
         timerAction = timerActionCaptor.getValue();

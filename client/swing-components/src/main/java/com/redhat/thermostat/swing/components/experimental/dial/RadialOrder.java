@@ -34,33 +34,22 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.host.overview.client.core;
+package com.redhat.thermostat.swing.components.experimental.dial;
 
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.common.Ordered;
 
+interface RadialOrder extends Ordered {
 
-public abstract class HostOverviewView extends BasicView implements UIComponent {
-
-    public abstract void setHostName(String newHostName);
-
-    public abstract void setCpuModel(String newCpuModel);
-
-    public abstract void setCpuCount(String newCpuCount);
-
-    public abstract void setTotalMemory(String newTotalMemory);
-
-    public abstract void setOsName(String newOsName);
-
-    public abstract void setOsKernel(String newOsKernel);
-
-    public abstract void setNetworkTableColumns(Object[] columns);
-
-    public abstract void setInitialNetworkTableData(Object[][] table);
-
-    public abstract void updateNetworkTableData(int row, int column, String data);
+    public static final int CENTER = 0;
     
-    public abstract void setCPUPercentage(float percentage);
-    public abstract void setMemoryPercentage(float percentage);
+    public static final int FIRST  = 1;
+    public static final int SECOND = 2;
+    public static final int THIRD  = 3;
+    public static final int FOURTH = 4;
+    public static final int FIFTH  = 5;
+    
+    public static final int INNER = CENTER;
+    public static final int OUTER = Integer.MAX_VALUE;
+    
+    int getAreaPercentage();
 }
-
