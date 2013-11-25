@@ -13,7 +13,8 @@ CONTENT:
 3.1.1 PASSING JVM SPECIFIC OPTIONS
 3.1.2 GNOME KEYRING
 3.2   RUNNING THERMOSTAT ECLIPSE
-4.  REFERECES
+4.  EXTENDING THERMOSTAT
+5.  REFERENCES
 
 
 --------------------------------------------------------------------------------
@@ -188,7 +189,12 @@ can access the keyring.
             
 
 --------------------------------------------------------------------------------
-4. REFERECES
+4. EXTENDING THERMOSTAT
+
+The README.api file contains a list of public/support API of thermostat.
+
+--------------------------------------------------------------------------------
+5. REFERENCES
 
   User Guide:
     http://icedtea.classpath.org/wiki/Thermostat/UserGuide

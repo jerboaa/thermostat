@@ -1,0 +1,59 @@
+Public API
+==========
+
+The public supported API of thermostat consists of the following packages:
+
+ - com.redhat.thermostat.agent
+ - com.redhat.thermostat.agent.command
+ - com.redhat.thermostat.agent.config
+ - com.redhat.thermostat.annotations
+ - com.redhat.thermostat.backend
+ - com.redhat.thermostat.client.cli
+ - com.redhat.thermostat.client.command
+ - com.redhat.thermostat.client.core
+ - com.redhat.thermostat.client.core.controllers
+ - com.redhat.thermostat.client.core.progress
+ - com.redhat.thermostat.client.core.views
+ - com.redhat.thermostat.client.swing
+ - com.redhat.thermostat.client.swing.components
+ - com.redhat.thermostat.client.swing.components.models
+ - com.redhat.thermostat.client.ui
+ - com.redhat.thermostat.common
+ - com.redhat.thermostat.common.cli
+ - com.redhat.thermostat.common.command
+ - com.redhat.thermostat.common.config
+ - com.redhat.thermostat.common.model
+ - com.redhat.thermostat.common.ssl
+ - com.redhat.thermostat.common.tools
+ - com.redhat.thermostat.common.utils
+ - com.redhat.thermostat.launcher
+ - com.redhat.thermostat.plugin.validator
+ - com.redhat.thermostat.service.process
+ - com.redhat.thermostat.shared.config
+ - com.redhat.thermostat.shared.locale
+ - com.redhat.thermostat.storage.config
+ - com.redhat.thermostat.storage.core
+ - com.redhat.thermostat.storage.core.auth
+ - com.redhat.thermostat.storage.dao
+ - com.redhat.thermostat.storage.model
+ - com.redhat.thermostat.storage.monitor
+ - com.redhat.thermostat.storage.query
+ - com.redhat.thermostat.utils
+ - com.redhat.thermostat.utils.hostname
+ - com.redhat.thermostat.utils.keyring
+ - com.redhat.thermostat.utils.management
+ - com.redhat.thermostat.utils.username
+
+
+
+Internal API
+------------
+
+A number of packages are public (either OSGi or not) but should be considered
+internal.
+
+ - c.r.t.main
+ - c.r.t.*.experimental (and subpackages)
+ - c.r.t.storage.mongodb (and subpackages)
+ - c.r.t.web (and subpackages)
+ - c.r.t.client.filter.vm.core
