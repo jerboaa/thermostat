@@ -49,9 +49,9 @@ import java.io.StringReader;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.agent.utils.ProcDataSource;
 import com.redhat.thermostat.host.memory.common.model.MemoryStat;
 import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.utils.ProcDataSource;
 
 public class MemoryStatBuilderTest {
 

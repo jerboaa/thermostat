@@ -46,8 +46,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.agent.utils.ProcDataSource;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.utils.ProcDataSource;
 
 public class ProcessEnvironmentBuilder {
 

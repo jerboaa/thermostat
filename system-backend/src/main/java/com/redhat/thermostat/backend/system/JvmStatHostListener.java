@@ -54,6 +54,7 @@ import sun.jvmstat.monitor.event.VmStatusChangeEvent;
 
 import com.redhat.thermostat.agent.VmBlacklist;
 import com.redhat.thermostat.agent.VmStatusListener.Status;
+import com.redhat.thermostat.agent.utils.ProcDataSource;
 import com.redhat.thermostat.backend.system.ProcessUserInfoBuilder.ProcessUserInfo;
 import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -62,7 +63,6 @@ import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
-import com.redhat.thermostat.utils.ProcDataSource;
 
 public class JvmStatHostListener implements HostListener {
 

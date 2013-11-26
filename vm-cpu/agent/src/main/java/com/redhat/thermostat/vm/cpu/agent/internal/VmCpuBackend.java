@@ -48,14 +48,14 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.VmStatusListener;
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
+import com.redhat.thermostat.agent.utils.ProcDataSource;
+import com.redhat.thermostat.agent.utils.SysConf;
 import com.redhat.thermostat.backend.BaseBackend;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.utils.ProcDataSource;
-import com.redhat.thermostat.utils.SysConf;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
 

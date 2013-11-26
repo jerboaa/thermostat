@@ -46,9 +46,9 @@ import java.io.StringReader;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.agent.utils.ProcDataSource;
 import com.redhat.thermostat.backend.system.ProcessUserInfoBuilder.ProcessUserInfo;
 import com.redhat.thermostat.common.tools.ApplicationException;
-import com.redhat.thermostat.utils.ProcDataSource;
 import com.redhat.thermostat.utils.username.UserNameLookupException;
 import com.redhat.thermostat.utils.username.UserNameUtil;
 

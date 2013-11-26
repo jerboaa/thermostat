@@ -49,13 +49,13 @@ import java.net.InetAddress;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.agent.utils.ProcDataSource;
 import com.redhat.thermostat.backend.system.HostInfoBuilder.HostCpuInfo;
 import com.redhat.thermostat.backend.system.HostInfoBuilder.HostMemoryInfo;
 import com.redhat.thermostat.backend.system.HostInfoBuilder.HostOsInfo;
 import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.model.HostInfo;
-import com.redhat.thermostat.utils.ProcDataSource;
 
 public class HostInfoBuilderTest {
 

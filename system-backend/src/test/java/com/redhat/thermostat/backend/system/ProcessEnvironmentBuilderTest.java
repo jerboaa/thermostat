@@ -55,8 +55,8 @@ import java.util.Random;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.agent.utils.ProcDataSource;
 import com.redhat.thermostat.testutils.TestUtils;
-import com.redhat.thermostat.utils.ProcDataSource;
 
 public class ProcessEnvironmentBuilderTest {
 

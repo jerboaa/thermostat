@@ -6,6 +6,7 @@ The public supported API of thermostat consists of the following packages:
  - com.redhat.thermostat.agent
  - com.redhat.thermostat.agent.command
  - com.redhat.thermostat.agent.config
+ - com.redhat.thermostat.agent.utils
  - com.redhat.thermostat.annotations
  - com.redhat.thermostat.backend
  - com.redhat.thermostat.client.cli
@@ -38,7 +39,6 @@ The public supported API of thermostat consists of the following packages:
  - com.redhat.thermostat.storage.model
  - com.redhat.thermostat.storage.monitor
  - com.redhat.thermostat.storage.query
- - com.redhat.thermostat.utils
  - com.redhat.thermostat.utils.hostname
  - com.redhat.thermostat.utils.keyring
  - com.redhat.thermostat.utils.management

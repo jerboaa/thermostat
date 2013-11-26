@@ -125,9 +125,9 @@
             <Export-Package>
               com.redhat.thermostat.agent,
               com.redhat.thermostat.agent.config,
+              com.redhat.thermostat.agent.utils,
               com.redhat.thermostat.backend,
               com.redhat.thermostat.utils.hostname,
-              com.redhat.thermostat.utils,
               com.redhat.thermostat.utils.management,
               com.redhat.thermostat.utils.username,
             </Export-Package>

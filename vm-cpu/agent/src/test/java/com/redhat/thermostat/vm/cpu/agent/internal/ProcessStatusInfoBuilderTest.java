@@ -48,7 +48,7 @@ import java.io.StringReader;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.utils.ProcDataSource;
+import com.redhat.thermostat.agent.utils.ProcDataSource;
 import com.redhat.thermostat.vm.cpu.agent.internal.ProcessStatusInfo;
 import com.redhat.thermostat.vm.cpu.agent.internal.ProcessStatusInfoBuilder;
 

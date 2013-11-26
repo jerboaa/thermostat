@@ -34,20 +34,52 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.utils;
+package com.redhat.thermostat.agent.utils;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
+
+import java.io.IOException;
+import java.io.Reader;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.utils.SysConf;
+import com.redhat.thermostat.agent.utils.ProcDataSource;
+import com.redhat.thermostat.testutils.TestUtils;
 
-public class SysConfTest {
+public class ProcDataSourceTest {
 
     @Test
-    public void test() {
-        long ticksPerSecond = SysConf.getClockTicksPerSecond();
-        assertTrue(ticksPerSecond >= 1);
+    public void testGetCpuInfoReader() throws IOException {
+        Reader r = new ProcDataSource().getCpuInfoReader();
+        assertNotNull(r);
     }
+
+    @Test
+    public void testGetCpuLoadReader() throws IOException {
+        Reader r = new ProcDataSource().getCpuLoadReader();
+        assertNotNull(r);
+    }
+
+    @Test
+    public void testGetMemInfoReader() throws IOException {
+        Reader r = new ProcDataSource().getMemInfoReader();
+        assertNotNull(r);
+    }
+
+    @Test
+    public void testGetStatReader() throws IOException {
+        int pid = TestUtils.getProcessId();
+        Reader r = new ProcDataSource().getStatReader(pid);
+        assertNotNull(r);
+    }
+
+
+    @Test
+    public void testGetEnvironReader() throws IOException {
+        int pid = TestUtils.getProcessId();
+        Reader r = new ProcDataSource().getEnvironReader(pid);
+        assertNotNull(r);
+    }
+
 }
 

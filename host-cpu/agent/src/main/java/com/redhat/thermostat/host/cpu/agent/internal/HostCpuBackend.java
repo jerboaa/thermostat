@@ -39,14 +39,14 @@ package com.redhat.thermostat.host.cpu.agent.internal;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import com.redhat.thermostat.agent.utils.ProcDataSource;
+import com.redhat.thermostat.agent.utils.SysConf;
 import com.redhat.thermostat.backend.BaseBackend;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
 import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.utils.ProcDataSource;
-import com.redhat.thermostat.utils.SysConf;
 
 public class HostCpuBackend extends BaseBackend {
 

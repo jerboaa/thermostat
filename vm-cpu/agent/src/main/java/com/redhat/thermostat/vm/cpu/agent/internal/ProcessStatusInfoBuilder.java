@@ -43,8 +43,8 @@ import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.agent.utils.ProcDataSource;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.utils.ProcDataSource;
 
 /**
  * Extract status information about the process from /proc/. This is what tools
