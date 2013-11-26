@@ -36,9 +36,12 @@
 
 package com.redhat.thermostat.agent.utils.username;
 
+import com.redhat.thermostat.annotations.Service;
+
 /**
  * Utility to query the operating system for a user name.
  */
+@Service
 public interface UserNameUtil {
 
     /**
