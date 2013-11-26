@@ -43,6 +43,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.agent.VmBlacklist;
+import com.redhat.thermostat.agent.utils.username.UserNameUtil;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendService;
 import com.redhat.thermostat.backend.system.SystemBackend;
@@ -54,7 +55,6 @@ import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
-import com.redhat.thermostat.utils.username.UserNameUtil;
 
 @SuppressWarnings("rawtypes")
 public class SystemBackendActivator implements BundleActivator {

@@ -48,6 +48,7 @@ import sun.jvmstat.monitor.MonitoredHost;
 
 import com.redhat.thermostat.agent.VmBlacklist;
 import com.redhat.thermostat.agent.utils.ProcDataSource;
+import com.redhat.thermostat.agent.utils.username.UserNameUtil;
 import com.redhat.thermostat.backend.BaseBackend;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -58,7 +59,6 @@ import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.HostInfo;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
-import com.redhat.thermostat.utils.username.UserNameUtil;
 
 public class SystemBackend extends BaseBackend {
 

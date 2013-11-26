@@ -46,12 +46,12 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.agent.VmBlacklist;
+import com.redhat.thermostat.agent.utils.username.UserNameUtil;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
-import com.redhat.thermostat.utils.username.UserNameUtil;
 
 public class SystemBackendTest {
 

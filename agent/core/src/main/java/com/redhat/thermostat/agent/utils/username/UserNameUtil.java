@@ -34,18 +34,22 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.utils.username;
+package com.redhat.thermostat.agent.utils.username;
 
 /**
- * 
- * Thrown on user name lookup error.
- *
- * @see UserNameUtil
+ * Utility to query the operating system for a user name.
  */
-@SuppressWarnings("serial")
-public class UserNameLookupException extends Exception {
+public interface UserNameUtil {
 
-    public UserNameLookupException(Throwable cause) {
-        super(cause);
-    }
+    /**
+     * Gets the user name corresponding to the provided UID.
+     * 
+     * @param uid
+     *            The UID whose name to return.
+     * @throws UserNameLookupException
+     *            If an error occurred during retrieval of the user name.
+     * @return The user name if found. null if no such UID exists.
+     */
+    String getUserName(long uid) throws UserNameLookupException;
+
 }

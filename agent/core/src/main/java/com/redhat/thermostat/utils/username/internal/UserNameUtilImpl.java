@@ -38,9 +38,9 @@ package com.redhat.thermostat.utils.username.internal;
 
 import java.io.IOException;
 
-import com.redhat.thermostat.utils.username.UserNameLookupException;
+import com.redhat.thermostat.agent.utils.username.UserNameLookupException;
+import com.redhat.thermostat.agent.utils.username.UserNameUtil;
 import com.redhat.thermostat.shared.config.NativeLibraryResolver;
-import com.redhat.thermostat.utils.username.UserNameUtil;
 
 public class UserNameUtilImpl implements UserNameUtil {
     

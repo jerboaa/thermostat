@@ -128,8 +128,8 @@
               com.redhat.thermostat.agent.utils,
               com.redhat.thermostat.agent.utils.hostname,
               com.redhat.thermostat.agent.utils.management,
+              com.redhat.thermostat.agent.utils.username,
               com.redhat.thermostat.backend,
-              com.redhat.thermostat.utils.username,
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.agent.internal,
