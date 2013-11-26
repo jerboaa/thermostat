@@ -54,6 +54,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
+import com.redhat.thermostat.client.ui.ClientPreferencesModel;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.eclipse.LoggerFacility;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
@@ -74,7 +75,7 @@ public class MainPreferencePage extends FieldEditorPreferencePage implements
     private StringFieldEditor usernameEditor;
     private StringFieldEditor passwordEditor;
     private BooleanFieldEditor saveEntitlementsEditor;
-    private ClientPreferences clientPrefs;
+    private ClientPreferencesModel clientPrefs;
     
     /**
      * Default no-arg constructor.
@@ -176,7 +177,7 @@ public class MainPreferencePage extends FieldEditorPreferencePage implements
         addField(passwordEditor);
         addField(saveEntitlementsEditor);
         updateMargins(generalGroup);
-        this.clientPrefs = new ClientPreferences(Activator.getDefault().getKeyring(), Activator.getDefault().getCommonPaths());
+        this.clientPrefs = new ClientPreferencesModel(Activator.getDefault().getKeyring(), new ClientPreferences(Activator.getDefault().getCommonPaths()));
         synchronizeValues();
     }
     

@@ -96,8 +96,7 @@ public class HostsVmsTreeViewPart extends ViewPart {
     private Timer timer;
 
     public HostsVmsTreeViewPart() {
-        ClientPreferences clientPrefs = new ClientPreferences(Activator.getDefault().getKeyring(),
-                                                              Activator.getDefault().getCommonPaths());
+        ClientPreferences clientPrefs = new ClientPreferences(Activator.getDefault().getCommonPaths());
         Job connectJob = new ConnectDbJob(
                 "Connecting to Thermostat storage...", clientPrefs);
         connectJob.setSystem(true);

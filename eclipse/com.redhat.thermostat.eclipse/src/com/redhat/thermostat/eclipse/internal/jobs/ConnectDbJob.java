@@ -78,18 +78,9 @@ public class ConnectDbJob extends Job {
      * Establish a DB connection.
      */
     private void connectToBackEnd() throws ConnectionException {
-        char[] password = null;
-        try {
-            DbServiceFactory dbServiceFactory = new DbServiceFactory();
-            password = configuration.getPassword();
-            DbService dbService = dbServiceFactory.createDbService(configuration.getUserName(),
-                    password, configuration.getConnectionUrl());
-            dbService.connect();
-        } finally {
-            if (password != null) {
-                Arrays.fill(password, '\0');
-            }
-        }
+        DbServiceFactory dbServiceFactory = new DbServiceFactory();
+        DbService dbService = dbServiceFactory.createDbService(configuration.getConnectionUrl());
+        dbService.connect();
     }
 }
 
