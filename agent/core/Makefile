@@ -21,7 +21,7 @@ USERNAME_OBJECTS    = $(USERNAME_TARGET:.c=.o)
 USERNAME_EXECUTABLE = libUserNameUtilWrapper.so
 
 .PHONY:
-JNI_LIST = com.redhat.thermostat.utils.hostname.HostName\
+JNI_LIST = com.redhat.thermostat.agent.utils.hostname.HostName\
  com.redhat.thermostat.utils.username.internal.UserNameUtilImpl
 
 $(JNI_LIST):

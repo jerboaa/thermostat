@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-#include "com_redhat_thermostat_utils_hostname_HostName.h"
+#include "com_redhat_thermostat_agent_utils_hostname_HostName.h"
 
 #include <jni.h>
 #include <unistd.h>
@@ -47,7 +47,7 @@
 #endif /* NI_MAXHOST */
 
 JNIEXPORT jstring JNICALL
-Java_com_redhat_thermostat_utils_hostname_HostName_getHostName
+Java_com_redhat_thermostat_agent_utils_hostname_HostName_getHostName
   (JNIEnv *env, jclass HostNameClass)
 {
     char hostname[NI_MAXHOST];

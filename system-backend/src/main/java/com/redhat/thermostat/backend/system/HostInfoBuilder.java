@@ -44,12 +44,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.utils.ProcDataSource;
+import com.redhat.thermostat.agent.utils.hostname.HostName;
 import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.common.Size.Unit;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.storage.model.HostInfo;
-import com.redhat.thermostat.utils.hostname.HostName;
 
 public class HostInfoBuilder {
 
