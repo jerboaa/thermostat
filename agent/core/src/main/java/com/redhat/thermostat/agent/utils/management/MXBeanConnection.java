@@ -34,17 +34,15 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.utils.management;
+package com.redhat.thermostat.agent.utils.management;
 
-import com.redhat.thermostat.annotations.Service;
+import javax.management.MBeanServerConnection;
+import javax.management.MalformedObjectNameException;
 
-/**
- * A pool for caching and reusing MXBeanConnections.
- */
-@Service
-public interface MXBeanConnectionPool {
+public interface MXBeanConnection {
 
-    MXBeanConnection acquire(int pid) throws Exception;
+    <E> E createProxy(String name, Class<? extends E> proxyClass) throws MalformedObjectNameException;
 
-    void release(int pid, MXBeanConnection connection) throws Exception;
+    MBeanServerConnection get();
+
 }

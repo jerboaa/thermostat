@@ -39,8 +39,8 @@ package com.redhat.thermostat.vm.heap.analysis.agent.internal;
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 
-import com.redhat.thermostat.utils.management.MXBeanConnection;
-import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 
 class JMXHeapDumper {
 

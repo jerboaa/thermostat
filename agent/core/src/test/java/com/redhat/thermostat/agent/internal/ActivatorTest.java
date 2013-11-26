@@ -47,10 +47,10 @@ import org.junit.Test;
 
 import com.redhat.thermostat.agent.RMIRegistry;
 import com.redhat.thermostat.agent.VmBlacklist;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.NativeLibraryResolver;
 import com.redhat.thermostat.testutils.StubBundleContext;
-import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl;
 import com.redhat.thermostat.utils.username.UserNameUtil;
 import com.redhat.thermostat.utils.username.internal.UserNameUtilImpl;

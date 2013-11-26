@@ -51,7 +51,7 @@ import java.io.File;
 import org.junit.Test;
 
 import com.redhat.thermostat.agent.internal.RMIRegistryImpl;
-import com.redhat.thermostat.utils.management.MXBeanConnection;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
 import com.redhat.thermostat.utils.management.internal.MXBeanConnectionPoolImpl.ConnectorCreator;
 
 public class MXBeanConnectionPoolImplTest {

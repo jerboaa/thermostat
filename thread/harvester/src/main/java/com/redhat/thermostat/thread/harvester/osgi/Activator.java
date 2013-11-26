@@ -48,6 +48,7 @@ import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
@@ -56,7 +57,6 @@ import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.harvester.ThreadBackend;
 import com.redhat.thermostat.thread.harvester.ThreadHarvester;
-import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 
 public class Activator implements BundleActivator {
     

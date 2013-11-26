@@ -49,6 +49,8 @@ import java.util.logging.Logger;
 
 import javax.management.MalformedObjectNameException;
 
+import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -58,8 +60,6 @@ import com.redhat.thermostat.thread.model.ThreadInfoData;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 import com.redhat.thermostat.thread.model.VmDeadLockData;
-import com.redhat.thermostat.utils.management.MXBeanConnection;
-import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 
 @SuppressWarnings("restriction")
 class Harvester {

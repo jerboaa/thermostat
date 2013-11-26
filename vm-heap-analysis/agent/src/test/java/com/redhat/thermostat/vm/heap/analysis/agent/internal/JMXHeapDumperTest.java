@@ -45,8 +45,8 @@ import javax.management.ObjectName;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.utils.management.MXBeanConnection;
-import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 
 public class JMXHeapDumperTest {
 

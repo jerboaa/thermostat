@@ -40,6 +40,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.command.RequestReceiver;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
@@ -47,7 +48,6 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.gc.remote.command.internal.GC;
 import com.redhat.thermostat.gc.remote.command.internal.GCException;
 import com.redhat.thermostat.gc.remote.common.command.GCCommand;
-import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 
 public class GCCommandReceiver implements RequestReceiver {
 

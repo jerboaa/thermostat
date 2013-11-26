@@ -44,7 +44,7 @@ import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.management.remote.JMXConnector;
 
-import com.redhat.thermostat.utils.management.MXBeanConnection;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
 
 class MXBeanConnectionImpl implements MXBeanConnection {
 

@@ -44,9 +44,9 @@ import static org.mockito.Mockito.mock;
 import org.junit.Test;
 
 import com.redhat.thermostat.agent.command.RequestReceiver;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.testutils.StubBundleContext;
-import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 
 public class ActivatorTest {

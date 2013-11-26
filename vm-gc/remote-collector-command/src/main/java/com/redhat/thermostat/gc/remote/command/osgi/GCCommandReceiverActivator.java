@@ -42,8 +42,8 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.gc.remote.command.GCCommandReceiver;
-import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 
 public class GCCommandReceiverActivator implements BundleActivator {
 

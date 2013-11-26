@@ -46,11 +46,11 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.RMIRegistry;
 import com.redhat.thermostat.agent.internal.RMIRegistryImpl;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.utils.management.MXBeanConnection;
-import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 
 public class MXBeanConnectionPoolImpl implements MXBeanConnectionPool {
 

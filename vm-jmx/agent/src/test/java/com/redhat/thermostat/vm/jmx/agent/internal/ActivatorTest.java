@@ -45,10 +45,10 @@ import org.junit.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
 
+import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.testutils.StubBundleContext;
-import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.vm.jmx.agent.internal.Activator;
 import com.redhat.thermostat.vm.jmx.agent.internal.JmxBackend;
 import com.redhat.thermostat.vm.jmx.common.JmxNotificationDAO;

@@ -65,11 +65,11 @@ import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.agent.command.RequestReceiver;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.utils.management.MXBeanConnection;
-import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.vm.jmx.common.JmxNotification;
 import com.redhat.thermostat.vm.jmx.common.JmxNotificationDAO;
 

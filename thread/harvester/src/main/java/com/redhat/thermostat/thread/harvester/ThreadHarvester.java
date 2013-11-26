@@ -47,6 +47,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.command.RequestReceiver;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.SystemClock;
@@ -58,7 +59,6 @@ import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.thread.collector.HarvesterCommand;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
-import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 
 public class ThreadHarvester implements RequestReceiver {
 

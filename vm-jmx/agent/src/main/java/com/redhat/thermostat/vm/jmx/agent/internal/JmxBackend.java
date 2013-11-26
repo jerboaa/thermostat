@@ -55,14 +55,14 @@ import javax.management.ReflectionException;
 
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.agent.command.RequestReceiver;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.backend.BaseBackend;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.utils.management.MXBeanConnection;
-import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.vm.jmx.common.JmxNotification;
 import com.redhat.thermostat.vm.jmx.common.JmxNotificationDAO;
 import com.redhat.thermostat.vm.jmx.common.JmxNotificationStatus;

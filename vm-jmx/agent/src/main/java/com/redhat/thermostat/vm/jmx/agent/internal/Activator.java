@@ -43,11 +43,11 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.vm.jmx.common.JmxNotificationDAO;
 
 public class Activator implements BundleActivator {
