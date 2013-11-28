@@ -222,7 +222,6 @@
           <version>2.9.1</version>
           <configuration>
             <excludePackageNames>*.impl*;*.internal.*;*.experimental;com.redhat.thermostat.agent.locale;com.redhat.thermostat.agent.proxy;com.redhat.thermostat.backend.system;com.redhat.thermostat.client.command.cli;com.redhat.thermostat.client.filter.host.swing;com.redhat.thermostat.client.filter.vm.core;com.redhat.thermostat.client.filter.vm.swing;com.redhat.thermostat.client.locale;com.redhat.thermostat.common.locale;com.redhat.thermostat.main;com.redhat.thermostat.numa;com.redhat.thermostat.plugin.validator.locale;com.redhat.thermostat.storage.mongodb;com.redhat.thermostat.test;com.redhat.thermostat.testutils;com.redhat.thermostat.utils.keyring.activator;com.redhat.thermostat.vm;com.redhat.thermostat.host;com.redhat.thermostat.gc;com.redhat.thermostat.thread;com.redhat.thermostat.validate;com.redhat.thermostat.service.activator;com.redhat.thermostat.web;com.redhat.thermostat.killvm.client.locale</excludePackageNames>
-            <debug>true</debug>
           </configuration>
         </plugin>
         <plugin>
