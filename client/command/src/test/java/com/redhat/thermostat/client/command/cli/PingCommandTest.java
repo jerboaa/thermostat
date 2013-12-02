@@ -42,12 +42,23 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.net.InetSocketAddress;
 import java.util.Arrays;
+import java.util.concurrent.Semaphore;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.client.command.cli.PingCommand.PongListener;
+import com.redhat.thermostat.client.command.internal.LocaleResources;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
+import com.redhat.thermostat.common.command.Request;
+import com.redhat.thermostat.common.command.Response;
+import com.redhat.thermostat.common.command.Response.ResponseType;
+import com.redhat.thermostat.shared.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
@@ -150,6 +161,26 @@ public class PingCommandTest {
         } catch (CommandException e) {
             assertEquals("Unable to access command request queue: service not available", e.getMessage());
         }
+    }
+    
+    /*
+     * Tests whether getContents() gets called on auth fail responses.
+     */
+    @Test
+    public void testAuthFailStringMessage() {
+        ByteArrayOutputStream bout = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(bout);
+        Semaphore responseBarrier = new Semaphore(1);
+        InetSocketAddress addr = InetSocketAddress.createUnresolved("foo", 1234);
+        @SuppressWarnings("unchecked")
+        Translate<LocaleResources> t = mock(Translate.class);
+        when(t.localize(LocaleResources.COMMAND_PING_RESPONSE_AUTH_FAILED, addr.toString())).thenReturn(new LocalizedString("auth_fail"));
+        PongListener listener = new PongListener(out, responseBarrier, t);
+        responseBarrier.release();
+        Request request = mock(Request.class);
+        when(request.getTarget()).thenReturn(addr);
+        listener.fireComplete(request, new Response(ResponseType.AUTH_FAILED));
+        assertEquals("auth_fail\n", bout.toString());
     }
 
     // TODO add more tests that check the actual behaviour under valid input

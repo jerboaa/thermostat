@@ -67,35 +67,37 @@ public class PingCommand extends AbstractCommand {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private class PongListener implements RequestResponseListener {
+    static class PongListener implements RequestResponseListener {
 
         private PrintStream out;
         private final Semaphore responseBarrier;
+        private final Translate<LocaleResources> t;
 
-        public PongListener(PrintStream out, Semaphore responseBarrier) {
+        PongListener(PrintStream out, Semaphore responseBarrier, Translate<LocaleResources> t) {
             this.out = out;
             this.responseBarrier = responseBarrier;
+            this.t = t;
         }
 
         @Override
         public void fireComplete(Request request, Response response) {
             switch (response.getType()) {
             case ERROR:
-                out.println(translator.localize(LocaleResources.COMMAND_PING_RESPONSE_ERROR, request.getTarget().toString()).getContents());
+                out.println(t.localize(LocaleResources.COMMAND_PING_RESPONSE_ERROR, request.getTarget().toString()).getContents());
                 break;
             case AUTH_FAILED:
-                out.println(translator.localize(LocaleResources.COMMAND_PING_RESPONSE_AUTH_FAILED, request.getTarget().toString()));
+                out.println(t.localize(LocaleResources.COMMAND_PING_RESPONSE_AUTH_FAILED, request.getTarget().toString()).getContents());
                 break;
             case OK:
                 // fallthrough
             case NOOP:
-                out.println(translator.localize(LocaleResources.COMMAND_PING_RESPONSE_OK, request.getTarget().toString()).getContents());
+                out.println(t.localize(LocaleResources.COMMAND_PING_RESPONSE_OK, request.getTarget().toString()).getContents());
                 break;
             case NOK:
-                out.println(translator.localize(LocaleResources.COMMAND_PING_RESPONSE_REFUSED).getContents());
+                out.println(t.localize(LocaleResources.COMMAND_PING_RESPONSE_REFUSED).getContents());
                 break;
             default:
-                out.println(translator.localize(LocaleResources.COMMAND_PING_RESPONSE_UNKNOWN).getContents());
+                out.println(t.localize(LocaleResources.COMMAND_PING_RESPONSE_UNKNOWN).getContents());
                 break;
             }
             responseBarrier.release();
@@ -148,7 +150,7 @@ public class PingCommand extends AbstractCommand {
         ping.setParameter(Request.ACTION, PING_ACTION_NAME);
         ping.setReceiver("com.redhat.thermostat.agent.command.internal.PingReceiver");
         final Semaphore responseBarrier = new Semaphore(0);
-        ping.addListener(new PongListener(out, responseBarrier));
+        ping.addListener(new PongListener(out, responseBarrier, translator));
 
         ServiceReference queueRef = context.getServiceReference(RequestQueue.class.getName());
         if (queueRef == null) {
