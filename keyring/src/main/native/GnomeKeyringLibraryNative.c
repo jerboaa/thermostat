@@ -73,7 +73,7 @@ Java_com_redhat_thermostat_utils_keyring_impl_KeyringImpl_gnomeKeyringWrapperSav
     }
 
     jsize passwordLength = (*env)->GetArrayLength(env, jpassword);
-    char *password = (*env)->GetByteArrayElements(env, jpassword, NULL);
+    jbyte *password = (*env)->GetByteArrayElements(env, jpassword, NULL);
     if (password == NULL) {
         (*env)->ReleaseStringUTFChars(env, jurl, url);
         (*env)->ReleaseStringUTFChars(env, juserName, userName);
@@ -162,9 +162,11 @@ Java_com_redhat_thermostat_utils_keyring_impl_KeyringImpl_gnomeKeyringWrapperGet
     (*env)->ReleaseStringUTFChars(env, juserName, userName);
 
     if (res == GNOME_KEYRING_RESULT_OK) {
+        const jbyte *jbytePassword = (const jbyte *) password;
+
         jsize passwordLength = strlen(password);
         jbyteArray jpassword = (*env)->NewByteArray(env, passwordLength);
-        (*env)->SetByteArrayRegion(env, jpassword, 0, passwordLength, password);
+        (*env)->SetByteArrayRegion(env, jpassword, 0, passwordLength, jbytePassword);
         gnome_keyring_free_password(password);
         return jpassword;
     } else {
