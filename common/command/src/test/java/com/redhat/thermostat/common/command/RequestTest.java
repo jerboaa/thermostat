@@ -42,6 +42,10 @@ import static org.junit.Assert.assertTrue;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import org.junit.Test;
 
@@ -116,6 +120,67 @@ public class RequestTest {
         InetSocketAddress addr = new InetSocketAddress(1234);
         Request request = new Request(RequestType.RESPONSE_EXPECTED, addr);
         assertEquals("{ Request: {target = "+ addr.toString() + "}, {type = RESPONSE_EXPECTED}, {parameters = {}} }", request.toString());
+    }
+    
+    /*
+     * It is important that request parameters won't get logged (at any log
+     * level). Since toString() is used in some log statements it should be
+     * sufficient to verify toString() filters parameters appropriately.
+     */
+    @Test
+    public void testToStringFiltersParams() {
+        InetSocketAddress addr = new InetSocketAddress(1234);
+        Request request = new Request(RequestType.RESPONSE_EXPECTED, addr);
+        request.setParameter(Request.AUTH_TOKEN, "foo-auth-token");
+        request.setParameter(Request.CLIENT_TOKEN, "bar-client-token");
+        String preamble = "{ Request: {target = "+ addr.toString() + 
+                "}, {type = RESPONSE_EXPECTED}, ";
+        String postfix = " }";
+        // maps aren't ordered. work around it by using a set assert.
+        String expectedParamOrdering1 = "{parameters = {" +
+                Request.AUTH_TOKEN +"=<filtered>, " +
+                Request.CLIENT_TOKEN +"=<filtered>}}";
+        String expectedParamOrdering2 = "{parameters = {" +
+                Request.CLIENT_TOKEN +"=<filtered>, " +
+                Request.AUTH_TOKEN +"=<filtered>}}";
+        Set<String> expectedStrings = new HashSet<>();
+        expectedStrings.add(preamble + expectedParamOrdering1 + postfix);
+        expectedStrings.add(preamble + expectedParamOrdering2 + postfix);
+        String actual = request.toString();
+        assertTrue("Security sensitive parameters should be filtered! String was: "
+                + actual, expectedStrings.contains(actual));
+    }
+    
+    @Test
+    public void testFilterParams() {
+        Map<String, String> origParams = new HashMap<>();
+        origParams.put(Request.AUTH_TOKEN, "foo-auth-token");
+        origParams.put(Request.CLIENT_TOKEN, "bar-client-token");
+        origParams.put("foo-param", "something");
+        
+        InetSocketAddress addr = new InetSocketAddress(1234);
+        Request request = new Request(RequestType.RESPONSE_EXPECTED, addr);
+        Map<String, String> filteredParams = request.getFilteredParams(origParams);
+        assertEquals(Request.AUTH_TOKEN + " should be filtered", "<filtered>", filteredParams.get(Request.AUTH_TOKEN));
+        assertEquals(Request.CLIENT_TOKEN + " should be filtered", "<filtered>", filteredParams.get(Request.CLIENT_TOKEN));
+        assertEquals("something", filteredParams.get("foo-param"));
+        assertEquals(3, filteredParams.size());
+        
+        origParams.clear();
+        origParams.put(Request.AUTH_TOKEN, "foo-auth-token");
+        origParams.put("foo-param", "something-new");
+        filteredParams = request.getFilteredParams(origParams);
+        assertEquals(Request.AUTH_TOKEN + " should be filtered", "<filtered>", filteredParams.get(Request.AUTH_TOKEN));
+        assertEquals("something-new", filteredParams.get("foo-param"));
+        assertEquals(2, filteredParams.size());
+        
+        origParams.clear();
+        origParams.put("bar-param", "should-be-unchanged");
+        origParams.put(Request.CLIENT_TOKEN, "client-token");
+        filteredParams = request.getFilteredParams(origParams);
+        assertEquals(Request.CLIENT_TOKEN + " should be filtered", "<filtered>", filteredParams.get(Request.CLIENT_TOKEN));
+        assertEquals("should-be-unchanged", filteredParams.get("bar-param"));
+        assertEquals(2, filteredParams.size());
     }
 }
 

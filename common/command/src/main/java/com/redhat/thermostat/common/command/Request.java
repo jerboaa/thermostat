@@ -40,7 +40,9 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -85,7 +87,22 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class Request implements Message {
     
+    private static final String RECEIVER = "receiver";
+    
+    public static final String CLIENT_TOKEN = "client-token";
+    public static final String AUTH_TOKEN = "auth-token";
+    public static final String ACTION = "action-name";
     public static final String UNKNOWN_HOSTNAME = "";
+
+    private static final String FILTERED_PARAM_VALUE = "<filtered>";
+    private static final Set<String> FILTERED_PARAMS;
+    
+    static {
+        FILTERED_PARAMS = new HashSet<>();
+        FILTERED_PARAMS.add(AUTH_TOKEN);
+        FILTERED_PARAMS.add(CLIENT_TOKEN);
+    }
+    
 
     public enum RequestType implements MessageType {
         NO_RESPONSE_EXPECTED,
@@ -98,11 +115,6 @@ public class Request implements Message {
     private final InetSocketAddress target;
     private final Collection<RequestResponseListener> listeners;
 
-    private static final String RECEIVER = "receiver";
-
-    public static final String CLIENT_TOKEN = "client-token";
-    public static final String AUTH_TOKEN = "auth-token";
-    public static final String ACTION = "action-name";
 
     public Request(RequestType type, InetSocketAddress target) {
         this.type = type;
@@ -154,7 +166,25 @@ public class Request implements Message {
     
     @Override
     public String toString() {
-        return "{ Request: {target = " + target.toString() + "}, {type = " + type.name() + "}, {parameters = " + parameters.toString() + "} }";
+        Map<String, String> filteredParams = getFilteredParams(parameters);
+        return "{ Request: {target = " + target.toString() + "}, {type = " +
+                type.name() + "}, {parameters = " + filteredParams +
+                "} }";
     }
+    
+    // package-private for testing
+    Map<String, String> getFilteredParams(Map<String, String> unfiltered) {
+        Map<String, String> filtered = new TreeMap<>();
+        for (String key: unfiltered.keySet()) {
+            if (FILTERED_PARAMS.contains(key)) {
+                // actual value may be security sensitive
+                filtered.put(key, FILTERED_PARAM_VALUE);
+            } else {
+                filtered.put(key, unfiltered.get(key));
+            }
+        }
+        return filtered;
+    }
+    
 }
 
