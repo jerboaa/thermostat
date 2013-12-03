@@ -51,6 +51,37 @@ import com.redhat.thermostat.common.command.MessageEncoder;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
+/**
+ * <p>
+ * {@link Request} objects are serialized over the command channel in the
+ * following format:
+ * <pre>
+ * -------------------------
+ * | A | TYPE | B | PARAMS |
+ * -------------------------
+ * 
+ * A is an 32 bit integer representing the length - in bytes - of TYPE. TYPE
+ * is a byte array representing the string of the request type (e.g.
+ * "RESPONSE_EXPECTED") B is a 32 bit integer representing the number of
+ * request parameters which follow.
+ * 
+ * PARAMS (if B > 0) is a variable length stream of the following format:
+ * 
+ * It is a simple encoding of name => value pairs.
+ * 
+ * -----------------------------------------------------------------------------------------------
+ * | I_1 | K_1 | P_1 | V_1 | ... | I_(n-1) | K_(n-1) | P_(n-1) | V_(n-1) | I_n | K_n | P_n | V_n |
+ * -----------------------------------------------------------------------------------------------
+ * 
+ * I_n  A 32 bit integer representing the length - in bytes - of the n'th
+ *      parameter name.
+ * K_n  A 32 bit integer representing the length - in bytes - of the n'th
+ *      parameter value.
+ * P_n  A byte array representing the string of the n'th parameter name.
+ * V_n  A byte array representing the string of the n'th parameter value.
+ * </pre>
+ * </p>
+ */
 class RequestEncoder extends MessageEncoder {
 
     private static final Logger logger = LoggingUtils.getLogger(RequestEncoder.class);

@@ -48,10 +48,16 @@ import com.redhat.thermostat.common.command.DecodingHelper;
 import com.redhat.thermostat.common.command.InvalidMessageException;
 import com.redhat.thermostat.common.command.Message;
 import com.redhat.thermostat.common.command.MessageDecoder;
+import com.redhat.thermostat.common.command.MessageEncoder;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
+/**
+ * 
+ * See implementation of {@link MessageEncoder} for documentation of the
+ * {@link Request} encoding format.
+ */
 class RequestDecoder extends MessageDecoder {
     
     private static final Logger logger = LoggingUtils.getLogger(RequestDecoder.class);

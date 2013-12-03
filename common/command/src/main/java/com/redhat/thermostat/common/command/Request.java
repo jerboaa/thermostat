@@ -37,7 +37,6 @@
 package com.redhat.thermostat.common.command;
 
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -47,43 +46,15 @@ import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
+ * <p>
  * A Request object represents a request passed from a client
  * to an agent. Each request is separate, complete and unordered. The
  * agent may or may not take an action when it receives a request.
+ * </p>
  * <p>
  * Requests are meant for controlling the agent, not for asking an
  * agent nor sending an agent any sort of data.
- * <p>
- * The following implementation details of this class are subject to
- * change at any time.
- * <p>
- * Request objects are serialized over the command channel in the following
- * format:
- * 
- * -------------------------
- * | A | TYPE | B | PARAMS |
- * -------------------------
- * 
- * A is an 32 bit integer representing the length - in bytes - of TYPE. TYPE
- * is a byte array representing the string of the request type (e.g.
- * "RESPONSE_EXPECTED") B is a 32 bit integer representing the number of
- * request parameters which follow.
- * 
- * PARAMS (if B > 0) is a variable length stream of the following format:
- * 
- * It is a simple encoding of name => value pairs.
- * 
- * -----------------------------------------------------------------------------------------------
- * | I_1 | K_1 | P_1 | V_1 | ... | I_(n-1) | K_(n-1) | P_(n-1) | V_(n-1) | I_n | K_n | P_n | V_n |
- * -----------------------------------------------------------------------------------------------
- * 
- * I_n  A 32 bit integer representing the length - in bytes - of the n'th
- *      parameter name.
- * K_n  A 32 bit integer representing the length - in bytes - of the n'th
- *      parameter value.
- * P_n  A byte array representing the string of the n'th parameter name.
- * V_n  A byte array representing the string of the n'th parameter value.
- * 
+ * </p>
  */
 public class Request implements Message {
     
