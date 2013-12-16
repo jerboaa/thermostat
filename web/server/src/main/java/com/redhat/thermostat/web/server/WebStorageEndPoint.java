@@ -46,7 +46,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -120,8 +122,17 @@ public class WebStorageEndPoint extends HttpServlet {
     static final String FILES_WRITE_GRANT_ROLE_PREFIX = "thermostat-files-grant-write-filename-";
     private static final String TOKEN_MANAGER_TIMEOUT_PARAM = "token-manager-timeout";
     private static final String TOKEN_MANAGER_KEY = "token-manager";
-    private static final String JETTY_JAAS_USER_PRINCIPAL_CLASS_NAME = "org.eclipse.jetty.plus.jaas.JAASUserPrincipal";
+    private static final String JETTY8_JAAS_USER_PRINCIPAL_CLASS_NAME = "org.eclipse.jetty.plus.jaas.JAASUserPrincipal";
+    private static final String JETTY9_JAAS_USER_PRINCIPAL_CLASS_NAME = "org.eclipse.jetty.jaas.JAASUserPrincipal";
+    private static final Set<String> JETTY_USER_PRINCIPAL_CLASSES;
     private static final String CATEGORY_KEY_FORMAT = "%s|%s";
+    
+    static {
+        Set<String> jettyUserPrincipals = new HashSet<>(2);
+        jettyUserPrincipals.add(JETTY8_JAAS_USER_PRINCIPAL_CLASS_NAME);
+        jettyUserPrincipals.add(JETTY9_JAAS_USER_PRINCIPAL_CLASS_NAME);
+        JETTY_USER_PRINCIPAL_CLASSES = Collections.unmodifiableSet(jettyUserPrincipals);
+    }
 
     // our strings can contain non-ASCII characters. Use UTF-8
     // see also PR 1344
@@ -642,36 +653,54 @@ public class WebStorageEndPoint extends HttpServlet {
         // which in turn has our user principal added.
         Principal principal = req.getUserPrincipal();
         
-        if (principal.getClass().getName().equals(JETTY_JAAS_USER_PRINCIPAL_CLASS_NAME)) {
-            // Jetty has our principal on the accessible subject.
-            Subject subject = null;
-            try {
-                // Do this via reflection in order to avoid a hard dependency
-                // on jetty-plus.
-                Class<?> jassUserPrincipal = Class.forName(JETTY_JAAS_USER_PRINCIPAL_CLASS_NAME);
-                Method method = jassUserPrincipal.getDeclaredMethod("getSubject");
-                subject = (Subject)method.invoke(principal);
-            } catch (ClassNotFoundException | NoSuchMethodException
-                    | SecurityException | IllegalAccessException
-                    | IllegalArgumentException | InvocationTargetException e) {
-                logger.log(Level.WARNING, e.getMessage(), e);
-            }
-            if (subject == null) {
-                throw new IllegalStateException(
-                        "Could not retrieve subject from principal of type "
-                                + JETTY_JAAS_USER_PRINCIPAL_CLASS_NAME);
-            }
-            Set<UserPrincipal> userPrincipals = subject.getPrincipals(UserPrincipal.class);
-            if (userPrincipals.size() != 1) {
-                throw new IllegalStateException("More than one thermostat user principals!");
-            }
-            return userPrincipals.iterator().next();
+        String principalClassName = principal.getClass().getName();
+        if (JETTY_USER_PRINCIPAL_CLASSES.contains(principalClassName)) {
+            return getJettyUserPrincipal(principal); 
         } else {
             // A simple cast should succeed for the non-jetty case. At the very
             // least this should work for Tomcat and JBoss AS 7.
             return (UserPrincipal)principal;
         }
-        
+    }
+    
+    private UserPrincipal getJettyUserPrincipal(Principal principal) {
+        // Jetty has our principal on the accessible subject.
+        // The package of the JAASUserPrincipal class changed between
+        // Jetty 8 and Jetty 9. 
+        Subject subject = getJettySubject(principal);
+        Set<UserPrincipal> userPrincipals = subject.getPrincipals(UserPrincipal.class);
+        if (userPrincipals.size() != 1) {
+            throw new IllegalStateException("More than one thermostat user principals!");
+        }
+        return userPrincipals.iterator().next();
+    }
+    
+    private Subject getJettySubject(Principal principal) {
+        Subject subject = null;
+        for (String clazzName: JETTY_USER_PRINCIPAL_CLASSES) {
+            try {
+                // Do this via reflection in order to avoid a hard dependency
+                // on jetty-plus.
+                Class<?> jassUserPrincipal = Class.forName(clazzName);
+                Method method = jassUserPrincipal.getDeclaredMethod("getSubject");
+                subject = (Subject)method.invoke(principal);
+            } catch (ClassNotFoundException | NoSuchMethodException
+                    | SecurityException | IllegalAccessException
+                    | IllegalArgumentException | InvocationTargetException e) {
+                // log and continue
+                logger.log(Level.WARNING, e.getMessage(), e);
+            }
+            if (subject != null) {
+                // short-circuit loop
+                break;
+            }
+        }
+        if (subject == null) {
+            throw new IllegalStateException(
+                    "Could not retrieve subject from principal of type "
+                            + principal.getClass().getName());
+        }
+        return subject;
     }
 
     /*

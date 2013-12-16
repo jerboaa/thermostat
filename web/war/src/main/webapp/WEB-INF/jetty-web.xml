@@ -15,7 +15,7 @@ This should work with Jetty 8.
   <Set name="contextPath">/thermostat</Set>
   <Get name="securityHandler">
     <Set name="loginService">
-      <New class="org.eclipse.jetty.plus.jaas.JAASLoginService">
+      <New class="org.eclipse.jetty.jaas.JAASLoginService">
             <Set name="name">Thermostat Realm</Set>
             <Set name="loginModuleName">ThermostatJAASLogin</Set>
             <Set name="roleClassNames">

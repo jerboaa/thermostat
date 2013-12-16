@@ -75,7 +75,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
-import org.eclipse.jetty.plus.jaas.JAASLoginService;
+import org.eclipse.jetty.jaas.JAASLoginService;
 import org.eclipse.jetty.security.DefaultUserIdentity;
 import org.eclipse.jetty.security.LoginService;
 import org.eclipse.jetty.security.MappedLoginService;
