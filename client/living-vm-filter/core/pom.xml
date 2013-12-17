@@ -25,8 +25,10 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Export-Package>com.redhat.thermostat.client.filter.vm.core</Export-Package>
-            <Private-Package>com.redhat.thermostat.client.filter.vm.core.internal</Private-Package>
+            <Private-Package>
+                com.redhat.thermostat.client.filter.vm.core.internal,
+                com.redhat.thermostat.client.filter.vm.core
+            </Private-Package>
             <Bundle-Activator>com.redhat.thermostat.client.filter.vm.core.internal.VMFilterActivator</Bundle-Activator>
             <Bundle-SymbolicName>com.redhat.thermostat.filter.livingvm.core</Bundle-SymbolicName>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
