@@ -75,6 +75,13 @@
       <version>${jetty.version}</version>
       <scope>test</scope>
     </dependency>
+    <!-- Used in jetty8 compatibility test -->
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-plus</artifactId>
+      <version>${jetty8-tests.version}</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-webapp</artifactId>
@@ -145,7 +152,8 @@
             <Export-Package>
               com.redhat.thermostat.web.server,
               com.redhat.thermostat.web.server.auth,
-              com.redhat.thermostat.web.server.auth.spi
+              com.redhat.thermostat.web.server.auth.spi,
+              com.redhat.thermostat.web.server.containers,
             </Export-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>

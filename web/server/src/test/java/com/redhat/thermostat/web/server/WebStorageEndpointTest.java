@@ -70,6 +70,12 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.security.auth.Subject;
+import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.login.AppConfigurationEntry;
+import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
+import javax.security.auth.login.Configuration;
+import javax.security.auth.login.LoginException;
+import javax.security.auth.spi.LoginModule;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
@@ -347,7 +353,9 @@ public class WebStorageEndpointTest {
         UserPrincipal testUser = new UserPrincipal("ignored1");
         testUser.setRoles(roles);
         
-        final LoginService loginService = new TestJAASLoginService(testUser);
+        final JAASLoginService loginService = getConfiguredLoginService(testUser, roles);
+        
+        //final LoginService loginService = new TestJAASLoginService(testUser);
         port = FreePortFinder.findFreePort(new TryPort() {
             
             @Override
@@ -476,7 +484,7 @@ public class WebStorageEndpointTest {
             UserPrincipal testUser = new UserPrincipal("ignored1");
             testUser.setRoles(roles);
             
-            final LoginService loginService = new TestJAASLoginService(testUser);
+            final JAASLoginService loginService = getConfiguredLoginService(testUser, roles);
             port = FreePortFinder.findFreePort(new TryPort() {
                 
                 @Override
@@ -603,7 +611,7 @@ public class WebStorageEndpointTest {
         UserPrincipal testUser = new UserPrincipal("ignored1");
         testUser.setRoles(roles);
         
-        final LoginService loginService = new TestJAASLoginService(testUser); 
+        final JAASLoginService loginService = getConfiguredLoginService(testUser, roles);
         port = FreePortFinder.findFreePort(new TryPort() {
             
             @Override
@@ -735,7 +743,7 @@ public class WebStorageEndpointTest {
             UserPrincipal testUser = new UserPrincipal("ignored1");
             testUser.setRoles(roles);
             
-            final LoginService loginService = new TestJAASLoginService(testUser);
+            final JAASLoginService loginService = getConfiguredLoginService(testUser, roles);
             port = FreePortFinder.findFreePort(new TryPort() {
                 
                 @Override
@@ -917,7 +925,7 @@ public class WebStorageEndpointTest {
         UserPrincipal testUser = new UserPrincipal("ignored1");
         testUser.setRoles(roles);
         
-        final LoginService loginService = new TestJAASLoginService(testUser); 
+        final JAASLoginService loginService = getConfiguredLoginService(testUser, roles);
         port = FreePortFinder.findFreePort(new TryPort() {
             
             @Override
@@ -1528,6 +1536,14 @@ public class WebStorageEndpointTest {
         return verifyAuthorizedGenerateToken(username, password, expectedResponseCode, actionName);
     }
     
+    private JAASLoginService getConfiguredLoginService(UserPrincipal user, Set<BasicRole> roles) {
+        Configuration config = new TestConfiguration(user, roles);
+        Configuration.setConfiguration(config);
+        JAASLoginService loginService = new JAASLoginService("foo");
+        loginService.setRoleClassNames(new String[] { RolePrincipal.class.getName() });
+        return loginService;
+    }
+    
     private byte[] verifyAuthorizedGenerateToken(String username,
             String password, int expectedResponseCode, String actionName)
             throws IOException {
@@ -1589,46 +1605,6 @@ public class WebStorageEndpointTest {
         }
     }
     
-    private static class TestJAASLoginService extends JAASLoginService {
-        
-        private final UserPrincipal userPrincipal;
-        
-        private TestJAASLoginService(UserPrincipal userPrincipal) {
-            this.userPrincipal = userPrincipal;
-        }
-        
-        @Override
-        public UserIdentity login(String username, Object credentials) {
-            return new TestUserIdentity(userPrincipal);
-        }
-        
-        private static class TestUserIdentity implements UserIdentity {
-
-            private final UserPrincipal userPrincipal;
-            
-            private TestUserIdentity(UserPrincipal principal) {
-                this.userPrincipal = principal;
-            }
-            
-            @Override
-            public Subject getSubject() {
-                throw new IllegalStateException("Not implemented");
-            }
-
-            @Override
-            public Principal getUserPrincipal() {
-                return userPrincipal;
-            }
-
-            @Override
-            public boolean isUserInRole(String role, Scope scope) {
-                RolePrincipal rolePrincipal = new RolePrincipal(role);
-                return userPrincipal.getRoles().contains(rolePrincipal);
-            }
-            
-        }
-    }
-    
     private static class TestStatementDescriptorRegistration implements StatementDescriptorRegistration {
 
         private final Set<String> descriptorSet;
@@ -1648,6 +1624,69 @@ public class WebStorageEndpointTest {
         @Override
         public Set<String> getStatementDescriptors() {
             return descriptorSet;
+        }
+        
+    }
+    
+    private class TestConfiguration extends Configuration {
+        
+        private final UserPrincipal uPrincipal;
+        private final Set<BasicRole> roles;
+        
+        TestConfiguration(UserPrincipal uPrincipal, Set<BasicRole> roles) {
+            this.uPrincipal = uPrincipal;
+            this.roles = roles;
+        }
+
+        @Override
+        public AppConfigurationEntry[] getAppConfigurationEntry(String name) {
+            Map<String, Object> state = new HashMap<>();
+            // TestLoginModule uses those options
+            state.put("user", uPrincipal);
+            state.put("roles", roles);
+            AppConfigurationEntry entry = new AppConfigurationEntry(TestLoginModule.class.getName(), LoginModuleControlFlag.REQUIRED, state);
+            return new AppConfigurationEntry[] { entry };
+        }
+        
+    }
+    
+    public static class TestLoginModule implements LoginModule {
+        
+        private Subject subject;
+        private UserPrincipal user;
+        private Set<BasicRole> roles;
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public void initialize(Subject subject,
+                CallbackHandler callbackHandler, Map<String, ?> sharedState,
+                Map<String, ?> options) {
+            this.subject = subject;
+            this.user = (UserPrincipal)options.get("user");
+            this.roles = (Set<BasicRole>)options.get("roles");
+        }
+
+        @Override
+        public boolean login() throws LoginException {
+            Set<Principal> principals = subject.getPrincipals();
+            principals.add(user);
+            principals.addAll(roles);
+            return true;
+        }
+
+        @Override
+        public boolean commit() throws LoginException {
+            return true;
+        }
+
+        @Override
+        public boolean abort() throws LoginException {
+            return true;
+        }
+
+        @Override
+        public boolean logout() throws LoginException {
+            return true;
         }
         
     }

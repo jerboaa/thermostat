@@ -42,21 +42,18 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
 import java.lang.reflect.Array;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.security.Principal;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.security.auth.Subject;
 import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -110,9 +107,13 @@ import com.redhat.thermostat.web.common.WebPreparedStatementSerializer;
 import com.redhat.thermostat.web.common.WebQueryResponse;
 import com.redhat.thermostat.web.common.WebQueryResponseSerializer;
 import com.redhat.thermostat.web.server.auth.FilterResult;
+import com.redhat.thermostat.web.server.auth.PrincipalCallback;
+import com.redhat.thermostat.web.server.auth.PrincipalCallbackFactory;
 import com.redhat.thermostat.web.server.auth.Roles;
 import com.redhat.thermostat.web.server.auth.UserPrincipal;
 import com.redhat.thermostat.web.server.auth.WebStoragePathHandler;
+import com.redhat.thermostat.web.server.containers.ServletContainerInfo;
+import com.redhat.thermostat.web.server.containers.ServletContainerInfoFactory;
 
 @SuppressWarnings("serial")
 public class WebStorageEndPoint extends HttpServlet {
@@ -122,17 +123,8 @@ public class WebStorageEndPoint extends HttpServlet {
     static final String FILES_WRITE_GRANT_ROLE_PREFIX = "thermostat-files-grant-write-filename-";
     private static final String TOKEN_MANAGER_TIMEOUT_PARAM = "token-manager-timeout";
     private static final String TOKEN_MANAGER_KEY = "token-manager";
-    private static final String JETTY8_JAAS_USER_PRINCIPAL_CLASS_NAME = "org.eclipse.jetty.plus.jaas.JAASUserPrincipal";
-    private static final String JETTY9_JAAS_USER_PRINCIPAL_CLASS_NAME = "org.eclipse.jetty.jaas.JAASUserPrincipal";
-    private static final Set<String> JETTY_USER_PRINCIPAL_CLASSES;
+    private static final String USER_PRINCIPAL_CALLBACK_KEY = "user-principal-callback";
     private static final String CATEGORY_KEY_FORMAT = "%s|%s";
-    
-    static {
-        Set<String> jettyUserPrincipals = new HashSet<>(2);
-        jettyUserPrincipals.add(JETTY8_JAAS_USER_PRINCIPAL_CLASS_NAME);
-        jettyUserPrincipals.add(JETTY9_JAAS_USER_PRINCIPAL_CLASS_NAME);
-        JETTY_USER_PRINCIPAL_CLASSES = Collections.unmodifiableSet(jettyUserPrincipals);
-    }
 
     // our strings can contain non-ASCII characters. Use UTF-8
     // see also PR 1344
@@ -192,7 +184,8 @@ public class WebStorageEndPoint extends HttpServlet {
         if (timeoutParam != null) {
             tokenManager.setTimeout(Integer.parseInt(timeoutParam));
         }
-        getServletContext().setAttribute(TOKEN_MANAGER_KEY, tokenManager);
+        ServletContext servletContext = getServletContext();
+        servletContext.setAttribute(TOKEN_MANAGER_KEY, tokenManager);
         
         // Set the set of statement descriptors which we trust
         KnownDescriptorRegistry descRegistry = KnownDescriptorRegistryFactory.getInstance();
@@ -201,6 +194,14 @@ public class WebStorageEndPoint extends HttpServlet {
         // Set the set of category names which we allow to get registered
         KnownCategoryRegistry categoryRegistry = KnownCategoryRegistryFactory.getInstance();
         knownCategoryNames = categoryRegistry.getRegisteredCategoryNames();
+        
+        // finally set callback for retrieving our JAAS user principal
+        String serverInfo = servletContext.getServerInfo();
+        ServletContainerInfoFactory factory = new ServletContainerInfoFactory(serverInfo);
+        ServletContainerInfo info = factory.getInfo();
+        PrincipalCallbackFactory cbFactory = new PrincipalCallbackFactory(info);
+        PrincipalCallback callback = Objects.requireNonNull(cbFactory.getCallback());
+        servletContext.setAttribute(USER_PRINCIPAL_CALLBACK_KEY, callback);
     }
     
     @Override
@@ -646,61 +647,11 @@ public class WebStorageEndPoint extends HttpServlet {
     }
     
     private UserPrincipal getUserPrincipal(HttpServletRequest req) {
-        // Since we use our own JAAS based auth module this cast is safe
-        // for Tomcat and JBoss AS 7 since they allow for configuration of
-        // user principal classes. As for Jetty, it always uses
-        // JAASUserPrincipal, but that principal has access to the subject
-        // which in turn has our user principal added.
         Principal principal = req.getUserPrincipal();
         
-        String principalClassName = principal.getClass().getName();
-        if (JETTY_USER_PRINCIPAL_CLASSES.contains(principalClassName)) {
-            return getJettyUserPrincipal(principal); 
-        } else {
-            // A simple cast should succeed for the non-jetty case. At the very
-            // least this should work for Tomcat and JBoss AS 7.
-            return (UserPrincipal)principal;
-        }
-    }
-    
-    private UserPrincipal getJettyUserPrincipal(Principal principal) {
-        // Jetty has our principal on the accessible subject.
-        // The package of the JAASUserPrincipal class changed between
-        // Jetty 8 and Jetty 9. 
-        Subject subject = getJettySubject(principal);
-        Set<UserPrincipal> userPrincipals = subject.getPrincipals(UserPrincipal.class);
-        if (userPrincipals.size() != 1) {
-            throw new IllegalStateException("More than one thermostat user principals!");
-        }
-        return userPrincipals.iterator().next();
-    }
-    
-    private Subject getJettySubject(Principal principal) {
-        Subject subject = null;
-        for (String clazzName: JETTY_USER_PRINCIPAL_CLASSES) {
-            try {
-                // Do this via reflection in order to avoid a hard dependency
-                // on jetty-plus.
-                Class<?> jassUserPrincipal = Class.forName(clazzName);
-                Method method = jassUserPrincipal.getDeclaredMethod("getSubject");
-                subject = (Subject)method.invoke(principal);
-            } catch (ClassNotFoundException | NoSuchMethodException
-                    | SecurityException | IllegalAccessException
-                    | IllegalArgumentException | InvocationTargetException e) {
-                // log and continue
-                logger.log(Level.WARNING, e.getMessage(), e);
-            }
-            if (subject != null) {
-                // short-circuit loop
-                break;
-            }
-        }
-        if (subject == null) {
-            throw new IllegalStateException(
-                    "Could not retrieve subject from principal of type "
-                            + principal.getClass().getName());
-        }
-        return subject;
+        ServletContext context = getServletContext();
+        PrincipalCallback callback = (PrincipalCallback)context.getAttribute(USER_PRINCIPAL_CALLBACK_KEY);
+        return callback.getUserPrincipal(principal);
     }
 
     /*
