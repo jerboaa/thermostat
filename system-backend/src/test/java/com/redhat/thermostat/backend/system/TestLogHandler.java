@@ -36,49 +36,51 @@
 
 package com.redhat.thermostat.backend.system;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.UUID;
-
-import org.junit.Test;
-
-public class LsbReleaseTest {
+/*
+ * Test log handler used for DistributionInformation log testing.
+ */
+public class TestLogHandler extends Handler {
     
-    static final String NOT_EXISTING_LSB_RELEASE = "lsb_release-"
-            + UUID.randomUUID();
-
-    @Test
-    public void testName() throws IOException, InterruptedException {
-        BufferedReader reader = new BufferedReader(new StringReader("Distributor ID: Name"));
-        DistributionInformation info = new LsbRelease().getFromLsbRelease(reader);
-        assertEquals("Name", info.getName());
-    }
-
-    @Test
-    public void testVersion() throws IOException {
-        BufferedReader reader = new BufferedReader(new StringReader("Release: Version"));
-        DistributionInformation info = new LsbRelease().getFromLsbRelease(reader);
-        assertEquals("Version", info.getVersion());
-    }
+    private boolean etcOsReleaseLogged;
+    private boolean lsbReleaseLogged;
+    private static final String EXPECTED_OS_RELEASE_FAIL_MSG =
+            "unable to use os-release";
+    private static final String EXPECTED_LSB_RELEASE_FAIL_MSG =
+            "unable to use os-release AND lsb_release";
     
-    @Test
-    public void getDistributionInformationThrowsIOExceptionIfScriptNotThere() {
-        LsbRelease lsbRelease = new LsbRelease(NOT_EXISTING_LSB_RELEASE);
-        try {
-            lsbRelease.getDistributionInformation();
-            fail("Should have thrown IOException, since file is not there!");
-        } catch (IOException e) {
-            // pass
-            String message = e.getMessage();
-            assertTrue(message.contains("Cannot run program \"lsb_release-"));
-            assertTrue(message.contains("No such file or directory"));
+    @Override
+    public void publish(LogRecord record) {
+        String logMessage = record.getMessage();
+        if (record.getLevel().intValue() >= Level.WARNING.intValue() && 
+                logMessage.equals(EXPECTED_OS_RELEASE_FAIL_MSG)) {
+            etcOsReleaseLogged = true;
+        };
+        if (record.getLevel().intValue() >= Level.WARNING.intValue() &&
+                logMessage.equals(EXPECTED_LSB_RELEASE_FAIL_MSG)) {
+            lsbReleaseLogged = true;
         }
     }
 
-}
+    @Override
+    public void flush() {
+        // nothing
+    }
 
+    @Override
+    public void close() throws SecurityException {
+        // nothing
+    }
+    
+    boolean isEtcOsReleaseLogged() {
+        return etcOsReleaseLogged;
+    }
+    
+    boolean isLsbReleaseLogged() {
+        return lsbReleaseLogged;
+    }
+    
+}

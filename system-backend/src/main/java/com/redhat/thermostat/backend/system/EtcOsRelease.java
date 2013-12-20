@@ -45,14 +45,24 @@ import java.nio.charset.StandardCharsets;
 public class EtcOsRelease implements DistributionInformationSource {
 
     private static final String OS_RELEASE = "/etc/os-release";
-
+    private final String osReleaseFile;
+    
+    public EtcOsRelease() {
+        this.osReleaseFile = OS_RELEASE;
+    }
+    
+    // package-private for testing
+    EtcOsRelease(String osReleaseFile) {
+        this.osReleaseFile = osReleaseFile;
+    }
+    
     @Override
     public DistributionInformation getDistributionInformation() throws IOException {
         return getFromOsRelease();
     }
 
     public DistributionInformation getFromOsRelease() throws IOException {
-        return getFromOsRelease(OS_RELEASE);
+        return getFromOsRelease(osReleaseFile);
     }
 
     public DistributionInformation getFromOsRelease(String releaseFile) throws IOException {

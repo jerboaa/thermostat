@@ -58,15 +58,25 @@ public class DistributionInformation {
     }
 
     public static DistributionInformation get() {
+        EtcOsRelease etcOsRelease = new EtcOsRelease();
+        LsbRelease lsbRelease = new LsbRelease();
+        return get(etcOsRelease, lsbRelease);
+    }
+    
+    // package-private for testing
+    static DistributionInformation get(EtcOsRelease etcOsRelease, LsbRelease lsbRelease) {
         try {
-            return new EtcOsRelease().getDistributionInformation();
+            return etcOsRelease.getDistributionInformation();
         } catch (IOException e) {
-            logger.log(Level.WARNING, "unable to use os-release", e);
+            // Log only at level FINE, since we have the LSB fallback
+            logger.log(Level.FINE, "unable to use os-release", e);
         }
         try {
-            return new LsbRelease().getDistributionInformation();
+            return lsbRelease.getDistributionInformation();
         } catch (IOException e) {
-            logger.log(Level.WARNING, "unable to use lsb_release", e);
+            // Log exception at level FINE only.
+            logger.log(Level.FINE, "unable to use lsb_release", e);
+            logger.log(Level.WARNING, "unable to use os-release AND lsb_release");
         }
         return new DistributionInformation(UNKNOWN_NAME, UNKNOWN_VERSION);
     }

@@ -38,11 +38,94 @@ package com.redhat.thermostat.backend.system;
 
 import static org.junit.Assert.*;
 
+import java.util.logging.Handler;
+import java.util.logging.Logger;
+
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.testutils.TestUtils;
 
 public class DistributionInformationTest {
+    
+    private Logger logger;
+    private TestLogHandler handler;
+    
+    @Before
+    public void setup() {
+        setupTestLogger();
+    }
+    
+    @After
+    public void tearDown() {
+        if (handler != null) {
+            logger.removeHandler(handler);
+            handler = null;
+        }
+    }
+    
+    private void setupTestLogger() {
+        logger = Logger.getLogger("com.redhat.thermostat");
+        handler = new TestLogHandler();
+        logger.addHandler(handler);
+    }
+    
+    /*
+     * Verifies that no warning gets logged if EtcOsRelease fails, but
+     * LsbRelease works. Since LsbRelease is the fallback, all is well.
+     * 
+     * see: http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=1628
+     */
+    @Test
+    public void testNoWarningLoggedOnFallback() {
+        // verify preconditions
+        assertFalse(handler.isEtcOsReleaseLogged());
+        assertTestHandlerRegistered();
+        
+        // Default LSB release
+        LsbRelease lsbRelease = new LsbRelease();
+        // EtcOsRelease with non existent file
+        EtcOsRelease etcOsRelease = new EtcOsRelease(EtcOsReleaseTest.NOT_EXISTING_OS_RELEASE_FILE);
+        DistributionInformation.get(etcOsRelease, lsbRelease);
+        assertFalse(handler.isEtcOsReleaseLogged());
+    }
+    
+    /*
+     * Verifies that a warning gets logged if os-release and lsb_release both
+     * fail.
+     * 
+     * see: http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=1628
+     */
+    @Test
+    public void testWarningLoggedIfBothFail() {
+        // verify preconditions
+        assertFalse(handler.isEtcOsReleaseLogged());
+        assertFalse(handler.isLsbReleaseLogged());
+        assertTestHandlerRegistered();
+        
+        // both etc-os-release and lsb-release don't exist for this test
+        EtcOsRelease etcOsRelease = new EtcOsRelease(EtcOsReleaseTest.NOT_EXISTING_OS_RELEASE_FILE);
+        LsbRelease lsbRelease = new LsbRelease(LsbReleaseTest.NOT_EXISTING_LSB_RELEASE);
+        
+        DistributionInformation info = DistributionInformation.get(etcOsRelease, lsbRelease);
+        assertFalse(handler.isEtcOsReleaseLogged());
+        assertTrue(handler.isLsbReleaseLogged());
+        assertNotNull(info);
+        assertEquals(DistributionInformation.UNKNOWN_NAME, info.getName());
+        assertEquals(DistributionInformation.UNKNOWN_VERSION, info.getVersion());
+    }
+
+    private void assertTestHandlerRegistered() {
+        assertNotNull(logger);
+        boolean testLogHandlerRegistered = false;
+        for (Handler h: logger.getHandlers()) {
+            if (h instanceof TestLogHandler) {
+                testLogHandlerRegistered = true;
+            }
+        }
+        assertTrue(testLogHandlerRegistered);
+    }
 
     @Test
     public void testName() {

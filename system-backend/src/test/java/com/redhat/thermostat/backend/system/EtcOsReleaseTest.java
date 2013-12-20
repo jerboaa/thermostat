@@ -37,16 +37,22 @@
 package com.redhat.thermostat.backend.system;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.UUID;
 
 import org.junit.Test;
 
 import com.redhat.thermostat.test.Bug;
 
 public class EtcOsReleaseTest {
+    
+    static final String NOT_EXISTING_OS_RELEASE_FILE = "/thermostat-os-release-testing-"
+            + UUID.randomUUID();
 
     @Test
     public void testName() throws IOException, InterruptedException {
@@ -79,6 +85,20 @@ public class EtcOsReleaseTest {
 
         assertEquals("openSUSE", info.getName());
         assertEquals("12.1 (Asparagus)", info.getVersion());
+    }
+    
+    @Test
+    public void getDistributionInformationThrowsIOExceptionIfFileNotThere() {
+        EtcOsRelease etcOsRelease = new EtcOsRelease(NOT_EXISTING_OS_RELEASE_FILE);
+        try {
+            etcOsRelease.getDistributionInformation();
+            fail("Should have thrown IOException, since file is not there!");
+        } catch (IOException e) {
+            // pass
+            String message = e.getMessage();
+            assertTrue(message.contains("/thermostat-os-release-testing-"));
+            assertTrue(message.contains("(No such file or directory)"));
+        }
     }
 
 }

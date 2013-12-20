@@ -51,6 +51,18 @@ public class LsbRelease implements DistributionInformationSource {
 
     private static final String DISTRIBUTION_NAME = "distributor id";
     private static final String DISTRIBUTION_VERSION = "release";
+    private static final String LSB_RELEASE_SCRIPT = "lsb_release";
+    
+    private final String lsbRelaseBin;
+    
+    public LsbRelease() {
+        this.lsbRelaseBin = LSB_RELEASE_SCRIPT;
+    }
+    
+    // package-private for testing
+    LsbRelease(String lsbReleaseBin) {
+        this.lsbRelaseBin = lsbReleaseBin;
+    }
 
     @Override
     public DistributionInformation getDistributionInformation()
@@ -59,10 +71,9 @@ public class LsbRelease implements DistributionInformationSource {
     }
 
     public DistributionInformation getFromLsbRelease() throws IOException {
-
         BufferedReader reader = null;
         try {
-            Process lsbProc = Runtime.getRuntime().exec(new String[] { "lsb_release", "-a" });
+            Process lsbProc = Runtime.getRuntime().exec(new String[] { lsbRelaseBin, "-a" });
             InputStream progOutput = lsbProc.getInputStream();
             reader = new BufferedReader(new InputStreamReader(progOutput));
             DistributionInformation result = getFromLsbRelease(reader);
