@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Red Hat, Inc.
+ * Copyright 2012-2014 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -50,3 +50,4 @@ public class LocaleResourcesTest extends AbstractLocaleResourcesTest<LocaleResou
         return LocaleResources.RESOURCE_BUNDLE;
     }
 }
+

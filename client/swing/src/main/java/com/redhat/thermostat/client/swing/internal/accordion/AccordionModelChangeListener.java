@@ -1,5 +1,5 @@
 /*
- * Copyright 2012, 2013 Red Hat, Inc.
+ * Copyright 2012-2014 Red Hat, Inc.
  * 
  * This file is part of Thermostat.
  * 
@@ -46,3 +46,4 @@ public interface AccordionModelChangeListener<H, C> extends EventListener {
     public void componentAdded(AccordionComponentEvent<H, C> e);
     public void componentRemoved(AccordionComponentEvent<H, C> e);
 }
+

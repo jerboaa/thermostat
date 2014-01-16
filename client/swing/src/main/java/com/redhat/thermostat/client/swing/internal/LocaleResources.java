@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Red Hat, Inc.
+ * Copyright 2012-2014 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -55,3 +55,4 @@ public enum LocaleResources {
         return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
     }
 }
+

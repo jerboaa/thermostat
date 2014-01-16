@@ -1,4 +1,4 @@
-Copyright 2012, 2013 Red Hat, Inc.
+Copyright 2012-2014 Red Hat, Inc.
 
 Thermostat is distributed under the GNU General Public License,
 version 2 or any later version (with a special exception described
@@ -30,3 +30,4 @@ Additional files and licenses
 Thermostat uses Font Awesome by Dave Gandy (http://fontawesome.io) as primary
 icon resource, distributed under the SIL OFL 1.1 (http://scripts.sil.org/OFL).
 A copy of the OFL 1.1 license is also included and distributed with Thermostat.
+

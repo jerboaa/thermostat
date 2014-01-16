@@ -1,5 +1,5 @@
 /*
- * Copyright 2012, 2013 Red Hat, Inc.
+ * Copyright 2012-2014 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -101,3 +101,4 @@ public class KeyringImpl implements Keyring {
     private static native byte[] gnomeKeyringWrapperGetPasswordNative(String url, String userName);
     private static native boolean gnomeKeyringWrapperClearPasswordNative(String url, String userName);
 }
+

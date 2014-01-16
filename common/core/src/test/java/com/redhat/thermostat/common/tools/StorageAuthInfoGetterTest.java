@@ -3,7 +3,7 @@ package com.redhat.thermostat.common.tools;
 import java.io.IOException;
 import java.io.InputStream;
 /*
- * Copyright 2012, 2013 Red Hat, Inc.
+ * Copyright 2012-2014 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -104,3 +104,4 @@ public class StorageAuthInfoGetterTest {
         assertEquals(new String(pass), new String(getter.getPassword("url_doesn't_matter")));
     }
 }
+

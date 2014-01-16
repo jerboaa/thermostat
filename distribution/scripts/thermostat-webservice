@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2012, 2013 Red Hat, Inc.
+# Copyright 2012-2014 Red Hat, Inc.
 #
 # This file is part of Thermostat.
 #
@@ -209,3 +209,4 @@ do_function $FUNCTION
 #mkdir -p ~/.thermostat/etc
 #echo -e "username=agent-tester\npassword=tester" > ~/.thermostat/etc/agent.auth
 #./distribution/target/image/bin/thermostat agent -d http://127.0.0.1:8080/thermostat/storage
+

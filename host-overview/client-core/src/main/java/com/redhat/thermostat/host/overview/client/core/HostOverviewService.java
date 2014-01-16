@@ -1,5 +1,5 @@
 /*
- * Copyright 2012, 2013 Red Hat, Inc.
+ * Copyright 2012-2014 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -44,3 +44,4 @@ public interface HostOverviewService extends InformationService<HostRef> {
     public static final String SERVICE_ID = "com.redhat.thermostat.host.overview";
 
 }
+

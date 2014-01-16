@@ -1,5 +1,5 @@
 /*
- * Copyright 2012, 2013 Red Hat, Inc.
+ * Copyright 2012-2014 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -199,3 +199,4 @@ Java_com_redhat_thermostat_utils_keyring_impl_KeyringImpl_gnomeKeyringWrapperCle
 
     return (res == GNOME_KEYRING_RESULT_OK) ? JNI_TRUE : JNI_FALSE;
 }
+

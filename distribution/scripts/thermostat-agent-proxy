@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2012, 2013 Red Hat, Inc.
+# Copyright 2012-2014 Red Hat, Inc.
 #
 # This file is part of Thermostat.
 #
@@ -72,3 +72,4 @@ fi
 # Start server
 ${JAVA} -cp ${SERVICE_CLASSPATH} ${DEBUG_OPTS} "-Djava.security.auth.login.config=${JAAS_CONFIG}" \
 "-Djava.rmi.server.randomIDs=true" ${AGENT_PROXY_CLASS} "$1"
+
