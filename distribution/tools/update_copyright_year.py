@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright 2012, 2013 Red Hat, Inc.
+# Copyright 2012-2014 Red Hat, Inc.
 # 
 # This file is part of Thermostat.
 # 
@@ -42,7 +42,7 @@ import os
 import glob
 import sys
 
-COPYRIGHT = "Copyright 2012, 2013 Red Hat, Inc."
+COPYRIGHT = "Copyright 2012-2014 Red Hat, Inc."
 
 def main():
     directory = sys.argv[1]
