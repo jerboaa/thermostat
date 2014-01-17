@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Red Hat, Inc.
+ * Copyright 2012, 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -33,31 +33,44 @@
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
-package com.redhat.thermostat.agent.cli.impl.db;
 
-import java.io.File;
+package com.redhat.thermostat.storage.cli.internal;
 
-import com.redhat.thermostat.common.tools.ApplicationException;
+import static com.redhat.thermostat.testutils.Asserts.assertCommandIsRegistered;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
 
-@SuppressWarnings("serial")
-public class StorageStopException extends ApplicationException {
+import org.junit.Test;
 
-    private final File dbConfig;
-    private final int status;
+import com.redhat.thermostat.common.ExitStatus;
+import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.testutils.StubBundleContext;
 
-    public StorageStopException(File dbConfig, int status, String message) {
-        super(message);
-        this.dbConfig = dbConfig;
-        this.status = status;
+public class ActivatorTest {
+
+    @Test
+    public void verifyActivatorRegistersCommands() throws Exception {        
+        StubBundleContext bundleContext = new StubBundleContext();
+
+        ExitStatus exitStatus = mock(ExitStatus.class);
+        CommonPaths paths = mock(CommonPaths.class);
+        bundleContext.registerService(ExitStatus.class, exitStatus, null);
+        bundleContext.registerService(CommonPaths.class, paths, null);
+        
+        Activator activator = new Activator();
+
+        assertEquals(0, bundleContext.getServiceListeners().size());
+        
+        activator.start(bundleContext);
+        
+        assertEquals(2, bundleContext.getServiceListeners().size());
+        
+        assertCommandIsRegistered(bundleContext, "storage", StorageCommand.class);
+
+        activator.stop(bundleContext);
+
+        assertEquals(0, bundleContext.getServiceListeners().size());
+        assertEquals(2, bundleContext.getAllServices().size());
     }
-
-    public File getDbConfig() {
-        return dbConfig;
-    }
-
-    public int getStatus() {
-        return status;
-    }
-
 }
 

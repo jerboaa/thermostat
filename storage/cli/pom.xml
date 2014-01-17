@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- 
 
- Copyright 2012-2014 Red Hat, Inc.
+ Copyright 2012, 2013 Red Hat, Inc.
 
  This file is part of Thermostat.
 
@@ -41,14 +41,14 @@
 
   <parent>
     <groupId>com.redhat.thermostat</groupId>
-    <artifactId>thermostat-agent</artifactId>
+    <artifactId>thermostat-storage</artifactId>
     <version>1.1.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>thermostat-agent-cli</artifactId>
+  <artifactId>thermostat-storage-cli</artifactId>
   <packaging>bundle</packaging>
 
-  <name>Thermostat Agent Command Line</name>
+  <name>Thermostat Storage Command Line</name>
 
   <dependencies>
     <dependency>
@@ -60,36 +60,6 @@
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-api-mockito</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-module-junit4</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-agent-core</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-agent-command</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-common-core</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-launcher</artifactId>
-      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
@@ -122,11 +92,11 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-Activator>com.redhat.thermostat.agent.cli.impl.Activator</Bundle-Activator>
-            <Bundle-SymbolicName>com.redhat.thermostat.agent.cli</Bundle-SymbolicName>
+            <Bundle-Activator>com.redhat.thermostat.storage.cli.internal.Activator</Bundle-Activator>
+            <Bundle-SymbolicName>com.redhat.thermostat.storage.cli</Bundle-SymbolicName>
             <Private-Package>
-              com.redhat.thermostat.agent.cli.impl,
-              com.redhat.thermostat.agent.cli.impl.locale,
+              com.redhat.thermostat.storage.cli.internal,
+              com.redhat.thermostat.storage.cli.internal.locale,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>

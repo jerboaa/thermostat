@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.cli.impl.db;
+package com.redhat.thermostat.storage.cli.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -64,6 +64,10 @@ import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.config.internal.CommonPathsImpl;
+import com.redhat.thermostat.storage.cli.internal.DBConfig;
+import com.redhat.thermostat.storage.cli.internal.DBStartupConfiguration;
+import com.redhat.thermostat.storage.cli.internal.MongoProcessRunner;
+import com.redhat.thermostat.storage.cli.internal.StorageCommand;
 import com.redhat.thermostat.testutils.TestUtils;
 
 public class StorageCommandTest {

@@ -60,6 +60,7 @@
 
   <modules>
     <module>core</module>
+    <module>cli</module>
     <module>mongo</module>
   </modules>
 

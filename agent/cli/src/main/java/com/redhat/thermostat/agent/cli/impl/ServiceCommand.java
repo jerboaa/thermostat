@@ -43,12 +43,11 @@ import java.util.concurrent.Semaphore;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
-import com.redhat.thermostat.agent.cli.impl.db.StorageAlreadyRunningException;
-import com.redhat.thermostat.agent.cli.impl.db.StorageCommand;
 import com.redhat.thermostat.agent.cli.impl.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.cli.AbstractCommand;
+import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.tools.ApplicationState;
@@ -68,6 +67,7 @@ public class ServiceCommand extends AbstractCommand implements ActionListener<Ap
     private BundleContext context;
     private Launcher launcher;
     private boolean storageFailed = false;
+    private CommandContext cmdCtx;
 
     public ServiceCommand(BundleContext context) {
         this.context = context;
@@ -77,6 +77,7 @@ public class ServiceCommand extends AbstractCommand implements ActionListener<Ap
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
+        cmdCtx = ctx;
         ServiceReference launcherRef = context.getServiceReference(Launcher.class);
         if (launcherRef == null) {
             throw new CommandException(translator.localize(LocaleResources.LAUNCHER_UNAVAILABLE));
@@ -96,32 +97,47 @@ public class ServiceCommand extends AbstractCommand implements ActionListener<Ap
         launcher.run(storageStopArgs, false);
         
         context.ungetService(launcherRef);
+        cmdCtx = null;
     }
 
     @Override
     public void actionPerformed(ActionEvent<ApplicationState> actionEvent) {
-        if (actionEvent.getSource() instanceof StorageCommand) {
-            StorageCommand storage = (StorageCommand) actionEvent.getSource();
+        if (actionEvent.getSource() instanceof AbstractStateNotifyingCommand) {
+            AbstractStateNotifyingCommand storage = (AbstractStateNotifyingCommand) actionEvent.getSource();
             // Implementation detail: there is a single StorageCommand instance registered
             // as an OSGi service.  We remove ourselves as listener so that we don't get
             // notified in the case that the command is invoked by some other means later.
             storage.getNotifier().removeActionListener(this);
-            switch (actionEvent.getActionId()) {
-            case START:
-                String dbUrl = storage.getConfiguration().getDBConnectionString();
-                String[] agentArgs =  new String[] {"agent", "-d", dbUrl};
-                System.err.println(translator.localize(LocaleResources.STARTING_AGENT).getContents());
-                launcher.run(agentArgs, false);
-                break;
-            case FAIL:
-                storageFailed = true;
-                Object payload = actionEvent.getPayload();
-                if (payload instanceof StorageAlreadyRunningException) {
-                    System.err.println(translator.localize(LocaleResources.STORAGE_ALREADY_RUNNING).getContents());
+            
+            try {
+                switch (actionEvent.getActionId()) {
+                case START:
+                    // Payload is connection URL
+                    Object payload = actionEvent.getPayload();
+                    if (payload == null || !(payload instanceof String)) {
+                        throw new CommandException(translator.localize(LocaleResources.UNEXPECTED_RESULT_STORAGE));
+                    }
+                    String dbUrl = (String) payload;
+                    String[] agentArgs =  new String[] {"agent", "-d", dbUrl};
+                    cmdCtx.getConsole().getError().println(translator.localize(LocaleResources.STARTING_AGENT).getContents());
+                    launcher.run(agentArgs, false);
+                    break;
+                case FAIL:
+                    storageFailed = true;
+                    // Payload is exception
+                    payload = actionEvent.getPayload();
+                    if (payload == null || !(payload instanceof Exception)) {
+                        throw new CommandException(translator.localize(LocaleResources.UNEXPECTED_RESULT_STORAGE));
+                    }
+                    Exception ex = (Exception) payload;
+                    cmdCtx.getConsole().getError().println(ex.getMessage());
+                    break;
                 }
-                break;
+            } catch (CommandException e) {
+                cmdCtx.getConsole().getError().println(e.getMessage());
+            } finally {
+                agentBarrier.release();
             }
-            agentBarrier.release();
         }
     }
 

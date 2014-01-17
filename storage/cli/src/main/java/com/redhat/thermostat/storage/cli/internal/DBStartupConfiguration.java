@@ -34,16 +34,16 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.cli.impl.db;
+package com.redhat.thermostat.storage.cli.internal;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
-import com.redhat.thermostat.agent.cli.impl.locale.LocaleResources;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.storage.cli.internal.locale.LocaleResources;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 
 public class DBStartupConfiguration implements StartupConfiguration {

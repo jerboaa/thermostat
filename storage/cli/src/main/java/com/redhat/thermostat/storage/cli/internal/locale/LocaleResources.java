@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Red Hat, Inc.
+ * Copyright 2012, 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -33,30 +33,39 @@
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
-package com.redhat.thermostat.agent.cli.impl.db;
 
-import java.io.File;
+package com.redhat.thermostat.storage.cli.internal.locale;
 
-import com.redhat.thermostat.common.tools.ApplicationException;
+import com.redhat.thermostat.shared.locale.Translate;
 
-@SuppressWarnings("serial")
-public class StorageStartException extends ApplicationException {
+public enum LocaleResources {
 
-    private final File dbFile;
-    private final int status;
+    COMMAND_STORAGE_ARGUMENT_REQUIRED,
 
-    public StorageStartException(File dbPath, int status, String message) {
-        super(message);
-        this.dbFile = dbPath;
-        this.status = status;
-    }
+    STORAGE_ALREADY_RUNNING_WITH_PID,
+    SERVER_SHUTDOWN_COMPLETE,
+    LOG_FILE_AT,
+    CANNOT_START_SERVER,
+    CANNOT_SHUTDOWN_SERVER,
+    STALE_PID_FILE,
+    STALE_PID_FILE_NO_MATCHING_PROCESS,
+    STARTING_STORAGE_SERVER,
+    CANNOT_EXECUTE_PROCESS,
+    SERVER_LISTENING_ON,
+    PID_IS,
+    MISSING_PROPERTY,
+    MISSING_PEM,
+    MISSING_PASSPHRASE,
+    MISSING_DB_CONFIG,
+    MISSING_DB_DIR,
+    STORAGE_RUNNING,
+    STORAGE_NOT_RUNNING
+    ;
 
-    public File getDbPath() {
-        return dbFile;
-    }
+    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.storage.cli.internal.strings";
 
-    public int getStatus() {
-        return status;
+    public static Translate<LocaleResources> createLocalizer() {
+        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
     }
 
 }

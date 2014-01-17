@@ -33,24 +33,30 @@
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
+package com.redhat.thermostat.storage.cli.internal;
 
-package com.redhat.thermostat.agent.cli.impl.locale;
+import java.io.File;
 
-import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.common.tools.ApplicationException;
 
-public enum LocaleResources {
+@SuppressWarnings("serial")
+public class StorageStartException extends ApplicationException {
 
-    STARTING_AGENT,
+    private final File dbFile;
+    private final int status;
 
-    SERVICE_FAILED_TO_START_DB,
-    LAUNCHER_UNAVAILABLE,
-    UNEXPECTED_RESULT_STORAGE,
-    ;
+    public StorageStartException(File dbPath, int status, String message) {
+        super(message);
+        this.dbFile = dbPath;
+        this.status = status;
+    }
 
-    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.agent.cli.impl.strings";
+    public File getDbPath() {
+        return dbFile;
+    }
 
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+    public int getStatus() {
+        return status;
     }
 
 }

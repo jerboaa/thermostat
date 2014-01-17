@@ -34,14 +34,13 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.cli.impl.db;
+package com.redhat.thermostat.storage.cli.internal;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.agent.cli.impl.locale.LocaleResources;
 import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.cli.Arguments;
@@ -53,6 +52,7 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.storage.cli.internal.locale.LocaleResources;
 
 public class StorageCommand extends AbstractStateNotifyingCommand {
 
@@ -113,7 +113,7 @@ public class StorageCommand extends AbstractStateNotifyingCommand {
              default:
                 break;
             }
-            getNotifier().fireAction(ApplicationState.SUCCESS);
+            getNotifier().fireAction(ApplicationState.SUCCESS, configuration.getDBConnectionString());
         } catch (InvalidConfigurationException e) {
             // rethrow
             throw e;
@@ -137,7 +137,7 @@ public class StorageCommand extends AbstractStateNotifyingCommand {
             // rethrow
             throw e;
         }
-        getNotifier().fireAction(ApplicationState.START);
+        getNotifier().fireAction(ApplicationState.START, configuration.getDBConnectionString());
     }
     
     private void createNeededDirectories() throws InvalidConfigurationException {

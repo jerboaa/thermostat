@@ -34,13 +34,13 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.cli.impl.db;
+package com.redhat.thermostat.storage.cli.internal;
 
 import com.redhat.thermostat.common.cli.Arguments;
-import com.redhat.thermostat.agent.cli.impl.locale.LocaleResources;
 import com.redhat.thermostat.common.config.ThermostatOptionParser;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.storage.cli.internal.locale.LocaleResources;
 
 public class DBOptionParser implements ThermostatOptionParser {
     

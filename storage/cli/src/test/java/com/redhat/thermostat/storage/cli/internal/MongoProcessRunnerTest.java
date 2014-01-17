@@ -1,4 +1,4 @@
-package com.redhat.thermostat.agent.cli.impl.db;
+package com.redhat.thermostat.storage.cli.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -16,8 +16,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.agent.cli.impl.db.MongoProcessRunner;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
+import com.redhat.thermostat.storage.cli.internal.DBStartupConfiguration;
+import com.redhat.thermostat.storage.cli.internal.MongoProcessRunner;
 
 public class MongoProcessRunnerTest {
 

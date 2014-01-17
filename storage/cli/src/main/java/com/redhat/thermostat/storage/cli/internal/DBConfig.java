@@ -34,15 +34,35 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.cli.impl.db;
+package com.redhat.thermostat.storage.cli.internal;
 
-import com.redhat.thermostat.common.tools.ApplicationException;
 
-@SuppressWarnings("serial")
-public class StorageNotRunningException extends ApplicationException {
+/**
+ * Set of configuration options that the {@link StorageCommand} understands.
+ * Keys map to properties in $THERMOSTAT_HOME/storage/db.properties.
+ */
+public enum DBConfig {
 
-    public StorageNotRunningException(String message) {
-        super(message);
-    }
+    /**
+     * The bind IP address.
+     */
+    BIND,
+    /**
+     * The port on which mongodb will be listening.
+     */
+    PORT,
+    /**
+     * Weather or not to start mongodb with SSL enabled.
+     */
+    SSL_ENABLE,
+    /**
+     * The PEM encoded SSL certificate + SSL key.
+     */
+    SSL_PEM_FILE,
+    /**
+     * The passphrase for the encrypted SSL key. Only used if the private key was encrypted.
+     */
+    SSL_KEY_PASSWORD,
+    
 }
 

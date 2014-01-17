@@ -42,9 +42,7 @@ import static org.mockito.Mockito.mock;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.agent.cli.impl.db.StorageCommand;
 import com.redhat.thermostat.common.ExitStatus;
-import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
@@ -56,10 +54,8 @@ public class ActivatorTest {
 
         ExitStatus exitStatus = mock(ExitStatus.class);
         WriterID writerID = mock(WriterID.class);
-        CommonPaths paths = mock(CommonPaths.class);
         bundleContext.registerService(WriterID.class, writerID, null);
         bundleContext.registerService(ExitStatus.class, exitStatus, null);
-        bundleContext.registerService(CommonPaths.class, paths, null);
         
         Activator activator = new Activator();
 
@@ -67,16 +63,15 @@ public class ActivatorTest {
         
         activator.start(bundleContext);
         
-        assertEquals(3, bundleContext.getServiceListeners().size());
+        assertEquals(2, bundleContext.getServiceListeners().size());
         
         assertCommandIsRegistered(bundleContext, "agent", AgentApplication.class);
         assertCommandIsRegistered(bundleContext, "service", ServiceCommand.class);
-        assertCommandIsRegistered(bundleContext, "storage", StorageCommand.class);
 
         activator.stop(bundleContext);
 
         assertEquals(0, bundleContext.getServiceListeners().size());
-        assertEquals(3, bundleContext.getAllServices().size());
+        assertEquals(2, bundleContext.getAllServices().size());
     }
 }
 

@@ -66,6 +66,7 @@
         <include>com.redhat.thermostat:thermostat-common-core</include>
         <include>com.redhat.thermostat:thermostat-common-command</include>
         <include>com.redhat.thermostat:thermostat-osgi-process-handler</include>
+        <include>com.redhat.thermostat:thermostat-storage-cli</include>
         <include>com.redhat.thermostat:thermostat-keyring</include>
         <include>com.redhat.thermostat:thermostat-web-client</include>
         <include>com.redhat.thermostat:thermostat-web-cmd</include>

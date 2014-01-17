@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.cli.impl.db;
+package com.redhat.thermostat.storage.cli.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -47,6 +47,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
+import com.redhat.thermostat.storage.cli.internal.DBStartupConfiguration;
 
 public class DBStartupConfigurationTest {
     

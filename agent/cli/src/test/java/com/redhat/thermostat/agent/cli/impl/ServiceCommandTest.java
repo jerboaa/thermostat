@@ -36,16 +36,17 @@
 
 package com.redhat.thermostat.agent.cli.impl;
 
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.isA;
-import static org.mockito.Mockito.anyBoolean;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.never;
 
+import java.io.PrintStream;
 import java.util.Collection;
 
 import junit.framework.Assert;
@@ -55,15 +56,14 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.osgi.framework.ServiceReference;
 
-import com.redhat.thermostat.agent.cli.impl.db.DBStartupConfiguration;
-import com.redhat.thermostat.agent.cli.impl.db.StorageCommand;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.Console;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.testutils.StubBundleContext;
@@ -91,16 +91,18 @@ public class ServiceCommandTest {
         bundleContext.registerService(Launcher.class, mockLauncher, null);
         serviceCommand = new ServiceCommand(bundleContext);
         
-        StorageCommand mockStorageCommand = mock(StorageCommand.class);
+        AbstractStateNotifyingCommand mockStorageCommand = mock(AbstractStateNotifyingCommand.class);
         mockActionEvent = mock(ActionEvent.class);
         when(mockActionEvent.getSource()).thenReturn(mockStorageCommand);
         mockCommandContext = mock(CommandContext.class);
+        Console console = mock(Console.class);
+        PrintStream err = mock(PrintStream.class);
+        when(console.getError()).thenReturn(err);
+        when(mockCommandContext.getConsole()).thenReturn(console);
         
         ActionNotifier<ApplicationState> mockNotifier = mock(ActionNotifier.class);
-        DBStartupConfiguration mockDbsConfiguration = mock(DBStartupConfiguration.class);
         when(mockStorageCommand.getNotifier()).thenReturn(mockNotifier);
-        when(mockStorageCommand.getConfiguration()).thenReturn(mockDbsConfiguration);
-        when(mockDbsConfiguration.getDBConnectionString()).thenReturn(new String("Test String"));
+        when(mockActionEvent.getPayload()).thenReturn(new String("Test String"));
     }
 
     @After
@@ -156,6 +158,7 @@ public class ServiceCommandTest {
                     when(mockActionEvent.getActionId()).thenReturn(ApplicationState.START);
                 } else {
                     when(mockActionEvent.getActionId()).thenReturn(ApplicationState.FAIL);
+                    when(mockActionEvent.getPayload()).thenReturn(new Exception("Test Exception"));
                 }
                 ++count;
                 
@@ -197,6 +200,7 @@ public class ServiceCommandTest {
                 listeners = (Collection<ActionListener<ApplicationState>>)args[1];
                 
                 when(mockActionEvent.getActionId()).thenReturn(ApplicationState.FAIL);
+                when(mockActionEvent.getPayload()).thenReturn(new Exception("Test Exception"));
                 
                 for(ActionListener<ApplicationState> listener : listeners) {
                     listener.actionPerformed(mockActionEvent);

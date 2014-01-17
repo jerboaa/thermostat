@@ -33,29 +33,16 @@
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
-package com.redhat.thermostat.agent.cli.impl.db;
 
-import java.io.File;
+package com.redhat.thermostat.storage.cli.internal;
 
-import com.redhat.thermostat.agent.cli.impl.locale.LocaleResources;
 import com.redhat.thermostat.common.tools.ApplicationException;
-import com.redhat.thermostat.shared.locale.Translate;
 
 @SuppressWarnings("serial")
-public class StalePidFileException extends ApplicationException {
+public class StorageNotRunningException extends ApplicationException {
 
-    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
-
-    private final File pidFile;
-
-    public StalePidFileException(File pidFile) {
-        super(translator.localize(LocaleResources.STALE_PID_FILE, pidFile.toString()).getContents());
-        this.pidFile = pidFile;
+    public StorageNotRunningException(String message) {
+        super(message);
     }
-
-    public File getPidFile() {
-        return pidFile;
-    }
-
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Red Hat, Inc.
+ * Copyright 2012, 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.cli.impl;
+package com.redhat.thermostat.storage.cli.internal;
 
 import java.util.Map;
 
@@ -46,12 +46,11 @@ import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
-import com.redhat.thermostat.storage.core.WriterID;
+import com.redhat.thermostat.shared.config.CommonPaths;
 
 public class Activator implements BundleActivator {
 
     private CommandRegistry reg;
-    private AgentApplication agentApplication;
     private MultipleServiceTracker tracker;
 
     @Override
@@ -60,22 +59,19 @@ public class Activator implements BundleActivator {
         
         Class<?>[] deps = new Class<?>[] {
                 ExitStatus.class,
-                WriterID.class // agent app uses it
+                CommonPaths.class
         };
         tracker = new MultipleServiceTracker(context, deps, new Action() {
             
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
                 ExitStatus exitStatus = (ExitStatus) services.get(ExitStatus.class.getName());
-                WriterID writerID = (WriterID) services.get(WriterID.class.getName());
-                agentApplication = new AgentApplication(context, exitStatus, writerID);
-                reg.registerCommand("service", new ServiceCommand(context));
-                reg.registerCommand("agent", agentApplication);
+                CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
+                reg.registerCommand("storage", new StorageCommand(exitStatus, paths));
             }
 
             @Override
             public void dependenciesUnavailable() {
-                agentApplication.shutdown();
                 reg.unregisterCommands();
             }
         });
@@ -84,11 +80,6 @@ public class Activator implements BundleActivator {
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        if (agentApplication != null) {
-            // Bundle may be shut down *before* deps become available and
-            // app is set.
-            agentApplication.shutdown();
-        }
         reg.unregisterCommands();
         tracker.close();
     }
