@@ -1,0 +1,28 @@
+This is a simple multi-module Thermostat[1] plugin scaffold.
+
+The structure in the file system looks as follows:
+
+└── foo-plugin
+    ├── pom.xml (parent pom)
+    ├── agent
+    ├── storage-common
+    ├── client-cli
+    └── distribution
+
+The agent directory contains plug-in bits for thermostat agents. This usually
+includes some form of back-end.
+
+The client-cli directory contains plug-in bits for thermostat command-line
+clients.
+
+The storage-common directory contains model and DAO classes which your plug-in
+may contribute. This module is usually a dependency of the agent and client-cli
+modules.
+
+The distribution directory is an assembly helper for your plug-in. The most
+important part in there is thermostat-plugin.xml. The assembled plug-in can
+be found in this module's target directory after a successful maven build.
+
+Enjoy!
+
+[1] http://icedtea.classpath.org/thermostat/

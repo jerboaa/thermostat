@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0                       http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>${groupId}</groupId>
+    <artifactId>${rootArtifactId}</artifactId>
+    <version>${version}</version>
+  </parent>
+
+  <artifactId>${artifactId}</artifactId>
+  <packaging>bundle</packaging>
+
+  <name>${pluginDescription} - CLI</name>
+
+  <dependencies>
+      
+      <dependency>
+          <groupId>org.osgi</groupId>
+          <artifactId>org.osgi.core</artifactId>
+          <scope>provided</scope>
+      </dependency>
+
+      <!-- thermostat specific dependencies -->
+    
+      <dependency>
+          <groupId>com.redhat.thermostat</groupId>
+          <artifactId>thermostat-client-core</artifactId>
+          <type>jar</type>
+      </dependency>
+      
+      <dependency>
+          <groupId>com.redhat.thermostat</groupId>
+          <artifactId>thermostat-common-core</artifactId>
+          <type>jar</type>
+      </dependency>
+    
+      <!-- plugin specific dependencies -->
+      
+      <dependency>
+          <groupId>${groupId}</groupId>
+          <artifactId>${rootArtifactId}-storage-common</artifactId>
+    	  <version>${version}</version>
+      </dependency>
+
+  </dependencies>
+
+  <build>
+    <plugins>
+    
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Bundle-Activator>${package}.cli.internal.Activator</Bundle-Activator>
+            <Bundle-SymbolicName>${package}.cli</Bundle-SymbolicName>
+            <Private-Package>${package}.cli.internal</Private-Package>
+            <!-- Do not autogenerate uses clauses in Manifests -->
+            <_nouses>true</_nouses>
+          </instructions>
+        </configuration>
+      </plugin>
+      
+      <!-- No tests in this module, skip them in order to make the build pass -->    
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <skipTests>true</skipTests>
+        </configuration>
+      </plugin>
+      
+    </plugins>
+
+  </build>
+
+</project>

@@ -52,6 +52,7 @@
 
   <modules>
     <module>archetype-ext</module>
+    <module>multi-module-plugin-archetype</module>
   </modules>
 
 </project>
