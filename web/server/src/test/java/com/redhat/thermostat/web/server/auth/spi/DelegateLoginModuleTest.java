@@ -41,7 +41,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.net.URL;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -50,6 +49,9 @@ import java.util.Set;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.login.AppConfigurationEntry;
+import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
+import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginException;
 
 import org.junit.After;
@@ -74,10 +76,9 @@ public class DelegateLoginModuleTest {
         mockOptions = new HashMap<>();
         // DelegateLoginModule uses the name callback
         mockCallBack = new SimpleCallBackHandler("testUser", "doesn't matter".toCharArray());
-        // sets jaas config so as to use StubDelegateLoginModule
-        URL testConfig = DelegateLoginModuleTest.class
-                .getResource("/delegate_login_module_test_jaas.conf");
-        System.setProperty("java.security.auth.login.config", testConfig.getFile());
+        // sets jaas config so as to use Stub*DelegateLoginModule
+        Configuration config = new TestConfiguration();
+        Configuration.setConfiguration(config);
     }
     
     @After
@@ -173,6 +174,28 @@ public class DelegateLoginModuleTest {
         // simulate abort which should clear any principals from the subject
         delegateLogin.abort();
         assertEquals(0, subject.getPrincipals().size());
+    }
+    
+    private class TestConfiguration extends Configuration {
+        
+        private final AppConfigurationEntry successEntry =
+                new AppConfigurationEntry(StubSuccessDelegateLoginModule.class.getName(), LoginModuleControlFlag.REQUIRED, new HashMap<String, Object>());
+        private final AppConfigurationEntry failureEntry =
+                new AppConfigurationEntry(StubFailureDelegateLoginModule.class.getName(), LoginModuleControlFlag.REQUIRED, new HashMap<String, Object>());
+        
+        @Override
+        public AppConfigurationEntry[] getAppConfigurationEntry(String name) {
+            AppConfigurationEntry entry = null;
+            if (name.equals("Failure")) {
+                entry = failureEntry;
+            } else if (name.equals("Success")) {
+                entry = successEntry;
+            } else {
+                throw new RuntimeException("Don't know how to handle config name '" + name + "'");
+            }
+            return new AppConfigurationEntry[] { entry };
+        }
+        
     }
 }
 
