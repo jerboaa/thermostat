@@ -54,7 +54,8 @@ public class ApplicationServiceImpl implements ApplicationService {
     // when used carelessly).
     private ExecutorService executor = Executors.newCachedThreadPool();
 
-    private TimerFactory timers = new ThreadPoolTimerFactory(1);
+    // TODO: this is hardcoded, should really go into the configuration file
+    private TimerFactory timers = new ThreadPoolTimerFactory(100);
 
     @Override
     public ApplicationCache getApplicationCache() {
