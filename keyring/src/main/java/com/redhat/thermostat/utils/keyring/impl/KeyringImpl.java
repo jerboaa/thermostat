@@ -43,6 +43,7 @@ import java.util.Arrays;
 
 import com.redhat.thermostat.shared.config.NativeLibraryResolver;
 import com.redhat.thermostat.utils.keyring.Keyring;
+import com.redhat.thermostat.utils.keyring.KeyringException;
 
 public class KeyringImpl implements Keyring {
 
@@ -71,7 +72,7 @@ public class KeyringImpl implements Keyring {
             }
         }
         if (!success) {
-            throw new RuntimeException("Couldn't save password.");
+            throw new KeyringException("Couldn't save password.");
         }
     }
 

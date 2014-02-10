@@ -46,6 +46,7 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.StorageCredentials;
+import com.redhat.thermostat.utils.keyring.KeyringException;
 
 public class ClientConfigurationController implements ActionListener<Action> {
 
@@ -83,10 +84,10 @@ public class ClientConfigurationController implements ActionListener<Action> {
         model.setSaveEntitlements(view.getSaveEntitlements());
         model.setConnectionUrl(view.getConnectionUrl());
         
-        model.setCredentials(view.getUserName(), view.getPassword());
         try {
+            model.setCredentials(view.getUserName(), view.getPassword());
             model.flush();
-        } catch (IOException e) {
+        } catch (IOException|KeyringException e) {
             logger.log(Level.WARNING, "error saving client preferences", e);
         }
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Red Hat, Inc.
+ * Copyright 2014 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -36,40 +36,12 @@
 
 package com.redhat.thermostat.utils.keyring;
 
-import com.redhat.thermostat.annotations.Service;
+public class KeyringException extends RuntimeException {
 
-/**
- * Maps url/username to passwords, securely.  Implementations may support persisting
- * this mapping across sessions.
- */
-@Service
-public interface Keyring {
+    private static final long serialVersionUID = -7031713489739688863L;
 
-    /**
-     * Map the given password to the given url and username.
-     * @param url The url for this saved password
-     * @param username The username for this saved password
-     * @param password The password to be saved
-     * @throws KeyringException to indicate password could not be saved due to an error
-     */
-    public void savePassword(String url, String username, char[] password);
-
-    /**
-     * Retrieve the password associated with the given url and username.
-     * @param url The url for the desired password
-     * @param username The username for the desired password
-     * @return The password mapped to the given url and username, if any.  Null otherwise
-     * @throws KeyringException if error is encountered when attempting to retrieve password
-     */
-    public char[] getPassword(String url, String username);
-
-    /**
-     * Clear the password associated with the given url and username, if any.
-     * @param url The url for the password to be cleared
-     * @param username The username for the password to be cleared
-     * @throws KeyringException if error is encountered when attempting to retrieve password
-     */
-    public void clearPassword(String url, String username);
+    public KeyringException(String string) {
+        super(string);
+    }
 
 }
-

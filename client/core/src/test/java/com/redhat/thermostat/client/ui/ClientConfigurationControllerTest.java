@@ -36,9 +36,11 @@
 
 package com.redhat.thermostat.client.ui;
 
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -48,8 +50,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.client.core.views.ClientConfigurationView;
+import com.redhat.thermostat.client.core.views.ClientConfigurationView.Action;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.storage.core.StorageCredentials;
+import com.redhat.thermostat.utils.keyring.KeyringException;
 
 public class ClientConfigurationControllerTest {
 
@@ -152,6 +156,21 @@ public class ClientConfigurationControllerTest {
         verify(view).hideDialog();
     }
 
-    
+    @Test
+    public void verifyCatchesKeyringException() {
+        ClientPreferencesModel badModel = mock(ClientPreferencesModel.class);
+        doThrow(new KeyringException("")).when(badModel).setCredentials("mock-username", "mock-password".toCharArray());
+        ClientConfigurationController controller = new ClientConfigurationController(badModel, view);
+        ActionEvent event = mock(ActionEvent.class);
+        when(event.getActionId()).thenReturn(Action.CLOSE_ACCEPT);
+        try {
+            controller.actionPerformed(event);
+        } catch (KeyringException e) {
+            e.printStackTrace();
+            // Such an exception should be caught within the controller.
+            fail();
+        }
+    }
+
 }
 
