@@ -307,7 +307,7 @@ public class MongoStorage implements BackingStorage {
             }
         });
     }
-
+    
     public <T extends Pojo> Cursor<T> executeGetCount(Category<T> category, MongoQuery<T> queryToAggregate) {
         try {
             DBCollection coll = getCachedCollection(category);

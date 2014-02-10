@@ -60,6 +60,14 @@ import com.redhat.thermostat.storage.cli.internal.locale.LocaleResources;
 
 public class MongoProcessRunner {
     
+    private static final boolean profile;
+    private static final int profileLevel;
+    
+    static {
+        profile = Boolean.getBoolean("thermostat.storage.mongo.profile");
+        profileLevel = Integer.getInteger("thermostat.storage.mongo.profile.slowms", 100);
+    }
+    
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     private static final Logger logger = LoggingUtils.getLogger(MongoProcessRunner.class);
 
@@ -255,6 +263,8 @@ public class MongoProcessRunner {
         commands.add("--port");
         commands.add(Long.toString(configuration.getPort()));
         
+        setupProfiling(commands);
+        
         if (configuration.isSslEnabled()) {
             // check for configuration which has a chance of working :)
             if (configuration.getSslPemFile() == null) {
@@ -271,7 +281,17 @@ public class MongoProcessRunner {
         
         return commands;
     }
- 
+    
+    private void  setupProfiling(List<String> commands) {
+        if (profile) {
+            logger.warning("mongodb profile enabled with level: " + profileLevel);
+            commands.add("--profile");
+            commands.add("" + 1);
+            commands.add("--slowms");
+            commands.add("" + profileLevel);
+        }
+    }
+    
     private String getDBVersion() throws IOException {
         Process process = new ProcessBuilder(Arrays.asList("mongod", "--version")).start();
         InputStream out = process.getInputStream();
