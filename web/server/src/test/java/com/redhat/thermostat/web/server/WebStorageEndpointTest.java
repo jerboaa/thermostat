@@ -48,13 +48,13 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
-import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -76,8 +76,6 @@ import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
 import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
@@ -87,6 +85,8 @@ import org.eclipse.jetty.security.LoginService;
 import org.eclipse.jetty.security.MappedLoginService;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.UserIdentity;
+import org.eclipse.jetty.util.component.LifeCycle;
+import org.eclipse.jetty.util.component.LifeCycle.Listener;
 import org.eclipse.jetty.util.security.Password;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.junit.After;
@@ -140,7 +140,6 @@ import com.redhat.thermostat.web.server.auth.BasicRole;
 import com.redhat.thermostat.web.server.auth.RolePrincipal;
 import com.redhat.thermostat.web.server.auth.Roles;
 import com.redhat.thermostat.web.server.auth.UserPrincipal;
-import com.redhat.thermostat.web.server.auth.WebStoragePathHandler;
 
 public class WebStorageEndpointTest {
 
@@ -212,8 +211,56 @@ public class WebStorageEndpointTest {
 
     private void startServer(int port, LoginService loginService) throws Exception {
         server = new Server(port);
-        WebAppContext ctx = new WebAppContext("src/main/webapp", "/");
+        // This makes the test use the web.xml in src/main/webapp. That's
+        // also where the test's thermostat home is set up via 
+        // the context listener. THERMOSTAT_HOME == /tmp/test-thermostat-home
+        // See src/main/webapp/WEB-INF/web.xml
+        final WebAppContext ctx = new WebAppContext("src/main/webapp", "/");
         ctx.getSecurityHandler().setLoginService(loginService);
+        // We get access to the THERMOSTAT_HOME value once the context has
+        // been started.
+        ctx.addLifeCycleListener(new Listener() {
+
+            @Override
+            public void lifeCycleFailure(LifeCycle arg0, Throwable arg1) {
+                // nothing
+            }
+
+            @Override
+            public void lifeCycleStarted(LifeCycle arg0) {
+                // In Servlet.init() we check if ssl.properties exists. We need
+                // to create that file in order for the tests to get past this
+                // check.
+                File thermostatHome = new File(ctx.getInitParameter("THERMOSTAT_HOME"));
+                File configDirectory = new File(thermostatHome, "etc");
+                if (!configDirectory.exists()) {
+                    configDirectory.mkdir();
+                }
+                File sslProperties = new File(configDirectory, "ssl.properties");
+                // only creates file if it doesn't exist yet
+                try {
+                    sslProperties.createNewFile();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            @Override
+            public void lifeCycleStarting(LifeCycle arg0) {
+                // nothing
+            }
+
+            @Override
+            public void lifeCycleStopped(LifeCycle arg0) {
+                // nothing
+            }
+
+            @Override
+            public void lifeCycleStopping(LifeCycle arg0) {
+                // nothing
+            }
+            
+        });
         server.setHandler(ctx);
         server.start();
     }
@@ -230,60 +277,6 @@ public class WebStorageEndpointTest {
         KnownDescriptorRegistryFactory.setKnownDescriptorRegistry(null);
     }
 
-    /**
-     * Makes sure that all paths we dispatch to, dispatch to
-     * {@link WebStoragePathHandler} annotated methods.
-     * 
-     * @throws Exception
-     */
-    @Test
-    public void ensureAuthorizationCovered() throws Exception {
-        // manually maintained list of path handlers which should include
-        // authorization checks
-        final String[] authPaths = new String[] {
-                "prepare-statement", "query-execute", "write-execute", "register-category",
-                "save-file", "load-file", "purge", "ping", "generate-token", "verify-token"
-        };
-        Map<String, Boolean> checkedAutPaths = new HashMap<>();
-        for (String path: authPaths) {
-            checkedAutPaths.put(path, false);
-        }
-        int methodsReqAuthorization = 0;
-        for (Method method: WebStorageEndPoint.class.getDeclaredMethods()) {
-            if (method.isAnnotationPresent(WebStoragePathHandler.class)) {
-                methodsReqAuthorization++;
-                WebStoragePathHandler annot = method.getAnnotation(WebStoragePathHandler.class);
-                try {
-                    // this may NPE if there is something funny going on in
-                    // WebStorageEndPoint (e.g. one method annotated but this
-                    // reference list has not been updated).
-                    if (!checkedAutPaths.get(annot.path())) {
-                        // mark path as covered
-                        checkedAutPaths.put(annot.path(), true);
-                    } else {
-                        throw new AssertionError(
-                                "method "
-                                        + method
-                                        + " annotated as web storage path handler (path '"
-                                        + annot.path()
-                                        + "'), but not in reference list we know about!");
-                    }
-                } catch (NullPointerException e) {
-                    throw new AssertionError("Don't know about path '"
-                            + annot.path() + "'");
-                }
-            }
-        }
-        // at this point we should have all dispatched paths covered
-        for (String path: authPaths) {
-            assertTrue(
-                    "Is " + path
-                          + " marked with @WebStoragePathHandler and have proper authorization checks been included?",
-                    checkedAutPaths.get(path));
-        }
-        assertEquals(authPaths.length, methodsReqAuthorization);
-    }
-    
     @Test
     public void authorizedPrepareQueryWithUnTrustedDescriptor() throws Exception {
         String strDescriptor = "QUERY " + category.getName() + " WHERE '" + key1.getName() + "' = ?s SORT '" + key1.getName() + "' DSC LIMIT 42";
@@ -1500,34 +1493,6 @@ public class WebStorageEndpointTest {
         doUnauthorizedTest("verify-token", failMsg, insufficientRoles, false);
     }
     
-    @Test
-    public void initThrowsRuntimeExceptionIfThermostatHomeNotSet() {
-        // setup sets this, but we don't want to have it set for this test
-        System.clearProperty("THERMOSTAT_HOME");
-        WebStorageEndPoint endpoint = new WebStorageEndPoint();
-        ServletConfig config = mock(ServletConfig.class);
-        try {
-            endpoint.init(config);
-            fail("Thermostat home was not set in config, should not get here!");
-        } catch (RuntimeException e) {
-            // pass
-            assertTrue(e.getMessage().contains("THERMOSTAT_HOME"));
-        } catch (ServletException e) {
-            fail(e.getMessage());
-        }
-        // set config with non-existing dir
-        when(config.getInitParameter("THERMOSTAT_HOME")).thenReturn("not-existing");
-        try {
-            endpoint.init(config);
-            fail("Thermostat home was set in config but file does not exist, should have died!");
-        } catch (RuntimeException e) {
-            // pass
-            assertTrue(e.getMessage().contains("THERMOSTAT_HOME"));
-        } catch (ServletException e) {
-            fail(e.getMessage());
-        }
-    }
-
     private byte[] verifyAuthorizedGenerateToken(String username, String password, String actionName) throws IOException {
         return verifyAuthorizedGenerateToken(username, password, actionName, 200);
     }

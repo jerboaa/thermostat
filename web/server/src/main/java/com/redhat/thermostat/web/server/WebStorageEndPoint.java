@@ -70,7 +70,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.CommonPaths;
-import com.redhat.thermostat.shared.config.DirectoryStructureCreator;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.config.internal.CommonPathsImpl;
 import com.redhat.thermostat.storage.core.Categories;
@@ -273,12 +272,12 @@ public class WebStorageEndPoint extends HttpServlet {
     }
 
     // Side effect: sets this.paths
-    private boolean isThermostatHomeSet() {
+    // package-private for testing
+    boolean isThermostatHomeSet() {
         try {
             // this throws config exception if neither the property
             // nor the env var is set
             paths = new CommonPathsImpl();
-            new DirectoryStructureCreator(paths).createPaths();
             return true;
         } catch (InvalidConfigurationException e) {
             return false;
@@ -293,15 +292,26 @@ public class WebStorageEndPoint extends HttpServlet {
             throw new RuntimeException(msg);
         }
         File thermostatHomeFile = getThermostatHome();
+        String notReadableMsg = " is not readable or does not exist!";
         if (!thermostatHomeFile.canRead()) {
             // This is bad news. If we can't at least read THERMOSTAT_HOME
             // we are bound to fail in some weird ways at some later point.
             String msg = "THERMOSTAT_HOME = "
                     + thermostatHomeFile.getAbsolutePath()
-                    + " is not readable or does not exist!";
+                    + notReadableMsg;
             logger.log(Level.SEVERE, msg);
             throw new RuntimeException(msg);
         }
+        // we need to be able to read ssl config for backing storage
+        // paths got set in isThermostatHomeSet()
+        File sslProperties = new File(paths.getSystemConfigurationDirectory(), "ssl.properties");
+        if (!sslProperties.canRead()) {
+            String msg = "File " + sslProperties.getAbsolutePath() +
+                    notReadableMsg;
+            logger.log(Level.SEVERE, msg);
+            throw new RuntimeException(msg);
+        }
+        // Thermost home looks OK and seems usable
         logger.log(Level.FINEST, "THERMOSTAT_HOME == "
                 + thermostatHomeFile.getAbsolutePath());
     }
