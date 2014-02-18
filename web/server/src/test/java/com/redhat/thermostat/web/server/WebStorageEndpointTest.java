@@ -61,6 +61,7 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.file.Path;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -186,6 +187,7 @@ public class WebStorageEndpointTest {
     private static Key<Integer> key2;
     private static Category<TestClass> category;
     private static String categoryName = "test";
+    private static File testThermostatHome;
 
     @BeforeClass
     public static void setupCategory() {
@@ -200,6 +202,15 @@ public class WebStorageEndpointTest {
         category = null;
         key2 = null;
         key1 = null;
+        
+        if (testThermostatHome != null) {
+            Path testTh = testThermostatHome.toPath();
+            try {
+                WebstorageEndpointTestUtils.deleteDirectoryRecursive(testTh);
+            } catch (IOException e) {
+                e.printStackTrace(System.err);
+            }
+        }
     }
 
     @Before
@@ -232,6 +243,12 @@ public class WebStorageEndpointTest {
                 // to create that file in order for the tests to get past this
                 // check.
                 File thermostatHome = new File(ctx.getInitParameter("THERMOSTAT_HOME"));
+                if (testThermostatHome == null) {
+                    testThermostatHome = thermostatHome;
+                }
+                if (!thermostatHome.exists()) {
+                    thermostatHome.mkdir();
+                }
                 File configDirectory = new File(thermostatHome, "etc");
                 if (!configDirectory.exists()) {
                     configDirectory.mkdir();
