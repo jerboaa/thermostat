@@ -417,6 +417,13 @@ public class MongoStorage implements BackingStorage {
         try {
             BasicDBObject query = new BasicDBObject(Key.AGENT_ID.getName(), agentId);
             for (String collectionName : db.getCollectionNames()) {
+                // Mongodb creates an internal collection called
+                // "system.indexes". Don't delete anything in there as this
+                // would throw MongoException later (error code 12050,
+                // msg: "cannot delete from system namespace"
+                if (collectionName.startsWith("system.")) {
+                    continue;
+                }
                 DBCollection coll = db.getCollectionFromString(collectionName);
                 coll.remove(query);
             }

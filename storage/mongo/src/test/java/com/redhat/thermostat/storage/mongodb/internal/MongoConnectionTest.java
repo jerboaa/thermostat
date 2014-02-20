@@ -44,7 +44,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doCallRealMethod;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -54,6 +53,7 @@ import static org.powermock.api.mockito.PowerMockito.whenNew;
 import java.io.IOException;
 import java.net.UnknownHostException;
 
+import javax.net.SocketFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLSocketFactory;
@@ -72,8 +72,9 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoException;
-import com.mongodb.MongoOptions;
 import com.mongodb.MongoURI;
 import com.mongodb.ServerAddress;
 import com.redhat.thermostat.common.ssl.SSLContextFactory;
@@ -120,9 +121,9 @@ public class MongoConnectionTest {
         DBCollection collection = mock(DBCollection.class);
         DB db = mock(DB.class);
         when(db.getCollection("agent-config")).thenReturn(collection);
-        Mongo m = mock(Mongo.class);
+        MongoClient m = mock(MongoClient.class);
         when(m.getDB(MongoConnection.THERMOSTAT_DB_NAME)).thenReturn(db);
-        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
+        PowerMockito.whenNew(MongoClient.class).withParameterTypes(ServerAddress.class).withArguments(any(ServerAddress.class)).thenReturn(m);
         conn.connect();
 
         verify(listener).changed(ConnectionStatus.CONNECTED);
@@ -134,9 +135,9 @@ public class MongoConnectionTest {
         DBCollection collection = mock(DBCollection.class);
         DB db = mock(DB.class);
         when(db.getCollection("agent-config")).thenReturn(collection);
-        Mongo m = mock(Mongo.class);
+        MongoClient m = mock(MongoClient.class);
         when(m.getDB(MongoConnection.THERMOSTAT_DB_NAME)).thenReturn(db);
-        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
+        PowerMockito.whenNew(MongoClient.class).withParameterTypes(ServerAddress.class).withArguments(any(ServerAddress.class)).thenReturn(m);
         conn.connect();
 
         verify(listener).changed(ConnectionStatus.CONNECTED);
@@ -213,10 +214,10 @@ public class MongoConnectionTest {
         when(SSLContextFactory.wrapSSLFactory(any(SSLSocketFactory.class), any(SSLParameters.class))).thenReturn(factory);
         SSLParameters params = mock(SSLParameters.class);
         when(SSLContextFactory.getSSLParameters(context)).thenReturn(params);
-        Mongo mockMongo = mock(Mongo.class);
-        ArgumentCaptor<MongoOptions> mongoOptCaptor = ArgumentCaptor.forClass(MongoOptions.class);
-        whenNew(Mongo.class).withParameterTypes(ServerAddress.class,
-                MongoOptions.class).withArguments(any(ServerAddress.class),
+        MongoClient mockMongo = mock(MongoClient.class);
+        ArgumentCaptor<MongoClientOptions> mongoOptCaptor = ArgumentCaptor.forClass(MongoClientOptions.class);
+        whenNew(MongoClient.class).withParameterTypes(ServerAddress.class,
+                MongoClientOptions.class).withArguments(any(ServerAddress.class),
                 mongoOptCaptor.capture()).thenReturn(mockMongo);
         DB mockDb = mock(DB.class);
         when(mockMongo.getDB(eq(MongoConnection.THERMOSTAT_DB_NAME))).thenReturn(mockDb);
@@ -224,11 +225,12 @@ public class MongoConnectionTest {
         when(mockDb.getCollection(any(String.class))).thenReturn(mockCollection);
         conn.connect();
         verify(params).setEndpointIdentificationAlgorithm("HTTPS");
-        Mongo mongo = conn.getMongo();
+        MongoClient mongo = conn.getMongo();
         assertEquals(mockMongo, mongo);
-        MongoOptions opts = mongoOptCaptor.getValue();
-        assertTrue(opts.socketFactory instanceof SSLSocketFactory);
-        assertEquals(factory, opts.socketFactory);
+        MongoClientOptions opts = mongoOptCaptor.getValue();
+        SocketFactory sockFactory = opts.getSocketFactory();
+        assertTrue(sockFactory instanceof SSLSocketFactory);
+        assertEquals(factory, sockFactory);
     }
     
     @PrepareForTest({ MongoConnection.class, SSLContextFactory.class, SSLContext.class, SSLSocketFactory.class })
@@ -237,9 +239,9 @@ public class MongoConnectionTest {
         DBCollection collection = mock(DBCollection.class);
         DB db = mock(DB.class);
         when(db.getCollection("agent-config")).thenReturn(collection);
-        Mongo mockMongo = mock(Mongo.class);
+        MongoClient mockMongo = mock(MongoClient.class);
         when(mockMongo.getDB(MongoConnection.THERMOSTAT_DB_NAME)).thenReturn(db);
-        PowerMockito.whenNew(Mongo.class).withParameterTypes(ServerAddress.class)
+        PowerMockito.whenNew(MongoClient.class).withParameterTypes(ServerAddress.class)
                 .withArguments(any(ServerAddress.class)).thenReturn(mockMongo);
         MongoConnection connection = mock(MongoConnection.class);
         doCallRealMethod().when(connection).connect();

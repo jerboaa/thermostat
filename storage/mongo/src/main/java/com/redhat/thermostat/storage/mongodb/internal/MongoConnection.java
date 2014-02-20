@@ -47,9 +47,10 @@ import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLSocketFactory;
 
 import com.mongodb.DB;
-import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoClientOptions.Builder;
 import com.mongodb.MongoException;
-import com.mongodb.MongoOptions;
 import com.mongodb.ServerAddress;
 import com.redhat.thermostat.common.ssl.SSLContextFactory;
 import com.redhat.thermostat.common.ssl.SslInitException;
@@ -67,7 +68,7 @@ class MongoConnection extends Connection {
     private static final Logger logger = LoggingUtils.getLogger(MongoConnection.class);
     static final String THERMOSTAT_DB_NAME = "thermostat";
 
-    private Mongo m = null;
+    private MongoClient m = null;
     private DB db = null;
     private String url;
     StorageCredentials creds;
@@ -137,13 +138,13 @@ class MongoConnection extends Connection {
             this.m = getSSLMongo();
         } else {
             logger.log(Level.FINE, "Using plain socket for mongodb://");
-            this.m = new Mongo(getServerAddress());
+            this.m = new MongoClient(getServerAddress());
         }
         this.db = m.getDB(THERMOSTAT_DB_NAME);
     }
 
-    Mongo getSSLMongo() throws UnknownHostException, MongoException {
-        MongoOptions opts = new MongoOptions();
+    MongoClient getSSLMongo() throws UnknownHostException, MongoException {
+        Builder builder = new MongoClientOptions.Builder();
         SSLContext ctxt = null;
         try {
             ctxt = SSLContextFactory.getClientContext(sslConf);
@@ -159,8 +160,10 @@ class MongoConnection extends Connection {
         SSLSocketFactory factory = SSLContextFactory.wrapSSLFactory(
                 ctxt.getSocketFactory(), params);
         logger.log(Level.FINE, "factory is: " + factory.getClass().getName());
-        opts.socketFactory = factory;
-        return new Mongo(getServerAddress(), opts);
+        builder.socketFactory(factory);
+        MongoClientOptions opts = builder.build();
+        MongoClient client = new MongoClient(getServerAddress(), opts);
+        return client;
     }
 
     ServerAddress getServerAddress() throws InvalidConfigurationException, UnknownHostException {
@@ -178,7 +181,7 @@ class MongoConnection extends Connection {
     }
     
     // Testing hook
-    Mongo getMongo() {
+    MongoClient getMongo() {
         return this.m;
     }
 }

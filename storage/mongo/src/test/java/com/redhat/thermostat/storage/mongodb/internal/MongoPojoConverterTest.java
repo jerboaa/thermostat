@@ -132,6 +132,7 @@ public class MongoPojoConverterTest {
     }
 
     public static class BrokenPojo1 extends SimplePojo {
+        @SuppressWarnings("unused")
         private int broken;
 
         @Persist

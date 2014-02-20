@@ -53,6 +53,10 @@ import com.redhat.thermostat.storage.core.Persist;
 import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.model.Pojo;
 
+// We have to use raw types and unchecked casts, since we don't have
+// the relevant generic type info in this class. Suppress warnings
+// in this class.
+@SuppressWarnings({"rawtypes", "unchecked"})
 class MongoPojoConverter {
 
     public DBObject convertPojoToMongo(Pojo obj) {
