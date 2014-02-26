@@ -83,6 +83,12 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-common-test</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.framework</artifactId>
     </dependency>
@@ -121,6 +127,12 @@
         <groupId>com.redhat.thermostat</groupId>
         <artifactId>thermostat-common-core</artifactId>
         <version>${project.version}</version>
+    </dependency>
+    <!-- For the mongodb setup command -->
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-launcher</artifactId>
+      <version>${project.version}</version>
     </dependency>
   </dependencies>
 

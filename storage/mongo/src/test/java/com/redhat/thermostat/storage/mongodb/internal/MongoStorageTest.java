@@ -746,6 +746,48 @@ public class MongoStorageTest {
         assertFalse(bool2.getValue());
     }
     
+    /*
+     * AddUserCommand family use this API. Tests that working
+     * credentials don't get recreated, since this would fail
+     * anyway.
+     */
+    @Test
+    public void verifyExistingUserIsNotAdded() throws Exception {
+        DB db = PowerMockito.mock(DB.class);
+        CountDownLatch latch = new CountDownLatch(1);
+        MongoStorage storage = new MongoStorage(db, latch);
+        
+        String username = "testUser";
+        char password[] = new char[] { 'f', 'o', 'o' };
+        when(db.authenticate(eq(username), eq(password))).thenReturn(true);
+        
+        // This should not have called db.addUser() 
+        storage.addUser(username, password);
+        
+        verify(db, times(0)).addUser(any(String.class), any(char[].class));
+    }
+    
+    /*
+     * AddUserCommand family use this API. Tests that working
+     * credentials don't get recreated, since this would fail
+     * anyway.
+     */
+    @Test
+    public void verifyNotExistingUserAdded() throws Exception {
+        DB db = PowerMockito.mock(DB.class);
+        CountDownLatch latch = new CountDownLatch(1);
+        MongoStorage storage = new MongoStorage(db, latch);
+        
+        String username = "testUser";
+        char password[] = new char[] { 'f', 'o', 'o' };
+        when(db.authenticate(eq(username), eq(password))).thenReturn(false);
+        
+        // This should not have called db.addUser() 
+        storage.addUser(username, password);
+        
+        verify(db).addUser(eq(username), eq(password));
+    }
+    
     private static class FakeDataClass implements Pojo {};
 }
 

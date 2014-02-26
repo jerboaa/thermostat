@@ -38,6 +38,7 @@ package com.redhat.thermostat.storage.mongodb.internal;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -624,6 +625,18 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
         coll.update(new BasicDBObject(SchemaInfo.NAME.getName(), category.getName()),
                     categoryInfo, true, false);
         
+    }
+    
+    /*
+     * Used by add-user command.
+     * 
+     * Pre: must be connected to storage already
+     */
+    void addUser(String username, char[] password) {
+        // only create user if not already existing
+        if (!db.authenticate(username, password)) {
+            db.addUser(username, password);
+        }
     }
 
 }

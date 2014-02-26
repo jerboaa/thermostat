@@ -43,6 +43,7 @@ import jline.console.ConsoleReader;
 
 import com.redhat.thermostat.common.cli.Console;
 import com.redhat.thermostat.common.locale.LocaleResources;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 
 /**
@@ -54,12 +55,28 @@ public class StorageAuthInfoGetter {
 
     private static final int PW_SIZE_INCREMENT = 16;
 
-    private ConsoleReader reader;
-    private Translate<LocaleResources> t;
-
-    public StorageAuthInfoGetter(Console console) throws IOException {
+    private final ConsoleReader reader;
+    private final Translate<LocaleResources> t;
+    private final LocalizedString userPrompt;
+    private final LocalizedString passwordPrompt;
+    
+    /**
+     * Constructor. Allows for setting of prompt(s).
+     * @param console The console to use.
+     * @param userPrompt The prompt printed when asking for username.
+     * @param passwordPrompt The prompt printed when asking for password.
+     * @throws IOException
+     */
+    public StorageAuthInfoGetter(Console console, LocalizedString userPrompt,
+                                 LocalizedString passwordPrompt) throws IOException {
         reader = new ConsoleReader(console.getInput(), console.getOutput());
         t = LocaleResources.createLocalizer();
+        this.passwordPrompt = passwordPrompt;
+        this.userPrompt = userPrompt;
+    }
+
+    public StorageAuthInfoGetter(Console console) throws IOException {
+        this(console, null, null);
     }
 
     /**
@@ -69,8 +86,11 @@ public class StorageAuthInfoGetter {
      * @throws IOException 
      */
     public String getUserName(String url) throws IOException {
-        String prompt = t.localize(LocaleResources.USERNAME_PROMPT, url).getContents();
-        String name = reader.readLine(prompt);
+        LocalizedString prompt = userPrompt;
+        if (prompt == null) {
+            prompt = t.localize(LocaleResources.USERNAME_PROMPT, url); 
+        }
+        String name = reader.readLine(prompt.getContents());
         return name;
     }
 
@@ -83,9 +103,13 @@ public class StorageAuthInfoGetter {
      * @throws IOException 
      */
     public char[] getPassword(String url) throws IOException {
+        LocalizedString prompt = passwordPrompt;
+        if (prompt == null) {
+            prompt = t.localize(LocaleResources.PASSWORD_PROMPT, url); 
+        }
         char[] password = new char[PW_SIZE_INCREMENT];
         reader.setHistoryEnabled(false);
-        reader.print(t.localize(LocaleResources.PASSWORD_PROMPT, url).getContents());
+        reader.print(prompt.getContents());
         reader.flush();
         Character oldEcho = reader.getEchoCharacter();
         reader.setEchoCharacter('\0');

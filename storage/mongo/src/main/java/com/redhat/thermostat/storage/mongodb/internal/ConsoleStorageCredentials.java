@@ -36,34 +36,45 @@
 
 package com.redhat.thermostat.storage.mongodb.internal;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
+import java.io.IOException;
 
-import com.redhat.thermostat.common.cli.CommandRegistry;
-import com.redhat.thermostat.common.cli.CommandRegistryImpl;
-import com.redhat.thermostat.storage.core.StorageProvider;
-import com.redhat.thermostat.storage.mongodb.MongoStorageProvider;
+import com.redhat.thermostat.common.tools.StorageAuthInfoGetter;
+import com.redhat.thermostat.storage.core.StorageCredentials;
 
-public class Activator implements BundleActivator {
+/**
+ * Read credentials from the console for every call to getUsername
+ * and getPassword respectively. Consumers of this class need to
+ * account for this "blocking" of getUsername/getPassword.
+ *
+ */
+class ConsoleStorageCredentials implements StorageCredentials {
 
-    @SuppressWarnings("rawtypes")
-    private ServiceRegistration reg;
-    private CommandRegistry cmdReg;
+    private final StorageAuthInfoGetter getter;
+    
+    ConsoleStorageCredentials(StorageAuthInfoGetter getter) {
+        this.getter = getter;
+    }
     
     @Override
-    public void start(BundleContext context) throws Exception {
-        StorageProvider prov = new MongoStorageProvider();
-        reg = context.registerService(StorageProvider.class.getName(), prov, null);
-        cmdReg = new CommandRegistryImpl(context);
-        cmdReg.registerCommand(AddUserCommandDispatcher.COMMAND_NAME, new AddUserCommandDispatcher(context));
+    public String getUsername() {
+        String userName = null;
+        try {
+            userName = getter.getUserName(null /* unused */);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return userName;
     }
 
     @Override
-    public void stop(BundleContext context) throws Exception {
-        reg.unregister();
-        cmdReg.unregisterCommands();
+    public char[] getPassword() {
+        char[] password = null;
+        try {
+            password = getter.getPassword(null /* unused */);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return password;
     }
-
+    
 }
-

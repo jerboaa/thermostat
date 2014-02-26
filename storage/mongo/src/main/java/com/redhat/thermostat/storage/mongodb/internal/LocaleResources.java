@@ -36,33 +36,36 @@
 
 package com.redhat.thermostat.storage.mongodb.internal;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
+import com.redhat.thermostat.shared.locale.Translate;
 
-import com.redhat.thermostat.common.cli.CommandRegistry;
-import com.redhat.thermostat.common.cli.CommandRegistryImpl;
-import com.redhat.thermostat.storage.core.StorageProvider;
-import com.redhat.thermostat.storage.mongodb.MongoStorageProvider;
 
-public class Activator implements BundleActivator {
-
-    @SuppressWarnings("rawtypes")
-    private ServiceRegistration reg;
-    private CommandRegistry cmdReg;
+public enum LocaleResources {
     
-    @Override
-    public void start(BundleContext context) throws Exception {
-        StorageProvider prov = new MongoStorageProvider();
-        reg = context.registerService(StorageProvider.class.getName(), prov, null);
-        cmdReg = new CommandRegistryImpl(context);
-        cmdReg.registerCommand(AddUserCommandDispatcher.COMMAND_NAME, new AddUserCommandDispatcher(context));
-    }
+    COMMON_PATHS_SERVICE_UNAVAILABLE,
+    MONGODB_SETUP_FILE_EXISTS,
+    ALREADY_CONNECTED_TO_STORAGE_WARNING,
+    UNKNOWN_STORAGE_URL,
+    STORAGE_SERVICE_UNAVAILABLE,
+    MONGOSTORAGE_RETRIEVAL_FAILED,
+    STAMP_FILE_CREATION_FAILED,
+    MONGODB_USER_SETUP_COMPLETE,
+    LAUNCHER_SERVICE_UNAVAILABLE,
+    INTERRUPTED_WAITING_FOR_STORAGE_STOP,
+    STORAGE_STOP_FAILED,
+    USER_SETUP_COMPLETE,
+    USER_SETUP_FAILED,
+    UNRECOGNIZED_PAYLOAD_FROM_STORAGE_CMD,
+    ADDING_USER_FAILED,
+    INTERRUPTED_WAITING_FOR_ADD_USER,
+    DISPATCHER_WRONG_OPTION,
+    USERNAME_PROMPT,
+    PASSWORD_PROMPT
+    ;
 
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        reg.unregister();
-        cmdReg.unregisterCommands();
+    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.storage.mongodb.strings";
+
+    public static Translate<LocaleResources> createLocalizer() {
+        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
     }
 
 }

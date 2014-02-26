@@ -36,34 +36,27 @@
 
 package com.redhat.thermostat.storage.mongodb.internal;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
+import static org.junit.Assert.assertFalse;
 
-import com.redhat.thermostat.common.cli.CommandRegistry;
-import com.redhat.thermostat.common.cli.CommandRegistryImpl;
-import com.redhat.thermostat.storage.core.StorageProvider;
-import com.redhat.thermostat.storage.mongodb.MongoStorageProvider;
+import org.junit.Test;
 
-public class Activator implements BundleActivator {
+import com.redhat.thermostat.common.cli.CommandContext;
+import com.redhat.thermostat.common.cli.CommandException;
 
-    @SuppressWarnings("rawtypes")
-    private ServiceRegistration reg;
-    private CommandRegistry cmdReg;
+public class BaseAddUserCommandTest {
+
+    @Test
+    public void storageRequiredFalse() {
+        TestAddUserCommand cmd = new TestAddUserCommand();
+        assertFalse(cmd.isStorageRequired());
+    }
     
-    @Override
-    public void start(BundleContext context) throws Exception {
-        StorageProvider prov = new MongoStorageProvider();
-        reg = context.registerService(StorageProvider.class.getName(), prov, null);
-        cmdReg = new CommandRegistryImpl(context);
-        cmdReg.registerCommand(AddUserCommandDispatcher.COMMAND_NAME, new AddUserCommandDispatcher(context));
-    }
+    private static class TestAddUserCommand extends BaseAddUserCommand {
 
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        reg.unregister();
-        cmdReg.unregisterCommands();
+        @Override
+        public void run(CommandContext ctx) throws CommandException {
+            // no-op
+        }
+        
     }
-
 }
-

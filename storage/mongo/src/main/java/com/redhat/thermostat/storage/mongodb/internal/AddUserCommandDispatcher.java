@@ -36,34 +36,43 @@
 
 package com.redhat.thermostat.storage.mongodb.internal;
 
-import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.common.cli.CommandRegistry;
-import com.redhat.thermostat.common.cli.CommandRegistryImpl;
-import com.redhat.thermostat.storage.core.StorageProvider;
-import com.redhat.thermostat.storage.mongodb.MongoStorageProvider;
+import com.redhat.thermostat.common.cli.CommandContext;
+import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.shared.locale.Translate;
 
-public class Activator implements BundleActivator {
-
-    @SuppressWarnings("rawtypes")
-    private ServiceRegistration reg;
-    private CommandRegistry cmdReg;
+/**
+ * Dispatcher making sure either -d or -s has been provided.
+ *
+ */
+class AddUserCommandDispatcher extends BaseAddUserCommand {
     
-    @Override
-    public void start(BundleContext context) throws Exception {
-        StorageProvider prov = new MongoStorageProvider();
-        reg = context.registerService(StorageProvider.class.getName(), prov, null);
-        cmdReg = new CommandRegistryImpl(context);
-        cmdReg.registerCommand(AddUserCommandDispatcher.COMMAND_NAME, new AddUserCommandDispatcher(context));
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
+    private static final String START_STORAGE_ARG = "startStorage";
+    private static final String DB_URL_ARG = "dbUrl";
+    static final String COMMAND_NAME = "add-mongodb-user";
+    private final BundleContext context;
+    private BaseAddUserCommand command;
+    
+    AddUserCommandDispatcher(BundleContext context, BaseAddUserCommand cmd) {
+        this.context = context;
+        this.command = cmd;
     }
 
+    AddUserCommandDispatcher(BundleContext context) {
+        this(context, new AddUserCommand(context));
+    }
+    
     @Override
-    public void stop(BundleContext context) throws Exception {
-        reg.unregister();
-        cmdReg.unregisterCommands();
+    public void run(CommandContext ctx) throws CommandException {
+        if (ctx.getArguments().hasArgument(START_STORAGE_ARG)) {
+            // decorate and run
+            command = new StartStopAddUserCommandDecorator(context, command);
+        } else if (!ctx.getArguments().hasArgument(DB_URL_ARG)) {
+            throw new CommandException(t.localize(LocaleResources.DISPATCHER_WRONG_OPTION));
+        }
+        command.run(ctx);
     }
 
 }
-
