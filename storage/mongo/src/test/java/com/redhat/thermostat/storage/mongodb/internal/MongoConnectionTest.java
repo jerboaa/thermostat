@@ -71,11 +71,9 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
-import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoException;
-import com.mongodb.MongoURI;
 import com.mongodb.ServerAddress;
 import com.redhat.thermostat.common.ssl.SSLContextFactory;
 import com.redhat.thermostat.common.utils.HostPortsParser;
@@ -150,12 +148,16 @@ public class MongoConnectionTest {
     @PrepareForTest({ MongoConnection.class })
     @Test
     public void testConnectIOException() throws Exception {
-        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenThrow(new IOException());
+        IOException fakeException = new IOException();
+        PowerMockito.whenNew(MongoClient.class).withParameterTypes(ServerAddress.class).withArguments(any(ServerAddress.class)).thenThrow(fakeException);
         boolean exceptionThrown = false;
         try {
             conn.connect();
+            fail("Should have thrown IOException");
         } catch (ConnectionException ex) {
             exceptionThrown = true;
+            assertTrue("Expected fake exception to be thrown. Nothing else.",
+                    ex.getCause() == fakeException);
         }
         verify(listener).changed(ConnectionStatus.FAILED_TO_CONNECT);
         assertTrue(exceptionThrown);
@@ -164,12 +166,16 @@ public class MongoConnectionTest {
     @PrepareForTest({ MongoConnection.class })
     @Test
     public void testConnectMongoException() throws Exception {
-        PowerMockito.whenNew(Mongo.class).withParameterTypes(ServerAddress.class).withArguments(any(ServerAddress.class)).thenThrow(new MongoException("fluff"));
+        MongoException fakeException = new MongoException("fluff");
+        PowerMockito.whenNew(MongoClient.class).withParameterTypes(ServerAddress.class).withArguments(any(ServerAddress.class)).thenThrow(fakeException);
         boolean exceptionThrown = false;
         try {
             conn.connect();
+            fail("Should have thrown MongoException");
         } catch (ConnectionException ex) {
             exceptionThrown = true;
+            assertTrue("Expected fake exception to be thrown. Nothing else.",
+                    ex.getCause() == fakeException);
         }
 
         verify(listener).changed(ConnectionStatus.FAILED_TO_CONNECT);
