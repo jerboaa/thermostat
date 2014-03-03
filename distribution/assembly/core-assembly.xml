@@ -67,14 +67,11 @@
         <include>com.redhat.thermostat:thermostat-common-command</include>
         <include>com.redhat.thermostat:thermostat-osgi-process-handler</include>
         <include>com.redhat.thermostat:thermostat-storage-cli</include>
+        <include>com.redhat.thermostat:thermostat-storage-mongodb</include>
         <include>com.redhat.thermostat:thermostat-keyring</include>
         <include>com.redhat.thermostat:thermostat-web-client</include>
-        <include>com.redhat.thermostat:thermostat-web-cmd</include>
-        <include>com.redhat.thermostat:thermostat-web-server</include>
         <include>com.redhat.thermostat:thermostat-system-backend</include>
         <include>com.redhat.thermostat:thermostat-laf-utils</include>
-        <include>org.eclipse.jetty:jetty-server</include>
-        <include>org.eclipse.jetty:jetty-webapp</include>
       </includes>
       <excludes>
         <exclude>org.osgi:*</exclude>

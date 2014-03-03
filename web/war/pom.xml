@@ -50,12 +50,12 @@
 
   <name>Thermostat Web WAR package</name>
 
+  <!-- The set of dependencies of the web archive should be
+       as minimal as possible. -->
   <dependencies>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-distribution</artifactId>
-      <!-- distribution is packaged as pom -->
-      <type>pom</type>
+      <artifactId>thermostat-web-server</artifactId>
       <version>${project.version}</version>
       <!-- exclude conflicting jars. Those cause problems for servlet
            containers and hence prevent the web archive to deploy
@@ -106,6 +106,65 @@
           <artifactId>jetty-jndi</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+
+    <!-- Plug-in dependencies:
+         Required because of model classes and
+         registries. -->
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-host-cpu-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-host-memory-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-host-memory-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-numa-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-thread-collector</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-classstat-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-cpu-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-gc-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-heap-analysis-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-jmx-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-memory-common</artifactId>
+      <version>${project.version}</version>
     </dependency>
   </dependencies>
 

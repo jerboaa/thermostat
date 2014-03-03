@@ -362,24 +362,23 @@
         <artifactId>thermostat-web-client</artifactId>
         <version>${project.version}</version>
     </dependency>
+    <!-- thermostat-web-server is deliberately missing from
+         assembly/core-assembly.xml. We want it to build, but
+         not copied to the image/libs folder since it's a
+         web-archive only dep. -->
     <dependency>
         <groupId>com.redhat.thermostat</groupId>
         <artifactId>thermostat-web-server</artifactId>
         <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-server</artifactId>
-      <version>8.1.5.v20120716</version>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-webapp</artifactId>
-      <version>8.1.5.v20120716</version>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>thermostat-system-backend</artifactId>
+        <version>${project.version}</version>
     </dependency>
     <dependency>
         <groupId>com.redhat.thermostat</groupId>
-        <artifactId>thermostat-system-backend</artifactId>
+        <artifactId>thermostat-storage-mongodb</artifactId>
         <version>${project.version}</version>
     </dependency>
     
