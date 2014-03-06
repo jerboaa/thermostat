@@ -49,10 +49,12 @@ import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.lucene.analysis.SimpleAnalyzer;
+import org.apache.lucene.analysis.core.SimpleAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.CorruptIndexException;
+import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
@@ -139,13 +141,13 @@ public class HeapDump {
 
         Enumeration<JavaHeapObject> thingos = snapshot.getThings();
         Directory dir = new RAMDirectory();
-        IndexWriterConfig indexWriterConfig = new IndexWriterConfig(Version.LUCENE_36, new SimpleAnalyzer(Version.LUCENE_36));
+        IndexWriterConfig indexWriterConfig = new IndexWriterConfig(Version.LUCENE_47, new SimpleAnalyzer(Version.LUCENE_47));
         IndexWriter writer = new IndexWriter(dir, indexWriterConfig);
         while (thingos.hasMoreElements()) {
             JavaHeapObject thingo = thingos.nextElement();
             Document doc = new Document();
-            doc.add(new Field(INDEX_FIELD_CLASSNAME, thingo.getClazz().getName(), Field.Store.YES, Field.Index.NOT_ANALYZED));
-            doc.add(new Field(INDEX_FIELD_OBJECT_ID, thingo.getIdString(), Field.Store.YES, Field.Index.NOT_ANALYZED));
+            doc.add(new StringField(INDEX_FIELD_CLASSNAME, thingo.getClazz().getName(), Field.Store.YES));
+            doc.add(new StringField(INDEX_FIELD_OBJECT_ID, thingo.getIdString(), Field.Store.YES));
             writer.addDocument(doc);
         }
         writer.close();
@@ -208,7 +210,7 @@ public class HeapDump {
         WildcardQuery query = new WildcardQuery(new Term(INDEX_FIELD_CLASSNAME, wildCardClassNamePattern));
         Collection<String> results = new ArrayList<String>();
         try {
-            IndexReader indexReader = IndexReader.open(searchIndex);
+            IndexReader indexReader = DirectoryReader.open(searchIndex);
             IndexSearcher searcher = new IndexSearcher(indexReader);
             TopDocs found = searcher.search(query, limit);
             for (ScoreDoc scoreDoc : found.scoreDocs) {
@@ -216,7 +218,7 @@ public class HeapDump {
                 String objectId = doc.get(INDEX_FIELD_OBJECT_ID);
                 results.add(objectId);
             }
-            searcher.close();
+            indexReader.close();
         } catch (IOException e) {
             log.log(Level.SEVERE, "Unexpected IO Exception while searching heap dump index", e);
         }

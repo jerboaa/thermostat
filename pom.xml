@@ -189,8 +189,8 @@ password=${agent.dev.password}
     <commons-fileupload.version>1.2.2</commons-fileupload.version>
 
     <jline.version>2.9</jline.version>
-    <lucene.version>3.6.0_1</lucene.version>
-    <lucene.osgi-version>3.6.0.1</lucene.osgi-version>
+    <lucene.version>4.7.0_1</lucene.version>
+    <lucene.osgi-version>4.7.0.1</lucene.osgi-version>
     <!--
          felix 4.0 is compliant with osgi 4.3
          for osgi clients, 4.3 is backwards compatible with 4.2
@@ -497,6 +497,11 @@ password=${agent.dev.password}
       <dependency>
         <groupId>org.apache.servicemix.bundles</groupId>
         <artifactId>org.apache.servicemix.bundles.lucene</artifactId>
+        <version>${lucene.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.servicemix.bundles</groupId>
+        <artifactId>org.apache.servicemix.bundles.lucene-analyzers-common</artifactId>
         <version>${lucene.version}</version>
       </dependency>
 
