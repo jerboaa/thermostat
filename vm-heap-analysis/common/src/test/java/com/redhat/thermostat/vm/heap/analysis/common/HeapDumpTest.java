@@ -37,21 +37,30 @@
 package com.redhat.thermostat.vm.heap.analysis.common;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Vector;
 import java.util.zip.GZIPInputStream;
 
+import org.apache.lucene.store.Directory;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.internal.runners.statements.Fail;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
 
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
+import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
+import com.sun.tools.hat.internal.model.Snapshot;
 
 /*
  * This testcase uses a minimalistic heapdump that is stored as binary in
@@ -105,6 +114,36 @@ public class HeapDumpTest {
         assertTrue(foundObjectIds.contains("0x7d70471e8"));
         assertTrue(foundObjectIds.contains("0x7d7049aa0"));
         assertTrue(foundObjectIds.contains("0x7d704bfe0"));
+    }
+    
+    /*
+     * Smoke test for basic lucene compat testing.
+     */
+    @Test
+    public void canCreateLuceneIndex() {
+        try {
+            Snapshot mockSnapShot = mock(Snapshot.class);
+            JavaHeapObject obj1 = mock(JavaHeapObject.class);
+            JavaClass clazz1 = mock(JavaClass.class);
+            when(obj1.getClazz()).thenReturn(clazz1);
+            when(clazz1.getName()).thenReturn("fake-class-one");
+            when(obj1.getIdString()).thenReturn("foo");
+            JavaClass clazz2 = mock(JavaClass.class);
+            when(clazz2.getName()).thenReturn("fake-class-two");
+            JavaHeapObject obj2 = mock(JavaHeapObject.class);
+            when(obj2.getIdString()).thenReturn("bar");
+            when(obj2.getClazz()).thenReturn(clazz2);
+            Vector<JavaHeapObject> things = new Vector<>();
+            things.add(obj1);
+            things.add(obj2);
+            when(mockSnapShot.getThings()).thenReturn(things.elements());
+            HeapDump bareDump = new HeapDump(null, null, mockSnapShot);
+            Directory dir = bareDump.createLuceneIndex();
+            assertNotNull(dir);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("Failed to create lucene index");
+        }
     }
 
     @Test

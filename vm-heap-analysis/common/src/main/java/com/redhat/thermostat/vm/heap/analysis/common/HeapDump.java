@@ -91,9 +91,15 @@ public class HeapDump {
 
     private Directory luceneIndex;
 
-    public HeapDump(HeapInfo heapInfo, HeapDAO heapDAO) {
+    // package-private for testing
+    HeapDump(HeapInfo heapInfo, HeapDAO heapDAO, Snapshot snapshot) {
         this.heapInfo = heapInfo;
         this.heapDAO = heapDAO;
+        this.snapshot = snapshot;
+    }
+    
+    public HeapDump(HeapInfo heapInfo, HeapDAO heapDAO) {
+        this(heapInfo, heapDAO, null);
     }
 
     public long getTimestamp() {
@@ -125,7 +131,8 @@ public class HeapDump {
         return luceneIndex;
     }
 
-    private Directory createLuceneIndex() throws IOException,
+    // package-private for testing
+    Directory createLuceneIndex() throws IOException,
             CorruptIndexException, LockObtainFailedException {
 
         loadHeapDumpIfNecessary();
