@@ -37,8 +37,8 @@
 package com.redhat.thermostat.client.swing.internal.views;
 
 import java.awt.Frame;
+import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
@@ -80,23 +80,11 @@ public class ClientConfigurationSwing implements ClientConfigurationView {
 
         windowClosingListener = new WindowClosingListener();
         configurationPanel = new ClientConfigurationPanel();
-        configurationPanel.password.addKeyListener(new KeyListener() {
-
-            @Override
-            public void keyPressed(KeyEvent arg0) {
-                // Ignore
-            }
-
-            @Override
-            public void keyReleased(KeyEvent arg0) {
-                // Ignore
-            }
-
+        configurationPanel.password.addKeyListener(new KeyAdapter() {
             @Override
             public void keyTyped(KeyEvent arg0) {
                 userOverrodePassword = true;
             }
-            
         });
 
         java.awt.event.ActionListener acceptOnEnterListener = new java.awt.event.ActionListener() {
