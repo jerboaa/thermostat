@@ -288,24 +288,41 @@ public class MongoStorage implements BackingStorage {
         this.conn = null;
     }
     
-    public MongoStorage(String url, StorageCredentials creds, SSLConfiguration sslConf) {
-        conn = new MongoConnection(url, creds, sslConf);
+    MongoStorage(MongoConnection connection) {
+        this.conn = connection;
         connectedLatch = new CountDownLatch(1);
+        
+        // We register a connection listener in order for the mongo-java-driver
+        // DB object to be valid once it's first used (that's usually in
+        // registerCategory())
         conn.addListener(new ConnectionListener() {
             @Override
             public void changed(ConnectionStatus newStatus) {
                 switch (newStatus) {
-                case DISCONNECTED:
-                    db = null;
                 case CONNECTED:
+                    // Main success entry point
                     db = conn.getDB();
                     // This is important. See comment in registerCategory().
                     connectedLatch.countDown();
-                default:
-                    // ignore other status events
+                    break;
+                case FAILED_TO_CONNECT:
+                    // Main connection-failure entry-point
+                    connectedLatch.countDown();
+                    break;
+                case CONNECTING:
+                    // no-op
+                    break;
+                case DISCONNECTED:
+                    // mark the db object invalid
+                    db = null;
+                    break;
                 }
             }
         });
+    }
+    
+    public MongoStorage(String url, StorageCredentials creds, SSLConfiguration sslConf) {
+        this(new MongoConnection(url, creds, sslConf));
     }
     
     public <T extends Pojo> Cursor<T> executeGetCount(Category<T> category, MongoQuery<T> queryToAggregate) {

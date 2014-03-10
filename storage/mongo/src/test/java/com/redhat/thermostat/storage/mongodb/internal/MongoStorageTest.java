@@ -87,6 +87,8 @@ import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.BackingStorage;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.CategoryAdapter;
+import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
+import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Key;
@@ -99,6 +101,7 @@ import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.BasePojo;
 import com.redhat.thermostat.storage.model.HostInfo;
+import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.storage.query.ExpressionFactory;
 
@@ -259,6 +262,49 @@ public class MongoStorageTest {
     public void isBackingStorage() {
         MongoStorage storage = new MongoStorage(url, creds, sslConf);
         assertTrue(storage instanceof BackingStorage);
+    }
+    
+    @Test
+    public void verifyConnectEventSetsDb() {
+        MongoConnection mockConnection = mock(MongoConnection.class);
+        
+        // This adds a listener which we capture
+        new MongoStorage(mockConnection);
+        
+        ArgumentCaptor<ConnectionListener> captor = ArgumentCaptor.forClass(ConnectionListener.class);
+        verify(mockConnection).addListener(captor.capture());
+        ConnectionListener listener = captor.getValue();
+        assertNotNull(listener);
+        listener.changed(ConnectionStatus.CONNECTED);
+        verify(mockConnection).getDB();
+    }
+    
+    @Test(expected=NullPointerException.class)
+    public void verifyDisconnectedEventInvalidatesDb() {
+        MongoConnection mockConnection = mock(MongoConnection.class);
+        
+        // This adds a listener which we capture
+        MongoStorage storage = new MongoStorage(mockConnection);
+        
+        ArgumentCaptor<ConnectionListener> captor = ArgumentCaptor.forClass(ConnectionListener.class);
+        verify(mockConnection).addListener(captor.capture());
+        ConnectionListener listener = captor.getValue();
+        assertNotNull(listener);
+        
+        // fire a connecting event for good measure. It should do nothing.
+        listener.changed(ConnectionStatus.CONNECTING);
+        
+        listener.changed(ConnectionStatus.CONNECTED);
+        verify(mockConnection).getDB();
+        
+        // This should set the db instance to null
+        listener.changed(ConnectionStatus.DISCONNECTED);
+        
+        @SuppressWarnings("unchecked")
+        Category<FakeDataClass> cat = mock(Category.class);
+        when(cat.getDataClass()).thenReturn(FakeDataClass.class);
+        // this throws NPE due to the null DB instance
+        storage.registerCategory(cat);
     }
     
     @Test
@@ -618,5 +664,7 @@ public class MongoStorageTest {
         dbField.setAccessible(true);
         dbField.set(storage, db);
     }
+    
+    private static class FakeDataClass implements Pojo {};
 }
 
