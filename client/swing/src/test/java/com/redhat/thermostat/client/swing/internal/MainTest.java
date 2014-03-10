@@ -36,35 +36,39 @@
 
 package com.redhat.thermostat.client.swing.internal;
 
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 
-import javax.swing.SwingUtilities;
+import javax.swing.JOptionPane;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.osgi.framework.BundleContext;
 
-import com.redhat.thermostat.client.swing.internal.Main.MainWindowRunnable;
+import com.redhat.thermostat.client.swing.internal.Main.ClientPreferencesCreator;
+import com.redhat.thermostat.client.swing.internal.Main.GUIInteractions;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.storage.core.DbServiceFactory;
+import com.redhat.thermostat.storage.core.StorageCredentials;
+import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.testutils.StubBundleContext;
@@ -72,21 +76,22 @@ import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class MainTest {
 
-    private ExecutorService executorService;
-
-    private MainWindowRunnable mainWindowRunnable;
-
     private ArgumentCaptor<ConnectionListener> connectionListenerCaptor;
 
     private DbServiceFactory dbServiceFactory;
     private DbService dbService;
 
+    private ExecutorService executorService;
     private TimerFactory timerFactory;
     private StubBundleContext context;
     private ApplicationService appService;
     private Keyring keyring;
-    private CommonPaths paths;
     private CountDownLatch shutdown;
+
+    private ClientPreferencesCreator prefsCreator;
+    private ClientPreferences prefs;
+
+    private GUIInteractions interactions;
 
     @Before
     public void setUp() {
@@ -106,8 +111,6 @@ public class MainTest {
 
         when(appService.getApplicationExecutor()).thenReturn(executorService);
         
-        mainWindowRunnable = mock(MainWindowRunnable.class);
-        
         dbServiceFactory = mock(DbServiceFactory.class);
         dbService = mock(DbService.class);
         when(dbServiceFactory.createDbService(anyString())).thenReturn(dbService);
@@ -119,48 +122,58 @@ public class MainTest {
         when(appService.getTimerFactory()).thenReturn(timerFactory);
 
         keyring = mock(Keyring.class);
-        paths = mock(CommonPaths.class);
-        File userConfig = mock(File.class);
-        when(userConfig.isFile()).thenReturn(false);
-        when(paths.getUserClientConfigurationFile()).thenReturn(userConfig);
-        
+
+        prefs = mock(ClientPreferences.class);
+
+        prefsCreator = mock(ClientPreferencesCreator.class);
+        when(prefsCreator.create()).thenReturn(prefs);
+
         shutdown = mock(CountDownLatch.class);
+
+        interactions = mock(GUIInteractions.class);
     }
 
-    /**
-     * Handle all outstanding EDT events by posting a no-op event and waiting
-     * until it completes.
-     */
-    private void handleAllEdtEvents() throws Exception {
-        SwingUtilities.invokeAndWait(new Runnable() {
-            @Override
-            public void run() {
-                /* NO-OP */
-            }
-        });
+    private Main createMain(BundleContext context) {
+        return new Main(context, appService, dbServiceFactory, keyring, shutdown, prefsCreator, interactions);
+    }
+
+    @Test
+    public void verifyLookAndFeelIsSet() throws Exception {
+        Main main = createMain(context);
+
+        main.run();
+
+        verify(interactions).initializeLookAndFeel();
     }
 
     @Test
     public void verifyRunWaitsForShutdown() throws Exception {
-        Main main = new Main(context, appService, dbServiceFactory, keyring, paths, shutdown, mainWindowRunnable);
+        Main main = createMain(context);
 
         main.run();
-
-        handleAllEdtEvents();
 
         verify(shutdown).await();
     }
 
     @Test
-    public void verifyConnectionIsMade() throws Exception {
-        Main main = new Main(context, appService, dbServiceFactory, keyring, paths, shutdown, mainWindowRunnable);
+    public void verifyUnknownStorageProtocolIsHandledCorrectly() {
+        StorageException unknownProtocolException = new StorageException("Unknown protocol");
+        when(dbServiceFactory.createDbService(anyString())).thenThrow(unknownProtocolException);
+
+        Main main = createMain(context);
 
         main.run();
 
-        handleAllEdtEvents();
+        verify(interactions).showFailedToConnectDialogWithRetryOption();
+    }
+
+    @Test
+    public void verifyConnectionIsMade() throws Exception {
+        Main main = createMain(context);
+
+        main.run();
 
         verify(dbService).connect();
-
     }
 
     @Test
@@ -169,36 +182,55 @@ public class MainTest {
         context.registerService(HostInfoDAO.class, hostInfoDAO, null);
         VmInfoDAO vmInfoDAO = mock(VmInfoDAO.class);
         context.registerService(VmInfoDAO.class, vmInfoDAO, null);
-        Main main = new Main(context, appService, dbServiceFactory, keyring, paths, shutdown, mainWindowRunnable);
+
+        Main main = createMain(context);
 
         main.run();
-
-        handleAllEdtEvents();
 
         ConnectionListener connectionListener = connectionListenerCaptor.getValue();
         connectionListener.changed(ConnectionStatus.CONNECTED);
 
-        handleAllEdtEvents();
-
-        verify(mainWindowRunnable).run();
+        verify(interactions).showMainWindow();
     }
 
-    @Ignore("this prompts the user with some gui")
     @Test
-    public void verifyFailedConnectionTriggersShutdown() throws Exception {
+    public void verifyFailedConnectionTriggersMessageWithQuitOption() throws Exception {
+        Main main = createMain(context);
 
-        Main main = new Main(context, appService, dbServiceFactory, keyring, paths, shutdown, mainWindowRunnable);
+        when(interactions.showFailedToConnectDialogWithRetryOption()).thenReturn(JOptionPane.CANCEL_OPTION);
 
         main.run();
-
-        handleAllEdtEvents();
 
         ConnectionListener connectionListener = connectionListenerCaptor.getValue();
         connectionListener.changed(ConnectionStatus.FAILED_TO_CONNECT);
 
-        handleAllEdtEvents();
-
+        verify(interactions).showFailedToConnectDialogWithRetryOption();
         verify(shutdown).countDown();
+
+        verify(interactions, never()).showPreferencesDialog(any(ExecutorService.class));
+    }
+
+    @Test
+    public void verifyFailedConnectionTriggersMessageWithRetryOption() throws Exception {
+        Main main = createMain(context);
+
+        when(interactions.showFailedToConnectDialogWithRetryOption()).thenReturn(JOptionPane.YES_OPTION);
+
+        main.run();
+
+        ConnectionListener connectionListener = connectionListenerCaptor.getValue();
+        connectionListener.changed(ConnectionStatus.FAILED_TO_CONNECT);
+
+        verify(interactions).showFailedToConnectDialogWithRetryOption();
+        verify(interactions, never()).showFailedToConnectDialog();
+        verify(interactions).showPreferencesDialog(any(ExecutorService.class));
+
+        main.reconnect(prefs, mock(StorageCredentials.class));
+
+        connectionListener = connectionListenerCaptor.getValue();
+        connectionListener.changed(ConnectionStatus.FAILED_TO_CONNECT);
+
+        verify(interactions).showFailedToConnectDialog();
     }
 }
 

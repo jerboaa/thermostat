@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.swing.internal;
 
 import java.awt.EventQueue;
 import java.lang.reflect.InvocationTargetException;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Level;
@@ -51,6 +52,7 @@ import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.client.core.views.ClientConfigurationView;
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.swing.EdtHelper;
 import com.redhat.thermostat.client.swing.UIDefaults;
 import com.redhat.thermostat.client.swing.internal.views.ClientConfigurationSwing;
 import com.redhat.thermostat.client.swing.internal.vmlist.UIDefaultsImpl;
@@ -71,7 +73,7 @@ import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
-public class Main {
+public class Main implements ClientConfigReconnector, ConnectionListener {
     
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
@@ -81,76 +83,54 @@ public class Main {
     private ApplicationService appSvc;
     private DbServiceFactory dbServiceFactory;
     private Keyring keyring;
-    private CommonPaths paths;
-    private ClientPreferences prefs;
     private CountDownLatch shutdown;
+    private ClientPreferencesCreator prefsCreator;
+    private GUIInteractions interactions;
+
     private MainWindowControllerImpl mainController;
-    private MainWindowRunnable mainWindowRunnable;
-    
-    public Main(BundleContext context, Keyring keyring, CommonPaths paths,
-            ApplicationService appSvc, String[] args) {
+
+    private boolean retryConnecting = true;
+
+    public Main(BundleContext context, Keyring keyring, CommonPaths paths, ApplicationService appSvc) {
 
         DbServiceFactory dbServiceFactory = new DbServiceFactory();
         CountDownLatch shutdown = new CountDownLatch(1);
-        MainWindowRunnable mainWindowRunnable = new MainWindowRunnable();
+        ShowMainWindow mainWindowRunnable = new ShowMainWindow();
+        ClientPreferencesCreator prefsCreator = new ClientPreferencesCreator(paths);
+        GUIInteractions interactions = new GUIInteractions(context, keyring, prefsCreator, this, mainWindowRunnable);
 
-        init(context, appSvc, dbServiceFactory, keyring, paths, shutdown,
-                mainWindowRunnable);
+        init(context, appSvc, dbServiceFactory, keyring, shutdown, prefsCreator, interactions);
     }
 
     Main(BundleContext context, ApplicationService appSvc,
-            DbServiceFactory dbServiceFactory, Keyring keyring, CommonPaths paths,
-            CountDownLatch shutdown, MainWindowRunnable mainWindowRunnable) {
-        init(context, appSvc, dbServiceFactory, keyring, paths, shutdown,
-                mainWindowRunnable);
+            DbServiceFactory dbServiceFactory, Keyring keyring,
+            CountDownLatch shutdown, ClientPreferencesCreator prefsCreator, GUIInteractions interactions) {
+        init(context, appSvc, dbServiceFactory, keyring, shutdown, prefsCreator, interactions);
     }
 
     private void init(BundleContext context, ApplicationService appSvc,
-            DbServiceFactory dbServiceFactory, Keyring keyring, CommonPaths paths,
-            CountDownLatch shutdown, MainWindowRunnable mainWindowRunnable) {
+            DbServiceFactory dbServiceFactory, Keyring keyring,
+            CountDownLatch shutdown, ClientPreferencesCreator prefsCreator, GUIInteractions interactions) {
         this.context = context;
         this.appSvc = appSvc;
         this.dbServiceFactory = dbServiceFactory;
         this.keyring = keyring;
-        this.paths = paths;
         this.shutdown = shutdown;
-        this.mainWindowRunnable = mainWindowRunnable;
-        this.prefs = new ClientPreferences(paths);
+        this.prefsCreator = prefsCreator;
+        this.interactions = interactions;
     }
     
     public void run() {
-        EventQueue.invokeLater(new Runnable() {
-
-            @Override
-            public void run() {
-                ThemeManager themeManager = ThemeManager.getInstance();
-                themeManager.setLAF();
-                
-                // this needs to be done after setting the laf, otherwise
-                // we will not get consistent colours
-                UIDefaults uiDefaults = UIDefaultsImpl.getInstance();
-                context.registerService(UIDefaults.class, uiDefaults, null);
-            }
-
-        });
+        interactions.initializeLookAndFeel();
 
         tryConnecting();
 
         try {
             shutdown.await();
-            
+
             // Shutdown MainController
             if (mainController != null) {
-                try {
-                    SwingUtilities.invokeAndWait(new Runnable() {
-                        @Override
-                        public void run() {
-                            mainController.shutdownApplication();
-                        }
-                    });
-                } catch (InvocationTargetException e) {
-                    logger.log(Level.WARNING, "Unable to shutdown MainWindowController", e);
-                }
+                mainController.shutdownApplication();
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -159,58 +139,24 @@ public class Main {
 
     private void tryConnecting() {
         final ExecutorService service = appSvc.getApplicationExecutor();
-        ClientPreferences prefs = new ClientPreferences(paths);
+        ClientPreferences prefs = prefsCreator.create();
         StorageCredentials creds = new KeyringStorageCredentials(keyring, prefs);
         connect(prefs, creds, service);
     }
-    
-    private class ConnectionAttempt implements Runnable {
-        private ExecutorService service;
-        public ConnectionAttempt(ExecutorService service) {
-            this.service = service;
-        }
-        
-        @Override
-        public void run() {
-            Object[] options = {
-                    translator.localize(LocaleResources.CONNECTION_WIZARD).getContents(),
-                    translator.localize(LocaleResources.CONNECTION_QUIT).getContents(),
-            };
-            int n = JOptionPane
-                    .showOptionDialog(
-                            null,
-                            translator.localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_DESCRIPTION).getContents(),
-                            translator.localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_TITLE).getContents(),
-                            JOptionPane.OK_CANCEL_OPTION,
-                            JOptionPane.ERROR_MESSAGE, null, options,
-                            options[0]);
 
-            switch (n) {
-
-            case JOptionPane.CANCEL_OPTION:
-            case JOptionPane.CLOSED_OPTION:
-            case JOptionPane.NO_OPTION:
-                shutdown.countDown();
-                break;
-
-            case JOptionPane.YES_OPTION:
-            default:
-                createPreferencesDialog(service);
-                break;
-            }
-        }
+    @Override
+    public void reconnect(ClientPreferences prefs, StorageCredentials creds) {
+        connect(prefs, creds, appSvc.getApplicationExecutor());
     }
 
-    
-    
     private void connect(ClientPreferences prefs, StorageCredentials creds, ExecutorService service) {
+        // FIXME: bug? on reconnect, this service is registered again, with a different object :(
         @SuppressWarnings("rawtypes")
         final ServiceRegistration credsReg = context.registerService(StorageCredentials.class, creds, null);
-        final ConnectionHandler reconnectionHandler = new ConnectionHandler(service);
         try {
             // create DbService with potentially modified parameters
             final DbService dbService = dbServiceFactory.createDbService(prefs.getConnectionUrl());
-            dbService.addConnectionListener(reconnectionHandler);
+            dbService.addConnectionListener(this);
             service.execute(new Runnable() {
                 @Override
                 public void run() {
@@ -230,75 +176,56 @@ public class Main {
             // Prevent Icedtea BZ#1294, where no matching StorageProvider
             // could potentially be found for the given connection URL.
             // Indicate connection failure immediately.
-            reconnectionHandler.changed(ConnectionStatus.FAILED_TO_CONNECT);
+            changed(ConnectionStatus.FAILED_TO_CONNECT);
         }
     }
-    
-    private class MainClientConfigReconnector implements ClientConfigReconnector {
-        private ExecutorService service;
-        public MainClientConfigReconnector(ExecutorService service) {
-            this.service = service;
-        }
-        
-        @Override
-        public void reconnect(ClientPreferences prefs, StorageCredentials creds) {
-            connect(prefs, creds, service);
-        }
 
-        @Override
-        public void abort() {
-            shutdown.countDown();
-        }
-    }
-    
-    private void createPreferencesDialog(final ExecutorService service) {
-        ClientConfigurationView configDialog = new ClientConfigurationSwing();
-        ClientConfigurationController controller =
-                new ClientConfigurationController(new ClientPreferencesModel(keyring, prefs), configDialog, new MainClientConfigReconnector(service));
-        
-        controller.showDialog();
-    }
-    
-    private class ConnectionHandler implements ConnectionListener {
-        private boolean retry;
-        private ExecutorService service;
-        public ConnectionHandler(ExecutorService service) {
-            this.retry = true;
-            this.service = service;
-        }
-        
-        private void showConnectionAttemptWarning() {
-            SwingUtilities.invokeLater(new ConnectionAttempt(service));
-        }
-        
-        @Override
-        public void changed(ConnectionStatus newStatus) {
-            if (newStatus == ConnectionStatus.CONNECTED) {
-                SwingUtilities.invokeLater(mainWindowRunnable);
-            } else if (newStatus == ConnectionStatus.FAILED_TO_CONNECT) {
-                if (retry) {
-                    retry = false;
-                    showConnectionAttemptWarning();
-                } else {
-                    JOptionPane.showMessageDialog(
-                            null,
-                            translator.localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_DESCRIPTION).getContents(),
-                            translator.localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_TITLE).getContents(),
-                            JOptionPane.ERROR_MESSAGE);
-                    shutdown.countDown();
-                }
+    @Override
+    public void changed(ConnectionStatus newStatus) {
+        if (newStatus == ConnectionStatus.CONNECTED) {
+            interactions.showMainWindow();
+        } else if (newStatus == ConnectionStatus.FAILED_TO_CONNECT) {
+            if (retryConnecting) {
+                retryConnecting = false;
+                connectionAttemptFailed();
+            } else {
+                interactions.showFailedToConnectDialog();
+                shutdown.countDown();
             }
         }
     }
-    
+
+    private void connectionAttemptFailed() {
+        int userAction = interactions.showFailedToConnectDialogWithRetryOption();
+
+        switch (userAction) {
+
+        case JOptionPane.CANCEL_OPTION:
+        case JOptionPane.CLOSED_OPTION:
+        case JOptionPane.NO_OPTION:
+            shutdown();
+            break;
+
+        case JOptionPane.YES_OPTION:
+        default:
+            interactions.showPreferencesDialog(appSvc.getApplicationExecutor());
+            break;
+        }
+    }
+
+    @Override
+    public void abort() {
+        shutdown();
+    }
+
     public void shutdown() {
         shutdown.countDown();
     }
-    
+
     /*
      * This Runnable is extracted to a class for testing purposes.
      */
-    class MainWindowRunnable implements Runnable {
+    class ShowMainWindow implements Runnable {
 
         @Override
         public void run() {
@@ -307,7 +234,7 @@ public class Main {
         }
     }
 
-    class KeyringStorageCredentials implements StorageCredentials {
+    static class KeyringStorageCredentials implements StorageCredentials {
 
         private Keyring keyring;
         private ClientPreferences prefs;
@@ -326,7 +253,115 @@ public class Main {
         public char[] getPassword() {
             return keyring.getPassword(prefs.getConnectionUrl(), prefs.getUserName());
         }
-        
+
+    }
+
+    static class GUIInteractions {
+
+        private ClientConfigReconnector reconnector;
+        private Keyring keyring;
+        private ClientPreferencesCreator prefsCreator;
+        private ShowMainWindow showMainWindow;
+        private BundleContext context;
+
+        public GUIInteractions(BundleContext context, Keyring keyring, ClientPreferencesCreator prefsCreator,
+                ClientConfigReconnector reconnector, ShowMainWindow showMainWindow) {
+            this.context = context;
+            this.keyring = keyring;
+            this.prefsCreator = prefsCreator;
+            this.reconnector = reconnector;
+            this.showMainWindow = showMainWindow;
+        }
+
+        // FIXME some methods in this class are synchronous (and so need to block)
+        // others are async and call the appropriate thing when done (these dont have to block)
+
+        void initializeLookAndFeel() {
+            EventQueue.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    ThemeManager themeManager = ThemeManager.getInstance();
+                    themeManager.setLAF();
+
+                    // this needs to be done after setting the laf, otherwise
+                    // we will not get consistent colours
+                    UIDefaults uiDefaults = UIDefaultsImpl.getInstance();
+                    context.registerService(UIDefaults.class, uiDefaults, null);
+                }
+            });
+        }
+        void showPreferencesDialog(final ExecutorService service) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    ClientPreferences prefs = prefsCreator.create();
+                    ClientConfigurationView configDialog = new ClientConfigurationSwing();
+                    ClientConfigurationController controller =
+                            new ClientConfigurationController(new ClientPreferencesModel(keyring, prefs), configDialog, reconnector);
+                    controller.showDialog();
+                }
+            });
+        }
+
+        /** Returns an _OPTION value from {@link JOptionPane} */
+        int showFailedToConnectDialogWithRetryOption() {
+            try {
+                return (int) new EdtHelper().callAndWait(new Callable<Integer>() {
+                    @Override
+                    public Integer call() throws Exception {
+                        Object[] options = {
+                                translator.localize(LocaleResources.CONNECTION_WIZARD).getContents(),
+                                translator.localize(LocaleResources.CONNECTION_QUIT).getContents(),
+                        };
+                        int n = JOptionPane
+                                .showOptionDialog(
+                                        null,
+                                        translator.localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_DESCRIPTION).getContents(),
+                                        translator.localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_TITLE).getContents(),
+                                        JOptionPane.OK_CANCEL_OPTION,
+                                        JOptionPane.ERROR_MESSAGE, null, options,
+                                        options[0]);
+                        return n;
+                    }
+                });
+            } catch (InvocationTargetException | InterruptedException e) {
+                logger.log(Level.WARNING, "Error", e);
+                return JOptionPane.CANCEL_OPTION;
+            }
+        }
+
+        void showMainWindow() {
+            SwingUtilities.invokeLater(showMainWindow);
+        }
+
+        void showFailedToConnectDialog() {
+            try {
+                new EdtHelper().callAndWait(new Runnable() {
+                    @Override
+                    public void run() {
+                        JOptionPane.showMessageDialog(
+                                null,
+                                translator.localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_DESCRIPTION).getContents(),
+                                translator.localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_TITLE).getContents(),
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+                });
+            } catch (InvocationTargetException | InterruptedException e) {
+                logger.log(Level.WARNING, "Error while waiting for user to dismiss dialog", e);
+            }
+        }
+    }
+
+    static class ClientPreferencesCreator {
+        private CommonPaths paths;
+
+        public ClientPreferencesCreator(CommonPaths paths) {
+            this.paths = paths;
+        }
+
+        public ClientPreferences create() {
+            return new ClientPreferences(paths);
+        }
     }
 }
 

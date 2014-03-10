@@ -105,7 +105,7 @@ public class ThermostatActivator implements BundleActivator {
                 CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
                 ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
                 cmdReg = new CommandRegistryImpl(context);
-                main = new Main(context, keyring, paths, appSvc, new String[0]);
+                main = new Main(context, keyring, paths, appSvc);
                 
                 GUIClientCommand cmd = new GUIClientCommand(main);
                 cmdReg.registerCommand("gui", cmd);
