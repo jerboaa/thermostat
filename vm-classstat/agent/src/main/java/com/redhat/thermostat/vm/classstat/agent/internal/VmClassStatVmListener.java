@@ -53,6 +53,8 @@ class VmClassStatVmListener implements VmUpdateListener {
     private final VmClassStatDAO dao;
     private final String vmId;
     private final String writerId;
+    
+    private boolean error;
 
     VmClassStatVmListener(String writerId, VmClassStatDAO dao, String vmId) {
         this.dao = dao;
@@ -64,12 +66,26 @@ class VmClassStatVmListener implements VmUpdateListener {
     public void countersUpdated(VmUpdate update) {
         VmClassStatDataExtractor extractor = new VmClassStatDataExtractor(update);
         try {
-            long loadedClasses = extractor.getLoadedClasses();
-            long timestamp = System.currentTimeMillis();
-            VmClassStat stat = new VmClassStat(writerId, vmId, timestamp, loadedClasses);
-            dao.putVmClassStat(stat);
+            Long loadedClasses = extractor.getLoadedClasses();
+            if (loadedClasses != null) {
+                long timestamp = System.currentTimeMillis();
+                VmClassStat stat = new VmClassStat(writerId, vmId, timestamp, loadedClasses);
+                dao.putVmClassStat(stat);
+            }
+            else {
+                logWarningOnce("Unable to determine number of loaded classes for VM " 
+                        + vmId);
+            }
         } catch (VmUpdateException e) {
-            logger.log(Level.WARNING, "error gathering class info for vm " + vmId, e);
+            logger.log(Level.WARNING, "Error gathering class info for VM " + vmId, e);
+        }
+    }
+    
+    private void logWarningOnce(String message) {
+        if (!error) {
+            logger.log(Level.WARNING, message);
+            logger.log(Level.WARNING, "Further warnings will be ignored");
+            error = true;
         }
     }
 

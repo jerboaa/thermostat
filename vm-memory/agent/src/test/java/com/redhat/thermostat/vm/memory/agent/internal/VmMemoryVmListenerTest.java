@@ -37,8 +37,10 @@
 package com.redhat.thermostat.vm.memory.agent.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -187,6 +189,279 @@ public class VmMemoryVmListenerTest {
         vmListener.recordMemoryStat(extractor);
 
         verifyNoMoreInteractions(vmMemoryStatDAO);
+    }
+    
+    @Test
+    public void testRecordMemoryStatNoTotal() throws VmUpdateException {
+        when(extractor.getTotalGcGenerations()).thenReturn(null);
+        vmListener.recordMemoryStat(extractor);
+        verify(vmMemoryStatDAO, never()).putVmMemoryStat(any(VmMemoryStat.class));
+    }
+
+    @Test
+    public void testRecordMemoryStatNoName() throws VmUpdateException {
+        when(extractor.getGenerationName(0)).thenReturn(null);
+        vmListener.recordMemoryStat(extractor);
+        ArgumentCaptor<VmMemoryStat> captor = ArgumentCaptor.forClass(VmMemoryStat.class);
+        verify(vmMemoryStatDAO).putVmMemoryStat(captor.capture());
+        VmMemoryStat memoryStat = captor.getValue();
+        
+        Generation[] gens = memoryStat.getGenerations();
+        assertEquals(1, gens.length);
+        Generation gen = gens[0];
+        assertEquals(GEN_NAMES[1], gen.getName());
+        assertEquals(GEN_CAPS[1], (Long) gen.getCapacity());
+        assertEquals(GEN_MAX_CAPS[1], (Long) gen.getMaxCapacity());
+        assertEquals(GEN_GCS[1], gen.getCollector());
+        assertEquals(GEN_SPACES[1], Long.valueOf(gen.getSpaces().length));
+        Space[] spaces = gen.getSpaces();
+        for (int j = 1; j < spaces.length; j++) {
+            Space space = spaces[j];
+            assertEquals(SPACE_NAME[1][j], space.getName());
+            assertEquals(SPACE_CAPS[1][j], (Long) space.getCapacity());
+            assertEquals(SPACE_MAX_CAPS[1][j], (Long) space.getMaxCapacity());
+            assertEquals(SPACE_USED[1][j], (Long) space.getUsed());
+        }
+    }
+    
+    @Test
+    public void testRecordMemoryStatNoCapacity() throws VmUpdateException {
+        when(extractor.getGenerationCapacity(0)).thenReturn(null);
+        vmListener.recordMemoryStat(extractor);
+        ArgumentCaptor<VmMemoryStat> captor = ArgumentCaptor.forClass(VmMemoryStat.class);
+        verify(vmMemoryStatDAO).putVmMemoryStat(captor.capture());
+        VmMemoryStat memoryStat = captor.getValue();
+        
+        Generation[] gens = memoryStat.getGenerations();
+        assertEquals(1, gens.length);
+        Generation gen = gens[0];
+        assertEquals(GEN_NAMES[1], gen.getName());
+        assertEquals(GEN_CAPS[1], (Long) gen.getCapacity());
+        assertEquals(GEN_MAX_CAPS[1], (Long) gen.getMaxCapacity());
+        assertEquals(GEN_GCS[1], gen.getCollector());
+        assertEquals(GEN_SPACES[1], Long.valueOf(gen.getSpaces().length));
+        Space[] spaces = gen.getSpaces();
+        for (int j = 1; j < spaces.length; j++) {
+            Space space = spaces[j];
+            assertEquals(SPACE_NAME[1][j], space.getName());
+            assertEquals(SPACE_CAPS[1][j], (Long) space.getCapacity());
+            assertEquals(SPACE_MAX_CAPS[1][j], (Long) space.getMaxCapacity());
+            assertEquals(SPACE_USED[1][j], (Long) space.getUsed());
+        }
+    }
+    
+    @Test
+    public void testRecordMemoryStatNoMaxCapacity() throws VmUpdateException {
+        when(extractor.getGenerationMaxCapacity(0)).thenReturn(null);
+        vmListener.recordMemoryStat(extractor);
+        ArgumentCaptor<VmMemoryStat> captor = ArgumentCaptor.forClass(VmMemoryStat.class);
+        verify(vmMemoryStatDAO).putVmMemoryStat(captor.capture());
+        VmMemoryStat memoryStat = captor.getValue();
+        
+        Generation[] gens = memoryStat.getGenerations();
+        assertEquals(1, gens.length);
+        Generation gen = gens[0];
+        assertEquals(GEN_NAMES[1], gen.getName());
+        assertEquals(GEN_CAPS[1], (Long) gen.getCapacity());
+        assertEquals(GEN_MAX_CAPS[1], (Long) gen.getMaxCapacity());
+        assertEquals(GEN_GCS[1], gen.getCollector());
+        assertEquals(GEN_SPACES[1], Long.valueOf(gen.getSpaces().length));
+        Space[] spaces = gen.getSpaces();
+        for (int j = 1; j < spaces.length; j++) {
+            Space space = spaces[j];
+            assertEquals(SPACE_NAME[1][j], space.getName());
+            assertEquals(SPACE_CAPS[1][j], (Long) space.getCapacity());
+            assertEquals(SPACE_MAX_CAPS[1][j], (Long) space.getMaxCapacity());
+            assertEquals(SPACE_USED[1][j], (Long) space.getUsed());
+        }
+    }
+    
+    @Test
+    public void testRecordMemoryStatNoCollector() throws VmUpdateException {
+        when(extractor.getGenerationCollector(0)).thenReturn(null);
+        vmListener.recordMemoryStat(extractor);
+        ArgumentCaptor<VmMemoryStat> captor = ArgumentCaptor.forClass(VmMemoryStat.class);
+        verify(vmMemoryStatDAO).putVmMemoryStat(captor.capture());
+        VmMemoryStat memoryStat = captor.getValue();
+        
+        Generation[] gens = memoryStat.getGenerations();
+        assertEquals(1, gens.length);
+        Generation gen = gens[0];
+        assertEquals(GEN_NAMES[1], gen.getName());
+        assertEquals(GEN_CAPS[1], (Long) gen.getCapacity());
+        assertEquals(GEN_MAX_CAPS[1], (Long) gen.getMaxCapacity());
+        assertEquals(GEN_GCS[1], gen.getCollector());
+        assertEquals(GEN_SPACES[1], Long.valueOf(gen.getSpaces().length));
+        Space[] spaces = gen.getSpaces();
+        for (int j = 1; j < spaces.length; j++) {
+            Space space = spaces[j];
+            assertEquals(SPACE_NAME[1][j], space.getName());
+            assertEquals(SPACE_CAPS[1][j], (Long) space.getCapacity());
+            assertEquals(SPACE_MAX_CAPS[1][j], (Long) space.getMaxCapacity());
+            assertEquals(SPACE_USED[1][j], (Long) space.getUsed());
+        }
+    }
+    
+    @Test
+    public void testRecordMemoryStatNoTotalSpaces() throws VmUpdateException {
+        when(extractor.getTotalSpaces(0)).thenReturn(null);
+        vmListener.recordMemoryStat(extractor);
+        ArgumentCaptor<VmMemoryStat> captor = ArgumentCaptor.forClass(VmMemoryStat.class);
+        verify(vmMemoryStatDAO).putVmMemoryStat(captor.capture());
+        VmMemoryStat memoryStat = captor.getValue();
+        
+        Generation[] gens = memoryStat.getGenerations();
+        assertEquals(1, gens.length);
+        Generation gen = gens[0];
+        assertEquals(GEN_NAMES[1], gen.getName());
+        assertEquals(GEN_CAPS[1], (Long) gen.getCapacity());
+        assertEquals(GEN_MAX_CAPS[1], (Long) gen.getMaxCapacity());
+        assertEquals(GEN_GCS[1], gen.getCollector());
+        assertEquals(GEN_SPACES[1], Long.valueOf(gen.getSpaces().length));
+        Space[] spaces = gen.getSpaces();
+        for (int j = 1; j < spaces.length; j++) {
+            Space space = spaces[j];
+            assertEquals(SPACE_NAME[1][j], space.getName());
+            assertEquals(SPACE_CAPS[1][j], (Long) space.getCapacity());
+            assertEquals(SPACE_MAX_CAPS[1][j], (Long) space.getMaxCapacity());
+            assertEquals(SPACE_USED[1][j], (Long) space.getUsed());
+        }
+    }
+    
+    @Test
+    public void testRecordMemoryStatNoSpaceName() throws VmUpdateException {
+        when(extractor.getSpaceName(0, 1)).thenReturn(null);
+        vmListener.recordMemoryStat(extractor);
+        ArgumentCaptor<VmMemoryStat> captor = ArgumentCaptor.forClass(VmMemoryStat.class);
+        verify(vmMemoryStatDAO).putVmMemoryStat(captor.capture());
+        VmMemoryStat memoryStat = captor.getValue();
+        
+        Generation[] gens = memoryStat.getGenerations();
+        assertEquals(2, gens.length);
+        for (int i = 0; i < gens.length; i++) {
+            Generation gen = gens[i];
+            assertEquals(GEN_NAMES[i], gen.getName());
+            assertEquals(GEN_CAPS[i], (Long) gen.getCapacity());
+            assertEquals(GEN_MAX_CAPS[i], (Long) gen.getMaxCapacity());
+            assertEquals(GEN_GCS[i], gen.getCollector());
+            if (i == 0) {
+                // Bad space in first generation
+                assertEquals(Long.valueOf(GEN_SPACES[i] - 1), Long.valueOf(gen.getSpaces().length));
+            }
+            else {
+                assertEquals(GEN_SPACES[i], Long.valueOf(gen.getSpaces().length));
+            }
+            Space[] spaces = gen.getSpaces();
+            for (int j = 0; j < spaces.length; j++) {
+                Space space = spaces[j];
+                assertEquals(SPACE_NAME[i][j], space.getName());
+                assertEquals(SPACE_CAPS[i][j], (Long) space.getCapacity());
+                assertEquals(SPACE_MAX_CAPS[i][j], (Long) space.getMaxCapacity());
+                assertEquals(SPACE_USED[i][j], (Long) space.getUsed());
+            }
+        }
+    }
+    
+    @Test
+    public void testRecordMemoryStatNoSpaceCapacity() throws VmUpdateException {
+        when(extractor.getSpaceCapacity(0, 1)).thenReturn(null);
+        vmListener.recordMemoryStat(extractor);
+        ArgumentCaptor<VmMemoryStat> captor = ArgumentCaptor.forClass(VmMemoryStat.class);
+        verify(vmMemoryStatDAO).putVmMemoryStat(captor.capture());
+        VmMemoryStat memoryStat = captor.getValue();
+        
+        Generation[] gens = memoryStat.getGenerations();
+        assertEquals(2, gens.length);
+        for (int i = 0; i < gens.length; i++) {
+            Generation gen = gens[i];
+            assertEquals(GEN_NAMES[i], gen.getName());
+            assertEquals(GEN_CAPS[i], (Long) gen.getCapacity());
+            assertEquals(GEN_MAX_CAPS[i], (Long) gen.getMaxCapacity());
+            assertEquals(GEN_GCS[i], gen.getCollector());
+            if (i == 0) {
+                // Bad space in first generation
+                assertEquals(Long.valueOf(GEN_SPACES[i] - 1), Long.valueOf(gen.getSpaces().length));
+            }
+            else {
+                assertEquals(GEN_SPACES[i], Long.valueOf(gen.getSpaces().length));
+            }
+            Space[] spaces = gen.getSpaces();
+            for (int j = 0; j < spaces.length; j++) {
+                Space space = spaces[j];
+                assertEquals(SPACE_NAME[i][j], space.getName());
+                assertEquals(SPACE_CAPS[i][j], (Long) space.getCapacity());
+                assertEquals(SPACE_MAX_CAPS[i][j], (Long) space.getMaxCapacity());
+                assertEquals(SPACE_USED[i][j], (Long) space.getUsed());
+            }
+        }
+    }
+    
+    @Test
+    public void testRecordMemoryStatNoSpaceMaxCapacity() throws VmUpdateException {
+        when(extractor.getSpaceMaxCapacity(0, 1)).thenReturn(null);
+        vmListener.recordMemoryStat(extractor);
+        ArgumentCaptor<VmMemoryStat> captor = ArgumentCaptor.forClass(VmMemoryStat.class);
+        verify(vmMemoryStatDAO).putVmMemoryStat(captor.capture());
+        VmMemoryStat memoryStat = captor.getValue();
+        
+        Generation[] gens = memoryStat.getGenerations();
+        assertEquals(2, gens.length);
+        for (int i = 0; i < gens.length; i++) {
+            Generation gen = gens[i];
+            assertEquals(GEN_NAMES[i], gen.getName());
+            assertEquals(GEN_CAPS[i], (Long) gen.getCapacity());
+            assertEquals(GEN_MAX_CAPS[i], (Long) gen.getMaxCapacity());
+            assertEquals(GEN_GCS[i], gen.getCollector());
+            if (i == 0) {
+                // Bad space in first generation
+                assertEquals(Long.valueOf(GEN_SPACES[i] - 1), Long.valueOf(gen.getSpaces().length));
+            }
+            else {
+                assertEquals(GEN_SPACES[i], Long.valueOf(gen.getSpaces().length));
+            }
+            Space[] spaces = gen.getSpaces();
+            for (int j = 0; j < spaces.length; j++) {
+                Space space = spaces[j];
+                assertEquals(SPACE_NAME[i][j], space.getName());
+                assertEquals(SPACE_CAPS[i][j], (Long) space.getCapacity());
+                assertEquals(SPACE_MAX_CAPS[i][j], (Long) space.getMaxCapacity());
+                assertEquals(SPACE_USED[i][j], (Long) space.getUsed());
+            }
+        }
+    }
+    
+    @Test
+    public void testRecordMemoryStatNoSpaceUsed() throws VmUpdateException {
+        when(extractor.getSpaceUsed(0, 1)).thenReturn(null);
+        vmListener.recordMemoryStat(extractor);
+        ArgumentCaptor<VmMemoryStat> captor = ArgumentCaptor.forClass(VmMemoryStat.class);
+        verify(vmMemoryStatDAO).putVmMemoryStat(captor.capture());
+        VmMemoryStat memoryStat = captor.getValue();
+        
+        Generation[] gens = memoryStat.getGenerations();
+        assertEquals(2, gens.length);
+        for (int i = 0; i < gens.length; i++) {
+            Generation gen = gens[i];
+            assertEquals(GEN_NAMES[i], gen.getName());
+            assertEquals(GEN_CAPS[i], (Long) gen.getCapacity());
+            assertEquals(GEN_MAX_CAPS[i], (Long) gen.getMaxCapacity());
+            assertEquals(GEN_GCS[i], gen.getCollector());
+            if (i == 0) {
+                // Bad space in first generation
+                assertEquals(Long.valueOf(GEN_SPACES[i] - 1), Long.valueOf(gen.getSpaces().length));
+            }
+            else {
+                assertEquals(GEN_SPACES[i], Long.valueOf(gen.getSpaces().length));
+            }
+            Space[] spaces = gen.getSpaces();
+            for (int j = 0; j < spaces.length; j++) {
+                Space space = spaces[j];
+                assertEquals(SPACE_NAME[i][j], space.getName());
+                assertEquals(SPACE_CAPS[i][j], (Long) space.getCapacity());
+                assertEquals(SPACE_MAX_CAPS[i][j], (Long) space.getMaxCapacity());
+                assertEquals(SPACE_USED[i][j], (Long) space.getUsed());
+            }
+        }
     }
 }
 

@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.vm.memory.agent.internal;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -55,6 +57,8 @@ public class VmMemoryVmListener implements VmUpdateListener {
     private final String vmId;
     private final VmMemoryStatDAO memDAO;
     private final String writerId;
+    
+    private boolean error;
 
     public VmMemoryVmListener(String writerId, VmMemoryStatDAO vmMemoryStatDao, String vmId) {
         memDAO = vmMemoryStatDao;
@@ -71,35 +75,121 @@ public class VmMemoryVmListener implements VmUpdateListener {
     void recordMemoryStat(VmMemoryDataExtractor extractor) {
         try {
             long timestamp = System.currentTimeMillis();
-            int maxGenerations = (int) extractor.getTotalGcGenerations();
-            Generation[] generations = new Generation[maxGenerations];
-            for (int generation = 0; generation < maxGenerations; generation++) {
-                Generation g = new Generation();
-                g.setName(extractor.getGenerationName(generation));
-                g.setCapacity(extractor.getGenerationCapacity(generation));
-                g.setMaxCapacity(extractor.getGenerationMaxCapacity(generation));
-                g.setCollector(extractor.getGenerationCollector(generation));
-                generations[generation] = g;
-                int maxSpaces = (int) extractor.getTotalSpaces(generation);
-                Space[] spaces = new Space[maxSpaces];
-                for (int space = 0; space < maxSpaces; space++) {
-                    Space s = new Space();
-                    s.setIndex((int) space);
-                    s.setName(extractor.getSpaceName(generation, space));
-                    s.setCapacity(extractor.getSpaceCapacity(generation, space));
-                    s.setMaxCapacity(extractor.getSpaceMaxCapacity(generation, space));
-                    s.setUsed(extractor.getSpaceUsed(generation, space));
-                    spaces[space] = s;
+            Long maxGenerations = extractor.getTotalGcGenerations();
+            if (maxGenerations != null) {
+                List<Generation> generations = new ArrayList<Generation>(maxGenerations.intValue());
+                for (int generation = 0; generation < maxGenerations; generation++) {
+                    Generation g = createGeneration(extractor, generation);
+                    if (g != null) {
+                        Long maxSpaces = extractor.getTotalSpaces(generation);
+                        if (maxSpaces != null) {
+                            List<Space> spaces = new ArrayList<Space>(maxSpaces.intValue());
+                            for (int space = 0; space < maxSpaces; space++) {
+                                Space s = createSpace(extractor, generation,
+                                        space);
+                                if (s != null) {
+                                    spaces.add(s);
+                                }
+                            }
+                            g.setSpaces(spaces.toArray(new Space[spaces.size()]));
+                            generations.add(g);
+                        }
+                        else {
+                            logWarningOnce("Unable to determine number of spaces in generation "
+                                    + generation + " for VM " + vmId + ". Skipping generation");
+                        }
+                    }
                 }
-                g.setSpaces(spaces);
+                VmMemoryStat stat = new VmMemoryStat(writerId, timestamp, vmId, 
+                        generations.toArray(new Generation[generations.size()]));
+                memDAO.putVmMemoryStat(stat);
             }
-            VmMemoryStat stat = new VmMemoryStat(writerId, timestamp, vmId, generations);
-            memDAO.putVmMemoryStat(stat);
+            else {
+                logWarningOnce("Unable to determine number of generations for VM " + vmId);
+            }
         } catch (VmUpdateException e) {
-            logger.log(Level.WARNING, "error gathering memory info for vm " + vmId, e);
+            logger.log(Level.WARNING, "Error gathering memory info for VM " + vmId, e);
         }
     }
 
+    private Generation createGeneration(VmMemoryDataExtractor extractor,
+            int generation) throws VmUpdateException {
+        String name = extractor.getGenerationName(generation);
+        if (name == null) {
+            logWarningOnce("Unable to determine name of generation " 
+                    + generation + " for VM " + vmId);
+            return null;
+        }
+        Long capacity = extractor.getGenerationCapacity(generation);
+        if (capacity == null) {
+            logWarningOnce("Unable to determine capacity of generation " 
+                    + generation + " for VM " + vmId);
+            return null;
+        }
+        Long maxCapacity = extractor.getGenerationMaxCapacity(generation);
+        if (maxCapacity == null) {
+            logWarningOnce("Unable to determine max capacity of generation " 
+                    + generation + " for VM " + vmId);
+            return null;
+        }
+        String collector = extractor.getGenerationCollector(generation);
+        if (collector == null) {
+            logWarningOnce("Unable to determine collector of generation " 
+                    + generation + " for VM " + vmId);
+            return null;
+        }
+        
+        Generation g = new Generation();
+        g.setName(name);
+        g.setCapacity(capacity);
+        g.setMaxCapacity(maxCapacity);
+        g.setCollector(collector);
+        return g;
+    }
+
+    private Space createSpace(VmMemoryDataExtractor extractor, int generation,
+            int space) throws VmUpdateException {
+        String name = extractor.getSpaceName(generation, space);
+        if (name == null) {
+            logWarningOnce("Unable to determine name of space " + space 
+                    + " in generation " + generation + " for VM " + vmId);
+            return null;
+        }
+        Long capacity = extractor.getSpaceCapacity(generation, space);
+        if (capacity == null) {
+            logWarningOnce("Unable to determine capacity of space " + space 
+                    + " in generation " + generation + " for VM " + vmId);
+            return null;
+        }
+        Long maxCapacity = extractor.getSpaceMaxCapacity(generation, space);
+        if (maxCapacity == null) {
+            logWarningOnce("Unable to determine max capacity of space " + space 
+                    + " in generation " + generation + " for VM " + vmId);
+            return null;
+        }
+        Long used = extractor.getSpaceUsed(generation, space);
+        if (used == null) {
+            logWarningOnce("Unable to determine used memory of space " + space 
+                    + " in generation " + generation + " for VM " + vmId);
+            return null;
+        }
+        
+        Space s = new Space();
+        s.setIndex(space);
+        s.setName(name);
+        s.setCapacity(capacity);
+        s.setMaxCapacity(maxCapacity);
+        s.setUsed(used);
+        return s;
+    }
+    
+    private void logWarningOnce(String message) {
+        if (!error) {
+            logger.log(Level.WARNING, message);
+            logger.log(Level.WARNING, "Further warnings will be ignored");
+            error = true;
+        }
+    }
 
 }
 

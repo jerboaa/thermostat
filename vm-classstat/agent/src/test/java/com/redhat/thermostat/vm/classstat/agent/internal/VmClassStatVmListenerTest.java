@@ -37,9 +37,11 @@
 package com.redhat.thermostat.vm.classstat.agent.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -100,6 +102,16 @@ public class VmClassStatVmListenerTest {
         listener.countersUpdated(update);
 
         verifyNoMoreInteractions(dao);
+    }
+    
+    @Test
+    public void testMonitorUpdatedClassStatNoCounter() throws Exception {
+        VmUpdate update = mock(VmUpdate.class);
+        when(update.getPerformanceCounterLong(eq("java.cls.loadedClasses"))).thenReturn(null);
+
+        listener.countersUpdated(update);
+
+        verify(dao, never()).putVmClassStat(any(VmClassStat.class));
     }
 }
 

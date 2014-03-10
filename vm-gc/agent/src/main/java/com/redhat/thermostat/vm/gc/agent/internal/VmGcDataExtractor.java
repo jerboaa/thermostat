@@ -65,7 +65,7 @@ public class VmGcDataExtractor {
         this.update = update;
     }
 
-    public long getTotalCollectors() throws VmUpdateException {
+    public Long getTotalCollectors() throws VmUpdateException {
         return update.getPerformanceCounterLong("sun.gc.policy.collectors");
     }
 
@@ -73,11 +73,11 @@ public class VmGcDataExtractor {
         return update.getPerformanceCounterString("sun.gc.collector." + collector + ".name");
     }
 
-    public long getCollectorTime(long collector) throws VmUpdateException {
+    public Long getCollectorTime(long collector) throws VmUpdateException {
         return update.getPerformanceCounterLong("sun.gc.collector." + collector + ".time");
     }
 
-    public long getCollectorInvocations(long collector) throws VmUpdateException {
+    public Long getCollectorInvocations(long collector) throws VmUpdateException {
         return update.getPerformanceCounterLong("sun.gc.collector." + collector + ".invocations");
     }
 

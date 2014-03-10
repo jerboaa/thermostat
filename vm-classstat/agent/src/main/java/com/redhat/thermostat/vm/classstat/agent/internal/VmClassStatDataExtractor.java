@@ -65,7 +65,7 @@ public class VmClassStatDataExtractor {
         this.update = update;
     }
 
-    public long getLoadedClasses() throws VmUpdateException {
+    public Long getLoadedClasses() throws VmUpdateException {
         return update.getPerformanceCounterLong("java.cls.loadedClasses");
     }
 

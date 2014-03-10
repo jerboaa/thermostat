@@ -66,7 +66,7 @@ public class VmMemoryDataExtractor {
         this.update = update;
     }
     
-    public long getTotalGcGenerations() throws VmUpdateException {
+    public Long getTotalGcGenerations() throws VmUpdateException {
         return update.getPerformanceCounterLong("sun.gc.policy.generations");
     }
 
@@ -74,11 +74,11 @@ public class VmMemoryDataExtractor {
         return update.getPerformanceCounterString("sun.gc.generation." + generation + ".name");
     }
 
-    public long getGenerationCapacity(long generation) throws VmUpdateException {
+    public Long getGenerationCapacity(long generation) throws VmUpdateException {
         return update.getPerformanceCounterLong("sun.gc.generation." + generation + ".capacity");
     }
 
-    public long getGenerationMaxCapacity(long generation) throws VmUpdateException {
+    public Long getGenerationMaxCapacity(long generation) throws VmUpdateException {
         return update.getPerformanceCounterLong("sun.gc.generation." + generation + ".maxCapacity");
     }
 
@@ -92,7 +92,7 @@ public class VmMemoryDataExtractor {
         return collector;
     }
 
-    public long getTotalSpaces(long generation) throws VmUpdateException {
+    public Long getTotalSpaces(long generation) throws VmUpdateException {
         return update.getPerformanceCounterLong("sun.gc.generation." + generation + ".spaces");
     }
 
@@ -100,15 +100,15 @@ public class VmMemoryDataExtractor {
         return update.getPerformanceCounterString("sun.gc.generation." + generation + ".space." + space + ".name");
     }
 
-    public long getSpaceCapacity(long generation, long space) throws VmUpdateException {
+    public Long getSpaceCapacity(long generation, long space) throws VmUpdateException {
         return update.getPerformanceCounterLong("sun.gc.generation." + generation + ".space." + space + ".capacity");
     }
 
-    public long getSpaceMaxCapacity(long generation, long space) throws VmUpdateException {
+    public Long getSpaceMaxCapacity(long generation, long space) throws VmUpdateException {
         return update.getPerformanceCounterLong("sun.gc.generation." + generation + ".space." + space + ".maxCapacity");
     }
 
-    public long getSpaceUsed(long generation, long space) throws VmUpdateException {
+    public Long getSpaceUsed(long generation, long space) throws VmUpdateException {
         return update.getPerformanceCounterLong("sun.gc.generation." + generation + ".space." + space + ".used");
     }
 

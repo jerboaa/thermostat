@@ -37,7 +37,9 @@
 package com.redhat.thermostat.vm.gc.agent.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -104,6 +106,64 @@ public class VmGcVmListenerTest {
             assertEquals(GC_INVOCS[i], (Long) stat.getRunCount());
             assertEquals(GC_TIMES[i], (Long) stat.getWallTime());
         }
+    }
+    
+    @Test
+    public void testRecordMemoryStatNoName() throws VmUpdateException {
+        when(extractor.getCollectorName(1)).thenReturn(null);
+        vmListener.recordGcStat(extractor);
+        ArgumentCaptor<VmGcStat> captor = ArgumentCaptor.forClass(VmGcStat.class);
+        verify(vmGcStatDAO).putVmGcStat(captor.capture());
+        List<VmGcStat> gcStats = captor.getAllValues();
+        
+        // Verify second collector skipped
+        assertEquals(1, gcStats.size());
+        
+        VmGcStat stat = gcStats.get(0);
+        assertEquals(GC_NAMES[0], stat.getCollectorName());
+        assertEquals(GC_INVOCS[0], (Long) stat.getRunCount());
+        assertEquals(GC_TIMES[0], (Long) stat.getWallTime());
+    }
+    
+    @Test
+    public void testRecordMemoryStatNoInvocations() throws VmUpdateException {
+        when(extractor.getCollectorInvocations(1)).thenReturn(null);
+        vmListener.recordGcStat(extractor);
+        ArgumentCaptor<VmGcStat> captor = ArgumentCaptor.forClass(VmGcStat.class);
+        verify(vmGcStatDAO).putVmGcStat(captor.capture());
+        List<VmGcStat> gcStats = captor.getAllValues();
+        
+        // Verify second collector skipped
+        assertEquals(1, gcStats.size());
+        
+        VmGcStat stat = gcStats.get(0);
+        assertEquals(GC_NAMES[0], stat.getCollectorName());
+        assertEquals(GC_INVOCS[0], (Long) stat.getRunCount());
+        assertEquals(GC_TIMES[0], (Long) stat.getWallTime());
+    }
+    
+    @Test
+    public void testRecordMemoryStatNoTime() throws VmUpdateException {
+        when(extractor.getCollectorTime(1)).thenReturn(null);
+        vmListener.recordGcStat(extractor);
+        ArgumentCaptor<VmGcStat> captor = ArgumentCaptor.forClass(VmGcStat.class);
+        verify(vmGcStatDAO).putVmGcStat(captor.capture());
+        List<VmGcStat> gcStats = captor.getAllValues();
+        
+        // Verify second collector skipped
+        assertEquals(1, gcStats.size());
+        
+        VmGcStat stat = gcStats.get(0);
+        assertEquals(GC_NAMES[0], stat.getCollectorName());
+        assertEquals(GC_INVOCS[0], (Long) stat.getRunCount());
+        assertEquals(GC_TIMES[0], (Long) stat.getWallTime());
+    }
+    
+    @Test
+    public void testRecordMemoryStatNoTotal() throws VmUpdateException {
+        when(extractor.getTotalCollectors()).thenReturn(null);
+        vmListener.recordGcStat(extractor);
+        verify(vmGcStatDAO, never()).putVmGcStat(any(VmGcStat.class));
     }
 }
 

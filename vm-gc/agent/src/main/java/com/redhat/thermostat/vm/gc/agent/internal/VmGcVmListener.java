@@ -53,6 +53,8 @@ public class VmGcVmListener implements VmUpdateListener {
     private final String vmId;
     private final VmGcStatDAO gcDAO;
     private final String writerId;
+    
+    private boolean error;
 
     public VmGcVmListener(String writerId, VmGcStatDAO vmGcStatDao, String vmId) {
         gcDAO = vmGcStatDao;
@@ -68,17 +70,48 @@ public class VmGcVmListener implements VmUpdateListener {
 
     void recordGcStat(VmGcDataExtractor extractor) {
         try {
-            long collectors = extractor.getTotalCollectors();
-            for (int i = 0; i < collectors; i++) {
-                long timestamp = System.currentTimeMillis();
-                VmGcStat stat = new VmGcStat(writerId, vmId, timestamp,
-                        extractor.getCollectorName(i),
-                        extractor.getCollectorInvocations(i),
-                        extractor.getCollectorTime(i));
-                gcDAO.putVmGcStat(stat);
+            Long collectors = extractor.getTotalCollectors();
+            if (collectors != null) {
+                for (int i = 0; i < collectors; i++) {
+                    long timestamp = System.currentTimeMillis();
+                    String name = extractor.getCollectorName(i);
+                    if (name != null) {
+                        Long invocations = extractor.getCollectorInvocations(i);
+                        if (invocations != null) {
+                            Long time = extractor.getCollectorTime(i);
+                            if (time != null) {
+                                VmGcStat stat = new VmGcStat(writerId, vmId, timestamp,
+                                        name, invocations, time);
+                                gcDAO.putVmGcStat(stat);
+                            }
+                            else {
+                                logWarningOnce("Unable to determine time spent by collector " 
+                                        + i + " for VM " + vmId);
+                            }
+                        }
+                        else {
+                            logWarningOnce("Unable to determine number of invocations of collector " 
+                                    + i + " for VM " + vmId);
+                        }
+                    }
+                    else {
+                        logWarningOnce("Unable to determine name of collector " + i + " for VM " + vmId);
+                    }
+                }
+            }
+            else {
+                logWarningOnce("Unable to determine number of collectors for VM " + vmId);
             }
         } catch (VmUpdateException e) {
-            logger.log(Level.WARNING, "error gathering gc info for vm " + vmId, e);
+            logger.log(Level.WARNING, "Error gathering GC info for VM " + vmId, e);
+        }
+    }
+    
+    private void logWarningOnce(String message) {
+        if (!error) {
+            logger.log(Level.WARNING, message);
+            logger.log(Level.WARNING, "Further warnings will be ignored");
+            error = true;
         }
     }
 
