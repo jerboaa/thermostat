@@ -50,10 +50,25 @@
 
   <name>Thermostat Integration Tests (parent)</name>
 
-  <modules>
-    <module>itest-run</module>
-    <module>standalone</module>
-  </modules>
+  <!-- Modules are in a profile section since we only
+       want to include integration-tests if maven
+       tests aren't skipped :)
+       -->
+  <profiles>
+    <profile>
+      <id>skip-itest-modules-on-skip-tests</id>
+      <activation>
+        <property>
+          <name>maven.test.skip</name>
+          <value>!true</value>
+        </property>
+      </activation>
+      <modules>
+        <module>itest-run</module>
+        <module>standalone</module>
+      </modules>
+    </profile>
+  </profiles>
 
 </project>
 
