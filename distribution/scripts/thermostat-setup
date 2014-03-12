@@ -1,0 +1,454 @@
+#!/bin/bash
+#
+# Copyright 2012-2014 Red Hat, Inc.
+#
+# This file is part of Thermostat.
+#
+# Thermostat is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published
+# by the Free Software Foundation; either version 2, or (at your
+# option) any later version.
+#
+# Thermostat is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Thermostat; see the file COPYING.  If not see
+# <http://www.gnu.org/licenses/>.
+#
+# Linking this code with other modules is making a combined work
+# based on this code.  Thus, the terms and conditions of the GNU
+# General Public License cover the whole combination.
+#
+# As a special exception, the copyright holders of this code give
+# you permission to link this code with independent modules to
+# produce an executable, regardless of the license terms of these
+# independent modules, and to copy and distribute the resulting
+# executable under terms of your choice, provided that you also
+# meet, for each linked independent module, the terms and conditions
+# of the license of that module.  An independent module is a module
+# which is not derived from or based on this code.  If you modify
+# this code, you may extend this exception to your version of the
+# library, but you are not obligated to do so.  If you do not wish
+# to do so, delete this exception statement from your version.
+#
+#####################################################################
+#
+# Setup utility script in order to assist users in setting up
+# mongodb credentials and set web.xml accordingly.
+# 
+# Upon a new install of thermostat it will not run any command
+# until this setup utility has been run. Upon completion this
+# script creates a STAMP file in $USER_THERMOSTAT_HOME, namely:
+# $USER_THERMOSTAT_HOME/data/setup-complete.stamp
+# If the file was created by this utility, it will have content
+# similar to:
+# "Created by thermostat-setup on YYYY-MM-DD-hh:mm:ss"
+# 
+# Since this script merely uses thermostat commands for setting
+# up the mongodb user, this causes a chicken-and-egg problem.
+# We work around this by temporily creating an empty
+# setup-complete-file and replacing it by the real file upon
+# successful completion.
+
+# For debugging
+#set -xv
+
+# Interruptions are failures
+trap exitFail SIGINT
+
+displayThermostatBlurb() {
+  cat <<EOF
+
+Thermostat Basics:
+
+Thermostat is a database backed distributed monitoring
+solution with support for monitoring multiple JVM instances.
+The system is made up of three (3) components:
+
+  1. Agents which collect data.
+  2. Clients, which allow users to visualize collected data.
+  3. Storage layer which connects the above componets.
+
+The storage layer itself is two-tiered. The endpoint agents
+and clients communicate with is a web application which uses
+Mongodb as a backing database.
+
+This script helps with a setup where all three components
+run on a local system. In particular, it helps with the setup
+of the storage layer. First, a user is set up in mongodb which
+the web endpoint will use for database connections. Second,
+the web endpoint's servlet config is updated so as to use the
+credentials of this database user.
+
+Please see the Thermostat User Guide for more information on
+how to connect clients and agents to the pre-configured storage
+layer:
+http://icedtea.classpath.org/wiki/Thermostat/UserGuide
+
+-------------------------------------------------------------
+
+EOF
+}
+
+setThermostatEnvironment() {
+  # Thermostat home
+  if [ "x$THERMOSTAT_HOME" = "x" ] ; then
+    THERMOSTAT_HOME="@thermostat.home@"
+  fi
+  export THERMOSTAT_HOME
+  # Thermostat user home
+  if [ "x$USER_THERMOSTAT_HOME" = "x" ]; then
+    USER_THERMOSTAT_HOME="$HOME/.thermostat"
+  fi
+  export USER_THERMOSTAT_HOME
+  THERMOSTAT="$THERMOSTAT_HOME/bin/thermostat"
+}
+
+setStampCompleteVars() {
+  scriptName="$(basename $0)"
+  timestamp="$(date '+%Y-%m-%d-%H:%M:%S %Z')"
+  SETUP_TMP_UNLOCK_CONTENT="Temporarily unlocked thermostat via $scriptName on $timestamp"
+  SETUP_UNLOCK_CONTENT_REGULAR="Created by $scriptName on $timestamp"
+  SETUP_UNLOCK_CONTENT_READ_ONLY_WEBXML="Created by $scriptName on $timestamp (web.xml read-only)"
+}
+
+exitFail() {
+  # Remove temp stamp file if we've created it
+  # in this script already, but failed somewhere
+  # down the line.
+  removeTempStampFile
+  cleanupSedFiles
+  echo 'Thermostat setup failed!' 1>&2
+  exit 1
+}
+
+removeTempStampFile() {
+  if [ ! -z "$SETUP_TMP_UNLOCK_CONTENT" ] && 
+     [ ! -z "$SETUP_COMPLETE_FILE" ] && 
+     [ -e $SETUP_COMPLETE_FILE ] &&
+     grep -s "$SETUP_TMP_UNLOCK_CONTENT" "$SETUP_COMPLETE_FILE" > /dev/null; then
+    rm "$SETUP_COMPLETE_FILE"
+  fi
+}
+
+cleanupSedFiles() {
+  if [ ! -z "$SED_FILES_DIR" ] && 
+     [ -e $SED_FILES_DIR ]; then
+    rm -rf "$SED_FILES_DIR"
+  fi
+}
+
+exitSuccess() {
+  # Remove temporary unlock file and create the actual setup-complete
+  # file.
+  removeTempStampFile
+  cleanupSedFiles
+  echo $SETUP_UNLOCK_CONTENT_REGULAR > "$SETUP_COMPLETE_FILE"
+  echo -e "\nThermostat setup complete!\n"
+  echo -e "Be sure to configure thermostat-users.properties and"
+  echo -e "thermostat-roles.properties before you attempt connections"
+  echo -e "with agent(s) and/or client(s)."
+  exit 0
+}
+
+exitSuccessNotWritable() {
+  # Remove temporary unlock file. Note, we intentionally
+  # do not clean up the sed files, since the user might
+  # want to use them still.
+  removeTempStampFile
+  # Create successful stamp file with note that
+  # web.xml might not have been properly set up.
+  echo $SETUP_UNLOCK_CONTENT_READ_ONLY_WEBXML > "$SETUP_COMPLETE_FILE"
+  echo "Thermostat setup complete!"
+  echo -e "\nBe sure to configure $TH_WEB_INF as mentioned above."
+  echo -e "\nThen, make sure to configure thermostat-users.properties and"
+  echo -e "thermostat-roles.properties before you attempt connections"
+  echo -e "with agent(s) and/or client(s)."
+  exit 0
+}
+
+unlockThermostat() {
+  setThermostatEnvironment
+  setStampCompleteVars
+  SETUP_COMPLETE_FILE="$USER_THERMOSTAT_HOME/data/setup-complete.stamp"
+  if [ -e "$SETUP_COMPLETE_FILE" ]; then
+    echo "File $SETUP_COMPLETE_FILE exists. Skipping setup!"
+    exit 0
+  fi
+  echo "$SETUP_TMP_UNLOCK_CONTENT" > "$SETUP_COMPLETE_FILE"
+}
+
+runSetup() {
+  unlockThermostat
+  setupMongodbUser
+  # Location of the exploded web archive. We need this
+  # in order to be able to inject mongodb user credentials
+  # in there. Allow THERMOSTAT_WEBAPP_LOCATION to be set
+  # as env variable. This allows for running setup on
+  # packaged thermostat.
+  if [ "x$THERMOSTAT_WEBAPP_LOCATION" = "x" ]; then
+    # Expecting an upstream build where THERMOSTAT_HOME is
+    # distribution/target/image. The web archive gets copied
+    # as an exploded archive to the webapp subdir of the
+    # image.
+    default_webapp="$THERMOSTAT_HOME/webapp"
+    THERMOSTAT_WEBAPP_LOCATION="$(readlink -f $default_webapp)"
+  fi
+  TH_WEB_INF="$THERMOSTAT_WEBAPP_LOCATION/WEB-INF/web.xml"
+  
+  if [ ! -e $TH_WEB_INF ]; then
+    echo "File not found: $TH_WEB_INF" 1>&2
+    exitFail
+  fi
+
+  # We use this var for cleaning up after sed has run and
+  # the script exits.
+  SED_FILES_DIR="$(mktemp -d)"
+  setSedExprs "storage.username" "$USERNAME"
+  writeSedFiles "$SED_FILES_DIR" "storage.username"
+  SED_CMD_USER1="sed -i -f $SED_FILE_UNCOMMENTED $TH_WEB_INF"
+  SED_CMD_USER2="sed -i -f $SED_FILE_COMMENTED $TH_WEB_INF"
+
+  setSedExprs "storage.password" "$PASSWORD"
+  writeSedFiles "$SED_FILES_DIR" "storage.password"
+  SED_CMD_PWD1="sed -i -f $SED_FILE_UNCOMMENTED $TH_WEB_INF"
+  SED_CMD_PWD2="sed -i -f $SED_FILE_COMMENTED $TH_WEB_INF"
+
+  if [ ! -w $TH_WEB_INF ]; then
+    local sed_one_line_user="$SED_CMD_USER1 && $SED_CMD_USER2"
+    local sed_one_line_pwd="$SED_CMD_PWD1 && $SED_CMD_PWD2"
+    echo -e "\n\nWARNING: $(readlink -f $TH_WEB_INF) is NOT writable.\n"
+    echo -e "You have the following options:\n"
+    echo -e "  1. Run the following command(s) as root:"
+    echo -e "     #> $sed_one_line_user"
+    echo -e "     #> $sed_one_line_pwd"
+    echo -e "     #> rm -r $SED_FILES_DIR"
+    echo -e "  2. Modify the file manually and add the following"
+    echo -e "     credentials config snippet (in 'servlet'):"
+    echo -e "     <init-param>"
+    echo -e "       <param-name>storage.username</param-name>"
+    echo -e "       <param-value>$USERNAME</param-value>"
+    echo -e "     </init-param>"
+    echo -e "     <init-param>"
+    echo -e "       <param-name>storage.password</param-name>"
+    echo -e "       <param-value>$PASSWORD</param-value>"
+    echo -e "     </init-param>"
+    echo -e "     The file in which you need to put this snippet"
+    echo -e "     is:"
+    echo -e "     $TH_WEB_INF"
+    exitSuccessNotWritable
+  else
+    # Run the sed command(s)
+    local sedSuccess=0
+    $SED_CMD_USER1 && $SED_CMD_USER2
+    sedSuccess=$(( $sedSuccess + $? ))
+    $SED_CMD_PWD1 && $SED_CMD_PWD2
+    sedSuccess=$(( $sedSuccess + $? ))
+    if [ $sedSuccess -eq 0 ]; then
+      exitSuccess
+    else
+      echo "Automatic substitution of file $TH_WEB_INF failed!" 1>&2
+      exitFail
+    fi
+  fi
+}
+
+writeSedFiles() {
+  local tmpDir="$1"
+  local paramName="$2"
+  SED_FILE_UNCOMMENTED="$tmpDir/uncommented-${paramName}.sed"
+  SED_FILE_COMMENTED="$tmpDir/commented-${paramName}.sed"
+  echo "$SED_EXPR_COMMENTED" > $SED_FILE_COMMENTED
+  echo "$SED_EXPR_UNCOMMENTED" > $SED_FILE_UNCOMMENTED
+}
+
+setSedExprs() {
+  local paramName=$1
+  local paramVal=$2
+  setSedExprUnCommented "$paramName" "$paramVal"
+  setSedExprCommented "$paramName" "$paramVal"
+}
+
+setSedExprCommented() {
+  local paramName=$1
+  local paramVal=$2
+  SED_EXPR_COMMENTED="
+  # Finds pattern A and replaces it with B.
+  #
+  # Pattern A is something like the following:
+  #   <!--
+  #   <init-param>
+  #     <param-name>storage.username</param-name>
+  #     <param-value>something</param-value>
+  #   </init-param>
+  #   -->
+  #
+  # Replacement (B) would then be:
+  #
+  # <init-param>
+  #   <param-name>storage.username</param-name>
+  #   <param-value>foo-bar</param-value>
+  # </init-param>
+  #
+  # In essence it removes the comments and sets
+  # the param value we want.
+  #
+  /<[!]--/ {
+    N
+    /<init-param>/ {
+      N
+      /<param-name>$paramName<[/]param-name>/ {
+        N
+        /<param-value>.*<[/]param-value>/ {
+          N
+          /<[/]init-param>/ {
+            N
+            /-->/ {
+              N
+              # Do the substitution with all matching lines in
+              # current buffer
+              s%.*<[!]--\n.*<init-param>\n.*<param-name>$paramName<[/]param-name>\n.*<param-value>.*<[/]param-value>.*<[/]init-param>.*-->%<init-param>\n<param-name>$paramName</param-name>\n<param-value>$paramVal</param-value>\n</init-param>%
+            }
+          }
+        }
+      }
+    }
+  }"
+}
+
+setSedExprUnCommented() {
+  paramName=$1
+  paramVal=$2
+  SED_EXPR_UNCOMMENTED="
+  # Finds pattern C and replaces it with D.
+  #
+  # Pattern C is something like the following:
+  #   <init-param>
+  #     <param-name>storage.username</param-name>
+  #     <param-value>something</param-value>
+  #   </init-param>
+  #
+  # Replacement (D) would then be:
+  #
+  # <init-param>
+  #   <param-name>storage.username</param-name>
+  #   <param-value>foo-bar</param-value>
+  # </init-param>
+  #
+  # I.e. it changes the username to what we'd
+  # like it to be. If that section is already
+  # in place (not commented out)
+  #
+  /<init-param>/ {
+    N
+    /<param-name>$paramName<[/]param-name>/ {
+      N
+      /<param-value>.*<[/]param-value>/ {
+        N
+        /<[/]init-param>/ {
+          N
+          # Do the substitution with all matching lines in
+          # current buffer
+          s%.*<init-param>\n.*<param-name>$paramName<[/]param-name>\n.*<param-value>.*<[/]param-value>.*<[/]init-param>%<init-param>\n<param-name>$paramName</param-name>\n<param-value>$paramVal</param-value>\n</init-param>%
+        }
+      }
+    }
+  }"
+}
+
+readUsername() {
+  dUsername="$1"
+  prompt="Please enter the desired Mongodb username (press return in order to use '$dUsername'): "
+  read -p "$prompt" USERNAME 
+  if [ "x$USERNAME" = "x" ]; then
+    USERNAME="$dUsername"
+  fi
+  echo "Chosen username is '$USERNAME'"
+}
+
+# Read in the desired password, not permitting
+# empty passwords.
+readFirstPassword() {
+  prompt="Please enter the desired password for user '$USERNAME': "
+  while true; do
+    read -s -p "$prompt" PASSWORD 
+    if [ "x$PASSWORD" = "x" ]; then
+      echo -e "\nPassword must not be empty. Please try again."
+    else
+      echo # Formatting
+      break
+    fi
+  done
+}
+
+# Read in the password confirmation
+confirmReadPassword() {
+  firstTry="$1"
+  prompt="Please confirm password for user '$USERNAME': "
+  read -s -p "$prompt" confirmedPwd 
+  # Passwords cannot be empty
+  if [ "$firstTry" != "$confirmedPwd" ]; then
+    echo -e "\nPasswords did not match. Please try again."
+    PASSWORDS_MATCH="no"
+  else
+    PASSWORDS_MATCH="yes"
+  fi
+}
+
+readPassword() {
+  while true; do
+    readFirstPassword
+    confirmReadPassword "$PASSWORD"
+    if [ "x$PASSWORDS_MATCH" = "xyes" ]; then
+      break;
+    fi
+  done
+}
+
+setupMongodbUser() {
+  # Generate some form of a random default username
+  defaultName="thermostat-user-$(date +%s)"
+  echo -e "\nStarting Mongodb user setup ...\n"
+  echo -e "Next, you are required to enter the username/password,"
+  echo -e "which the web storage endpoint will use for mongodb"
+  echo -e "connections.\n"
+  readUsername "$defaultName"
+  readPassword
+  setupCmdName="add-mongodb-user -s"
+  output="$(echo -e $USERNAME\\n$PASSWORD\\n | $THERMOSTAT $setupCmdName 2>&1)"
+  # The above should have created the mongodb stamp file
+  monogdbSetupStampFile="$USER_THERMOSTAT_HOME/data/mongodb-user-done.stamp"
+  if [ ! -e "$monogdbSetupStampFile" ] ||
+    ! echo $output | grep -s "setup complete" > /dev/null; then
+    echo -e "\nMongodb user setup failed." 1>&2
+    exitFail
+  fi
+}
+
+doProceedLoop() {
+  DO_SETUP=1
+  while true; do
+    read -p "Ready to proceed? Please type 'yes' or 'no': " RESPONSE
+    if [ "x$RESPONSE" = "xyes" ]; then
+      break
+    elif [ "x$RESPONSE" = "xno" ]; then
+      DO_SETUP=0
+      break
+    else
+      echo "Unknown response. Please only type 'yes' or 'no'"
+    fi
+  done
+}
+
+displayThermostatBlurb 
+doProceedLoop
+
+if [ $DO_SETUP -eq 0 ]; then
+  echo "Exiting on user request. Bye!"
+  exit 0
+else
+  runSetup
+fi
