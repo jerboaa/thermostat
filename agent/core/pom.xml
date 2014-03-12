@@ -67,7 +67,6 @@
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
-
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-common-core</artifactId>
@@ -92,12 +91,6 @@
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-osgi-process-handler</artifactId>
       <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-common-test</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.osgi</groupId>
