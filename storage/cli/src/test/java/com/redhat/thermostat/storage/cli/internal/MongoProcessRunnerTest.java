@@ -26,6 +26,7 @@ public class MongoProcessRunnerTest {
     private DBStartupConfiguration config;
     private static final String NO_JOURNAL_MONGODB_VERSION = "2.0.0";
     private static final String JOURNAL_MONGODB_VERSION = "1.8.0";
+    private static final String NO_LOCALHOST_EXCPTN_VERSION = "2.2.0";
     private static final String BIND_IP = "127.0.0.1";
     private static final long PORT = 12456;
     
@@ -40,7 +41,7 @@ public class MongoProcessRunnerTest {
         when(config.getDBPath()).thenReturn(dbPath);
         when(config.getLogFile()).thenReturn(logPath);
         when(config.getPidFile()).thenReturn(pidFile);
-        runner = new MongoProcessRunner(config, false);
+        runner = new MongoProcessRunner(config, false, false);
     }
     
     @After
@@ -71,6 +72,57 @@ public class MongoProcessRunnerTest {
                 config.getPidFile().getCanonicalPath(), "--port",
                 Long.toString(config.getPort()) };
         List<String> cmds = runner.getStartupCommand(JOURNAL_MONGODB_VERSION);
+        String[] actual = cmds.toArray(new String[0]);
+        verifyEquals(expected, actual);
+    }
+    
+    @Test
+    public void testLocalhostExcptn() throws Exception {
+        String[] expected = { "mongod", "--nojournal", "--quiet", "--fork", "--auth",
+                "--nohttpinterface", "--bind_ip", config.getBindIP(),
+                "--dbpath", config.getDBPath().getCanonicalPath(), "--logpath",
+                config.getLogFile().getCanonicalPath(), "--pidfilepath",
+                config.getPidFile().getCanonicalPath(), "--port",
+                Long.toString(config.getPort()),
+                "--setParameter", "enableLocalhostAuthBypass=0"};
+        
+        List<String> cmds = runner.getStartupCommand(MongoProcessRunner.LOCALHOST_EXPTN_FIRST_VERSION);
+        String[] actual = cmds.toArray(new String[0]);
+        verifyEquals(expected, actual);
+    }
+    
+    /*
+     * Tests whether the localhost exception parameter is *not* set even
+     * though the mongod version would technically support it. Equivalent
+     * of passing --permitLocalhostException to "thermostat storage --start".
+     * 
+     * Having this flag is useful for testing.
+     */
+    @Test
+    public void testLocalhostExcptnDisabled() throws Exception {
+        runner = new MongoProcessRunner(config, false, true);
+        String[] expected = { "mongod", "--nojournal", "--quiet", "--fork", "--auth",
+                "--nohttpinterface", "--bind_ip", config.getBindIP(),
+                "--dbpath", config.getDBPath().getCanonicalPath(), "--logpath",
+                config.getLogFile().getCanonicalPath(), "--pidfilepath",
+                config.getPidFile().getCanonicalPath(), "--port",
+                Long.toString(config.getPort())};
+        
+        List<String> cmds = runner.getStartupCommand(MongoProcessRunner.LOCALHOST_EXPTN_FIRST_VERSION);
+        String[] actual = cmds.toArray(new String[0]);
+        verifyEquals(expected, actual);
+    }
+    
+    @Test
+    public void testLocalhostExcptnNotSupported() throws Exception {
+        String[] expected = { "mongod", "--nojournal", "--quiet", "--fork", "--auth",
+                "--nohttpinterface", "--bind_ip", config.getBindIP(),
+                "--dbpath", config.getDBPath().getCanonicalPath(), "--logpath",
+                config.getLogFile().getCanonicalPath(), "--pidfilepath",
+                config.getPidFile().getCanonicalPath(), "--port",
+                Long.toString(config.getPort())};
+        
+        List<String> cmds = runner.getStartupCommand(NO_LOCALHOST_EXCPTN_VERSION);
         String[] actual = cmds.toArray(new String[0]);
         verifyEquals(expected, actual);
     }

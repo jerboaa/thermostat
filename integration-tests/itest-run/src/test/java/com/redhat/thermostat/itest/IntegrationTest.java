@@ -147,7 +147,7 @@ public class IntegrationTest {
     public static Spawn startStorage() throws Exception {
         clearStorageDataDirectory();
 
-        Spawn storage = spawnThermostat("storage", "--start");
+        Spawn storage = spawnThermostat("storage", "--start", "--permitLocalhostException");
         try {
             storage.expect("pid:");
         } catch (IOException e) {

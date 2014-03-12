@@ -83,7 +83,7 @@ public class ServiceCommand extends AbstractCommand implements ActionListener<Ap
             throw new CommandException(translator.localize(LocaleResources.LAUNCHER_UNAVAILABLE));
         }
         launcher = (Launcher) context.getService(launcherRef);
-        String[] storageStartArgs = new String[] { "storage", "--start" };
+        String[] storageStartArgs = new String[] { "storage", "--start", "--permitLocalhostException"};
         launcher.run(storageStartArgs, listeners, false);
         agentBarrier.acquireUninterruptibly();
         

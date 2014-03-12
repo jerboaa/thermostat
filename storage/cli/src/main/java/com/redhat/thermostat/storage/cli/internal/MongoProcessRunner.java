@@ -83,14 +83,17 @@ public class MongoProcessRunner {
 
     private static final String NO_JOURNAL_ARGUMENT = "--nojournal";
     static final String NO_JOURNAL_FIRST_VERSION = "1.9.2";
+    static final String LOCALHOST_EXPTN_FIRST_VERSION = "2.4.0";
 
     private DBStartupConfiguration configuration;
-    private boolean isQuiet;
     private Integer pid;
+    private final boolean isQuiet;
+    private final boolean permitLocalhostExpn;
     
-    public MongoProcessRunner(DBStartupConfiguration configuration, boolean quiet) {
+    public MongoProcessRunner(DBStartupConfiguration configuration, boolean quiet, boolean permitLocalhostException) {
         this.configuration = configuration;
         this.isQuiet = quiet;
+        this.permitLocalhostExpn = permitLocalhostException;
     }
 
     private boolean checkPid() {
@@ -277,6 +280,12 @@ public class MongoProcessRunner {
             commands.add(configuration.getSslPemFile().getCanonicalPath());
             commands.add("--sslPEMKeyPassword");
             commands.add(configuration.getSslKeyPassphrase());
+        }
+        
+        if (!permitLocalhostExpn && 
+                dbVersion.compareTo(LOCALHOST_EXPTN_FIRST_VERSION) >= 0) {
+            commands.add("--setParameter");
+            commands.add("enableLocalhostAuthBypass=0");
         }
         
         return commands;

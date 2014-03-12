@@ -48,6 +48,8 @@ public class DBOptionParser implements ThermostatOptionParser {
 
     private boolean quiet;
     
+    private boolean localhostExceptionAllowed;
+    
     private DBStartupConfiguration configuration;
     
     private Arguments args;
@@ -72,6 +74,10 @@ public class DBOptionParser implements ThermostatOptionParser {
             serviceAction = DBArgs.STATUS;
         } else {
             throw new InvalidConfigurationException(translator.localize(LocaleResources.COMMAND_STORAGE_ARGUMENT_REQUIRED));
+        }
+        
+        if (args.hasArgument(DBArgs.USE_LOCALHOST_EXPN.option)) {
+            localhostExceptionAllowed = true;
         }
 
         if (args.hasArgument(DBArgs.DRY.option)) {
@@ -107,7 +113,9 @@ public class DBOptionParser implements ThermostatOptionParser {
         
         QUIET("quiet"),
         
-        STATUS("status");
+        STATUS("status"),
+        
+        USE_LOCALHOST_EXPN("permitLocalhostException");
         
         private String option;
         
@@ -118,6 +126,10 @@ public class DBOptionParser implements ThermostatOptionParser {
 
     public boolean isQuiet() {
         return quiet;
+    }
+    
+    public boolean isLocalHostExceptionAllowed() {
+        return localhostExceptionAllowed;
     }
 }
 

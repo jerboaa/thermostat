@@ -195,7 +195,7 @@ public class StorageCommand extends AbstractStateNotifyingCommand {
     }
     
     MongoProcessRunner createRunner() {
-        return new MongoProcessRunner(configuration, parser.isQuiet());
+        return new MongoProcessRunner(configuration, parser.isQuiet(), parser.isLocalHostExceptionAllowed());
     }
 
     public DBStartupConfiguration getConfiguration() {

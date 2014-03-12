@@ -77,7 +77,7 @@ public class ServiceCommandTest {
     private static ActionEvent<ApplicationState> mockActionEvent;
     private static Collection<ActionListener<ApplicationState>> listeners;
 
-    private static final String[] STORAGE_START_ARGS = { "storage", "--start" };
+    private static final String[] STORAGE_START_ARGS = { "storage", "--start", "--permitLocalhostException" };
     private static final String[] STORAGE_STOP_ARGS = { "storage", "--stop" };
     private static final String[] AGENT_ARGS = {"agent", "-d", "Test String"};
     
