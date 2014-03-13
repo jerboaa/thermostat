@@ -72,6 +72,8 @@ import com.redhat.thermostat.storage.core.PreparedStatementFactory;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Replace;
+import com.redhat.thermostat.storage.core.SchemaInfo;
+import com.redhat.thermostat.storage.core.SchemaInfoInserter;
 import com.redhat.thermostat.storage.core.Statement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StorageCredentials;
@@ -87,7 +89,7 @@ import com.redhat.thermostat.storage.query.Expression;
  *
  * In this implementation, each CATEGORY is given a distinct collection.
  */
-public class MongoStorage implements BackingStorage {
+public class MongoStorage implements BackingStorage, SchemaInfoInserter {
     
     private class MongoCountQuery<T extends Pojo> extends AggregateQuery<T> {
         
@@ -302,6 +304,7 @@ public class MongoStorage implements BackingStorage {
                 case CONNECTED:
                     // Main success entry point
                     db = conn.getDB();
+                    createSchemaInfo();
                     // This is important. See comment in registerCategory().
                     connectedLatch.countDown();
                     break;
@@ -474,7 +477,10 @@ public class MongoStorage implements BackingStorage {
             }
 
             DBCollection coll;
-            if (! db.collectionExists(name)) {
+            Boolean isSchemaInfo = SchemaInfo.CATEGORY.getName().equals(category.getName());
+            
+            // Check if category is SchemaInfo, in this case it doesn't need to create this collection
+            if ( !isSchemaInfo && !db.collectionExists(name)) {
                 coll = db.createCollection(name, new BasicDBObject("capped", false));
                 for (Key<?> key: category.getIndexedKeys()) {
                     coll.ensureIndex(key.getName());
@@ -483,6 +489,9 @@ public class MongoStorage implements BackingStorage {
                 coll = db.getCollection(name);
             }
             collectionCache.put(name, coll);
+            if(!isSchemaInfo) {
+                insertSchemaInfo(category);
+            }
         } catch (MongoException me) {
             throw new StorageException(me);
         }
@@ -596,6 +605,25 @@ public class MongoStorage implements BackingStorage {
             throw new IllegalStateException("function not supported: "
                     + function);
         }
+    }
+
+    @Override
+    public void createSchemaInfo() {
+        if (!db.collectionExists(SchemaInfo.CATEGORY.getName())) {
+            db.createCollection(SchemaInfo.CATEGORY.getName(), new BasicDBObject("capped", false));
+        }
+    }
+
+    @Override
+    public <T extends Pojo> void insertSchemaInfo(Category<T> category) {
+        DBCollection coll = db.getCollection(SchemaInfo.CATEGORY.getName());
+        
+        BasicDBObject categoryInfo = new BasicDBObject();
+        categoryInfo.put(SchemaInfo.NAME.getName(), category.getName());
+        categoryInfo.put(Key.TIMESTAMP.getName(), System.currentTimeMillis());
+        coll.update(new BasicDBObject(SchemaInfo.NAME.getName(), category.getName()),
+                    new BasicDBObject("$setOnInsert", categoryInfo), true, false);
+        
     }
 
 }

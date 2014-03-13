@@ -34,38 +34,67 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.internal.dao;
+package com.redhat.thermostat.storage.model;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Objects;
 
-import com.redhat.thermostat.storage.core.SchemaInfo;
-import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.dao.BackendInfoDAO;
-import com.redhat.thermostat.storage.dao.HostInfoDAO;
-import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
-import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.core.Entity;
+import com.redhat.thermostat.storage.core.Persist;
 
-/**
- * Registers the category used by this maven module. The web storage
- * endpoint only allows categories to be registered which it knows of
- * ahead of time.
- *
- */
-public class DAOImplCategoryRegistration implements CategoryRegistration {
+@Entity
+public class SchemaInformation implements TimeStampedPojo {
 
-    @Override
-    public Set<String> getCategoryNames() {
-        Set<String> categories = new HashSet<>(5);
-        categories.add(HostInfoDAO.hostInfoCategory.getName());
-        categories.add(AgentInfoDAO.CATEGORY.getName());
-        categories.add(VmInfoDAO.vmInfoCategory.getName());
-        categories.add(BackendInfoDAO.CATEGORY.getName());
-        categories.add(NetworkInterfaceInfoDAO.networkInfoCategory.getName());
-        categories.add(SchemaInfo.CATEGORY.getName());
-        return categories;
+    private String categoryName;
+    private long timeStamp;
+    
+    public SchemaInformation() {
     }
-
+    
+    @Persist
+    public String getCategoryName() {
+        return categoryName;
+    }
+    
+    @Persist
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
+    }
+    
+    @Persist
+    public long getTimeStamp() {
+        return this.timeStamp;
+    }
+    
+    @Persist
+    public void setTimeStamp(long timeStamp) {
+        this.timeStamp = timeStamp;
+    }
+    
+    @Override
+    public String toString() {
+        return "name: " + getCategoryName() + "; timestamp: " + getTimeStamp();
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof SchemaInformation)) {
+            return false;
+        }
+        
+        SchemaInformation other = (SchemaInformation) obj;
+        return Objects.equals(this.categoryName, other.categoryName) &&
+               Objects.equals(this.timeStamp, other.timeStamp);    
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hash(categoryName, timeStamp);
+    }
+    
 }
-

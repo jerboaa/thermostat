@@ -81,7 +81,7 @@ public class KnownDescriptorRegistryTest {
         // storage-core registers 22 descriptors; this module has
         // only storage-core as maven dep which registers queries.
         // see DAOImplStatementDescriptorRegistration
-        assertEquals(22, trustedDescs.size());
+        assertEquals(23, trustedDescs.size());
     }
     
     @Test

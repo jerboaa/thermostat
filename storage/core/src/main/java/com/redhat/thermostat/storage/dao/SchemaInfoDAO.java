@@ -34,38 +34,34 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.internal.dao;
+package com.redhat.thermostat.storage.dao;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Collection;
 
-import com.redhat.thermostat.storage.core.SchemaInfo;
-import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.dao.BackendInfoDAO;
-import com.redhat.thermostat.storage.dao.HostInfoDAO;
-import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
-import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.annotations.Service;
+import com.redhat.thermostat.storage.model.SchemaInformation;
 
-/**
- * Registers the category used by this maven module. The web storage
- * endpoint only allows categories to be registered which it knows of
- * ahead of time.
- *
+/*
+ * BakingStorage has responsibility to create the collection this DAO use for queries because:
+ * - schema-info is a special collection/category.
+ * - This DAO can be used from clients.
+ * - The DAO should work also when schema-info collection doesn't exist.
+ * - Problem with creating collection.
+ * - Need a valid Storage instance.
  */
-public class DAOImplCategoryRegistration implements CategoryRegistration {
-
-    @Override
-    public Set<String> getCategoryNames() {
-        Set<String> categories = new HashSet<>(5);
-        categories.add(HostInfoDAO.hostInfoCategory.getName());
-        categories.add(AgentInfoDAO.CATEGORY.getName());
-        categories.add(VmInfoDAO.vmInfoCategory.getName());
-        categories.add(BackendInfoDAO.CATEGORY.getName());
-        categories.add(NetworkInterfaceInfoDAO.networkInfoCategory.getName());
-        categories.add(SchemaInfo.CATEGORY.getName());
-        return categories;
-    }
+/**
+ * A data access object for retrieving {@link SchemaInformation} about 
+ * {@link Category}s in Storage.
+ */
+@Service
+public interface SchemaInfoDAO {
+    /**
+     * Get all category's names stored in schema-info.
+     * 
+     * @return a {@link Collection} of {@link SchemaInformation} for all registered
+     * categories in schema-info.It will be empty if there is no categories or 
+     * no schema-info collection
+     */
+    Collection<SchemaInformation> getSchemaInfos();
 
 }
-

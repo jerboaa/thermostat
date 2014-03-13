@@ -41,21 +41,58 @@
 
   <parent>
     <groupId>com.redhat.thermostat</groupId>
-    <artifactId>thermostat</artifactId>
+    <artifactId>thermostat-schema-info</artifactId>
     <version>1.1.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>thermostat-devel-modules</artifactId>
+  <artifactId>thermostat-schema-info-distribution</artifactId>
   <packaging>pom</packaging>
 
-  <name>Thermostat Development Modules</name>
+  <name>Thermostat Schema Information plugin distribution</name>
+  
+  <properties>
+    <thermostat.plugin>schema-info</thermostat.plugin>
+  </properties>
 
-  <modules>
-    <module>archetype-ext</module>
-    <module>multi-module-plugin-archetype</module>
-    <module>ide-launcher</module>
-    <module>schema-info-command</module>
-  </modules>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <dependencies>
+          <dependency>
+            <groupId>com.redhat.thermostat</groupId>
+            <artifactId>thermostat-assembly</artifactId>
+            <version>${project.version}</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <descriptorRefs>
+            <descriptorRef>plugin-assembly</descriptorRef>
+          </descriptorRefs>
+          <appendAssemblyId>false</appendAssemblyId>
+        </configuration>
+        <executions>
+          <execution>
+            <id>assemble-plugin</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  
+  <!-- Explicitly list all plug-in artifacts, transitive dependencies
+       are not included in assembly. -->
+  <dependencies>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-schema-info-command</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
 
 </project>
 

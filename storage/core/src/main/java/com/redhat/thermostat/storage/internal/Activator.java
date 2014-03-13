@@ -54,11 +54,13 @@ import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
+import com.redhat.thermostat.storage.dao.SchemaInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.internal.dao.AgentInfoDAOImpl;
 import com.redhat.thermostat.storage.internal.dao.BackendInfoDAOImpl;
 import com.redhat.thermostat.storage.internal.dao.HostInfoDAOImpl;
 import com.redhat.thermostat.storage.internal.dao.NetworkInterfaceInfoDAOImpl;
+import com.redhat.thermostat.storage.internal.dao.SchemaInfoDAOImpl;
 import com.redhat.thermostat.storage.internal.dao.VmInfoDAOImpl;
 import com.redhat.thermostat.storage.monitor.HostMonitor;
 import com.redhat.thermostat.storage.monitor.NetworkMonitor;
@@ -96,9 +98,12 @@ public class Activator implements BundleActivator {
             public void dependenciesAvailable(Map<String, Object> services) {
                 
                 Storage storage = (Storage) services.get(Storage.class.getName());          
-                AgentInfoDAO agentInfoDao = new AgentInfoDAOImpl(storage);
+                SchemaInfoDAO schemaInfoDAO = new SchemaInfoDAOImpl(storage);
+                ServiceRegistration<?> reg = context.registerService(SchemaInfoDAO.class.getName(), schemaInfoDAO, null);
+                regs.add(reg);
                 
-                ServiceRegistration<?> reg = context.registerService(AgentInfoDAO.class.getName(), agentInfoDao, null);
+                AgentInfoDAO agentInfoDao = new AgentInfoDAOImpl(storage);
+                reg = context.registerService(AgentInfoDAO.class.getName(), agentInfoDao, null);
                 regs.add(reg);
                 
                 BackendInfoDAO backendInfoDao = new BackendInfoDAOImpl(storage);

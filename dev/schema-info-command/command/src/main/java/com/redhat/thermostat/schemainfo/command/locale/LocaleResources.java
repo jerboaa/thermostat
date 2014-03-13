@@ -34,37 +34,21 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.internal.dao;
+package com.redhat.thermostat.schemainfo.command.locale;
 
-import java.util.HashSet;
-import java.util.Set;
+import com.redhat.thermostat.shared.locale.Translate;
 
-import com.redhat.thermostat.storage.core.SchemaInfo;
-import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.dao.BackendInfoDAO;
-import com.redhat.thermostat.storage.dao.HostInfoDAO;
-import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
-import com.redhat.thermostat.storage.dao.VmInfoDAO;
+public enum LocaleResources {
+    
+    SCHEMAINFO_SERVICE_UNAVAILABLE,
+    NO_CATEGORIES,
+    ;
 
-/**
- * Registers the category used by this maven module. The web storage
- * endpoint only allows categories to be registered which it knows of
- * ahead of time.
- *
- */
-public class DAOImplCategoryRegistration implements CategoryRegistration {
+    static final String RESOURCE_BUNDLE =
+            "com.redhat.thermostat.schemainfo.locale.strings";
 
-    @Override
-    public Set<String> getCategoryNames() {
-        Set<String> categories = new HashSet<>(5);
-        categories.add(HostInfoDAO.hostInfoCategory.getName());
-        categories.add(AgentInfoDAO.CATEGORY.getName());
-        categories.add(VmInfoDAO.vmInfoCategory.getName());
-        categories.add(BackendInfoDAO.CATEGORY.getName());
-        categories.add(NetworkInterfaceInfoDAO.networkInfoCategory.getName());
-        categories.add(SchemaInfo.CATEGORY.getName());
-        return categories;
+    public static Translate<LocaleResources> createLocalizer() {
+        return new Translate(RESOURCE_BUNDLE, LocaleResources.class);
     }
 
 }

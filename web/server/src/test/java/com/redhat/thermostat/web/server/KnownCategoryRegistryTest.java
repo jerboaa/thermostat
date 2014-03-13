@@ -103,7 +103,7 @@ public class KnownCategoryRegistryTest {
         Set<String> actualRegs = reg.getRegisteredCategoryNames();
         assertNotNull(actualRegs);
         // storage-core registers them. no-other modules in classpath.
-        assertEquals(5, actualRegs.size());
+        assertEquals(6, actualRegs.size());
     }
     
     private static class TestCategoryRegistration implements CategoryRegistration {

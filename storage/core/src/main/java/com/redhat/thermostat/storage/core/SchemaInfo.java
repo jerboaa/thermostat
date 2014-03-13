@@ -34,38 +34,21 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.internal.dao;
+package com.redhat.thermostat.storage.core;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import com.redhat.thermostat.storage.core.SchemaInfo;
-import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.dao.BackendInfoDAO;
-import com.redhat.thermostat.storage.dao.HostInfoDAO;
-import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
-import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.SchemaInformation;
 
 /**
- * Registers the category used by this maven module. The web storage
- * endpoint only allows categories to be registered which it knows of
- * ahead of time.
- *
+ * An interface which contains shared information used in 
+ * {@link SchemaInfoDAO} and {@link SchemaInfoInserter}.
  */
-public class DAOImplCategoryRegistration implements CategoryRegistration {
-
-    @Override
-    public Set<String> getCategoryNames() {
-        Set<String> categories = new HashSet<>(5);
-        categories.add(HostInfoDAO.hostInfoCategory.getName());
-        categories.add(AgentInfoDAO.CATEGORY.getName());
-        categories.add(VmInfoDAO.vmInfoCategory.getName());
-        categories.add(BackendInfoDAO.CATEGORY.getName());
-        categories.add(NetworkInterfaceInfoDAO.networkInfoCategory.getName());
-        categories.add(SchemaInfo.CATEGORY.getName());
-        return categories;
-    }
+public interface SchemaInfo {
+    
+    static final Key<String> NAME = new Key<>("categoryName");
+    
+    static final Category<SchemaInformation> CATEGORY = new Category<>("schema-info", SchemaInformation.class,
+            Key.TIMESTAMP,
+            NAME
+            );
 
 }
-

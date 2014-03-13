@@ -38,24 +38,21 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-
   <parent>
     <groupId>com.redhat.thermostat</groupId>
-    <artifactId>thermostat</artifactId>
+    <artifactId>thermostat-devel-modules</artifactId>
     <version>1.1.0-SNAPSHOT</version>
   </parent>
-
-  <artifactId>thermostat-devel-modules</artifactId>
+  <artifactId>thermostat-schema-info</artifactId>
   <packaging>pom</packaging>
-
-  <name>Thermostat Development Modules</name>
-
+  
+  <name>Thermostat Schema Information</name>
+  
+  <description>Plugin to get all registered categories in Storage</description>
+  
   <modules>
-    <module>archetype-ext</module>
-    <module>multi-module-plugin-archetype</module>
-    <module>ide-launcher</module>
-    <module>schema-info-command</module>
+    <module>command</module>
+    <module>distribution</module>
   </modules>
-
 </project>
 

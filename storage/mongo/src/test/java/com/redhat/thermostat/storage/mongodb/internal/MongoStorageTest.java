@@ -95,6 +95,7 @@ import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Persist;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Replace;
+import com.redhat.thermostat.storage.core.SchemaInfo;
 import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
@@ -270,11 +271,11 @@ public class MongoStorageTest {
         
         // This adds a listener which we capture
         new MongoStorage(mockConnection);
-        
         ArgumentCaptor<ConnectionListener> captor = ArgumentCaptor.forClass(ConnectionListener.class);
         verify(mockConnection).addListener(captor.capture());
         ConnectionListener listener = captor.getValue();
         assertNotNull(listener);
+        when(mockConnection.getDB()).thenReturn(db);
         listener.changed(ConnectionStatus.CONNECTED);
         verify(mockConnection).getDB();
     }
@@ -313,10 +314,40 @@ public class MongoStorageTest {
         CountDownLatch latch = new CountDownLatch(1);
         MongoStorage storage = new MongoStorage(db, latch);
         latch.countDown();
+        
+        when(db.getCollection(SchemaInfo.CATEGORY.getName())).thenReturn(testCollection);
+        storage.registerCategory(SchemaInfo.CATEGORY);
+        verify(db,times(0)).createCollection(eq(SchemaInfo.CATEGORY.getName()), any(BasicDBObject.class));
+        verify(testCollection,times(0)).update(any(BasicDBObject.class), any(BasicDBObject.class), eq(true), eq(false));
+        try {
+            storage.registerCategory(SchemaInfo.CATEGORY);
+            fail();
+        } catch (IllegalStateException ex) {
+            assertEquals("Category may only be associated with one backend.", ex.getMessage());
+        }
+        
         storage.registerCategory(HostInfoDAO.hostInfoCategory);
         Category<AggregateCount> countCat = new CategoryAdapter<HostInfo, AggregateCount>(HostInfoDAO.hostInfoCategory).getAdapted(AggregateCount.class);
         storage.registerCategory(countCat);
         verify(db).collectionExists(eq(HostInfoDAO.hostInfoCategory.getName()));
+        
+        ArgumentCaptor<BasicDBObject> msgCaptor = ArgumentCaptor.forClass(BasicDBObject.class);
+        ArgumentCaptor<BasicDBObject> msgCaptor2 = ArgumentCaptor.forClass(BasicDBObject.class);
+        BasicDBObject expetedObject1 = new BasicDBObject(SchemaInfo.NAME.getName(), HostInfoDAO.hostInfoCategory.getName());
+        
+        verify(testCollection).update(msgCaptor.capture(), msgCaptor2.capture(), eq(true), eq(false));
+        
+        BasicDBObject resultObject1 = msgCaptor.getValue();
+        BasicDBObject resultObject2 = msgCaptor2.getValue();
+        BasicDBObject categoryInfoObject = (BasicDBObject) resultObject2.get("$setOnInsert");
+       
+        assertEquals(expetedObject1, resultObject1);
+        
+        assertTrue(categoryInfoObject.containsField(SchemaInfo.NAME.getName()));
+        assertTrue(categoryInfoObject.containsField(Key.TIMESTAMP.getName()));
+        
+        assertEquals(HostInfoDAO.hostInfoCategory.getName(), categoryInfoObject.get(SchemaInfo.NAME.getName()));
+        assertNotNull(categoryInfoObject.get(Key.TIMESTAMP.getName()));
     }
 
     @Test
@@ -663,6 +694,59 @@ public class MongoStorageTest {
         Field dbField = storage.getClass().getDeclaredField("db");
         dbField.setAccessible(true);
         dbField.set(storage, db);
+    }
+    @Test
+    public void verifySchemaInfoNotExists() throws Exception {
+        DB db = PowerMockito.mock(DB.class);
+        CountDownLatch latch = new CountDownLatch(1);
+        MongoStorage storage = new MongoStorage(db, latch);
+        ArgumentCaptor<String> categoryNameCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<BasicDBObject> basicDBCaptor = ArgumentCaptor.forClass(BasicDBObject.class);
+        
+        when(db.collectionExists(SchemaInfo.CATEGORY.getName())).thenReturn(false);
+        storage.createSchemaInfo();
+        verify(db, times(1)).createCollection(categoryNameCaptor.capture(), basicDBCaptor.capture());
+        assertEquals(SchemaInfo.CATEGORY.getName(), categoryNameCaptor.getValue());
+        assertEquals(new BasicDBObject("capped", false), basicDBCaptor.getValue());
+    }
+    
+    @Test
+    public void verifySchemaInfoExists() throws Exception {
+        DB db = PowerMockito.mock(DB.class);
+        CountDownLatch latch = new CountDownLatch(1);
+        MongoStorage storage = new MongoStorage(db, latch);
+        
+        when(db.collectionExists(SchemaInfo.CATEGORY.getName())).thenReturn(true);
+        storage.createSchemaInfo();
+        verify(db, times(0)).createCollection(any(String.class), any(BasicDBObject.class));
+    }
+    
+    @Test
+    public void verifyInsertSchemaInfo() throws Exception {
+        DB db = PowerMockito.mock(DB.class);
+        CountDownLatch latch = new CountDownLatch(1);
+        MongoStorage storage = new MongoStorage(db, latch);
+        ArgumentCaptor<BasicDBObject> basicDBCaptor1 = ArgumentCaptor.forClass(BasicDBObject.class);
+        ArgumentCaptor<BasicDBObject> basicDBCaptor2 = ArgumentCaptor.forClass(BasicDBObject.class);
+        ArgumentCaptor<Boolean> bool1 = ArgumentCaptor.forClass(Boolean.class);
+        ArgumentCaptor<Boolean> bool2 = ArgumentCaptor.forClass(Boolean.class);
+        BasicDBObject expected1 = new BasicDBObject(SchemaInfo.NAME.getName(), testCategory.getName());
+        
+        when(db.getCollection(SchemaInfo.CATEGORY.getName())).thenReturn(testCollection);
+        storage.insertSchemaInfo(testCategory);
+        verify(testCollection).update(basicDBCaptor1.capture(), basicDBCaptor2.capture(), bool1.capture(), bool2.capture());
+
+        assertEquals(expected1, basicDBCaptor1.getValue());
+        assertTrue(basicDBCaptor2.getValue().containsField("$setOnInsert"));
+        BasicDBObject arg = (BasicDBObject) basicDBCaptor2.getValue().get("$setOnInsert");
+        
+        assertTrue( arg.containsField(SchemaInfo.NAME.getName()));
+        assertEquals(testCategory.getName(), arg.get(SchemaInfo.NAME.getName()));
+        assertTrue( arg.containsField(Key.TIMESTAMP.getName()));
+        assertNotNull(arg.get(Key.TIMESTAMP.getName()));
+
+        assertTrue(bool1.getValue());
+        assertFalse(bool2.getValue());
     }
     
     private static class FakeDataClass implements Pojo {};

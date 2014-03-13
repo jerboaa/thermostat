@@ -62,7 +62,7 @@ public class DAOImplStatementDescriptorRegistrationTest {
     public void registersAllQueries() {
         DAOImplStatementDescriptorRegistration reg = new DAOImplStatementDescriptorRegistration();
         Set<String> descriptors = reg.getStatementDescriptors();
-        assertEquals(22, descriptors.size());
+        assertEquals(23, descriptors.size());
         assertFalse(descriptors.contains(null));
     }
     
@@ -80,7 +80,7 @@ public class DAOImplStatementDescriptorRegistrationTest {
             registrations.add(r);
         }
         assertEquals(1, registrations.size());
-        assertEquals(22, registrations.get(0).getStatementDescriptors().size());
+        assertEquals(23, registrations.get(0).getStatementDescriptors().size());
     }
     
     @Test

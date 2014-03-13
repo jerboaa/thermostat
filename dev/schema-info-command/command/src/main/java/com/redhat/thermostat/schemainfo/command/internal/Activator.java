@@ -34,38 +34,30 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.internal.dao;
+package com.redhat.thermostat.schemainfo.command.internal;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Hashtable;
 
-import com.redhat.thermostat.storage.core.SchemaInfo;
-import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.dao.BackendInfoDAO;
-import com.redhat.thermostat.storage.dao.HostInfoDAO;
-import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
-import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
-/**
- * Registers the category used by this maven module. The web storage
- * endpoint only allows categories to be registered which it knows of
- * ahead of time.
- *
- */
-public class DAOImplCategoryRegistration implements CategoryRegistration {
+import com.redhat.thermostat.common.cli.Command;
+
+public class Activator implements BundleActivator {
+
+    private ServiceRegistration registration;
 
     @Override
-    public Set<String> getCategoryNames() {
-        Set<String> categories = new HashSet<>(5);
-        categories.add(HostInfoDAO.hostInfoCategory.getName());
-        categories.add(AgentInfoDAO.CATEGORY.getName());
-        categories.add(VmInfoDAO.vmInfoCategory.getName());
-        categories.add(BackendInfoDAO.CATEGORY.getName());
-        categories.add(NetworkInterfaceInfoDAO.networkInfoCategory.getName());
-        categories.add(SchemaInfo.CATEGORY.getName());
-        return categories;
+    public void start(final BundleContext context) throws Exception {
+        Hashtable<String,String> properties = new Hashtable<>();
+        properties.put(Command.NAME, SchemaInfoCommand.commandName);
+        registration = context.registerService(Command.class.getName(), new SchemaInfoCommand(context), properties);
     }
 
+    @Override
+    public void stop(BundleContext context) throws Exception {
+        registration.unregister();
+    }
 }
 

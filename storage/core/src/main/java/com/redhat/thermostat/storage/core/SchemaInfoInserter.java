@@ -34,38 +34,29 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.internal.dao;
+package com.redhat.thermostat.storage.core;
 
-import java.util.HashSet;
-import java.util.Set;
+import com.redhat.thermostat.storage.model.Pojo;
 
-import com.redhat.thermostat.storage.core.SchemaInfo;
-import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.dao.BackendInfoDAO;
-import com.redhat.thermostat.storage.dao.HostInfoDAO;
-import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
-import com.redhat.thermostat.storage.dao.VmInfoDAO;
-
-/**
- * Registers the category used by this maven module. The web storage
- * endpoint only allows categories to be registered which it knows of
- * ahead of time.
- *
+/*
+ * This interface and {@link BackingStorage} could be merged in a future 
+ * breaking API release.
  */
-public class DAOImplCategoryRegistration implements CategoryRegistration {
-
-    @Override
-    public Set<String> getCategoryNames() {
-        Set<String> categories = new HashSet<>(5);
-        categories.add(HostInfoDAO.hostInfoCategory.getName());
-        categories.add(AgentInfoDAO.CATEGORY.getName());
-        categories.add(VmInfoDAO.vmInfoCategory.getName());
-        categories.add(BackendInfoDAO.CATEGORY.getName());
-        categories.add(NetworkInterfaceInfoDAO.networkInfoCategory.getName());
-        categories.add(SchemaInfo.CATEGORY.getName());
-        return categories;
-    }
+/**
+ * This is a buddy interface of {@link BackingStorage}. Implementors of 
+ * {@link BackingStorage} <strong>should</strong> also implement this interface.
+ * The interface is created to provide a new feature without breaking API release.
+ * 
+ * A data access object for retrieving schema information {@link Storage}
+ * knows about irrespective of installed plug-ins.
+ * 
+ * @see SchemaInfoInserter
+ * @see SchemaInfo
+ */
+public interface SchemaInfoInserter {
+    
+    void createSchemaInfo();
+    
+    <T extends Pojo> void insertSchemaInfo(Category<T> category);
 
 }
-

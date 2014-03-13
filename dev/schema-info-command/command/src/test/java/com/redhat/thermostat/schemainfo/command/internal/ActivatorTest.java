@@ -34,37 +34,31 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.internal.dao;
+package com.redhat.thermostat.schemainfo.command.internal;
 
-import java.util.HashSet;
-import java.util.Set;
+import static com.redhat.thermostat.testutils.Asserts.assertCommandIsRegistered;
+import static org.junit.Assert.assertEquals;
 
-import com.redhat.thermostat.storage.core.SchemaInfo;
-import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.dao.BackendInfoDAO;
-import com.redhat.thermostat.storage.dao.HostInfoDAO;
-import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
-import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import org.junit.Test;
 
-/**
- * Registers the category used by this maven module. The web storage
- * endpoint only allows categories to be registered which it knows of
- * ahead of time.
- *
- */
-public class DAOImplCategoryRegistration implements CategoryRegistration {
+import com.redhat.thermostat.schemainfo.command.internal.Activator;
+import com.redhat.thermostat.testutils.StubBundleContext;
 
-    @Override
-    public Set<String> getCategoryNames() {
-        Set<String> categories = new HashSet<>(5);
-        categories.add(HostInfoDAO.hostInfoCategory.getName());
-        categories.add(AgentInfoDAO.CATEGORY.getName());
-        categories.add(VmInfoDAO.vmInfoCategory.getName());
-        categories.add(BackendInfoDAO.CATEGORY.getName());
-        categories.add(NetworkInterfaceInfoDAO.networkInfoCategory.getName());
-        categories.add(SchemaInfo.CATEGORY.getName());
-        return categories;
+public class ActivatorTest {
+
+    @Test
+    public void testCommandsRegistered() throws Exception {
+        StubBundleContext ctx = new StubBundleContext();
+        
+        Activator activator = new Activator();
+        
+        activator.start(ctx);
+        
+        assertCommandIsRegistered(ctx, SchemaInfoCommand.commandName, SchemaInfoCommand.class);
+        
+        activator.stop(ctx);
+        
+        assertEquals(0, ctx.getAllServices().size());
     }
 
 }
