@@ -339,15 +339,13 @@ public class MongoStorageTest {
         
         BasicDBObject resultObject1 = msgCaptor.getValue();
         BasicDBObject resultObject2 = msgCaptor2.getValue();
-        BasicDBObject categoryInfoObject = (BasicDBObject) resultObject2.get("$setOnInsert");
        
         assertEquals(expetedObject1, resultObject1);
+        assertTrue(resultObject2.containsField(SchemaInfo.NAME.getName()));
+        assertTrue(resultObject2.containsField(Key.TIMESTAMP.getName()));
         
-        assertTrue(categoryInfoObject.containsField(SchemaInfo.NAME.getName()));
-        assertTrue(categoryInfoObject.containsField(Key.TIMESTAMP.getName()));
-        
-        assertEquals(HostInfoDAO.hostInfoCategory.getName(), categoryInfoObject.get(SchemaInfo.NAME.getName()));
-        assertNotNull(categoryInfoObject.get(Key.TIMESTAMP.getName()));
+        assertEquals(HostInfoDAO.hostInfoCategory.getName(), resultObject2.get(SchemaInfo.NAME.getName()));
+        assertNotNull(resultObject2.get(Key.TIMESTAMP.getName()));
     }
 
     @Test
@@ -737,8 +735,7 @@ public class MongoStorageTest {
         verify(testCollection).update(basicDBCaptor1.capture(), basicDBCaptor2.capture(), bool1.capture(), bool2.capture());
 
         assertEquals(expected1, basicDBCaptor1.getValue());
-        assertTrue(basicDBCaptor2.getValue().containsField("$setOnInsert"));
-        BasicDBObject arg = (BasicDBObject) basicDBCaptor2.getValue().get("$setOnInsert");
+        BasicDBObject arg = (BasicDBObject) basicDBCaptor2.getValue();
         
         assertTrue( arg.containsField(SchemaInfo.NAME.getName()));
         assertEquals(testCategory.getName(), arg.get(SchemaInfo.NAME.getName()));

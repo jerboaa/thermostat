@@ -622,7 +622,7 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
         categoryInfo.put(SchemaInfo.NAME.getName(), category.getName());
         categoryInfo.put(Key.TIMESTAMP.getName(), System.currentTimeMillis());
         coll.update(new BasicDBObject(SchemaInfo.NAME.getName(), category.getName()),
-                    new BasicDBObject("$setOnInsert", categoryInfo), true, false);
+                    categoryInfo, true, false);
         
     }
 
