@@ -42,7 +42,7 @@
   <commands>
     <command>
       <name>list-categories</name>
-      <description>Schema Information Pluging</description>
+      <description>lists all registered categories in Storage</description>
       <environments>
         <environment>cli</environment>
         <environment>shell</environment>
