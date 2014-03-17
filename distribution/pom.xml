@@ -173,6 +173,7 @@
                     <include>thermostat-users.properties</include>
                     <include>thermostat-roles.properties</include>
                     <include>thermostat_jaas.conf</include>
+                    <include>devsetup.input</include>
                     <include>agent_proxy_jaas.conf</include>
                     <include>db.properties</include>
                     <include>logging.properties</include>

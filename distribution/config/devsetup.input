@@ -1,0 +1,4 @@
+yes
+${mongodb.dev.username}
+${mongodb.dev.password}
+${mongodb.dev.password}
