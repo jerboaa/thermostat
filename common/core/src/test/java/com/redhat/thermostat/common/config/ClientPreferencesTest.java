@@ -128,13 +128,11 @@ public class ClientPreferencesTest {
     }
     
     @Test
-    public void testDefaultPreferencesIsMongodb() {
-        // Default preferences for GUI is mongodb:// since this is accomodates
-        // more use cases
+    public void testDefaultPreferencesIsHTTP() {
         Properties prefs = mock(Properties.class);
         when(prefs.getProperty(eq("connection-url"), any(String.class))).thenReturn(ClientPreferences.DEFAULT_CONNECTION_URL);
         ClientPreferences clientPrefs = new ClientPreferences(prefs);
-        assertEquals("mongodb://127.0.0.1:27518", clientPrefs.getConnectionUrl());
+        assertEquals("http://127.0.0.1:8999/thermostat/storage", clientPrefs.getConnectionUrl());
     }
 }
 

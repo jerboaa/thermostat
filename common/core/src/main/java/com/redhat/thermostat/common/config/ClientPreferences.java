@@ -54,7 +54,7 @@ public class ClientPreferences {
     static final String USERNAME = "username";
     static final String CONNECTION_URL = "connection-url";
     static final String SAVE_ENTITLEMENTS = "save-entitlements";
-    static final String DEFAULT_CONNECTION_URL = "mongodb://127.0.0.1:27518";
+    static final String DEFAULT_CONNECTION_URL = "http://127.0.0.1:8999/thermostat/storage";
 
     private static final Logger logger = LoggingUtils.getLogger(ClientPreferences.class);
 
