@@ -267,6 +267,9 @@ public class LauncherImplTest {
         File userConfigFile = mock(File.class);
         when(userConfigFile.isFile()).thenReturn(false);
         when(paths.getUserClientConfigurationFile()).thenReturn(userConfigFile);
+        File setupFile = mock(File.class);
+        when(setupFile.exists()).thenReturn(true);
+        when(paths.getUserSetupCompleteStampFile()).thenReturn(setupFile);
         ClientPreferences prefs = new ClientPreferences(paths);
 
         launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext),

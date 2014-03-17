@@ -61,6 +61,7 @@ public enum LocaleResources {
     LAUNCHER_USER_AUTH_PROMPT_ERROR,
     LAUNCHER_MALFORMED_URL,
     LAUNCHER_CONNECTION_ERROR,
+    LAUNCHER_FIRST_LAUNCH_MSG,
     ;
 
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.launcher.internal.strings";

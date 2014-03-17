@@ -224,6 +224,12 @@ public class DirectoryStructureCreatorTest {
         public File getUserHistoryFile() throws InvalidConfigurationException {
             return null; // Only directories need to be created
         }
+
+        @Override
+        public File getUserSetupCompleteStampFile()
+                throws InvalidConfigurationException {
+            return null; // Only directories need to be created
+        }
         
     }
 

@@ -74,6 +74,9 @@ public interface CommonPaths {
     public File getSystemConfigurationDirectory() throws InvalidConfigurationException;
 
     public File getUserConfigurationDirectory() throws InvalidConfigurationException;
+    
+    /** A file indicating that Thermostat commands are ready to be run **/
+    public File getUserSetupCompleteStampFile() throws InvalidConfigurationException;
 
     /** A location that contains data that is persisted */
     public File getUserPersistentDataDirectory() throws InvalidConfigurationException;

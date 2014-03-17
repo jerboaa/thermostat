@@ -64,6 +64,23 @@ public class IntegrationTest {
     
     public static final String ITEST_USER_HOME_PROP = "com.redhat.thermostat.itest.thermostatUserHome";
     public static final String ITEST_THERMOSTAT_HOME_PROP = "com.redhat.thermostat.itest.thermostatHome";
+    
+    // Make sure the setup file - and its partent directories - are created
+    // before any integration test runs.
+    // See CommonPathsImpl.getUserSetupComleteStampFile().
+    static {
+        String userHome = getUserThermostatHome();
+        File fUserHome = new File(userHome);
+        fUserHome.mkdir();
+        File dataDir = new File(fUserHome, "data");
+        dataDir.mkdir();
+        File setupFile = new File(dataDir, "setup-complete.stamp");
+        try {
+            setupFile.createNewFile();
+        } catch (IOException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
 
     public static class SpawnResult {
         final Process process;

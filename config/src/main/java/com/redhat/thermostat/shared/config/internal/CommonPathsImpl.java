@@ -272,6 +272,13 @@ public class CommonPathsImpl implements CommonPaths {
         File history = new File(getUserPersistentDataDirectory(), "cli-history");
         return history;
     }
+    
+    @Override
+    public File getUserSetupCompleteStampFile()
+            throws InvalidConfigurationException {
+        File setupCompleteStamp = new File(getUserPersistentDataDirectory(), "setup-complete.stamp");
+        return setupCompleteStamp;
+    }
 
     // TODO add logging files here (see LoggingUtils)
     // TODO add ssl.properties file here (see SSLConfiguration)

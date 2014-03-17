@@ -36,10 +36,12 @@
 
 package com.redhat.thermostat.launcher.internal;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -86,6 +88,7 @@ import com.redhat.thermostat.utils.keyring.Keyring;
 public class LauncherImpl implements Launcher {
 
     private static final String HELP_COMMAND_NAME = "help";
+    private static final String SETUP_SCRIPT_NAME = "thermostat-setup";
 
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     private Logger logger;
@@ -99,6 +102,7 @@ public class LauncherImpl implements Launcher {
     private final CommandSource commandSource;
     private final CommandInfoSource commandInfoSource;
     private final CurrentEnvironment currentEnvironment;
+    private final CommonPaths paths;
 
     private final ClientPreferences prefs;
     private final Keyring keyring;
@@ -123,6 +127,7 @@ public class LauncherImpl implements Launcher {
         this.currentEnvironment = currentEnvironment;
         this.prefs = prefs;
         this.keyring = keyring;
+        this.paths = Objects.requireNonNull(paths);
 
         loggingInitializer.initialize();
         logger = LoggingUtils.getLogger(LauncherImpl.class);
@@ -148,7 +153,12 @@ public class LauncherImpl implements Launcher {
                 // thermostat, so we use the no-arg constructor of Version
                 cmdCtxFactory.getConsole().getOutput().println(coreVersion.getVersionInfo());
             } else {
-                runCommandFromArguments(args, listeners, inShell);
+                // With web-always-on we need to make sure that the setup ran.
+                if (isThermostatConfigured()) {
+                    runCommandFromArguments(args, listeners, inShell);
+                } else {
+                    printSetupHelpMessage();
+                }
             }
         } catch (NoClassDefFoundError e) {
             // This could mean pom is missing <Private-Package> or <Export-Package> lines.
@@ -170,6 +180,23 @@ public class LauncherImpl implements Launcher {
                 shutdown();
             }
         }
+    }
+
+    private void printSetupHelpMessage() {
+        String msg = t.localize(LocaleResources.LAUNCHER_FIRST_LAUNCH_MSG, 
+                                SETUP_SCRIPT_NAME).getContents();
+        printAndLogLine(msg);
+    }
+    
+    // Log messages might go to a file. Be sure to print to stdout as well.
+    private void printAndLogLine(String msg) {
+        System.out.println(msg);
+        logger.log(Level.INFO, msg);
+    }
+
+    private boolean isThermostatConfigured() throws InvalidConfigurationException {
+        File setupCompleteFile = paths.getUserSetupCompleteStampFile();
+        return setupCompleteFile.exists();
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

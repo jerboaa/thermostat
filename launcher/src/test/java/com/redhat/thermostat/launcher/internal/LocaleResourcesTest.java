@@ -36,12 +36,16 @@
 
 package com.redhat.thermostat.launcher.internal;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.util.Properties;
 
 import junit.framework.Assert;
 
 import org.junit.Test;
+
+import com.redhat.thermostat.shared.locale.Translate;
 
 public class LocaleResourcesTest {
 
@@ -58,6 +62,15 @@ public class LocaleResourcesTest {
             Assert.assertTrue("missing property from resource bound file: " + resource,
                               props.containsKey(resource.name()));
         }
+    }
+    
+    @Test
+    public void verifyVariableIsExpanded() {
+        Translate<LocaleResources> t = LocaleResources.createLocalizer();
+        String fakeSetupScript = "foobar";
+        String msg = t.localize(LocaleResources.LAUNCHER_FIRST_LAUNCH_MSG, fakeSetupScript).getContents();
+        assertTrue("String '" + msg + "' should have contained '" + fakeSetupScript + "'",
+                   msg.contains(fakeSetupScript));
     }
 }
 
