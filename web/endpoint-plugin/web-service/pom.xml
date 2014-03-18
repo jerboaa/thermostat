@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+
+ Copyright 2012-2014 Red Hat, Inc.
+
+ This file is part of Thermostat.
+
+ Thermostat is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published
+ by the Free Software Foundation; either version 2, or (at your
+ option) any later version.
+
+ Thermostat is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with Thermostat; see the file COPYING.  If not see
+ <http://www.gnu.org/licenses />.
+
+ Linking this code with other modules is making a combined work
+ based on this code.  Thus, the terms and conditions of the GNU
+ General Public License cover the whole combination.
+
+ As a special exception, the copyright holders of this code give
+ you permission to link this code with independent modules to
+ produce an executable, regardless of the license terms of these
+ independent modules, and to copy and distribute the resulting
+ executable under terms of your choice, provided that you also
+ meet, for each linked independent module, the terms and conditions
+ of the license of that module.  An independent module is a module
+ which is not derived from or based on this code.  If you modify
+ this code, you may extend this exception to your version of the
+ library, but you are not obligated to do so.  If you do not wish
+ to do so, delete this exception statement from your version.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.redhat.thermostat</groupId>
+    <artifactId>thermostat-web-endpoint</artifactId>
+    <version>1.1.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>thermostat-web-endpoint-plugin</artifactId>
+
+  <packaging>bundle</packaging>
+
+  <name>Thermostat Web Embedded Servlet Container Endpoint Core</name>
+  
+  <dependencies>
+    <!-- Plain OSGi -->
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.core</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- The war which we are going to deploy in embedded jetty -->
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-web-war</artifactId>
+      <version>${project.version}</version>
+      <!-- thermostat-web-war has the attachClasses config set to true.
+           This allows us to use it here. In addition to the war a
+           file thermostat-web-war-<VERSION>-classes.jar is created
+           that way. -->
+      <classifier>classes</classifier>
+    </dependency>
+    
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-launcher</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <!-- The embedded servlet container we use -->
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-server</artifactId>
+      <version>${jetty.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-jaas</artifactId>
+      <version>${jetty.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-webapp</artifactId>
+      <version>${jetty.version}</version>
+    </dependency>
+    
+    <!-- test scoped deps -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-common-test</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Bundle-SymbolicName>com.redhat.thermostat.web.endpoint</Bundle-SymbolicName>
+            <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
+            <!-- Do not autogenerate uses clauses in Manifests -->
+            <Bundle-Activator>com.redhat.thermostat.web.endpoint.internal.Activator</Bundle-Activator>
+            <!-- need to declare bundles explicitly since the automatisms fail if an embedded jetty
+                 -->
+            <Import-Package>
+              javax.servlet,
+              javax.servlet.http,
+              org.eclipse.jetty.server,
+              org.eclipse.jetty.http,
+              org.eclipse.jetty.xml,
+              org.eclipse.jetty.util,
+              org.eclipse.jetty.io,
+              org.eclipse.jetty.webapp,
+              org.eclipse.jetty.security,
+              org.eclipse.jetty.servlet,
+              org.eclipse.jetty.servlet.listener,
+              org.eclipse.jetty.jaas,
+              *,
+            </Import-Package>
+            <Private-Package>
+              com.redhat.thermostat.web.endpoint.internal              
+            </Private-Package>
+            <_nouses>true</_nouses>
+          </instructions>
+        </configuration>
+      </plugin>
+
+    </plugins>
+  </build>
+
+</project>
+

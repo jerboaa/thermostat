@@ -21,20 +21,10 @@
 
     <!-- Username to use for connecting to the backing storage
          implementation. -->
-    <!--
-    <init-param>
-      <param-name>storage.username</param-name>
-      <param-value>thermostat-webservice</param-value>
-    </init-param>
-    -->
+    ${web.war.backingstorage.username.snippet}
     <!-- Password to use for connecting to the backing storage
          implementation -->
-    <!--
-    <init-param>
-      <param-name>storage.password</param-name>
-      <param-value>supersecrit</param-value>
-    </init-param>
-    -->
+    ${web.war.backingstorage.password.snippet}
     <!-- The timeout of the token manager in ms -->
     <init-param>
       <param-name>token-manager-timeout</param-name>

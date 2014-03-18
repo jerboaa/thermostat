@@ -41,21 +41,18 @@
 
   <parent>
     <groupId>com.redhat.thermostat</groupId>
-    <artifactId>thermostat</artifactId>
+    <artifactId>thermostat-web</artifactId>
     <version>1.1.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>thermostat-web</artifactId>
+  <artifactId>thermostat-web-endpoint</artifactId>
   <packaging>pom</packaging>
 
-  <name>Thermostat Web</name>
+  <name>Thermostat Web Embedded Servlet Container Endpoint</name>
 
   <modules>
-    <module>common</module>
-    <module>server</module>
-    <module>client</module>
-    <module>endpoint-plugin</module>
-    <module>war</module>
+    <module>distribution</module>
+    <module>web-service</module>
   </modules>
 
 </project>

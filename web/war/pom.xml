@@ -234,6 +234,8 @@
               </webResources>
               <warSourceDirectory>src/main/webapp</warSourceDirectory>
               <webXml>src/main/webapp/WEB-INF/web.xml</webXml>
+              <!-- Required for the embedded servlet endpoint plugin. -->
+              <attachClasses>true</attachClasses>
             </configuration>
           </execution>
         </executions>

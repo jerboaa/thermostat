@@ -69,6 +69,33 @@
           <skip>true</skip>
         </configuration>
       </plugin>
+      <!-- Copy the extracted thermostat web archive to directory image/webapp
+           using maven-dependency-plugin. The thermostat-web-war artifact
+           will be extracted as the only artifact. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-exploded-web-archive-to-image-dir</id>
+            <phase>package</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>com.redhat.thermostat</groupId>
+                  <artifactId>thermostat-web-war</artifactId>
+                  <type>war</type>
+                </artifactItem>
+              </artifactItems>
+              <outputDirectory>${project.build.directory}/image/webapp</outputDirectory>
+              <excludeTransitive>true</excludeTransitive>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
@@ -140,6 +167,7 @@
                   <filtering>true</filtering>
                   <includes>
                     <include>agent.properties</include>
+                    <include>web-storage-service.properties</include>
                     <include>agent.auth</include>
                     <include>ssl.properties</include>
                     <include>thermostat-users.properties</include>
@@ -252,7 +280,21 @@
       </plugins>
     </pluginManagement>
   </build>
-  <dependencies>
+  <!-- Define two build profiles. One for development builds. Another for
+       release builds. Difference for them should be inclusion of:
+        - list-categories experimental feature.
+       in dependencies.
+    -->
+  <profiles>
+    <profile>
+      <id>dev-build</id>
+      <activation>
+        <property>
+          <name>environment.type</name>
+          <value>!release</value>
+        </property>
+      </activation>
+    <dependencies>
 
     <!-- thermostat core parts. Be sure to
          also adjust distribution/assembly/core-assembly.xml -->
@@ -356,14 +398,14 @@
         <artifactId>thermostat-web-client</artifactId>
         <version>${project.version}</version>
     </dependency>
-    <!-- thermostat-web-server is deliberately missing from
-         assembly/core-assembly.xml. We want it to build, but
-         not copied to the image/libs folder since it's a
-         web-archive only dep. -->
+    <!-- depend on the web archive to be built in order
+         to be able to copy the exploded war into the
+         image directory -->
     <dependency>
         <groupId>com.redhat.thermostat</groupId>
-        <artifactId>thermostat-web-server</artifactId>
+        <artifactId>thermostat-web-war</artifactId>
         <version>${project.version}</version>
+        <type>war</type>
     </dependency>
     <dependency>
         <groupId>com.redhat.thermostat</groupId>
@@ -459,11 +501,242 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-web-endpoint-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <!-- build list-categories command for dev builds only -->
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-schema-info-distribution</artifactId>
       <version>${project.version}</version>
       <type>zip</type>
     </dependency>
+    </dependencies>
+    </profile> <!-- dev-build -->
+
+    <profile> <!-- release-build -->
+      <id>release-build</id>
+      <activation>
+        <property>
+          <name>environment.type</name>
+          <value>release</value>
+        </property>
+      </activation>
+    <dependencies>
+
+    <!-- thermostat core parts. Be sure to
+         also adjust distribution/assembly/core-assembly.xml -->
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-main</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-launcher</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-client-swing</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-swing-components</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-client-command</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-client-cli</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>thermostat-osgi-living-vm-filter-swing</artifactId>
+        <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-agent-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-agent-cli</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-storage-cli</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-agent-command</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-agent-proxy-server</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-killvm-agent</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>thermostat-killvm-client-swing</artifactId>
+        <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-common-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-common-command</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>thermostat-osgi-process-handler</artifactId>
+        <version>${project.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>thermostat-keyring</artifactId>
+        <version>${project.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>thermostat-laf-utils</artifactId>
+        <version>${project.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>thermostat-web-client</artifactId>
+        <version>${project.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>thermostat-system-backend</artifactId>
+        <version>${project.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>thermostat-storage-mongodb</artifactId>
+        <version>${project.version}</version>
+    </dependency>
+    <!-- depend on the web archive to be built in order
+         to be able to copy the exploded war into the
+         image directory -->
+    <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>thermostat-web-war</artifactId>
+        <version>${project.version}</version>
+        <type>war</type>
+    </dependency>
     
-  </dependencies>
+    <!-- Plugins -->
+    <!-- Be sure to add the distribution module of your plugin below
+         with type "zip", and also to distribution/assembly/all-plugin-assembly.xml -->
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-host-cpu-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-validate-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-host-memory-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-host-overview-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-numa-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-thread-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-classstat-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-cpu-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-gc-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-heap-analysis-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-jmx-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-memory-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-overview-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-web-endpoint-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    
+    </dependencies>
+    </profile> <!-- release-build -->
+  </profiles>
 </project>
 

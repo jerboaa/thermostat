@@ -1,0 +1,90 @@
+<?xml version="1.0"?>
+<!-- 
+
+ Copyright 2012-2014 Red Hat, Inc.
+
+ This file is part of Thermostat.
+
+ Thermostat is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published
+ by the Free Software Foundation; either version 2, or (at your
+ option) any later version.
+
+ Thermostat is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with Thermostat; see the file COPYING.  If not see
+ <http://www.gnu.org/licenses />.
+
+ Linking this code with other modules is making a combined work
+ based on this code.  Thus, the terms and conditions of the GNU
+ General Public License cover the whole combination.
+
+ As a special exception, the copyright holders of this code give
+ you permission to link this code with independent modules to
+ produce an executable, regardless of the license terms of these
+ independent modules, and to copy and distribute the resulting
+ executable under terms of your choice, provided that you also
+ meet, for each linked independent module, the terms and conditions
+ of the license of that module.  An independent module is a module
+ which is not derived from or based on this code.  If you modify
+ this code, you may extend this exception to your version of the
+ library, but you are not obligated to do so.  If you do not wish
+ to do so, delete this exception statement from your version.
+
+-->
+<plugin xmlns="http://icedtea.classpath.org/thermostat/plugins/v1.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://icedtea.classpath.org/thermostat/plugins/v1.0 thermostat-plugin.xsd">
+  <commands>
+    <command>
+      <name>web-storage-service</name>
+      <description>starts mongodb storage, an embedded servlet container with the web archive deployed and then connects an agent to this web endpoint</description>
+      <environments>
+        <environment>cli</environment>
+      </environments>
+      <bundles>
+        <bundle><symbolic-name>com.redhat.thermostat.common.core</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.configuration</symbolic-name><version>${project.version}</version></bundle>
+        <!-- Dependencies of the jetty-based web endpoint plugin -->
+        <bundle><symbolic-name>com.redhat.thermostat.web.endpoint</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>org.eclipse.jetty.server</symbolic-name><version>${jetty.version}</version></bundle>
+        <bundle><symbolic-name>org.eclipse.jetty.http</symbolic-name><version>${jetty.version}</version></bundle>
+        <bundle><symbolic-name>org.eclipse.jetty.util</symbolic-name><version>${jetty.version}</version></bundle>
+        <bundle><symbolic-name>org.eclipse.jetty.io</symbolic-name><version>${jetty.version}</version></bundle>
+        <bundle><symbolic-name>org.eclipse.jetty.webapp</symbolic-name><version>${jetty.version}</version></bundle>
+        <bundle><symbolic-name>org.eclipse.jetty.security</symbolic-name><version>${jetty.version}</version></bundle>
+        <bundle><symbolic-name>org.eclipse.jetty.servlet</symbolic-name><version>${jetty.version}</version></bundle>
+        <bundle><symbolic-name>org.eclipse.jetty.xml</symbolic-name><version>${jetty.version}</version></bundle>
+        <bundle><symbolic-name>org.eclipse.jetty.jaas</symbolic-name><version>${jetty.version}</version></bundle>
+        <bundle><symbolic-name>javax.servlet-api</symbolic-name><version>${jetty.javax.servlet.osgi.version}</version></bundle>
+        <!-- Required for running agent on top of http.
+             It should be the equivalent of $THERMOSTAT_HOME/etc/commands/agent.properties -->
+        <bundle><symbolic-name>com.redhat.thermostat.agent.core</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.web.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.web.client</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
+        <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.process</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.agent.cli</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.agent.proxy.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.common.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.agent.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.killvm.agent</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.backend.system</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.storage.mongodb</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>org.mongodb.mongo-java-driver</symbolic-name><version>${mongo-driver.osgi-version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.beanutils</symbolic-name><version>${commons-beanutils.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.codec</symbolic-name><version>${commons-codec.osgi-version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.collections</symbolic-name><version>${commons-collections.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
+        <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
+      </bundles>
+    </command>
+  </commands>
+</plugin>
+

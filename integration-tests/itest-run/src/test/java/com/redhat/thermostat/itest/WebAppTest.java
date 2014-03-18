@@ -112,6 +112,9 @@ import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
 import com.redhat.thermostat.web.client.internal.WebStorage;
 import com.redhat.thermostat.web.server.auth.Roles;
 
+import expectj.Spawn;
+import expectj.TimeoutException;
+
 /**
  * This test class starts up a mongod instance and a web storage instance
  * (in jetty container) in front of that.  Tests should make their own
@@ -259,7 +262,13 @@ public class WebAppTest extends IntegrationTest {
 
     @BeforeClass
     public static void setUpOnce() throws Exception {
+        
+        // This starts storage with the permit localhost exception option.
+        // It's important to start storage with that exception. Otherwise the
+        // mongodb user creds setup will fail.
         startStorage();
+        
+        setupMongodbUser();
 
         backupUsers = Files.createTempFile("itest-backup-thermostat-users", "");
         backupRoles = Files.createTempFile("itest-backup-thermostat-roles", "");
@@ -284,16 +293,84 @@ public class WebAppTest extends IntegrationTest {
     @AfterClass
     public static void tearDownOnce() throws Exception {
         deleteCpuData();
-
+    
         server.stop();
         server.join();
         
         stopStorage();
-
+        cleanupMongodbStampFile();
+    
         Files.copy(backupUsers, new File(THERMOSTAT_USERS_FILE).toPath(), StandardCopyOption.REPLACE_EXISTING);
         Files.copy(backupRoles, new File(THERMOSTAT_ROLES_FILE).toPath(), StandardCopyOption.REPLACE_EXISTING);
     }
+
+    private static void cleanupMongodbStampFile() throws IOException {
+        File dataDir = new File(getUserThermostatHome(), "data");
+        File mongodbStampFile = new File(dataDir, "mongodb-user-done.stamp");
+        if (mongodbStampFile.exists()) {
+            Files.delete(mongodbStampFile.toPath());
+        }
+    }
+
+    // PRE: storage started with --permitLocalhostException
+    private static void setupMongodbUser() throws Exception {
+        // The actual setup is only required for devel builds.
+        // Release builds won't have a web.xml with actual username/passwords
+        // in it, so starting backing storage (i.e. mongodb) with the 
+        // --permitLocalhostException option is sufficient.
+        if (isDevelopmentBuild()) {
+            String mongodbUsername = getMongodbUsername();
+            String mongodbPassword = getMongodbPassword();
+            String creds = String.format("%s\n%s\n", mongodbUsername,
+                                                     mongodbPassword);
+            String[] addUserArgs = new String[] {
+                    "add-mongodb-user",
+                    "-d", "mongodb://127.0.0.1:27518"
+            };
+            
+            // This should be an equivalent of:
+            // $ echo -e "mongodbUsername\nmongodbPassword\n" | \
+            //   thermostat add-mongodb-user -d mongodb://127.0.0.1:27518
+            Spawn addUser = spawnThermostat(addUserArgs);
+            addUser.send(creds);
+            try {
+                addUser.expect("mongodb user setup complete");
+            } catch (TimeoutException | IOException e) {
+                // failed to set up mongodb user, stop storage and bail.
+                stopStorage();
+                throw e;
+            }
+            addUser.expectClose();
+        } else {
+            System.out.println("Not a development build. Skipping mongodb setup.");
+        }
+    }
+
+    private static String getMongodbUsername() {
+        assertTrue(isDevelopmentBuild());
+        
+        // Define this default in order for IDE based runs to require fewer
+        // properties to be set.
+        String defaultDevUser = "mongodevuser";
+        String devUsername = System.getProperty("mongodb.dev.username", defaultDevUser);
+        return devUsername;
+    }
+
+    private static String getMongodbPassword() {
+        assertTrue(isDevelopmentBuild());
+        
+        // Define this default in order for IDE based runs to require fewer
+        // properties to be set.
+        String defaultDevPassword = "mongodevpassword";
+        String devPassword = System.getProperty("mongodb.dev.password", defaultDevPassword);
+        return devPassword;
+    }
     
+    private static boolean isDevelopmentBuild() {
+        boolean isDevelBuild = Boolean.getBoolean("devel.build");
+        return isDevelBuild;
+    }
+
     /*
      * Queries tests use write operations to put things into storage. For them
      * we don't want to go through the hassles of using prepared writes. Instead
