@@ -254,13 +254,6 @@
   </build>
   <dependencies>
 
-    <!-- integration tests -->
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-
     <!-- thermostat parts -->
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
