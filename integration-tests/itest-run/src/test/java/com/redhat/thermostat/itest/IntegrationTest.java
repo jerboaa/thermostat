@@ -44,7 +44,6 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import com.redhat.thermostat.common.utils.StreamUtils;
@@ -76,25 +75,25 @@ public class IntegrationTest {
         }
     }
 
-    // FIXME Make sure all methods are using a sane environment that's set up correctly
-
     public static final long TIMEOUT_IN_SECONDS = 30;
 
     public static final String SHELL_PROMPT = "Thermostat >";
 
     private static final String THERMOSTAT_HOME = "THERMOSTAT_HOME";
     private static final String USER_THERMOSTAT_HOME = "USER_THERMOSTAT_HOME";
+    private static final String THERMOSTAT_SCRIPT = "thermostat";
 
     /* This is a mirror of paths from c.r.t.shared.Configuration */
 
-    private static String getThermostatExecutable() {
-        return getThermostatHome() + "/bin/thermostat";
-    }
-    
     public static String getThermostatHome() {
         String propHome = System.getProperty(ITEST_THERMOSTAT_HOME_PROP);
         if (propHome == null) {
-            return "../../distribution/target/image";
+        	String relPath = "../../distribution/target/image";
+        	try {
+        	    return new File(relPath).getCanonicalPath();
+        	} catch (IOException e) {
+        	    throw new RuntimeException(e);
+        	}
         } else {
             return propHome;
         }
@@ -107,11 +106,20 @@ public class IntegrationTest {
     public static String getConfigurationDir() {
         return getThermostatHome() + "/etc";
     }
+    
+    public static String getSystemBinRoot() {
+        return getThermostatHome() + "/bin";
+    }
 
     public static String getUserThermostatHome() {
         String userHomeProp = System.getProperty(ITEST_USER_HOME_PROP);
         if (userHomeProp == null) {
-            return "../../distribution/target/user-home";
+        	String relPath = "../../distribution/target/user-home";
+        	try {
+                return new File(relPath).getCanonicalPath();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         } else {
             return userHomeProp;
         }
@@ -130,15 +138,6 @@ public class IntegrationTest {
                 throw new IllegalStateException(storageDir + " exists but is not a directory");
             }
         }
-    }
-
-    public static Process runThermostat(String... args) throws IOException {
-        List<String> completeArgs = new ArrayList<String>(args.length+1);
-        completeArgs.add(getThermostatExecutable());
-        completeArgs.addAll(Arrays.asList(args));
-        ProcessBuilder builder = buildThermostatProcess(completeArgs);
-
-        return builder.start();
     }
 
     public static Spawn spawnThermostat(String... args) throws IOException {
@@ -179,68 +178,53 @@ public class IntegrationTest {
     }
 
     public static Spawn spawnThermostat(boolean localeDependent, String... args) throws IOException {
+        return runScript(localeDependent, THERMOSTAT_SCRIPT, args);
+    }
+    
+    private static Spawn runScript(boolean localeDependent, String script, String[] args) throws IOException {
         ExpectJ expect = new ExpectJ(TIMEOUT_IN_SECONDS);
-        StringBuilder result = new StringBuilder(getThermostatExecutable());
+        String toExecute = convertArgsToString(args);
+        Executor exec = null;
+        if (localeDependent) {
+            exec = new LocaleExecutor(script, toExecute);
+        } else {
+            exec = new SimpleExecutor(script, toExecute);
+        }
+        return expect.spawn(exec);
+    }
+    
+    private static String convertArgsToString(String[] args) {
+    	StringBuilder result = new StringBuilder();
         if (args != null) {
             for (String arg : args) {
                 result.append(" ").append(arg);
             }
         }
-        String toExecute = result.toString();
-        Executor exec = null;
-        if (localeDependent) {
-            exec = new LocaleExecutor(toExecute);
-        } else {
-            exec = new SimpleExecutor(toExecute);
-        }
-        return expect.spawn(exec);
+        return result.toString();
     }
 
-    public static SpawnResult spawnThermostatAndGetProcess(String... args) throws IOException {
-        final List<String> completeArgs = new ArrayList<String>(args.length+1);
-        completeArgs.add(getThermostatExecutable());
-        completeArgs.addAll(Arrays.asList(args));
+	public static SpawnResult spawnThermostatAndGetProcess(String... args) throws IOException {
+	    return runComandAndGetProcess(THERMOSTAT_SCRIPT, args);
+	}
+	
+	private static SpawnResult runComandAndGetProcess(String script, String[] args) throws IOException {
+	    String toExecute = convertArgsToString(args);
 
         final Process[] process = new Process[1];
 
         ExpectJ expect = new ExpectJ(TIMEOUT_IN_SECONDS);
 
-        Spawn spawn = expect.spawn(new Executor() {
+        Spawn spawn = expect.spawn(new SimpleExecutor(script, toExecute) {
             @Override
             public Process execute() throws IOException {
-                ProcessBuilder builder = buildThermostatProcess(completeArgs);
-                Process service = builder.start();
-                process[0] = service;
-                return service;
+                Process p = super.execute();
+                process[0] = p;
+                return p;
             }
         });
 
         return new SpawnResult(process[0], spawn);
-    }
-
-    private static ProcessBuilder buildThermostatProcess(List<String> args) {
-        ProcessBuilder builder = new ProcessBuilder(args);
-        builder.environment().put(THERMOSTAT_HOME, getThermostatHome());
-        builder.environment().put(USER_THERMOSTAT_HOME, getUserThermostatHome());
-
-        return builder;
-    }
-
-    /**
-     * Generic method to run a program.
-     * <p>
-     * DO NOT USE THIS TO RUN THERMOSTAT ITSELF. It does not set up the
-     * environment correctly, using incorrect data and possibly overwriting
-     * important data.
-     */
-    public static Spawn spawn(List<String> args) throws IOException {
-        ExpectJ expect = new ExpectJ(TIMEOUT_IN_SECONDS);
-        StringBuilder result = new StringBuilder();
-        for (String arg : args) {
-            result.append(arg).append(" ");
-        }
-        return expect.spawn(result.substring(0, result.length() - 1));
-    }
+	}
 
     /**
      * Kill the process and all its children, recursively. Sends SIGTERM.
@@ -347,8 +331,8 @@ public class IntegrationTest {
                 "LANG=C"
         };
 
-        public LocaleExecutor(String process) {
-            super(process, ENV_WITH_LANG_C);
+        public LocaleExecutor(String script, String args) {
+            super(script, args, ENV_WITH_LANG_C);
         }
 
     }
@@ -360,29 +344,48 @@ public class IntegrationTest {
                 USER_THERMOSTAT_HOME + "=" + getUserThermostatHome(),
         };
 
-        public SimpleExecutor(String process) {
-            super(process, ENV_WITH);
+        public SimpleExecutor(String script, String args) {
+            super(script, args, ENV_WITH);
         }
     }
 
+    /**
+     * Runs any script in $THERMOSTAT_HOME/bin with the given name, args
+     * and enviroment.
+     *
+     */
     private static class EnvironmentExecutor implements Executor {
 
         private final String[] env;
-        private final String process;
+        private final String args;
+        private final String script;
 
-        public EnvironmentExecutor(String process, String[] env) {
-            this.process = process;
+        /**
+         * 
+         * @param script The script name (e.g. "thermostat")
+         * @param args The space separated list of arguments
+         * @param env List of environment variables in key=value pair format.
+         */
+        public EnvironmentExecutor(String script, String args, String[] env) {
+            this.args = args;
             this.env = env;
+            this.script = script;
         }
 
         @Override
         public Process execute() throws IOException {
-            return Runtime.getRuntime().exec(process, env);
+            String command = buildCommand();
+            Process p = Runtime.getRuntime().exec(command, env);
+            return p;
         }
 
         @Override
         public String toString() {
-            return process;
+            return args;
+        }
+        
+        private String buildCommand() {
+            return getSystemBinRoot() + "/" + script + " " + args;
         }
     }
 }
