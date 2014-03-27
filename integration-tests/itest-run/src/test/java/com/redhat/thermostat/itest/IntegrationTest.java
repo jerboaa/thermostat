@@ -193,6 +193,10 @@ public class IntegrationTest {
         assertNoExceptions(storage.getCurrentStandardOutContents(), storage.getCurrentStandardErrContents());
         return storage;
     }
+    
+    public static Spawn spawnScript(String script, String... args) throws IOException {
+        return runScript(false, script, args);
+    }
 
     public static Spawn spawnThermostat(boolean localeDependent, String... args) throws IOException {
         return runScript(localeDependent, THERMOSTAT_SCRIPT, args);
@@ -241,7 +245,12 @@ public class IntegrationTest {
         });
 
         return new SpawnResult(process[0], spawn);
-	}
+    }
+
+    protected static boolean isDevelopmentBuild() {
+        boolean isDevelBuild = Boolean.getBoolean("devel.build");
+        return isDevelBuild;
+    }
 
     /**
      * Kill the process and all its children, recursively. Sends SIGTERM.

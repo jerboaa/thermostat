@@ -366,11 +366,6 @@ public class WebAppTest extends IntegrationTest {
         return devPassword;
     }
     
-    private static boolean isDevelopmentBuild() {
-        boolean isDevelBuild = Boolean.getBoolean("devel.build");
-        return isDevelBuild;
-    }
-
     /*
      * Queries tests use write operations to put things into storage. For them
      * we don't want to go through the hassles of using prepared writes. Instead
