@@ -40,38 +40,109 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
 
+import org.junit.After;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.testutils.TestUtils;
 
 public class AgentConfigsUtilsTest {
+    
+    private File tmpDir;
 
-    @BeforeClass
-    public static void setUpOnce() {
-
-        Properties agentProperties = new Properties();
-        agentProperties.setProperty("SAVE_ON_EXIT", "true");
-        agentProperties.setProperty("CONFIG_LISTEN_ADDRESS", "42.42.42.42:42");
-
-        try {
-            TestUtils.setupAgentConfigs(agentProperties);
-            File agentConf = TestUtils.getAgentConfFile();
-            // By default system config == user config
-            AgentConfigsUtils.setConfigFiles(agentConf, agentConf);
-        } catch (IOException e) {
-            throw new AssertionError("Unable to create agent configuration", e);
+    @After
+    public void tearDown() throws IOException {
+        if (tmpDir != null) {
+            TestUtils.deleteRecursively(tmpDir);
         }
+        AgentConfigsUtils.setConfigFiles(null, null);
+        tmpDir = null;
     }
     
     @Test
-    public void testCreateAgentConfigs() throws InvalidConfigurationException, IOException {
-        AgentStartupConfiguration config = AgentConfigsUtils.createAgentConfigs();        
+    public void testSystemDbUrl() throws InvalidConfigurationException, IOException {
+        Properties sysProps = createSystemProperties();
+        setConfigs(sysProps, new Properties());
+        AgentStartupConfiguration config = AgentConfigsUtils.createAgentConfigs();
+
+        Assert.assertEquals("http://1.2.3.4:9001/hello", config.getDBConnectionString());
+    }
+    
+    @Test
+    public void testSystemPurgeProp() throws InvalidConfigurationException, IOException {
+        Properties sysProps = createSystemProperties();
+        setConfigs(sysProps, new Properties());
+        AgentStartupConfiguration config = AgentConfigsUtils.createAgentConfigs();
 
         Assert.assertFalse(config.purge());
+    }
+    
+    @Test
+    public void testSystemAddressProp() {
+        Properties sysProps = createSystemProperties();
+        setConfigs(sysProps, new Properties());
+        AgentStartupConfiguration config = AgentConfigsUtils.createAgentConfigs();
+
         Assert.assertEquals("42.42.42.42:42", config.getConfigListenAddress());
+    }
+    
+    @Test
+    public void testUserDbUrl() throws InvalidConfigurationException, IOException {
+        Properties sysProps = createSystemProperties();
+        Properties userProps = createUserProperties();
+        setConfigs(sysProps, userProps);
+        AgentStartupConfiguration config = AgentConfigsUtils.createAgentConfigs();        
+
+        Assert.assertEquals("http://5.6.7.8:9002/world", config.getDBConnectionString());
+    }
+    
+    @Test
+    public void testUserPurgeProp() throws InvalidConfigurationException, IOException {
+        Properties sysProps = createSystemProperties();
+        Properties userProps = createUserProperties();
+        setConfigs(sysProps, userProps);
+        AgentStartupConfiguration config = AgentConfigsUtils.createAgentConfigs();        
+
+        Assert.assertTrue(config.purge());
+    }
+    
+    @Test
+    public void testUserAddressProp() {
+        Properties sysProps = createSystemProperties();
+        Properties userProps = createUserProperties();
+        setConfigs(sysProps, userProps);
+        AgentStartupConfiguration config = AgentConfigsUtils.createAgentConfigs();        
+
+        Assert.assertEquals("24.24.24.24:24", config.getConfigListenAddress());
+    }
+    
+    private Properties createSystemProperties() {
+        Properties agentProperties = new Properties();
+        agentProperties.setProperty("DB_URL", "http://1.2.3.4:9001/hello");
+        agentProperties.setProperty("SAVE_ON_EXIT", "true");
+        agentProperties.setProperty("CONFIG_LISTEN_ADDRESS", "42.42.42.42:42");
+        return agentProperties;
+    }
+    
+    private Properties createUserProperties() {
+        Properties agentProperties = new Properties();
+        agentProperties.setProperty("DB_URL", "http://5.6.7.8:9002/world");
+        agentProperties.setProperty("SAVE_ON_EXIT", "false");
+        agentProperties.setProperty("CONFIG_LISTEN_ADDRESS", "24.24.24.24:24");
+        return agentProperties;
+    }
+    
+    private void setConfigs(Properties sysProps, Properties userProps) {
+        try {
+            String tmpDirPath = TestUtils.setupAgentConfigs(sysProps, userProps);
+            tmpDir = new File(tmpDirPath);
+            File sysAgentConf = TestUtils.getAgentConfFile();
+            File userAgentConf = TestUtils.getUserAgentConfFile();
+            AgentConfigsUtils.setConfigFiles(sysAgentConf, userAgentConf);
+        } catch (IOException e) {
+            throw new AssertionError("Unable to create agent configuration", e);
+        }
     }
 }
 

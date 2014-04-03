@@ -49,7 +49,7 @@ import java.util.Random;
 // FIXME the methods in this class can probably be split more sanely
 public class TestUtils {
 
-	private static File agentConf, agentAuth;
+	private static File sysAgentConf, userAgentConf, agentAuth;
 
     /**
      * @return the process id of the current process
@@ -107,8 +107,19 @@ public class TestUtils {
     /**
      * Creates and initializes a directory suitable for use as the agent's
      * configuration directory
+     * 
+     * @deprecated use {@link #setupAgentConfigs(Properties, Properties)} instead
      */
+    @Deprecated
     public static String setupAgentConfigs(Properties agentProperties) throws IOException {
+        return setupAgentConfigs(agentProperties, agentProperties);
+    }
+    
+    /**
+     * Creates and initializes a directory suitable for use as the agent's
+     * configuration directory
+     */
+    public static String setupAgentConfigs(Properties sysProps, Properties userProps) throws IOException {
         // need to create dummy config files for the tests
         Random random = new Random();
 
@@ -116,22 +127,39 @@ public class TestUtils {
                 Math.abs(random.nextInt()) + File.separatorChar;
 
         System.setProperty("THERMOSTAT_HOME", tmpDir);
-        File etc = makeEtc(tmpDir);
-        setupSystemAgentConfig(etc, agentProperties);
-        setupUserAgentConfig(tmpDir);
+        
+        File root = new File(tmpDir);
+        mkdirOrThrow(root);
+        
+        // Create system-wide configuration
+        File sysRoot = new File(root, "system");
+        mkdirOrThrow(sysRoot);
+        File etc = makeEtc(sysRoot);
+        setupSystemAgentConfig(etc, sysProps);
         setupAgentAuth(etc);
+        
+        // Create user-specific configuration
+        File userRoot = new File(root, "user");
+        mkdirOrThrow(userRoot);
+        System.setProperty("USER_THERMOSTAT_HOME", userRoot.getAbsolutePath());
+        File userEtc = makeEtc(userRoot);
+        setupUserAgentConfig(userEtc, userProps);
 
         return tmpDir;
     }
 
     public static File getAgentConfFile() {
-    	return agentConf;
+    	return sysAgentConf;
+    }
+
+    public static File getUserAgentConfFile() {
+        return userAgentConf;
     }
 
     public static File getAgentAuthFile() {
     	return agentAuth;
     }
-
+    
     public static void deleteRecursively(File root) throws IOException {
         if (root.isFile()) {
             root.delete();
@@ -148,16 +176,16 @@ public class TestUtils {
         }
     }
 
-    private static File makeEtc(String root) {
-        File etc = new File(root, "etc");
-        etc.mkdirs();
+    private static File makeEtc(File sysRoot) throws IOException {
+        File etc = new File(sysRoot, "etc");
+        mkdirOrThrow(etc);
         return etc;
     }
 
     private static void setupSystemAgentConfig(File etc, Properties agentProperties) throws FileNotFoundException, IOException {
-        agentConf = new File(etc, "agent.properties");
+        sysAgentConf = new File(etc, "agent.properties");
 
-        try (OutputStream propsOutputStream = new FileOutputStream(agentConf)) {
+        try (OutputStream propsOutputStream = new FileOutputStream(sysAgentConf)) {
             agentProperties.store(propsOutputStream, "thermostat agent test properties");
         }
     }
@@ -170,16 +198,18 @@ public class TestUtils {
         authWriter.close();
     }
 
-    private static File setupUserAgentConfig(String root) throws IOException {
-        System.setProperty("USER_THERMOSTAT_HOME", root);
-
-        File agent = new File(root, "agent");
-        agent.mkdirs();
-
-        new File(agent, "run").mkdirs();
-        new File(agent, "logs").mkdirs();
-        return agent;
-
+    private static void setupUserAgentConfig(File etc, Properties agentProperties) throws IOException {
+        userAgentConf = new File(etc, "agent.properties");
+        
+        try (OutputStream propsOutputStream = new FileOutputStream(userAgentConf)) {
+            agentProperties.store(propsOutputStream, "thermostat agent test properties");
+        }
+    }
+    
+    private static void mkdirOrThrow(File dir) throws IOException {
+        if (!dir.mkdirs()) {
+            throw new IOException("Failed to create user configuration directory");
+        }
     }
 }
 

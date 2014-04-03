@@ -85,18 +85,20 @@ public class AgentConfigsUtils {
             configuration.setDatabaseURL(db);
         }
         
-        configuration.setPurge(true);
-        if (properties.containsKey(AgentProperties.SAVE_ON_EXIT.name())) {
-            String purge = (String) properties.get(AgentProperties.SAVE_ON_EXIT.name());
-            configuration.setPurge(!Boolean.parseBoolean(purge));
+        String saveOnExit = properties.getProperty(AgentProperties.SAVE_ON_EXIT.name());
+        if (saveOnExit != null) {
+            configuration.setPurge(!Boolean.parseBoolean(saveOnExit));
+        } else {
+            configuration.setPurge(true);
         }
 
-        // TODO: we could avoid this, which means the agent doesn't want to
-        // accept any connection
-        configuration.setConfigListenAddress("127.0.0.1:12000");
-        if (properties.containsKey(AgentProperties.CONFIG_LISTEN_ADDRESS.name())) {
-            String address = properties.getProperty(AgentProperties.CONFIG_LISTEN_ADDRESS.name());
-            configuration.setConfigListenAddress(address);
+        String configListenAddress = properties.getProperty(AgentProperties.CONFIG_LISTEN_ADDRESS.name());
+        if (configListenAddress != null) {
+            configuration.setConfigListenAddress(configListenAddress);
+        } else {
+            // TODO: we could avoid this, which means the agent doesn't want to
+            // accept any connection
+            configuration.setConfigListenAddress("127.0.0.1:12000");
         }
     }
 }
