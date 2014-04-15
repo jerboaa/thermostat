@@ -38,13 +38,18 @@ package com.redhat.thermostat.shared.config.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
 import java.io.File;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.internal.SSLConfigurationImpl;
 
 public class SSLConfigurationImplTest {
@@ -55,7 +60,7 @@ public class SSLConfigurationImplTest {
     public void setUp() {
         sslConf = new SSLConfigurationImpl(null);
         File clientProps = new File(this.getClass().getResource("/client.properties").getFile());
-        sslConf.initClientProperties(clientProps);
+        sslConf.initProperties(clientProps);
     }
 
     @Test
@@ -70,7 +75,7 @@ public class SSLConfigurationImplTest {
     public void notExistingPropertiesFileReturnsNull() throws Exception {
         SSLConfigurationImpl badSSLConf = new SSLConfigurationImpl(null);
         File clientProps = new File("i/am/not/there/file.txt");
-        badSSLConf.initClientProperties(clientProps);
+        badSSLConf.initProperties(clientProps);
         assertTrue(badSSLConf.getKeystoreFile() == null);
         assertEquals(null, badSSLConf.getKeyStorePassword());
     }
@@ -82,10 +87,149 @@ public class SSLConfigurationImplTest {
         assertTrue(sslConf.disableHostnameVerification());
         File disabledSSLProps = new File(this.getClass().getResource("/ssl.properties").getFile());
         SSLConfigurationImpl disabledSSLConf = new SSLConfigurationImpl(null);
-        disabledSSLConf.initClientProperties(disabledSSLProps);
+        disabledSSLConf.initProperties(disabledSSLProps);
         assertFalse(disabledSSLConf.enableForCmdChannel());
         assertFalse(disabledSSLConf.enableForBackingStorage());
         assertFalse(disabledSSLConf.disableHostnameVerification());
+    }
+    
+    /*
+     * $THERMOSTAT_HOME/etc/ssl.properties is specified,
+     * $USER_THERMOSTAT_HOME/etc/ssl.properties not specified.
+     * 
+     * Thus, system ssl.properties should get used.
+     */
+    @Test
+    public void canInitFromSystemHomeConfig() {
+        File systemEtc = new File(this.getClass().getResource("/system_th_home").getFile());
+        CommonPaths paths = mock(CommonPaths.class);
+        when(paths.getSystemConfigurationDirectory()).thenReturn(systemEtc);
+        File userEtc = new File("/thermostat/not-existing-foo");
+        
+        // assert preconditions
+        assertTrue("ssl.properties in system home expected to exist",
+                new File(systemEtc, "ssl.properties").exists());
+        assertFalse("ssl.properties in user home must not exist",
+                new File(userEtc, "ssl.properties").exists());
+        
+        SSLConfigurationImpl config = new SSLConfigurationImpl(paths);
+        // This should use system ssl.properties and use values defined there
+        config.loadProperties();
+        
+        // Both config location should have been checked.
+        verify(paths).getSystemConfigurationDirectory();
+        verify(paths).getUserConfigurationDirectory();
+        
+        // use this assertion in order to avoid false positives if loading of
+        // ssl.properties did not work, but boolean matches default values.
+        assertEquals("system thermostat home", config.getKeyStorePassword());
+        assertTrue(config.enableForBackingStorage());
+        assertTrue(config.disableHostnameVerification());
+    }
+    
+    /*
+     * $THERMOSTAT_HOME/etc/ssl.properties is specified,
+     * $USER_THERMOSTAT_HOME/etc/ssl.properties also specified.
+     * 
+     * Thus, user ssl.properties should get used.
+     */
+    @Test
+    public void userHomeConfigOverridesSystem() {
+        File systemEtc = new File(this.getClass().getResource("/system_th_home").getFile());
+        CommonPaths paths = mock(CommonPaths.class);
+        when(paths.getSystemConfigurationDirectory()).thenReturn(systemEtc);
+        File userEtc = new File(this.getClass().getResource("/user_th_home").getFile());
+        when(paths.getUserConfigurationDirectory()).thenReturn(userEtc);
+        
+        // assert preconditions
+        assertTrue("ssl.properties in system home expected to exist",
+                new File(systemEtc, "ssl.properties").exists());
+        assertTrue("ssl.properties in user home expected to exist",
+                new File(userEtc, "ssl.properties").exists());
+        
+        SSLConfigurationImpl config = new SSLConfigurationImpl(paths);
+        // This should use system ssl.properties and use values defined there
+        config.loadProperties();
+        
+        // Both config location should have been checked.
+        verify(paths).getSystemConfigurationDirectory();
+        verify(paths).getUserConfigurationDirectory();
+        
+        // use this assertion in order to avoid false positives if loading of
+        // ssl.properties did not work, but boolean matches default values.
+        assertEquals("user thermostat home", config.getKeyStorePassword());
+        assertFalse(config.enableForBackingStorage());
+        assertFalse(config.disableHostnameVerification());
+    }
+    
+    /*
+     * $THERMOSTAT_HOME/etc/ssl.properties is missing,
+     * $USER_THERMOSTAT_HOME/etc/ssl.properties is specified.
+     * 
+     * Thus, user ssl.properties should get used and it should not fail in some
+     * weird way since system ssl.properties is not existing.
+     */
+    @Test
+    public void userHomeConfigCanBeUsedWithSystemMissing() {
+        File systemEtc = new File("/thermostat/not-existing-foo");
+        CommonPaths paths = mock(CommonPaths.class);
+        when(paths.getSystemConfigurationDirectory()).thenReturn(systemEtc);
+        File userEtc = new File(this.getClass().getResource("/user_th_home").getFile());
+        when(paths.getUserConfigurationDirectory()).thenReturn(userEtc);
+        
+        // assert preconditions
+        assertFalse("system ssl.properties does not exist",
+                new File(systemEtc, "ssl.properties").exists());
+        assertTrue("ssl.properties in user home exists",
+                new File(userEtc, "ssl.properties").exists());
+        
+        SSLConfigurationImpl config = new SSLConfigurationImpl(paths);
+        // This should use system ssl.properties and use values defined there
+        config.loadProperties();
+        
+        // Both config location should have been checked.
+        verify(paths).getSystemConfigurationDirectory();
+        verify(paths).getUserConfigurationDirectory();
+        
+        // use this assertion in order to avoid false positives if loading of
+        // ssl.properties did not work, but boolean matches default values.
+        assertEquals("user thermostat home", config.getKeyStorePassword());
+        assertFalse(config.enableForBackingStorage());
+        assertFalse(config.disableHostnameVerification());
+    }
+    
+    /*
+     * Neither ssl.properties file exist. It is expected to initialize and
+     * provide reasonable default values.
+     */
+    @Test
+    public void noSSLConfigProvidesReasonableDefaults() {
+        File systemEtc = new File("/thermostat-home-system/not-existing-foo");
+        CommonPaths paths = mock(CommonPaths.class);
+        when(paths.getSystemConfigurationDirectory()).thenReturn(systemEtc);
+        File userEtc = new File("/thermostat-home-user/not-existing-bar");
+        when(paths.getUserConfigurationDirectory()).thenReturn(userEtc);
+        
+        // assert preconditions
+        assertFalse("system ssl.properties does not exist",
+                new File(systemEtc, "ssl.properties").exists());
+        assertFalse("user ssl.properties does not exist",
+                new File(userEtc, "ssl.properties").exists());
+        
+        SSLConfigurationImpl config = new SSLConfigurationImpl(paths);
+        // This should use system ssl.properties and use values defined there
+        config.loadProperties();
+        
+        // Both config location should have been checked.
+        verify(paths).getSystemConfigurationDirectory();
+        verify(paths).getUserConfigurationDirectory();
+
+        // assert default values
+        assertNull(config.getKeyStorePassword());
+        assertNull(config.getKeystoreFile());
+        assertFalse(config.enableForBackingStorage());
+        assertFalse(config.enableForCmdChannel());
+        assertFalse(config.disableHostnameVerification());
     }
 }
 

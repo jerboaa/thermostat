@@ -50,7 +50,8 @@ import com.redhat.thermostat.shared.config.SSLConfiguration;
 public class SSLConfigurationImpl implements SSLConfiguration {
 
     private CommonPaths paths;
-    private Properties clientProps = null;
+    private Properties configProps = null;
+    private static final String SSL_PROPS_FILENAME = "ssl.properties";
     private static final String KEYSTORE_FILE_KEY = "KEYSTORE_FILE";
     private static final String KEYSTORE_FILE_PWD_KEY = "KEYSTORE_PASSWORD";
     private static final String CMD_CHANNEL_SSL_KEY = "COMMAND_CHANNEL_USE_SSL";
@@ -65,13 +66,13 @@ public class SSLConfigurationImpl implements SSLConfiguration {
     @Override
     public File getKeystoreFile() {
         try {
-            loadClientProperties();
+            loadProperties();
         } catch (InvalidConfigurationException e) {
             // Thermostat home not set? Should have failed earlier. Do something
             // reasonable.
             return null;
         }
-        String path = clientProps.getProperty(KEYSTORE_FILE_KEY);
+        String path = configProps.getProperty(KEYSTORE_FILE_KEY);
         if (path != null) {
             File file = new File(path);
             return file;
@@ -82,12 +83,12 @@ public class SSLConfigurationImpl implements SSLConfiguration {
     @Override
     public String getKeyStorePassword() {
         try {
-            loadClientProperties();
+            loadProperties();
         } catch (InvalidConfigurationException e) {
             // Thermostat home not set? Do something reasonable
             return null;
         }
-        String pwd = clientProps.getProperty(KEYSTORE_FILE_PWD_KEY);
+        String pwd = configProps.getProperty(KEYSTORE_FILE_PWD_KEY);
         return pwd;
     }
     
@@ -107,10 +108,10 @@ public class SSLConfigurationImpl implements SSLConfiguration {
     }
 
     // testing hook
-    void initClientProperties(File clientPropertiesFile) {
-        clientProps = new Properties();
+    void initProperties(File clientPropertiesFile) {
+        configProps = new Properties();
         try {
-            clientProps.load(new FileInputStream(clientPropertiesFile));
+            configProps.load(new FileInputStream(clientPropertiesFile));
         } catch (IOException | IllegalArgumentException e) {
             // Could not load ssl properties file. This is fine as it's
             // an optional config.
@@ -120,26 +121,36 @@ public class SSLConfigurationImpl implements SSLConfiguration {
     private boolean readBooleanProperty(final String property) {
         boolean result = false;
         try {
-            loadClientProperties();
+            loadProperties();
         } catch (InvalidConfigurationException e) {
             logger.log(Level.WARNING,
                     "THERMOSTAT_HOME not set and config file attempted to be " +
                     		"read from there! Returning false.");
             return result;
         }
-        String token = clientProps.getProperty(property);
+        String token = configProps.getProperty(property);
         if (token != null) {
             result = Boolean.parseBoolean(token);
         }
         return result;
     }
 
-    private void loadClientProperties()
+    // package-private for testing.
+    void loadProperties()
             throws InvalidConfigurationException {
-        if (clientProps == null) {
-            File clientPropertiesFile = new File(paths.getUserConfigurationDirectory(),
-                    "ssl.properties");
-            initClientProperties(clientPropertiesFile);
+        if (configProps == null) {
+            File userPropertiesFile = new File(paths.getUserConfigurationDirectory(),
+                    SSL_PROPS_FILENAME);
+            File systemPropertiesFile = new File(paths.getSystemConfigurationDirectory(),
+                    SSL_PROPS_FILENAME);
+            if (userPropertiesFile.exists()) {
+                // user props overrides system file
+                initProperties(userPropertiesFile);
+            } else {
+                // user props does not exist, use system properties file
+                // (if any)
+                initProperties(systemPropertiesFile);
+            }
         }
     }
 }
