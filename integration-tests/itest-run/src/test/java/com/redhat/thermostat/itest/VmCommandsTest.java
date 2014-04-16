@@ -53,6 +53,7 @@ public class VmCommandsTest extends IntegrationTest {
 
     @BeforeClass
     public static void setUpOnce() throws Exception {
+        createFakeSetupCompleteFile();
         startStorage();
 
         // TODO insert actual data into the database and test that
@@ -61,6 +62,7 @@ public class VmCommandsTest extends IntegrationTest {
     @AfterClass
     public static void tearDownOnce() throws Exception {
         stopStorage();
+        removeSetupCompleteStampFiles();
     }
 
     @Ignore //FIXME when keyring/preferences improvements have been made, un-Ignore

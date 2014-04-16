@@ -266,6 +266,7 @@ public class WebAppTest extends IntegrationTest {
         // This starts storage with the permit localhost exception option.
         // It's important to start storage with that exception. Otherwise the
         // mongodb user creds setup will fail.
+        createFakeSetupCompleteFile();
         startStorage();
         
         setupMongodbUser();
@@ -298,18 +299,10 @@ public class WebAppTest extends IntegrationTest {
         server.join();
         
         stopStorage();
-        cleanupMongodbStampFile();
+        removeSetupCompleteStampFiles();
     
         Files.copy(backupUsers, new File(THERMOSTAT_USERS_FILE).toPath(), StandardCopyOption.REPLACE_EXISTING);
         Files.copy(backupRoles, new File(THERMOSTAT_ROLES_FILE).toPath(), StandardCopyOption.REPLACE_EXISTING);
-    }
-
-    private static void cleanupMongodbStampFile() throws IOException {
-        File dataDir = new File(getUserThermostatHome(), "data");
-        File mongodbStampFile = new File(dataDir, "mongodb-user-done.stamp");
-        if (mongodbStampFile.exists()) {
-            Files.delete(mongodbStampFile.toPath());
-        }
     }
 
     // PRE: storage started with --permitLocalhostException
@@ -319,6 +312,13 @@ public class WebAppTest extends IntegrationTest {
         // in it, so starting backing storage (i.e. mongodb) with the 
         // --permitLocalhostException option is sufficient.
         if (isDevelopmentBuild()) {
+            
+            // Remove the mongodb-user-added.stamp file,
+            // but keep the main setup file around so as to be able to
+            // actually launch thermostat.
+            removeSetupCompleteStampFiles();
+            createFakeSetupCompleteFile();
+            
             String mongodbUsername = getMongodbUsername();
             String mongodbPassword = getMongodbPassword();
             String creds = String.format("%s\n%s\n", mongodbUsername,

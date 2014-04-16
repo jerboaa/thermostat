@@ -38,6 +38,8 @@ package com.redhat.thermostat.itest;
 
 import java.io.IOException;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -55,6 +57,16 @@ public class StorageConnectionTest extends IntegrationTest {
     // @AfterClass // reinstate once we actually need storage running
     public static void tearDownOnce() throws Exception {
         stopStorage();
+    }
+    
+    @Before
+    public void setup() {
+        createFakeSetupCompleteFile();
+    }
+    
+    @After
+    public void tearDown() throws IOException {
+        removeSetupCompleteStampFiles();
     }
 
     @Ignore //FIXME when keyring/preferences improvements have been made, un-Ignore

@@ -43,6 +43,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,23 +66,6 @@ public class IntegrationTest {
     public static final String ITEST_USER_HOME_PROP = "com.redhat.thermostat.itest.thermostatUserHome";
     public static final String ITEST_THERMOSTAT_HOME_PROP = "com.redhat.thermostat.itest.thermostatHome";
     
-    // Make sure the setup file - and its partent directories - are created
-    // before any integration test runs.
-    // See CommonPathsImpl.getUserSetupComleteStampFile().
-    static {
-        String userHome = getUserThermostatHome();
-        File fUserHome = new File(userHome);
-        fUserHome.mkdir();
-        File dataDir = new File(fUserHome, "data");
-        dataDir.mkdir();
-        File setupFile = new File(dataDir, "setup-complete.stamp");
-        try {
-            setupFile.createNewFile();
-        } catch (IOException e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
-    }
-
     public static class SpawnResult {
         final Process process;
         final Spawn spawn;
@@ -99,6 +83,59 @@ public class IntegrationTest {
     private static final String THERMOSTAT_HOME = "THERMOSTAT_HOME";
     private static final String USER_THERMOSTAT_HOME = "USER_THERMOSTAT_HOME";
     private static final String THERMOSTAT_SCRIPT = "thermostat";
+    
+    /**
+     * Utility method for creating the setup file - and its parent directories
+     * which makes basic thermostat commands to be able to run (instead of
+     * getting the launcher warning).
+     * 
+     * Be sure to call this in @Before/@BeforeClass methods of your tests as
+     * appropriate. There is no good way for this base class to know when it
+     * should get called.
+     */
+    protected static void createFakeSetupCompleteFile() {
+        String userHome = getUserThermostatHome();
+        File fUserHome = new File(userHome);
+        fUserHome.mkdir();
+        File dataDir = new File(fUserHome, "data");
+        dataDir.mkdir();
+        File setupFile = new File(dataDir, "setup-complete.stamp");
+        try {
+            // creates file only if not yet existing
+            setupFile.createNewFile();
+        } catch (IOException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Utility method for removing stamp files which may get created by certain
+     * integration test runs. For example a test which runs the "service"
+     * command now depends on a proper mongodb user to be set up. Setting it up
+     * may create the mongodb-user-done.stamp file. Similar with running
+     * the thermostat-setup script and setup-complete.stamp.
+     * 
+     * Be sure to call this in @After/@AfterClass as appropriate. There is no
+     * simple way for the base class to know when to erase those files.
+     * 
+     * @throws IOException
+     */
+    protected static void removeSetupCompleteStampFiles() throws IOException {
+        String mongodbUserDoneFile = getUserThermostatHome() + "/data/mongodb-user-done.stamp";
+        String setupStampFile = getUserThermostatHome() + "/data/setup-complete.stamp";
+        File mongodbFileStamp = new File(mongodbUserDoneFile);
+        File setupFileStamp = new File(setupStampFile);
+        removeFileIgnoreMissing(mongodbFileStamp);
+        removeFileIgnoreMissing(setupFileStamp);
+    }
+    
+    private static void removeFileIgnoreMissing(File file) throws IOException {
+        try {
+            Files.delete(file.toPath());
+        } catch (NoSuchFileException e) {
+            // wanted to delete that file, so that should be fine.
+        }
+    }
 
     /* This is a mirror of paths from c.r.t.shared.Configuration */
 

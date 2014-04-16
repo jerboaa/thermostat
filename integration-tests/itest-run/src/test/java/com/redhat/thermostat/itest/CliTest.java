@@ -42,6 +42,8 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import expectj.Spawn;
@@ -50,6 +52,16 @@ import expectj.Spawn;
  * Integration tests to exercise the basics of the thermostat command line.
  */
 public class CliTest extends IntegrationTest {
+    
+    @Before
+    public void setup() {
+        createFakeSetupCompleteFile();
+    }
+    
+    @After
+    public void tearDown() throws IOException {
+        removeSetupCompleteStampFiles();
+    }
 
     @Test
     public void testExpectIsSane() throws Exception {

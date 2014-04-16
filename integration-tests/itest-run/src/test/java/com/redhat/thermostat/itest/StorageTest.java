@@ -36,11 +36,25 @@
 
 package com.redhat.thermostat.itest;
 
+import java.io.IOException;
+
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import expectj.Spawn;
 
 public class StorageTest extends IntegrationTest {
+    
+    @Before
+    public void setup() {
+        createFakeSetupCompleteFile();
+    }
+    
+    @After
+    public void tearDown() throws IOException {
+        removeSetupCompleteStampFiles();
+    }
 
     @Test
     public void startAndStopStorage() throws Exception {
@@ -65,7 +79,6 @@ public class StorageTest extends IntegrationTest {
 
     @Test
     public void testServiceStartAndKilling() throws Exception {
-
         SpawnResult spawnResult = spawnThermostatAndGetProcess("service");
         Spawn service = spawnResult.spawn;
 
@@ -73,6 +86,13 @@ public class StorageTest extends IntegrationTest {
             service.expectErr("agent started");
         } finally {
             killRecursively(spawnResult.process);
+            try {
+                // On Eclipse IDE runs this recursive killing does not kill
+                // mongod. Do it this way to be really sure.
+                stopStorage();
+            } catch (Exception e) {
+                // ignore if second try of stopping storage failed.
+            }
         }
 
         service.stop();

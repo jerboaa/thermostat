@@ -122,6 +122,7 @@ public class MongoQueriesTest extends IntegrationTest {
 
     @BeforeClass
     public static void setUpOnce() throws Exception {
+        createFakeSetupCompleteFile();
         startStorage();
 
         addCpuData(4);
@@ -132,6 +133,7 @@ public class MongoQueriesTest extends IntegrationTest {
         deleteCpuData();
 
         stopStorage();
+        removeSetupCompleteStampFiles();
     }
 
     /*

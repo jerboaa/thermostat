@@ -43,7 +43,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -66,12 +68,22 @@ public class PluginTest extends IntegrationTest {
         userPlugin.install();
         unknownExtension.install();
     }
+    
+    @Before
+    public void setup() {
+        createFakeSetupCompleteFile();
+    }
 
     @AfterClass
     public static void tearDownOnce() {
         unknownExtension.uninstall();
         userPlugin.uninstall();
         fooPlugin.uninstall();
+    }
+    
+    @After
+    public void tearDown() throws IOException {
+        removeSetupCompleteStampFiles();
     }
 
     @Test

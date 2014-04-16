@@ -39,10 +39,11 @@ package com.redhat.thermostat.itest;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 
+import org.junit.After;
 import org.junit.Test;
 
 import expectj.Spawn;
@@ -51,25 +52,33 @@ public class DevWebStorageTest extends IntegrationTest {
     
     private static final String THERMOSTAT_DEV_SETUP_SCRIPT = "thermostat-devsetup";
     
+    @After
+    public void tearDown() throws IOException {
+        removeSetupCompleteStampFiles();
+        removeAgentAuthFile();
+    }
+    
+    private static void removeAgentAuthFile() throws IOException {
+        File agentAuth = new File(getUserThermostatHome() , "etc/agent.auth");
+        try {
+            Files.delete(agentAuth.toPath());
+        } catch (FileNotFoundException e) {
+            // this is what we wanted, so ignore it.
+        }
+    }
+
     @Test
     public void canRunWebStorageService() throws Exception {
         if (isDevelopmentBuild()) {
-            removeSetupCompleteStampFile();
+            // test setup
+            removeSetupCompleteStampFiles();
+            
+            // run the test methods
             runThermostatSetup();
             runWebStorageTest();
         }
         // otherwise service is not build so don't run the
         // test.
-    }
-    
-    private void removeSetupCompleteStampFile() throws IOException {
-        String setupStampFile = getUserThermostatHome() + "/data/setup-complete.stamp";
-        File fileStamp = new File(setupStampFile);
-        try {
-            Files.delete(fileStamp.toPath());
-        } catch (NoSuchFileException e) {
-            // wanted to delete that file, so that should be fine.
-        }
     }
 
     private void runThermostatSetup() throws Exception {
@@ -92,6 +101,13 @@ public class DevWebStorageTest extends IntegrationTest {
         } finally {
             // service.stop only stops the agent/webservice.
             killRecursively(spawnResult.process);
+            try {
+                // On Eclipse IDE runs this recursive killing does not kill
+                // mongod. Do it this way to be really sure.
+                stopStorage();
+            } catch (Exception e) {
+                // ignore if second try of stopping storage failed.
+            }
         }
 
         service.expectClose();
