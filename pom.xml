@@ -277,6 +277,9 @@ password=${agent.dev.password}
     <module>thermostat-plugin-validator</module>
     <module>validate-command</module>
     <module>config</module>
+    <!-- pom-only artifact for reducing duplication
+         of deps across dev/release build profiles -->
+    <module>build-deps</module>
     <!-- development related modules -->
     <module>integration-tests</module>
     <module>dev</module>
