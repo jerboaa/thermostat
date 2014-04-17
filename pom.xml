@@ -99,7 +99,7 @@ client-tester=tester
         </dev.users.snippet>
         <dev.roles.snippet>
 # Roles for our two dev users
-${agent.dev.username}=thermostat-agent
+${agent.dev.username}=thermostat-agent, thermostat-grant-write-files-all-agent
 client-tester=thermostat-grant-read-all-client, thermostat-cmdc
 # Agent recursive role
 thermostat-agent = thermostat-cmdc-verify, \
@@ -110,7 +110,10 @@ thermostat-agent = thermostat-cmdc-verify, \
                    thermostat-realm, \
                    thermostat-save-file, \
                    thermostat-write
-# Client recursive role (granting a client to read all data)
+# Grant agent to write any file
+thermostat-grant-write-files-all-agent = thermostat-files-grant-write-filename-ALL
+                   
+# Client recursive role (granting a client to read all data + all files)
 thermostat-grant-read-all-client = thermostat-agents-grant-read-agentId-ALL, \
                     thermostat-cmdc-generate, \
                     thermostat-hosts-grant-read-hostname-ALL, \
@@ -121,7 +124,8 @@ thermostat-grant-read-all-client = thermostat-agents-grant-read-agentId-ALL, \
                     thermostat-realm, \
                     thermostat-register-category, \
                     thermostat-vms-grant-read-username-ALL, \
-                    thermostat-vms-grant-read-vmId-ALL
+                    thermostat-vms-grant-read-vmId-ALL, \
+                    thermostat-files-grant-read-filename-ALL
 # Grants all command channel operations
 thermostat-cmdc = thermostat-cmdc-grant-garbage-collect, \
                   thermostat-cmdc-grant-dump-heap, \
