@@ -178,6 +178,12 @@ unlockThermostat() {
     echo "File $SETUP_COMPLETE_FILE exists. Skipping setup!"
     exit 0
   fi
+  # Be sure to create the "data" parent directory if it does not
+  # yet exist.
+  local datadir="$(dirname $SETUP_COMPLETE_FILE)"
+  if [ ! -e "$datadir" ]; then
+    mkdir -p "$datadir"
+  fi
   echo "$SETUP_TMP_UNLOCK_CONTENT" > "$SETUP_COMPLETE_FILE"
 }
 
