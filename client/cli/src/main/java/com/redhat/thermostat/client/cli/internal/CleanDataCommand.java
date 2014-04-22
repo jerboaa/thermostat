@@ -37,13 +37,7 @@
 package com.redhat.thermostat.client.cli.internal;
 
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -52,25 +46,15 @@ import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.storage.core.Categories;
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
-import com.redhat.thermostat.storage.model.BasePojo;
 
 public class CleanDataCommand extends AbstractCommand {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
-    private static final Logger logger = LoggingUtils.getLogger(CleanDataCommand.class);
     private BundleContext bundleContext;
     private boolean removeLiveAgent = false;
 
@@ -110,14 +94,10 @@ public class CleanDataCommand extends AbstractCommand {
         AgentInfoDAO agentInfoDAO = (AgentInfoDAO) bundleContext.getService(agentServiceRef);
         
         try {
-            Set<String> storedAgentIdList = getAllRegisteredAgents(storage);
-            
             for (String agentId : agentIdList) {
-                AgentInformation agentInfo = agentInfoDAO.getAgentInformation(new HostRef(agentId, agentId));
+                AgentInformation agentInfo = agentInfoDAO.getAgentInformation(new HostRef(agentId, "unused"));
                 if (agentInfo != null) {
                     removeAgentDataIfSane(storage, agentId, !agentInfo.isAlive(), output);
-                } else if (storedAgentIdList.contains(agentId)) {
-                    removeAgentDataIfSane(storage, agentId, true, output);
                 } else {
                     output.println(translator.localize(LocaleResources.AGENT_NOT_FOUND, agentId).getContents());
                 }
@@ -135,16 +115,10 @@ public class CleanDataCommand extends AbstractCommand {
         AgentInfoDAO agentInfoDAO = (AgentInfoDAO) bundleContext.getService(agentServiceRef);
         
         try {
-            Set<String> storedAgentIdList = getAllRegisteredAgents(storage);
-            List<String> aliveAgentsId = new ArrayList<String>();
-            List<AgentInformation> allAliveAgentsInfo = agentInfoDAO.getAliveAgents(); 
-            for (AgentInformation aliveAgent : allAliveAgentsInfo) {
-                aliveAgentsId.add(aliveAgent.getAgentId());
-            }
-            
-            for (String agentId : storedAgentIdList) {
-                boolean isDead = !aliveAgentsId.contains(agentId);
-                removeAgentDataIfSane(storage, agentId, isDead, output);
+            List<AgentInformation> allAgents = agentInfoDAO.getAllAgentInformation();
+            for (AgentInformation agentInfo : allAgents) {
+                boolean isDead = !agentInfo.isAlive();
+                removeAgentDataIfSane(storage, agentInfo.getAgentId(), isDead, output);
             }
         } finally {
             bundleContext.ungetService(agentServiceRef);
@@ -170,31 +144,6 @@ public class CleanDataCommand extends AbstractCommand {
         CleanOptions(String option) {
             this.option = option;
         }
-    }
-
-    private Set<String> getAllRegisteredAgents(Storage storage) {
-        List<Category<?>> categories = Categories.getAllCategories();
-        Set<String> agents = new HashSet<>();
-        PreparedStatement<BasePojo> prepared = null;
-        Cursor<BasePojo> agentCursor = null;
-        for (Category category : categories) {
-            String query = "QUERY " + category.getName();
-            StatementDescriptor<BasePojo> desc = new StatementDescriptor<>(category, query);
-            try {
-                prepared = storage.prepareStatement(desc);
-                agentCursor = prepared.executeQuery();
-            } catch (DescriptorParsingException e) {
-                logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
-                return Collections.emptySet();
-            } catch (StatementExecutionException e) {
-                logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
-                return Collections.emptySet();
-            }
-            while (agentCursor.hasNext()) {
-                agents.add(agentCursor.next().getAgentId());
-            }
-        }
-        return agents;
     }
 
 }

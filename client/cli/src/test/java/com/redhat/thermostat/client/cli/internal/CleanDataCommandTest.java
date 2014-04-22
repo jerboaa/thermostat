@@ -36,44 +36,33 @@
 
 package com.redhat.thermostat.client.cli.internal;
 
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.times;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Console;
-import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
-import com.redhat.thermostat.storage.model.BasePojo;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(AgentInformation.class)
 public class CleanDataCommandTest {
 
     private CleanDataCommand cleanDataCommand;
@@ -82,6 +71,8 @@ public class CleanDataCommandTest {
     private PrintStream mockOutput;
     private AgentInfoDAO mockAgentInfoDAO;
     private Arguments mockArguments;
+    private List<AgentInformation> liveAgentInfoList;
+    private List<AgentInformation> allAgentInfoList;
 
     @Before
     public void setUp() throws DescriptorParsingException, StatementExecutionException {
@@ -104,36 +95,31 @@ public class CleanDataCommandTest {
         when(mockCommandContext.getConsole()).thenReturn(mockConsole);
         when(mockConsole.getOutput()).thenReturn(mockOutput);
         
-        List<AgentInformation> liveAgentInfoList = new ArrayList<AgentInformation>();
-        AgentInformation mockAgent1 = PowerMockito.mock(AgentInformation.class);
-        AgentInformation mockAgent2 = PowerMockito.mock(AgentInformation.class);
-        AgentInformation mockAgent3 = PowerMockito.mock(AgentInformation.class);
-        AgentInformation mockAgent4 = PowerMockito.mock(AgentInformation.class);
-        AgentInformation mockAgent5 = PowerMockito.mock(AgentInformation.class);
-        when(mockAgent1.getAgentId()).thenReturn("agentId1");
-        when(mockAgent2.getAgentId()).thenReturn("agentId2");
-        when(mockAgent3.getAgentId()).thenReturn("agentId3");
-        when(mockAgent4.getAgentId()).thenReturn("agentId4");
-        when(mockAgent5.getAgentId()).thenReturn("agentId5");
-        when(mockAgent4.isAlive()).thenReturn(true);
-        when(mockAgent5.isAlive()).thenReturn(true);
+        liveAgentInfoList = new ArrayList<AgentInformation>();
+        AgentInformation mockAgent1 = new AgentInformation("agentId1");
+        AgentInformation mockAgent2 = new AgentInformation("agentId2");
+        AgentInformation mockAgent3 = new AgentInformation("agentId3");
+        AgentInformation mockAgent4 = new AgentInformation("agentId4");
+        AgentInformation mockAgent5 = new AgentInformation("agentId5");
+        mockAgent4.setAlive(true);
+        mockAgent5.setAlive(true);
         
         liveAgentInfoList.add(mockAgent4);
         liveAgentInfoList.add(mockAgent5);
-        when(mockAgentInfoDAO.getAliveAgents()).thenReturn(liveAgentInfoList);
-        when(mockAgentInfoDAO.getAgentInformation(new HostRef("agentId1", "agentId1"))).thenReturn(mockAgent1);
-        when(mockAgentInfoDAO.getAgentInformation(new HostRef("agentId2", "agentId2"))).thenReturn(mockAgent2);
-        when(mockAgentInfoDAO.getAgentInformation(new HostRef("agentId3", "agentId3"))).thenReturn(mockAgent3);
-        when(mockAgentInfoDAO.getAgentInformation(new HostRef("agentId4", "agentId4"))).thenReturn(mockAgent4);
-        when(mockAgentInfoDAO.getAgentInformation(new HostRef("agentId5", "agentId5"))).thenReturn(mockAgent5);
+        allAgentInfoList = new ArrayList<>(5);
+        allAgentInfoList.addAll(Arrays.asList(
+           mockAgent1,
+           mockAgent2,
+           mockAgent3,
+           mockAgent4,
+           mockAgent5
+        ));
         
-        Cursor<BasePojo> agentCursor = (Cursor<BasePojo>) mock(Cursor.class);
-        when(agentCursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(true).thenReturn(true).thenReturn(true).thenReturn(false);
-        when(agentCursor.next()).thenReturn(mockAgent1).thenReturn(mockAgent2).thenReturn(mockAgent3).thenReturn(mockAgent4).thenReturn(mockAgent5).thenReturn(null);
-        
-        PreparedStatement<BasePojo> prepared = (PreparedStatement<BasePojo>) mock(PreparedStatement.class);
-        when(mockStorage.prepareStatement((StatementDescriptor<BasePojo>) any(StatementDescriptor.class))).thenReturn(prepared);
-        when(prepared.executeQuery()).thenReturn(agentCursor);
+        when(mockAgentInfoDAO.getAgentInformation(new HostRef("agentId1", "unused"))).thenReturn(mockAgent1);
+        when(mockAgentInfoDAO.getAgentInformation(new HostRef("agentId2", "unused"))).thenReturn(mockAgent2);
+        when(mockAgentInfoDAO.getAgentInformation(new HostRef("agentId3", "unused"))).thenReturn(mockAgent3);
+        when(mockAgentInfoDAO.getAgentInformation(new HostRef("agentId4", "unused"))).thenReturn(mockAgent4);
+        when(mockAgentInfoDAO.getAgentInformation(new HostRef("agentId5", "unused"))).thenReturn(mockAgent5);
     }
 
     @Test
@@ -209,6 +195,7 @@ public class CleanDataCommandTest {
     @Test
     public void testRemoveAllDeadAgents() throws CommandException {
         when(mockArguments.hasArgument("all")).thenReturn(true);
+        when(mockAgentInfoDAO.getAllAgentInformation()).thenReturn(allAgentInfoList);
         
         cleanDataCommand.run(mockCommandContext);
         
@@ -222,6 +209,7 @@ public class CleanDataCommandTest {
     public void testRemoveAllLiveAgents() throws CommandException {
         when(mockArguments.hasArgument("all")).thenReturn(true);
         when(mockArguments.hasArgument("alive")).thenReturn(true);
+        when(mockAgentInfoDAO.getAllAgentInformation()).thenReturn(allAgentInfoList);
       
         cleanDataCommand.run(mockCommandContext);
       
