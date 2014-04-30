@@ -100,7 +100,8 @@ client-tester=tester
         <dev.roles.snippet>
 # Roles for our two dev users
 ${agent.dev.username}=thermostat-agent, thermostat-grant-write-files-all-agent
-client-tester=thermostat-grant-read-all-client, thermostat-cmdc
+# client-tester needs thermostat-purge role for clean-data command to work
+client-tester=thermostat-grant-read-all-client, thermostat-cmdc, thermostat-purge
 # Agent recursive role
 thermostat-agent = thermostat-cmdc-verify, \
                    thermostat-login, \
