@@ -53,6 +53,7 @@ import com.redhat.thermostat.client.swing.components.GradientPanel;
 import com.redhat.thermostat.client.ui.Palette;
 import com.redhat.thermostat.common.model.Range;
 
+@Deprecated
 @SuppressWarnings("serial")
 public abstract class TimelineRulerHeader extends GradientPanel {
 

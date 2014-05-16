@@ -42,11 +42,13 @@ import java.awt.Rectangle;
 
 import com.redhat.thermostat.client.ui.Palette;
 
+@Deprecated
 public class TimelineUtils {
     public static final Font FONT = new Font("SansSerif", Font.PLAIN, 10);
  
     public static void drawMarks(Graphics2D graphics, Rectangle bounds,
-                                 int currentValue, boolean darkerTop, int increment)
+                                 int currentValue, boolean darkerTop,
+                                 int increment)
     {
         int inc = currentValue % increment;
         int x = (bounds.x - inc);
