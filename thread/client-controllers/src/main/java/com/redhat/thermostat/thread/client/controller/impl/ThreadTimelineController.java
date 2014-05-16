@@ -49,8 +49,6 @@ import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
 import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView.ThreadTimelineViewAction;
 import com.redhat.thermostat.thread.model.ThreadHeader;
 import com.redhat.thermostat.thread.model.ThreadState;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.List;
 
 public class ThreadTimelineController extends CommonController {
@@ -65,7 +63,6 @@ public class ThreadTimelineController extends CommonController {
     private final String lock = new String("ThreadTimelineController"); 
 
     private boolean followMode;
-    private long timelineLength;
 
     private TimelineDimensionModel timelineDimensionModel;
     private Range<Long> pageRangeInStaticMode;
@@ -80,20 +77,8 @@ public class ThreadTimelineController extends CommonController {
         followMode = false;
 
         this.timelineDimensionModel = timelineDimensionModel;
-        timelineDimensionModel.addPropertyChangeListener(TimelineDimensionModel.LENGTH_PROPERTY,
-                                                         new TimelineDimensionPropertyChangeListener());
     }
 
-    private class TimelineDimensionPropertyChangeListener implements PropertyChangeListener {
-        
-        @Override
-        public void propertyChange(PropertyChangeEvent evt) {
-            synchronized (lock) {                    
-                timelineLength = timelineDimensionModel.getLengthInMillis();
-            }
-        }
-    }
-    
     private class ThreadTimelineSelectedAction implements ActionListener<ThreadTimelineViewAction> {
         
         @Override
@@ -129,6 +114,8 @@ public class ThreadTimelineController extends CommonController {
         public void run() {
             
             synchronized (lock) {
+
+                long timelineLength = timelineDimensionModel.getLengthInMillis();
 
                 Range<Long> totalRange = collector.getThreadStateTotalTimeRange();
                 if (totalRange == null) {
