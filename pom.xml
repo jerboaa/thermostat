@@ -151,6 +151,8 @@ password=${agent.dev.password}
     <thermostat.releasedate>${maven.build.timestamp}</thermostat.releasedate>
     <thermostat.email>thermostat@icedtea.classpath.org</thermostat.email>
     <thermostat.url>http://icedtea.classpath.org/thermostat/</thermostat.url>
+    <thermostat.bug.url>http://icedtea.classpath.org/bugzilla/enter_bug.cgi?product=Thermostat</thermostat.bug.url>
+
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <thermostat.build.directory>target</thermostat.build.directory>
     <thermostat.java.version>1.7</thermostat.java.version>

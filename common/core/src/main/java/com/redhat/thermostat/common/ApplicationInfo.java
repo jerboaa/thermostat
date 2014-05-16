@@ -107,5 +107,8 @@ public class ApplicationInfo {
         return appInfo.getProperty("APP_WEBSITE", MISSING_INFO);
     }
 
+    public String getBugReportsAddress() {
+        return appInfo.getProperty("BUG_WEBSITE", MISSING_INFO);
+    }
 }
 

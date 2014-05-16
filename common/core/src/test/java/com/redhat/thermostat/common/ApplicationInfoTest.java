@@ -36,16 +36,14 @@
 
 package com.redhat.thermostat.common;
 
-import static org.junit.Assert.*;
-
+import com.redhat.thermostat.common.locale.LocaleResources;
 import java.util.Locale;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.locale.LocaleResources;
-import com.redhat.thermostat.common.ApplicationInfo;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 public class ApplicationInfoTest {
 
@@ -61,6 +59,12 @@ public class ApplicationInfoTest {
     public void testProperties() {
         ApplicationInfo appInfo = new ApplicationInfo();
         assertFalse(appInfo.getName().compareTo(LocaleResources.createLocalizer().localize(LocaleResources.MISSING_INFO).getContents()) == 0);
+    }
+
+    @Test
+    public void testGetBugReportsAddress() {
+        ApplicationInfo appInfo = new ApplicationInfo();
+        assertEquals(appInfo.getBugReportsAddress(), "http://icedtea.classpath.org/bugzilla/enter_bug.cgi?product=Thermostat");
     }
 
     @After

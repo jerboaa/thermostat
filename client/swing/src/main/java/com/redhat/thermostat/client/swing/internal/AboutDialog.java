@@ -57,7 +57,6 @@ public class AboutDialog extends JDialog {
 
     /**
      * Create the dialog.
-     * @param applicationInfo 
      */
     public AboutDialog(ApplicationInfo appInfo) {
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);

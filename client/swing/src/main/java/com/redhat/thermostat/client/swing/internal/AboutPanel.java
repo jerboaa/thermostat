@@ -67,7 +67,7 @@ public class AboutPanel extends JPanel {
     private String license;
     private String website;
     private String email;
-    
+    private String bugReports;
 
     public AboutPanel(ApplicationInfo appInfo) {
         description = appInfo.getDescription();
@@ -76,7 +76,8 @@ public class AboutPanel extends JPanel {
         license = appInfo.getLicenseSummary();
         website = appInfo.getWebsite();
         email = appInfo.getEmail();
-        
+        bugReports = appInfo.getBugReportsAddress();
+
         UIResources res = UIResources.getInstance();
         icon = new com.redhat.thermostat.client.swing.components.Icon(res.getLogo());
         
@@ -97,7 +98,7 @@ public class AboutPanel extends JPanel {
         homePageLabel.setForeground(res.hyperlinkColor());
         homePageLabel.setHorizontalAlignment(SwingConstants.CENTER);
         homePageLabel.setFont(res.footerFont());        
-        homePageLabel.addMouseListener(new Browse(homePageLabel));
+        homePageLabel.addMouseListener(new Browse(homePageLabel, website));
 
         JLabel copyrightLabel = new JLabel(copyright);
         copyrightLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -112,20 +113,27 @@ public class AboutPanel extends JPanel {
         emailLabel.setForeground(res.hyperlinkColor());
         emailLabel.setFont(res.footerFont());
         emailLabel.addMouseListener(new Mailer(emailLabel));
-        
+
+        JLabel bugReportsLabel = new JLabel(bugReports);
+        bugReportsLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        bugReportsLabel.setForeground(res.hyperlinkColor());
+        bugReportsLabel.setFont(res.footerFont());
+        bugReportsLabel.addMouseListener(new Browse(bugReportsLabel, bugReports));
+
         GroupLayout gl_panel = new GroupLayout(this);
         gl_panel.setHorizontalGroup(
             gl_panel.createParallelGroup(Alignment.TRAILING)
-                .addGroup(gl_panel.createSequentialGroup()
+                .addGroup(Alignment.LEADING, gl_panel.createSequentialGroup()
                     .addContainerGap()
                     .addGroup(gl_panel.createParallelGroup(Alignment.LEADING)
-                        .addComponent(iconLabel, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 398, Short.MAX_VALUE)
-                        .addComponent(versionLabel, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 398, Short.MAX_VALUE)
-                        .addComponent(descriptionLabel, GroupLayout.DEFAULT_SIZE, 398, Short.MAX_VALUE)
-                        .addComponent(copyrightLabel, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 398, Short.MAX_VALUE)
-                        .addComponent(licenseString, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 398, Short.MAX_VALUE)
-                        .addComponent(emailLabel, GroupLayout.DEFAULT_SIZE, 398, Short.MAX_VALUE)
-                        .addComponent(homePageLabel, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 398, Short.MAX_VALUE))
+                        .addComponent(bugReportsLabel, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 564, Short.MAX_VALUE)
+                        .addComponent(iconLabel, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 499, Short.MAX_VALUE)
+                        .addComponent(versionLabel, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 499, Short.MAX_VALUE)
+                        .addComponent(descriptionLabel, GroupLayout.DEFAULT_SIZE, 499, Short.MAX_VALUE)
+                        .addComponent(copyrightLabel, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 499, Short.MAX_VALUE)
+                        .addComponent(licenseString, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 499, Short.MAX_VALUE)
+                        .addComponent(emailLabel, GroupLayout.DEFAULT_SIZE, 499, Short.MAX_VALUE)
+                        .addComponent(homePageLabel, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 499, Short.MAX_VALUE))
                     .addContainerGap())
         );
         gl_panel.setVerticalGroup(
@@ -134,17 +142,19 @@ public class AboutPanel extends JPanel {
                     .addContainerGap()
                     .addComponent(iconLabel)
                     .addGap(4)
-                    .addComponent(versionLabel, GroupLayout.DEFAULT_SIZE, 13, Short.MAX_VALUE)
+                    .addComponent(versionLabel, GroupLayout.DEFAULT_SIZE, 38, Short.MAX_VALUE)
                     .addPreferredGap(ComponentPlacement.UNRELATED)
-                    .addComponent(descriptionLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(descriptionLabel, GroupLayout.DEFAULT_SIZE, 38, Short.MAX_VALUE)
                     .addGap(12)
-                    .addComponent(homePageLabel, GroupLayout.DEFAULT_SIZE, 19, Short.MAX_VALUE)
+                    .addComponent(homePageLabel, GroupLayout.DEFAULT_SIZE, 42, Short.MAX_VALUE)
                     .addGap(3)
-                    .addComponent(emailLabel, GroupLayout.DEFAULT_SIZE, 19, Short.MAX_VALUE)
+                    .addComponent(emailLabel, GroupLayout.DEFAULT_SIZE, 38, Short.MAX_VALUE)
                     .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(copyrightLabel, GroupLayout.DEFAULT_SIZE, 13, Short.MAX_VALUE)
+                    .addComponent(copyrightLabel, GroupLayout.DEFAULT_SIZE, 38, Short.MAX_VALUE)
                     .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(licenseString, GroupLayout.DEFAULT_SIZE, 13, Short.MAX_VALUE)
+                    .addComponent(licenseString, GroupLayout.DEFAULT_SIZE, 38, Short.MAX_VALUE)
+                    .addPreferredGap(ComponentPlacement.UNRELATED)
+                    .addComponent(bugReportsLabel, GroupLayout.PREFERRED_SIZE, 40, GroupLayout.PREFERRED_SIZE)
                     .addContainerGap())
         );
         this.setLayout(gl_panel);
@@ -208,14 +218,16 @@ public class AboutPanel extends JPanel {
     }
     
     private class Browse extends HyperLinkAction {
-        public Browse(JLabel hyperLinkLabel) {
+        private String website;
+        public Browse(JLabel hyperLinkLabel, String website) {
             super(hyperLinkLabel);
+            this.website = website;
         }
         
         @Override
         protected void doAction() {
             try {
-                Desktop.getDesktop().browse(new URI(website));
+                Desktop.getDesktop().browse(new URI(Browse.this.website));
             } catch (Exception ex) {
                 logger.log(Level.WARNING, "Cannot open Thermostat website URL", ex);
             }
