@@ -36,19 +36,6 @@
 
 package com.redhat.thermostat.thread.client.controller.impl;
 
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.isA;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.any;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationCache;
@@ -63,13 +50,25 @@ import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
+import com.redhat.thermostat.thread.client.common.model.timeline.TimelineDimensionModel;
 import com.redhat.thermostat.thread.client.common.view.ThreadCountView;
 import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
+import com.redhat.thermostat.thread.client.common.view.ThreadTableView.ThreadSelectionAction;
 import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
 import com.redhat.thermostat.thread.client.common.view.ThreadView;
 import com.redhat.thermostat.thread.client.common.view.VMThreadCapabilitiesView;
-import com.redhat.thermostat.thread.client.common.view.ThreadTableView.ThreadSelectionAction;
 import com.redhat.thermostat.thread.client.common.view.VmDeadLockView;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+
+import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class ThreadInformationControllerTest {
 
@@ -89,9 +88,14 @@ public class ThreadInformationControllerTest {
     private VmDeadLockView deadLockView;
     private ThreadTimelineView threadTimelineView;
     private ThreadCountView threadCountView;
-    
+
+    private TimelineDimensionModel timelineDimensionModel;
+
     @Before
     public void setUp() {
+
+        timelineDimensionModel = mock(TimelineDimensionModel.class);
+
         appService = mock(ApplicationService.class);
         vmInfo = mock(VmInfo.class);
         when(vmInfo.isAlive()).thenReturn(true);
@@ -142,17 +146,20 @@ public class ThreadInformationControllerTest {
     private void createController() {
         ApplicationCache cache = mock(ApplicationCache.class);
         when(appService.getApplicationCache()).thenReturn(cache);
-        
+
         VmRef ref = mock(VmRef.class);
         HostRef agent = mock(HostRef.class);
         when(ref.getHostRef()).thenReturn(agent);
         when(agent.getAgentId()).thenReturn("0xcafe");
-        
+
         ThreadCollectorFactory collectorFactory = mock(ThreadCollectorFactory.class);
         ThreadCollector collector = mock(ThreadCollector.class);
         when(collectorFactory.getCollector(ref)).thenReturn(collector);
-        
-        controller = new ThreadInformationController(ref, appService, vmInfoDao, collectorFactory, viewFactory);
+
+        controller = new ThreadInformationController(ref, appService, vmInfoDao,
+                                                     collectorFactory,
+                                                     viewFactory,
+                                                     timelineDimensionModel);
     }
     
     @Test
@@ -173,13 +180,13 @@ public class ThreadInformationControllerTest {
         ActionListener<ThreadView.ThreadAction> threadActionListener;
         ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addThreadActionListener(viewArgumentCaptor.capture());
-        
+
         VmRef ref = mock(VmRef.class);
         when(ref.getVmId()).thenReturn("42");
         HostRef agent = mock(HostRef.class);
         when(ref.getHostRef()).thenReturn(agent);
         when(agent.getAgentId()).thenReturn("0xcafe");
-        
+
         ThreadCollector collector = mock(ThreadCollector.class);
         when(collector.isHarvesterCollecting()).thenReturn(false).thenReturn(true);
         when(collector.startHarvester()).thenReturn(true);
@@ -187,29 +194,32 @@ public class ThreadInformationControllerTest {
 
         ThreadCollectorFactory collectorFactory = mock(ThreadCollectorFactory.class);
         when(collectorFactory.getCollector(ref)).thenReturn(collector);
-        
+
         ApplicationCache cache = mock(ApplicationCache.class);
         when(appService.getApplicationCache()).thenReturn(cache);
-                
-        controller = new ThreadInformationController(ref, appService, vmInfoDao, collectorFactory, viewFactory);
-        
+
+        controller = new ThreadInformationController(ref, appService, vmInfoDao,
+                                                     collectorFactory,
+                                                     viewFactory,
+                                                     timelineDimensionModel);
+
         verify(collector).isHarvesterCollecting();
         verify(view, times(1)).setRecording(false, false);
-        
+
         threadActionListener = viewArgumentCaptor.getValue();
         threadActionListener.actionPerformed(new ActionEvent<>(view, ThreadView.ThreadAction.START_LIVE_RECORDING));
-        
+
         verify(view, times(1)).setRecording(false, false);
         verify(collector).startHarvester();
-        
+
         threadActionListener.actionPerformed(new ActionEvent<>(view, ThreadView.ThreadAction.STOP_LIVE_RECORDING));
-        
-        verify(collector).stopHarvester();        
+
+        verify(collector).stopHarvester();
         verify(view, times(1)).setRecording(false, false);
-        
+
         threadActionListener.actionPerformed(new ActionEvent<>(view, ThreadView.ThreadAction.STOP_LIVE_RECORDING));
-        
-        verify(collector, times(2)).stopHarvester();        
+
+        verify(collector, times(2)).stopHarvester();
         verify(view, times(1)).setRecording(true, false);
 
         verify(view, times(0)).setEnableRecordingControl(false);

@@ -36,20 +36,12 @@
 
 package com.redhat.thermostat.thread.client.common.collector.impl;
 
-import java.net.InetSocketAddress;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
+import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
@@ -57,11 +49,21 @@ import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.collector.HarvesterCommand;
 import com.redhat.thermostat.thread.dao.ThreadDao;
+import com.redhat.thermostat.thread.model.ThreadContentionSample;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
-import com.redhat.thermostat.thread.model.ThreadInfoData;
+import com.redhat.thermostat.thread.model.ThreadHeader;
+import com.redhat.thermostat.thread.model.ThreadState;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 import com.redhat.thermostat.thread.model.VmDeadLockData;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+
+import java.net.InetSocketAddress;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ThreadMXBeanCollector implements ThreadCollector {
     
@@ -143,7 +145,22 @@ public class ThreadMXBeanCollector implements ThreadCollector {
         }
         return summary;
     }
-    
+
+    @Override
+    public Range<Long> getThreadStateRange(ThreadHeader thread) {
+
+        Range<Long> result = null;
+
+        ThreadState last = threadDao.getLastThreadState(thread);
+        ThreadState first = threadDao.getFirstThreadState(thread);
+
+        if (last != null && first != null) {
+            result = new Range<>(first.getProbeStartTime(), last.getProbeEndTime());
+        }
+
+        return result;
+    }
+
     @Override
     public List<ThreadSummary> getThreadSummary(long since) {
         List<ThreadSummary> summary = threadDao.loadSummary(ref, since);
@@ -154,15 +171,14 @@ public class ThreadMXBeanCollector implements ThreadCollector {
     public List<ThreadSummary> getThreadSummary() {
         return getThreadSummary(0);
     }
-    
+
     @Override
-    public List<ThreadInfoData> getThreadInfo() {
-        return getThreadInfo(0);
+    public Range<Long> getThreadStateTotalTimeRange() {
+        return threadDao.getThreadStateTotalTimeRange(ref);
     }
-    
-    @Override
-    public List<ThreadInfoData> getThreadInfo(long since) {
-        return threadDao.loadThreadInfo(ref, since);
+
+    public List<ThreadState> getThreadStates(ThreadHeader thread, Range<Long> range) {
+        return threadDao.getThreadStates(thread, range);
     }
 
     @Override
@@ -185,6 +201,11 @@ public class ThreadMXBeanCollector implements ThreadCollector {
         harvester.setParameter(HarvesterCommand.VM_PID.name(), String.valueOf(ref.getPid()));
 
         postAndWait(harvester);
+    }
+
+    @Override
+    public ThreadContentionSample getLatestContentionSample(ThreadHeader thread) {
+        return threadDao.getLatestContentionSample(thread);
     }
 
     private boolean postAndWait(Request harvester) {
@@ -213,7 +234,12 @@ public class ThreadMXBeanCollector implements ThreadCollector {
         } catch (InterruptedException ignore) {}
         return result[0];
     }
-    
+
+    @Override
+    public List<ThreadHeader> getThreads() {
+        return threadDao.getThreads(ref);
+    }
+
     private void enqueueRequest(Request req) throws CommandChannelException {
         ServiceReference ref = context.getServiceReference(RequestQueue.class.getName());
         if (ref == null) {

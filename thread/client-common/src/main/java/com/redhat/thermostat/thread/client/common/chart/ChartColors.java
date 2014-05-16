@@ -45,7 +45,11 @@ public class ChartColors {
     public static Color getColor(String state) {
         return getColor(Thread.State.valueOf(state));
     }
-    
+
+    public static Palette getPaletteColor(String state) {
+        return getPaletteColor(Thread.State.valueOf(state));
+    }
+
     public static Palette getPaletteColor(Thread.State state) {
         Palette result = null;
         

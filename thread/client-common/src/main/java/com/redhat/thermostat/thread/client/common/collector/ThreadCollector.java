@@ -36,14 +36,17 @@
 
 package com.redhat.thermostat.thread.client.common.collector;
 
-import java.util.List;
-
+import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.model.ThreadInfoData;
+import com.redhat.thermostat.thread.model.ThreadContentionSample;
+import com.redhat.thermostat.thread.model.ThreadHeader;
+import com.redhat.thermostat.thread.model.ThreadState;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 import com.redhat.thermostat.thread.model.VmDeadLockData;
+
+import java.util.List;
 
 public interface ThreadCollector {
     
@@ -59,27 +62,44 @@ public interface ThreadCollector {
     ThreadSummary getLatestThreadSummary();
     List<ThreadSummary> getThreadSummary(long since);
     List<ThreadSummary> getThreadSummary();
-    
-    /**
-     * Return a list of {@link ThreadInfoData}, sorted in descending order their by
-     * {@link ThreadInfoData#getTimeStamp()}, whose elements are at most
-     * "{@code since}" old.
-     */
-    List<ThreadInfoData> getThreadInfo(long since);
 
     /**
-     * Return a list of all the {@link ThreadInfoData} collected, sorted in
-     * descending order their by {@link ThreadInfoData#getTimeStamp()}.
+     * Return the range of all {@link ThreadState} data (timestamp of first and
+     * last ThreadState entry in storage) for this virtual machine.
      */
-    List<ThreadInfoData> getThreadInfo();
+    Range<Long> getThreadStateTotalTimeRange();
+
+    /**
+     * Return the range of {@link ThreadState} for the given
+     * {@link ThreadHeader} (timestamp of first and
+     * last ThreadState entry in storage).
+     */
+    Range<Long> getThreadStateRange(ThreadHeader thread);
+
+    /**
+     * Returns a list with all the {@link ThreadState} information for the
+     * given {@link ThreadHeader}, in the given range, in ascending order.
+     */
+    List<ThreadState> getThreadStates(ThreadHeader thread, Range<Long> range);
 
     /**
      * Check for deadlocks. {@link #getLatestDeadLockData} needs to be called to
-     * obtain the data
+     * obtain the data.
      */
     void requestDeadLockCheck();
 
     /** Return the latest deadlock data */
     VmDeadLockData getLatestDeadLockData();
+    
+    /**
+     * Returns a list with all {@link ThreadHeader}s listed in the storage.
+     */
+    List<ThreadHeader> getThreads();
+
+    /**
+     * Returns the latest {@link ThreadContentionSample} available for this
+     * {@link ThreadHeader}.
+     */
+    ThreadContentionSample getLatestContentionSample(ThreadHeader thread);
 }
 

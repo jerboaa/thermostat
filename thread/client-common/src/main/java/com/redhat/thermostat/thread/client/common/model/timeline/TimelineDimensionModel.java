@@ -34,42 +34,25 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.controller.impl;
+package com.redhat.thermostat.thread.client.common.model.timeline;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.beans.PropertyChangeListener;
 
-import com.redhat.thermostat.thread.model.ThreadInfoData;
+import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
 
-public class ThreadInfoHelper {
-
+/**
+ * Model to define the size of the timeline with respect to the physical
+ * dimension of the {@link ThreadTimelineView}.
+ */
+public interface TimelineDimensionModel {
+    
     /**
-     * Creates a {@link Map} whose keys are {@link ThreadInfoData} in the input
-     * list and whose values are all the {@link ThreadInfoData} equals to the
-     * key.
-     *
-     * <br /><br />
-     * 
-     * Preserves the order of the input list.
-     * 
-     * <br /><br />
-     * 
-     * <strong>NOTE</strong>: The current invariant is that
-     * {@link ThreadInfoData} are equals if they have same thread id and name.
+     * This property defines the total length in milliseconds of the
+     * {@link ThreadTimelineView}.
      */
-    public static Map<ThreadInfoData, List<ThreadInfoData>> getThreadInfoDataMap(List<ThreadInfoData> infos) {
-        Map<ThreadInfoData, List<ThreadInfoData>> stats = new HashMap<>();
-        for (ThreadInfoData info : infos) {
-            List<ThreadInfoData> beanList = stats.get(info);
-            if (beanList == null) {
-                beanList = new ArrayList<ThreadInfoData>();
-                stats.put(info, beanList);
-            }                    
-            beanList.add(info);
-        }
-        return stats;
-    }
+    public static final String LENGTH_PROPERTY = "LENGTH_PROPERTY";
+    
+    long getLengthInMillis();
+    
+    public void addPropertyChangeListener(String property, PropertyChangeListener listener);
 }
-

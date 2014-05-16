@@ -39,6 +39,7 @@ package com.redhat.thermostat.thread.client.swing.impl;
 import java.awt.Component;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -180,8 +181,8 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
         private String [] columns = {
                 t.localize(LocaleResources.NAME).getContents(),
                 t.localize(LocaleResources.ID).getContents(),
-                t.localize(LocaleResources.START).getContents(),
-                t.localize(LocaleResources.STOP).getContents(),
+                t.localize(LocaleResources.FIRST_SEEN).getContents(),
+                t.localize(LocaleResources.LAST_SEEN).getContents(),
                 t.localize(LocaleResources.WAIT_COUNT).getContents(),
                 t.localize(LocaleResources.BLOCK_COUNT).getContents(),
                 t.localize(LocaleResources.RUNNING).getContents(),
@@ -223,11 +224,12 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
             switch (column) {
             case 1:
             case 2:
-            case 3:                
-                return String.class;                
+            case 3:
             case 6:
             case 7:
-                return Double.class;
+            case 8:
+            case 9:
+                return String.class;
             default:
                 return Long.class;
             }
@@ -236,15 +238,17 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
         @Override
         public Object getValueAt(int row, int column) {
 
+            DecimalFormat format = new DecimalFormat("###.00");
+
             Object result = null;
             
             ThreadTableBean info = infos.get(row);
             switch (column) {
             case 0:
-                result = info.getId();
+                result = info.getName();
                 break;
             case 1:
-                result = info.getName();
+                result = info.getId();
                 break;
             case 2:
                 result = new Date(info.getStartTimeStamp()).toString();
@@ -263,16 +267,16 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
                 result = info.getBlockedCount();
                 break;
             case 6:
-                result = info.getRunningPercent();
+                result = format.format(info.getRunningPercent());
                 break;
             case 7:
-                result = info.getWaitingPercent();
+                result = format.format(info.getWaitingPercent());
                 break;
             case 8:
-                result = info.getSleepingPercent();
+                result = format.format(info.getSleepingPercent());
                 break;
             case 9:
-                result = info.getMonitorPercent();
+                result = format.format(info.getMonitorPercent());
                 break;
              default:
                  result = "n/a";

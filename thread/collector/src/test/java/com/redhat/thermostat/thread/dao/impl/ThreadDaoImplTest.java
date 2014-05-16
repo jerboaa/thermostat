@@ -36,27 +36,6 @@
 
 package com.redhat.thermostat.thread.dao.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-
-import java.util.List;
-import java.util.NoSuchElementException;
-
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
-
 import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
@@ -70,9 +49,30 @@ import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
-import com.redhat.thermostat.thread.model.ThreadInfoData;
+import com.redhat.thermostat.thread.model.ThreadHeader;
+import com.redhat.thermostat.thread.model.ThreadState;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 import com.redhat.thermostat.thread.model.VmDeadLockData;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
+
+import java.util.List;
+import java.util.NoSuchElementException;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 public class ThreadDaoImplTest {
 
@@ -96,45 +96,51 @@ public class ThreadDaoImplTest {
     public void preparedQueryDescriptorsAreSane() {
         String expectedQueryThreadCaps = "QUERY vm-thread-capabilities WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1";
         assertEquals(expectedQueryThreadCaps, ThreadDaoImpl.QUERY_THREAD_CAPS);
+
         String expectedQueryLatestSummary = "QUERY vm-thread-summary WHERE 'agentId' = ?s AND 'vmId' = ?s SORT 'timeStamp' DSC LIMIT 1";
         assertEquals(expectedQueryLatestSummary, ThreadDaoImpl.QUERY_LATEST_SUMMARY);
+
         String expectedQuerySummarySince = "QUERY vm-thread-summary WHERE 'agentId' = ?s AND 'vmId' = ?s AND 'timeStamp' > ?l SORT 'timeStamp' DSC";
         assertEquals(expectedQuerySummarySince, ThreadDaoImpl.QUERY_SUMMARY_SINCE);
+
         String expectedQueryLatestHarvestingStatus = "QUERY vm-thread-harvesting WHERE 'agentId' = ?s AND 'vmId' = ?s SORT 'timeStamp' DSC LIMIT 1";
         assertEquals(expectedQueryLatestHarvestingStatus, ThreadDaoImpl.QUERY_LATEST_HARVESTING_STATUS);
-        String expectedQueryThreadInfoSince = "QUERY vm-thread-info WHERE 'agentId' = ?s AND 'vmId' = ?s AND 'timeStamp' > ?l SORT 'timeStamp' DSC";
-        assertEquals(expectedQueryThreadInfoSince, ThreadDaoImpl.QUERY_THREAD_INFO_SINCE);
-        String expectedQueryThreadInfoInterval = "QUERY vm-thread-info WHERE 'agentId' = ?s AND 'vmId' = ?s AND 'timeStamp' > ?l AND 'timeStamp' < ?l SORT 'timeStamp' DSC";
-        assertEquals(expectedQueryThreadInfoInterval, ThreadDaoImpl.QUERY_THREAD_INFO_INTERVAL);
-        String expectedQueryLatestThreadInfo = "QUERY vm-thread-info WHERE 'agentId' = ?s AND 'vmId' = ?s SORT 'timeStamp' DSC LIMIT 1";
-        assertEquals(expectedQueryLatestThreadInfo, ThreadDaoImpl.QUERY_LATEST_THREAD_INFO);
-        String expectedQueryOldestThreadInfo = "QUERY vm-thread-info WHERE 'agentId' = ?s AND 'vmId' = ?s SORT 'timeStamp' ASC LIMIT 1";
-        assertEquals(expectedQueryOldestThreadInfo, ThreadDaoImpl.QUERY_OLDEST_THREAD_INFO);
+
+        String expectedQueryThreadHeader = "QUERY vm-thread-header WHERE 'agentId' = ?s AND 'vmId' = ?s AND 'threadName' = ?s AND 'threadId' = ?l LIMIT 1";
+        assertEquals(expectedQueryThreadHeader, ThreadDaoImpl.QUERY_THREAD_HEADER);
+
+        String expectedQueryAllThreadHeaders = "QUERY vm-thread-header WHERE 'agentId' = ?s AND 'vmId' = ?s SORT 'timeStamp' DSC";
+        assertEquals(expectedQueryAllThreadHeaders, ThreadDaoImpl.QUERY_ALL_THREAD_HEADERS);
+
+        String expectedQueryLatestThreadStateForThread = "QUERY vm-thread-state WHERE 'agentId' = ?s AND 'referenceID' = ?s SORT 'probeEndTime' DSC LIMIT 1";
+        assertEquals(expectedQueryLatestThreadStateForThread, ThreadDaoImpl.QUERY_LATEST_THREAD_STATE_FOR_THREAD);
+
+        String expectedQueryOldestThreadState = "QUERY vm-thread-state WHERE 'agentId' = ?s AND 'vmId' = ?s SORT 'probeStartTime' ASC LIMIT 1";
+        assertEquals(expectedQueryOldestThreadState, ThreadDaoImpl.QUERY_OLDEST_THREAD_STATE);
+
         String expectedQueryThreadLatestDeadlockInfo = "QUERY vm-deadlock-data WHERE 'agentId' = ?s AND 'vmId' = ?s SORT 'timeStamp' DSC LIMIT 1";
         assertEquals(expectedQueryThreadLatestDeadlockInfo, ThreadDaoImpl.QUERY_LATEST_DEADLOCK_INFO);
+
         String addThreadSummary = "ADD vm-thread-summary SET 'agentId' = ?s , " +
                                             "'vmId' = ?s , " +
                                             "'currentLiveThreads' = ?l , " +
                                             "'currentDaemonThreads' = ?l , " +
                                             "'timeStamp' = ?l";
         assertEquals(addThreadSummary, ThreadDaoImpl.DESC_ADD_THREAD_SUMMARY);
+
         String addThreadHarvesting = "ADD vm-thread-harvesting SET 'agentId' = ?s , " +
                                                     "'vmId' = ?s , " +
                                                     "'timeStamp' = ?l , " +
                                                     "'harvesting' = ?b";
         assertEquals(addThreadHarvesting, ThreadDaoImpl.DESC_ADD_THREAD_HARVESTING_STATUS);
-        String addThreadInfo = "ADD vm-thread-info SET 'agentId' = ?s , " +
+
+        String addThreadInfo = "ADD vm-thread-header SET 'agentId' = ?s , " +
                                     "'vmId' = ?s , " +
                                     "'threadName' = ?s , " +
                                     "'threadId' = ?l , " +
-                                    "'threadState' = ?s , " +
-                                    "'allocatedBytes' = ?l , " +
                                     "'timeStamp' = ?l , " +
-                                    "'threadCpuTime' = ?l , " +
-                                    "'threadUserTime' = ?l , " +
-                                    "'threadBlockedCount' = ?l , " +
-                                    "'threadWaitCount' = ?l";
-        assertEquals(addThreadInfo, ThreadDaoImpl.DESC_ADD_THREAD_INFO);
+                                    "'referenceID' = ?s";
+        assertEquals(addThreadInfo, ThreadDaoImpl.ADD_THREAD_HEADER);
         String addDeadlockData = "ADD vm-deadlock-data SET 'agentId' = ?s , " +
                                     "'vmId' = ?s , " +
                                     "'timeStamp' = ?l , " +
@@ -145,6 +151,35 @@ public class ThreadDaoImplTest {
                                         "'supportedFeaturesList' = ?s[" +
                                     " WHERE 'agentId' = ?s AND 'vmId' = ?s";
         assertEquals(replaceThreadCaps, ThreadDaoImpl.DESC_REPLACE_THREAD_CAPS);
+
+
+        String addThreadState = "ADD vm-thread-state SET 'agentId' = ?s , " +
+                                "'vmId' = ?s , 'state' = ?s , " +
+                                "'probeStartTime' = ?l , 'probeEndTime' = ?l , " +
+                                "'referenceID' = ?s";
+        assertEquals(addThreadState, ThreadDaoImpl.ADD_THREAD_STATE);
+
+        String getThreadStatesForVM = "QUERY vm-thread-state WHERE " +
+                                      "'referenceID' = ?s AND " +
+                                      "'probeEndTime' >= ?l AND " +
+                                      "'probeStartTime' <= ?l SORT " +
+                                      "'probeStartTime' ASC";
+        assertEquals(getThreadStatesForVM, ThreadDaoImpl.QUERY_THREAD_STATE_PER_THREAD);
+
+        String addContentionSample = "ADD thread-contention-sample SET " +
+                "'agentId' = ?s , 'vmId' = ?s , 'blockedCount' = ?l , " +
+                "'blockedTime' = ?l , 'waitedCount' = ?l , " +
+                "'waitedTime' = ?l , 'referenceID' = ?s , 'timeStamp' = ?l";
+        assertEquals(addContentionSample, ThreadDaoImpl.ADD_CONTENTION_SAMPLE);
+
+        String getLatestContentionSample = "QUERY thread-contention-sample " +
+                "WHERE 'referenceID' = ?s SORT 'timeStamp' DSC LIMIT 1";
+        assertEquals(getLatestContentionSample, ThreadDaoImpl.GET_LATEST_CONTENTION_SAMPLE);
+
+        String getFirstThreadState = "QUERY vm-thread-state WHERE " +
+                "'agentId' = ?s AND 'referenceID' = ?s SORT 'probeStartTime' " +
+                "ASC LIMIT 1";
+        assertEquals(getFirstThreadState, ThreadDaoImpl.QUERY_FIRST_THREAD_STATE_FOR_THREAD);
     }
     
     @Test
@@ -156,7 +191,6 @@ public class ThreadDaoImplTest {
         
         verify(storage).registerCategory(ThreadDao.THREAD_CAPABILITIES);
         verify(storage).registerCategory(ThreadDao.THREAD_HARVESTING_STATUS);
-        verify(storage).registerCategory(ThreadDao.THREAD_INFO);
         verify(storage).registerCategory(ThreadDao.THREAD_SUMMARY);
     }
     
@@ -386,175 +420,272 @@ public class ThreadDaoImplTest {
     }
 
     @Test
-    public void testSaveThreadInfo() throws DescriptorParsingException, StatementExecutionException {
+    public void testSaveThread() throws DescriptorParsingException, StatementExecutionException {
         final String THREAD_NAME = "name of a thread";
         final long THREAD_ID = 0xcafebabe;
-        final String THREAD_STATE = Thread.State.RUNNABLE.toString();
-        final long ALLOCATED_BYTES = 0xbadbeef;
         final long TIMESTAMP = 0xdeadbeef;
-        final long CPU_TIME = 42;
-        final long USER_TIME = 24;
-        final long BLOCKED_COUNT = 22;
-        final long WAIT_COUNT = 33;
+        final String REF_ID = "42";
 
         Storage storage = mock(Storage.class);
-        PreparedStatement<ThreadInfoData> add = mock(PreparedStatement.class);
+        PreparedStatement<ThreadHeader> add = mock(PreparedStatement.class);
         when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(add);
 
-        // not using mocks because ThreadInfoData is really a data holder (no logic)
-        ThreadInfoData threadInfo = new ThreadInfoData();
-        threadInfo.setAgentId(AGENT_ID);
-        threadInfo.setVmId(VM_ID);
-        threadInfo.setThreadName(THREAD_NAME);
-        threadInfo.setThreadId(THREAD_ID);
-        threadInfo.setThreadState(THREAD_STATE);
-        threadInfo.setAllocatedBytes(ALLOCATED_BYTES);
-        threadInfo.setTimeStamp(TIMESTAMP);
-        threadInfo.setThreadCpuTime(CPU_TIME);
-        threadInfo.setThreadUserTime(USER_TIME);
-        threadInfo.setThreadBlockedCount(BLOCKED_COUNT);
-        threadInfo.setThreadWaitCount(WAIT_COUNT);
+        // not using mocks because ThreadHeader is really a data holder (no logic)
+        ThreadHeader header = new ThreadHeader();
+        header.setAgentId(AGENT_ID);
+        header.setVmId(VM_ID);
+        header.setThreadName(THREAD_NAME);
+        header.setThreadId(THREAD_ID);
+        header.setTimeStamp(TIMESTAMP);
+        header.setReferenceID(REF_ID);
 
         ThreadDaoImpl dao = new ThreadDaoImpl(storage);
-        dao.saveThreadInfo(threadInfo);
+        dao.saveThread(header);
 
         verify(add).setString(0, AGENT_ID);
         verify(add).setString(1, VM_ID);
         verify(add).setString(2, THREAD_NAME);
         verify(add).setLong(3, THREAD_ID);
-        verify(add).setString(4, THREAD_STATE);
-        verify(add).setLong(5, ALLOCATED_BYTES);
-        verify(add).setLong(6, TIMESTAMP);
-        verify(add).setLong(7, CPU_TIME);
-        verify(add).setLong(8, USER_TIME);
-        verify(add).setLong(9, BLOCKED_COUNT);
-        verify(add).setLong(10, WAIT_COUNT);
+        verify(add).setLong(4, TIMESTAMP);
+        verify(add).setString(5, REF_ID);
+
         verify(add).execute();
+
         verifyNoMoreInteractions(add);
     }
 
     @Test
-    public void testThreadInfoTimeRangeWithNoDataAvailable() throws Exception {
-        Cursor<ThreadInfoData> oldestThreadQueryCursor = mock(Cursor.class);
-        when(oldestThreadQueryCursor.hasNext()).thenReturn(false);
-        when(oldestThreadQueryCursor.next()).thenThrow(IllegalStateException.class);
+    public void testGetThreadNoData() throws DescriptorParsingException, StatementExecutionException {
+        final String THREAD_NAME = "name of a thread";
+        final long THREAD_ID = 0xcafebabe;
+        final long TIMESTAMP = 0xdeadbeef;
+        final String REF_ID = "42";
 
-        PreparedStatement<ThreadInfoData> oldestThreadQueryStatement = mock(PreparedStatement.class);
-        when(oldestThreadQueryStatement.executeQuery()).thenReturn(oldestThreadQueryCursor);
+        Cursor<ThreadHeader> cursor = mock(Cursor.class);
+        when(cursor.hasNext()).thenReturn(false);
 
         Storage storage = mock(Storage.class);
-        when(storage.prepareStatement(any(StatementDescriptor.class)))
-            .thenReturn(oldestThreadQueryStatement);
+        PreparedStatement<ThreadHeader> get = mock(PreparedStatement.class);
+        when(get.executeQuery()).thenReturn(cursor);
+
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(get);
+
+        ThreadHeader header = new ThreadHeader();
+        header.setAgentId(AGENT_ID);
+        header.setVmId(VM_ID);
+        header.setThreadName(THREAD_NAME);
+        header.setThreadId(THREAD_ID);
+        header.setTimeStamp(TIMESTAMP);
+        header.setReferenceID(REF_ID);
 
         ThreadDaoImpl dao = new ThreadDaoImpl(storage);
-
-        Range<Long> result = dao.getThreadInfoTimeRange(vmRef);
-
+        ThreadHeader result = dao.getThread(header);
         assertNull(result);
+
+        verify(get).setString(0, AGENT_ID);
+        verify(get).setString(1, VM_ID);
+        verify(get).setString(2, THREAD_NAME);
+        verify(get).setLong(3, THREAD_ID);
+
+        verify(get).executeQuery();
+
+        verifyNoMoreInteractions(get);
     }
 
     @Test
-    public void testThreadInfoTimeRange() throws DescriptorParsingException, StatementExecutionException {
-        final long OLDEST_TIMESTAMP = 0;
-        final long LATEST_TIMESTAMP = 1999;
+    public void testGetThreadWithData() throws DescriptorParsingException, StatementExecutionException {
+        final String THREAD_NAME = "name of a thread";
+        final long THREAD_ID = 0xcafebabe;
+        final long TIMESTAMP = 0xdeadbeef;
+        final String REF_ID = "42";
 
-        ThreadInfoData oldestData = new ThreadInfoData();
-        oldestData.setTimeStamp(OLDEST_TIMESTAMP);
+        ThreadHeader header = new ThreadHeader();
+        header.setAgentId(AGENT_ID);
+        header.setVmId(VM_ID);
+        header.setThreadName(THREAD_NAME);
+        header.setThreadId(THREAD_ID);
+        header.setTimeStamp(TIMESTAMP);
+        header.setReferenceID(REF_ID);
 
-        ThreadInfoData latestData = new ThreadInfoData();
-        latestData.setTimeStamp(LATEST_TIMESTAMP);
-
-        StatementDescriptor<ThreadInfoData> oldestThreadQueryDescriptor
-                = new StatementDescriptor<>(ThreadDaoImpl.THREAD_INFO, ThreadDaoImpl.QUERY_OLDEST_THREAD_INFO);
-
-        StatementDescriptor<ThreadInfoData> latestThreadQueryDescriptor
-                = new StatementDescriptor<>(ThreadDaoImpl.THREAD_INFO, ThreadDaoImpl.QUERY_LATEST_THREAD_INFO);
-
-        Cursor<ThreadInfoData> oldestThreadQueryCursor = mock(Cursor.class);
-        when(oldestThreadQueryCursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(oldestThreadQueryCursor.next()).thenReturn(oldestData).thenThrow(IllegalStateException.class);
-
-        Cursor<ThreadInfoData> latestThreadQueryCursor = mock(Cursor.class);
-        when(latestThreadQueryCursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(latestThreadQueryCursor.next()).thenReturn(latestData).thenThrow(IllegalStateException.class);
-
-        PreparedStatement<ThreadInfoData> oldestThreadQueryStatement = mock(PreparedStatement.class);
-        when(oldestThreadQueryStatement.executeQuery()).thenReturn(oldestThreadQueryCursor);
-
-        PreparedStatement<ThreadInfoData> latestThreadQueryStatement = mock(PreparedStatement.class);
-        when(latestThreadQueryStatement.executeQuery()).thenReturn(latestThreadQueryCursor);
-
-        Storage storage = mock(Storage.class);
-        when(storage.prepareStatement(any(StatementDescriptor.class)))
-            .thenReturn(oldestThreadQueryStatement)
-            .thenReturn(latestThreadQueryStatement);
-
-        ThreadDaoImpl dao = new ThreadDaoImpl(storage);
-
-        Range<Long> result = dao.getThreadInfoTimeRange(vmRef);
-
-        assertEquals((Long) OLDEST_TIMESTAMP, result.getMin());
-        assertEquals((Long) LATEST_TIMESTAMP, result.getMax());
-    }
-
-    @Test
-    public void testLoadThreadInfoSince() throws DescriptorParsingException, StatementExecutionException {
-        final long SINCE_TIMESTAMP = 100;
-
-        Storage storage = mock(Storage.class);
-        PreparedStatement<ThreadInfoData> query = mock(PreparedStatement.class);
-        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(query);
-
-        @SuppressWarnings("unchecked")
-        Cursor<ThreadInfoData> cursor = (Cursor<ThreadInfoData>) mock(Cursor.class);
-        ThreadInfoData info = mock(ThreadInfoData.class);
-
+        Cursor<ThreadHeader> cursor = mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(cursor.next()).thenReturn(info).thenReturn(null);
-        when(query.executeQuery()).thenReturn(cursor);
+        when(cursor.next()).thenReturn(header).thenReturn(null);
+
+        Storage storage = mock(Storage.class);
+        PreparedStatement<ThreadHeader> get = mock(PreparedStatement.class);
+        when(get.executeQuery()).thenReturn(cursor);
+
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(get);
 
         ThreadDaoImpl dao = new ThreadDaoImpl(storage);
-        List<ThreadInfoData> result = dao.loadThreadInfo(vmRef, SINCE_TIMESTAMP);
+        ThreadHeader result = dao.getThread(header);
+        assertNotNull(result);
+        assertEquals(header, result);
 
-        verify(query).setString(0, AGENT_ID);
-        verify(query).setString(1, VM_ID);
-        verify(query).setLong(2, SINCE_TIMESTAMP);
-        verify(query).executeQuery();
-        verifyNoMoreInteractions(query);
+        verify(get).setString(0, AGENT_ID);
+        verify(get).setString(1, VM_ID);
+        verify(get).setString(2, THREAD_NAME);
+        verify(get).setLong(3, THREAD_ID);
 
-        assertEquals(1, result.size());
-        assertEquals(info, result.get(0));
+        verify(get).executeQuery();
+
+        verifyNoMoreInteractions(get);
     }
 
     @Test
-    public void testLoadThreadInfoForRange() throws StatementExecutionException, DescriptorParsingException {
-        final long SINCE_TIMESTAMP = 100;
-        final long TO_TIMESTAMP = 10000;
+    public void testGetThreads() throws DescriptorParsingException, StatementExecutionException {
+
+        ThreadHeader header0 = mock(ThreadHeader.class);
+        ThreadHeader header1 = mock(ThreadHeader.class);
+        ThreadHeader header2 = mock(ThreadHeader.class);
+
+        Cursor<ThreadHeader> cursor = mock(Cursor.class);
+        when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(true).thenReturn(false);
+        when(cursor.next()).thenReturn(header0).thenReturn(header1).thenReturn(header2).thenReturn(null);
 
         Storage storage = mock(Storage.class);
-        PreparedStatement<ThreadInfoData> query = mock(PreparedStatement.class);
-        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(query);
+        PreparedStatement<ThreadHeader> get = mock(PreparedStatement.class);
+        when(get.executeQuery()).thenReturn(cursor);
 
-        @SuppressWarnings("unchecked")
-        Cursor<ThreadInfoData> cursor = (Cursor<ThreadInfoData>) mock(Cursor.class);
-        ThreadInfoData info = mock(ThreadInfoData.class);
-
-        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(cursor.next()).thenReturn(info).thenReturn(null);
-        when(query.executeQuery()).thenReturn(cursor);
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(get);
 
         ThreadDaoImpl dao = new ThreadDaoImpl(storage);
-        List<ThreadInfoData> result = dao.loadThreadInfo(vmRef, new Range<Long>(SINCE_TIMESTAMP, TO_TIMESTAMP));
+        List<ThreadHeader> result = dao.getThreads(vmRef);
+        assertNotNull(result);
+        assertEquals(result.size(), 3);
+        assertEquals(result.get(0), header0);
+        assertEquals(result.get(1), header1);
+        assertEquals(result.get(2), header2);
 
-        verify(query).setString(0, AGENT_ID);
-        verify(query).setString(1, VM_ID);
-        verify(query).setLong(2, SINCE_TIMESTAMP);
-        verify(query).setLong(3, TO_TIMESTAMP);
-        verify(query).executeQuery();
-        verifyNoMoreInteractions(query);
+        verify(get).setString(0, AGENT_ID);
+        verify(get).setString(1, VM_ID);
 
-        assertEquals(1, result.size());
-        assertEquals(info, result.get(0));
+        verify(get).executeQuery();
+
+        verifyNoMoreInteractions(get);
+    }
+
+    @Test
+    public void testAddThreadState() throws Exception {
+        final String VM_ID = "vm42";
+        final String AGENT_ID = "agent42";
+        final String REF_ID = "42";
+        final String STATE = "runnable";
+        final long START_TIME = 1l;
+        final long STOP_TIME = 1l;
+
+        ThreadHeader header = new ThreadHeader(AGENT_ID);
+        header.setVmId(VM_ID);
+        header.setReferenceID(REF_ID);
+
+        ThreadState template = mock(ThreadState.class);
+        when(template.getHeader()).thenReturn(header);
+        when(template.getState()).thenReturn(STATE);
+        when(template.getProbeStartTime()).thenReturn(START_TIME);
+        when(template.getProbeEndTime()).thenReturn(STOP_TIME);
+
+        Storage storage = mock(Storage.class);
+        PreparedStatement<ThreadState> set = mock(PreparedStatement.class);
+
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(set);
+
+        ThreadDaoImpl dao = new ThreadDaoImpl(storage);
+        dao.addThreadState(template);
+
+        verify(set).setString(0, AGENT_ID);
+        verify(set).setString(1, VM_ID);
+        verify(set).setString(2, STATE);
+        verify(set).setLong(3, START_TIME);
+        verify(set).setLong(4, STOP_TIME);
+        verify(set).setString(5, REF_ID);
+
+        verify(set).execute();
+    }
+
+    @Test
+    public void testUpdateThreadState() throws Exception {
+        final String REF_ID = "42";
+        final long START_TIME = 0l;
+        final long STOP_TIME = 1l;
+
+        ThreadHeader header = new ThreadHeader(AGENT_ID);
+        header.setVmId(VM_ID);
+        header.setReferenceID(REF_ID);
+
+        ThreadState template = mock(ThreadState.class);
+        when(template.getHeader()).thenReturn(header);
+        when(template.getProbeStartTime()).thenReturn(START_TIME);
+        when(template.getProbeEndTime()).thenReturn(STOP_TIME);
+
+        Storage storage = mock(Storage.class);
+        PreparedStatement<ThreadState> update = mock(PreparedStatement.class);
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(update);
+
+        ThreadDaoImpl dao = new ThreadDaoImpl(storage);
+        dao.updateThreadState(template);
+
+        verify(update).setLong(0, STOP_TIME);
+        verify(update).setString(1, REF_ID);
+        verify(update).setLong(2, START_TIME);
+
+        verify(update).execute();
+    }
+
+    @Test
+    public void testGetThreadStateTotalTimeRange() throws Exception {
+
+        Range<Long> oldest = new Range(0l, 1l);
+        ThreadState oldestData = mock(ThreadState.class);
+        when(oldestData.getRange()).thenReturn(oldest);
+
+        Range<Long> latest = new Range(2l, 3l);
+        ThreadState latestData = mock(ThreadState.class);
+        when(latestData.getRange()).thenReturn(latest);
+
+        Cursor<ThreadState> cursor = mock(Cursor.class);
+        when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
+        when(cursor.next()).thenReturn(oldestData).thenReturn(latestData);
+
+        Storage storage = mock(Storage.class);
+        PreparedStatement<ThreadState> get = mock(PreparedStatement.class);
+        when(get.executeQuery()).thenReturn(cursor);
+
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(get);
+
+        ThreadDaoImpl dao = new ThreadDaoImpl(storage);
+        Range<Long> result = dao.getThreadStateTotalTimeRange(vmRef);
+        assertNotNull(result);
+
+        verify(get, times(2)).setString(0, AGENT_ID);
+        verify(get, times(2)).setString(1, VM_ID);
+
+        verify(get, times(2)).executeQuery();
+
+        verifyNoMoreInteractions(get);
+    }
+
+    @Test
+    public void testGetThreadStateTotalTimeRangeNoData() throws Exception {
+
+        Cursor<ThreadState> cursor = mock(Cursor.class);
+        when(cursor.hasNext()).thenReturn(false);
+
+        Storage storage = mock(Storage.class);
+        PreparedStatement<ThreadState> get = mock(PreparedStatement.class);
+        when(get.executeQuery()).thenReturn(cursor);
+
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(get);
+
+        ThreadDaoImpl dao = new ThreadDaoImpl(storage);
+        Range<Long> result = dao.getThreadStateTotalTimeRange(vmRef);
+        assertNull(result);
+
+        verify(get).setString(0, AGENT_ID);
+        verify(get).setString(1, VM_ID);
+
+        verify(get).executeQuery();
+
+        verifyNoMoreInteractions(get);
     }
 }
 

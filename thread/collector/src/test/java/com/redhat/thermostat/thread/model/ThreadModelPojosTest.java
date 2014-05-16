@@ -36,20 +36,22 @@
 
 package com.redhat.thermostat.thread.model;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 import java.util.ArrayList;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 public class ThreadModelPojosTest {
 
     private static final Class<?>[] CLASSES_LIST = new Class[] {
         ThreadHarvestingStatus.class,
-        ThreadInfoData.class,
+        ThreadState.class,
+        ThreadHeader.class,
         ThreadSummary.class,
+        ThreadContentionSample.class,
+        VMThreadCapabilities.class,
         VmDeadLockData.class,
-        VMThreadCapabilities.class
     };
 
     @Test

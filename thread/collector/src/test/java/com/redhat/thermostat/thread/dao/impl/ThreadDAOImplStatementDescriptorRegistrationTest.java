@@ -36,13 +36,12 @@
 
 package com.redhat.thermostat.thread.dao.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import com.redhat.thermostat.storage.core.PreparedParameter;
+import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
+import com.redhat.thermostat.storage.core.auth.StatementDescriptorMetadataFactory;
+import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
+import com.redhat.thermostat.storage.internal.dao.DAOImplStatementDescriptorRegistration;
+import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -50,13 +49,13 @@ import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Set;
 
-import org.junit.Test;
-
-import com.redhat.thermostat.storage.core.PreparedParameter;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorMetadataFactory;
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
-import com.redhat.thermostat.storage.internal.dao.DAOImplStatementDescriptorRegistration;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class ThreadDAOImplStatementDescriptorRegistrationTest {
 
@@ -76,7 +75,7 @@ public class ThreadDAOImplStatementDescriptorRegistrationTest {
     public void registersAllDescriptors() {
         ThreadDaoImplStatementDescriptorRegistration reg = new ThreadDaoImplStatementDescriptorRegistration();
         Set<String> descriptors = reg.getStatementDescriptors();
-        assertEquals(14, descriptors.size());
+        assertEquals(20, descriptors.size());
         assertFalse("null descriptor not allowed", descriptors.contains(null));
     }
     
@@ -104,7 +103,7 @@ public class ThreadDAOImplStatementDescriptorRegistrationTest {
         // storage-core + this module
         assertEquals(2, registrations.size());
         assertNotNull(threadDaoReg);
-        assertEquals(14, threadDaoReg.getStatementDescriptors().size());
+        assertEquals(20, threadDaoReg.getStatementDescriptors().size());
     }
     
     private Triple<String, String, PreparedParameter[]> setupForMetaDataTest() {
@@ -165,41 +164,59 @@ public class ThreadDAOImplStatementDescriptorRegistrationTest {
     }
     
     @Test
-    public void canGetMetadataOldestThreadInfo() {
-        Triple<String, String, PreparedParameter[]> triple = setupForMetaDataTest(); 
+    public void canGetMetadataForThreadHeader() {
+        Triple<String, String, PreparedParameter[]> triple = setupForMetaDataTest();
 
         StatementDescriptorMetadataFactory factory = new ThreadDaoImplStatementDescriptorRegistration();
-        DescriptorMetadata data = factory.getDescriptorMetadata(ThreadDaoImpl.QUERY_OLDEST_THREAD_INFO, triple.third);
+        DescriptorMetadata data = factory.getDescriptorMetadata(ThreadDaoImpl.QUERY_THREAD_HEADER, triple.third);
         assertThreadMetadata(triple, data);
     }
 
     @Test
-    public void canGetMetadataLatestThreadInfo() {
+    public void canGetMetadataAllThreadHeaders() {
         Triple<String, String, PreparedParameter[]> triple = setupForMetaDataTest();
 
         StatementDescriptorMetadataFactory factory = new ThreadDaoImplStatementDescriptorRegistration();
-        DescriptorMetadata data = factory.getDescriptorMetadata(ThreadDaoImpl.QUERY_LATEST_THREAD_INFO, triple.third);
+        DescriptorMetadata data = factory.getDescriptorMetadata(ThreadDaoImpl.QUERY_ALL_THREAD_HEADERS, triple.third);
         assertThreadMetadata(triple, data);
     }
 
     @Test
-    public void canGetMetadataThreadInfoQuerySince() {
+    public void canGetMetadataLastThreadStateForThread() {
         Triple<String, String, PreparedParameter[]> triple = setupForMetaDataTest();
 
         StatementDescriptorMetadataFactory factory = new ThreadDaoImplStatementDescriptorRegistration();
-        DescriptorMetadata data = factory.getDescriptorMetadata(ThreadDaoImpl.QUERY_THREAD_INFO_SINCE, triple.third);
+        DescriptorMetadata data = factory.getDescriptorMetadata(ThreadDaoImpl.QUERY_LATEST_THREAD_STATE_FOR_THREAD, triple.third);
         assertThreadMetadata(triple, data);
     }
 
     @Test
-    public void canGetMetadataThreadInfoQueryInterval() {
+    public void canGetMetadataOldestThreadState() {
         Triple<String, String, PreparedParameter[]> triple = setupForMetaDataTest();
 
         StatementDescriptorMetadataFactory factory = new ThreadDaoImplStatementDescriptorRegistration();
-        DescriptorMetadata data = factory.getDescriptorMetadata(ThreadDaoImpl.QUERY_THREAD_INFO_INTERVAL, triple.third);
+        DescriptorMetadata data = factory.getDescriptorMetadata(ThreadDaoImpl.QUERY_OLDEST_THREAD_STATE, triple.third);
         assertThreadMetadata(triple, data);
     }
-    
+
+    @Test
+    public void canGetMetadataLatestThreadState() {
+        Triple<String, String, PreparedParameter[]> triple = setupForMetaDataTest();
+
+        StatementDescriptorMetadataFactory factory = new ThreadDaoImplStatementDescriptorRegistration();
+        DescriptorMetadata data = factory.getDescriptorMetadata(ThreadDaoImpl.QUERY_LATEST_THREAD_STATE, triple.third);
+        assertThreadMetadata(triple, data);
+    }
+
+    @Test
+    public void canGetMetadataThreadStateRange() {
+        Triple<String, String, PreparedParameter[]> triple = setupForMetaDataTest();
+
+        StatementDescriptorMetadataFactory factory = new ThreadDaoImplStatementDescriptorRegistration();
+        DescriptorMetadata data = factory.getDescriptorMetadata(ThreadDaoImpl.QUERY_THREAD_STATE_PER_THREAD, triple.third);
+        assertThreadMetadata(triple, data);
+    }
+
     @Test
     public void unknownDescriptorThrowsException() {
         StatementDescriptorMetadataFactory factory = new ThreadDaoImplStatementDescriptorRegistration();

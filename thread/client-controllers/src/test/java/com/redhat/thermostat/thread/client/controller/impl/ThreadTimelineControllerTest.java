@@ -36,162 +36,96 @@
 
 package com.redhat.thermostat.thread.client.controller.impl;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.anyLong;
-import static org.mockito.Mockito.when;
-
+import com.redhat.thermostat.common.Timer;
+import com.redhat.thermostat.common.model.Range;
+import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
+import com.redhat.thermostat.thread.client.common.model.timeline.Timeline;
+import com.redhat.thermostat.thread.client.common.model.timeline.TimelineDimensionModel;
+import com.redhat.thermostat.thread.client.common.model.timeline.TimelineGroupDataModel;
+import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
+import com.redhat.thermostat.thread.model.ThreadHeader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.common.ActionEvent;
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.Timer;
-import com.redhat.thermostat.common.model.Range;
-import com.redhat.thermostat.thread.client.common.Timeline;
-import com.redhat.thermostat.thread.client.common.TimelineInfo;
-import com.redhat.thermostat.thread.client.common.chart.ChartColors;
-import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
-import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
-import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
-import com.redhat.thermostat.thread.model.ThreadInfoData;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class ThreadTimelineControllerTest {
 
+    private ArgumentCaptor<Runnable> timerActionCaptor;
+    private Timer timer;
+
     private ThreadTimelineView view;
     private ThreadCollector collector;
-    
-    private Timer timer;
-    
-    private ActionListener<ThreadTableView.Action> actionListener;
-    ArgumentCaptor<Runnable> timerActionCaptor;
-    
+    private TimelineDimensionModel timelineDimensionModel;
+    private TimelineGroupDataModel groupDataModel;
+
+    private Range<Long> totalRange = new Range<>(0l, 30_000l);
+
     @Before
-    public void setUp() {
-        collector = mock(ThreadCollector.class);
-        
-        timer = mock(Timer.class);
-        
-        view = mock(ThreadTimelineView.class);
-        
-        setUpTimers();
-    }
-    
-    private void setUpTimers() {
+    public void setUp() throws Exception {
         timer = mock(Timer.class);
         timerActionCaptor = ArgumentCaptor.forClass(Runnable.class);
         doNothing().when(timer).setAction(timerActionCaptor.capture());
-    }
-    
-    @Test
-    public void testDisplayStats() {
-        
-        ThreadInfoData data1 = new ThreadInfoData("foo-agent");
-        data1.setThreadName("test1");
-        data1.setThreadId(1);
-        data1.setState(Thread.State.RUNNABLE);
-        data1.setTimeStamp(100);
-        
-        ThreadInfoData data2 = new ThreadInfoData("foo-agent");
-        data2.setThreadName("test2");
-        data2.setThreadId(2);
-        data2.setTimeStamp(1000);
-        data2.setState(Thread.State.BLOCKED);
-        
-        ThreadInfoData data3 = new ThreadInfoData("foo-agent");
-        data3.setThreadName("test1");
-        data3.setThreadId(1);
-        data3.setState(Thread.State.TIMED_WAITING);
-        data3.setTimeStamp(200);
-        
-        ThreadInfoData data4 = new ThreadInfoData("foo-agent");
-        data4.setThreadName("test2");
-        data4.setThreadId(2);
-        data4.setState(Thread.State.BLOCKED);
-        data4.setTimeStamp(2000);
-        
-        ThreadInfoData data5 = new ThreadInfoData("foo-agent");
-        data5.setThreadName("test2");
-        data5.setThreadId(2);
-        data5.setState(Thread.State.RUNNABLE);
-        data5.setTimeStamp(3000);
-        
-        List<ThreadInfoData> infos = new ArrayList<>();
-        // descending order
-        infos.add(data5);
-        infos.add(data4);
-        infos.add(data2);
-        infos.add(data3);
-        infos.add(data1);
 
-        when(collector.getThreadInfo()).thenReturn(infos);
-        
-        ArgumentCaptor<Runnable> timerCaptor = ArgumentCaptor.forClass(Runnable.class);
-        doNothing().when(timer).setAction(timerCaptor.capture());
-        
-        ThreadTimelineController controller = new ThreadTimelineController(view, collector, timer);
-        controller.initialize();
-        
-        Runnable action = timerCaptor.getValue();
-        action.run();
-        
-        ArgumentCaptor<List> listCaptor = ArgumentCaptor.forClass(List.class);
-        ArgumentCaptor<Range> rangeCaptor = ArgumentCaptor.forClass(Range.class);
+        view = mock(ThreadTimelineView.class);
+        collector = mock(ThreadCollector.class);
+        timelineDimensionModel = mock(TimelineDimensionModel.class);
+        when(timelineDimensionModel.getLengthInMillis()).thenReturn(25_000l);
+        when(collector.getThreadStateTotalTimeRange()).thenReturn(totalRange);
 
-        verify(view).displayStats(listCaptor.capture(), rangeCaptor.capture());
-        
-        List viewResult = listCaptor.getValue();
-        Range<Long> rangeResult = rangeCaptor.getValue();
-        assertEquals(2, viewResult.size());
-        assertEquals(100l, (long) rangeResult.getMin());
-        assertEquals(3000l, (long) rangeResult.getMax());
-
-        Timeline timeline = (Timeline) viewResult.get(0);
-        assertEquals(2, timeline.getId());
-        assertEquals("test2", timeline.getName());
-        assertEquals(3, timeline.size());
-        
-        TimelineInfo [] timelineInfos = timeline.toArray();
-        assertEquals(ChartColors.getPaletteColor(data2.getState()), timelineInfos[0].getColor());
-        assertEquals(ChartColors.getPaletteColor(data4.getState()), timelineInfos[1].getColor());
-        assertEquals(ChartColors.getPaletteColor(data5.getState()), timelineInfos[2].getColor());
-
-        
-        timeline = (Timeline) viewResult.get(1);
-        assertEquals(1, timeline.getId());
-        assertEquals("test1", timeline.getName());
-        assertEquals(2, timeline.size());
-        
-        timelineInfos = timeline.toArray();
-        assertEquals(ChartColors.getPaletteColor(data1.getState()), timelineInfos[0].getColor());
-        assertEquals(ChartColors.getPaletteColor(data3.getState()), timelineInfos[1].getColor());        
+        groupDataModel = mock(TimelineGroupDataModel.class);
+        when(view.getGroupDataModel()).thenReturn(groupDataModel);
     }
 
     @Test
-    public void testStartThreadTimelineController() {
-        
-        ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
-        doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
-        
-        ThreadTimelineController controller = new ThreadTimelineController(view, collector, timer);
-        controller.initialize();
+    public void testTimelineController() {
 
-        actionListener = viewArgumentCaptor.getValue();
-        actionListener.actionPerformed(new ActionEvent<>(view, BasicView.Action.VISIBLE));
-        
-        verify(timer).start();
-        
-        actionListener.actionPerformed(new ActionEvent<>(view, BasicView.Action.HIDDEN));
+        Range<Long> pageRange = new Range<>(5_000l, 30_000l);
+        ArgumentCaptor<Range> pageRangeCaptor = ArgumentCaptor.forClass(Range.class);
+        doNothing().when(groupDataModel).setPageRange(pageRangeCaptor.capture());
 
-        verify(timer).stop();
+        ThreadHeader thread1 = mock(ThreadHeader.class);
+        ThreadHeader thread2 = mock(ThreadHeader.class);
+
+        List<ThreadHeader> threads = new ArrayList<>();
+
+        threads.add(thread1);
+        threads.add(thread2);
+
+        when(collector.getThreads()).thenReturn(threads);
+
+        ThreadTimelineController controller =
+                new ThreadTimelineController(view, collector, timer,
+                                             timelineDimensionModel);
+
+        Runnable controllerRunnable = timerActionCaptor.getValue();
+
+        controllerRunnable.run();
+
+        // check that the thread list is correctly passed to the view
+        verify(view).updateThreadList(threads);
+
+        // verify group model gets updated with the page and total data
+        verify(groupDataModel).setTotalRange(totalRange);
+        Range<Long> pageRangeResult = pageRangeCaptor.getValue();
+        assertEquals(pageRangeResult, pageRange);
+
+        // check that the thread state is queried for each of the thread headers
+        verify(collector).getThreadStates(eq(thread1), any(Range.class));
+        verify(collector).getThreadStates(eq(thread2), any(Range.class));
+
+        verify(view).displayTimeline(eq(thread1), any(Timeline.class));
+        verify(view).displayTimeline(eq(thread2), any(Timeline.class));
+
+        verify(view).submitChanges();
     }
 }
-

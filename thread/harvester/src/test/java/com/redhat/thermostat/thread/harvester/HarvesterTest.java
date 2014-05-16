@@ -36,385 +36,344 @@
 
 package com.redhat.thermostat.thread.harvester;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
+import com.redhat.thermostat.storage.core.WriterID;
+import com.redhat.thermostat.thread.dao.ThreadDao;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.lang.management.ThreadInfo;
-import java.lang.management.ThreadMXBean;
-import java.util.List;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-
-import javax.management.MalformedObjectNameException;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-
-import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
-import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
-import com.redhat.thermostat.common.Clock;
-import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.model.ThreadInfoData;
-import com.redhat.thermostat.thread.model.ThreadSummary;
-import com.redhat.thermostat.thread.model.VMThreadCapabilities;
-import com.redhat.thermostat.thread.model.VmDeadLockData;
-
 public class HarvesterTest {
-    
+
     private WriterID writerId;
-    
+    private int pid;
+
+    private ScheduledExecutorService executor;
+    private ThreadDao dao;
+    private MXBeanConnectionPool pool;
+    private MXBeanConnection connection;
+    private DeadlockHelper deadlockHelper;
+    private VMCapsHelper vmCapsHelper;
+
     @Before
-    public void setup() {
+    public void setup() throws Exception {
         writerId = mock(WriterID.class);
+        pid = 42;
+
+        int pid = 42;
+
+        deadlockHelper = mock(DeadlockHelper.class);
+        vmCapsHelper = mock(VMCapsHelper.class);
+
+        executor = mock(ScheduledExecutorService.class);
+        dao = mock(ThreadDao.class);
+        pool = mock(MXBeanConnectionPool.class);
+        connection = mock(MXBeanConnection.class);
+        when(pool.acquire(pid)).thenReturn(connection);
     }
 
     @Test
-    public void testStart() {
-        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
-        ThreadDao dao = mock(ThreadDao.class);
-        MXBeanConnectionPool pool = mock(MXBeanConnectionPool.class);
+    public void testStart() throws Exception {
 
         ArgumentCaptor<Runnable> arg0 = ArgumentCaptor.forClass(Runnable.class);
         ArgumentCaptor<Long> arg1 = ArgumentCaptor.forClass(Long.class);
         ArgumentCaptor<Long> arg2 = ArgumentCaptor.forClass(Long.class);
         ArgumentCaptor<TimeUnit> arg3 = ArgumentCaptor.forClass(TimeUnit.class);
-        
-        final boolean [] harvestDataCalled = new boolean[1];
-        
-        when(executor.scheduleAtFixedRate(arg0.capture(), arg1.capture(), arg2.capture(), arg3.capture())).thenReturn(null);
-        
-        Harvester harvester = new Harvester(dao, executor, "vmId", 42, pool, writerId) {
-            @Override
-            synchronized void harvestData() {
-                harvestDataCalled[0] = true;
-            }
-        };
-        
+
+        when(executor.scheduleAtFixedRate(arg0.capture(), arg1.capture(),
+                                          arg2.capture(), arg3.capture())).
+            thenReturn(null);
+
+        HarvesterHelper helper = mock(HarvesterHelper.class);
+
+        Harvester harvester = new Harvester(pid, executor, pool, helper,
+                                            deadlockHelper, vmCapsHelper);
+
         harvester.start();
-        
-        verify(executor).scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class));
-        
-        assertTrue(arg1.getValue() == 0);
-        assertTrue(arg2.getValue() == 250);
-        assertEquals(TimeUnit.MILLISECONDS, arg3.getValue());
-        
+
+        verify(executor).scheduleAtFixedRate(any(Runnable.class), anyLong(),
+                                             anyLong(), any(TimeUnit.class));
+        verify(pool).acquire(pid);
+
+        assertTrue(arg1.getValue() == Harvester.DEFAULT_INITIAL_DELAY);
+        assertTrue(arg2.getValue() == Harvester.DEFAULT_PERIOD);
+        assertEquals(Harvester.DEFAULT_TIME_UNIT, arg3.getValue());
+
         Runnable action = arg0.getValue();
         assertNotNull(action);
-        
-        action.run();
-        
-        assertTrue(harvestDataCalled[0]);
-        
         assertTrue(harvester.isConnected());
     }
-    
-    /**
-     *  Mostly the same as testStart, but we call harvester.start() twice
-     */
-    @Test
-    public void testStartOnce() throws Exception {
 
-        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
-        ThreadDao dao = mock(ThreadDao.class);
-        MXBeanConnectionPool pool = mock(MXBeanConnectionPool.class);
-        
-        ArgumentCaptor<Runnable> arg0 = ArgumentCaptor.forClass(Runnable.class);
-        ArgumentCaptor<Long> arg1 = ArgumentCaptor.forClass(Long.class);
-        ArgumentCaptor<Long> arg2 = ArgumentCaptor.forClass(Long.class);
-        ArgumentCaptor<TimeUnit> arg3 = ArgumentCaptor.forClass(TimeUnit.class);
-        
-        final boolean [] harvestDataCalled = new boolean[1];
-        
-        when(executor.scheduleAtFixedRate(arg0.capture(), arg1.capture(), arg2.capture(), arg3.capture())).thenReturn(null);
-        
-        Harvester harvester = new Harvester(dao, executor, "vmId", 42, pool, writerId) {
-            @Override
-            synchronized void harvestData() {
-                harvestDataCalled[0] = true;
-            }
-        };
-        
+    @Test
+    public void testStartTwice() throws Exception {
+        // Mostly the same as testStart, but we call harvester.start() twice
+
+        HarvesterHelper helper = mock(HarvesterHelper.class);
+
+        Harvester harvester = new Harvester(pid, executor, pool, helper,
+                                            deadlockHelper, vmCapsHelper);
+
         harvester.start();
         harvester.start();
 
-        verify(executor, times(1)).scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class));
-        
-        assertTrue(arg1.getValue() == 0);
-        assertTrue(arg2.getValue() == 250);
-        assertEquals(TimeUnit.MILLISECONDS, arg3.getValue());
-        
-        Runnable action = arg0.getValue();
-        assertNotNull(action);
-        
-        action.run();
-        
-        assertTrue(harvestDataCalled[0]);
-        
+        verify(executor, times(1)).scheduleAtFixedRate(any(Runnable.class),
+                                                       anyLong(),
+                                                       anyLong(),
+                                                       any(TimeUnit.class));
         assertTrue(harvester.isConnected());
+        verify(pool, times(1)).acquire(pid);
     }
-    
+
     @Test
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     public void testStopAfterStarting() throws Exception {
-        
+        // Calls start and then stop
+
         ScheduledFuture future = mock(ScheduledFuture.class);
-        
-        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
-        ThreadDao dao = mock(ThreadDao.class);
-        MXBeanConnectionPool pool = mock(MXBeanConnectionPool.class);
-        MXBeanConnection connection = mock(MXBeanConnection.class);
-        when(pool.acquire(42)).thenReturn(connection);
-        
-        when(executor.scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class))).thenReturn(future);
-        
-        Harvester harvester = new Harvester(dao, executor, "vmId", 42, pool, writerId);
-        
+        when(executor.scheduleAtFixedRate(any(Runnable.class), anyLong(),
+                                          anyLong(), any(TimeUnit.class))).
+            thenReturn(future);
+
+        HarvesterHelper helper = mock(HarvesterHelper.class);
+
+        Harvester harvester = new Harvester(pid, executor, pool, helper,
+                                            deadlockHelper, vmCapsHelper);
+
         harvester.start();
-        
         assertTrue(harvester.isConnected());
-        
+        verify(pool).acquire(pid);
+
         harvester.stop();
-        
+        assertFalse(harvester.isConnected());
+        verify(pool).release(pid, connection);
         verify(future).cancel(false);
-        
-        verify(pool).acquire(42);
-        verify(pool).release(42, connection);
-        
-        assertFalse(harvester.isConnected());
     }
-    
-    /**
-     *  Mostly the same as testStopAfterStarting, but we call harvester.stop()
-     *  twice
-     */
+
     @Test
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     public void testStopTwiceAfterStarting() throws Exception {
-        
+        // like before, but stop is called twice
+
         ScheduledFuture future = mock(ScheduledFuture.class);
-        
-        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
-        ThreadDao dao = mock(ThreadDao.class);
-        MXBeanConnectionPool pool = mock(MXBeanConnectionPool.class);
-        MXBeanConnection connection = mock(MXBeanConnection.class);
-        when(pool.acquire(42)).thenReturn(connection);
-        
-        when(executor.scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class))).thenReturn(future);
-        
-        Harvester harvester = new Harvester(dao, executor, "vmId", 42, pool, writerId);
-        
+        when(executor.scheduleAtFixedRate(any(Runnable.class), anyLong(),
+                                          anyLong(), any(TimeUnit.class))).
+            thenReturn(future);
+
+        HarvesterHelper helper = mock(HarvesterHelper.class);
+
+        Harvester harvester = new Harvester(pid, executor, pool, helper,
+                                            deadlockHelper, vmCapsHelper);
+
         harvester.start();
-        
         assertTrue(harvester.isConnected());
-        
+        verify(pool).acquire(pid);
+
         harvester.stop();
         harvester.stop();
 
+        assertFalse(harvester.isConnected());
+        verify(pool, times(1)).release(pid, connection);
         verify(future, times(1)).cancel(false);
-        
-        verify(pool).acquire(42);
-        verify(pool).release(42, connection);
-        
-        assertFalse(harvester.isConnected());
     }
-    
-    @Test
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    public void testStopNotStarted() throws Exception {
-        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
-        ThreadDao dao = mock(ThreadDao.class);
-        
-        ScheduledFuture future = mock(ScheduledFuture.class);
-        when(executor.scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class))).thenReturn(future);
-        
-        MXBeanConnectionPool pool = mock(MXBeanConnectionPool.class);
 
-        Harvester harvester = new Harvester(dao, executor, "vmId", 42, pool, writerId);
-        
-        verify(executor, times(0)).scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class));
-        
+    @Test
+    public void testStopNotStarted() throws Exception {
+        // calls stop on an harvester that was never started
+
+        ScheduledFuture future = mock(ScheduledFuture.class);
+        when(executor.scheduleAtFixedRate(any(Runnable.class), anyLong(),
+                                          anyLong(), any(TimeUnit.class))).
+            thenReturn(future);
+
+        HarvesterHelper helper = mock(HarvesterHelper.class);
+
+        Harvester harvester = new Harvester(pid, executor, pool, helper,
+                                            deadlockHelper, vmCapsHelper);
+
         assertFalse(harvester.isConnected());
-        
+
         harvester.stop();
 
         assertFalse(harvester.isConnected());
-        
+        verify(pool, times(0)).release(pid, connection);
         verify(future, times(0)).cancel(false);
     }
-    
+
     @Test
-    public void testHarvestData() {
-        
-        long ids[] = new long [] {
-            0, 1
-        };
-        
-        ThreadInfo info1 = mock(ThreadInfo.class);
-        when(info1.getThreadName()).thenReturn("fluff1");
-        when(info1.getThreadId()).thenReturn(1l);
-        when(info1.getThreadState()).thenReturn(Thread.State.RUNNABLE);
-        
-        ThreadInfo info2 = mock(ThreadInfo.class);
-        when(info2.getThreadName()).thenReturn("fluff2");
-        when(info2.getThreadId()).thenReturn(2l);
-        when(info2.getThreadState()).thenReturn(Thread.State.BLOCKED);
+    public void testHarvestingLoopWithSunBean() throws Exception {
+        // test that the harvester loop calls the appropriate helpers
 
-        ThreadInfo[] infos = new ThreadInfo[] {
-            info1,
-            info2
-        };
+        com.sun.management.ThreadMXBean sunBean =
+                mock(com.sun.management.ThreadMXBean.class);
 
-        MXBeanConnectionPool pool = mock(MXBeanConnectionPool.class);
-        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
+        ArgumentCaptor<Runnable> arg0 = ArgumentCaptor.forClass(Runnable.class);
+        ScheduledFuture future = mock(ScheduledFuture.class);
+        when(executor.scheduleAtFixedRate(arg0.capture(), anyLong(),
+                                          anyLong(), any(TimeUnit.class))).
+            thenReturn(future);
 
-        ArgumentCaptor<ThreadSummary> summaryCapture = ArgumentCaptor.forClass(ThreadSummary.class);
 
-        ThreadDao dao = mock(ThreadDao.class);
-        doNothing().when(dao).saveSummary(summaryCapture.capture());
+        // simulate the sun bean first
+        when(connection.createProxy(ManagementFactory.THREAD_MXBEAN_NAME,
+                                    com.sun.management.ThreadMXBean.class)).
+            thenReturn(sunBean);
 
-        ArgumentCaptor<ThreadInfoData> threadInfoCapture = ArgumentCaptor.forClass(ThreadInfoData.class);        
-        doNothing().when(dao).saveThreadInfo(threadInfoCapture.capture());
 
-        final ThreadMXBean collectorBean = mock(ThreadMXBean.class);
+        HarvesterHelper helper = mock(HarvesterHelper.class);
 
-        when(collectorBean.getThreadCount()).thenReturn(42);
-        when(collectorBean.getAllThreadIds()).thenReturn(ids);
-        when(collectorBean.getThreadInfo(ids, true, true)).thenReturn(infos);
+        Harvester harvester = new Harvester(pid, executor, pool, helper,
+                                            deadlockHelper, vmCapsHelper);
 
-        final boolean [] getDataCollectorBeanCalled = new boolean[1];
-        
-        Harvester harvester = new Harvester(dao, executor, "vmId", 42, pool, writerId) {
-            @Override
-            ThreadMXBean getDataCollectorBean(MXBeanConnection connection)
-                    throws MalformedObjectNameException {
-                getDataCollectorBeanCalled[0] = true;
-                return collectorBean;
-            }
-        };
+        harvester.start();
 
-        harvester.harvestData();
-        
-        assertTrue(getDataCollectorBeanCalled[0]);
-        
-        verify(collectorBean).getThreadInfo(ids, true, true);
-        
-        verify(dao).saveSummary(any(ThreadSummary.class));
-        
-        // once for each thread info
-        verify(dao, times(2)).saveThreadInfo(any(ThreadInfoData.class));
-        
-        assertEquals(42, summaryCapture.getValue().getCurrentLiveThreads());
-        assertEquals("vmId", summaryCapture.getValue().getVmId());
-        
-        assertEquals(42, summaryCapture.getValue().getCurrentLiveThreads());
-        assertEquals("vmId", summaryCapture.getValue().getVmId());
+        Runnable harvesterRunnable = arg0.getValue();
+        assertNotNull(harvesterRunnable);
 
-        List<ThreadInfoData> threadInfos = threadInfoCapture.getAllValues();
-        assertEquals(2, threadInfos.size());
-        
-        assertEquals("fluff1", threadInfos.get(0).getThreadName());
-        assertEquals("fluff2", threadInfos.get(1).getThreadName());
-        
-        assertEquals("RUNNABLE", threadInfos.get(0).getThreadState());
-        assertEquals("BLOCKED", threadInfos.get(1).getThreadState());
-        assertEquals(Thread.State.RUNNABLE, threadInfos.get(0).getState());
-        assertEquals(Thread.State.BLOCKED, threadInfos.get(1).getState());
+        harvesterRunnable.run();
 
-        verify(collectorBean, times(1)).getThreadCpuTime(1l);
-        verify(collectorBean, times(1)).getThreadCpuTime(2l);
+        verify(helper).collectAndSaveThreadData(sunBean);
     }
-    
+
     @Test
-    public void testSaveVmCaps() {
+    public void testHarvestingLoopWithMXBean() throws Exception {
+        // test that the harvester loop calls the appropriate helpers,
+        // this time with the standard mxbean
 
-        MXBeanConnectionPool pool = mock(MXBeanConnectionPool.class);
-        
-        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
+        ThreadMXBean mxBean = mock(ThreadMXBean.class);
 
-        ArgumentCaptor<VMThreadCapabilities> capsCapture = ArgumentCaptor.forClass(VMThreadCapabilities.class);
+        ArgumentCaptor<Runnable> arg0 = ArgumentCaptor.forClass(Runnable.class);
+        ScheduledFuture future = mock(ScheduledFuture.class);
+        when(executor.scheduleAtFixedRate(arg0.capture(), anyLong(),
+                                          anyLong(), any(TimeUnit.class))).
+            thenReturn(future);
 
-        ThreadDao dao = mock(ThreadDao.class);
-        doNothing().when(dao).saveCapabilities(capsCapture.capture());
-      
-        final ThreadMXBean collectorBean = mock(ThreadMXBean.class);
-        when(collectorBean.isThreadCpuTimeSupported()).thenReturn(true);
-        when(collectorBean.isThreadContentionMonitoringSupported()).thenReturn(true);
+        // simulate the sun bean first
+        when(connection.createProxy(ManagementFactory.THREAD_MXBEAN_NAME,
+                                    com.sun.management.ThreadMXBean.class)).
+                thenReturn(null);
+        when(connection.createProxy(ManagementFactory.THREAD_MXBEAN_NAME,
+                                    ThreadMXBean.class)).
+                thenReturn(mxBean);
 
-        final boolean [] getDataCollectorBeanCalled = new boolean[1];
-        
-        Harvester harvester = new Harvester(dao, executor, "vmId", 42, pool, writerId) {
+        HarvesterHelper helper = mock(HarvesterHelper.class);
+
+        Harvester harvester = new Harvester(pid, executor, pool, helper,
+                                            deadlockHelper, vmCapsHelper);
+
+        harvester.start();
+
+        Runnable harvesterRunnable = arg0.getValue();
+        assertNotNull(harvesterRunnable);
+
+        harvesterRunnable.run();
+
+        verify(helper).collectAndSaveThreadData(mxBean);
+    }
+
+    @Test
+    public void testSaveDeadlockVmCaps() {
+
+        final ThreadMXBean mxBean = mock(ThreadMXBean.class);
+        HarvesterHelper helper = mock(HarvesterHelper.class);
+        Harvester harvester = new Harvester(pid, executor, pool, helper,
+                                            deadlockHelper, vmCapsHelper)
+        {
             @Override
-            ThreadMXBean getDataCollectorBean(MXBeanConnection connection)
-                    throws MalformedObjectNameException {
-                getDataCollectorBeanCalled[0] = true;
-                return collectorBean;
+            ThreadMXBean getDataCollectorBean(MXBeanConnection connection) {
+                return mxBean;
+            }
+
+            @Override
+            synchronized boolean isConnected() {
+                return true;
             }
         };
 
         harvester.saveVmCaps();
-        assertTrue(getDataCollectorBeanCalled[0]);
-        
-        verify(dao, times(1)).saveCapabilities(any(VMThreadCapabilities.class));
-        assertEquals("vmId", capsCapture.getValue().getVmId());
 
-        String[] features = capsCapture.getValue().getSupportedFeaturesList();
-        assertEquals(2, features.length);
-        assertEquals(ThreadDao.CPU_TIME, features[0]);
-        assertEquals(ThreadDao.CONTENTION_MONITOR, features[1]);
-    }    
+        verify(vmCapsHelper).saveVMCapabilities(mxBean);
+    }
 
     @Test
-    public void testCheckForDeadLocks() {
-        MXBeanConnectionPool pool = mock(MXBeanConnectionPool.class);
+    public void testSaveDeadlockVmCapsUnconnectedWillDisconnectAgain() throws Exception {
 
-        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
-
-        ArgumentCaptor<VmDeadLockData> deadLockCapture = ArgumentCaptor.forClass(VmDeadLockData.class);
-
-        ThreadDao dao = mock(ThreadDao.class);
-
-        ThreadInfo[] threadInfo = new ThreadInfo[0];
-
-        final ThreadMXBean collectorBean = mock(ThreadMXBean.class);
-        when(collectorBean.findDeadlockedThreads()).thenReturn(new long[] { -1, 0, 1 });
-        when(collectorBean.getThreadInfo(new long[] { -1, 0, 1 }, true, true)).thenReturn(threadInfo);
-
-        Clock clock = mock(Clock.class);
-        when(clock.getRealTimeMillis()).thenReturn(101010l);
-
-        final boolean[] getDataCollectorBeanCalled = new boolean[1];
-
-        Harvester harvester = new Harvester(dao, executor, clock, "vmId", 42, pool, writerId) {
+        final ThreadMXBean mxBean = mock(ThreadMXBean.class);
+        HarvesterHelper helper = mock(HarvesterHelper.class);
+        Harvester harvester = new Harvester(pid, executor, pool, helper,
+                                            deadlockHelper, vmCapsHelper)
+        {
             @Override
-            ThreadMXBean getDataCollectorBean(MXBeanConnection connection)
-                    throws MalformedObjectNameException {
-                getDataCollectorBeanCalled[0] = true;
-                return collectorBean;
+            ThreadMXBean getDataCollectorBean(MXBeanConnection connection) {
+                return mxBean;
+            }
+        };
+
+        harvester.saveVmCaps();
+
+        verify(pool).acquire(pid);
+        verify(vmCapsHelper).saveVMCapabilities(mxBean);
+        verify(pool).release(pid, connection);
+    }
+
+    @Test
+    public void testSaveDeadlockData() {
+
+        final ThreadMXBean mxBean = mock(ThreadMXBean.class);
+        HarvesterHelper helper = mock(HarvesterHelper.class);
+        Harvester harvester = new Harvester(pid, executor, pool, helper,
+                                            deadlockHelper, vmCapsHelper)
+        {
+            @Override
+            ThreadMXBean getDataCollectorBean(MXBeanConnection connection) {
+                return mxBean;
+            }
+
+            @Override
+            synchronized boolean isConnected() {
+                return true;
             }
         };
 
         harvester.saveDeadLockData();
-        assertTrue(getDataCollectorBeanCalled[0]);
 
-        verify(dao).saveDeadLockStatus(deadLockCapture.capture());
+        verify(deadlockHelper).saveDeadlockInformation(mxBean);
+    }
 
-        VmDeadLockData data = deadLockCapture.getValue();
+    @Test
+    public void testSaveDeadlockDataUnconnectedWillDisconnectAgain() throws Exception {
 
-        assertEquals("vmId", data.getVmId());
-        assertEquals(101010l, data.getTimeStamp());
-        assertEquals("", data.getDeadLockDescription());
+        final ThreadMXBean mxBean = mock(ThreadMXBean.class);
+        HarvesterHelper helper = mock(HarvesterHelper.class);
+        Harvester harvester = new Harvester(pid, executor, pool, helper,
+                                            deadlockHelper, vmCapsHelper)
+        {
+            @Override
+            ThreadMXBean getDataCollectorBean(MXBeanConnection connection) {
+                return mxBean;
+            }
+        };
+
+        harvester.saveDeadLockData();
+
+        verify(pool).acquire(pid);
+        verify(deadlockHelper).saveDeadlockInformation(mxBean);
+        verify(pool).release(pid, connection);
     }
 }
 

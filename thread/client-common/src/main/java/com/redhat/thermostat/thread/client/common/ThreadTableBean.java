@@ -52,7 +52,12 @@ public class ThreadTableBean {
     private double waitingPercent;
     private double monitorPercent;
     private double sleepingPercent;
-    
+
+    private long runningTime;
+    private long waitingTime;
+    private long monitorTime;
+    private long sleepingTime;
+
     public long getId() {
         return id;
     }
@@ -100,20 +105,20 @@ public class ThreadTableBean {
         return true;
     }
 
-    public void setStartTimeStamp(long start) {
-        this.start = start;
-    }
-    
-    public void setStopTimeStamp(long stop) {
-        this.stop = stop;
-    }
-    
     public long getStartTimeStamp() {
         return start;
     }
     
     public long getStopTimeStamp() {
         return stop;
+    }
+
+    public void setStartTimeStamp(long start) {
+        this.start = start;
+    }
+
+    public void setStopTimeStamp(long stop) {
+        this.stop = stop;
     }
 
     public long getBlockedCount() {
@@ -162,6 +167,38 @@ public class ThreadTableBean {
     
     public double getSleepingPercent() {
         return sleepingPercent;
+    }
+
+    public void setMonitorTime(long monitorTime) {
+        this.monitorTime = monitorTime;
+    }
+
+    public long getMonitorTime() {
+        return monitorTime;
+    }
+
+    public void setRunningTime(long runningTime) {
+        this.runningTime = runningTime;
+    }
+
+    public long getRunningTime() {
+        return runningTime;
+    }
+
+    public void setSleepingTime(long sleepingTime) {
+        this.sleepingTime = sleepingTime;
+    }
+
+    public long getSleepingTime() {
+        return sleepingTime;
+    }
+
+    public void setWaitingTime(long waitingTime) {
+        this.waitingTime = waitingTime;
+    }
+
+    public long getWaitingTime() {
+        return waitingTime;
     }
 }
 

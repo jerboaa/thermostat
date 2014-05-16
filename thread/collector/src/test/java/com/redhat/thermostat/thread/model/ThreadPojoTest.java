@@ -34,53 +34,33 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.common;
+package com.redhat.thermostat.thread.model;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.Iterator;
+import org.junit.Test;
 
-public class Timeline implements Iterable<TimelineInfo> {
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
 
-    private Deque<TimelineInfo> infos;
-    
-    private String name;
-    private long id;
-    
-    public Timeline(String name, long id) {
-        this.name = name;
-        this.id = id;
-        infos = new ArrayDeque<>();
-    }
+public class ThreadPojoTest {
 
-    public String getName() {
-        return name;
-    }
-    
-    public long getId() {
-        return id;
-    }
-    
-    @Override
-    public Iterator<TimelineInfo> iterator() {
-        return infos.descendingIterator();
-    }
-    
-    public TimelineInfo[] toArray() {
-        TimelineInfo[] result = new TimelineInfo[size()];
-        int i = 0;
-        for (TimelineInfo info : this) {
-            result[i++] = info;
-        }
-        return result;
-    }
-    
-    public void add(TimelineInfo info) {
-        infos.add(info);
-    }
-    
-    public int size() {
-        return infos.size();
+    @Test
+    public void testEqualsAndHashCode() throws Exception {
+
+        ThreadHeader header1 = new ThreadHeader("1234");
+        header1.setReferenceID("vm42");
+        header1.setThreadName("main");
+        header1.setThreadId(1);
+
+        ThreadPojo pojo1 = new ThreadPojo("1234", header1);
+        ThreadPojo pojo2 = new ThreadPojo("1234", header1);
+
+        assertEquals(pojo1, pojo2);
+        assertEquals(pojo1.hashCode(), pojo2.hashCode());
+
+        ThreadHeader header2 = new ThreadHeader("12344");
+        pojo2.setHeader(header2);
+
+        assertFalse(pojo1.equals(pojo2));
+        assertFalse(pojo1.hashCode() == pojo2.hashCode());
     }
 }
-

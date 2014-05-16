@@ -42,8 +42,8 @@ public enum LocaleResources {
 
     NAME,
     ID,
-    START,
-    STOP,
+    FIRST_SEEN,
+    LAST_SEEN,
     WAIT_COUNT,
     BLOCK_COUNT,
     RUNNING,

@@ -44,6 +44,7 @@ import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
+import com.redhat.thermostat.thread.client.common.model.timeline.TimelineDimensionModel;
 import com.redhat.thermostat.thread.client.controller.ThreadInformationService;
 
 public class ThreadInformationServiceImpl implements ThreadInformationService {
@@ -55,15 +56,18 @@ public class ThreadInformationServiceImpl implements ThreadInformationService {
     private VmInfoDAO vmInfoDao;
     private ThreadCollectorFactory collectorFactory;
     private ThreadViewProvider viewFactory;
-    
+    private TimelineDimensionModel timelineDimensionModel;
+
     public ThreadInformationServiceImpl(ApplicationService appService, VmInfoDAO vmInfoDao,
                                     ThreadCollectorFactory collectorFactory,
-                                    ThreadViewProvider viewFactory)
+                                    ThreadViewProvider viewFactory,
+                                    TimelineDimensionModel timelineDimensionModel)
     {
         this.service = appService;
         this.vmInfoDao = vmInfoDao;
         this.collectorFactory = collectorFactory;
         this.viewFactory = viewFactory;
+        this.timelineDimensionModel = timelineDimensionModel;
     }
     
     @Override
@@ -73,7 +77,7 @@ public class ThreadInformationServiceImpl implements ThreadInformationService {
 
     @Override
     public InformationServiceController<VmRef> getInformationServiceController(VmRef ref) {
-        return new ThreadInformationController(ref, service, vmInfoDao, collectorFactory, viewFactory);
+        return new ThreadInformationController(ref, service, vmInfoDao, collectorFactory, viewFactory, timelineDimensionModel);
     }
 
     @Override

@@ -36,13 +36,13 @@
 
 package com.redhat.thermostat.thread.dao.impl;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorMetadataFactory;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Registers prepared queries issued by this maven module via
@@ -55,21 +55,32 @@ public class ThreadDaoImplStatementDescriptorRegistration implements
     private final Set<String> descs;
     
     public ThreadDaoImplStatementDescriptorRegistration() {
-        descs = new HashSet<>(6);
+        descs = new HashSet<>();
         descs.add(ThreadDaoImpl.QUERY_LATEST_DEADLOCK_INFO);
         descs.add(ThreadDaoImpl.QUERY_LATEST_HARVESTING_STATUS);
         descs.add(ThreadDaoImpl.QUERY_LATEST_SUMMARY);
         descs.add(ThreadDaoImpl.QUERY_SUMMARY_SINCE);
         descs.add(ThreadDaoImpl.QUERY_THREAD_CAPS);
-        descs.add(ThreadDaoImpl.QUERY_THREAD_INFO_SINCE);
-        descs.add(ThreadDaoImpl.QUERY_THREAD_INFO_INTERVAL);
-        descs.add(ThreadDaoImpl.QUERY_OLDEST_THREAD_INFO);
-        descs.add(ThreadDaoImpl.QUERY_LATEST_THREAD_INFO);
         descs.add(ThreadDaoImpl.DESC_ADD_THREAD_DEADLOCK_DATA);
         descs.add(ThreadDaoImpl.DESC_ADD_THREAD_HARVESTING_STATUS);
-        descs.add(ThreadDaoImpl.DESC_ADD_THREAD_INFO);
         descs.add(ThreadDaoImpl.DESC_ADD_THREAD_SUMMARY);
         descs.add(ThreadDaoImpl.DESC_REPLACE_THREAD_CAPS);
+
+        descs.add(ThreadDaoImpl.ADD_THREAD_HEADER);
+        descs.add(ThreadDaoImpl.QUERY_THREAD_HEADER);
+        descs.add(ThreadDaoImpl.QUERY_ALL_THREAD_HEADERS);
+
+        descs.add(ThreadDaoImpl.ADD_THREAD_STATE);
+        descs.add(ThreadDaoImpl.QUERY_LATEST_THREAD_STATE_FOR_THREAD);
+        descs.add(ThreadDaoImpl.QUERY_FIRST_THREAD_STATE_FOR_THREAD);
+
+        descs.add(ThreadDaoImpl.QUERY_OLDEST_THREAD_STATE);
+        descs.add(ThreadDaoImpl.QUERY_LATEST_THREAD_STATE);
+
+        descs.add(ThreadDaoImpl.QUERY_THREAD_STATE_PER_THREAD);
+
+        descs.add(ThreadDaoImpl.ADD_CONTENTION_SAMPLE);
+        descs.add(ThreadDaoImpl.GET_LATEST_CONTENTION_SAMPLE);
     }
     
     @Override

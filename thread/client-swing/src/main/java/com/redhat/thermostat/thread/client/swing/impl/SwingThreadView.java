@@ -50,6 +50,7 @@ import javax.swing.SwingWorker;
 
 import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.client.swing.UIDefaults;
 import com.redhat.thermostat.client.swing.components.ThermostatTabbedPane;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.shared.locale.LocalizedString;
@@ -62,6 +63,7 @@ import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
 import com.redhat.thermostat.thread.client.common.view.ThreadView;
 import com.redhat.thermostat.thread.client.common.view.VMThreadCapabilitiesView;
 import com.redhat.thermostat.thread.client.common.view.VmDeadLockView;
+import com.redhat.thermostat.thread.client.swing.impl.timeline.SwingTimelineDimensionModel;
 
 public class SwingThreadView extends ThreadView implements SwingComponent {
     
@@ -85,7 +87,13 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
     
     private int threadDetailsPaneID = 0;
     
-    public SwingThreadView() {
+    private UIDefaults uiDefaults;
+    private SwingTimelineDimensionModel dimensionModel;
+    
+    public SwingThreadView(UIDefaults uiDefaults, SwingTimelineDimensionModel dimensionModel) {
+        
+        this.uiDefaults = uiDefaults;
+        this.dimensionModel = dimensionModel;
         
         panel = new ThreadMainPanel();
         panel.addHierarchyListener(new ComponentVisibleListener() {
@@ -150,7 +158,7 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
         topPane = new ThermostatTabbedPane();
         topPane.setName("topTabbedPane");
         
-        threadTimelineView = new SwingThreadTimelineView();
+        threadTimelineView = new SwingThreadTimelineView(uiDefaults, dimensionModel);
         topPane.addTab(t.localize(LocaleResources.TIMELINE).getContents(), threadTimelineView.getUiComponent());
         
         threadCountView = new SwingThreadCountView();

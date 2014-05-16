@@ -36,17 +36,43 @@
 
 package com.redhat.thermostat.thread.client.common.model.timeline;
 
+import com.redhat.thermostat.client.ui.Palette;
 import com.redhat.thermostat.common.model.Range;
 
-public class Page {
+public class TimelineInfo {
 
-    private Range<Long> range;
-    public Page(Range<Long> range) {
-        this.range = range;
+    private Palette colour;
+    private Range<Long> timeStamp;
+    
+    public TimelineInfo() {
+        timeStamp = new Range<>(0l, Long.MAX_VALUE);
+        colour = Palette.BLACK; 
     }
     
-    public Range<Long> getSpan() {
-        return range;
+    public TimelineInfo(Palette colour, Range<Long> timeStamp) {
+        this.timeStamp = timeStamp;
+        this.colour = colour;
+    }
+    
+    public Palette getColor() {
+        return colour;
+    }
+    
+    public void setColor(Palette colour) {
+        this.colour = colour;
+    }
+    
+    public void setRange(Range<Long> timestamp) {
+        this.timeStamp = timestamp;
+    }
+
+    public Range<Long> getRange() {
+        return timeStamp;
+    }
+
+    @Override
+    public String toString() {
+        return "TimelineInfo [colour=" + colour + ", timeStamp=" + timeStamp + "]";
     }
 }
 

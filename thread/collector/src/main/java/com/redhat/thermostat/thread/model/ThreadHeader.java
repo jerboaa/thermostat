@@ -36,68 +36,48 @@
 
 package com.redhat.thermostat.thread.model;
 
-import java.lang.Thread.State;
-import java.util.Arrays;
+import java.util.Objects;
+import java.util.UUID;
 
 import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Persist;
 import com.redhat.thermostat.storage.model.BasePojo;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
-
+/**
+ * The common {@link Entity} for Thread related informations. 
+ */
 @Entity
-public class ThreadInfoData extends BasePojo implements TimeStampedPojo {
+public class ThreadHeader extends BasePojo implements TimeStampedPojo {
 
-    private String vmId;
-    private StackTraceElement[] stackTrace;
-    private long threadID;
-    private State threadState;
-    private String name;
-    private long allocatedBytes;
-    
-    private long threadCpuTime;
-    private long threadUserTime;
-    private long blockedCount;
-    private long waitedCount;
-    
     private long timestamp;
-    
-    public ThreadInfoData() {
+    private String vmId;
+    private String name;
+    private long threadID;
+
+    private String referenceID;
+
+    public ThreadHeader() {
         this(null);
     }
 
-    public ThreadInfoData(String writerId) {
+    public ThreadHeader(String writerId) {
+        this(writerId, UUID.randomUUID().toString());
+    }
+
+    public ThreadHeader(String writerId, String referenceID) {
         super(writerId);
-    }
-    
-    public void setStackTrace(StackTraceElement[] stackTrace) {
-        this.stackTrace = stackTrace;
-    }
-
-    public StackTraceElement[] getStackTrace() {
-        return stackTrace;
-    }
-    
-    @Override
-    public String toString() {
-        return "ThreadMXInfo [name=" + name
-                + ", threadID=" + threadID + ", threadState=" + threadState
-                + ", stackTrace=" + Arrays.toString(stackTrace)
-                + ", allocatedBytes=" + allocatedBytes
-                + ", threadCpuTime=" + threadCpuTime + ", threadUserTime="
-                + threadUserTime + ", blockedCount=" + blockedCount
-                + ", waitedCount=" + waitedCount + ", timestamp=" + timestamp
-                + "]";
+        this.referenceID = referenceID;
     }
 
     @Persist
-    public void setVmId(String vmId) {
-        this.vmId = vmId;
+    public String getReferenceID() {
+        return referenceID;
     }
 
     @Persist
-    public String getVmId() {
-        return vmId;
+    public void setReferenceID(String referenceID) {
+        this.referenceID = referenceID;
     }
 
     @Persist
@@ -109,45 +89,28 @@ public class ThreadInfoData extends BasePojo implements TimeStampedPojo {
     public void setThreadId(long threadID) {
         this.threadID = threadID;
     }
-    
-    public void setState(State threadState) {
-        this.threadState = threadState;
-    }
-
-    @Persist
-    public void setThreadState(String threadStateString) {
-        this.threadState = Thread.State.valueOf(threadStateString);
-    }
-
-    @Persist
-    public void setAllocatedBytes(long allocatedBytes) {
-        this.allocatedBytes = allocatedBytes;
-    }
 
     @Persist
     public String getThreadName() {
         return name;
     }
-
-    @Persist
-    public long getAllocatedBytes() {
-        return allocatedBytes;
-    }
-
+    
     @Persist
     public long getThreadId() {
         return threadID;
     }
-
-    public State getState() {
-        return threadState;
+    
+    @Persist
+    public void setVmId(String vmId) {
+        this.vmId = vmId;
     }
 
     @Persist
-    public String getThreadState() {
-        return threadState.name();
+    public String getVmId() {
+        return vmId;
     }
     
+    @Override
     @Persist
     public long getTimeStamp() {
         return timestamp;
@@ -158,71 +121,58 @@ public class ThreadInfoData extends BasePojo implements TimeStampedPojo {
         this.timestamp = timestamp;
     }
 
-    @Persist
-    public void setThreadCpuTime(long threadCpuTime) {
-        this.threadCpuTime = threadCpuTime;
-    }
-
-    @Persist
-    public void setThreadUserTime(long threadUserTime) {
-       this.threadUserTime = threadUserTime;
-    }
-
-    @Persist
-    public void setThreadBlockedCount(long blockedCount) {
-        this.blockedCount = blockedCount;
-    }
-
-    @Persist
-    public void setThreadWaitCount(long waitedCount) {
-        this.waitedCount = waitedCount;
-    }
-
-    @Persist
-    public long getThreadBlockedCount() {
-        return blockedCount;
-    }
-
-    @Persist
-    public long getThreadWaitCount() {
-        return waitedCount;
-    }
-
-    @Persist
-    public long getThreadCpuTime() {
-        return threadCpuTime;
-    }
-
-    @Persist
-    public long getThreadUserTime() {
-        return threadUserTime;
-    }
-
+    @Override
     public int hashCode() {
         final int prime = 31;
-        int result = 1;
+        int result = super.hashCode();
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         result = prime * result + (int) (threadID ^ (threadID >>> 32));
+        result = prime * result + ((vmId == null) ? 0 : vmId.hashCode());
+        
+        String agentID = getAgentId();
+        result = prime * result + ((agentID == null) ? 0 : agentID.hashCode());
+        
         return result;
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (!super.equals(obj)) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
-        ThreadInfoData other = (ThreadInfoData) obj;
+        }
+        ThreadHeader other = (ThreadHeader) obj;
         if (name == null) {
-            if (other.name != null)
+            if (other.name != null) {
                 return false;
-        } else if (!name.equals(other.name))
+            }
+        } else if (!name.equals(other.name)) {
             return false;
-        if (threadID != other.threadID)
+        }
+        if (threadID != other.threadID) {
             return false;
-        return true;
+        }
+        if (vmId == null) {
+            if (other.vmId != null) {
+                return false;
+            }
+        } else if (!vmId.equals(other.vmId)) {
+            return false;
+        }
+        
+        String agentID = getAgentId();
+        String otherAgentID = getAgentId();
+        return Objects.equals(agentID, otherAgentID);
+    }
+
+    @Override
+    public String toString() {
+        return "ThreadHeader [name=" + name + ", threadID=" + threadID
+                + ", vmId=" + vmId + ", timestamp=" + timestamp + "]";
     }
 }
-

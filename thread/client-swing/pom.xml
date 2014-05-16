@@ -116,6 +116,7 @@
               com.redhat.thermostat.thread.client.swing.osgi,
               com.redhat.thermostat.thread.client.swing.impl,
               com.redhat.thermostat.thread.client.swing.impl.timeline,
+              com.redhat.thermostat.thread.client.swing.impl.timeline.scrollbar,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>

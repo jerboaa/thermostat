@@ -54,6 +54,7 @@ import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
+import com.redhat.thermostat.thread.client.common.model.timeline.TimelineDimensionModel;
 import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
 import com.redhat.thermostat.thread.client.common.view.ThreadView;
 import com.redhat.thermostat.thread.client.common.view.ThreadTableView.ThreadSelectionAction;
@@ -68,13 +69,19 @@ public class ThreadInformationController implements InformationServiceController
     private ThreadCollector collector;
 
     private ApplicationService appService;
-            
+
+    private TimelineDimensionModel timelineDimensionModel;
+
     public ThreadInformationController(VmRef ref, ApplicationService appService,
                                        VmInfoDAO vmInfoDao,
                                        ThreadCollectorFactory collectorFactory, 
-                                       ThreadViewProvider viewFactory)
+                                       ThreadViewProvider viewFactory,
+                                       TimelineDimensionModel timelineDimensionModel)
     {
         this.appService = appService;
+
+        this.timelineDimensionModel = timelineDimensionModel;
+
         view = viewFactory.createView();
         view.setApplicationService(appService, ref.getVmId() + "-" + ref.getHostRef().getAgentId());
         
@@ -167,7 +174,7 @@ public class ThreadInformationController implements InformationServiceController
         
         CommonController threadTimeline =
                 new ThreadTimelineController(view.createThreadTimelineView(), collector,
-                                             tf.createTimer());
+                                             tf.createTimer(), timelineDimensionModel);
         threadTimeline.initialize();
     }
 }

@@ -36,21 +36,23 @@
 
 package com.redhat.thermostat.thread.client.swing.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
+import com.redhat.thermostat.client.swing.UIDefaults;
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.thread.client.common.ThreadTableBean;
+import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
+import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
+import com.redhat.thermostat.thread.client.common.view.ThreadTableView.ThreadSelectionAction;
+import com.redhat.thermostat.thread.client.swing.impl.timeline.SwingTimelineDimensionModel;
+import java.awt.Color;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Semaphore;
-
 import javax.swing.JFrame;
-
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
-
 import org.fest.swing.annotation.GUITest;
 import org.fest.swing.data.TableCell;
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
@@ -66,13 +68,10 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
-import com.redhat.thermostat.common.ActionEvent;
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.thread.client.common.ThreadTableBean;
-import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
-import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
-import com.redhat.thermostat.thread.client.common.view.ThreadTableView.ThreadSelectionAction;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @RunWith(CacioFESTRunner.class)
 public class SwingThreadViewTest {
@@ -85,9 +84,14 @@ public class SwingThreadViewTest {
     private FrameFixture frameFixture;
     
     private static Locale locale;
-    
+
+    private static UIDefaults defaults;
+
     @BeforeClass
     public static void setUpOnce() {
+        defaults = mock(UIDefaults.class);
+        when(defaults.getReferenceFieldIconColor()).thenReturn(Color.BLACK);
+
         FailOnThreadViolationRepaintManager.install();
         locale = Locale.getDefault();
         Locale.setDefault(Locale.US);
@@ -109,7 +113,7 @@ public class SwingThreadViewTest {
         GuiActionRunner.execute(new GuiTask() {
             @Override
             protected void executeInEDT() throws Throwable {
-                view = new SwingThreadView();
+                view = new SwingThreadView(defaults, new SwingTimelineDimensionModel());
                 frame = new JFrame();
                 frame.add(view.getUiComponent());
             }

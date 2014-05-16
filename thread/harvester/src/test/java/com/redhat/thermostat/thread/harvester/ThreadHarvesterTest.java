@@ -36,19 +36,6 @@
 
 package com.redhat.thermostat.thread.harvester;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.util.List;
-import java.util.concurrent.ScheduledExecutorService;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.Pair;
@@ -59,6 +46,17 @@ import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.thread.collector.HarvesterCommand;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
+import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class ThreadHarvesterTest {
 
@@ -150,8 +148,8 @@ public class ThreadHarvesterTest {
         Request request = mock(Request.class);
 
         final boolean[] createHarvesterCalled = new boolean[1];
-        final Harvester harverster = mock(Harvester.class);
-        when(harverster.start()).thenReturn(true);
+        final Harvester harvester = mock(Harvester.class);
+        when(harvester.start()).thenReturn(true);
 
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
 
@@ -169,7 +167,7 @@ public class ThreadHarvesterTest {
                 assertEquals("vmId", vmId);
                 assertEquals(42, pid);
 
-                return harverster;
+                return harvester;
             }
         };
         threadHarvester.setThreadDao(dao);
@@ -184,7 +182,7 @@ public class ThreadHarvesterTest {
 
         assertTrue(createHarvesterCalled[0]);
 
-        verify(harverster).saveDeadLockData();
+        verify(harvester).saveDeadLockData();
     }
 
     @Test
@@ -192,7 +190,7 @@ public class ThreadHarvesterTest {
         ThreadDao dao = mock(ThreadDao.class);
         
         final boolean[] createHarvesterCalled = new boolean[1];
-        final Harvester harverster = mock(Harvester.class);
+        final Harvester harvester = mock(Harvester.class);
         
         ThreadHarvester threadHarvester = new ThreadHarvester(executor, pool, writerId) {
             @Override
@@ -202,7 +200,7 @@ public class ThreadHarvesterTest {
                 assertEquals("vmId", vmId);
                 assertEquals(42, pid);
                 
-                return harverster;
+                return harvester;
             }
         };
         threadHarvester.setThreadDao(dao);
@@ -210,11 +208,11 @@ public class ThreadHarvesterTest {
         
         assertTrue(createHarvesterCalled[0]);
         
-        verify(harverster).saveVmCaps();
+        verify(harvester).saveVmCaps();
     }    
 
     @Test
-    public void testRecieveWithoutDaosFails() {
+    public void testReceiveWithoutDaosFails() {
         ThreadHarvester harvester = new ThreadHarvester(executor, pool, writerId);
         Response response = harvester.receive(mock(Request.class));
 
@@ -230,27 +228,6 @@ public class ThreadHarvesterTest {
         ThreadHarvester harvester = new ThreadHarvester(executor, clock, pool, writerId);
         harvester.setThreadDao(dao);
 
-        harvester.addThreadHarvestingStatus("vmId");
-
-        ArgumentCaptor<ThreadHarvestingStatus> statusCaptor = ArgumentCaptor.forClass(ThreadHarvestingStatus.class);
-        verify(dao).saveHarvestingStatus(statusCaptor.capture());
-
-        ThreadHarvestingStatus status = statusCaptor.getValue();
-        assertEquals("vmId", status.getVmId());
-        assertEquals(false, status.isHarvesting());
-        assertEquals(1, status.getTimeStamp());
-    }
-
-    @Test
-    public void testHarvestingStatusAfterSavingVmCaps() {
-        Clock clock = mock(Clock.class);
-        when(clock.getRealTimeMillis()).thenReturn(1l);
-        ThreadDao dao = mock(ThreadDao.class);
-
-        ThreadHarvester harvester = new ThreadHarvester(executor, clock, pool, writerId);
-        harvester.setThreadDao(dao);
-
-        harvester.saveVmCaps("vmId", 10);
         harvester.addThreadHarvestingStatus("vmId");
 
         ArgumentCaptor<ThreadHarvestingStatus> statusCaptor = ArgumentCaptor.forClass(ThreadHarvestingStatus.class);

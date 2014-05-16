@@ -36,30 +36,57 @@
 
 package com.redhat.thermostat.thread.client.swing.osgi;
 
+import com.redhat.thermostat.client.swing.UIDefaults;
+import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
+import com.redhat.thermostat.thread.client.common.model.timeline.TimelineDimensionModel;
+import com.redhat.thermostat.thread.client.swing.SwingThreadViewService;
+import com.redhat.thermostat.thread.client.swing.impl.timeline.SwingTimelineDimensionModel;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.util.tracker.ServiceTracker;
-
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
-import com.redhat.thermostat.thread.client.swing.SwingThreadViewService;
+import org.osgi.framework.ServiceRegistration;
 
 public class Activator implements BundleActivator {
 
+    private List<ServiceRegistration> regs = new ArrayList<>();
+
     @Override
     public void start(final BundleContext context) throws Exception {
-        
-        @SuppressWarnings({ "rawtypes", "unchecked" })
-        ServiceTracker tracker = new ServiceTracker(context, ApplicationService.class.getName(), null) {
-            @Override
-            public Object addingService(ServiceReference reference) {
-                
-                context.registerService(ThreadViewProvider.class.getName(), new SwingThreadViewService(), null);
-                
-                return super.addingService(reference);
-            }
+
+        Class<?> [] classes = {
+                UIDefaults.class,
         };
+        
+        MultipleServiceTracker tracker = new MultipleServiceTracker(context, classes, new Action() {
+            @Override
+            public void dependenciesUnavailable() {
+                for (ServiceRegistration reg : regs) {
+                    reg.unregister();
+                }
+                regs.clear();
+            }
+            
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                
+                SwingTimelineDimensionModel dimensionModel = new SwingTimelineDimensionModel();
+                
+                UIDefaults uiDefaults = (UIDefaults) services.get(UIDefaults.class.getName());
+                ServiceRegistration reg = context.registerService(ThreadViewProvider.class.getName(),
+                                              new SwingThreadViewService(uiDefaults, dimensionModel),
+                                              null);
+                regs.add(reg);
+
+                reg = context.registerService(TimelineDimensionModel.class.getName(),
+                                              dimensionModel, null);
+                regs.add(reg);
+            }
+        });
+        
         tracker.open();
     }
     

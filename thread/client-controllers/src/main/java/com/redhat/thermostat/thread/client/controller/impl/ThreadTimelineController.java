@@ -36,77 +36,159 @@
 
 package com.redhat.thermostat.thread.client.controller.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import com.redhat.thermostat.client.ui.Palette;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.model.Range;
-import com.redhat.thermostat.thread.client.common.Timeline;
-import com.redhat.thermostat.thread.client.common.TimelineInfo;
 import com.redhat.thermostat.thread.client.common.chart.ChartColors;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
+import com.redhat.thermostat.thread.client.common.model.timeline.Timeline;
+import com.redhat.thermostat.thread.client.common.model.timeline.TimelineDimensionModel;
+import com.redhat.thermostat.thread.client.common.model.timeline.TimelineInfo;
 import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
 import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView.ThreadTimelineViewAction;
-import com.redhat.thermostat.thread.model.ThreadInfoData;
+import com.redhat.thermostat.thread.model.ThreadHeader;
+import com.redhat.thermostat.thread.model.ThreadState;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.List;
 
 public class ThreadTimelineController extends CommonController {
+
+    private static final boolean _DEBUG_BLOCK_TIMING_ = false;
 
     private ThreadTimelineView view;
     private ThreadCollector collector;
     
-    private final String lock = new String("ThreadTimelineController"); 
+    private static final long EXTRA_TIMELINE_BUFFER = 2000;
     
-    public ThreadTimelineController(ThreadTimelineView view, ThreadCollector collector, Timer timer) {
+    private final String lock = new String("ThreadTimelineController"); 
+
+    private boolean followMode;
+    private long timelineLength;
+
+    private TimelineDimensionModel timelineDimensionModel;
+    private Range<Long> pageRangeInStaticMode;
+
+    public ThreadTimelineController(ThreadTimelineView view, ThreadCollector collector, Timer timer,
+                                    TimelineDimensionModel timelineDimensionModel) {
         super(timer, view);
         timer.setAction(new ThreadTimelineControllerAction());
         this.view = view;
         this.view.addThreadSelectionActionListener(new ThreadTimelineSelectedAction());
         this.collector = collector;
+        followMode = false;
+
+        this.timelineDimensionModel = timelineDimensionModel;
+        timelineDimensionModel.addPropertyChangeListener(TimelineDimensionModel.LENGTH_PROPERTY,
+                                                         new TimelineDimensionPropertyChangeListener());
     }
 
+    private class TimelineDimensionPropertyChangeListener implements PropertyChangeListener {
+        
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+            synchronized (lock) {                    
+                timelineLength = timelineDimensionModel.getLengthInMillis();
+            }
+        }
+    }
+    
     private class ThreadTimelineSelectedAction implements ActionListener<ThreadTimelineViewAction> {
         
         @Override
         public void actionPerformed(ActionEvent<ThreadTimelineViewAction> actionEvent) {
-            // TODO
+            switch (actionEvent.getActionId()) {
+            case THREAD_TIMELINE_SELECTED:
+                break;
+                
+            case SWITCH_TO_FOLLOW_MODE:
+                synchronized (lock) {
+                    followMode = true;
+                }
+                view.ensureTimelineState(ThreadTimelineView.TimelineSelectorState.FOLLOWING);
+                break;
+                
+            case SWITCH_TO_STATIC_MODE:
+                synchronized (lock) {                    
+                    followMode = false;
+                    pageRangeInStaticMode = (Range<Long>) actionEvent.getPayload();
+                }
+                view.ensureTimelineState(ThreadTimelineView.TimelineSelectorState.STATIC);
+                break;
+            
+            default:
+                break;
+            }
         }
     }
     
     private class ThreadTimelineControllerAction implements Runnable {
+
         @Override
         public void run() {
             
             synchronized (lock) {
-                // FIXME: only load latest, not all the info all the time
-                Range<Long> range = new Range<Long>(Long.MAX_VALUE, Long.MIN_VALUE);
-                List<ThreadInfoData> infos = collector.getThreadInfo();
-                if(infos.size() > 0) {
-                    Map<ThreadInfoData, List<ThreadInfoData>> stats = ThreadInfoHelper.getThreadInfoDataMap(infos);
-                    List<Timeline> timelines =  new ArrayList<>();
-                    for (List<ThreadInfoData> beanList : stats.values()) {
-                        Timeline timeline = new Timeline(beanList.get(0).getThreadName(), beanList.get(0).getThreadId());
- 
-                        for (ThreadInfoData data : beanList) {
-                            Palette palette = ChartColors.getPaletteColor(data.getState());
-                            long timestamp = data.getTimeStamp();
-                            TimelineInfo info = new TimelineInfo(palette, timestamp);
-                            timeline.add(info);
 
-                            if (range.getMin() > timestamp) {
-                                range = new Range<>(timestamp, range.getMax());
-                            }
-                            if (range.getMax() < timestamp) {
-                                range = new Range<>(range.getMin(), timestamp);
-                            }
-                        }
-                        timelines.add(timeline);
-                    }
-                    view.displayStats(timelines, range);
+                Range<Long> totalRange = collector.getThreadStateTotalTimeRange();
+                if (totalRange == null) {
+                    // that simply means we don't have data yet, let's just skip
+                    // this loop
+                    return;
                 }
+                view.getGroupDataModel().setTotalRange(totalRange);
+
+                List<ThreadHeader> threads = collector.getThreads();
+
+                view.updateThreadList(threads);
+
+                Range<Long> pageRange = null;
+                Range<Long> visibleRange = null;
+                List<ThreadState> states = null;
+                if (followMode || pageRangeInStaticMode == null) {
+                    // get the latest info available, ensure a little of extra
+                    // buffer so that we are sure to have continuity around the
+                    // timeline edges
+                    long max = totalRange.getMax();
+                    long pageMin = max - timelineLength;
+                    pageRange = new Range<>(pageMin, totalRange.getMax());
+
+                    long min = pageMin - EXTRA_TIMELINE_BUFFER;
+                    visibleRange = new Range<>(min, max);
+
+                    view.getGroupDataModel().setPageRange(pageRange);
+
+                } else {
+                    long max = pageRangeInStaticMode.getMax() + EXTRA_TIMELINE_BUFFER;
+                    long pageMin = max - timelineLength;
+                    long min = pageMin - EXTRA_TIMELINE_BUFFER;
+                    visibleRange = new Range<>(min, max);
+                    view.getGroupDataModel().setPageRange(pageRangeInStaticMode);
+                }
+
+                long sampleStart = 0l;
+                if (_DEBUG_BLOCK_TIMING_) {
+                    sampleStart = System.currentTimeMillis();
+                }
+
+                for (ThreadHeader thread : threads) {
+                    states = collector.getThreadStates(thread, visibleRange);
+                    Timeline threadTimeline = new Timeline(thread.getThreadName(), thread.getThreadId());
+                    for (ThreadState state : states) {
+                        TimelineInfo info = new TimelineInfo();
+                        info.setColor(ChartColors.getPaletteColor(state.getState()));
+                        info.setRange(state.getRange());
+                        threadTimeline.add(info);
+                    }
+                    view.displayTimeline(thread, threadTimeline);
+                }
+
+                if (_DEBUG_BLOCK_TIMING_) {
+                    long sampleStop = System.currentTimeMillis();
+                    System.err.println("getThreadStates time: " + (sampleStop - sampleStart));
+                }
+
+                view.submitChanges();
             }
         }
     }

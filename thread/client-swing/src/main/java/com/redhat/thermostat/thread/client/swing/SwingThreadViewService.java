@@ -36,15 +36,25 @@
 
 package com.redhat.thermostat.thread.client.swing;
 
+import com.redhat.thermostat.client.swing.UIDefaults;
 import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
 import com.redhat.thermostat.thread.client.common.view.ThreadView;
 import com.redhat.thermostat.thread.client.swing.impl.SwingThreadView;
+import com.redhat.thermostat.thread.client.swing.impl.timeline.SwingTimelineDimensionModel;
 
 public class SwingThreadViewService implements ThreadViewProvider {
     
+    private UIDefaults uiDefaults;
+    private SwingTimelineDimensionModel dimensionModel;
+    
+    public SwingThreadViewService(UIDefaults uiDefaults, SwingTimelineDimensionModel dimensionModel) {
+        this.uiDefaults = uiDefaults;
+        this.dimensionModel = dimensionModel;
+    }
+    
     @Override
     public ThreadView createView() {
-        return new SwingThreadView();
+        return new SwingThreadView(uiDefaults, dimensionModel);
     }
 }
 

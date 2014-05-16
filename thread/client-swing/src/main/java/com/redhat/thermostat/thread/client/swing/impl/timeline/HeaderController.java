@@ -34,46 +34,25 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.common;
+package com.redhat.thermostat.thread.client.swing.impl.timeline;
 
-import com.redhat.thermostat.client.ui.Palette;
-import com.redhat.thermostat.storage.model.TimeStampedPojo;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import javax.swing.JComponent;
 
-public class TimelineInfo implements TimeStampedPojo {
+/**
+ */
+public class HeaderController implements PropertyChangeListener {
 
-    private Palette colour;
-    private long timeStamp;
-    
-    public TimelineInfo() {
-        timeStamp = 0;
-        colour = Palette.BLACK; 
-    }
-    
-    public TimelineInfo(Palette colour, long timeStamp) {
-        this.timeStamp = timeStamp;
-        this.colour = colour;
-    }
-    
-    public Palette getColor() {
-        return colour;
-    }
-    
-    public void setColor(Palette colour) {
-        this.colour = colour;
-    }
-    
-    public void setTimeStamp(long timestamp) {
-        this.timeStamp = timestamp;
+    private JComponent[] toRepaint;
+    public HeaderController(JComponent ... toRepaint) {
+        this.toRepaint = toRepaint;
     }
 
     @Override
-    public long getTimeStamp() {
-        return timeStamp;
-    }
-
-    @Override
-    public String toString() {
-        return "TimelineInfo [colour=" + colour + ", timeStamp=" + timeStamp + "]";
+    public void propertyChange(PropertyChangeEvent evt) {
+        for (JComponent component : toRepaint) {
+            component.repaint();
+        }
     }
 }
-

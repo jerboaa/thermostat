@@ -51,6 +51,5 @@ public class TimelineCellRenderer extends JPanel implements ListCellRenderer<Tim
     {
         value.setSelected(isSelected);
         return value;
-    } 
+    }
 }
-
