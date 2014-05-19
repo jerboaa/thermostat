@@ -59,6 +59,7 @@ public class ThreadDAOCategoryRegistration implements CategoryRegistration {
         categories.add(ThreadDao.THREAD_HEADER.getName());
         categories.add(ThreadDao.THREAD_STATE.getName());
         categories.add(ThreadDao.THREAD_SUMMARY.getName());
+        categories.add(ThreadDao.THREAD_CONTENTION_SAMPLE.getName());
         return categories;
     }
 
