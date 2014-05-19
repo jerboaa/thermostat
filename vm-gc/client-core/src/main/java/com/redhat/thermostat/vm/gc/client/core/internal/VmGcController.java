@@ -63,6 +63,8 @@ import com.redhat.thermostat.storage.model.TimeStampedPojoComparator;
 import com.redhat.thermostat.vm.gc.client.core.VmGcView;
 import com.redhat.thermostat.vm.gc.client.core.VmGcViewProvider;
 import com.redhat.thermostat.vm.gc.client.locale.LocaleResources;
+import com.redhat.thermostat.vm.gc.common.GcCommonNameMapper;
+import com.redhat.thermostat.vm.gc.common.GcCommonNameMapper.CollectorCommonName;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
@@ -72,6 +74,7 @@ import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Generation;
 public class VmGcController implements InformationServiceController<VmRef> {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+    private static final GcCommonNameMapper mapper = new GcCommonNameMapper();
 
     private final VmRef ref;
     private final VmGcView view;
@@ -143,6 +146,9 @@ public class VmGcController implements InformationServiceController<VmRef> {
     }
 
     private void doUpdateCollectorData() {
+        CollectorCommonName commonName = getCommonName();
+        view.setCommonCollectorName(commonName);
+        
         Map<String, List<IntervalTimeData<Double>>> dataToAdd = new HashMap<>();
         List<VmGcStat> sortedList = gcDao.getLatestVmGcStats(ref, lastSeenTimeStamp);
         Collections.sort(sortedList, new TimeStampedPojoComparator<>());
@@ -179,6 +185,15 @@ public class VmGcController implements InformationServiceController<VmRef> {
             }
             view.addData(entry.getKey(), entry.getValue());
         }
+    }
+
+    private CollectorCommonName getCommonName() {
+        Set<String> distinctCollectors = gcDao.getDistinctCollectorNames(ref);
+        CollectorCommonName commonName = CollectorCommonName.UNKNOWN_COLLECTOR;
+        if (distinctCollectors.size() > 0) {
+            commonName = mapper.mapToCommonName(distinctCollectors);
+        }
+        return commonName;
     }
 
     public String getCollectorGeneration(String collectorName) {

@@ -36,11 +36,17 @@
 
 package com.redhat.thermostat.vm.gc.common.internal;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.CategoryAdapter;
+import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
@@ -49,6 +55,7 @@ import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.model.DistinctResult;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
 
@@ -68,13 +75,26 @@ public class VmGcStatDAOImpl implements VmGcStatDAO {
                  "'" + collectorKey.getName() + "' = ?s , " +
                  "'" + runCountKey.getName() + "' = ?l , " +
                  "'" + wallTimeKey.getName() + "' = ?l";
+    // The assumption is that VM id's are unique. Which it is. It's a UUID.
+    static final String DESC_QUERY_DISTINCT_COLLECTORS = "QUERY-DISTINCT(" +
+            collectorKey.getName() + ") " + vmGcStatCategory.getName() +
+            " WHERE '" + Key.VM_ID.getName() + "' = ?s";
+    
 
     private final Storage storage;
     private final VmLatestPojoListGetter<VmGcStat> getter;
+    private final Category<DistinctResult> aggregateCategory;
 
     VmGcStatDAOImpl(Storage storage) {
         this.storage = storage;
         storage.registerCategory(vmGcStatCategory);
+        // getDistinctCollectorNames uses an adapted category. Be sure to
+        // register it after the source category has been registered. This is
+        // necessary in order for web storage to work with the adapted
+        // category.
+        CategoryAdapter<VmGcStat, DistinctResult> adapter = new CategoryAdapter<>(vmGcStatCategory);
+        this.aggregateCategory = adapter.getAdapted(DistinctResult.class);
+        storage.registerCategory(aggregateCategory);
         getter = new VmLatestPojoListGetter<>(storage, vmGcStatCategory);
     }
 
@@ -101,6 +121,35 @@ public class VmGcStatDAOImpl implements VmGcStatDAO {
         } catch (StatementExecutionException e) {
             logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
         }
+    }
+
+    @Override
+    public Set<String> getDistinctCollectorNames(VmRef ref) {
+        StatementDescriptor<DistinctResult> desc = new StatementDescriptor<>(aggregateCategory, DESC_QUERY_DISTINCT_COLLECTORS);
+        PreparedStatement<DistinctResult> prepared;
+        try {
+            prepared = storage.prepareStatement(desc);
+            prepared.setString(0, ref.getVmId());
+            Cursor<DistinctResult> cursor = prepared.executeQuery();
+            // DistinctResult comes as a single value if any
+            if (cursor.hasNext()) {
+                DistinctResult result = cursor.next();
+                Set<String> collNames = new HashSet<>();
+                for (String col: result.getValues()) {
+                    collNames.add(col);
+                }
+                return collNames;
+            } else {
+                // Something wrong with the query?
+                logger.log(Level.FINE, "Query '" + desc + "' returned no result!");
+                return Collections.emptySet();
+            }
+        } catch (DescriptorParsingException e) {
+            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
+        } catch (StatementExecutionException e) {
+            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+        }
+        return Collections.emptySet();
     }
 
 }

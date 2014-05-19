@@ -38,6 +38,7 @@ package com.redhat.thermostat.vm.gc.common;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.storage.core.Category;
@@ -58,7 +59,18 @@ public interface VmGcStatDAO {
             Arrays.<Key<?>>asList(Key.TIMESTAMP));
 
     public List<VmGcStat> getLatestVmGcStats(VmRef ref, long since);
-
+    
+    /**
+     * Find the set of distinct collector names for this JVM. For each JVM there
+     * are potentially multiple collectors recorded in storage.
+     * 
+     * @param ref
+     *            The idendifier of the JVM for which to get the collector names
+     *            for.
+     * @return A set of distinct collector names.
+     */
+    public Set<String> getDistinctCollectorNames(VmRef ref);
+    
     public void putVmGcStat(VmGcStat stat);
 }
 

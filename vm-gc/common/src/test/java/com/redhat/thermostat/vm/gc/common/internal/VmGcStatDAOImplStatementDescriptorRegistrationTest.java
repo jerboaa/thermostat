@@ -94,7 +94,7 @@ public class VmGcStatDAOImplStatementDescriptorRegistrationTest {
     public void registersAllDescriptors() {
         VmGcStatDAOImplStatementDescriptorRegistration reg = new VmGcStatDAOImplStatementDescriptorRegistration();
         Set<String> descriptors = reg.getStatementDescriptors();
-        assertEquals(2, descriptors.size());
+        assertEquals(3, descriptors.size());
         assertFalse("null descriptor not allowed", descriptors.contains(null));
     }
     
@@ -119,10 +119,10 @@ public class VmGcStatDAOImplStatementDescriptorRegistrationTest {
             }
             registrations.add(r);
         }
-        // storage-core + this module
+        // 2 modules: storage-core + this module
         assertEquals(2, registrations.size());
         assertNotNull(vmGcStatReg);
-        assertEquals(2, vmGcStatReg.getStatementDescriptors().size());
+        assertEquals(3, vmGcStatReg.getStatementDescriptors().size());
     }
 
 }

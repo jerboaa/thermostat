@@ -42,6 +42,7 @@ import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.model.IntervalTimeData;
+import com.redhat.thermostat.vm.gc.common.GcCommonNameMapper.CollectorCommonName;
 
 public abstract class VmGcView extends BasicView implements UIComponent {
 
@@ -53,5 +54,6 @@ public abstract class VmGcView extends BasicView implements UIComponent {
 
     public abstract void clearData(String tag);
 
+    public abstract void setCommonCollectorName(CollectorCommonName commonName);
 }
 

@@ -45,7 +45,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
@@ -61,6 +63,7 @@ import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.vm.gc.client.core.VmGcView;
 import com.redhat.thermostat.vm.gc.client.core.VmGcViewProvider;
+import com.redhat.thermostat.vm.gc.common.GcCommonNameMapper.CollectorCommonName;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
@@ -106,6 +109,12 @@ public class VmGcControllerTest {
         when(vmGcStatDAO.getLatestVmGcStats(isA(VmRef.class), eq(Long.MIN_VALUE))).thenReturn(stats);
         VmMemoryStatDAO vmMemoryStatDAO = mock(VmMemoryStatDAO.class);
         when(vmMemoryStatDAO.getLatestMemoryStat(isA(VmRef.class))).thenReturn(memoryStat);
+        // the following set should map to Concurrent Collector
+        Set<String> cms = new HashSet<>();
+        cms.add("CMS");
+        cms.add("PCopy");
+        
+        when(vmGcStatDAO.getDistinctCollectorNames(isA(VmRef.class))).thenReturn(cms);
 
         // Setup View
         view = mock(VmGcView.class);
@@ -153,6 +162,7 @@ public class VmGcControllerTest {
         timerAction.run();
 
         verify(view).addData(isA(String.class), isA(List.class));
+        verify(view).setCommonCollectorName(eq(CollectorCommonName.CONCURRENT_COLLECTOR));
     }
 
 }

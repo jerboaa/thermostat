@@ -38,6 +38,7 @@ package com.redhat.thermostat.vm.gc.client.swing.internal;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.util.ArrayList;
@@ -46,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.swing.BorderFactory;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
@@ -75,13 +77,18 @@ import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.model.IntervalTimeData;
 import com.redhat.thermostat.vm.gc.client.core.VmGcView;
 import com.redhat.thermostat.vm.gc.client.locale.LocaleResources;
+import com.redhat.thermostat.vm.gc.common.GcCommonNameMapper.CollectorCommonName;
 
 public class VmGcPanel extends VmGcView implements SwingComponent {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
-
+    private static final String GC_ALGO_LABEL_NAME = translator.localize(LocaleResources.VM_GC_CONFIGURED_COLLECTOR).getContents();
+    
     private HeaderPanel visiblePanel = new HeaderPanel();
-    private JPanel realPanel = new JPanel();
+    private JPanel chartPanelContainer = new JPanel();
+    private JPanel containerPanel = new JPanel();
+    private JLabel gcAlgoLabelDescr;
+    private JLabel commonNameLabel;
 
     private final Map<String, SampledDataset> dataset = new HashMap<>();
     private final Map<String, JPanel> subPanels = new HashMap<>();
@@ -90,8 +97,8 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
 
     public VmGcPanel() {
         super();
-        initializePanel();
 
+        initializePanel();
         gcPanelConstraints = new GridBagConstraints();
         gcPanelConstraints.gridx = 0;
         gcPanelConstraints.gridy = 0;
@@ -118,9 +125,43 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
     }
 
     private void initializePanel() {
-        visiblePanel.setContent(realPanel);
+        visiblePanel.setContent(containerPanel);
         visiblePanel.setHeader(translator.localize(LocaleResources.VM_GC_TITLE));
-        realPanel.setLayout(new GridBagLayout());
+        containerPanel.setLayout(new GridBagLayout());
+        GridBagConstraints commonNameConstraints = getWeightedGridBagConstraint(0.03);
+        commonNameConstraints.gridy = 0;
+        GridBagConstraints chartPanelConstraints = getWeightedGridBagConstraint(0.97);
+        chartPanelConstraints.gridy = 1;
+        chartPanelContainer.setLayout(new GridBagLayout());
+        JPanel commonNamePanel = createCollectorsCommonPanel();
+        containerPanel.add(commonNamePanel, commonNameConstraints);
+        containerPanel.add(chartPanelContainer, chartPanelConstraints);
+    }
+    
+    private GridBagConstraints getWeightedGridBagConstraint(double weightY) {
+        GridBagConstraints c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 0;
+        c.weightx = 1;
+        c.weighty = weightY;
+        c.fill = GridBagConstraints.BOTH;
+        return c;
+    }
+    
+    private JPanel createCollectorsCommonPanel() {
+        JPanel commonPanel = new JPanel();
+        FlowLayout layout = new FlowLayout();
+        layout.setAlignment(FlowLayout.LEFT);
+        layout.setHgap(3);
+        commonPanel.setLayout(layout);
+        // Common name for a GC algo might not be shown at all. Thus
+        // fill with empty labels first and set a visible text only once
+        // we know there is a known mapping.
+        this.gcAlgoLabelDescr = new JLabel(""); // intentionally empty string
+        this.commonNameLabel = new JLabel(""); // intentionally empty string
+        commonPanel.add(gcAlgoLabelDescr);
+        commonPanel.add(commonNameLabel);
+        return commonPanel;
     }
 
     private JPanel createCollectorDetailsPanel(IntervalXYDataset collectorData, LocalizedString title, String units) {
@@ -193,9 +234,9 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
                 dataset.put(tag, newData);
                 JPanel subPanel = createCollectorDetailsPanel(newData, title, units);
                 subPanels.put(tag, subPanel);
-                realPanel.add(subPanel, gcPanelConstraints);
+                chartPanelContainer.add(subPanel, gcPanelConstraints);
                 gcPanelConstraints.gridy++;
-                realPanel.revalidate();
+                containerPanel.revalidate();
             }
         });
     }
@@ -207,9 +248,9 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
             public void run() {
                 dataset.remove(tag);
                 JPanel subPanel = subPanels.remove(tag);
-                realPanel.remove(subPanel);
-                realPanel.revalidate();
+                chartPanelContainer.remove(subPanel);
                 gcPanelConstraints.gridy--;
+                containerPanel.revalidate();
             }
         });
     }
@@ -238,6 +279,21 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
                 series.clear();
             }
         });
+    }
+
+    @Override
+    public void setCommonCollectorName(final CollectorCommonName commonName) {
+        // only set values if we are able to show more info about the in-use
+        // GC-algo.
+        if (commonName != CollectorCommonName.UNKNOWN_COLLECTOR) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    gcAlgoLabelDescr.setText(GC_ALGO_LABEL_NAME);
+                    commonNameLabel.setText(commonName.getHumanReadableString());
+                }
+            });
+        }
     }
 }
 
