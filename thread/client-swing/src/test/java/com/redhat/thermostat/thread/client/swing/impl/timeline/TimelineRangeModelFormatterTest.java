@@ -37,6 +37,7 @@
 package com.redhat.thermostat.thread.client.swing.impl.timeline;
 
 import java.util.Locale;
+import java.util.TimeZone;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -46,22 +47,27 @@ import static junit.framework.Assert.assertEquals;
 public class TimelineRangeModelFormatterTest {
 
     private static Locale defaultLocale;
+    private static TimeZone defaultTimeZone;
 
     @BeforeClass
     public static void setUp() {
         defaultLocale = Locale.getDefault();
         Locale.setDefault(Locale.US);
+
+        defaultTimeZone = TimeZone.getDefault();
+        TimeZone.setDefault(TimeZone.getTimeZone("Etc/UTC"));
     }
 
     @AfterClass
     public static void tearDown() {
+        TimeZone.setDefault(defaultTimeZone);
         Locale.setDefault(defaultLocale);
     }
 
     @Test
     public void testGetFormattedString() throws Exception {
         String range = TimelineRangeModelFormatter.getFormattedString(5_000l);
-        assertEquals("1970.01.01, 01:00:05", range);
+        assertEquals("1970.01.01, 00:00:05", range);
     }
 
     @Test
