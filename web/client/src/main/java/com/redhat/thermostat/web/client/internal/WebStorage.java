@@ -112,8 +112,8 @@ import com.redhat.thermostat.web.common.WebQueryResponseSerializer;
 public class WebStorage implements Storage, SecureStorage {
 
     private static final String HTTPS_PREFIX = "https";
-    final Logger logger = LoggingUtils.getLogger(WebStorage.class);
-
+    static final Logger logger = LoggingUtils.getLogger(WebStorage.class);
+    
     private static class CloseableHttpEntity implements Closeable, HttpEntity {
 
         private HttpEntity entity;
@@ -378,9 +378,14 @@ public class WebStorage implements Storage, SecureStorage {
             client.getCredentialsProvider().setCredentials(scope, creds);
         }
     }
-
+    
     private void ping() throws StorageException {
-        post(endpoint + "/ping", (HttpEntity) null).close();
+        CloseableHttpEntity entity = post(endpoint + "/ping", (HttpEntity) null);
+        int responseCode = entity.getResponseCode();
+        entity.close();
+        if (responseCode != HttpServletResponse.SC_OK) {
+            throw new StorageException("ping returned HTTP code '" + responseCode + "'");
+        }
     }
 
     private CloseableHttpEntity post(String url, List<NameValuePair> formparams)
@@ -427,6 +432,9 @@ public class WebStorage implements Storage, SecureStorage {
             break;
         case (HttpServletResponse.SC_OK):
             // Let calling code handle SC_OK
+            break;
+        case (HttpServletResponse.SC_FORBIDDEN):
+            // Let calling code handle SC_FORBIDDEN
             break;
         default:
             throw new IOException("Server returned status: " + status);
@@ -488,6 +496,15 @@ public class WebStorage implements Storage, SecureStorage {
         List<NameValuePair> formparams = Arrays.asList(queryParam);
         WebQueryResponse<T> qResp = null;
         try (CloseableHttpEntity entity = post(endpoint + "/query-execute", formparams)) {
+            // Be sure to handle the forbidden case in order to properly consume
+            // the HTTP entity and thus close the content stream.
+            // See postImpl() and
+            // http://hc.apache.org/httpcomponents-core-4.3.x/httpcore/apidocs/org/apache/http/util/EntityUtils.html#consume%28org.apache.http.HttpEntity%29
+            if (entity.getResponseCode() == HttpServletResponse.SC_FORBIDDEN) {
+                logger.log(Level.INFO, "Got response code '" + HttpServletResponse.SC_FORBIDDEN + "' (Forbidden). " +
+                                       "Returning null cursor!");
+                return null;
+            }
             Reader reader = getContentAsReader(entity);
             qResp = gson.fromJson(reader, parametrizedTypeToken);
         } catch (Exception e) {
@@ -529,6 +546,15 @@ public class WebStorage implements Storage, SecureStorage {
         List<NameValuePair> formparams = Arrays.asList(queryParam);
         int responseCode = PreparedStatementResponseCode.WRITE_GENERIC_FAILURE;
         try (CloseableHttpEntity entity = post(endpoint + "/write-execute", formparams)) {
+            // Be sure to handle the forbidden case in order to properly consume
+            // the HTTP entity and thus close the content stream.
+            // See postImpl() and
+            // http://hc.apache.org/httpcomponents-core-4.3.x/httpcore/apidocs/org/apache/http/util/EntityUtils.html#consume%28org.apache.http.HttpEntity%29
+            if (entity.getResponseCode() == HttpServletResponse.SC_FORBIDDEN) {
+                logger.log(Level.INFO, "Got response code '" + HttpServletResponse.SC_FORBIDDEN + "' (Forbidden). " +
+                                       "Returning generic write failure code!");
+                return PreparedStatementResponseCode.WRITE_GENERIC_FAILURE;
+            }
             Reader reader = getContentAsReader(entity);
             responseCode = gson.fromJson(reader, int.class);
         } catch (Exception e) {

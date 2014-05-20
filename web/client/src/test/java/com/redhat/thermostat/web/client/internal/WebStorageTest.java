@@ -85,13 +85,12 @@ import org.mockito.Mockito;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
-import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.AuthToken;
+import com.redhat.thermostat.storage.core.BackingStorage;
 import com.redhat.thermostat.storage.core.Categories;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
-import com.redhat.thermostat.storage.core.BackingStorage;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.IllegalDescriptorException;
@@ -308,6 +307,53 @@ public class WebStorageTest {
     }
     
     @Test
+    public void forbiddenExecuteQueryReturnsNullCursor() throws UnsupportedEncodingException, IOException {
+        Gson gson = new GsonBuilder().registerTypeHierarchyAdapter(PreparedParameter.class, new PreparedParameterSerializer())
+                .registerTypeAdapter(WebPreparedStatement.class, new WebPreparedStatementSerializer())
+                .registerTypeAdapter(WebQueryResponse.class, new WebQueryResponseSerializer<>())
+                .registerTypeAdapter(Pojo.class, new ThermostatGSONConverter())
+                .create();
+
+        String strDesc = "QUERY test WHERE 'property1' = ?s";
+        StatementDescriptor<TestObj> desc = new StatementDescriptor<>(category, strDesc);
+        PreparedStatement<TestObj> stmt = null;
+        
+        int fakePrepStmtId = 5;
+        WebPreparedStatementResponse fakeResponse = new WebPreparedStatementResponse();
+        fakeResponse.setNumFreeVariables(1);
+        fakeResponse.setStatementId(fakePrepStmtId);
+        prepareServer(gson.toJson(fakeResponse));
+        try {
+            stmt = storage.prepareStatement(desc);
+        } catch (DescriptorParsingException e) {
+            // descriptor should parse fine and is trusted
+            fail(e.getMessage());
+        }
+        assertTrue(stmt instanceof WebPreparedStatement);
+        WebPreparedStatement<TestObj> webStmt = (WebPreparedStatement<TestObj>)stmt;
+        assertEquals(fakePrepStmtId, webStmt.getStatementId());
+        PreparedParameters params = webStmt.getParams();
+        assertEquals(1, params.getParams().length);
+        assertNull(params.getParams()[0]);
+        
+        // now set a parameter
+        stmt.setString(0, "fluff");
+        assertEquals("fluff", params.getParams()[0].getValue());
+        assertEquals(String.class, params.getParams()[0].getType());
+        
+        prepareServer(HttpServletResponse.SC_FORBIDDEN);
+        Cursor<TestObj> results = null;
+        try {
+            results = stmt.executeQuery();
+        } catch (StatementExecutionException e) {
+            // should execute fine
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+        assertNull("Forbidden should have returned a null cursor", results);
+    }
+    
+    @Test
     public void canPrepareAndExecuteQuery() throws UnsupportedEncodingException, IOException {
         TestObj obj1 = new TestObj();
         obj1.setProperty1("fluffor1");
@@ -424,6 +470,54 @@ public class WebStorageTest {
         
         assertEquals(PreparedStatementResponseCode.WRITE_GENERIC_FAILURE, response);
     }
+    
+    @Test
+    public void forbiddenExecuteWriteReturnsGenericWriteFailure() {
+        Gson gson = new GsonBuilder().registerTypeAdapter(PreparedParameter.class, new PreparedParameterSerializer())
+                .registerTypeAdapter(WebPreparedStatement.class, new WebPreparedStatementSerializer())
+                .registerTypeHierarchyAdapter(Pojo.class, new ThermostatGSONConverter())
+                .create();
+
+        String strDesc = "ADD test SET 'property1' = ?s";
+        StatementDescriptor<TestObj> desc = new StatementDescriptor<>(category, strDesc);
+        PreparedStatement<TestObj> stmt = null;
+        
+        int fakePrepStmtId = 3;
+        WebPreparedStatementResponse fakeResponse = new WebPreparedStatementResponse();
+        fakeResponse.setNumFreeVariables(1);
+        fakeResponse.setStatementId(fakePrepStmtId);
+        prepareServer(gson.toJson(fakeResponse));
+        try {
+            stmt = storage.prepareStatement(desc);
+        } catch (DescriptorParsingException e) {
+            // descriptor should parse fine and is trusted
+            fail(e.getMessage());
+        }
+        assertTrue(stmt instanceof WebPreparedStatement);
+        WebPreparedStatement<TestObj> webStmt = (WebPreparedStatement<TestObj>)stmt;
+        assertEquals(fakePrepStmtId, webStmt.getStatementId());
+        PreparedParameters params = webStmt.getParams();
+        assertEquals(1, params.getParams().length);
+        assertNull(params.getParams()[0]);
+        
+        // now set a parameter
+        stmt.setString(0, "fluff");
+        assertEquals("fluff", params.getParams()[0].getValue());
+        assertEquals(String.class, params.getParams()[0].getType());
+        
+        prepareServer(HttpServletResponse.SC_FORBIDDEN);
+        int response = Integer.MAX_VALUE;
+        try {
+            response = stmt.execute();
+        } catch (StatementExecutionException e) {
+            // should execute fine
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+        
+        assertEquals("Forbidden should have returned a generic write failure response",
+                PreparedStatementResponseCode.WRITE_GENERIC_FAILURE, response);
+    }
 
     @Test
     public void testSaveFile() {
@@ -522,14 +616,6 @@ public class WebStorageTest {
 
     @Test
     public void canSSLEnableClient() {
-        // This test doesn't use the class-wide storage+server setup.
-        StartupConfiguration config = new StartupConfiguration() {
-            
-            @Override
-            public String getDBConnectionString() {
-                return "https://onlyHttpsPrefixUsed.example.com";
-            }
-        };
         SSLConfiguration sslConf = mock(SSLConfiguration.class);
         WebStorage storage = new WebStorage("https://onlyHttpsPrefixUsed.example.com",
                 new TrivialStorageCredentials(null, null), sslConf);
