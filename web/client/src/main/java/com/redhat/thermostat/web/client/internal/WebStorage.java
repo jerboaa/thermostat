@@ -55,7 +55,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.net.ssl.SSLContext;
-import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.Header;
@@ -110,6 +109,9 @@ import com.redhat.thermostat.web.common.WebQueryResponse;
 import com.redhat.thermostat.web.common.WebQueryResponseSerializer;
 
 public class WebStorage implements Storage, SecureStorage {
+
+    private static final int STATUS_OK = 200;
+    private static final int STATUS_NO_CONTENT = 204;
 
     private static final String HTTPS_PREFIX = "https";
     final Logger logger = LoggingUtils.getLogger(WebStorage.class);
@@ -422,11 +424,11 @@ public class WebStorage implements Storage, SecureStorage {
         StatusLine status = response.getStatusLine();
         int responseCode = status.getStatusCode();
         switch (responseCode) {
-        case (HttpServletResponse.SC_NO_CONTENT):
-            // Let calling code handle SC_NO_CONTENT
+        case (STATUS_NO_CONTENT):
+            // Let calling code handle STATUS_NO_CONTENT
             break;
-        case (HttpServletResponse.SC_OK):
-            // Let calling code handle SC_OK
+        case (STATUS_OK):
+            // Let calling code handle STATUS_OK
             break;
         default:
             throw new IOException("Server returned status: " + status);
@@ -553,7 +555,7 @@ public class WebStorage implements Storage, SecureStorage {
         NameValuePair fileParam = new BasicNameValuePair("file", name);
         List<NameValuePair> formparams = Arrays.asList(fileParam);
         CloseableHttpEntity entity = post(endpoint + "/load-file", formparams);
-        if (entity.getResponseCode() == HttpServletResponse.SC_NO_CONTENT) {
+        if (entity.getResponseCode() == STATUS_NO_CONTENT) {
             return null;
         }
         return new WebDataStream(entity);
@@ -617,7 +619,7 @@ public class WebStorage implements Storage, SecureStorage {
             httpPost.setEntity(entity);
             response = httpClient.execute(httpPost);
             StatusLine status = response.getStatusLine();
-            return status.getStatusCode() == 200;
+            return status.getStatusCode() == STATUS_OK;
         } catch (IOException ex) {
             throw new StorageException(ex);
         } finally {
