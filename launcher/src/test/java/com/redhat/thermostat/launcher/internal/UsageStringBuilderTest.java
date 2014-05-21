@@ -37,6 +37,9 @@
 package com.redhat.thermostat.launcher.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Arrays;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -81,7 +84,11 @@ public class UsageStringBuilderTest {
         options.addOption(b);
 
         String usage = builder.getUsage("test", options);
-        assertEquals("test [--bee] [-a]", usage);
+        String[] parts = usage.split(" ");
+        assertEquals(3, parts.length);
+        assertEquals("test", parts[0]);
+        assertTrue(Arrays.asList(parts).contains("[-a]"));
+        assertTrue(Arrays.asList(parts).contains("[--bee]"));
     }
 
     @Test

@@ -177,9 +177,9 @@ password=${agent.dev.password}
     <java.dir>/usr/share/java</java.dir>
 
     <junit.version>4.10</junit.version>
-    <mockito.version>1.9.0</mockito.version>
+    <mockito.version>1.9.5</mockito.version>
     <fest.version>1.2.1</fest.version>
-    <powermock.version>1.4.11</powermock.version>
+    <powermock.version>1.5.4</powermock.version>
     <easymock.version>3.1</easymock.version>
     <expectj.version>2.0.7</expectj.version>
 
@@ -352,7 +352,7 @@ password=${agent.dev.password}
         <plugin>
           <groupId>org.jacoco</groupId>
           <artifactId>jacoco-maven-plugin</artifactId>
-          <version>0.6.0.201210061924</version>
+          <version>0.7.0.201403182114</version>
         </plugin>
         <plugin>
           <groupId>org.apache.felix</groupId>
