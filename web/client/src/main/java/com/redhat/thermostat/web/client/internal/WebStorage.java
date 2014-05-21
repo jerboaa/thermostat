@@ -114,8 +114,8 @@ public class WebStorage implements Storage, SecureStorage {
     private static final int STATUS_NO_CONTENT = 204;
 
     private static final String HTTPS_PREFIX = "https";
-    final Logger logger = LoggingUtils.getLogger(WebStorage.class);
-
+    static final Logger logger = LoggingUtils.getLogger(WebStorage.class);
+    
     private static class CloseableHttpEntity implements Closeable, HttpEntity {
 
         private HttpEntity entity;
@@ -380,7 +380,7 @@ public class WebStorage implements Storage, SecureStorage {
             client.getCredentialsProvider().setCredentials(scope, creds);
         }
     }
-
+    
     private void ping() throws StorageException {
         post(endpoint + "/ping", (HttpEntity) null).close();
     }
@@ -431,7 +431,12 @@ public class WebStorage implements Storage, SecureStorage {
             // Let calling code handle STATUS_OK
             break;
         default:
-            throw new IOException("Server returned status: " + status);
+            // Properly consume the entity, thus closing the content stream,
+            // by throwing this IOException sub-class. This is important for the
+            // 403 and 500 status code cases. See:
+            // http://hc.apache.org/httpcomponents-core-4.3.x/httpcore/apidocs/org/apache/http/util/EntityUtils.html#consume%28org.apache.http.HttpEntity%29
+            throw new EntityConsumingIOException(response.getEntity(), 
+                    "Server returned status: " + status);
         }
 
         return new CloseableHttpEntity(response.getEntity(), responseCode);
