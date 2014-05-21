@@ -40,6 +40,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.io.Writer;
 import java.lang.reflect.Array;
 import java.security.Principal;
@@ -719,9 +720,19 @@ public class WebStorageEndPoint extends HttpServlet {
 
     private void writeResponse(HttpServletResponse resp,
             Object responseObj, Class<?> typeOfResponseObj) throws IOException {
+        String json = null;
+        try {
+            json = gson.toJson(responseObj, typeOfResponseObj);
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "JSON serialization failed for " + typeOfResponseObj, e);
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            return;
+        }
         resp.setStatus(HttpServletResponse.SC_OK);
         resp.setContentType(RESPONSE_JSON_CONTENT_TYPE);
-        gson.toJson(responseObj, typeOfResponseObj, resp.getWriter());
+        try (PrintWriter pw = resp.getWriter()) {
+            pw.write(json);
+        }
         resp.flushBuffer();
     }
 
