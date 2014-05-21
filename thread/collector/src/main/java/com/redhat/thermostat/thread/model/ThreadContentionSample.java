@@ -36,11 +36,13 @@
 
 package com.redhat.thermostat.thread.model;
 
+import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Persist;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
 /**
  */
+@Entity
 public class ThreadContentionSample extends ThreadPojo implements TimeStampedPojo {
 
     private long blockedCount;
@@ -48,8 +50,6 @@ public class ThreadContentionSample extends ThreadPojo implements TimeStampedPoj
 
     private long blockedTime;
     private long waitedTime;
-
-    private ThreadHeader header;
 
     // probe time
     private long timestamp;

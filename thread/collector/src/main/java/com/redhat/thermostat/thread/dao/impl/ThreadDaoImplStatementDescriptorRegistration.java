@@ -81,6 +81,7 @@ public class ThreadDaoImplStatementDescriptorRegistration implements
 
         descs.add(ThreadDaoImpl.ADD_CONTENTION_SAMPLE);
         descs.add(ThreadDaoImpl.GET_LATEST_CONTENTION_SAMPLE);
+        descs.add(ThreadDaoImpl.DESC_UPDATE_THREAD_STATE);
     }
     
     @Override
@@ -91,8 +92,16 @@ public class ThreadDaoImplStatementDescriptorRegistration implements
     @Override
     public DescriptorMetadata getDescriptorMetadata(String descriptor,
             PreparedParameter[] params) {
-        if (descs.contains(descriptor)) {
-            // All queries hava agentId/vmId parameters
+        if (descriptor.equals(ThreadDaoImpl.QUERY_THREAD_STATE_PER_THREAD) ||
+                descriptor.equals(ThreadDaoImpl.GET_LATEST_CONTENTION_SAMPLE)) {
+            // no agent/vm ids in descriptor.
+            return new DescriptorMetadata();
+        } else if (descriptor.equals(ThreadDaoImpl.QUERY_LATEST_THREAD_STATE_FOR_THREAD) ||
+                descriptor.equals(ThreadDaoImpl.QUERY_FIRST_THREAD_STATE_FOR_THREAD)) {
+            String agentId = (String)params[0].getValue();
+            return new DescriptorMetadata(agentId);
+        } else if (descs.contains(descriptor)) {
+            // All other queries have agentId/vmId parameters
             String agentId = (String)params[0].getValue();
             String vmId = (String)params[1].getValue();
             DescriptorMetadata metadata = new DescriptorMetadata(agentId, vmId);
