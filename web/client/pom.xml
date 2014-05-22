@@ -86,12 +86,6 @@
       <version>${jetty.version}</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>servlet-api</artifactId>
-      <version>${javax.servlet.version}</version>
-      <scope>provided</scope>
-    </dependency>
 
     <dependency>
       <groupId>com.google.code.gson</groupId>
