@@ -54,8 +54,9 @@ public class AgentStorageCredentials implements StorageCredentials {
 
     private static final char[] pw = {'p', 'a', 's', 's', 'w', 'o', 'r', 'd'};
     private static final char[] user = {'u', 's', 'e', 'r', 'n', 'a', 'm', 'e'};
-    private static String newLine = System.lineSeparator();
     private static final char comment = '#';
+
+    private final String newLine;
 
     private final File authFile;
     private final Reader testingAuthReader;
@@ -68,6 +69,7 @@ public class AgentStorageCredentials implements StorageCredentials {
         }
         this.testingAuthReader = null;
         this.authFile = agentAuthFile;
+        newLine = System.lineSeparator();
         long length = authFile.length();
         if (length > Integer.MAX_VALUE || length < 0L) {
             // Unlikely issue with authFile, try to get path to share with user via exception message
@@ -86,11 +88,12 @@ public class AgentStorageCredentials implements StorageCredentials {
     }
 
     // Testing constructor
-    AgentStorageCredentials(Reader agentAuthReader) {
+    AgentStorageCredentials(Reader agentAuthReader, String lineSeparator) {
         if (agentAuthReader == null) {
             throw new IllegalArgumentException("agentAuthReader must not be null");
         }
         this.testingAuthReader = agentAuthReader;
+        newLine = lineSeparator;
         long length = -1;
         try {
             length = testingAuthReader.skip(Long.MAX_VALUE);
@@ -104,6 +107,11 @@ public class AgentStorageCredentials implements StorageCredentials {
         authDataLength = (int) length;
         this.authFile = null;
         initUsername();
+    }
+
+    // Testing constructor
+    AgentStorageCredentials(Reader agentAuthReader) {
+        this(agentAuthReader, System.lineSeparator());
     }
 
     @Override
@@ -202,10 +210,9 @@ public class AgentStorageCredentials implements StorageCredentials {
     private char[] getValueFromData(char[] data, int dataLen, char[] target) {
         int position = 0;
         while (position < dataLen) {
-            if ((position + 1 == dataLen) || data[position] == newLine.charAt(0)) {
-                // Empty line
-                position = nextLine(data, position);
-                continue;
+            while (Character.isWhitespace(data[position])) {
+                // skip leading whitespace.
+                position++;
             }
             if (data[position] == comment) {
                 // Comment
@@ -243,14 +250,26 @@ public class AgentStorageCredentials implements StorageCredentials {
     }
 
     private int nextLine(char[] data, int current) {
+        int nextNewLine = getPositionOfNextNewline(data, current);
+        return nextNewLine + newLine.length();
+    }
+
+    private int getPositionOfNextNewline(char[] data, int current) {
         int next = current;
         while (next < data.length) {
-            if (data[next] == newLine.charAt(0)) {
+            boolean newLineFound = false;
+            for (int i = 0; i < newLine.length(); i++) {
+                if (data[next + i] == newLine.charAt(i)) {
+                    newLineFound = true;
+                } else {
+                    newLineFound = false;
+                }
+            }
+            if (newLineFound) {
                 break;
             }
-            next += newLine.length();
+            next++;
         }
-        next++;
         return next;
     }
 
@@ -263,28 +282,35 @@ public class AgentStorageCredentials implements StorageCredentials {
     }
 
     private char[] getValue(char[] data, int start, char[] key) {
-        if (data[start + key.length] != '=') {
-            return null;
-        }
+        int position = start;
         for (int i = 0; i < key.length; i++) {
-            if (key[i] != data[start + i]) {
+            if (key[i] != data[position]) {
                 return null;
             }
+            position++;
         }
-        int end = positionOf(newLine.charAt(0), data, start, data.length);
-        char[] value = Arrays.copyOfRange(data, start + key.length + 1, end);
+        while (Character.isWhitespace(data[position])) {
+            // skip whitespace between key and "=".
+            position++;
+        }
+        if (data[position] != '=') {
+            return null;
+        } else {
+            position++;
+        }
+        while (Character.isWhitespace(data[position])) {
+            // skip whitespace between "=" and value.
+            position++;
+        }
+        int valueStart = position;
+        int valueEnd = getPositionOfNextNewline(data, position);
+        while (Character.isWhitespace(data[valueEnd])) {
+            // Ignore whitespace after value.
+            valueEnd--;
+        }
+        valueEnd++;
+        char[] value = Arrays.copyOfRange(data, valueStart, valueEnd);
         return value;
-    }
-
-    private int positionOf(char character, char[] data, int start, int end) {
-        int position = -1;
-        for (int possible = start; possible < data.length && possible <= end; possible++) {
-            if (data[possible] == character) {
-                position = possible;
-                break;
-            }
-        }
-        return position;
     }
 
     public void clearCharArray(char[] chars) {

@@ -83,5 +83,38 @@ public class AgentStorageCredentialsTest {
         Assert.assertEquals("user", creds.getUsername());
         Assert.assertEquals("pass", new String(creds.getPassword()));
     }
+
+    @Test
+    public void testAuthConfigWithSillyWhitespace() {
+        Reader reader = new StringReader("\tusername =\t  user\n\n\npassword=pass   \n\n\n");
+        AgentStorageCredentials creds = new AgentStorageCredentials(reader);
+        Assert.assertEquals("user", creds.getUsername());
+        Assert.assertEquals("pass", new String(creds.getPassword()));
+    }
+
+    @Test
+    public void testCommentPrecededByWhitespaceIsStillIgnored() {
+        Reader reader = new StringReader("     #username=wronguser\nusername=user\npassword=pass\n    #username=wronguser");
+        AgentStorageCredentials creds = new AgentStorageCredentials(reader);
+        Assert.assertEquals("user", creds.getUsername());
+        Assert.assertEquals("pass", new String(creds.getPassword()));
+    }
+
+    @Test
+    public void testAuthParamsContainingWhitespace() {
+        Reader reader = new StringReader("     #username=wronguser\nusername=u s e r\npassword=p a s s\n    #username=wronguser");
+        AgentStorageCredentials creds = new AgentStorageCredentials(reader);
+        Assert.assertEquals("u s e r", creds.getUsername());
+        Assert.assertEquals("p a s s", new String(creds.getPassword()));
+    }
+
+    @Test
+    public void testAlternateNewLine() {
+        Reader reader = new StringReader("username=user\r\npassword=pass\r\n");
+        AgentStorageCredentials creds = new AgentStorageCredentials(reader, "\r\n");
+        Assert.assertEquals("user", creds.getUsername());
+        Assert.assertEquals("pass", new String(creds.getPassword()));
+    }
+
 }
 
