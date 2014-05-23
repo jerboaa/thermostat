@@ -43,6 +43,15 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class AgentStorageCredentialsTest {
+    
+    @Test
+    public void testAuthConfigNoNewlineAtEOF() {
+        Reader reader = new StringReader("username=user\npassword=pass");
+        AgentStorageCredentials creds = new AgentStorageCredentials(reader);
+        Assert.assertEquals("user", creds.getUsername());
+        Assert.assertEquals(4, creds.getPassword().length);
+        Assert.assertEquals("pass", new String(creds.getPassword()));
+    }
 
     @Test
     public void testAuthConfig() {

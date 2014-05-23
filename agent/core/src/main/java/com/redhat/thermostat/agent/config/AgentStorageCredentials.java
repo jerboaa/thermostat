@@ -255,6 +255,7 @@ public class AgentStorageCredentials implements StorageCredentials {
     }
 
     private int getPositionOfNextNewline(char[] data, int current) {
+        assert( current <= data.length );
         int next = current;
         while (next < data.length) {
             boolean newLineFound = false;
@@ -269,6 +270,13 @@ public class AgentStorageCredentials implements StorageCredentials {
                 break;
             }
             next++;
+        }
+        // Corner case. No new line at EOF.
+        // Treat last non-whitespace char as next new line
+        // so that getValue() does not throw IOBE when
+        // checking if whitespace char.
+        if (next == data.length) {
+            next--;
         }
         return next;
     }
