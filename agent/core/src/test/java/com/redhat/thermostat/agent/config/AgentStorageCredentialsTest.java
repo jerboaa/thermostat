@@ -36,58 +36,52 @@
 package com.redhat.thermostat.agent.config;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.Random;
+import java.io.Reader;
+import java.io.StringReader;
 
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class AgentStorageCredentialsTest {
 
-    private static Random random;
-
-    @BeforeClass
-    public static void setUpOnce() {
-        random = new Random();
-    }
-
     @Test
-    public void testAuthConfigFromFile() throws IOException {
-        File tmpAuth = createTempAuthFile("username=user\npassword=pass\n");
-        AgentStorageCredentials creds = new AgentStorageCredentials(tmpAuth);
+    public void testAuthConfig() {
+        Reader reader = new StringReader("username=user\npassword=pass\n");
+        AgentStorageCredentials creds = new AgentStorageCredentials(reader);
         Assert.assertEquals("user", creds.getUsername());
         Assert.assertEquals("pass", new String(creds.getPassword()));
     }
 
     @Test
-    public void testAuthConfigFromEmptyFile() throws IOException {
-        File tmpAuth = createTempAuthFile("");
-        AgentStorageCredentials creds = new AgentStorageCredentials(tmpAuth);
+    public void testEmptyAuthConfig() {
+        Reader reader = new StringReader("");
+        AgentStorageCredentials creds = new AgentStorageCredentials(reader);
         Assert.assertNull(creds.getUsername());
         Assert.assertNull(creds.getPassword());
     }
 
     @Test
-    public void testAuthConfigWithConfigCommentedOut() throws IOException {
-        File tmpAuth = createTempAuthFile("#username=user\n#password=pass\n");
-        AgentStorageCredentials creds = new AgentStorageCredentials(tmpAuth);
+    public void testNonExistingAgentAuthFile() {
+        File file = new File("this.file.should.not.exist");
+        AgentStorageCredentials creds = new AgentStorageCredentials(file);
         Assert.assertNull(creds.getUsername());
         Assert.assertNull(creds.getPassword());
     }
 
-    private File createTempAuthFile(String contents) throws IOException {
-        String tmpAuthLoc = System.getProperty("java.io.tmpdir") + File.separatorChar +
-                Math.abs(random.nextInt());
-        File tmpAuth = new File(tmpAuthLoc);
-        tmpAuth.deleteOnExit();
-        tmpAuth.createNewFile();
-        FileWriter authWriter = new FileWriter(tmpAuth);
-        authWriter.append(contents);
-        authWriter.flush();
-        authWriter.close();
-        return tmpAuth;
+    @Test
+    public void testAuthConfigWithConfigCommentedOut() {
+        Reader reader = new StringReader("#username=user\n#password=pass\n");
+        AgentStorageCredentials creds = new AgentStorageCredentials(reader);
+        Assert.assertNull(creds.getUsername());
+        Assert.assertNull(creds.getPassword());
+    }
+
+    @Test
+    public void testAuthConfigWithVariousExtraNewlines() {
+        Reader reader = new StringReader("\n#username=nottheuser\n\n\n#password=wrong\nusername=user\n\n\npassword=pass\n\n\n#username=wronguser\n\n\n#password=badpassword");
+        AgentStorageCredentials creds = new AgentStorageCredentials(reader);
+        Assert.assertEquals("user", creds.getUsername());
+        Assert.assertEquals("pass", new String(creds.getPassword()));
     }
 }
 

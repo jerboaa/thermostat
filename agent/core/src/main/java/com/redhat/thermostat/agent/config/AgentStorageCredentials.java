@@ -52,15 +52,21 @@ public class AgentStorageCredentials implements StorageCredentials {
 
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
-    private static char[] pw = {'p', 'a', 's', 's', 'w', 'o', 'r', 'd'};
-    private static char[] user = {'u', 's', 'e', 'r', 'n', 'a', 'm', 'e'};
+    private static final char[] pw = {'p', 'a', 's', 's', 'w', 'o', 'r', 'd'};
+    private static final char[] user = {'u', 's', 'e', 'r', 'n', 'a', 'm', 'e'};
     private static String newLine = System.lineSeparator();
-    private static char comment = '#';
+    private static final char comment = '#';
 
-    final File authFile;
-    private String username = null; // default value
+    private final File authFile;
+    private final Reader testingAuthReader;
+    private final int authDataLength;
+    private String username;
 
     public AgentStorageCredentials(File agentAuthFile) {
+        if (agentAuthFile == null) {
+            throw new IllegalArgumentException("agentAuthFile must not be null");
+        }
+        this.testingAuthReader = null;
         this.authFile = agentAuthFile;
         long length = authFile.length();
         if (length > Integer.MAX_VALUE || length < 0L) {
@@ -73,9 +79,31 @@ public class AgentStorageCredentials implements StorageCredentials {
             }
             throw new InvalidConfigurationException(t.localize(LocaleResources.FILE_NOT_VALID, authPath));
         }
+        authDataLength = (int) length;
         // Cache username but not password, instead read that on demand to prevent heap dump
         // password leak attack.
-        initUsernameFromFile();
+        initUsername();
+    }
+
+    // Testing constructor
+    AgentStorageCredentials(Reader agentAuthReader) {
+        if (agentAuthReader == null) {
+            throw new IllegalArgumentException("agentAuthReader must not be null");
+        }
+        this.testingAuthReader = agentAuthReader;
+        long length = -1;
+        try {
+            length = testingAuthReader.skip(Long.MAX_VALUE);
+            if (length > Integer.MAX_VALUE) {
+                throw new IllegalArgumentException("agentAuthReader larger than supported Integer.MAX_VALUE");
+            }
+            testingAuthReader.reset();
+        } catch (IOException e) {
+            throw new IllegalArgumentException("IOException from agentAuthReader", e);
+        }
+        authDataLength = (int) length;
+        this.authFile = null;
+        initUsername();
     }
 
     @Override
@@ -85,51 +113,76 @@ public class AgentStorageCredentials implements StorageCredentials {
 
     @Override
     public char[] getPassword() {
-        return readPasswordFromFile();
+        return readPassword();
     }
 
-    private void initUsernameFromFile() {
-        char[] authData = getAuthFileData();
+    private Reader getReader() throws IOException {
+        if (testingAuthReader != null) {
+           return testingAuthReader;
+        }
+        if (authFile == null || !authFile.canRead() || !authFile.isFile()) {
+            throw new IllegalStateException("Invalid agent.auth file: " + authFile.getCanonicalPath());
+        }
+        return new InputStreamReader(new FileInputStream(authFile), StandardCharsets.US_ASCII);
+    }
+
+    private void initUsername() {
+        char[] authData = getAuthData();
         if (authData == null) {
             return;
         }
         try {
-            setUsernameFromData(authData, (int) authFile.length());
+            setUsernameFromData(authData, authDataLength);
         } finally {
             clearCharArray(authData);
         }
     }
 
-    private char[] readPasswordFromFile() {
-        char[] authData = getAuthFileData();
+    private char[] readPassword() {
+        char[] authData = getAuthData();
         if (authData == null) {
             return null;
         }
         char[] password = null;
         try {
-            password = getValueFromData(authData, (int) authFile.length(), pw);
+            password = getValueFromData(authData, authDataLength, pw);
         } finally {
             clearCharArray(authData);
         }
         return password;
     }
 
-    private char[] getAuthFileData() {
+    private char[] getAuthData() {
         char[] authData = null;
-        if (authFile != null && authFile.canRead() && authFile.isFile()) {
-            int length = (int) authFile.length(); // Verified during constructor that this cast is safe
-            try (Reader reader = new InputStreamReader(new FileInputStream(authFile), StandardCharsets.US_ASCII)) {
-                // file size in bytes >= # of chars so this size should be sufficient.
-                authData = new char[length];
-                // This is probably the most sensitive time for password-in-heap exposure.
-                // The reader here may contain buffers containing the password.  It will,
-                // of course, be garbage collected in due time.
-                int chars = reader.read(authData, 0, length);
-                if (chars != length) {
-                    throw new InvalidConfigurationException("End of auth file stream reached unexpectedly.");
+        Reader reader = null;
+        try {
+            try {
+                reader = getReader();
+            } catch (IllegalStateException e) {
+                // Callers will assume null auth parameters.
+                return null;
+            }
+            // file size in bytes >= # of chars so this size should be sufficient.
+            authData = new char[authDataLength];
+            // This is probably the most sensitive time for password-in-heap exposure.
+            // The reader here may contain buffers containing the password.  It will,
+            // of course, be garbage collected in due time.
+            int chars = reader.read(authData, 0, authDataLength);
+            if (chars != authDataLength) {
+                throw new InvalidConfigurationException("End of auth file stream reached unexpectedly.");
+            }
+            if (reader == testingAuthReader) {
+                reader.reset();
+            }
+        } catch (IOException e) {
+            throw new InvalidConfigurationException(e);
+        } finally {
+            if (reader != testingAuthReader) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-            } catch (IOException e) {
-                throw new InvalidConfigurationException(e);
             }
         }
         return authData;
@@ -149,7 +202,7 @@ public class AgentStorageCredentials implements StorageCredentials {
     private char[] getValueFromData(char[] data, int dataLen, char[] target) {
         int position = 0;
         while (position < dataLen) {
-            if ((position + 1 == dataLen) || data[position + 1] == newLine.charAt(0)) {
+            if ((position + 1 == dataLen) || data[position] == newLine.charAt(0)) {
                 // Empty line
                 position = nextLine(data, position);
                 continue;
@@ -190,7 +243,7 @@ public class AgentStorageCredentials implements StorageCredentials {
     }
 
     private int nextLine(char[] data, int current) {
-        int next = current + 1;
+        int next = current;
         while (next < data.length) {
             if (data[next] == newLine.charAt(0)) {
                 break;
