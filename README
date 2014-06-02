@@ -7,12 +7,10 @@ CONTENT:
 1.  REQUIREMENTS
 2.  BUILDING THERMOSTAT
 2.1   BUILDING THERMOSTAT CORE
-2.2   BUILDING THERMOSTAT ECLIPSE (optional)
 3.  RUNNING THERMOSTAT
 3.1   RUNNING THERMOSTAT CORE
 3.1.1 PASSING JVM SPECIFIC OPTIONS
 3.1.2 GNOME KEYRING
-3.2   RUNNING THERMOSTAT ECLIPSE
 4.  EXTENDING THERMOSTAT
 5.  REFERENCES
 
@@ -63,15 +61,17 @@ Thermostat Core consists of:
   * The thermostat agent
   * The web service layer (plugged-in optionally)
 
-Thermostat Eclipse is an Eclipse-based Thermostat client. At this point the
-Eclipse-based client is experimental.
-
 --------------------------------------------------------------------------------
 2.1. BUILDING THERMOSTAT CORE
 
 2.1.1.
    Run "mvn clean install". All tests should pass and the build should
    succeed. It requires a graphical environment for the ui tests.
+
+   Thermostat also includes a Makefile wrapping the maven build.  In most
+   cases, simply running "make" will accomplish the same as "mvn clean
+   install".  Please see environment variables near beginning of
+   Makefile for some options that can be customized.
    
    You can skip the tests phase by running:
    
@@ -85,26 +85,6 @@ Eclipse-based client is experimental.
    The resulting Thermostat system can now be found under the directory
    distribution/target/image.
            
---------------------------------------------------------------------------------
-2.2. BUILDING THERMOSTAT ECLIPSE (optional)
-
-2.2.1.
-   Run "make". This will build both, Thermostat Core and Thermostat Eclipse,
-   since Eclipse bits depend on Thermostat Core. All tests should pass and the
-   build should succeed. Running Eclipse plug-in tests will open an Eclipse
-   instance during build. This requires a working graphical environment and
-   DISPLAY.
-
-   You can skip the tests phase by running:
-
-   make SKIP_TESTS=true
-
-2.2.2.
-   This produces a local "update-site" or p2 repository from which you can
-   install Thermostat Eclipse into your Eclipse. The repository is at:
-
-   eclipse/composite-repo/target/composite-repo
-
 --------------------------------------------------------------------------------
 3. RUNNING THERMOSTAT
 
@@ -149,31 +129,6 @@ bin/thermostat gui \
 Thermostat includes support to store user credentials in the Gnome Keyring
 daemon, if the user wishes.  If this is not available at runtime, no credentials
 will be stored.
-
---------------------------------------------------------------------------------
-3.2. RUNNING THERMOSTAT ECLIPSE
-
-  Note that the Thermostat Eclipse client is an experimental feature at this
-  point.
-
-  The "eclipse/composite-repo/target/composite-repo" directory was
-  produced during step 2.2. In order to use this local repository
-  follow these steps:
-
-    "Help" => "Install New Software..."
-    "Add..."
-    "Local..."
-    Select "eclipse/composite-repo/target/composite-repo"
-    Give it any name you like and click "OK".
-    Select "Thermostat Eclipse Plug-ins", then "Next >"
-    Click through dialog, accepting options.
-   
-  After this you should be able to open the Thermostat Eclipse perspective:
-    "Window" => "Open Perspective" => "Other..." => "Thermostat" 
-
-  Next, make sure you've got the thermostat service running (see above) and
-  click the "Connect" link/icon. Enjoy!
-            
 
 --------------------------------------------------------------------------------
 4. EXTENDING THERMOSTAT

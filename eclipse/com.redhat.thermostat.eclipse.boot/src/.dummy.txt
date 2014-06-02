@@ -1,1 +1,0 @@
-This file is simply there to make Eclipse happy and have some src folder.
