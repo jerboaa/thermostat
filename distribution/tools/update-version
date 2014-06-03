@@ -115,43 +115,22 @@ find_target() {
   find ./ -name *.target | grep -v \/target\/
 }
 
-find_eclipse_manifest() {
-  find ./eclipse -name MANIFEST.MF | grep -v \/target\/
-}
-
-find_eclipse_category_feature() {
-  find ./eclipse -name category.xml -o -name feature.xml | grep -v \/target\/
-}
-
-find_build_properties() {
-  find ./eclipse -name build.properties | grep -v \/target\/
-}
-
 bump_keep_qualifier() {
   echo "Keeping SNAPSHOT qualifier..."
   sed -i s/${old_regex}-SNAPSHOT/${new}-SNAPSHOT/g `find_pom_metadata`
   sed -i s/${old_regex}\.SNAPSHOT/${new}.SNAPSHOT/g `find_target`
-  sed -i "s/Bundle-Version: ${old_regex}.qualifier/Bundle-Version: ${new}.qualifier/g" `find_eclipse_manifest`
-  sed -i s/${old_regex}.qualifier/${new}.qualifier/g `find_eclipse_category_feature`
 }
 
 bump_drop_qualifier() {
   echo "Dropping SNAPSHOT qualifier..."
   sed -i s/${old_regex}-SNAPSHOT/${new}/g `find_pom_metadata`
   sed -i s/${old_regex}\.SNAPSHOT/${new}/g `find_target`
-  sed -i "s/Bundle-Version: ${old_regex}.qualifier/Bundle-Version: ${new}/g" `find_eclipse_manifest`
-  sed -i s/${old_regex}.qualifier/${new}/g `find_eclipse_category_feature`
-  sed -i "s/forceContextQualifier = SNAPSHOT//" `find_build_properties`
-  sed -i '${/^$/d}' `find_build_properties`
 }
 
 bump_add_qualifier() {
   echo "Adding SNAPSHOT qualifier..."
   sed -i s/${old_regex}/${new}-SNAPSHOT/g `find_pom_metadata`
   sed -i s/${old_regex}/${new}.SNAPSHOT/g `find_target`
-  sed -i "s/Bundle-Version: ${old_regex}/Bundle-Version: ${new}.qualifier/g" `find_eclipse_manifest`
-  sed -i s/${old_regex}/${new}.qualifier/g `find_eclipse_category_feature`
-  sed -i "$ a \forceContextQualifier = SNAPSHOT" `find_build_properties`
 }
 
 echo ""
@@ -172,7 +151,8 @@ echo "Finished updating version."
 echo ""
 find_and_warn_incomplete
 echo ""
-echo "Before you commit, tag, or release, be sure to run a full build:"
-echo "   USE_VNC=true make"
+echo "Before you commit, tag, or release, be sure to run a full build and"
+echo "run all tests.  The easiest way to do this is to run \"make\" from"
+echo "the root of the repository."
 exit 0
 
