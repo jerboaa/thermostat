@@ -55,6 +55,7 @@ import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.Statement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Update;
+import com.redhat.thermostat.storage.core.experimental.AggregateQuery2;
 import com.redhat.thermostat.storage.model.Pojo;
 
 class SemanticsEnabledDescriptorParser<T extends Pojo> extends
@@ -109,12 +110,27 @@ class SemanticsEnabledDescriptorParser<T extends Pojo> extends
             String msg = "SET not allowed for REMOVE";
             throw new DescriptorParsingException(msg);
         }
-        // matches for QUERY/QUERY-COUNT
+        // matches for QUERY/QUERY-COUNT/QUERY-DISTINCT
         if (stmt instanceof Query) {
             if (setList.getValues().size() > 0) {
                 // Must not have SET for QUERYs
                 String msg = "SET not allowed for QUERY/QUERY-COUNT";
                 throw new DescriptorParsingException(msg);
+            }
+            if (stmt instanceof AggregateQuery2) {
+                AggregateQuery2<T> aggQuery = (AggregateQuery2<T>)stmt;
+                switch (aggQuery.getAggregateFunction()) {
+                case COUNT:
+                    // count queries need a sane key param if present
+                    performKeyParamChecksAllowNull(aggQuery);
+                    break;
+                case DISTINCT:
+                    // distinct queries must have a known key
+                    performKeyParamChecks(aggQuery);
+                    break;
+                default:
+                    throw new IllegalStateException("Unknown aggregate function: " + aggQuery.getAggregateFunction());
+                }
             }
         } else {
             assert(stmt instanceof DataModifyingStatement);
@@ -123,6 +139,26 @@ class SemanticsEnabledDescriptorParser<T extends Pojo> extends
                 String msg = "LIMIT/SORT only allowed for QUERY/QUERY-COUNT";
                 throw new DescriptorParsingException(msg);
             }
+        }
+    }
+
+    private void performKeyParamChecksAllowNull(AggregateQuery2<T> aggQuery) throws DescriptorParsingException {
+        if (aggQuery.getAggregateKey() != null) {
+            performKeyParamChecks(aggQuery);
+        }
+    }
+
+    private void performKeyParamChecks(AggregateQuery2<T> aggQuery) throws DescriptorParsingException {
+        Key<?> optionalKey = aggQuery.getAggregateKey();
+        if (optionalKey == null) {
+            throw new DescriptorParsingException("Aggregate key for " 
+                       + aggQuery.getAggregateFunction() + " must not be null.");
+        }
+        // non-null case
+        String name = optionalKey.getName();
+        Key<?> aggKey = desc.getCategory().getKey(name);
+        if (aggKey == null) {
+            throw new DescriptorParsingException("Unknown aggregate key '" + name + "'");
         }
     }
 

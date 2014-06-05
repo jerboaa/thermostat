@@ -36,20 +36,46 @@
 
 package com.redhat.thermostat.storage.model;
 
-import static org.junit.Assert.assertNotNull;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import java.util.Map;
+import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.experimental.BasicBatchCursor;
 
-import org.junit.Test;
+/**
+ * A cursor which returns true on {@link #hasNext()} once and only once.
+ * {@link #next()} will return the instance given when the cursor was
+ * constructed.
+ * 
+ * @param <T>
+ */
+class AggregateCursor<T extends Pojo> extends BasicBatchCursor<T> {
 
-public class BackendInformationTest {
+    private static final Logger logger = LoggingUtils.getLogger(AggregateCursor.class);
+    private boolean available = true;
+    private final T result;
 
-    @Test
-    public void testConfigurationNotNull() {
-        BackendInformation backendInfo = new BackendInformation("foo-agent");
-        Map<String,String> config = backendInfo.getConfiguration();
-        assertNotNull(config);
+    AggregateCursor(T value) {
+        this.result = value;
+    }
+
+    @Override
+    public boolean hasNext() {
+        return available;
+    }
+
+    @Override
+    public T next() {
+        if (available) {
+            available = false;
+            return result;
+        } else {
+            // FIXME: Thermostat 2.0: Change to throwing NoSuchElementException
+            String warning = "No next element but next() is being called. " +
+                             "This will throw NoSuchElementException in the next release!";
+            logger.log(Level.WARNING, warning);
+            return null;
+        }
     }
 
 }
-

@@ -37,16 +37,21 @@
 package com.redhat.thermostat.storage.internal.statement;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.any;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -66,6 +71,7 @@ import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Update;
+import com.redhat.thermostat.storage.core.experimental.AggregateQuery2;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.AggregateCount;
@@ -103,17 +109,101 @@ public class BasicDescriptorParserTest {
         when(storage.createReplace(eq(AgentInfoDAO.CATEGORY))).thenReturn(mockReplace);
     }
     
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Test
+    public void verifyMatchingAggregateCountParamRegexp() {
+        Pattern p = Pattern.compile(BasicDescriptorParser.AGGREGATE_PARAM_REGEXP);
+        String empty = "";
+        Matcher matcher = p.matcher(empty);
+        assertTrue("Should match empty == no params", matcher.matches());
+        assertEquals(1, matcher.groupCount());
+        assertNull(matcher.group(1));
+        String parensWithName = "(foo)";
+        matcher = p.matcher(parensWithName);
+        assertTrue("Should match for a parameter name: " + parensWithName, matcher.matches());
+        assertEquals(1, matcher.groupCount());
+        assertEquals("foo", matcher.group(1));
+        String upLowUnderscore = "(Foo_Bar)";
+        matcher = p.matcher(upLowUnderscore);
+        assertTrue("Should match for a parameter name with upper/lowercase and underscore: "
+                   + upLowUnderscore, matcher.matches());
+        assertEquals(1, matcher.groupCount());
+        assertEquals("Foo_Bar", matcher.group(1));
+    }
+    
+    @Test
+    public void verifyRejectingAggregateCountParamRegexp() {
+        Pattern p = Pattern.compile(BasicDescriptorParser.AGGREGATE_PARAM_REGEXP);
+        String parensOnly = "()";
+        Matcher matcher = p.matcher(parensOnly);
+        assertFalse(parensOnly + " should not match", matcher.matches());
+        String spaceString = "( foo )";
+        matcher = p.matcher(spaceString);
+        assertFalse(spaceString + " should not match because it has spaces", matcher.matches());
+    }
+    
+    /*
+     * We allow QUERY-COUNT without any parameter for backwards compatibility
+     * Contrast this with QUERY-COUNT(foo). 
+     */
     @Test
     public void testParseAggregateCount() throws DescriptorParsingException {
-        Query<AggregateCount> query = mock(AggregateQuery.class);
+        String descFormat = "QUERY-COUNT %s WHERE 'a' = 'b'";
+        runAggregateCountTest(descFormat, AggregateFunction.COUNT);
+    }
+    
+    /*
+     * Query count with a specific optional key. Tests basic parsing.
+     */
+    @Test
+    public void testParseAggregateCountWithParam() throws DescriptorParsingException {
+        String descrString = "QUERY-COUNT(a) %s WHERE 'a' = 'b'";
+        runAggregateCountTest(descrString, AggregateFunction.COUNT);
+    }
+    
+    /*
+     * Distinct with a specific optional key. Tests basic parsing.
+     */
+    @Test
+    public void testParseAggregateDistinctWithParam() throws DescriptorParsingException {
+        String descrString = "QUERY-DISTINCT(a) %s WHERE 'a' = 'b'";
+        runAggregateCountTest(descrString, AggregateFunction.DISTINCT);
+    }
+    
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Test
+    public void testParseAggregateCountNoWhereClause() throws DescriptorParsingException {
+        AggregateQuery<AggregateCount> query = mock(AggregateQuery.class);
         ArgumentCaptor<Category> captor = ArgumentCaptor.forClass(Category.class);
         when(storage.createAggregateQuery(eq(AggregateFunction.COUNT), captor.capture())).thenReturn(query);
         // first adapt from the target category in order to be able to produce the
         // right aggregate query with a different result type.
         CategoryAdapter<AgentInformation, AggregateCount> adapter = new CategoryAdapter<>(AgentInfoDAO.CATEGORY);
         Category<AggregateCount> aggregateCategory = adapter.getAdapted(AggregateCount.class);
-        String descrString = "QUERY-COUNT " + aggregateCategory.getName() + " WHERE 'a' = 'b'";
+        String descrString = "QUERY-COUNT " + aggregateCategory.getName();
+        StatementDescriptor<AggregateCount> desc = new StatementDescriptor<>(aggregateCategory, descrString);
+        BasicDescriptorParser<AggregateCount> parser = new BasicDescriptorParser<>(storage, desc);
+        ParsedStatementImpl<AggregateCount> statement = (ParsedStatementImpl<AggregateCount>)parser.parse();
+        assertEquals(0, statement.getNumParams());
+        assertTrue(statement.getRawStatement() instanceof AggregateQuery);
+        Category<AggregateCount> capturedCategory = captor.getValue();
+        assertEquals(aggregateCategory, capturedCategory);
+        SuffixExpression expn = statement.getSuffixExpression();
+        assertNotNull(expn);
+        assertNull(expn.getWhereExpn());
+        assertNull(expn.getSortExpn());
+        assertNull(expn.getLimitExpn());
+    }
+    
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private void runAggregateCountTest(String descriptorFormat, AggregateFunction function) throws DescriptorParsingException {
+        AggregateQuery2<AggregateCount> query = mock(AggregateQuery2.class);
+        ArgumentCaptor<Category> captor = ArgumentCaptor.forClass(Category.class);
+        when(storage.createAggregateQuery(eq(function), captor.capture())).thenReturn(query);
+        // first adapt from the target category in order to be able to produce the
+        // right aggregate query with a different result type.
+        CategoryAdapter<AgentInformation, AggregateCount> adapter = new CategoryAdapter<>(AgentInfoDAO.CATEGORY);
+        Category<AggregateCount> aggregateCategory = adapter.getAdapted(AggregateCount.class);
+        String descrString = String.format(descriptorFormat, aggregateCategory.getName());
         StatementDescriptor<AggregateCount> desc = new StatementDescriptor<>(aggregateCategory, descrString);
         BasicDescriptorParser<AggregateCount> parser = new BasicDescriptorParser<>(storage, desc);
         ParsedStatementImpl<AggregateCount> statement = (ParsedStatementImpl<AggregateCount>)parser.parse();
@@ -125,6 +215,45 @@ public class BasicDescriptorParserTest {
         assertNotNull(expn);
         WhereExpression where = expn.getWhereExpn();
         assertNotNull(where);
+        assertNull(expn.getSortExpn());
+        assertNull(expn.getLimitExpn());
+    }
+    
+    @Test
+    public void testParseQueryCountWithAssertedParamValue() throws DescriptorParsingException {
+        String formatedDesc = "QUERY-COUNT(a) %s";
+        runParamAggregateAssertedValueTest(formatedDesc, AggregateFunction.COUNT);
+    }
+    
+    @Test
+    public void testParseQueryDistinctWithAssertedParamValue() throws DescriptorParsingException {
+        String formatedDesc = "QUERY-DISTINCT(a) %s";
+        runParamAggregateAssertedValueTest(formatedDesc, AggregateFunction.DISTINCT);
+    }
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private void runParamAggregateAssertedValueTest(String aggregateDescFormat, AggregateFunction function) throws DescriptorParsingException {
+        AggregateQuery2<AggregateCount> query = mock(AggregateQuery2.class);
+        ArgumentCaptor<Category> captor = ArgumentCaptor.forClass(Category.class);
+        when(storage.createAggregateQuery(eq(function), captor.capture())).thenReturn(query);
+        // first adapt from the target category in order to be able to produce the
+        // right aggregate query with a different result type.
+        CategoryAdapter<AgentInformation, AggregateCount> adapter = new CategoryAdapter<>(AgentInfoDAO.CATEGORY);
+        Category<AggregateCount> aggregateCategory = adapter.getAdapted(AggregateCount.class);
+        String descrString = String.format(aggregateDescFormat, aggregateCategory.getName());
+        StatementDescriptor<AggregateCount> desc = new StatementDescriptor<>(aggregateCategory, descrString);
+        BasicDescriptorParser<AggregateCount> parser = new BasicDescriptorParser<>(storage, desc);
+        ParsedStatementImpl<AggregateCount> statement = (ParsedStatementImpl<AggregateCount>)parser.parse();
+        assertEquals(0, statement.getNumParams());
+        assertTrue(statement.getRawStatement() instanceof AggregateQuery);
+        Key<?> aKey = new Key<>("a");
+        // Make sure the optional key is set
+        verify(query).setAggregateKey(eq(aKey));
+        Category<AggregateCount> capturedCategory = captor.getValue();
+        assertEquals(aggregateCategory, capturedCategory);
+        SuffixExpression expn = statement.getSuffixExpression();
+        assertNotNull(expn);
+        assertNull("No where expression expected", expn.getWhereExpn());
         assertNull(expn.getSortExpn());
         assertNull(expn.getLimitExpn());
     }
@@ -1575,6 +1704,41 @@ public class BasicDescriptorParserTest {
         }
     }
     
+    @Test
+    public void rejectSpaceInQueryCountParam() {
+        String descFormat = "QUERY-COUNT(' a) %s";
+        String expnMsg = "Unknown statement type: 'QUERY-COUNT(''";
+        runRejectQueryCountTest(descFormat, expnMsg);
+    }
+    
+    @Test
+    public void rejectSpaceInQueryCountParam2() {
+        String descFormat = "QUERY-COUNT(Abc ) %s";
+        String expnMsg = "Unknown statement type: 'QUERY-COUNT(Abc'";
+        runRejectQueryCountTest(descFormat, expnMsg);
+    }
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private void runRejectQueryCountTest(String descFormat, String expnMsg) {
+        AggregateQuery<AggregateCount> query = mock(AggregateQuery.class);
+        ArgumentCaptor<Category> captor = ArgumentCaptor.forClass(Category.class);
+        when(storage.createAggregateQuery(eq(AggregateFunction.COUNT), captor.capture())).thenReturn(query);
+        // first adapt from the target category in order to be able to produce the
+        // right aggregate query with a different result type.
+        CategoryAdapter<AgentInformation, AggregateCount> adapter = new CategoryAdapter<>(AgentInfoDAO.CATEGORY);
+        Category<AggregateCount> aggregateCategory = adapter.getAdapted(AggregateCount.class);
+        String descrString = String.format(descFormat, aggregateCategory.getName());
+        StatementDescriptor<AggregateCount> desc = new StatementDescriptor<>(aggregateCategory, descrString);
+        BasicDescriptorParser<AggregateCount> parser = new BasicDescriptorParser<>(storage, desc);
+        try {
+            parser.parse();
+            fail("shouldn't have parsed correctly");
+        } catch (DescriptorParsingException e) {
+            assertTrue(e.getMessage().contains(expnMsg));
+        }
+    }
+    
+    
     /*
      * At this point list types don't make sense in WHERE.
      *   What should "'a' != [ 'a', 'b' ]" evaluate to?
@@ -1584,6 +1748,7 @@ public class BasicDescriptorParserTest {
      * We don't support this in a prepared context at this point. Should this
      * change in future, this test needs to be carefully re-crafted. 
      */
+    @SuppressWarnings("unchecked")
     @Test
     public void rejectListTypesAsFreeVarInInvalidContext() throws DescriptorParsingException {
         List<String> illegalDescs = new ArrayList<>();
@@ -1596,10 +1761,13 @@ public class BasicDescriptorParserTest {
                 " WHERE 'a' = ?d[",
         };
         
-        // Make sure we test for QUERY, QUERY-COUNT, REPLACE, UPDATE, REMOVE
+        // Make sure we test for QUERY, QUERY-COUNT, QUERY-DISTINCT, REPLACE, UPDATE, REMOVE
         // i.e. all that accept a WHERE.
         String basicQuery = "QUERY " + AgentInfoDAO.CATEGORY.getName();
         String basicQueryCount = "QUERY-COUNT " + AgentInfoDAO.CATEGORY.getName();
+        String basicQueryDistinct = "QUERY-DISTINCT(foo) " + AgentInfoDAO.CATEGORY.getName();
+        when(storage.createAggregateQuery(eq(AggregateFunction.COUNT), eq(AgentInfoDAO.CATEGORY))).thenReturn(mock(AggregateQuery.class));
+        when(storage.createAggregateQuery(eq(AggregateFunction.DISTINCT), eq(AgentInfoDAO.CATEGORY))).thenReturn(mock(AggregateQuery.class));
         // note SET clause is legal
         String basicUpdate = "UPDATE " + AgentInfoDAO.CATEGORY.getName() + " SET 'a' = ?s[";
         // note SET clause is legal
@@ -1608,6 +1776,7 @@ public class BasicDescriptorParserTest {
         for (String where: illegalWheres) {
             illegalDescs.add(basicQuery + where);
             illegalDescs.add(basicQueryCount + where);
+            illegalDescs.add(basicQueryDistinct + where);
             illegalDescs.add(basicUpdate + where);
             illegalDescs.add(basicReplace + where);
             illegalDescs.add(basicRemove + where);
@@ -1658,7 +1827,7 @@ public class BasicDescriptorParserTest {
     
     private void doIllegalDescsTest(List<String> descs, String errorMsgContext, String type) {
         for (String strDesc : descs) {
-            StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, strDesc); 
+            StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, strDesc);
             parser = new BasicDescriptorParser<>(storage, desc);
             try {
                 parser.parse();
@@ -1852,6 +2021,22 @@ public class BasicDescriptorParserTest {
         } catch (DescriptorParsingException e) {
             // pass
             assertEquals("Illegal terminal type. Token was ->,<-", e.getMessage());
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testCompatibilityNonAggregateQuery() throws DescriptorParsingException {
+        when(storage.createAggregateQuery(any(AggregateFunction.class), any(Category.class))).thenReturn(mock(Query.class));
+        String descString = "QUERY-COUNT(foo) " + AgentInfoDAO.CATEGORY.getName();
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
+        parser = new BasicDescriptorParser<>(storage, desc);
+        try {
+            parser.parse();
+            // pass
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("Expected to parse even though createAggregateQuery returned a simple Query instance instead of AggregateQuery");
         }
     }
     

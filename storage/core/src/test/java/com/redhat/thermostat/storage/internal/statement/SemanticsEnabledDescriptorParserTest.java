@@ -38,6 +38,7 @@ package com.redhat.thermostat.storage.internal.statement;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.eq;
@@ -58,6 +59,7 @@ import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Update;
+import com.redhat.thermostat.storage.core.experimental.AggregateQuery2;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 
@@ -79,6 +81,7 @@ public class SemanticsEnabledDescriptorParserTest {
 
     private BackingStorage storage;
     private Query<AgentInformation> mockQuery;
+    private AggregateQuery2<AgentInformation> aggQuery;
     private SemanticsEnabledDescriptorParser<AgentInformation> parser;
     private Add<AgentInformation> mockAdd;
     private Update<AgentInformation> mockUpdate;
@@ -90,9 +93,11 @@ public class SemanticsEnabledDescriptorParserTest {
     public void setup() {
         storage = mock(BackingStorage.class);
         mockQuery = mock(Query.class);
-        // setup for QUERY/QUERY-COUNT
+        aggQuery = mock(AggregateQuery2.class);
+        // setup for QUERY/QUERY-COUNT/QUERY-DISTINCT
         when(storage.createQuery(eq(AgentInfoDAO.CATEGORY))).thenReturn(mockQuery);
-        when(storage.createAggregateQuery(eq(AggregateFunction.COUNT), (eq(AgentInfoDAO.CATEGORY)))).thenReturn(mockQuery);
+        when(storage.createAggregateQuery(eq(AggregateFunction.COUNT), (eq(AgentInfoDAO.CATEGORY)))).thenReturn(aggQuery);
+        when(storage.createAggregateQuery(eq(AggregateFunction.DISTINCT), (eq(AgentInfoDAO.CATEGORY)))).thenReturn(aggQuery);
         // setup for ADD
         mockAdd = mock(Add.class);
         when(storage.createAdd(eq(AgentInfoDAO.CATEGORY))).thenReturn(mockAdd);
@@ -112,7 +117,30 @@ public class SemanticsEnabledDescriptorParserTest {
         String descString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " LIMIT 1";
         doSemanticsBasicParseTest(descString);
         
-        descString = "QUERY-COUNT " + AgentInfoDAO.CATEGORY.getName() + " LIMIT 1";
+    }
+    
+    @Test
+    public void catParseQueryCountWithLimit() throws DescriptorParsingException {
+        when(aggQuery.getAggregateFunction()).thenReturn(AggregateFunction.COUNT);
+        String descString = "QUERY-COUNT " + AgentInfoDAO.CATEGORY.getName() + " LIMIT 1";
+        doSemanticsBasicParseTest(descString);
+    }
+    
+    @Test
+    public void canParseQueryCountWithCorrectKeyParam() throws DescriptorParsingException {
+        when(aggQuery.getAggregateFunction()).thenReturn(AggregateFunction.COUNT);
+        String descString = "QUERY-COUNT(" + Key.AGENT_ID.getName() + ") "
+                              + AgentInfoDAO.CATEGORY.getName();
+        doSemanticsBasicParseTest(descString);
+    }
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @Test
+    public void canParseQueryDistinctWithCorrectKeyParam() throws DescriptorParsingException {
+        when(aggQuery.getAggregateFunction()).thenReturn(AggregateFunction.DISTINCT);
+        when(aggQuery.getAggregateKey()).thenReturn((Key)Key.AGENT_ID);
+        String descString = "QUERY-DISTINCT(" + Key.AGENT_ID.getName() + ") "
+                              + AgentInfoDAO.CATEGORY.getName();
         doSemanticsBasicParseTest(descString);
     }
     
@@ -120,8 +148,12 @@ public class SemanticsEnabledDescriptorParserTest {
     public void canParseQueryWithSort() throws DescriptorParsingException {
         String descString = "QUERY " + AgentInfoDAO.CATEGORY.getName() + " SORT 'foo' DSC";
         doSemanticsBasicParseTest(descString);
-        
-        descString = "QUERY-COUNT " + AgentInfoDAO.CATEGORY.getName() + " SORT 'foo' DSC";
+    }
+    
+    @Test
+    public void catParseQueryCountWithSort() throws DescriptorParsingException {
+        when(aggQuery.getAggregateFunction()).thenReturn(AggregateFunction.COUNT);
+        String descString = "QUERY-COUNT " + AgentInfoDAO.CATEGORY.getName() + " SORT 'foo' DSC";
         doSemanticsBasicParseTest(descString);
     }
     
@@ -165,6 +197,68 @@ public class SemanticsEnabledDescriptorParserTest {
         parser = new SemanticsEnabledDescriptorParser<>(storage, desc);
         ParsedStatement<AgentInformation> p = parser.parse();
         assertNotNull(p);
+    }
+    
+    /*
+     * Tests whether we appropriately reject a provided key parameter in a
+     * query-count aggregate for which the key is unknown in the given category.
+     */
+    @Test
+    public void rejectQueryCountWithUnknownKeyAsParam() throws DescriptorParsingException {
+        when(aggQuery.getAggregateFunction()).thenReturn(AggregateFunction.COUNT);
+        doRejectQueryAggregateTestWithParam(AggregateFunction.COUNT);
+    }
+    
+    /*
+     * Tests whether we appropriately reject a provided key parameter in a
+     * query-distinct aggregate for which the key is unknown in the given category.
+     */
+    @Test
+    public void rejectQueryDistinctWithUnknownKeyAsParam() throws DescriptorParsingException {
+        when(aggQuery.getAggregateFunction()).thenReturn(AggregateFunction.DISTINCT);
+        doRejectQueryAggregateTestWithParam(AggregateFunction.DISTINCT);
+    }
+    
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private void doRejectQueryAggregateTestWithParam(AggregateFunction function) {
+        String unknownKeyName = "unknown_key";
+        Key unknownKey = new Key(unknownKeyName);
+        when(aggQuery.getAggregateKey()).thenReturn(unknownKey);
+        String format = "QUERY-%s(%s) %s";
+        String descString = String.format(format, function.name(), unknownKeyName, AgentInfoDAO.CATEGORY.getName());
+        assertNull("Precondition failed. unknown_key in AgentInfo category?",
+                AgentInfoDAO.CATEGORY.getKey(unknownKeyName));
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
+        parser = new SemanticsEnabledDescriptorParser<>(storage, desc);
+        try {
+            parser.parse();
+            fail(String.format("QUERY-%s with an unknown key as param should not parse", function.name()));
+        } catch (DescriptorParsingException e) {
+            // pass
+            assertTrue(e.getMessage().contains("Unknown aggregate key '" + unknownKeyName + "'"));
+        }
+    }
+    
+    /*
+     * Distinct queries aggregate by selecting all distinct values for a
+     * given key. Not providing a key for which to find distinct values for 
+     * doesn't make sense.
+     */
+    @Test
+    public void rejectQueryDistinctWithoutKeyParam() throws DescriptorParsingException {
+        String descString = "QUERY-DISTINCT " + AgentInfoDAO.CATEGORY.getName();
+        
+        when(aggQuery.getAggregateKey()).thenReturn(null);
+        when(aggQuery.getAggregateFunction()).thenReturn(AggregateFunction.DISTINCT);
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
+        parser = new SemanticsEnabledDescriptorParser<>(storage, desc);
+        try {
+            parser.parse();
+            fail("QUERY-DISTINCT without a key for which to produce distinct values for should not parse");
+        } catch (DescriptorParsingException e) {
+            // pass
+            assertTrue(e.getMessage().contains("Aggregate key for DISTINCT must not be null"));
+        }
     }
     
     @Test

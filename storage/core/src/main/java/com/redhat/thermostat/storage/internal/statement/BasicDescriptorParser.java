@@ -39,7 +39,12 @@ package com.redhat.thermostat.storage.internal.statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.AggregateQuery.AggregateFunction;
 import com.redhat.thermostat.storage.core.BackingStorage;
@@ -53,6 +58,7 @@ import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Update;
+import com.redhat.thermostat.storage.core.experimental.AggregateQuery2;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.BinaryComparisonOperator;
 import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
@@ -125,16 +131,23 @@ import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
  */
 class BasicDescriptorParser<T extends Pojo> implements StatementDescriptorParser<T> {
 
+    private static final Logger logger = LoggingUtils.getLogger(BasicDescriptorParser.class);
     private static final String TOKEN_DELIMS = " \t\r\n\f";
     private static final short IDX_QUERY = 0;
-    private static final short IDX_QUERY_COUNT = 1;
-    private static final short IDX_ADD = 2;
-    private static final short IDX_REPLACE = 3;
-    private static final short IDX_UPDATE = 4;
-    private static final short IDX_REMOVE = 5;
+    private static final short IDX_ADD = 1;
+    private static final short IDX_REPLACE = 2;
+    private static final short IDX_UPDATE = 3;
+    private static final short IDX_REMOVE = 4;
     private static final String[] KNOWN_STATEMENT_TYPES = new String[] {
-        "QUERY", "QUERY-COUNT", "ADD", "REPLACE", "UPDATE", "REMOVE"
+        "QUERY", "ADD", "REPLACE", "UPDATE", "REMOVE"
     };
+    
+    // package-private for testing
+    static final String AGGREGATE_PARAM_REGEXP = "(?:\\(([a-zA-Z_]+)\\))?$";
+    private static final String QUERY_COUNT_REGEXP = "QUERY-COUNT" + AGGREGATE_PARAM_REGEXP;
+    private static final String QUERY_DISTINCT_REGEXP = "QUERY-DISTINCT" + AGGREGATE_PARAM_REGEXP;
+    private static final Pattern QUERY_COUNT_PATTERN = Pattern.compile(QUERY_COUNT_REGEXP);
+    private static final Pattern QUERY_DISTINCT_PATTERN = Pattern.compile(QUERY_DISTINCT_REGEXP);
     private static final String SORTLIST_SEP = ",";
     private static final String SETLIST_SEP = SORTLIST_SEP;
     private static final String KEYWORD_SET = "SET";
@@ -754,13 +767,11 @@ class BasicDescriptorParser<T extends Pojo> implements StatementDescriptorParser
         // matchStatementType and matchCategory advanced currTokenIndex,
         // lets use idx of 0 here.
         final String statementType = tokens[0];
+        Matcher queryCountMatcher = QUERY_COUNT_PATTERN.matcher(statementType);
+        Matcher queryDistinctMatcher = QUERY_DISTINCT_PATTERN.matcher(statementType);
         if (statementType.equals(KNOWN_STATEMENT_TYPES[IDX_QUERY])) {
             // regular query case
             Query<T> query = storage.createQuery(desc.getCategory());
-            this.parsedStatement = new ParsedStatementImpl<>(query);
-        } else if (statementType.equals(KNOWN_STATEMENT_TYPES[IDX_QUERY_COUNT])) {
-            // create aggregate count query
-            Query<T> query = storage.createAggregateQuery(AggregateFunction.COUNT, desc.getCategory());
             this.parsedStatement = new ParsedStatementImpl<>(query);
         } else if (statementType.equals(KNOWN_STATEMENT_TYPES[IDX_ADD])) {
             // create add
@@ -778,9 +789,36 @@ class BasicDescriptorParser<T extends Pojo> implements StatementDescriptorParser
             // create remove
             Remove<T> remove = storage.createRemove(desc.getCategory());
             this.parsedStatement = new ParsedStatementImpl<>(remove);
+        } else if (queryCountMatcher.matches()) {
+            this.parsedStatement = createAggregatePreparedStatement(AggregateFunction.COUNT, queryCountMatcher);
+        } else if (queryDistinctMatcher.matches()) {
+            this.parsedStatement = createAggregatePreparedStatement(AggregateFunction.DISTINCT, queryDistinctMatcher);
         } else {
             throw new IllegalStateException("Don't know how to create statement type '" + statementType + "'");
         }
+    }
+    
+    private ParsedStatementImpl<T> createAggregatePreparedStatement(final AggregateFunction function, final Matcher matcher) {
+        // create aggregate query
+        Query<T> query = storage.createAggregateQuery(function, desc.getCategory());
+        if (!(query instanceof AggregateQuery2)) {
+            // FIXME: Thermostat 2.0 BackingStorage.createAggregateQuery() should
+            //        return a merged version of AggregateQuery (i.e. AggregateQuery2).
+            //        Thus, this check can go away then.
+            //        For 1.2 we have this in order to be API backwards compatible.
+            logger.log(Level.WARNING, "Expected AggregateQuery2. This will no longer work for Thermostat 2.0. Stmt was: " + desc);
+            return new ParsedStatementImpl<>(query);
+        }
+        AggregateQuery2<T> aggregateQuery = (AggregateQuery2<T>)query;
+        // We'll always have a match for at least one group. That group
+        // will be the keyName to use (if any). For old query descriptors
+        // the keyName may be null
+        String keyName = matcher.group(1); // groups start at 1
+        if (keyName != null) {
+            Key<?> aggKey = new Key<>(keyName);
+            aggregateQuery.setAggregateKey(aggKey);
+        }
+        return new ParsedStatementImpl<>(aggregateQuery);
     }
 
     private void matchCategory() throws DescriptorParsingException {
@@ -799,26 +837,32 @@ class BasicDescriptorParser<T extends Pojo> implements StatementDescriptorParser
     }
 
     private void matchStatementType() throws DescriptorParsingException {
-        if (tokens[currTokenIndex].equals(KNOWN_STATEMENT_TYPES[IDX_QUERY])) {
+        final String statementType = tokens[currTokenIndex];
+        Matcher queryCountMatcher = QUERY_COUNT_PATTERN.matcher(statementType);
+        Matcher queryDistinctMatcher = QUERY_DISTINCT_PATTERN.matcher(statementType);
+        if (statementType.equals(KNOWN_STATEMENT_TYPES[IDX_QUERY])) {
             // QUERY
             currTokenIndex++;
-        } else if (tokens[currTokenIndex].equals(KNOWN_STATEMENT_TYPES[IDX_QUERY_COUNT])) {
-            // QUERY-COUNT
-            currTokenIndex++;
-        } else if (tokens[currTokenIndex].equals(KNOWN_STATEMENT_TYPES[IDX_ADD])) {
+        } else if (statementType.equals(KNOWN_STATEMENT_TYPES[IDX_ADD])) {
             // ADD
             currTokenIndex++;
-        } else if (tokens[currTokenIndex].equals(KNOWN_STATEMENT_TYPES[IDX_REPLACE])) {
+        } else if (statementType.equals(KNOWN_STATEMENT_TYPES[IDX_REPLACE])) {
             // REPLACE
             currTokenIndex++;
-        } else if (tokens[currTokenIndex].equals(KNOWN_STATEMENT_TYPES[IDX_UPDATE])) {
+        } else if (statementType.equals(KNOWN_STATEMENT_TYPES[IDX_UPDATE])) {
             // UPDATE
             currTokenIndex++;
-        } else if (tokens[currTokenIndex].equals(KNOWN_STATEMENT_TYPES[IDX_REMOVE])) {
+        } else if (statementType.equals(KNOWN_STATEMENT_TYPES[IDX_REMOVE])) {
             // REMOVE
             currTokenIndex++;
+        } else if (queryCountMatcher.matches()) {
+            // QUERY-COUNT
+            currTokenIndex++;
+        } else if (queryDistinctMatcher.matches()) {
+            // QUERY-DISTINCT
+            currTokenIndex++;
         } else {
-            throw new DescriptorParsingException("Unknown statement type: '" + tokens[currTokenIndex] + "'");
+            throw new DescriptorParsingException("Unknown statement type: '" + statementType + "'");
         }
     }
 }

@@ -36,20 +36,48 @@
 
 package com.redhat.thermostat.storage.model;
 
-import static org.junit.Assert.assertNotNull;
-
-import java.util.Map;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-public class BackendInformationTest {
+import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.experimental.BatchCursor;
+
+public class AggregateCursorTest {
 
     @Test
-    public void testConfigurationNotNull() {
-        BackendInformation backendInfo = new BackendInformation("foo-agent");
-        Map<String,String> config = backendInfo.getConfiguration();
-        assertNotNull(config);
+    public void testCursor() {
+        AggregateTest t = new AggregateTest();
+        Cursor<AggregateTest> cursor = t.getCursor();
+        assertTrue(cursor.hasNext());
+        AggregateTest actual = cursor.next();
+        assertSame(t, actual);
+        assertFalse(cursor.hasNext());
+        assertNull(cursor.next());
     }
 
+    /**
+     * Setting the batch size for single result lists should be no-op.
+     * This just makes sure that nothing bad happens (no exceptions being thrown)
+     */
+    @Test
+    public void testCursorBatchSize() {
+        AggregateTest t = new AggregateTest();
+        Cursor<AggregateTest> cursor = t.getCursor();
+        BatchCursor<AggregateTest> advCursor = (BatchCursor<AggregateTest>)cursor;
+        advCursor.setBatchSize(500);
+        assertEquals(500, advCursor.getBatchSize());
+    }
+    
+    private static class AggregateTest implements AggregateResult {
+        
+        @SuppressWarnings("unchecked")
+        private <T extends Pojo> Cursor<T> getCursor() {
+            return (Cursor<T>)new AggregateCursor<>(this);
+        }
+    }
 }
-

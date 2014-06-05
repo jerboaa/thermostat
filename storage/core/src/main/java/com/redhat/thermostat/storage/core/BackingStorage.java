@@ -53,6 +53,7 @@ public interface BackingStorage extends Storage {
     
     <T extends Pojo> Query<T> createQuery(Category<T> category);
     
+    // FIXME: Thermostat 2.0 return AggregateQuery2 (or merged version of AggregateQuery) instead
     <T extends Pojo> Query<T> createAggregateQuery(AggregateFunction function, Category<T> category);
     
     <T extends Pojo> Add<T> createAdd(Category<T> category);

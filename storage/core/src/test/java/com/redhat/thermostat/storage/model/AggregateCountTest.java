@@ -38,41 +38,40 @@ package com.redhat.thermostat.storage.model;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.experimental.BatchCursor;
-
 public class AggregateCountTest {
-
+    
     @Test
-    public void testCursor() {
+    public void testEquals() {
         AggregateCount c = new AggregateCount();
-        c.setCount(10);
-        Cursor<AggregateCount> cursor = c.getCursor();
-        assertTrue(cursor.hasNext());
-        AggregateCount actual = cursor.next();
-        assertEquals(10, actual.getCount());
-        assertFalse(cursor.hasNext());
-        assertNull(cursor.next());
+        assertTrue("should be equal to self", c.equals(c));
+        c.setCount(-1);
+        assertTrue("should be equal to self", c.equals(c));
+        AggregateCount d = new AggregateCount();
+        d.setCount(-1);
+        assertTrue("c + d have equal count", c.equals(d));
+        d.setCount(10);
+        assertFalse("c has count -1, d 10", c.equals(d));
+        assertFalse("string is no agg-count", c.equals("foo"));
+        assertTrue(new AggregateCount().equals(new AggregateCount()));
     }
     
-    /**
-     * Setting the batch size for single result lists should be no-op.
-     * This just makes sure that nothing bad happens (no exceptions being thrown)
-     */
     @Test
-    public void testCursorBatchSize() {
-        AggregateCount count = new AggregateCount();
-        count.setCount(3);
-        Cursor<AggregateCount> cursor = count.getCursor();
-        BatchCursor<AggregateCount> advCursor = (BatchCursor<AggregateCount>)cursor;
-        advCursor.setBatchSize(500);
-        AggregateCount result = advCursor.next();
-        assertEquals(3, result.getCount());
+    public void testHashCode() {
+        AggregateCount c = new AggregateCount();
+        assertEquals(c.hashCode(), c.hashCode());
+        c.setCount(-1);
+        assertEquals(c.hashCode(), c.hashCode());
+        AggregateCount d = new AggregateCount();
+        d.setCount(-1);
+        assertEquals(d.hashCode(), c.hashCode());
+        d.setCount(100);
+        assertFalse(d.hashCode() == c.hashCode());
+        assertFalse("foo".hashCode() == d.hashCode());
+        assertEquals(new AggregateCount().hashCode(), new AggregateCount().hashCode());
     }
 }
 

@@ -55,6 +55,7 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -84,9 +85,11 @@ import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.core.Add;
+import com.redhat.thermostat.storage.core.AggregateQuery;
 import com.redhat.thermostat.storage.core.BackingStorage;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.CategoryAdapter;
+import com.redhat.thermostat.storage.core.AggregateQuery.AggregateFunction;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.core.Cursor;
@@ -97,11 +100,14 @@ import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.SchemaInfo;
+import com.redhat.thermostat.storage.core.Statement;
 import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.Update;
+import com.redhat.thermostat.storage.core.experimental.AggregateQuery2;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.BasePojo;
+import com.redhat.thermostat.storage.model.DistinctResult;
 import com.redhat.thermostat.storage.model.HostInfo;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
@@ -521,6 +527,102 @@ public class MongoStorageTest {
         DBObject pojoVal = result.get(0);
         assertEquals("val1", pojoVal.get("key1"));
         assertEquals("val3", pojoVal.get("key3"));
+    }
+    
+    @Test
+    public void verifyAggregateDistinct() throws Exception {
+        // setup
+        List<Integer> mockList = new ArrayList<>();
+        mockList.add(-1);
+        mockList.add(200);
+        when(testCollection.distinct(eq(key1.getName()), any(DBObject.class))).thenReturn(mockList);
+        
+        MongoStorage storage = makeStorage();
+        CategoryAdapter<TestClass, DistinctResult> adapter = new CategoryAdapter<>(testCategory);
+        Category<DistinctResult> adaptedCategory = adapter.getAdapted(DistinctResult.class);
+        AggregateQuery<DistinctResult> aggQuery = storage.createAggregateQuery(AggregateFunction.DISTINCT, adaptedCategory);
+        assertTrue(aggQuery instanceof AggregateQuery2);
+        AggregateQuery2<DistinctResult> aggQuery2 = (AggregateQuery2<DistinctResult>)aggQuery;
+        aggQuery2.setAggregateKey(key1);
+        Cursor<DistinctResult> cursor = aggQuery.execute();
+        assertTrue(cursor.hasNext());
+        DistinctResult r = cursor.next();
+        String[] expected = new String[] { "-1", "200" };
+        assertArrayEquals(expected, r.getValues());
+        assertEquals(key1, r.getKey());
+        
+        // do it again with a list of booleans
+        List<Boolean> boolList = new ArrayList<>();
+        boolList.add(false);
+        boolList.add(true);
+        boolList.add(true);
+        when(testCollection.distinct(eq(key2.getName()), any(DBObject.class))).thenReturn(boolList);
+        aggQuery = storage.createAggregateQuery(AggregateFunction.DISTINCT, adaptedCategory);
+        assertTrue(aggQuery instanceof AggregateQuery2);
+        aggQuery2 = (AggregateQuery2<DistinctResult>)aggQuery;
+        aggQuery2.setAggregateKey(key2);
+        cursor = aggQuery2.execute();
+        assertTrue(cursor.hasNext());
+        r = cursor.next();
+        expected = new String[] { "false", "true", "true" };
+        assertArrayEquals(expected, r.getValues());
+        assertEquals(key2, r.getKey());
+    }
+    
+    /*
+     * The statement descriptor subsystem uses getRawDuplicate. That duplicate
+     * needs to keep the key parameter set for distinct aggregate queries.
+     */
+    @Test
+    public void canDuplicateAggregateDistinct() throws Exception {
+        MongoStorage storage = makeStorage();
+        CategoryAdapter<TestClass, DistinctResult> adapter = new CategoryAdapter<>(testCategory);
+        Category<DistinctResult> adaptedCategory = adapter.getAdapted(DistinctResult.class);
+        AggregateQuery<DistinctResult> aggQuery = storage.createAggregateQuery(AggregateFunction.DISTINCT, adaptedCategory);
+        assertTrue(aggQuery instanceof AggregateQuery2);
+        AggregateQuery2<DistinctResult> aggQuery2 = (AggregateQuery2<DistinctResult>)aggQuery;
+        assertNull(aggQuery2.getAggregateKey());
+        aggQuery2.setAggregateKey(key1);
+        
+        Statement<DistinctResult> stmt = aggQuery2.getRawDuplicate();
+        assertTrue(stmt instanceof AggregateQuery2);
+        AggregateQuery2<DistinctResult> rawCopy = (AggregateQuery2<DistinctResult>) stmt;
+        assertEquals("Expected key to be copied for dupe", key1, rawCopy.getAggregateKey());
+    }
+    
+    /*
+     * The statement descriptor subsystem uses getRawDuplicate. That duplicate
+     * needs to keep the key parameter if set for count aggregates.
+     */
+    @Test
+    public void canDuplicateAggregateCountWithKey() throws Exception {
+        MongoStorage storage = makeStorage();
+        CategoryAdapter<TestClass, AggregateCount> adapter = new CategoryAdapter<>(testCategory);
+        Category<AggregateCount> adaptedCategory = adapter.getAdapted(AggregateCount.class);
+        AggregateQuery<AggregateCount> aggQuery = storage.createAggregateQuery(AggregateFunction.COUNT, adaptedCategory);
+        
+        // Produce duplicate without key set
+        assertTrue(aggQuery instanceof AggregateQuery2);
+        AggregateQuery2<AggregateCount> aggQuery2 = (AggregateQuery2<AggregateCount>)aggQuery;
+        assertNull(aggQuery2.getAggregateKey());
+        Statement<AggregateCount> stmt = aggQuery2.getRawDuplicate();
+        assertTrue(stmt instanceof AggregateQuery2);
+        AggregateQuery2<AggregateCount> rawCopy = (AggregateQuery2<AggregateCount>) stmt;
+
+        // Duplicate with key set
+        aggQuery2.setAggregateKey(key1);
+        assertNotNull(aggQuery2.getAggregateKey());
+        stmt = aggQuery2.getRawDuplicate();
+        assertTrue(stmt instanceof AggregateQuery2);
+        rawCopy = (AggregateQuery2<AggregateCount>) stmt;
+        assertEquals("Expected key to be copied for dupe", key1, rawCopy.getAggregateKey());
+    }
+    
+    private static void assertArrayEquals(String[] expected, String[] actual) {
+        assertEquals(expected.length, actual.length);
+        for (int i = 0; i < expected.length; i++) {
+            assertEquals(expected[i], actual[i]);
+        }
     }
 
     @Test

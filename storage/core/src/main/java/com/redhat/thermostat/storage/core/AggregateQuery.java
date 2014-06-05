@@ -48,12 +48,16 @@ public abstract class AggregateQuery<T extends Pojo> implements Query<T> {
         /**
          * Aggregate records by counting them.
          */
-        COUNT
+        COUNT,
+        /**
+         * Find distinct values for a {@link Key}
+         */
+        DISTINCT,
     }
     
     protected final Query<T> queryToAggregate;
     private final AggregateFunction function;
-
+    
     public AggregateQuery(AggregateFunction function, Query<T> queryToAggregate) {
         this.function = function;
         this.queryToAggregate = queryToAggregate;
@@ -87,6 +91,6 @@ public abstract class AggregateQuery<T extends Pojo> implements Query<T> {
     public AggregateFunction getAggregateFunction() {
         return this.function;
     }
-
+    
 }
 

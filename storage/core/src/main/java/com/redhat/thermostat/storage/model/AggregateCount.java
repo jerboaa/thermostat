@@ -37,14 +37,10 @@
 package com.redhat.thermostat.storage.model;
 
 import java.util.Objects;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Persist;
-import com.redhat.thermostat.storage.core.experimental.BasicBatchCursor;
 import com.redhat.thermostat.storage.core.experimental.BatchCursor;
 
 /**
@@ -84,36 +80,6 @@ public class AggregateCount implements AggregateResult {
     public <T extends Pojo> Cursor<T> getCursor() {
         return (BatchCursor<T>) new AggregateCursor<>(this);
     }
-    
-    private static class AggregateCursor<T extends Pojo> extends BasicBatchCursor<T> {
 
-        private static final Logger logger = LoggingUtils.getLogger(AggregateCursor.class);
-        private boolean available = true;
-        private final T count;
-        
-        private AggregateCursor(T count) {
-            this.count = count;
-        }
-        
-        @Override
-        public boolean hasNext() {
-            return available; 
-        }
-
-        @Override
-        public T next() {
-            if (available) {
-                available = false;
-                return count;
-            } else {
-                // FIXME: Thermostat 2.0: Change to throwing NoSuchElementException
-                String warning = "No next element but next() is being called. " +
-                                 "This will throw NoSuchElementException in the next release!";
-                logger.log(Level.WARNING, warning);
-                return null;
-            }
-        }
-        
-    }
 }
 

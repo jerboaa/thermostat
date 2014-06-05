@@ -34,22 +34,46 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.model;
+package com.redhat.thermostat.storage.core.experimental;
 
-import static org.junit.Assert.assertNotNull;
+import java.util.Objects;
 
-import java.util.Map;
+import com.redhat.thermostat.storage.core.AggregateQuery;
+import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.model.Pojo;
 
-import org.junit.Test;
+/**
+ * Successor of {@link AggregateQuery} with improved support for agregating on
+ * a key value.
+ * 
+ * @param <T>
+ */
+// FIXME: Thermostat 2.0 Merge into AggregateQuery
+public abstract class AggregateQuery2<T extends Pojo> extends AggregateQuery<T> {
 
-public class BackendInformationTest {
-
-    @Test
-    public void testConfigurationNotNull() {
-        BackendInformation backendInfo = new BackendInformation("foo-agent");
-        Map<String,String> config = backendInfo.getConfiguration();
-        assertNotNull(config);
+    // optional Key to aggregate values for
+    private Key<?> aggregateKey;
+    
+    public AggregateQuery2(AggregateFunction function, Query<T> queryToAggregate) {
+        super(function, queryToAggregate);
     }
 
-}
+    /**
+     * 
+     * @return An optional {@link Key} to aggregate values for. May be
+     *         {@code null};
+     */
+    public Key<?> getAggregateKey() {
+        return aggregateKey;
+    }
 
+    /**
+     * Sets an optional {@link Key} to aggregate values for.
+     * @param aggregateKey Must not be {@code null}.
+     * @throws NullPointerException If the aggregate key was {@code null}
+     */
+    public void setAggregateKey(Key<?> aggregateKey) {
+        this.aggregateKey = Objects.requireNonNull(aggregateKey);
+    }
+}

@@ -79,9 +79,11 @@ import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.core.Update;
+import com.redhat.thermostat.storage.core.experimental.AggregateQuery2;
 import com.redhat.thermostat.storage.core.experimental.BatchCursor;
 import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.AggregateResult;
+import com.redhat.thermostat.storage.model.DistinctResult;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
 
@@ -92,7 +94,33 @@ import com.redhat.thermostat.storage.query.Expression;
  */
 public class MongoStorage implements BackingStorage, SchemaInfoInserter {
     
-    private class MongoCountQuery<T extends Pojo> extends AggregateQuery<T> {
+    private class MongoDistinctQuery<T extends Pojo> extends AggregateQuery2<T> {
+
+        private final Category<T> category;
+        
+        private MongoDistinctQuery(MongoQuery<T> queryToAggregate, Category<T> category) {
+            super(AggregateFunction.DISTINCT, queryToAggregate);
+            this.category = category;
+        }
+        
+        @Override
+        public Cursor<T> execute() {
+            return executeDistinctQuery(this, category, (MongoQuery<T>)queryToAggregate);
+        }
+
+        @Override
+        public Statement<T> getRawDuplicate() {
+            MongoQuery<T> query = (MongoQuery<T>) this.queryToAggregate;
+            MongoDistinctQuery<T> aggQuery = new MongoDistinctQuery<>(query, category);
+            // Distinct queries require this param. It's static so pass this
+            // on to duplicates.
+            aggQuery.setAggregateKey(getAggregateKey());
+            return aggQuery;
+        }
+        
+    }
+    
+    private class MongoCountQuery<T extends Pojo> extends AggregateQuery2<T> {
         
         private final Category<T> category;
         
@@ -109,7 +137,13 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
         @Override
         public Statement<T> getRawDuplicate() {
             MongoQuery<T> query = (MongoQuery<T>) this.queryToAggregate;
-            return new MongoCountQuery<>(query, category);
+            MongoCountQuery<T> dupe = new MongoCountQuery<>(query, category);
+            // Count aggregates have an optional key to aggregate. Optional for
+            // backwards compat reasons. Be sure to copy it over if it was set.
+            if (getAggregateKey() != null) {
+                dupe.setAggregateKey(getAggregateKey());
+            }
+            return dupe;
         }
     }
     
@@ -332,22 +366,6 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
         this(new MongoConnection(url, creds, sslConf));
     }
     
-    public <T extends Pojo> Cursor<T> executeGetCount(Category<T> category, MongoQuery<T> queryToAggregate) {
-        try {
-            DBCollection coll = getCachedCollection(category);
-            long count = 0L;
-            DBObject query = queryToAggregate.getGeneratedQuery();
-            if (coll != null) {
-                count = coll.getCount(query);
-            }
-            AggregateCount result = new AggregateCount();
-            result.setCount(count);
-            return result.getCursor();
-        } catch (MongoException me) {
-            throw new StorageException(me);
-        }
-    }
-
     @Override
     public Connection getConnection() {
         return conn;
@@ -363,6 +381,56 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
     public <T extends Pojo> Replace<T> createReplace(Category<T> into) {
         MongoReplace<T> replace = new MongoReplace<>(into);
         return replace;
+    }
+
+    private <T extends Pojo> Cursor<T> executeGetCount(Category<T> category, MongoQuery<T> queryToAggregate) {
+        try {
+            DBCollection coll = getCachedCollection(category);
+            long count = 0L;
+            DBObject query = queryToAggregate.getGeneratedQuery();
+            if (coll != null) {
+                count = coll.getCount(query);
+            }
+            AggregateCount result = new AggregateCount();
+            result.setCount(count);
+            return result.getCursor();
+        } catch (MongoException me) {
+            throw new StorageException(me);
+        }
+    }
+    
+    private <T extends Pojo> Cursor<T> executeDistinctQuery(MongoDistinctQuery<T> aggQuery, Category<T> category, MongoQuery<T> queryToAggregate) {
+        try {
+            DBCollection coll = getCachedCollection(category);
+            DBObject query = queryToAggregate.getGeneratedQuery();
+            String[] distinctValues;
+            Key<?> aggregateKey = aggQuery.getAggregateKey();
+            if (coll != null) {
+                String key = aggregateKey.getName();
+                List<?> values = coll.distinct(key, query);
+                distinctValues = convertToStringList(values, key);
+            } else {
+                distinctValues = new String[0];
+            }
+            DistinctResult result = new DistinctResult();
+            result.setKey(aggregateKey);
+            result.setValues(distinctValues);
+            return result.getCursor();
+        } catch (MongoException me) {
+            throw new StorageException(me);
+        }
+    }
+    
+    private String[] convertToStringList(List<?> values, String keyName) {
+        List<String> stringList = new ArrayList<>();
+        for (int i = 0; i < values.size(); i++) {
+            Object val = values.get(i);
+            // Mongodb might give us null values.
+            if (val != null) {
+                stringList.add(val.toString());
+            }
+        }
+        return stringList.toArray(new String[0]);
     }
 
     private <T extends Pojo> int addImpl(final Category<T> cat, final DBObject values) {
@@ -601,12 +669,14 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
     }
 
     @Override
-    public <T extends Pojo> Query<T> createAggregateQuery(
+    public <T extends Pojo> AggregateQuery<T> createAggregateQuery(
             AggregateFunction function, Category<T> category) {
+        MongoQuery<T> query = (MongoQuery<T>)createQuery(category);
         switch (function) {
         case COUNT:
-            MongoQuery<T> query = (MongoQuery<T>)createQuery(category);
             return new MongoCountQuery<>(query, category);
+        case DISTINCT:
+            return new MongoDistinctQuery<>(query, category); 
         default:
             throw new IllegalStateException("function not supported: "
                     + function);

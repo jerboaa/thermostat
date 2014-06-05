@@ -36,20 +36,45 @@
 
 package com.redhat.thermostat.storage.model;
 
-import static org.junit.Assert.assertNotNull;
+import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.Entity;
+import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Persist;
 
-import java.util.Map;
+/**
+ * Model class for aggregated query results based on distinct values
+ * of a key.
+ *
+ */
+@Entity
+public class DistinctResult implements AggregateResult {
 
-import org.junit.Test;
-
-public class BackendInformationTest {
-
-    @Test
-    public void testConfigurationNotNull() {
-        BackendInformation backendInfo = new BackendInformation("foo-agent");
-        Map<String,String> config = backendInfo.getConfiguration();
-        assertNotNull(config);
+    private String[] values;
+    private Key<?> key;
+    
+    @Persist
+    public String[] getValues() {
+        return values;
+    }
+    
+    @Persist
+    public void setValues(String[] values) {
+        this.values = values;
+    }
+    
+    @Persist
+    public Key<?> getKey() {
+        return key;
     }
 
+    @Persist
+    public void setKey(Key<?> key) {
+        this.key = key;
+    }
+    
+    @SuppressWarnings("unchecked")
+    public <T extends Pojo> Cursor<T> getCursor() {
+        return (Cursor<T>) new AggregateCursor<>(this);
+    }
+    
 }
-
