@@ -1,0 +1,18 @@
+#set( $symbol_dollar = '$' )
+<?xml version="1.0"?>
+<plugin xmlns="http://icedtea.classpath.org/thermostat/plugins/v1.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <commands>
+    <command>
+      <name>example-command</name>
+      <description>Simple Hello World plugin</description>
+      <environments>
+        <environment>cli</environment>
+        <environment>shell</environment>
+      </environments>
+      <bundles>
+        <bundle><symbolic-name>${bundleSymbolicName}</symbolic-name><version>${version}</version></bundle>
+      </bundles>
+    </command>
+  </commands>
+</plugin>

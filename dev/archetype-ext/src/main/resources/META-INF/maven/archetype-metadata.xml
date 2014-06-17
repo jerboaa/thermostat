@@ -28,5 +28,12 @@
 	<include>ExampleCommandTest.java</include>
       </includes>
     </fileSet>
+    <fileSet filtered="true" encoding="UTF-8">
+      <targetPath>target</targetPath> 
+      <directory></directory>
+      <includes>
+        <include>thermostat-plugin.xml</include>
+      </includes>
+    </fileSet>
   </fileSets>
 </archetype-descriptor>
