@@ -91,7 +91,7 @@ public class Agent {
 
                         backend.activate();
 
-                        BackendInformation info = createBackendInformation(backend);
+                        BackendInformation info = AgentHelper.createBackendInformation(backend, getId());
                         backendDao.addBackendInformation(info);
                         backendInfos.put(backend, info);                    
                     } else {
@@ -161,18 +161,6 @@ public class Agent {
         return agentInfo;
     }
 
-    private BackendInformation createBackendInformation(Backend backend) {
-        String writerId = getId();
-        BackendInformation backendInfo = new BackendInformation(writerId);
-        backendInfo.setName(backend.getName());
-        backendInfo.setDescription(backend.getDescription());
-        backendInfo.setObserveNewJvm(backend.getObserveNewJvm());
-        backendInfo.setActive(true);
-        backendInfo.setPids(new int[0]);
-        backendInfo.setOrderValue(backend.getOrderValue());
-        
-        return backendInfo;
-    }
 
     public synchronized void stop() {
         if (started) {
