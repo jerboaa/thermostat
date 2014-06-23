@@ -701,8 +701,7 @@ public class WebStorageEndPoint extends HttpServlet {
                 return patchedQuery;
             }
         }
-        assert( (whereExpression != null && authorizationExpression == null) ||
-                (whereExpression == null && authorizationExpression == null));
+        assert(authorizationExpression == null);
         // nothing to tag on
         return patchedQuery;
     }
