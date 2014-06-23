@@ -37,11 +37,6 @@
 package com.redhat.thermostat.client.swing.internal.views;
 
 import static org.mockito.Mockito.mock;
-
-import java.lang.reflect.InvocationTargetException;
-
-import javax.swing.JTabbedPane;
-
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
 import org.fest.swing.annotation.GUITest;
@@ -52,61 +47,27 @@ import org.junit.runner.RunWith;
 
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.swing.FrameWithPanelTest;
-import com.redhat.thermostat.client.swing.TabbedPaneMatcher;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 
 @RunWith(CacioFESTRunner.class)
-public class HostInformationPanelTest extends FrameWithPanelTest<HostInformationPanel> {
+public class VmInformationPanelTest extends FrameWithPanelTest<VmInformationPanel> {
 
     @Override
-    protected HostInformationPanel createPanel() {
-        return GuiActionRunner.execute(new GuiQuery<HostInformationPanel>() {
+    protected VmInformationPanel createPanel() {
+        return GuiActionRunner.execute(new GuiQuery<VmInformationPanel>() {
             @Override
-            protected HostInformationPanel executeInEDT() throws Throwable {
-                return new HostInformationPanel();
+            protected VmInformationPanel executeInEDT() throws Throwable {
+                return new VmInformationPanel();
             }
         });
     }
 
-    @Test
-    public void testAddTwice() throws InvocationTargetException, InterruptedException {
-        UIComponent mock1 = createPanel();
-
-        panel.addChildView(new LocalizedString("foo1"), mock1);
-
-        // The panel in test has no views added so the matcher with a tab count > 0 works
-        // in order to select the right panel.
-        window.panel("panel").tabbedPane(new TabbedPaneMatcher(JTabbedPane.class)).requireTabTitles("foo1");
-
-        UIComponent mock2 = createPanel();
-        panel.addChildView(new LocalizedString("foo2"), mock2);
-
-        window.panel("panel").tabbedPane(new TabbedPaneMatcher(JTabbedPane.class)).requireTabTitles("foo1", "foo2");
-    }
-
-    @Test
-    public void testAddRemove() throws InvocationTargetException, InterruptedException {
-        UIComponent test1 = createPanel();
-        UIComponent test2 = createPanel();
-
-        panel.addChildView(new LocalizedString("test1"), test1);
-        panel.addChildView(new LocalizedString("test2"), test2);
-
-        // The panel in test has no views added so the matcher with a tab count > 0 works
-        // in order to select the right panel.
-        window.panel("panel").tabbedPane(new TabbedPaneMatcher(JTabbedPane.class)).requireTabTitles("test1", "test2");
-
-        panel.removeChildView(new LocalizedString("test1"));
-
-        window.panel("panel").tabbedPane(new TabbedPaneMatcher(JTabbedPane.class)).requireTabTitles("test2");
-    }
-
     @GUITest
     @Test(expected=AssertionError.class)
-    public void testAddingNonSwingComponentFails() {
-        // note: doesn't implement SwingComponent interface
-        UIComponent component = mock(UIComponent.class);
-        panel.addChildView(new LocalizedString("test1"), component);
+    public void verifyAddChildViewFailsWithNonSwingComponent() {
+        // does not implement SwingComponent interface
+        UIComponent view = mock(UIComponent.class);
+        panel.addChildView(new LocalizedString("test. please ignore"), view);
     }
-}
 
+}

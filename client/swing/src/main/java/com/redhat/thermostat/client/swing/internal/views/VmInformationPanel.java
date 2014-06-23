@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.swing.internal.views;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.util.logging.Logger;
 
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
@@ -45,9 +46,12 @@ import javax.swing.JTabbedPane;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.core.views.VmInformationView;
 import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 
 public class VmInformationPanel extends VmInformationView implements SwingComponent {
+
+    private static final Logger logger = LoggingUtils.getLogger(VmInformationPanel.class);
 
     private final JTabbedPane tabPane = new JTabbedPane();
     private JPanel visiblePanel;
@@ -68,6 +72,16 @@ public class VmInformationPanel extends VmInformationView implements SwingCompon
             SwingComponent panel = (SwingComponent)view;
             tabPane.insertTab(title.getContents(), null, panel.getUiComponent(), null, tabCount);
             tabCount++;
+        } else {
+            String message = ""
+                    + "There's a non-swing view registered: '" + view.toString()
+                    + "'. The swing client can not use these views. This is "
+                    + "most likely a developer mistake. If this is meant to "
+                    + "be a swing-based view, it must implement the "
+                    + "'SwingComponent' interface. If it's not meant to be a "
+                    + "swing-based view, it should not have been registered.";
+            logger.severe(message);
+            throw new AssertionError(message);
         }
     }
 

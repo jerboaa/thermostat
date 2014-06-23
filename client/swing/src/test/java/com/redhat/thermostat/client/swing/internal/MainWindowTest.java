@@ -61,6 +61,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
+import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.ui.MenuAction;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
@@ -243,7 +244,16 @@ public class MainWindowTest {
 
         assertTrue(menuItem.target instanceof JCheckBoxMenuItem);
     }
-    
+
+    @GUITest
+    @Test(expected=AssertionError.class)
+    public void verifyThatAddingNonSwingSubViewFails() {
+        BasicView subView = mock(BasicView.class);
+
+        frameFixture.show();
+        window.setSubView(subView);
+    }
+
 //    @GUITest
 //    @Test
 //    public void verifyContextMenu() {

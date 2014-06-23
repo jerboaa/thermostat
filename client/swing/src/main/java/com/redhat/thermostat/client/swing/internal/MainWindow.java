@@ -54,6 +54,7 @@ import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Logger;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
@@ -93,6 +94,7 @@ import com.redhat.thermostat.client.ui.MenuAction;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.utils.StringUtils;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -102,6 +104,8 @@ import com.redhat.thermostat.storage.core.VmRef;
 public class MainWindow extends JFrame implements MainView {
     
     public static final String MAIN_WINDOW_NAME = "Thermostat_mainWindo_JFrame_parent#1";
+
+    private static final Logger logger = LoggingUtils.getLogger(MainWindow.class);
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
@@ -465,6 +469,16 @@ public class MainWindow extends JFrame implements MainView {
                     contentArea.revalidate();
                 }
             });
+        } else {
+            String message = ""
+                    + "There's a non-swing view registered: '" + view.toString()
+                    + "'. The swing client can not use these views. This is "
+                    + "most likely a developer mistake. If this is meant to "
+                    + "be a swing-based view, it must implement the "
+                    + "'SwingComponent' interface. If it's not meant to be a "
+                    + "swing-based view, it should not have been registered.";
+            logger.severe(message);
+            throw new AssertionError(message);
         }
     }
 
