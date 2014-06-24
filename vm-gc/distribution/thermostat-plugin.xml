@@ -60,13 +60,6 @@
         <bundle><symbolic-name>com.redhat.thermostat.gc.remote.command</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
     </extension>
-    <!-- Requires all storage entity classes to be loaded -->
-    <extension>
-      <name>webservice</name>
-      <bundles>
-        <bundle><symbolic-name>com.redhat.thermostat.vm.gc.common</symbolic-name><version>${project.version}</version></bundle>
-      </bundles>
-    </extension>
   </extensions>
   <!-- TODO: Need to express dependency on vm-memory-common -->
 </plugin>

@@ -56,13 +56,6 @@
         <bundle><symbolic-name>com.redhat.thermostat.thread.harvester</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
     </extension>
-    <!-- Requires all storage entity classes to be loaded -->
-    <extension>
-      <name>webservice</name>
-      <bundles>
-        <bundle><symbolic-name>com.redhat.thermostat.thread.collector</symbolic-name><version>${project.version}</version></bundle>
-      </bundles>
-    </extension>
   </extensions>
 </plugin>
 

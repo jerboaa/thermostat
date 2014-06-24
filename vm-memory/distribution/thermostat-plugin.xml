@@ -55,13 +55,6 @@
         <bundle><symbolic-name>com.redhat.thermostat.vm.memory.agent</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
     </extension>
-    <!-- Requires all storage entity classes to be loaded -->
-    <extension>
-      <name>webservice</name>
-      <bundles>
-        <bundle><symbolic-name>com.redhat.thermostat.vm.memory.common</symbolic-name><version>${project.version}</version></bundle>
-      </bundles>
-    </extension>
     <extension>
       <name>vm-stat</name>
       <bundles>
