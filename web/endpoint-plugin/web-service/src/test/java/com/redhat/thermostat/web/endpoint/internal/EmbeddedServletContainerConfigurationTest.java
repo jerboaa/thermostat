@@ -38,6 +38,7 @@ package com.redhat.thermostat.web.endpoint.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
@@ -253,6 +254,51 @@ public class EmbeddedServletContainerConfigurationTest {
         File expected = new File(fooThermostatHome, "webapp");
         File actual = config.getAbsolutePathToExplodedWebArchive();
         assertEquals(expected.getAbsolutePath(), actual.getAbsolutePath());
+    }
+    
+    /*
+     * If a request log configuration is set, be sure config paths are available
+     */
+    @Test
+    public void verifyRequestLogConfiguration() {
+        CommonPaths paths = mock(CommonPaths.class);
+        File testUserHomeLogs = new File("/test/userhome/logs");
+        when(paths.getUserLogDirectory()).thenReturn(testUserHomeLogs);
+
+        // system config only
+        Properties userConfig = new Properties();
+        Properties systemConfig = new Properties();
+        systemConfig.setProperty(ConfigKeys.REQUEST_LOG_FILENAME.name(), "logfile.log");
+        EmbeddedServletContainerConfiguration config = new EmbeddedServletContainerConfiguration(paths, systemConfig, userConfig);
+        assertTrue("Should have request log config", config.hasRequestLogConfig());
+        assertEquals("/test/userhome/logs/logfile.log", config.getAbsolutePathToRequestLog());
+        
+        // user config only
+        userConfig = new Properties();
+        systemConfig = new Properties();
+        userConfig.setProperty(ConfigKeys.REQUEST_LOG_FILENAME.name(), "userlogFile.log");
+        config = new EmbeddedServletContainerConfiguration(paths, systemConfig, userConfig);
+        assertTrue("Should have request log config", config.hasRequestLogConfig());
+        assertEquals("/test/userhome/logs/userlogFile.log", config.getAbsolutePathToRequestLog());
+        
+        // user and system config
+        userConfig = new Properties();
+        systemConfig = new Properties();
+        userConfig.setProperty(ConfigKeys.REQUEST_LOG_FILENAME.name(), "userlogFile.log");
+        systemConfig.setProperty(ConfigKeys.REQUEST_LOG_FILENAME.name(), "systemlogFile.log");
+        config = new EmbeddedServletContainerConfiguration(paths, systemConfig, userConfig);
+        assertTrue("Should have request log config", config.hasRequestLogConfig());
+        assertEquals("User config overrides system config",
+                     "/test/userhome/logs/userlogFile.log",
+                     config.getAbsolutePathToRequestLog());
+        
+        // no config
+        userConfig = new Properties();
+        systemConfig = new Properties();
+        config = new EmbeddedServletContainerConfiguration(paths, systemConfig, userConfig);
+        assertFalse("Should NOT have request log config", config.hasRequestLogConfig());
+        assertNull("No config specified",
+                     config.getAbsolutePathToRequestLog());
     }
     
     @Test

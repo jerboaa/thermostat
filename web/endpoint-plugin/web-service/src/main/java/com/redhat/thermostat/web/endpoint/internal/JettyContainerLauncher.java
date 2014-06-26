@@ -42,18 +42,25 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Calendar;
+import java.util.TimeZone;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.net.ssl.SSLContext;
 
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.NCSARequestLog;
 import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.SslConnectionFactory;
+import org.eclipse.jetty.server.handler.ContextHandlerCollection;
+import org.eclipse.jetty.server.handler.HandlerCollection;
+import org.eclipse.jetty.server.handler.RequestLogHandler;
 import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.webapp.WebAppContext;
@@ -61,6 +68,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
 import com.redhat.thermostat.common.ssl.SSLContextFactory;
+import com.redhat.thermostat.common.ssl.SslInitException;
 import com.redhat.thermostat.common.utils.HostPortPair;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
@@ -133,30 +141,8 @@ class JettyContainerLauncher {
             return;
         }
         server = new Server();
-        // Set up the connector with the desired host/port listen address.
-        ServerConnector connector;
-        if (config.isEnableTLS()) {
-            logger.log(Level.FINEST, "Enabling TLS enabled web storage endpoint");
-            
-            // HTTP Configuration
-            HttpConfiguration http_config = new HttpConfiguration();
-            http_config.setSecureScheme("https");
-            
-            // SSL HTTP Configuration
-            HttpConfiguration https_config = new HttpConfiguration(http_config);
-            https_config.addCustomizer(new SecureRequestCustomizer());
-
-            SslContextFactory sslContextFactory = new SslContextFactory();
-            SSLContext serverContext = SSLContextFactory.getServerContext(sslConfig);
-            sslContextFactory.setSslContext(serverContext);
-            // SSL Connector
-            connector = new ServerConnector(server,
-                new SslConnectionFactory(sslContextFactory,"http/1.1"),
-                new HttpConnectionFactory(https_config));
-        } else {
-            // non-SSL
-            connector = new ServerConnector(server);
-        }
+        // Set up the connector with SSL enabled if so configured
+        ServerConnector connector = getServerConnector();
         
         // Set host and port
         connector.setHost(ipPort.getHost());
@@ -221,10 +207,66 @@ class JettyContainerLauncher {
             }
         });
         configureJaas();
+        // Configure the context handler with request logging if 
+        // so desired.
+        configureRequestLog(ctx);
         
-        server.setHandler(ctx);
         server.start();
     }
+
+    private void configureRequestLog(WebAppContext ctx) {
+        if (config.hasRequestLogConfig()) {
+            HandlerCollection handlers = new HandlerCollection();
+            ContextHandlerCollection contexts = new ContextHandlerCollection();
+            RequestLogHandler requestLogHandler = new RequestLogHandler();
+            handlers.setHandlers(new Handler[] { contexts, ctx,
+                    requestLogHandler });
+            server.setHandler(handlers);
+    
+            String logPath = config.getAbsolutePathToRequestLog();
+            NCSARequestLog requestLog = new NCSARequestLog(logPath);
+            requestLog.setRetainDays(90);
+            requestLog.setAppend(true);
+            requestLog.setExtended(false);
+            TimeZone tz = Calendar.getInstance().getTimeZone();
+            requestLog.setLogTimeZone(tz.getID());
+            requestLogHandler.setRequestLog(requestLog);
+            logger.log(Level.FINEST, "Using jetty request log: " + logPath);
+        } else {
+            // no request logging just use the context as handler
+            server.setHandler(ctx);
+        }
+    }
+
+
+    private ServerConnector getServerConnector()
+            throws InvalidConfigurationException, SslInitException {
+        ServerConnector connector;
+        if (config.isEnableTLS()) {
+            logger.log(Level.FINEST, "Enabling TLS enabled web storage endpoint");
+            
+            // HTTP Configuration
+            HttpConfiguration http_config = new HttpConfiguration();
+            http_config.setSecureScheme("https");
+            
+            // SSL HTTP Configuration
+            HttpConfiguration https_config = new HttpConfiguration(http_config);
+            https_config.addCustomizer(new SecureRequestCustomizer());
+
+            SslContextFactory sslContextFactory = new SslContextFactory();
+            SSLContext serverContext = SSLContextFactory.getServerContext(sslConfig);
+            sslContextFactory.setSslContext(serverContext);
+            // SSL Connector
+            connector = new ServerConnector(server,
+                new SslConnectionFactory(sslContextFactory,"http/1.1"),
+                new HttpConnectionFactory(https_config));
+        } else {
+            // non-SSL
+            connector = new ServerConnector(server);
+        }
+        return connector;
+    }
+
 
     private void writeWebDefaults(File tempWebDefaults, URL uri) {
         try (FileOutputStream fout = new FileOutputStream(tempWebDefaults);

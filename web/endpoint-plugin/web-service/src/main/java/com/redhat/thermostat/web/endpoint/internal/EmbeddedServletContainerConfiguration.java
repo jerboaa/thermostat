@@ -60,7 +60,8 @@ class EmbeddedServletContainerConfiguration {
     private final Properties userConfiguration;
     private final CommonPaths paths;
     
-    private EmbeddedServletContainerConfiguration(CommonPaths paths, Properties systemConfiguration, Properties userConfiguration) {
+    // Main constructor
+    EmbeddedServletContainerConfiguration(CommonPaths paths, Properties systemConfiguration, Properties userConfiguration) {
         this.systemConfiguration = systemConfiguration;
         this.userConfiguration = userConfiguration;
         this.paths = paths;
@@ -184,6 +185,34 @@ class EmbeddedServletContainerConfiguration {
         }
     }
     
+    boolean hasRequestLogConfig() {
+        return getLogFileFromProperties() != null;
+    }
+    
+    String getAbsolutePathToRequestLog() throws InvalidConfigurationException {
+        String logFileName = getLogFileFromProperties();
+        if (logFileName == null) {
+            // no config
+            return null;
+        }
+        File userLogsPath = paths.getUserLogDirectory();
+        File requestLog = new File(userLogsPath, logFileName);
+        return requestLog.getAbsolutePath();
+    }
+    
+    private String getLogFileFromProperties() {
+        String logFileName = systemConfiguration.getProperty(ConfigKeys.REQUEST_LOG_FILENAME.name());
+        String userPotentialFileName = userConfiguration.getProperty(ConfigKeys.REQUEST_LOG_FILENAME.name());
+        if (userPotentialFileName != null) {
+            logFileName = userPotentialFileName;
+        }
+        if (logFileName == null) {
+            // Not set
+            return null;
+        }
+        return logFileName;
+    }
+    
     static enum ConfigKeys {
         /* String: The bind address. host:port format */
         SERVLET_CONTAINER_BIND_ADDRESS,
@@ -191,6 +220,10 @@ class EmbeddedServletContainerConfiguration {
          * boot up with SSL support. It uses config in ssl.properties for
          * keystore et al.
          */
-        USE_SSL
+        USE_SSL,
+        /* Filename of the request log. It's relative to thermostat's
+         * logs directory.
+         */
+        REQUEST_LOG_FILENAME
     }
 }
