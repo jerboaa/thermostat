@@ -355,6 +355,41 @@ public class WebStorageTest {
     }
     
     @Test
+    public void prepareStatementCachesStatements() throws DescriptorParsingException {
+        String strDesc = "QUERY test WHERE 'property1' = ?s";
+        StatementDescriptor<TestObj> desc = new StatementDescriptor<>(category, strDesc);
+        PrepareStatementWebStorage testStorage = new PrepareStatementWebStorage("foo", mock(StorageCredentials.class), mock(SSLConfiguration.class));
+        // should fill the cache
+        WebPreparedStatement<TestObj> stmt = (WebPreparedStatement<TestObj>)testStorage.prepareStatement(desc);
+        int numParams = stmt.getParams().getParams().length;
+        int stmtId = stmt.getStatementId();
+        assertEquals(0, numParams);
+        assertEquals(1, stmtId);
+        // this one should be cached, same stmtId and numParams as previous
+        // one.
+        stmt = (WebPreparedStatement<TestObj>)testStorage.prepareStatement(desc);
+        numParams = stmt.getParams().getParams().length;
+        stmtId = stmt.getStatementId();
+        assertEquals("PreparedStatementWebStorge increments a counter" +
+                     " if it wasn't cached. Was it 2? Bad!",
+                     0, numParams);
+        assertEquals("PreparedStatementWebStorge increments a counter" +
+                     " if it wasn't cached. Was it 3? Bad!", 1, stmtId);
+        // preparing a different descriptor should not be cached.
+        strDesc = "QUERY test WHERE 'foo' = ?l";
+        desc = new StatementDescriptor<>(category, strDesc);
+        stmt = (WebPreparedStatement<TestObj>)testStorage.prepareStatement(desc);
+        numParams = stmt.getParams().getParams().length;
+        stmtId = stmt.getStatementId();
+        assertEquals("PreparedStatementWebStorge increments a counter" +
+                     " if it wasn't cached. Triggers e.g. if it was erronously cached!",
+                     2, numParams);
+        assertEquals("PreparedStatementWebStorge increments a counter" +
+                     " if it wasn't cached. Triggers e.g. if it was erronously cached!",
+                     3, stmtId);
+    }
+    
+    @Test
     public void canPrepareAndExecuteQuery() throws UnsupportedEncodingException, IOException {
         TestObj obj1 = new TestObj();
         obj1.setProperty1("fluffor1");
@@ -771,6 +806,22 @@ public class WebStorageTest {
         @Override
         public char[] getPassword() {
             return pw;
+        }
+    }
+    
+    private static class PrepareStatementWebStorage extends WebStorage {
+
+        private int counter;
+        
+        public PrepareStatementWebStorage(String url, StorageCredentials creds,
+                SSLConfiguration sslConf) throws StorageException {
+            super(url, creds, sslConf);
+        }
+        
+        @Override
+        <T extends Pojo> WebPreparedStatementHolder sendPrepareStmtRequest(StatementDescriptor<T> desc)
+                throws DescriptorParsingException {
+            return new WebPreparedStatementHolder(TestObj.class, counter++, counter++); 
         }
     }
 }

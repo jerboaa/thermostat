@@ -51,6 +51,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -318,6 +319,7 @@ public class WebStorage implements Storage, SecureStorage {
     private StorageCredentials creds;
     private SecureRandom random;
     private WebConnection conn;
+    private Map<StatementDescriptor<?>, WebPreparedStatementHolder> stmtCache;
     
     // for testing
     WebStorage(String url, StorageCredentials creds, DefaultHttpClient client,
@@ -350,6 +352,10 @@ public class WebStorage implements Storage, SecureStorage {
         if (endpoint.startsWith(HTTPS_PREFIX)) {
             registerSSLScheme(connManager, sslConf);
         }
+        // Use weak map in order for it to not eat up too much memory. The sole
+        // purpose is to cache values and prevent some unnecessary network
+        // overhead.
+        this.stmtCache = new WeakHashMap<>();
     }
 
     private void registerSSLScheme(ClientConnectionManager conManager, SSLConfiguration sslConf)
@@ -650,6 +656,34 @@ public class WebStorage implements Storage, SecureStorage {
     @Override
     public <T extends Pojo> PreparedStatement<T> prepareStatement(StatementDescriptor<T> desc)
             throws DescriptorParsingException {
+        /*
+         * Avoid two network round-trips for statements which have already
+         * been prepared. Note that this makes preparing statements not entirely
+         * stateless, since the prepared statement ID might change if the
+         * web endpoint reboots, but the agent/client does not and keeps old IDs
+         * in the cache. This will likely produce statement execution errors.
+         * So if that happens you've just found the likely cause :)
+         */
+        WebPreparedStatementHolder holder = null;
+        synchronized(this.stmtCache) {
+            if (this.stmtCache.containsKey(desc)) {
+                // note this is a WeakHashMap and may return null here
+                holder = stmtCache.get(desc);
+            }
+        }
+        if (holder == null) {
+            // Cache-miss, send request over the wire and cache result.
+            holder = sendPrepareStmtRequest(desc);
+            synchronized(this.stmtCache) {
+                this.stmtCache.put(desc, holder);
+            }
+        }
+        return new WebPreparedStatementImpl<>(holder.typeToken, holder.numParams, holder.statementId);
+    }
+    
+    // package-private for testing
+    <T extends Pojo> WebPreparedStatementHolder sendPrepareStmtRequest(StatementDescriptor<T> desc)
+            throws DescriptorParsingException {
         String strDesc = desc.getDescriptor();
         int categoryId = getCategoryId(desc.getCategory());
         NameValuePair nameParam = new BasicNameValuePair("query-descriptor",
@@ -679,8 +713,23 @@ public class WebStorage implements Storage, SecureStorage {
                 // info hint.
                 Class<T> dataClass = desc.getCategory().getDataClass();
                 Type typeToken = new WebQueryResponse<T>().getRuntimeParametrizedType(dataClass);
-                return new WebPreparedStatementImpl<T>(typeToken, numParams, statementId);
+                return new WebPreparedStatementHolder(typeToken, numParams, statementId);
             }
+        }
+    }
+    
+    // Container used for parameter caching in order to avoid unneccessary
+    // network overhead.
+    static class WebPreparedStatementHolder {
+        
+        private final Type typeToken;
+        private final int numParams;
+        private final int statementId;
+        
+        WebPreparedStatementHolder(Type typeToken, int numParams, int statementId) {
+            this.typeToken = typeToken;
+            this.numParams = numParams;
+            this.statementId = statementId;
         }
     }
 
