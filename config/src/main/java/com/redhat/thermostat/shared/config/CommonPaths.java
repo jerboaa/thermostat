@@ -73,8 +73,12 @@ public interface CommonPaths {
 
     public File getSystemConfigurationDirectory() throws InvalidConfigurationException;
 
+    public File getSystemPluginConfigurationDirectory() throws InvalidConfigurationException;
+
+    public File getUserPluginConfigurationDirectory() throws InvalidConfigurationException;
+
     public File getUserConfigurationDirectory() throws InvalidConfigurationException;
-    
+
     /** A file indicating that Thermostat commands are ready to be run **/
     public File getUserSetupCompleteStampFile() throws InvalidConfigurationException;
 

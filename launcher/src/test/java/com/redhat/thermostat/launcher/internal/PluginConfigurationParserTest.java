@@ -45,10 +45,10 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.List;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
@@ -56,6 +56,7 @@ import org.junit.Test;
 
 import com.redhat.thermostat.launcher.BundleInformation;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandExtensions;
+import com.redhat.thermostat.launcher.internal.PluginConfiguration.Configurations;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.NewCommand;
 import com.redhat.thermostat.shared.locale.Translate;
 
@@ -68,7 +69,7 @@ public class PluginConfigurationParserTest {
         parser.parse("test", new ByteArrayInputStream(config.getBytes("UTF-8")));
         fail("should not reach here");
     }
-    
+
     @Test
     public void testMinimalConfiguration() throws UnsupportedEncodingException {
         PluginConfigurationParser parser = new PluginConfigurationParser();
@@ -119,7 +120,7 @@ public class PluginConfigurationParserTest {
                 new BundleInformation("foo", "1.0"), new BundleInformation("bar", "1.0"), new BundleInformation("baz", "1.0"),
         };
         assertEquals(Arrays.asList(expectedBundles), first.getBundles());    }
-    
+
     @Test
     public void testConfigurationThatAddsNewCommand() throws UnsupportedEncodingException {
         String config = "<?xml version=\"1.0\"?>\n" +
@@ -204,6 +205,95 @@ public class PluginConfigurationParserTest {
                 new BundleInformation("foo", "ignore"), new BundleInformation("bar  baz", "ignore"), new BundleInformation("buzz", "ignore"),
         };
         assertEquals(Arrays.asList(expectedBundles), first.getBundles());
+    }
+
+    @Test
+    public void testConfigurationParsePluginID() throws IOException {
+        String pluginID = "com.redhat.thermostat.simple";
+        String configName = "config.conf";
+        String config = "<?xml version=\"1.0\"?>\n"
+                + "<plugin xmlns=\"http://icedtea.classpath.org/thermostat/plugins/v1.0\"\n"
+                + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
+                + " xsi:schemaLocation=\"http://icedtea.classpath.org/thermostat/plugins/v1.0\">\n"
+                + "  <id>" + pluginID + "</id>\n"
+                + "  <configurations>"
+                + "    <configuration>" + configName + "</configuration>\n"
+                + "  </configurations>"
+                + "</plugin>\n";
+
+        PluginConfiguration result = new PluginConfigurationParser().parse("test",
+                new ByteArrayInputStream(config.getBytes("UTF-8")));
+
+        String resPluginID = result.getPluginID().getPluginID();
+
+        assertTrue(pluginID.equals(resPluginID));
+    }
+
+    @Test
+    public void testConfigurationParseConfigurations() throws IOException {
+        String pluginID = "com.redhat.thermostat.simple";
+        String configName = "config.conf";
+        String config = "<?xml version=\"1.0\"?>\n"
+                + "<plugin xmlns=\"http://icedtea.classpath.org/thermostat/plugins/v1.0\"\n"
+                + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
+                + " xsi:schemaLocation=\"http://icedtea.classpath.org/thermostat/plugins/v1.0\">\n"
+                + "  <id>" + pluginID + "</id>\n"
+                + "  <configurations>"
+                + "    <configuration>" + configName + "</configuration>\n"
+                + "  </configurations>"
+                + "</plugin>\n";
+
+        PluginConfiguration result = new PluginConfigurationParser().parse("test",
+                new ByteArrayInputStream(config.getBytes("UTF-8")));
+        Configurations resConf = result.getConfigurations();
+
+        assertTrue(resConf.containsFile(configName));
+    }
+
+    @Test
+    public void testConfigurationParseMultipleConfigurations() throws IOException {
+        String pluginID = "com.redhat.thermostat.simple";
+        String configNameOne = "a.conf";
+        String configNameTwo = "b.conf";
+        String configNameThree = "c.conf";
+        String config = "<?xml version=\"1.0\"?>\n"
+                + "<plugin xmlns=\"http://icedtea.classpath.org/thermostat/plugins/v1.0\"\n"
+                + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
+                + " xsi:schemaLocation=\"http://icedtea.classpath.org/thermostat/plugins/v1.0\">\n"
+                + "  <id>" + pluginID + "</id>\n"
+                + "  <configurations>"
+                + "    <configuration>" + configNameOne + "</configuration>\n"
+                + "    <configuration>" + configNameTwo + "</configuration>\n"
+                + "    <configuration>" + configNameThree + "</configuration>\n"
+                + "  </configurations>"
+                + "</plugin>\n";
+
+        PluginConfiguration result = new PluginConfigurationParser().parse("test",
+                new ByteArrayInputStream(config.getBytes("UTF-8")));
+        Configurations resConf = result.getConfigurations();
+
+        assertTrue(resConf.containsFile(configNameOne));
+        assertTrue(resConf.containsFile(configNameTwo));
+        assertTrue(resConf.containsFile(configNameThree));
+    }
+
+    @Test
+    public void testConfigurationWithNoPluginID() throws IOException {
+        String configName = "d.conf";
+        String config = "<?xml version=\"1.0\"?>\n"
+                + "<plugin xmlns=\"http://icedtea.classpath.org/thermostat/plugins/v1.0\"\n"
+                + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
+                + " xsi:schemaLocation=\"http://icedtea.classpath.org/thermostat/plugins/v1.0\">\n"
+                + "  <configurations>"
+                + "    <configuration>" + configName + "</configuration>\n"
+                + "  </configurations>"
+                + "</plugin>\n";
+
+        PluginConfiguration result = new PluginConfigurationParser().parse("test",
+                new ByteArrayInputStream(config.getBytes("UTF-8")));
+        Configurations resConf = result.getConfigurations();
+        assertTrue(!resConf.containsFile(configName));
+
     }
 
     @Test
@@ -349,7 +439,7 @@ public class PluginConfigurationParserTest {
                 "</plugin>";
 
         PluginConfiguration result = new PluginConfigurationParser()
-                .parse("test", new ByteArrayInputStream(config.getBytes("UTF-8")));
+                .parse("test", new ByteArrayInputStream(config.getBytes("UTF-8"))    );
 
         assertEquals(0, result.getExtendedCommands().size());
 
@@ -414,6 +504,6 @@ public class PluginConfigurationParserTest {
         Option dbUrlOption = opts.getOption("foobarbaz");
         assertNull(dbUrlOption);
     }
-    
+
 }
 

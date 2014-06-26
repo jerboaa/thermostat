@@ -15,18 +15,24 @@
 <xs:element name="long" type="xs:string"/>
 <xs:element name="argument" type="xs:string"/>
 <xs:element name="required" type="xs:boolean"/>
+<xs:element name="id" type="xs:string"/>
+<xs:element name="configuration" type="xs:string"/>
 
 
 <!-- definition of complex elements -->
 <xs:element name="plugin">
   <xs:complexType>
-    <xs:choice>
-      <xs:sequence>
-        <xs:element ref="commands"/>
-        <xs:element ref="extensions" minOccurs="0" maxOccurs="1"/>
-      </xs:sequence>
-      <xs:element ref="extensions"/>
-    </xs:choice>
+    <xs:sequence>
+      <xs:element ref="id" minOccurs="0" maxOccurs="1"/>
+      <xs:choice>
+        <xs:sequence>
+          <xs:element ref="commands"/>
+          <xs:element ref="extensions" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
+        <xs:element ref="extensions"/>
+      </xs:choice>
+      <xs:element ref="configurations" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
   </xs:complexType>
 </xs:element>
 
@@ -189,6 +195,14 @@
           </xs:documentation>
         </xs:annotation>
       </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="configurations">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="configuration" minOccurs="1" maxOccurs="unbounded"/>
     </xs:sequence>
   </xs:complexType>
 </xs:element>

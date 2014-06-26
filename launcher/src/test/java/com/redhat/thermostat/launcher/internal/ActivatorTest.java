@@ -116,11 +116,11 @@ public class ActivatorTest {
                 withParameterTypes(String.class, String.class).
                 withArguments(isA(String.class), isA(String.class)).thenReturn(source1);
 
-        PluginCommandInfoSource source2 = mock(PluginCommandInfoSource.class);
+        PluginInfoSource source2 = mock(PluginInfoSource.class);
         when(source2.getCommandInfos()).thenReturn(new ArrayList<CommandInfo>());
-        whenNew(PluginCommandInfoSource.class)
-                .withParameterTypes(String.class, String.class, String.class)
-                .withArguments(anyString(), anyString(), anyString())
+        whenNew(PluginInfoSource.class)
+                .withParameterTypes(String.class, String.class, String.class, String.class, String.class)
+                .withArguments(anyString(), anyString(), anyString(), anyString(), anyString())
                 .thenReturn(source2);
 
         CompoundCommandInfoSource commands = mock(CompoundCommandInfoSource.class);
@@ -180,6 +180,8 @@ public class ActivatorTest {
         when(paths.getSystemPluginRoot()).thenReturn(new File(""));
         when(paths.getUserPluginRoot()).thenReturn(new File(""));
         when(paths.getUserClientConfigurationFile()).thenReturn(new File(""));
+        when(paths.getSystemPluginConfigurationDirectory()).thenReturn(new File(""));
+        when(paths.getUserPluginConfigurationDirectory()).thenReturn(new File(""));
         @SuppressWarnings("rawtypes")
         ServiceRegistration keyringReg = context.registerService(Keyring.class, keyringService, null);
         @SuppressWarnings("rawtypes")

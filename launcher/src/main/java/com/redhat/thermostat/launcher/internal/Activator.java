@@ -53,6 +53,7 @@ import com.redhat.thermostat.common.cli.CommandContextFactory;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 import com.redhat.thermostat.common.config.ClientPreferences;
+import com.redhat.thermostat.common.config.ConfigurationInfoSource;
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.launcher.internal.CurrentEnvironment.CurrentEnvironmentChangeListener;
@@ -60,7 +61,7 @@ import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class Activator implements BundleActivator {
-    
+
     @SuppressWarnings({ "rawtypes" })
     class RegisterLauncherAction implements Action {
 
@@ -68,6 +69,7 @@ public class Activator implements BundleActivator {
         private ServiceRegistration bundleManReg;
         private ServiceRegistration cmdInfoReg;
         private ServiceRegistration exitStatusReg;
+        private ServiceRegistration pluginConfReg;
         private BundleContext context;
         private CurrentEnvironment env;
 
@@ -85,11 +87,17 @@ public class Activator implements BundleActivator {
             String commandsDir = new File(paths.getSystemConfigurationDirectory(), "commands").toString();
             CommandInfoSource builtInCommandSource =
                     new BuiltInCommandInfoSource(commandsDir, paths.getSystemLibRoot().toString());
-            CommandInfoSource pluginCommandSource = new PluginCommandInfoSource(
-                            paths.getSystemLibRoot().toString(), paths.getSystemPluginRoot().toString(),
-                            paths.getUserPluginRoot().toString());
-            CommandInfoSource commands = new CompoundCommandInfoSource(builtInCommandSource, pluginCommandSource);
+            PluginInfoSource pluginSource = new PluginInfoSource(
+                            paths.getSystemLibRoot().toString(),
+                            paths.getSystemPluginRoot().toString(),
+                            paths.getUserPluginRoot().toString(),
+                            paths.getSystemPluginConfigurationDirectory().toString(),
+                            paths.getUserPluginConfigurationDirectory().toString());
 
+            ConfigurationInfoSource configurations = pluginSource;
+            pluginConfReg = context.registerService(ConfigurationInfoSource.class, configurations, null);
+
+            CommandInfoSource commands = new CompoundCommandInfoSource(builtInCommandSource, pluginSource);
             cmdInfoReg = context.registerService(CommandInfoSource.class, commands, null);
 
             BundleManager bundleService = null;
@@ -106,6 +114,9 @@ public class Activator implements BundleActivator {
             bundleManReg = context.registerService(BundleManager.class, bundleService, null);
             ExitStatus exitStatus = new ExitStatusImpl(ExitStatus.EXIT_SUCCESS);
             exitStatusReg = context.registerService(ExitStatus.class, exitStatus, null);
+
+
+
         }
 
         @Override
@@ -115,8 +126,9 @@ public class Activator implements BundleActivator {
             bundleManReg.unregister();
             cmdInfoReg.unregister();
             exitStatusReg.unregister();
+            pluginConfReg.unregister();
         }
-        
+
     }
 
     private MultipleServiceTracker launcherDepsTracker;

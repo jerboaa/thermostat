@@ -57,6 +57,8 @@ public class DirectoryStructureCreator {
         makeDir(paths.getSystemNativeLibsRoot());
         makeDir(paths.getSystemBinRoot());
         makeDir(paths.getSystemConfigurationDirectory());
+        makeDir(paths.getSystemPluginConfigurationDirectory());
+        makeDir(paths.getUserPluginConfigurationDirectory());
         makeDir(paths.getUserThermostatHome());
         makeDir(paths.getUserConfigurationDirectory());
         makeDir(paths.getUserRuntimeDataDirectory());

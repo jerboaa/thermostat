@@ -177,6 +177,16 @@ public class CommonPathsImpl implements CommonPaths {
     }
 
     @Override
+    public File getSystemPluginConfigurationDirectory() throws InvalidConfigurationException {
+        return new File(getSystemConfigurationDirectory(), "plugins.d");
+    }
+
+    @Override
+    public File getUserPluginConfigurationDirectory() throws InvalidConfigurationException {
+        return userDirectories.getUserPluginConfigurationDirectory();
+    }
+
+    @Override
     public File getUserConfigurationDirectory() throws InvalidConfigurationException {
         return userDirectories.getUserConfigurationDirectory();
     }
@@ -272,7 +282,7 @@ public class CommonPathsImpl implements CommonPaths {
         File history = new File(getUserPersistentDataDirectory(), "cli-history");
         return history;
     }
-    
+
     @Override
     public File getUserSetupCompleteStampFile()
             throws InvalidConfigurationException {
@@ -288,6 +298,8 @@ public class CommonPathsImpl implements CommonPaths {
         public File getSystemRoot();
 
         public File getUserConfigurationDirectory();
+
+        public File getUserPluginConfigurationDirectory();
 
         public File getUserPersistentDataDirectory();
 
@@ -334,6 +346,10 @@ public class CommonPathsImpl implements CommonPaths {
             return new File(getSystemRoot(), "etc");
         }
 
+        public File getUserPluginConfigurationDirectory() throws InvalidConfigurationException {
+            return new File(getUserConfigurationDirectory(), "plugins.d");
+        }
+
         public File getUserPersistentDataDirectory() throws InvalidConfigurationException {
             return new File(getSystemRoot(), "data");
         }
@@ -375,6 +391,10 @@ public class CommonPathsImpl implements CommonPaths {
 
         public File getUserConfigurationDirectory() throws InvalidConfigurationException {
             return new File(getSystemRoot(), "etc/thermostat");
+        }
+
+        public File getUserPluginConfigurationDirectory() throws InvalidConfigurationException {
+            return new File(getUserConfigurationDirectory(), "plugins.d");
         }
 
         public File getUserPersistentDataDirectory() throws InvalidConfigurationException {

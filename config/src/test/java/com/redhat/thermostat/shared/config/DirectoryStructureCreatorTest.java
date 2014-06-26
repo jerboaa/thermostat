@@ -47,10 +47,10 @@ import org.junit.Test;
 public class DirectoryStructureCreatorTest {
 
     private File systemThermostatHome, systemLibRoot, systemNativeLibsRoot, systemBinRoot,
-                systemPluginRoot, systemConfigurationDirectory, userThermostatHome,
-                userConfigurationDirectory, userRuntimeDataDirectory,
-                userLogDirectory, userCacheDirectory, userPersistentDataDirectory,
-                userPluginRoot, userStorageDirectory;
+                systemPluginRoot, systemConfigurationDirectory, systemPluginConfigurationDirectory, 
+                userThermostatHome, userConfigurationDirectory, userRuntimeDataDirectory,
+                userPluginConfigurationDirectory, userLogDirectory, userCacheDirectory,
+                userPersistentDataDirectory, userPluginRoot, userStorageDirectory;
 
 
     private class TestCommonPaths implements CommonPaths {
@@ -68,10 +68,14 @@ public class DirectoryStructureCreatorTest {
             systemPluginRoot.deleteOnExit();
             systemConfigurationDirectory = new File(tempRootDir, "systemConfigurationDir");
             systemConfigurationDirectory.deleteOnExit();
+            systemPluginConfigurationDirectory = new File(tempRootDir, "systemPluginConfigurationDir");
+            systemPluginConfigurationDirectory.deleteOnExit();
             userThermostatHome = new File(tempRootDir, "userThermostatHome");
             userThermostatHome.deleteOnExit();
             userConfigurationDirectory = new File(tempRootDir, "userConfigurationDirectory");
             userConfigurationDirectory.deleteOnExit();
+            userPluginConfigurationDirectory = new File(tempRootDir, "userPluginConfigurationDir");
+            userPluginConfigurationDirectory.deleteOnExit();
             userRuntimeDataDirectory = new File(tempRootDir, "userRuntimeDataDirectory");
             userRuntimeDataDirectory.deleteOnExit();
             userLogDirectory = new File(tempRootDir, "userLogDirectory");
@@ -124,6 +128,16 @@ public class DirectoryStructureCreatorTest {
         public File getSystemConfigurationDirectory()
                 throws InvalidConfigurationException {
             return systemConfigurationDirectory;
+        }
+
+        @Override
+        public File getSystemPluginConfigurationDirectory() throws InvalidConfigurationException {
+            return systemPluginConfigurationDirectory;
+        }
+
+        @Override
+        public File getUserPluginConfigurationDirectory() throws InvalidConfigurationException {
+            return userPluginConfigurationDirectory;
         }
 
         @Override

@@ -58,7 +58,7 @@ public class CommonPathsImplTest {
         System.clearProperty("USER_THERMOSTAT_HOME");
         System.clearProperty("THERMOSTAT_SYSTEM_USER");
     }
-    
+
     @After
     public void tearDown() {
         System.clearProperty("THERMOSTAT_HOME");
@@ -82,6 +82,7 @@ public class CommonPathsImplTest {
         Assert.assertEquals(thermostatHome + s + "etc", config.getSystemConfigurationDirectory().getCanonicalPath());
         Assert.assertEquals(thermostatHome + s + "libs", config.getSystemLibRoot().getCanonicalPath());
         Assert.assertEquals(thermostatHome + s + "plugins", config.getSystemPluginRoot().getCanonicalPath());
+        Assert.assertEquals(thermostatHome + s + "etc" + s + "plugins.d", config.getSystemPluginConfigurationDirectory().getCanonicalPath());
     }
 
     @Test
@@ -108,6 +109,8 @@ public class CommonPathsImplTest {
 
         Assert.assertEquals(userHome + s + "data" + s + "plugins",
                 config.getUserPluginRoot().getCanonicalPath());
+        Assert.assertEquals(userHome + s + "etc" + s + "plugins.d",
+                config.getUserPluginConfigurationDirectory().getCanonicalPath());
     }
 
     @Test
@@ -128,6 +131,7 @@ public class CommonPathsImplTest {
         Assert.assertEquals("/tmp/thermostat_test/var/log/thermostat/db.log", config.getUserStorageLogFile().getCanonicalPath());
 
         Assert.assertEquals("/tmp/thermostat_test/var/lib/thermostat/plugins", config.getUserPluginRoot().getCanonicalPath());
+        Assert.assertEquals("/tmp/thermostat_test/etc/thermostat/plugins.d", config.getUserPluginConfigurationDirectory().getCanonicalPath());
     }
 
     @Test
@@ -150,6 +154,8 @@ public class CommonPathsImplTest {
         Assert.assertEquals(prefix + "/var/log/thermostat/db.log", config.getUserStorageLogFile().getCanonicalPath());
 
         Assert.assertEquals(prefix + "/var/lib/thermostat/plugins", config.getUserPluginRoot().getCanonicalPath());
+
+        Assert.assertEquals(prefix + "/etc/thermostat/plugins.d", config.getUserPluginConfigurationDirectory().getCanonicalPath());
     }
 
     @Test

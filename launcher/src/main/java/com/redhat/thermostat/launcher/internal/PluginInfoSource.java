@@ -37,53 +37,70 @@
 package com.redhat.thermostat.launcher.internal;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.config.ConfigurationInfoSource;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.BundleInformation;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandExtensions;
+import com.redhat.thermostat.launcher.internal.PluginConfiguration.Configurations;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.NewCommand;
+import com.redhat.thermostat.launcher.internal.PluginConfiguration.PluginID;
 import com.redhat.thermostat.plugin.validator.PluginConfigurationValidatorException;
 import com.redhat.thermostat.plugin.validator.ValidationErrorsFormatter;
 
 /**
  * Searches for plugins under <code>$THERMOSTAT_HOME/plugins/</code> and
- * provides information about all commands specified by them.
+ * provides information about commands and configurations specified by them.
  * <p>
  * Each plugin is located under
  * <code>$THERMOSTAT_HOME/plugins/$PLUGIN_NAME/</code> and must have a
- * <code>plugin.xml</code> file in the main plugin directory.
+ * <code>thermostat-plugin.xml</code> file in the main plugin directory.
  *
- * @see PluginConfigurationParser how the plugin.xml file is parsed
+ * @see PluginConfigurationParser how the thermostat-plugin.xml file is parsed
  */
-public class PluginCommandInfoSource implements CommandInfoSource {
+public class PluginInfoSource implements CommandInfoSource, ConfigurationInfoSource {
 
     private static final String PLUGIN_CONFIG_FILE = "thermostat-plugin.xml";
 
-    private static final Logger logger = LoggingUtils.getLogger(PluginCommandInfoSource.class);
+    private static final Logger logger = LoggingUtils.getLogger(PluginInfoSource.class);
 
     private final UsageStringBuilder usageBuilder;
 
     private Map<String, BasicCommandInfo> allNewCommands = new HashMap<>();
     private Map<String, List<BundleInformation>> additionalBundlesForExistingCommands = new HashMap<>();
+    private Map<PluginID, Configurations> allConfigs = new HashMap<>();
 
-    public PluginCommandInfoSource(String internalJarRoot, String systemPluginRootDir, String userPluginRootDir) {
-        this(new File(internalJarRoot), new File(systemPluginRootDir), new File(userPluginRootDir), new PluginConfigurationParser(), new UsageStringBuilder());
+    private final File userConfRootdir;
+    private final File sysConfRootDir;
+
+    public PluginInfoSource(String internalJarRoot, String systemPluginRootDir, String userPluginRootDir, String sysConfRootDir, String userConfRootDir) {
+        this(new File(internalJarRoot), new File(systemPluginRootDir), new File(userPluginRootDir),
+                new File(sysConfRootDir), new File(userConfRootDir),
+                new PluginConfigurationParser(), new UsageStringBuilder());
     }
 
-    PluginCommandInfoSource(File internalJarRoot, File systemPluginRootDir, File userPluginRootDir, PluginConfigurationParser parser, UsageStringBuilder usageBuilder) {
+    PluginInfoSource(File internalJarRoot, File systemPluginRootDir, File userPluginRootDir,
+            File sysConfRootDir, File userConfRootDir,
+            PluginConfigurationParser parser, UsageStringBuilder usageBuilder) {
         this.usageBuilder = usageBuilder;
+        this.userConfRootdir = userConfRootDir;
+        this.sysConfRootDir = sysConfRootDir;
 
         List<File> pluginDirectories = new ArrayList<>();
 
@@ -95,22 +112,27 @@ public class PluginCommandInfoSource implements CommandInfoSource {
                 File configurationFile = new File(pluginDir, PLUGIN_CONFIG_FILE);
                 PluginConfiguration pluginConfig = parser.parse(configurationFile);
                 loadNewAndExtendedCommands(internalJarRoot, pluginDir, pluginConfig);
-                
+                if (allConfigs.containsKey(pluginConfig.getPluginID())) {
+                    logger.log(Level.WARNING, "Plugin with ID: " + pluginConfig.getPluginID() + " conflicts with a previous plugin's ID and the config file will not be overwritten.");
+                } else if (pluginConfig.hasValidID() && !pluginConfig.isEmpty()){
+                    allConfigs.put(pluginConfig.getPluginID(), pluginConfig.getConfigurations());
+                }
+
             } catch (PluginConfigurationParseException exception) {
                 logger.log(Level.WARNING, "unable to parse plugin configuration", exception);
-                
+
             } catch (PluginConfigurationValidatorException pcve) {
                 ValidationErrorsFormatter formatter = new ValidationErrorsFormatter();
                 logger.log(Level.INFO, formatter.format(pcve.getAllErrors()));
                 logger.log(Level.INFO, "unable to validate " + pcve.getXmlFile().getAbsolutePath() + " file\n");
-                
+
             } catch (FileNotFoundException exception) {
                 logger.log(Level.INFO, "file not found", exception);
             }
         }
         combineCommands();
     }
-    
+
     private void addPluginDirectory(List<File> allPluginDirectories, File aPluginRoot) {
         File[] pluginDirs = aPluginRoot.listFiles();
 
@@ -118,7 +140,7 @@ public class PluginCommandInfoSource implements CommandInfoSource {
             allPluginDirectories.addAll(Arrays.asList(pluginDirs));
         }
     }
-   
+
     private void loadNewAndExtendedCommands(File coreJarRoot, File pluginDir,
             PluginConfiguration pluginConfig) {
 
@@ -204,7 +226,56 @@ public class PluginCommandInfoSource implements CommandInfoSource {
         }
         return result;
     }
-    
 
+    public Map<String, String> getConfiguration(String pluginID, String fileName) throws IOException {
+        Configurations config = this.allConfigs.get(new PluginID(pluginID));
+        if (config != null && config.containsFile(fileName)) {
+            String filePath = config.getFullFilePath(fileName);
+            File file = new File(filePath);
+            Map<String, String> confMap = null;
+            confMap = loadConfMap(config, file);
+            return Collections.unmodifiableMap(confMap);
+        } else {
+            Map<String, String> sysMap = null;
+            Map<String, String> userMap = null;
+
+            String sysPath = this.sysConfRootDir + "/" + pluginID + "/" + fileName;
+            String userPath = this.userConfRootdir + "/" + pluginID + "/" + fileName;
+
+            File sysFile = new File(sysPath);
+            File userFile = new File(userPath);
+
+            sysMap = loadConfMap(config, sysFile);
+            userMap = loadConfMap(config, userFile);
+
+            return Collections.unmodifiableMap(combineMap(userMap, sysMap));
+        }
+    }
+
+    private Map<String, String> loadConfMap(Configurations config, File confFile) {
+        try (FileInputStream stream = new FileInputStream(confFile);) {
+            Properties properties = new Properties();
+            properties.load(stream);
+
+            Map<String, String> returnMap = new HashMap<String, String>();
+            for (Entry<Object, Object> entry : properties.entrySet()) {
+                returnMap.put((String)entry.getKey(), (String)entry.getValue());
+            }
+            return returnMap;
+        } catch (IOException e) {
+            logger.warning("Plugin file: " + confFile.getAbsolutePath() + " does not exist or is not a valid file");
+            return Collections.emptyMap();
+        }
+    }
+
+    private Map<String, String> combineMap(Map<String, String> baseMap, Map<String, String> topMap) {
+        // Writes top onto base and returns base.
+        for (String key : topMap.keySet()) {
+            if (!baseMap.containsKey(key)) {
+                baseMap.put(key, topMap.get(key));
+            }
+        }
+        return baseMap;
+    }
 }
 

@@ -48,7 +48,7 @@ import org.junit.Test;
 
 
 public class PluginValidatorTest {
-    
+
     @Test
     public void validateEmptyConfiguration() throws IOException {
         String config = "<?xml version=\"1.0\"?>\n";
@@ -63,10 +63,10 @@ public class PluginValidatorTest {
             testFile.delete();
         }
     }
-    
+
     @Test
     public void canValidatePluginXMLMultipleTimes() throws Exception {
-        
+
         try {
             String config = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                     "<plugin xmlns=\"http://icedtea.classpath.org/thermostat/plugins/v1.0\"\n" +
@@ -86,7 +86,7 @@ public class PluginValidatorTest {
             File testFile = createFile("testSystemId", config);
             PluginValidator validator = new PluginValidator();
             validator.validate(testFile);
-            
+
             //  Second validation on the same file
             validator.validate(testFile);
             testFile.delete();
@@ -94,14 +94,15 @@ public class PluginValidatorTest {
            fail("should not reach here, plugin.xml should be validated according to schema");
         }
     }
-    
+
     @Test
     public void validationFailsOnInvalidPluginFile() throws Exception {
         String config = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                 "<plugin xmlns=\"http://icedtea.classpath.org/thermostat/plugins/v1.0\"\n" +
                 " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
                 " xsi:schemaLocation=\"http://icedtea.classpath.org/thermostat/plugins/v1.0 thermostat-plugin.xsd\">\n" +
-                "  <extensions>\n" +      
+                "  <id>test</id>\n" +
+                "  <extensions>\n" +
                 "    <something>\n" +    // Error line
                 "    <extension>\n" +
                 "      <name>test</name>\n" +
@@ -128,13 +129,14 @@ public class PluginValidatorTest {
             testFile.delete();
         }
     }
-    
+
     @Test
     public void canValidateCorrectFile() throws IOException {
         String config = "<?xml version=\"1.0\"?>\n" +
                 "<plugin xmlns=\"http://icedtea.classpath.org/thermostat/plugins/v1.0\"\n" +
                 " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
                 " xsi:schemaLocation=\"http://icedtea.classpath.org/thermostat/plugins/v1.0 thermostat-plugin.xsd\">\n" +
+                "  <id>test</id>\n" +
                 "  <commands>\n" +
                 "    <command>\n" +
                 "      <name>test</name>\n" +
@@ -175,6 +177,10 @@ public class PluginValidatorTest {
                 "      </bundles>\n" +
                 "    </command>\n" +
                 "  </commands>\n" +
+                "  <configurations>" +
+                "    <configuration>blob</configuration>\n" +
+                "    <configuration> blah </configuration>\n" +
+                "  </configurations>" +
                 "</plugin>";
 
         File testFile = createFile("testSystemId", config);
@@ -186,9 +192,9 @@ public class PluginValidatorTest {
         } finally {
             testFile.delete();
         }
-        
+
     }
-    
+
     private File createFile(String fileName, String contents) throws IOException {
         FileWriter fstream = new FileWriter(fileName);
         BufferedWriter out = new BufferedWriter(fstream);

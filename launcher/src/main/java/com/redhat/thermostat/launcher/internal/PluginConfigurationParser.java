@@ -42,11 +42,13 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -67,7 +69,9 @@ import org.xml.sax.SAXParseException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.BundleInformation;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandExtensions;
+import com.redhat.thermostat.launcher.internal.PluginConfiguration.Configurations;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.NewCommand;
+import com.redhat.thermostat.launcher.internal.PluginConfiguration.PluginID;
 import com.redhat.thermostat.plugin.validator.PluginConfigurationValidatorException;
 import com.redhat.thermostat.plugin.validator.PluginValidator;
 
@@ -79,19 +83,19 @@ import com.redhat.thermostat.plugin.validator.PluginValidator;
  * A example configuration looks like the following:
  *
  * <pre>
- * 
+ *
 &lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;plugin xmlns="http://icedtea.classpath.org/thermostat/plugins/v1.0"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://icedtea.classpath.org/thermostat/plugins/v1.0"&gt;
-  &lt;commands&gt;  
+  &lt;commands&gt;
     &lt;command&gt;
       &lt;name&gt;platform&lt;/name&gt;
       &lt;description&gt;launches a bare bone Platform Client&lt;/description&gt;
       &lt;arguments&gt;
         &lt;argument&gt;argument1&lt;/argument&gt;
       &lt;/arguments&gt;
-      &lt;options&gt; 
+      &lt;options&gt;
         &lt;group&gt;
           &lt;required&gt;true&lt;/required&gt;
           &lt;option&gt;
@@ -106,7 +110,7 @@ import com.redhat.thermostat.plugin.validator.PluginValidator;
           &lt;/option&gt;
           &lt;option&gt;
             &lt;long&gt;optC&lt;/long&gt;
-            &lt;short&gt;b&lt;/short&gt;        
+            &lt;short&gt;b&lt;/short&gt;
             &lt;required&gt;false&lt;/required&gt;
           &lt;/option&gt;
           &lt;option common="true"&gt;
@@ -121,7 +125,7 @@ import com.redhat.thermostat.plugin.validator.PluginValidator;
           &lt;option common="true"&gt;
             &lt;long&gt;logLevel&lt;/long&gt;
           &lt;/option&gt;
-        &lt;/group&gt;   
+        &lt;/group&gt;
         &lt;option&gt;
           &lt;long&gt;heapId&lt;/long&gt;
           &lt;short&gt;h&lt;/short&gt;
@@ -155,7 +159,7 @@ import com.redhat.thermostat.plugin.validator.PluginValidator;
       &lt;arguments&gt;
         &lt;argument&gt;argument2&lt;/argument&gt;
       &lt;/arguments&gt;
-      &lt;options&gt; 
+      &lt;options&gt;
         &lt;option&gt;
           &lt;long&gt;heapId2&lt;/long&gt;
           &lt;short&gt;h&lt;/short&gt;
@@ -199,23 +203,23 @@ import com.redhat.thermostat.plugin.validator.PluginValidator;
  * This class is thread-safe
  */
 public class PluginConfigurationParser {
-    
+
     private static final Logger logger = LoggingUtils.getLogger(PluginConfigurationParser.class);
     // thread safe because there is no state :)
-    
+
     public PluginConfiguration parse(File configurationFile) throws FileNotFoundException, PluginConfigurationValidatorException {
         PluginValidator validator = new PluginValidator();
         validator.validate(configurationFile);
         PluginConfiguration config = null;
         try (FileInputStream fis = new FileInputStream(configurationFile)) {
             config = parse(configurationFile.getParentFile().getName(), fis);
-            
+
         } catch (IOException ioFisClosed) {
             // ignore if fis closing fails
         }
         return config;
     }
-    
+
     PluginConfiguration parse(String pluginName, InputStream configurationStream) {
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -227,15 +231,17 @@ public class PluginConfigurationParser {
             if (rootNode == null) {
                 throw new PluginConfigurationParseException("no configuration found");
             }
-            return parseRootElement(pluginName, rootNode); 
+            return parseRootElement(pluginName, rootNode);
         } catch (ParserConfigurationException | SAXException | IOException exception) {
             throw new PluginConfigurationParseException("failed to parse plugin configuration", exception);
         }
     }
-    
+
     private PluginConfiguration parseRootElement(String pluginName, Node root) {
         List<NewCommand> commands = Collections.emptyList();
         List<CommandExtensions> extensions = Collections.emptyList();
+        Configurations configurations = null;
+        String pluginID = null;
 
         if (root.getNodeName().equals("plugin")) {
             NodeList nodes = root.getChildNodes();
@@ -245,6 +251,10 @@ public class PluginConfigurationParser {
                     commands = parseCommands(pluginName, node);
                 } else if (node.getNodeName().equals("extensions")) {
                     extensions = parseExtensions(pluginName, node);
+                } else if (node.getNodeName().equals("id")) {
+                    pluginID = node.getTextContent().trim();
+                } else if (node.getNodeName().equals("configurations") && (pluginID != null)) {
+                    configurations = parseConfigurations(node);
                 }
             }
         }
@@ -253,7 +263,14 @@ public class PluginConfigurationParser {
             logger.warning("plugin " + pluginName + " does not extend any command or provide any new commands");
         }
 
-        return new PluginConfiguration(commands, extensions);
+        if (configurations == null) {
+            configurations = Configurations.emptyConfigurations();
+        }
+        if (pluginID == null) {
+            pluginID = "";
+        }
+
+        return new PluginConfiguration(commands, extensions, new PluginID(pluginID), configurations);
     }
 
     private List<NewCommand> parseCommands(String pluginName, Node commandsNode) {
@@ -270,7 +287,7 @@ public class PluginConfigurationParser {
         }
         return newCommands;
     }
-    
+
     private List<CommandExtensions> parseExtensions(String pluginName, Node extensionsNode) {
         List<CommandExtensions> commandExtensions = new ArrayList<CommandExtensions>();
         NodeList childNodes = extensionsNode.getChildNodes();
@@ -284,6 +301,27 @@ public class PluginConfigurationParser {
             }
         }
         return commandExtensions;
+    }
+
+    private Configurations parseConfigurations(Node configurationsNode) {
+        NodeList childNodes = configurationsNode.getChildNodes();
+        Map<String, String> configs = new HashMap<String, String>();
+
+
+        String file = null;
+
+        for (int i = 0; i < childNodes.getLength(); i++) {
+            Node node = childNodes.item(i);
+            if (node.getNodeName().equals("configuration")) {
+                file = node.getTextContent().trim();
+                File f = new File(file);
+                configs.put(f.getName(), file);
+                if (!f.exists() || !f.isFile()) {
+                    logger.warning("Plugin file: " + file + " does not exist or is not a valid file.");
+                }
+            }
+        }
+        return new Configurations(configs);
     }
 
     private CommandExtensions parseAdditionsToExistingCommand(String pluginName, Node commandNode) {
@@ -565,6 +603,6 @@ public class PluginConfigurationParser {
             throw exception;
         }
     }
-    
+
 }
 

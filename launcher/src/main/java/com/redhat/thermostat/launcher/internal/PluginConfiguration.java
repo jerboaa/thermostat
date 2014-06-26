@@ -36,9 +36,10 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.cli.Options;
@@ -51,9 +52,14 @@ public class PluginConfiguration {
     private final List<CommandExtensions> extensions;
     private final List<NewCommand> newCommands;
 
-    public PluginConfiguration(List<NewCommand> newCommands, List<CommandExtensions> extensions) {
+    private final PluginID pluginID;
+    private final Configurations configurations;
+
+    public PluginConfiguration(List<NewCommand> newCommands, List<CommandExtensions> extensions, PluginID pluginID, Configurations config) {
         this.newCommands = newCommands;
         this.extensions = extensions;
+        this.pluginID = pluginID;
+        this.configurations = config;
     }
 
     public List<CommandExtensions> getExtendedCommands() {
@@ -62,6 +68,22 @@ public class PluginConfiguration {
 
     public List<NewCommand> getNewCommands() {
         return newCommands;
+    }
+
+    public PluginID getPluginID() {
+        return this.pluginID;
+    }
+
+    public Configurations getConfigurations() {
+        return this.configurations;
+    }
+
+    public boolean hasValidID() {
+        return this.pluginID.isValidID();
+    }
+
+    public boolean isEmpty() {
+        return this.configurations.isEmpty() && !this.pluginID.equals("");
     }
 
     public static class CommandExtensions {
@@ -149,5 +171,61 @@ public class PluginConfiguration {
 
     }
 
+    public static class PluginID {
+        private final String pluginID;
+
+        public PluginID(String pluginID) {
+            this.pluginID = pluginID;
+        }
+
+        public String getPluginID() {
+            return this.pluginID;
+        }
+
+        public boolean isValidID() {
+            return !this.pluginID.equals("");
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof PluginID)) {
+                return false;
+            }
+            if (obj == this) {
+                return true;
+            }
+            PluginID testObj = (PluginID) obj;
+            if (this.pluginID.equals(testObj.getPluginID())) {
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            return this.pluginID.hashCode();
+        }
+    }
+
+    public static class Configurations {
+        private Map<String, String> fileNames = new HashMap<String, String>();
+
+        public Configurations(Map<String, String> fileNames) {
+            this.fileNames = fileNames;
+        }
+
+        public static Configurations emptyConfigurations() {
+            return new Configurations(Collections.<String, String>emptyMap());
+        }
+        public boolean containsFile(String fileName) {
+            return fileNames.containsKey(fileName);
+        }
+        public boolean isEmpty() {
+            return fileNames.isEmpty();
+        }
+        public String getFullFilePath(String fileName) {
+            return fileNames.get(fileName);
+        }
+    }
 }
 

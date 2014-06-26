@@ -42,10 +42,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
@@ -54,7 +50,6 @@ import java.util.Set;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
-import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.launcher.BundleInformation;
@@ -154,7 +149,7 @@ public class BuiltInCommandInfoTest {
         assertFalse(bar.isRequired());
         assertEquals("the bar option", bar.getDescription());
     }
-    
+
     @Test
     public void canAddCommonDBOptions() {
         Properties props = new Properties();
@@ -171,7 +166,7 @@ public class BuiltInCommandInfoTest {
         assertEquals("d", dbUrlOption.getOpt());
         assertEquals("dbUrl", dbUrlOption.getLongOpt());
     }
-    
+
     @Test
     public void requiredCommandPropertyOverridesCommonDbOptions() {
         Properties props = new Properties();
@@ -190,7 +185,7 @@ public class BuiltInCommandInfoTest {
         assertEquals("dbUrl", dbUrlOption1.getLongOpt());
         assertEquals("d", dbUrlOption1.getOpt());
     }
-    
+
     @Test
     public void canAddLogOption() {
         Properties props = new Properties();
