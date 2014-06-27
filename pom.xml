@@ -137,7 +137,8 @@ thermostat-grant-read-all-client = thermostat-agents-grant-read-agentId-ALL, \
                     thermostat-register-category, \
                     thermostat-vms-grant-read-username-ALL, \
                     thermostat-vms-grant-read-vmId-ALL, \
-                    thermostat-files-grant-read-filename-ALL
+                    thermostat-files-grant-read-filename-ALL, \
+                    thermostat-write
 # Grants all command channel operations
 thermostat-cmdc = thermostat-cmdc-grant-garbage-collect, \
                   thermostat-cmdc-grant-dump-heap, \
@@ -286,6 +287,7 @@ password=${agent.dev.password}
     <module>vm-memory</module>
     <module>vm-heap-analysis</module>
     <module>vm-jmx</module>
+    <module>notes</module>
     <module>numa</module>
     <module>laf-utils</module>
     <module>thermostat-plugin-validator</module>
