@@ -68,11 +68,6 @@
       <artifactId>org.osgi.core</artifactId>
       <scope>provided</scope>
     </dependency>
-    <dependency>
-      <groupId>org.osgi</groupId>
-      <artifactId>org.osgi.compendium</artifactId>
-      <scope>provided</scope>
-    </dependency>
 
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
@@ -97,6 +92,12 @@
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient-osgi</artifactId>
       <version>${httpcomponents.client.version}</version>
+    </dependency>
+    <!-- httpclient 4.3 needs this bundle, but does only
+         specify it's dep on it with scope provided -->
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.compendium</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>

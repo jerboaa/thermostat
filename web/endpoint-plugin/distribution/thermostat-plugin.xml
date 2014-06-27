@@ -68,6 +68,7 @@
         <bundle><symbolic-name>com.redhat.thermostat.web.client</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
         <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
+        <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.process</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.agent.cli</symbolic-name><version>${project.version}</version></bundle>

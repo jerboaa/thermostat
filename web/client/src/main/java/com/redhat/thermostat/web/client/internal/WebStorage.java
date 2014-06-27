@@ -63,18 +63,32 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.StatusLine;
+import org.apache.http.auth.AuthSchemeProvider;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.AuthSchemes;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.conn.ClientConnectionManager;
-import org.apache.http.conn.scheme.Scheme;
-import org.apache.http.conn.ssl.SSLSocketFactory;
-import org.apache.http.entity.mime.MultipartEntity;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.config.Lookup;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.InputStreamBody;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.apache.http.impl.auth.BasicScheme;
+import org.apache.http.impl.auth.BasicSchemeFactory;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
@@ -114,6 +128,7 @@ public class WebStorage implements Storage, SecureStorage {
     private static final int STATUS_OK = 200;
     private static final int STATUS_NO_CONTENT = 204;
 
+    private static final String HTTP_PREFIX = "http";
     private static final String HTTPS_PREFIX = "https";
     static final Logger logger = LoggingUtils.getLogger(WebStorage.class);
     
@@ -201,7 +216,7 @@ public class WebStorage implements Storage, SecureStorage {
         @Override
         public void connect() {
             try {
-                initAuthentication(httpClient);
+                initAuthentication();
                 ping();
                 connected = true;
                 logger.fine("Connected to storage");
@@ -209,6 +224,26 @@ public class WebStorage implements Storage, SecureStorage {
             } catch (Exception ex) {
                 logger.log(Level.WARNING, "Could not connect to storage!", ex);
                 fireChanged(ConnectionStatus.FAILED_TO_CONNECT);
+            }
+        }
+        
+        private void initAuthentication()
+                throws MalformedURLException {
+            String username = creds.getUsername();
+            char[] password = creds.getPassword();
+            if (username != null && password != null) {
+                URL endpointURL = new URL(endpoint);
+                BasicCredentialsProvider credsProvider = new BasicCredentialsProvider();
+                // FIXME Password as string?  BAD.  Limited by apache API here however.
+                Credentials creds = new UsernamePasswordCredentials(username,
+                        new String(password));
+                Arrays.fill(password, '\0');
+                AuthScope scope = new AuthScope(endpointURL.getHost(),
+                        endpointURL.getPort(), "Thermostat Realm");
+                credsProvider.setCredentials(scope, creds);
+                synchronized (httpClientContextLock) {
+                    httpClientContext.setCredentialsProvider(credsProvider);
+                }
             }
         }
 
@@ -314,27 +349,36 @@ public class WebStorage implements Storage, SecureStorage {
 
     private Map<Category<?>, Integer> categoryIds;
     private Gson gson;
-    // package private for testing
-    DefaultHttpClient httpClient;
+    // The shared http client we use for execution (uses the context below)
+    private HttpClient httpClient;
+    private Object httpClientContextLock = new Object();
+    // Http client execution context. Protected via clientContext lock.
+    private HttpClientContext httpClientContext;
     private StorageCredentials creds;
     private SecureRandom random;
     private WebConnection conn;
     private Map<StatementDescriptor<?>, WebPreparedStatementHolder> stmtCache;
     
     // for testing
-    WebStorage(String url, StorageCredentials creds, DefaultHttpClient client,
-               ClientConnectionManager connManager, SSLConfiguration sslConf) {
-        init(url, creds, client, connManager, sslConf);
+    WebStorage(String url, StorageCredentials creds, HttpClient client) {
+        init(url, creds, client);
     }
 
     public WebStorage(String url, StorageCredentials creds, SSLConfiguration sslConf) throws StorageException {
-        ClientConnectionManager connManager = new ThreadSafeClientConnManager();
-        DefaultHttpClient client = new DefaultHttpClient(connManager);
-        init(url, creds, client, connManager, sslConf);
+        PoolingHttpClientConnectionManager connManager = getPoolingHttpClientConnManager(sslConf, url);
+        HttpClientBuilder builder = HttpClients.custom();
+        Lookup<AuthSchemeProvider> authProviders = RegistryBuilder.<AuthSchemeProvider>create()
+                .register(AuthSchemes.BASIC, new BasicSchemeFactory())
+                .build();
+        // Set up client with default basic-auth scheme and pooled
+        // connection manager.
+        HttpClient client = builder.setConnectionManager(connManager)
+                .setDefaultAuthSchemeRegistry(authProviders)
+                .build();
+        init(url, creds, client);
     }
     
-    private void init(String url, StorageCredentials creds, DefaultHttpClient client,
-                      ClientConnectionManager connManager, SSLConfiguration sslConf) {
+    private void init(String url, StorageCredentials creds, HttpClient client) {
         categoryIds = new HashMap<>();
         gson = new GsonBuilder().registerTypeHierarchyAdapter(Pojo.class,
                         new ThermostatGSONConverter())
@@ -343,50 +387,40 @@ public class WebStorage implements Storage, SecureStorage {
                 .registerTypeAdapter(PreparedParameter.class, new PreparedParameterSerializer())
                 .create();
         httpClient = client;
+        synchronized (httpClientContextLock) {
+            httpClientContext = HttpClientContext.create();
+        }
         random = new SecureRandom();
         conn = new WebConnection();
         
         this.endpoint = url;
         this.creds = creds;
-        // setup SSL if necessary
-        if (endpoint.startsWith(HTTPS_PREFIX)) {
-            registerSSLScheme(connManager, sslConf);
-        }
         // Use weak map in order for it to not eat up too much memory. The sole
         // purpose is to cache values and prevent some unnecessary network
         // overhead.
         this.stmtCache = new WeakHashMap<>();
     }
 
-    private void registerSSLScheme(ClientConnectionManager conManager, SSLConfiguration sslConf)
+    // package private for testing
+    PoolingHttpClientConnectionManager getPoolingHttpClientConnManager(SSLConfiguration sslConf, String url)
             throws StorageException {
+        ConnectionSocketFactory plainsf = new PlainConnectionSocketFactory();
+        RegistryBuilder<ConnectionSocketFactory> regBuilder = RegistryBuilder.<ConnectionSocketFactory>create()
+                .register(HTTP_PREFIX, plainsf);
         try {
-            SSLContext sc = SSLContextFactory.getClientContext(sslConf);
-            SSLSocketFactory socketFactory = new SSLSocketFactory(sc);
-            Scheme sch = new Scheme("https", 443, socketFactory);
-            conManager.getSchemeRegistry().register(sch);
+            // setup SSL if necessary
+            if (url.startsWith(HTTPS_PREFIX)) {
+                SSLContext sc = SSLContextFactory.getClientContext(sslConf);
+                SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(sc);
+                regBuilder = regBuilder.register(HTTPS_PREFIX, socketFactory);
+            }
         } catch ( SslInitException e) {
             throw new StorageException(e);
         }
+        Registry<ConnectionSocketFactory> r = regBuilder.build();
+        return new PoolingHttpClientConnectionManager(r);
     }
 
-    private void initAuthentication(DefaultHttpClient client)
-            throws MalformedURLException {
-        String username = creds.getUsername();
-        char[] password = creds.getPassword();
-        if (username != null && password != null) {
-            URL endpointURL = new URL(endpoint);
-            // TODO: Maybe also limit to realm like 'Thermostat Realm' or such?
-            AuthScope scope = new AuthScope(endpointURL.getHost(),
-                    endpointURL.getPort());
-            // FIXME Password as string?  BAD.  Limited by apache API here however.
-            Credentials creds = new UsernamePasswordCredentials(username,
-                    new String(password));
-            Arrays.fill(password, '\0');
-            client.getCredentialsProvider().setCredentials(scope, creds);
-        }
-    }
-    
     private void ping() throws StorageException {
         post(endpoint + "/ping", (HttpEntity) null).close();
     }
@@ -414,19 +448,45 @@ public class WebStorage implements Storage, SecureStorage {
     private CloseableHttpEntity post(String url, HttpEntity entity)
             throws StorageException {
         try {
-            return postImpl(url, entity);
+            return postImpl(url, entity, null);
         } catch (IOException ex) {
             throw new StorageException(ex);
         }
     }
-
-    private CloseableHttpEntity postImpl(String url, HttpEntity entity)
+    
+    private CloseableHttpEntity post(String url, HttpEntity entity, RequestConfig config)
+            throws StorageException {
+        try {
+            return postImpl(url, entity, config);
+        } catch (IOException ex) {
+            throw new StorageException(ex);
+        }
+    }
+    
+    private CloseableHttpEntity postImpl(String url, HttpEntity entity, RequestConfig config)
             throws IOException {
         HttpPost httpPost = new HttpPost(url);
         if (entity != null) {
             httpPost.setEntity(entity);
         }
-        HttpResponse response = httpClient.execute(httpPost);
+        HttpResponse response = null;
+        // The client context is not thread-safe. Thus protect execution
+        // via the client context lock.
+        synchronized(httpClientContextLock) {
+            RequestConfig oldConfig = httpClientContext.getRequestConfig();
+            if (config != null) {
+                httpClientContext.setRequestConfig(config);
+            }
+            try {
+                response = httpClient.execute(httpPost, httpClientContext);
+            } catch (Throwable e) {
+                throw e;
+            } finally {
+                if (config != null) {
+                    httpClientContext.setRequestConfig(oldConfig);
+                }
+            }
+        }
         StatusLine status = response.getStatusLine();
         int responseCode = status.getStatusCode();
         switch (responseCode) {
@@ -444,8 +504,17 @@ public class WebStorage implements Storage, SecureStorage {
             throw new EntityConsumingIOException(response.getEntity(), 
                     "Server returned status: " + status);
         }
-
+        
         return new CloseableHttpEntity(response.getEntity(), responseCode);
+    }
+
+    private CloseableHttpEntity postImpl(String url, HttpEntity entity)
+            throws StorageException {
+        try {
+            return postImpl(url, entity, null);
+        } catch (IOException ex) {
+            throw new StorageException(ex);
+        }
     }
 
     private static InputStream getContent(HttpEntity entity) {
@@ -575,19 +644,15 @@ public class WebStorage implements Storage, SecureStorage {
     @Override
     public void saveFile(String name, InputStream in) throws StorageException {
         InputStreamBody body = new InputStreamBody(in, name);
-        MultipartEntity mpEntity = new MultipartEntity();
-        mpEntity.addPart("file", body);
-        // See IcedTea bug #1314. For safe-file we need to do this. However,
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+        HttpEntity mpEntity = builder.addPart("file", body).build();
+        // See IcedTea bug #1314. For safe-file we need to do this:
+        // setExcpectContinueEnabled. However,
         // doing this for other actions messes up authentication when using
         // jetty (and possibly others). Hence, do this expect-continue thingy
-        // only for save-file.
-        httpClient.getParams().setParameter("http.protocol.expect-continue", Boolean.TRUE);
-        try {
-            post(endpoint + "/save-file", mpEntity).close();
-        } finally {
-            // FIXME: Not sure if we need this :/
-            httpClient.getParams().removeParameter("http.protocol.expect-continue");
-        }
+        // only for save-file. We achieve this via a single request configuration.
+        RequestConfig config = RequestConfig.custom().setExpectContinueEnabled(true).build();
+        post(endpoint + "/save-file", mpEntity, config).close();
     }
 
     @Override
@@ -628,7 +693,9 @@ public class WebStorage implements Storage, SecureStorage {
             HttpEntity entity = new UrlEncodedFormEntity(formparams, "UTF-8");
             HttpPost httpPost = new HttpPost(endpoint + "/verify-token");
             httpPost.setEntity(entity);
-            response = httpClient.execute(httpPost);
+            synchronized (httpClientContextLock) {
+                response = httpClient.execute(httpPost, httpClientContext);
+            }
             StatusLine status = response.getStatusLine();
             return status.getStatusCode() == STATUS_OK;
         } catch (IOException ex) {

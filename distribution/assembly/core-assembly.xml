@@ -72,9 +72,10 @@
         <include>com.redhat.thermostat:thermostat-web-client</include>
         <include>com.redhat.thermostat:thermostat-system-backend</include>
         <include>com.redhat.thermostat:thermostat-laf-utils</include>
+        <include>org.osgi:org.osgi.compendium</include>
       </includes>
       <excludes>
-        <exclude>org.osgi:*</exclude>
+        <exclude>org.osgi:org.osgi.core</exclude>
       </excludes>
       <useTransitiveDependencies>true</useTransitiveDependencies>
       <useTransitiveFiltering>true</useTransitiveFiltering>

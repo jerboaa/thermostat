@@ -39,6 +39,7 @@
         <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${symbol_dollar}{commons-logging.version}</version></bundle>
         <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${symbol_dollar}{httpcomponents.core.version}</version></bundle>
         <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${symbol_dollar}{httpcomponents.client.version}</version></bundle>
+        <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${symbol_dollar}{gson.version}</version></bundle>
       </bundles>
     </command>

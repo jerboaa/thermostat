@@ -44,6 +44,9 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -68,10 +71,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.client.HttpClient;
-import org.apache.http.conn.ClientConnectionManager;
-import org.apache.http.conn.scheme.Scheme;
-import org.apache.http.conn.scheme.SchemeRegistry;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.protocol.HttpContext;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
@@ -649,15 +650,23 @@ public class WebStorageTest {
     }
 
     @Test
-    public void canSSLEnableClient() {
+    public void enablesTLSforHttps() {
         SSLConfiguration sslConf = mock(SSLConfiguration.class);
-        WebStorage storage = new WebStorage("https://onlyHttpsPrefixUsed.example.com",
+        String httpsUrl = "https://onlyHttpsPrefixUsed.example.com";
+        new WebStorage(httpsUrl,
                 new TrivialStorageCredentials(null, null), sslConf);
-        HttpClient client = storage.httpClient;
-        SchemeRegistry schemeReg = client.getConnectionManager().getSchemeRegistry();
-        Scheme scheme = schemeReg.getScheme("https");
-        assertNotNull(scheme);
-        assertEquals(443, scheme.getDefaultPort());
+        // should get called for HTTPS URLs
+        verify(sslConf).getKeystoreFile();
+        verify(sslConf).getKeyStorePassword();
+    }
+    
+    @Test
+    public void doesnotEnableTLSForHttp() {
+        SSLConfiguration sslConf = mock(SSLConfiguration.class);
+        String httpsUrl = "http://foo.example.com";
+        new WebStorage(httpsUrl,
+                new TrivialStorageCredentials(null, null), sslConf);
+        verifyNoMoreInteractions(sslConf);
     }
 
     @Test
@@ -709,14 +718,12 @@ public class WebStorageTest {
     }
     
     @Test
-    public void verifyConnectFiresEventOnConnectionFailure() {
-        DefaultHttpClient client = mock(DefaultHttpClient.class);
-        ClientConnectionManager connManager = mock(ClientConnectionManager.class);
-        // this should make connect fail
-        Mockito.doThrow(RuntimeException.class).when(client).getCredentialsProvider();
-        SSLConfiguration sslConf = mock(SSLConfiguration.class);
+    public void verifyConnectFiresEventOnConnectionFailure() throws Exception {
+        HttpClient client = mock(HttpClient.class);
+        // Execution of ping() will fail
+        Mockito.doThrow(RuntimeException.class).when(client).execute(any(HttpUriRequest.class), any(HttpContext.class));
         storage = new WebStorage("http://localhost:" + port + "/", new TrivialStorageCredentials(null, null),
-                client, connManager, sslConf);
+                client);
         
         CountDownLatch latch = new CountDownLatch(1);
         MyListener listener = new MyListener(latch);
