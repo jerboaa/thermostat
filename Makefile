@@ -1,5 +1,6 @@
 JAVA            ?= java
 JAVAC           ?= javac
+BASH            ?= bash
 MAVEN           ?= mvn
 SKIP_TESTS      ?= false
 BUILD_DOCS      ?= false
@@ -14,6 +15,7 @@ REPO_FLAG       = -Dmaven.repo.local=$(REPO_LOC)
 GOAL            = package
 POM             = pom.xml
 ARCH            = $(shell uname -m)
+THERMOSTAT_HOME = $(shell pwd)/distribution/target/image
 
 ifeq ($(SKIP_TESTS),true)
 	MAVEN_SKIP_TEST = -Dmaven.test.skip=true
@@ -23,11 +25,14 @@ ifeq ($(BUILD_DOCS),true)
     MAVEN_JAVADOC = javadoc:aggregate
 endif
 
-all: core
+all: core verify-archetype-ext
 
 # Default to just building core
 core:
 	$(MAVEN) -f $(POM) $(MAVEN_FLAGS) $(MAVEN_SKIP_TEST) clean $(GOAL) $(MAVEN_JAVADOC)
+
+verify-archetype-ext:
+	$(BASH) distribution/tools/verify-archetype-ext.sh $(REPO_LOC) $(THERMOSTAT_HOME)
 
 # 
 # Cleaning the repo prevents things like not seeing build failures
@@ -54,4 +59,4 @@ plugin_docs.html:
 	$(XSLTPROC) distribution/tools/plugin-docs-html.xslt merged-plugin-docs.xml > $@
 
 # We only have phony targets
-.PHONY:	all core core-install create-repo-dir clean-repo echo-repo plugin-docs
+.PHONY:	all core verify-archetype-ext core-install create-repo-dir clean-repo echo-repo plugin-docs
