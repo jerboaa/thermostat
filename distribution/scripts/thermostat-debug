@@ -47,6 +47,6 @@ if [ x"$THERMOSTAT_DEBUG_ADDRESS" = x ] ; then
 fi
 export THERMOSTAT_DEBUG_ADDRESS
 
-$THERMOSTAT_HOME/bin/thermostat $1 --print-osgi-info -J-Dsun.awt.disablegrab=true -J-Xdebug -J-Xrunjdwp:transport=dt_socket,server=y,address=$THERMOSTAT_DEBUG_ADDRESS
+$THERMOSTAT_HOME/bin/thermostat "$@" --print-osgi-info -J-Dsun.awt.disablegrab=true -J-Xdebug -J-Xrunjdwp:transport=dt_socket,server=y,address=$THERMOSTAT_DEBUG_ADDRESS
 exit $?
 
