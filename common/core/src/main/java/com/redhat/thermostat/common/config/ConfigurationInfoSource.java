@@ -44,9 +44,9 @@ import com.redhat.thermostat.annotations.Service;
 /**
  * Provides plugins with access to their config files through the use of their plugin ID and config filenames
  * defined in their thermostat-plugin.xml file. Plugins may request this service through their Activator's
- * BundleContext. If no <configurations> tag is specified, config files by default are searched for in
+ * BundleContext. If no {@code configurations} tag is specified, config files by default are searched for in
  * $THERMOSTAT_HOME/etc/plugins.d/$PLUGIN_ID/ and/or $USER_THERMOSTAT_HOME/etc/plugins.d/$PLUGIN_ID/.
- * Users may provide custom locations through the <configurations> tag in their thermostat-plugin.xml.
+ * Users may provide custom locations through the {@code configurations} tag in their thermostat-plugin.xml.
  * The tag expects absolute paths
  *
  * Note: The configuration files here are visible to other plugins and is not appropriate for storing
