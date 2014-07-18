@@ -56,11 +56,11 @@ public class ExampleDAOImpl implements ExampleDAO {
     
     private static final Logger logger = LoggingUtils.getLogger(ExampleDAOImpl.class);
 
-    private static final String REPLACE_DESCRIPTOR = "REPLACE " + exampleCategory.getName() +
+    static final String REPLACE_DESCRIPTOR = "REPLACE " + exampleCategory.getName() +
                                                               " SET '" + Key.AGENT_ID.getName() + "' = ?s , " +
                                                                    "'" + MESSAGE_KEY.getName() + "' = ?s " +
                                                                    "WHERE '" + Key.AGENT_ID.getName() + "' = ?s";
-    private static final String QUERY_DESCRIPTOR = "QUERY " + exampleCategory.getName() + " WHERE " +
+    static final String QUERY_DESCRIPTOR = "QUERY " + exampleCategory.getName() + " WHERE " +
                                                                    "'" + Key.AGENT_ID.getName() + "' = ?s";
     
     private final Storage storage;

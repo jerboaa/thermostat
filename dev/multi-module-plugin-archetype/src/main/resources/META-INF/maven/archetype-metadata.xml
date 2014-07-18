@@ -72,6 +72,13 @@
             <include>**/*.java</include>
           </includes>
         </fileSet>
+    <!--Auth files needed for CategoryRegistration and StatementDescriptorRegistration-->
+	<fileSet filtered="true" packaged="false" encoding="UTF-8">
+          <directory>src/main/resources</directory>
+          <includes>
+            <include>**/*.auth.*</include>
+          </includes>
+        </fileSet>
       </fileSets>
     </module>
     <module id="${rootArtifactId}-distribution" dir="distribution" name="${rootArtifactId}-distribution">

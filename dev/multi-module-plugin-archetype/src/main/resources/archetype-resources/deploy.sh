@@ -16,3 +16,6 @@ DISTRO_ZIP=$(pwd)/distribution/target/${artifactId}-distribution*.zip
 pushd $PLUGIN_DIR
 unzip $DISTRO_ZIP
 
+WEBLIB_DIR=$THERMOSTAT_DEV_HOME/distribution/target/image/webapp/WEB-INF/lib
+pushd $TARGET_DIR
+cp *-storage-common-*.jar $WEBLIB_DIR
