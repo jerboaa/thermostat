@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.storage.dao;
 
+import com.redhat.thermostat.storage.core.VmId;
 import java.util.Collection;
 
 import com.redhat.thermostat.annotations.Service;
@@ -75,12 +76,14 @@ public interface VmInfoDAO extends Countable {
             startTimeKey, stopTimeKey,
             uidKey, usernameKey);
 
-    public VmInfo getVmInfo(VmRef ref);
+    VmInfo getVmInfo(VmId id);
+
+    VmInfo getVmInfo(VmRef ref);
 
     Collection<VmRef> getVMs(HostRef host);
 
-    public void putVmInfo(VmInfo info);
+    void putVmInfo(VmInfo info);
 
-    public void putVmStoppedTime(String vmId, long since);
+    void putVmStoppedTime(String vmId, long since);
 }
 

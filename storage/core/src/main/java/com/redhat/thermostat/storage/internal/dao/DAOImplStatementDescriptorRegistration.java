@@ -77,7 +77,9 @@ public class DAOImplStatementDescriptorRegistration implements
         daoDescs.add(VmInfoDAOImpl.AGGREGATE_COUNT_ALL_VMS);
         daoDescs.add(VmInfoDAOImpl.DESC_ADD_VM_INFO);
         daoDescs.add(VmInfoDAOImpl.DESC_UPDATE_VM_STOP_TIME);
+        daoDescs.add(VmInfoDAOImpl.QUERY_VM_FROM_ID);
         daoDescs.add(SchemaInfoDAOImpl.QUERY_ALL_COLLECTIONS);
+
         return daoDescs;
     }
 
@@ -114,6 +116,10 @@ public class DAOImplStatementDescriptorRegistration implements
         } else if (descriptor.equals(VmInfoDAOImpl.QUERY_ALL_VMS) ||
                 descriptor.equals(VmInfoDAOImpl.AGGREGATE_COUNT_ALL_VMS)) {
             DescriptorMetadata metadata = new DescriptorMetadata();
+            return metadata;
+        } else if (descriptor.equals(VmInfoDAOImpl.QUERY_VM_FROM_ID)) {
+            String vmId = (String)params[1].getValue();
+            DescriptorMetadata metadata = new DescriptorMetadata(null, vmId);
             return metadata;
         } else if (descriptor.equals(VmInfoDAOImpl.QUERY_ALL_VMS_FOR_HOST)) {
             String agentId = (String)params[0].getValue();

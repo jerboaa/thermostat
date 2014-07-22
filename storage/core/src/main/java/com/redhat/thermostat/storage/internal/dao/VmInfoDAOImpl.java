@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.storage.internal.dao;
 
+import com.redhat.thermostat.storage.core.VmId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -70,6 +71,11 @@ public class VmInfoDAOImpl extends BaseCountable implements VmInfoDAO {
     static final String QUERY_ALL_VMS_FOR_HOST = "QUERY " 
             + vmInfoCategory.getName() + " WHERE '" 
             + Key.AGENT_ID.getName() + "' = ?s";
+
+    static final String QUERY_VM_FROM_ID = "QUERY "
+            + vmInfoCategory.getName() + " WHERE '"
+            + Key.VM_ID.getName() + "' = ?s";
+
     static final String QUERY_ALL_VMS = "QUERY " + vmInfoCategory.getName();
     static final String AGGREGATE_COUNT_ALL_VMS = "QUERY-COUNT " + vmInfoCategory.getName();
     // ADD vm-info SET 'agentId' = ?s , \
@@ -124,6 +130,35 @@ public class VmInfoDAOImpl extends BaseCountable implements VmInfoDAO {
         this.aggregateCategory = adapter.getAdapted(AggregateCount.class);
         storage.registerCategory(vmInfoCategory);
         storage.registerCategory(aggregateCategory);
+    }
+
+    @Override
+    public VmInfo getVmInfo(VmId id) {
+
+        VmInfo result = null;
+
+        StatementDescriptor<VmInfo> desc = new StatementDescriptor<>(vmInfoCategory, QUERY_VM_FROM_ID);
+        PreparedStatement<VmInfo> stmt;
+
+        Cursor<VmInfo> cursor;
+        try {
+            stmt = storage.prepareStatement(desc);
+            stmt.setString(0, id.get());
+
+            cursor = stmt.executeQuery();
+            if (cursor.hasNext()) {
+                result = cursor.next();
+            }
+
+        } catch (DescriptorParsingException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
+
+        } catch (StatementExecutionException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
+        }
+        return result;
     }
 
     @Override

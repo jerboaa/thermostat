@@ -36,21 +36,19 @@
 
 package com.redhat.thermostat.web.server;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
+import com.redhat.thermostat.storage.core.PreparedParameter;
+import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
+import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.core.PreparedParameter;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class KnownDescriptorRegistryTest {
 
@@ -78,10 +76,10 @@ public class KnownDescriptorRegistryTest {
         KnownDescriptorRegistry reg = new KnownDescriptorRegistry();
         Set<String> trustedDescs = reg.getRegisteredDescriptors();
         assertNotNull(trustedDescs);
-        // storage-core registers 22 descriptors; this module has
+        // storage-core registers 24 descriptors; this module has
         // only storage-core as maven dep which registers queries.
         // see DAOImplStatementDescriptorRegistration
-        assertEquals(23, trustedDescs.size());
+        assertEquals(24, trustedDescs.size());
     }
     
     @Test

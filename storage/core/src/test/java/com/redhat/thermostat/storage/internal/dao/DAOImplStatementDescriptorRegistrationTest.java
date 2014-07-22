@@ -36,6 +36,16 @@
 
 package com.redhat.thermostat.storage.internal.dao;
 
+import com.redhat.thermostat.storage.core.PreparedParameter;
+import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
+import com.redhat.thermostat.storage.core.auth.StatementDescriptorMetadataFactory;
+import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ServiceLoader;
+import java.util.Set;
+import org.junit.Test;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -44,25 +54,13 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ServiceLoader;
-import java.util.Set;
-
-import org.junit.Test;
-
-import com.redhat.thermostat.storage.core.PreparedParameter;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorMetadataFactory;
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
-
 public class DAOImplStatementDescriptorRegistrationTest {
 
     @Test
     public void registersAllQueries() {
         DAOImplStatementDescriptorRegistration reg = new DAOImplStatementDescriptorRegistration();
         Set<String> descriptors = reg.getStatementDescriptors();
-        assertEquals(23, descriptors.size());
+        assertEquals(24, descriptors.size());
         assertFalse(descriptors.contains(null));
     }
     
@@ -80,7 +78,7 @@ public class DAOImplStatementDescriptorRegistrationTest {
             registrations.add(r);
         }
         assertEquals(1, registrations.size());
-        assertEquals(23, registrations.get(0).getStatementDescriptors().size());
+        assertEquals(24, registrations.get(0).getStatementDescriptors().size());
     }
     
     @Test
