@@ -118,7 +118,7 @@ public class DAOImplStatementDescriptorRegistration implements
             DescriptorMetadata metadata = new DescriptorMetadata();
             return metadata;
         } else if (descriptor.equals(VmInfoDAOImpl.QUERY_VM_FROM_ID)) {
-            String vmId = (String)params[1].getValue();
+            String vmId = (String)params[0].getValue();
             DescriptorMetadata metadata = new DescriptorMetadata(null, vmId);
             return metadata;
         } else if (descriptor.equals(VmInfoDAOImpl.QUERY_ALL_VMS_FOR_HOST)) {
