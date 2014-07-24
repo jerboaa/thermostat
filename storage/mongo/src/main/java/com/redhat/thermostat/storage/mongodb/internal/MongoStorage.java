@@ -269,6 +269,9 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
         
         @Override
         public int apply() {
+            if (query == null) {
+                query = new BasicDBObject();
+            }
             return removePojo(category, query);
         }
 

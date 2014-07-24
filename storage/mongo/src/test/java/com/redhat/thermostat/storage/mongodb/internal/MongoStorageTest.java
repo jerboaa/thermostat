@@ -94,6 +94,7 @@ import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Persist;
 import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.SchemaInfo;
 import com.redhat.thermostat.storage.core.StorageCredentials;
@@ -664,7 +665,29 @@ public class MongoStorageTest {
         assertEquals("test5", value.get("key5"));
         assertEquals("123", value.get("agentId"));
     }
-    
+
+    @Test
+    public void verifyRemove() {
+        MongoStorage storage = makeStorage();
+        Remove<TestClass> remove = storage.createRemove(testCategory);
+        Expression expr = factory.equalTo(Key.AGENT_ID, "test1");
+        remove.where(expr);
+
+        remove.apply();
+
+        verify(testCollection).remove(new BasicDBObject(Key.AGENT_ID.getName(), "test1"));
+    }
+
+    @Test
+    public void verifyRemoveWithoutWhere() {
+        MongoStorage storage = makeStorage();
+        Remove<TestClass> remove = storage.createRemove(testCategory);
+
+        remove.apply();
+
+        verify(testCollection).remove(new BasicDBObject());
+    }
+
     @Test
     public void verifyMongoCloseOnShutdown() throws Exception {
         Mongo mockMongo = mock(Mongo.class);
