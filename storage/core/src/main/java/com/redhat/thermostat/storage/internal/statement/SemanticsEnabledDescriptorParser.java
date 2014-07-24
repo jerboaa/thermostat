@@ -170,7 +170,7 @@ class SemanticsEnabledDescriptorParser<T extends Pojo> extends
             throw new DescriptorParsingException(msg);
         }
         if (!keysInSetList.equals(expectedSet)) {
-            String msg = "Keys don't match keys in category. Expected the following keys: " + expectedSet;
+            String msg = "Keys don't match keys in category. Expected the following keys: " + expectedSet + " got " + keysInSetList;
             throw new DescriptorParsingException(msg);
         };
     }
