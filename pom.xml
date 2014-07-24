@@ -279,6 +279,7 @@ password=${agent.dev.password}
     <module>web</module>
     <module>system-backend</module>
     <module>storage</module>
+    <module>storage-profile</module>
     <module>host-overview</module>
     <module>host-cpu</module>
     <module>host-memory</module>
