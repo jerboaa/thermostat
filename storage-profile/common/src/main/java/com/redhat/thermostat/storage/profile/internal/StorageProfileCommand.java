@@ -36,9 +36,9 @@
 
 package com.redhat.thermostat.storage.profile.internal;
 
+import java.text.DecimalFormat;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
@@ -189,7 +189,8 @@ public class StorageProfileCommand implements Command, CategoryRegistration, Sta
                 statement.execute();
             }
             long end = System.nanoTime();
-            console.getOutput().println("ADD (x" + ITERATIONS + ") took " + TimeUnit.NANOSECONDS.toMicros(end-start) + " µs");
+            console.getOutput().println("ADD (x" + ITERATIONS + ") took " + nanosToMicroSeconds(end-start));
+            console.getOutput().println("ADD avg was " + nanosToMicroSeconds(1.0 * (end-start) / ITERATIONS));
         } catch (StatementExecutionException e) {
             console.getError().println("Error ADDing data");
             e.printStackTrace(console.getError());
@@ -210,7 +211,8 @@ public class StorageProfileCommand implements Command, CategoryRegistration, Sta
                 }
             }
             long end = System.nanoTime();
-            console.getOutput().println("QUERY (x" + ITERATIONS + ") took " + TimeUnit.NANOSECONDS.toMicros(end-start) + " µs");
+            console.getOutput().println("QUERY (x" + ITERATIONS + ") took " + nanosToMicroSeconds(end-start));
+            console.getOutput().println("QUERY avg was " + nanosToMicroSeconds(1.0 * (end-start) / ITERATIONS));
         } catch (StatementExecutionException e) {
             console.getError().println("Error QUERYing data");
             e.printStackTrace(console.getError());
@@ -246,7 +248,8 @@ public class StorageProfileCommand implements Command, CategoryRegistration, Sta
                 }
             }
             long end = System.nanoTime();
-            console.getOutput().println("QUERY multiple (" + DATA_COUNT + ") (x" + ITERATIONS + ") took " + TimeUnit.NANOSECONDS.toMicros(end-start) + " µs");
+            console.getOutput().println("QUERY multiple (" + DATA_COUNT + ") (x" + ITERATIONS + ") took " + nanosToMicroSeconds(end-start));
+            console.getOutput().println("QUERY multiple avg was " + nanosToMicroSeconds(1.0 * (end-start) / ITERATIONS ));
         } catch (StatementExecutionException e) {
             console.getError().println("Error QUERYing data");
             e.printStackTrace(console.getError());
@@ -283,7 +286,8 @@ public class StorageProfileCommand implements Command, CategoryRegistration, Sta
                 assert count == DATA_COUNT;
             }
             long end = System.nanoTime();
-            console.getOutput().println("QUERY-COUNT (x" + ITERATIONS + ") took " + TimeUnit.NANOSECONDS.toMicros(end-start) + " µs");
+            console.getOutput().println("QUERY-COUNT (x" + ITERATIONS + ") took " + nanosToMicroSeconds(end-start));
+            console.getOutput().println("QUERY-COUNT avg was " + nanosToMicroSeconds(1.0 * (end-start) / ITERATIONS));
         } catch (StatementExecutionException e) {
             console.getError().println("Error QUERY-COUNTing data");
             e.printStackTrace(console.getError());
@@ -318,13 +322,20 @@ public class StorageProfileCommand implements Command, CategoryRegistration, Sta
                 statement.execute();
             }
             long end = System.nanoTime();
-            console.getOutput().println("UPDATE (x" + ITERATIONS + ") took " + TimeUnit.NANOSECONDS.toMicros(end-start) + " µs");
+            console.getOutput().println("UPDATE (x" + ITERATIONS + ") took " + nanosToMicroSeconds(end-start));
+            console.getOutput().println("UPDATE avg was " + nanosToMicroSeconds(1.0 * (end-start) / ITERATIONS));
         } catch (StatementExecutionException e) {
             console.getError().println("Error UPDATEing data");
             e.printStackTrace(console.getError());
         } catch (DescriptorParsingException parsingException) {
             throw new AssertionError("The descriptor must be valid", parsingException);
         }
+    }
+
+    /** Convert the nanoseconds to microseconds and return a human-readable string */
+    private String nanosToMicroSeconds(double nanos) {
+        DecimalFormat format = new DecimalFormat("###.##");
+        return format.format(nanos * 1E-3) + " µs";
     }
 
     private void waitForDataCount(Console console, int count) {
