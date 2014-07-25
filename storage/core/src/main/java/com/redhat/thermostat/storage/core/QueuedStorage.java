@@ -45,30 +45,33 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.storage.query.Expression;
 
 public class QueuedStorage implements Storage {
     
     private static final Logger logger = LoggingUtils.getLogger(QueuedStorage.class);
     private static final int SHUTDOWN_TIMEOUT_SECONDS = 3;
 
+    /*
+     * True if and only if the delegate is a backing storage (such as mongodb)
+     * and it is used as a backing storage for proxied storage (such as web).
+     */
+    protected final boolean isBackingStorageInProxy;
     protected final Storage delegate;
     protected final ExecutorService executor;
     protected final ExecutorService fileExecutor;
-
-    /*
-     * Decorates PreparedStatement.execute() so that executions of writes
-     * are queued.
-     */
-    class QueuedPreparedStatement<T extends Pojo> implements PreparedStatement<T> {
+    
+    private abstract static class SettingDecorator<T extends Pojo> implements PreparedStatementSetter, PreparedStatement<T> {
         
-        private final PreparedStatement<T> delegate;
+        protected final PreparedStatement<T> delegate;
         
-        private QueuedPreparedStatement(PreparedStatement<T> delegate) {
-            this.delegate = Objects.requireNonNull(delegate);
+        private SettingDecorator(PreparedStatement<T> decoratee) {
+            this.delegate = decoratee;
         }
-
+        
         @Override
         public void setBooleanList(int paramIndex, boolean[] paramValue) {
             delegate.setBooleanList(paramIndex, paramValue);
@@ -128,15 +131,143 @@ public class QueuedStorage implements Storage {
         public void setStringList(int paramIndex, String[] paramValue) {
             delegate.setStringList(paramIndex, paramValue);
         }
+        
+    }
+    
+    class QueuedStatementDecorator<T extends Pojo> implements Statement<T> {
+        
+        private final Statement<T> stmt;
+        
+        private QueuedStatementDecorator(Statement<T> delegate) {
+            this.stmt = delegate;
+        }
+
+        @Override
+        public Statement<T> getRawDuplicate() {
+            return stmt.getRawDuplicate();
+        }
+    }
+    
+    abstract class QueuedQueryDecorator<T extends Pojo> extends QueuedStatementDecorator<T> implements Query<T> {
+
+        protected final Query<T> query;
+        private QueuedQueryDecorator(Query<T> delegate) {
+            super(delegate);
+            this.query = delegate;
+        }
+        
+        @Override
+        public void where(Expression expr) {
+            query.where(expr);
+        }
+
+        @Override
+        public void sort(Key<?> key,
+                com.redhat.thermostat.storage.core.Query.SortDirection direction) {
+            query.sort(key, direction);
+        }
+
+        @Override
+        public void limit(int n) {
+            query.limit(n);
+        }
+
+        public abstract Cursor<T> execute();
+
+        @Override
+        public Expression getWhereExpression() {
+            return query.getWhereExpression();
+        }
+        
+    }
+    
+    class QueuedWrite<T extends Pojo> extends QueuedStatementDecorator<T> implements DataModifyingStatement<T> {
+
+        protected final DataModifyingStatement<T> write;
+        
+        private QueuedWrite(DataModifyingStatement<T> delegate) {
+            super(delegate);
+            this.write = delegate;
+        }
+        
+        @Override
+        public int apply() {
+            executor.execute(new Runnable() {
+                
+                @Override
+                public void run() {
+                    // FIXME: perhaps read return code and log
+                    write.apply();
+                }
+            });
+            return DataModifyingStatement.DEFAULT_STATUS_SUCCESS;
+        }
+        
+    }
+    
+    abstract class QueuedParsedStatementDecorator<T extends Pojo> implements ParsedStatement<T> {
+
+        protected final ParsedStatement<T> delegate;
+        
+        private QueuedParsedStatementDecorator(ParsedStatement<T> delegate) {
+            this.delegate = delegate;
+        }
+        
+        @Override
+        public abstract Statement<T> patchStatement(PreparedParameter[] params) throws IllegalPatchException;
+
+        @Override
+        public int getNumParams() {
+            return delegate.getNumParams();
+        }
+        
+    }
+    
+    class QueuedParsedStatement<T extends Pojo> extends QueuedParsedStatementDecorator<T> {
+        
+        private QueuedParsedStatement(ParsedStatement<T> delegate) {
+            super(delegate);
+        }
+
+        @Override
+        public Statement<T> patchStatement(PreparedParameter[] params)
+                throws IllegalPatchException {
+            Statement<T> stmt = delegate.patchStatement(params);
+            if (stmt instanceof DataModifyingStatement) {
+                DataModifyingStatement<T> target = (DataModifyingStatement<T>)stmt;
+                return new QueuedWrite<>(target);
+            } else if (stmt instanceof Query) {
+                // Queries are not queued
+                return stmt;
+            } else {
+                // We only have two statement types: reads and writes.
+                throw new IllegalStateException("Should not reach here"); 
+            }
+        }
+        
+    }
+
+    /*
+     * Decorates PreparedStatement.execute() so that executions of writes
+     * are queued.
+     */
+    class QueuedPreparedStatement<T extends Pojo> extends SettingDecorator<T> implements PreparedStatement<T> {
+        
+        private QueuedPreparedStatement(PreparedStatement<T> delegate) {
+            super(Objects.requireNonNull(delegate));
+        }
 
         @Override
         public int execute() throws StatementExecutionException {
+            if (isBackingStorageInProxy) {
+                String msg = "Did not expect to get called for backing storage in proxied setup.";
+                throw new AssertionError(msg);
+            }
             executor.execute(new Runnable() {
-
+                
                 @Override
                 public void run() {
                     try {
-                        // TODO log return code of delegate, time execution?
                         delegate.execute();
                     } catch (StatementExecutionException e) {
                         // There isn't much we can do in case of invalid
@@ -144,25 +275,40 @@ public class QueuedStorage implements Storage {
                         logger.log(Level.WARNING, "Failed to execute statement", e);
                     }
                 }
-                
             });
             return DataModifyingStatement.DEFAULT_STATUS_SUCCESS;
         }
 
         @Override
         public Cursor<T> executeQuery() throws StatementExecutionException {
+            if (isBackingStorageInProxy) {
+                String msg = "Did not expect to get called for backing storage in proxied setup.";
+                throw new AssertionError(msg);
+            }
             return delegate.executeQuery();
         }
-
+        
+        /*
+         * For proxied prepared statements we never actually call the underlying
+         * execute() and executeQuery() methods for performance reasons. We
+         * simply use previously prepared statements and use the parsed result
+         * of them. Thus, in order to make backing storages queued too, we
+         * need to decorate them this way.
+         */
         @Override
         public ParsedStatement<T> getParsedStatement() {
-            return delegate.getParsedStatement();
+            if (isBackingStorageInProxy) {
+                ParsedStatement<T> target = delegate.getParsedStatement();
+                return new QueuedParsedStatement<>(target);
+            } else {
+                return delegate.getParsedStatement();
+            }
         }
         
     }
     
     /*
-     * NOTE: We intentially use single-thread executor. All updates are put into
+     * NOTE: We intentionally use single-thread executor. All updates are put into
      * a queue, from which a single dispatch thread calls the underlying
      * storage. Using multiple dispatch threads could cause out-of-order issues,
      * e.g. a VM death being reported before its VM start, which could confuse
@@ -171,14 +317,15 @@ public class QueuedStorage implements Storage {
     public QueuedStorage(Storage delegate) {
         this(delegate, Executors.newSingleThreadExecutor(), Executors.newSingleThreadExecutor());
     }
-
+    
     /*
      * This is here solely for use by tests.
      */
     QueuedStorage(Storage delegate, ExecutorService executor, ExecutorService fileExecutor) {
         this.delegate = delegate;
-        this.executor = executor;
         this.fileExecutor = fileExecutor;
+        this.isBackingStorageInProxy = !(delegate instanceof SecureStorage) && Boolean.getBoolean(Constants.IS_PROXIED_STORAGE);
+        this.executor = executor;
     }
 
     ExecutorService getExecutor() {
@@ -233,7 +380,7 @@ public class QueuedStorage implements Storage {
         PreparedStatement<T> decoratee = delegate.prepareStatement(desc);
         return new QueuedPreparedStatement<>(decoratee);
     }
-
+    
     @Override
     public Connection getConnection() {
         return delegate.getConnection();

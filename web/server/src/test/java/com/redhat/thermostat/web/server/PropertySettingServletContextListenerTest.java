@@ -43,8 +43,12 @@ import javax.servlet.ServletContextEvent;
 import org.junit.After;
 import org.junit.Test;
 
+import com.redhat.thermostat.common.Constants;
+
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Matchers.any;
@@ -54,6 +58,7 @@ public class PropertySettingServletContextListenerTest {
     @After
     public void tearDown() {
         System.clearProperty("THERMOSTAT_HOME");
+        System.clearProperty(Constants.IS_PROXIED_STORAGE);
     }
     
     @Test
@@ -66,6 +71,8 @@ public class PropertySettingServletContextListenerTest {
         when(mockContext.getInitParameter(any(String.class))).thenReturn(fakeHome);
         listener.contextInitialized(event);
         assertEquals(fakeHome, System.getProperty("THERMOSTAT_HOME"));
+        boolean isProxyStorage = Boolean.getBoolean(Constants.IS_PROXIED_STORAGE);
+        assertTrue("Expected to set proxied storage property", isProxyStorage);
     }
     
     @Test
@@ -74,6 +81,8 @@ public class PropertySettingServletContextListenerTest {
         PropertySettingServletContextListener listener = new PropertySettingServletContextListener();
         listener.contextDestroyed(null);
         assertNull(System.getProperty("THERMOSTAT_HOME"));
+        boolean isProxyStorage = Boolean.getBoolean(Constants.IS_PROXIED_STORAGE);
+        assertFalse("Expected context listener to clear proxied storage property", isProxyStorage);
     }
 }
 

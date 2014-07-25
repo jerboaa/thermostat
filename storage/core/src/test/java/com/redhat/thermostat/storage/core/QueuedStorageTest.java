@@ -38,16 +38,17 @@
 package com.redhat.thermostat.storage.core;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.same;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -70,7 +71,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import com.redhat.thermostat.common.Constants;
+import com.redhat.thermostat.storage.core.QueuedStorage.QueuedParsedStatement;
 import com.redhat.thermostat.storage.core.QueuedStorage.QueuedPreparedStatement;
+import com.redhat.thermostat.storage.core.QueuedStorage.QueuedWrite;
 import com.redhat.thermostat.storage.model.Pojo;
 
 
@@ -87,7 +91,7 @@ public class QueuedStorageTest {
         public void execute(Runnable task) {
             this.task = task;
         }
-
+        
         Runnable getTask() {
             return task;
         }
@@ -220,12 +224,14 @@ public class QueuedStorageTest {
 
     @After
     public void tearDown() {
+        System.clearProperty(Constants.IS_PROXIED_STORAGE);
         expectedFile = null;
         queuedStorage = null;
         delegateStorage = null;
         fileExecutor = null;
         executor = null;
     }
+    
     
     @Test
     public void testPurge() {
@@ -268,11 +274,139 @@ public class QueuedStorageTest {
         assertNull(fileExecutor.getTask());
     }
     
+    /*
+     * For backing storage (i.e. a mongo delegate) and a proxy in front
+     * we should decorate PreparedStatement.execute(),
+     * PreparedStatement.executeQuery() and PreparedStatement.getParsedStatement().
+     * However, execute() and executeQuery() must not be called and it is not
+     * called. In that case the queueing is achieved via the decoration of
+     * PreparedStatement.getParsedStatement().
+     */
     @Test
-    public void testPrepareStatement() throws DescriptorParsingException, StatementExecutionException {
+    public void testPrepareStatementBackingNotProxied() throws DescriptorParsingException, StatementExecutionException, IllegalPatchException {
+        assertFalse("Precondition not secure storage FAILED!", delegateStorage instanceof SecureStorage);
+        System.setProperty(Constants.IS_PROXIED_STORAGE, Boolean.TRUE.toString());
+        queuedStorage = new QueuedStorage(delegateStorage, executor, fileExecutor);
+        
         @SuppressWarnings("unchecked")
         PreparedStatement<Pojo> statement = (PreparedStatement<Pojo>)mock(PreparedStatement.class);
         when(delegateStorage.prepareStatement(anyStatementDescriptor())).thenReturn(statement);
+        @SuppressWarnings("unchecked")
+        ParsedStatement<Pojo> mockParsedStatement = (ParsedStatement<Pojo>)mock(ParsedStatement.class);
+        when(statement.getParsedStatement()).thenReturn(mockParsedStatement);
+        @SuppressWarnings("unchecked")
+        DataModifyingStatement<Pojo> mockDms = (DataModifyingStatement<Pojo>)mock(DataModifyingStatement.class);
+        @SuppressWarnings("unchecked")
+        Query<Pojo> mockQuery = (Query<Pojo>)mock(Query.class);
+        // First return a write then a query
+        when(mockParsedStatement.patchStatement(any(PreparedParameter[].class))).thenReturn(mockDms).thenReturn(mockQuery);
+        
+        
+        StatementDescriptor<FooPojo> desc = new StatementDescriptor<>(TEST_CATEGORY, "QUERY foo-table");
+        PreparedStatement<FooPojo> decorated = queuedStorage.prepareStatement(desc);
+        assertNotNull(decorated);
+        assertTrue(decorated instanceof QueuedPreparedStatement);
+        assertNotSame(decorated, statement);
+        assertNull(executor.getTask());
+        QueuedPreparedStatement<FooPojo> stmt = (QueuedPreparedStatement<FooPojo>)decorated;
+        
+        // make sure execution of PreparedStatement.execute() and
+        // PreparedStatement.executeQuery() throws assertionError.
+        verifyAssertionError(stmt);
+        
+        // be sure that getParsedStatement returns a QueuedParsedStatement
+        ParsedStatement<FooPojo> parsed = stmt.getParsedStatement();
+        assertNotNull(parsed);
+        assertTrue(parsed instanceof QueuedParsedStatement);
+        QueuedParsedStatement<FooPojo> qParsed = (QueuedParsedStatement<FooPojo>)parsed;
+        // we should get a write first
+        Statement<FooPojo> patched = qParsed.patchStatement(new PreparedParameter[]{});
+        assertTrue(patched instanceof QueuedWrite);
+        QueuedWrite<FooPojo> qWrite = (QueuedWrite<FooPojo>)patched;
+        assertNull(executor.getTask());
+        qWrite.apply();
+        assertNotNull(executor.getTask());
+        // run the task
+        executor.getTask().run();
+        verify(mockDms).apply();
+        verifyNoMoreInteractions(mockDms);
+        // reset
+        executor.execute(null);
+        
+        // now do it again with a query
+        patched = qParsed.patchStatement(new PreparedParameter[]{});
+        assertTrue(patched instanceof Query);
+        Query<FooPojo> query = (Query<FooPojo>)patched;
+        assertNull(executor.getTask());
+        assertSame("Didn't expect query to get decorated", mockQuery, query);
+        query.execute();
+        assertNull("should not have submited to executor", executor.getTask());
+        verify(mockQuery).execute();
+        verifyNoMoreInteractions(mockQuery);
+    }
+    
+    private <T extends Pojo> void verifyAssertionError(QueuedPreparedStatement<T> decorated) throws StatementExecutionException {
+        try {
+            decorated.execute();
+            // throw something not an assertion error
+            throw new IllegalStateException("test failed");
+        } catch (AssertionError e) {
+            assertTrue(e.getMessage().contains("backing storage"));
+        }
+        try {
+            decorated.executeQuery();
+            // throw something not an assertion error
+            throw new IllegalStateException("test failed");
+        } catch (AssertionError e) {
+            assertTrue(e.getMessage().contains("backing storage"));
+        }
+    }
+    
+    /*
+     * For proxied storage (i.e. a web delegate) we should only decorate
+     * PreparedStatement.execute() and PreparedStatement.executeQuery() rather
+     * than also decorating PreparedStatement.getParsedStatement(). If we did
+     * both, we'd queue things twice.
+     */
+    @Test
+    public void testPrepareStatementProxied() throws DescriptorParsingException, StatementExecutionException, IllegalPatchException {
+        assertFalse(delegateStorage instanceof SecureStorage);
+        delegateStorage = mock(SecureStorage.class);
+        System.setProperty(Constants.IS_PROXIED_STORAGE, Boolean.TRUE.toString());
+        assertTrue("Precondition secure storage FAILED!", delegateStorage instanceof SecureStorage);
+        queuedStorage = new QueuedStorage(delegateStorage, executor, fileExecutor);
+        
+        verifyDirectStorage();
+    }
+    
+    /*
+     * For backing storage used directly (i.e. a mongo delegate with *no* proxy storage in front) we should only decorate
+     * PreparedStatement.execute() and PreparedStatement.executeQuery() rather
+     * than also decorating PreparedStatement.getParsedStatement(). If we did
+     * both, we'd queue things twice.
+     */
+    @Test
+    public void testPrepareStatementBackingNoProxy() throws DescriptorParsingException, StatementExecutionException, IllegalPatchException {
+        assertFalse(delegateStorage instanceof SecureStorage);
+        System.setProperty(Constants.IS_PROXIED_STORAGE, Boolean.FALSE.toString());
+        queuedStorage = new QueuedStorage(delegateStorage, executor, fileExecutor);
+        
+        verifyDirectStorage();
+    }
+    
+    private void verifyDirectStorage() throws DescriptorParsingException, StatementExecutionException, IllegalPatchException {
+        @SuppressWarnings("unchecked")
+        PreparedStatement<Pojo> statement = (PreparedStatement<Pojo>)mock(PreparedStatement.class);
+        when(delegateStorage.prepareStatement(anyStatementDescriptor())).thenReturn(statement);
+        @SuppressWarnings("unchecked")
+        ParsedStatement<Pojo> mockParsedStatement = (ParsedStatement<Pojo>)mock(ParsedStatement.class);
+        when(statement.getParsedStatement()).thenReturn(mockParsedStatement);
+        @SuppressWarnings("unchecked")
+        DataModifyingStatement<Pojo> mockDms = (DataModifyingStatement<Pojo>)mock(DataModifyingStatement.class);
+        @SuppressWarnings("unchecked")
+        Query<Pojo> mockQuery = (Query<Pojo>)mock(Query.class);
+        // First return a write then a query
+        when(mockParsedStatement.patchStatement(any(PreparedParameter[].class))).thenReturn(mockDms).thenReturn(mockQuery);
         
         
         StatementDescriptor<FooPojo> desc = new StatementDescriptor<>(TEST_CATEGORY, "QUERY foo-table");
@@ -285,6 +419,41 @@ public class QueuedStorageTest {
         // make sure execution queues a runnable
         decorated.execute();
         assertNotNull(executor.getTask());
+        // reset
+        executor.execute(null);
+        assertNull(executor.getTask());
+        decorated.executeQuery();
+        assertNull("queries are not queued", executor.getTask());
+        
+        QueuedPreparedStatement<FooPojo> stmt = (QueuedPreparedStatement<FooPojo>)decorated;
+        ParsedStatement<FooPojo> parsed = stmt.getParsedStatement();
+        assertNotNull(parsed);
+        // Be sure that getParsedStatement returns simple (non-queued version).
+        // If true, we'd be queueing things twice: via execute() then via
+        // getParsedStatement().
+        assertFalse("Do not want parsed statement decoration for web", parsed instanceof QueuedParsedStatement);
+        Statement<FooPojo> patched = parsed.patchStatement(new PreparedParameter[]{});
+        assertFalse("Do not want parsed statement decoration for web", patched instanceof QueuedWrite);
+        assertNull(executor.getTask());
+        assertTrue(patched instanceof DataModifyingStatement);
+        DataModifyingStatement<FooPojo> write = (DataModifyingStatement<FooPojo>)patched;
+        write.apply();
+        assertNull(executor.getTask());
+        verify(mockDms).apply();
+        verifyNoMoreInteractions(mockDms);
+        // reset
+        executor.execute(null);
+        
+        // now do it again with a query
+        patched = parsed.patchStatement(new PreparedParameter[]{});
+        assertTrue(patched instanceof Query);
+        Query<FooPojo> query = (Query<FooPojo>)patched;
+        assertNull(executor.getTask());
+        assertSame("Didn't expect query to get decorated", mockQuery, query);
+        query.execute();
+        assertNull("should not have submited to executor", executor.getTask());
+        verify(mockQuery).execute();
+        verifyNoMoreInteractions(mockQuery);
     }
     
     /*
@@ -297,6 +466,12 @@ public class QueuedStorageTest {
     @Test
     public void testExecutePreparedStatementFails()
             throws DescriptorParsingException, StatementExecutionException {
+        assertFalse(delegateStorage instanceof SecureStorage);
+        delegateStorage = mock(SecureStorage.class);
+        queuedStorage = new QueuedStorage(delegateStorage, executor, fileExecutor);
+        assertFalse(Boolean.getBoolean(Constants.IS_PROXIED_STORAGE));
+        
+        assertTrue("Precondition secure storage FAILED!", delegateStorage instanceof SecureStorage);
         @SuppressWarnings("unchecked")
         PreparedStatement<Pojo> statement = (PreparedStatement<Pojo>)mock(PreparedStatement.class);
         

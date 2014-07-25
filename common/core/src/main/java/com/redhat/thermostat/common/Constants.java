@@ -44,5 +44,10 @@ public class Constants {
 
     public static final String GENERIC_SERVICE_CLASSNAME = "GenericClassName";
 
+    /**
+     * Property which will be set to {@code true} if and only if the storage in
+     * use is proxied. This is set to {@code true} within the thermostat webapp.
+     */
+    public static final String IS_PROXIED_STORAGE = "thermostat.storage.proxied";
 }
 
