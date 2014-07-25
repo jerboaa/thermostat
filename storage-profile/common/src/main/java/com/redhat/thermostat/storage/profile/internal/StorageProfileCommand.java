@@ -61,6 +61,8 @@ import com.redhat.thermostat.storage.model.AggregateCount;
 
 public class StorageProfileCommand implements Command, CategoryRegistration, StatementDescriptorRegistration {
 
+    private static final int DEFAULT_ITERATIONS = 10000;
+
     private static final Key<Long> KEY_LONG = new Key<>("long");
     private static final Key<String> KEY_STRING = new Key<>("string");
 
@@ -115,34 +117,38 @@ public class StorageProfileCommand implements Command, CategoryRegistration, Sta
 
         Console console = ctx.getConsole();
 
-        clearAndVerifyAllData(console);
-
-        measureAdd(console);
-
-        clearAndVerifyAllData(console);
-
-        measureQuerySingleItem(console);
+        int iterations = DEFAULT_ITERATIONS;
+        if (ctx.getArguments().hasArgument("iterations")) {
+            iterations = Integer.valueOf(ctx.getArguments().getArgument("iterations"));
+        }
+        console.getOutput().println("Running " + iterations + " iterations");
 
         clearAndVerifyAllData(console);
 
-        measureQueryDistinctItems(console);
+        measureAdd(console, iterations);
 
         clearAndVerifyAllData(console);
 
-        measureQueryCount(console);
+        measureQuerySingleItem(console, iterations);
 
         clearAndVerifyAllData(console);
 
-        measureUpdate(console);
+        measureQueryDistinctItems(console, iterations);
+
+        clearAndVerifyAllData(console);
+
+        measureQueryCount(console, iterations);
+
+        clearAndVerifyAllData(console);
+
+        measureUpdate(console, iterations);
 
         clearAndVerifyAllData(console);
     }
 
     private void clearAndVerifyAllData(Console console) throws AssertionError {
         clearAllData(console);
-        while (countAllData(console) != 0) {
-            // wait
-        }
+        waitForDataCount(console, 0);
     }
 
     private void clearAllData(Console console) {
@@ -171,12 +177,11 @@ public class StorageProfileCommand implements Command, CategoryRegistration, Sta
         }
     }
 
-    private void measureAdd(Console console) throws AssertionError {
+    private void measureAdd(Console console, final int ITERATIONS) throws AssertionError {
         try {
             StatementDescriptor<SimpleData> desc = new StatementDescriptor<>(PROFILE_CATEGORY, INSERT_DATA);
             long start = System.nanoTime();
-            final int ADD_ITERATIONS = 1000;
-            for (int i = 0; i < ADD_ITERATIONS; i++) {
+            for (int i = 0; i < ITERATIONS; i++) {
                 PreparedStatement<SimpleData> statement = storage.prepareStatement(desc);
                 statement.setString(0, "FOO");
                 statement.setString(1, "FOO" + i);
@@ -184,7 +189,7 @@ public class StorageProfileCommand implements Command, CategoryRegistration, Sta
                 statement.execute();
             }
             long end = System.nanoTime();
-            console.getOutput().println("ADD (x" + ADD_ITERATIONS + ") took " + TimeUnit.NANOSECONDS.toMicros(end-start) + " µs");
+            console.getOutput().println("ADD (x" + ITERATIONS + ") took " + TimeUnit.NANOSECONDS.toMicros(end-start) + " µs");
         } catch (StatementExecutionException e) {
             console.getError().println("Error ADDing data");
             e.printStackTrace(console.getError());
@@ -193,12 +198,11 @@ public class StorageProfileCommand implements Command, CategoryRegistration, Sta
         }
     }
 
-    private void measureQuerySingleItem(Console console) {
+    private void measureQuerySingleItem(Console console, final int ITERATIONS) {
         try {
             StatementDescriptor<SimpleData> desc = new StatementDescriptor<>(PROFILE_CATEGORY, QUERY_ALL_DATA);
             long start = System.nanoTime();
-            final int QUERY_ITERATIONS = 1000;
-            for (int i = 0; i < QUERY_ITERATIONS; i++) {
+            for (int i = 0; i < ITERATIONS; i++) {
                 PreparedStatement<SimpleData> statement = storage.prepareStatement(desc);
                 Cursor<SimpleData> results = statement.executeQuery();
                 while (results.hasNext()) {
@@ -206,7 +210,7 @@ public class StorageProfileCommand implements Command, CategoryRegistration, Sta
                 }
             }
             long end = System.nanoTime();
-            console.getOutput().println("QUERY (x" + QUERY_ITERATIONS + ") took " + TimeUnit.NANOSECONDS.toMicros(end-start) + " µs");
+            console.getOutput().println("QUERY (x" + ITERATIONS + ") took " + TimeUnit.NANOSECONDS.toMicros(end-start) + " µs");
         } catch (StatementExecutionException e) {
             console.getError().println("Error QUERYing data");
             e.printStackTrace(console.getError());
@@ -215,7 +219,7 @@ public class StorageProfileCommand implements Command, CategoryRegistration, Sta
         }
     }
 
-    private void measureQueryDistinctItems(Console console) {
+    private void measureQueryDistinctItems(Console console, final int ITERATIONS) {
         try {
 
             // populate data
@@ -229,15 +233,12 @@ public class StorageProfileCommand implements Command, CategoryRegistration, Sta
                 statement.execute();
             }
 
-            while (countAllData(console) != DATA_COUNT) {
-                // wait for data to hit storage
-            }
+            waitForDataCount(console, DATA_COUNT);
 
             // time query
             StatementDescriptor<SimpleData> desc = new StatementDescriptor<>(PROFILE_CATEGORY, QUERY_ALL_DATA);
             long start = System.nanoTime();
-            final int QUERY_ITERATIONS = 1000;
-            for (int i = 0; i < QUERY_ITERATIONS; i++) {
+            for (int i = 0; i < ITERATIONS; i++) {
                 PreparedStatement<SimpleData> statement = storage.prepareStatement(desc);
                 Cursor<SimpleData> results = statement.executeQuery();
                 while (results.hasNext()) {
@@ -245,7 +246,7 @@ public class StorageProfileCommand implements Command, CategoryRegistration, Sta
                 }
             }
             long end = System.nanoTime();
-            console.getOutput().println("QUERY multiple (" + DATA_COUNT + ")  (x" + QUERY_ITERATIONS + ") took " + TimeUnit.NANOSECONDS.toMicros(end-start) + " µs");
+            console.getOutput().println("QUERY multiple (" + DATA_COUNT + ") (x" + ITERATIONS + ") took " + TimeUnit.NANOSECONDS.toMicros(end-start) + " µs");
         } catch (StatementExecutionException e) {
             console.getError().println("Error QUERYing data");
             e.printStackTrace(console.getError());
@@ -254,7 +255,7 @@ public class StorageProfileCommand implements Command, CategoryRegistration, Sta
         }
     }
 
-    private void measureQueryCount(Console console) {
+    private void measureQueryCount(Console console, final int ITERATIONS) {
         try {
 
             // populate data
@@ -268,15 +269,12 @@ public class StorageProfileCommand implements Command, CategoryRegistration, Sta
                 statement.execute();
             }
 
-            while (countAllData(console) != DATA_COUNT) {
-                // wait for data to hit storage
-            }
+            waitForDataCount(console, DATA_COUNT);
 
             // measure query
             StatementDescriptor<AggregateCount> desc = new StatementDescriptor<>(AGGREGATE_CATEGORY, QUERY_COUNT_DATA);
             long start = System.nanoTime();
-            final int QUERY_ITERATIONS = 1000;
-            for (int i = 0; i < QUERY_ITERATIONS; i++) {
+            for (int i = 0; i < ITERATIONS; i++) {
                 PreparedStatement<AggregateCount> statement = storage.prepareStatement(desc);
                 Cursor<AggregateCount> cursor = statement.executeQuery();
                 assert cursor.hasNext();
@@ -285,7 +283,7 @@ public class StorageProfileCommand implements Command, CategoryRegistration, Sta
                 assert count == DATA_COUNT;
             }
             long end = System.nanoTime();
-            console.getOutput().println("QUERY-COUNT (x" + QUERY_ITERATIONS + ") took " + TimeUnit.NANOSECONDS.toMicros(end-start) + " µs");
+            console.getOutput().println("QUERY-COUNT (x" + ITERATIONS + ") took " + TimeUnit.NANOSECONDS.toMicros(end-start) + " µs");
         } catch (StatementExecutionException e) {
             console.getError().println("Error QUERY-COUNTing data");
             e.printStackTrace(console.getError());
@@ -294,7 +292,7 @@ public class StorageProfileCommand implements Command, CategoryRegistration, Sta
         }
     }
 
-    private void measureUpdate(Console console) {
+    private void measureUpdate(Console console, final int ITERATIONS) {
         try {
 
             // populate data
@@ -308,27 +306,35 @@ public class StorageProfileCommand implements Command, CategoryRegistration, Sta
                 statement.execute();
             }
 
-            while (countAllData(console) != DATA_COUNT) {
-                // wait for data to hit storage
-            }
+            waitForDataCount(console, DATA_COUNT);
 
             // measure update
             StatementDescriptor<SimpleData> desc = new StatementDescriptor<>(PROFILE_CATEGORY, UPDATE_DATA);
             long start = System.nanoTime();
-            final int QUERY_ITERATIONS = 1000;
-            for (int i = 0; i < QUERY_ITERATIONS; i++) {
+            for (int i = 0; i < ITERATIONS; i++) {
                 PreparedStatement<SimpleData> statement = storage.prepareStatement(desc);
                 statement.setString(0, "FOO" + "10");
                 statement.setLong(1, 10000);
                 statement.execute();
             }
             long end = System.nanoTime();
-            console.getOutput().println("UPDATE (x" + QUERY_ITERATIONS + ") took " + TimeUnit.NANOSECONDS.toMicros(end-start) + " µs");
+            console.getOutput().println("UPDATE (x" + ITERATIONS + ") took " + TimeUnit.NANOSECONDS.toMicros(end-start) + " µs");
         } catch (StatementExecutionException e) {
             console.getError().println("Error UPDATEing data");
             e.printStackTrace(console.getError());
         } catch (DescriptorParsingException parsingException) {
             throw new AssertionError("The descriptor must be valid", parsingException);
+        }
+    }
+
+    private void waitForDataCount(Console console, int count) {
+        while (countAllData(console) != count) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                console.getError().print("Error waiting for data in storage to stabilize");
+                e.printStackTrace(console.getError());
+            }
         }
     }
 

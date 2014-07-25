@@ -43,6 +43,15 @@
     <command>
       <name>storage-profile</name>
       <description>profile how fast storage operations are</description>
+      <options>
+        <option>
+          <long>iterations</long>
+          <short>i</short>
+          <argument>number</argument>
+          <required>false</required>
+          <description>the number of iterations to run for each benchmark</description>
+        </option>
+      </options>
       <environments>
         <environment>cli</environment>
         <environment>shell</environment>
