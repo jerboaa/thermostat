@@ -48,6 +48,7 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.perflog.PerformanceLogFormatter;
+import com.redhat.thermostat.shared.perflog.PerformanceLogFormatter.LogTag;
 import com.redhat.thermostat.storage.internal.CountingDecorator;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
@@ -62,6 +63,10 @@ public class QueuedStorage implements Storage {
      * and it is used as a backing storage for proxied storage (such as web).
      */
     protected final boolean isBackingStorageInProxy;
+    /*
+     * True if and only if statements should get timed and logged.
+     */
+    protected final boolean isTimedStatements;
     // performance logger. may be null
     protected final PerformanceLogFormatter perfLogFormatter;
     protected final Storage delegate;
@@ -70,70 +75,70 @@ public class QueuedStorage implements Storage {
     
     private abstract static class SettingDecorator<T extends Pojo> implements PreparedStatementSetter, PreparedStatement<T> {
         
-        protected final PreparedStatement<T> delegate;
+        protected final PreparedStatement<T> stmtDelegate;
         
         private SettingDecorator(PreparedStatement<T> decoratee) {
-            this.delegate = decoratee;
+            this.stmtDelegate = decoratee;
         }
         
         @Override
         public void setBooleanList(int paramIndex, boolean[] paramValue) {
-            delegate.setBooleanList(paramIndex, paramValue);
+            stmtDelegate.setBooleanList(paramIndex, paramValue);
         }
 
         @Override
         public void setLongList(int paramIndex, long[] paramValue) {
-            delegate.setLongList(paramIndex, paramValue);
+            stmtDelegate.setLongList(paramIndex, paramValue);
         }
 
         @Override
         public void setIntList(int paramIndex, int[] paramValue) {
-            delegate.setIntList(paramIndex, paramValue);
+            stmtDelegate.setIntList(paramIndex, paramValue);
         }
 
         @Override
         public void setDouble(int paramIndex, double paramValue) {
-            delegate.setDouble(paramIndex, paramValue);
+            stmtDelegate.setDouble(paramIndex, paramValue);
         }
 
         @Override
         public void setDoubleList(int paramIndex, double[] paramValue) {
-            delegate.setDoubleList(paramIndex, paramValue);
+            stmtDelegate.setDoubleList(paramIndex, paramValue);
         }
 
         @Override
         public void setPojo(int paramIndex, Pojo paramValue) {
-            delegate.setPojo(paramIndex, paramValue);
+            stmtDelegate.setPojo(paramIndex, paramValue);
         }
 
         @Override
         public void setPojoList(int paramIndex, Pojo[] paramValue) {
-            delegate.setPojoList(paramIndex, paramValue);
+            stmtDelegate.setPojoList(paramIndex, paramValue);
         }
 
         @Override
         public void setBoolean(int paramIndex, boolean paramValue) {
-            delegate.setBoolean(paramIndex, paramValue);
+            stmtDelegate.setBoolean(paramIndex, paramValue);
         }
 
         @Override
         public void setLong(int paramIndex, long paramValue) {
-            delegate.setLong(paramIndex, paramValue);
+            stmtDelegate.setLong(paramIndex, paramValue);
         }
 
         @Override
         public void setInt(int paramIndex, int paramValue) {
-            delegate.setInt(paramIndex, paramValue);
+            stmtDelegate.setInt(paramIndex, paramValue);
         }
 
         @Override
         public void setString(int paramIndex, String paramValue) {
-            delegate.setString(paramIndex, paramValue);
+            stmtDelegate.setString(paramIndex, paramValue);
         }
 
         @Override
         public void setStringList(int paramIndex, String[] paramValue) {
-            delegate.setStringList(paramIndex, paramValue);
+            stmtDelegate.setStringList(paramIndex, paramValue);
         }
         
     }
@@ -200,21 +205,25 @@ public class QueuedStorage implements Storage {
                 
                 @Override
                 public void run() {
-                    // FIXME: perhaps read return code and log
-                    write.apply();
+                    doApply();
                 }
             });
             return DataModifyingStatement.DEFAULT_STATUS_SUCCESS;
+        }
+        
+        // Allows for timed decoration
+        protected int doApply() {
+            return write.apply();
         }
         
     }
     
     abstract class QueuedParsedStatementDecorator<T extends Pojo> implements ParsedStatement<T> {
 
-        protected final ParsedStatement<T> delegate;
+        protected final ParsedStatement<T> parsedDelegate;
         
         private QueuedParsedStatementDecorator(ParsedStatement<T> delegate) {
-            this.delegate = delegate;
+            this.parsedDelegate = delegate;
         }
         
         @Override
@@ -222,7 +231,7 @@ public class QueuedStorage implements Storage {
 
         @Override
         public int getNumParams() {
-            return delegate.getNumParams();
+            return parsedDelegate.getNumParams();
         }
         
     }
@@ -236,7 +245,7 @@ public class QueuedStorage implements Storage {
         @Override
         public Statement<T> patchStatement(PreparedParameter[] params)
                 throws IllegalPatchException {
-            Statement<T> stmt = delegate.patchStatement(params);
+            Statement<T> stmt = parsedDelegate.patchStatement(params);
             if (stmt instanceof DataModifyingStatement) {
                 DataModifyingStatement<T> target = (DataModifyingStatement<T>)stmt;
                 return new QueuedWrite<>(target);
@@ -246,6 +255,99 @@ public class QueuedStorage implements Storage {
             } else {
                 // We only have two statement types: reads and writes.
                 throw new IllegalStateException("Should not reach here"); 
+            }
+        }
+        
+    }
+    
+    static class TimedStatement {
+        private static final String DB_READ_PREFIX = "DB_READ";
+        private static final String DB_WRITE_PREFIX = "DB_WRITE";
+        private static final String DB_WRITE_FORMAT = DB_WRITE_PREFIX + "(%s) %s";
+        private static final String DB_READ_FORMAT = DB_READ_PREFIX + " %s";
+    }
+    
+    class TimedQuery<T extends Pojo> extends QueuedQueryDecorator<T> {
+
+        private final Query<T> queryDelegate;
+        private final PerformanceLogFormatter perfLogFormatter;
+        private final String descriptor;
+        
+        private TimedQuery(Query<T> delegate, PerformanceLogFormatter perfLogFormatter, String descriptor) {
+            super(delegate);
+            this.queryDelegate = delegate;
+            this.perfLogFormatter = perfLogFormatter;
+            this.descriptor = descriptor;
+        }
+
+        @Override
+        public Cursor<T> execute() {
+            long start = System.nanoTime();
+            Cursor<T> result = queryDelegate.execute();
+            long end = System.nanoTime();
+            String msg = String.format(TimedStatement.DB_READ_FORMAT, descriptor);
+            logger.log(LoggingUtils.PERFLOG, perfLogFormatter.format(LogTag.STORAGE_BACKING_PROXIED, msg, (end - start)));
+            return result;
+        }
+        
+    }
+    
+    class TimedWrite<T extends Pojo> extends QueuedWrite<T> implements DataModifyingStatement<T> {
+
+        private final QueuedWrite<T> write;
+        private final PerformanceLogFormatter perfLogFormatter;
+        private final String descriptor;
+        
+        private TimedWrite(QueuedWrite<T> delegate, PerformanceLogFormatter perfLogFormatter, String descriptor) {
+            super(delegate);
+            this.write = delegate;
+            this.perfLogFormatter = perfLogFormatter;
+            this.descriptor = descriptor;
+        }
+
+        @Override
+        public int apply() {
+            executor.execute(new Runnable() {
+                
+                @Override
+                public void run() {
+                    long start = System.nanoTime();
+                    int retval = write.doApply();
+                    long end = System.nanoTime();
+                    String msg = String.format(TimedStatement.DB_WRITE_FORMAT, retval, descriptor);
+                    logger.log(LoggingUtils.PERFLOG, perfLogFormatter.format(LogTag.STORAGE_BACKING_PROXIED, msg, (end - start)));
+                }
+                
+            });
+            return DataModifyingStatement.DEFAULT_STATUS_SUCCESS;
+        }
+        
+    }
+    
+    class TimedParsedStatement<T extends Pojo> extends QueuedParsedStatementDecorator<T> {
+
+        private final PerformanceLogFormatter perfLogFormatter;
+        private final String descriptor;
+        
+        private TimedParsedStatement(ParsedStatement<T> delegate, PerformanceLogFormatter perfLogFormatter, String descriptor) {
+            super(delegate);
+            this.perfLogFormatter = perfLogFormatter;
+            this.descriptor = descriptor;
+        }
+        
+        @Override
+        public Statement<T> patchStatement(PreparedParameter[] params)
+                throws IllegalPatchException {
+            Statement<T> stmt = parsedDelegate.patchStatement(params);
+            if (stmt instanceof DataModifyingStatement) {
+                QueuedWrite<T> target = (QueuedWrite<T>)stmt;
+                return new TimedWrite<>(target, perfLogFormatter, descriptor);
+            } else if (stmt instanceof Query) {
+                Query<T> target = (Query<T>)stmt;
+                return new TimedQuery<>(target, perfLogFormatter, descriptor);
+            } else {
+                // We only have two statement types: reads and writes.
+                throw new IllegalStateException("Should not reach here");
             }
         }
         
@@ -261,7 +363,6 @@ public class QueuedStorage implements Storage {
         private static final String DB_WRITE_PREFIX = "DB_WRITE";
         private static final String DB_WRITE_FORMAT = DB_WRITE_PREFIX + "(%s) %s";
         private static final String DB_READ_FORMAT = DB_READ_PREFIX + " %s";
-        private static final String LOG_TAG = "TimedPreparedStatement";
         private final PerformanceLogFormatter perfLogFormatter;
         private final String descriptor;
         
@@ -274,10 +375,10 @@ public class QueuedStorage implements Storage {
         @Override
         public Cursor<T> executeQuery() throws StatementExecutionException {
             long start = System.nanoTime();
-            Cursor<T> result = delegate.executeQuery();
+            Cursor<T> result = stmtDelegate.executeQuery();
             long end = System.nanoTime();
             String msg = String.format(DB_READ_FORMAT, descriptor);
-            logger.log(LoggingUtils.PERFLOG, perfLogFormatter.format(LOG_TAG, msg, (end - start)));
+            logger.log(LoggingUtils.PERFLOG, perfLogFormatter.format(LogTag.STORAGE_FRONT_END, msg, (end - start)));
             return result;
         }
         
@@ -289,11 +390,11 @@ public class QueuedStorage implements Storage {
                 public void run() {
                     try {
                         long start = System.nanoTime();
-                        QueuedPreparedStatement<T> d = (QueuedPreparedStatement<T>)delegate;
+                        QueuedPreparedStatement<T> d = (QueuedPreparedStatement<T>)stmtDelegate;
                         int retval = d.doExecute();
                         long end = System.nanoTime();
                         String msg = String.format(DB_WRITE_FORMAT, retval, descriptor);
-                        logger.log(LoggingUtils.PERFLOG, perfLogFormatter.format(LOG_TAG, msg, (end - start)));
+                        logger.log(LoggingUtils.PERFLOG, perfLogFormatter.format(LogTag.STORAGE_FRONT_END, msg, (end - start)));
                     } catch (StatementExecutionException e) {
                         // There isn't much we can do in case of invalid
                         // patch or the likes. Log it and move on.
@@ -304,9 +405,21 @@ public class QueuedStorage implements Storage {
             return DataModifyingStatement.DEFAULT_STATUS_SUCCESS;
         }
 
+        /*
+         * For proxied prepared statements we never actually call the underlying
+         * execute() and executeQuery() methods for performance reasons. We
+         * simply use previously prepared statements and use the parsed result
+         * of them. Thus, in order to make backing storages queued too, we
+         * need to decorate them this way.
+         */
         @Override
         public ParsedStatement<T> getParsedStatement() {
-            return delegate.getParsedStatement();
+            if (isBackingStorageInProxy) {
+                ParsedStatement<T> target = stmtDelegate.getParsedStatement();
+                return new TimedParsedStatement<>(target, perfLogFormatter, descriptor);
+            } else {
+                return stmtDelegate.getParsedStatement();
+            }
         }
         
     }
@@ -349,7 +462,7 @@ public class QueuedStorage implements Storage {
                 String msg = "Did not expect to get called for backing storage in proxied setup.";
                 throw new AssertionError(msg);
             }
-            return delegate.executeQuery();
+            return stmtDelegate.executeQuery();
         }
         
         /*
@@ -362,16 +475,16 @@ public class QueuedStorage implements Storage {
         @Override
         public ParsedStatement<T> getParsedStatement() {
             if (isBackingStorageInProxy) {
-                ParsedStatement<T> target = delegate.getParsedStatement();
+                ParsedStatement<T> target = stmtDelegate.getParsedStatement();
                 return new QueuedParsedStatement<>(target);
             } else {
-                return delegate.getParsedStatement();
+                return stmtDelegate.getParsedStatement();
             }
         }
         
         // This is to allow for proper decoration of it if timing is turned on.
         private int doExecute() throws StatementExecutionException {
-            return delegate.execute();
+            return stmtDelegate.execute();
         }
         
     }
@@ -395,16 +508,15 @@ public class QueuedStorage implements Storage {
         this(delegate, executor, fileExecutor, null);
     }
     
-    /*
-     * This is here solely for use by tests.
-     */
     QueuedStorage(Storage delegate, ExecutorService executor, ExecutorService fileExecutor, PerformanceLogFormatter perfLogFormatter) {
         this.delegate = delegate;
         this.fileExecutor = fileExecutor;
         this.isBackingStorageInProxy = !(delegate instanceof SecureStorage) && Boolean.getBoolean(Constants.IS_PROXIED_STORAGE);
+        this.isTimedStatements = LoggingUtils.getEffectiveLogLevel(logger).intValue() <= LoggingUtils.PERFLOG.intValue();
         // set up queue counting executor if so requested
-        if (LoggingUtils.getEffectiveLogLevel(logger).intValue() <= LoggingUtils.PERFLOG.intValue()) {
-            this.executor = new CountingDecorator(executor, perfLogFormatter);
+        if (isTimedStatements) {
+            LogTag logTag = (isBackingStorageInProxy ? LogTag.STORAGE_BACKING_PROXIED : LogTag.STORAGE_FRONT_END);
+            this.executor = new CountingDecorator(executor, perfLogFormatter, logTag);
         } else {
             this.executor = executor;
         }
@@ -466,7 +578,7 @@ public class QueuedStorage implements Storage {
     }
     
     private <T extends Pojo> PreparedStatement<T> decorateWithTimingLoggerIfNecessary(QueuedPreparedStatement<T> decoratee, StatementDescriptor<T> desc) {
-        if (LoggingUtils.getEffectiveLogLevel(logger).intValue() <= LoggingUtils.PERFLOG.intValue()) {
+        if (isTimedStatements) {
             return new TimedPreparedStatement<>(decoratee, this.perfLogFormatter, desc.getDescriptor());
         }
         return decoratee;

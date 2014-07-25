@@ -45,31 +45,65 @@ package com.redhat.thermostat.shared.perflog;
  *
  */
 public interface PerformanceLogFormatter {
+    
+    /**
+     * 
+     * Log tags the Thermostat internal log analyzer knows about.
+     *
+     */
+    public enum LogTag {
+        
+        // Note: Keep string values in sync with thermostat-perflog-analyzer's
+        //       LogTag.
+        
+        /**
+         * Log tag for storage related messages. In particular messages emitted
+         * from backing proxied storage (usually from within the webapp).
+         */
+        STORAGE_BACKING_PROXIED("s-backing-proxied"),
+        /**
+         * Log tag for storage related messages. In particular messages emitted
+         * from front-end storage.
+         */
+        STORAGE_FRONT_END("s-front-end"),
+        ;
+        
+        private final String value;
+        
+        LogTag(String value) {
+            this.value = value;
+        }
+        
+        @Override
+        public String toString() {
+            return value;
+        }
+    }
 
     /**
      * Format a log message with the given duration.
      * 
-     * @param uniqueToken A unique token. Useful if logs are split across files
+     * @param tag         Useful if logs are split across files
      *                    and should get combined or aggregated in some way via
-     *                    this token.
+     *                    this token. See also {@link LogTag#toString()}.
      * @param msg The message to log
      * @param durationInNanos
      * @return A formatted string suitable for logging at the
      *         {@link com.redhat.thermostat.common.utils.LoggingUtils.PERFLOG}
      *         level.
      */
-    public String format(String uniqueToken, String msg, long durationInNanos);
+    public String format(LogTag tag, String msg, long durationInNanos);
     
     /**
      * Format a log message.
      * 
-     * @param uniqueToken A unique token. Useful if logs are split across files
+     * @param tag Useful if logs are split across files
      *                    and should get combined or aggregated in some way via
-     *                    this token.
+     *                    this token. See also {@link LogTag#toString()}.
      * @param msg The message to log
      * @return A formatted string suitable for logging at the
      *         {@link com.redhat.thermostat.common.utils.LoggingUtils.PERFLOG}
      *         level.
      */
-    public String format(String uniqueToken, String msg);
+    public String format(LogTag tag, String msg);
 }

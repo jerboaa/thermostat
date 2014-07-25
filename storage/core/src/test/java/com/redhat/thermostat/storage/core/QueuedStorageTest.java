@@ -219,7 +219,7 @@ public class QueuedStorageTest {
 
         expectedFile = mock(InputStream.class);
         when(delegateStorage.loadFile(anyString())).thenReturn(expectedFile);
-        queuedStorage = new QueuedStorage(delegateStorage, executor, fileExecutor);
+        queuedStorage = new QueuedStorage(delegateStorage, executor, fileExecutor, null);
     }
 
     @After
@@ -231,7 +231,6 @@ public class QueuedStorageTest {
         fileExecutor = null;
         executor = null;
     }
-    
     
     @Test
     public void testPurge() {

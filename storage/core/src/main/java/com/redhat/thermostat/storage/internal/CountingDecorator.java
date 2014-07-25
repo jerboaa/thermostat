@@ -49,6 +49,7 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.perflog.PerformanceLogFormatter;
+import com.redhat.thermostat.shared.perflog.PerformanceLogFormatter.LogTag;
 import com.redhat.thermostat.storage.core.QueuedStorage;
 
 /**
@@ -59,17 +60,26 @@ import com.redhat.thermostat.storage.core.QueuedStorage;
  */
 public class CountingDecorator implements ExecutorService {
 
-    private static final String LOG_TAG = CountingDecorator.class.getSimpleName();
     private static final String QUEUE_SIZE_PREFIX = "Q_SIZE";
     private static final String QUEUE_SIZE_FORMAT = QUEUE_SIZE_PREFIX + " %s";
     private static final Logger logger = LoggingUtils.getLogger(CountingDecorator.class);
+    private final LogTag logTag;
     private final PerformanceLogFormatter perfLogFormatter;
     private final ExecutorService decoratee;
     private final AtomicLong queueLength;
     
-    public CountingDecorator(ExecutorService decoratee, PerformanceLogFormatter perfLogFormatter) {
+    /**
+     * 
+     * @param decoratee
+     *            The executor service to decorate.
+     * @param perfLogFormatter
+     *            The log formatter to use for logged messages.
+     * @param logTag The log tag to use when logging messages.
+     */
+    public CountingDecorator(ExecutorService decoratee, PerformanceLogFormatter perfLogFormatter, LogTag logTag) {
         this.decoratee = Objects.requireNonNull(decoratee);
         this.perfLogFormatter = Objects.requireNonNull(perfLogFormatter);
+        this.logTag = logTag;
         this.queueLength = new AtomicLong();
     }
     
@@ -86,7 +96,7 @@ public class CountingDecorator implements ExecutorService {
             
         });
         String msg = String.format(QUEUE_SIZE_FORMAT, queueLength.get());
-        logger.log(LoggingUtils.PERFLOG, perfLogFormatter.format(LOG_TAG, msg));
+        logger.log(LoggingUtils.PERFLOG, perfLogFormatter.format(logTag, msg));
     }
 
     @Override

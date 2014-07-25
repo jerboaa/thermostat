@@ -92,17 +92,17 @@ public class PerformanceLogFormatterImpl implements PerformanceLogFormatter {
     }
 
     @Override
-    public String format(String uniqueToken, String msg, long durationInNanos) {
+    public String format(LogTag tag, String msg, long durationInNanos) {
         StringBuilder sb = new StringBuilder(ts.getTimeStamp());
         String duration = getFormattedDuration(durationInNanos);
-        sb.append(String.format(FORMAT_WITH_DURATION, uniqueToken, msg, duration));
+        sb.append(String.format(FORMAT_WITH_DURATION, tag.toString(), msg, duration));
         return sb.toString();
     }
     
     @Override
-    public String format(String uniqueToken, String msg) {
+    public String format(LogTag tag, String msg) {
         StringBuilder sb = new StringBuilder(ts.getTimeStamp());
-        sb.append(String.format(FORMAT_NO_DURATION, uniqueToken, msg));
+        sb.append(String.format(FORMAT_NO_DURATION, tag.toString(), msg));
         return sb.toString();
     }
 
