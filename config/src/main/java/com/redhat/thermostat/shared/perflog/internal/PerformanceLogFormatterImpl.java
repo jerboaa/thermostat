@@ -33,23 +33,19 @@
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
-package com.redhat.thermostat.storage.internal;
+package com.redhat.thermostat.shared.perflog.internal;
 
-import java.io.Closeable;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.storage.core.PerformanceLogger;
-import com.redhat.thermostat.storage.core.PerformanceLoggerBuilder;
+import com.redhat.thermostat.shared.perflog.PerformanceLogFormatter;
+import com.redhat.thermostat.shared.perflog.PerformanceLogFormatterBuilder;
+import com.redhat.thermostat.shared.perflog.internal.TimeStampProvider;
 
 /**
- * @see PerformanceLogger
- * @see PerformanceLoggerBuilder
+ * @see PerformanceLogFormatter
+ * @see PerformanceLogFormatterBuilder
  */
-public class PerformanceLoggerImpl implements PerformanceLogger, AutoCloseable, Closeable {
+public class PerformanceLogFormatterImpl implements PerformanceLogFormatter {
     
     private static final char MICRO_SIGN = '\u00b5';
     private static final String DAYS_SHORT = "days";
@@ -63,17 +59,14 @@ public class PerformanceLoggerImpl implements PerformanceLogger, AutoCloseable, 
     private static final String FORMAT_WITH_DURATION = "1|%s|%s|%s";
     // unique-token, msg
     private static final String FORMAT_NO_DURATION = "0|%s|%s";
-    private final File filename;
     private final TimeUnit timeUnit;
     private final String durationFormat;
-    private boolean isClosed;
-    private TimeStampedPrintWriter pw;
+    private TimeStampProvider ts;
     
-    public PerformanceLoggerImpl(File filename, TimeUnit timeUnit) {
-        this.filename = filename;
+    public PerformanceLogFormatterImpl(TimeUnit timeUnit) {
         this.timeUnit = timeUnit;
         this.durationFormat = getDurationFormat(timeUnit);
-        initOutStreams();
+        ts = new TimeStampProvider();
     }
 
     private String getDurationFormat(TimeUnit unit) {
@@ -98,49 +91,24 @@ public class PerformanceLoggerImpl implements PerformanceLogger, AutoCloseable, 
         }
     }
 
-    private void initOutStreams() {
-        try {
-            FileOutputStream fout = new FileOutputStream(filename, true);
-            this.pw = new TimeStampedPrintWriter(fout);
-            this.isClosed = false;
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
-
     @Override
-    public void log(String uniqueToken, String msg, long durationInNanos) {
+    public String format(String uniqueToken, String msg, long durationInNanos) {
+        StringBuilder sb = new StringBuilder(ts.getTimeStamp());
         String duration = getFormattedDuration(durationInNanos);
-        String logMsg = String.format(FORMAT_WITH_DURATION, uniqueToken, msg, duration);
-        doLog(logMsg);
+        sb.append(String.format(FORMAT_WITH_DURATION, uniqueToken, msg, duration));
+        return sb.toString();
     }
     
     @Override
-    public void log(String uniqueToken, String msg) {
-        String logMsg = String.format(FORMAT_NO_DURATION, uniqueToken, msg);
-        doLog(logMsg);
+    public String format(String uniqueToken, String msg) {
+        StringBuilder sb = new StringBuilder(ts.getTimeStamp());
+        sb.append(String.format(FORMAT_NO_DURATION, uniqueToken, msg));
+        return sb.toString();
     }
 
     private String getFormattedDuration(long durationInNanos) {
         long convertedTime = timeUnit.convert(durationInNanos, TimeUnit.NANOSECONDS);
         return String.format(durationFormat, convertedTime);
-    }
-
-    private synchronized void doLog(String logMsg) {
-        if (isClosed) {
-            initOutStreams();
-        }
-        pw.println(logMsg);
-        pw.flush();
-    }
-
-    @Override
-    public synchronized void close() throws IOException {
-        if (isClosed) {
-            return;
-        }
-        pw.close();
-        this.isClosed = true;
     }
 
 }

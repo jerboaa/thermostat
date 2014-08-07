@@ -34,36 +34,38 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.core;
+package com.redhat.thermostat.shared.perflog.internal;
 
-import com.redhat.thermostat.shared.perflog.PerformanceLogFormatter;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
-/**
- * Secure version of {@link QueuedStorage}. I.e. its delegate is an instance of
- * {@link SecureStorage}.
- *
- * @see SecureStorage
- * @see QueuedStorage
- */
-public final class SecureQueuedStorage extends QueuedStorage implements SecureStorage {
+class TimeStampProvider {
+    
+    static final String SEPARATOR = "|";
 
-    public SecureQueuedStorage(SecureStorage storage, PerformanceLogFormatter logger) {
-        super(storage, logger);
+    static final String ISO_FORMAT_WITH_MILLIS = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+    private final DateSource source;
+    private final DateFormat dateFormat;
+    
+    TimeStampProvider() {
+        this(new DateSource());
     }
     
-    public SecureQueuedStorage(SecureStorage storage) {
-        this(storage, null);
-    }
-    
-    @Override
-    public AuthToken generateToken(String actionName) throws StorageException {
-        return ((SecureStorage)delegate).generateToken(actionName);
+    // for testing
+    TimeStampProvider(DateSource source) {
+        this.source = source; 
+        this.dateFormat = new SimpleDateFormat(ISO_FORMAT_WITH_MILLIS);
     }
 
-    @Override
-    public boolean verifyToken(AuthToken token, String actionName) {
-        return ((SecureStorage)delegate).verifyToken(token, actionName);
+    public String getTimeStamp() {
+        return dateFormat.format(source.getDate()) + SEPARATOR;
+    }
+    
+    static class DateSource {
+        Date getDate() {
+            return new Date();
+        }
     }
 
 }
-

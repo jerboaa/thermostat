@@ -50,24 +50,5 @@ public class Constants {
      */
     public static final String IS_PROXIED_STORAGE = "thermostat.storage.proxied";
 
-    /**
-     * System property. Set this to {@code true} if performance metrics should
-     * get logged.
-     */
-    public static final String LOG_PERFORMANCE_METRICS = "thermostat.perf.log.metrics";
-    
-    /**
-     * System property. Set this to an absolute path to a file where perf
-     * metrics should be logged.
-     */
-    public static final String LOG_PERFORMANCE_FILE_WEB = "thermostat.perf.log.filename.web";
-    
-    /**
-     * System property. Set this to an absolute path to a file where perf
-     * metrics should be logged.
-     */
-    public static final String LOG_PERFORMANCE_FILE_MONGO = "thermostat.perf.log.filename.mongodb";
-    
-    public static final String DEFAULT_LOG_FILENAME = "thermostat_perf.log";
 }
 

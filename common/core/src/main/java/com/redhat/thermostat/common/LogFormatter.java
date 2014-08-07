@@ -46,9 +46,7 @@ public class LogFormatter extends Formatter {
     public synchronized String format(LogRecord record) {
         StringBuilder sb = new StringBuilder();
         Level level = record.getLevel();
-        if (level.intValue() >= Level.WARNING.intValue()) {
-            sb.append(level.toString() + " - ");
-        }
+        sb.append(level.toString() + " - ");
         String[] fullLoggingClassName = record.getSourceClassName().split("\\.");
         String loggingClassName = fullLoggingClassName[fullLoggingClassName.length - 1];
         sb.append(loggingClassName);

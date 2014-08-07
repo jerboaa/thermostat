@@ -33,43 +33,43 @@
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
+package com.redhat.thermostat.shared.perflog;
 
-package com.redhat.thermostat.storage.internal;
+import java.util.concurrent.TimeUnit;
 
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import com.redhat.thermostat.shared.perflog.internal.PerformanceLogFormatterImpl;
 
-class TimeStampedPrintWriter extends PrintWriter {
+public class PerformanceLogFormatterBuilder {
+
+    private TimeUnit timeUnitToPrint;
     
-    static final String SEPARATOR = "|";
-
-    static final String ISO_FORMAT_WITH_MILLIS = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
-    private final DateSource source;
-    private final DateFormat dateFormat;
-    
-    TimeStampedPrintWriter(OutputStream out) {
-        this(out, new DateSource());
+    private PerformanceLogFormatterBuilder() {
+        // only instantiate via factory method
     }
     
-    // for testing
-    TimeStampedPrintWriter(OutputStream out, DateSource source) {
-        super(out);
-        this.source = source; 
-        this.dateFormat = new SimpleDateFormat(ISO_FORMAT_WITH_MILLIS);
+    public static PerformanceLogFormatterBuilder create() {
+        return new PerformanceLogFormatterBuilder();
     }
     
-    @Override
-    public void println(String line) {
-        super.println(dateFormat.format(source.getDate()) + SEPARATOR + line);
+    /**
+     * @param timeUnit The time unit to use in logs.
+     * @return This instance.
+     */
+    public PerformanceLogFormatterBuilder setLoggedTimeUnit(TimeUnit timeUnit) {
+        this.timeUnitToPrint = timeUnit;
+        return this;
     }
-    
-    static class DateSource {
-        Date getDate() {
-            return new Date();
+
+    /**
+     * 
+     * @return The configured logger.
+     * 
+     * @throws IllegalStateException if no filename or timeunit was set.
+     */
+    public PerformanceLogFormatter build() {
+        if (timeUnitToPrint == null) {
+            throw new IllegalStateException("Must set time unit");
         }
+        return new PerformanceLogFormatterImpl(timeUnitToPrint);
     }
-
 }

@@ -36,13 +36,12 @@
 
 package com.redhat.thermostat.web.client.internal;
 
-import java.io.File;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.common.Constants;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
-import com.redhat.thermostat.storage.core.PerformanceLogger;
-import com.redhat.thermostat.storage.core.PerformanceLoggerBuilder;
+import com.redhat.thermostat.shared.perflog.PerformanceLogFormatter;
+import com.redhat.thermostat.shared.perflog.PerformanceLogFormatterBuilder;
 import com.redhat.thermostat.storage.core.SecureQueuedStorage;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageCredentials;
@@ -57,14 +56,11 @@ public class WebStorageProvider implements StorageProvider {
     @Override
     public Storage createStorage() {
         WebStorage storage = new WebStorage(url, creds, sslConf);
-        if (Boolean.getBoolean(Constants.LOG_PERFORMANCE_METRICS)) {
-            String filename = System.getProperty(Constants.LOG_PERFORMANCE_FILE_WEB, Constants.DEFAULT_LOG_FILENAME);
-            File logFile = new File(filename);
-            PerformanceLoggerBuilder builder = PerformanceLoggerBuilder.create();
-            PerformanceLogger logger = builder.setFilename(logFile)
-                                              .setLoggedTimeUnit(TimeUnit.MICROSECONDS)
+        if (LoggingUtils.getEffectiveLogLevel(LoggingUtils.getLogger(WebStorageProvider.class)).intValue() <= LoggingUtils.PERFLOG.intValue()) {
+            PerformanceLogFormatterBuilder builder = PerformanceLogFormatterBuilder.create();
+            PerformanceLogFormatter lf = builder.setLoggedTimeUnit(TimeUnit.MICROSECONDS)
                                               .build();
-            return new SecureQueuedStorage(storage, logger); 
+            return new SecureQueuedStorage(storage, lf); 
         }
         return new SecureQueuedStorage(storage);
     }

@@ -33,55 +33,49 @@
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
-package com.redhat.thermostat.storage.core;
 
-import java.io.File;
-import java.util.concurrent.TimeUnit;
+package com.redhat.thermostat.shared.perflog.internal;
 
-import com.redhat.thermostat.storage.internal.PerformanceLoggerImpl;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-public class PerformanceLoggerBuilder {
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
-    private File fileName;
-    private TimeUnit timeUnitToPrint;
-    
-    private PerformanceLoggerBuilder() {
-        // only instantiate via factory method
-    }
-    
-    public static PerformanceLoggerBuilder create() {
-        return new PerformanceLoggerBuilder();
-    }
-    
-    /**
-     * 
-     * @param filename The file to log values to.
-     * @return This instance.
-     */
-    public PerformanceLoggerBuilder setFilename(File filename) {
-        this.fileName = filename;
-        return this;
-    }
-    
-    /**
-     * @param timeUnit The time unit to use in logs.
-     * @return This instance.
-     */
-    public PerformanceLoggerBuilder setLoggedTimeUnit(TimeUnit timeUnit) {
-        this.timeUnitToPrint = timeUnit;
-        return this;
+import org.junit.Test;
+
+import com.redhat.thermostat.shared.perflog.internal.TimeStampProvider;
+import com.redhat.thermostat.shared.perflog.internal.TimeStampProvider.DateSource;
+
+public class TimeStampProviderTest {
+
+    @Test
+    public void getsTimestamp() {
+        DateSource calendar = mock(DateSource.class);
+        Date d = new Date();
+        when(calendar.getDate()).thenReturn(d);
+        TimeStampProvider ts = new TimeStampProvider(calendar);
+        String actual = ts.getTimeStamp();
+
+        SimpleDateFormat format = new SimpleDateFormat(TimeStampProvider.ISO_FORMAT_WITH_MILLIS);
+        String timestamp = format.format(d);
+        String expected = timestamp + "|";
+        assertEquals(expected, actual);
     }
 
-    /**
-     * 
-     * @return The configured logger.
-     * 
-     * @throws IllegalStateException if no filename or timeunit was set.
-     */
-    public PerformanceLogger build() {
-        if (fileName == null || timeUnitToPrint == null) {
-            throw new IllegalStateException("Must set filename and time unit");
-        }
-        return new PerformanceLoggerImpl(fileName, timeUnitToPrint);
+    @Test
+    public void multipleCallsProducesFreshTimestamp() throws InterruptedException {
+        TimeStampProvider ts = new TimeStampProvider();
+        String first = ts.getTimeStamp();
+
+        // be sure to be 3 millis later
+        Thread.sleep(3);
+
+        ts = new TimeStampProvider();
+        String second = ts.getTimeStamp();
+
+        assertFalse(first + " " + second, first.equals(second));
     }
 }

@@ -60,6 +60,10 @@ import com.redhat.thermostat.shared.locale.Translate;
  */
 public final class LoggingUtils {
 
+    public static final Level PERFLOG = new Level("PERFLOG", 50) {
+        private static final long serialVersionUID = 1L;
+    };
+
     // package private for testing
     static final String ROOTNAME = "com.redhat.thermostat";
 
@@ -137,6 +141,15 @@ public final class LoggingUtils {
         loadConfig(loggingPropertiesFile);
     }
 
+    public static Level getEffectiveLogLevel(Logger logger) {
+        Level level = logger.getLevel();
+        while (level == null) {
+            logger = logger.getParent();
+            level = logger.getLevel();
+        }
+        return level;
+    }
+
     // for testing
     static void loadConfig(File loggingPropertiesFile) throws InvalidConfigurationException {
         if (loggingPropertiesFile.isFile()) {
@@ -174,7 +187,7 @@ public final class LoggingUtils {
                 @SuppressWarnings("rawtypes")
                 Class clazz = ClassLoader.getSystemClassLoader().loadClass(clazzName);
                 Handler handler = (Handler)clazz.newInstance();
-                handler.setLevel(root.getLevel());
+                handler.setLevel(getEffectiveLogLevel(root));
                 root.addHandler(handler);
             } catch (Exception e) {
                 System.err.print("Could not load log-handler '" + clazzName + "'");

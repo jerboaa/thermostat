@@ -36,13 +36,12 @@
 
 package com.redhat.thermostat.storage.mongodb;
 
-import java.io.File;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.common.Constants;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
-import com.redhat.thermostat.storage.core.PerformanceLogger;
-import com.redhat.thermostat.storage.core.PerformanceLoggerBuilder;
+import com.redhat.thermostat.shared.perflog.PerformanceLogFormatter;
+import com.redhat.thermostat.shared.perflog.PerformanceLogFormatterBuilder;
 import com.redhat.thermostat.storage.core.QueuedStorage;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageCredentials;
@@ -64,14 +63,11 @@ public class MongoStorageProvider implements StorageProvider {
     @Override
     public Storage createStorage() {
         MongoStorage storage = new MongoStorage(url, creds, sslConf);
-        if (Boolean.getBoolean(Constants.LOG_PERFORMANCE_METRICS)) {
-            String filename = System.getProperty(Constants.LOG_PERFORMANCE_FILE_MONGO, Constants.DEFAULT_LOG_FILENAME);
-            File logFile = new File(filename);
-            PerformanceLoggerBuilder builder = PerformanceLoggerBuilder.create();
-            PerformanceLogger logger = builder.setFilename(logFile)
-                                              .setLoggedTimeUnit(TimeUnit.NANOSECONDS)
+        if (LoggingUtils.getEffectiveLogLevel(LoggingUtils.getLogger(MongoStorageProvider.class)).intValue() <= LoggingUtils.PERFLOG.intValue()) {
+            PerformanceLogFormatterBuilder builder = PerformanceLogFormatterBuilder.create();
+            PerformanceLogFormatter lf = builder.setLoggedTimeUnit(TimeUnit.NANOSECONDS)
                                               .build();
-            return new QueuedStorage(storage, logger); 
+            return new QueuedStorage(storage, lf); 
         }
         return new QueuedStorage(storage);
     }

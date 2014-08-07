@@ -45,8 +45,10 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Logger;
 
-import com.redhat.thermostat.storage.core.PerformanceLogger;
+import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.perflog.PerformanceLogFormatter;
 import com.redhat.thermostat.storage.core.QueuedStorage;
 
 /**
@@ -60,14 +62,15 @@ public class CountingDecorator implements ExecutorService {
     private static final String LOG_TAG = CountingDecorator.class.getSimpleName();
     private static final String QUEUE_SIZE_PREFIX = "Q_SIZE";
     private static final String QUEUE_SIZE_FORMAT = QUEUE_SIZE_PREFIX + " %s";
-    private final PerformanceLogger perfLog;
+    private static final Logger logger = LoggingUtils.getLogger(CountingDecorator.class);
+    private final PerformanceLogFormatter perfLogFormatter;
     private final ExecutorService decoratee;
     private final AtomicLong queueLength;
     
-    public CountingDecorator(ExecutorService decoratee, PerformanceLogger perfLog) {
+    public CountingDecorator(ExecutorService decoratee, PerformanceLogFormatter perfLogFormatter) {
         this.decoratee = Objects.requireNonNull(decoratee);
+        this.perfLogFormatter = Objects.requireNonNull(perfLogFormatter);
         this.queueLength = new AtomicLong();
-        this.perfLog = perfLog;
     }
     
     @Override
@@ -83,7 +86,7 @@ public class CountingDecorator implements ExecutorService {
             
         });
         String msg = String.format(QUEUE_SIZE_FORMAT, queueLength.get());
-        perfLog.log(LOG_TAG, msg);
+        logger.log(LoggingUtils.PERFLOG, perfLogFormatter.format(LOG_TAG, msg));
     }
 
     @Override

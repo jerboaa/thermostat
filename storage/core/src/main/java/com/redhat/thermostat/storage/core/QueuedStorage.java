@@ -47,6 +47,7 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.perflog.PerformanceLogFormatter;
 import com.redhat.thermostat.storage.internal.CountingDecorator;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
@@ -62,7 +63,7 @@ public class QueuedStorage implements Storage {
      */
     protected final boolean isBackingStorageInProxy;
     // performance logger. may be null
-    protected final PerformanceLogger perfLogger;
+    protected final PerformanceLogFormatter perfLogFormatter;
     protected final Storage delegate;
     protected final ExecutorService executor;
     protected final ExecutorService fileExecutor;
@@ -261,12 +262,12 @@ public class QueuedStorage implements Storage {
         private static final String DB_WRITE_FORMAT = DB_WRITE_PREFIX + "(%s) %s";
         private static final String DB_READ_FORMAT = DB_READ_PREFIX + " %s";
         private static final String LOG_TAG = "TimedPreparedStatement";
-        private final PerformanceLogger perfLog;
+        private final PerformanceLogFormatter perfLogFormatter;
         private final String descriptor;
         
-        private TimedPreparedStatement(QueuedPreparedStatement<T> decoratee, PerformanceLogger perfLog, String descriptor) {
+        private TimedPreparedStatement(QueuedPreparedStatement<T> decoratee, PerformanceLogFormatter perfLogFormatter, String descriptor) {
             super(decoratee);
-            this.perfLog = perfLog;
+            this.perfLogFormatter = perfLogFormatter;
             this.descriptor = descriptor;
         }
 
@@ -276,7 +277,7 @@ public class QueuedStorage implements Storage {
             Cursor<T> result = delegate.executeQuery();
             long end = System.nanoTime();
             String msg = String.format(DB_READ_FORMAT, descriptor);
-            perfLog.log(LOG_TAG, msg, (end - start));
+            logger.log(LoggingUtils.PERFLOG, perfLogFormatter.format(LOG_TAG, msg, (end - start)));
             return result;
         }
         
@@ -292,7 +293,7 @@ public class QueuedStorage implements Storage {
                         int retval = d.doExecute();
                         long end = System.nanoTime();
                         String msg = String.format(DB_WRITE_FORMAT, retval, descriptor);
-                        perfLog.log(LOG_TAG, msg, (end - start));
+                        logger.log(LoggingUtils.PERFLOG, perfLogFormatter.format(LOG_TAG, msg, (end - start)));
                     } catch (StatementExecutionException e) {
                         // There isn't much we can do in case of invalid
                         // patch or the likes. Log it and move on.
@@ -386,8 +387,8 @@ public class QueuedStorage implements Storage {
      * e.g. a VM death being reported before its VM start, which could confuse
      * the heck out of clients.
      */
-    public QueuedStorage(Storage delegate, PerformanceLogger perfLogger) {
-        this(delegate, Executors.newSingleThreadExecutor(), Executors.newSingleThreadExecutor(), perfLogger);
+    public QueuedStorage(Storage delegate, PerformanceLogFormatter perfLogFormatter) {
+        this(delegate, Executors.newSingleThreadExecutor(), Executors.newSingleThreadExecutor(), perfLogFormatter);
     }
 
     QueuedStorage(Storage delegate, ExecutorService executor, ExecutorService fileExecutor) {
@@ -397,17 +398,17 @@ public class QueuedStorage implements Storage {
     /*
      * This is here solely for use by tests.
      */
-    QueuedStorage(Storage delegate, ExecutorService executor, ExecutorService fileExecutor, PerformanceLogger perfLogger) {
+    QueuedStorage(Storage delegate, ExecutorService executor, ExecutorService fileExecutor, PerformanceLogFormatter perfLogFormatter) {
         this.delegate = delegate;
         this.fileExecutor = fileExecutor;
         this.isBackingStorageInProxy = !(delegate instanceof SecureStorage) && Boolean.getBoolean(Constants.IS_PROXIED_STORAGE);
         // set up queue counting executor if so requested
-        if (Boolean.getBoolean(Constants.LOG_PERFORMANCE_METRICS)) {
-            this.executor = new CountingDecorator(executor, perfLogger);
+        if (LoggingUtils.getEffectiveLogLevel(logger).intValue() <= LoggingUtils.PERFLOG.intValue()) {
+            this.executor = new CountingDecorator(executor, perfLogFormatter);
         } else {
             this.executor = executor;
         }
-        this.perfLogger = perfLogger;
+        this.perfLogFormatter = perfLogFormatter;
     }
 
     ExecutorService getExecutor() {
@@ -465,8 +466,8 @@ public class QueuedStorage implements Storage {
     }
     
     private <T extends Pojo> PreparedStatement<T> decorateWithTimingLoggerIfNecessary(QueuedPreparedStatement<T> decoratee, StatementDescriptor<T> desc) {
-        if (Boolean.getBoolean(Constants.LOG_PERFORMANCE_METRICS)) {
-            return new TimedPreparedStatement<>(decoratee, this.perfLogger, desc.getDescriptor());
+        if (LoggingUtils.getEffectiveLogLevel(logger).intValue() <= LoggingUtils.PERFLOG.intValue()) {
+            return new TimedPreparedStatement<>(decoratee, this.perfLogFormatter, desc.getDescriptor());
         }
         return decoratee;
     }

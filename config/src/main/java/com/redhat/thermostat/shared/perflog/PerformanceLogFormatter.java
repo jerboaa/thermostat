@@ -34,35 +34,42 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.core;
+package com.redhat.thermostat.shared.perflog;
+
 
 /**
  * 
  * Log facility for Thermostat internal performance metrics.
  * 
- * @see PerformanceLoggerBuilder
+ * @see PerformanceLogFormatterBuilder
  *
  */
-public interface PerformanceLogger {
+public interface PerformanceLogFormatter {
 
     /**
-     * Logs a message with the given duration.
+     * Format a log message with the given duration.
      * 
      * @param uniqueToken A unique token. Useful if logs are split across files
      *                    and should get combined or aggregated in some way via
      *                    this token.
      * @param msg The message to log
      * @param durationInNanos
+     * @return A formatted string suitable for logging at the
+     *         {@link com.redhat.thermostat.shared.perflog.PerformanceLogLevel.PERFLOG}
+     *         level.
      */
-    public void log(String uniqueToken, String msg, long durationInNanos);
+    public String format(String uniqueToken, String msg, long durationInNanos);
     
     /**
-     * Logs a message.
+     * Format a log message.
      * 
      * @param uniqueToken A unique token. Useful if logs are split across files
      *                    and should get combined or aggregated in some way via
      *                    this token.
      * @param msg The message to log
+     * @return A formatted string suitable for logging at the
+     *         {@link com.redhat.thermostat.shared.perflog.PerformanceLogLevel.PERFLOG}
+     *         level.
      */
-    public void log(String uniqueToken, String msg);
+    public String format(String uniqueToken, String msg);
 }
