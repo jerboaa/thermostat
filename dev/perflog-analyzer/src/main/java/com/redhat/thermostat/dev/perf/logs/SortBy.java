@@ -36,49 +36,21 @@
 
 package com.redhat.thermostat.dev.perf.logs;
 
-import com.redhat.thermostat.dev.perf.logs.internal.StatsConfigParser;
-
-public class PerfLogAnalyzer {
-
-    static void printUsage() {
-        System.err.println("usage: java -cp thermostat-perflog-analyzer*.jar " + PerfLogAnalyzer.class.getName() + " [OPTIONS] <perflog-file>");
-        System.err.println("");
-        System.err.println("  OPTIONS:");
-        System.err.print("   --" + StatsConfig.SORT_KEY + "=<KEY>   <KEY> is one of:");
-        SortBy[] sorts = SortBy.values();
-        for (int i = 0; i < sorts.length; i++) {
-            System.err.print(" " + sorts[i]);
-            if (i != sorts.length - 1) {
-                System.err.print(",");
-            }
-        }
-        System.err.println(" (" + SortBy.AVG + " is default)");
-        System.err.print("   --" + StatsConfig.DIRECTION_KEY + "=<KEY>   <KEY> is one of: ");
-        System.err.print(Direction.ASC.name() + ", " + Direction.DSC.name());
-        System.err.println(" (" + Direction.DSC + " is default)");
-    }
-    
-    private static void usage() {
-        printUsage();
-        System.exit(1);
-    }
-    
-    public static void main(String[] args) {
-        if (args.length < 1) {
-            usage();
-        }
-        StatsConfigParser statsConfigParser = new StatsConfigParser(args);
-        StatsConfig config = null;
-        try {
-            config = statsConfigParser.parse();
-        } catch (IllegalArgumentException e) {
-            System.err.println(e.getMessage());
-            System.err.println("");
-            usage();
-        }
-        AnalyzerBuilder builder = AnalyzerBuilder.create();
-        LogAnalyzer analyzer = builder.setConfig(config).build();
-        analyzer.analyze();
-    }
-
+public enum SortBy {
+    /**
+     * Sorts stats by their minimum values.
+     */
+    MIN,
+    /**
+     * Sorts stats by their maximum values.
+     */
+    MAX,
+    /**
+     * Sorts stats by their average values.
+     */
+    AVG,
+    /**
+     * Sorts stats by the number of time they occurred in total.
+     */
+    COUNT,
 }

@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.dev.perf.logs.internal;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -45,6 +44,7 @@ import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.dev.perf.logs.LogAnalyzer;
+import com.redhat.thermostat.dev.perf.logs.StatsConfig;
 
 public class LogAnalyzerImpl implements LogAnalyzer {
 
@@ -57,10 +57,10 @@ public class LogAnalyzerImpl implements LogAnalyzer {
     private static final String MICROS_SHORT = MICRO_SIGN + "s";
     private static final String NANOS_SHORT = "ns";
     
-    private final File logFile;
+    private final StatsConfig config;
     
-    public LogAnalyzerImpl(File logFile) {
-        this.logFile = logFile;
+    public LogAnalyzerImpl(StatsConfig config) {
+        this.config = config;
     }
     
     @Override
@@ -76,7 +76,7 @@ public class LogAnalyzerImpl implements LogAnalyzer {
     }
 
     private void printStats(LogFileStats stats) {
-        System.out.println("Statistics for log file: " + logFile.getAbsolutePath());
+        System.out.println("Statistics for log file: " + config.getLogFile().getAbsolutePath());
         System.out.println("Total of " + stats.getTotalStats() + " records analyzed.");
         System.out.println();
         QueueStats queueStats = stats.getQueueStats();
@@ -92,7 +92,7 @@ public class LogAnalyzerImpl implements LogAnalyzer {
         System.out.println("");
         StatementStats statementStats = stats.getStatementStats();
         System.out.print(String.format("Statement statistics (%s records): ", statementStats.getTotalNumberOfRecords()));
-        List<StatementStat> distinctStatements = statementStats.getDistinctStatements();
+        List<StatementStat> distinctStatements = statementStats.getDistinctStatements(config.getSortBy(), config.getDirection());
         String detail = String.format("%s distinct statements (%s reads, %s writes)",
                                        distinctStatements.size(),
                                        statementStats.getNumReads(),
@@ -100,18 +100,35 @@ public class LogAnalyzerImpl implements LogAnalyzer {
         System.out.println(detail);
         if (distinctStatements.size() > 0) {
             System.out.println("");
-            System.out.println("Statement details:");
+            System.out.println("Statement details (" + getSortDetailsMsg() + "):");
             for (StatementStat stat: distinctStatements) {
                 String descriptor = stat.getDescriptor();
                 long min = statementStats.getMinExecTime(descriptor);
                 long max = statementStats.getMaxExecTime(descriptor);
                 double avg = statementStats.getAverage(descriptor);
+                long count = statementStats.getTotalCount(descriptor);
                 TimeUnit timeUnit = statementStats.getTimeUnit(descriptor);
                 String tu = getTimeUnit(timeUnit);
-                String descDetail = String.format("%s%s (min), %s%s (max), %.02f%s (avg), DESCRIPTOR: %s",
-                        min, tu, max, tu, avg, tu, descriptor);
+                String descDetail = String.format("Total #: %s, %s%s (min), %s%s (max), %.02f%s (avg), DESCRIPTOR: %s",
+                        count, min, tu, max, tu, avg, tu, descriptor);
                 System.out.println(descDetail);
             }
+        }
+    }
+
+    private String getSortDetailsMsg() {
+        String sortByMsg = "sorted by ";
+        switch(config.getSortBy()) {
+        case AVG:
+            return sortByMsg + "avg exec time";
+        case COUNT:
+            return sortByMsg + "total occurances";
+        case MAX:
+            return sortByMsg + "max exec time";
+        case MIN:
+            return sortByMsg + "min exec time";
+        default:
+            throw new IllegalArgumentException("Unknown sort value " + config.getSortBy());
         }
     }
 
@@ -139,7 +156,7 @@ public class LogAnalyzerImpl implements LogAnalyzer {
     private LogFileStats readFileCollectStats() throws ReadException {
         StatsParser parser = StatsParserBuilder.build();
         LogFileStats stats = new LogFileStats(parser.getSharedState());
-        try (FileReader freader = new FileReader(logFile);
+        try (FileReader freader = new FileReader(config.getLogFile());
                 Scanner scanner = new Scanner(freader)) {
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
@@ -149,9 +166,9 @@ public class LogAnalyzerImpl implements LogAnalyzer {
                 }
             }
         } catch (FileNotFoundException e) {
-            throw new ReadException("File not found: " + logFile.getAbsolutePath(), e);
+            throw new ReadException("File not found: " + config.getLogFile().getAbsolutePath(), e);
         } catch (IOException e) {
-            throw new ReadException("Error reading log file: " + logFile.getAbsolutePath(), e);
+            throw new ReadException("Error reading log file: " + config.getLogFile().getAbsolutePath(), e);
         }
         return stats;
     }

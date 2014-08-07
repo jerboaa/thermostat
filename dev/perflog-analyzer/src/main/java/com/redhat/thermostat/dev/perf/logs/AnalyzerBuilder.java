@@ -35,13 +35,11 @@
  */
 package com.redhat.thermostat.dev.perf.logs;
 
-import java.io.File;
-
 import com.redhat.thermostat.dev.perf.logs.internal.LogAnalyzerImpl;
 
 class AnalyzerBuilder {
     
-    private File logFile;
+    private StatsConfig config;
 
     private AnalyzerBuilder() {
         // only instantiable via factory method
@@ -51,15 +49,15 @@ class AnalyzerBuilder {
         return new AnalyzerBuilder();
     }
     
-    AnalyzerBuilder setLogFile(File file) {
-        this.logFile = file;
+    AnalyzerBuilder setConfig(StatsConfig file) {
+        this.config = file;
         return this;
     }
     
     LogAnalyzer build() {
-        if (logFile == null) {
-            throw new IllegalStateException("Log file is required");
+        if (config == null) {
+            throw new IllegalStateException("config is required");
         }
-        return new LogAnalyzerImpl(logFile);
+        return new LogAnalyzerImpl(config);
     }
 }

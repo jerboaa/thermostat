@@ -37,11 +37,16 @@
 package com.redhat.thermostat.dev.perf.logs.internal;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
+
+import com.redhat.thermostat.dev.perf.logs.Direction;
+import com.redhat.thermostat.dev.perf.logs.SortBy;
 
 public class StatementStats {
     
@@ -93,6 +98,19 @@ public class StatementStats {
         return summary.getMin();
     }
     
+    long getTotalCount(String descriptor) {
+        if (!analysisDone) {
+            doAnalysis();
+        }
+        int id = state.getMappedStatementId(descriptor);
+        StatementStatSummary summary = cachedSummaries.get(id);
+        return summary.getCount();
+    }
+    
+    /**
+     * 
+     * @return All distinct statements in undefined order.
+     */
     List<StatementStat> getDistinctStatements() {
         if (!analysisDone) {
             doAnalysis();
@@ -102,6 +120,51 @@ public class StatementStats {
             distincts.add(entry.getValue().getStatement());
         }
         return distincts;
+    }
+    
+    private List<StatementStatSummary> getDistinctSummaries() {
+        if (!analysisDone) {
+            doAnalysis();
+        }
+        List<StatementStatSummary> summaries = new ArrayList<>();
+        for (StatementStatSummary sum: cachedSummaries.values()) {
+            summaries.add(sum);
+        }
+        return summaries;
+    }
+    
+    /**
+     * 
+     * @param property The property to sort by.
+     * @return All distinct statements in sorted order as specified by
+     *         {@code property}.
+     */
+    List<StatementStat> getDistinctStatements(SortBy property, Direction direction) {
+        boolean invert = direction == Direction.DSC ? true : false;
+        Comparator<StatementStatSummary> comparator = null;
+        switch(property) {
+        case AVG:
+            comparator = new StatementStatSummaryAvgComparator(invert);
+            break;
+        case COUNT:
+            comparator = new StatementStatSummaryCountComparator(invert);
+            break;
+        case MAX:
+            comparator = new StatementStatSummaryMaxComparator(invert);
+            break;
+        case MIN:
+            comparator = new StatementStatSummaryMinComparator(invert);
+            break;
+        default:
+            throw new IllegalStateException("Unknown sort by property " + property);
+        }
+        List<StatementStatSummary> stats = getDistinctSummaries();
+        Collections.sort(stats, comparator);
+        List<StatementStat> retval = new ArrayList<>();
+        for (StatementStatSummary sumary: stats) {
+            retval.add(sumary.getStatement());
+        }
+        return retval;
     }
     
     int getNumReads() {
@@ -147,7 +210,105 @@ public class StatementStats {
         analysisDone = true;
     }
     
-    private static class StatementStatSummary {
+    static abstract class BaseStatComparator implements Comparator<StatementStatSummary> {
+        
+        private final boolean invert;
+        
+        private BaseStatComparator(boolean invert) {
+            this.invert = invert;
+        }
+        
+        abstract int getComparison(StatementStatSummary one, StatementStatSummary other);
+        
+        @Override
+        public int compare(StatementStatSummary one, StatementStatSummary other) {
+            int retval = getComparison(one, other);
+            if (invert) {
+                return -retval;
+            } else {
+                return retval;
+            }
+        }
+        
+    }
+    
+    static class StatementStatSummaryAvgComparator extends BaseStatComparator {
+        
+        StatementStatSummaryAvgComparator(boolean invert) {
+            super(invert);
+        }
+
+        @Override
+        public int getComparison(StatementStatSummary one, StatementStatSummary other) {
+            if (one.getAvg() < other.getAvg()) {
+                return -1;
+            } else if (one.getAvg() > other.getAvg()) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }
+        
+    }
+    
+    static class StatementStatSummaryMinComparator extends BaseStatComparator {
+
+        StatementStatSummaryMinComparator(boolean invert) {
+            super(invert);
+        }
+        
+        @Override
+        public int getComparison(StatementStatSummary one, StatementStatSummary other) {
+            if (one.getMin() < other.getMin()) {
+                return -1;
+            } else if (one.getMin() > other.getMin()) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }
+        
+    }
+    
+    static class StatementStatSummaryMaxComparator extends BaseStatComparator {
+
+        StatementStatSummaryMaxComparator(boolean invert) {
+            super(invert);
+        }
+        
+        @Override
+        public int getComparison(StatementStatSummary one, StatementStatSummary other) {
+            if (one.getMax() < other.getMax()) {
+                return -1;
+            } else if (one.getMax() > other.getMax()) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }
+        
+    }
+    
+    static class StatementStatSummaryCountComparator extends BaseStatComparator {
+
+        StatementStatSummaryCountComparator(boolean invert) {
+            super(invert);
+        }
+        
+        @Override
+        public int getComparison(StatementStatSummary one, StatementStatSummary other) {
+            if (one.getCount() < other.getCount()) {
+                return -1;
+            } else if (one.getCount() > other.getCount()) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }
+        
+    }
+    
+    static class StatementStatSummary {
         
         private final StatementStat stat;
         private TimeUnit timeUnit;
@@ -183,6 +344,10 @@ public class StatementStats {
         
         private long getMin() {
             return minVal;
+        }
+        
+        private long getCount() {
+            return runningCount;
         }
         
         private double getAvg() {

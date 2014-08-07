@@ -51,6 +51,9 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.dev.perf.logs.Direction;
+import com.redhat.thermostat.dev.perf.logs.SortBy;
+
 public class StatementStatsTest {
 
     private static final double AVG_DELTA = 0.001;
@@ -119,6 +122,64 @@ public class StatementStatsTest {
             actual.add(s.getDescId());
         }
         assertEquals(expected, actual);
+    }
+    
+    @Test
+    public void canGetSortedDistincts() {
+        // count sorts
+        List<StatementStat> distincts = stats.getDistinctStatements(SortBy.COUNT, Direction.DSC);
+        assertEquals(3, distincts.size());
+        assertEquals(desc1Id, distincts.get(0).getDescId());
+        assertEquals(desc2Id, distincts.get(1).getDescId());
+        assertEquals(desc3Id, distincts.get(2).getDescId());
+        distincts = stats.getDistinctStatements(SortBy.COUNT, Direction.ASC);
+        assertEquals(3, distincts.size());
+        assertEquals(desc3Id, distincts.get(0).getDescId());
+        assertEquals(desc2Id, distincts.get(1).getDescId());
+        assertEquals(desc1Id, distincts.get(2).getDescId());
+        
+        // min sorts
+        distincts = stats.getDistinctStatements(SortBy.MIN, Direction.ASC);
+        assertEquals(3, distincts.size());
+        assertEquals(desc1Id, distincts.get(0).getDescId());
+        assertEquals(desc3Id, distincts.get(1).getDescId());
+        assertEquals(desc2Id, distincts.get(2).getDescId());
+        distincts = stats.getDistinctStatements(SortBy.MIN, Direction.DSC);
+        assertEquals(3, distincts.size());
+        assertEquals(desc2Id, distincts.get(0).getDescId());
+        assertEquals(desc3Id, distincts.get(1).getDescId());
+        assertEquals(desc1Id, distincts.get(2).getDescId());
+        
+        // max sorts
+        distincts = stats.getDistinctStatements(SortBy.MAX, Direction.ASC);
+        assertEquals(3, distincts.size());
+        assertEquals(desc3Id, distincts.get(0).getDescId());
+        assertEquals(desc1Id, distincts.get(1).getDescId());
+        assertEquals(desc2Id, distincts.get(2).getDescId());
+        distincts = stats.getDistinctStatements(SortBy.MAX, Direction.DSC);
+        assertEquals(3, distincts.size());
+        assertEquals(desc2Id, distincts.get(0).getDescId());
+        assertEquals(desc1Id, distincts.get(1).getDescId());
+        assertEquals(desc3Id, distincts.get(2).getDescId());
+        
+        // avg sorts
+        distincts = stats.getDistinctStatements(SortBy.AVG, Direction.ASC);
+        assertEquals(3, distincts.size());
+        assertEquals(desc3Id, distincts.get(0).getDescId());
+        assertEquals(desc1Id, distincts.get(1).getDescId());
+        assertEquals(desc2Id, distincts.get(2).getDescId());
+        distincts = stats.getDistinctStatements(SortBy.AVG, Direction.DSC);
+        assertEquals(3, distincts.size());
+        assertEquals(desc2Id, distincts.get(0).getDescId());
+        assertEquals(desc1Id, distincts.get(1).getDescId());
+        assertEquals(desc3Id, distincts.get(2).getDescId());
+    }
+    
+    @Test
+    public void canGetCountPerDescriptor() {
+        assertEquals(3, stats.getTotalCount(desc1));
+        assertEquals(2, stats.getTotalCount(desc2));
+        assertEquals(1, stats.getTotalCount(desc3));
     }
     
     @Test

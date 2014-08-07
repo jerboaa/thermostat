@@ -36,49 +36,35 @@
 
 package com.redhat.thermostat.dev.perf.logs;
 
-import com.redhat.thermostat.dev.perf.logs.internal.StatsConfigParser;
+import static org.junit.Assert.assertEquals;
 
-public class PerfLogAnalyzer {
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 
-    static void printUsage() {
-        System.err.println("usage: java -cp thermostat-perflog-analyzer*.jar " + PerfLogAnalyzer.class.getName() + " [OPTIONS] <perflog-file>");
-        System.err.println("");
-        System.err.println("  OPTIONS:");
-        System.err.print("   --" + StatsConfig.SORT_KEY + "=<KEY>   <KEY> is one of:");
-        SortBy[] sorts = SortBy.values();
-        for (int i = 0; i < sorts.length; i++) {
-            System.err.print(" " + sorts[i]);
-            if (i != sorts.length - 1) {
-                System.err.print(",");
-            }
-        }
-        System.err.println(" (" + SortBy.AVG + " is default)");
-        System.err.print("   --" + StatsConfig.DIRECTION_KEY + "=<KEY>   <KEY> is one of: ");
-        System.err.print(Direction.ASC.name() + ", " + Direction.DSC.name());
-        System.err.println(" (" + Direction.DSC + " is default)");
-    }
-    
-    private static void usage() {
-        printUsage();
-        System.exit(1);
-    }
-    
-    public static void main(String[] args) {
-        if (args.length < 1) {
-            usage();
-        }
-        StatsConfigParser statsConfigParser = new StatsConfigParser(args);
-        StatsConfig config = null;
-        try {
-            config = statsConfigParser.parse();
-        } catch (IllegalArgumentException e) {
-            System.err.println(e.getMessage());
-            System.err.println("");
-            usage();
-        }
-        AnalyzerBuilder builder = AnalyzerBuilder.create();
-        LogAnalyzer analyzer = builder.setConfig(config).build();
-        analyzer.analyze();
-    }
+import org.junit.Test;
 
+import com.redhat.thermostat.dev.perf.logs.PerfLogAnalyzer;
+
+public class PerfLogAnalyzerTest {
+
+    @Test
+    public void testUsage() {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintStream ps = new PrintStream(baos);
+        PrintStream old = System.err;
+        System.setErr(ps);
+        
+        PerfLogAnalyzer.printUsage();
+        
+        System.setErr(old);
+        
+        String actual = baos.toString();
+        StringBuilder builder = new StringBuilder();
+        builder.append("usage: java -cp thermostat-perflog-analyzer*.jar " + PerfLogAnalyzer.class.getName() + " [OPTIONS] <perflog-file>\n\n");
+        builder.append("  OPTIONS:\n");
+        builder.append("   --sort-by=<KEY>   <KEY> is one of: MIN, MAX, AVG, COUNT (AVG is default)\n");
+        builder.append("   --direction=<KEY>   <KEY> is one of: ASC, DSC (DSC is default)\n");
+        String expected = builder.toString();
+        assertEquals(expected, actual);
+    }
 }
