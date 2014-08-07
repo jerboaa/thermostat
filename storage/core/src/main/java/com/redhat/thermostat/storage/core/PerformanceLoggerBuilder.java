@@ -33,41 +33,55 @@
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
+package com.redhat.thermostat.storage.core;
 
-package com.redhat.thermostat.common;
+import java.io.File;
+import java.util.concurrent.TimeUnit;
 
-/**
- * A grab bag of constants. This could be cleaned up later, but lets throw
- * things here for now.
- */
-public class Constants {
+import com.redhat.thermostat.storage.internal.PerformanceLoggerImpl;
 
-    public static final String GENERIC_SERVICE_CLASSNAME = "GenericClassName";
+public class PerformanceLoggerBuilder {
 
-    /**
-     * Property which will be set to {@code true} if and only if the storage in
-     * use is proxied. This is set to {@code true} within the thermostat webapp.
-     */
-    public static final String IS_PROXIED_STORAGE = "thermostat.storage.proxied";
-
-    /**
-     * System property. Set this to {@code true} if performance metrics should
-     * get logged.
-     */
-    public static final String LOG_PERFORMANCE_METRICS = "thermostat.perf.log.metrics";
+    private File fileName;
+    private TimeUnit timeUnitToPrint;
+    
+    private PerformanceLoggerBuilder() {
+        // only instantiate via factory method
+    }
+    
+    public static PerformanceLoggerBuilder create() {
+        return new PerformanceLoggerBuilder();
+    }
     
     /**
-     * System property. Set this to an absolute path to a file where perf
-     * metrics should be logged.
+     * 
+     * @param filename The file to log values to.
+     * @return This instance.
      */
-    public static final String LOG_PERFORMANCE_FILE_WEB = "thermostat.perf.log.filename.web";
+    public PerformanceLoggerBuilder setFilename(File filename) {
+        this.fileName = filename;
+        return this;
+    }
     
     /**
-     * System property. Set this to an absolute path to a file where perf
-     * metrics should be logged.
+     * @param timeUnit The time unit to use in logs.
+     * @return This instance.
      */
-    public static final String LOG_PERFORMANCE_FILE_MONGO = "thermostat.perf.log.filename.mongodb";
-    
-    public static final String DEFAULT_LOG_FILENAME = "thermostat_perf.log";
+    public PerformanceLoggerBuilder setLoggedTimeUnit(TimeUnit timeUnit) {
+        this.timeUnitToPrint = timeUnit;
+        return this;
+    }
+
+    /**
+     * 
+     * @return The configured logger.
+     * 
+     * @throws IllegalStateException if no filename or timeunit was set.
+     */
+    public PerformanceLogger build() {
+        if (fileName == null || timeUnitToPrint == null) {
+            throw new IllegalStateException("Must set filename and time unit");
+        }
+        return new PerformanceLoggerImpl(fileName, timeUnitToPrint);
+    }
 }
-

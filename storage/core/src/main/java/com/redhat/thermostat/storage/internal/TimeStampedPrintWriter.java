@@ -34,40 +34,42 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common;
+package com.redhat.thermostat.storage.internal;
 
-/**
- * A grab bag of constants. This could be cleaned up later, but lets throw
- * things here for now.
- */
-public class Constants {
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
-    public static final String GENERIC_SERVICE_CLASSNAME = "GenericClassName";
-
-    /**
-     * Property which will be set to {@code true} if and only if the storage in
-     * use is proxied. This is set to {@code true} within the thermostat webapp.
-     */
-    public static final String IS_PROXIED_STORAGE = "thermostat.storage.proxied";
-
-    /**
-     * System property. Set this to {@code true} if performance metrics should
-     * get logged.
-     */
-    public static final String LOG_PERFORMANCE_METRICS = "thermostat.perf.log.metrics";
+class TimeStampedPrintWriter extends PrintWriter {
     
-    /**
-     * System property. Set this to an absolute path to a file where perf
-     * metrics should be logged.
-     */
-    public static final String LOG_PERFORMANCE_FILE_WEB = "thermostat.perf.log.filename.web";
+    static final String SEPARATOR = "|";
+
+    static final String ISO_FORMAT_WITH_MILLIS = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+    private final DateSource source;
+    private final DateFormat dateFormat;
     
-    /**
-     * System property. Set this to an absolute path to a file where perf
-     * metrics should be logged.
-     */
-    public static final String LOG_PERFORMANCE_FILE_MONGO = "thermostat.perf.log.filename.mongodb";
+    TimeStampedPrintWriter(OutputStream out) {
+        this(out, new DateSource());
+    }
     
-    public static final String DEFAULT_LOG_FILENAME = "thermostat_perf.log";
+    // for testing
+    TimeStampedPrintWriter(OutputStream out, DateSource source) {
+        super(out);
+        this.source = source; 
+        this.dateFormat = new SimpleDateFormat(ISO_FORMAT_WITH_MILLIS);
+    }
+    
+    @Override
+    public void println(String line) {
+        super.println(dateFormat.format(source.getDate()) + SEPARATOR + line);
+    }
+    
+    static class DateSource {
+        Date getDate() {
+            return new Date();
+        }
+    }
+
 }
-

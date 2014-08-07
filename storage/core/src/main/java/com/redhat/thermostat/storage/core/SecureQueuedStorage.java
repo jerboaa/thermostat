@@ -45,9 +45,14 @@ package com.redhat.thermostat.storage.core;
  */
 public final class SecureQueuedStorage extends QueuedStorage implements SecureStorage {
 
-    public SecureQueuedStorage(SecureStorage storage) {
-        super(storage);
+    public SecureQueuedStorage(SecureStorage storage, PerformanceLogger logger) {
+        super(storage, logger);
     }
+    
+    public SecureQueuedStorage(SecureStorage storage) {
+        this(storage, null);
+    }
+    
     @Override
     public AuthToken generateToken(String actionName) throws StorageException {
         return ((SecureStorage)delegate).generateToken(actionName);

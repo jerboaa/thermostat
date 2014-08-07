@@ -34,40 +34,35 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common;
+package com.redhat.thermostat.storage.core;
 
 /**
- * A grab bag of constants. This could be cleaned up later, but lets throw
- * things here for now.
+ * 
+ * Log facility for Thermostat internal performance metrics.
+ * 
+ * @see PerformanceLoggerBuilder
+ *
  */
-public class Constants {
-
-    public static final String GENERIC_SERVICE_CLASSNAME = "GenericClassName";
+public interface PerformanceLogger {
 
     /**
-     * Property which will be set to {@code true} if and only if the storage in
-     * use is proxied. This is set to {@code true} within the thermostat webapp.
+     * Logs a message with the given duration.
+     * 
+     * @param uniqueToken A unique token. Useful if logs are split across files
+     *                    and should get combined or aggregated in some way via
+     *                    this token.
+     * @param msg The message to log
+     * @param durationInNanos
      */
-    public static final String IS_PROXIED_STORAGE = "thermostat.storage.proxied";
-
-    /**
-     * System property. Set this to {@code true} if performance metrics should
-     * get logged.
-     */
-    public static final String LOG_PERFORMANCE_METRICS = "thermostat.perf.log.metrics";
+    public void log(String uniqueToken, String msg, long durationInNanos);
     
     /**
-     * System property. Set this to an absolute path to a file where perf
-     * metrics should be logged.
+     * Logs a message.
+     * 
+     * @param uniqueToken A unique token. Useful if logs are split across files
+     *                    and should get combined or aggregated in some way via
+     *                    this token.
+     * @param msg The message to log
      */
-    public static final String LOG_PERFORMANCE_FILE_WEB = "thermostat.perf.log.filename.web";
-    
-    /**
-     * System property. Set this to an absolute path to a file where perf
-     * metrics should be logged.
-     */
-    public static final String LOG_PERFORMANCE_FILE_MONGO = "thermostat.perf.log.filename.mongodb";
-    
-    public static final String DEFAULT_LOG_FILENAME = "thermostat_perf.log";
+    public void log(String uniqueToken, String msg);
 }
-
