@@ -15,6 +15,45 @@
     <requiredProperty key="pluginDeployDir">
       <defaultValue>example-plugin</defaultValue>
     </requiredProperty>
+    <requiredProperty key="thermostat-java-version">
+      <defaultValue>${thermostat.java.version}</defaultValue>
+    </requiredProperty>
+    <requiredProperty key="mongo-driver-osgi-version">
+      <defaultValue>${mongo-driver.osgi-version}</defaultValue>
+    </requiredProperty>
+    <requiredProperty key="commons-beanutils-version">
+      <defaultValue>${commons-beanutils.version}</defaultValue>
+    </requiredProperty>
+    <requiredProperty key="commons-codec-osgi-version">
+      <defaultValue>${commons-codec.osgi-version}</defaultValue>
+    </requiredProperty>
+    <requiredProperty key="commons-collections-version">
+      <defaultValue>${commons-collections.version}</defaultValue>
+    </requiredProperty>
+    <requiredProperty key="commons-logging-version">
+      <defaultValue>${commons-logging.version}</defaultValue>
+    </requiredProperty> 
+    <requiredProperty key="osgi-core-version">
+      <defaultValue>${osgi.core.version}</defaultValue>
+    </requiredProperty> 
+    <requiredProperty key="junit-version">
+      <defaultValue>${junit.version}</defaultValue>
+    </requiredProperty>
+    <requiredProperty key="httpcomponents-core-version">
+      <defaultValue>${httpcomponents.core.version}</defaultValue>
+    </requiredProperty>
+    <requiredProperty key="httpcomponents-client-version">
+      <defaultValue>${httpcomponents.client.version}</defaultValue>
+    </requiredProperty>
+    <requiredProperty key="gson-version">
+      <defaultValue>${gson.version}</defaultValue>
+    </requiredProperty>
+     <requiredProperty key="osgi-compendium-osgi-version">
+      <defaultValue>${osgi.compendium.osgi-version}</defaultValue>
+    </requiredProperty>
+     <requiredProperty key="osgi-compendium-bundle-symbolic-name">
+      <defaultValue>${osgi.compendium.bundle.symbolic-name}</defaultValue>
+    </requiredProperty>
   </requiredProperties>
   <fileSets>
     <fileSet filtered="true" encoding="UTF-8">
@@ -26,7 +65,7 @@
     </fileSet>
   </fileSets>
   <modules>
-    <module id="${rootArtifactId}-cli" dir="client-cli" name="${rootArtifactId}-cli">
+    <module id="\${rootArtifactId}-cli" dir="client-cli" name="\${rootArtifactId}-cli">
       <fileSets>
         <fileSet filtered="true" packaged="true" encoding="UTF-8">
           <directory>src/main/java</directory>
@@ -36,7 +75,7 @@
         </fileSet>
       </fileSets>
     </module>
-    <module id="${rootArtifactId}-agent" dir="agent" name="${rootArtifactId}-agent">
+    <module id="\${rootArtifactId}-agent" dir="agent" name="\${rootArtifactId}-agent">
       <fileSets>
         <fileSet filtered="true" packaged="true" encoding="UTF-8">
           <directory>src/main/java</directory>
@@ -58,7 +97,7 @@
         </fileSet>
       </fileSets>
     </module>
-    <module id="${rootArtifactId}-storage-common" dir="storage-common" name="${rootArtifactId}-storage-common">
+    <module id="\${rootArtifactId}-storage-common" dir="storage-common" name="\${rootArtifactId}-storage-common">
       <fileSets>
         <fileSet filtered="true" packaged="true" encoding="UTF-8">
           <directory>src/main/java</directory>
@@ -72,7 +111,7 @@
             <include>**/*.java</include>
           </includes>
         </fileSet>
-    <!--Auth files needed for CategoryRegistration and StatementDescriptorRegistration-->
+        <!--Auth files needed for CategoryRegistration and StatementDescriptorRegistration-->
 	<fileSet filtered="true" packaged="false" encoding="UTF-8">
           <directory>src/main/resources</directory>
           <includes>
@@ -81,7 +120,7 @@
         </fileSet>
       </fileSets>
     </module>
-    <module id="${rootArtifactId}-distribution" dir="distribution" name="${rootArtifactId}-distribution">
+    <module id="\${rootArtifactId}-distribution" dir="distribution" name="\${rootArtifactId}-distribution">
       <fileSets>
         <fileSet filtered="true" encoding="UTF-8">
           <directory></directory>

@@ -49,6 +49,19 @@
   <properties>
     <!-- version of core thermostat we'll be using -->
     <thermostat-core-version>${thermostat-core-version}</thermostat-core-version>
+    <!-- versions of transitive deps -->
+    <mongo-driver.osgi-version>${mongo-driver-osgi-version}</mongo-driver.osgi-version>
+    <commons-beanutils.version>${commons-beanutils-version}</commons-beanutils.version>
+    <commons-codec.osgi-version>${commons-codec-osgi-version}</commons-codec.osgi-version>
+    <commons-collections.version>${commons-collections-version}</commons-collections.version>
+    <commons-logging.version>${commons-logging-version}</commons-logging.version>
+    <httpcomponents.core.version>${httpcomponents-core-version}</httpcomponents.core.version>
+    <httpcomponents.client.version>${httpcomponents-client-version}</httpcomponents.client.version>
+    <osgi.compendium.osgi-version>${osgi-compendium-osgi-version}</osgi.compendium.osgi-version>
+    <osgi.compendium.bundle.symbolic-name>${osgi-compendium-bundle-symbolic-name}</osgi.compendium.bundle.symbolic-name>
+    <gson.version>${gson-version}</gson.version>
+    <osgi.core.version>${osgi-core-version}</osgi.core.version>
+    <junit.version>${junit-version}</junit.version>
   </properties>
 
   <build>
@@ -59,8 +72,8 @@
           <artifactId>maven-compiler-plugin</artifactId>
           <version>2.3.2</version>
           <configuration>
-            <source>${thermostat.java.version}</source>
-            <target>${thermostat.java.version}</target>
+            <source>${thermostat-java-version}</source>
+            <target>${thermostat-java-version}</target>
           </configuration>
         </plugin>
  

@@ -41,6 +41,33 @@
           <skip>true</skip>
         </configuration>
       </plugin>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>filter-archetype-metadata</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <!-- filter version properties at build time so that the generated version of
+                   the plug-in code will have the same versions than thermostat was built
+                   with. Some things should *not* get filtered. Those are escaped via the
+                   backslash. See src/main/resouces/META-INF/maven/archetype-metadata.xml -->
+              <escapeString>\</escapeString>
+              <outputDirectory>${project.build.directory}</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>src/main/resources/META-INF</directory>
+                  <targetPath>classes/META-INF</targetPath>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 

@@ -34,6 +34,9 @@ core:
 verify-archetype-ext:
 	$(BASH) distribution/tools/verify-archetype-ext.sh $(REPO_LOC) $(THERMOSTAT_HOME)
 
+verify-archetype-multimodule:
+	$(BASH) distribution/tools/verify-archetype-multimodule.sh $(REPO_LOC) $(THERMOSTAT_HOME)
+
 # 
 # Cleaning the repo prevents things like not seeing build failures
 # after bundles have been renamed.
@@ -59,4 +62,4 @@ plugin_docs.html:
 	$(XSLTPROC) distribution/tools/plugin-docs-html.xslt merged-plugin-docs.xml > $@
 
 # We only have phony targets
-.PHONY:	all core verify-archetype-ext core-install create-repo-dir clean-repo echo-repo plugin-docs
+.PHONY:	all core verify-archetype-ext verify-archetype-multimodule core-install create-repo-dir clean-repo echo-repo plugin-docs
