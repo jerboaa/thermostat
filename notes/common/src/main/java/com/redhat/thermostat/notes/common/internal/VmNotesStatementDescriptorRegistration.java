@@ -51,22 +51,27 @@ public class VmNotesStatementDescriptorRegistration implements StatementDescript
     @Override
     public Set<String> getStatementDescriptors() {
         Set<String> descs = new HashSet<>();
-        descs.add(NotesDAOImpl.ADD_VM_NOTES);
-        descs.add(NotesDAOImpl.QUERY_VM_NOTES);
+        descs.add(NotesDAOImpl.ADD_VM_NOTE);
+        descs.add(NotesDAOImpl.QUERY_VM_NOTE_BY_ID);
+        descs.add(NotesDAOImpl.QUERY_VM_NOTES_BY_VM_ID);
+        descs.add(NotesDAOImpl.UPDATE_VM_NOTE);
+        descs.add(NotesDAOImpl.REMOVE_VM_NOTE_BY_ID);
         return descs;
     }
 
     @Override
-    public DescriptorMetadata getDescriptorMetadata(String descriptor,
-            PreparedParameter[] params) {
-        if (descriptor.equals(NotesDAOImpl.ADD_VM_NOTES) || descriptor.equals(NotesDAOImpl.QUERY_VM_NOTES)) {
-            String agentId = (String)params[0].getValue();
-            String vmId = (String)params[1].getValue();
-            DescriptorMetadata metadata = new DescriptorMetadata(agentId, vmId);
-            return metadata;
+    public DescriptorMetadata getDescriptorMetadata(String descriptor, PreparedParameter[] params) {
+        String agentId;
+        String vmId;
+        if (descriptor.equals(NotesDAOImpl.UPDATE_VM_NOTE)) {
+            agentId = (String)params[2].getValue();
+            vmId = (String)params[3].getValue();
         } else {
-            throw new IllegalArgumentException("Unknown descriptor: ->" + descriptor + "<-");
+            agentId = (String)params[0].getValue();
+            vmId = (String)params[1].getValue();
         }
+        DescriptorMetadata metadata = new DescriptorMetadata(agentId, vmId);
+        return metadata;
     }
 
 }

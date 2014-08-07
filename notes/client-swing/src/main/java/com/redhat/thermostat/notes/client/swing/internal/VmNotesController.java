@@ -36,12 +36,17 @@
 
 package com.redhat.thermostat.notes.client.swing.internal;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.notes.common.Notes;
-import com.redhat.thermostat.notes.common.NotesDAO;
+import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.notes.common.VmNote;
+import com.redhat.thermostat.notes.common.VmNoteDAO;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
@@ -49,26 +54,40 @@ import com.redhat.thermostat.storage.core.VmRef;
 public class VmNotesController implements InformationServiceController<VmRef> {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+    private Clock clock;
+
     private VmRef vm;
 
-    private NotesDAO dao;
+    private VmNoteDAO dao;
     private VmNotesView view;
 
-    public VmNotesController(final VmRef vm, NotesDAO notesDao, VmNotesView notesView) {
+    private List<VmNoteViewModel> viewModels;
+
+    public VmNotesController(Clock clock, final VmRef vm, VmNoteDAO vmNoteDao, VmNotesView notesView) {
+        this.clock = clock;
         this.vm = vm;
-        this.dao = notesDao;
+        this.dao = vmNoteDao;
         this.view = notesView;
+
+        viewModels = new ArrayList<>();
 
         this.view.getNotifier().addActionListener(new ActionListener<VmNotesView.Action>() {
             @Override
             public void actionPerformed(ActionEvent<VmNotesView.Action> actionEvent) {
                 switch(actionEvent.getActionId()) {
+                case NEW:
+                    addNewNote();
+                    break;
                 case LOAD:
                     updateNotesInView();
                     break;
                 case SAVE:
-                    String content = (String) actionEvent.getPayload();
-                    saveCurrentNotes(content);
+                    updateNotesInStorage();
+                    break;
+                case DELETE:
+                    String noteId = /* tag = */ (String) actionEvent.getPayload();
+                    deleteNote(noteId);
+                    break;
                 }
             }
         });
@@ -76,25 +95,68 @@ public class VmNotesController implements InformationServiceController<VmRef> {
         updateNotesInView();
     }
 
-    protected void saveCurrentNotes(String content) {
-        Notes notes = new Notes();
-        notes.setTimeStamp(System.currentTimeMillis());
-        notes.setAgentId(vm.getHostRef().getAgentId());
-        notes.setVmId(vm.getVmId());
-        notes.setContent(content);
+    private void addNewNote() {
+        long timeStamp = clock.getRealTimeMillis();
+        String content = "";
+        VmNote note = createNewVmNote(timeStamp, content);
 
-        dao.put(notes);
+        VmNoteViewModel model = new VmNoteViewModel(note.getId(), timeStamp, content);
+        viewModels.add(model);
+        view.add(model);
+
+        dao.add(note);
+    }
+
+    private VmNote createNewVmNote(long timeStamp, String text) {
+        VmNote vmNote = new VmNote();
+        vmNote.setAgentId(vm.getHostRef().getAgentId());
+        vmNote.setVmId(vm.getVmId());
+        vmNote.setId(UUID.randomUUID().toString());
+        vmNote.setTimeStamp(timeStamp);
+        vmNote.setContent(text);
+        return vmNote;
     }
 
     private void updateNotesInView() {
-        Notes notes = dao.get(vm);
-        if (notes != null) {
-            view.setContent(notes.getContent());
-        } else {
-            view.setContent("");
+        List<VmNote> vmNotes = dao.getFor(vm);
+
+        // TODO only apply diff of notes to reduce UI glitches/changes
+        viewModels.clear();
+        view.clearAll();
+
+        for (int i = 0; i < vmNotes.size(); i++) {
+            VmNote vmNote = vmNotes.get(i);
+            VmNoteViewModel viewModel = new VmNoteViewModel(vmNote.getId(), vmNote.getTimeStamp(), vmNote.getContent());
+            viewModels.add(viewModel);
+            view.add(viewModel);
         }
     }
 
+    private void updateNotesInStorage() {
+        // TODO check if we need any synchronization
+
+        long timeStamp = clock.getRealTimeMillis();
+
+        for (VmNoteViewModel viewModel : viewModels) {
+            String oldContent = viewModel.text;
+            String newContent = view.getContent(viewModel.tag);
+            if (oldContent.equals(newContent)) {
+                continue;
+            }
+
+            VmNote toUpdate = dao.getById(vm, viewModel.tag);
+            toUpdate.setTimeStamp(timeStamp);
+            toUpdate.setContent(newContent);
+
+            dao.update(toUpdate);
+        }
+    }
+
+    private void deleteNote(String noteId) {
+        dao.removeById(vm, noteId);
+
+        updateNotesInView();
+    }
 
     @Override
     public UIComponent getView() {

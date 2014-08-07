@@ -49,7 +49,10 @@ public class VmNotesStatementDescriptorRegistrationTest {
         VmNotesStatementDescriptorRegistration statementRegistration = new VmNotesStatementDescriptorRegistration();
         Set<String> descriptors = statementRegistration.getStatementDescriptors();
 
-        assertTrue(descriptors.contains(NotesDAOImpl.ADD_VM_NOTES));
-        assertTrue(descriptors.contains(NotesDAOImpl.QUERY_VM_NOTES));
+        assertTrue(descriptors.contains(NotesDAOImpl.ADD_VM_NOTE));
+        assertTrue(descriptors.contains(NotesDAOImpl.QUERY_VM_NOTE_BY_ID));
+        assertTrue(descriptors.contains(NotesDAOImpl.QUERY_VM_NOTES_BY_VM_ID));
+        assertTrue(descriptors.contains(NotesDAOImpl.UPDATE_VM_NOTE));
+        assertTrue(descriptors.contains(NotesDAOImpl.REMOVE_VM_NOTE_BY_ID));
     }
 }

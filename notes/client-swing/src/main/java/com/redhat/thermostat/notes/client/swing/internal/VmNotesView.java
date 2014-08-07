@@ -38,50 +38,83 @@ package com.redhat.thermostat.notes.client.swing.internal;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.GridBagConstraints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.HashMap;
+import java.util.Map;
 
-import javax.swing.JButton;
+import javax.swing.BoxLayout;
+import javax.swing.Icon;
 import javax.swing.JPanel;
-import javax.swing.JTextArea;
-import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.client.swing.components.ActionButton;
+import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
+import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.shared.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.Translate;
 
 /** SwingComponent serves as a tag for SwingClient to use this view */
 public class VmNotesView implements UIComponent, SwingComponent {
 
-    private JPanel container;
-    private JTextArea notes;
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+
+    private static final int FONT_SIZE = 12;
+
+    private HeaderPanel container;
+    private JPanel contentContainer;
+    private GridBagConstraints contentContainerConstraints;
 
     public enum Action {
+        NEW,
         LOAD,
-        /** Payload contains the text */
         SAVE,
+        DELETE,
     }
 
     private ActionNotifier<Action> actionNotifier = new ActionNotifier<>(this);
 
+    private Map<String, VmNotePanel> tagToPanel;
+
     public VmNotesView() {
-        container = new JPanel();
-        container.setLayout(new BorderLayout());
+        tagToPanel = new HashMap<>();
 
-        JPanel toolBar = new JPanel();
-        container.add(toolBar, BorderLayout.PAGE_START);
+        container = new HeaderPanel(translator.localize(LocaleResources.VM_TAB_NAME));
 
-        JButton saveButton = new JButton("Save");
-        saveButton.addActionListener(new ActionListener() {
+        container.addToolBarButton(
+                createToolbarButton(translator.localize(LocaleResources.VM_NOTES_NEW), '\uf067', Action.NEW));
+
+        container.addToolBarButton(
+                createToolbarButton(translator.localize(LocaleResources.VM_NOTES_REFRESH), '\uf021', Action.LOAD));
+
+        container.addToolBarButton(
+                createToolbarButton(translator.localize(LocaleResources.VM_NOTES_SAVE), '\uf0c7', Action.SAVE));
+
+        JPanel rootContentContainer = new JPanel();
+        rootContentContainer.setLayout(new BorderLayout());
+        contentContainer = new JPanel();
+        rootContentContainer.add(contentContainer, BorderLayout.NORTH);
+
+        BoxLayout layout = new BoxLayout(contentContainer, BoxLayout.PAGE_AXIS);
+        contentContainer.setLayout(layout);
+
+        container.setContent(rootContentContainer);
+    }
+
+    private ActionButton createToolbarButton(LocalizedString description, char iconId, final Action action) {
+        Icon icon = new FontAwesomeIcon(iconId, FONT_SIZE);
+        ActionButton button = new ActionButton(icon);
+        button.setToolTipText(description.getContents());
+        button.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                actionNotifier.fireAction(Action.SAVE, notes.getText());
+            public void actionPerformed(ActionEvent event) {
+                actionNotifier.fireAction(action);
             }
         });
-        toolBar.add(saveButton);
-
-        notes = new JTextArea("<Notes>");
-        container.add(notes, BorderLayout.CENTER);
+        return button;
     }
 
     @Override
@@ -93,12 +126,22 @@ public class VmNotesView implements UIComponent, SwingComponent {
         return actionNotifier;
     }
 
-    public void setContent(final String content) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                notes.setText(content);
-            }
-        });
+    public void clearAll() {
+        for (Map.Entry<String, VmNotePanel> entry : tagToPanel.entrySet()) {
+            contentContainer.remove(entry.getValue());
+        }
+        tagToPanel.clear();
     }
+
+    public void add(VmNoteViewModel model) {
+        VmNotePanel widget = new VmNotePanel(model, actionNotifier);
+        tagToPanel.put(model.tag, widget);
+        contentContainer.add(widget, contentContainerConstraints);
+        contentContainer.revalidate();
+    }
+
+    public String getContent(String tag) {
+        return tagToPanel.get(tag).getContent();
+    }
+
 }

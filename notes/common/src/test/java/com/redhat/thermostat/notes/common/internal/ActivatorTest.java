@@ -42,7 +42,7 @@ import static org.mockito.Mockito.mock;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.notes.common.NotesDAO;
+import com.redhat.thermostat.notes.common.VmNoteDAO;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
@@ -58,10 +58,10 @@ public class ActivatorTest {
         Activator activator = new Activator();
         activator.start(context);
 
-        assertTrue(context.isServiceRegistered(NotesDAO.class.getName(), NotesDAOImpl.class));
+        assertTrue(context.isServiceRegistered(VmNoteDAO.class.getName(), NotesDAOImpl.class));
 
         activator.stop(context);
 
-        assertFalse(context.isServiceRegistered(NotesDAO.class.getName(), NotesDAOImpl.class));
+        assertFalse(context.isServiceRegistered(VmNoteDAO.class.getName(), NotesDAOImpl.class));
     }
 }

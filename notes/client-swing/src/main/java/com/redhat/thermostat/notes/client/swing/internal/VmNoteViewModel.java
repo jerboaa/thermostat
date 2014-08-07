@@ -34,53 +34,18 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.notes.common;
+package com.redhat.thermostat.notes.client.swing.internal;
 
-import com.redhat.thermostat.storage.core.Entity;
-import com.redhat.thermostat.storage.core.Persist;
-import com.redhat.thermostat.storage.model.BasePojo;
-import com.redhat.thermostat.storage.model.TimeStampedPojo;
+public class VmNoteViewModel {
 
-@Entity
-public class Notes extends BasePojo implements TimeStampedPojo {
+    public final String tag;
+    public final long timeStamp;
+    public final String text;
 
-    private long timeStamp;
-    private String vmId;
-    private String content;
-
-    public Notes() {
-        super(null);
-        this.content = "";
-    }
-
-    @Persist
-    public String getVmId() {
-        return vmId;
-    }
-
-    @Persist
-    public void setVmId(String vmId) {
-        this.vmId = vmId;
-    }
-
-    @Persist
-    @Override
-    public long getTimeStamp() {
-        return timeStamp;
-    }
-
-    @Persist
-    public void setTimeStamp(long timeStamp) {
+    public VmNoteViewModel(String tag, long timeStamp, String text) {
+        this.tag = tag;
         this.timeStamp = timeStamp;
+        this.text = text;
     }
 
-    @Persist
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    @Persist
-    public String getContent() {
-        return this.content;
-    }
 }

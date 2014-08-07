@@ -47,9 +47,10 @@ import org.osgi.framework.ServiceRegistration;
 import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.notes.common.NotesDAO;
+import com.redhat.thermostat.notes.common.VmNoteDAO;
 import com.redhat.thermostat.storage.core.VmRef;
 
 public class Activator implements BundleActivator {
@@ -65,11 +66,11 @@ public class Activator implements BundleActivator {
     public void start(final BundleContext context) {
         logger.config("notes-client-swing started");
 
-        notesDaoTracker = new MultipleServiceTracker(context, new Class<?>[] { NotesDAO.class }, new Action() {
+        notesDaoTracker = new MultipleServiceTracker(context, new Class<?>[] { VmNoteDAO.class }, new Action() {
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
-                NotesDAO notesDao = (NotesDAO) services.get(NotesDAO.class.getName());
-                VmNotesProvider notesService = new VmNotesProvider(notesDao);
+                VmNoteDAO vmNoteDao = (VmNoteDAO) services.get(VmNoteDAO.class.getName());
+                VmNotesProvider notesService = new VmNotesProvider(new SystemClock(), vmNoteDao);
                 Hashtable<String, String> properties = new Hashtable<>();
                 properties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
                 properties.put(InformationService.KEY_SERVICE_ID, notesService.getClass().getName());

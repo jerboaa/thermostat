@@ -41,6 +41,12 @@ import com.redhat.thermostat.shared.locale.Translate;
 public enum LocaleResources {
 
     VM_TAB_NAME,
+
+    VM_NOTES_NEW,
+    VM_NOTES_REFRESH,
+    VM_NOTES_SAVE,
+    VM_NOTES_DELETE,
+
     ;
 
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.notes.client.swing.internal.strings";

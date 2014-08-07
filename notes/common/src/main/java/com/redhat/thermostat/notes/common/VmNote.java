@@ -34,40 +34,65 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.notes.client.swing.internal;
+package com.redhat.thermostat.notes.common;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
+import com.redhat.thermostat.storage.core.Entity;
+import com.redhat.thermostat.storage.core.Persist;
+import com.redhat.thermostat.storage.model.BasePojo;
+import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
-import java.util.Hashtable;
+@Entity
+public class VmNote extends BasePojo implements TimeStampedPojo {
 
-import org.junit.Test;
+    /** a GUID */
+    private String id;
+    private long timeStamp;
+    private String vmId;
+    private String content;
 
-import com.redhat.thermostat.client.core.InformationService;
-import com.redhat.thermostat.common.Constants;
-import com.redhat.thermostat.notes.common.VmNoteDAO;
-import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.testutils.StubBundleContext;
+    public VmNote() {
+        super(null);
+        this.content = "";
+    }
 
-public class ActivatorTest {
+    @Persist
+    public String getVmId() {
+        return vmId;
+    }
 
-    @Test
-    public void verifyThatSwingPluginIsRegisteredWhenNotesDAOIsAvailable() {
-        StubBundleContext context = new StubBundleContext();
-        VmNoteDAO dao = mock(VmNoteDAO.class);
+    @Persist
+    public void setVmId(String vmId) {
+        this.vmId = vmId;
+    }
 
-        context.registerService(VmNoteDAO.class, dao, null);
+    @Persist
+    public String getId() {
+        return id;
+    }
 
-        Activator activator = new Activator();
-        activator.start(context);
+    @Persist
+    public void setId(String id) {
+        this.id = id;
+    }
 
-        Hashtable<String,String> props = new Hashtable<>();
-        props.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
-        assertTrue(context.isServiceRegistered(InformationService.class.getName(), VmNotesProvider.class, props));
+    @Persist
+    @Override
+    public long getTimeStamp() {
+        return timeStamp;
+    }
 
-        activator.stop(context);
+    @Persist
+    public void setTimeStamp(long timeStamp) {
+        this.timeStamp = timeStamp;
+    }
 
-        assertFalse(context.isServiceRegistered(InformationService.class.getName(), VmNotesProvider.class));
+    @Persist
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    @Persist
+    public String getContent() {
+        return this.content;
     }
 }

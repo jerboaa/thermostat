@@ -43,13 +43,13 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.common.MultipleServiceTracker;
-import com.redhat.thermostat.notes.common.NotesDAO;
+import com.redhat.thermostat.notes.common.VmNoteDAO;
 import com.redhat.thermostat.storage.core.Storage;
 
 public class Activator implements BundleActivator {
 
     private MultipleServiceTracker tracker;
-    private ServiceRegistration<NotesDAO> daoRegisteration;
+    private ServiceRegistration<VmNoteDAO> daoRegisteration;
 
     @Override
     public void start(final BundleContext context) {
@@ -63,8 +63,8 @@ public class Activator implements BundleActivator {
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
                 Storage storage = (Storage) services.get(Storage.class.getName());
-                NotesDAO notesDao = new NotesDAOImpl(storage);
-                daoRegisteration = context.registerService(NotesDAO.class, notesDao, null);
+                VmNoteDAO vmNoteDao = new NotesDAOImpl(storage);
+                daoRegisteration = context.registerService(VmNoteDAO.class, vmNoteDao, null);
             }
         });
 
