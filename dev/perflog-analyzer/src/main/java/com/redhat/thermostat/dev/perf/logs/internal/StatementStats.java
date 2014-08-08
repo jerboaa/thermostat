@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.dev.perf.logs.internal;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -48,25 +49,36 @@ import java.util.concurrent.TimeUnit;
 import com.redhat.thermostat.dev.perf.logs.Direction;
 import com.redhat.thermostat.dev.perf.logs.SortBy;
 
-public class StatementStats {
+public class StatementStats extends BasicStats<StatementStat> {
     
-    private final List<StatementStat> stats;
-    private final SharedStatementState state; 
+    private static final char MICRO_SIGN = '\u00b5';
+    private static final String DAYS_SHORT = "days";
+    private static final String HOURS_SHORT = "hours";
+    private static final String MINUTES_SHORT = "mins";
+    private static final String SECONDS_SHORT = "s";
+    private static final String MILLIS_SHORT = "ms";
+    private static final String MICROS_SHORT = MICRO_SIGN + "s";
+    private static final String NANOS_SHORT = "ns";
     private boolean analysisDone = false;
     private Map<Integer, StatementStatSummary> cachedSummaries;
     private int numReads = 0;
     private int numWrites = 0;
     
+    // for testing
     StatementStats(List<StatementStat> stats, SharedStatementState state) {
-        this.stats = stats;
-        this.state = state;
+        super(stats, state);
     }
+    
+    StatementStats() {
+        // main no-arg constructor as used by factory
+    }
+    
     
     TimeUnit getTimeUnit(String descriptor) {
         if (!analysisDone) {
             doAnalysis();
         }
-        int id = state.getMappedStatementId(descriptor);
+        int id = sharedState.getMappedStatementId(descriptor);
         StatementStatSummary summary = cachedSummaries.get(id);
         return summary.getTimeUnit();
     }
@@ -75,7 +87,7 @@ public class StatementStats {
         if (!analysisDone) {
             doAnalysis();
         }
-        int id = state.getMappedStatementId(descriptor);
+        int id = sharedState.getMappedStatementId(descriptor);
         StatementStatSummary summary = cachedSummaries.get(id);
         return summary.getAvg();
     }
@@ -84,7 +96,7 @@ public class StatementStats {
         if (!analysisDone) {
             doAnalysis();
         }
-        int id = state.getMappedStatementId(descriptor);
+        int id = sharedState.getMappedStatementId(descriptor);
         StatementStatSummary summary = cachedSummaries.get(id);
         return summary.getMax();
     }
@@ -93,7 +105,7 @@ public class StatementStats {
         if (!analysisDone) {
             doAnalysis();
         }
-        int id = state.getMappedStatementId(descriptor);
+        int id = sharedState.getMappedStatementId(descriptor);
         StatementStatSummary summary = cachedSummaries.get(id);
         return summary.getMin();
     }
@@ -102,7 +114,7 @@ public class StatementStats {
         if (!analysisDone) {
             doAnalysis();
         }
-        int id = state.getMappedStatementId(descriptor);
+        int id = sharedState.getMappedStatementId(descriptor);
         StatementStatSummary summary = cachedSummaries.get(id);
         return summary.getCount();
     }
@@ -179,14 +191,6 @@ public class StatementStats {
             doAnalysis();
         }
         return numWrites;
-    }
-    
-    int getTotalNumberOfRecords() {
-        return stats.size();
-    }
-    
-    List<StatementStat> getAllStats() {
-        return stats;
     }
     
     private void doAnalysis() {
@@ -360,6 +364,71 @@ public class StatementStats {
         
         private StatementStat getStatement() {
             return this.stat;
+        }
+    }
+
+    @Override
+    public void printSummary(PrintStream out) {
+        out.print(String.format("Statement statistics (%s records): ", getTotalNumberOfRecords()));
+        List<StatementStat> distinctStatements = getDistinctStatements(config.getSortBy(), config.getDirection());
+        String detail = String.format("%s distinct statements (%s reads, %s writes)",
+                distinctStatements.size(),
+                getNumReads(),
+                getNumWrites());
+        out.println(detail);
+        if (distinctStatements.size() > 0) {
+            out.println("");
+            out.println("Statement details (" + getSortDetailsMsg() + "):");
+            for (StatementStat stat: distinctStatements) {
+                String descriptor = stat.getDescriptor();
+                long min = getMinExecTime(descriptor);
+                long max = getMaxExecTime(descriptor);
+                double avg = getAverage(descriptor);
+                long count = getTotalCount(descriptor);
+                TimeUnit timeUnit = getTimeUnit(descriptor);
+                String tu = getTimeUnit(timeUnit);
+                String descDetail = String.format("Total #: %s, %s%s (min), %s%s (max), %.02f%s (avg), DESCRIPTOR: %s",
+                        count, min, tu, max, tu, avg, tu, descriptor);
+                out.println(descDetail);
+            }
+        }
+        out.println(""); // Extra line at end of summary
+    }
+    
+    private String getSortDetailsMsg() {
+        String sortByMsg = "sorted by ";
+        switch(config.getSortBy()) {
+        case AVG:
+            return sortByMsg + "avg exec time";
+        case COUNT:
+            return sortByMsg + "total occurances";
+        case MAX:
+            return sortByMsg + "max exec time";
+        case MIN:
+            return sortByMsg + "min exec time";
+        default:
+            throw new IllegalArgumentException("Unknown sort value " + config.getSortBy());
+        }
+    }
+
+    private String getTimeUnit(TimeUnit timeUnit) {
+        switch(timeUnit) {
+        case DAYS:
+            return DAYS_SHORT;
+        case HOURS:
+            return HOURS_SHORT;
+        case MICROSECONDS:
+            return MICROS_SHORT;
+        case MILLISECONDS:
+            return MILLIS_SHORT;
+        case MINUTES:
+            return MINUTES_SHORT;
+        case NANOSECONDS:
+            return NANOS_SHORT;
+        case SECONDS:
+            return SECONDS_SHORT;
+        default:
+            throw new IllegalStateException("Unknown time unit " + timeUnit);
         }
     }
 }

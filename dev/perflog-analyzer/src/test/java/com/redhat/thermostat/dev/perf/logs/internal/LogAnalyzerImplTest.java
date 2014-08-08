@@ -36,12 +36,53 @@
 
 package com.redhat.thermostat.dev.perf.logs.internal;
 
-import java.util.Date;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-public interface LineStat {
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.PrintStream;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.redhat.thermostat.dev.perf.logs.Direction;
+import com.redhat.thermostat.dev.perf.logs.SortBy;
+import com.redhat.thermostat.dev.perf.logs.StatsConfig;
+
+public class LogAnalyzerImplTest {
     
-    public LogTag getLogTag();
+    private PrintStream out;
     
-    public Date getTimeStamp();
+    @Before
+    public void setup() {
+        out = System.out;
+    }
     
+    @After
+    public void tearDown() {
+        System.setOut(out);
+    }
+
+    @Test
+    public void verifyBasicAnalysis() {
+        File logFile = new File(this.getClass().getResource("/perflogMultipleLogTags.log").getFile());
+        StatsConfig config = new StatsConfig(logFile, SortBy.AVG, Direction.DSC, false);
+        LogAnalyzerImpl analyzer = new LogAnalyzerImpl(config);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintStream pStream = new PrintStream(baos);
+        System.setOut(pStream);
+        // This prints to stdout
+        analyzer.analyze();
+        String output = baos.toString();
+        baos.reset();
+        // last config value should make the analyzer print more output
+        StatsConfig otherConfig = new StatsConfig(logFile, SortBy.AVG, Direction.DSC, true);
+        analyzer = new LogAnalyzerImpl(otherConfig);
+        analyzer.analyze();
+        String moreOutput = baos.toString();
+        assertTrue(moreOutput.contains(output));
+        assertFalse(moreOutput.equals(output));
+    }
 }

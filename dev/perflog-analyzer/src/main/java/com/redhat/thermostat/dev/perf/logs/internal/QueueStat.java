@@ -46,7 +46,7 @@ public class QueueStat extends BasicLineStat {
 
     private final long count;
 
-    public QueueStat(Date timestamp, String logTag, long qSize) {
+    public QueueStat(Date timestamp, LogTag logTag, long qSize) {
         super(timestamp, logTag);
         this.count = qSize;
     }

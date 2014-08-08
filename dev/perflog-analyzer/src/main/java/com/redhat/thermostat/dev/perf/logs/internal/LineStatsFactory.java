@@ -36,12 +36,33 @@
 
 package com.redhat.thermostat.dev.perf.logs.internal;
 
-import java.util.Date;
+import java.util.List;
 
-public interface LineStat {
+import com.redhat.thermostat.dev.perf.logs.StatsConfig;
+
+class LineStatsFactory<S extends LineStat, T extends LineStats<S>> {
+
+    private final SharedStatementState sharedState;
+    private final StatsConfig config;
+    private final List<S> stats;
+    private final Class<T> clazz;
     
-    public LogTag getLogTag();
+    LineStatsFactory(SharedStatementState sharedStatementState, StatsConfig config, List<S> stats, Class<T> clazz) {
+        this.sharedState = sharedStatementState;
+        this.stats = stats;
+        this.clazz = clazz;
+        this.config = config;
+    }
     
-    public Date getTimeStamp();
-    
+    T create() {
+        try {
+            T instance = clazz.newInstance();
+            instance.setSharedStatementState(sharedState);
+            instance.setStats(stats);
+            instance.setConfig(config);
+            return instance;
+        } catch (InstantiationException | IllegalAccessException e) {
+            throw new RuntimeException("failed to create LineStats instance", e);
+        }
+    }
 }

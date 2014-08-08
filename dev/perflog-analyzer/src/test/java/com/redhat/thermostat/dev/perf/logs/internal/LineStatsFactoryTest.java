@@ -36,12 +36,23 @@
 
 package com.redhat.thermostat.dev.perf.logs.internal;
 
-import java.util.Date;
+import static org.junit.Assert.assertNotNull;
 
-public interface LineStat {
+import org.junit.Test;
+
+public class LineStatsFactoryTest {
+
+    @Test
+    public void canCreateStatementStats() {
+        LineStatsFactory<StatementStat, StatementStats> factory = new LineStatsFactory<>(new SharedStatementState(), null, null, StatementStats.class);
+        StatementStats test = factory.create();
+        assertNotNull(test);
+    }
     
-    public LogTag getLogTag();
-    
-    public Date getTimeStamp();
-    
+    @Test
+    public void canCreateQueueStats() {
+        LineStatsFactory<QueueStat, QueueStats> factory = new LineStatsFactory<>(new SharedStatementState(), null , null, QueueStats.class);
+        QueueStats test = factory.create();
+        assertNotNull(test);
+    }
 }

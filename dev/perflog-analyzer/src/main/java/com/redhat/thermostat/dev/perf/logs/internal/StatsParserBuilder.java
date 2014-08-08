@@ -100,7 +100,7 @@ class StatsParserBuilder {
                 }
                 System.err.println("WARNING: No parser matched for: " + rawMessage);
             } catch (LineParseException e) {
-                System.err.println(e.getMessage());
+                System.err.println(e.getMessage() + " log line was: '" + line + "'");
             }
             return null;
         }
@@ -120,7 +120,7 @@ class StatsParserBuilder {
             try {
                 Date date = FORMAT.parse(tokens[0]);
                 boolean hasDuration = tokens[1].equals("1");
-                String logToken = tokens[2];
+                LogTag logToken = LogTag.parseFromStringForm(tokens[2]);
                 String msg = tokens[3];
                 MessageDuration md = null;
                 if (hasDuration) {

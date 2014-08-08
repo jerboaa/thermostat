@@ -42,9 +42,13 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Scanner;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
@@ -61,7 +65,7 @@ public class StatsParserBuilderTest {
     public void canParseBasicTokensWithDuration() throws LineParseException {
         StatsParserImpl parser = (StatsParserImpl)StatsParserBuilder.build();
         String date = "2014-07-02T17:31:17.920+0200";
-        String logToken = "foo-log-token";
+        LogTag logToken = LogTag.STORAGE_BACKING_PROXIED;
         String hasDuration = "1";
         String msg = "some message";
         String duration = "34050 ns";
@@ -91,7 +95,7 @@ public class StatsParserBuilderTest {
     public void canParseBasicTokensNoDuration() throws LineParseException {
         StatsParserImpl parser = (StatsParserImpl)StatsParserBuilder.build();
         String date = "2014-07-02T17:31:17.920+0200";
-        String logToken = "foo-log-token";
+        LogTag logToken = LogTag.STORAGE_BACKING_PROXIED;
         String hasDuration = "0";
         String msg = "some message";
         String line = date + SEP + hasDuration + SEP + logToken + SEP + msg; 
@@ -137,6 +141,72 @@ public class StatsParserBuilderTest {
         String desc = "QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1";
         String actualDesc = readRec.getDescriptor();
         assertEquals(desc, actualDesc);
+    }
+    
+    @Test
+    public void canParseLogFileWithMultipleLogTags() throws FileNotFoundException, IllegalFilterException, ParseException {
+        StatsParser parser = StatsParserBuilder.build();
+        File perfLogFile = new File(this.getClass().getResource("/perflogMultipleLogTags.log").getFile());
+        Scanner scanner = new Scanner(perfLogFile);
+        LogFileStats stats = new LogFileStats(new SharedStatementState(), null);
+        // add composite filters for queue stats.
+        LineStatsFilter<QueueStat, QueueStats> qFrontFilter = new LogTagStatsFilterDecorator<>(new QueueStatsFilter(), LogTag.STORAGE_FRONT_END);
+        LineStatsFilter<QueueStat, QueueStats> qBackFilter = new LogTagStatsFilterDecorator<>(new QueueStatsFilter(), LogTag.STORAGE_BACKING_PROXIED);
+        LineStatsFilter<StatementStat, StatementStats> stmtStatsBackFilter = new LogTagStatsFilterDecorator<>(new StatementStatsFilter(), LogTag.STORAGE_BACKING_PROXIED);
+        LineStatsFilter<StatementStat, StatementStats> stmtStatsFrontFilter = new LogTagStatsFilterDecorator<>(new StatementStatsFilter(), LogTag.STORAGE_FRONT_END);
+        stats.registerStatsFilter(qFrontFilter);
+        stats.registerStatsFilter(qBackFilter);
+        stats.registerStatsFilter(stmtStatsBackFilter);
+        stats.registerStatsFilter(stmtStatsFrontFilter);
+        int skipped = 0; // number of skipped entries
+        while (scanner.hasNextLine()) {
+            String line = scanner.nextLine();
+            LineStat stat = parser.parse(line);
+            if (stat != null) {
+                stats.add(stat);
+            } else {
+                skipped++;
+            }
+        }
+        scanner.close();
+        
+        assertEquals("There are 7 non-PERFLOG entries in the test log file", 7, skipped);
+        assertEquals("There are 55 PERFLOG entries in the test log file", 55, stats.getTotalStats());
+        
+        // Get the front-end queue stats
+        QueueStats qstats = stats.getStatsForBucket(qFrontFilter);
+        List<QueueStat> qStatList = qstats.getAllStats();
+        assertEquals(11, qStatList.size());
+        
+        QueueStat s = qStatList.get(3); // fetch 4'th line of file
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+        Date expected = dateFormat.parse("2014-08-08T16:07:07.247+0200");
+        assertEquals(expected, s.getTimeStamp());
+        assertEquals("Expected queue size of 5", 5, s.getSizeValue());
+        
+        // Get the back-end statement stats
+        StatementStats stmtStats = stats.getStatsForBucket(stmtStatsBackFilter);
+        assertEquals(14, stmtStats.getTotalNumberOfRecords());
+        List<StatementStat> allBackStmtStats = stmtStats.getAllStats();
+        // DB_WRITE(1) REMOVE backend-info WHERE 'name' = ?s|532724 ns
+        StatementStat stmtStatItem = allBackStmtStats.get(3);
+        assertTrue(stmtStatItem instanceof WriteStatementStat);
+        assertEquals(532724, stmtStatItem.getExecTime().getVal());
+        assertEquals(TimeUnit.NANOSECONDS, stmtStatItem.getExecTime().getTimeUnit());
+        String expectedDescr = "REMOVE backend-info WHERE 'name' = ?s";
+        assertEquals(expectedDescr, stmtStatItem.getDescriptor());
+        
+        // Make sure we've parsed all stats in log-file
+        StatementStats stmtStatsFront = stats.getStatsForBucket(stmtStatsFrontFilter);
+        QueueStats queueStatsBack = stats.getStatsForBucket(qBackFilter);
+        /* We have 55 stats in total (already asserted)
+         *   11 front-end queue size stats (already asserted)
+         *   15 back-end queue size stats
+         *   15 front-end statement stats
+         *   14 back-end statement stats (already asserted)
+         */
+        assertEquals("Expected 15 front-end stmt stats", 15, stmtStatsFront.getTotalNumberOfRecords());
+        assertEquals("Expected 15 back-end queue size stats", 15, queueStatsBack.getTotalNumberOfRecords());
     }
 
     @Test

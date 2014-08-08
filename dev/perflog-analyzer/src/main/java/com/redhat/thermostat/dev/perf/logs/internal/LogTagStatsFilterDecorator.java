@@ -36,12 +36,44 @@
 
 package com.redhat.thermostat.dev.perf.logs.internal;
 
-import java.util.Date;
+import java.util.Objects;
 
-public interface LineStat {
+/**
+ * A decorator-based implementation of a log-tag filter.
+ *
+ * @param <S> The {@link LineStat} implementation type
+ * @param <T> The {@link LineStats} implementation type
+ * 
+ * @see LineStatsFilter
+ * @see QueueStatsFilter
+ * @see StatementStatsFilter
+ */
+class LogTagStatsFilterDecorator<S extends LineStat, T extends LineStats<S>> implements LineStatsFilter<S, T> {
+
+    private final LogTag logTag;
+    private final LineStatsFilter<S, T> decoratee;
     
-    public LogTag getLogTag();
+    LogTagStatsFilterDecorator(LineStatsFilter<S, T> decoratee, LogTag logTag) {
+        this.logTag = logTag;
+        this.decoratee = Objects.requireNonNull(decoratee);
+    }
     
-    public Date getTimeStamp();
-    
+    @Override
+    public boolean matches(LineStat stat) {
+        if (!decoratee.matches(stat)) {
+            return false;
+        }
+        return logTag == stat.getLogTag();
+    }
+
+    @Override
+    public String getBucketName() {
+        return decoratee.getBucketName() + "-" + logTag.toString();
+    }
+
+    @Override
+    public Class<T> getStatsClass() {
+        return decoratee.getStatsClass();
+    }
+
 }

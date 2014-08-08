@@ -36,12 +36,29 @@
 
 package com.redhat.thermostat.dev.perf.logs.internal;
 
-import java.util.Date;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
-public interface LineStat {
+import org.junit.Test;
+
+public class LogTagTest {
+
+    @Test
+    public void assertKnownLogTags() {
+        assertEquals("backing storage log-tag changed? Be sure to adapt in core thermostat", "s-backing-proxied", LogTag.STORAGE_BACKING_PROXIED.toString());
+        assertEquals("front-end storage log-tag changed? Be sure to adapt in core thermostat", "s-front-end", LogTag.STORAGE_FRONT_END.toString());
+    }
     
-    public LogTag getLogTag();
-    
-    public Date getTimeStamp();
-    
+    @Test
+    public void canParseLogTag() {
+        LogTag tag = LogTag.parseFromStringForm("s-backing-proxied");
+        assertNotNull(tag);
+        assertEquals(LogTag.STORAGE_BACKING_PROXIED, tag);
+        tag = LogTag.parseFromStringForm("s-front-end");
+        assertNotNull(tag);
+        assertEquals(LogTag.STORAGE_FRONT_END, tag);
+        tag = LogTag.parseFromStringForm("foo");
+        assertNull(tag);
+    }
 }

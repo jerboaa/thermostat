@@ -39,23 +39,19 @@ package com.redhat.thermostat.dev.perf.logs.internal;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.List;
 import java.util.Scanner;
-import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.dev.perf.logs.LogAnalyzer;
 import com.redhat.thermostat.dev.perf.logs.StatsConfig;
 
 public class LogAnalyzerImpl implements LogAnalyzer {
 
-    private static final char MICRO_SIGN = '\u00b5';
-    private static final String DAYS_SHORT = "days";
-    private static final String HOURS_SHORT = "hours";
-    private static final String MINUTES_SHORT = "mins";
-    private static final String SECONDS_SHORT = "s";
-    private static final String MILLIS_SHORT = "ms";
-    private static final String MICROS_SHORT = MICRO_SIGN + "s";
-    private static final String NANOS_SHORT = "ns";
+    private static final QueueStatsFilter QUEUESTATS_FILTER = new QueueStatsFilter();
+    private static final StatementStatsFilter STATEMENTSTATS_FILTER = new StatementStatsFilter();
+    private static final LineStatsFilter<QueueStat, QueueStats> QUEUESTATS_BACKING_FILTER = new LogTagStatsFilterDecorator<>(QUEUESTATS_FILTER, LogTag.STORAGE_BACKING_PROXIED);
+    private static final LineStatsFilter<QueueStat, QueueStats> QUEUESTATS_FRONT_FILTER = new LogTagStatsFilterDecorator<>(QUEUESTATS_FILTER, LogTag.STORAGE_FRONT_END);
+    private static final LineStatsFilter<StatementStat, StatementStats> STATEMENTSTATS_BACKING_FILTER = new LogTagStatsFilterDecorator<>(STATEMENTSTATS_FILTER, LogTag.STORAGE_BACKING_PROXIED);
+    private static final LineStatsFilter<StatementStat, StatementStats> STATEMENTSTATS_FRONT_FILTER = new LogTagStatsFilterDecorator<>(STATEMENTSTATS_FILTER, LogTag.STORAGE_FRONT_END);
     
     private final StatsConfig config;
     
@@ -65,97 +61,47 @@ public class LogAnalyzerImpl implements LogAnalyzer {
     
     @Override
     public void analyze() {
+        StatsParser parser = StatsParserBuilder.build();
         LogFileStats stats = null;
         try {
-            stats = readFileCollectStats();
+            stats = createLogFileStats(parser.getSharedState());
+            readFileCollectStats(parser, stats);
         } catch (ReadException e) {
             System.err.println(e.getMessage());
             return;
         }
         printStats(stats);
     }
+    
+    private LogFileStats createLogFileStats(final SharedStatementState state) throws ReadException {
+        LogFileStats stats = new LogFileStats(state, config);
+        try {
+            // register filters in this order since it influences printing.
+            stats.registerStatsFilter(QUEUESTATS_FRONT_FILTER);
+            stats.registerStatsFilter(STATEMENTSTATS_FRONT_FILTER);
+            // show backing config only if so configured
+            if (config.isShowBacking()) {
+                stats.registerStatsFilter(QUEUESTATS_BACKING_FILTER);
+                stats.registerStatsFilter(STATEMENTSTATS_BACKING_FILTER);
+            }
+            return stats;
+        } catch (IllegalFilterException e) {
+            throw new ReadException("Invalid filter", e);
+        }
+    }
 
     private void printStats(LogFileStats stats) {
         System.out.println("Statistics for log file: " + config.getLogFile().getAbsolutePath());
         System.out.println("Total of " + stats.getTotalStats() + " records analyzed.");
         System.out.println();
-        QueueStats queueStats = stats.getQueueStats();
-        System.out.print(String.format("Queue size stats (%s records)", queueStats.getTotalNumberOfRecords()));
-        if (queueStats.getTotalNumberOfRecords() > 0) {
-            System.out.print(": ");
-            System.out.print(queueStats.getMax() + "(max) ");
-            System.out.print(queueStats.getMin() + "(min) ");
-            System.out.println(String.format("%.02f(avg)", queueStats.getAvgQueueSize()));
-        } else {
-            System.out.println(""); // line-feed
-        }
-        System.out.println("");
-        StatementStats statementStats = stats.getStatementStats();
-        System.out.print(String.format("Statement statistics (%s records): ", statementStats.getTotalNumberOfRecords()));
-        List<StatementStat> distinctStatements = statementStats.getDistinctStatements(config.getSortBy(), config.getDirection());
-        String detail = String.format("%s distinct statements (%s reads, %s writes)",
-                                       distinctStatements.size(),
-                                       statementStats.getNumReads(),
-                                       statementStats.getNumWrites());
-        System.out.println(detail);
-        if (distinctStatements.size() > 0) {
-            System.out.println("");
-            System.out.println("Statement details (" + getSortDetailsMsg() + "):");
-            for (StatementStat stat: distinctStatements) {
-                String descriptor = stat.getDescriptor();
-                long min = statementStats.getMinExecTime(descriptor);
-                long max = statementStats.getMaxExecTime(descriptor);
-                double avg = statementStats.getAverage(descriptor);
-                long count = statementStats.getTotalCount(descriptor);
-                TimeUnit timeUnit = statementStats.getTimeUnit(descriptor);
-                String tu = getTimeUnit(timeUnit);
-                String descDetail = String.format("Total #: %s, %s%s (min), %s%s (max), %.02f%s (avg), DESCRIPTOR: %s",
-                        count, min, tu, max, tu, avg, tu, descriptor);
-                System.out.println(descDetail);
-            }
+        
+        for (LineStatsFilter<?, ?> filter: stats.getRegisteredFilters()) {
+            LineStats<?> lineStats = stats.getStatsForBucket(filter);
+            lineStats.printSummary(System.out);
         }
     }
 
-    private String getSortDetailsMsg() {
-        String sortByMsg = "sorted by ";
-        switch(config.getSortBy()) {
-        case AVG:
-            return sortByMsg + "avg exec time";
-        case COUNT:
-            return sortByMsg + "total occurances";
-        case MAX:
-            return sortByMsg + "max exec time";
-        case MIN:
-            return sortByMsg + "min exec time";
-        default:
-            throw new IllegalArgumentException("Unknown sort value " + config.getSortBy());
-        }
-    }
-
-    private String getTimeUnit(TimeUnit timeUnit) {
-        switch(timeUnit) {
-        case DAYS:
-            return DAYS_SHORT;
-        case HOURS:
-            return HOURS_SHORT;
-        case MICROSECONDS:
-            return MICROS_SHORT;
-        case MILLISECONDS:
-            return MILLIS_SHORT;
-        case MINUTES:
-            return MINUTES_SHORT;
-        case NANOSECONDS:
-            return NANOS_SHORT;
-        case SECONDS:
-            return SECONDS_SHORT;
-        default:
-            throw new IllegalStateException("Unknown time unit " + timeUnit);
-        }
-    }
-
-    private LogFileStats readFileCollectStats() throws ReadException {
-        StatsParser parser = StatsParserBuilder.build();
-        LogFileStats stats = new LogFileStats(parser.getSharedState());
+    private void readFileCollectStats(final StatsParser parser, final LogFileStats stats) throws ReadException {
         try (FileReader freader = new FileReader(config.getLogFile());
                 Scanner scanner = new Scanner(freader)) {
             while (scanner.hasNextLine()) {
@@ -170,7 +116,6 @@ public class LogAnalyzerImpl implements LogAnalyzer {
         } catch (IOException e) {
             throw new ReadException("Error reading log file: " + config.getLogFile().getAbsolutePath(), e);
         }
-        return stats;
     }
     
     private static class ReadException extends Exception {

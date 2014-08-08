@@ -37,43 +37,110 @@
 package com.redhat.thermostat.dev.perf.logs.internal;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import com.redhat.thermostat.dev.perf.logs.StatsConfig;
 
 class LogFileStats {
 
-    private final List<QueueStat> qStats;
-    private final List<StatementStat> sStats;
+    private final StatsConfig config;
     private final List<LineStat> allStats;
+    private final Map<String, List<?>> bucket;
     private final SharedStatementState state;
+    private final Map<String, LineStatsFilter<?, ?>> statFiltersMap;
+    private final List<LineStatsFilter<?, ?>> statFilterList;
     
-    LogFileStats(SharedStatementState state) {
-        this.qStats = new ArrayList<>();
-        this.sStats = new ArrayList<>();
+    LogFileStats(SharedStatementState state, StatsConfig config) {
+        this.config = config;
         this.allStats = new ArrayList<>();
+        this.bucket = new HashMap<>();
+        this.statFiltersMap = new HashMap<>();
+        this.statFilterList = new ArrayList<>();
         this.state = state;
     }
     
-    void add(LineStat stat) {
+    /**
+     * Adds the stat to the bucket of {@link LineStat} elements for which it
+     * matches registered filters.
+     * 
+     * @param stat
+     *            The element which should get added to the bucket.
+     */
+    <S extends LineStat, T extends LineStats<S>> void add(LineStat stat) {
         allStats.add(stat);
-        if (stat instanceof StatementStat) {
-            StatementStat statementStat = (StatementStat)stat;
-            sStats.add(statementStat);
+        LineStatsFilter<S, T> filter = findMatchingFilter(stat);
+        if (filter == null) {
+            // no matching filter
+            return;
         }
-        if (stat instanceof QueueStat) {
-            QueueStat qStat = (QueueStat)stat;
-            qStats.add(qStat);
-        }
+        String name = filter.getBucketName();
+        List<S> bucketList = getBucketList(name);
+        @SuppressWarnings("unchecked") // if the filter matches this must work
+        S upCastedStat = (S)stat;
+        bucketList.add(upCastedStat);
     }
     
-    StatementStats getStatementStats() {
-        return new StatementStats(sStats, state);
+    private <S extends LineStat> List<S> getBucketList(String name) {
+        @SuppressWarnings("unchecked")
+        List<S> list = (List<S>)bucket.get(name);
+        if (list == null) {
+            // no such bucket list, create it.
+            List<S> bucketList = new ArrayList<>();
+            bucket.put(name, bucketList);
+            list = bucketList;
+        }
+        return list;
+    }
+
+    @SuppressWarnings("unchecked")
+    private <S extends LineStat, T extends LineStats<S>> LineStatsFilter<S, T> findMatchingFilter(LineStat stat) {
+        for (LineStatsFilter<?, ?> filter: statFilterList) {
+            if (filter.matches(stat)) {
+                return (LineStatsFilter<S, T>)filter;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Registers the given filter. The number of registered filters
+     * determines the number of buckets. Filters must be registered before
+     * stats get added. Subsequent calls to {@link #add(LineStat)} will add the
+     * line stat to the appropriate bucket which matches a registered filter.
+     * 
+     * @param filter The filter which should get registered.
+     */
+    <S extends LineStat, T extends LineStats<S>> void registerStatsFilter(final LineStatsFilter<S, T> filter) throws IllegalFilterException {
+        if (statFiltersMap.containsKey(filter.getBucketName())) {
+            throw new IllegalFilterException("bucket name '" + filter.getBucketName() + "' already taken");
+        }
+        statFilterList.add(filter);
+        statFiltersMap.put(filter.getBucketName(), filter);
     }
     
-    QueueStats getQueueStats() {
-        return new QueueStats(qStats);
+    /**
+     * 
+     * @param filter The filter used when {@link #registerStatsFilter(LineStatsFilter)} was called.
+     * @return T An instance of the stats class populated with filtered stats.
+     */
+    <S extends LineStat, T extends LineStats<S>> T getStatsForBucket(LineStatsFilter<S, T> filter) {
+        @SuppressWarnings("unchecked")
+        List<S> stats = (List<S>)bucket.get(filter.getBucketName());
+        LineStatsFactory<S, T> factory = new LineStatsFactory<>(state, config, stats, filter.getStatsClass());
+        return factory.create();
     }
     
     int getTotalStats() {
         return allStats.size();
+    }
+    
+    /**
+     * 
+     * @return The list of filters in the order they were registered.
+     */
+    List<LineStatsFilter<?, ?>> getRegisteredFilters() {
+        return statFilterList;
     }
 }

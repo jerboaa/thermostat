@@ -36,12 +36,56 @@
 
 package com.redhat.thermostat.dev.perf.logs.internal;
 
-import java.util.Date;
+import java.util.List;
 
-public interface LineStat {
+import com.redhat.thermostat.dev.perf.logs.StatsConfig;
+
+/**
+ * Base class for {@link LineStats} implementations.
+ *
+ * @param <T>
+ */
+abstract class BasicStats<T extends LineStat> implements LineStats<T> {
+
+    protected StatsConfig config;
+    protected List<T> stats;
+    protected SharedStatementState sharedState;
+
+    public BasicStats() {
+        // no-arg constructor
+    }
     
-    public LogTag getLogTag();
+    // for testing
+    protected BasicStats(List<T> stats) {
+        this(stats, null);
+    }
     
-    public Date getTimeStamp();
+    // for testing
+    protected BasicStats(List<T> stats, SharedStatementState state) {
+        this.stats = stats;
+        this.sharedState = state;
+    }
     
+    @Override
+    public void setSharedStatementState(SharedStatementState sharedState) {
+        this.sharedState = sharedState;
+    }
+
+    @Override
+    public void setStats(List<T> stats) {
+        this.stats = stats;
+    }
+    
+    @Override
+    public void setConfig(StatsConfig config) {
+        this.config = config;
+    }
+    
+    int getTotalNumberOfRecords() {
+        return stats == null ? 0 : stats.size();
+    }
+    
+    List<T> getAllStats() {
+        return stats;
+    }
 }

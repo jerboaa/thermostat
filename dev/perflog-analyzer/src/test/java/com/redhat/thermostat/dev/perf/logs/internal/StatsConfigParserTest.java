@@ -37,6 +37,8 @@
 package com.redhat.thermostat.dev.perf.logs.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.File;
@@ -107,6 +109,17 @@ public class StatsConfigParserTest {
     }
     
     @Test
+    public void noShowBackingUsesDefault() {
+        String filename = "path/to/foo/test.log";
+        StatsConfigParser p = new StatsConfigParser(new String[] {
+                filename
+        });
+        StatsConfig config = p.parse();
+        assertEquals(new File(filename), config.getLogFile());
+        assertFalse(config.isShowBacking());
+    }
+    
+    @Test
     public void illegalSortValue() {
         StatsConfigParser p = new StatsConfigParser(new String[] {
                 "--" + StatsConfig.SORT_KEY + "=unrecognized", "foo.log"
@@ -138,6 +151,7 @@ public class StatsConfigParserTest {
         String[] testArgs = new String[] {
                 "--sort-by=MAX",
                 "--direction=ASC",
+                "--show-backing",
                 filename
         };
         StatsConfigParser p = new StatsConfigParser(testArgs);
@@ -145,6 +159,7 @@ public class StatsConfigParserTest {
         assertEquals(new File(filename), config.getLogFile());
         assertEquals(SortBy.MAX, config.getSortBy());
         assertEquals(Direction.ASC, config.getDirection());
+        assertTrue(config.isShowBacking());
     }
     
     @Test
@@ -153,13 +168,15 @@ public class StatsConfigParserTest {
         String[] testArgs = new String[] {
                 filename,
                 "--sort-by=MIN",
-                "--direction=DSC"
+                "--direction=DSC",
+                "--show-backing"
         };
         StatsConfigParser p = new StatsConfigParser(testArgs);
         StatsConfig config = p.parse();
         assertEquals(new File(filename), config.getLogFile());
         assertEquals(SortBy.MIN, config.getSortBy());
         assertEquals(Direction.DSC, config.getDirection());
+        assertTrue(config.isShowBacking());
     }
     
     @Test(expected = IllegalArgumentException.class)
@@ -177,6 +194,16 @@ public class StatsConfigParserTest {
         String sort = "--sort-by=MAX";
         String[] testArgs = new String[] {
                 sort, "foo.log", sort
+        };
+        StatsConfigParser p = new StatsConfigParser(testArgs);
+        p.parse();
+    }
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void multipleShowBackingFail() {
+        String showBacking = "--show-backing";
+        String[] testArgs = new String[] {
+                showBacking, "foo.log", showBacking
         };
         StatsConfigParser p = new StatsConfigParser(testArgs);
         p.parse();

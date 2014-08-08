@@ -41,17 +41,19 @@ import java.util.Date;
 public class BasicLineStat implements LineStat {
 
     private final Date timestamp;
-    private final String logTag;
+    private final LogTag logTag;
     
-    public Date getTimestamp() {
+    @Override
+    public Date getTimeStamp() {
         return timestamp;
     }
 
-    public String getLogTag() {
+    @Override
+    public LogTag getLogTag() {
         return logTag;
     }
 
-    public BasicLineStat(Date timestamp, String logTag) {
+    public BasicLineStat(Date timestamp, LogTag logTag) {
         this.timestamp = timestamp;
         this.logTag = logTag;
     }

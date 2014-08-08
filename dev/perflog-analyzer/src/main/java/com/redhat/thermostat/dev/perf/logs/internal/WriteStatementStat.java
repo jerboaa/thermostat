@@ -46,7 +46,7 @@ public class WriteStatementStat extends StatementStat {
 
     private final long recAffected;
     
-    public WriteStatementStat(SharedStatementState state, Date timestamp, String logTag, int descId, Duration duration, long recordsAffected) {
+    public WriteStatementStat(SharedStatementState state, Date timestamp, LogTag logTag, int descId, Duration duration, long recordsAffected) {
         super(state, timestamp, logTag, descId, duration);
         this.recAffected = recordsAffected;
     }

@@ -36,12 +36,25 @@
 
 package com.redhat.thermostat.dev.perf.logs.internal;
 
-import java.util.Date;
+/**
+ * A filter for prepared statement statistics.
+ *
+ */
+class StatementStatsFilter implements LineStatsFilter<StatementStat, StatementStats> {
 
-public interface LineStat {
-    
-    public LogTag getLogTag();
-    
-    public Date getTimeStamp();
-    
+    @Override
+    public boolean matches(LineStat stat) {
+        return (stat instanceof StatementStat);
+    }
+
+    @Override
+    public String getBucketName() {
+        return "statement-stat";
+    }
+
+    @Override
+    public Class<StatementStats> getStatsClass() {
+        return StatementStats.class;
+    }
+
 }

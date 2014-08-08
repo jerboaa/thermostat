@@ -51,6 +51,7 @@ import org.junit.Test;
 import com.redhat.thermostat.dev.perf.logs.internal.Duration;
 import com.redhat.thermostat.dev.perf.logs.internal.LineParseException;
 import com.redhat.thermostat.dev.perf.logs.internal.LineStat;
+import com.redhat.thermostat.dev.perf.logs.internal.LogTag;
 import com.redhat.thermostat.dev.perf.logs.internal.MessageDuration;
 import com.redhat.thermostat.dev.perf.logs.internal.ReadStatementStat;
 import com.redhat.thermostat.dev.perf.logs.internal.SharedStatementState;
@@ -69,14 +70,13 @@ public class ReadStatementStatParserTest {
         ReadStatementStatParser parser = new ReadStatementStatParser(state);
         assertTrue(parser.matches(msg));
         Date timestamp = mock(Date.class);
-        String logTag = "foo-bar-tag";
-        LineStat stat = parser.parse(timestamp, true, logTag, md);
+        LineStat stat = parser.parse(timestamp, true, LogTag.STORAGE_BACKING_PROXIED, md);
         assertNotNull(stat);
         assertTrue(stat instanceof ReadStatementStat);
         ReadStatementStat rStat = (ReadStatementStat)stat;
         assertEquals(descId, rStat.getDescId());
-        assertEquals(timestamp, rStat.getTimestamp());
-        assertEquals("foo-bar-tag", rStat.getLogTag());
+        assertEquals(timestamp, rStat.getTimeStamp());
+        assertEquals(LogTag.STORAGE_BACKING_PROXIED, rStat.getLogTag());
         assertEquals(d, rStat.getExecTime());
     }
     

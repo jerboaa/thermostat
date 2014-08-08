@@ -1,0 +1,62 @@
+PERFLOG - QueuedStorage$TimedPreparedStatement$1: 2014-08-08T16:07:07.280+0200|1|s-front-end|DB_WRITE(0) REMOVE backend-info WHERE 'name' = ?s|3277 µs
+PERFLOG - CountingDecorator: 2014-08-08T16:07:07.283+0200|0|s-backing-proxied|Q_SIZE 1
+PERFLOG - QueuedStorage$TimedPreparedStatement$1: 2014-08-08T16:07:07.283+0200|1|s-front-end|DB_WRITE(0) REMOVE backend-info WHERE 'name' = ?s|3109 µs
+PERFLOG - QueuedStorage$TimedWrite$1: 2014-08-08T16:07:07.283+0200|1|s-backing-proxied|DB_WRITE(1) REMOVE backend-info WHERE 'name' = ?s|558107 ns
+PERFLOG - CountingDecorator: 2014-08-08T16:07:07.286+0200|0|s-backing-proxied|Q_SIZE 1
+PERFLOG - QueuedStorage$TimedWrite$1: 2014-08-08T16:07:07.287+0200|1|s-backing-proxied|DB_WRITE(1) REMOVE backend-info WHERE 'name' = ?s|441548 ns
+PERFLOG - QueuedStorage$TimedPreparedStatement$1: 2014-08-08T16:07:07.287+0200|1|s-front-end|DB_WRITE(0) REMOVE backend-info WHERE 'name' = ?s|3725 µs
+PERFLOG - CountingDecorator: 2014-08-08T16:07:07.291+0200|0|s-backing-proxied|Q_SIZE 1
+PERFLOG - QueuedStorage$TimedWrite$1: 2014-08-08T16:07:07.291+0200|1|s-backing-proxied|DB_WRITE(1) REMOVE backend-info WHERE 'name' = ?s|630604 ns
+PERFLOG - QueuedStorage$TimedPreparedStatement$1: 2014-08-08T16:07:07.291+0200|1|s-front-end|DB_WRITE(0) REMOVE backend-info WHERE 'name' = ?s|3984 µs
+PERFLOG - CountingDecorator: 2014-08-08T16:07:07.295+0200|0|s-backing-proxied|Q_SIZE 1
+PERFLOG - QueuedStorage$TimedWrite$1: 2014-08-08T16:07:07.295+0200|1|s-backing-proxied|DB_WRITE(1) REMOVE backend-info WHERE 'name' = ?s|532724 ns
+PERFLOG - QueuedStorage$TimedPreparedStatement$1: 2014-08-08T16:07:07.295+0200|1|s-front-end|DB_WRITE(0) REMOVE backend-info WHERE 'name' = ?s|3927 µs
+PERFLOG - CountingDecorator: 2014-08-08T16:07:07.298+0200|0|s-backing-proxied|Q_SIZE 1
+PERFLOG - QueuedStorage$TimedWrite$1: 2014-08-08T16:07:07.299+0200|1|s-backing-proxied|DB_WRITE(1) REMOVE backend-info WHERE 'name' = ?s|611066 ns
+PERFLOG - QueuedStorage$TimedPreparedStatement$1: 2014-08-08T16:07:07.299+0200|1|s-front-end|DB_WRITE(0) REMOVE backend-info WHERE 'name' = ?s|3687 µs
+PERFLOG - CountingDecorator: 2014-08-08T16:07:07.303+0200|0|s-backing-proxied|Q_SIZE 1
+PERFLOG - QueuedStorage$TimedWrite$1: 2014-08-08T16:07:07.303+0200|1|s-backing-proxied|DB_WRITE(1) REMOVE backend-info WHERE 'name' = ?s|549917 ns
+PERFLOG - QueuedStorage$TimedPreparedStatement$1: 2014-08-08T16:07:07.303+0200|1|s-front-end|DB_WRITE(0) REMOVE backend-info WHERE 'name' = ?s|3797 µs
+PERFLOG - CountingDecorator: 2014-08-08T16:07:07.307+0200|0|s-backing-proxied|Q_SIZE 1
+PERFLOG - QueuedStorage$TimedWrite$1: 2014-08-08T16:07:07.308+0200|1|s-backing-proxied|DB_WRITE(0) ADD vm-thread-harvesting SET 'agentId' = ?s , 'vmId' = ?s , 'timeStamp' = ?l , 'harvesting' = ?b|542078 ns
+PERFLOG - QueuedStorage$TimedPreparedStatement$1: 2014-08-08T16:07:07.308+0200|1|s-front-end|DB_WRITE(0) ADD vm-thread-harvesting SET 'agentId' = ?s , 'vmId' = ?s , 'timeStamp' = ?l , 'harvesting' = ?b|4334 µs
+PERFLOG - CountingDecorator: 2014-08-08T16:07:07.317+0200|0|s-backing-proxied|Q_SIZE 1
+PERFLOG - QueuedStorage$TimedWrite$1: 2014-08-08T16:07:07.318+0200|1|s-backing-proxied|DB_WRITE(0) ADD vm-thread-harvesting SET 'agentId' = ?s , 'vmId' = ?s , 'timeStamp' = ?l , 'harvesting' = ?b|682188 ns
+PERFLOG - QueuedStorage$TimedPreparedStatement$1: 2014-08-08T16:07:07.319+0200|1|s-front-end|DB_WRITE(0) ADD vm-thread-harvesting SET 'agentId' = ?s , 'vmId' = ?s , 'timeStamp' = ?l , 'harvesting' = ?b|10728 µs
+PERFLOG - CountingDecorator: 2014-08-08T16:07:07.323+0200|0|s-backing-proxied|Q_SIZE 1
+PERFLOG - QueuedStorage$TimedWrite$1: 2014-08-08T16:07:07.324+0200|1|s-backing-proxied|DB_WRITE(1) REMOVE backend-info WHERE 'name' = ?s|699456 ns
+PERFLOG - QueuedStorage$TimedPreparedStatement$1: 2014-08-08T16:07:07.324+0200|1|s-front-end|DB_WRITE(0) REMOVE backend-info WHERE 'name' = ?s|4951 µs
+PERFLOG - CountingDecorator: 2014-08-08T16:07:07.327+0200|0|s-backing-proxied|Q_SIZE 1
+PERFLOG - QueuedStorage$TimedPreparedStatement$1: 2014-08-08T16:07:07.328+0200|1|s-front-end|DB_WRITE(0) REMOVE backend-info WHERE 'name' = ?s|3532 µs
+PERFLOG - QueuedStorage$TimedWrite$1: 2014-08-08T16:07:07.328+0200|1|s-backing-proxied|DB_WRITE(1) REMOVE backend-info WHERE 'name' = ?s|517868 ns
+PERFLOG - CountingDecorator: 2014-08-08T16:07:07.331+0200|0|s-backing-proxied|Q_SIZE 1
+PERFLOG - QueuedStorage$TimedWrite$1: 2014-08-08T16:07:07.331+0200|1|s-backing-proxied|DB_WRITE(1) REMOVE backend-info WHERE 'name' = ?s|509501 ns
+PERFLOG - QueuedStorage$TimedPreparedStatement$1: 2014-08-08T16:07:07.331+0200|1|s-front-end|DB_WRITE(0) REMOVE backend-info WHERE 'name' = ?s|3445 µs
+PERFLOG - CountingDecorator: 2014-08-08T16:07:07.334+0200|0|s-backing-proxied|Q_SIZE 1
+PERFLOG - QueuedStorage$TimedPreparedStatement$1: 2014-08-08T16:07:07.335+0200|1|s-front-end|DB_WRITE(0) REMOVE agent-config WHERE 'agentId' = ?s|3462 µs
+PERFLOG - QueuedStorage$TimedWrite$1: 2014-08-08T16:07:07.335+0200|1|s-backing-proxied|DB_WRITE(1) REMOVE agent-config WHERE 'agentId' = ?s|528136 ns
+PERFLOG - CountingDecorator: 2014-08-08T16:07:07.238+0200|0|s-front-end|Q_SIZE 4
+PERFLOG - CountingDecorator: 2014-08-08T16:07:07.240+0200|0|s-backing-proxied|Q_SIZE 1
+PERFLOG - CountingDecorator: 2014-08-08T16:07:07.241+0200|0|s-front-end|Q_SIZE 5
+PERFLOG - QueuedStorage$TimedWrite$1: 2014-08-08T16:07:07.241+0200|1|s-backing-proxied|DB_WRITE(0) ADD vm-gc-stats SET 'agentId' = ?s , 'vmId' = ?s , 'timeStamp' = ?l , 'collectorName' = ?s , 'runCount' = ?l , 'wallTime' = ?l|735170 ns
+PERFLOG - QueuedStorage$TimedPreparedStatement$1: 2014-08-08T16:07:07.241+0200|1|s-front-end|DB_WRITE(0) ADD vm-gc-stats SET 'agentId' = ?s , 'vmId' = ?s , 'timeStamp' = ?l , 'collectorName' = ?s , 'runCount' = ?l , 'wallTime' = ?l|4247 µs
+INFO - Agent$1: removing backend: Backend [name=VM CPU Backend, version=1.1.0, vendor=Red Hat, Inc., description=Gathers CPU statistics about a JVM]
+PERFLOG - CountingDecorator: 2014-08-08T16:07:07.242+0200|0|s-front-end|Q_SIZE 5
+PERFLOG - CountingDecorator: 2014-08-08T16:07:07.245+0200|0|s-backing-proxied|Q_SIZE 1
+PERFLOG - QueuedStorage$TimedWrite$1: 2014-08-08T16:07:07.245+0200|1|s-backing-proxied|DB_WRITE(0) ADD vm-cpu-stats SET 'agentId' = ?s , 'vmId' = ?s , 'timeStamp' = ?l , 'cpuLoad' = ?d|441720 ns
+PERFLOG - QueuedStorage$TimedPreparedStatement$1: 2014-08-08T16:07:07.245+0200|1|s-front-end|DB_WRITE(0) ADD vm-cpu-stats SET 'agentId' = ?s , 'vmId' = ?s , 'timeStamp' = ?l , 'cpuLoad' = ?d|4291 µs
+PERFLOG - CountingDecorator: 2014-08-08T16:07:07.247+0200|0|s-front-end|Q_SIZE 5
+PERFLOG - CountingDecorator: 2014-08-08T16:07:07.249+0200|0|s-front-end|Q_SIZE 6
+INFO - Agent$1: removing backend: Backend [name=VM Classes Backend, version=1.1.0, vendor=Red Hat, Inc., description=Gathers class loading statistics about a JVM]
+PERFLOG - CountingDecorator: 2014-08-08T16:07:07.250+0200|0|s-front-end|Q_SIZE 7
+INFO - Agent$1: removing backend: Backend [name=VM GC Backend, version=1.1.0, vendor=Red Hat, Inc., description=Gathers garbage collection statistics about a JVM]
+PERFLOG - CountingDecorator: 2014-08-08T16:07:07.251+0200|0|s-front-end|Q_SIZE 8
+INFO - Agent$1: removing backend: Backend [name=NUMA Backend, version=1.1.0, vendor=Red Hat, Inc., description=Gathers NUMA statistics about a host]
+PERFLOG - CountingDecorator: 2014-08-08T16:07:07.251+0200|0|s-front-end|Q_SIZE 9
+INFO - Agent$1: removing backend: Backend [name=Host Memory Backend, version=1.1.0, vendor=Red Hat, Inc., description=Gathers memory statistics about a host]
+PERFLOG - CountingDecorator: 2014-08-08T16:07:07.252+0200|0|s-front-end|Q_SIZE 10
+INFO - Agent$1: removing backend: Backend [name=VM JMX Backend, version=1.1.0, vendor=Red Hat, Inc., description=gathers JMX information using JMX]
+PERFLOG - CountingDecorator: 2014-08-08T16:07:07.252+0200|0|s-front-end|Q_SIZE 11
+INFO - Agent$1: removing backend: Backend [name=System Backend, version=1.1.0, vendor=Red Hat, Inc., description=Gathers basic information from the system]
+PERFLOG - CountingDecorator: 2014-08-08T16:07:07.252+0200|0|s-backing-proxied|Q_SIZE 1
+PERFLOG - CountingDecorator: 2014-08-08T16:07:07.253+0200|0|s-front-end|Q_SIZE 12

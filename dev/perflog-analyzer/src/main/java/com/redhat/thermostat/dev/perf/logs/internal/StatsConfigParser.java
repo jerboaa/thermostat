@@ -52,6 +52,8 @@ public class StatsConfigParser {
     private SortBy parsedSortBy;
     private Direction parsedDirection;
     private File parsedFile;
+    // Tri-state flag. null == unset
+    private Boolean parsedShowBacking;
     
     public StatsConfigParser(String[] args) {
         this.args = args;
@@ -73,7 +75,7 @@ public class StatsConfigParser {
             }
         }
         setDefaultsPerformSanityChecks();
-        return new StatsConfig(parsedFile, parsedSortBy, parsedDirection);
+        return new StatsConfig(parsedFile, parsedSortBy, parsedDirection, parsedShowBacking);
     }
 
     private void setDefaultsPerformSanityChecks() throws IllegalArgumentException {
@@ -86,6 +88,9 @@ public class StatsConfigParser {
         if (parsedFile == null) {
             throw new IllegalArgumentException("No log file specified");
         }
+        if (parsedShowBacking == null) {
+            parsedShowBacking = Boolean.FALSE;
+        }
     }
 
     private void processFile(String fileName) throws IllegalArgumentException {
@@ -96,6 +101,10 @@ public class StatsConfigParser {
     }
 
     private void processOption(String keyValue) throws IllegalArgumentException {
+        if (keyValue.equals(StatsConfig.SHOW_BACKING)) {
+            setShowBacking();
+            return;
+        }
         String[] keyValues = keyValue.split("=");
         if (keyValues.length != 2) {
             throw new IllegalArgumentException("Illegal key value pair");
@@ -107,6 +116,13 @@ public class StatsConfigParser {
         } else {
             throw new IllegalArgumentException("Illegal option " + OPTION_PREFIX + keyValue);
         }
+    }
+
+    private void setShowBacking() throws IllegalArgumentException {
+        if (parsedShowBacking != null) {
+            throw new IllegalArgumentException("Multiple show-backing option specified");
+        }
+        parsedShowBacking = Boolean.TRUE;
     }
 
     private void parseDirection(String direction) throws IllegalArgumentException {

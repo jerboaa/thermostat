@@ -64,6 +64,7 @@ public class PerfLogAnalyzerTest {
         builder.append("  OPTIONS:\n");
         builder.append("   --sort-by=<KEY>   <KEY> is one of: MIN, MAX, AVG, COUNT (AVG is default)\n");
         builder.append("   --direction=<KEY>   <KEY> is one of: ASC, DSC (DSC is default)\n");
+        builder.append("   --show-backing   Shows stats analysis for backing storage (if any)\n");
         String expected = builder.toString();
         assertEquals(expected, actual);
     }

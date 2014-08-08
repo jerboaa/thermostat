@@ -44,7 +44,7 @@ public class StatementStat extends BasicLineStat {
     private final int descId;
     private final SharedStatementState state;
     
-    public StatementStat(SharedStatementState state, Date timestamp, String logTag, int descId, Duration execTime) {
+    public StatementStat(SharedStatementState state, Date timestamp, LogTag logTag, int descId, Duration execTime) {
         super(timestamp, logTag);
         this.execTime = execTime;
         this.descId = descId;

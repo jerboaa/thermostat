@@ -34,48 +34,75 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.dev.perf.logs.internal.parsers;
+package com.redhat.thermostat.dev.perf.logs.internal;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 
-import java.sql.Date;
-import java.util.concurrent.TimeUnit;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.dev.perf.logs.internal.Duration;
-import com.redhat.thermostat.dev.perf.logs.internal.LineParseException;
-import com.redhat.thermostat.dev.perf.logs.internal.LineStat;
-import com.redhat.thermostat.dev.perf.logs.internal.LogTag;
-import com.redhat.thermostat.dev.perf.logs.internal.MessageDuration;
-import com.redhat.thermostat.dev.perf.logs.internal.QueueStat;
+import com.redhat.thermostat.dev.perf.logs.StatsConfig;
 
-public class QueueStatParserTest {
-
-    @Test
-    public void canParseBasic() throws LineParseException {
-        String msg = "Q_SIZE 1003";
-        Duration d = new Duration(8812, TimeUnit.NANOSECONDS);
-        MessageDuration md = new MessageDuration(msg, d);
-        QueueStatParser parser = new QueueStatParser();
-        assertTrue(parser.matches(msg));
-        Date timestamp = mock(Date.class);
-        LineStat stat = parser.parse(timestamp, true, LogTag.STORAGE_BACKING_PROXIED, md);
-        assertNotNull(stat);
-        assertTrue(stat instanceof QueueStat);
-        QueueStat qStat = (QueueStat)stat;
-        assertEquals(timestamp, qStat.getTimeStamp());
-        assertEquals(LogTag.STORAGE_BACKING_PROXIED, qStat.getLogTag());
-        assertEquals(1003, qStat.getSizeValue());
-    }
+public class BasicStatsTest {
     
     @Test
-    public void refusesToMatchForWrongLine() {
-        QueueStatParser parser = new QueueStatParser();
-        assertFalse(parser.matches("should-not-match-me"));
+    public void canGetTotalNumberEmpty() {
+        TestBasicStats basic = new TestBasicStats();
+        doBasicTests(basic);
+    }
+
+    @Test
+    public void canSetValues() {
+        TestBasicStats basic = new TestBasicStats();
+        doBasicTests(basic);
+        basic.setConfig(mock(StatsConfig.class));
+        basic.setSharedStatementState(mock(SharedStatementState.class));
+        List<TestLineStat> testList = new ArrayList<>();
+        testList.add(new TestLineStat());
+        basic.setStats(testList);
+        assertEquals(1, basic.getTotalNumberOfRecords());
+        assertNotNull(basic.getAllStats());
+        assertNotNull(basic.config);
+        assertNotNull(basic.sharedState);
+        assertNotNull(basic.stats);
+    }
+    
+    private void doBasicTests(TestBasicStats basic) {
+        assertNull(basic.getAllStats());
+        assertEquals(0, basic.getTotalNumberOfRecords());
+        assertNull(basic.sharedState);
+        assertNull(basic.config);
+    }
+
+    private static class TestBasicStats extends BasicStats<TestLineStat> {
+
+        @Override
+        public void printSummary(PrintStream out) {
+            // no-op
+        }
+        
+    }
+    
+    private static class TestLineStat implements LineStat {
+
+        @Override
+        public LogTag getLogTag() {
+            // not implemented
+            return null;
+        }
+
+        @Override
+        public Date getTimeStamp() {
+            // not implemented
+            return null;
+        }
+        
     }
 }

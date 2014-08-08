@@ -36,12 +36,25 @@
 
 package com.redhat.thermostat.dev.perf.logs.internal;
 
-import java.util.Date;
+/**
+ * A filter for queue size statistics.
+ *
+ */
+class QueueStatsFilter implements LineStatsFilter<QueueStat, QueueStats> {
 
-public interface LineStat {
-    
-    public LogTag getLogTag();
-    
-    public Date getTimeStamp();
-    
+    @Override
+    public boolean matches(LineStat stat) {
+        return (stat instanceof QueueStat);
+    }
+
+    @Override
+    public String getBucketName() {
+        return "queue-stat";
+    }
+
+    @Override
+    public Class<QueueStats> getStatsClass() {
+        return QueueStats.class;
+    }
+
 }

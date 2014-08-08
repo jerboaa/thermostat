@@ -41,10 +41,10 @@ import java.util.Date;
 class TokenizedLine {
     private final Date date;
     private final boolean hasDuration;
-    private final String logToken;
+    private final LogTag logToken;
     private final MessageDuration md;
     
-    TokenizedLine(Date date, boolean hasDuration, String logToken, MessageDuration md) {
+    TokenizedLine(Date date, boolean hasDuration, LogTag logToken, MessageDuration md) {
         this.date = date;
         this.hasDuration = hasDuration;
         this.logToken = logToken;
@@ -63,7 +63,7 @@ class TokenizedLine {
         return md;
     }
 
-    String getLogToken() {
+    LogTag getLogToken() {
         return logToken;
     }
 }

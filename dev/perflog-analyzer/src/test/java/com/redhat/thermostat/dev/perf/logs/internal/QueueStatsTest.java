@@ -38,7 +38,10 @@ package com.redhat.thermostat.dev.perf.logs.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -74,6 +77,23 @@ public class QueueStatsTest {
         assertEquals(avg, stats.getAvgQueueSize(), DELTA);
     }
     
+    /*
+     * If no filter matches, stats might end up being null. Verify we do not
+     * throw exceptions.
+     */
+    @Test
+    public void testStatsNull() {
+        QueueStats stats = new QueueStats();
+        try {
+            // should not throw exception;
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            PrintStream pStream = new PrintStream(baos);
+            stats.printSummary(pStream);
+        } catch (NullPointerException e) {
+            fail();
+        }
+    }
+    
     @Test
     public void testNumberRecords() {
         assertEquals(5, stats.getTotalNumberOfRecords());
@@ -95,13 +115,28 @@ public class QueueStatsTest {
         assertEquals(5, s.size());
     }
     
+    @Test
+    public void verifyQueueStatsSummaryPrinting() {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintStream pStream = new PrintStream(baos);
+        stats.printSummary(pStream);
+        String summary = baos.toString();
+        assertEquals("Queue size stats (5 records): 12(max) 1(min) 5.60(avg)\n\n", summary);
+    }
+    
+    @Test
+    public void verifyNoArgConstructor() throws InstantiationException, IllegalAccessException {
+        QueueStats stats = (QueueStats)QueueStats.class.newInstance();
+        assertNotNull(stats);
+    }
+    
     private List<QueueStat> buildStats() {
         List<QueueStat> sts = new ArrayList<>();
         int[] sizes = new int[] {
           1, 3, 12, 4 , 8     
         };
         for (int size: sizes) {
-            QueueStat s = new QueueStat(new Date(), "foo", size);
+            QueueStat s = new QueueStat(new Date(), LogTag.STORAGE_BACKING_PROXIED, size);
             sts.add(s);
         }
         return sts;

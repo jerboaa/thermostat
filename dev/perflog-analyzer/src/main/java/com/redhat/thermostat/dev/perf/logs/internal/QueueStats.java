@@ -36,20 +36,25 @@
 
 package com.redhat.thermostat.dev.perf.logs.internal;
 
+import java.io.PrintStream;
 import java.util.List;
 
-class QueueStats {
+class QueueStats extends BasicStats<QueueStat> {
 
     public static final int NOT_APPLICABLE = -1;
-    private final List<QueueStat> stats;
     private boolean analysisDone = false;
     private long runningSum = 0;
     private long runningCount = 0;
     private long currMax = Long.MIN_VALUE;
     private long currMin = Long.MAX_VALUE;
     
+    // for testing
     QueueStats(List<QueueStat> stats) {
-        this.stats = stats;
+        super(stats);
+    }
+    
+    QueueStats() {
+        // no-arg main constructor used by factory
     }
     
     long getMax() {
@@ -82,10 +87,6 @@ class QueueStats {
         return runningSum/(double)runningCount;
     }
     
-    int getTotalNumberOfRecords() {
-        return stats.size();
-    }
-    
     private void doAnalysis() {
         for (QueueStat s: stats) {
             runningCount++;
@@ -100,8 +101,19 @@ class QueueStats {
         }
         analysisDone = true;
     }
-    
-    List<QueueStat> getAllStats() {
-        return stats;
+
+    @Override
+    public void printSummary(PrintStream out) {
+        out.print(String.format("Queue size stats (%s records)", getTotalNumberOfRecords()));
+        if (getTotalNumberOfRecords() > 0) {
+            out.print(": ");
+            out.print(getMax() + "(max) ");
+            out.print(getMin() + "(min) ");
+            out.println(String.format("%.02f(avg)", getAvgQueueSize()));
+        } else {
+            out.println(""); // line-feed
+        }
+        out.println(""); // Extra line at end of summary
     }
+
 }

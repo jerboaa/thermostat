@@ -56,6 +56,7 @@ public class PerfLogAnalyzer {
         System.err.print("   --" + StatsConfig.DIRECTION_KEY + "=<KEY>   <KEY> is one of: ");
         System.err.print(Direction.ASC.name() + ", " + Direction.DSC.name());
         System.err.println(" (" + Direction.DSC + " is default)");
+        System.err.println("   --" + StatsConfig.SHOW_BACKING + "   Shows stats analysis for backing storage (if any)");
     }
     
     private static void usage() {

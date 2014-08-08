@@ -40,6 +40,7 @@ import java.util.Date;
 
 import com.redhat.thermostat.dev.perf.logs.internal.LineParseException;
 import com.redhat.thermostat.dev.perf.logs.internal.LineStat;
+import com.redhat.thermostat.dev.perf.logs.internal.LogTag;
 import com.redhat.thermostat.dev.perf.logs.internal.MessageDuration;
 
 /**
@@ -50,7 +51,7 @@ public interface LineStatParser {
 
     boolean matches(String msg);
     
-    LineStat parse(Date timestamp, boolean hasDuration, String logToken,
+    LineStat parse(Date timestamp, boolean hasDuration, LogTag logToken,
             MessageDuration msg) throws LineParseException;
     
 }

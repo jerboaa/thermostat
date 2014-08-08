@@ -43,7 +43,7 @@ import java.util.Date;
  */
 public class ReadStatementStat extends StatementStat {
 
-    public ReadStatementStat(SharedStatementState state, Date timestamp, String logTag, int descriptorId, Duration execTime) {
+    public ReadStatementStat(SharedStatementState state, Date timestamp, LogTag logTag, int descriptorId, Duration execTime) {
         super(state, timestamp, logTag, descriptorId, execTime);
     }
 }

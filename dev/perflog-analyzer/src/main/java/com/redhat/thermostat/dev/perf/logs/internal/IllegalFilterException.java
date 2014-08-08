@@ -36,12 +36,10 @@
 
 package com.redhat.thermostat.dev.perf.logs.internal;
 
-import java.util.Date;
+@SuppressWarnings("serial")
+public class IllegalFilterException extends Exception {
 
-public interface LineStat {
-    
-    public LogTag getLogTag();
-    
-    public Date getTimeStamp();
-    
+    public IllegalFilterException(String msg) {
+        super(msg);
+    }
 }

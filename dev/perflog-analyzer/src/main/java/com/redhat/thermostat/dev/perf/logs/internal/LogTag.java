@@ -36,12 +36,50 @@
 
 package com.redhat.thermostat.dev.perf.logs.internal;
 
-import java.util.Date;
+/**
+ * Log tags we know and filter by.
+ *
+ */
+// Note: Keep in sync with core thermostat's LogTag
+public enum LogTag {
 
-public interface LineStat {
+    /**
+     * Tag used for proxied backing storage log entries.
+     */
+    STORAGE_BACKING_PROXIED("s-backing-proxied"),
     
-    public LogTag getLogTag();
+    /**
+     * Tag used for front end storage log entries.
+     */
+    STORAGE_FRONT_END("s-front-end"),
+    ;
     
-    public Date getTimeStamp();
+    private String value;
+    
+    LogTag(String value) {
+        this.value = value;
+    }
+    
+    @Override
+    public String toString() {
+        return this.value;
+    }
+    
+    /**
+     * Parses a LogTag from its corresponding toString() value.
+     * 
+     * @param value The value from which to parse the enum.
+     * @return An LogTag value or {@code null} if not recognized.
+     */
+    public static LogTag parseFromStringForm(String value) {
+        switch(value) {
+        case "s-backing-proxied":
+            return STORAGE_BACKING_PROXIED;
+        case "s-front-end":
+            return STORAGE_FRONT_END;
+        default:
+            return null;
+        }
+    }
     
 }

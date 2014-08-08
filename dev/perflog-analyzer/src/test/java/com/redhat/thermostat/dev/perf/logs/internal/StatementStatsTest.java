@@ -41,6 +41,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -53,6 +56,7 @@ import org.junit.Test;
 
 import com.redhat.thermostat.dev.perf.logs.Direction;
 import com.redhat.thermostat.dev.perf.logs.SortBy;
+import com.redhat.thermostat.dev.perf.logs.StatsConfig;
 
 public class StatementStatsTest {
 
@@ -70,10 +74,11 @@ public class StatementStatsTest {
     private StatementStat s5;
     private StatementStat s6;
     private StatementStats stats;
+    private SharedStatementState state;
     
     @Before
     public void setup() {
-        SharedStatementState state = mock(SharedStatementState.class);
+        state = mock(SharedStatementState.class);
         when(state.getMappedStatementId(desc1)).thenReturn(desc1Id);
         when(state.getMappedStatementId(desc2)).thenReturn(desc2Id);
         when(state.getMappedStatementId(desc3)).thenReturn(desc3Id);
@@ -199,17 +204,45 @@ public class StatementStatsTest {
         assertEquals(6, s.size());
     }
     
+    @Test
+    public void verifyNoArgConstructor() throws InstantiationException, IllegalAccessException {
+        StatementStats stats = (StatementStats)StatementStats.class.newInstance();
+        assertNotNull("stats factory uses no-arg constructor", stats);
+    }
+    
+    @Test
+    public void verifySummaryPrinting() {
+        when(state.getDescriptor(desc1Id)).thenReturn(desc1);
+        when(state.getDescriptor(desc2Id)).thenReturn(desc2);
+        when(state.getDescriptor(desc3Id)).thenReturn(desc3);
+        
+        StatsConfig config = new StatsConfig(new File("foo-bar"), SortBy.AVG, Direction.DSC, false);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintStream pStream = new PrintStream(baos);
+        stats.setConfig(config);
+        stats.printSummary(pStream);
+        String expected = "Statement statistics (6 records): 3 distinct statements (5 reads, 1 writes)\n" +
+                          "\n" +
+                          "Statement details (sorted by avg exec time):\n" +
+                          "Total #: 2, 300µs (min), 333µs (max), 316.50µs (avg), DESCRIPTOR: QUERY foo-bar WHERE 'x' = ?l\n" +
+                          "Total #: 3, 2ms (min), 120ms (max), 44.67ms (avg), DESCRIPTOR: QUERY foo WHERE 'a' = ?s\n" +
+                          "Total #: 1, 44ns (min), 44ns (max), 44.00ns (avg), DESCRIPTOR: ADD foo SET 'a' = ?s\n\n";
+        String summary = baos.toString();
+        assertEquals(expected, summary);
+    }
+    
     private List<StatementStat> buildStats(SharedStatementState state) {
         List<StatementStat> stats = new ArrayList<>();
         int id = desc1Id;
-        s1 = new ReadStatementStat(state, new Date(), "foo", id, new Duration(12, TimeUnit.MILLISECONDS));
-        s2 = new ReadStatementStat(state, new Date(), "foo", id, new Duration(120, TimeUnit.MILLISECONDS));
-        s3 = new ReadStatementStat(state, new Date(), "foo", id, new Duration(2, TimeUnit.MILLISECONDS));
+        LogTag logTag = LogTag.STORAGE_BACKING_PROXIED;
+        s1 = new ReadStatementStat(state, new Date(), logTag, id, new Duration(12, TimeUnit.MILLISECONDS));
+        s2 = new ReadStatementStat(state, new Date(), logTag, id, new Duration(120, TimeUnit.MILLISECONDS));
+        s3 = new ReadStatementStat(state, new Date(), logTag, id, new Duration(2, TimeUnit.MILLISECONDS));
         id = desc2Id;
-        s4 = new ReadStatementStat(state, new Date(), "foo", id, new Duration(300, TimeUnit.MICROSECONDS));
-        s5 = new ReadStatementStat(state, new Date(), "foo", id, new Duration(333, TimeUnit.MICROSECONDS));
+        s4 = new ReadStatementStat(state, new Date(), logTag, id, new Duration(300, TimeUnit.MICROSECONDS));
+        s5 = new ReadStatementStat(state, new Date(), logTag, id, new Duration(333, TimeUnit.MICROSECONDS));
         id = desc3Id;
-        s6 = new WriteStatementStat(state, new Date(), "foo", id, new Duration(44, TimeUnit.NANOSECONDS), 3);
+        s6 = new WriteStatementStat(state, new Date(), logTag, id, new Duration(44, TimeUnit.NANOSECONDS), 3);
         // adding order should not matter
         stats.add(s1);
         stats.add(s3);

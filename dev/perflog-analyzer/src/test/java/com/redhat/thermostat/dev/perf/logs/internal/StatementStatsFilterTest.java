@@ -36,12 +36,40 @@
 
 package com.redhat.thermostat.dev.perf.logs.internal;
 
-import java.util.Date;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
-public interface LineStat {
+import org.junit.Before;
+import org.junit.Test;
+
+public class StatementStatsFilterTest {
     
-    public LogTag getLogTag();
+    private StatementStatsFilter filter;
     
-    public Date getTimeStamp();
+    @Before
+    public void setup() {
+        filter = new StatementStatsFilter();
+    }
+
+    @Test
+    public void verifyBucketName() {
+        assertEquals("statement-stat", filter.getBucketName());
+    }
     
+    @Test
+    public void verifyStatsClass() {
+        assertEquals(StatementStats.class, filter.getStatsClass());
+    }
+    
+    @Test
+    public void verifyMatch() {
+        StatementStat stat = mock(StatementStat.class);
+        assertTrue(filter.matches(stat));
+        QueueStat queueStat = mock(QueueStat.class);
+        assertFalse(filter.matches(queueStat));
+        LineStat rawStat = mock(LineStat.class);
+        assertFalse(filter.matches(rawStat));
+    }
 }

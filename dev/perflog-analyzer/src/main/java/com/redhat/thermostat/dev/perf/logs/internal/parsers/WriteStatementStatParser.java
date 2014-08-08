@@ -43,6 +43,7 @@ import java.util.regex.Pattern;
 import com.redhat.thermostat.dev.perf.logs.internal.Duration;
 import com.redhat.thermostat.dev.perf.logs.internal.LineParseException;
 import com.redhat.thermostat.dev.perf.logs.internal.LineStat;
+import com.redhat.thermostat.dev.perf.logs.internal.LogTag;
 import com.redhat.thermostat.dev.perf.logs.internal.MessageDuration;
 import com.redhat.thermostat.dev.perf.logs.internal.SharedStatementState;
 import com.redhat.thermostat.dev.perf.logs.internal.WriteStatementStat;
@@ -64,7 +65,7 @@ public class WriteStatementStatParser extends StatementStatParser {
     }
 
     @Override
-    public LineStat parse(Date timestamp, boolean hasDuration, String logToken,
+    public LineStat parse(Date timestamp, boolean hasDuration, LogTag logToken,
             MessageDuration msg) throws LineParseException {
         String strMsg = msg.getMsg();
         Duration duration = msg.getDuration();
