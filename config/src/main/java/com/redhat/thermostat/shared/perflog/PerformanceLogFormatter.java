@@ -39,7 +39,7 @@ package com.redhat.thermostat.shared.perflog;
 
 /**
  * 
- * Log facility for Thermostat internal performance metrics.
+ * Log formatter for Thermostat internal performance metrics.
  * 
  * @see PerformanceLogFormatterBuilder
  *
@@ -55,7 +55,7 @@ public interface PerformanceLogFormatter {
      * @param msg The message to log
      * @param durationInNanos
      * @return A formatted string suitable for logging at the
-     *         {@link com.redhat.thermostat.shared.perflog.PerformanceLogLevel.PERFLOG}
+     *         {@link com.redhat.thermostat.common.utils.LoggingUtils.PERFLOG}
      *         level.
      */
     public String format(String uniqueToken, String msg, long durationInNanos);
@@ -68,7 +68,7 @@ public interface PerformanceLogFormatter {
      *                    this token.
      * @param msg The message to log
      * @return A formatted string suitable for logging at the
-     *         {@link com.redhat.thermostat.shared.perflog.PerformanceLogLevel.PERFLOG}
+     *         {@link com.redhat.thermostat.common.utils.LoggingUtils.PERFLOG}
      *         level.
      */
     public String format(String uniqueToken, String msg);

@@ -60,6 +60,11 @@ import com.redhat.thermostat.shared.locale.Translate;
  */
 public final class LoggingUtils {
 
+    /*
+     * Custom log level, intended for use with Thermostat's internal performance
+     * analysis framework.  Log messages at this level should be formatted using
+     * {@link com.redhat.thermostat.shared.perflog.PerformanceLogFormatter}.
+     */
     public static final Level PERFLOG = new Level("PERFLOG", 50) {
         private static final long serialVersionUID = 1L;
     };
