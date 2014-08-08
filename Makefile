@@ -25,7 +25,7 @@ ifeq ($(BUILD_DOCS),true)
     MAVEN_JAVADOC = javadoc:aggregate
 endif
 
-all: core verify-archetype-ext
+all: core verify-archetype-ext verify-archetype-multimodule
 
 # Default to just building core
 core:

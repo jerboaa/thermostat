@@ -16,13 +16,14 @@ fi
 
 M2_REPO=$1
 THERMOSTAT_HOME=$2
+PLUGIN_DIR="foo-bar"
+ARTIFACT_ID="helloworld-multimodule"
 
 echo Using m2 repo: $M2_REPO
 echo Using THERMOSTAT_HOME to which to install plugin to: $THERMOSTAT_HOME
 
 find "$M2_REPO" -name '*thermostat*' -print0 | xargs -0 rm -rf;
 mvn -Dmaven.test.skip=true -Dmaven.repo.local="$M2_REPO" clean install
-PLUGIN_DIR="foo-bar"
 
 # Use the archetype in order to verify it works
 TMP_DIR=$(mktemp -d)
@@ -34,21 +35,19 @@ mvn archetype:generate -DarchetypeCatalog=local \
                           -DbundleSymbolicName=com.example.thermostat.helloworld \
                           -Dpackage=com.example.thermostat \
                           -DgroupId=com.example.thermostat \
-                          -DartifactId=helloworld \
+                          -DartifactId="$ARTIFACT_ID" \
                           -Dversion=0.0.1-SNAPSHOT \
                           -DmoduleName="Thermostat Hello World Extension Command" \
-                          -DpluginDeployDir=$PLUGIN_DIR
+                          -DpluginDeployDir="$PLUGIN_DIR"
 
 # Build plugin
-pushd helloworld
+pushd "$ARTIFACT_ID"
 mvn -Dmaven.repo.local="$M2_REPO" package
 
-if [ -e $THERMOSTAT_HOME/plugins/example-plugin ]; then
-  rm -rf $THERMOSTAT_HOME/plugins/example-plugin
-fi
-
-bash deploy.sh
-popd # helloworld
+# deploy.sh cleans up previously deployed bits (if any)
+# pass on THERMOSTAT_HOME which deploy.sh uses.
+THERMOSTAT_HOME=$THERMOSTAT_HOME bash deploy.sh
+popd # ARTIFACT_ID dir
 
 # Make thermostat runnable. I.e. prepare a thermostat user home
 # run devsetup
@@ -100,18 +99,21 @@ done
 if [ $retval -eq 0 ]; then
   rm -rf $TMP_DIR
   rm -rf $USER_THERMOSTAT_HOME
+  # clean-up plugin artifacts from THERMOSTAT_HOME which we've used for
+  # installation.
   rm -rf $THERMOSTAT_HOME/plugins/$PLUGIN_DIR
+  rm -rf $THERMOSTAT_HOME/webapp/WEB-INF/lib/"$ARTIFACT_ID"-storage-common*.jar
 else
   cat 1>&2 <<END
 Something went wrong. You may find the following info useful.
 
-Plug-in root should be: $TMP_DIR/helloworld
+Plug-in root should be: $TMP_DIR/$ARTIFACT_ID
 Recompile with:
   $ mvn -Dmaven.repo.local="$M2_REPO" clean package
 
 USER_THERMOSTAT_HOME was:     $USER_THERMOSTAT_HOME
 THERMOSTAT_HOME was:          $THERMOSTAT_HOME
-Plugin install directory was: $THERMOSTAT_HOME/plugins/"$PLUGIN_DIR"
+Plugin install directory was: $THERMOSTAT_HOME/plugins/$PLUGIN_DIR
 END
 fi
 
