@@ -138,4 +138,32 @@ public class StatsParserBuilderTest {
         String actualDesc = readRec.getDescriptor();
         assertEquals(desc, actualDesc);
     }
+
+    @Test
+    public void canExtractMessageFromLogEntry() {
+        StatsParserImpl parser = (StatsParserImpl)StatsParserBuilder.build();
+
+        String logEntry = "PERFLOG - CountingDecorator: 2014-07-24T19:18:04.124-0600|0|CountingDecorator|Q_SIZE 2";
+        String expectedMessage = "2014-07-24T19:18:04.124-0600|0|CountingDecorator|Q_SIZE 2";
+        String message = parser.extractMessage(logEntry);
+        assertEquals(expectedMessage, message);
+
+        logEntry = "PERFLOG FooFooFoo: MessageMessageMessage";
+        expectedMessage = "MessageMessageMessage";
+        message = parser.extractMessage(logEntry);
+        assertEquals(expectedMessage, message);
+    }
+
+    @Test
+    public void ignoreNonPerfLogEntries() {
+        StatsParserImpl parser = (StatsParserImpl)StatsParserBuilder.build();
+
+        String logEntry = "WARNING - CountingDecorator: 2014-07-24T19:18:04.124-0600|0|CountingDecorator|Q_SIZE 2";
+        LineStat stat = parser.parse(logEntry);
+        assertNull(stat);
+
+        logEntry = "Any String that does not start with \"PERFLOG\" should not parse.";
+        stat = parser.parse(logEntry);
+        assertNull(stat);
+    }
 }

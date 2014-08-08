@@ -58,6 +58,7 @@ class StatsParserBuilder {
     // package private for testing
     static class StatsParserImpl implements StatsParser {
 
+        private static final String PERFLOG_PREFIX = "PERFLOG";
         private static final char MICRO_SIGN = '\u00b5';
         private static final String DAYS = "days";
         private static final String HOURS = "hours";
@@ -69,6 +70,7 @@ class StatsParserBuilder {
         private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
         private static final DateFormat FORMAT = new SimpleDateFormat(DATE_FORMAT);
         private static final String VERTICAL_BAR = "\\|";
+        private static final char COLON = ':';
         private final SharedStatementState state;
         private List<LineStatParser> parsers;
         
@@ -82,8 +84,12 @@ class StatsParserBuilder {
         
         @Override
         public LineStat parse(String line) {
+            if (!line.startsWith(PERFLOG_PREFIX)) {
+                // Ignore non-perf log entries.
+                return null;
+            }
             try {
-                TokenizedLine tokens = splitIntoTokens(line);
+                TokenizedLine tokens = splitIntoTokens(extractMessage(line));
                 MessageDuration md = tokens.getMessageDuration();
                 String rawMessage = md.getMsg();
                 for (LineStatParser p: parsers) {
@@ -97,6 +103,11 @@ class StatsParserBuilder {
                 System.err.println(e.getMessage());
             }
             return null;
+        }
+
+        String extractMessage(String line) {
+            int messageStart = line.indexOf(COLON) + 2;
+            return line.substring(messageStart);
         }
 
         // package-private for testing

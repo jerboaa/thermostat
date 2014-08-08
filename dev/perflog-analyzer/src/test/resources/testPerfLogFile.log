@@ -1,80 +1,80 @@
-2014-07-03T16:07:18.095+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s|16523 µs
-2014-07-03T16:07:18.100+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s|20607 µs
-2014-07-03T16:07:18.101+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s|25899 µs
-2014-07-03T16:07:18.110+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|4724 µs
-2014-07-03T16:07:18.113+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s|37749 µs
-2014-07-03T16:07:18.118+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|13185 µs
-2014-07-03T16:07:18.121+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|13506 µs
-2014-07-03T16:07:18.125+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|10889 µs
-2014-07-03T16:07:18.127+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|11021 µs
-2014-07-03T16:07:18.131+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|10420 µs
-2014-07-03T16:07:18.134+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|3948 µs
-2014-07-03T16:07:18.138+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|10581 µs
-2014-07-03T16:07:18.142+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|19222 µs
-2014-07-03T16:07:18.147+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|4376 µs
-2014-07-03T16:07:18.147+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|13575 µs
-2014-07-03T16:07:18.154+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|13930 µs
-2014-07-03T16:07:18.154+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|3942 µs
-2014-07-03T16:07:18.160+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|24253 µs
-2014-07-03T16:07:18.160+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|3745 µs
-2014-07-03T16:07:18.290+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s|13646 µs
-2014-07-03T16:07:18.290+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s|14019 µs
-2014-07-03T16:07:18.297+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s|17199 µs
-2014-07-03T16:07:18.300+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s|20280 µs
-2014-07-03T16:07:18.304+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s|20087 µs
-2014-07-03T16:07:18.307+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s|22847 µs
-2014-07-03T16:07:18.311+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|17496 µs
-2014-07-03T16:07:18.319+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|12513 µs
-2014-07-03T16:07:18.323+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|13477 µs
-2014-07-03T16:07:18.326+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|13452 µs
-2014-07-03T16:07:18.327+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|13551 µs
-2014-07-03T16:07:18.330+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|11328 µs
-2014-07-03T16:07:18.333+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|12089 µs
-2014-07-03T16:07:18.339+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|9219 µs
-2014-07-03T16:07:18.343+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|8025 µs
-2014-07-03T16:07:18.343+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|10901 µs
-2014-07-03T16:07:18.347+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|8040 µs
-2014-07-03T16:07:18.348+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|11498 µs
-2014-07-03T16:07:18.354+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|4111 µs
-2014-07-03T16:07:18.356+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|5885 µs
-2014-07-03T16:07:18.358+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|5763 µs
-2014-07-03T16:06:01.290+0200|1|TimedPreparedStatement|DB_WRITE(0) ADD agent-config SET 'agentId' = ?s , 'startTime' = ?l , 'stopTime' = ?l , 'alive' = ?b , 'configListenAddress' = ?s|25897 µs
-2014-07-03T16:06:01.351+0200|1|TimedPreparedStatement|DB_WRITE(0) ADD backend-info SET 'agentId' = ?s , 'name' = ?s , 'description' = ?s , 'observeNewJvm' = ?b , 'pids' = ?i[ , 'active' = ?b , 'orderValue' = ?i|60302 µs
-2014-07-03T16:06:01.360+0200|1|TimedPreparedStatement|DB_WRITE(0) ADD backend-info SET 'agentId' = ?s , 'name' = ?s , 'description' = ?s , 'observeNewJvm' = ?b , 'pids' = ?i[ , 'active' = ?b , 'orderValue' = ?i|8976 µs
-2014-07-03T16:06:01.393+0200|1|TimedPreparedStatement|DB_WRITE(0) ADD backend-info SET 'agentId' = ?s , 'name' = ?s , 'description' = ?s , 'observeNewJvm' = ?b , 'pids' = ?i[ , 'active' = ?b , 'orderValue' = ?i|32617 µs
-2014-07-03T16:06:01.458+0200|1|TimedPreparedStatement|DB_WRITE(0) ADD numa-host-info SET 'agentId' = ?s , 'numNumaNodes' = ?i|64754 µs
-2014-07-03T16:06:01.469+0200|1|TimedPreparedStatement|DB_WRITE(0) ADD backend-info SET 'agentId' = ?s , 'name' = ?s , 'description' = ?s , 'observeNewJvm' = ?b , 'pids' = ?i[ , 'active' = ?b , 'orderValue' = ?i|10652 µs
-2014-07-03T16:06:01.680+0200|1|TimedPreparedStatement|DB_WRITE(0) ADD numa-stat SET 'agentId' = ?s , 'timeStamp' = ?l , 'nodeStats' = ?p[|209978 µs
-2014-07-03T16:06:01.694+0200|1|TimedPreparedStatement|DB_WRITE(0) ADD host-info SET 'agentId' = ?s , 'hostname' = ?s , 'osName' = ?s , 'osKernel' = ?s , 'cpuModel' = ?s , 'cpuCount' = ?i , 'totalMemory' = ?l|13981 µs
-2014-07-03T16:06:01.715+0200|1|TimedPreparedStatement|DB_WRITE(1) REPLACE network-info SET 'agentId' = ?s , 'interfaceName' = ?s , 'ip4Addr' = ?s , 'ip6Addr' = ?s WHERE 'agentId' = ?s AND 'interfaceName' = ?s|20540 µs
-2014-07-03T16:06:01.720+0200|1|TimedPreparedStatement|DB_WRITE(0) ADD backend-info SET 'agentId' = ?s , 'name' = ?s , 'description' = ?s , 'observeNewJvm' = ?b , 'pids' = ?i[ , 'active' = ?b , 'orderValue' = ?i|5517 µs
-2014-07-03T16:06:01.726+0200|1|TimedPreparedStatement|DB_WRITE(1) REPLACE network-info SET 'agentId' = ?s , 'interfaceName' = ?s , 'ip4Addr' = ?s , 'ip6Addr' = ?s WHERE 'agentId' = ?s AND 'interfaceName' = ?s|5497 µs
-2014-07-03T16:06:01.733+0200|1|TimedPreparedStatement|DB_WRITE(0) ADD backend-info SET 'agentId' = ?s , 'name' = ?s , 'description' = ?s , 'observeNewJvm' = ?b , 'pids' = ?i[ , 'active' = ?b , 'orderValue' = ?i|6687 µs
-2014-07-03T16:06:01.773+0200|1|TimedPreparedStatement|DB_WRITE(0) ADD memory-stats SET 'agentId' = ?s , 'timeStamp' = ?l , 'total' = ?l , 'free' = ?l , 'buffers' = ?l , 'cached' = ?l , 'swapTotal' = ?l , 'swapFree' = ?l , 'commitLimit' = ?l|39395 µs
-2014-07-03T16:06:01.778+0200|1|TimedPreparedStatement|DB_WRITE(1) REPLACE network-info SET 'agentId' = ?s , 'interfaceName' = ?s , 'ip4Addr' = ?s , 'ip6Addr' = ?s WHERE 'agentId' = ?s AND 'interfaceName' = ?s|5386 µs
-2014-07-03T16:06:01.784+0200|1|TimedPreparedStatement|DB_WRITE(1) REPLACE network-info SET 'agentId' = ?s , 'interfaceName' = ?s , 'ip4Addr' = ?s , 'ip6Addr' = ?s WHERE 'agentId' = ?s AND 'interfaceName' = ?s|5762 µs
-2014-07-03T16:06:01.791+0200|1|TimedPreparedStatement|DB_WRITE(0) ADD backend-info SET 'agentId' = ?s , 'name' = ?s , 'description' = ?s , 'observeNewJvm' = ?b , 'pids' = ?i[ , 'active' = ?b , 'orderValue' = ?i|6004 µs
-2014-07-03T16:06:01.797+0200|1|TimedPreparedStatement|DB_WRITE(0) ADD backend-info SET 'agentId' = ?s , 'name' = ?s , 'description' = ?s , 'observeNewJvm' = ?b , 'pids' = ?i[ , 'active' = ?b , 'orderValue' = ?i|5718 µs
-2014-07-03T16:06:01.803+0200|1|TimedPreparedStatement|DB_WRITE(0) ADD backend-info SET 'agentId' = ?s , 'name' = ?s , 'description' = ?s , 'observeNewJvm' = ?b , 'pids' = ?i[ , 'active' = ?b , 'orderValue' = ?i|5688 µs
-2014-07-03T16:06:01.808+0200|1|TimedPreparedStatement|DB_WRITE(0) ADD backend-info SET 'agentId' = ?s , 'name' = ?s , 'description' = ?s , 'observeNewJvm' = ?b , 'pids' = ?i[ , 'active' = ?b , 'orderValue' = ?i|5411 µs
-2014-07-03T16:06:01.343+0200|0|CountingDecorator|Q_SIZE 3
-2014-07-03T16:06:01.264+0200|0|CountingDecorator|Q_SIZE 1
-2014-07-03T16:06:01.275+0200|0|CountingDecorator|Q_SIZE 2
-2014-07-03T16:06:01.282+0200|0|CountingDecorator|Q_SIZE 3
-2014-07-03T16:06:01.356+0200|0|CountingDecorator|Q_SIZE 3
-2014-07-03T16:06:01.373+0200|0|CountingDecorator|Q_SIZE 3
-2014-07-03T16:06:01.379+0200|0|CountingDecorator|Q_SIZE 4
-2014-07-03T16:06:01.395+0200|0|CountingDecorator|Q_SIZE 4
-2014-07-03T16:06:01.421+0200|0|CountingDecorator|Q_SIZE 5
-2014-07-03T16:06:01.426+0200|0|CountingDecorator|Q_SIZE 6
-2014-07-03T16:06:01.431+0200|0|CountingDecorator|Q_SIZE 7
-2014-07-03T16:06:01.436+0200|0|CountingDecorator|Q_SIZE 8
-2014-07-03T16:06:01.443+0200|0|CountingDecorator|Q_SIZE 9
-2014-07-03T16:06:01.449+0200|0|CountingDecorator|Q_SIZE 10
-2014-07-03T16:06:01.459+0200|0|CountingDecorator|Q_SIZE 10
-2014-07-03T16:06:01.466+0200|0|CountingDecorator|Q_SIZE 11
-2014-07-03T16:06:01.493+0200|0|CountingDecorator|Q_SIZE 11
-2014-07-03T16:06:01.521+0200|0|CountingDecorator|Q_SIZE 12
-2014-07-03T16:06:01.560+0200|0|CountingDecorator|Q_SIZE 13
-2014-07-03T16:06:02.351+0200|0|CountingDecorator|Q_SIZE 1
-2014-07-03T16:06:02.367+0200|0|CountingDecorator|Q_SIZE 2
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.095+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s|16523 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.100+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s|20607 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.101+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s|25899 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.110+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|4724 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.113+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s|37749 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.118+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|13185 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.121+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|13506 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.125+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|10889 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.127+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|11021 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.131+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|10420 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.134+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|3948 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.138+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|10581 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.142+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|19222 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.147+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|4376 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.147+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|13575 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.154+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|13930 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.154+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|3942 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.160+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|24253 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.160+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|3745 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.290+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s|13646 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.290+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s|14019 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.297+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s|17199 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.300+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s|20280 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.304+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s|20087 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.307+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s|22847 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.311+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|17496 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.319+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|12513 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.323+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|13477 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.326+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|13452 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.327+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|13551 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.330+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|11328 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.333+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|12089 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.339+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|9219 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.343+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|8025 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.343+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|10901 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.347+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|8040 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.348+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|11498 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.354+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|4111 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.356+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|5885 µs
+PERFLOG - SomeClassName: 2014-07-03T16:07:18.358+0200|1|TimedPreparedStatement|DB_READ QUERY vm-info WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1|5763 µs
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.290+0200|1|TimedPreparedStatement|DB_WRITE(0) ADD agent-config SET 'agentId' = ?s , 'startTime' = ?l , 'stopTime' = ?l , 'alive' = ?b , 'configListenAddress' = ?s|25897 µs
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.351+0200|1|TimedPreparedStatement|DB_WRITE(0) ADD backend-info SET 'agentId' = ?s , 'name' = ?s , 'description' = ?s , 'observeNewJvm' = ?b , 'pids' = ?i[ , 'active' = ?b , 'orderValue' = ?i|60302 µs
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.360+0200|1|TimedPreparedStatement|DB_WRITE(0) ADD backend-info SET 'agentId' = ?s , 'name' = ?s , 'description' = ?s , 'observeNewJvm' = ?b , 'pids' = ?i[ , 'active' = ?b , 'orderValue' = ?i|8976 µs
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.393+0200|1|TimedPreparedStatement|DB_WRITE(0) ADD backend-info SET 'agentId' = ?s , 'name' = ?s , 'description' = ?s , 'observeNewJvm' = ?b , 'pids' = ?i[ , 'active' = ?b , 'orderValue' = ?i|32617 µs
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.458+0200|1|TimedPreparedStatement|DB_WRITE(0) ADD numa-host-info SET 'agentId' = ?s , 'numNumaNodes' = ?i|64754 µs
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.469+0200|1|TimedPreparedStatement|DB_WRITE(0) ADD backend-info SET 'agentId' = ?s , 'name' = ?s , 'description' = ?s , 'observeNewJvm' = ?b , 'pids' = ?i[ , 'active' = ?b , 'orderValue' = ?i|10652 µs
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.680+0200|1|TimedPreparedStatement|DB_WRITE(0) ADD numa-stat SET 'agentId' = ?s , 'timeStamp' = ?l , 'nodeStats' = ?p[|209978 µs
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.694+0200|1|TimedPreparedStatement|DB_WRITE(0) ADD host-info SET 'agentId' = ?s , 'hostname' = ?s , 'osName' = ?s , 'osKernel' = ?s , 'cpuModel' = ?s , 'cpuCount' = ?i , 'totalMemory' = ?l|13981 µs
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.715+0200|1|TimedPreparedStatement|DB_WRITE(1) REPLACE network-info SET 'agentId' = ?s , 'interfaceName' = ?s , 'ip4Addr' = ?s , 'ip6Addr' = ?s WHERE 'agentId' = ?s AND 'interfaceName' = ?s|20540 µs
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.720+0200|1|TimedPreparedStatement|DB_WRITE(0) ADD backend-info SET 'agentId' = ?s , 'name' = ?s , 'description' = ?s , 'observeNewJvm' = ?b , 'pids' = ?i[ , 'active' = ?b , 'orderValue' = ?i|5517 µs
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.726+0200|1|TimedPreparedStatement|DB_WRITE(1) REPLACE network-info SET 'agentId' = ?s , 'interfaceName' = ?s , 'ip4Addr' = ?s , 'ip6Addr' = ?s WHERE 'agentId' = ?s AND 'interfaceName' = ?s|5497 µs
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.733+0200|1|TimedPreparedStatement|DB_WRITE(0) ADD backend-info SET 'agentId' = ?s , 'name' = ?s , 'description' = ?s , 'observeNewJvm' = ?b , 'pids' = ?i[ , 'active' = ?b , 'orderValue' = ?i|6687 µs
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.773+0200|1|TimedPreparedStatement|DB_WRITE(0) ADD memory-stats SET 'agentId' = ?s , 'timeStamp' = ?l , 'total' = ?l , 'free' = ?l , 'buffers' = ?l , 'cached' = ?l , 'swapTotal' = ?l , 'swapFree' = ?l , 'commitLimit' = ?l|39395 µs
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.778+0200|1|TimedPreparedStatement|DB_WRITE(1) REPLACE network-info SET 'agentId' = ?s , 'interfaceName' = ?s , 'ip4Addr' = ?s , 'ip6Addr' = ?s WHERE 'agentId' = ?s AND 'interfaceName' = ?s|5386 µs
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.784+0200|1|TimedPreparedStatement|DB_WRITE(1) REPLACE network-info SET 'agentId' = ?s , 'interfaceName' = ?s , 'ip4Addr' = ?s , 'ip6Addr' = ?s WHERE 'agentId' = ?s AND 'interfaceName' = ?s|5762 µs
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.791+0200|1|TimedPreparedStatement|DB_WRITE(0) ADD backend-info SET 'agentId' = ?s , 'name' = ?s , 'description' = ?s , 'observeNewJvm' = ?b , 'pids' = ?i[ , 'active' = ?b , 'orderValue' = ?i|6004 µs
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.797+0200|1|TimedPreparedStatement|DB_WRITE(0) ADD backend-info SET 'agentId' = ?s , 'name' = ?s , 'description' = ?s , 'observeNewJvm' = ?b , 'pids' = ?i[ , 'active' = ?b , 'orderValue' = ?i|5718 µs
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.803+0200|1|TimedPreparedStatement|DB_WRITE(0) ADD backend-info SET 'agentId' = ?s , 'name' = ?s , 'description' = ?s , 'observeNewJvm' = ?b , 'pids' = ?i[ , 'active' = ?b , 'orderValue' = ?i|5688 µs
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.808+0200|1|TimedPreparedStatement|DB_WRITE(0) ADD backend-info SET 'agentId' = ?s , 'name' = ?s , 'description' = ?s , 'observeNewJvm' = ?b , 'pids' = ?i[ , 'active' = ?b , 'orderValue' = ?i|5411 µs
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.343+0200|0|CountingDecorator|Q_SIZE 3
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.264+0200|0|CountingDecorator|Q_SIZE 1
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.275+0200|0|CountingDecorator|Q_SIZE 2
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.282+0200|0|CountingDecorator|Q_SIZE 3
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.356+0200|0|CountingDecorator|Q_SIZE 3
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.373+0200|0|CountingDecorator|Q_SIZE 3
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.379+0200|0|CountingDecorator|Q_SIZE 4
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.395+0200|0|CountingDecorator|Q_SIZE 4
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.421+0200|0|CountingDecorator|Q_SIZE 5
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.426+0200|0|CountingDecorator|Q_SIZE 6
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.431+0200|0|CountingDecorator|Q_SIZE 7
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.436+0200|0|CountingDecorator|Q_SIZE 8
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.443+0200|0|CountingDecorator|Q_SIZE 9
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.449+0200|0|CountingDecorator|Q_SIZE 10
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.459+0200|0|CountingDecorator|Q_SIZE 10
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.466+0200|0|CountingDecorator|Q_SIZE 11
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.493+0200|0|CountingDecorator|Q_SIZE 11
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.521+0200|0|CountingDecorator|Q_SIZE 12
+PERFLOG - SomeClassName: 2014-07-03T16:06:01.560+0200|0|CountingDecorator|Q_SIZE 13
+PERFLOG - SomeClassName: 2014-07-03T16:06:02.351+0200|0|CountingDecorator|Q_SIZE 1
+PERFLOG - SomeClassName: 2014-07-03T16:06:02.367+0200|0|CountingDecorator|Q_SIZE 2
