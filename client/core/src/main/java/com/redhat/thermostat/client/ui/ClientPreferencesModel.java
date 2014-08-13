@@ -55,6 +55,9 @@ public class ClientPreferencesModel {
         initialUrl = prefs.getConnectionUrl();
         initialUsername = prefs.getUserName();
 
+        this.username = initialUsername;
+        this.url = initialUrl;
+
         this.prefs = prefs;
         this.keyring = keyring;
     }
