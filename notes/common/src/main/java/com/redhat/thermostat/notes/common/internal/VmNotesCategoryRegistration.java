@@ -49,7 +49,7 @@ public class VmNotesCategoryRegistration implements CategoryRegistration {
     @Override
     public Set<String> getCategoryNames() {
         Set<String> categories = new HashSet<>(1);
-        categories.add(NotesDAOImpl.vmNotesCategory.getName());
+        categories.add(VmNoteDAOImpl.vmNotesCategory.getName());
         return categories;
     }
 

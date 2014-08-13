@@ -58,7 +58,7 @@ import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 
 /** SwingComponent serves as a tag for SwingClient to use this view */
-public class VmNotesView implements UIComponent, SwingComponent {
+public class NotesView implements UIComponent, SwingComponent {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
@@ -77,21 +77,21 @@ public class VmNotesView implements UIComponent, SwingComponent {
 
     private ActionNotifier<Action> actionNotifier = new ActionNotifier<>(this);
 
-    private Map<String, VmNotePanel> tagToPanel;
+    private Map<String, NotePanel> tagToPanel;
 
-    public VmNotesView() {
+    public NotesView() {
         tagToPanel = new HashMap<>();
 
-        container = new HeaderPanel(translator.localize(LocaleResources.VM_TAB_NAME));
+        container = new HeaderPanel(translator.localize(LocaleResources.TAB_NAME));
 
         container.addToolBarButton(
-                createToolbarButton(translator.localize(LocaleResources.VM_NOTES_NEW), '\uf067', Action.NEW));
+                createToolbarButton(translator.localize(LocaleResources.NOTES_NEW), '\uf067', Action.NEW));
 
         container.addToolBarButton(
-                createToolbarButton(translator.localize(LocaleResources.VM_NOTES_REFRESH), '\uf021', Action.LOAD));
+                createToolbarButton(translator.localize(LocaleResources.NOTES_REFRESH), '\uf021', Action.LOAD));
 
         container.addToolBarButton(
-                createToolbarButton(translator.localize(LocaleResources.VM_NOTES_SAVE), '\uf0c7', Action.SAVE));
+                createToolbarButton(translator.localize(LocaleResources.NOTES_SAVE), '\uf0c7', Action.SAVE));
 
         JPanel rootContentContainer = new JPanel();
         rootContentContainer.setLayout(new BorderLayout());
@@ -127,14 +127,14 @@ public class VmNotesView implements UIComponent, SwingComponent {
     }
 
     public void clearAll() {
-        for (Map.Entry<String, VmNotePanel> entry : tagToPanel.entrySet()) {
+        for (Map.Entry<String, NotePanel> entry : tagToPanel.entrySet()) {
             contentContainer.remove(entry.getValue());
         }
         tagToPanel.clear();
     }
 
-    public void add(VmNoteViewModel model) {
-        VmNotePanel widget = new VmNotePanel(model, actionNotifier);
+    public void add(NoteViewModel model) {
+        NotePanel widget = new NotePanel(model, actionNotifier);
         tagToPanel.put(model.tag, widget);
         contentContainer.add(widget, contentContainerConstraints);
         contentContainer.revalidate();

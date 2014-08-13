@@ -34,18 +34,23 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.notes.client.swing.internal;
+package com.redhat.thermostat.notes.common.internal;
 
-public class VmNoteViewModel {
+import java.util.HashSet;
+import java.util.Set;
 
-    public final String tag;
-    public final long timeStamp;
-    public final String text;
+import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
 
-    public VmNoteViewModel(String tag, long timeStamp, String text) {
-        this.tag = tag;
-        this.timeStamp = timeStamp;
-        this.text = text;
+/**
+ * Needed for web storage.
+ */
+public class HostNotesCategoryRegistration implements CategoryRegistration {
+
+    @Override
+    public Set<String> getCategoryNames() {
+        Set<String> categories = new HashSet<>(1);
+        categories.add(HostNoteDAOImpl.hostNotesCategory.getName());
+        return categories;
     }
 
 }

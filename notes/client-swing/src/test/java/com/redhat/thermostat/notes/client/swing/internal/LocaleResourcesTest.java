@@ -34,54 +34,20 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.notes.common.internal;
+package com.redhat.thermostat.notes.client.swing.internal;
 
-import java.util.Map;
+import com.redhat.thermostat.testutils.AbstractLocaleResourcesTest;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
-
-import com.redhat.thermostat.common.MultipleServiceTracker;
-import com.redhat.thermostat.notes.common.HostNoteDAO;
-import com.redhat.thermostat.notes.common.VmNoteDAO;
-import com.redhat.thermostat.storage.core.Storage;
-
-public class Activator implements BundleActivator {
-
-    private MultipleServiceTracker tracker;
-
-    private ServiceRegistration<HostNoteDAO> hostNoteDaoregistration;
-    private ServiceRegistration<VmNoteDAO> vmNoteDaoRegisteration;
+public class LocaleResourcesTest extends AbstractLocaleResourcesTest<LocaleResources> {
 
     @Override
-    public void start(final BundleContext context) {
-        tracker = new MultipleServiceTracker(context, new Class[]{ Storage.class }, new MultipleServiceTracker.Action() {
-
-            @Override
-            public void dependenciesUnavailable() {
-                hostNoteDaoregistration.unregister();
-                vmNoteDaoRegisteration.unregister();
-            }
-
-            @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                Storage storage = (Storage) services.get(Storage.class.getName());
-
-                HostNoteDAO hostNoteDao = new HostNoteDAOImpl(storage);
-                hostNoteDaoregistration = context.registerService(HostNoteDAO.class, hostNoteDao, null);
-
-                VmNoteDAO vmNoteDao = new VmNoteDAOImpl(storage);
-                vmNoteDaoRegisteration = context.registerService(VmNoteDAO.class, vmNoteDao, null);
-            }
-        });
-
-        tracker.open();
+    protected Class<LocaleResources> getEnumClass() {
+        return LocaleResources.class;
     }
 
     @Override
-    public void stop(BundleContext context) {
-        tracker.close();
+    protected String getResourceBundle() {
+        return LocaleResources.RESOURCE_BUNDLE;
     }
 
 }

@@ -34,25 +34,55 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.notes.client.swing.internal;
+package com.redhat.thermostat.notes.common;
 
-import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.storage.core.Entity;
+import com.redhat.thermostat.storage.core.Persist;
+import com.redhat.thermostat.storage.model.BasePojo;
+import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
-public enum LocaleResources {
+@Entity
+public class HostNote extends BasePojo implements TimeStampedPojo {
 
-    TAB_NAME,
+    /** a GUID */
+    private String id;
+    private long timeStamp;
+    private String content;
 
-    NOTES_NEW,
-    NOTES_REFRESH,
-    NOTES_SAVE,
-    NOTES_DELETE,
+    public HostNote() {
+        super(null);
+        this.content = "";
+    }
 
-    ;
+    @Persist
+    public String getId() {
+        return id;
+    }
 
-    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.notes.client.swing.internal.strings";
+    @Persist
+    public void setId(String id) {
+        this.id = id;
+    }
 
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+    @Persist
+    @Override
+    public long getTimeStamp() {
+        return timeStamp;
+    }
+
+    @Persist
+    public void setTimeStamp(long timeStamp) {
+        this.timeStamp = timeStamp;
+    }
+
+    @Persist
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    @Persist
+    public String getContent() {
+        return this.content;
     }
 
 }

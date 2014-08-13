@@ -34,25 +34,26 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.notes.client.swing.internal;
+package com.redhat.thermostat.notes.common;
 
-import com.redhat.thermostat.shared.locale.Translate;
+import java.util.List;
 
-public enum LocaleResources {
+import com.redhat.thermostat.annotations.Service;
+import com.redhat.thermostat.storage.core.HostRef;
 
-    TAB_NAME,
+@Service
+public interface HostNoteDAO {
 
-    NOTES_NEW,
-    NOTES_REFRESH,
-    NOTES_SAVE,
-    NOTES_DELETE,
+    public void add(HostNote note);
 
-    ;
+    /** Returns a {@link List} of {@link HostNote} objects. May return an empty list */
+    public List<HostNote> getFor(HostRef host);
 
-    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.notes.client.swing.internal.strings";
+    public HostNote getById(HostRef host, String id);
 
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
-    }
+    public void update(HostNote note);
 
+    public void remove(HostNote note);
+
+    public void removeById(HostRef host, String id);
 }

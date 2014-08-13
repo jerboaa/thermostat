@@ -55,7 +55,7 @@ import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
 
-class NotesDAOImpl implements VmNoteDAO {
+class VmNoteDAOImpl implements VmNoteDAO {
 
     static final Key<String> KEY_CONTENT = new Key<>("content");
     static final Key<String> KEY_ID = new Key<>("id");
@@ -90,17 +90,17 @@ class NotesDAOImpl implements VmNoteDAO {
             + "   AND 'vmId' = ?s "
             + "   AND 'id' = ?s";
 
-    public static final String REMOVE_VM_NOTE_BY_ID = ""
+    static final String REMOVE_VM_NOTE_BY_ID = ""
             + "REMOVE " + vmNotesCategory.getName() + " "
             + "WHERE 'agentId' = ?s "
             + "  AND 'vmId' = ?s "
             + "  AND 'id' = ?s";
 
-    private static final Logger logger = LoggingUtils.getLogger(NotesDAOImpl.class);
+    private static final Logger logger = LoggingUtils.getLogger(VmNoteDAOImpl.class);
 
     private Storage storage;
 
-    public NotesDAOImpl(Storage storage) {
+    public VmNoteDAOImpl(Storage storage) {
         this.storage = storage;
         storage.registerCategory(vmNotesCategory);
     }

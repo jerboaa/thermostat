@@ -51,11 +51,11 @@ public class VmNotesStatementDescriptorRegistration implements StatementDescript
     @Override
     public Set<String> getStatementDescriptors() {
         Set<String> descs = new HashSet<>();
-        descs.add(NotesDAOImpl.ADD_VM_NOTE);
-        descs.add(NotesDAOImpl.QUERY_VM_NOTE_BY_ID);
-        descs.add(NotesDAOImpl.QUERY_VM_NOTES_BY_VM_ID);
-        descs.add(NotesDAOImpl.UPDATE_VM_NOTE);
-        descs.add(NotesDAOImpl.REMOVE_VM_NOTE_BY_ID);
+        descs.add(VmNoteDAOImpl.ADD_VM_NOTE);
+        descs.add(VmNoteDAOImpl.QUERY_VM_NOTE_BY_ID);
+        descs.add(VmNoteDAOImpl.QUERY_VM_NOTES_BY_VM_ID);
+        descs.add(VmNoteDAOImpl.UPDATE_VM_NOTE);
+        descs.add(VmNoteDAOImpl.REMOVE_VM_NOTE_BY_ID);
         return descs;
     }
 
@@ -63,7 +63,7 @@ public class VmNotesStatementDescriptorRegistration implements StatementDescript
     public DescriptorMetadata getDescriptorMetadata(String descriptor, PreparedParameter[] params) {
         String agentId;
         String vmId;
-        if (descriptor.equals(NotesDAOImpl.UPDATE_VM_NOTE)) {
+        if (descriptor.equals(VmNoteDAOImpl.UPDATE_VM_NOTE)) {
             agentId = (String)params[2].getValue();
             vmId = (String)params[3].getValue();
         } else {

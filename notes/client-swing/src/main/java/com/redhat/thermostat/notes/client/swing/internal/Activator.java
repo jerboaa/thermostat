@@ -50,7 +50,9 @@ import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.notes.common.HostNoteDAO;
 import com.redhat.thermostat.notes.common.VmNoteDAO;
+import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 
 public class Activator implements BundleActivator {
@@ -58,15 +60,36 @@ public class Activator implements BundleActivator {
     private static final Logger logger = LoggingUtils.getLogger(Activator.class);
 
     @SuppressWarnings("rawtypes")
-    private ServiceRegistration<InformationService> notesRegistration;
+    private ServiceRegistration<InformationService> vmNotesRegistration;
+    @SuppressWarnings("rawtypes")
+    private ServiceRegistration<InformationService> hostNotesRegistration;
 
-    private MultipleServiceTracker notesDaoTracker;
+    private MultipleServiceTracker hostNotesDaoTracker;
+    private MultipleServiceTracker vmNotesDaoTracker;
 
     @Override
     public void start(final BundleContext context) {
         logger.config("notes-client-swing started");
 
-        notesDaoTracker = new MultipleServiceTracker(context, new Class<?>[] { VmNoteDAO.class }, new Action() {
+        hostNotesDaoTracker = new MultipleServiceTracker(context, new Class<?>[] { HostNoteDAO.class }, new Action() {
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                HostNoteDAO hostNoteDao = (HostNoteDAO) services.get(HostNoteDAO.class.getName());
+                HostNotesProvider hostNotesService = new HostNotesProvider(new SystemClock(), hostNoteDao);
+                Hashtable<String, String> properties = new Hashtable<>();
+                properties.put(Constants.GENERIC_SERVICE_CLASSNAME, HostRef.class.getName());
+                properties.put(InformationService.KEY_SERVICE_ID, hostNotesService.getClass().getName());
+                hostNotesRegistration = context.registerService(InformationService.class, hostNotesService, properties);
+            }
+            @Override
+            public void dependenciesUnavailable() {
+                hostNotesRegistration.unregister();
+                hostNotesRegistration = null;
+            }
+        });
+        hostNotesDaoTracker.open();
+
+        vmNotesDaoTracker = new MultipleServiceTracker(context, new Class<?>[] { VmNoteDAO.class }, new Action() {
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
                 VmNoteDAO vmNoteDao = (VmNoteDAO) services.get(VmNoteDAO.class.getName());
@@ -74,21 +97,22 @@ public class Activator implements BundleActivator {
                 Hashtable<String, String> properties = new Hashtable<>();
                 properties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
                 properties.put(InformationService.KEY_SERVICE_ID, notesService.getClass().getName());
-                notesRegistration = context.registerService(InformationService.class, notesService, properties);
+                vmNotesRegistration = context.registerService(InformationService.class, notesService, properties);
             }
 
             @Override
             public void dependenciesUnavailable() {
-                notesRegistration.unregister();
-                notesRegistration = null;
+                vmNotesRegistration.unregister();
+                vmNotesRegistration = null;
             }
         });
-        notesDaoTracker.open();
+        vmNotesDaoTracker.open();
     }
 
     @Override
     public void stop(BundleContext context) {
-        notesDaoTracker.close();
+        hostNotesDaoTracker.close();
+        vmNotesDaoTracker.close();
     }
 
 }

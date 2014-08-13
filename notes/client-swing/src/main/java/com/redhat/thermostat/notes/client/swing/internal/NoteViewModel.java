@@ -36,23 +36,16 @@
 
 package com.redhat.thermostat.notes.client.swing.internal;
 
-import com.redhat.thermostat.shared.locale.Translate;
+public class NoteViewModel {
 
-public enum LocaleResources {
+    public final String tag;
+    public final long timeStamp;
+    public final String text;
 
-    TAB_NAME,
-
-    NOTES_NEW,
-    NOTES_REFRESH,
-    NOTES_SAVE,
-    NOTES_DELETE,
-
-    ;
-
-    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.notes.client.swing.internal.strings";
-
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+    public NoteViewModel(String tag, long timeStamp, String text) {
+        this.tag = tag;
+        this.timeStamp = timeStamp;
+        this.text = text;
     }
 
 }

@@ -36,41 +36,64 @@
 
 package com.redhat.thermostat.notes.client.swing.internal;
 
-import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.common.AllPassFilter;
+import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Clock;
-import com.redhat.thermostat.common.Filter;
-import com.redhat.thermostat.notes.common.VmNoteDAO;
-import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.shared.locale.LocalizedString;
+import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.storage.core.Ref;
 
-public class VmNotesProvider implements InformationService<VmRef>{
+public abstract class NotesController<T extends Ref> implements InformationServiceController<T> {
 
-    private Clock clock;
-    private NotesView view;
-    private VmNoteDAO vmNoteDao;
+    protected static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    public VmNotesProvider(Clock clock, VmNoteDAO vmNoteDao) {
+    protected NotesView view;
+    protected Clock clock;
+
+    public NotesController(Clock clock, NotesView view) {
         this.clock = clock;
-        this.vmNoteDao = vmNoteDao;
+        this.view = view;
+
+        this.view.getNotifier().addActionListener(new ActionListener<NotesView.Action>() {
+            @Override
+            public void actionPerformed(ActionEvent<NotesView.Action> actionEvent) {
+                switch(actionEvent.getActionId()) {
+                case NEW:
+                    addNewNote();
+                    break;
+                case LOAD:
+                    updateNotesInView();
+                    break;
+                case SAVE:
+                    updateNotesInStorage();
+                    break;
+                case DELETE:
+                    String noteId = /* tag = */ (String) actionEvent.getPayload();
+                    deleteNote(noteId);
+                    break;
+                }
+            }
+        });
+    }
+
+    protected abstract void addNewNote();
+
+    protected abstract void updateNotesInView();
+
+    protected abstract void updateNotesInStorage();
+
+    protected abstract void deleteNote(String noteId);
+
+    @Override
+    public UIComponent getView() {
+        return view;
     }
 
     @Override
-    public int getOrderValue() {
-        return Constants.ORDER_VALUE;
-    }
-
-    @Override
-    public Filter<VmRef> getFilter() {
-        return new AllPassFilter<>();
-    }
-
-    @Override
-    public InformationServiceController<VmRef> getInformationServiceController(VmRef vm) {
-        view = new NotesView();
-        VmNotesController controller = new VmNotesController(clock, vm, vmNoteDao, view);
-        controller.updateNotesInView();
-        return controller;
+    public LocalizedString getLocalizedName() {
+        return translator.localize(LocaleResources.TAB_NAME);
     }
 
 }

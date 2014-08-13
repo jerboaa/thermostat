@@ -52,16 +52,16 @@ import javax.swing.JTextArea;
 
 import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.notes.client.swing.internal.VmNotesView.Action;
+import com.redhat.thermostat.notes.client.swing.internal.NotesView.Action;
 import com.redhat.thermostat.shared.locale.Translate;
 
-public class VmNotePanel extends JPanel {
+public class NotePanel extends JPanel {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private JTextArea text;
 
-    public VmNotePanel(final VmNoteViewModel viewModel, final ActionNotifier<Action> actionNotifier) {
+    public NotePanel(final NoteViewModel viewModel, final ActionNotifier<Action> actionNotifier) {
         // wrap in html tags to enable line wrapping
         SimpleDateFormat formatter = new SimpleDateFormat("'<html>'yyyy-MM-dd'<br>'HH:mm'</html>'");
         String date = formatter.format(new Date(viewModel.timeStamp));
@@ -69,7 +69,7 @@ public class VmNotePanel extends JPanel {
         text = new JTextArea(viewModel.text);
         Icon deleteIcon = new FontAwesomeIcon('\uf014', 12);
         JButton deleteButton = new JButton(deleteIcon);
-        deleteButton.setToolTipText(translator.localize(LocaleResources.VM_NOTES_DELETE).getContents());
+        deleteButton.setToolTipText(translator.localize(LocaleResources.NOTES_DELETE).getContents());
         deleteButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent event) {

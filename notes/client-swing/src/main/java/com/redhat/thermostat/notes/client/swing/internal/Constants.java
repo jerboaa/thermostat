@@ -36,23 +36,13 @@
 
 package com.redhat.thermostat.notes.client.swing.internal;
 
-import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.client.core.InformationService;
 
-public enum LocaleResources {
+public final class Constants {
 
-    TAB_NAME,
-
-    NOTES_NEW,
-    NOTES_REFRESH,
-    NOTES_SAVE,
-    NOTES_DELETE,
-
-    ;
-
-    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.notes.client.swing.internal.strings";
-
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+    private Constants() {
+        // don't instantiate
     }
 
+    static final int ORDER_VALUE = InformationService.ORDER_USER_GROUP + 256;
 }

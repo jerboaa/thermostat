@@ -41,29 +41,30 @@ import java.util.List;
 import java.util.UUID;
 
 import com.redhat.thermostat.common.Clock;
-import com.redhat.thermostat.notes.common.VmNote;
-import com.redhat.thermostat.notes.common.VmNoteDAO;
-import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.notes.common.HostNote;
+import com.redhat.thermostat.notes.common.HostNoteDAO;
+import com.redhat.thermostat.storage.core.HostRef;
 
-public class VmNotesController extends NotesController<VmRef> {
+public class HostNotesController extends NotesController<HostRef> {
 
-    private VmRef vm;
-    private VmNoteDAO dao;
+    private HostRef host;
+    private HostNoteDAO dao;
     private List<NoteViewModel> viewModels;
 
-    public VmNotesController(Clock clock, final VmRef vm, VmNoteDAO vmNoteDao, NotesView notesView) {
-        super(clock, notesView);
-        this.vm = vm;
-        this.dao = vmNoteDao;
+    public HostNotesController(Clock clock, HostNoteDAO dao, HostRef host, NotesView view) {
+        super(clock, view);
+        this.host = host;
+        this.dao = dao;
 
         viewModels = new ArrayList<>();
     }
 
     @Override
     protected void addNewNote() {
+        System.out.println("adding new note");
         long timeStamp = clock.getRealTimeMillis();
         String content = "";
-        VmNote note = createNewVmNote(timeStamp, content);
+        HostNote note = createNewHostNote(timeStamp, content);
 
         NoteViewModel model = new NoteViewModel(note.getId(), timeStamp, content);
         viewModels.add(model);
@@ -72,27 +73,29 @@ public class VmNotesController extends NotesController<VmRef> {
         dao.add(note);
     }
 
-    private VmNote createNewVmNote(long timeStamp, String text) {
-        VmNote vmNote = new VmNote();
-        vmNote.setAgentId(vm.getHostRef().getAgentId());
-        vmNote.setVmId(vm.getVmId());
-        vmNote.setId(UUID.randomUUID().toString());
-        vmNote.setTimeStamp(timeStamp);
-        vmNote.setContent(text);
-        return vmNote;
+    private HostNote createNewHostNote(long timeStamp, String text) {
+        HostNote hostNote = new HostNote();
+        hostNote.setAgentId(host.getAgentId());
+        hostNote.setId(UUID.randomUUID().toString());
+        hostNote.setTimeStamp(timeStamp);
+        hostNote.setContent(text);
+        return hostNote;
     }
 
     @Override
     protected void updateNotesInView() {
-        List<VmNote> vmNotes = dao.getFor(vm);
+        System.out.println("loading notes from storage");
+        List<HostNote> hostNotes = dao.getFor(host);
+
+        System.out.println("got " + hostNotes.size() + " notes");
 
         // TODO only apply diff of notes to reduce UI glitches/changes
         viewModels.clear();
         view.clearAll();
 
-        for (int i = 0; i < vmNotes.size(); i++) {
-            VmNote vmNote = vmNotes.get(i);
-            NoteViewModel viewModel = new NoteViewModel(vmNote.getId(), vmNote.getTimeStamp(), vmNote.getContent());
+        for (int i = 0; i < hostNotes.size(); i++) {
+            HostNote hostNote = hostNotes.get(i);
+            NoteViewModel viewModel = new NoteViewModel(hostNote.getId(), hostNote.getTimeStamp(), hostNote.getContent());
             viewModels.add(viewModel);
             view.add(viewModel);
         }
@@ -100,6 +103,7 @@ public class VmNotesController extends NotesController<VmRef> {
 
     @Override
     protected void updateNotesInStorage() {
+        System.out.println("saving notes");
         // TODO check if we need any synchronization
 
         long timeStamp = clock.getRealTimeMillis();
@@ -111,17 +115,20 @@ public class VmNotesController extends NotesController<VmRef> {
                 continue;
             }
 
-            VmNote toUpdate = dao.getById(vm, viewModel.tag);
+            HostNote toUpdate = dao.getById(host, viewModel.tag);
             toUpdate.setTimeStamp(timeStamp);
             toUpdate.setContent(newContent);
 
             dao.update(toUpdate);
+            System.out.println("saved a note");
         }
     }
 
     @Override
     protected void deleteNote(String noteId) {
-        dao.removeById(vm, noteId);
+        System.out.println("deleting note");
+
+        dao.removeById(host, noteId);
 
         updateNotesInView();
     }

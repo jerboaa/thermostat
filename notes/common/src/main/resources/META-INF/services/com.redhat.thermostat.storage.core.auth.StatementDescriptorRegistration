@@ -1,1 +1,2 @@
+com.redhat.thermostat.notes.common.internal.HostNotesStatementDescriptorRegistration
 com.redhat.thermostat.notes.common.internal.VmNotesStatementDescriptorRegistration

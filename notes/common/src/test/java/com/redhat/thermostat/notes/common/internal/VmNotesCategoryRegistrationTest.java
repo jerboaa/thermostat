@@ -48,6 +48,6 @@ public class VmNotesCategoryRegistrationTest {
     public void verifyThatVmNotesCategoryIsExported() {
         VmNotesCategoryRegistration registration = new VmNotesCategoryRegistration();
         Set<String> names = registration.getCategoryNames();
-        assertTrue(names.contains(NotesDAOImpl.vmNotesCategory.getName()));
+        assertTrue(names.contains(VmNoteDAOImpl.vmNotesCategory.getName()));
     }
 }

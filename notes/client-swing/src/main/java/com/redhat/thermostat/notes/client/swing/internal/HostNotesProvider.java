@@ -34,54 +34,42 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.notes.common.internal;
+package com.redhat.thermostat.notes.client.swing.internal;
 
-import java.util.Map;
-
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
-
-import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.client.core.InformationService;
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.common.AllPassFilter;
+import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.notes.common.HostNoteDAO;
-import com.redhat.thermostat.notes.common.VmNoteDAO;
-import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.HostRef;
 
-public class Activator implements BundleActivator {
+public class HostNotesProvider implements InformationService<HostRef> {
 
-    private MultipleServiceTracker tracker;
+    private final HostNoteDAO dao;
+    private final Clock clock;
 
-    private ServiceRegistration<HostNoteDAO> hostNoteDaoregistration;
-    private ServiceRegistration<VmNoteDAO> vmNoteDaoRegisteration;
-
-    @Override
-    public void start(final BundleContext context) {
-        tracker = new MultipleServiceTracker(context, new Class[]{ Storage.class }, new MultipleServiceTracker.Action() {
-
-            @Override
-            public void dependenciesUnavailable() {
-                hostNoteDaoregistration.unregister();
-                vmNoteDaoRegisteration.unregister();
-            }
-
-            @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                Storage storage = (Storage) services.get(Storage.class.getName());
-
-                HostNoteDAO hostNoteDao = new HostNoteDAOImpl(storage);
-                hostNoteDaoregistration = context.registerService(HostNoteDAO.class, hostNoteDao, null);
-
-                VmNoteDAO vmNoteDao = new VmNoteDAOImpl(storage);
-                vmNoteDaoRegisteration = context.registerService(VmNoteDAO.class, vmNoteDao, null);
-            }
-        });
-
-        tracker.open();
+    public HostNotesProvider(Clock clock, HostNoteDAO hostNoteDao) {
+        this.clock = clock;
+        this.dao = hostNoteDao;
     }
 
     @Override
-    public void stop(BundleContext context) {
-        tracker.close();
+    public int getOrderValue() {
+        return Constants.ORDER_VALUE;
+    }
+
+    @Override
+    public Filter<HostRef> getFilter() {
+        return new AllPassFilter<>();
+    }
+
+    @Override
+    public InformationServiceController<HostRef> getInformationServiceController(HostRef host) {
+        NotesView view = new NotesView();
+        HostNotesController controller = new HostNotesController(clock, dao, host, view);
+        controller.updateNotesInView();
+        return controller;
     }
 
 }

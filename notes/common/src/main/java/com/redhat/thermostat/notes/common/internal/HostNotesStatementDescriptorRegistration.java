@@ -36,52 +36,40 @@
 
 package com.redhat.thermostat.notes.common.internal;
 
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
+import com.redhat.thermostat.storage.core.PreparedParameter;
+import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
+import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 
-import com.redhat.thermostat.common.MultipleServiceTracker;
-import com.redhat.thermostat.notes.common.HostNoteDAO;
-import com.redhat.thermostat.notes.common.VmNoteDAO;
-import com.redhat.thermostat.storage.core.Storage;
-
-public class Activator implements BundleActivator {
-
-    private MultipleServiceTracker tracker;
-
-    private ServiceRegistration<HostNoteDAO> hostNoteDaoregistration;
-    private ServiceRegistration<VmNoteDAO> vmNoteDaoRegisteration;
+/**
+ * Registers the prepared queries issued by this module
+ */
+public class HostNotesStatementDescriptorRegistration implements StatementDescriptorRegistration {
 
     @Override
-    public void start(final BundleContext context) {
-        tracker = new MultipleServiceTracker(context, new Class[]{ Storage.class }, new MultipleServiceTracker.Action() {
-
-            @Override
-            public void dependenciesUnavailable() {
-                hostNoteDaoregistration.unregister();
-                vmNoteDaoRegisteration.unregister();
-            }
-
-            @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                Storage storage = (Storage) services.get(Storage.class.getName());
-
-                HostNoteDAO hostNoteDao = new HostNoteDAOImpl(storage);
-                hostNoteDaoregistration = context.registerService(HostNoteDAO.class, hostNoteDao, null);
-
-                VmNoteDAO vmNoteDao = new VmNoteDAOImpl(storage);
-                vmNoteDaoRegisteration = context.registerService(VmNoteDAO.class, vmNoteDao, null);
-            }
-        });
-
-        tracker.open();
+    public Set<String> getStatementDescriptors() {
+        Set<String> descs = new HashSet<>();
+        descs.add(HostNoteDAOImpl.ADD_HOST_NOTE);
+        descs.add(HostNoteDAOImpl.QUERY_HOST_NOTE_BY_ID);
+        descs.add(HostNoteDAOImpl.QUERY_HOST_NOTES_BY_VM_ID);
+        descs.add(HostNoteDAOImpl.REMOVE_HOST_NOTE_BY_ID);
+        descs.add(HostNoteDAOImpl.UPDATE_HOST_NOTE);
+        return descs;
     }
 
     @Override
-    public void stop(BundleContext context) {
-        tracker.close();
+    public DescriptorMetadata getDescriptorMetadata(String descriptor, PreparedParameter[] params) {
+        String agentId;
+        if (descriptor.equals(HostNoteDAOImpl.UPDATE_HOST_NOTE)) {
+            agentId = (String)params[2].getValue();
+        } else {
+            agentId = (String)params[0].getValue();
+        }
+        DescriptorMetadata metadata = new DescriptorMetadata(agentId);
+        return metadata;
     }
 
 }
+
