@@ -48,6 +48,7 @@ mvn -Dmaven.repo.local="$M2_REPO" package
 # pass on THERMOSTAT_HOME which deploy.sh uses.
 THERMOSTAT_HOME=$THERMOSTAT_HOME bash deploy.sh
 popd # ARTIFACT_ID dir
+popd # TMP_DIR
 
 # Make thermostat runnable. I.e. prepare a thermostat user home
 # run devsetup
@@ -57,11 +58,11 @@ $THERMOSTAT_HOME/bin/thermostat-devsetup
 
 # launch web-storage-service
 WSS_OUTPUT="$(mktemp)"
-$THERMOSTAT_HOME/bin/thermostat -Tbg $TMP_DIR/web-storage-service.pid web-storage-service > WSS_OUTPUT 2>&1 
+$THERMOSTAT_HOME/bin/thermostat -Tbg $TMP_DIR/web-storage-service.pid web-storage-service > $WSS_OUTPUT 2>&1 
 
 # Wait for web-storage-service to come up
 COUNT=0
-while [[ ! -f WSS_OUTPUT || ! `grep -e "Agent id:" < WSS_OUTPUT` ]]; do 
+while [[ ! -f $WSS_OUTPUT || ! `grep -e "Agent id:" < $WSS_OUTPUT` ]]; do 
 	sleep 1
 	if [ $COUNT -ge 10 ]; then
 		break
@@ -69,8 +70,16 @@ while [[ ! -f WSS_OUTPUT || ! `grep -e "Agent id:" < WSS_OUTPUT` ]]; do
 	((COUNT++))
 done
 
-AGENT_ID="$(echo -e "client-tester\ntester" | $THERMOSTAT_HOME/bin/thermostat list-vms | grep "localhost" | head -1 | cut -d' ' -f1 )"
-popd # TMP_DIR
+# Why head -n4? Output looks like the following:
+#
+#   Please enter username for storage at http://127.0.0.1:8999/thermostat/storage:client-tester
+#   Please enter password for storage at http://127.0.0.1:8999/thermostat/storage:
+#   HOST_ID                              HOST                  VM_ID                                VM_PID STATUS  VM_NAME
+#   1cfd3933-3fb1-4090-a377-39a7b57d48a8 localhost.localdomain 339c274e-b385-42ca-81a9-dfda4cb4ca51 21985  EXITED  com.redhat.thermostat.main.Thermostat
+# 
+# So the first two lines is prompt, 1 line header, one line with an agent ID
+# which we are actually interested in.
+AGENT_ID="$(echo -e "client-tester\ntester" | $THERMOSTAT_HOME/bin/thermostat list-vms | head -n4 | tail -n1 | cut -d' ' -f1 )"
 
 # verify "example-command" shows up and works
 retval=0
