@@ -36,24 +36,10 @@
 
 package com.redhat.thermostat.notes.common;
 
-import java.util.List;
-
 import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.storage.core.VmRef;
 
 @Service
-public interface VmNoteDAO {
-
-    public void add(VmNote note);
-
-    /** Returns a {@link List} of {@link VmNote} objects. May return an empty list */
-    public List<VmNote> getFor(VmRef vm);
-
-    public VmNote getById(VmRef vm, String id);
-
-    public void update(VmNote note);
-
-    public void remove(VmNote note);
-
-    public void removeById(VmRef vm, String id);
+public interface VmNoteDAO extends NoteDAO<VmRef, VmNote> {
+    // see NoteDAO
 }

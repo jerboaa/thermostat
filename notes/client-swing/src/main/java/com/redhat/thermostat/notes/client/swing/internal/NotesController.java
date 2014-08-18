@@ -36,25 +36,40 @@
 
 package com.redhat.thermostat.notes.client.swing.internal;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.notes.common.Note;
+import com.redhat.thermostat.notes.common.NoteDAO;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.Ref;
 
-public abstract class NotesController<T extends Ref> implements InformationServiceController<T> {
+public abstract class NotesController<R extends Ref, N extends Note, D extends NoteDAO<R, N>> implements InformationServiceController<R> {
 
     protected static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     protected NotesView view;
     protected Clock clock;
+    protected D dao;
+    protected R ref;
 
-    public NotesController(Clock clock, NotesView view) {
+    private List<N> models;
+    private List<NoteViewModel> viewModels;
+
+    public NotesController(Clock clock, R ref, D dao, NotesView view) {
         this.clock = clock;
         this.view = view;
+        this.ref = ref;
+        this.dao = dao;
+
+        models = new ArrayList<>();
+        viewModels = new ArrayList<>();
 
         this.view.getNotifier().addActionListener(new ActionListener<NotesView.Action>() {
             @Override
@@ -89,21 +104,6 @@ public abstract class NotesController<T extends Ref> implements InformationServi
         });
     }
 
-    /** Add a new note */
-    protected abstract void localAddNewNote();
-
-    /** Update the local cache of notes to match what's in the view */
-    protected abstract void localSaveNote(String noteId);
-
-    /** Delete a note */
-    protected abstract void localDeleteNote(String noteId);
-
-    /** Update the view to match what's in the local cache */
-    protected abstract void localUpdateNotesInView();
-
-    protected abstract void remoteSaveNotes();
-    protected abstract void remoteGetNotesFromStorage();
-
     @Override
     public UIComponent getView() {
         return view;
@@ -114,4 +114,118 @@ public abstract class NotesController<T extends Ref> implements InformationServi
         return translator.localize(LocaleResources.TAB_NAME);
     }
 
+    protected void remoteGetNotesFromStorage() {
+        Utils.assertNotInEdt();
+
+        view.setBusy(true);
+
+        models = dao.getFor(ref);
+        localUpdateNotesInView();
+
+        view.setBusy(false);
+    }
+
+    protected void remoteSaveNotes() {
+        view.setBusy(true);
+
+        List<N> remoteModels = dao.getFor(ref);
+
+        List<String> seen = new ArrayList<>();
+        for (N remoteModel : remoteModels) {
+            N localModel = findById(models, remoteModel.getId());
+            if (localModel == null) {
+                // deleted
+                dao.remove(remoteModel);
+            } else {
+                if (localModel.getTimeStamp() != remoteModel.getTimeStamp()) {
+                    // notes differ
+                    dao.update(localModel);
+                }
+                seen.add(localModel.getId());
+            }
+        }
+
+        for (N note : models) {
+            if (seen.contains(note.getId())) {
+                continue;
+            }
+            dao.add(note);
+        }
+
+        view.setBusy(false);
+    }
+
+    /** Add a new note */
+    protected void localAddNewNote() {
+        long timeStamp = clock.getRealTimeMillis();
+        String content = "";
+
+        N note = createNewNote(timeStamp, content);
+        models.add(note);
+
+        localUpdateNotesInView();
+    }
+
+    protected abstract N createNewNote(long timeStamp, String content);
+
+    /** Update the view to match what's in the local cache */
+    protected void localUpdateNotesInView() {
+        List<N> vmNotes = models;
+
+        // TODO only apply diff of notes to reduce UI glitches/changes
+        viewModels.clear();
+        view.clearAll();
+
+        for (int i = 0; i < vmNotes.size(); i++) {
+            N vmNote = vmNotes.get(i);
+            NoteViewModel viewModel = new NoteViewModel(vmNote.getId(), vmNote.getTimeStamp(), vmNote.getContent());
+            viewModels.add(viewModel);
+            view.add(viewModel);
+        }
+    }
+
+    /** Update the local cache of notes to match what's in the view */
+    protected void localSaveNote(String noteId) {
+        long timeStamp = clock.getRealTimeMillis();
+
+        for (NoteViewModel viewModel : viewModels) {
+            if (viewModel.tag.equals(noteId)) {
+                String oldContent = viewModel.text;
+                String newContent = view.getContent(viewModel.tag);
+                if (oldContent.equals(newContent)) {
+                    continue;
+                }
+
+                view.setTimeStamp(viewModel.tag, timeStamp);
+
+                N toUpdate = findById(models, viewModel.tag);
+                toUpdate.setTimeStamp(timeStamp);
+                toUpdate.setContent(newContent);
+            }
+        }
+    }
+
+    /** Delete a note */
+    protected void localDeleteNote(String noteId) {
+        N note = findById(models, noteId);
+        if (note == null) {
+            throw new AssertionError("Unable to find note to delete");
+        }
+
+        boolean removed = models.remove(note);
+        if (!removed) {
+            throw new AssertionError("Deleting a note failed");
+        }
+
+        localUpdateNotesInView();
+    }
+
+    private static<N extends Note> N findById(List<N> notes, String id) {
+        for (N note : notes) {
+            if (note.getId().equals(id)) {
+                return note;
+            }
+        }
+        return null;
+    }
 }

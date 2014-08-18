@@ -34,47 +34,24 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.notes.client.swing.internal;
+package com.redhat.thermostat.notes.common;
 
-import com.redhat.thermostat.client.core.InformationService;
-import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.common.AllPassFilter;
-import com.redhat.thermostat.common.Clock;
-import com.redhat.thermostat.common.Filter;
-import com.redhat.thermostat.notes.common.VmNoteDAO;
-import com.redhat.thermostat.storage.core.VmRef;
+import java.util.List;
 
-public class VmNotesProvider implements InformationService<VmRef>{
+import com.redhat.thermostat.storage.core.Ref;
 
-    private Clock clock;
-    private VmNoteDAO vmNoteDao;
+public interface NoteDAO<T extends Ref, U extends Note> {
 
-    public VmNotesProvider(Clock clock, VmNoteDAO vmNoteDao) {
-        this.clock = clock;
-        this.vmNoteDao = vmNoteDao;
-    }
+    public void add(U note);
 
-    @Override
-    public int getOrderValue() {
-        return Constants.ORDER_VALUE;
-    }
+    /** Returns a {@link List} of {@link HostNote} objects. May return an empty list */
+    public List<U> getFor(T ref);
 
-    @Override
-    public Filter<VmRef> getFilter() {
-        return new AllPassFilter<>();
-    }
+    public U getById(T ref, String id);
 
-    @Override
-    public InformationServiceController<VmRef> getInformationServiceController(VmRef vm) {
-        NotesView view = new NotesView();
-        final VmNotesController controller = new VmNotesController(clock, vm, vmNoteDao, view);
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                controller.remoteGetNotesFromStorage();
-            }
-        }).start();
-        return controller;
-    }
+    public void update(U note);
 
+    public void remove(U note);
+
+    public void removeById(T ref, String id);
 }

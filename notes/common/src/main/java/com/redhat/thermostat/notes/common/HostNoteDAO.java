@@ -36,24 +36,10 @@
 
 package com.redhat.thermostat.notes.common;
 
-import java.util.List;
-
 import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.storage.core.HostRef;
 
 @Service
-public interface HostNoteDAO {
-
-    public void add(HostNote note);
-
-    /** Returns a {@link List} of {@link HostNote} objects. May return an empty list */
-    public List<HostNote> getFor(HostRef host);
-
-    public HostNote getById(HostRef host, String id);
-
-    public void update(HostNote note);
-
-    public void remove(HostNote note);
-
-    public void removeById(HostRef host, String id);
+public interface HostNoteDAO extends NoteDAO<HostRef, HostNote> {
+    // see HostNote
 }

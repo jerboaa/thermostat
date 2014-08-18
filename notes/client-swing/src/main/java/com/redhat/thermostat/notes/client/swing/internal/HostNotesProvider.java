@@ -67,8 +67,13 @@ public class HostNotesProvider implements InformationService<HostRef> {
     @Override
     public InformationServiceController<HostRef> getInformationServiceController(HostRef host) {
         NotesView view = new NotesView();
-        HostNotesController controller = new HostNotesController(clock, dao, host, view);
-        controller.localUpdateNotesInView();
+        final HostNotesController controller = new HostNotesController(clock, dao, host, view);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                controller.remoteGetNotesFromStorage();
+            }
+        }).start();
         return controller;
     }
 

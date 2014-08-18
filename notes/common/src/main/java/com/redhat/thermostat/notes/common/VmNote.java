@@ -44,7 +44,7 @@ import com.redhat.thermostat.storage.model.BasePojo;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
 @Entity
-public class VmNote extends BasePojo implements TimeStampedPojo {
+public class VmNote extends BasePojo implements TimeStampedPojo, Note {
 
     /** a GUID */
     private String id;
@@ -68,6 +68,7 @@ public class VmNote extends BasePojo implements TimeStampedPojo {
     }
 
     @Persist
+    @Override
     public String getId() {
         return id;
     }
@@ -84,16 +85,19 @@ public class VmNote extends BasePojo implements TimeStampedPojo {
     }
 
     @Persist
+    @Override
     public void setTimeStamp(long timeStamp) {
         this.timeStamp = timeStamp;
     }
 
     @Persist
+    @Override
     public void setContent(String content) {
         this.content = content;
     }
 
     @Persist
+    @Override
     public String getContent() {
         return this.content;
     }
