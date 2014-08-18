@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.notes.common;
 
+import java.util.Objects;
+
 import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Persist;
 import com.redhat.thermostat.storage.model.BasePojo;
@@ -94,5 +96,26 @@ public class VmNote extends BasePojo implements TimeStampedPojo {
     @Persist
     public String getContent() {
         return this.content;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getAgentId(), vmId, id, timeStamp);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof VmNote)) {
+            return false;
+        }
+        VmNote other = (VmNote) obj;
+        return super.equals(obj)
+                && Objects.equals(this.content, other.content)
+                && Objects.equals(this.id, other.id)
+                && Objects.equals(this.timeStamp, other.timeStamp)
+                && Objects.equals(this.vmId, other.vmId);
     }
 }

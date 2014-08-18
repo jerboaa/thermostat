@@ -68,7 +68,7 @@ public class HostNotesProvider implements InformationService<HostRef> {
     public InformationServiceController<HostRef> getInformationServiceController(HostRef host) {
         NotesView view = new NotesView();
         HostNotesController controller = new HostNotesController(clock, dao, host, view);
-        controller.updateNotesInView();
+        controller.localUpdateNotesInView();
         return controller;
     }
 

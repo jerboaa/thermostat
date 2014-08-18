@@ -60,31 +60,49 @@ public abstract class NotesController<T extends Ref> implements InformationServi
             @Override
             public void actionPerformed(ActionEvent<NotesView.Action> actionEvent) {
                 switch(actionEvent.getActionId()) {
-                case NEW:
-                    addNewNote();
-                    break;
-                case LOAD:
-                    updateNotesInView();
-                    break;
-                case SAVE:
-                    updateNotesInStorage();
-                    break;
-                case DELETE:
-                    String noteId = /* tag = */ (String) actionEvent.getPayload();
-                    deleteNote(noteId);
-                    break;
+                    /* remote-storage operations */
+                    case REMOTE_REFRESH: {
+                        remoteGetNotesFromStorage();
+                        break;
+                    }
+                    case REMOTE_SAVE: {
+                        remoteSaveNotes();
+                        break;
+                    }
+                    /* local operations */
+                    case LOCAL_ADD: {
+                        localAddNewNote();
+                        break;
+                    }
+                    case LOCAL_SAVE: {
+                        String noteId = /* tag = */ (String) actionEvent.getPayload();
+                        localSaveNote(noteId);
+                        break;
+                    }
+                    case LOCAL_DELETE: {
+                        String noteId = /* tag = */ (String) actionEvent.getPayload();
+                        localDeleteNote(noteId);
+                        break;
+                    }
                 }
             }
         });
     }
 
-    protected abstract void addNewNote();
+    /** Add a new note */
+    protected abstract void localAddNewNote();
 
-    protected abstract void updateNotesInView();
+    /** Update the local cache of notes to match what's in the view */
+    protected abstract void localSaveNote(String noteId);
 
-    protected abstract void updateNotesInStorage();
+    /** Delete a note */
+    protected abstract void localDeleteNote(String noteId);
 
-    protected abstract void deleteNote(String noteId);
+    /** Update the view to match what's in the local cache */
+    protected abstract void localUpdateNotesInView();
+
+    protected abstract void remoteSaveNotes();
+    protected abstract void remoteGetNotesFromStorage();
 
     @Override
     public UIComponent getView() {

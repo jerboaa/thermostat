@@ -49,6 +49,8 @@ public class VmNotesController extends NotesController<VmRef> {
 
     private VmRef vm;
     private VmNoteDAO dao;
+
+    private List<VmNote> models;
     private List<NoteViewModel> viewModels;
 
     public VmNotesController(Clock clock, final VmRef vm, VmNoteDAO vmNoteDao, NotesView notesView) {
@@ -56,20 +58,62 @@ public class VmNotesController extends NotesController<VmRef> {
         this.vm = vm;
         this.dao = vmNoteDao;
 
+        models = new ArrayList<>();
         viewModels = new ArrayList<>();
     }
 
     @Override
-    protected void addNewNote() {
+    protected void remoteGetNotesFromStorage() {
+        Utils.assertNotInEdt();
+
+        view.setBusy(true);
+
+        models = dao.getFor(vm);
+        localUpdateNotesInView();
+
+        view.setBusy(false);
+    }
+
+    @Override
+    protected void remoteSaveNotes() {
+        view.setBusy(true);
+
+        List<VmNote> remoteModels = dao.getFor(vm);
+
+        List<String> seen = new ArrayList<>();
+        for (VmNote remoteModel : remoteModels) {
+            VmNote localModel = findById(models, remoteModel.getId());
+            if (localModel == null) {
+                // deleted
+                dao.remove(remoteModel);
+            } else {
+                if (localModel.getTimeStamp() != remoteModel.getTimeStamp()) {
+                    // notes differ
+                    dao.update(localModel);
+                }
+                seen.add(localModel.getId());
+            }
+        }
+
+        for (VmNote note : models) {
+            if (seen.contains(note.getId())) {
+                continue;
+            }
+            dao.add(note);
+        }
+
+        view.setBusy(false);
+    }
+
+    @Override
+    protected void localAddNewNote() {
         long timeStamp = clock.getRealTimeMillis();
         String content = "";
+
         VmNote note = createNewVmNote(timeStamp, content);
+        models.add(note);
 
-        NoteViewModel model = new NoteViewModel(note.getId(), timeStamp, content);
-        viewModels.add(model);
-        view.add(model);
-
-        dao.add(note);
+        localUpdateNotesInView();
     }
 
     private VmNote createNewVmNote(long timeStamp, String text) {
@@ -83,8 +127,8 @@ public class VmNotesController extends NotesController<VmRef> {
     }
 
     @Override
-    protected void updateNotesInView() {
-        List<VmNote> vmNotes = dao.getFor(vm);
+    protected void localUpdateNotesInView() {
+        List<VmNote> vmNotes = models;
 
         // TODO only apply diff of notes to reduce UI glitches/changes
         viewModels.clear();
@@ -99,31 +143,48 @@ public class VmNotesController extends NotesController<VmRef> {
     }
 
     @Override
-    protected void updateNotesInStorage() {
-        // TODO check if we need any synchronization
-
+    protected void localSaveNote(String noteId) {
         long timeStamp = clock.getRealTimeMillis();
 
         for (NoteViewModel viewModel : viewModels) {
-            String oldContent = viewModel.text;
-            String newContent = view.getContent(viewModel.tag);
-            if (oldContent.equals(newContent)) {
-                continue;
+            if (viewModel.tag.equals(noteId)) {
+                String oldContent = viewModel.text;
+                String newContent = view.getContent(viewModel.tag);
+                if (oldContent.equals(newContent)) {
+                    continue;
+                }
+
+                view.setTimeStamp(viewModel.tag, timeStamp);
+
+                VmNote toUpdate = findById(models, viewModel.tag);
+                toUpdate.setTimeStamp(timeStamp);
+                toUpdate.setContent(newContent);
             }
-
-            VmNote toUpdate = dao.getById(vm, viewModel.tag);
-            toUpdate.setTimeStamp(timeStamp);
-            toUpdate.setContent(newContent);
-
-            dao.update(toUpdate);
         }
     }
 
     @Override
-    protected void deleteNote(String noteId) {
-        dao.removeById(vm, noteId);
+    protected void localDeleteNote(String noteId) {
+        VmNote note = findById(models, noteId);
+        if (note == null) {
+            throw new AssertionError("Unable to find note to delete");
+        }
 
-        updateNotesInView();
+        boolean removed = models.remove(note);
+        if (!removed) {
+            throw new AssertionError("Deleting a note failed");
+        }
+
+        localUpdateNotesInView();
+    }
+
+    private static VmNote findById(List<VmNote> notes, String id) {
+        for (VmNote note : notes) {
+            if (note.getId().equals(id)) {
+                return note;
+            }
+        }
+        return null;
     }
 
 }

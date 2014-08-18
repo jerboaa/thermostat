@@ -36,46 +36,46 @@
 
 package com.redhat.thermostat.notes.client.swing.internal;
 
-import com.redhat.thermostat.client.core.InformationService;
-import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.common.AllPassFilter;
-import com.redhat.thermostat.common.Clock;
-import com.redhat.thermostat.common.Filter;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
+
+import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.notes.common.VmNoteDAO;
+import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 
-public class VmNotesProvider implements InformationService<VmRef>{
+public class VmNotesControllerTest {
 
-    private Clock clock;
-    private NotesView view;
-    private VmNoteDAO vmNoteDao;
-
-    public VmNotesProvider(Clock clock, VmNoteDAO vmNoteDao) {
-        this.clock = clock;
-        this.vmNoteDao = vmNoteDao;
-    }
-
-    @Override
-    public int getOrderValue() {
-        return Constants.ORDER_VALUE;
-    }
-
-    @Override
-    public Filter<VmRef> getFilter() {
-        return new AllPassFilter<>();
-    }
-
-    @Override
-    public InformationServiceController<VmRef> getInformationServiceController(VmRef vm) {
-        view = new NotesView();
-        final VmNotesController controller = new VmNotesController(clock, vm, vmNoteDao, view);
-        new Thread(new Runnable() {
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                controller.remoteGetNotesFromStorage();
+                NotesView notesView = new NotesView();
+                VmNoteDAO dao = mock(VmNoteDAO.class);
+                HostRef host = mock(HostRef.class);
+                when(host.getAgentId()).thenReturn("t800");
+                VmRef vm = mock(VmRef.class);
+                when(vm.getVmId()).thenReturn("vm1000");
+                when(vm.getHostRef()).thenReturn(host);
+
+                final VmNotesController notesController = new VmNotesController(
+                        new SystemClock(), vm, dao, notesView);
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        notesController.remoteGetNotesFromStorage();
+                    }
+                }).start();
+
+                JFrame mainWindow = new JFrame();
+                mainWindow.add(notesView.getUiComponent());
+                mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                mainWindow.setVisible(true);
             }
-        }).start();
-        return controller;
+        });
     }
 
 }

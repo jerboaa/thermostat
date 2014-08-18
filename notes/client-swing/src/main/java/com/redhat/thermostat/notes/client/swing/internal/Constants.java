@@ -45,4 +45,8 @@ public final class Constants {
     }
 
     static final int ORDER_VALUE = InformationService.ORDER_USER_GROUP + 256;
+
+    static final int TEXT_SIZE = 12;
+    static final int PADDING = 5;
+
 }

@@ -36,46 +36,21 @@
 
 package com.redhat.thermostat.notes.client.swing.internal;
 
-import com.redhat.thermostat.client.core.InformationService;
-import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.common.AllPassFilter;
-import com.redhat.thermostat.common.Clock;
-import com.redhat.thermostat.common.Filter;
-import com.redhat.thermostat.notes.common.VmNoteDAO;
-import com.redhat.thermostat.storage.core.VmRef;
+import javax.swing.SwingUtilities;
 
-public class VmNotesProvider implements InformationService<VmRef>{
+public class Utils {
 
-    private Clock clock;
-    private NotesView view;
-    private VmNoteDAO vmNoteDao;
-
-    public VmNotesProvider(Clock clock, VmNoteDAO vmNoteDao) {
-        this.clock = clock;
-        this.vmNoteDao = vmNoteDao;
+    public static void assertInEdt() {
+        if (!SwingUtilities.isEventDispatchThread()) {
+            throw new AssertionError("Called from outside the EDT");
+        }
     }
 
-    @Override
-    public int getOrderValue() {
-        return Constants.ORDER_VALUE;
-    }
-
-    @Override
-    public Filter<VmRef> getFilter() {
-        return new AllPassFilter<>();
-    }
-
-    @Override
-    public InformationServiceController<VmRef> getInformationServiceController(VmRef vm) {
-        view = new NotesView();
-        final VmNotesController controller = new VmNotesController(clock, vm, vmNoteDao, view);
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                controller.remoteGetNotesFromStorage();
-            }
-        }).start();
-        return controller;
+    public static void assertNotInEdt() {
+        if (SwingUtilities.isEventDispatchThread()) {
+            throw new AssertionError("Called from outside the EDT");
+        }
     }
 
 }
+

@@ -49,6 +49,9 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
+import javax.swing.SwingWorker;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.common.ActionNotifier;
@@ -60,30 +63,49 @@ public class NotePanel extends JPanel {
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private JTextArea text;
+    private JLabel timeStampLabel;
+    private ActionNotifier<Action> actionNotifier;
 
     public NotePanel(final NoteViewModel viewModel, final ActionNotifier<Action> actionNotifier) {
+        Utils.assertInEdt();
+        this.actionNotifier = actionNotifier;
+
         // wrap in html tags to enable line wrapping
-        SimpleDateFormat formatter = new SimpleDateFormat("'<html>'yyyy-MM-dd'<br>'HH:mm'</html>'");
-        String date = formatter.format(new Date(viewModel.timeStamp));
-        JLabel timeStampLabel = new JLabel(date);
+        String date = getPrettyTimeStamp(viewModel.timeStamp);
+        timeStampLabel = new JLabel(date);
         text = new JTextArea(viewModel.text);
-        Icon deleteIcon = new FontAwesomeIcon('\uf014', 12);
+        text.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void removeUpdate(DocumentEvent event) {
+                fireAction(Action.LOCAL_SAVE, viewModel.tag);
+            }
+            @Override
+            public void insertUpdate(DocumentEvent event) {
+                fireAction(Action.LOCAL_SAVE, viewModel.tag);
+            }
+            @Override
+            public void changedUpdate(DocumentEvent event) {
+                fireAction(Action.LOCAL_SAVE, viewModel.tag);
+            }
+        });
+        Icon deleteIcon = new FontAwesomeIcon('\uf014', Constants.TEXT_SIZE);
         JButton deleteButton = new JButton(deleteIcon);
         deleteButton.setToolTipText(translator.localize(LocaleResources.NOTES_DELETE).getContents());
         deleteButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent event) {
-                actionNotifier.fireAction(Action.DELETE, viewModel.tag);
+                fireAction(Action.LOCAL_DELETE, viewModel.tag);
             }
         });
 
         this.setLayout(new GridBagLayout());
-        this.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        int padding = Constants.PADDING;
+        this.setBorder(BorderFactory.createEmptyBorder(padding, padding, padding, padding));
 
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.anchor = GridBagConstraints.PAGE_START;
-        constraints.ipadx = 5;
-        constraints.ipady = 5;
+        constraints.ipadx = padding;
+        constraints.ipady = padding;
 
         constraints.weightx = 0;
         this.add(timeStampLabel, constraints);
@@ -97,8 +119,35 @@ public class NotePanel extends JPanel {
         this.add(deleteButton, constraints);
     }
 
+    private void fireAction(final Action action, final Object payload) {
+        SwingWorker<Void, Void> asyncActionWorker = new SwingWorker<Void, Void>() {
+            @Override
+            protected Void doInBackground() throws Exception {
+                actionNotifier.fireAction(action, payload);
+                return null;
+            }
+        };
+        asyncActionWorker.execute();
+    }
+
     public String getContent() {
+        Utils.assertInEdt();
         return text.getText();
+    }
+
+    public void setContent(String content) {
+        Utils.assertInEdt();
+        text.setText(content);
+    }
+
+    public void setTimeStamp(long timeStamp) {
+        Utils.assertInEdt();
+        timeStampLabel.setText(getPrettyTimeStamp(timeStamp));
+    }
+
+    private static String getPrettyTimeStamp(long timeStamp) {
+        SimpleDateFormat formatter = new SimpleDateFormat("'<html>'yyyy-MM-dd'<br>'HH:mm'</html>'");
+        return formatter.format(new Date(timeStamp));
     }
 
 }

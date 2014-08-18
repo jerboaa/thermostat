@@ -60,7 +60,50 @@ public class HostNotesController extends NotesController<HostRef> {
     }
 
     @Override
-    protected void addNewNote() {
+    protected void localSaveNote(String noteId) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected void remoteGetNotesFromStorage() {
+        List<HostNote> hostNotes = dao.getFor(host);
+        // TODO only apply diff of notes to reduce UI glitches/changes
+        viewModels.clear();
+        view.clearAll();
+
+        for (int i = 0; i < hostNotes.size(); i++) {
+            HostNote hostNote = hostNotes.get(i);
+            NoteViewModel viewModel = new NoteViewModel(hostNote.getId(), hostNote.getTimeStamp(), hostNote.getContent());
+            viewModels.add(viewModel);
+            view.add(viewModel);
+        }
+    }
+
+    @Override
+    protected void remoteSaveNotes() {
+        System.out.println("saving notes");
+        // TODO check if we need any synchronization
+
+        long timeStamp = clock.getRealTimeMillis();
+
+        for (NoteViewModel viewModel : viewModels) {
+            String oldContent = viewModel.text;
+            String newContent = view.getContent(viewModel.tag);
+            if (oldContent.equals(newContent)) {
+                continue;
+            }
+
+            HostNote toUpdate = dao.getById(host, viewModel.tag);
+            toUpdate.setTimeStamp(timeStamp);
+            toUpdate.setContent(newContent);
+
+            dao.update(toUpdate);
+            System.out.println("saved a note");
+        }
+    }
+
+    @Override
+    protected void localAddNewNote() {
         System.out.println("adding new note");
         long timeStamp = clock.getRealTimeMillis();
         String content = "";
@@ -83,7 +126,7 @@ public class HostNotesController extends NotesController<HostRef> {
     }
 
     @Override
-    protected void updateNotesInView() {
+    protected void localUpdateNotesInView() {
         System.out.println("loading notes from storage");
         List<HostNote> hostNotes = dao.getFor(host);
 
@@ -101,7 +144,7 @@ public class HostNotesController extends NotesController<HostRef> {
         }
     }
 
-    @Override
+    // FIXME @Override
     protected void updateNotesInStorage() {
         System.out.println("saving notes");
         // TODO check if we need any synchronization
@@ -125,12 +168,12 @@ public class HostNotesController extends NotesController<HostRef> {
     }
 
     @Override
-    protected void deleteNote(String noteId) {
+    protected void localDeleteNote(String noteId) {
         System.out.println("deleting note");
 
         dao.removeById(host, noteId);
 
-        updateNotesInView();
+        localUpdateNotesInView();
     }
 
 }

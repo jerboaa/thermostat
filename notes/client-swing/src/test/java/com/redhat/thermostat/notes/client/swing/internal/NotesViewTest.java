@@ -36,46 +36,18 @@
 
 package com.redhat.thermostat.notes.client.swing.internal;
 
-import com.redhat.thermostat.client.core.InformationService;
-import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.common.AllPassFilter;
-import com.redhat.thermostat.common.Clock;
-import com.redhat.thermostat.common.Filter;
-import com.redhat.thermostat.notes.common.VmNoteDAO;
-import com.redhat.thermostat.storage.core.VmRef;
+import java.awt.Component;
 
-public class VmNotesProvider implements InformationService<VmRef>{
+import javax.swing.JFrame;
 
-    private Clock clock;
-    private NotesView view;
-    private VmNoteDAO vmNoteDao;
+public class NotesViewTest {
+    public static void main(String[] args) {
+        JFrame frame = new JFrame();
 
-    public VmNotesProvider(Clock clock, VmNoteDAO vmNoteDao) {
-        this.clock = clock;
-        this.vmNoteDao = vmNoteDao;
+        NotesView view = new NotesView();
+        Component component = view.getUiComponent();
+        frame.add(component);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setVisible(true);
     }
-
-    @Override
-    public int getOrderValue() {
-        return Constants.ORDER_VALUE;
-    }
-
-    @Override
-    public Filter<VmRef> getFilter() {
-        return new AllPassFilter<>();
-    }
-
-    @Override
-    public InformationServiceController<VmRef> getInformationServiceController(VmRef vm) {
-        view = new NotesView();
-        final VmNotesController controller = new VmNotesController(clock, vm, vmNoteDao, view);
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                controller.remoteGetNotesFromStorage();
-            }
-        }).start();
-        return controller;
-    }
-
 }
