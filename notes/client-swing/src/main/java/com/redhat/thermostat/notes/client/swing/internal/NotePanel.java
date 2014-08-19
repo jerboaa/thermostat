@@ -56,6 +56,7 @@ import javax.swing.event.DocumentListener;
 import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.notes.client.swing.internal.NotesView.Action;
+import com.redhat.thermostat.notes.common.Note;
 import com.redhat.thermostat.shared.locale.Translate;
 
 public class NotePanel extends JPanel {
@@ -66,28 +67,28 @@ public class NotePanel extends JPanel {
     private JLabel timeStampLabel;
     private ActionNotifier<Action> actionNotifier;
 
-    public NotePanel(final NoteViewModel viewModel, final ActionNotifier<Action> actionNotifier) {
+    public NotePanel(final Note note, final ActionNotifier<Action> actionNotifier) {
         Utils.assertInEdt();
         this.actionNotifier = actionNotifier;
 
         // wrap in html tags to enable line wrapping
-        String date = getPrettyTimeStamp(viewModel.timeStamp);
+        String date = getPrettyTimeStamp(note.getTimeStamp());
         timeStampLabel = new JLabel(date);
-        text = new JTextArea(viewModel.text);
+        text = new JTextArea(note.getContent());
         text.setWrapStyleWord(true);
         text.setLineWrap(true);
         text.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void removeUpdate(DocumentEvent event) {
-                fireAction(Action.LOCAL_SAVE, viewModel.tag);
+                fireAction(Action.LOCAL_SAVE, note.getId());
             }
             @Override
             public void insertUpdate(DocumentEvent event) {
-                fireAction(Action.LOCAL_SAVE, viewModel.tag);
+                fireAction(Action.LOCAL_SAVE, note.getId());
             }
             @Override
             public void changedUpdate(DocumentEvent event) {
-                fireAction(Action.LOCAL_SAVE, viewModel.tag);
+                fireAction(Action.LOCAL_SAVE, note.getId());
             }
         });
         Icon deleteIcon = new FontAwesomeIcon('\uf014', Constants.TEXT_SIZE);
@@ -96,7 +97,7 @@ public class NotePanel extends JPanel {
         deleteButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent event) {
-                fireAction(Action.LOCAL_DELETE, viewModel.tag);
+                fireAction(Action.LOCAL_DELETE, note.getId());
             }
         });
 

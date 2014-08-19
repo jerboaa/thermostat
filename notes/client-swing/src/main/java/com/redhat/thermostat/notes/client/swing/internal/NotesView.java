@@ -77,6 +77,7 @@ import com.redhat.thermostat.client.swing.components.ActionButton;
 import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.notes.common.Note;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 
@@ -206,12 +207,12 @@ public class NotesView implements UIComponent, SwingComponent {
         });
     }
 
-    public void add(final NoteViewModel model) {
+    public void add(final Note note) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                NotePanel widget = new NotePanel(model, actionNotifier);
-                tagToPanel.put(model.tag, widget);
+                NotePanel widget = new NotePanel(note, actionNotifier);
+                tagToPanel.put(note.getId(), widget);
                 notesContainer.add(widget);
                 notesAndToolsContainer.revalidate();
             }

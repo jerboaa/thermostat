@@ -60,7 +60,6 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
     protected R ref;
 
     private List<N> models;
-    private List<NoteViewModel> viewModels;
 
     public NotesController(Clock clock, R ref, D dao, NotesView view) {
         this.clock = clock;
@@ -69,7 +68,6 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
         this.dao = dao;
 
         models = new ArrayList<>();
-        viewModels = new ArrayList<>();
 
         this.view.getNotifier().addActionListener(new ActionListener<NotesView.Action>() {
             @Override
@@ -173,14 +171,11 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
         List<N> vmNotes = models;
 
         // TODO only apply diff of notes to reduce UI glitches/changes
-        viewModels.clear();
         view.clearAll();
 
         for (int i = 0; i < vmNotes.size(); i++) {
             N vmNote = vmNotes.get(i);
-            NoteViewModel viewModel = new NoteViewModel(vmNote.getId(), vmNote.getTimeStamp(), vmNote.getContent());
-            viewModels.add(viewModel);
-            view.add(viewModel);
+            view.add(vmNote);
         }
     }
 
@@ -188,19 +183,18 @@ public abstract class NotesController<R extends Ref, N extends Note, D extends N
     protected void localSaveNote(String noteId) {
         long timeStamp = clock.getRealTimeMillis();
 
-        for (NoteViewModel viewModel : viewModels) {
-            if (viewModel.tag.equals(noteId)) {
-                String oldContent = viewModel.text;
-                String newContent = view.getContent(viewModel.tag);
+        for (N note : models) {
+            if (noteId.equals(note.getId())) {
+                String oldContent = note.getContent();
+                String newContent = view.getContent(noteId);
                 if (oldContent.equals(newContent)) {
                     continue;
                 }
 
-                view.setTimeStamp(viewModel.tag, timeStamp);
+                view.setTimeStamp(noteId, timeStamp);
 
-                N toUpdate = findById(models, viewModel.tag);
-                toUpdate.setTimeStamp(timeStamp);
-                toUpdate.setContent(newContent);
+                note.setTimeStamp(timeStamp);
+                note.setContent(newContent);
             }
         }
     }
