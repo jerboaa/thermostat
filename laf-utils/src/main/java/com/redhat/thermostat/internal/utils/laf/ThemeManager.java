@@ -51,7 +51,7 @@ import com.redhat.thermostat.client.ui.Palette;
 import com.redhat.thermostat.internal.utils.laf.gtk.GTKThemeUtils;
 
 public class ThemeManager {
-    
+
     private static final Logger logger = Logger.getLogger(ThemeManager.class.getSimpleName());
     private static final ThemeManager theInstance = new ThemeManager();
     
@@ -111,9 +111,6 @@ public class ThemeManager {
                 laf = NimbusLookAndFeel.class.getName();
                 nimbusBased = true;
                 break;
-            case "dolphin":
-                laf = "com.redhat.swing.laf.dolphin.DolphinLookAndFeel";
-                break;
             default:
                 break;
         }
@@ -139,7 +136,7 @@ public class ThemeManager {
             UIManager.getDefaults().put("OptionPane.isYesLast", true);
         }
         
-        if (tryGTKColors && desktop != null && desktop.equalsIgnoreCase("gnome")) {
+        if (tryGTKColors) {
             GTKThemeUtils utils = new GTKThemeUtils();
             utils.setNimbusColours();
         }
