@@ -38,14 +38,14 @@ package com.redhat.thermostat.notes.client.swing.internal;
 
 import java.awt.AWTEvent;
 import java.awt.AlphaComposite;
-import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Composite;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.GridBagConstraints;
 import java.awt.Image;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -62,9 +62,12 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLayer;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.Scrollable;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.Timer;
+import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.LayerUI;
 
 import com.redhat.thermostat.client.core.views.UIComponent;
@@ -87,8 +90,9 @@ public class NotesView implements UIComponent, SwingComponent {
     private JLayer<JPanel> containerCover;
     private BusyLayerUI busyLayer;
 
-    private JPanel notesContainer;
-    private GridBagConstraints contentContainerConstraints;
+    private JScrollPane notesScrollPane;
+    private VerticalScrollablePanel notesContainer;
+    private JPanel notesAndToolsContainer;
 
     private ActionButton refreshButton;
     private ActionButton saveButton;
@@ -125,19 +129,18 @@ public class NotesView implements UIComponent, SwingComponent {
                 Action.REMOTE_SAVE);
         container.addToolBarButton(saveButton);
 
-        JPanel root = new JPanel();
-        root.setLayout(new BorderLayout());
-
-        JPanel notesAndToolsContainer = new JPanel();
-        busyLayer = new BusyLayerUI();
-        containerCover = new JLayer<JPanel>(notesAndToolsContainer, busyLayer);
-        root.add(containerCover, BorderLayout.PAGE_START);
-
+        notesAndToolsContainer = new JPanel();
         BoxLayout contentAndToolsLayout = new BoxLayout(notesAndToolsContainer, BoxLayout.PAGE_AXIS);
         notesAndToolsContainer.setLayout(contentAndToolsLayout);
 
-        notesContainer = new JPanel();
-        notesAndToolsContainer.add(notesContainer);
+        notesContainer = new VerticalScrollablePanel();
+        BoxLayout layout = new BoxLayout(notesContainer, BoxLayout.Y_AXIS);
+        notesContainer.setLayout(layout);
+
+        notesScrollPane = new JScrollPane(notesContainer);
+        int padding = Constants.PADDING;
+        notesScrollPane.setBorder(new EmptyBorder(padding, padding, padding, padding));
+        notesAndToolsContainer.add(notesScrollPane);
 
         JButton addNewNoteButton = new JButton("Add");
         addNewNoteButton.addActionListener(new ActionListener() {
@@ -150,10 +153,10 @@ public class NotesView implements UIComponent, SwingComponent {
         buttonContainer.add(addNewNoteButton);
         notesAndToolsContainer.add(buttonContainer);
 
-        BoxLayout layout = new BoxLayout(notesContainer, BoxLayout.PAGE_AXIS);
-        notesContainer.setLayout(layout);
+        busyLayer = new BusyLayerUI();
+        containerCover = new JLayer<JPanel>(notesAndToolsContainer, busyLayer);
 
-        container.setContent(root);
+        container.setContent(containerCover);
     }
 
     private ActionButton createToolbarButton(LocalizedString description, char iconId, final Action action) {
@@ -198,7 +201,7 @@ public class NotesView implements UIComponent, SwingComponent {
                     notesContainer.remove(entry.getValue());
                 }
                 tagToPanel.clear();
-                notesContainer.revalidate();
+                notesAndToolsContainer.revalidate();
             }
         });
     }
@@ -209,8 +212,8 @@ public class NotesView implements UIComponent, SwingComponent {
             public void run() {
                 NotePanel widget = new NotePanel(model, actionNotifier);
                 tagToPanel.put(model.tag, widget);
-                notesContainer.add(widget, contentContainerConstraints);
-                notesContainer.revalidate();
+                notesContainer.add(widget);
+                notesAndToolsContainer.revalidate();
             }
         });
     }
@@ -246,6 +249,41 @@ public class NotesView implements UIComponent, SwingComponent {
             }
         };
         worker.execute();
+    }
+
+    /**
+     * A {@link JPanel} that only allows vertical scrolling.
+     */
+    static class VerticalScrollablePanel extends JPanel implements Scrollable {
+
+        @Override
+        public Dimension getPreferredScrollableViewportSize() {
+            return super.getPreferredSize();
+        }
+
+        @Override
+        public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
+            //Unit scroll 1/10th of the panel's height.
+            //Used when scrolling with scrollbar arrows.
+            return (int)(this.getPreferredSize().getHeight() / 10);
+        }
+
+        @Override
+        public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) {
+            //Block scroll 1/5th of the panel's height.
+            //Used when scrolling with mouse-wheel clicks.
+            return (int)(this.getPreferredSize().getHeight() / 5);
+        }
+
+        @Override
+        public boolean getScrollableTracksViewportWidth() {
+            return true;
+        }
+
+        @Override
+        public boolean getScrollableTracksViewportHeight() {
+            return false;
+        }
     }
 
     /**

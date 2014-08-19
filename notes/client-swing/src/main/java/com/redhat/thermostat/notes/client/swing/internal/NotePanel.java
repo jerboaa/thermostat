@@ -74,6 +74,8 @@ public class NotePanel extends JPanel {
         String date = getPrettyTimeStamp(viewModel.timeStamp);
         timeStampLabel = new JLabel(date);
         text = new JTextArea(viewModel.text);
+        text.setWrapStyleWord(true);
+        text.setLineWrap(true);
         text.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void removeUpdate(DocumentEvent event) {
@@ -104,7 +106,7 @@ public class NotePanel extends JPanel {
 
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.anchor = GridBagConstraints.PAGE_START;
-        constraints.ipadx = padding;
+        constraints.ipadx = 0;
         constraints.ipady = padding;
 
         constraints.weightx = 0;
