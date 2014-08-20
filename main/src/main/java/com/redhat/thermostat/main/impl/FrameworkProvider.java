@@ -71,15 +71,21 @@ public class FrameworkProvider {
     private CommonPaths paths;
     private boolean printOSGiInfo;
     private boolean ignoreBundleVersions;
+    private String bootDelegation;
 
     // The framework cache location; Must not be shared between apps!
     private Path osgiCacheStorage;
 
-    public FrameworkProvider(CommonPaths paths, boolean printOSGiInfo, boolean ignoreBundleVersions) {
+    public FrameworkProvider(CommonPaths paths, boolean printOSGiInfo, boolean ignoreBundleVersions, String bootDelegation) {
         this.paths = paths;
 
         this.printOSGiInfo = printOSGiInfo;
         this.ignoreBundleVersions = ignoreBundleVersions;
+        this.bootDelegation = bootDelegation;
+
+        if ("".equals(bootDelegation)) {
+            throw new RuntimeException("Unexpected string used with boot delegation: '" + bootDelegation + "'");
+        }
     }
 
     // This is our ticket into OSGi land. Unfortunately, we to use a bit of reflection here.
@@ -193,6 +199,9 @@ public class FrameworkProvider {
         String extraPackages = getOSGiPublicPackages();
         bundleConfigurations.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, extraPackages);
         bundleConfigurations.put(Constants.FRAMEWORK_STORAGE, osgiCacheStorage.toFile().getAbsolutePath());
+        if (bootDelegation != null) {
+            bundleConfigurations.put(Constants.FRAMEWORK_BOOTDELEGATION, bootDelegation);
+        }
         Iterator<FrameworkFactory> factories = loader.iterator();
         if (factories.hasNext()) {
             // we just want the first found

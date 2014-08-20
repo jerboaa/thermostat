@@ -58,6 +58,7 @@ public class ThermostatTest {
     private ArgumentCaptor<Boolean> printOsgiInfoCaptor;
     private ArgumentCaptor<Boolean> ignoreBundleVersionsCaptor;
     private Thermostat thermostat;
+    private ArgumentCaptor<String> bootDelgationCaptor;
 
     @Before
     public void setUp() {
@@ -66,11 +67,15 @@ public class ThermostatTest {
 
         printOsgiInfoCaptor = ArgumentCaptor.forClass(Boolean.class);
         ignoreBundleVersionsCaptor = ArgumentCaptor.forClass(Boolean.class);
+        bootDelgationCaptor = ArgumentCaptor.forClass(String.class);
 
         thermostat = mock(Thermostat.class);
 
         when(thermostat
-                .createFrameworkProvider(eq(paths), printOsgiInfoCaptor.capture(), ignoreBundleVersionsCaptor.capture()))
+                .createFrameworkProvider(eq(paths),
+                        printOsgiInfoCaptor.capture(),
+                        ignoreBundleVersionsCaptor.capture(),
+                        bootDelgationCaptor.capture()))
                 .thenReturn(provider);
         doCallRealMethod().when(thermostat).start(eq(paths), any(String[].class));
 
@@ -110,6 +115,33 @@ public class ThermostatTest {
 
         verify(provider).start(eq(new String[]{}));
         assertEquals(true, ignoreBundleVersionsCaptor.getValue());
+    }
+
+    @Test
+    public void verifyNoBootDelegationArgIsPassedAsNull() {
+        String[] args = {};
+        thermostat.start(paths, args);
+
+        verify(provider).start(eq(new String[]{}));
+        assertEquals(null, bootDelgationCaptor.getValue());
+    }
+
+    @Test
+    public void verifyBootDelegationIsPassedAlong() {
+        String[] args = {"--boot-delegation=foo"};
+        thermostat.start(paths, args);
+
+        verify(provider).start(eq(new String[]{}));
+        assertEquals("foo", bootDelgationCaptor.getValue());
+    }
+
+    @Test
+    public void verifyBootDelegationIsPassedAlong2() {
+        String[] args = {"--boot-delegation="};
+        thermostat.start(paths, args);
+
+        verify(provider).start(eq(new String[]{}));
+        assertEquals("", bootDelgationCaptor.getValue());
     }
 
     @Test

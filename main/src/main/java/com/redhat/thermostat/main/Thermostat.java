@@ -60,6 +60,7 @@ public class Thermostat {
     public void start(CommonPaths paths, String[] args) {
         boolean printOSGiInfo = false;
         boolean ignoreBundleVersions = false;
+        String bootDelegation = null;
 
         List<String> toProcess = new ArrayList<>(Arrays.asList(args));
         Iterator<String> iter = toProcess.iterator();
@@ -73,15 +74,20 @@ public class Thermostat {
                 ignoreBundleVersions = true;
                 iter.remove();
             }
+            if (arg.startsWith("--boot-delegation=")) {
+                int startIndex = "--boot-delegation=".length();
+                bootDelegation = arg.substring(startIndex);
+                iter.remove();
+            }
         }
 
-        FrameworkProvider frameworkProvider = createFrameworkProvider(paths, printOSGiInfo, ignoreBundleVersions);
+        FrameworkProvider frameworkProvider = createFrameworkProvider(paths, printOSGiInfo, ignoreBundleVersions, bootDelegation);
         frameworkProvider.start(toProcess.toArray(new String[0]));
     }
 
     /* allow overriding for unit testing */
-    protected FrameworkProvider createFrameworkProvider(CommonPaths paths, boolean printOSGiInfo, boolean ignoreBundleVersions) {
-        return new FrameworkProvider(paths, printOSGiInfo, ignoreBundleVersions);
+    protected FrameworkProvider createFrameworkProvider(CommonPaths paths, boolean printOSGiInfo, boolean ignoreBundleVersions, String bootDelegation) {
+        return new FrameworkProvider(paths, printOSGiInfo, ignoreBundleVersions, bootDelegation);
     }
 }
 

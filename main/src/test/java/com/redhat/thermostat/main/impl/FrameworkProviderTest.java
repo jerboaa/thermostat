@@ -37,6 +37,7 @@
 package com.redhat.thermostat.main.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -50,6 +51,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
@@ -58,6 +60,7 @@ import org.junit.runner.RunWith;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.Constants;
 import org.osgi.framework.launch.Framework;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
@@ -183,7 +186,7 @@ public class FrameworkProviderTest {
     @Test
     public void testStartRunsOSGiFramework() throws Exception {
         CommonPaths paths = new CommonPathsImpl();
-        FrameworkProvider provider = new FrameworkProvider(paths, false, false);
+        FrameworkProvider provider = new FrameworkProvider(paths, false, false, null);
 
         provider.start(new String[] {});
 
@@ -194,7 +197,7 @@ public class FrameworkProviderTest {
     @Test
     public void testStartRunsLauncher() throws Exception {
         CommonPaths paths = new CommonPathsImpl();
-        FrameworkProvider provider = new FrameworkProvider(paths, false, false);
+        FrameworkProvider provider = new FrameworkProvider(paths, false, false, null);
 
         provider.start(new String[] {});
 
@@ -204,7 +207,7 @@ public class FrameworkProviderTest {
     @Test
     public void testPrintOSGiInfoParameterIsPassedToBundleManager() {
         CommonPaths paths = new CommonPathsImpl();
-        FrameworkProvider provider = new FrameworkProvider(paths, true, false);
+        FrameworkProvider provider = new FrameworkProvider(paths, true, false, null);
 
         provider.start(new String[] {});
 
@@ -214,10 +217,40 @@ public class FrameworkProviderTest {
     @Test
     public void testIgnoreBundleVersionsParameterIsPassedToBundleManager() {
         CommonPaths paths = new CommonPathsImpl();
-        FrameworkProvider provider = new FrameworkProvider(paths, false, true);
+        FrameworkProvider provider = new FrameworkProvider(paths, false, true, null);
 
         provider.start(new String[] {});
 
         assertEquals(true, bundleManager.ignoreBundleVersion);
+    }
+
+    @Test(expected=RuntimeException.class)
+    public void testErrorThrownOnEmptyBootDelegationParameter() {
+        CommonPaths paths = new CommonPathsImpl();
+        FrameworkProvider provider = new FrameworkProvider(paths, false, true, "");
+
+        provider.start(new String[] {});
+    }
+
+    @Test
+    public void testNullBootDelegationIsNotSetInConfiguration() {
+        CommonPaths paths = new CommonPathsImpl();
+        FrameworkProvider provider = new FrameworkProvider(paths, false, false, null);
+
+        provider.start(new String[] {});
+
+        Map<String, String> config = TestFrameworkFactory.getConfig();
+        assertFalse(config.containsKey(Constants.FRAMEWORK_BOOTDELEGATION));
+    }
+
+    @Test
+    public void testPackagesListedInBootDelegationArePassedToFramework() {
+        CommonPaths paths = new CommonPathsImpl();
+        FrameworkProvider provider = new FrameworkProvider(paths, false, true, "foo");
+
+        provider.start(new String[] {});
+
+        Map<String, String> config = TestFrameworkFactory.getConfig();
+        assertEquals("foo", config.get(Constants.FRAMEWORK_BOOTDELEGATION));
     }
 }
