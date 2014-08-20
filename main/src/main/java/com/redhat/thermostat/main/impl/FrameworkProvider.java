@@ -41,7 +41,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -266,12 +265,8 @@ public class FrameworkProvider {
         try {
             Method m = clazz.getMethod(name, classes);
             m.invoke(object, args);
-        } catch (IllegalAccessException | NoSuchMethodException |
-                IllegalArgumentException | InvocationTargetException e) {
-            // It's pretty evil to just swallow these exceptions.  But, these can only
-            // really come up in Really Bad Code Errors, which testing will catch early.
-            // Right?  Right.  Of course it will.
-            e.printStackTrace();
+        } catch (ReflectiveOperationException e) {
+            throw new AssertionError("Unable to call '" + name + "' method on object " + object, e);
         }
     }
 

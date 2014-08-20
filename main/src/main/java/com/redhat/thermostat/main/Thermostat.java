@@ -51,7 +51,13 @@ public class Thermostat {
      * @param args the arguments to the program
      */
     public static void main(String[] args) {
+        CommonPaths paths = new CommonPathsImpl();
 
+        Thermostat thermostat = new Thermostat();
+        thermostat.start(paths, args);
+    }
+
+    public void start(CommonPaths paths, String[] args) {
         boolean printOSGiInfo = false;
         boolean ignoreBundleVersions = false;
 
@@ -69,10 +75,13 @@ public class Thermostat {
             }
         }
 
-        CommonPaths paths = new CommonPathsImpl();
-        FrameworkProvider frameworkProvider = new FrameworkProvider(paths, printOSGiInfo, ignoreBundleVersions);
+        FrameworkProvider frameworkProvider = createFrameworkProvider(paths, printOSGiInfo, ignoreBundleVersions);
         frameworkProvider.start(toProcess.toArray(new String[0]));
     }
 
+    /* allow overriding for unit testing */
+    protected FrameworkProvider createFrameworkProvider(CommonPaths paths, boolean printOSGiInfo, boolean ignoreBundleVersions) {
+        return new FrameworkProvider(paths, printOSGiInfo, ignoreBundleVersions);
+    }
 }
 

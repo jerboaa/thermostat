@@ -34,13 +34,14 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.main;
+package com.redhat.thermostat.main.impl;
 
 import java.util.Map;
 
 import org.osgi.framework.launch.Framework;
 import org.osgi.framework.launch.FrameworkFactory;
 
+/** Registered using ServiceLoader */
 public class TestFrameworkFactory implements FrameworkFactory {
 
     private static Framework framework;

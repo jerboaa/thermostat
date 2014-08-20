@@ -36,124 +36,88 @@
 
 package com.redhat.thermostat.main;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Hashtable;
-
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.launch.Framework;
-import org.osgi.util.tracker.ServiceTracker;
-import org.osgi.util.tracker.ServiceTrackerCustomizer;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.launcher.BundleManager;
-import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.main.impl.FrameworkProvider;
+import com.redhat.thermostat.shared.config.CommonPaths;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({FrameworkProvider.class})
 public class ThermostatTest {
 
-    private Path tempDir;
+    private FrameworkProvider provider;
+    private CommonPaths paths;
+    private ArgumentCaptor<Boolean> printOsgiInfoCaptor;
+    private ArgumentCaptor<Boolean> ignoreBundleVersionsCaptor;
+    private Thermostat thermostat;
 
-    private Framework mockFramework;
-
-    private BundleContext mockContext;
-
-    @SuppressWarnings("rawtypes")
     @Before
-    public void setUp() throws Exception {
-        tempDir = Files.createTempDirectory("test");
-        tempDir.toFile().deleteOnExit();
-        System.setProperty("THERMOSTAT_HOME", tempDir.toString());
-        System.setProperty("USER_THERMOSTAT_HOME", tempDir.toString());
-        
-        File tempEtc = new File(tempDir.toFile(), "etc");
-        tempEtc.mkdirs();
-        tempEtc.deleteOnExit();
-        
-        File tempProps = new File(tempEtc, "osgi-export.properties");
-        tempProps.createNewFile();
-        tempProps.deleteOnExit();
+    public void setUp() {
+        provider = mock(FrameworkProvider.class);
+        paths = mock(CommonPaths.class);
 
-        File tempBundleProps = new File(tempEtc, "bundles.properties");
-        tempBundleProps.createNewFile();
-        tempBundleProps.deleteOnExit();
-        
-        File tempLibs = new File(tempDir.toFile(), "libs");
-        tempLibs.mkdirs();
-        tempLibs.deleteOnExit();
-        
-        mockContext = mock(BundleContext.class);
+        printOsgiInfoCaptor = ArgumentCaptor.forClass(Boolean.class);
+        ignoreBundleVersionsCaptor = ArgumentCaptor.forClass(Boolean.class);
 
-        Framework framework = mock(Framework.class);
-        TestFrameworkFactory.setFramework(framework);
-        when(framework.getBundleContext()).thenReturn(mockContext);
-        Bundle mockBundle = mock(Bundle.class);
-        when(mockContext.installBundle(any(String.class))).thenReturn(mockBundle);
-        when(mockBundle.getHeaders()).thenReturn(new Hashtable<String, String>());
-        ServiceTracker registryTracker = mock(ServiceTracker.class);
-        PowerMockito
-                .whenNew(ServiceTracker.class)
-                .withParameterTypes(BundleContext.class, String.class,
-                        ServiceTrackerCustomizer.class)
-                .withArguments(any(BundleContext.class),
-                        eq(BundleManager.class.getName()), any(ServiceTrackerCustomizer.class))
-                .thenReturn(registryTracker);
-        when(registryTracker.waitForService(0)).thenReturn(mock(BundleManager.class));
-        ServiceTracker launcherTracker = mock(ServiceTracker.class);
-        Launcher launcher = mock(Launcher.class);
-        PowerMockito
-                .whenNew(ServiceTracker.class)
-                .withParameterTypes(BundleContext.class, String.class,
-                        ServiceTrackerCustomizer.class)
-                .withArguments(any(BundleContext.class),
-                        eq(Launcher.class.getName()),
-                        any(ServiceTrackerCustomizer.class))
-                .thenReturn(launcherTracker);
-        when(launcherTracker.waitForService(0))
-                .thenReturn(launcher);
+        thermostat = mock(Thermostat.class);
+
+        when(thermostat
+                .createFrameworkProvider(eq(paths), printOsgiInfoCaptor.capture(), ignoreBundleVersionsCaptor.capture()))
+                .thenReturn(provider);
+        doCallRealMethod().when(thermostat).start(eq(paths), any(String[].class));
+
     }
 
     @Test
-    public void testOSGIDirExists() throws Exception {
-        Path osgiDir = tempDir.resolve("osgi-cache");
-        osgiDir.toFile().mkdirs();
-        osgiDir.toFile().deleteOnExit();
-        assertTrue(osgiDir.toFile().exists());
-        try {
-            Thermostat.main(new String[0]);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        assertTrue(osgiDir.toFile().exists());
+    public void verifyNoArgDoesNotPrintOsgiInfo() {
+        String[] args = {};
+        thermostat.start(paths, args);
+
+        verify(provider).start(eq(new String[]{}));
+        assertEquals(false, printOsgiInfoCaptor.getValue());
     }
 
     @Test
-    public void testFrameworkInitAndStart() throws Exception {
-        Path osgiDir = tempDir.resolve("osgi-cache");
-        osgiDir.toFile().mkdirs();
-        osgiDir.toFile().deleteOnExit();
-        mockFramework = mock(Framework.class);
-        when(mockFramework.getBundleContext()).thenReturn(mockContext);
-        TestFrameworkFactory.setFramework(mockFramework);
-        Thermostat.main(new String[0]);
-        verify(mockFramework).init();
-        verify(mockFramework).start();
+    public void verifyArgPrintsOsgiInfo() {
+        String[] args = {"--print-osgi-info"};
+        thermostat.start(paths, args);
+
+        verify(provider).start(eq(new String[]{}));
+        assertEquals(true, printOsgiInfoCaptor.getValue());
+    }
+
+    @Test
+    public void verifyNoArgDoesNotIgnoreOsgiVersions() {
+        String[] args = {};
+        thermostat.start(paths, args);
+
+        verify(provider).start(eq(new String[]{}));
+        assertEquals(false, ignoreBundleVersionsCaptor.getValue());
+    }
+
+    @Test
+    public void verifyArgIgnoresBundleVersions() {
+        String[] args = {"--ignore-bundle-versions"};
+        thermostat.start(paths, args);
+
+        verify(provider).start(eq(new String[]{}));
+        assertEquals(true, ignoreBundleVersionsCaptor.getValue());
+    }
+
+    @Test
+    public void verifyUnrecognizedArgsArePassedAlong() {
+        String[] args = {"--new-super-arg", "unknown"};
+        thermostat.start(paths, args);
+
+        verify(provider).start(eq(args));
     }
 }
 
