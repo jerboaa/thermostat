@@ -66,7 +66,6 @@ import javax.swing.Scrollable;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.Timer;
-import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.LayerUI;
 
 import com.redhat.thermostat.client.core.views.UIComponent;
@@ -131,16 +130,21 @@ public class NotesView implements UIComponent, SwingComponent {
         container.addToolBarButton(saveButton);
 
         notesAndToolsContainer = new JPanel();
-        BoxLayout contentAndToolsLayout = new BoxLayout(notesAndToolsContainer, BoxLayout.PAGE_AXIS);
+        BoxLayout contentAndToolsLayout = new BoxLayout(notesAndToolsContainer, BoxLayout.Y_AXIS);
         notesAndToolsContainer.setLayout(contentAndToolsLayout);
 
         notesContainer = new VerticalScrollablePanel();
         BoxLayout layout = new BoxLayout(notesContainer, BoxLayout.Y_AXIS);
         notesContainer.setLayout(layout);
 
-        notesScrollPane = new ThermostatScrollPane(notesContainer);
-        int padding = Constants.PADDING;
-        notesScrollPane.setBorder(new EmptyBorder(padding, padding, padding, padding));
+        notesScrollPane = new ThermostatScrollPane(notesContainer) {
+            @Override
+            public Dimension getMaximumSize() {
+                int width = (int) super.getMaximumSize().getWidth();
+                return new Dimension(width, (int) this.getPreferredSize().getHeight());
+            }
+        };
+
         notesAndToolsContainer.add(notesScrollPane);
 
         JButton addNewNoteButton = new JButton("Add");
