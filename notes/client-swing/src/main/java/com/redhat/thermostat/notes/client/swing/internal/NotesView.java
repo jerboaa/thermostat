@@ -62,7 +62,6 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLayer;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.Scrollable;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
@@ -76,6 +75,7 @@ import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.ActionButton;
 import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
+import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.notes.common.Note;
 import com.redhat.thermostat.shared.locale.LocalizedString;
@@ -91,7 +91,7 @@ public class NotesView implements UIComponent, SwingComponent {
     private JLayer<JPanel> containerCover;
     private BusyLayerUI busyLayer;
 
-    private JScrollPane notesScrollPane;
+    private ThermostatScrollPane notesScrollPane;
     private VerticalScrollablePanel notesContainer;
     private JPanel notesAndToolsContainer;
 
@@ -138,7 +138,7 @@ public class NotesView implements UIComponent, SwingComponent {
         BoxLayout layout = new BoxLayout(notesContainer, BoxLayout.Y_AXIS);
         notesContainer.setLayout(layout);
 
-        notesScrollPane = new JScrollPane(notesContainer);
+        notesScrollPane = new ThermostatScrollPane(notesContainer);
         int padding = Constants.PADDING;
         notesScrollPane.setBorder(new EmptyBorder(padding, padding, padding, padding));
         notesAndToolsContainer.add(notesScrollPane);
