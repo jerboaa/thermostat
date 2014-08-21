@@ -129,6 +129,10 @@ public class StorageProfileCommand implements Command, CategoryRegistration, Sta
 
         clearAndVerifyAllData(console);
 
+        measureQueryNoResult(console, iterations);
+
+        clearAndVerifyAllData(console);
+
         measureQuerySingleItem(console, iterations);
 
         clearAndVerifyAllData(console);
@@ -199,7 +203,7 @@ public class StorageProfileCommand implements Command, CategoryRegistration, Sta
         }
     }
 
-    private void measureQuerySingleItem(Console console, final int ITERATIONS) {
+    private void measureQueryNoResult(Console console, final int ITERATIONS) {
         try {
             StatementDescriptor<SimpleData> desc = new StatementDescriptor<>(PROFILE_CATEGORY, QUERY_ALL_DATA);
             long start = System.nanoTime();
@@ -211,8 +215,47 @@ public class StorageProfileCommand implements Command, CategoryRegistration, Sta
                 }
             }
             long end = System.nanoTime();
-            console.getOutput().println("QUERY (x" + ITERATIONS + ") took " + nanosToMicroSeconds(end-start));
-            console.getOutput().println("QUERY avg was " + nanosToMicroSeconds(1.0 * (end-start) / ITERATIONS));
+            console.getOutput().println("QUERY no-result (x" + ITERATIONS + ") took " + nanosToMicroSeconds(end-start));
+            console.getOutput().println("QUERY no-result avg was " + nanosToMicroSeconds(1.0 * (end-start) / ITERATIONS));
+        } catch (StatementExecutionException e) {
+            console.getError().println("Error QUERYing data");
+            e.printStackTrace(console.getError());
+        } catch (DescriptorParsingException parsingException) {
+            throw new AssertionError("The descriptor must be valid", parsingException);
+        }
+    }
+
+    private void measureQuerySingleItem(Console console, final int ITERATIONS) {
+        try {
+
+            // populate single data item
+            StatementDescriptor<SimpleData> addDesc = new StatementDescriptor<>(PROFILE_CATEGORY, INSERT_DATA);
+            PreparedStatement<SimpleData> insertStatement = storage.prepareStatement(addDesc);
+            insertStatement.setString(0, "FOO");
+            insertStatement.setString(1, "BAR");
+            insertStatement.setLong(2, 1);
+            insertStatement.execute();
+
+            waitForDataCount(console, 1);
+
+            // time query
+            StatementDescriptor<SimpleData> desc = new StatementDescriptor<>(PROFILE_CATEGORY, QUERY_ALL_DATA);
+            long start = System.nanoTime();
+            for (int i = 0; i < ITERATIONS; i++) {
+                PreparedStatement<SimpleData> statement = storage.prepareStatement(desc);
+                Cursor<SimpleData> results = statement.executeQuery();
+                boolean firstResult = true;
+                while (results.hasNext()) {
+                    /* discard = */ results.next();
+                    if (!firstResult) {
+                        throw new AssertionError("Unexpected reuslts");
+                    }
+                    firstResult = false;
+                }
+            }
+            long end = System.nanoTime();
+            console.getOutput().println("QUERY single (x" + ITERATIONS + ") took " + nanosToMicroSeconds(end-start));
+            console.getOutput().println("QUERY single avg was " + nanosToMicroSeconds(1.0 * (end-start) / ITERATIONS ));
         } catch (StatementExecutionException e) {
             console.getError().println("Error QUERYing data");
             e.printStackTrace(console.getError());
