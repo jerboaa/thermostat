@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.Properties;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import javax.security.auth.Subject;
 
@@ -49,8 +50,12 @@ import com.sun.tools.attach.AgentLoadException;
 import com.sun.tools.attach.AttachNotSupportedException;
 import com.sun.tools.attach.VirtualMachine;
 
+import com.redhat.thermostat.common.utils.LoggingUtils;
+
 class AgentProxyControlImpl {
     
+    private static final Logger logger = LoggingUtils.getLogger(AgentProxyControlImpl.class);
+
     private static final String CONNECTOR_ADDRESS_PROPERTY = "com.sun.management.jmxremote.localConnectorAddress";
     
     private final int pid;
@@ -78,16 +83,23 @@ class AgentProxyControlImpl {
             Properties props = vm.getAgentProperties();
             connectorAddress = props.getProperty(CONNECTOR_ADDRESS_PROPERTY);
             if (connectorAddress == null) {
-                props = vm.getSystemProperties();
-                String home = props.getProperty("java.home");
-                String agent = home + File.separator + "lib" + File.separator + "management-agent.jar";
-                vm.loadAgent(agent);
-                
-                props = vm.getAgentProperties();
-                connectorAddress = props.getProperty(CONNECTOR_ADDRESS_PROPERTY);
+                String home = null;
+                String agent = null;
+                try {
+                    props = vm.getSystemProperties();
+                    home = props.getProperty("java.home");
+                    agent = home + File.separator + "lib" + File.separator + "management-agent.jar";
+                    logger.fine("Loading '" + agent + "' into VM (pid: " + pid + ")");
+                    vm.loadAgent(agent);
+
+                    props = vm.getAgentProperties();
+                    connectorAddress = props.getProperty(CONNECTOR_ADDRESS_PROPERTY);
+                } catch (IOException | AgentLoadException | AgentInitializationException e) {
+                    throw new RemoteException("Failed to load agent ('" + agent + "', from home '" + home + "') into VM (pid: " + pid + ")", e);
+                }
             }
-        } catch (AttachNotSupportedException | IOException | AgentLoadException | AgentInitializationException e) {
-            throw new RemoteException("Failed to attach to VM", e);
+        } catch (AttachNotSupportedException | IOException e) {
+            throw new RemoteException("Failed to attach to VM (pid: " + pid + ")", e);
         }
     }
 
