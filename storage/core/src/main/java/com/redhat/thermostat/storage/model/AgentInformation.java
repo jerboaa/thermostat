@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.storage.model;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 import com.redhat.thermostat.storage.core.Entity;
@@ -51,9 +49,6 @@ public class AgentInformation extends BasePojo {
 
     private boolean alive;
     private String address;
-
-    @SuppressWarnings("unused")
-    private List<BackendInformation> backends = new ArrayList<BackendInformation>();
 
     public AgentInformation() {
         this(null);

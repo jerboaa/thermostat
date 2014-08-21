@@ -78,13 +78,13 @@ public class WebQueryResponseSerializerTest {
         response.setResponseCode(PreparedStatementResponseCode.ILLEGAL_PATCH);
         
         String jsonStr = gson.toJson(response);
-        String expectedJson = "{\"payload\":[{\"startTime\":0,\"stopTime\":0,\"alive\":false,\"backends\":[],\"agentId\":\"testing\"}],\"errno\":-1}";
+        String expectedJson = "{\"payload\":[{\"startTime\":0,\"stopTime\":0,\"alive\":false,\"agentId\":\"testing\"}],\"errno\":-1}";
         assertEquals(expectedJson, jsonStr);
     }
     
     @Test
     public void canDeserializeBasic() {
-        String rawJson = "{\"payload\":[{\"startTime\":0,\"stopTime\":0,\"alive\":true,\"backends\":[],\"agentId\":\"testing\"}],\"errno\":-1}";
+        String rawJson = "{\"payload\":[{\"startTime\":0,\"stopTime\":0,\"alive\":true,\"agentId\":\"testing\"}],\"errno\":-1}";
         Type queryResponseType = new TypeToken<WebQueryResponse<AgentInformation>>() {}.getType();
         WebQueryResponse<AgentInformation> actual = gson.fromJson(rawJson, queryResponseType);
         
@@ -142,7 +142,7 @@ public class WebQueryResponseSerializerTest {
         response.setResponseCode(PreparedStatementResponseCode.ILLEGAL_PATCH);
         
         String jsonStr = gson.toJson(response);
-        String expectedJson = "{\"payload\":[{\"startTime\":0,\"stopTime\":0,\"alive\":false,\"backends\":[],\"agentId\":\"testing\"}],\"errno\":-1}";
+        String expectedJson = "{\"payload\":[{\"startTime\":0,\"stopTime\":0,\"alive\":false,\"agentId\":\"testing\"}],\"errno\":-1}";
         assertEquals(expectedJson, jsonStr);
 
         // We need to tell GSON which parametrized type we want it to deserialize
