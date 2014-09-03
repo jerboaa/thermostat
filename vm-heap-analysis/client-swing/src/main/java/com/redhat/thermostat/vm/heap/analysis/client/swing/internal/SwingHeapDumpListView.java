@@ -38,6 +38,12 @@ package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -45,14 +51,19 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import javax.swing.DefaultListModel;
-import javax.swing.JList;
+import javax.swing.BoxLayout;
+import javax.swing.Icon;
+import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.ListCellRenderer;
+import javax.swing.Scrollable;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.border.EmptyBorder;
 
 import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.client.swing.components.ActionButton;
+import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.client.swing.components.ShadowLabel;
 import com.redhat.thermostat.client.swing.components.ThermostatThinScrollBar;
 import com.redhat.thermostat.client.ui.Palette;
@@ -64,49 +75,42 @@ public class SwingHeapDumpListView extends HeapDumpListView implements SwingComp
 
     private JPanel container;
     private JScrollPane scrollPane;
-    private HeapDumpModel model;
-    private JList<HeapDump> list;
+    private HeapDumpPanel table;
 
     public SwingHeapDumpListView() {
         container = new JPanel();
-        container.setName(getClass().getName());
-        container.setLayout(new BorderLayout(0, 0));
+        container.setLayout(new BorderLayout());
         container.setOpaque(false);
 
-        model = new HeapDumpModel();
-        list = new JList<>(model);
-        list.setName(getClass().getName() + "_LIST");
-        list.setBorder(null);
-        list.setOpaque(false);
-        list.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent evt) {
-                if (evt.getClickCount() == 2) {
-                    int index = list.locationToIndex(evt.getPoint());
-                    HeapDump dump = model.get(index);
-                    listNotifier.fireAction(ListAction.DUMP_SELECTED, dump);
-                }
-            }
-        });
-        
-        list.setCellRenderer(new HeapCellRenderer());
-        
-        scrollPane = new JScrollPane(list);
+        table = new HeapDumpPanel();
+        BoxLayout layout = new BoxLayout(table, BoxLayout.Y_AXIS);
+        table.setLayout(layout);
+        table.setBorder(new EmptyBorder(Constants.THIN_INSETS));
+        table.setOpaque(false);
+
+        scrollPane = new JScrollPane(table);
         scrollPane.setVerticalScrollBar(new ThermostatThinScrollBar(ThermostatThinScrollBar.VERTICAL));
-        scrollPane.setBorder(null);
+        scrollPane.setBorder(new EmptyBorder(Constants.INVISIBLE_INSETS));
         scrollPane.setViewportBorder(null);
         scrollPane.getViewport().setOpaque(false);
         scrollPane.setOpaque(false);
 
         container.add(scrollPane, BorderLayout.CENTER);
+
+        JPanel invisibleFixture = new JPanel();
+        invisibleFixture.setOpaque(false);
+        invisibleFixture.setMaximumSize(Constants.MINIMUM_SIZE);
+
+        container.add(invisibleFixture, BorderLayout.SOUTH);
     }
-    
+
     @Override
     public Component getUiComponent() {
         return container;
     }
     
     @Override
-    public void setDumps(List<HeapDump> dumps) {
+    public void setDumps(final List<HeapDump> dumps) {
         
         final List<HeapDump> _dumps = new ArrayList<>(dumps);
         Collections.sort(_dumps, new DumpsComparator());
@@ -114,18 +118,16 @@ public class SwingHeapDumpListView extends HeapDumpListView implements SwingComp
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                model.clear();
-                for (HeapDump  dump : _dumps) {
-                    model.addElement(dump);
-                    container.repaint();
+                table.clear();
+                for (final HeapDump  dump : dumps) {
+                    final HeapDumpItem item = new HeapDumpItem(dump);
+                    table.add(item);
                 }
+                container.revalidate();
             }
         });
     }
-    
-    @SuppressWarnings("serial")
-    private class HeapDumpModel extends DefaultListModel<HeapDump> {}
-    
+
     private class DumpsComparator implements Comparator<HeapDump> {
         @Override
         public int compare(HeapDump o1, HeapDump o2) {
@@ -135,26 +137,154 @@ public class SwingHeapDumpListView extends HeapDumpListView implements SwingComp
             return -result;
         }
     }
-    
-    private class HeapCellRenderer implements ListCellRenderer<HeapDump> {
+
+    private class HeapDumpPanel extends JPanel implements Scrollable {
+        private List<HeapDumpItem> heapdumpList = new ArrayList<>();
+
+        public HeapDumpPanel() {
+            setDoubleBuffered(true);
+        }
+
+        public void heapDumpItemMouseOver(final HeapDumpItem item) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    for (HeapDumpItem i : heapdumpList) {
+                        i.toggleDisplayButtonOff();
+                    }
+                    item.toggleDisplayButtonOn();
+                }
+            });
+        }
+
 
         @Override
-        public Component getListCellRendererComponent(JList<? extends HeapDump> list, HeapDump value, int index,
-                                                      boolean isSelected, boolean cellHasFocus) {
-            
-            ShadowLabel label = new ShadowLabel(new LocalizedString(value.toString()));
-            label.setForeground(Palette.ROYAL_BLUE.getColor());
-
-            if (!isSelected) {
-                label.setOpaque(false);
-            } else {
-                label.setOpaque(true);
-                label.setBackground(Palette.ELEGANT_CYAN.getColor());
-            }
-            
-            return label;
+        public java.awt.Component add(java.awt.Component comp) {
+            super.add(comp);
+            heapdumpList.add((HeapDumpItem) comp);
+            return comp;
         }
-        
+
+        public void clear() {
+            for (HeapDumpItem item : heapdumpList) {
+                super.remove(item);
+            }
+            heapdumpList.clear();
+        }
+
+        @Override
+        public Dimension getPreferredScrollableViewportSize() {
+            return super.getPreferredSize();
+        }
+
+        @Override
+        public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
+            //Unit scroll 1/10th of the panel's height.
+            //Used when scrolling with scrollbar arrows.
+            return (int)(this.getPreferredSize().getHeight() / 10);
+        }
+
+        @Override
+        public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) {
+            //Block scroll 1/5th of the panel's height.
+            //Used when scrolling with mouse-wheel clicks.
+            return (int)(this.getPreferredSize().getHeight() / 5);
+        }
+
+        @Override
+        public boolean getScrollableTracksViewportWidth() {
+            return true;
+        }
+
+        @Override
+        public boolean getScrollableTracksViewportHeight() {
+            return false;
+        }
+
+    }
+
+    private class HeapDumpItem extends JPanel {
+        private HeapDump heapDump;
+        private JButton button;
+
+        public HeapDumpItem(final HeapDump heapDump) {
+            super();
+
+            this.setName(heapDump.toString() + "_panel");
+            this.heapDump = heapDump;
+
+            ShadowLabel label = new ShadowLabel(new LocalizedString(heapDump.toString()));
+            label.setForeground(Palette.ROYAL_BLUE.getColor());
+            label.setName(heapDump.toString() + "_label");
+
+            char iconId = '\uF019';
+            Icon icon = new FontAwesomeIcon(iconId, (int) label.getMinimumSize().getHeight());
+            button = new ActionButton(icon);
+
+            button.setToolTipText("Export heap dump.");
+            button.setName(heapDump.toString() + "_button");
+            button.setBackground(null);
+
+            button.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    listNotifier.fireAction(ListAction.EXPORT_DUMP, HeapDumpItem.this.heapDump);
+                }
+            });
+
+            button.setVisible(false);
+
+            GridBagLayout gbl = new GridBagLayout();
+            setLayout(gbl);
+
+            GridBagConstraints gbc = new GridBagConstraints();
+
+            gbc.gridy = 0;
+            gbc.gridx = GridBagConstraints.RELATIVE;
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+            gbc.weighty = 1;
+
+            gbc.weightx = 1;
+            add(label, gbc);
+
+            gbc.weightx = 0;
+            add(button, gbc);
+
+            setOpaque(false);
+            setBorder(new EmptyBorder(Constants.THIN_INSETS));
+            setPreferredSize(label.getPreferredSize());
+
+            this.addMouseListener(new MouseAdapter() {
+                public void mouseClicked(MouseEvent evt) {
+                    if (evt.getClickCount() == 2) {
+                        listNotifier.fireAction(ListAction.OPEN_DUMP_DETAILS, HeapDumpItem.this.heapDump);
+                    }
+
+                }
+
+                public void mouseEntered(MouseEvent evt) {
+                    table.heapDumpItemMouseOver(HeapDumpItem.this);
+                }
+            });
+        }
+
+        private void toggleDisplayButtonOn() {
+            this.setBackground(Palette.ELEGANT_CYAN.getColor());
+            setOpaque(true);
+            button.setVisible(true);
+        }
+
+        private void toggleDisplayButtonOff() {
+            this.setBackground(UIManager.getColor("Panel.background"));
+            setOpaque(false);
+            button.setVisible(false);
+        }
+
+        @Override
+        public Dimension getMaximumSize() {
+            int width = (int) super.getMaximumSize().getWidth();
+            return new Dimension(width, (int) this.getPreferredSize().getHeight());
+        }
     }
 }
 

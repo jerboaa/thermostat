@@ -42,7 +42,6 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListViewProvider;
-import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListView.ListAction;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
 
 public class HeapDumpListController {
@@ -53,8 +52,15 @@ public class HeapDumpListController {
         view = viewProvider.createView();
         view.addListListener(new ActionListener<HeapDumpListView.ListAction>() {
             @Override
-            public void actionPerformed(ActionEvent<ListAction> actionEvent) {
-                mainController.analyseDump((HeapDump) actionEvent.getPayload());
+            public void actionPerformed(ActionEvent<HeapDumpListView.ListAction> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                    case OPEN_DUMP_DETAILS:
+                        mainController.analyseDump((HeapDump) actionEvent.getPayload());
+                        break;
+                    case EXPORT_DUMP:
+                        mainController.exportDump((HeapDump) actionEvent.getPayload());
+                        break;
+                }
             }
         });
     }

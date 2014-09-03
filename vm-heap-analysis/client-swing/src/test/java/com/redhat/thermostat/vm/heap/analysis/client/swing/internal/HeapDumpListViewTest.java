@@ -36,27 +36,25 @@
 
 package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
 
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.TestCase.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JFrame;
-
-import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
+import javax.swing.JPanel;
 
 import org.fest.swing.annotation.GUITest;
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
 import org.fest.swing.edt.GuiActionRunner;
 import org.fest.swing.edt.GuiTask;
 import org.fest.swing.fixture.FrameFixture;
-import org.fest.swing.fixture.JListFixture;
-
+import org.fest.swing.fixture.JButtonFixture;
+import org.fest.swing.fixture.JLabelFixture;
+import org.fest.swing.fixture.JPanelFixture;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -66,8 +64,9 @@ import org.junit.runner.RunWith;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListView;
-import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListView.ListAction;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
+
+import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
 @RunWith(CacioFESTRunner.class)
 public class HeapDumpListViewTest {
@@ -93,6 +92,7 @@ public class HeapDumpListViewTest {
             }
         });
         frameFixture = new FrameFixture(frame);
+        frameFixture.show();
     }
 
     @After
@@ -103,45 +103,94 @@ public class HeapDumpListViewTest {
     
     @GUITest
     @Test
-    public void testDumpSelectedFired() {
-        
+    public void testDumpDetailsFired() {
         final boolean [] result = new boolean[1];
         final HeapDump [] selectedHeap = new HeapDump[1];
 
         view.addListListener(new ActionListener<HeapDumpListView.ListAction>() {
             @Override
-            public void actionPerformed(ActionEvent<ListAction> actionEvent) {
-                result[0] = true;
-                selectedHeap[0] = (HeapDump) actionEvent.getPayload();
+            public void actionPerformed(ActionEvent<HeapDumpListView.ListAction> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                    case OPEN_DUMP_DETAILS:
+                        result[0] = true;
+                        selectedHeap[0] = (HeapDump) actionEvent.getPayload();
+                        break;
+                }
             }
         });
-        
-        frameFixture.show();
-        
+
         HeapDump dump1 = mock(HeapDump.class);
-        when(dump1.getTimestamp()).thenReturn(1L);
-        
-        HeapDump dump2 = mock(HeapDump.class);
-        when(dump2.getTimestamp()).thenReturn(2L);
-        
+        when(dump1.toString()).thenReturn("dump1");
+
         List<HeapDump> dumps = new ArrayList<>();
         dumps.add(dump1);
-        dumps.add(dump2);
-        
+
         view.setDumps(dumps);
-        
-        verify(dump1).getTimestamp();
-        verify(dump2).getTimestamp();
-        
-        JListFixture list = frameFixture.list(SwingHeapDumpListView.class.getName() + "_LIST");
-        list.item(0).doubleClick();
-                
+
+        JLabelFixture label = frameFixture.label("dump1_label");
+        label.doubleClick();
+
         assertTrue(result[0]);
-        assertEquals(dump2, selectedHeap[0]);
-        
-        result[0] = false;        
-        list.item(1).doubleClick();
-                
+        assertEquals(dump1, selectedHeap[0]);
+    }
+
+    @GUITest
+    @Test
+    public void testDu1mpSelectFired() {
+        final boolean [] result = new boolean[1];
+        final JPanel[] selectedHeap = new JPanel[1];
+
+
+        HeapDump dump1 = mock(HeapDump.class);
+        when(dump1.toString()).thenReturn("dump1");
+
+        List<HeapDump> dumps = new ArrayList<>();
+        dumps.add(dump1);
+
+        view.setDumps(dumps);
+
+        JPanelFixture item = frameFixture.panel("dump1_panel");
+
+        JLabelFixture label = frameFixture.label("dump1_label");
+        label.click();
+
+        JButtonFixture button = frameFixture.button("dump1_button");
+
+        assertTrue(button.target.isVisible());
+    }
+
+    @GUITest
+    @Test
+    public void testExportFired() {
+        final boolean [] result = new boolean[1];
+        final HeapDump [] selectedHeap = new HeapDump[1];
+
+        view.addListListener(new ActionListener<HeapDumpListView.ListAction>() {
+            @Override
+            public void actionPerformed(ActionEvent<HeapDumpListView.ListAction> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                    case EXPORT_DUMP:
+                        result[0] = true;
+                        selectedHeap[0] = (HeapDump) actionEvent.getPayload();
+                        break;
+                }
+            }
+        });
+
+        HeapDump dump1 = mock(HeapDump.class);
+        when(dump1.toString()).thenReturn("dump1");
+
+        List<HeapDump> dumps = new ArrayList<>();
+        dumps.add(dump1);
+
+        view.setDumps(dumps);
+
+        JLabelFixture label = frameFixture.label("dump1_label");
+        label.click();
+
+        JButtonFixture button = frameFixture.button("dump1_button");
+        button.click();
+
         assertTrue(result[0]);
         assertEquals(dump1, selectedHeap[0]);
     }

@@ -66,7 +66,6 @@ import com.redhat.thermostat.client.swing.components.OverlayPanel;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListView;
-import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListView.ListAction;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapIconResources;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.chart.OverviewChart;
@@ -98,7 +97,7 @@ public class HeapSwingView extends HeapView implements SwingComponent {
     private JPanel stack;
     
     private JFileChooser fileChooser;
-    
+
     public HeapSwingView() {
         stats = new StatsPanel();
         stats.addHeapDumperListener(new ActionListener() {
@@ -371,14 +370,14 @@ public class HeapSwingView extends HeapView implements SwingComponent {
             SwingHeapDumpListView swingView = (SwingHeapDumpListView) view;
             view.addListListener(new com.redhat.thermostat.common.ActionListener<HeapDumpListView.ListAction>() {
                 @Override
-                public void actionPerformed(com.redhat.thermostat.common.ActionEvent<ListAction> actionEvent) {
+                public void actionPerformed(com.redhat.thermostat.common.ActionEvent<HeapDumpListView.ListAction> actionEvent) {
                     switch (actionEvent.getActionId()) {
-                    case DUMP_SELECTED:
-                        closeDumpListView();
-                        break;
-                        
-                    default:
-                        break;
+                        case OPEN_DUMP_DETAILS:
+                            closeDumpListView();
+                            break;
+
+                        default:
+                            break;
                     }
                 }
             });

@@ -221,14 +221,7 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
                     
                 case REQUEST_EXPORT: {
                     dump = (HeapDump) actionEvent.getPayload();
-                    DumpFile localHeapDump = new DumpFile();
-                    SimpleDateFormat format = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss_SSS");
-                    Date date = new Date(dump.getTimestamp());
-                    String timeStamp = format.format(date);
-                    String id = "heapdump-" + ref.getName() + "-" + timeStamp + "." + dump.getType();
-                    localHeapDump.setFile(new File(id));
-                    localHeapDump.setDump(dump);
-                    view.openExportDialog(localHeapDump);
+                    exportDump(dump);
                 } break;
                 
                 case SAVE_HEAP_DUMP: {                    
@@ -323,6 +316,17 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
                 appService.getApplicationCache().addAttribute(ref, dump);
             }
         });
+    }
+
+    void exportDump(final HeapDump dump) {
+        DumpFile localHeapDump = new DumpFile();
+        SimpleDateFormat format = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss_SSS");
+        Date date = new Date(dump.getTimestamp());
+        String timeStamp = format.format(date);
+        String id = "heapdump-" + ref.getName() + "-" + timeStamp + "." + dump.getType();
+        localHeapDump.setFile(new File(id));
+        localHeapDump.setDump(dump);
+        view.openExportDialog(localHeapDump);
     }
 
     private void showHeapDumpDetails(HeapDump dump) {

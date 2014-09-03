@@ -36,6 +36,13 @@
 
 package com.redhat.thermostat.vm.heap.analysis.client.core.internal;
 
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+
 import java.util.List;
 
 import org.junit.Before;
@@ -46,15 +53,7 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListViewProvider;
-import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListView.ListAction;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
-
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.junit.Assert.assertNotNull;
 
 public class HeapDumpListControllerTest {
 
@@ -82,10 +81,10 @@ public class HeapDumpListControllerTest {
         
         HeapDumpListController controller = new HeapDumpListController(provider, mainController);
         
-        ActionListener<ListAction> listener = viewArgumentCaptor.getValue();
+        ActionListener<HeapDumpListView.ListAction> listener = viewArgumentCaptor.getValue();
         assertNotNull(listener);
         
-        ActionEvent<ListAction> actionEvent = new ActionEvent<HeapDumpListView.ListAction>(view, ListAction.DUMP_SELECTED);
+        ActionEvent<HeapDumpListView.ListAction> actionEvent = new ActionEvent<HeapDumpListView.ListAction>(view, HeapDumpListView.ListAction.OPEN_DUMP_DETAILS);
         actionEvent.setPayload(dump);
         listener.actionPerformed(actionEvent);
         
