@@ -98,14 +98,16 @@ import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.BinaryLogicalExpression;
 import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
 import com.redhat.thermostat.storage.query.Expression;
-import com.redhat.thermostat.web.common.PreparedParameterSerializer;
 import com.redhat.thermostat.web.common.PreparedStatementResponseCode;
-import com.redhat.thermostat.web.common.ThermostatGSONConverter;
 import com.redhat.thermostat.web.common.WebPreparedStatement;
 import com.redhat.thermostat.web.common.WebPreparedStatementResponse;
-import com.redhat.thermostat.web.common.WebPreparedStatementSerializer;
 import com.redhat.thermostat.web.common.WebQueryResponse;
-import com.redhat.thermostat.web.common.WebQueryResponseSerializer;
+import com.redhat.thermostat.web.common.typeadapters.PojoTypeAdapterFactory;
+import com.redhat.thermostat.web.common.typeadapters.PreparedParameterTypeAdapterFactory;
+import com.redhat.thermostat.web.common.typeadapters.PreparedParametersTypeAdapterFactory;
+import com.redhat.thermostat.web.common.typeadapters.WebPreparedStatementResponseTypeAdapterFactory;
+import com.redhat.thermostat.web.common.typeadapters.WebPreparedStatementTypeAdapterFactory;
+import com.redhat.thermostat.web.common.typeadapters.WebQueryResponseTypeAdapterFactory;
 import com.redhat.thermostat.web.server.auth.FilterResult;
 import com.redhat.thermostat.web.server.auth.PrincipalCallback;
 import com.redhat.thermostat.web.server.auth.PrincipalCallbackFactory;
@@ -169,11 +171,12 @@ public class WebStorageEndPoint extends HttpServlet {
         checkThermostatHome();
         
         gson = new GsonBuilder()
-                .registerTypeHierarchyAdapter(Pojo.class,
-                        new ThermostatGSONConverter())
-                .registerTypeAdapter(WebQueryResponse.class, new WebQueryResponseSerializer<>())
-                .registerTypeAdapter(PreparedParameter.class, new PreparedParameterSerializer())
-                .registerTypeAdapter(WebPreparedStatement.class, new WebPreparedStatementSerializer())
+                .registerTypeAdapterFactory(new PojoTypeAdapterFactory())
+                .registerTypeAdapterFactory(new WebPreparedStatementResponseTypeAdapterFactory())
+                .registerTypeAdapterFactory(new WebQueryResponseTypeAdapterFactory())
+                .registerTypeAdapterFactory(new PreparedParameterTypeAdapterFactory())
+                .registerTypeAdapterFactory(new WebPreparedStatementTypeAdapterFactory())
+                .registerTypeAdapterFactory(new PreparedParametersTypeAdapterFactory())
                 .create();
         categoryIds = new HashMap<>();
         categories = new HashMap<>();

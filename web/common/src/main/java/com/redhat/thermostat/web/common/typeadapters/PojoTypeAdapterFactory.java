@@ -34,39 +34,29 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.common;
-
-import static org.junit.Assert.assertEquals;
-
-import org.junit.Before;
-import org.junit.Test;
+package com.redhat.thermostat.web.common.typeadapters;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.TypeAdapter;
+import com.google.gson.TypeAdapterFactory;
+import com.google.gson.reflect.TypeToken;
+import com.redhat.thermostat.storage.model.Pojo;
 
-public class WebPreparedStatementResponseSerializerTest {
+public class PojoTypeAdapterFactory implements TypeAdapterFactory {
 
-    private Gson gson;
-    
-    @Before
-    public void setup() {
-        gson = new GsonBuilder().create();
+    @Override
+    public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
+        Class<?> rawType = type.getRawType();
+        if (Pojo.class.isAssignableFrom(rawType)) {
+            // We've just verified that we have a Pojo type. The unchecked
+            // cast is safe.
+            @SuppressWarnings("unchecked")
+            Class<T> castedType = (Class<T>)rawType;
+            @SuppressWarnings({ "unchecked", "rawtypes" })
+            TypeAdapter<T> ta = (TypeAdapter<T>)new PojoTypeAdapter(this, gson, castedType);
+            return ta;
+        }
+        return null;
     }
-    
-    @Test
-    public void testSerializationDeserializationBasic() {
-        WebPreparedStatementResponse response = new WebPreparedStatementResponse();
-        response.setNumFreeVariables(6);
-        response.setStatementId(WebPreparedStatementResponse.ILLEGAL_STATEMENT);
-        
-        String jsonStr = gson.toJson(response, WebPreparedStatementResponse.class);
-        String expectedString = "{\"numFreeVariables\":6,\"statementId\":-1}";
-        assertEquals(expectedString, jsonStr);
-        
-        WebPreparedStatementResponse actual = gson.fromJson(jsonStr, WebPreparedStatementResponse.class);
-        
-        assertEquals(6, actual.getNumFreeVariables());
-        assertEquals(WebPreparedStatementResponse.ILLEGAL_STATEMENT, actual.getStatementId());
-    }
+
 }
-

@@ -48,10 +48,22 @@
   <url>${thermostat.url}</url>
 
   <profiles>
+    <!-- Profile for running performance tests. Performance tests are
+         excluded from normal builds. That is, they'll only run if
+         explicitly requested via -Pperf-tests. See web/common/pom.xml 
+         for an example as to how this property is used. -->
+    <profile>
+      <id>perf-tests</id>
+      <properties>
+        <!-- define it empty so as to NOT exclude the PerformanceTests
+             categorized tests. -->
+        <surefire-perftests-exclusion />
+      </properties>
+    </profile>
     <!-- Development settings for web.xml. Release builds should
          have the "environment.type=release" property. -->
     <profile>
-    <id>dev-build</id>
+      <id>dev-build</id>
       <activation>
         <property>
           <name>environment.type</name>
@@ -261,6 +273,8 @@ password=${agent.dev.password}
     <dev.users.snippet /> <!-- intentionally empty -->
     <dev.roles.snippet /> <!-- intentionally empty -->
     <agent.auth.snippet /> <!-- intentionally empty -->
+    <!-- see web/common/pom.xml for an example as to how this is used -->
+    <surefire-perftests-exclusion>com.redhat.thermostat.testutils.PerformanceTest</surefire-perftests-exclusion>
   </properties>
 
   <modules>

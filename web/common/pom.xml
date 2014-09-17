@@ -57,7 +57,12 @@
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
-
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-common-test</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
@@ -90,11 +95,19 @@
             <Bundle-SymbolicName>com.redhat.thermostat.web.common</Bundle-SymbolicName>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Export-Package>
-              com.redhat.thermostat.web.common
+              com.redhat.thermostat.web.common,
+              com.redhat.thermostat.web.common.typeadapters,
             </Export-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
           </instructions>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <excludedGroups>${surefire-perftests-exclusion}</excludedGroups>
         </configuration>
       </plugin>
     </plugins>

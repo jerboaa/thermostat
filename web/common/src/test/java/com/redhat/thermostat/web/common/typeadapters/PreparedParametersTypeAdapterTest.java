@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.common;
+package com.redhat.thermostat.web.common.typeadapters;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -49,18 +49,17 @@ import com.redhat.thermostat.storage.core.PreparedParameters;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.Pojo;
 
-public class PreparedParametersSerializerTest {
+public class PreparedParametersTypeAdapterTest {
 
     private Gson gson;
     
     @Before
     public void setup() {
         gson = new GsonBuilder()
-                .registerTypeHierarchyAdapter(Pojo.class,
-                        new ThermostatGSONConverter())
-                .registerTypeAdapter(
-                        PreparedParameter.class,
-                        new PreparedParameterSerializer()).create();
+                    .registerTypeAdapterFactory(new PojoTypeAdapterFactory())
+                    .registerTypeAdapterFactory(new PreparedParameterTypeAdapterFactory())
+                    .registerTypeAdapterFactory(new PreparedParametersTypeAdapterFactory())
+                    .create();
     }
     
     @Test
@@ -140,5 +139,7 @@ public class PreparedParametersSerializerTest {
             assertEquals(infos[i], pojos[i]);
         }
     }
+    
+    
 }
 

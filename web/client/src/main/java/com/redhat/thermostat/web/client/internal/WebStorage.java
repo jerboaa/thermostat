@@ -67,7 +67,6 @@ import org.apache.http.auth.AuthSchemeProvider;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.AuthSchemes;
 import org.apache.http.client.config.RequestConfig;
@@ -82,10 +81,8 @@ import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.InputStreamBody;
-import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.auth.BasicSchemeFactory;
 import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
@@ -105,7 +102,6 @@ import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.IllegalDescriptorException;
 import com.redhat.thermostat.storage.core.IllegalPatchException;
-import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.SecureStorage;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
@@ -114,14 +110,16 @@ import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.web.common.PreparedParameterSerializer;
 import com.redhat.thermostat.web.common.PreparedStatementResponseCode;
-import com.redhat.thermostat.web.common.ThermostatGSONConverter;
 import com.redhat.thermostat.web.common.WebPreparedStatement;
 import com.redhat.thermostat.web.common.WebPreparedStatementResponse;
-import com.redhat.thermostat.web.common.WebPreparedStatementSerializer;
 import com.redhat.thermostat.web.common.WebQueryResponse;
-import com.redhat.thermostat.web.common.WebQueryResponseSerializer;
+import com.redhat.thermostat.web.common.typeadapters.PojoTypeAdapterFactory;
+import com.redhat.thermostat.web.common.typeadapters.PreparedParameterTypeAdapterFactory;
+import com.redhat.thermostat.web.common.typeadapters.PreparedParametersTypeAdapterFactory;
+import com.redhat.thermostat.web.common.typeadapters.WebPreparedStatementResponseTypeAdapterFactory;
+import com.redhat.thermostat.web.common.typeadapters.WebPreparedStatementTypeAdapterFactory;
+import com.redhat.thermostat.web.common.typeadapters.WebQueryResponseTypeAdapterFactory;
 
 public class WebStorage implements Storage, SecureStorage {
 
@@ -380,11 +378,13 @@ public class WebStorage implements Storage, SecureStorage {
     
     private void init(String url, StorageCredentials creds, HttpClient client) {
         categoryIds = new HashMap<>();
-        gson = new GsonBuilder().registerTypeHierarchyAdapter(Pojo.class,
-                        new ThermostatGSONConverter())
-                .registerTypeAdapter(WebPreparedStatement.class, new WebPreparedStatementSerializer())
-                .registerTypeAdapter(WebQueryResponse.class, new WebQueryResponseSerializer<>())
-                .registerTypeAdapter(PreparedParameter.class, new PreparedParameterSerializer())
+        gson = new GsonBuilder()
+                .registerTypeAdapterFactory(new PojoTypeAdapterFactory())
+                .registerTypeAdapterFactory(new WebPreparedStatementResponseTypeAdapterFactory())
+                .registerTypeAdapterFactory(new WebQueryResponseTypeAdapterFactory())
+                .registerTypeAdapterFactory(new PreparedParameterTypeAdapterFactory())
+                .registerTypeAdapterFactory(new WebPreparedStatementTypeAdapterFactory())
+                .registerTypeAdapterFactory(new PreparedParametersTypeAdapterFactory())
                 .create();
         httpClient = client;
         synchronized (httpClientContextLock) {

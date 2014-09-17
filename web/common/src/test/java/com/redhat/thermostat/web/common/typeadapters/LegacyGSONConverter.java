@@ -35,7 +35,7 @@
  */
 
 
-package com.redhat.thermostat.web.common;
+package com.redhat.thermostat.web.common.typeadapters;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
@@ -55,7 +55,10 @@ import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Persist;
 import com.redhat.thermostat.storage.model.Pojo;
 
-public class ThermostatGSONConverter implements JsonSerializer<Pojo>, JsonDeserializer<Pojo> {
+/**
+ * Old non-stream GSON API serializer. Used only in performance tests. 
+ */
+public class LegacyGSONConverter implements JsonSerializer<Pojo>, JsonDeserializer<Pojo> {
 
     @Override
     public Pojo deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {

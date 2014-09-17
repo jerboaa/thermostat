@@ -43,9 +43,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import java.io.BufferedReader;
@@ -96,7 +96,6 @@ import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.IllegalDescriptorException;
 import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.PreparedParameters;
 import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
@@ -106,14 +105,15 @@ import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
-import com.redhat.thermostat.web.common.PreparedParameterSerializer;
 import com.redhat.thermostat.web.common.PreparedStatementResponseCode;
-import com.redhat.thermostat.web.common.ThermostatGSONConverter;
 import com.redhat.thermostat.web.common.WebPreparedStatement;
 import com.redhat.thermostat.web.common.WebPreparedStatementResponse;
-import com.redhat.thermostat.web.common.WebPreparedStatementSerializer;
 import com.redhat.thermostat.web.common.WebQueryResponse;
-import com.redhat.thermostat.web.common.WebQueryResponseSerializer;
+import com.redhat.thermostat.web.common.typeadapters.PojoTypeAdapterFactory;
+import com.redhat.thermostat.web.common.typeadapters.PreparedParameterTypeAdapterFactory;
+import com.redhat.thermostat.web.common.typeadapters.WebPreparedStatementResponseTypeAdapterFactory;
+import com.redhat.thermostat.web.common.typeadapters.WebPreparedStatementTypeAdapterFactory;
+import com.redhat.thermostat.web.common.typeadapters.WebQueryResponseTypeAdapterFactory;
 
 public class WebStorageTest {
 
@@ -263,7 +263,8 @@ public class WebStorageTest {
     @Test
     public void preparingFaultyDescriptorThrowsException() throws UnsupportedEncodingException, IOException {
         Gson gson = new GsonBuilder()
-                .registerTypeAdapter(WebPreparedStatement.class, new WebPreparedStatementSerializer())
+                .registerTypeAdapterFactory(new WebPreparedStatementTypeAdapterFactory())
+                .registerTypeAdapterFactory(new WebPreparedStatementResponseTypeAdapterFactory())
                 .create();
 
         // missing quotes for LHS key
@@ -287,7 +288,8 @@ public class WebStorageTest {
     @Test
     public void preparingUnknownDescriptorThrowsException() throws UnsupportedEncodingException, IOException {
         Gson gson = new GsonBuilder()
-                .registerTypeAdapter(WebPreparedStatement.class, new WebPreparedStatementSerializer())
+                .registerTypeAdapterFactory(new WebPreparedStatementTypeAdapterFactory())
+                .registerTypeAdapterFactory(new WebPreparedStatementResponseTypeAdapterFactory())
                 .create();
 
         String strDesc = "QUERY test WHERE 'property1' = ?s";
@@ -310,11 +312,13 @@ public class WebStorageTest {
     
     @Test
     public void forbiddenExecuteQueryThrowsConsumingExcptn() throws UnsupportedEncodingException, IOException {
-        Gson gson = new GsonBuilder().registerTypeHierarchyAdapter(PreparedParameter.class, new PreparedParameterSerializer())
-                .registerTypeAdapter(WebPreparedStatement.class, new WebPreparedStatementSerializer())
-                .registerTypeAdapter(WebQueryResponse.class, new WebQueryResponseSerializer<>())
-                .registerTypeAdapter(Pojo.class, new ThermostatGSONConverter())
-                .create();
+        Gson gson = new GsonBuilder()
+                            .registerTypeAdapterFactory(new PojoTypeAdapterFactory())
+                            .registerTypeAdapterFactory(new WebPreparedStatementResponseTypeAdapterFactory())
+                            .registerTypeAdapterFactory(new WebQueryResponseTypeAdapterFactory())
+                            .registerTypeAdapterFactory(new PreparedParameterTypeAdapterFactory())
+                            .registerTypeAdapterFactory(new WebPreparedStatementTypeAdapterFactory())
+                            .create();
 
         String strDesc = "QUERY test WHERE 'property1' = ?s";
         StatementDescriptor<TestObj> desc = new StatementDescriptor<>(category, strDesc);
@@ -396,11 +400,13 @@ public class WebStorageTest {
         obj1.setProperty1("fluffor1");
         TestObj obj2 = new TestObj();
         obj2.setProperty1("fluffor2");
-        Gson gson = new GsonBuilder().registerTypeHierarchyAdapter(PreparedParameter.class, new PreparedParameterSerializer())
-                .registerTypeAdapter(WebPreparedStatement.class, new WebPreparedStatementSerializer())
-                .registerTypeAdapter(WebQueryResponse.class, new WebQueryResponseSerializer<>())
-                .registerTypeAdapter(Pojo.class, new ThermostatGSONConverter())
-                .create();
+        Gson gson = new GsonBuilder()
+                            .registerTypeAdapterFactory(new PojoTypeAdapterFactory())
+                            .registerTypeAdapterFactory(new WebPreparedStatementResponseTypeAdapterFactory())
+                            .registerTypeAdapterFactory(new WebQueryResponseTypeAdapterFactory())
+                            .registerTypeAdapterFactory(new PreparedParameterTypeAdapterFactory())
+                            .registerTypeAdapterFactory(new WebPreparedStatementTypeAdapterFactory())
+                            .create();
 
         String strDesc = "QUERY test WHERE 'property1' = ?s";
         StatementDescriptor<TestObj> desc = new StatementDescriptor<>(category, strDesc);
@@ -462,10 +468,13 @@ public class WebStorageTest {
         obj1.setProperty1("fluffor1");
         TestObj obj2 = new TestObj();
         obj2.setProperty1("fluffor2");
-        Gson gson = new GsonBuilder().registerTypeAdapter(PreparedParameter.class, new PreparedParameterSerializer())
-                .registerTypeAdapter(WebPreparedStatement.class, new WebPreparedStatementSerializer())
-                .registerTypeHierarchyAdapter(Pojo.class, new ThermostatGSONConverter())
-                .create();
+        Gson gson = new GsonBuilder()
+                            .registerTypeAdapterFactory(new PojoTypeAdapterFactory())
+                            .registerTypeAdapterFactory(new WebPreparedStatementResponseTypeAdapterFactory())
+                            .registerTypeAdapterFactory(new WebQueryResponseTypeAdapterFactory())
+                            .registerTypeAdapterFactory(new PreparedParameterTypeAdapterFactory())
+                            .registerTypeAdapterFactory(new WebPreparedStatementTypeAdapterFactory())
+                            .create();
 
         String strDesc = "ADD test SET 'property1' = ?s";
         StatementDescriptor<TestObj> desc = new StatementDescriptor<>(category, strDesc);
@@ -510,10 +519,13 @@ public class WebStorageTest {
     
     @Test
     public void forbiddenExecuteWriteReturnsGenericWriteFailure() {
-        Gson gson = new GsonBuilder().registerTypeAdapter(PreparedParameter.class, new PreparedParameterSerializer())
-                .registerTypeAdapter(WebPreparedStatement.class, new WebPreparedStatementSerializer())
-                .registerTypeHierarchyAdapter(Pojo.class, new ThermostatGSONConverter())
-                .create();
+        Gson gson = new GsonBuilder()
+                            .registerTypeAdapterFactory(new PojoTypeAdapterFactory())
+                            .registerTypeAdapterFactory(new WebPreparedStatementResponseTypeAdapterFactory())
+                            .registerTypeAdapterFactory(new WebQueryResponseTypeAdapterFactory())
+                            .registerTypeAdapterFactory(new PreparedParameterTypeAdapterFactory())
+                            .registerTypeAdapterFactory(new WebPreparedStatementTypeAdapterFactory())
+                            .create();
 
         String strDesc = "ADD test SET 'property1' = ?s";
         StatementDescriptor<TestObj> desc = new StatementDescriptor<>(category, strDesc);

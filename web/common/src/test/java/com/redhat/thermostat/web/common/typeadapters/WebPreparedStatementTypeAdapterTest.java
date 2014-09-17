@@ -34,10 +34,11 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.common;
+package com.redhat.thermostat.web.common.typeadapters;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -47,20 +48,60 @@ import com.google.gson.GsonBuilder;
 import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.PreparedParameters;
 import com.redhat.thermostat.storage.model.AgentInformation;
-import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.web.common.WebPreparedStatement;
+import com.redhat.thermostat.web.common.WebPreparedStatementResponse;
 
-public class WebPreparedStatementSerializerTest {
+public class WebPreparedStatementTypeAdapterTest {
 
     private Gson gson;
     
     @Before
     public void setup() {
         gson = new GsonBuilder()
-                .registerTypeAdapter(WebPreparedStatement.class,
-                        new WebPreparedStatementSerializer())
-                .registerTypeHierarchyAdapter(Pojo.class, new ThermostatGSONConverter())
-                .registerTypeAdapter(PreparedParameter.class,
-                        new PreparedParameterSerializer()).create();
+                .registerTypeAdapterFactory(new WebPreparedStatementTypeAdapterFactory())
+                .registerTypeAdapterFactory(new PreparedParameterTypeAdapterFactory())
+                .registerTypeAdapterFactory(new PojoTypeAdapterFactory())
+                .create();
+    }
+    
+    @Test
+    public void canSerializeNullParams() {
+        WebPreparedStatement<?> stmt = new WebPreparedStatement<>();
+        stmt.setStatementId(500);
+        stmt.setParams(null);
+        
+        String expected = "{\"sid\":500}";
+        
+        String actual = gson.toJson(stmt);
+        assertEquals(expected, actual);
+    }
+    
+    @Test
+    public void canDeserializeNullParams() {
+        String json = "{\"sid\": 500}";
+        
+        WebPreparedStatement<?> stmt = gson.fromJson(json, WebPreparedStatement.class);
+        assertEquals(500, stmt.getStatementId());
+        assertNull(stmt.getParams());
+    }
+    
+    @Test
+    public void canSerializeEmptyParams() {
+        WebPreparedStatement<?> stmt = new WebPreparedStatement<>(0, 555);
+        
+        String expected = "{\"sid\":555,\"p\":{\"params\":[]}}";
+        String actual = gson.toJson(stmt);
+        assertEquals(expected, actual);
+    }
+    
+    @Test
+    public void canDeserializeEmptyParams() {
+        String json = "{\"sid\":555,\"p\":{\"params\":[]}}";
+        
+        WebPreparedStatement<?> stmt = gson.fromJson(json, WebPreparedStatement.class);
+        assertEquals(555, stmt.getStatementId());
+        assertNotNull(stmt.getParams());
+        assertEquals(0, stmt.getParams().getParams().length);
     }
     
     @Test
@@ -120,7 +161,6 @@ public class WebPreparedStatementSerializerTest {
         WebPreparedStatement<?> result = gson.fromJson(jsonString, WebPreparedStatement.class);
         assertEquals(WebPreparedStatementResponse.DESCRIPTOR_PARSE_FAILED, result.getStatementId());
         assertNotNull(result.getParams());
-        
     }
 }
 

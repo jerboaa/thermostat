@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.common;
+package com.redhat.thermostat.web.common.typeadapters;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
@@ -50,14 +50,12 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.web.common.WebQueryResponse;
 
 /**
- * GSON type adapter for {@link QueryResponse}.
- * Depends on {@link ThermostatGSONConverter} being registered as
- * type adapter as well.
- *
+ * Old non-stream GSON API serializer. Used only in performance tests. 
  */
-public class WebQueryResponseSerializer<T extends Pojo> implements
+public class LegacyWebQueryResponseSerializer<T extends Pojo> implements
         JsonDeserializer<WebQueryResponse<T>>, JsonSerializer<WebQueryResponse<T>> {
 
     private static final String PROP_RESULT = "payload";

@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.common;
+package com.redhat.thermostat.web.common.typeadapters;
 
 import static org.junit.Assert.assertEquals;
 
@@ -48,19 +48,21 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.HostInfo;
-import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.web.common.PreparedStatementResponseCode;
+import com.redhat.thermostat.web.common.WebQueryResponse;
+import com.redhat.thermostat.web.common.typeadapters.PojoTypeAdapterFactory;
+import com.redhat.thermostat.web.common.typeadapters.WebQueryResponseTypeAdapterFactory;
 
-public class WebQueryResponseSerializerTest {
+public class WebQueryResponseTypeAdapterTest {
 
     private Gson gson;
     
-    @SuppressWarnings("rawtypes")
     @Before
     public void setup() {
         gson = new GsonBuilder()
-                .registerTypeAdapter(Pojo.class, new ThermostatGSONConverter())
-                .registerTypeAdapter(WebQueryResponse.class,
-                        new WebQueryResponseSerializer()).create();
+                    .registerTypeAdapterFactory(new PojoTypeAdapterFactory())
+                    .registerTypeAdapterFactory(new WebQueryResponseTypeAdapterFactory())
+                    .create();
     }
     
     @Test
@@ -78,13 +80,13 @@ public class WebQueryResponseSerializerTest {
         response.setResponseCode(PreparedStatementResponseCode.ILLEGAL_PATCH);
         
         String jsonStr = gson.toJson(response);
-        String expectedJson = "{\"payload\":[{\"startTime\":0,\"stopTime\":0,\"alive\":false,\"agentId\":\"testing\"}],\"errno\":-1}";
+        String expectedJson = "{\"errno\":-1,\"payload\":[{\"agentId\":\"testing\",\"alive\":false,\"startTime\":0,\"stopTime\":0}]}";
         assertEquals(expectedJson, jsonStr);
     }
     
     @Test
     public void canDeserializeBasic() {
-        String rawJson = "{\"payload\":[{\"startTime\":0,\"stopTime\":0,\"alive\":true,\"agentId\":\"testing\"}],\"errno\":-1}";
+        String rawJson = "{\"errno\":-1,\"payload\":[{\"startTime\":0,\"stopTime\":0,\"alive\":true,\"agentId\":\"testing\"}]}";
         Type queryResponseType = new TypeToken<WebQueryResponse<AgentInformation>>() {}.getType();
         WebQueryResponse<AgentInformation> actual = gson.fromJson(rawJson, queryResponseType);
         
@@ -142,7 +144,7 @@ public class WebQueryResponseSerializerTest {
         response.setResponseCode(PreparedStatementResponseCode.ILLEGAL_PATCH);
         
         String jsonStr = gson.toJson(response);
-        String expectedJson = "{\"payload\":[{\"startTime\":0,\"stopTime\":0,\"alive\":false,\"agentId\":\"testing\"}],\"errno\":-1}";
+        String expectedJson = "{\"errno\":-1,\"payload\":[{\"agentId\":\"testing\",\"alive\":false,\"startTime\":0,\"stopTime\":0}]}";
         assertEquals(expectedJson, jsonStr);
 
         // We need to tell GSON which parametrized type we want it to deserialize

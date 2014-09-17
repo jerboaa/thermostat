@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.common;
+package com.redhat.thermostat.web.common.typeadapters;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Type;
@@ -58,12 +58,12 @@ import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.model.Pojo;
 
 /**
- * GSON type adapter for {@link PreparedParameter}.
- *
+ * Old non-stream GSON API serializer. Used only in performance tests. 
  */
-public class PreparedParameterSerializer implements JsonDeserializer<PreparedParameter>, JsonSerializer<PreparedParameter>{
+public class LegacyPreparedParameterSerializer implements JsonSerializer<PreparedParameter>,
+                                                    JsonDeserializer<PreparedParameter>{
 
-    private static final Logger logger = LoggingUtils.getLogger(PreparedParameterSerializer.class);
+    private static final Logger logger = LoggingUtils.getLogger(LegacyPreparedParameterSerializer.class);
     private static final String PROP_TYPE = "type";
     private static final String PROP_VALUE = "value";
     private static final Set<Class<?>> VALID_CLASSES;
@@ -190,4 +190,3 @@ public class PreparedParameterSerializer implements JsonDeserializer<PreparedPar
     }
 
 }
-

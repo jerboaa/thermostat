@@ -123,20 +123,21 @@ import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.BasePojo;
 import com.redhat.thermostat.storage.model.HostInfo;
-import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.BinarySetMembershipExpression;
 import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
-import com.redhat.thermostat.web.common.PreparedParameterSerializer;
 import com.redhat.thermostat.web.common.PreparedStatementResponseCode;
-import com.redhat.thermostat.web.common.ThermostatGSONConverter;
 import com.redhat.thermostat.web.common.WebPreparedStatement;
 import com.redhat.thermostat.web.common.WebPreparedStatementResponse;
-import com.redhat.thermostat.web.common.WebPreparedStatementSerializer;
 import com.redhat.thermostat.web.common.WebQueryResponse;
-import com.redhat.thermostat.web.common.WebQueryResponseSerializer;
+import com.redhat.thermostat.web.common.typeadapters.PojoTypeAdapterFactory;
+import com.redhat.thermostat.web.common.typeadapters.PreparedParameterTypeAdapterFactory;
+import com.redhat.thermostat.web.common.typeadapters.PreparedParametersTypeAdapterFactory;
+import com.redhat.thermostat.web.common.typeadapters.WebPreparedStatementResponseTypeAdapterFactory;
+import com.redhat.thermostat.web.common.typeadapters.WebPreparedStatementTypeAdapterFactory;
+import com.redhat.thermostat.web.common.typeadapters.WebQueryResponseTypeAdapterFactory;
 import com.redhat.thermostat.web.server.auth.BasicRole;
 import com.redhat.thermostat.web.server.auth.RolePrincipal;
 import com.redhat.thermostat.web.server.auth.Roles;
@@ -330,10 +331,12 @@ public class WebStorageEndpointTest {
         conn.setDoInput(true);
         conn.setDoOutput(true);
         Gson gson = new GsonBuilder()
-                .registerTypeHierarchyAdapter(WebQueryResponse.class, new WebQueryResponseSerializer<>())
-                .registerTypeAdapter(Pojo.class, new ThermostatGSONConverter())
-                .registerTypeAdapter(WebPreparedStatement.class, new WebPreparedStatementSerializer())
-                .registerTypeAdapter(PreparedParameter.class, new PreparedParameterSerializer()).create();
+                        .registerTypeAdapterFactory(new PojoTypeAdapterFactory())
+                        .registerTypeAdapterFactory(new WebPreparedStatementResponseTypeAdapterFactory())
+                        .registerTypeAdapterFactory(new WebQueryResponseTypeAdapterFactory())
+                        .registerTypeAdapterFactory(new PreparedParameterTypeAdapterFactory())
+                        .registerTypeAdapterFactory(new WebPreparedStatementTypeAdapterFactory())
+                        .create();
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
         String body = "query-descriptor=" + URLEncoder.encode(strDescriptor, "UTF-8") + "&category-id=" + categoryId;
         out.write(body + "\n");
@@ -414,10 +417,13 @@ public class WebStorageEndpointTest {
         conn.setDoInput(true);
         conn.setDoOutput(true);
         Gson gson = new GsonBuilder()
-                .registerTypeHierarchyAdapter(WebQueryResponse.class, new WebQueryResponseSerializer<>())
-                .registerTypeAdapter(Pojo.class, new ThermostatGSONConverter())
-                .registerTypeAdapter(WebPreparedStatement.class, new WebPreparedStatementSerializer())
-                .registerTypeAdapter(PreparedParameter.class, new PreparedParameterSerializer()).create();
+                            .registerTypeAdapterFactory(new PojoTypeAdapterFactory())
+                            .registerTypeAdapterFactory(new WebPreparedStatementResponseTypeAdapterFactory())
+                            .registerTypeAdapterFactory(new WebQueryResponseTypeAdapterFactory())
+                            .registerTypeAdapterFactory(new PreparedParameterTypeAdapterFactory())
+                            .registerTypeAdapterFactory(new WebPreparedStatementTypeAdapterFactory())
+                            .registerTypeAdapterFactory(new PreparedParametersTypeAdapterFactory())
+                            .create();
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
         String body = "query-descriptor=" + URLEncoder.encode(strDescriptor, "UTF-8") + "&category-id=" + categoryId;
         out.write(body + "\n");
@@ -544,10 +550,13 @@ public class WebStorageEndpointTest {
             conn.setDoInput(true);
             conn.setDoOutput(true);
             Gson gson = new GsonBuilder()
-                    .registerTypeHierarchyAdapter(WebQueryResponse.class, new WebQueryResponseSerializer<>())
-                    .registerTypeAdapter(Pojo.class, new ThermostatGSONConverter())
-                    .registerTypeAdapter(WebPreparedStatement.class, new WebPreparedStatementSerializer())
-                    .registerTypeAdapter(PreparedParameter.class, new PreparedParameterSerializer()).create();
+                                .registerTypeAdapterFactory(new PojoTypeAdapterFactory())
+                                .registerTypeAdapterFactory(new WebPreparedStatementResponseTypeAdapterFactory())
+                                .registerTypeAdapterFactory(new WebQueryResponseTypeAdapterFactory())
+                                .registerTypeAdapterFactory(new PreparedParameterTypeAdapterFactory())
+                                .registerTypeAdapterFactory(new WebPreparedStatementTypeAdapterFactory())
+                                .registerTypeAdapterFactory(new PreparedParametersTypeAdapterFactory())
+                                .create();
             OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
             String body = "query-descriptor=" + URLEncoder.encode(strDescriptor, "UTF-8") + "&category-id=" + categoryId;
             out.write(body + "\n");
@@ -664,10 +673,13 @@ public class WebStorageEndpointTest {
         conn.setDoInput(true);
         conn.setDoOutput(true);
         Gson gson = new GsonBuilder()
-                .registerTypeHierarchyAdapter(WebQueryResponse.class, new WebQueryResponseSerializer<>())
-                .registerTypeAdapter(Pojo.class, new ThermostatGSONConverter())
-                .registerTypeAdapter(WebPreparedStatement.class, new WebPreparedStatementSerializer())
-                .registerTypeAdapter(PreparedParameter.class, new PreparedParameterSerializer()).create();
+                            .registerTypeAdapterFactory(new PojoTypeAdapterFactory())
+                            .registerTypeAdapterFactory(new WebPreparedStatementResponseTypeAdapterFactory())
+                            .registerTypeAdapterFactory(new WebQueryResponseTypeAdapterFactory())
+                            .registerTypeAdapterFactory(new PreparedParameterTypeAdapterFactory())
+                            .registerTypeAdapterFactory(new WebPreparedStatementTypeAdapterFactory())
+                            .registerTypeAdapterFactory(new PreparedParametersTypeAdapterFactory())
+                            .create();
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
         String body = "query-descriptor=" + URLEncoder.encode(strDescriptor, "UTF-8") + "&category-id=" + categoryId;
         out.write(body + "\n");
@@ -793,9 +805,12 @@ public class WebStorageEndpointTest {
             conn.setDoInput(true);
             conn.setDoOutput(true);
             Gson gson = new GsonBuilder()
-                    .registerTypeHierarchyAdapter(Pojo.class, new ThermostatGSONConverter())
-                    .registerTypeAdapter(WebPreparedStatement.class, new WebPreparedStatementSerializer())
-                    .registerTypeAdapter(PreparedParameter.class, new PreparedParameterSerializer()).create();
+                .registerTypeAdapterFactory(new PojoTypeAdapterFactory())
+                .registerTypeAdapterFactory(new PreparedParameterTypeAdapterFactory())
+                .registerTypeAdapterFactory(new WebPreparedStatementTypeAdapterFactory())
+                .registerTypeAdapterFactory(new WebPreparedStatementResponseTypeAdapterFactory())
+                .registerTypeAdapterFactory(new PreparedParametersTypeAdapterFactory())
+                .create();
             OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
             String body = "query-descriptor=" + URLEncoder.encode(strDescriptor, "UTF-8") + "&category-id=" + categoryId;
             out.write(body + "\n");

@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.common;
+package com.redhat.thermostat.web.common.typeadapters;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -49,20 +49,18 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.model.AgentInformation;
-import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.model.VmInfo.KeyValuePair;
 
-public class PreparedParameterSerializerTest {
+public class PreparedParameterTypeAdapterTest {
 
     private Gson gson;
     
     @Before
     public void setup() {
         gson = new GsonBuilder()
-            .registerTypeHierarchyAdapter(Pojo.class, new ThermostatGSONConverter())
-            .registerTypeAdapter(
-                PreparedParameter.class,
-                new PreparedParameterSerializer()).create();
+                .registerTypeAdapterFactory(new PojoTypeAdapterFactory())
+                .registerTypeAdapterFactory(new PreparedParameterTypeAdapterFactory())
+                .create();
     }
     
     @Test
@@ -256,33 +254,33 @@ public class PreparedParameterSerializerTest {
     @Test
     public void canSerializeBasic() {
         // String
-        String expected = "{\"value\":\"testing\",\"type\":\"java.lang.String\"}";
+        String expected = "{\"type\":\"java.lang.String\",\"value\":\"testing\"}";
         PreparedParameter param = new PreparedParameter();
         param.setType(String.class);
         param.setValue("testing");
         String actual = gson.toJson(param);
         assertEquals(expected, actual);
         // Integer
-        expected = "{\"value\":-1,\"type\":\"int\"}";
+        expected = "{\"type\":\"int\",\"value\":-1}";
         param.setType(int.class);
         param.setValue(-1);
         actual = gson.toJson(param);
         assertEquals(expected, actual);
         // Long
-        expected = "{\"value\":30000000003,\"type\":\"long\"}";
+        expected = "{\"type\":\"long\",\"value\":30000000003}";
         param.setType(long.class);
         param.setValue(30000000003L);
         actual = gson.toJson(param);
         assertEquals(expected, actual);
         // boolean
-        expected = "{\"value\":true,\"type\":\"boolean\"}";
+        expected = "{\"type\":\"boolean\",\"value\":true}";
         param.setType(boolean.class);
         param.setValue(true);
         actual = gson.toJson(param);
         assertEquals(expected, actual);
         // String[]
         String strArrayVal = "[\"testing1\",\"testing2\",\"3\"]";
-        expected = "{\"value\":" + strArrayVal + ",\"type\":\"[Ljava.lang.String;\"}";
+        expected = "{\"type\":\"[Ljava.lang.String;\",\"value\":" + strArrayVal + "}";
         param.setType(String[].class);
         String[] array = new String[] {
                 "testing1", "testing2", "3"
