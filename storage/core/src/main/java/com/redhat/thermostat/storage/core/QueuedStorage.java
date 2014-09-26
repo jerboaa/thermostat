@@ -501,7 +501,7 @@ public class QueuedStorage implements Storage {
      * the heck out of clients.
      */
     public QueuedStorage(Storage delegate, PerformanceLogFormatter perfLogFormatter) {
-        this(delegate, Executors.newSingleThreadExecutor(), Executors.newSingleThreadExecutor(), perfLogFormatter);
+        this(delegate, Executors.newFixedThreadPool(250), Executors.newFixedThreadPool(250));
     }
 
     QueuedStorage(Storage delegate, ExecutorService executor, ExecutorService fileExecutor) {
