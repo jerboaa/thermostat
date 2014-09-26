@@ -37,14 +37,14 @@
 
 package com.redhat.thermostat.storage.core;
 
-import static org.mockito.Mockito.mock;
-import static org.junit.Assert.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 public class QueuedStorageExecutorTest {
 
@@ -55,32 +55,19 @@ public class QueuedStorageExecutorTest {
 
     private volatile int activeTasks;
 
-    private volatile boolean passed;
-    private volatile Thread workerThread;
-
     private CountDownLatch latch;
 
     private class TestRunnable implements Runnable {
         public void run() {
-            if (activeTasks != 0) {
-                passed = false;
-            }
-            synchronized(QueuedStorageExecutorTest.this) {
-                if (workerThread == null) {
-                    workerThread = Thread.currentThread();
-                } else {
-                    if (workerThread != Thread.currentThread()) {
-                        passed = false;
-                    }
+            synchronized (QueuedStorageExecutorTest.class) {
+                activeTasks++;
+                try {
+                    Thread.sleep(TASK_DURATION_MS);
+                } catch (InterruptedException e) {
+                    // Get out of here ASAP.
                 }
+                activeTasks--;
             }
-            activeTasks++;
-            try {
-                Thread.sleep(TASK_DURATION_MS);
-            } catch (InterruptedException e) {
-                // Get out of here ASAP.
-            }
-            activeTasks--;
             latch.countDown();
         }
     }
@@ -90,8 +77,6 @@ public class QueuedStorageExecutorTest {
         Storage mockStorage = mock(Storage.class);
         queuedStorage = new QueuedStorage(mockStorage);
         activeTasks = 0;
-        passed = true;
-        workerThread = null;
         latch = null;
     }
 
@@ -99,8 +84,6 @@ public class QueuedStorageExecutorTest {
     public void tearDown() {
         queuedStorage = null;
         activeTasks = 0;
-        passed = true;
-        workerThread = null;
         latch = null;
     }
 
@@ -132,7 +115,7 @@ public class QueuedStorageExecutorTest {
         } catch (InterruptedException e) {
             // Get out as soon as possible.
         }
-        assertTrue(passed);
+        assertTrue(activeTasks == 0);
     }
 
 
