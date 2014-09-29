@@ -24,9 +24,9 @@
               com.redhat.thermostat.killvm.client.internal,
               com.redhat.thermostat.killvm.client.locale,
             </Private-Package>
+            <!-- Do not autogenerate uses clauses in Manifests -->
+            <_nouses>true</_nouses>
           </instructions>
-          <!-- Do not autogenerate uses clauses in Manifests -->
-          <_nouses>true</_nouses>
         </configuration>
       </plugin>
     </plugins>

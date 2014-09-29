@@ -66,6 +66,7 @@
         <include>com.redhat.thermostat:thermostat-vm-overview-distribution</include>
         <include>com.redhat.thermostat:thermostat-schema-info-distribution</include>
         <include>com.redhat.thermostat:thermostat-web-endpoint-distribution</include>
+        <include>com.redhat.thermostat:thermostat-killvm-distribution</include>
       </includes>
     </dependencySet>  
   </dependencySets>

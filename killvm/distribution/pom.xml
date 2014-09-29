@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 
+<!--
 
  Copyright 2012-2014 Red Hat, Inc.
 
@@ -36,33 +36,62 @@
  to do so, delete this exception statement from your version.
 
 -->
+
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-
   <parent>
     <groupId>com.redhat.thermostat</groupId>
-    <artifactId>thermostat</artifactId>
+    <artifactId>thermostat-killvm</artifactId>
     <version>1.1.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>thermostat-killvm</artifactId>
+  <artifactId>thermostat-killvm-distribution</artifactId>
   <packaging>pom</packaging>
 
-  <name>Thermostat Kill VM Plugins</name>
+  <name>Thermostat KillVM Distribution</name>
 
+  <properties>
+    <thermostat.plugin>killvm</thermostat.plugin>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <dependencies>
+          <dependency>
+            <groupId>com.redhat.thermostat</groupId>
+            <artifactId>thermostat-assembly</artifactId>
+            <version>${project.version}</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <descriptorRefs>
+            <descriptorRef>plugin-assembly</descriptorRef>
+          </descriptorRefs>
+          <appendAssemblyId>false</appendAssemblyId>
+        </configuration>
+        <executions>
+          <execution>
+            <id>assemble-plugin</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <!-- Explicitly list all plug-in artifacts, transitive dependencies
+       are not included in assembly. -->
   <dependencies>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-killvm-command</artifactId>
+      <version>${project.version}</version>
     </dependency>
   </dependencies>
-
-  <modules>
-    <module>client-swing</module>
-    <module>agent</module>
-    <module>command</module>
-    <module>distribution</module>
-  </modules>
 </project>
 
