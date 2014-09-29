@@ -38,6 +38,7 @@ package com.redhat.thermostat.vm.cpu.common.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -60,6 +61,7 @@ import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.testutils.StatementDescriptorTester;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
 
@@ -83,6 +85,19 @@ public class VmCpuStatDAOTest {
                                                 "'timeStamp' = ?l , " +
                                                 "'cpuLoad' = ?d";
         assertEquals(addCpuStat, VmCpuStatDAOImpl.DESC_ADD_VM_CPU_STAT);
+    }
+    
+    @Test
+    public void canParseDescriptor() {
+        StatementDescriptorTester<VmCpuStat> tester = new StatementDescriptorTester<>();
+        StatementDescriptor<VmCpuStat> desc = new StatementDescriptor<>(VmCpuStatDAO.vmCpuStatCategory, VmCpuStatDAOImpl.DESC_ADD_VM_CPU_STAT);
+        try {
+            tester.testParseBasic(desc);
+            tester.testParseSemantic(desc);
+            // pass
+        } catch (DescriptorParsingException e) {
+            fail(e.getMessage());
+        }
     }
 
     @Test

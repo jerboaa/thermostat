@@ -41,29 +41,33 @@
 
   <parent>
     <groupId>com.redhat.thermostat</groupId>
-    <artifactId>thermostat</artifactId>
+    <artifactId>thermostat-storage</artifactId>
     <version>1.1.0-SNAPSHOT</version>
   </parent>
+  
+  <artifactId>thermostat-storage-testutils</artifactId>
+  <!-- Intentionally not a bundle. This module
+       provides utilities for testing statement
+       descriptors outside of storage-core -->
+  <packaging>jar</packaging>
 
-  <artifactId>thermostat-storage</artifactId>
-  <packaging>pom</packaging>
-
-  <name>Thermostat Storage (DB) Drivers</name>
+  <name>Thermostat Storage Test Utils</name>
 
   <dependencies>
+    <!-- Uses classes from storage-core -->
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-storage-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <!-- Intentionally not scope "test" since this utility uses mockito for
+         stubbing in src/main/java. However, this test utility
+         should only be used as a dep with scope "test". -->
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
     </dependency>
   </dependencies>
-
-  <modules>
-    <module>core</module>
-    <module>cli</module>
-    <module>mongo</module>
-    <module>testutils</module>
-  </modules>
 
 </project>
 
