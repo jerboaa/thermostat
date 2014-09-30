@@ -50,6 +50,7 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.perflog.PerformanceLogFormatter;
 import com.redhat.thermostat.shared.perflog.PerformanceLogFormatter.LogTag;
 import com.redhat.thermostat.storage.internal.CountingDecorator;
+import com.redhat.thermostat.storage.internal.ThreadPoolSizeRetriever;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
 
@@ -493,15 +494,12 @@ public class QueuedStorage implements Storage {
         this(delegate, null);
     }
     
-    /*
-     * NOTE: We intentionally use single-thread executor. All updates are put into
-     * a queue, from which a single dispatch thread calls the underlying
-     * storage. Using multiple dispatch threads could cause out-of-order issues,
-     * e.g. a VM death being reported before its VM start, which could confuse
-     * the heck out of clients.
-     */
     public QueuedStorage(Storage delegate, PerformanceLogFormatter perfLogFormatter) {
-        this(delegate, Executors.newFixedThreadPool(250), Executors.newFixedThreadPool(250));
+        this(delegate, perfLogFormatter, new ThreadPoolSizeRetriever().getPoolSize());
+    }
+    
+    QueuedStorage(Storage delegate, PerformanceLogFormatter perflogFormatter, int poolSize) {
+        this(delegate, Executors.newFixedThreadPool(poolSize), Executors.newFixedThreadPool(poolSize), perflogFormatter);
     }
 
     QueuedStorage(Storage delegate, ExecutorService executor, ExecutorService fileExecutor) {
