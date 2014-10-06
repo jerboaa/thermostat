@@ -37,9 +37,11 @@
 package com.redhat.thermostat.internal.utils.laf.gtk;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
+import javax.swing.JLabel;
 import javax.swing.UIManager;
 
 import com.redhat.thermostat.shared.config.NativeLibraryResolver;
@@ -62,6 +64,7 @@ public class GTKThemeUtils {
     native private static boolean init();
     native private static boolean hasColor(String id);
     native private static int getColor(String id);
+    native private static String getDefaultFont();
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public static Color getColor(String name, float hOffset, float sOffset,
@@ -109,7 +112,7 @@ public class GTKThemeUtils {
         return result;
     }
     
-    public void setNimbusColours() {
+    public void setNimbusColoursAndFont() {
 
         if (!nativeLoaded) {
             return;
@@ -120,7 +123,77 @@ public class GTKThemeUtils {
         }
         
         initialized = true;
-        
+
+        if (!Boolean.getBoolean("skip.system.fonts")) {
+            String defaultFontDesc = getDefaultFont();
+            if (!defaultFontDesc.isEmpty()) {
+                Font font = Font.decode(defaultFontDesc);
+
+                // Java2D uses 72dpi based size, Gnome sizes are configurable.
+                // Also, it's possible (but unlikely) that Java2D may change this
+                // default to accomodate high resolution displays, so rather than
+                // figuring out what's the real size given the possible
+                // resolution, let's ask this to Java2D directly. This may make
+                // our default fonts different than proper native application,
+                // but we don't care as long as it looks good. If not, use
+                // the property above
+                float size = new JLabel().getFont().getSize2D();
+                font = font.deriveFont(size);
+
+                // The following list applies to Nimbus and is given by the
+                // official documentation at this URL:
+                // http://docs.oracle.com/javase/tutorial/uiswing/lookandfeel/_nimbusDefaults.html
+
+                UIManager.put("FileChooser.font", font);
+                UIManager.put("RootPane.font", font);
+                UIManager.put("TextPane.font", font);
+                UIManager.put("FormattedTextField.font", font);
+                UIManager.put("Spinner.font", font);
+                UIManager.put("PopupMenuSeparator.font", font);
+                UIManager.put("Table.font", font);
+                UIManager.put("TextArea.font", font);
+                UIManager.put("Slider.font", font);
+                UIManager.put("InternalFrameTitlePane.font", font);
+                UIManager.put("DesktopPane.font", font);
+                UIManager.put("Menu.font", font);
+                UIManager.put("PasswordField.font", font);
+                UIManager.put("InternalFrame.font", font);
+                UIManager.put("Button.font", font);
+                UIManager.put("Panel.font", font);
+                UIManager.put("MenuBar.font", font);
+                UIManager.put("ComboBox.font", font);
+                UIManager.put("Tree.font", font);
+                UIManager.put("EditorPane.font", font);
+                UIManager.put("ToggleButton.font", font);
+                UIManager.put("TabbedPane.font", font);
+                UIManager.put("TableHeader.font", font);
+                UIManager.put("List.font", font);
+                UIManager.put("PopupMenu.font", font);
+                UIManager.put("ToolTip.font", font);
+                UIManager.put("Separator.font", font);
+                UIManager.put("RadioButtonMenuItem.font", font);
+                UIManager.put("RadioButton.font", font);
+                UIManager.put("ToolBar.font", font);
+                UIManager.put("ScrollPane.font", font);
+                UIManager.put("CheckBoxMenuItem.font", font);
+                UIManager.put("Viewport.font", font);
+                UIManager.put("TextField.font", font);
+                UIManager.put("SplitPane.font", font);
+                UIManager.put("MenuItem.font", font);
+                UIManager.put("OptionPane.font", font);
+                UIManager.put("ArrowButton.font", font);
+                UIManager.put("Label.font", font);
+                UIManager.put("ProgressBar.font", font);
+                UIManager.put("ScrollBar.font", font);
+                UIManager.put("ScrollBarThumb.font", font);
+                UIManager.put("ScrollBarTrack.font", font);
+                UIManager.put("SliderThumb.font", font);
+                UIManager.put("SliderTrack.font", font);
+                UIManager.put("TitledBorder.font", font);
+
+                UIManager.put("thermostat-default-font", font);
+            }
+        }
         // if we at least have the fg colour we can try the rest,
         // otherwise, just skip everything and use nimbus defaults        
         if (hasColor("fg_color")) {
@@ -147,9 +220,8 @@ public class GTKThemeUtils {
             float brightnessOffset = -.300f;
             
             Color nimbusBase = deriveColor("bg_color", UIManager.getDefaults().getColor("nimbusBase"), brightnessOffset);
-            Color control = UIManager.getDefaults().getColor("control");
             int bgColor = getColor("bg_color");
-            control = new Color(bgColor);
+            Color control = new Color(bgColor);
             
             Color info = control;
             
@@ -158,10 +230,9 @@ public class GTKThemeUtils {
             UIManager.put("control", control);
             UIManager.put("info", info);
             
-            Color nimbusFocus = UIManager.getDefaults().getColor("nimbusFocus");
             if (hasColor("selected_bg_color")) {
                 int fgColor = getColor("selected_bg_color");
-                nimbusFocus = new Color(fgColor);
+                Color nimbusFocus = new Color(fgColor);
                 
                 UIManager.put("nimbusFocus", nimbusFocus);
                 UIManager.put("nimbusSelectionBackground", nimbusFocus);

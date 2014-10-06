@@ -138,7 +138,7 @@ public class ThemeManager {
         
         if (tryGTKColors) {
             GTKThemeUtils utils = new GTKThemeUtils();
-            utils.setNimbusColours();
+            utils.setNimbusColoursAndFont();
         }
         
         // TODO: document those or place them into a proper UI class

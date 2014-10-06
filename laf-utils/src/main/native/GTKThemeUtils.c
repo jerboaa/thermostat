@@ -142,3 +142,36 @@ bailString:
     return pixel;
 }
 
+JNIEXPORT jstring JNICALL
+Java_com_redhat_thermostat_internal_utils_laf_gtk_GTKThemeUtils_getDefaultFont
+    (JNIEnv *env, jclass GTKThemeUtils)
+{
+    jstring result = NULL;
+    char* fontName = NULL;
+    GtkWidget *dummy = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    if (dummy == NULL) {
+        goto bailString;
+    }
+
+    gtk_widget_ensure_style(dummy);
+
+    GtkStyle *style = gtk_rc_get_style(dummy);
+    if (style != NULL) {
+        PangoFontDescription *desc = style->font_desc;
+	fontName = pango_font_description_to_string(desc);
+
+        // fprintf(stderr, "default font: %s\n", fontName);
+    }
+
+    gtk_widget_destroy(dummy);
+
+bailString:
+    if (fontName == NULL) {
+        result = (*env)->NewStringUTF(env, "");
+    } else {
+        result = (*env)->NewStringUTF(env, fontName);
+        g_free(fontName);
+    }
+
+    return result;
+}

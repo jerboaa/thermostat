@@ -38,6 +38,8 @@ package com.redhat.thermostat.client.swing.internal.vmlist;
 
 import java.awt.Color;
 
+import java.awt.Font;
+import javax.swing.JLabel;
 import javax.swing.UIManager;
 
 import com.redhat.thermostat.client.ui.Palette;
@@ -48,7 +50,13 @@ public class UIDefaultsImpl implements com.redhat.thermostat.client.swing.UIDefa
     public static UIDefaultsImpl getInstance() {
         return palette;
     }
-    
+
+    @Override
+    public Font getDefaultFont() {
+        Font font = (Font) UIManager.get("thermostat-default-font");
+        return font != null ? font : new JLabel().getFont();
+    }
+
     public Color getSelectedComponentFGColor() {
         Color color = (Color) UIManager.get("thermostat-selection-fg-color");
         return color != null ? color : Palette.LIGHT_GRAY.getColor();        

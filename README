@@ -12,7 +12,8 @@ CONTENT:
 3.1.1 PASSING JVM SPECIFIC OPTIONS
 3.1.2 GNOME KEYRING
 4.  EXTENDING THERMOSTAT
-5.  REFERENCES
+5.  SYSTEM PROPERTIES
+6.  REFERENCES
 
 
 --------------------------------------------------------------------------------
@@ -136,7 +137,69 @@ will be stored.
 The README.api file contains a list of public/support API of thermostat.
 
 --------------------------------------------------------------------------------
-5. REFERENCES
+5. SYSTEM PROPERTIES
+
+Although Thermostat by default is configured to behave in the best possible
+way, there is a number of system properties that allows tweaking the behaviour
+of specific areas of the platform.
+
+Here follows the description for the release
+referred by this README. Please, refer to 
+[3.1.1. PASSING JVM SPECIFIC OPTIONS TO THERMOSTAT] for an explanation
+on how to pass system properties to Thermostat.
+
+IMPORTANT NOTE: Those properties should be considered internal and
+may not be used or available in all the releases. Likewise, defaults may
+change at any given time without notice.
+
+* Font Tweaks, Swing GUI only
+
+  skip.system.fonts=<boolean>
+
+By default, Thermostat tries to use the same fonts used by GTK on the
+currently running Desktop. When this property is set to false, the process
+is skipped.
+
+This property is only valid if the default look and feel is used, otherwise
+is ignored.
+
+* Windows Translucency, Swing GUI only
+
+  com.redhat.thermostat.popup.opaque=<boolean>
+
+By default, Thermostat tries to use translucency popup menus to add a
+subtle effect to its user interface. The user can request fully opaque
+windows to be used instead, by setting this property to false.
+
+Note that not all desktop environment support transparency, so this
+property may not have any effect.
+
+  com.redhat.thermostat.popup.transparency=<float>
+
+If transparent windows are used, this property influences the amount of
+transparency of the windows. The valid range is 0.0 for fully transparent
+and 1.0 for fully opaque, the default value is 0.90.
+
+* Mongo Storage Profiling, Mongo Storage only
+
+  thermostat.storage.mongo.profile=<boolean>
+
+Thermostat has some intstrumentation code to perform analysis of the
+backend databases. In the case of MongoDB, it is possible to run additional
+analysis by using Mongo profiling features. The default is to run MongoDB
+without profiling support, to turn profiling on this property should be set
+to true. This option has only effect when Thermostat is directly responsible
+to start the database backend, is ignored otherwise.
+
+  thermostat.storage.mongo.profile.slowms=<integer>
+
+This property has only effect in conjuction with
+"thermostat.storage.mongo.profile=true" and controls the threshold in
+milliseconds to decide if a database operation is considere a "slow". The
+default is 100.
+
+--------------------------------------------------------------------------------
+6. REFERENCES
 
   User Guide:
     http://icedtea.classpath.org/wiki/Thermostat/UserGuide

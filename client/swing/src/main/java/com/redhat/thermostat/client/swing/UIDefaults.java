@@ -36,17 +36,22 @@
 
 package com.redhat.thermostat.client.swing;
 
-import java.awt.Color;
-import java.awt.Paint;
-
 import com.redhat.thermostat.annotations.Service;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Paint;
 
 /**
  * Returns the default UI defaults used by this Thermostat client.
  */
 @Service
 public interface UIDefaults {
-    
+
+    /**
+     * Returns the default font used by Thermostat.
+     */
+    Font getDefaultFont();
+
     /**
      * Returns the foreground colour for components that are
      * selected, like text or entries in the reference field panel.
