@@ -1,0 +1,10 @@
+
+Code Style
+==========
+
+The standard license header goes on top of every file. It's enforced
+using a maven plugin. Use `mvn license:format` to generate/update it.
+The license template is defined in `src/license/header.txt`.
+
+See also: http://icedtea.classpath.org/wiki/Thermostat/DevelopmentStyleGuide
+
