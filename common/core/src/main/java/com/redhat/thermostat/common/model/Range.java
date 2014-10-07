@@ -84,7 +84,6 @@ public class Range<T extends Number> {
         return Objects.equals(this.min, other.min) && Objects.equals(this.max, other.max);
     }
 
-    /** Note: It's not a good idea to use mutable values (like {@code Range}) as a hash */
     @Override
     public int hashCode() {
         return Objects.hash(min, max);
