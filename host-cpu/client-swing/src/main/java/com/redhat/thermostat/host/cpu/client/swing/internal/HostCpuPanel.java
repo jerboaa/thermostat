@@ -39,19 +39,18 @@ package com.redhat.thermostat.host.cpu.client.swing.internal;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
+import java.awt.BorderLayout;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.Alignment;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
+import javax.swing.Box;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
@@ -233,49 +232,59 @@ public class HostCpuPanel extends HostCpuView implements SwingComponent {
         legendPanel = new JPanel(new WrapLayout(FlowLayout.LEADING));
         legendPanel.setOpaque(false);
 
-        GroupLayout groupLayout = new GroupLayout(visiblePanel);
-        groupLayout.setHorizontalGroup(
-            groupLayout.createParallelGroup(Alignment.TRAILING)
-                .addGroup(groupLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-                        .addComponent(legendPanel, GroupLayout.DEFAULT_SIZE, 427, Short.MAX_VALUE)
-                        .addComponent(chartPanel, GroupLayout.DEFAULT_SIZE, 427, Short.MAX_VALUE)
-                        .addComponent(summaryLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                        .addGroup(groupLayout.createSequentialGroup()
-                            .addGap(12)
-                            .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-                                .addGroup(groupLayout.createSequentialGroup()
-                                    .addPreferredGap(ComponentPlacement.RELATED)
-                                    .addComponent(cpuCountLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                                    .addGap(18)
-                                    .addComponent(cpuCount, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                .addGroup(groupLayout.createSequentialGroup()
-                                    .addComponent(cpuModelLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                                    .addGap(18)
-                                    .addComponent(cpuModel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))))
-                    .addGap(11))
-        );
-        groupLayout.setVerticalGroup(
-            groupLayout.createParallelGroup(Alignment.LEADING)
-                .addGroup(groupLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .addComponent(summaryLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                    .addPreferredGap(ComponentPlacement.RELATED)
-                    .addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
-                        .addComponent(cpuModelLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                        .addComponent(cpuModel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-                    .addGap(10)
-                    .addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
-                        .addComponent(cpuCount, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                        .addComponent(cpuCountLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-                    .addGap(18)
-                    .addComponent(chartPanel, GroupLayout.DEFAULT_SIZE, 263, Short.MAX_VALUE)
-                    .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(legendPanel, GroupLayout.PREFERRED_SIZE, 30, GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap())
-        );
-        visiblePanel.setLayout(groupLayout);
+        JPanel mainPanel = new JPanel();
+
+        BorderLayout northPanelBorderLayout = new BorderLayout();
+        northPanelBorderLayout.setVgap(5);
+        northPanelBorderLayout.setHgap(10);
+        JPanel northPanel = new JPanel();
+        northPanel.setLayout(northPanelBorderLayout);
+
+        BorderLayout cpuCommonBorderLayout = new BorderLayout();
+        cpuCommonBorderLayout.setVgap(5);
+        JPanel cpuCommonPanel = new JPanel();
+        cpuCommonPanel.setLayout(cpuCommonBorderLayout);
+
+        BorderLayout cpuModelBorderLayout = new BorderLayout();
+        cpuModelBorderLayout.setHgap(25);
+
+        JPanel cpuModelPanel = new JPanel();
+        cpuModelPanel.setLayout(cpuModelBorderLayout);
+        cpuModelPanel.add(cpuModelLabel, BorderLayout.WEST);
+        cpuModelPanel.add(cpuModel, BorderLayout.CENTER);
+
+        BorderLayout cpuCountBorderLayout = new BorderLayout();
+        cpuCountBorderLayout.setHgap(25);
+
+        JPanel cpuCountPanel = new JPanel();
+        cpuCountPanel.setLayout(cpuCountBorderLayout);
+        cpuCountPanel.add(cpuCountLabel, BorderLayout.WEST);
+        cpuCountPanel.add(cpuCount, BorderLayout.CENTER);
+
+        cpuCommonPanel.add(cpuModelPanel, BorderLayout.NORTH);
+        cpuCommonPanel.add(cpuCountPanel, BorderLayout.SOUTH);
+
+        northPanel.add(summaryLabel, BorderLayout.NORTH);
+        northPanel.add(Box.createGlue(), BorderLayout.WEST);
+        northPanel.add(cpuCommonPanel, BorderLayout.CENTER);
+
+        BorderLayout mainPanelBorderLayout = new BorderLayout();
+        mainPanelBorderLayout.setHgap(5);
+        mainPanelBorderLayout.setVgap(10);
+        mainPanel.setLayout(mainPanelBorderLayout);
+
+        mainPanel.add(northPanel, BorderLayout.NORTH);
+        mainPanel.add(Box.createGlue(), BorderLayout.WEST);
+        mainPanel.add(chartPanel, BorderLayout.CENTER);
+        mainPanel.add(Box.createGlue(), BorderLayout.EAST);
+        mainPanel.add(legendPanel, BorderLayout.SOUTH);
+
+        BorderLayout visiblePanelBorderLayout = new BorderLayout();
+        visiblePanelBorderLayout.setVgap(10);
+        visiblePanel.setLayout(visiblePanelBorderLayout);
+        visiblePanel.add(Box.createGlue(), BorderLayout.NORTH);
+        visiblePanel.add(mainPanel, BorderLayout.CENTER);
+        visiblePanel.add(Box.createGlue(), BorderLayout.SOUTH);
     }
 
     /**

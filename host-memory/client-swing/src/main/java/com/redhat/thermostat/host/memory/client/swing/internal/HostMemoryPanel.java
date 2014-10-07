@@ -39,20 +39,19 @@ package com.redhat.thermostat.host.memory.client.swing.internal;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
+import java.awt.BorderLayout;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.Alignment;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
+import javax.swing.Box;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
@@ -265,38 +264,43 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
 
         memoryCheckBoxPanel.setOpaque(false);
 
-        GroupLayout groupLayout = new GroupLayout(visiblePanel);
-        groupLayout.setHorizontalGroup(
-            groupLayout.createParallelGroup(Alignment.LEADING)
-                .addGroup(groupLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-                        .addComponent(chartPanel, GroupLayout.DEFAULT_SIZE, 883, Short.MAX_VALUE)
-                        .addGroup(groupLayout.createSequentialGroup()
-                            .addGap(12)
-                            .addComponent(totalMemoryLabel)
-                            .addPreferredGap(ComponentPlacement.RELATED)
-                            .addComponent(totalMemory, GroupLayout.DEFAULT_SIZE, 751, Short.MAX_VALUE))
-                        .addComponent(lblMemory)
-                        .addComponent(memoryCheckBoxPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE))
-                    .addContainerGap())
-        );
-        groupLayout.setVerticalGroup(
-            groupLayout.createParallelGroup(Alignment.LEADING)
-                .addGroup(groupLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .addComponent(lblMemory)
-                    .addPreferredGap(ComponentPlacement.RELATED)
-                    .addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
-                        .addComponent(totalMemory, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                        .addComponent(totalMemoryLabel))
-                    .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(chartPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, Short.MAX_VALUE)
-                    .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(memoryCheckBoxPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap())
-        );
-        visiblePanel.setLayout(groupLayout);
+        JPanel mainPanel = new JPanel();
+
+        JPanel totalMemoryPanel = new JPanel();
+        BorderLayout totalMemoryBorderLayout = new BorderLayout();
+        totalMemoryBorderLayout.setHgap(15);
+        totalMemoryPanel.setLayout(totalMemoryBorderLayout);
+        totalMemoryPanel.add(totalMemoryLabel, BorderLayout.WEST);
+        totalMemoryPanel.add(totalMemory, BorderLayout.CENTER);
+
+        JPanel northPanel = new JPanel();
+        BorderLayout northPanelBorderLayout = new BorderLayout();
+        northPanelBorderLayout.setVgap(5);
+        northPanelBorderLayout.setHgap(10);
+
+        northPanel.setLayout(northPanelBorderLayout);
+
+        northPanel.add(lblMemory, BorderLayout.NORTH);
+        northPanel.add(Box.createGlue(), BorderLayout.WEST);
+        northPanel.add(totalMemoryPanel, BorderLayout.CENTER);
+
+        BorderLayout mainPanelBorderLayout = new BorderLayout();
+        mainPanelBorderLayout.setHgap(5);
+        mainPanelBorderLayout.setVgap(10);
+        mainPanel.setLayout(mainPanelBorderLayout);
+
+        mainPanel.add(northPanel, BorderLayout.NORTH);
+        mainPanel.add(Box.createGlue(), BorderLayout.WEST);
+        mainPanel.add(chartPanel, BorderLayout.CENTER);
+        mainPanel.add(Box.createGlue(), BorderLayout.EAST);
+        mainPanel.add(memoryCheckBoxPanel, BorderLayout.SOUTH);
+
+        BorderLayout visiblePanelBorderLayout = new BorderLayout();
+        visiblePanelBorderLayout.setVgap(10);
+        visiblePanel.setLayout(visiblePanelBorderLayout);
+        visiblePanel.add(Box.createGlue(), BorderLayout.NORTH);
+        visiblePanel.add(mainPanel, BorderLayout.CENTER);
+        visiblePanel.add(Box.createGlue(), BorderLayout.SOUTH);
     }
 
     private JFreeChart createMemoryChart() {
