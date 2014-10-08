@@ -91,6 +91,16 @@
       <artifactId>thermostat-killvm-command</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-killvm-agent</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-killvm-client-swing</artifactId>
+      <version>${project.version}</version>
+    </dependency>
   </dependencies>
 </project>
 

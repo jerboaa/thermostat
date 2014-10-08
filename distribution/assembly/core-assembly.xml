@@ -61,8 +61,6 @@
         <include>com.redhat.thermostat:thermostat-agent-command</include>
         <include>com.redhat.thermostat:thermostat-agent-proxy-common</include>
         <include>com.redhat.thermostat:thermostat-agent-proxy-server</include>
-        <include>com.redhat.thermostat:thermostat-killvm-agent</include>
-        <include>com.redhat.thermostat:thermostat-killvm-client-swing</include>
         <include>com.redhat.thermostat:thermostat-common-core</include>
         <include>com.redhat.thermostat:thermostat-common-command</include>
         <include>com.redhat.thermostat:thermostat-osgi-process-handler</include>

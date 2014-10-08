@@ -85,5 +85,19 @@
       </bundles>
     </command>
   </commands>
+  <extensions>
+    <extension>
+      <name>gui</name>
+      <bundles>
+        <bundle><symbolic-name>com.redhat.thermostat.killvm.client</symbolic-name><version>${project.version}</version></bundle>
+      </bundles>
+    </extension>
+    <extension>
+      <name>agent</name>
+      <bundles>
+        <bundle><symbolic-name>com.redhat.thermostat.killvm.agent</symbolic-name><version>${project.version}</version></bundle>
+      </bundles>
+    </extension>
+  </extensions>
 </plugin>
 
