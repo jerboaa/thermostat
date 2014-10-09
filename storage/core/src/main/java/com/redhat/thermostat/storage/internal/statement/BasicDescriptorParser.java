@@ -183,7 +183,7 @@ class BasicDescriptorParser<T extends Pojo> implements StatementDescriptorParser
         this.tree = new SuffixExpression();
         matchSuffix();
         if (currTokenIndex != tokens.length) {
-            throw new DescriptorParsingException("Incomplete parse");
+            throw new DescriptorParsingException("Incomplete parse of '" + desc.toString() + "'");
         }
         parsedStatement.setNumFreeParams(placeHolderCount);
         parsedStatement.setSetList(setList);
