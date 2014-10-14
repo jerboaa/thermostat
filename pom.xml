@@ -453,11 +453,13 @@ password=${agent.dev.password}
          <groupId>com.mycila</groupId>
          <artifactId>license-maven-plugin</artifactId>
          <version>2.6</version>
+         <inherited>false</inherited>
          <configuration>
            <headerDefinitions>
              <headerDefinition>src/license/thermostat-java.xml</headerDefinition>
              <headerDefinition>src/license/thermostat-xml.xml</headerDefinition>
            </headerDefinitions>
+           <aggregate>true</aggregate>
            <mapping>
              <java>THERMOSTAT_JAVA_STYLE</java>
              <xml>THERMOSTAT_XML_STYLE</xml>
