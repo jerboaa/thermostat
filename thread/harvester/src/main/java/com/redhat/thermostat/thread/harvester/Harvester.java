@@ -55,7 +55,7 @@ import javax.management.MalformedObjectNameException;
 class Harvester {
 
     static final long DEFAULT_INITIAL_DELAY = 0;
-    static final long DEFAULT_PERIOD = 25;
+    static final long DEFAULT_PERIOD = 250;
     static final TimeUnit DEFAULT_TIME_UNIT = TimeUnit.MILLISECONDS;
 
     private static final Logger logger = LoggingUtils.getLogger(Harvester.class);
