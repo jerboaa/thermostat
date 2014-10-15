@@ -44,49 +44,55 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
 /**
- * @see HostTimeIntervalPojoListGetter
+ * Get a {@link List} of {@link TimeStampedPojo}s in a given time interval
+ * range.
+ *
+ * @see VmLatestPojoListGetter
  */
-public class HostLatestPojoListGetter<T extends TimeStampedPojo> extends AbstractGetter<T> {
+public class VmTimeIntervalPojoListGetter <T extends TimeStampedPojo> extends AbstractGetter<T> {
 
-    public static final String HOST_LATEST_QUERY_FORMAT = "QUERY %s WHERE '"
+    public static final String VM_INTERVAL_QUERY_FORMAT = "QUERY %s WHERE '"
             + Key.AGENT_ID.getName() + "' = ?s AND '"
-            + Key.TIMESTAMP.getName() + "' > ?l SORT '"
+            + Key.VM_ID.getName() + "' = ?s AND '" 
+            + Key.TIMESTAMP.getName() + "' > ?l AND '"
+            + Key.TIMESTAMP.getName() + "' < ?l SORT '"
             + Key.TIMESTAMP.getName() + "' DSC";
 
-    private static final Logger logger = LoggingUtils.getLogger(HostLatestPojoListGetter.class);
-    
+    private static final Logger logger = LoggingUtils.getLogger(VmTimeIntervalPojoListGetter.class);
+
     private final Storage storage;
     private final Category<T> cat;
-    private final String queryLatest;
+    private final String query;
 
-    public HostLatestPojoListGetter(Storage storage, Category<T> cat) {
+    public VmTimeIntervalPojoListGetter(Storage storage, Category<T> cat) {
         this.storage = storage;
         this.cat = cat;
-        this.queryLatest = String.format(HOST_LATEST_QUERY_FORMAT, cat.getName());
+        this.query = String.format(VM_INTERVAL_QUERY_FORMAT, cat.getName());
     }
 
-    public List<T> getLatest(HostRef hostRef, long since) {
-        PreparedStatement<T> query = buildQuery(hostRef, since);
+    public List<T> getLatest(VmRef vmRef, long since, long to) {
+        PreparedStatement<T> query = buildQuery(vmRef, since, to);
         return getLatestOrEmpty(query);
     }
 
-    PreparedStatement<T> buildQuery(HostRef hostRef, long since) {
-        StatementDescriptor<T> desc = new StatementDescriptor<>(cat, queryLatest);
+    protected PreparedStatement<T> buildQuery(VmRef vmRef, long since, long to) {
+        StatementDescriptor<T> desc = new StatementDescriptor<>(cat, query);
         PreparedStatement<T> stmt = null;
         try {
             stmt = storage.prepareStatement(desc);
-            stmt.setString(0, hostRef.getAgentId());
-            stmt.setLong(1, since);
+            stmt.setString(0, vmRef.getHostRef().getAgentId());
+            stmt.setString(1, vmRef.getVmId());
+            stmt.setLong(2, since);
+            stmt.setLong(3, to);
         } catch (DescriptorParsingException e) {
             // should not happen, but if it *does* happen, at least log it
             logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
         }
         return stmt;
     }
-    
-    // package private for testing
+
+    // package private for tests
     String getQueryLatestDesc() {
-        return queryLatest;
+        return query;
     }
 }
-

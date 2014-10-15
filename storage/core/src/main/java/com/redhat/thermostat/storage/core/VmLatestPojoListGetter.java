@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.storage.core;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -45,7 +43,12 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
-public class VmLatestPojoListGetter<T extends TimeStampedPojo> {
+/**
+ * Get a {@link List} of {@link TimeStampedPojo}s newer than a given time stamp.
+ *
+ * @see VmTimeIntervalPojoListGetter
+ */
+public class VmLatestPojoListGetter<T extends TimeStampedPojo> extends AbstractGetter<T> {
     
     public static final String VM_LATEST_QUERY_FORMAT = "QUERY %s WHERE '"
             + Key.AGENT_ID.getName() + "' = ?s AND '"
@@ -66,28 +69,7 @@ public class VmLatestPojoListGetter<T extends TimeStampedPojo> {
 
     public List<T> getLatest(VmRef vmRef, long since) {
         PreparedStatement<T> query = buildQuery(vmRef, since);
-        if (query == null) {
-            return Collections.emptyList();
-        }
-        return getLatest(query);
-    }
-
-    private List<T> getLatest(PreparedStatement<T> query) {
-        Cursor<T> cursor;
-        try {
-            cursor = query.executeQuery();
-        } catch (StatementExecutionException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Executing query '" + query + "' failed!", e);
-            return Collections.emptyList();
-        }
-        
-        List<T> result = new ArrayList<>();
-        while (cursor.hasNext()) {
-            T pojo = cursor.next();
-            result.add(pojo);
-        }
-        return result;
+        return getLatestOrEmpty(query);
     }
 
     protected PreparedStatement<T> buildQuery(VmRef vmRef, long since) {

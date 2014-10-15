@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.storage.core;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -43,50 +45,32 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
-/**
- * @see HostTimeIntervalPojoListGetter
- */
-public class HostLatestPojoListGetter<T extends TimeStampedPojo> extends AbstractGetter<T> {
+class AbstractGetter<T extends TimeStampedPojo> {
 
-    public static final String HOST_LATEST_QUERY_FORMAT = "QUERY %s WHERE '"
-            + Key.AGENT_ID.getName() + "' = ?s AND '"
-            + Key.TIMESTAMP.getName() + "' > ?l SORT '"
-            + Key.TIMESTAMP.getName() + "' DSC";
+    private static final Logger logger = LoggingUtils.getLogger(AbstractGetter.class);
 
-    private static final Logger logger = LoggingUtils.getLogger(HostLatestPojoListGetter.class);
-    
-    private final Storage storage;
-    private final Category<T> cat;
-    private final String queryLatest;
-
-    public HostLatestPojoListGetter(Storage storage, Category<T> cat) {
-        this.storage = storage;
-        this.cat = cat;
-        this.queryLatest = String.format(HOST_LATEST_QUERY_FORMAT, cat.getName());
-    }
-
-    public List<T> getLatest(HostRef hostRef, long since) {
-        PreparedStatement<T> query = buildQuery(hostRef, since);
-        return getLatestOrEmpty(query);
-    }
-
-    PreparedStatement<T> buildQuery(HostRef hostRef, long since) {
-        StatementDescriptor<T> desc = new StatementDescriptor<>(cat, queryLatest);
-        PreparedStatement<T> stmt = null;
-        try {
-            stmt = storage.prepareStatement(desc);
-            stmt.setString(0, hostRef.getAgentId());
-            stmt.setLong(1, since);
-        } catch (DescriptorParsingException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
+    List<T> getLatestOrEmpty(PreparedStatement<T> query) {
+        if (query == null) {
+            return Collections.emptyList();
         }
-        return stmt;
+        return getLatest(query);
     }
-    
-    // package private for testing
-    String getQueryLatestDesc() {
-        return queryLatest;
-    }
-}
 
+    List<T> getLatest(PreparedStatement<T> query) {
+        Cursor<T> cursor;
+        try {
+            cursor = query.executeQuery();
+        } catch (StatementExecutionException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Executing query '" + query + "' failed!", e);
+            return Collections.emptyList();
+        }
+        List<T> result = new ArrayList<>();
+        while (cursor.hasNext()) {
+            T pojo = cursor.next();
+            result.add(pojo);
+        }
+        return result;
+    }
+
+}

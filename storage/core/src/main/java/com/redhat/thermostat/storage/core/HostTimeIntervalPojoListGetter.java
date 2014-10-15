@@ -44,39 +44,41 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
 /**
- * @see HostTimeIntervalPojoListGetter
+ * @see HostLatestPojoListGetter
  */
-public class HostLatestPojoListGetter<T extends TimeStampedPojo> extends AbstractGetter<T> {
+public class HostTimeIntervalPojoListGetter<T extends TimeStampedPojo> extends AbstractGetter<T> {
 
-    public static final String HOST_LATEST_QUERY_FORMAT = "QUERY %s WHERE '"
+    public static final String HOST_INTERVAL_QUERY_FORMAT = "QUERY %s WHERE '"
             + Key.AGENT_ID.getName() + "' = ?s AND '"
-            + Key.TIMESTAMP.getName() + "' > ?l SORT '"
+            + Key.TIMESTAMP.getName() + "' > ?l AND '"
+            + Key.TIMESTAMP.getName() + "' < ?l SORT '"
             + Key.TIMESTAMP.getName() + "' DSC";
 
-    private static final Logger logger = LoggingUtils.getLogger(HostLatestPojoListGetter.class);
+    private static final Logger logger = LoggingUtils.getLogger(HostTimeIntervalPojoListGetter.class);
     
     private final Storage storage;
     private final Category<T> cat;
-    private final String queryLatest;
+    private final String query;
 
-    public HostLatestPojoListGetter(Storage storage, Category<T> cat) {
+    public HostTimeIntervalPojoListGetter(Storage storage, Category<T> cat) {
         this.storage = storage;
         this.cat = cat;
-        this.queryLatest = String.format(HOST_LATEST_QUERY_FORMAT, cat.getName());
+        this.query = String.format(HOST_INTERVAL_QUERY_FORMAT, cat.getName());
     }
 
-    public List<T> getLatest(HostRef hostRef, long since) {
-        PreparedStatement<T> query = buildQuery(hostRef, since);
+    public List<T> getLatest(HostRef hostRef, long since, long to) {
+        PreparedStatement<T> query = buildQuery(hostRef, since, to);
         return getLatestOrEmpty(query);
     }
 
-    PreparedStatement<T> buildQuery(HostRef hostRef, long since) {
-        StatementDescriptor<T> desc = new StatementDescriptor<>(cat, queryLatest);
+    PreparedStatement<T> buildQuery(HostRef hostRef, long since, long to) {
+        StatementDescriptor<T> desc = new StatementDescriptor<>(cat, query);
         PreparedStatement<T> stmt = null;
         try {
             stmt = storage.prepareStatement(desc);
             stmt.setString(0, hostRef.getAgentId());
             stmt.setLong(1, since);
+            stmt.setLong(2, to);
         } catch (DescriptorParsingException e) {
             // should not happen, but if it *does* happen, at least log it
             logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
@@ -86,7 +88,7 @@ public class HostLatestPojoListGetter<T extends TimeStampedPojo> extends Abstrac
     
     // package private for testing
     String getQueryLatestDesc() {
-        return queryLatest;
+        return query;
     }
 }
 
