@@ -198,6 +198,18 @@ This property has only effect in conjuction with
 milliseconds to decide if a database operation is considere a "slow". The
 default is 100.
 
+* Queued Storage Thread Pool Size
+
+  com.redhat.thermostat.storage.queue.poolSize=<integer>
+
+The above property is used to override the desired thread pool size. The size is
+capped at size 100 (the default if no property is specified). This is because
+Linux systems usually enforce a per-user process limit of 1024 (ulimit -u).
+
+The above upper bound can be lifted by setting the following property to true:
+
+  com.redhat.thermostat.storage.queue.unbounded=<boolean>
+
 --------------------------------------------------------------------------------
 6. REFERENCES
 
