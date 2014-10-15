@@ -77,7 +77,7 @@ public class ThreadDAOImplStatementDescriptorRegistrationTest {
     public void registersAllDescriptors() {
         ThreadDaoImplStatementDescriptorRegistration reg = new ThreadDaoImplStatementDescriptorRegistration();
         Set<String> descriptors = reg.getStatementDescriptors();
-        assertEquals(21, descriptors.size());
+        assertEquals(19, descriptors.size());
         assertFalse("null descriptor not allowed", descriptors.contains(null));
     }
     
@@ -105,7 +105,7 @@ public class ThreadDAOImplStatementDescriptorRegistrationTest {
         // storage-core + this module
         assertEquals(2, registrations.size());
         assertNotNull(threadDaoReg);
-        assertEquals(21, threadDaoReg.getStatementDescriptors().size());
+        assertEquals(19, threadDaoReg.getStatementDescriptors().size());
     }
     
     private Triple<String, String, PreparedParameter[]> setupForMetaDataTest() {
@@ -138,15 +138,6 @@ public class ThreadDAOImplStatementDescriptorRegistrationTest {
         assertThreadMetadata(triple, data);
     }
 
-    @Test
-    public void canGetMetadataForThreadCapsQuery() {
-        Triple<String, String, PreparedParameter[]> triple = setupForMetaDataTest(); 
-        
-        StatementDescriptorMetadataFactory factory = new ThreadDaoImplStatementDescriptorRegistration();
-        DescriptorMetadata data = factory.getDescriptorMetadata(ThreadDaoImpl.QUERY_THREAD_CAPS, triple.third);
-        assertThreadMetadata(triple, data);
-    }
-    
     @Test
     public void canGetMetadataForLatestHarvestingStatusQuery() {
         Triple<String, String, PreparedParameter[]> triple = setupForMetaDataTest(); 

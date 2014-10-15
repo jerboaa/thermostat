@@ -45,9 +45,7 @@ import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
 import com.redhat.thermostat.thread.model.ThreadHeader;
 import com.redhat.thermostat.thread.model.ThreadState;
 import com.redhat.thermostat.thread.model.ThreadSummary;
-import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 import com.redhat.thermostat.thread.model.VmDeadLockData;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -59,14 +57,6 @@ public interface ThreadDao {
     static final String CPU_TIME = "thread-cpu-time";
     static final String CONTENTION_MONITOR = "thread-contention-monitor";
     static final String THREAD_ALLOCATED_MEMORY = "thread-allocated-memory";
-    
-    /*
-     * vm-thread-capabilities schema
-     */
-    static final Key<List<String>> SUPPORTED_FEATURES_LIST_KEY = new Key<List<String>>("supportedFeaturesList");
-    static final Category<VMThreadCapabilities> THREAD_CAPABILITIES =
-            new Category<>("vm-thread-capabilities", VMThreadCapabilities.class, Key.AGENT_ID, Key.VM_ID,
-                         SUPPORTED_FEATURES_LIST_KEY);
 
     /*
      * vm-thread-summary schema
@@ -186,9 +176,6 @@ public interface ThreadDao {
 
     ThreadHarvestingStatus getLatestHarvestingStatus(VmRef vm);
     void saveHarvestingStatus(ThreadHarvestingStatus status);
-
-    VMThreadCapabilities loadCapabilities(VmRef ref);
-    void saveCapabilities(VMThreadCapabilities caps);
 
     void saveDeadLockStatus(VmDeadLockData deadLockInfo);
 

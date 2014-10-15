@@ -60,11 +60,9 @@ public class ThreadDaoImplStatementDescriptorRegistration implements
         descs.add(ThreadDaoImpl.QUERY_LATEST_HARVESTING_STATUS);
         descs.add(ThreadDaoImpl.QUERY_LATEST_SUMMARY);
         descs.add(ThreadDaoImpl.QUERY_SUMMARY_SINCE);
-        descs.add(ThreadDaoImpl.QUERY_THREAD_CAPS);
         descs.add(ThreadDaoImpl.DESC_ADD_THREAD_DEADLOCK_DATA);
         descs.add(ThreadDaoImpl.DESC_ADD_THREAD_HARVESTING_STATUS);
         descs.add(ThreadDaoImpl.DESC_ADD_THREAD_SUMMARY);
-        descs.add(ThreadDaoImpl.DESC_REPLACE_THREAD_CAPS);
 
         descs.add(ThreadDaoImpl.ADD_THREAD_HEADER);
         descs.add(ThreadDaoImpl.QUERY_THREAD_HEADER);

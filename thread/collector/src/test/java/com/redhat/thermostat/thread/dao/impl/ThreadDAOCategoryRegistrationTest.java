@@ -58,10 +58,9 @@ public class ThreadDAOCategoryRegistrationTest {
     public void registersAllCategories() {
         ThreadDAOCategoryRegistration reg = new ThreadDAOCategoryRegistration();
         Set<String> categories = reg.getCategoryNames();
-        assertEquals(7, categories.size());
+        assertEquals(6, categories.size());
         assertFalse("null descriptor not allowed", categories.contains(null));
         assertTrue(categories.contains(ThreadDao.DEADLOCK_INFO.getName()));
-        assertTrue(categories.contains(ThreadDao.THREAD_CAPABILITIES.getName()));
         assertTrue(categories.contains(ThreadDao.THREAD_HEADER.getName()));
         assertTrue(categories.contains(ThreadDao.THREAD_STATE.getName()));
         assertTrue(categories.contains(ThreadDao.THREAD_SUMMARY.getName()));
@@ -93,7 +92,7 @@ public class ThreadDAOCategoryRegistrationTest {
         // storage-core + this module
         assertEquals(2, registrations.size());
         assertNotNull(threadCatReg);
-        assertEquals(7, threadCatReg.getCategoryNames().size());
+        assertEquals(6, threadCatReg.getCategoryNames().size());
     }
 }
 

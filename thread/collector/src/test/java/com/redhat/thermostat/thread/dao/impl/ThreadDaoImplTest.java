@@ -45,28 +45,22 @@ import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
 import com.redhat.thermostat.thread.model.ThreadHeader;
 import com.redhat.thermostat.thread.model.ThreadState;
-import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 import com.redhat.thermostat.thread.model.VmDeadLockData;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
-import java.util.List;
-import java.util.NoSuchElementException;
-
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -94,8 +88,6 @@ public class ThreadDaoImplTest {
 
     @Test
     public void preparedQueryDescriptorsAreSane() {
-        String expectedQueryThreadCaps = "QUERY vm-thread-capabilities WHERE 'agentId' = ?s AND 'vmId' = ?s LIMIT 1";
-        assertEquals(expectedQueryThreadCaps, ThreadDaoImpl.QUERY_THREAD_CAPS);
 
         String expectedQueryLatestSummary = "QUERY vm-thread-summary WHERE 'agentId' = ?s AND 'vmId' = ?s SORT 'timeStamp' DSC LIMIT 1";
         assertEquals(expectedQueryLatestSummary, ThreadDaoImpl.QUERY_LATEST_SUMMARY);
@@ -146,12 +138,6 @@ public class ThreadDaoImplTest {
                                     "'timeStamp' = ?l , " +
                                     "'deadLockDescription' = ?s";
         assertEquals(addDeadlockData, ThreadDaoImpl.DESC_ADD_THREAD_DEADLOCK_DATA);
-        String replaceThreadCaps = "REPLACE vm-thread-capabilities SET 'agentId' = ?s , "+
-                                        "'vmId' = ?s , " +
-                                        "'supportedFeaturesList' = ?s[" +
-                                    " WHERE 'agentId' = ?s AND 'vmId' = ?s";
-        assertEquals(replaceThreadCaps, ThreadDaoImpl.DESC_REPLACE_THREAD_CAPS);
-
 
         String addThreadState = "ADD vm-thread-state SET 'agentId' = ?s , " +
                                 "'vmId' = ?s , 'state' = ?s , " +
@@ -189,108 +175,13 @@ public class ThreadDaoImplTest {
         @SuppressWarnings("unused")
         ThreadDaoImpl dao = new ThreadDaoImpl(storage);
         
-        verify(storage).registerCategory(ThreadDao.THREAD_CAPABILITIES);
         verify(storage).registerCategory(ThreadDao.THREAD_HARVESTING_STATUS);
         verify(storage).registerCategory(ThreadDao.THREAD_SUMMARY);
-    }
-    
-    @Test
-    public void testLoadVMCapabilities() throws DescriptorParsingException, StatementExecutionException {
-        @SuppressWarnings("unchecked")
-        PreparedStatement<VMThreadCapabilities> stmt = (PreparedStatement<VMThreadCapabilities>) mock(PreparedStatement.class);
-        Storage storage = mock(Storage.class);
-        when(storage.prepareStatement(anyDescriptor(VMThreadCapabilities.class))).thenReturn(stmt);
-
-        VMThreadCapabilities expected = new VMThreadCapabilities(AGENT_ID);
-        expected.setSupportedFeaturesList(new String[] { ThreadDao.CPU_TIME, ThreadDao.THREAD_ALLOCATED_MEMORY });
-        @SuppressWarnings("unchecked")
-        Cursor<VMThreadCapabilities> cursor = (Cursor<VMThreadCapabilities>) mock(Cursor.class);
-        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(cursor.next()).thenReturn(expected).thenReturn(null);
-        when(stmt.executeQuery()).thenReturn(cursor);
-        
-        ThreadDaoImpl dao = new ThreadDaoImpl(storage);
-        VMThreadCapabilities caps = dao.loadCapabilities(vmRef);
-
-        verify(storage).prepareStatement(anyDescriptor(VMThreadCapabilities.class));
-        verify(stmt).setString(0, AGENT_ID);
-        verify(stmt).setString(1, VM_ID);
-        verify(stmt).executeQuery();
-        verifyNoMoreInteractions(stmt);
-
-        assertFalse(caps.supportContentionMonitor());
-        assertTrue(caps.supportCPUTime());
-        assertTrue(caps.supportThreadAllocatedMemory());
     }
 
     @SuppressWarnings("unchecked")
     private <T extends Pojo> StatementDescriptor<T> anyDescriptor(Class<T> type) {
         return (StatementDescriptor<T>) any(StatementDescriptor.class);
-    }
-
-    @Test
-    public void testLoadVMCapabilitiesWithoutAnyDataInStorage() throws DescriptorParsingException, StatementExecutionException {
-        @SuppressWarnings("unchecked")
-        PreparedStatement<VMThreadCapabilities> stmt = (PreparedStatement<VMThreadCapabilities>) mock(PreparedStatement.class);
-        Storage storage = mock(Storage.class);
-        when(storage.prepareStatement(anyDescriptor(VMThreadCapabilities.class))).thenReturn(stmt);
-
-        VMThreadCapabilities expected = new VMThreadCapabilities(AGENT_ID);
-        expected.setSupportedFeaturesList(new String[] { ThreadDao.CPU_TIME, ThreadDao.THREAD_ALLOCATED_MEMORY });
-        @SuppressWarnings("unchecked")
-        Cursor<VMThreadCapabilities> cursor = (Cursor<VMThreadCapabilities>) mock(Cursor.class);
-        when(cursor.hasNext()).thenReturn(false);
-        when(cursor.next()).thenThrow(new NoSuchElementException());
-        when(stmt.executeQuery()).thenReturn(cursor);
-
-        ThreadDaoImpl dao = new ThreadDaoImpl(storage);
-        VMThreadCapabilities caps = dao.loadCapabilities(vmRef);
-
-        verify(storage).prepareStatement(anyDescriptor(VMThreadCapabilities.class));
-        verify(stmt).setString(0, AGENT_ID);
-        verify(stmt).setString(1, VM_ID);
-        verify(stmt).executeQuery();
-        verifyNoMoreInteractions(stmt);
-
-        assertEquals(null, caps);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test
-    public void testSaveVMCapabilities() throws DescriptorParsingException, StatementExecutionException {
-        Storage storage = mock(Storage.class);
-        PreparedStatement<AgentInformation> replace = mock(PreparedStatement.class);
-        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(replace);
-
-        VMThreadCapabilities caps = new VMThreadCapabilities(AGENT_ID);
-        String[] capsFeatures = new String[] {
-                ThreadDao.CONTENTION_MONITOR,
-                ThreadDao.CPU_TIME,
-                ThreadDao.THREAD_ALLOCATED_MEMORY,
-        };
-        caps.setSupportedFeaturesList(capsFeatures);
-        assertTrue(caps.supportContentionMonitor());
-        assertTrue(caps.supportCPUTime());
-        assertTrue(caps.supportThreadAllocatedMemory());
-        caps.setVmId(VM_ID);
-        
-        ThreadDaoImpl dao = new ThreadDaoImpl(storage);
-        dao.saveCapabilities(caps);
-        
-        @SuppressWarnings("rawtypes")
-        ArgumentCaptor<StatementDescriptor> captor = ArgumentCaptor.forClass(StatementDescriptor.class);
-        
-        verify(storage).prepareStatement(captor.capture());
-        StatementDescriptor<?> desc = captor.getValue();
-        assertEquals(ThreadDaoImpl.DESC_REPLACE_THREAD_CAPS, desc.getDescriptor());
-        
-        verify(replace).setString(0, caps.getAgentId());
-        verify(replace).setString(1, caps.getVmId());
-        verify(replace).setStringList(2, caps.getSupportedFeaturesList());
-        verify(replace).setString(3, caps.getAgentId());
-        verify(replace).setString(4, caps.getVmId());
-        verify(replace).execute();
-        verifyNoMoreInteractions(replace);
     }
 
     @Test

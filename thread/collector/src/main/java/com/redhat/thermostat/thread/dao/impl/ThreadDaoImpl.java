@@ -54,7 +54,6 @@ import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
 import com.redhat.thermostat.thread.model.ThreadHeader;
 import com.redhat.thermostat.thread.model.ThreadState;
 import com.redhat.thermostat.thread.model.ThreadSummary;
-import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 import com.redhat.thermostat.thread.model.VmDeadLockData;
 
 import java.util.ArrayList;
@@ -68,11 +67,7 @@ public class ThreadDaoImpl implements ThreadDao {
     private static final Logger logger = LoggingUtils.getLogger(ThreadDaoImpl.class);
     
     // Queries
-    
-    static final String QUERY_THREAD_CAPS = "QUERY "
-            + THREAD_CAPABILITIES.getName() + " WHERE '"
-            + Key.AGENT_ID.getName() + "' = ?s AND '" 
-            + Key.VM_ID.getName() + "' = ?s LIMIT 1";
+
     static final String QUERY_LATEST_SUMMARY = "QUERY "
             + THREAD_SUMMARY.getName() + " WHERE '"
             + Key.AGENT_ID.getName() + "' = ?s AND '" 
@@ -171,17 +166,7 @@ public class ThreadDaoImpl implements ThreadDao {
                  "'" + Key.VM_ID.getName() + "' = ?s , " +
                  "'" + Key.TIMESTAMP.getName() + "' = ?l , " +
                  "'" + DEADLOCK_DESCRIPTION_KEY.getName() + "' = ?s";
-    // REPLACE vm-thread-capabilities SET 'agentId' = ?s , \
-    //                                    'vmId' = ?s , \
-    //                                    'supportedFeaturesList' = ?s[
-    //                                WHERE 'agentId' = ?s AND 'vmId' = ?s
-    static final String DESC_REPLACE_THREAD_CAPS = "REPLACE " + THREAD_CAPABILITIES.getName() + 
-            " SET '" + Key.AGENT_ID.getName() + "' = ?s , " +
-                 "'" + Key.VM_ID.getName() + "' = ?s , " +
-                 "'" + SUPPORTED_FEATURES_LIST_KEY.getName() + "' = ?s[" +
-            " WHERE '" + Key.AGENT_ID.getName() + "' = ?s AND " +
-                   "'" + Key.VM_ID.getName() + "' = ?s";
-    
+
     static final String ADD_THREAD_HEADER =
             "ADD " + THREAD_HEADER.getName() + " " +
             "SET '" + Key.AGENT_ID.getName() + "' = ?s , "    +
@@ -226,7 +211,6 @@ public class ThreadDaoImpl implements ThreadDao {
     
     public ThreadDaoImpl(Storage storage) {
         this.storage = storage;
-        storage.registerCategory(THREAD_CAPABILITIES);
         storage.registerCategory(THREAD_SUMMARY);
         storage.registerCategory(THREAD_HARVESTING_STATUS);
         storage.registerCategory(THREAD_HEADER);
@@ -483,35 +467,6 @@ public class ThreadDaoImpl implements ThreadDao {
         return new Range<Long>(oldestTimeStamp, latestTimeStamp);
     }
 
-    @Override
-    public VMThreadCapabilities loadCapabilities(VmRef vm) {
-        PreparedStatement<VMThreadCapabilities> stmt = prepareQuery(THREAD_CAPABILITIES, QUERY_THREAD_CAPS, vm);
-        if (stmt == null) {
-            return null;
-        }
-        
-        return getFirstResult(stmt);
-    }
-    
-    @Override
-    public void saveCapabilities(VMThreadCapabilities caps) {
-        StatementDescriptor<VMThreadCapabilities> desc = new StatementDescriptor<>(THREAD_CAPABILITIES, DESC_REPLACE_THREAD_CAPS);
-        PreparedStatement<VMThreadCapabilities> prepared;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, caps.getAgentId());
-            prepared.setString(1, caps.getVmId());
-            prepared.setStringList(2, caps.getSupportedFeaturesList());
-            prepared.setString(3, caps.getAgentId());
-            prepared.setString(4, caps.getVmId());
-            prepared.execute();
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-        }
-    }
-    
     @Override
     public void saveSummary(ThreadSummary summary) {
         StatementDescriptor<ThreadSummary> desc = new StatementDescriptor<>(THREAD_SUMMARY, DESC_ADD_THREAD_SUMMARY);

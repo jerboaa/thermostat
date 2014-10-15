@@ -71,7 +71,6 @@ class Harvester {
     private HarvesterHelper harvesterHelper;
     private final MXBeanConnectionPool connectionPool;
     private final DeadlockHelper deadlockHelper;
-    private final VMCapsHelper vmCapsHelper;
 
     public Harvester(ThreadDao threadDao, ScheduledExecutorService threadPool,
                      String vmId, int pid, MXBeanConnectionPool connectionPool,
@@ -79,22 +78,19 @@ class Harvester {
     {
         this(pid, threadPool, connectionPool,
              new HarvesterHelper(threadDao, new SystemClock(), vmId, writerId),
-             new DeadlockHelper(threadDao, new SystemClock(), vmId, writerId),
-             new VMCapsHelper(threadDao, new SystemClock(), vmId, writerId));
+             new DeadlockHelper(threadDao, new SystemClock(), vmId, writerId));
     }
 
     Harvester(int pid, ScheduledExecutorService threadPool,
               MXBeanConnectionPool connectionPool,
               HarvesterHelper harvesterHelper,
-              DeadlockHelper deadlockHelper,
-              VMCapsHelper vmCapsHelper)
+              DeadlockHelper deadlockHelper)
     {
         this.pid = pid;
         this.threadPool = threadPool;
         this.connectionPool = connectionPool;
         this.harvesterHelper = harvesterHelper;
         this.deadlockHelper = deadlockHelper;
-        this.vmCapsHelper = vmCapsHelper;
     }
     
     synchronized boolean start() {
@@ -228,27 +224,6 @@ class Harvester {
             } else {
                 logger.log(Level.WARNING, "ThreadMXBean is null, is JMX available?");
             }
-        }
-    }
-    
-    synchronized void saveVmCaps() {
-
-        boolean disconnectAtEnd = false;
-        if (!isConnected()) {
-            disconnectAtEnd = true;
-            connect();
-        }
-
-        if (collectorBean == null) {
-            collectorBean = getDataCollectorBean(connection);
-        }
-
-        if (collectorBean != null) {
-            vmCapsHelper.saveVMCapabilities(collectorBean);
-        }
-
-        if (disconnectAtEnd) {
-            disconnect();
         }
     }
 

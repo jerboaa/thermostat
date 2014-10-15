@@ -54,7 +54,6 @@ import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
 import com.redhat.thermostat.thread.model.ThreadHeader;
 import com.redhat.thermostat.thread.model.ThreadState;
 import com.redhat.thermostat.thread.model.ThreadSummary;
-import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 import com.redhat.thermostat.thread.model.VmDeadLockData;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -166,11 +165,6 @@ public class ThreadMXBeanCollector implements ThreadCollector {
         List<ThreadSummary> summary = threadDao.loadSummary(ref, since);
         return summary;
     }
-    
-    @Override
-    public List<ThreadSummary> getThreadSummary() {
-        return getThreadSummary(0);
-    }
 
     @Override
     public Range<Long> getThreadStateTotalTimeRange() {
@@ -179,12 +173,6 @@ public class ThreadMXBeanCollector implements ThreadCollector {
 
     public List<ThreadState> getThreadStates(ThreadHeader thread, Range<Long> range) {
         return threadDao.getThreadStates(thread, range);
-    }
-
-    @Override
-    public VMThreadCapabilities getVMThreadCapabilities() {
-        VMThreadCapabilities caps = threadDao.loadCapabilities(ref);
-        return caps;
     }
 
     @Override

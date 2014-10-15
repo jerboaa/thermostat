@@ -56,7 +56,6 @@ import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
 import com.redhat.thermostat.thread.client.common.view.ThreadTableView.ThreadSelectionAction;
 import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
 import com.redhat.thermostat.thread.client.common.view.ThreadView;
-import com.redhat.thermostat.thread.client.common.view.VMThreadCapabilitiesView;
 import com.redhat.thermostat.thread.client.common.view.VmDeadLockView;
 import org.junit.Before;
 import org.junit.Test;
@@ -84,7 +83,6 @@ public class ThreadInformationControllerTest {
     private VmInfoDAO vmInfoDao;
 
     private ThreadTableView threadTableView;
-    private VMThreadCapabilitiesView threadCapsView;
     private VmDeadLockView deadLockView;
     private ThreadTimelineView threadTimelineView;
     private ThreadCountView threadCountView;
@@ -106,7 +104,6 @@ public class ThreadInformationControllerTest {
     }
 
     private void setUpView() {
-        threadCapsView = mock(VMThreadCapabilitiesView.class);
         deadLockView = mock(VmDeadLockView.class);
         threadTableView = mock(ThreadTableView.class);
         threadTimelineView = mock(ThreadTimelineView.class);
@@ -116,7 +113,6 @@ public class ThreadInformationControllerTest {
         viewFactory = mock(ThreadViewProvider.class);
         when(viewFactory.createView()).thenReturn(view);
         
-        when(view.createVMThreadCapabilitiesView()).thenReturn(threadCapsView);
         when(view.createDeadLockView()).thenReturn(deadLockView);
         when(view.createThreadTableView()).thenReturn(threadTableView);
         when(view.createThreadTimelineView()).thenReturn(threadTimelineView);
@@ -168,7 +164,6 @@ public class ThreadInformationControllerTest {
         createController();
         
         verify(view).createThreadTableView();
-        verify(view).createVMThreadCapabilitiesView();
         verify(view).createDeadLockView();
         verify(view).createThreadTimelineView();
         verify(view).createThreadCountView();

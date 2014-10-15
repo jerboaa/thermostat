@@ -50,7 +50,6 @@ public class ThreadModelPojosTest {
         ThreadHeader.class,
         ThreadSummary.class,
         ThreadContentionSample.class,
-        VMThreadCapabilities.class,
         VmDeadLockData.class,
     };
 

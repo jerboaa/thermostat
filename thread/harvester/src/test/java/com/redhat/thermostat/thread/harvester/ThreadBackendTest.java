@@ -109,7 +109,6 @@ public class ThreadBackendTest {
     public void testVmStarts() {
         backend.vmStatusChanged(Status.VM_STARTED, "vmId", 10);
 
-        verify(threadHarvester).saveVmCaps("vmId", 10);
         verify(threadHarvester).addThreadHarvestingStatus("vmId");
     }
 

@@ -186,32 +186,6 @@ public class ThreadHarvesterTest {
     }
 
     @Test
-    public void testSaveVmCaps() {
-        ThreadDao dao = mock(ThreadDao.class);
-        
-        final boolean[] createHarvesterCalled = new boolean[1];
-        final Harvester harvester = mock(Harvester.class);
-        
-        ThreadHarvester threadHarvester = new ThreadHarvester(executor, pool, writerId) {
-            @Override
-            Harvester createHarvester(String vmId, int pid) {
-                
-                createHarvesterCalled[0] = true;
-                assertEquals("vmId", vmId);
-                assertEquals(42, pid);
-                
-                return harvester;
-            }
-        };
-        threadHarvester.setThreadDao(dao);
-        threadHarvester.saveVmCaps("vmId", 42);
-        
-        assertTrue(createHarvesterCalled[0]);
-        
-        verify(harvester).saveVmCaps();
-    }    
-
-    @Test
     public void testReceiveWithoutDaosFails() {
         ThreadHarvester harvester = new ThreadHarvester(executor, pool, writerId);
         Response response = harvester.receive(mock(Request.class));

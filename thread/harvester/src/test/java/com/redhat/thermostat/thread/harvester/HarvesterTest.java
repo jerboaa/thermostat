@@ -71,7 +71,6 @@ public class HarvesterTest {
     private MXBeanConnectionPool pool;
     private MXBeanConnection connection;
     private DeadlockHelper deadlockHelper;
-    private VMCapsHelper vmCapsHelper;
 
     @Before
     public void setup() throws Exception {
@@ -81,7 +80,6 @@ public class HarvesterTest {
         int pid = 42;
 
         deadlockHelper = mock(DeadlockHelper.class);
-        vmCapsHelper = mock(VMCapsHelper.class);
 
         executor = mock(ScheduledExecutorService.class);
         dao = mock(ThreadDao.class);
@@ -105,7 +103,7 @@ public class HarvesterTest {
         HarvesterHelper helper = mock(HarvesterHelper.class);
 
         Harvester harvester = new Harvester(pid, executor, pool, helper,
-                                            deadlockHelper, vmCapsHelper);
+                                            deadlockHelper);
 
         harvester.start();
 
@@ -129,7 +127,7 @@ public class HarvesterTest {
         HarvesterHelper helper = mock(HarvesterHelper.class);
 
         Harvester harvester = new Harvester(pid, executor, pool, helper,
-                                            deadlockHelper, vmCapsHelper);
+                                            deadlockHelper);
 
         harvester.start();
         harvester.start();
@@ -154,7 +152,7 @@ public class HarvesterTest {
         HarvesterHelper helper = mock(HarvesterHelper.class);
 
         Harvester harvester = new Harvester(pid, executor, pool, helper,
-                                            deadlockHelper, vmCapsHelper);
+                                            deadlockHelper);
 
         harvester.start();
         assertTrue(harvester.isConnected());
@@ -178,7 +176,7 @@ public class HarvesterTest {
         HarvesterHelper helper = mock(HarvesterHelper.class);
 
         Harvester harvester = new Harvester(pid, executor, pool, helper,
-                                            deadlockHelper, vmCapsHelper);
+                                            deadlockHelper);
 
         harvester.start();
         assertTrue(harvester.isConnected());
@@ -204,7 +202,7 @@ public class HarvesterTest {
         HarvesterHelper helper = mock(HarvesterHelper.class);
 
         Harvester harvester = new Harvester(pid, executor, pool, helper,
-                                            deadlockHelper, vmCapsHelper);
+                                            deadlockHelper);
 
         assertFalse(harvester.isConnected());
 
@@ -238,7 +236,7 @@ public class HarvesterTest {
         HarvesterHelper helper = mock(HarvesterHelper.class);
 
         Harvester harvester = new Harvester(pid, executor, pool, helper,
-                                            deadlockHelper, vmCapsHelper);
+                                            deadlockHelper);
 
         harvester.start();
 
@@ -274,7 +272,7 @@ public class HarvesterTest {
         HarvesterHelper helper = mock(HarvesterHelper.class);
 
         Harvester harvester = new Harvester(pid, executor, pool, helper,
-                                            deadlockHelper, vmCapsHelper);
+                                            deadlockHelper);
 
         harvester.start();
 
@@ -287,57 +285,12 @@ public class HarvesterTest {
     }
 
     @Test
-    public void testSaveDeadlockVmCaps() {
-
-        final ThreadMXBean mxBean = mock(ThreadMXBean.class);
-        HarvesterHelper helper = mock(HarvesterHelper.class);
-        Harvester harvester = new Harvester(pid, executor, pool, helper,
-                                            deadlockHelper, vmCapsHelper)
-        {
-            @Override
-            ThreadMXBean getDataCollectorBean(MXBeanConnection connection) {
-                return mxBean;
-            }
-
-            @Override
-            synchronized boolean isConnected() {
-                return true;
-            }
-        };
-
-        harvester.saveVmCaps();
-
-        verify(vmCapsHelper).saveVMCapabilities(mxBean);
-    }
-
-    @Test
-    public void testSaveDeadlockVmCapsUnconnectedWillDisconnectAgain() throws Exception {
-
-        final ThreadMXBean mxBean = mock(ThreadMXBean.class);
-        HarvesterHelper helper = mock(HarvesterHelper.class);
-        Harvester harvester = new Harvester(pid, executor, pool, helper,
-                                            deadlockHelper, vmCapsHelper)
-        {
-            @Override
-            ThreadMXBean getDataCollectorBean(MXBeanConnection connection) {
-                return mxBean;
-            }
-        };
-
-        harvester.saveVmCaps();
-
-        verify(pool).acquire(pid);
-        verify(vmCapsHelper).saveVMCapabilities(mxBean);
-        verify(pool).release(pid, connection);
-    }
-
-    @Test
     public void testSaveDeadlockData() {
 
         final ThreadMXBean mxBean = mock(ThreadMXBean.class);
         HarvesterHelper helper = mock(HarvesterHelper.class);
         Harvester harvester = new Harvester(pid, executor, pool, helper,
-                                            deadlockHelper, vmCapsHelper)
+                                            deadlockHelper)
         {
             @Override
             ThreadMXBean getDataCollectorBean(MXBeanConnection connection) {
@@ -361,7 +314,7 @@ public class HarvesterTest {
         final ThreadMXBean mxBean = mock(ThreadMXBean.class);
         HarvesterHelper helper = mock(HarvesterHelper.class);
         Harvester harvester = new Harvester(pid, executor, pool, helper,
-                                            deadlockHelper, vmCapsHelper)
+                                            deadlockHelper)
         {
             @Override
             ThreadMXBean getDataCollectorBean(MXBeanConnection connection) {

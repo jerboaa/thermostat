@@ -36,18 +36,6 @@
 
 package com.redhat.thermostat.thread.client.swing.impl;
 
-import java.awt.Component;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-
-import javax.swing.JOptionPane;
-import javax.swing.JSplitPane;
-import javax.swing.JTabbedPane;
-import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
-
 import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.UIDefaults;
@@ -61,9 +49,18 @@ import com.redhat.thermostat.thread.client.common.view.ThreadCountView;
 import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
 import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
 import com.redhat.thermostat.thread.client.common.view.ThreadView;
-import com.redhat.thermostat.thread.client.common.view.VMThreadCapabilitiesView;
 import com.redhat.thermostat.thread.client.common.view.VmDeadLockView;
 import com.redhat.thermostat.thread.client.swing.impl.timeline.SwingTimelineDimensionModel;
+import java.awt.Component;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import javax.swing.JOptionPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
+import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 
 public class SwingThreadView extends ThreadView implements SwingComponent {
     
@@ -73,7 +70,6 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
     
     private SwingThreadCountView threadCountView;
     private SwingThreadTableView threadTableView;
-    private SwingVMThreadCapabilitiesView vmCapsView;
     private SwingVmDeadLockView vmDeadLockView;
     private SwingThreadTimelineView threadTimelineView;
     private SwingThreadDetailsView threadDetailsView;
@@ -178,9 +174,6 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
         bottomPane.addTab(t.localize(LocaleResources.DETAILS).getContents(), threadDetailsView.getUiComponent());
         threadDetailsPaneID = 1;
 
-        vmCapsView = new SwingVMThreadCapabilitiesView();
-        bottomPane.addTab(t.localize(LocaleResources.VM_CAPABILITIES).getContents(), vmCapsView.getUiComponent());
-
         vmDeadLockView = new SwingVmDeadLockView();
         bottomPane.addTab(t.localize(LocaleResources.VM_DEADLOCK).getContents(), vmDeadLockView.getUiComponent());
 
@@ -218,11 +211,6 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
                 if (!notify) skipNotification = false;
             }
         });
-    }
-    
-    @Override
-    public VMThreadCapabilitiesView createVMThreadCapabilitiesView() {
-        return vmCapsView;
     }
 
     @Override

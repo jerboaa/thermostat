@@ -43,9 +43,7 @@ import com.redhat.thermostat.thread.model.ThreadContentionSample;
 import com.redhat.thermostat.thread.model.ThreadHeader;
 import com.redhat.thermostat.thread.model.ThreadState;
 import com.redhat.thermostat.thread.model.ThreadSummary;
-import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 import com.redhat.thermostat.thread.model.VmDeadLockData;
-
 import java.util.List;
 
 public interface ThreadCollector {
@@ -53,15 +51,12 @@ public interface ThreadCollector {
     void setAgentInfoDao(AgentInfoDAO agentDao);
     void setThreadDao(ThreadDao threadDao);
 
-    VMThreadCapabilities getVMThreadCapabilities();
-    
     boolean startHarvester();
     boolean stopHarvester();
     boolean isHarvesterCollecting();
     
     ThreadSummary getLatestThreadSummary();
     List<ThreadSummary> getThreadSummary(long since);
-    List<ThreadSummary> getThreadSummary();
 
     /**
      * Return the range of all {@link ThreadState} data (timestamp of first and

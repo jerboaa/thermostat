@@ -163,11 +163,6 @@ public class ThreadHarvester implements RequestReceiver {
         }
         return result;
     }
-    
-    void saveVmCaps(String vmId, int pid) {
-        Harvester harvester = getHarvester(vmId, pid);
-        harvester.saveVmCaps();
-    }
 
     /**
      * Stops and detaches a harvester from the given PID.

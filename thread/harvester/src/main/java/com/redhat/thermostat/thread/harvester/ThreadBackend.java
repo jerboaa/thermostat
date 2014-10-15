@@ -119,7 +119,6 @@ public class ThreadBackend extends BaseBackend implements VmStatusListener {
         switch (newStatus) {
         case VM_STARTED: case VM_ACTIVE:
             /* this is blocking */
-            harvester.saveVmCaps(vmId, pid);
             harvester.addThreadHarvestingStatus(vmId);
             break;
         case VM_STOPPED:

@@ -152,11 +152,7 @@ public class ThreadInformationController implements InformationServiceController
     
     private void initControllers() {
         TimerFactory tf = appService.getTimerFactory();
-                
-        VMThreadCapabilitiesController capsController =
-                new VMThreadCapabilitiesController(view.createVMThreadCapabilitiesView(), collector);
-        capsController.initialize();
-        
+
         VmDeadLockController deadLockController =
                 new VmDeadLockController(view.createDeadLockView(), collector, tf.createTimer());
         deadLockController.initialize();
