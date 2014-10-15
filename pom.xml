@@ -416,6 +416,23 @@ password=${agent.dev.password}
                     <ignore></ignore>
                   </action>
                 </pluginExecution>
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>com.mycila</groupId>
+                    <artifactId>
+                      license-maven-plugin
+                    </artifactId>
+                    <versionRange>
+                      [2.0,)
+                    </versionRange>
+                    <goals>
+                      <goal>check</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore></ignore>
+                  </action>
+                </pluginExecution>
               </pluginExecutions>
             </lifecycleMappingMetadata>
           </configuration>
