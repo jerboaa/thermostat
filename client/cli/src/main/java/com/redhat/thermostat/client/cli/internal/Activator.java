@@ -47,12 +47,16 @@ import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class Activator implements BundleActivator {
 
     private CommandRegistry reg = null;
     private MultipleServiceTracker tracker;
+
+    private MultipleServiceTracker agentTracker;
+    private final ListAgentsCommand listAgentsCommand = new ListAgentsCommand();
 
     @Override
     public void start(final BundleContext context) throws Exception {
@@ -86,11 +90,31 @@ public class Activator implements BundleActivator {
             
         });
         tracker.open();
+
+        Class<?>[] agentClasses = new Class[] {
+                AgentInfoDAO.class,
+        };
+        agentTracker = new MultipleServiceTracker(context, agentClasses, new Action() {
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                AgentInfoDAO agentInfoDAO = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
+                listAgentsCommand.setAgentInfoDAO(agentInfoDAO);
+            }
+
+            @Override
+            public void dependenciesUnavailable() {
+                listAgentsCommand.setAgentInfoDAO(null);
+            }
+        });
+        agentTracker.open();
+
+        reg.registerCommand("list-agents", listAgentsCommand);
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
         tracker.close();
+        agentTracker.close();
         reg.unregisterCommands();
     }
 

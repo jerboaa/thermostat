@@ -46,7 +46,6 @@ import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.killvm.command.internal.ShellVMKilledListener;
 import com.redhat.thermostat.killvm.command.locale.LocaleResources;
-import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
@@ -85,12 +84,6 @@ public class KillVMCommand extends AbstractCommand {
         HostVMArguments args = new HostVMArguments(ctx.getArguments(), true, true);
 
         attemptToKillVM(args.getVM());
-    }
-
-    private void requireNotNull(Object object, LocalizedString message) throws CommandException {
-        if (object == null) {
-            throw new CommandException(message);
-        }
     }
 
     private void attemptToKillVM(VmRef vmRef) throws CommandException {

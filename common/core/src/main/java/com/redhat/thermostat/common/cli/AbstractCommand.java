@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.common.cli;
 
+import com.redhat.thermostat.shared.locale.LocalizedString;
+
 /**
  * A partial implementation of {@link Command} that most implementations should
  * extend. By default, any extension of this class will require {@link Storage},
@@ -50,6 +52,12 @@ public abstract class AbstractCommand implements Command {
     @Override
     public boolean isStorageRequired() {
         return true;
+    }
+
+    public void requireNotNull(Object obj, LocalizedString message) throws CommandException {
+        if (obj == null) {
+            throw new CommandException(message);
+        }
     }
 
 }

@@ -37,53 +37,58 @@
 package com.redhat.thermostat.client.cli.internal;
 
 import java.io.PrintStream;
+import java.text.DateFormat;
+import java.util.Date;
 
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.model.VmInfo;
+import com.redhat.thermostat.storage.model.AgentInformation;
 
-class VMListFormatter {
 
+public class AgentListFormatter{
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
-    private static final int NUM_COLUMNS = 6;
+    private static final DateFormat dateFormat = DateFormat.getDateTimeInstance();
+    private static final int NUM_COLUMNS = 4;
 
-    private static final String HOST_ID = translator.localize(LocaleResources.COLUMN_HEADER_HOST_ID).getContents();
-    private static final String HOST = translator.localize(LocaleResources.COLUMN_HEADER_HOST).getContents();
-    private static final String VM_ID = translator.localize(LocaleResources.COLUMN_HEADER_VM_ID).getContents();
-    private static final String VM_PID = translator.localize(LocaleResources.COLUMN_HEADER_VM_PID).getContents();
-    private static final String VM_NAME = translator.localize(LocaleResources.COLUMN_HEADER_VM_NAME).getContents();
-    private static final String VM_STATUS = translator.localize(LocaleResources.COLUMN_HEADER_VM_STATUS).getContents();
-
-    private static final String STATUS_ALIVE = translator.localize(LocaleResources.VM_STATUS_ALIVE).getContents();
-    private static final String STATUS_DEAD = translator.localize(LocaleResources.VM_STATUS_DEAD).getContents();
+    private static final String AGENT_ID = translator.localize(LocaleResources.AGENT_ID).getContents();
+    private static final String CONFIG_LISTEN_ADDRESS = translator.localize(LocaleResources.CONFIG_LISTEN_ADDRESS).getContents();
+    private static final String START_TIME = translator.localize(LocaleResources.START_TIME).getContents();
+    private static final String STOP_TIME = translator.localize(LocaleResources.STOP_TIME).getContents();
 
     private final TableRenderer tableRenderer = new TableRenderer(NUM_COLUMNS);
 
-    void addVM(VmRef vm, VmInfo info) {
-        printVM(vm, info);
+    void addHeader() {
+        printLine(AGENT_ID, CONFIG_LISTEN_ADDRESS, START_TIME, STOP_TIME);
     }
 
-    void addHeader() {
-        printLine(HOST_ID, HOST, VM_ID, VM_PID, VM_STATUS, VM_NAME);
+    void addAgent(AgentInformation info) {
+        printAgent(info);
     }
 
     void format(PrintStream out) {
         tableRenderer.render(out);
     }
 
-    private void printVM(VmRef vm, VmInfo info) {
-        printLine(vm.getHostRef().getAgentId(),
-                  vm.getHostRef().getHostName(),
-                  vm.getVmId(),
-                  vm.getPid().toString(),
-                  info.isAlive() ? STATUS_ALIVE : STATUS_DEAD,
-                  vm.getName());
+    private void printAgent(AgentInformation info) {
+        String startTime = dateFormat.format(new Date(info.getStartTime()));
+        String stopTime = getStopTimeMessage(info.getStopTime());
+
+        printLine(info.getAgentId(),
+                info.getConfigListenAddress(),
+                startTime,
+                stopTime);
     }
 
-    private void printLine(String hostId, String host, String vmId, String pid, String status, String vmName) {
-        tableRenderer.printLine(hostId, host, vmId, pid, status, vmName);
+    private String getStopTimeMessage(long stopTime) {
+        if (stopTime == 0) {
+            return translator.localize(LocaleResources.AGENT_ACTIVE).getContents();
+        } else {
+            return dateFormat.format(new Date(stopTime));
+        }
+    }
+
+    private void printLine(String agentId, String address, String startTime, String stopTime) {
+        tableRenderer.printLine(agentId, address, startTime, stopTime);
     }
 
 }
-

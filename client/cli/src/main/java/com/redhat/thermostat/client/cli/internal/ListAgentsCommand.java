@@ -36,65 +36,70 @@
 
 package com.redhat.thermostat.client.cli.internal;
 
-import java.util.Collection;
-
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.ServiceReference;
+import java.io.PrintStream;
+import java.util.List;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.dao.HostInfoDAO;
-import com.redhat.thermostat.storage.dao.VmInfoDAO;
-import com.redhat.thermostat.storage.model.VmInfo;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.model.AgentInformation;
 
-public class ListVMsCommand extends AbstractCommand {
+public class ListAgentsCommand extends AbstractCommand {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private final BundleContext context;
+    private AgentInfoDAO agentInfoDAO;
+    private Semaphore servicesAvailable = new Semaphore(0);
 
-    public ListVMsCommand() {
-        this(FrameworkUtil.getBundle(ListVMsCommand.class).getBundleContext());
-    }
-
-    ListVMsCommand(BundleContext context) {
-        this.context = context;
-    }
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
+        waitForServices(500l);
 
-        ServiceReference hostsDAORef = context.getServiceReference(HostInfoDAO.class.getName());
-        if (hostsDAORef == null) {
-            throw new CommandException(translator.localize(LocaleResources.HOST_SERVICE_UNAVAILABLE));
-        }
-        HostInfoDAO hostsDAO = (HostInfoDAO) context.getService(hostsDAORef);
-        Collection<HostRef> hosts = hostsDAO.getHosts();
-        context.ungetService(hostsDAORef);
+        requireNotNull(agentInfoDAO, translator.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE));
 
-        ServiceReference vmsDAORef = context.getServiceReference(VmInfoDAO.class.getName());
-        if (vmsDAORef == null) {
-            throw new CommandException(translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
-        }
-        VmInfoDAO vmsDAO = (VmInfoDAO) context.getService(vmsDAORef);
-        VMListFormatter formatter = new VMListFormatter();
-        formatter.addHeader();
-        for (HostRef host : hosts) {
-            Collection<VmRef> vms = vmsDAO.getVMs(host);
-            for (VmRef vm : vms) {
-                VmInfo info = vmsDAO.getVmInfo(vm);
-                formatter.addVM(vm, info);
-            }
-        }
-        formatter.format(ctx.getConsole().getOutput());
-        context.ungetService(vmsDAORef);
+        listAgents(ctx.getConsole().getOutput(), agentInfoDAO.getAllAgentInformation());
     }
 
+    private void waitForServices(long timeout) {
+        try {
+            servicesAvailable.tryAcquire(timeout, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            translator.localize(LocaleResources.COMMAND_INTERRUPTED);
+        }
+    }
 
+    private void listAgents(PrintStream out, List<AgentInformation> informationList) {
+        AgentListFormatter formatter = new AgentListFormatter();
+        formatter.addHeader();
+
+        for (AgentInformation info : informationList) {
+            formatter.addAgent(info);
+        }
+
+        formatter.format(out);
+    }
+
+    public void setAgentInfoDAO(AgentInfoDAO agentInfoDAO) {
+        this.agentInfoDAO = agentInfoDAO;
+        if (agentInfoDAO == null) {
+            servicesUnavailable();
+        } else {
+            servicesAvailable();
+        }
+
+
+    }
+
+    private void servicesAvailable() {
+        this.servicesAvailable.release();
+    }
+
+    private void servicesUnavailable() {
+        this.servicesAvailable.drainPermits();
+    }
 }
-
