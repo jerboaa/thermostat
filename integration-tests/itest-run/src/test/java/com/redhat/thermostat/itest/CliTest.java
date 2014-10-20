@@ -216,7 +216,8 @@ public class CliTest extends IntegrationTest {
                            + "usage: thermostat shell\n"
                            + "                  launches the Thermostat interactive shell\n"
                            + "\n"
-                           + "thermostat shell\n\n";
+                           + "thermostat shell\n"
+                           + "     --help    show usage of command\n";
         assertEquals(expectedOut, stdOut);
     }
 

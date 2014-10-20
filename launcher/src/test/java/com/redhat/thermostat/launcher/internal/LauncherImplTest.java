@@ -380,6 +380,7 @@ public class LauncherImplTest {
                 + "thermostat test1\n"
                 + "     --arg1 <arg>\n"
                 + "     --arg2 <arg>\n"
+                + "     --help              show usage of command\n"
                 + "  -l,--logLevel <arg>\n";
         runAndVerifyCommand(new String[] {"test1", "--arg1", "arg1value", "--argNotAccepted"}, expected, false);
     }
@@ -393,6 +394,7 @@ public class LauncherImplTest {
                 + "thermostat test1\n"
                 + "     --arg1 <arg>\n"
                 + "     --arg2 <arg>\n"
+                + "     --help              show usage of command\n"
                 + "  -l,--logLevel <arg>\n";
         runAndVerifyCommand(new String[] {"test1"}, expected, false);
     }
@@ -412,6 +414,7 @@ public class LauncherImplTest {
                 + "thermostat test1\n"
                 + "     --arg1 <arg>\n"
                 + "     --arg2 <arg>\n"
+                + "     --help              show usage of command\n"
                 + "  -l,--logLevel <arg>\n";
         runAndVerifyCommand(new String[] {"test1", "--arg1"}, expected, false);
     }
