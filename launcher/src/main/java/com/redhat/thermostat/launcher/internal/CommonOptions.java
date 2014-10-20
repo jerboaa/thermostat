@@ -57,9 +57,11 @@ final class CommonOptions {
     // The launcher will auto-add a logLevel option if this special option is
     // specified in the command.properties option section. 
     static final String OPTIONS_COMMON_LOG_OPTION = "AUTO_LOG_OPTION";
-    
+
     static final String LOG_LEVEL_ARG = "logLevel";
     static final String DB_URL_ARG = "dbUrl";
+    static final String HELP_ARG = "help";
+
     static final Set<String> ALL_COMMON_OPTIONS = new HashSet<>(4);
     
     static {
@@ -85,6 +87,14 @@ final class CommonOptions {
         logOption.setRequired(false);
         logOption.setArgName(LOG_LEVEL_ARG);
         return logOption;
+    }
+
+    static Option getHelpOption() {
+        String helpDesc = t.localize(LocaleResources.OPTION_HELP_DESC).getContents();
+        Option helpOption = new Option(null, HELP_ARG, false, helpDesc);
+        helpOption.setRequired(false);
+        helpOption.setArgName(HELP_ARG);
+        return helpOption;
     }
 }
 

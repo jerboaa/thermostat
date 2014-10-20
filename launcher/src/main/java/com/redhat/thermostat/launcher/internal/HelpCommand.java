@@ -45,6 +45,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
 import com.redhat.thermostat.common.cli.AbstractCommand;
@@ -137,6 +138,8 @@ public class HelpCommand extends AbstractCommand  {
             header = header + getAvailabilityNote(info);
         }
         header = header + "\n" + APP_NAME + " " + info.getName();
+        Option help = CommonOptions.getHelpOption();
+        options.addOption(help);
         helpFormatter.printHelp(pw, 80, usage, header, options, 2, 4, null);
         pw.flush();
     }

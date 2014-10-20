@@ -148,7 +148,8 @@ public class HelpCommandTest {
         assertEquals("usage: thermostat usage of test command\n" +
                      "                  description of test command\n" +
                      "Note: this command is only supported outside the shell\n" +
-                     "thermostat test1\n\n", actual);
+                     "thermostat test1\n" +
+                     "     --help    show usage of command\n", actual);
     }
 
     @Test
@@ -241,6 +242,7 @@ public class HelpCommandTest {
                 + " test4         test command 4\n";
         assertEquals(expected, actual);
     }
+
     @Test
     public void verifyHelpUnknownCmdPrintsSummaries() {
         when(infos.getCommandInfo("test1")).thenThrow(new CommandInfoNotFoundException("test1"));

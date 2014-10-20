@@ -53,6 +53,7 @@ public enum LocaleResources {
 
     OPTION_DB_URL_DESC,
     OPTION_LOG_LEVEL_DESC,
+    OPTION_HELP_DESC,
 
     MISSING_OPTION,
     MISSING_OPTIONS,

@@ -73,5 +73,15 @@ public class CommonOptionsTest {
         Option dbUrlOption = options.getOption("dbUrl");
         assertEquals(CommonOptions.DB_URL_ARG, dbUrlOption.getArgName());
     }
+
+    @Test
+    public void canGetHelpOption() {
+        Option logOption = CommonOptions.getHelpOption();
+        Options options = new Options();
+        options.addOption(logOption);
+        assertTrue(options.hasOption("help"));
+        assertFalse(logOption.isRequired());
+        assertFalse(logOption.hasArg());
+    }
 }
 
