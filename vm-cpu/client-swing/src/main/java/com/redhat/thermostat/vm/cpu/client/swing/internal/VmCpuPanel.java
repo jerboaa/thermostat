@@ -37,10 +37,12 @@
 package com.redhat.thermostat.vm.cpu.client.swing.internal;
 
 import java.awt.Component;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
-import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import org.jfree.chart.ChartFactory;
@@ -53,9 +55,9 @@ import org.jfree.data.time.TimeSeriesCollection;
 import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
-import com.redhat.thermostat.client.swing.components.RecentTimeSeriesChartPanel;
-import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
 import com.redhat.thermostat.vm.cpu.client.core.VmCpuView;
@@ -65,14 +67,25 @@ public class VmCpuPanel extends VmCpuView implements SwingComponent {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
+    private static final int DEFAULT_VALUE = 10;
+    private static final TimeUnit DEFAULT_UNIT = TimeUnit.MINUTES;
+
+    private Duration duration;
+
     private HeaderPanel visiblePanel;
     
     private final TimeSeriesCollection data = new TimeSeriesCollection();
     private final TimeSeries cpuTimeSeries = new TimeSeries("cpu-stats");
 
+    private VmCpuChartPanel chartPanel;
+
+    private ActionNotifier<UserAction> userActionNotifier = new ActionNotifier<VmCpuView.UserAction>(this);
+
     public VmCpuPanel() {
         super();
         data.addSeries(cpuTimeSeries);
+
+        duration = new Duration(DEFAULT_VALUE, DEFAULT_UNIT);
 
         initializePanel();
 
@@ -87,16 +100,6 @@ public class VmCpuPanel extends VmCpuView implements SwingComponent {
                 notifier.fireAction(Action.HIDDEN);
             }
         });
-    }
-
-    @Override
-    public void addActionListener(ActionListener<Action> listener) {
-        notifier.addActionListener(listener);
-    }
-
-    @Override
-    public void removeActionListener(ActionListener<Action> listener) {
-        notifier.removeActionListener(listener);
     }
 
     @Override
@@ -117,9 +120,42 @@ public class VmCpuPanel extends VmCpuView implements SwingComponent {
 
         chart.getXYPlot().getRangeAxis().setLowerBound(0.0);
 
-        JPanel chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
+        chartPanel = new VmCpuChartPanel(chart, duration);
 
         visiblePanel.setContent(chartPanel);
+
+        chartPanel.addPropertyChangeListener(VmCpuChartPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                duration = (Duration) evt.getNewValue();
+                userActionNotifier.fireAction(UserAction.USER_CHANGED_TIME_RANGE);
+            }
+        });
+    }
+
+    @Override
+    public void addUserActionListener(ActionListener<UserAction> listener) {
+        userActionNotifier.addActionListener(listener);
+    }
+
+    @Override
+    public void removeUserActionListener(ActionListener<UserAction> listener) {
+        userActionNotifier.removeActionListener(listener);
+    }
+
+    @Override
+    public void setAvailableDataRange(Range<Long> availableInterval) {
+        // FIXME indicate the total data range to the user somehow
+    }
+
+    @Override
+    public void setVisibleDataRange(int time, TimeUnit unit) {
+        chartPanel.setTimeRangeToShow(time, unit);
+    }
+
+    @Override
+    public Duration getUserDesiredDuration() {
+        return duration;
     }
 
     @Override

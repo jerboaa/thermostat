@@ -53,7 +53,13 @@ public interface VmCpuStatDAO {
     static final Category<VmCpuStat> vmCpuStatCategory = new Category<>("vm-cpu-stats", VmCpuStat.class,
             Arrays.<Key<?>>asList(Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, vmCpuLoadKey), Arrays.<Key<?>>asList(Key.TIMESTAMP));
 
+    public abstract VmCpuStat getOldest(VmRef ref);
+
+    public abstract VmCpuStat getLatest(VmRef ref);
+
     public abstract List<VmCpuStat> getLatestVmCpuStats(VmRef ref, long since);
+
+    public abstract List<VmCpuStat> getVmCpuStats(VmRef ref, long since, long to);
 
     public abstract void putVmCpuStat(VmCpuStat stat);
 

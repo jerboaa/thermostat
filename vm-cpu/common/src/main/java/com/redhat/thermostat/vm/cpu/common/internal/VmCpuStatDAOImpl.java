@@ -36,11 +36,13 @@
 
 package com.redhat.thermostat.vm.cpu.common.internal;
 
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
@@ -49,6 +51,7 @@ import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.core.VmTimeIntervalPojoListGetter;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
 
@@ -64,20 +67,75 @@ public class VmCpuStatDAOImpl implements VmCpuStatDAO {
                  "'" + Key.VM_ID.getName() + "' = ?s , " +
                  "'" + Key.TIMESTAMP.getName() + "' = ?l , " +
                  "'" + vmCpuLoadKey.getName() + "' = ?d";
-    
-    
+
+    // QUERY vm-cpu-stats WHERE 'agentId' = ?s AND \
+    //                        'vmId' = ?s \
+    //                        SORT 'timeStamp' ASC  \
+    //                        LIMIT 1
+    static final String DESC_OLDEST_VM_CPU_STAT = "QUERY " + vmCpuStatCategory.getName() +
+            " WHERE '" + Key.AGENT_ID.getName() + "' = ?s " +
+            "   AND '" + Key.VM_ID.getName() + "' = ?s " +
+            "  SORT '" + Key.TIMESTAMP.getName() + "' ASC " +
+            "  LIMIT 1";
+
+    // QUERY vm-cpu-stats WHERE 'agentId' = ?s AND \
+    //                        'vmId' = ?s \
+    //                        SORT 'timeStamp' DSC  \
+    //                        LIMIT 1
+    static final String DESC_LATEST_VM_CPU_STAT = "QUERY " + vmCpuStatCategory.getName() +
+            " WHERE '" + Key.AGENT_ID.getName() + "' = ?s " +
+            "   AND '" + Key.VM_ID.getName() + "' = ?s " +
+            "  SORT '" + Key.TIMESTAMP.getName() + "' DSC " +
+            "  LIMIT 1";
+
     private final Storage storage;
     private final VmLatestPojoListGetter<VmCpuStat> getter;
+    private final VmTimeIntervalPojoListGetter<VmCpuStat> otherGetter;
 
     VmCpuStatDAOImpl(Storage storage) {
         this.storage = storage;
         storage.registerCategory(vmCpuStatCategory);
         this.getter = new VmLatestPojoListGetter<>(storage, vmCpuStatCategory);
+        this.otherGetter = new VmTimeIntervalPojoListGetter<>(storage, vmCpuStatCategory);
     }
 
     @Override
     public List<VmCpuStat> getLatestVmCpuStats(VmRef ref, long since) {
         return getter.getLatest(ref, since);
+    }
+
+    @Override
+    public List<VmCpuStat> getVmCpuStats(VmRef ref, long since, long to) {
+        return otherGetter.getLatest(ref, since, to);
+    }
+
+    @Override
+    public VmCpuStat getLatest(VmRef ref) {
+        return runAgentAndVmIdQuery(ref, DESC_LATEST_VM_CPU_STAT);
+    }
+
+    @Override
+    public VmCpuStat getOldest(VmRef ref) {
+        return runAgentAndVmIdQuery(ref, DESC_OLDEST_VM_CPU_STAT);
+    }
+
+    private VmCpuStat runAgentAndVmIdQuery(VmRef ref, String descriptor) {
+        StatementDescriptor<VmCpuStat> desc = new StatementDescriptor<>(vmCpuStatCategory, descriptor);
+        PreparedStatement<VmCpuStat> prepared;
+        try {
+            prepared = storage.prepareStatement(desc);
+            prepared.setString(0, ref.getHostRef().getAgentId());
+            prepared.setString(1, ref.getVmId());
+            Cursor<VmCpuStat> cursor = prepared.executeQuery();
+            if (cursor.hasNext()) {
+                return cursor.next();
+            }
+        } catch (DescriptorParsingException e) {
+            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
+        } catch (StatementExecutionException e) {
+            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+        }
+        return null;
     }
 
     @Override

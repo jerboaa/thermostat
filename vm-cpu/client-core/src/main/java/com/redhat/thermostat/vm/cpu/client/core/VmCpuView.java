@@ -37,12 +37,45 @@
 package com.redhat.thermostat.vm.cpu.client.core;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
+import com.redhat.thermostat.vm.cpu.client.core.VmCpuView.Duration;
 
 public abstract class VmCpuView extends BasicView implements UIComponent {
+
+    public static class Duration {
+        public final int value;
+        public final TimeUnit unit;
+
+        public Duration(int value, TimeUnit unit) {
+            this.value = value;
+            this.unit = unit;
+        }
+
+        @Override
+        public String toString() {
+            return value + " " + unit;
+        }
+    }
+
+    public enum UserAction {
+        USER_CHANGED_TIME_RANGE,
+    }
+
+    public abstract void addUserActionListener(ActionListener<UserAction> listener);
+
+    public abstract void removeUserActionListener(ActionListener<UserAction> listener);
+
+    public abstract Duration getUserDesiredDuration();
+
+    public abstract void setVisibleDataRange(int time, TimeUnit unit);
+
+    public abstract void setAvailableDataRange(Range<Long> availableInterval);
 
     public abstract void addData(List<DiscreteTimeData<? extends Number>> data);
 

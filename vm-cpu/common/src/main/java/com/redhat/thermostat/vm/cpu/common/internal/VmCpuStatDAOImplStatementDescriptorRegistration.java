@@ -41,6 +41,7 @@ import java.util.Set;
 
 import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.VmLatestPojoListGetter;
+import com.redhat.thermostat.storage.core.VmTimeIntervalPojoListGetter;
 import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
@@ -53,21 +54,29 @@ import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 public class VmCpuStatDAOImplStatementDescriptorRegistration implements
         StatementDescriptorRegistration {
     
-    static final String descriptor = String.format(VmLatestPojoListGetter.VM_LATEST_QUERY_FORMAT,
+    static final String latestDescriptor = String.format(VmLatestPojoListGetter.VM_LATEST_QUERY_FORMAT,
+            VmCpuStatDAO.vmCpuStatCategory.getName());
+    static final String rangeDescriptor = String.format(VmTimeIntervalPojoListGetter.VM_INTERVAL_QUERY_FORMAT,
             VmCpuStatDAO.vmCpuStatCategory.getName());
 
     @Override
     public Set<String> getStatementDescriptors() {
         Set<String> descs = new HashSet<>();
         descs.add(VmCpuStatDAOImpl.DESC_ADD_VM_CPU_STAT);
-        descs.add(descriptor);
+        descs.add(VmCpuStatDAOImpl.DESC_LATEST_VM_CPU_STAT);
+        descs.add(VmCpuStatDAOImpl.DESC_OLDEST_VM_CPU_STAT);
+        descs.add(latestDescriptor);
+        descs.add(rangeDescriptor);
         return descs;
     }
     
     @Override
     public DescriptorMetadata getDescriptorMetadata(String descriptor,
             PreparedParameter[] params) {
-        if (descriptor.equals(VmCpuStatDAOImplStatementDescriptorRegistration.descriptor)) {
+        if (descriptor.equals(VmCpuStatDAOImplStatementDescriptorRegistration.latestDescriptor)
+                || descriptor.equals(VmCpuStatDAOImplStatementDescriptorRegistration.rangeDescriptor)
+                || descriptor.equals(VmCpuStatDAOImpl.DESC_LATEST_VM_CPU_STAT)
+                || descriptor.equals(VmCpuStatDAOImpl.DESC_OLDEST_VM_CPU_STAT)) {
             String agentId = (String)params[0].getValue();
             String vmId = (String)params[1].getValue();
             DescriptorMetadata metadata = new DescriptorMetadata(agentId, vmId);

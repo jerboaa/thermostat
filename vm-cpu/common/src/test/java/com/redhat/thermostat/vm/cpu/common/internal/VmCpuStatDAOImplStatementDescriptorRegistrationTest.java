@@ -64,7 +64,7 @@ public class VmCpuStatDAOImplStatementDescriptorRegistrationTest {
     public void registersAllDescriptors() {
         VmCpuStatDAOImplStatementDescriptorRegistration reg = new VmCpuStatDAOImplStatementDescriptorRegistration();
         Set<String> descriptors = reg.getStatementDescriptors();
-        assertEquals(2, descriptors.size());
+        assertEquals(5, descriptors.size());
         assertFalse("null descriptor not allowed", descriptors.contains(null));
     }
     
@@ -92,11 +92,38 @@ public class VmCpuStatDAOImplStatementDescriptorRegistrationTest {
         // storage-core + this module
         assertEquals(2, registrations.size());
         assertNotNull(vmCpuStatReg);
-        assertEquals(2, vmCpuStatReg.getStatementDescriptors().size());
+        assertEquals(5, vmCpuStatReg.getStatementDescriptors().size());
     }
     
     @Test
     public void canGetMetadataForLatestCpuStatQuery() {
+        String descriptor = VmCpuStatDAOImplStatementDescriptorRegistration.latestDescriptor;
+
+        assertValidDescriptor(descriptor);
+    }
+
+    @Test
+    public void canGetMetadataForRangeCpuStatQuery() {
+        String descriptor = VmCpuStatDAOImplStatementDescriptorRegistration.rangeDescriptor;
+
+        assertValidDescriptor(descriptor);
+    }
+
+    @Test
+    public void canGetMetadataForSingleOldestCpuStatQuery() {
+        String descriptor = VmCpuStatDAOImpl.DESC_OLDEST_VM_CPU_STAT;
+
+        assertValidDescriptor(descriptor);
+    }
+
+    @Test
+    public void canGetMetadataForSingleLatestCpuStatQuery() {
+        String descriptor = VmCpuStatDAOImpl.DESC_LATEST_VM_CPU_STAT;
+
+        assertValidDescriptor(descriptor);
+    }
+
+    private void assertValidDescriptor(String descriptor) {
         PreparedParameter agentIdParam = mock(PreparedParameter.class);
         PreparedParameter vmIdParam = mock(PreparedParameter.class);
         String agentId = "agentId";
@@ -107,7 +134,7 @@ public class VmCpuStatDAOImplStatementDescriptorRegistrationTest {
                 vmIdParam };
         
         StatementDescriptorMetadataFactory factory = new VmCpuStatDAOImplStatementDescriptorRegistration();
-        DescriptorMetadata data = factory.getDescriptorMetadata(VmCpuStatDAOImplStatementDescriptorRegistration.descriptor, params);
+        DescriptorMetadata data = factory.getDescriptorMetadata(descriptor, params);
         assertNotNull(data);
         assertEquals(agentId, data.getAgentId());
         assertEquals(vmId, data.getVmId());

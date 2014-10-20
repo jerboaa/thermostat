@@ -37,7 +37,6 @@
 package com.redhat.thermostat.vm.cpu.client.core.internal;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -45,6 +44,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -56,26 +56,26 @@ import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.vm.cpu.client.core.VmCpuView;
+import com.redhat.thermostat.vm.cpu.client.core.VmCpuView.Duration;
 import com.redhat.thermostat.vm.cpu.client.core.VmCpuViewProvider;
-import com.redhat.thermostat.vm.cpu.client.core.internal.VmCpuController;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
-
 
 public class VmCpuControllerTest {
 
     @SuppressWarnings({ "unchecked", "rawtypes" }) // any(List.class)
     @Test
     public void testChartUpdate() {
+        VmRef ref = mock(VmRef.class);
 
         VmCpuStat stat1 = new VmCpuStat("foo-agent", 123, "vmId", 50.5);
         List<VmCpuStat> stats = new ArrayList<VmCpuStat>();
         stats.add(stat1);
 
         VmCpuStatDAO vmCpuStatDAO = mock(VmCpuStatDAO.class);
-        when(vmCpuStatDAO.getLatestVmCpuStats(any(VmRef.class), eq(Long.MIN_VALUE))).thenReturn(stats).thenReturn(new ArrayList<VmCpuStat>());
-
-        VmRef ref = mock(VmRef.class);
+        when(vmCpuStatDAO.getLatestVmCpuStats(any(VmRef.class), any(Long.class))).thenThrow(new AssertionError("Unbounded queries are bad!"));
+        when(vmCpuStatDAO.getOldest(ref)).thenReturn(stat1);
+        when(vmCpuStatDAO.getLatest(ref)).thenReturn(stat1);
 
         Timer timer = mock(Timer.class);
         ArgumentCaptor<Runnable> timerActionCaptor = ArgumentCaptor.forClass(Runnable.class);
@@ -89,6 +89,8 @@ public class VmCpuControllerTest {
         final VmCpuView view = mock(VmCpuView.class);
         ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
+
+        when(view.getUserDesiredDuration()).thenReturn(new Duration(1, TimeUnit.MINUTES));
         
         VmCpuViewProvider viewProvider = mock(VmCpuViewProvider.class);
         when(viewProvider.createView()).thenReturn(view);
