@@ -92,21 +92,15 @@ public class DumpHeapCommand extends AbstractCommand {
         };
 
         ServiceReference vmInfoRef = context.getServiceReference(VmInfoDAO.class.getName());
-        if (vmInfoRef == null) {
-            throw new CommandException(translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
-        }
+        requireNonNull(vmInfoRef, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
         VmInfoDAO vmInfoDAO = (VmInfoDAO) context.getService(vmInfoRef);
         
         ServiceReference agentInfoRef = context.getServiceReference(AgentInfoDAO.class.getName());
-        if (agentInfoRef == null) {
-            throw new CommandException(translator.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE));
-        }
+        requireNonNull(agentInfoRef, translator.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE));
         AgentInfoDAO agentInfoDAO = (AgentInfoDAO) context.getService(agentInfoRef);
         
         ServiceReference requestQueueRef = context.getServiceReference(RequestQueue.class.getName());
-        if (requestQueueRef == null) {
-            throw new CommandException(translator.localize(LocaleResources.REQUEST_QUEUE_UNAVAILABLE));
-        }
+        requireNonNull(requestQueueRef, translator.localize(LocaleResources.REQUEST_QUEUE_UNAVAILABLE));
         RequestQueue queue = (RequestQueue) context.getService(requestQueueRef);
         
         implementation.execute(vmInfoDAO, agentInfoDAO, args.getVM(), queue, successHandler, errorHandler);

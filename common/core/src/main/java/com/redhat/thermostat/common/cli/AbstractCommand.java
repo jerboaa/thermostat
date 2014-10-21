@@ -54,7 +54,7 @@ public abstract class AbstractCommand implements Command {
         return true;
     }
 
-    public void requireNotNull(Object obj, LocalizedString message) throws CommandException {
+    public void requireNonNull(Object obj, LocalizedString message) throws CommandException {
         if (obj == null) {
             throw new CommandException(message);
         }

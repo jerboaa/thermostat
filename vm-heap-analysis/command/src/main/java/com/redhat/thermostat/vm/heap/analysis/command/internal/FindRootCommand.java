@@ -76,9 +76,7 @@ public class FindRootCommand extends AbstractCommand {
     @Override
     public void run(CommandContext ctx) throws CommandException {
         ServiceReference heapDaoRef = context.getServiceReference(HeapDAO.class.getName());
-        if (heapDaoRef == null) {
-            throw new CommandException(translator.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
-        }
+        requireNonNull(heapDaoRef, translator.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
         HeapDAO heapDao = (HeapDAO) context.getService(heapDaoRef);
 
         try {

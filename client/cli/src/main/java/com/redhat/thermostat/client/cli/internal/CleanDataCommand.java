@@ -65,9 +65,7 @@ public class CleanDataCommand extends AbstractCommand {
     @Override
     public void run(CommandContext ctx) throws CommandException {
         ServiceReference storageServiceRef = bundleContext.getServiceReference(Storage.class);
-        if (storageServiceRef == null) {
-            throw new CommandException(translator.localize(LocaleResources.STORAGE_UNAVAILABLE));
-        }
+        requireNonNull(storageServiceRef, translator.localize(LocaleResources.STORAGE_UNAVAILABLE));
         Storage storage = (Storage) bundleContext.getService(storageServiceRef);
         
         try {
@@ -88,9 +86,7 @@ public class CleanDataCommand extends AbstractCommand {
 
     public void removeDataForSpecifiedAgents(Storage storage, List <String> agentIdList, PrintStream output) throws CommandException {
         ServiceReference agentServiceRef = bundleContext.getServiceReference(AgentInfoDAO.class);
-        if (agentServiceRef == null) {
-            throw new CommandException(translator.localize(LocaleResources.AGENT_UNAVAILABLE));
-        }
+        requireNonNull(agentServiceRef, translator.localize(LocaleResources.AGENT_UNAVAILABLE));
         AgentInfoDAO agentInfoDAO = (AgentInfoDAO) bundleContext.getService(agentServiceRef);
         
         try {
@@ -109,9 +105,7 @@ public class CleanDataCommand extends AbstractCommand {
 
     public void removeDataForAllAgents(Storage storage, PrintStream output) throws CommandException {
         ServiceReference agentServiceRef = bundleContext.getServiceReference(AgentInfoDAO.class);
-        if (agentServiceRef == null) {
-            throw new CommandException(translator.localize(LocaleResources.AGENT_UNAVAILABLE));
-        }
+        requireNonNull(agentServiceRef, translator.localize(LocaleResources.AGENT_UNAVAILABLE));
         AgentInfoDAO agentInfoDAO = (AgentInfoDAO) bundleContext.getService(agentServiceRef);
         
         try {

@@ -38,7 +38,6 @@ package com.redhat.thermostat.launcher.internal;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;

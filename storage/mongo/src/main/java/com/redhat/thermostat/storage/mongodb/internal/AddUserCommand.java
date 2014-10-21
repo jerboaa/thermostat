@@ -94,9 +94,7 @@ public class AddUserCommand extends BaseAddUserCommand {
     public void run(CommandContext ctx) throws CommandException {
         // Check if mongodb stamp file exists.
         ServiceReference commonPathRef = context.getServiceReference(CommonPaths.class.getName());
-        if (commonPathRef == null) {
-            throw new CommandException(t.localize(LocaleResources.COMMON_PATHS_SERVICE_UNAVAILABLE));
-        }
+        requireNonNull(commonPathRef, t.localize(LocaleResources.COMMON_PATHS_SERVICE_UNAVAILABLE));
         CommonPaths commonPath = (CommonPaths)context.getService(commonPathRef);
         File dataDir = commonPath.getUserPersistentDataDirectory();
         // Since this is backing storage specific, it's most likely not a good
@@ -132,9 +130,7 @@ public class AddUserCommand extends BaseAddUserCommand {
         reg.unregister();
         
         ServiceReference storageRef = context.getServiceReference(Storage.class.getName());
-        if (storageRef == null) {
-            throw new CommandException(t.localize(LocaleResources.STORAGE_SERVICE_UNAVAILABLE));
-        }
+        requireNonNull(storageRef, t.localize(LocaleResources.STORAGE_SERVICE_UNAVAILABLE));
         @SuppressWarnings("unchecked")
         // FIXME: Hack alarm. We use knowledge that via MongoStorageProvider we
         //        have a MongoStorage instance wrapped in QueuedStorage. What's
@@ -145,9 +141,7 @@ public class AddUserCommand extends BaseAddUserCommand {
         //        impl specific. For now do this hack :-/  
         QueuedStorage storage = (QueuedStorage)context.getService(storageRef);
         MongoStorage mongoStorage = getDelegate(storage);
-        if (mongoStorage == null) {
-            throw new CommandException(t.localize(LocaleResources.MONGOSTORAGE_RETRIEVAL_FAILED));
-        }
+        requireNonNull(mongoStorage, t.localize(LocaleResources.MONGOSTORAGE_RETRIEVAL_FAILED));
         StorageAuthInfoGetter getter = null;
         try {
             LocalizedString userPrompt = new LocalizedString("Please enter the username you'd like to add to mongodb storage at " + dbUrl + ": ");

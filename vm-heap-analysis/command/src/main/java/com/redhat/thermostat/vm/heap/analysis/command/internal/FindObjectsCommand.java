@@ -77,9 +77,7 @@ public class FindObjectsCommand extends AbstractCommand {
     @Override
     public void run(CommandContext ctx) throws CommandException {
         ServiceReference heapDAORef = context.getServiceReference(HeapDAO.class.getName());
-        if (heapDAORef == null) {
-            throw new CommandException(translator.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
-        }
+        requireNonNull(heapDAORef, translator.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
         HeapDAO heapDAO = (HeapDAO) context.getService(heapDAORef);
         try {
             run(ctx, heapDAO);

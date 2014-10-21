@@ -76,9 +76,7 @@ public class VMInfoCommand extends AbstractCommand {
     @Override
     public void run(CommandContext ctx) throws CommandException {
         ServiceReference vmsDAORef = context.getServiceReference(VmInfoDAO.class.getName());
-        if (vmsDAORef == null) {
-            throw new CommandException(translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
-        }
+        requireNonNull(vmsDAORef, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
         VmInfoDAO vmsDAO = (VmInfoDAO) context.getService(vmsDAORef);
 
         HostVMArguments hostVMArgs = new HostVMArguments(ctx.getArguments(), true, false);

@@ -41,15 +41,15 @@ import java.util.Collection;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
-import com.redhat.thermostat.common.cli.Command;
+import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.schemainfo.command.locale.LocaleResources;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.dao.SchemaInfoDAO;
-import com.redhat.thermostat.schemainfo.command.locale.LocaleResources;
-import com.redhat.thermostat.storage.model.SchemaInformation;;
+import com.redhat.thermostat.storage.model.SchemaInformation;
 
-public class SchemaInfoCommand implements Command {
+public class SchemaInfoCommand extends AbstractCommand {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     public static final String commandName = "list-categories";
@@ -62,10 +62,8 @@ public class SchemaInfoCommand implements Command {
     
     public void run(CommandContext ctx) throws CommandException {
         ServiceReference<?> schemaInfoDaoRef = context.getServiceReference(SchemaInfoDAO.class.getName());
-        if (schemaInfoDaoRef == null) {
-            throw new CommandException(translator.localize(LocaleResources.SCHEMAINFO_SERVICE_UNAVAILABLE));
-        }
-        
+        requireNonNull(schemaInfoDaoRef, translator.localize(LocaleResources.SCHEMAINFO_SERVICE_UNAVAILABLE));
+
         SchemaInfoDAO schemaInfoDao = (SchemaInfoDAO) context.getService(schemaInfoDaoRef);
         
         Collection<SchemaInformation> categoriesList = schemaInfoDao.getSchemaInfos();
@@ -78,10 +76,5 @@ public class SchemaInfoCommand implements Command {
             }
         }
     }
-
-    public boolean isStorageRequired() {
-        return true;
-    }
-
 }
 

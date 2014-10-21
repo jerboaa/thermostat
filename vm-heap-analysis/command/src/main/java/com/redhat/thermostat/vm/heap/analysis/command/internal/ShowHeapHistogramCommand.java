@@ -71,9 +71,7 @@ public class ShowHeapHistogramCommand extends AbstractCommand {
     @Override
     public void run(CommandContext ctx) throws CommandException {
         ServiceReference ref = context.getServiceReference(HeapDAO.class.getName());
-        if (ref == null) {
-            throw new CommandException(translator.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
-        }
+        requireNonNull(ref, translator.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
         HeapDAO heapDAO = (HeapDAO) context.getService(ref);
 
         try {

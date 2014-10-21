@@ -52,6 +52,7 @@ import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.CommandLineArgumentParseException;
 import com.redhat.thermostat.common.utils.StreamUtils;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.heap.analysis.command.locale.LocaleResources;
@@ -80,9 +81,7 @@ public class SaveHeapDumpToFileCommand extends AbstractCommand {
     @Override
     public void run(CommandContext ctx) throws CommandException {
         ServiceReference ref = context.getServiceReference(HeapDAO.class.getName());
-        if (ref == null) {
-            throw new CommandException(translator.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
-        }
+        requireNonNull(ref, translator.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
         HeapDAO heapDAO = (HeapDAO) context.getService(ref);
         try {
             run(ctx, heapDAO);
@@ -96,11 +95,11 @@ public class SaveHeapDumpToFileCommand extends AbstractCommand {
         Arguments args = ctx.getArguments();
         String heapId = args.getArgument(HEAP_ID_ARGUMENT);
         if (heapId == null) {
-            throw new CommandException(translator.localize(LocaleResources.HEAP_ID_REQUIRED));
+            throw new CommandLineArgumentParseException(translator.localize(LocaleResources.HEAP_ID_REQUIRED));
         }
         String filename = args.getArgument(FILE_NAME_ARGUMENT);
         if (filename == null) {
-            throw new CommandException(translator.localize(LocaleResources.FILE_REQUIRED));
+            throw new CommandLineArgumentParseException(translator.localize(LocaleResources.FILE_REQUIRED));
         }
 
         HeapInfo heapInfo = heapDAO.getHeapInfo(heapId);

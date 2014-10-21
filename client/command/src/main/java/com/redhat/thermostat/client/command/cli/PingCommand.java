@@ -125,9 +125,7 @@ public class PingCommand extends AbstractCommand {
         }
 
         ServiceReference hostInfoDaoRef = context.getServiceReference(HostInfoDAO.class.getName());
-        if (hostInfoDaoRef == null) {
-            throw new CommandException(translator.localize(LocaleResources.COMMAND_PING_NO_HOST_INFO_DAO));
-        }
+        requireNonNull(hostInfoDaoRef, translator.localize(LocaleResources.COMMAND_PING_NO_HOST_INFO_DAO));
         HostInfoDAO hostInfoDao = (HostInfoDAO) context.getService(hostInfoDaoRef);
         HostRef targetHostRef = getHostRef(hostInfoDao, agentId);
         context.ungetService(hostInfoDaoRef);
@@ -137,9 +135,7 @@ public class PingCommand extends AbstractCommand {
             return;
         }
         ServiceReference agentInfoDaoRef = context.getServiceReference(AgentInfoDAO.class.getName());
-        if (agentInfoDaoRef == null) {
-            throw new CommandException(translator.localize(LocaleResources.COMMAND_PING_NO_AGENT_INFO_DAO));
-        }
+        requireNonNull(agentInfoDaoRef, translator.localize(LocaleResources.COMMAND_PING_NO_AGENT_INFO_DAO));
         AgentInfoDAO agentInfoDao = (AgentInfoDAO) context.getService(agentInfoDaoRef);
         String address = agentInfoDao.getAgentInformation(targetHostRef).getConfigListenAddress();
         context.ungetService(agentInfoDaoRef);
@@ -153,9 +149,7 @@ public class PingCommand extends AbstractCommand {
         ping.addListener(new PongListener(out, responseBarrier, translator));
 
         ServiceReference queueRef = context.getServiceReference(RequestQueue.class.getName());
-        if (queueRef == null) {
-            throw new CommandException(translator.localize(LocaleResources.COMMAND_PING_NO_REQUEST_QUEUE));
-        }
+        requireNonNull(queueRef, translator.localize(LocaleResources.COMMAND_PING_NO_REQUEST_QUEUE));
         RequestQueue queue = (RequestQueue) context.getService(queueRef);
         out.println(translator.localize(LocaleResources.COMMAND_PING_QUEUING_REQUEST, target.toString()).getContents());
         queue.putRequest(ping);

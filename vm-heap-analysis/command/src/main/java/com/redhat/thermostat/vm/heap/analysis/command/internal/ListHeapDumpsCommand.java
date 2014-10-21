@@ -89,21 +89,15 @@ public class ListHeapDumpsCommand extends AbstractCommand {
         renderer.printLine(COLUMN_NAMES);
 
         ServiceReference hostDAORef = context.getServiceReference(HostInfoDAO.class.getName());
-        if (hostDAORef == null) {
-            throw new CommandException(translator.localize(LocaleResources.HOST_SERVICE_UNAVAILABLE));
-        }
+        requireNonNull(hostDAORef, translator.localize(LocaleResources.HOST_SERVICE_UNAVAILABLE));
         HostInfoDAO hostDAO = (HostInfoDAO) context.getService(hostDAORef);
 
         ServiceReference vmDAORef = context.getServiceReference(VmInfoDAO.class.getName());
-        if (vmDAORef == null) {
-            throw new CommandException(translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
-        }
+        requireNonNull(vmDAORef, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
         VmInfoDAO vmDAO = (VmInfoDAO) context.getService(vmDAORef);
 
         ServiceReference heapDAORef = context.getServiceReference(HeapDAO.class.getName());
-        if (heapDAORef == null) {
-            throw new CommandException(translator.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
-        }
+        requireNonNull(heapDAORef, translator.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
         HeapDAO heapDAO = (HeapDAO) context.getService(heapDAORef);
 
         Collection<HostRef> hosts = args.getHost() != null ? Arrays.asList(args.getHost()) : hostDAO.getHosts();

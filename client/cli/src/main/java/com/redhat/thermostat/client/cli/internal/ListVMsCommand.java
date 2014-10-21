@@ -70,18 +70,16 @@ public class ListVMsCommand extends AbstractCommand {
     public void run(CommandContext ctx) throws CommandException {
 
         ServiceReference hostsDAORef = context.getServiceReference(HostInfoDAO.class.getName());
-        if (hostsDAORef == null) {
-            throw new CommandException(translator.localize(LocaleResources.HOST_SERVICE_UNAVAILABLE));
-        }
+        requireNonNull(hostsDAORef, translator.localize(LocaleResources.HOST_SERVICE_UNAVAILABLE));
         HostInfoDAO hostsDAO = (HostInfoDAO) context.getService(hostsDAORef);
+
         Collection<HostRef> hosts = hostsDAO.getHosts();
         context.ungetService(hostsDAORef);
 
         ServiceReference vmsDAORef = context.getServiceReference(VmInfoDAO.class.getName());
-        if (vmsDAORef == null) {
-            throw new CommandException(translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
-        }
+        requireNonNull(vmsDAORef, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
         VmInfoDAO vmsDAO = (VmInfoDAO) context.getService(vmsDAORef);
+
         VMListFormatter formatter = new VMListFormatter();
         formatter.addHeader();
         for (HostRef host : hosts) {

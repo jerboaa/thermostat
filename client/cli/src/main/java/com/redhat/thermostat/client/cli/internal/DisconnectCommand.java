@@ -64,10 +64,9 @@ public class DisconnectCommand extends AbstractCommand {
     @Override
     public void run(CommandContext ctx) throws CommandException {
         ServiceReference ref = context.getServiceReference(DbService.class.getName());
-        if (ref == null) {
-            // not connected
-            throw new CommandException(translator.localize(LocaleResources.COMMAND_DISCONNECT_NOT_CONNECTED));
-        }
+
+        // if ref is null then we are not connected
+        requireNonNull(ref, translator.localize(LocaleResources.COMMAND_DISCONNECT_NOT_CONNECTED));
         
         try {
             DbService service = (DbService) context.getService(ref);

@@ -60,7 +60,7 @@ public class ListAgentsCommand extends AbstractCommand {
     public void run(CommandContext ctx) throws CommandException {
         waitForServices(500l);
 
-        requireNotNull(agentInfoDAO, translator.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE));
+        requireNonNull(agentInfoDAO, translator.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE));
 
         listAgents(ctx.getConsole().getOutput(), agentInfoDAO.getAllAgentInformation());
     }
