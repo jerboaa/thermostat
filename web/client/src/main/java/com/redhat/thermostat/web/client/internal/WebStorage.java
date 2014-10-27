@@ -576,8 +576,10 @@ public class WebStorage implements Storage, SecureStorage {
             throw new StatementExecutionException(e);
         }
         if (qResp.getResponseCode() == PreparedStatementResponseCode.QUERY_SUCCESS) {
-            T[] result = qResp.getResultList();
-            return new WebCursor<T>(result);
+            // Return an empty cursor
+            return new WebCursor<T>(this, qResp.getResultList(),
+                                    qResp.hasMoreBatches(),
+                                    qResp.getCursorId(), parametrizedTypeToken, stmt);
         } else if (qResp.getResponseCode() == PreparedStatementResponseCode.ILLEGAL_PATCH) {
             String msg = "Illegal statement argument. See server logs for details.";
             IllegalArgumentException iae = new IllegalArgumentException(msg);
@@ -587,10 +589,43 @@ public class WebStorage implements Storage, SecureStorage {
             // We only handle success responses and illegal patches, like
             // we do for other storages. This is just a defensive measure in
             // order to fail early in case something unexpected comes back.
-            String msg = "Unknown response from storage endpoint!";
+            String msg = "[query-execute] Unknown response from storage endpoint!";
             IllegalStateException ise = new IllegalStateException(msg);
             throw new StatementExecutionException(ise);
         }
+    }
+    
+    /**
+     * This method gets called from WebCursor in order to fetch more results
+     * or refresh the result set since parameters like limit or skip have
+     * changed since the original result set was fetched.
+     * 
+     * @param cursorId
+     * @param parametrizedTypeToken The type token for the data class (Pojo).
+     * @param batchSize The desired batchSize or null. null means that the user
+     *                  did not set an explicit batch size.
+     * @param limit The desired limit for this cursor or null. null means that
+     *              a user did not set an explicit limit.
+     * @param skip The desired skip value or null. null means no skip value has
+     *             been specified by the user.
+     * @return
+     */
+    <T extends Pojo> WebQueryResponse<T> getMore(int cursorId, Type parametrizedTypeToken, Integer batchSize, WebPreparedStatement<T> stmt) {
+        NameValuePair preparedStmtIdParam = new BasicNameValuePair("prepared-stmt-id", Integer.toString(stmt.getStatementId()));
+        NameValuePair cursorIdParam = new BasicNameValuePair("cursor-id", Integer.toString(cursorId));
+        NameValuePair batchSizeParam = new BasicNameValuePair("batch-size", batchSize.toString());
+        
+        List<NameValuePair> formparams = Arrays.asList(preparedStmtIdParam,
+                                                       cursorIdParam,
+                                                       batchSizeParam);
+        WebQueryResponse<T> qResp = null;
+        try (CloseableHttpEntity entity = post(endpoint + "/get-more", formparams)) {
+            Reader reader = getContentAsReader(entity);
+            qResp = gson.fromJson(reader, parametrizedTypeToken);
+        } catch (Exception e) {
+            throw new StorageException(e);
+        }
+        return qResp;
     }
     
     /**
@@ -799,6 +834,7 @@ public class WebStorage implements Storage, SecureStorage {
             this.statementId = statementId;
         }
     }
+
 
 }
 

@@ -34,56 +34,24 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.mongodb.internal;
+package com.redhat.thermostat.storage.core.experimental;
 
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import com.mongodb.MongoException;
-import com.redhat.thermostat.storage.core.StorageException;
-import com.redhat.thermostat.storage.core.experimental.BasicBatchCursor;
-import com.redhat.thermostat.storage.core.experimental.BatchCursor;
 import com.redhat.thermostat.storage.model.Pojo;
 
-class MongoCursor<T extends Pojo> extends BasicBatchCursor<T> {
+public abstract class BasicBatchCursor<T extends Pojo> implements BatchCursor<T> {
 
-    private DBCursor cursor;
-    private Class<T> resultClass;
-
-    MongoCursor(DBCursor cursor, Class<T> resultClass) {
-        this.cursor = cursor;
-        this.resultClass = resultClass;
-    }
-
-    @Override
-    public boolean hasNext() {
-        try {
-            return cursor.hasNext();
-        } catch (MongoException me) {
-            throw new StorageException(me);
-        }
-    }
-
-    @Override
-    public T next() {
-        try {
-            DBObject next = cursor.next();
-            if (next == null) {
-                // FIXME: This is inconsistent with other cursors throwing
-                //        NoSuchElementException
-                return null;
-            }
-            MongoPojoConverter converter = new MongoPojoConverter();
-            return converter.convertMongoToPojo(next, resultClass);
-        } catch (MongoException me) {
-            throw new StorageException(me);
-        }
-    }
-
+    private Integer batchSize;
+    
     @Override
     public void setBatchSize(int n) throws IllegalArgumentException {
-        super.setBatchSize(n); // validates input
-        cursor.batchSize(super.getBatchSize());
+        if (n <= 0) {
+            throw new IllegalArgumentException("Batch size must be > 0");
+        }
+        this.batchSize = n;
     }
     
+    @Override
+    public int getBatchSize() {
+        return this.batchSize == null ? BatchCursor.DEFAULT_BATCH_SIZE : this.batchSize;
+    }
 }
-

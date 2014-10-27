@@ -53,6 +53,8 @@ class WebQueryResponseTypeAdapter<T extends Pojo> extends TypeAdapter<WebQueryRe
 
     private static final String PROP_RESULT = "payload";
     private static final String PROP_ERROR_CODE = "errno";
+    private static final String PROP_CURSOR_ID = "cId";
+    private static final String PROP_CURSOR_HAS_MORE_BATCHES = "cHasMore";
     
     // The runtime type of the Pojo
     private final Class<T> runtimePojoType;
@@ -78,11 +80,23 @@ class WebQueryResponseTypeAdapter<T extends Pojo> extends TypeAdapter<WebQueryRe
         out.name(PROP_ERROR_CODE);
         out.value(value.getResponseCode());
         
+        // cursor id
+        out.name(PROP_CURSOR_ID);
+        out.value(value.getCursorId());
+        
+        // has more batches property
+        out.name(PROP_CURSOR_HAS_MORE_BATCHES);
+        out.value(value.hasMoreBatches());
+        
         // payload
         out.name(PROP_RESULT);
-        @SuppressWarnings("unchecked")
-        TypeAdapter<T[]> pojoTa = (TypeAdapter<T[]>)gson.getAdapter(value.getResultList().getClass());
-        pojoTa.write(out, value.getResultList());
+        if (value.getResultList() == null) {
+            out.nullValue();
+        } else {
+            @SuppressWarnings("unchecked")
+            TypeAdapter<T[]> pojoTa = (TypeAdapter<T[]>)gson.getAdapter(value.getResultList().getClass());
+            pojoTa.write(out, value.getResultList());
+        }
         
         out.endObject();
     }
@@ -97,14 +111,18 @@ class WebQueryResponseTypeAdapter<T extends Pojo> extends TypeAdapter<WebQueryRe
         
         in.beginObject();
         
-        // response code
+        // response code (can't be null)
         int responseCode = 0;
         String name = in.nextName();
-        if (name.equals(PROP_ERROR_CODE)) {
-            responseCode = in.nextInt();
-        } else {
-            throw new IllegalStateException("Expected " + PROP_ERROR_CODE + " but got " + name);
-        }
+        responseCode = in.nextInt();
+        
+        // cursor ID (can't be null)
+        name = in.nextName();
+        int cursorId = in.nextInt();
+        
+        // Has more batches, boolean, can't be null
+        name = in.nextName();
+        boolean hasMoreBatches = in.nextBoolean();
         
         if (runtimePojoType == null) {
             throw new IllegalStateException("Runtime pojo type unknown");
@@ -130,6 +148,8 @@ class WebQueryResponseTypeAdapter<T extends Pojo> extends TypeAdapter<WebQueryRe
         
         WebQueryResponse<T> qResponse = new WebQueryResponse<>();
         qResponse.setResponseCode(responseCode);
+        qResponse.setCursorId(cursorId);
+        qResponse.setHasMoreBatches(hasMoreBatches);
         qResponse.setResultList(resultList);
         return qResponse;
     }

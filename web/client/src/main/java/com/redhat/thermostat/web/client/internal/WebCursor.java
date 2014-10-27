@@ -37,34 +37,89 @@
 
 package com.redhat.thermostat.web.client.internal;
 
+import java.lang.reflect.Type;
 import java.util.NoSuchElementException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.StorageException;
+import com.redhat.thermostat.storage.core.experimental.BasicBatchCursor;
 import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.web.common.PreparedStatementResponseCode;
+import com.redhat.thermostat.web.common.WebPreparedStatement;
+import com.redhat.thermostat.web.common.WebQueryResponse;
 
-class WebCursor<T extends Pojo> implements Cursor<T> {
+class WebCursor<T extends Pojo> extends BasicBatchCursor<T> {
+    
+    private static final Logger logger = LoggingUtils.getLogger(WebCursor.class);
 
-    private T[] data;
-    private int index;
+    private final Type parametrizedTypeToken;
+    private final WebStorage storage;
+    private final int cursorId;
+    private final WebPreparedStatement<T> stmt;
+    private int batchIndex;
+    private T[] dataBatch;
+    private boolean hasMoreBatches;
 
-    WebCursor(T[] data) {
-        this.data = data;
-        index = 0;
+    // Main constructor called from doQueryExecute()
+    WebCursor(WebStorage storage, T[] dataBatch, boolean hasMoreBatches, int cursorId, Type parametrizedTypeToken, WebPreparedStatement<T> stmt) {
+        this.storage = storage;
+        this.cursorId = cursorId;
+        this.parametrizedTypeToken = parametrizedTypeToken;
+        this.stmt = stmt;
+        this.hasMoreBatches = hasMoreBatches;
+        this.dataBatch = dataBatch;
+        this.batchIndex = 0;
     }
 
     @Override
     public boolean hasNext() {
-        return index < data.length;
+        return batchIndex < dataBatch.length || hasMoreBatches;
     }
 
     @Override
     public T next() {
-        if (index >= data.length) {
+        if (batchIndex >= dataBatch.length && !hasMoreBatches) {
             throw new NoSuchElementException();
         }
-        T result = data[index];
-        index++;
+        T result = null;
+        // Check if we have still results left in batch,
+        // if not fetch a new batch.
+        if (batchIndex >= dataBatch.length) {
+            assert(hasMoreBatches);
+            // This updates batchIndex, dataBatch and
+            // hasMoreBatches
+            fetchBatchFromStorage();
+            assert(batchIndex == 0);
+            assert(dataBatch.length > 0);
+        }
+        result = dataBatch[batchIndex];
+        batchIndex++;
         return result;
+    }
+
+    private void fetchBatchFromStorage() throws StorageException {
+        logger.log(Level.FINEST, "Getting more results for cursorId: " + cursorId);
+        WebQueryResponse<T> nextBatchResponse = storage.getMore(cursorId, parametrizedTypeToken, getBatchSize(), stmt);
+        switch(nextBatchResponse.getResponseCode()) {
+        case PreparedStatementResponseCode.QUERY_SUCCESS: 
+            this.batchIndex = 0;
+            this.hasMoreBatches = nextBatchResponse.hasMoreBatches();
+            this.dataBatch = nextBatchResponse.getResultList();
+            break;
+        case PreparedStatementResponseCode.GET_MORE_NULL_CURSOR:
+            // Advise user about potentially timed-out cursor
+            String msg = "[get-more] Failed to get more results for cursorId: " + cursorId +
+                         " This may be caused because the cursor timed out." +
+                         " Resubmitting the original query might be an approach to fix it." +
+                         " See server logs for more details.";
+            throw new StorageException(msg);
+        default:
+            msg = "[get-more] Failed to get more results for cursorId: " + cursorId +
+            ". See server logs for details.";
+            throw new StorageException(msg);
+        }
     }
 
 }

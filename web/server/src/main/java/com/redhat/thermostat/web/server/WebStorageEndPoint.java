@@ -45,6 +45,7 @@ import java.io.Writer;
 import java.lang.reflect.Array;
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,6 +60,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.fileupload.FileItem;
@@ -93,6 +95,7 @@ import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorMetadataFactory;
+import com.redhat.thermostat.storage.core.experimental.BatchCursor;
 import com.redhat.thermostat.storage.model.AggregateResult;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.BinaryLogicalExpression;
@@ -120,12 +123,17 @@ import com.redhat.thermostat.web.server.containers.ServletContainerInfoFactory;
 @SuppressWarnings("serial")
 public class WebStorageEndPoint extends HttpServlet {
 
+    // This is an ugly hack in order to allow for testing of batched querying.
+    static int DEFAULT_QUERY_BATCH_SIZE = BatchCursor.DEFAULT_BATCH_SIZE;
+    
     static final String CMDC_AUTHORIZATION_GRANT_ROLE_PREFIX = "thermostat-cmdc-grant-";
     static final String FILES_READ_GRANT_ROLE_PREFIX = "thermostat-files-grant-read-filename-";
     static final String FILES_WRITE_GRANT_ROLE_PREFIX = "thermostat-files-grant-write-filename-";
     private static final String TOKEN_MANAGER_TIMEOUT_PARAM = "token-manager-timeout";
     private static final String TOKEN_MANAGER_KEY = "token-manager";
     private static final String USER_PRINCIPAL_CALLBACK_KEY = "user-principal-callback";
+    private static final String CURSOR_MANAGER_KEY = "cursor-manager";
+    private static final int UNKNOWN_CURSOR_ID = -0xdeadbeef;
     private static final String CATEGORY_KEY_FORMAT = "%s|%s";
 
     // our strings can contain non-ASCII characters. Use UTF-8
@@ -272,6 +280,8 @@ public class WebStorageEndPoint extends HttpServlet {
             generateToken(req, resp);
         } else if (cmd.equals("verify-token")) {
             verifyToken(req, resp);
+        } else if (cmd.equals("get-more")) {
+            getMore(req, resp);
         }
     }
 
@@ -585,13 +595,21 @@ public class WebStorageEndPoint extends HttpServlet {
         }
     }
 
-    @SuppressWarnings("unchecked")
+    /**
+     * Handler for query executions (except for getting more results). See
+     * {@link #getMore(HttpServletRequest, HttpServletResponse)}.
+     * 
+     * @param req
+     * @param resp
+     * @throws IOException
+     */
     @WebStoragePathHandler( path = "query-execute" )
     private <T extends Pojo> void queryExecute(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         if (! isAuthorized(req, resp, Roles.READ)) {
             return;
         }
         String queryParam = req.getParameter("prepared-stmt");
+        @SuppressWarnings("unchecked")
         WebPreparedStatement<T> stmt = gson.fromJson(queryParam, WebPreparedStatement.class);
         
         PreparedParameters p = stmt.getParams();
@@ -600,7 +618,6 @@ public class WebStorageEndPoint extends HttpServlet {
         PreparedStatement<T> targetStmt = targetStmtHolder.getStmt();
         ParsedStatement<T> parsed = targetStmt.getParsedStatement();
         Query<T> targetQuery = null;
-        ArrayList<T> resultList = new ArrayList<>();
         WebQueryResponse<T> response = new WebQueryResponse<>();
         try {
             targetQuery = (Query<T>)parsed.patchStatement(params);
@@ -618,16 +635,157 @@ public class WebStorageEndPoint extends HttpServlet {
         
         UserPrincipal userPrincipal = getUserPrincipal(req);
         targetQuery = getQueryForPrincipal(userPrincipal, targetQuery, desc, actualMetadata);
+        // While the signature still says the retval of query execute is
+        // cursor, we return an instance of AdvancedCursor instead for new code.
+        // This is the case for MongoStorage. However, in order to work
+        // around potential third-party implementations perform the check
+        // and fall back to legacy behaviour.
         Cursor<T> cursor = targetQuery.execute();
-        while (cursor.hasNext()) {
-            resultList.add(cursor.next());
+        List<T> resultsList = null;
+        if (cursor instanceof BatchCursor) {
+            BatchCursor<T> batchCursor = (BatchCursor<T>)cursor;
+            resultsList = getBatchFromCursor(batchCursor, DEFAULT_QUERY_BATCH_SIZE);
+            assert(resultsList.size() <= DEFAULT_QUERY_BATCH_SIZE);
+            CursorManager cursorManager = null;
+            HttpSession userSession = req.getSession();
+            synchronized(userSession) {
+                cursorManager = (CursorManager)userSession.getAttribute(CURSOR_MANAGER_KEY);
+                if (cursorManager == null) {
+                    // Not yet set for this user, create a new cursor manager
+                    // and start the sweeper timer so as to prevent memory
+                    // leaks due to cursors kept as a reference in cursor manager
+                    cursorManager = new CursorManager();
+                    cursorManager.startSweeperTimer();
+                    userSession.setAttribute(CURSOR_MANAGER_KEY, cursorManager);
+                }
+            }
+            // Only record cursor if there are more results to return than the
+            // first batch size.
+            int cursorId = cursorManager.put(batchCursor);
+            response.setCursorId(cursorId);
+            response.setHasMoreBatches(batchCursor.hasNext());
+        } else {
+            // fallback to old behaviour
+            resultsList = getLegacyResultList(cursor);
+            response.setHasMoreBatches(false); // only one batch
+            response.setCursorId(UNKNOWN_CURSOR_ID);
         }
-        T[] results = (T[])Array.newInstance(targetStmtHolder.getDataClass(), resultList.size());
-        for (int i = 0; i < resultList.size(); i++) {
-            results[i] = resultList.get(i);
+        writeQueryResponse(resp, response, resultsList, targetStmtHolder);
+    }
+    
+    private <T extends Pojo> void writeQueryResponse(HttpServletResponse resp, WebQueryResponse<T> response, List<T> resultsList, PreparedStatementHolder<T> targetStmtHolder) throws IOException {
+        @SuppressWarnings("unchecked")
+        T[] results = (T[])Array.newInstance(targetStmtHolder.getDataClass(), resultsList.size());
+        for (int i = 0; i < resultsList.size(); i++) {
+            results[i] = resultsList.get(i);
         }
         response.setResultList(results);
         writeResponse(resp, response, WebQueryResponse.class);
+    }
+    
+    /**
+     * Handler for getting more results for a query. Queries return results
+     * in batches. The first batch is returned via {@link #queryExecute(HttpServletRequest, HttpServletResponse)}. Subsequent results will get returned using
+     * this path.
+     * 
+     * @param req
+     * @param resp
+     * @throws IOException
+     */
+    @WebStoragePathHandler( path = "get-more" )
+    private <T extends Pojo> void getMore(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        if (! isAuthorized(req, resp, Roles.READ)) {
+            return;
+        }
+        String stmtIdParam = req.getParameter("prepared-stmt-id");
+        String cursorIdParam = req.getParameter("cursor-id");
+        String batchSizeParam = req.getParameter("batch-size");
+        
+        int stmtId = Integer.parseInt(stmtIdParam);
+        int cursorId = Integer.parseInt(cursorIdParam);
+        int batchSize = Integer.parseInt(batchSizeParam);
+        
+        HttpSession userSession = req.getSession();
+        CursorManager cursorManager = null; 
+        synchronized(userSession) {
+            cursorManager = (CursorManager)userSession.getAttribute(CURSOR_MANAGER_KEY);
+        }
+        if (cursorManager == null) {
+            // Trying to get a cursorManager for a user which does not
+            // have it in the session as an attribute? Perhaps a cluster
+            // deployment problem?
+            throw new IllegalStateException("[get-more] No cursor manager available in session for " + req.getRemoteUser());
+        }
+        @SuppressWarnings("unchecked")
+        BatchCursor<T> batchCursor = (BatchCursor<T>)cursorManager.get(cursorId);
+        
+        PreparedStatementHolder<T> targetStmtHolder = getStatementHolderFromId(stmtId);
+        if (batchCursor == null) {
+            // This either means:
+            // 1. The underlying (backing-storage) cursor didn't have
+            //    more results, thus WebQueryResponse.hasMoreBatches() == false,
+            //    when queryExecute() returned its WebQueryResponse. Still,
+            //    the client requested more elements anyway and ended up here.
+            //    That's really a bug in the client which performed this request.
+            // 2. The cursor expired via the sweeper timer in CursorManager,
+            //    before the client actually managed to request more results. In
+            //    that case the client is advised to re-issue the query in order
+            //    to get a new cursor, since the underlying data in the DB might
+            //    have changed anyway and results returned would be surprising.
+            //    See http://docs.mongodb.org/manual/core/cursors/
+            //    (section "Cursor Isolation")
+            String msg = "No cursor found for user " +
+                            req.getRemoteUser() + " and cursor id: " + cursorId +
+                         ". Query was: " + targetStmtHolder.getStatementDescriptor();
+            logger.log(Level.WARNING, msg);
+            WebQueryResponse<T> response = new WebQueryResponse<>();
+            response.setResponseCode(PreparedStatementResponseCode.GET_MORE_NULL_CURSOR);
+            response.setHasMoreBatches(false);
+            response.setCursorId(cursorId);
+            List<T> empty = Collections.emptyList();
+            writeQueryResponse(resp, response, empty, targetStmtHolder);
+            return;
+        }
+        // Update backing storage cursor with (possibly) changed params.
+        // This will validate batchSize input
+        batchCursor.setBatchSize(batchSize);
+        
+        List<T> nextBatch = getBatchFromCursor(batchCursor, batchCursor.getBatchSize());
+        boolean stillMoreResults = batchCursor.hasNext();
+        if (stillMoreResults) {
+            // Refresh timestamp of a live cursor so that it won't expire.
+            cursorManager.updateCursorTimeStamp(cursorId);
+        } else {
+            // no more results, remove cursor
+            cursorManager.removeCursor(cursorId);
+        }
+        logger.log(Level.FINEST, "Fetched more results (" + nextBatch.size() + ") for user '" + req.getRemoteUser() + "' cursorId " + cursorId +
+                                 ". Statement: " + targetStmtHolder.getStatementDescriptor());
+        WebQueryResponse<T> response = new WebQueryResponse<>();
+        response.setResponseCode(PreparedStatementResponseCode.QUERY_SUCCESS);
+        response.setHasMoreBatches(stillMoreResults);
+        response.setCursorId(cursorId);
+        writeQueryResponse(resp, response, nextBatch, targetStmtHolder);
+    }
+    
+    // Fetches the first batch of results. Number of results are determined
+    // by the default batch size in AdvancedCursor
+    private <T extends Pojo> List<T> getBatchFromCursor(final BatchCursor<T> cursor, final int batchSize) {
+        ArrayList<T> resultList = new ArrayList<>(batchSize);
+        for (int i = 0; i < batchSize && cursor.hasNext(); i++) {
+            resultList.add(cursor.next());
+        }
+        return resultList;
+    }
+    
+    // Fetches all results imposing no bound on the result set if the underlying
+    // query was unbounded.
+    private <T extends Pojo> ArrayList<T> getLegacyResultList(Cursor<T> cursor) {
+        ArrayList<T> resultList = new ArrayList<>();
+        while (cursor.hasNext()) {
+            resultList.add(cursor.next());
+        }
+        return resultList;
     }
     
     @SuppressWarnings("unchecked")

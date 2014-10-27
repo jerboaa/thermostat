@@ -38,7 +38,6 @@ package com.redhat.thermostat.storage.mongodb.internal;
 
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,6 +79,7 @@ import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.core.Update;
+import com.redhat.thermostat.storage.core.experimental.BatchCursor;
 import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.AggregateResult;
 import com.redhat.thermostat.storage.model.Pojo;
@@ -526,7 +526,9 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
                 dbCursor = coll.find();
             }
             dbCursor = applySortAndLimit(mongoQuery, dbCursor);
-            return new MongoCursor<T>(dbCursor, resultClass);
+            BatchCursor<T> mongoCursor = new MongoCursor<T>(dbCursor, resultClass);
+            mongoCursor.setBatchSize(BatchCursor.DEFAULT_BATCH_SIZE);
+            return mongoCursor;
         } catch (MongoException me) {
             throw new StorageException(me);
         }

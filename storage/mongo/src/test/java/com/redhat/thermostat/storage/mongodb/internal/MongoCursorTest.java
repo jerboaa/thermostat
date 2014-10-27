@@ -40,21 +40,24 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Persist;
+import com.redhat.thermostat.storage.core.experimental.BatchCursor;
 import com.redhat.thermostat.storage.model.BasePojo;
 
 public class MongoCursorTest {
@@ -105,7 +108,7 @@ public class MongoCursorTest {
     }
 
     private DBCursor dbCursor;
-    private Cursor<TestClass> cursor;
+    private BatchCursor<TestClass> cursor;
 
     @Before
     public void setUp() {
@@ -118,12 +121,12 @@ public class MongoCursorTest {
         value2.put("key4", "test4");
 
         dbCursor = mock(DBCursor.class);
+        when(dbCursor.batchSize(BatchCursor.DEFAULT_BATCH_SIZE)).thenReturn(dbCursor);
         when(dbCursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
         when(dbCursor.next()).thenReturn(value1).thenReturn(value2).thenReturn(null);
         when(dbCursor.sort(any(DBObject.class))).thenReturn(dbCursor);
         when(dbCursor.limit(anyInt())).thenReturn(dbCursor);
         cursor = new MongoCursor<TestClass>(dbCursor, TestClass.class);
-
     }
 
     @After
@@ -134,7 +137,6 @@ public class MongoCursorTest {
 
     @Test
     public void verifySimpleCursor() {
-
         assertTrue(cursor.hasNext());
         TestClass obj1 = cursor.next();
         assertEquals("test1", obj1.getKey1());
@@ -147,6 +149,29 @@ public class MongoCursorTest {
 
         assertFalse(cursor.hasNext());
         assertNull(cursor.next());
+    }
+    
+    @Test
+    public void testBatchSize() {
+        DBCursor mongoCursor = mock(DBCursor.class);
+        BatchCursor<TestClass> mC = new MongoCursor<>(mongoCursor, TestClass.class);
+        try {
+            mC.setBatchSize(-1);
+            fail("expected IAE for batch size of -1");
+        } catch (IllegalArgumentException e) {
+            // pass
+            assertEquals("Batch size must be > 0", e.getMessage());
+        }
+        try {
+            mC.setBatchSize(0);
+            fail("expected IAE for batch size of 0");
+        } catch (IllegalArgumentException e) {
+            // pass
+            assertEquals("Batch size must be > 0", e.getMessage());
+        }
+        mC.setBatchSize(333);
+        verify(mongoCursor).batchSize(333);
+        Mockito.verifyNoMoreInteractions(mongoCursor);
     }
 
 }

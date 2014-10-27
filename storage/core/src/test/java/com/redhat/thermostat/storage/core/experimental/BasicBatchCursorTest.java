@@ -34,52 +34,65 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.model;
+package com.redhat.thermostat.storage.core.experimental;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
-
-import java.util.NoSuchElementException;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.experimental.BatchCursor;
+import com.redhat.thermostat.storage.model.Pojo;
 
-public class AggregateCountTest {
-
+public class BasicBatchCursorTest {
+    
     @Test
-    public void testCursor() {
-        AggregateCount c = new AggregateCount();
-        c.setCount(10);
-        Cursor<AggregateCount> cursor = c.getCursor();
-        assertTrue(cursor.hasNext());
-        AggregateCount actual = cursor.next();
-        assertEquals(10, actual.getCount());
-        assertFalse(cursor.hasNext());
+    public void testSetBatchSize() {
+        BasicBatchCursor<TestPojo> cursor = new BasicBatchCursorImpl<>();
         try {
-            cursor.next();
-            fail("Should have thrown NoSuchElementException!");
-        } catch (NoSuchElementException e) {
+            cursor.setBatchSize(-1);
+            fail("expected IAE for batch size of -1");
+        } catch (IllegalArgumentException e) {
             // pass
+            assertEquals("Batch size must be > 0", e.getMessage());
         }
+        try {
+            cursor.setBatchSize(0);
+            fail("expected IAE for batch size of 0");
+        } catch (IllegalArgumentException e) {
+            // pass
+            assertEquals("Batch size must be > 0", e.getMessage());
+        }
+        cursor.setBatchSize(BatchCursor.DEFAULT_BATCH_SIZE);
+        assertEquals(BatchCursor.DEFAULT_BATCH_SIZE, cursor.getBatchSize());
     }
     
-    /**
-     * Setting the batch size for single result lists should be no-op.
-     * This just makes sure that nothing bad happens (no exceptions being thrown)
-     */
     @Test
-    public void testCursorBatchSize() {
-        AggregateCount count = new AggregateCount();
-        count.setCount(3);
-        Cursor<AggregateCount> cursor = count.getCursor();
-        BatchCursor<AggregateCount> advCursor = (BatchCursor<AggregateCount>)cursor;
-        advCursor.setBatchSize(500);
-        AggregateCount result = advCursor.next();
-        assertEquals(3, result.getCount());
+    public void testGetBatchSize() {
+        BasicBatchCursor<TestPojo> cursor = new BasicBatchCursorImpl<>();
+        assertNotNull("should always return default if never set", cursor.getBatchSize());
+        assertEquals(BatchCursor.DEFAULT_BATCH_SIZE, cursor.getBatchSize());
+        cursor.setBatchSize(3);
+        assertEquals(3, cursor.getBatchSize());
+    }
+
+    private static class BasicBatchCursorImpl<T extends Pojo> extends BasicBatchCursor<T> {
+
+        @Override
+        public boolean hasNext() {
+            // not implemented
+            return false;
+        }
+
+        @Override
+        public T next() {
+            // not implemented
+            return null;
+        }
+        
+    }
+    
+    private static class TestPojo implements Pojo {
+        // nothing
     }
 }
-

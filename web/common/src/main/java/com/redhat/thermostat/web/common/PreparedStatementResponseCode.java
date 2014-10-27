@@ -50,6 +50,19 @@ public interface PreparedStatementResponseCode {
     public static final int QUERY_SUCCESS = 0;
     
     /**
+     * Generic error code for failed queries. Usually
+     * returned if get-more failed for an unknown reason.
+     */
+    public static final int QUERY_FAILURE = -100;
+    
+    /**
+     * Failure code for expired cursors. Usually returned if
+     * get-more requests failed because the underlying cursor
+     * was null.
+     */
+    public static final int GET_MORE_NULL_CURSOR = -151;
+    
+    /**
      * Response code if patching of a {@link PreparedStatement} failed during
      * statement execution.
      * <p>

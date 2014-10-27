@@ -102,6 +102,7 @@ import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.StorageException;
+import com.redhat.thermostat.storage.core.experimental.BatchCursor;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
@@ -394,19 +395,162 @@ public class WebStorageTest {
                      3, stmtId);
     }
     
+    /**
+     * Tests a query which returns results in a single batch.
+     * 
+     * By setting hasMoreBatches to false in WebQueryResponse we signal that
+     * there are no more batches available via getMore().
+     * 
+     * @see {@link #canPrepareAndExecuteQueryMultiBatchFailure()}
+     * @see {@link #canPrepareAndExecuteQueryMultiBatchSuccess()}
+     */
     @Test
-    public void canPrepareAndExecuteQuery() throws UnsupportedEncodingException, IOException {
+    public void canPrepareAndExecuteQuerySingleBatch() {
+        WebQueryResponse<TestObj> fakeQueryResponse = new WebQueryResponse<>();
+        fakeQueryResponse.setResponseCode(PreparedStatementResponseCode.QUERY_SUCCESS);
+        fakeQueryResponse.setResultList(getTwoTestObjects());
+        fakeQueryResponse.setCursorId(444);
+        // Setting this to false makes Cursor.hasNext() return false after the
+        // current result list is exhausted.
+        fakeQueryResponse.setHasMoreBatches(false);
+        Cursor<TestObj> results = doBasicPrepareAndExecuteQueryTest(fakeQueryResponse);
+        assertFalse(results.hasNext());
+        try {
+            results.next();
+            fail();
+        } catch (NoSuchElementException ex) {
+            // Pass.
+        }
+    }
+    
+    /**
+     * Tests a query which returns results in multiple batches. The get-more
+     * call is successful in this test.
+     * 
+     * By setting hasMoreBatches to true in WebQueryResponse we signal that
+     * there are more batches available via getMore().
+     * 
+     * @see {@link #canPrepareAndExecuteQueryMultiBatchFailure()}
+     */
+    @Test
+    public void canPrepareAndExecuteQueryMultiBatchSuccess() {
+        WebQueryResponse<TestObj> fakeQueryResponse = new WebQueryResponse<>();
+        fakeQueryResponse.setResponseCode(PreparedStatementResponseCode.QUERY_SUCCESS);
+        fakeQueryResponse.setResultList(getTwoTestObjects());
+        fakeQueryResponse.setCursorId(444);
+        // Setting this to true makes Cursor.hasNext() return true after the
+        // current result list is exhausted.
+        fakeQueryResponse.setHasMoreBatches(true);
+        // doBasicPrepareAndExecuteQueryTest performs two hasNext() and
+        // next() calls on the cursor.
+        Cursor<TestObj> results = doBasicPrepareAndExecuteQueryTest(fakeQueryResponse);
+        assertTrue("Expected cursor to return true, since there are more batches", results.hasNext());
+        assertEquals("POST", method);
+        String path = requestURI.substring(requestURI.lastIndexOf('/'));
+        assertEquals("/query-execute", path);
+
+        TestObj more = new TestObj();
+        more.setProperty1("get-more-result");
+        WebQueryResponse<TestObj> getMoreResults = new WebQueryResponse<>();
+        getMoreResults.setResponseCode(PreparedStatementResponseCode.QUERY_SUCCESS);
+        getMoreResults.setCursorId(444);
+        getMoreResults.setHasMoreBatches(true); // one more batch
+        getMoreResults.setResultList(new TestObj[] {more});
+        final Gson gson = getQueryGson();
+        prepareServer(gson.toJson(getMoreResults));
+        // the following next() call performs the get-more request
+        // for which we had to prepare the server
+        TestObj returnedGetMore = results.next();
+        assertEquals("POST", method);
+        path = requestURI.substring(requestURI.lastIndexOf('/'));
+        assertEquals("/get-more", path);
+        // Verify correctly passed parameters
+        String[] requestParams = requestBody.split("&");
+        String prepStmtIdParam = requestParams[0];
+        String cursorIdParam = requestParams[1];
+        String batchSizeParam = requestParams[2];
+        String[] prStmtArray = prepStmtIdParam.split("=");
+        String[] cursorIdArray = cursorIdParam.split("=");
+        String[] batchSizeArray = batchSizeParam.split("=");
+        assertEquals("prepared-stmt-id", prStmtArray[0]);
+        assertEquals("5", prStmtArray[1]);
+        assertEquals("cursor-id", cursorIdArray[0]);
+        assertEquals("444", cursorIdArray[1]);
+        assertEquals("batch-size", batchSizeArray[0]);
+        assertEquals(Integer.toString(BatchCursor.DEFAULT_BATCH_SIZE), batchSizeArray[1]);
+
+        assertEquals("get-more-result", returnedGetMore.getProperty1());
+        
+        
+        // Do it again, this time with a non-default batch size: 5
+        
+        assertTrue(results instanceof BatchCursor);
+        BatchCursor<TestObj> advCursor = (BatchCursor<TestObj>)results;
+        advCursor.setBatchSize(5);
+        
+        WebQueryResponse<TestObj> getMoreResults2 = new WebQueryResponse<>();
+        getMoreResults2.setResponseCode(PreparedStatementResponseCode.QUERY_SUCCESS);
+        getMoreResults2.setCursorId(444);
+        getMoreResults2.setHasMoreBatches(false); // no more batches this time
+        getMoreResults2.setResultList(new TestObj[] { more });
+        prepareServer(gson.toJson(getMoreResults2));
+        advCursor.next();
+        
+        path = requestURI.substring(requestURI.lastIndexOf('/'));
+        assertEquals("/get-more", path);
+        
+        String[] batchSizeParamPair = requestBody.split("&")[2].split("=");
+        assertEquals("batch-size", batchSizeParamPair[0]);
+        assertEquals("5", batchSizeParamPair[1]);
+    }
+    
+    /**
+     * Tests a query which returns results in multiple batches. The get-more
+     * call fails on the server side, though.
+     *
+     * @see {@link #canPrepareAndExecuteQueryMultiBatchSuccess()}
+     */
+    @Test
+    public void canPrepareAndExecuteQueryMultiBatchFailure() {
+        WebQueryResponse<TestObj> fakeQueryResponse = new WebQueryResponse<>();
+        fakeQueryResponse.setResponseCode(PreparedStatementResponseCode.QUERY_SUCCESS);
+        fakeQueryResponse.setResultList(getTwoTestObjects());
+        fakeQueryResponse.setCursorId(444);
+        fakeQueryResponse.setHasMoreBatches(true);
+        Cursor<TestObj> results = doBasicPrepareAndExecuteQueryTest(fakeQueryResponse);
+        assertTrue("Expected cursor to return true, since there are more batches", results.hasNext());
+        
+        WebQueryResponse<TestObj> getMoreResults = new WebQueryResponse<>();
+        getMoreResults.setResponseCode(PreparedStatementResponseCode.QUERY_FAILURE);
+        final Gson gson = getQueryGson();
+        prepareServer(gson.toJson(getMoreResults));
+        try {
+            results.next();
+            fail(); // Expected storage exception
+        } catch (StorageException e) {
+            assertEquals("[get-more] Failed to get more results for cursorId: 444. See server logs for details.", e.getMessage());
+        }
+        // Do it again with a generic failure code
+        getMoreResults.setResponseCode(-0xcafeBabe); // this should be unknown
+        prepareServer(gson.toJson(getMoreResults));
+        try {
+            results.next();
+            fail(); // Expected storage exception
+        } catch (StorageException e) {
+            assertEquals("[get-more] Failed to get more results for cursorId: 444. See server logs for details.", e.getMessage());
+        }
+    }
+    
+    private TestObj[] getTwoTestObjects() {
         TestObj obj1 = new TestObj();
         obj1.setProperty1("fluffor1");
         TestObj obj2 = new TestObj();
         obj2.setProperty1("fluffor2");
-        Gson gson = new GsonBuilder()
-                            .registerTypeAdapterFactory(new PojoTypeAdapterFactory())
-                            .registerTypeAdapterFactory(new WebPreparedStatementResponseTypeAdapterFactory())
-                            .registerTypeAdapterFactory(new WebQueryResponseTypeAdapterFactory())
-                            .registerTypeAdapterFactory(new PreparedParameterTypeAdapterFactory())
-                            .registerTypeAdapterFactory(new WebPreparedStatementTypeAdapterFactory())
-                            .create();
+        return new TestObj[] { obj1, obj2 };
+    }
+
+    private Cursor<TestObj> doBasicPrepareAndExecuteQueryTest(WebQueryResponse<TestObj> fakeQueryResponse) {
+        Gson gson = getQueryGson();
 
         String strDesc = "QUERY test WHERE 'property1' = ?s";
         StatementDescriptor<TestObj> desc = new StatementDescriptor<>(category, strDesc);
@@ -435,9 +579,6 @@ public class WebStorageTest {
         assertEquals("fluff", params.getParams()[0].getValue());
         assertEquals(String.class, params.getParams()[0].getType());
         
-        WebQueryResponse<TestObj> fakeQueryResponse = new WebQueryResponse<>();
-        fakeQueryResponse.setResponseCode(PreparedStatementResponseCode.QUERY_SUCCESS);
-        fakeQueryResponse.setResultList(new TestObj[] { obj1, obj2 });
         prepareServer(gson.toJson(fakeQueryResponse));
         Cursor<TestObj> results = null;
         try {
@@ -449,17 +590,22 @@ public class WebStorageTest {
         }
         assertNotNull(results);
         assertTrue(results instanceof WebCursor);
+        assertTrue("Expected WebCursor to be an AdvancedCursor", results instanceof BatchCursor);
         assertTrue(results.hasNext());
         assertEquals("fluffor1", results.next().getProperty1());
         assertTrue(results.hasNext());
         assertEquals("fluffor2", results.next().getProperty1());
-        assertFalse(results.hasNext());
-        try {
-            results.next();
-            fail();
-        } catch (NoSuchElementException ex) {
-            // Pass.
-        }
+        return results;
+    }
+    
+    private Gson getQueryGson() {
+        return new GsonBuilder()
+                    .registerTypeAdapterFactory(new PojoTypeAdapterFactory())
+                    .registerTypeAdapterFactory(new WebPreparedStatementResponseTypeAdapterFactory())
+                    .registerTypeAdapterFactory(new WebQueryResponseTypeAdapterFactory())
+                    .registerTypeAdapterFactory(new PreparedParameterTypeAdapterFactory())
+                    .registerTypeAdapterFactory(new WebPreparedStatementTypeAdapterFactory())
+                    .create();
     }
     
     @Test

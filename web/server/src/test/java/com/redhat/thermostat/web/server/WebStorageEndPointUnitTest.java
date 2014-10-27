@@ -102,7 +102,8 @@ public class WebStorageEndPointUnitTest {
         // authorization checks
         final String[] authPaths = new String[] {
                 "prepare-statement", "query-execute", "write-execute", "register-category",
-                "save-file", "load-file", "purge", "ping", "generate-token", "verify-token"
+                "save-file", "load-file", "purge", "ping", "generate-token", "verify-token",
+                "get-more"
         };
         Map<String, Boolean> checkedAutPaths = new HashMap<>();
         for (String path: authPaths) {

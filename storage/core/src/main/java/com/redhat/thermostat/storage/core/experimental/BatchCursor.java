@@ -34,56 +34,40 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.mongodb.internal;
+package com.redhat.thermostat.storage.core.experimental;
 
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import com.mongodb.MongoException;
-import com.redhat.thermostat.storage.core.StorageException;
-import com.redhat.thermostat.storage.core.experimental.BasicBatchCursor;
-import com.redhat.thermostat.storage.core.experimental.BatchCursor;
+import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.model.Pojo;
 
-class MongoCursor<T extends Pojo> extends BasicBatchCursor<T> {
+public interface BatchCursor<T extends Pojo> extends Cursor<T> {
 
-    private DBCursor cursor;
-    private Class<T> resultClass;
+    public static final int DEFAULT_BATCH_SIZE = 100;
 
-    MongoCursor(DBCursor cursor, Class<T> resultClass) {
-        this.cursor = cursor;
-        this.resultClass = resultClass;
-    }
+    /**
+     * <p>
+     * Sets the configured batch size when retrieving more elements from the
+     * database. That is, no more elements will be loaded into memory than the
+     * configured batch size. Note that the new batch size will only take effect
+     * once the current batch is exhausted.
+     * </p>
+     * <p>
+     * The default batch size is 100.
+     * </p>
+     * 
+     * @param n
+     *            The number of results to fetch from storage in a single batch.
+     * @return A cursor with the configured batch size.
+     * @throws IllegalArgumentException
+     *             If {@code n} is < 1
+     */
+    void setBatchSize(int n) throws IllegalArgumentException;
 
-    @Override
-    public boolean hasNext() {
-        try {
-            return cursor.hasNext();
-        } catch (MongoException me) {
-            throw new StorageException(me);
-        }
-    }
+    /**
+     * 
+     * @return The configured batch size set via {@link setBatchSize} or
+     *         {@link BatchCursor#DEFAULT_BATCH_SIZE} if it was never set
+     *         explicitly.
+     */
+    int getBatchSize();
 
-    @Override
-    public T next() {
-        try {
-            DBObject next = cursor.next();
-            if (next == null) {
-                // FIXME: This is inconsistent with other cursors throwing
-                //        NoSuchElementException
-                return null;
-            }
-            MongoPojoConverter converter = new MongoPojoConverter();
-            return converter.convertMongoToPojo(next, resultClass);
-        } catch (MongoException me) {
-            throw new StorageException(me);
-        }
-    }
-
-    @Override
-    public void setBatchSize(int n) throws IllegalArgumentException {
-        super.setBatchSize(n); // validates input
-        cursor.batchSize(super.getBatchSize());
-    }
-    
 }
-

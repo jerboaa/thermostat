@@ -37,6 +37,8 @@
 package com.redhat.thermostat.web.server;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -119,6 +121,7 @@ import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
 import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
+import com.redhat.thermostat.storage.core.experimental.BatchCursor;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.BasePojo;
@@ -349,38 +352,197 @@ public class WebStorageEndpointTest {
         assertEquals("application/json; charset=UTF-8", conn.getContentType());
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    /**
+     * Tests a successful query execution, starting from preparing the query,
+     * then executing the query and finally getting more results for the query.
+     * 
+     * @throws Exception
+     * 
+     * @see {@link #authorizedPrepareQueryWithTrustedDescriptorGetMoreFail()}
+     */
+    @SuppressWarnings({ "rawtypes" })
     @Test
-    public void authorizedPrepareQueryWithTrustedDescriptor() throws Exception {
-        String strDescriptor = "QUERY " + category.getName() + " WHERE '" + key1.getName() + "' = ?s SORT '" + key1.getName() + "' DSC LIMIT 42";
-        // metadata which basically does no filtering. There's another test which
-        // asserts only allowed data (via ACL) gets returned.
-        DescriptorMetadata metadata = new DescriptorMetadata();        
-        setupTrustedStatementRegistry(strDescriptor, metadata);
+    public void authorizedPrepareQueryWithTrustedDescriptorSuccessfulGetMore() throws Exception {
+        // Get the trusted descriptor
+        String strDescriptor = setupPreparedQueryWithTrustedDescriptor();
         
-        Set<BasicRole> roles = new HashSet<>();
-        roles.add(new RolePrincipal(Roles.REGISTER_CATEGORY));
-        roles.add(new RolePrincipal(Roles.PREPARE_STATEMENT));
-        roles.add(new RolePrincipal(Roles.READ));
-        roles.add(new RolePrincipal(Roles.ACCESS_REALM));
-        UserPrincipal testUser = new UserPrincipal("ignored1");
-        testUser.setRoles(roles);
+        // Prepare the query
+        boolean moreBatches = true;
+        TrustedPreparedQueryTestResult prepareQueryResult = prepareQuery(strDescriptor, moreBatches);
         
-        final JAASLoginService loginService = getConfiguredLoginService(testUser, roles);
+        Type typeToken = new TypeToken<WebQueryResponse<TestClass>>(){}.getType();
+        // now execute the query we've just prepared
+        WebPreparedStatement<TestClass> stmt = new WebPreparedStatement<>(1, 0);
+        stmt.setString(0, "fluff");
         
-        //final LoginService loginService = new TestJAASLoginService(testUser);
-        port = FreePortFinder.findFreePort(new TryPort() {
-            
-            @Override
-            public void tryPort(int port) throws Exception {
-                startServer(port, loginService);
-            }
-        });
-        // This makes register category work for the "test" category.
-        // Undone via @After
-        setupTrustedCategory(categoryName);
-        registerCategory("ignored1", "ignored2");
+        // Execute the query, preserver the cookie
+        String cookieValue = executeQuery(prepareQueryResult.gson, prepareQueryResult.mockMongoQuery, typeToken, stmt, moreBatches);
         
+        // Simulate getting more elements
+        int cursorId = 0;
+        int batchSize = 3;
+        // stub the underlying cursor so that it can fill up a single batch (3)
+        // and leaves one element more => 3 + 1.
+        when(prepareQueryResult.cursor.hasNext()).thenReturn(true)  // 1
+                              .thenReturn(true)  // 2
+                              .thenReturn(true)  // 3
+                              .thenReturn(true)  // 4
+                              .thenReturn(false);
+                              
+                              
+        when(prepareQueryResult.cursor.next())
+                    .thenReturn(new TestClass()) // 1
+                    .thenReturn(new TestClass()) // 2
+                    .thenReturn(new TestClass()) // 3
+                    .thenReturn(new TestClass()) // 4
+                    .thenReturn(null);
+        when(prepareQueryResult.cursor.getBatchSize()).thenReturn(batchSize);
+        URL url = new URL(getEndpoint() + "/get-more");
+        HttpURLConnection getMoreConn = (HttpURLConnection) url.openConnection();
+        getMoreConn.setRequestMethod("POST");
+        setCookie(getMoreConn, cookieValue);
+        sendAuthentication(getMoreConn, "ignored1", "ignored2");
+        getMoreConn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        getMoreConn.setDoInput(true);
+        getMoreConn.setDoOutput(true);
+        
+        OutputStreamWriter out = new OutputStreamWriter(getMoreConn.getOutputStream());
+        String body = "prepared-stmt-id=" + stmt.getStatementId() + "&";
+        body += "cursor-id=" + cursorId + "&";
+        body += "batch-size=" + batchSize;
+        out.write(body);
+        out.flush();
+        
+        InputStreamReader in = new InputStreamReader(getMoreConn.getInputStream());
+        WebQueryResponse result = prepareQueryResult.gson.fromJson(in, typeToken);
+        assertEquals(3, result.getResultList().length);
+        assertEquals(cursorId, result.getCursorId());
+        assertTrue("There was one more result than the batch size", result.hasMoreBatches());
+        assertEquals("application/json; charset=UTF-8", getMoreConn.getContentType());
+        // expected setBatchSize to be called via get-more request
+        verify(prepareQueryResult.cursor).setBatchSize(batchSize);
+    }
+    
+    /**
+     * Tests authorized prepared query which attempts to do a get-more but does
+     * not have a cursor in the user's cursor manager.
+     * 
+     * @throws Exception
+     * 
+     * @see {@link #authorizedPrepareQueryWithTrustedDescriptorSuccessfulGetMore}
+     */
+    @SuppressWarnings({ "rawtypes" })
+    @Test
+    public void authorizedPrepareQueryWithTrustedDescriptorGetMoreFail() throws Exception {
+        // Get the trusted descriptor
+        String strDescriptor = setupPreparedQueryWithTrustedDescriptor();
+        
+        // Prepare the query
+        boolean moreBatches = false;
+        TrustedPreparedQueryTestResult prepareQueryResult = prepareQuery(strDescriptor, moreBatches);
+        
+        Type typeToken = new TypeToken<WebQueryResponse<TestClass>>(){}.getType();
+        // now execute the query we've just prepared
+        WebPreparedStatement<TestClass> stmt = new WebPreparedStatement<>(1, 0);
+        stmt.setString(0, "fluff");
+        
+        // Execute the query, preserver the cookie
+        String cookieValue = executeQuery(prepareQueryResult.gson, prepareQueryResult.mockMongoQuery, typeToken, stmt, moreBatches);
+        
+        // Simulate getting more elements
+        int cursorId = 0;
+        int batchSize = 3;
+        // stub the underlying cursor so that it can fill up a single batch (3)
+        // and leaves one element more => 3 + 1.
+        when(prepareQueryResult.cursor.hasNext()).thenReturn(true)  // 1
+                              .thenReturn(true)  // 2
+                              .thenReturn(true)  // 3
+                              .thenReturn(false)  // 4
+                              .thenReturn(false);
+                              
+                              
+        when(prepareQueryResult.cursor.next())
+                    .thenReturn(new TestClass()) // 1
+                    .thenReturn(new TestClass()) // 2
+                    .thenReturn(new TestClass()) // 3
+                    .thenReturn(null)            // 4
+                    .thenReturn(null);
+        when(prepareQueryResult.cursor.getBatchSize()).thenReturn(batchSize);
+        URL url = new URL(getEndpoint() + "/get-more");
+        HttpURLConnection getMoreConn = (HttpURLConnection) url.openConnection();
+        getMoreConn.setRequestMethod("POST");
+        setCookie(getMoreConn, cookieValue);
+        sendAuthentication(getMoreConn, "ignored1", "ignored2");
+        getMoreConn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        getMoreConn.setDoInput(true);
+        getMoreConn.setDoOutput(true);
+        
+        OutputStreamWriter out = new OutputStreamWriter(getMoreConn.getOutputStream());
+        String body = "prepared-stmt-id=" + stmt.getStatementId() + "&";
+        body += "cursor-id=" + cursorId + "&";
+        body += "batch-size=" + batchSize;
+        out.write(body);
+        out.flush();
+        
+        InputStreamReader in = new InputStreamReader(getMoreConn.getInputStream());
+        WebQueryResponse result = prepareQueryResult.gson.fromJson(in, typeToken);
+        assertEquals(PreparedStatementResponseCode.GET_MORE_NULL_CURSOR, result.getResponseCode());
+        assertNotNull(result.getResultList());
+        assertEquals(0, result.getResultList().length);
+        assertEquals(cursorId, result.getCursorId());
+        assertFalse("This is a failure response, no more batches", result.hasMoreBatches());
+        assertEquals("application/json; charset=UTF-8", getMoreConn.getContentType());
+    }
+
+    private String executeQuery(Gson gson, Query<TestClass> mockMongoQuery,
+            Type typeToken, WebPreparedStatement<TestClass> stmt, boolean moreBatches)
+            throws MalformedURLException, IOException, ProtocolException {
+        URL url = new URL(getEndpoint() + "/query-execute");
+        HttpURLConnection queryExecuteConn = (HttpURLConnection) url.openConnection();
+        queryExecuteConn.setRequestMethod("POST");
+        sendAuthentication(queryExecuteConn, "ignored1", "ignored2");
+        queryExecuteConn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        queryExecuteConn.setDoInput(true);
+        queryExecuteConn.setDoOutput(true);
+        
+        OutputStreamWriter out = new OutputStreamWriter(queryExecuteConn.getOutputStream());
+        String body = "prepared-stmt=" + gson.toJson(stmt, WebPreparedStatement.class);
+        out.write(body + "\n");
+        out.flush();
+
+        String cookieValue = queryExecuteConn.getHeaderField("Set-Cookie");
+        InputStreamReader in = new InputStreamReader(queryExecuteConn.getInputStream());
+        WebQueryResponse<TestClass> result = gson.fromJson(in, typeToken);
+        assertEquals("Expected more batches", moreBatches, result.hasMoreBatches());
+        TestClass[] results = result.getResultList();
+        assertEquals(2, results.length);
+        assertEquals("fluff1", results[0].getKey1());
+        assertEquals(42, results[0].getKey2());
+        assertEquals("fluff2", results[1].getKey1());
+        assertEquals(43, results[1].getKey2());
+
+        assertEquals("application/json; charset=UTF-8", queryExecuteConn.getContentType());
+        verify(mockMongoQuery).execute();
+        verify(mockMongoQuery).getWhereExpression();
+        verifyNoMoreInteractions(mockMongoQuery);
+        return cookieValue;
+    }
+    
+    private static class TrustedPreparedQueryTestResult {
+        
+        private final Gson gson;
+        private final Query<TestClass> mockMongoQuery;
+        private final BatchCursor<TestClass> cursor;
+        
+        private TrustedPreparedQueryTestResult(Gson gson, Query<TestClass> mockMongoQuery, BatchCursor<TestClass> cursor) {
+            this.cursor = cursor;
+            this.gson = gson;
+            this.mockMongoQuery = mockMongoQuery;
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    private TrustedPreparedQueryTestResult prepareQuery(String strDescriptor, boolean moreBatches) throws Exception {
         TestClass expected1 = new TestClass();
         expected1.setKey1("fluff1");
         expected1.setKey2(42);
@@ -391,14 +553,19 @@ public class WebStorageEndpointTest {
         Query<TestClass> mockMongoQuery = mock(Query.class);
         when(mockStorage.createQuery(eq(category))).thenReturn(mockMongoQuery);
 
-        Cursor<TestClass> cursor = mock(Cursor.class);
-        when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
+        BatchCursor<TestClass> cursor = mock(BatchCursor.class);
+        WebStorageEndPoint.DEFAULT_QUERY_BATCH_SIZE = 2;
+        // Assuming: moreBatches == true then we have
+        // WebStorageEndpoint.getBatchFromCursor() method calls hasNext() twice,
+        // CursorManager.put() calls it once and WebStorageEndpoint.queryExecute()
+        // calls it once. Thus, 2 + 1 + 1 = 4 x true, then return false;
+        when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(moreBatches).thenReturn(moreBatches).thenReturn(false);
         when(cursor.next()).thenReturn(expected1).thenReturn(expected2);
         
-        PreparedStatement mockPreparedQuery = mock(PreparedStatement.class);
+        PreparedStatement<TestClass> mockPreparedQuery = mock(PreparedStatement.class);
         when(mockStorage.prepareStatement(any(StatementDescriptor.class))).thenReturn(mockPreparedQuery);
         
-        ParsedStatement mockParsedStatement = mock(ParsedStatement.class);
+        ParsedStatement<TestClass> mockParsedStatement = mock(ParsedStatement.class);
         when(mockParsedStatement.getNumParams()).thenReturn(1);
         when(mockParsedStatement.patchStatement(any(PreparedParameter[].class))).thenReturn(mockMongoQuery);
         when(mockPreparedQuery.getParsedStatement()).thenReturn(mockParsedStatement);
@@ -435,39 +602,38 @@ public class WebStorageEndpointTest {
         assertEquals(0, response.getStatementId());
         assertEquals("application/json; charset=UTF-8", conn.getContentType());
         
-        
-        
-        // now execute the query we've just prepared
-        WebPreparedStatement<TestClass> stmt = new WebPreparedStatement<>(1, 0);
-        stmt.setString(0, "fluff");
-        
-        url = new URL(endpoint + "/query-execute");
-        HttpURLConnection conn2 = (HttpURLConnection) url.openConnection();
-        conn2.setRequestMethod("POST");
-        sendAuthentication(conn2, "ignored1", "ignored2");
-        conn2.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        conn2.setDoInput(true);
-        conn2.setDoOutput(true);
-        
-        out = new OutputStreamWriter(conn2.getOutputStream());
-        body = "prepared-stmt=" + gson.toJson(stmt, WebPreparedStatement.class);
-        out.write(body + "\n");
-        out.flush();
+        return new TrustedPreparedQueryTestResult(gson, mockMongoQuery, cursor);
+    }
 
-        in = new InputStreamReader(conn2.getInputStream());
-        Type typeToken = new TypeToken<WebQueryResponse<TestClass>>(){}.getType();
-        WebQueryResponse<TestClass> result = gson.fromJson(in, typeToken);
-        TestClass[] results = result.getResultList();
-        assertEquals(2, results.length);
-        assertEquals("fluff1", results[0].getKey1());
-        assertEquals(42, results[0].getKey2());
-        assertEquals("fluff2", results[1].getKey1());
-        assertEquals(43, results[1].getKey2());
-
-        assertEquals("application/json; charset=UTF-8", conn2.getContentType());
-        verify(mockMongoQuery).execute();
-        verify(mockMongoQuery).getWhereExpression();
-        verifyNoMoreInteractions(mockMongoQuery);
+    private String setupPreparedQueryWithTrustedDescriptor() throws Exception {
+        String strDescriptor = "QUERY " + category.getName() + " WHERE '" + key1.getName() + "' = ?s SORT '" + key1.getName() + "' DSC LIMIT 42";
+        // metadata which basically does no filtering. There's another test which
+        // asserts only allowed data (via ACL) gets returned.
+        DescriptorMetadata metadata = new DescriptorMetadata();        
+        setupTrustedStatementRegistry(strDescriptor, metadata);
+        
+        Set<BasicRole> roles = new HashSet<>();
+        roles.add(new RolePrincipal(Roles.REGISTER_CATEGORY));
+        roles.add(new RolePrincipal(Roles.PREPARE_STATEMENT));
+        roles.add(new RolePrincipal(Roles.READ));
+        roles.add(new RolePrincipal(Roles.ACCESS_REALM));
+        UserPrincipal testUser = new UserPrincipal("ignored1");
+        testUser.setRoles(roles);
+        
+        final JAASLoginService loginService = getConfiguredLoginService(testUser, roles);
+        
+        port = FreePortFinder.findFreePort(new TryPort() {
+            
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port, loginService);
+            }
+        });
+        // This makes register category work for the "test" category.
+        // Undone via @After
+        setupTrustedCategory(categoryName);
+        registerCategory("ignored1", "ignored2");
+        return strDescriptor;
     }
     
     /*
@@ -990,6 +1156,10 @@ public class WebStorageEndpointTest {
         Reader reader = new InputStreamReader(conn.getInputStream());
         Integer id = gson.fromJson(reader, Integer.class);
         return id;
+    }
+    
+    private void setCookie(HttpURLConnection conn, String cookieVal) {
+        conn.setRequestProperty("Cookie", cookieVal);
     }
 
     private void sendAuthentication(HttpURLConnection conn, String username, String passwd) {

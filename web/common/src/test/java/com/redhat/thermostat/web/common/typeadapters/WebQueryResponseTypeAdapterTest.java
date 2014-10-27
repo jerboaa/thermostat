@@ -37,6 +37,7 @@
 package com.redhat.thermostat.web.common.typeadapters;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.lang.reflect.Type;
 
@@ -77,18 +78,47 @@ public class WebQueryResponseTypeAdapterTest {
         // create the query response
         WebQueryResponse<AgentInformation> response = new WebQueryResponse<>();
         response.setResultList(resultList);
+        response.setCursorId(300);
         response.setResponseCode(PreparedStatementResponseCode.ILLEGAL_PATCH);
         
         String jsonStr = gson.toJson(response);
-        String expectedJson = "{\"errno\":-1,\"payload\":[{\"agentId\":\"testing\",\"alive\":false,\"startTime\":0,\"stopTime\":0}]}";
+        String expectedJson = "{\"errno\":-1,\"cId\":300,\"cHasMore\":false,\"payload\":[{\"agentId\":\"testing\",\"alive\":false,\"startTime\":0,\"stopTime\":0}]}";
         assertEquals(expectedJson, jsonStr);
     }
     
     @Test
-    public void canDeserializeBasic() {
-        String rawJson = "{\"errno\":-1,\"payload\":[{\"startTime\":0,\"stopTime\":0,\"alive\":true,\"agentId\":\"testing\"}]}";
+    public void canSerializeNoResultList() {
+        // create the query response
+        WebQueryResponse<AgentInformation> response = new WebQueryResponse<>();
+        response.setResultList(null); // should be left out from serialization
+        response.setCursorId(-0xdeadbeef);
+        response.setResponseCode(PreparedStatementResponseCode.ILLEGAL_PATCH);
+        
+        String jsonStr = gson.toJson(response);
+        String expectedJson = "{\"errno\":-1,\"cId\":559038737,\"cHasMore\":false}";
+        assertEquals(expectedJson, jsonStr);
+    }
+    
+    @Test
+    public void canDeserializeNoResultList() {
+        String rawJson = "{\"errno\":-1,\"cId\":444,\"cHasMore\":true}";
         Type queryResponseType = new TypeToken<WebQueryResponse<AgentInformation>>() {}.getType();
         WebQueryResponse<AgentInformation> actual = gson.fromJson(rawJson, queryResponseType);
+        assertEquals(true, actual.hasMoreBatches());
+        assertEquals(444, actual.getCursorId());
+        
+        assertNull(actual.getResultList());
+        
+        assertEquals(PreparedStatementResponseCode.ILLEGAL_PATCH, actual.getResponseCode());
+    }
+    
+    @Test
+    public void canDeserializeBasic() {
+        String rawJson = "{\"errno\":-1,\"cId\":444,\"cHasMore\":true,\"payload\":[{\"startTime\":0,\"stopTime\":0,\"alive\":true,\"agentId\":\"testing\"}]}";
+        Type queryResponseType = new TypeToken<WebQueryResponse<AgentInformation>>() {}.getType();
+        WebQueryResponse<AgentInformation> actual = gson.fromJson(rawJson, queryResponseType);
+        assertEquals(true, actual.hasMoreBatches());
+        assertEquals(444, actual.getCursorId());
         
         AgentInformation[] actualList = actual.getResultList();
         
@@ -144,7 +174,7 @@ public class WebQueryResponseTypeAdapterTest {
         response.setResponseCode(PreparedStatementResponseCode.ILLEGAL_PATCH);
         
         String jsonStr = gson.toJson(response);
-        String expectedJson = "{\"errno\":-1,\"payload\":[{\"agentId\":\"testing\",\"alive\":false,\"startTime\":0,\"stopTime\":0}]}";
+        String expectedJson = "{\"errno\":-1,\"cId\":0,\"cHasMore\":false,\"payload\":[{\"agentId\":\"testing\",\"alive\":false,\"startTime\":0,\"stopTime\":0}]}";
         assertEquals(expectedJson, jsonStr);
 
         // We need to tell GSON which parametrized type we want it to deserialize

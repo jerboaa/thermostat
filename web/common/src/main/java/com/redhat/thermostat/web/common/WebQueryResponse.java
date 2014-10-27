@@ -47,6 +47,8 @@ import com.redhat.thermostat.storage.model.Pojo;
  */
 public class WebQueryResponse<T extends Pojo> {
     
+    private int cursorId;
+    private boolean hasMoreBatches;
     private int responseCode;
     private T[] resultList;
     
@@ -66,6 +68,22 @@ public class WebQueryResponse<T extends Pojo> {
         this.resultList = resultList;
     }
     
+    public void setHasMoreBatches(boolean hasMoreBatches) {
+        this.hasMoreBatches = hasMoreBatches;
+    }
+    
+    public boolean hasMoreBatches() {
+        return hasMoreBatches;
+    }
+    
+    public int getCursorId() {
+        return cursorId;
+    }
+
+    public void setCursorId(int cursorId) {
+        this.cursorId = cursorId;
+    }
+
     public ParameterizedType getRuntimeParametrizedType(final Class<T> dataClass) {
         ParameterizedType webQueryResponseType = new ParameterizedType() {
             
