@@ -44,6 +44,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.client.command.RequestQueue;
+import com.redhat.thermostat.killvm.common.KillVMRequest;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.killvm.command.KillVMCommand;
@@ -63,6 +64,7 @@ public class Activator implements BundleActivator {
                 HostInfoDAO.class,
                 AgentInfoDAO.class,
                 VmInfoDAO.class,
+                KillVMRequest.class,
                 RequestQueue.class,
         };
 
@@ -72,12 +74,12 @@ public class Activator implements BundleActivator {
                 HostInfoDAO hostDAO = (HostInfoDAO) services.get(HostInfoDAO.class.getName());
                 AgentInfoDAO agentDao = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
                 VmInfoDAO vmDao = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
-                RequestQueue requestQueue = (RequestQueue) services.get(RequestQueue.class.getName());
+                KillVMRequest request= (KillVMRequest) services.get(KillVMRequest.class.getName());
 
                 command.setAgentInfoDAO(agentDao);
                 command.setHostInfoDAO(hostDAO);
                 command.setVmInfoDAO(vmDao);
-                command.setRequestQueue(requestQueue);
+                command.setKillVMRequest(request);
             }
 
             @Override
@@ -85,7 +87,7 @@ public class Activator implements BundleActivator {
                 command.setAgentInfoDAO(null);
                 command.setHostInfoDAO(null);
                 command.setVmInfoDAO(null);
-                command.setRequestQueue(null);
+                command.setKillVMRequest(null);
             }
         });
 

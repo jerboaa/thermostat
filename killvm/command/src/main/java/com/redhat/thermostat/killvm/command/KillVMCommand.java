@@ -36,20 +36,18 @@
 
 package com.redhat.thermostat.killvm.command;
 
-import java.net.InetSocketAddress;
-
 import com.redhat.thermostat.client.cli.HostVMArguments;
-import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.killvm.command.internal.ShellVMKilledListener;
 import com.redhat.thermostat.killvm.command.locale.LocaleResources;
+import com.redhat.thermostat.killvm.common.KillVMRequest;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.DAOException;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
@@ -65,7 +63,7 @@ public class KillVMCommand extends AbstractCommand {
     private HostInfoDAO hostInfoDAO;
     private VmInfoDAO vmInfoDAO;
     private AgentInfoDAO agentInfoDAO;
-    private RequestQueue requestQueue;
+    private KillVMRequest request;
 
     public KillVMCommand(ShellVMKilledListener listener) {
         this.listener = listener;
@@ -76,7 +74,7 @@ public class KillVMCommand extends AbstractCommand {
         requireNonNull(vmInfoDAO, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
         requireNonNull(hostInfoDAO, translator.localize(LocaleResources.HOST_SERVICE_UNAVAILABLE));
         requireNonNull(agentInfoDAO, translator.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE));
-        requireNonNull(requestQueue, translator.localize(LocaleResources.QUEUE_SERVICE_UNAVAILABLE));
+        requireNonNull(request, translator.localize(LocaleResources.REQUEST_SERVICE_UNAVAILABLE));
 
         listener.setOut(ctx.getConsole().getOutput());
         listener.setErr(ctx.getConsole().getError());
@@ -87,43 +85,22 @@ public class KillVMCommand extends AbstractCommand {
     }
 
     private void attemptToKillVM(VmRef vmRef) throws CommandException {
-        VmInfo result = vmInfoDAO.getVmInfo(vmRef);
-
-        if (result == null) {
-            throw new CommandException(translator.localize(LocaleResources.VM_NOT_FOUND, vmRef.getVmId()));
-        } else {
+        try {
+            VmInfo result = vmInfoDAO.getVmInfo(vmRef);
             sendKillRequest(vmRef.getHostRef(), result.getVmPid());
+        } catch (DAOException e) {
+            //FIXME: VmInfoDaoImpl currently throws DAOException when VM is not found
+            //This should be changed when VmInfoDAOImpl gets fixed
+            throw new CommandException(translator.localize(LocaleResources.VM_NOT_FOUND, vmRef.getVmId()));
         }
+
     }
 
-    private void sendKillRequest(HostRef hostRef, int vmPid) throws CommandException {
-        InetSocketAddress target = getAddressFromHost(hostRef);
-
-        Request murderer = setupMurderer(target, vmPid);
-
-        requestQueue.putRequest(murderer);
+    private void sendKillRequest(HostRef ref, int vmPid) throws CommandException {
+        VmRef vmRef = new VmRef(ref, "dummy", vmPid, "dummy");
+        request.sendKillVMRequestToAgent(vmRef, agentInfoDAO, listener);
 
         waitForListenerResponse();
-    }
-
-    private InetSocketAddress getAddressFromHost(HostRef hostRef) throws CommandException {
-        String [] hostAndPort = getHostAndPort(hostRef);
-        return new InetSocketAddress(hostAndPort[0], Integer.parseInt(hostAndPort[1]));
-    }
-
-    private Request setupMurderer(InetSocketAddress target, int vmPid) {
-        Request murderer = new Request(Request.RequestType.RESPONSE_EXPECTED, target);
-        murderer.setParameter(Request.ACTION, CMD_CHANNEL_ACTION_NAME);
-        murderer.setParameter("vm-pid", String.valueOf(vmPid));
-        murderer.setReceiver(RECEIVER);
-        murderer.addListener(listener);
-
-        return murderer;
-    }
-
-    private String[] getHostAndPort(HostRef hostRef) throws CommandException {
-        String address = agentInfoDAO.getAgentInformation(hostRef).getConfigListenAddress();
-        return address.split(":");
     }
 
     private void waitForListenerResponse() throws CommandException {
@@ -146,7 +123,7 @@ public class KillVMCommand extends AbstractCommand {
         this.agentInfoDAO = agentInfoDAO;
     }
 
-    public void setRequestQueue(RequestQueue requestQueue) {
-        this.requestQueue = requestQueue;
+    public void setKillVMRequest(KillVMRequest request) {
+        this.request = request;
     }
 }

@@ -34,63 +34,30 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.killvm.client.internal;
+package com.redhat.thermostat.killvm.common.internal;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import org.junit.Test;
 
 import com.redhat.thermostat.client.command.RequestQueue;
-import com.redhat.thermostat.client.ui.ReferenceContextAction;
 import com.redhat.thermostat.killvm.common.KillVMRequest;
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class ActivatorTest {
-    
-    @Test
-    public void verifyActivatorDoesNotRegisterServiceOnMissingDeps() throws Exception {
-        StubBundleContext context = new StubBundleContext();
-
-        Activator activator = new Activator();
-
-        activator.start(context);
-
-        assertEquals(0, context.getAllServices().size());
-        assertNotSame(1, context.getServiceListeners().size());
-
-        activator.stop(context);
-    }
-
     @Test
     public void verifyActivatorRegistersServices() throws Exception {
         StubBundleContext context = new StubBundleContext();
-        AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
-        VmInfoDAO vmInfoDAO = mock(VmInfoDAO.class);
-        RequestQueue queue = mock(RequestQueue.class);
-        KillVMRequest request = mock(KillVMRequest.class);
-
-        context.registerService(AgentInfoDAO.class, agentInfoDAO, null);
-        context.registerService(VmInfoDAO.class, vmInfoDAO, null);
-        context.registerService(RequestQueue.class, queue, null);
-        context.registerService(KillVMRequest.class, request, null);
-
+        context.registerService(RequestQueue.class.getName(), mock(RequestQueue.class), null);
 
         Activator activator = new Activator();
-
         activator.start(context);
 
-        assertTrue(context.isServiceRegistered(ReferenceContextAction.class.getName(), KillVMAction.class));
-
+        assertTrue(context.isServiceRegistered(KillVMRequest.class.getName(), KillVMRequest.class));
         activator.stop(context);
 
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(4, context.getAllServices().size());
     }
-
 }
-

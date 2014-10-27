@@ -34,23 +34,42 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.killvm.command.locale;
+package com.redhat.thermostat.killvm.common;
 
-import com.redhat.thermostat.shared.locale.Translate;
+import java.net.InetSocketAddress;
 
-public enum LocaleResources {
+import com.redhat.thermostat.client.command.RequestQueue;
+import com.redhat.thermostat.common.command.Request;
+import com.redhat.thermostat.common.command.RequestResponseListener;
+import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 
-    HOST_SERVICE_UNAVAILABLE,
-    VM_SERVICE_UNAVAILABLE,
-    AGENT_SERVICE_UNAVAILABLE,
-    REQUEST_SERVICE_UNAVAILABLE,
-    KILL_INTERRUPTED,
-    VM_NOT_FOUND;
+public class KillVMRequest {
+    private static final String RECEIVER = "com.redhat.thermostat.killvm.agent.internal.KillVmReceiver";
+    private static final String CMD_CHANNEL_ACTION_NAME = "killvm";
 
-    public static final String RESOURCE_BUNDLE =
-            "com.redhat.thermostat.killvm.command.locale.strings";
+    private RequestQueue queue;
 
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+    public KillVMRequest(RequestQueue queue) {
+        this.queue = queue;
+    }
+
+    public void sendKillVMRequestToAgent(VmRef vmRef, AgentInfoDAO agentInfoDAO, RequestResponseListener listener) {
+        String address = agentInfoDAO.getAgentInformation(vmRef.getHostRef()).getConfigListenAddress();
+
+        String [] host = address.split(":");
+        InetSocketAddress target = new InetSocketAddress(host[0], Integer.parseInt(host[1]));
+        Request murderer = getKillRequest(target);
+        murderer.setParameter(Request.ACTION, CMD_CHANNEL_ACTION_NAME);
+        murderer.setParameter("vm-pid", String.valueOf(vmRef.getPid()));
+        murderer.setReceiver(RECEIVER);
+        murderer.addListener(listener);
+
+        queue.putRequest(murderer);
+    }
+
+    // for testing
+    Request getKillRequest(InetSocketAddress target) {
+        return new Request(Request.RequestType.NO_RESPONSE_EXPECTED, target);
     }
 }

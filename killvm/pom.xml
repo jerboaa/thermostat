@@ -62,7 +62,9 @@
     <module>client-swing</module>
     <module>agent</module>
     <module>command</module>
+    <module>common</module>
     <module>distribution</module>
+
   </modules>
 </project>
 

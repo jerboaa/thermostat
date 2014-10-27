@@ -36,30 +36,24 @@
 
 package com.redhat.thermostat.killvm.client.internal;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.net.InetSocketAddress;
-
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
-import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.Filter;
-import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
+import com.redhat.thermostat.killvm.common.KillVMRequest;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Ref;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
-import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.VmInfo;
 
 public class KillVMActionTest {
@@ -75,10 +69,10 @@ public class KillVMActionTest {
         VmInfo vmInfo = mock(VmInfo.class);
         when(vmInfoDao.getVmInfo(matching)).thenReturn(vmInfo);
 
-        RequestQueue queue = mock(RequestQueue.class);
+        KillVMRequest request = mock(KillVMRequest.class);
         RequestResponseListener listener = mock(RequestResponseListener.class);
 
-        KillVMAction action = new KillVMAction(agentDao, vmInfoDao, queue, listener);
+        KillVMAction action = new KillVMAction(agentDao, vmInfoDao, request, listener);
 
         Filter<Ref> filter = action.getFilter();
 
@@ -101,10 +95,10 @@ public class KillVMActionTest {
         VmInfo vmInfo = mock(VmInfo.class);
         when(vmInfoDao.getVmInfo(matching)).thenReturn(vmInfo);
 
-        RequestQueue queue = mock(RequestQueue.class);
+        KillVMRequest request = mock(KillVMRequest.class);
         RequestResponseListener listener = mock(RequestResponseListener.class);
 
-        KillVMAction action = new KillVMAction(agentDao, vmInfoDao, queue, listener);
+        KillVMAction action = new KillVMAction(agentDao, vmInfoDao, request, listener);
 
         Filter<Ref> filter = action.getFilter();
 
@@ -118,39 +112,27 @@ public class KillVMActionTest {
     @Test
     public void canQueueKillRequest() {
         VmRef ref = mock(VmRef.class);
-        HostRef hostref = mock(HostRef.class);
-        when(ref.getHostRef()).thenReturn(hostref);
-        String agentAddress = "127.0.0.1:8888";
-
-        AgentInformation agentInfo = mock(AgentInformation.class);
-        when(agentInfo.getConfigListenAddress()).thenReturn(agentAddress);
-
         AgentInfoDAO agentDao = mock(AgentInfoDAO.class);
-        when(agentDao.getAgentInformation(hostref)).thenReturn(agentInfo);
         VmInfoDAO vmInfoDao = mock(VmInfoDAO.class);
 
         RequestResponseListener agentResponseListener = mock(RequestResponseListener.class);
 
-        RequestQueue queue = mock(RequestQueue.class);
-        final Request req = mock(Request.class);
-        when(req.getParameter(Request.ACTION)).thenReturn("killvm");
-        KillVMAction action = new KillVMAction(agentDao, vmInfoDao, queue, agentResponseListener) {
+        KillVMRequest request = mock(KillVMRequest.class);
+        KillVMAction action = new KillVMAction(agentDao, vmInfoDao, request, agentResponseListener);
+
+        final boolean[] complete = {false};
+
+        doAnswer(new Answer() {
             @Override
-            Request getKillRequest(InetSocketAddress target) {
-                return req;
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                complete[0] = true;
+                return null;
             }
-        };
+        }).when(request).sendKillVMRequestToAgent(ref, agentDao, agentResponseListener);
+
         action.execute(ref);
-        verify(req).setParameter(eq("vm-pid"), any(String.class));
-        verify(req).setParameter(eq(Request.ACTION), any(String.class));
-        verify(req).addListener(agentResponseListener);
-        ArgumentCaptor<String> receiverCaptor = ArgumentCaptor
-                .forClass(String.class);
-        verify(req).setReceiver(receiverCaptor.capture());
-        assertEquals(
-                "com.redhat.thermostat.killvm.agent.internal.KillVmReceiver",
-                receiverCaptor.getValue());
-        verify(queue).putRequest(req);
+
+        assertTrue(complete[0]);
     }
 
 }

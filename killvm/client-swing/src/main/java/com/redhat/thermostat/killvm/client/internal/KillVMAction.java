@@ -46,6 +46,7 @@ import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.killvm.client.locale.LocaleResources;
+import com.redhat.thermostat.killvm.common.KillVMRequest;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.Ref;
@@ -65,15 +66,15 @@ public class KillVMAction implements ReferenceContextAction {
     private final AgentInfoDAO agentDao;
     private final VmInfoDAO vmDao;
     private final Translate<LocaleResources> t;
-    private final RequestQueue queue;
+    private final KillVMRequest request;
     private final RequestResponseListener listener;
 
-    public KillVMAction(AgentInfoDAO agentDao, VmInfoDAO vmDao, RequestQueue queue, RequestResponseListener listener) {
+    public KillVMAction(AgentInfoDAO agentDao, VmInfoDAO vmDao, KillVMRequest queue, RequestResponseListener listener) {
         Objects.requireNonNull(listener, "Listener can't be null");
         this.agentDao = agentDao;
         this.vmDao = vmDao;
         this.t = LocaleResources.createLocalizer();
-        this.queue = queue;
+        this.request = queue;
         this.listener = listener;
     }
 
@@ -89,29 +90,12 @@ public class KillVMAction implements ReferenceContextAction {
 
     @Override
     public void execute(Ref ref) {
-        
         if (!(ref instanceof VmRef)) {
             return;
         }
-        
         VmRef reference = (VmRef) ref;
-        
-        String address = agentDao.getAgentInformation(reference.getHostRef()).getConfigListenAddress();
-        
-        String [] host = address.split(":");
-        InetSocketAddress target = new InetSocketAddress(host[0], Integer.parseInt(host[1]));
-        Request murderer = getKillRequest(target);
-        murderer.setParameter(Request.ACTION, CMD_CHANNEL_ACTION_NAME);
-        murderer.setParameter("vm-pid", String.valueOf(reference.getPid()));
-        murderer.setReceiver(RECEIVER);
-        murderer.addListener(listener);
 
-        queue.putRequest(murderer);
-    }
-
-    // testing hook; keep this package private
-    Request getKillRequest(InetSocketAddress target) {
-        return new Request(RequestType.RESPONSE_EXPECTED, target);
+        request.sendKillVMRequestToAgent(reference, agentDao, listener);
     }
 
     @Override

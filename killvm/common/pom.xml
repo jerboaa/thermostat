@@ -36,18 +36,20 @@
  to do so, delete this exception statement from your version.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <parent>
-    <groupId>com.redhat.thermostat</groupId>
     <artifactId>thermostat-killvm</artifactId>
+    <groupId>com.redhat.thermostat</groupId>
     <version>1.1.0-SNAPSHOT</version>
   </parent>
+  <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>thermostat-killvm-command</artifactId>
+  <artifactId>thermostat-killvm-common</artifactId>
   <packaging>bundle</packaging>
 
-  <name>Thermostat Command Kill VM</name>
+  <name>Thermostat KillVM Common</name>
 
   <build>
     <plugins>
@@ -58,14 +60,13 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-Activator>com.redhat.thermostat.killvm.command.internal.Activator</Bundle-Activator>
-            <Bundle-SymbolicName>com.redhat.thermostat.killvm.command</Bundle-SymbolicName>
+            <Bundle-Activator>com.redhat.thermostat.killvm.common.internal.Activator</Bundle-Activator>
+            <Bundle-SymbolicName>com.redhat.thermostat.killvm.common</Bundle-SymbolicName>
             <Export-Package>
-              com.redhat.thermostat.killvm.command,
+              com.redhat.thermostat.killvm.common,
             </Export-Package>
             <Private-Package>
-              com.redhat.thermostat.killvm.command.internal,
-              com.redhat.thermostat.killvm.command.locale,
+              com.redhat.thermostat.killvm.common.internal,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
@@ -92,9 +93,14 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-common-core</artifactId>
-      <version>${project.version}</version>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.compendium</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.framework</artifactId>
+      <version>4.2.0</version>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
@@ -103,7 +109,7 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-client-cli</artifactId>
+      <artifactId>thermostat-storage-core</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -112,22 +118,6 @@
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-storage-core</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-shared-config</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-killvm-common</artifactId>
-      <version>${project.version}</version>
-    </dependency>
   </dependencies>
 
 </project>
-
