@@ -57,7 +57,7 @@ import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.gc.remote.common.GCRequest;
-import com.redhat.thermostat.gc.remote.common.command.GCCommand;
+import com.redhat.thermostat.gc.remote.common.command.GCAction;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
@@ -192,9 +192,9 @@ public class MemoryStatsController implements InformationServiceController<VmRef
             }
         });
         
-        view.addGCActionListener(new ActionListener<GCCommand>() {
+        view.addGCActionListener(new ActionListener<GCAction>() {
             @Override
-            public void actionPerformed(ActionEvent<GCCommand> actionEvent) {
+            public void actionPerformed(ActionEvent<GCAction> actionEvent) {
                 RequestResponseListener listener = new RequestResponseListener() {
                     @Override
                     public void fireComplete(Request request, Response response) {

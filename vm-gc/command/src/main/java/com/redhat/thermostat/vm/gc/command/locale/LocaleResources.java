@@ -34,30 +34,25 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.gc.remote.client.common;
+package com.redhat.thermostat.vm.gc.command.locale;
 
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.gc.remote.common.command.GCAction;
+import com.redhat.thermostat.shared.locale.Translate;
 
-public class RequestGCAction {
-    
-    private final ActionNotifier<GCAction> notifier;
-    
-    public RequestGCAction() {
-        notifier = new ActionNotifier<>(this);
+public enum LocaleResources {
+
+    GCREQUEST_SERVICE_UNAVAILABLE,
+    GC_FAILED,
+    AGENT_SERVICE_UNAVAILABLE,
+    HOST_SERVICE_UNAVAILABLE,
+    VM_SERVICE_UNAVAILABLE,
+    LISTENER_UNAVAILABLE,
+    VM_NOT_FOUND, COMMAND_INTERRUPTED, GC_ERROR_RESULT, GC_SUCCESS_RESULT, GC_UNKNOWN_RESULT;
+
+    static final String RESOURCE_BUNDLE =
+            "com.redhat.thermostat.gc.command.locale.strings";
+
+    public static Translate<LocaleResources> createLocalizer() {
+        return new Translate(RESOURCE_BUNDLE, LocaleResources.class);
     }
-    
-    public void addActionListener(ActionListener<GCAction> listener) {
-        this.notifier.addActionListener(listener);
-    }
-    
-    public void removeActionListener(ActionListener<GCAction> listener) {
-        this.notifier.removeActionListener(listener);
-    }
-    
-    public void requestGC() {
-        notifier.fireAction(GCAction.REQUEST_GC);
-    }
+
 }
-

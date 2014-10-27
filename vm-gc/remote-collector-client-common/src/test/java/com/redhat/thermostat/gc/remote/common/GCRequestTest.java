@@ -49,7 +49,7 @@ import org.junit.Test;
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
-import com.redhat.thermostat.gc.remote.common.command.GCCommand;
+import com.redhat.thermostat.gc.remote.common.command.GCAction;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
@@ -113,9 +113,9 @@ public class GCRequestTest {
         assertTrue(results[1]);
         assertTrue(results[2]);
         
-        verify(request).setReceiver(GCCommand.RECEIVER);
-        verify(request).setParameter(GCCommand.class.getName(), GCCommand.REQUEST_GC.name());
-        verify(request).setParameter(GCCommand.VM_PID, "123456");
+        verify(request).setReceiver(GCAction.RECEIVER);
+        verify(request).setParameter(GCAction.class.getName(), GCAction.REQUEST_GC.name());
+        verify(request).setParameter(GCAction.VM_PID, "123456");
         verify(request).addListener(listener);
         
         verify(queue).putRequest(request);

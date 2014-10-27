@@ -36,41 +36,48 @@
 
 package com.redhat.thermostat.gc.remote.command.osgi;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.util.tracker.ServiceTracker;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
-import com.redhat.thermostat.agent.command.ReceiverRegistry;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.redhat.thermostat.agent.command.RequestReceiver;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
-import com.redhat.thermostat.gc.remote.command.GCCommandReceiver;
+import com.redhat.thermostat.gc.remote.command.GCRequestReceiver;
+import com.redhat.thermostat.testutils.StubBundleContext;
 
-public class GCCommandReceiverActivator implements BundleActivator {
+public class ActivatorTest {
 
-    ServiceTracker tracker;
+    private StubBundleContext context;
+    private Activator activator;
 
-    @Override
-    public void start(BundleContext context) throws Exception {
-        final ReceiverRegistry registry = new ReceiverRegistry(context);
-
-        tracker = new ServiceTracker(context, MXBeanConnectionPool.class, null) {
-            public MXBeanConnectionPool addingService(ServiceReference reference) {
-                MXBeanConnectionPool pool = (MXBeanConnectionPool) super.addingService(reference);
-                registry.registerReceiver(new GCCommandReceiver(pool));
-                return pool;
-            };
-
-            public void removedService(org.osgi.framework.ServiceReference reference, Object service) {
-                registry.unregisterReceivers();
-                super.removedService(reference, service);
-            };
-        };
-        tracker.open();
+    @Before
+    public void setup() {
+        context = new StubBundleContext();
+        activator = new Activator();
     }
 
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        tracker.close();
+    @Test
+    public void verifyReceiverRegistered() throws Exception {
+        MXBeanConnectionPool mxBeanConnectionPool = mock(MXBeanConnectionPool.class);
+        context.registerService(MXBeanConnectionPool.class, mxBeanConnectionPool, null);
+
+        activator.start(context);
+
+        assertEquals(2, context.getAllServices().size());
+        assertTrue(context.isServiceRegistered(RequestReceiver.class.getName(), GCRequestReceiver.class));
+
+        activator.stop(context);
+    }
+
+    @Test
+    public void verifyActivatorDoesNotRegisterServiceOnMissingDeps() throws Exception {
+        activator.start(context);
+
+        assertEquals(0, context.getAllServices().size());
+
+        activator.stop(context);
     }
 }
-

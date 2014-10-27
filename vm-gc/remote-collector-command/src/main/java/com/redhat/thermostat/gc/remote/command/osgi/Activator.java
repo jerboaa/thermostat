@@ -34,30 +34,45 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.gc.remote.client.common;
+package com.redhat.thermostat.gc.remote.command.osgi;
 
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.gc.remote.common.command.GCAction;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
 
-public class RequestGCAction {
-    
-    private final ActionNotifier<GCAction> notifier;
-    
-    public RequestGCAction() {
-        notifier = new ActionNotifier<>(this);
+import com.redhat.thermostat.agent.command.ReceiverRegistry;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
+import com.redhat.thermostat.gc.remote.command.GCRequestReceiver;
+
+public class Activator implements BundleActivator {
+
+    private ServiceTracker tracker;
+
+    @Override
+    public void start(BundleContext context) throws Exception {
+        final ReceiverRegistry registry = new ReceiverRegistry(context);
+
+        tracker = new ServiceTracker(context, MXBeanConnectionPool.class, null) {
+            @Override
+            public MXBeanConnectionPool addingService(ServiceReference reference) {
+                MXBeanConnectionPool pool = (MXBeanConnectionPool) super.addingService(reference);
+                registry.registerReceiver(new GCRequestReceiver(pool));
+                return pool;
+            };
+
+            @Override
+            public void removedService(ServiceReference reference, Object service) {
+                registry.unregisterReceivers();
+                super.removedService(reference, service);
+            };
+        };
+        tracker.open();
     }
-    
-    public void addActionListener(ActionListener<GCAction> listener) {
-        this.notifier.addActionListener(listener);
-    }
-    
-    public void removeActionListener(ActionListener<GCAction> listener) {
-        this.notifier.removeActionListener(listener);
-    }
-    
-    public void requestGC() {
-        notifier.fireAction(GCAction.REQUEST_GC);
+
+    @Override
+    public void stop(BundleContext context) throws Exception {
+        tracker.close();
     }
 }
 

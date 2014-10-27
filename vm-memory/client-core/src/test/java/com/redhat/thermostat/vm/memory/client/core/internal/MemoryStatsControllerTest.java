@@ -66,7 +66,7 @@ import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.gc.remote.common.GCRequest;
-import com.redhat.thermostat.gc.remote.common.command.GCCommand;
+import com.redhat.thermostat.gc.remote.common.command.GCAction;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
@@ -89,7 +89,7 @@ public class MemoryStatsControllerTest {
     private Timer timer;
     
     private ActionListener<MemoryStatsView.Action> viewListener;
-    private ActionListener<GCCommand> gcActionListener;
+    private ActionListener<GCAction> gcActionListener;
 
     private MemoryStatsController controller;
     
@@ -204,7 +204,7 @@ public class MemoryStatsControllerTest {
 
     @Test
     public void testGCInvoked() {
-        gcActionListener.actionPerformed(new ActionEvent<>(view, GCCommand.REQUEST_GC));
+        gcActionListener.actionPerformed(new ActionEvent<>(view, GCAction.REQUEST_GC));
         verify(gcRequest).sendGCRequestToAgent(eq(ref), eq(agentDAO), isA(RequestResponseListener.class));
     }
     

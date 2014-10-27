@@ -42,7 +42,7 @@ import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.RequestResponseListener;
-import com.redhat.thermostat.gc.remote.common.command.GCCommand;
+import com.redhat.thermostat.gc.remote.common.command.GCAction;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
@@ -66,11 +66,11 @@ public class GCRequest {
         InetSocketAddress target = new InetSocketAddress(host[0], Integer.parseInt(host[1]));
         Request gcRequest = createRequest(target);
 
-        gcRequest.setReceiver(GCCommand.RECEIVER);
+        gcRequest.setReceiver(GCAction.RECEIVER);
 
         gcRequest.setParameter(Request.ACTION, CMD_CHANNEL_ACTION_NAME);
-        gcRequest.setParameter(GCCommand.class.getName(), GCCommand.REQUEST_GC.name());
-        gcRequest.setParameter(GCCommand.VM_PID, String.valueOf(vm.getPid()));
+        gcRequest.setParameter(GCAction.class.getName(), GCAction.REQUEST_GC.name());
+        gcRequest.setParameter(GCAction.VM_PID, String.valueOf(vm.getPid()));
         
         gcRequest.addListener(responseListener);
 

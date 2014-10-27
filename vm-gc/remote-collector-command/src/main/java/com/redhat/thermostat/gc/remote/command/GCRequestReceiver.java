@@ -47,14 +47,14 @@ import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.gc.remote.command.internal.GC;
 import com.redhat.thermostat.gc.remote.command.internal.GCException;
-import com.redhat.thermostat.gc.remote.common.command.GCCommand;
+import com.redhat.thermostat.gc.remote.common.command.GCAction;
 
-public class GCCommandReceiver implements RequestReceiver {
+public class GCRequestReceiver implements RequestReceiver {
 
-    private static final Logger logger = LoggingUtils.getLogger(GCCommandReceiver.class);
+    private static final Logger logger = LoggingUtils.getLogger(GCRequestReceiver.class);
     private MXBeanConnectionPool pool;
 
-    public GCCommandReceiver(MXBeanConnectionPool pool) {
+    public GCRequestReceiver(MXBeanConnectionPool pool) {
         this.pool = pool;
     }
 
@@ -62,10 +62,10 @@ public class GCCommandReceiver implements RequestReceiver {
     public Response receive(Request request) {
         Response response = new Response(ResponseType.OK);
         
-        String command = request.getParameter(GCCommand.class.getName());
-        switch (GCCommand.valueOf(command)) {
+        String command = request.getParameter(GCAction.class.getName());
+        switch (GCAction.valueOf(command)) {
         case REQUEST_GC:
-            String strPid = request.getParameter(GCCommand.VM_PID);
+            String strPid = request.getParameter(GCAction.VM_PID);
             try {
                 int vmId = Integer.parseInt(strPid);
                 new GC(pool, vmId).gc();

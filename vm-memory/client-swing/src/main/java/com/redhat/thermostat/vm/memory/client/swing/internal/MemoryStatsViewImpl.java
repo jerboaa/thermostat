@@ -55,7 +55,7 @@ import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.gc.remote.client.common.RequestGCAction;
 import com.redhat.thermostat.gc.remote.client.swing.ToolbarGCButton;
-import com.redhat.thermostat.gc.remote.common.command.GCCommand;
+import com.redhat.thermostat.gc.remote.common.command.GCAction;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.memory.client.core.MemoryStatsView;
@@ -138,7 +138,7 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
     }
 
     @Override
-    public void addGCActionListener(ActionListener<GCCommand> listener) {
+    public void addGCActionListener(ActionListener<GCAction> listener) {
         toolbarButtonAction.addActionListener(listener);
     }
     

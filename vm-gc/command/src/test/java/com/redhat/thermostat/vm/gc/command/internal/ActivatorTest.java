@@ -34,13 +34,27 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.gc.remote.common.command;
+package com.redhat.thermostat.vm.gc.command.internal;
 
-public enum GCCommand {
+import static com.redhat.thermostat.testutils.Asserts.assertCommandIsRegistered;
+import static org.junit.Assert.assertEquals;
 
-    REQUEST_GC;
-    
-    public static final String VM_PID = "VM_PID";
-    public static final String RECEIVER = "com.redhat.thermostat.gc.remote.command.GCCommandReceiver";
+import org.junit.Test;
+
+import com.redhat.thermostat.testutils.StubBundleContext;
+
+public class ActivatorTest {
+    @Test
+    public void verifyCommandRegistered() throws Exception {
+        StubBundleContext context = new StubBundleContext();
+        Activator activator = new Activator();
+
+        activator.start(context);
+
+        assertCommandIsRegistered(context, "gc", GCCommand.class);
+
+        activator.stop(context);
+
+        assertEquals(0, context.getAllServices().size());
+    }
 }
-

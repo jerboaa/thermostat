@@ -45,10 +45,10 @@
     <version>1.1.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>thermostat-gc-remote-collector-command</artifactId>
+  <artifactId>thermostat-vm-gc-command</artifactId>
   <packaging>bundle</packaging>
 
-  <name>Thermostat GC Plugin Command Channel</name>
+  <name>Thermostat GC Plugin Command</name>
 
   <dependencies>
     <dependency>
@@ -66,7 +66,6 @@
       <artifactId>thermostat-common-core</artifactId>
       <version>${project.version}</version>
     </dependency>
-    
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
@@ -77,22 +76,36 @@
       <artifactId>org.osgi.compendium</artifactId>
       <scope>provided</scope>
     </dependency>
-    
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-gc-remote-collector-common</artifactId>
-      <version>${project.version}</version>      
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-agent-core</artifactId>
-      <version>${project.version}</version>      
-    </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-common-test</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-shared-config</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-client-cli</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-gc-remote-collector-client-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-client-command</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-storage-core</artifactId>
+      <version>${project.version}</version>
     </dependency>
   </dependencies>
 
@@ -105,15 +118,15 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-SymbolicName>com.redhat.thermostat.gc.remote.command</Bundle-SymbolicName>
-            <Bundle-Activator>com.redhat.thermostat.gc.remote.command.osgi.Activator</Bundle-Activator>
+            <Bundle-SymbolicName>com.redhat.thermostat.vm.gc.command</Bundle-SymbolicName>
+            <Bundle-Activator>com.redhat.thermostat.vm.gc.command.internal.Activator</Bundle-Activator>
             <Export-Package>
-              com.redhat.thermostat.gc.remote.command,
+              com.redhat.thermostat.vm.gc.command
             </Export-Package>
             <Private-Package>
-                com.redhat.thermostat.gc.remote.command.osgi,
-                com.redhat.thermostat.gc.remote.command.internal,
-            </Private-Package>               
+              com.redhat.thermostat.vm.gc.command.internal,
+              com.redhat.thermostat.vm.gc.command.locale,
+            </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
           </instructions>

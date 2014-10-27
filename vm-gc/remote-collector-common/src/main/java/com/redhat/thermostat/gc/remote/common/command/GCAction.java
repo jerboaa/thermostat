@@ -34,30 +34,13 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.gc.remote.client.common;
+package com.redhat.thermostat.gc.remote.common.command;
 
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.gc.remote.common.command.GCAction;
+public enum GCAction {
 
-public class RequestGCAction {
+    REQUEST_GC;
     
-    private final ActionNotifier<GCAction> notifier;
-    
-    public RequestGCAction() {
-        notifier = new ActionNotifier<>(this);
-    }
-    
-    public void addActionListener(ActionListener<GCAction> listener) {
-        this.notifier.addActionListener(listener);
-    }
-    
-    public void removeActionListener(ActionListener<GCAction> listener) {
-        this.notifier.removeActionListener(listener);
-    }
-    
-    public void requestGC() {
-        notifier.fireAction(GCAction.REQUEST_GC);
-    }
+    public static final String VM_PID = "VM_PID";
+    public static final String RECEIVER = "com.redhat.thermostat.gc.remote.command.GCRequestReceiver";
 }
 

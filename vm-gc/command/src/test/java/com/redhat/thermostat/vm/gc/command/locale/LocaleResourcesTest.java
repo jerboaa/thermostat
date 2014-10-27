@@ -34,30 +34,18 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.gc.remote.client.common;
+package com.redhat.thermostat.vm.gc.command.locale;
 
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.gc.remote.common.command.GCAction;
+import com.redhat.thermostat.testutils.AbstractLocaleResourcesTest;
 
-public class RequestGCAction {
-    
-    private final ActionNotifier<GCAction> notifier;
-    
-    public RequestGCAction() {
-        notifier = new ActionNotifier<>(this);
+public class LocaleResourcesTest extends AbstractLocaleResourcesTest<LocaleResources> {
+    @Override
+    protected Class<LocaleResources> getEnumClass() {
+        return LocaleResources.class;
     }
-    
-    public void addActionListener(ActionListener<GCAction> listener) {
-        this.notifier.addActionListener(listener);
-    }
-    
-    public void removeActionListener(ActionListener<GCAction> listener) {
-        this.notifier.removeActionListener(listener);
-    }
-    
-    public void requestGC() {
-        notifier.fireAction(GCAction.REQUEST_GC);
+
+    @Override
+    protected String getResourceBundle() {
+        return LocaleResources.RESOURCE_BUNDLE;
     }
 }
-
