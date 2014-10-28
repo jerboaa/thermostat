@@ -41,8 +41,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -68,6 +71,7 @@ public class CleanDataCommandTest {
     private CleanDataCommand cleanDataCommand;
     private CommandContext mockCommandContext;
     private Storage mockStorage;
+    private Console mockConsole;
     private PrintStream mockOutput;
     private AgentInfoDAO mockAgentInfoDAO;
     private Arguments mockArguments;
@@ -90,7 +94,7 @@ public class CleanDataCommandTest {
         when(mockCommandContext.getArguments()).thenReturn(mockArguments);
         when(mockArguments.getNonOptionArguments()).thenReturn(getValidAgentList());
         
-        Console mockConsole = mock(Console.class);
+        mockConsole = mock(Console.class);
         mockOutput = mock(PrintStream.class);
         when(mockCommandContext.getConsole()).thenReturn(mockConsole);
         when(mockConsole.getOutput()).thenReturn(mockOutput);
@@ -124,6 +128,7 @@ public class CleanDataCommandTest {
 
     @Test
     public void testOneValidArgument() throws CommandException {
+        setupUserConfirmation(new byte[]{ 'Y' });
         when(mockArguments.getNonOptionArguments()).thenReturn(getOneValidAgent());
         
         cleanDataCommand.run(mockCommandContext);
@@ -131,12 +136,15 @@ public class CleanDataCommandTest {
         verify(mockStorage, times(1)).purge(isA(String.class));
         verify(mockStorage).purge("agentId1");
         
-        verify(mockOutput, times(1)).println(isA(String.class));
+        verify(mockOutput, times(2)).println(isA(String.class));
+        verify(mockOutput, times(1)).print(isA(String.class));
         verify(mockOutput).println("Purging data for agent: agentId1");
     }
 
     @Test
     public void testMultipleValidArguments() throws CommandException {
+        setupUserConfirmation(new byte[]{ 'Y' });
+
         cleanDataCommand.run(mockCommandContext);
         
         verify(mockStorage, times(3)).purge(isA(String.class));
@@ -144,7 +152,10 @@ public class CleanDataCommandTest {
         verify(mockStorage).purge("agentId2");
         verify(mockStorage).purge("agentId3");
         
-        verify(mockOutput, times(3)).println(isA(String.class));
+        verify(mockOutput, times(4)).println(isA(String.class));
+        verify(mockOutput, times(1)).print(isA(String.class));
+        verify(mockOutput).println("Cleaning a lot of data from Thermostat storage can cause latency for other agents or clients.");
+        verify(mockOutput).print("Are you sure you want to continue (Y/y/N/n)?");
         verify(mockOutput).println("Purging data for agent: agentId1");
         verify(mockOutput).println("Purging data for agent: agentId2");
         verify(mockOutput).println("Purging data for agent: agentId3");
@@ -152,19 +163,24 @@ public class CleanDataCommandTest {
 
     @Test
     public void testUnauthorizedLiveAgents() throws CommandException {
+        setupUserConfirmation(new byte[]{ 'Y' });
         when(mockArguments.getNonOptionArguments()).thenReturn(getAliveAgents());
         
         cleanDataCommand.run(mockCommandContext);
         
         verify(mockStorage, never()).purge(isA(String.class));
         
-        verify(mockOutput, times(2)).println(isA(String.class));
+        verify(mockOutput, times(3)).println(isA(String.class));
+        verify(mockOutput, times(1)).print(isA(String.class));
+        verify(mockOutput).println("Cleaning a lot of data from Thermostat storage can cause latency for other agents or clients.");
+        verify(mockOutput).print("Are you sure you want to continue (Y/y/N/n)?");
         verify(mockOutput).println("Cannot purge data for agent agentId4. This agent is currently running");
         verify(mockOutput).println("Cannot purge data for agent agentId5. This agent is currently running");
     }
 
     @Test
     public void testRemoveSpecificLiveAgents() throws CommandException {
+        setupUserConfirmation(new byte[]{ 'Y' });
         when(mockArguments.hasArgument("alive")).thenReturn(true);
         when(mockArguments.getNonOptionArguments()).thenReturn(getAliveAgents());
         
@@ -174,19 +190,26 @@ public class CleanDataCommandTest {
         verify(mockStorage).purge("agentId4");
         verify(mockStorage).purge("agentId5");
         
-        verify(mockOutput, times(2)).println(isA(String.class));
+        verify(mockOutput, times(3)).println(isA(String.class));
+        verify(mockOutput, times(1)).print(isA(String.class));
+        verify(mockOutput).println("Cleaning a lot of data from Thermostat storage can cause latency for other agents or clients.");
+        verify(mockOutput).print("Are you sure you want to continue (Y/y/N/n)?");
         verify(mockOutput).println("Purging data for agent: agentId4");
         verify(mockOutput).println("Purging data for agent: agentId5");
     }
 
     @Test
     public void testInvalidArguments() throws CommandException {
+        setupUserConfirmation(new byte[]{ 'Y' });
         when(mockArguments.getNonOptionArguments()).thenReturn(getInvalidAgentList());
         
         cleanDataCommand.run(mockCommandContext);
         
         verify(mockStorage, never()).purge(isA(String.class));
-        verify(mockOutput, times(3)).println(isA(String.class));
+        verify(mockOutput, times(4)).println(isA(String.class));
+        verify(mockOutput, times(1)).print(isA(String.class));
+        verify(mockOutput).println("Cleaning a lot of data from Thermostat storage can cause latency for other agents or clients.");
+        verify(mockOutput).print("Are you sure you want to continue (Y/y/N/n)?");
         verify(mockOutput).println("Agent with an id [invalidAgent1] was not found!");
         verify(mockOutput).println("Agent with an id [invalidAgent2] was not found!");
         verify(mockOutput).println("Agent with an id [invalidAgent3] was not found!");
@@ -194,6 +217,7 @@ public class CleanDataCommandTest {
 
     @Test
     public void testRemoveAllDeadAgents() throws CommandException {
+        setupUserConfirmation(new byte[]{ 'Y' });
         when(mockArguments.hasArgument("all")).thenReturn(true);
         when(mockAgentInfoDAO.getAllAgentInformation()).thenReturn(allAgentInfoList);
         
@@ -207,6 +231,7 @@ public class CleanDataCommandTest {
 
     @Test
     public void testRemoveAllLiveAgents() throws CommandException {
+        setupUserConfirmation(new byte[]{ 'Y' });
         when(mockArguments.hasArgument("all")).thenReturn(true);
         when(mockArguments.hasArgument("alive")).thenReturn(true);
         when(mockAgentInfoDAO.getAllAgentInformation()).thenReturn(allAgentInfoList);
@@ -219,6 +244,20 @@ public class CleanDataCommandTest {
         verify(mockStorage).purge("agentId3");
         verify(mockStorage).purge("agentId4");
         verify(mockStorage).purge("agentId5");
+    }
+
+    @Test
+    public void testUserRefusesClean() throws CommandException {
+        setupUserConfirmation(new byte[]{ 'N' });
+
+        cleanDataCommand.run(mockCommandContext);
+
+        verifyZeroInteractions(mockStorage);
+        verify(mockOutput, times(2)).println(isA(String.class));
+        verify(mockOutput, times(1)).print(isA(String.class));
+        verify(mockOutput).println("Cleaning a lot of data from Thermostat storage can cause latency for other agents or clients.");
+        verify(mockOutput).print("Are you sure you want to continue (Y/y/N/n)?");
+        verify(mockOutput).println("Not cleaning Thermostat data at this time.");
     }
 
     private List<String> getValidAgentList() {
@@ -250,5 +289,9 @@ public class CleanDataCommandTest {
         return agentIdList;
     }
 
+    private void setupUserConfirmation(byte[] response) {
+        InputStream input = new ByteArrayInputStream(response);
+        when(mockConsole.getInput()).thenReturn(input);
+    }
 }
 

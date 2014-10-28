@@ -36,6 +36,10 @@
 
 package com.redhat.thermostat.client.cli.internal;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.List;
 
@@ -64,6 +68,18 @@ public class CleanDataCommand extends AbstractCommand {
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
+        InputStream input = ctx.getConsole().getInput();
+        PrintStream output = ctx.getConsole().getOutput();
+        try {
+            if (!userConfirmsCleanOperation(input, output)) {
+                indicateCleanCancelled(output);
+                return;
+            }
+        } catch (IOException ex) {
+            // We were not able to confirm operation with user.
+            indicateCleanCancelled(output);
+            return;
+        }
         ServiceReference storageServiceRef = bundleContext.getServiceReference(Storage.class);
         requireNonNull(storageServiceRef, translator.localize(LocaleResources.STORAGE_UNAVAILABLE));
         Storage storage = (Storage) bundleContext.getService(storageServiceRef);
@@ -72,7 +88,6 @@ public class CleanDataCommand extends AbstractCommand {
             Arguments args = ctx.getArguments();
             List<String> agentIdList = args.getNonOptionArguments();
             removeLiveAgent = args.hasArgument(CleanOptions.ALIVE.option);
-            PrintStream output = ctx.getConsole().getOutput();
             
             if (args.hasArgument(CleanOptions.ALL.option)) {
                 removeDataForAllAgents(storage, output);
@@ -138,6 +153,27 @@ public class CleanDataCommand extends AbstractCommand {
         CleanOptions(String option) {
             this.option = option;
         }
+    }
+
+    private boolean userConfirmsCleanOperation(InputStream input, PrintStream output) throws IOException {
+        output.println(translator.localize(LocaleResources.PURGE_EXPENSIVE_OPERATION_WARNING).getContents());
+        output.print(translator.localize(LocaleResources.PURGE_EXPENSIVE_OPERATION_PROMPT).getContents());
+        String userInput = new BufferedReader(new InputStreamReader(input)).readLine();
+        for (String affirmative : affirmativeResponses()) {
+            if (affirmative.equals(userInput.toLowerCase())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String[] affirmativeResponses() {
+        String yesses = translator.localize(LocaleResources.AFFIRMATIVE_RESPONSES).getContents();
+        return yesses.split("|");
+    }
+
+    private void indicateCleanCancelled(PrintStream output) {
+        output.println(translator.localize(LocaleResources.PURGE_CANCELLED_MESSAGE).getContents());
     }
 
 }

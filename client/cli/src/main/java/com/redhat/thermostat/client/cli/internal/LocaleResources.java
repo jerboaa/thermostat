@@ -101,6 +101,10 @@ public enum LocaleResources {
     AGENT_UNAVAILABLE,
     CANNOT_PURGE_AGENT_RUNNING,
     AGENT_NOT_FOUND,
+    PURGE_EXPENSIVE_OPERATION_WARNING,
+    PURGE_EXPENSIVE_OPERATION_PROMPT,
+    PURGE_CANCELLED_MESSAGE,
+    AFFIRMATIVE_RESPONSES,
     ;
 
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.client.cli.strings";
