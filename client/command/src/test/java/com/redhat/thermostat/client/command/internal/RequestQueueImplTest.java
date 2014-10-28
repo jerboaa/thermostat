@@ -39,12 +39,14 @@ package com.redhat.thermostat.client.command.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.net.InetSocketAddress;
 import java.util.Arrays;
 
 import org.junit.Before;
@@ -86,6 +88,32 @@ public class RequestQueueImplTest {
         when(FrameworkUtil.getBundle(RequestQueueImpl.class)).thenReturn(mockBundle);
     }
 
+    @Test
+    public void putRequestRejectsRequestWithNullTarget() {
+        Request request = createRequest(null, "foobar");
+        ConfigurationRequestContext ctx = mock(ConfigurationRequestContext.class);
+        RequestQueueImpl queue = new RequestQueueImpl(ctx);
+        try {
+            queue.putRequest(request);
+            fail("expected assertion not thrown");
+        } catch (AssertionError e) {
+            // okay
+        }
+    }
+
+    @Test
+    public void putRequestRejectsRequestWithNullReceiver() {
+        Request request = createRequest(mock(InetSocketAddress.class), null);
+        ConfigurationRequestContext ctx = mock(ConfigurationRequestContext.class);
+        RequestQueueImpl queue = new RequestQueueImpl(ctx);
+        try {
+            queue.putRequest(request);
+            fail("expected assertion not thrown");
+        } catch (AssertionError e) {
+            // okay
+        }
+    }
+
     /*
      * Other tests ensure that secure storage is returned from storage providers.
      * This is an attempt to make sure that authentication hooks are actually
@@ -102,7 +130,7 @@ public class RequestQueueImplTest {
         
         ConfigurationRequestContext ctx = mock(ConfigurationRequestContext.class);
         RequestQueueImpl queue = new RequestQueueImpl(ctx);
-        Request request = mock(Request.class);
+        Request request = createRequest(mock(InetSocketAddress.class), "");
         queue.putRequest(request);
         verify(request).setParameter(eq(Request.CLIENT_TOKEN), any(String.class));
         verify(request).setParameter(eq(Request.AUTH_TOKEN), any(String.class));
@@ -118,7 +146,7 @@ public class RequestQueueImplTest {
         
         ConfigurationRequestContext ctx = mock(ConfigurationRequestContext.class);
         RequestQueueImpl queue = new RequestQueueImpl(ctx);
-        Request request = mock(Request.class);
+        Request request = createRequest(mock(InetSocketAddress.class), "");
         
         RequestResponseListener listener = mock(RequestResponseListener.class);
         when(request.getListeners()).thenReturn(Arrays.asList(listener));
@@ -137,9 +165,16 @@ public class RequestQueueImplTest {
         
         ConfigurationRequestContext ctx = mock(ConfigurationRequestContext.class);
         RequestQueueImpl queue = new RequestQueueImpl(ctx);
-        Request request = mock(Request.class);
+        Request request = createRequest(mock(InetSocketAddress.class), "");
         queue.putRequest(request);
         assertTrue(queue.getQueue().contains(request));
+    }
+
+    private static Request createRequest(InetSocketAddress agentAddress, String receiver) {
+        Request request = mock(Request.class);
+        when(request.getReceiver()).thenReturn(receiver);
+        when(request.getTarget()).thenReturn(agentAddress);
+        return request;
     }
 }
 

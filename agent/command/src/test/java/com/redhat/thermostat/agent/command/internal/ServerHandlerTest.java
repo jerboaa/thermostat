@@ -36,38 +36,80 @@
 
 package com.redhat.thermostat.agent.command.internal;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelPipeline;
+import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.handler.ssl.SslHandler;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.agent.command.internal.ServerHandler.SSLHandshakeDoneListener;
+import com.redhat.thermostat.agent.command.internal.ServerHandler.StorageGetter;
+import com.redhat.thermostat.common.command.Request;
+import com.redhat.thermostat.common.command.Response;
+import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 
 public class ServerHandlerTest {
+
+    private StorageGetter storageGetter;
+
+    private Channel channel;
+    private ChannelHandlerContext ctx;
+
+    @Before
+    public void setup() {
+        channel = mock(Channel.class);
+        when(channel.isConnected()).thenReturn(true);
+        ChannelFuture channelFuture = mock(ChannelFuture.class);
+        when(channel.write(isA(Response.class))).thenReturn(channelFuture);
+
+        ctx = mock(ChannelHandlerContext.class);
+        when(ctx.getChannel()).thenReturn(channel);
+
+        storageGetter = mock(StorageGetter.class);
+    }
 
     @Test
     public void channelConnectedAddsSSLListener() throws Exception {
         SSLConfiguration mockSSLConf = mock(SSLConfiguration.class);
         when(mockSSLConf.enableForCmdChannel()).thenReturn(true);
-        ServerHandler handler = new ServerHandler(null, mockSSLConf);
+        ServerHandler handler = new ServerHandler(null, mockSSLConf, storageGetter);
         
-        ChannelHandlerContext ctx = mock(ChannelHandlerContext.class);
         ChannelPipeline pipeline = mock(ChannelPipeline.class);
         when(ctx.getPipeline()).thenReturn(pipeline);
         SslHandler sslHandler = mock(SslHandler.class);
         when(pipeline.get(SslHandler.class)).thenReturn(sslHandler);
-        ChannelFuture future = mock(ChannelFuture.class);
-        when(sslHandler.handshake()).thenReturn(future);
+        ChannelFuture handshakeFuture = mock(ChannelFuture.class);
+        when(sslHandler.handshake()).thenReturn(handshakeFuture);
         
         handler.channelConnected(ctx, null);
-        verify(future).addListener(any(SSLHandshakeDoneListener.class));
+        verify(handshakeFuture).addListener(any(SSLHandshakeDoneListener.class));
+    }
+
+    @Test
+    public void invalidRequestReturnsAnErrorResponse() {
+        // target and receiver are null
+        Request request = mock(Request.class);
+        MessageEvent event = mock(MessageEvent.class);
+        when(event.getMessage()).thenReturn(request);
+
+        ServerHandler handler = new ServerHandler(null, null, storageGetter);
+        handler.messageReceived(ctx, event);
+
+        ArgumentCaptor<Response> responseCaptor = ArgumentCaptor.forClass(Response.class);
+        verify(channel).write(responseCaptor.capture());
+        assertEquals(ResponseType.ERROR, responseCaptor.getValue().getType());
     }
 }
 

@@ -56,6 +56,7 @@ import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.agent.command.RequestReceiver;
+import com.redhat.thermostat.common.command.Message.MessageType;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
@@ -70,8 +71,15 @@ class ServerHandler extends SimpleChannelUpstreamHandler {
     private static final Logger logger = LoggingUtils.getLogger(ServerHandler.class);
     private ReceiverRegistry receivers;
     private SSLConfiguration sslConf;
+    private StorageGetter storageGetter;
 
     public ServerHandler(ReceiverRegistry receivers, SSLConfiguration sslConf) {
+        this(receivers, sslConf, new StorageGetter());
+    }
+
+    /** For testing only */
+    ServerHandler(ReceiverRegistry receivers, SSLConfiguration sslConf, StorageGetter getter) {
+        this.storageGetter = getter;
         this.receivers = receivers;
         this.sslConf = sslConf;
     }
@@ -103,17 +111,24 @@ class ServerHandler extends SimpleChannelUpstreamHandler {
     @Override
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
         Request request = (Request) e.getMessage();
+        String receiverName = request.getReceiver();
+        MessageType requestType = request.getType();
+        logger.info("Request received: '" + requestType + "' for '" + receiverName + "'");
         boolean authSucceeded = authenticateRequestIfNecessary(request);
         Response response = null;
         if (! authSucceeded) {
+            logger.info("Authentication for request failed");
             response = new Response(ResponseType.AUTH_FAILED);
         } else {
-            String receiverName = request.getReceiver();
-            logger.info("Request received: " + request.getType().toString() + " for " + receiverName);
-            RequestReceiver receiver = receivers.getReceiver(receiverName);
-            if (receiver != null) {
-                response = receiver.receive(request);
-            } else {
+            if (receiverName != null && requestType != null) {
+                RequestReceiver receiver = receivers.getReceiver(receiverName);
+                if (receiver != null) {
+                    response = receiver.receive(request);
+                }
+            }
+
+            if (response == null) {
+                logger.info("Receiver with name '" + receiverName + "' not found ");
                 response = new Response(ResponseType.ERROR);
             }
         }
@@ -128,9 +143,7 @@ class ServerHandler extends SimpleChannelUpstreamHandler {
     }
 
     private boolean authenticateRequestIfNecessary(Request request) {
-        BundleContext bCtx = FrameworkUtil.getBundle(getClass()).getBundleContext();
-        ServiceReference storageRef = bCtx.getServiceReference(Storage.class.getName());
-        Storage storage = (Storage) bCtx.getService(storageRef);
+        Storage storage = storageGetter.get();
         if (storage instanceof SecureStorage) {
             boolean authenticatedRequest = authenticateRequest(request, (SecureStorage) storage);
             if (authenticatedRequest) {
@@ -180,6 +193,17 @@ class ServerHandler extends SimpleChannelUpstreamHandler {
                 logger.log(Level.WARNING, "SSL handshake failed!");
                 future.getChannel().close();
             }
+        }
+    }
+
+    /** for testing only */
+    static class StorageGetter {
+        public Storage get() {
+            BundleContext bCtx = FrameworkUtil.getBundle(getClass()).getBundleContext();
+            ServiceReference<Storage> storageRef = bCtx.getServiceReference(Storage.class);
+            // FIXME there should be a matching unget() somewhere to release the reference
+            Storage storage = (Storage) bCtx.getService(storageRef);
+            return storage;
         }
     }
 }

@@ -41,7 +41,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
 import org.apache.commons.codec.binary.Base64;
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.Channel;
@@ -79,9 +78,20 @@ class RequestQueueImpl implements RequestQueue {
 
     @Override
     public void putRequest(Request request) {
+        assertValidRequest(request);
+
         // Only enqueue request if we've successfully authenticated
         if (authenticateRequest(request)) {
             queue.add(request);
+        }
+    }
+
+    private void assertValidRequest(Request request) {
+        if (request.getReceiver() == null) {
+            throw new AssertionError("The receiver for a Request must not be null");
+        }
+        if (request.getTarget() == null) {
+            throw new AssertionError("The target for a Request must not be null");
         }
     }
 
