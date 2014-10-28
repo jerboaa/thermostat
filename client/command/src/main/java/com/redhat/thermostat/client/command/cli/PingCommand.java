@@ -137,11 +137,9 @@ public class PingCommand extends AbstractCommand {
         ServiceReference agentInfoDaoRef = context.getServiceReference(AgentInfoDAO.class.getName());
         requireNonNull(agentInfoDaoRef, translator.localize(LocaleResources.COMMAND_PING_NO_AGENT_INFO_DAO));
         AgentInfoDAO agentInfoDao = (AgentInfoDAO) context.getService(agentInfoDaoRef);
-        String address = agentInfoDao.getAgentInformation(targetHostRef).getConfigListenAddress();
+        InetSocketAddress target = agentInfoDao.getAgentInformation(targetHostRef).getRequestQueueAddress();
         context.ungetService(agentInfoDaoRef);
         
-        String [] host = address.split(":");
-        InetSocketAddress target = new InetSocketAddress(host[0], Integer.parseInt(host[1]));
         Request ping = new Request(RequestType.RESPONSE_EXPECTED, target);
         ping.setParameter(Request.ACTION, PING_ACTION_NAME);
         ping.setReceiver("com.redhat.thermostat.agent.command.internal.PingReceiver");

@@ -75,10 +75,7 @@ public class JmxToggleNotificationRequest {
     public void sendEnableNotificationsRequestToAgent(VmRef vm, boolean enable) {
         HostRef targetHostRef = vm.getHostRef();
 
-        String address = agentDAO.getAgentInformation(targetHostRef).getConfigListenAddress();
-        String[] host = address.split(":");
-
-        InetSocketAddress target = new InetSocketAddress(host[0], Integer.parseInt(host[1]));
+        InetSocketAddress target = agentDAO.getAgentInformation(targetHostRef).getRequestQueueAddress();
         Request req = new Request(RequestType.RESPONSE_EXPECTED, target);
 
         req.setReceiver(JmxCommand.RECEIVER);

@@ -90,10 +90,7 @@ public class ThreadMXBeanCollector implements ThreadCollector {
     Request createRequest() {
         HostRef targetHostRef = ref.getHostRef();
         
-        String address = agentDao.getAgentInformation(targetHostRef).getConfigListenAddress();
-        String [] host = address.split(":");
-        
-        InetSocketAddress target = new InetSocketAddress(host[0], Integer.parseInt(host[1]));
+        InetSocketAddress target = agentDao.getAgentInformation(targetHostRef).getRequestQueueAddress();
         Request harvester = new Request(RequestType.RESPONSE_EXPECTED, target);
 
         harvester.setReceiver(HarvesterCommand.RECEIVER);

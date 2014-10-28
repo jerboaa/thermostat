@@ -34,40 +34,24 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.killvm.common;
+package com.redhat.thermostat.storage.model;
+
+import static org.junit.Assert.assertEquals;
 
 import java.net.InetSocketAddress;
 
-import com.redhat.thermostat.client.command.RequestQueue;
-import com.redhat.thermostat.common.command.Request;
-import com.redhat.thermostat.common.command.RequestResponseListener;
-import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import org.junit.Test;
 
-public class KillVMRequest {
-    private static final String RECEIVER = "com.redhat.thermostat.killvm.agent.internal.KillVmReceiver";
-    private static final String CMD_CHANNEL_ACTION_NAME = "killvm";
+public class AgentInformationTest {
 
-    private RequestQueue queue;
+    @Test
+    public void configurationAddressIsParsedCorrectly() {
+        final String HOST = "example.com";
+        final int PORT = 80;
 
-    public KillVMRequest(RequestQueue queue) {
-        this.queue = queue;
-    }
+        AgentInformation info = new AgentInformation();
+        info.setConfigListenAddress(HOST + ":" + PORT);
 
-    public void sendKillVMRequestToAgent(VmRef vmRef, AgentInfoDAO agentInfoDAO, RequestResponseListener listener) {
-        InetSocketAddress target = agentInfoDAO.getAgentInformation(vmRef.getHostRef()).getRequestQueueAddress();
-
-        Request murderer = getKillRequest(target);
-        murderer.setParameter(Request.ACTION, CMD_CHANNEL_ACTION_NAME);
-        murderer.setParameter("vm-pid", String.valueOf(vmRef.getPid()));
-        murderer.setReceiver(RECEIVER);
-        murderer.addListener(listener);
-
-        queue.putRequest(murderer);
-    }
-
-    // for testing
-    Request getKillRequest(InetSocketAddress target) {
-        return new Request(Request.RequestType.NO_RESPONSE_EXPECTED, target);
+        assertEquals(new InetSocketAddress(HOST, PORT), info.getRequestQueueAddress());
     }
 }

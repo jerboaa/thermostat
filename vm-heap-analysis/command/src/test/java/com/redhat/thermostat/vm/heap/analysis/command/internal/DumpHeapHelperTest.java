@@ -82,7 +82,7 @@ public class DumpHeapHelperTest {
         HostRef host = mock(HostRef.class);
 
         AgentInformation agentInfo = mock(AgentInformation.class);
-        when(agentInfo.getConfigListenAddress()).thenReturn("test:123");
+        when(agentInfo.getRequestQueueAddress()).thenReturn(new InetSocketAddress("test", 123));
 
         agentInfoDao = mock(AgentInfoDAO.class);
         when(agentInfoDao.getAgentInformation(host)).thenReturn(agentInfo);

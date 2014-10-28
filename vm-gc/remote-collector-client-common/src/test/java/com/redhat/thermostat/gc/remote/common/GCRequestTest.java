@@ -79,7 +79,7 @@ public class GCRequestTest {
         when(vm.getPid()).thenReturn(123456);
 
         AgentInformation info = mock(AgentInformation.class);
-        when(info.getConfigListenAddress()).thenReturn("0.0.42.42:42");
+        when(info.getRequestQueueAddress()).thenReturn(new InetSocketAddress("0.0.42.42", 42));
         
         when(agentDAO.getAgentInformation(ref)).thenReturn(info);
         

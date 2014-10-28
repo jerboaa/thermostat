@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.storage.model;
 
+import java.net.InetSocketAddress;
 import java.util.Objects;
 
 import com.redhat.thermostat.storage.core.Entity;
@@ -96,6 +97,13 @@ public class AgentInformation extends BasePojo {
     @Persist
     public void setConfigListenAddress(String address) {
         this.address = address;
+    }
+
+    public InetSocketAddress getRequestQueueAddress() {
+        String address = getConfigListenAddress();
+        String [] host = address.split(":");
+        InetSocketAddress target = new InetSocketAddress(host[0], Integer.parseInt(host[1]));
+        return target;
     }
 
     @Override

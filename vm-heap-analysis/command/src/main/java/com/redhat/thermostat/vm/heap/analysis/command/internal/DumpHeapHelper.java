@@ -90,10 +90,7 @@ public class DumpHeapHelper {
         int pid = info.getVmPid();
         
         HostRef targetHostRef = reference.getHostRef();
-        String address = agentInfoDAO.getAgentInformation(targetHostRef).getConfigListenAddress();
-        
-        String [] host = address.split(":");
-        InetSocketAddress target = new InetSocketAddress(host[0], Integer.parseInt(host[1]));
+        InetSocketAddress target = agentInfoDAO.getAgentInformation(targetHostRef).getRequestQueueAddress();
         Request req = new Request(RequestType.RESPONSE_EXPECTED, target);
         req.setReceiver(RECEIVER_CLASS_NAME);
         req.setParameter(Request.ACTION, CMD_CHANNEL_ACTION_NAME);

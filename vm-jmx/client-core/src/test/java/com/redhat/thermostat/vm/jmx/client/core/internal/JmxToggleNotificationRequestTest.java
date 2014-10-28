@@ -95,7 +95,7 @@ public class JmxToggleNotificationRequestTest {
         agentDAO = mock(AgentInfoDAO.class);
 
         agentInfo = mock(AgentInformation.class);
-        when(agentInfo.getConfigListenAddress()).thenReturn(HOST + ":" + PORT);
+        when(agentInfo.getRequestQueueAddress()).thenReturn(new InetSocketAddress(HOST, PORT));
         when(agentDAO.getAgentInformation(host)).thenReturn(agentInfo);
         
         factory = mock(JmxToggleResponseListenerFactory.class);

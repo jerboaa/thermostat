@@ -60,11 +60,8 @@ public class GCRequest {
                 
         HostRef targetHostRef = vm.getHostRef();
 
-        String address = agentDAO.getAgentInformation(targetHostRef).getConfigListenAddress();
-        String [] host = address.split(":");
-        
-        InetSocketAddress target = new InetSocketAddress(host[0], Integer.parseInt(host[1]));
-        Request gcRequest = createRequest(target);
+        InetSocketAddress address = agentDAO.getAgentInformation(targetHostRef).getRequestQueueAddress();
+        Request gcRequest = createRequest(address);
 
         gcRequest.setReceiver(GCAction.RECEIVER);
 
