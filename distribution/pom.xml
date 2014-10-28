@@ -254,7 +254,7 @@
   </build>
   <!-- Define two build profiles. One for development builds. Another for
        release builds. All dependencies for release builds are specified in
-       release-build-deps/pom.xml. Any extra dependencies for a devel-build
+       build-deps/pom.xml. Any extra dependencies for a devel-build
        go into the dev-build profile directly.
   -->
   <profiles>
