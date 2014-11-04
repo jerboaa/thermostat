@@ -173,7 +173,7 @@ public class ShellCommand extends AbstractCommand {
     }
 
     private void launchCommand(String line) throws CommandException {
-        String[] parsed = line.split(" ");
+        String[] parsed = line.split(" +");
         ServiceReference launcherRef = bundleContext.getServiceReference(Launcher.class.getName());
         if (launcherRef != null) {
             Launcher launcher = (Launcher) bundleContext.getService(launcherRef);

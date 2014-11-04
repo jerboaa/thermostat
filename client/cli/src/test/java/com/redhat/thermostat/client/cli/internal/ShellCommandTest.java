@@ -110,6 +110,20 @@ public class ShellCommandTest {
     }
 
     @Test
+    public void testExtraSpacesAreIgnored() throws CommandException {
+        ServiceReference ref = mock(ServiceReference.class);
+        when(bundleContext.getServiceReference(Launcher.class.getName())).thenReturn(ref);
+        Launcher launcher = mock(Launcher.class);
+        when(bundleContext.getService(ref)).thenReturn(launcher);
+        TestCommandContextFactory ctxFactory = new TestCommandContextFactory(bundleContext);
+        ctxFactory.setInput("foo   bar\nexit\n");
+        Arguments args = new SimpleArguments();
+        CommandContext ctx = ctxFactory.createContext(args);
+        cmd.run(ctx);
+        verify(launcher).run(new String[]{"foo", "bar"}, true);
+    }
+
+    @Test
     public void testQuitAlsoExits() throws CommandException {
         TestCommandContextFactory ctxFactory = new TestCommandContextFactory();
         ctxFactory.setInput("quit\n");
