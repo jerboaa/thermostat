@@ -105,6 +105,8 @@ public enum LocaleResources {
     PURGE_EXPENSIVE_OPERATION_PROMPT,
     PURGE_CANCELLED_MESSAGE,
     AFFIRMATIVE_RESPONSES,
+
+    VM_STAT_INVALID_SINCE_ARGUMENT,
     ;
 
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.client.cli.strings";

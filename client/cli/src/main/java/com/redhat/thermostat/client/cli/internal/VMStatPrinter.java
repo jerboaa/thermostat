@@ -71,20 +71,20 @@ class VMStatPrinter {
     private int numCols;
     private Map<VMStatPrintDelegate, DelegateInfo> delegateInfo;
 
-    VMStatPrinter(VmRef vm, List<VMStatPrintDelegate> delegates, PrintStream out) {
+    VMStatPrinter(VmRef vm, List<VMStatPrintDelegate> delegates, PrintStream out, long sinceTimestamp) {
         this.vm = vm;
         this.delegates = delegates;
         this.out = out;
         int numDelegates = delegates.size();
         this.delegateInfo = new HashMap<>();
         this.correlator = new TimeStampedPojoCorrelator(numDelegates);
-        
+
         // Sort the delegates list
         Collections.sort(delegates, new OrderedComparator<>());
-        
+
         for (VMStatPrintDelegate delegate : delegates) {
             DelegateInfo info = new DelegateInfo();
-            info.lastTimeStamp = Long.MIN_VALUE;
+            info.lastTimeStamp = sinceTimestamp;
             delegateInfo.put(delegate, info);
         }
     }

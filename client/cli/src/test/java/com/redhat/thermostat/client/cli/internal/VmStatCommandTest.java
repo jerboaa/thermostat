@@ -38,7 +38,6 @@ package com.redhat.thermostat.client.cli.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
@@ -54,13 +53,10 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.redhat.thermostat.client.cli.VMStatPrintDelegate;
@@ -68,7 +64,6 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
-import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 import com.redhat.thermostat.test.TestCommandContextFactory;
@@ -165,26 +160,20 @@ public class VmStatCommandTest {
         
         VMStatCommand cmd = new VMStatCommand(context);
         
-        SimpleArguments args = new SimpleArguments();
-        args.addArgument("vmId", "234");
-        args.addArgument("hostId", "123");
-        cmd.run(cmdCtxFactory.createContext(args));
+        cmd.run(cmdCtxFactory.createContext(setupArguments()));
         String expected = "TIME        FIRST SECOND THIRD FOURTH FIFTH\n"
                 + "12:00:00 AM 1     2      3     4      5\n"
                 + "12:00:01 AM 6     7      8     9      10\n"
                 + "12:00:02 AM 11    12     13    14     15\n";
         assertEquals(expected, cmdCtxFactory.getOutput());
     }
-    
+
     @Test
     public void testNoDelegates() throws CommandException {
         StubBundleContext context = new StubBundleContext();
         VMStatCommand cmd = new VMStatCommand(context);
         
-        SimpleArguments args = new SimpleArguments();
-        args.addArgument("vmId", "234");
-        args.addArgument("hostId", "123");
-        cmd.run(cmdCtxFactory.createContext(args));
+        cmd.run(cmdCtxFactory.createContext(setupArguments()));
         String expected = "TIME\n";
         assertEquals(expected, cmdCtxFactory.getOutput());
     }
@@ -216,9 +205,7 @@ public class VmStatCommandTest {
         
         Thread t = new Thread() {
             public void run() {
-                SimpleArguments args = new SimpleArguments();
-                args.addArgument("vmId", "234");
-                args.addArgument("hostId", "123");
+                SimpleArguments args = setupArguments();
                 args.addArgument("continuous", "true");
                 try {
                     cmd.run(cmdCtxFactory.createContext(args));
@@ -275,10 +262,7 @@ public class VmStatCommandTest {
         
         VMStatCommand cmd = new VMStatCommand(context);
         
-        SimpleArguments args = new SimpleArguments();
-        args.addArgument("vmId", "234");
-        args.addArgument("hostId", "123");
-        cmd.run(cmdCtxFactory.createContext(args));
+        cmd.run(cmdCtxFactory.createContext(setupArguments()));
         String expected = "TIME        FIRST SECOND THIRD FOURTH FIFTH\n"
                 + "12:00:00 AM 1     2      3     4      5\n"
                 + "12:00:01 AM 6     7      8     9      10\n"
@@ -301,10 +285,7 @@ public class VmStatCommandTest {
         
         VMStatCommand cmd = new VMStatCommand(context);
         
-        SimpleArguments args = new SimpleArguments();
-        args.addArgument("vmId", "234");
-        args.addArgument("hostId", "123");
-        cmd.run(cmdCtxFactory.createContext(args));
+        cmd.run(cmdCtxFactory.createContext(setupArguments()));
         String expected = "TIME        FIRST SECOND THIRD FOURTH FIFTH\n"
                 + "12:00:00 AM 1     2      3     4      5\n"
                 + "12:00:01 AM 6     7      8     9      10\n"
@@ -331,10 +312,7 @@ public class VmStatCommandTest {
         
         VMStatCommand cmd = new VMStatCommand(context);
         
-        SimpleArguments args = new SimpleArguments();
-        args.addArgument("vmId", "234");
-        args.addArgument("hostId", "123");
-        cmd.run(cmdCtxFactory.createContext(args));
+        cmd.run(cmdCtxFactory.createContext(setupArguments()));
         String expected = "TIME        FIRST SECOND THIRD BAD FOURTH FIFTH\n"
                 + "12:00:00 AM 1     2      3         4      5\n"
                 + "12:00:01 AM 6     7      8     0   9      10\n"
@@ -347,6 +325,14 @@ public class VmStatCommandTest {
         StubBundleContext context = new StubBundleContext();
         VMStatCommand cmd = new VMStatCommand(context);
         assertTrue(cmd.isStorageRequired());
+    }
+
+    private SimpleArguments setupArguments() {
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("vmId", "234");
+        args.addArgument("hostId", "123");
+        args.addArgument("since", "all");
+        return args;
     }
 }
 

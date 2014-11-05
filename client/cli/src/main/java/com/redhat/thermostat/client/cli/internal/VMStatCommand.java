@@ -57,16 +57,19 @@ import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.CommandLineArgumentParseException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
 
 public class VMStatCommand extends AbstractCommand {
 
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     private static final Logger log = LoggingUtils.getLogger(VMStatCommand.class);
-    
+
     private List<VMStatPrintDelegate> delegates;
     private BundleContext context;
-    
+
     public VMStatCommand() {
         this(FrameworkUtil.getBundle(VMStatCommand.class).getBundleContext());
     }
@@ -93,11 +96,25 @@ public class VMStatCommand extends AbstractCommand {
 
     @Override
     public void run(final CommandContext ctx) throws CommandException {
+        long currentTime = System.currentTimeMillis();
+        long defaultSinceTime = currentTime - TimeUnit.MINUTES.toMillis(10);
+
         HostVMArguments hostVMArgs = new HostVMArguments(ctx.getArguments());
         VmRef vm = hostVMArgs.getVM();
+
+        long sinceTimestamp;
+
+        String sinceArg = ctx.getArguments().getArgument("since");
+        try {
+            sinceTimestamp = new SinceTimestampParser(sinceArg, currentTime, defaultSinceTime).parse();
+        } catch (SinceTimestampParser.InvalidSinceTimestampFormatException e) {
+            throw new CommandLineArgumentParseException(translator.localize(LocaleResources.VM_STAT_INVALID_SINCE_ARGUMENT));
+        }
+
         // Pass a copy of the delegates list to the printer
-        final VMStatPrinter statPrinter = new VMStatPrinter(vm, new ArrayList<>(delegates), ctx.getConsole().getOutput());
+        final VMStatPrinter statPrinter = new VMStatPrinter(vm, new ArrayList<>(delegates), ctx.getConsole().getOutput(), sinceTimestamp);
         statPrinter.printStats();
+
         boolean continuous = ctx.getArguments().hasArgument("continuous");
         if (continuous) {
             startContinuousStats(ctx, statPrinter);
@@ -115,7 +132,6 @@ public class VMStatCommand extends AbstractCommand {
         timer.setSchedulingType(Timer.SchedulingType.FIXED_RATE);
         timer.setTimeUnit(TimeUnit.SECONDS);
         timer.setAction(new Runnable() {
-
             @Override
             public void run() {
                 statPrinter.printUpdatedStats();
@@ -140,7 +156,7 @@ public class VMStatCommand extends AbstractCommand {
         } catch (InterruptedException e) {
             // Return immediately.
         }
-        
+
         context.ungetService(ref);
     }
 
