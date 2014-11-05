@@ -38,10 +38,8 @@ package com.redhat.thermostat.storage.model;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.NoSuchElementException;
 
 import org.junit.Test;
 
@@ -59,12 +57,7 @@ public class AggregateCountTest {
         AggregateCount actual = cursor.next();
         assertEquals(10, actual.getCount());
         assertFalse(cursor.hasNext());
-        try {
-            cursor.next();
-            fail("Should have thrown NoSuchElementException!");
-        } catch (NoSuchElementException e) {
-            // pass
-        }
+        assertNull(cursor.next());
     }
     
     /**

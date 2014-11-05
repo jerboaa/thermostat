@@ -62,7 +62,6 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.concurrent.CountDownLatch;
 
 import javax.servlet.ServletException;
@@ -415,12 +414,7 @@ public class WebStorageTest {
         fakeQueryResponse.setHasMoreBatches(false);
         Cursor<TestObj> results = doBasicPrepareAndExecuteQueryTest(fakeQueryResponse);
         assertFalse(results.hasNext());
-        try {
-            results.next();
-            fail();
-        } catch (NoSuchElementException ex) {
-            // Pass.
-        }
+        assertNull(results.next());
     }
     
     /**

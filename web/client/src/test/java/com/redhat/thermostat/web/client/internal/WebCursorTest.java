@@ -46,7 +46,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Type;
-import java.util.NoSuchElementException;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -96,12 +95,7 @@ public class WebCursorTest {
         boolean hasMoreBatches = false;
         TestObj[] dataBatch = new TestObj[] { };
         WebCursor<TestObj> cursor = new WebCursor<>(storage, dataBatch, hasMoreBatches, cursorId, fakeType, stmt);
-        try {
-            cursor.next();
-            fail("no results and no more batches, expected NSEE");
-        } catch (NoSuchElementException e) {
-            // pass
-        }
+        assertNull(cursor.next());
         
         // test empty results but more batches
         hasMoreBatches = true;

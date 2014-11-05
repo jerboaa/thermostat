@@ -38,7 +38,6 @@
 package com.redhat.thermostat.web.client.internal;
 
 import java.lang.reflect.Type;
-import java.util.NoSuchElementException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -81,7 +80,11 @@ class WebCursor<T extends Pojo> extends BasicBatchCursor<T> {
     @Override
     public T next() {
         if (batchIndex >= dataBatch.length && !hasMoreBatches) {
-            throw new NoSuchElementException();
+            // FIXME: Thermostat 2.0: Change to throwing NoSuchElementException
+            String warning = "No next element but next() is being called. " +
+                             "This will throw NoSuchElementException in the next release!";
+            logger.log(Level.WARNING, warning);
+            return null;
         }
         T result = null;
         // Check if we have still results left in batch,

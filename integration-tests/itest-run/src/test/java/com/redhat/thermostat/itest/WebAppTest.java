@@ -39,6 +39,7 @@ package com.redhat.thermostat.itest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -57,7 +58,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
@@ -95,11 +95,11 @@ import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
+import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.HostInfo;
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.mongodb.internal.MongoStorage;
 import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.storage.query.ExpressionFactory;
@@ -791,12 +791,7 @@ public class WebAppTest extends IntegrationTest {
         
         Cursor<CpuStat> cursor = query.executeQuery();
         assertFalse(cursor.hasNext());
-        try {
-            cursor.next();
-            fail("cursor should have thrown exception!");
-        } catch (NoSuchElementException e) {
-            // pass
-        }
+        assertNull(cursor.next());
 
         webStorage.getConnection().disconnect();
     }

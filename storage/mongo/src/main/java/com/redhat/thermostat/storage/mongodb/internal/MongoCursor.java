@@ -36,16 +36,20 @@
 
 package com.redhat.thermostat.storage.mongodb.internal;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoException;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.core.experimental.BasicBatchCursor;
-import com.redhat.thermostat.storage.core.experimental.BatchCursor;
 import com.redhat.thermostat.storage.model.Pojo;
 
 class MongoCursor<T extends Pojo> extends BasicBatchCursor<T> {
 
+    private static final Logger logger = LoggingUtils.getLogger(MongoCursor.class);
     private DBCursor cursor;
     private Class<T> resultClass;
 
@@ -68,8 +72,10 @@ class MongoCursor<T extends Pojo> extends BasicBatchCursor<T> {
         try {
             DBObject next = cursor.next();
             if (next == null) {
-                // FIXME: This is inconsistent with other cursors throwing
-                //        NoSuchElementException
+                // FIXME: Thermostat 2.0: Change to throwing NoSuchElementException
+                String warning = "No next element but next() is being called. " +
+                                 "This will throw NoSuchElementException in the next release!";
+                logger.log(Level.WARNING, warning);
                 return null;
             }
             MongoPojoConverter converter = new MongoPojoConverter();

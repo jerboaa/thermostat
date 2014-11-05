@@ -36,20 +36,43 @@
 
 package com.redhat.thermostat.storage.core;
 
+import java.util.NoSuchElementException;
+
 import com.redhat.thermostat.storage.model.Pojo;
 
 /**
- * Allows traversing over objects obtained from Storage.
+ * Allows traversing over objects obtained from {@link Storage}.
+ * 
+ * @see PreparedStatement#executeQuery()
  */
 public interface Cursor<T extends Pojo> {
 
     /**
+     * @return {@code true} if there are more elements, {@code false} otherwise.
+     * 
      * @throws StorageException
+     *             If there was a problem with underlying {@link Storage}.
      */
     boolean hasNext();
 
     /**
+     * Retrieves the next element from the result set. Users are advised to call
+     * {@link #hasNext()} prior to calling this method.
+     * 
+     * @return <p>
+     *         The next element of the result set. {@code null} if there is no
+     *         next element.
+     *         </p>
+     *         <p>
+     *         <strong>Please note: </strong> This will change with the next
+     *         release. In the next major release a
+     *         {@link NoSuchElementException} will be thrown if there is no next
+     *         element. I.e. {@link #hasNext()} returns {@code false}, but
+     *         {@code next()} is still being called.
+     *         </p>
+     * 
      * @throws StorageException
+     *             If there was a problem with underlying {@link Storage}.
      */
     T next();
 
