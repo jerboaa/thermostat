@@ -48,6 +48,15 @@
   <url>${thermostat.url}</url>
 
   <profiles>
+    <profile>
+      <id>default</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <license.skip>false</license.skip>
+      </properties>
+    </profile>
     <!-- Profile for running performance tests. Performance tests are
          excluded from normal builds. That is, they'll only run if
          explicitly requested via -Pperf-tests. See web/common/pom.xml 
@@ -163,6 +172,28 @@ thermostat-cmdc = thermostat-cmdc-grant-garbage-collect, \
 username=${agent.dev.username}
 password=${agent.dev.password}
         </agent.auth.snippet>
+      </properties>
+    </profile>
+    <profile>
+      <id>skip-license-check-on-skip-tests</id>
+      <activation>
+        <property>
+          <name>skipTests</name>
+        </property>
+      </activation>
+      <properties>
+        <license.skip>true</license.skip>
+      </properties>
+    </profile>
+    <profile>
+      <id>skip-license-check-on-test-skip</id>
+      <activation>
+        <property>
+          <name>maven.test.skip</name>
+        </property>
+      </activation>
+      <properties>
+        <license.skip>true</license.skip>
       </properties>
     </profile>
   </profiles>
@@ -472,6 +503,7 @@ password=${agent.dev.password}
          <version>2.6</version>
          <inherited>false</inherited>
          <configuration>
+           <skip>${license.skip}</skip>
            <headerDefinitions>
              <headerDefinition>src/license/thermostat-java.xml</headerDefinition>
              <headerDefinition>src/license/thermostat-xml.xml</headerDefinition>
