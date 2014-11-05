@@ -44,15 +44,21 @@ import java.util.concurrent.TimeUnit;
 import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.CommandLineArgumentParseException;
 import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.model.BackendInformation;
 
-public class ListAgentsCommand extends AbstractCommand {
+public class AgentInfoCommand extends AbstractCommand {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private AgentInfoDAO agentInfoDAO;
+    private BackendInfoDAO backendInfoDAO;
+
     private Semaphore servicesAvailable = new Semaphore(0);
 
     @Override
@@ -60,8 +66,14 @@ public class ListAgentsCommand extends AbstractCommand {
         waitForServices(500l);
 
         requireNonNull(agentInfoDAO, translator.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE));
+        requireNonNull(backendInfoDAO, translator.localize(LocaleResources.BACKEND_SERVICE_UNAVAILABLE));
 
-        listAgents(ctx.getConsole().getOutput(), agentInfoDAO.getAllAgentInformation());
+        String agentId = ctx.getArguments().getArgument("agentId");
+        if (agentId == null) {
+            throw new CommandLineArgumentParseException(translator.localize(LocaleResources.AGENT_ID_REQUIRED_MESSAGE));
+        }
+
+        displayAgentInfo(ctx.getConsole().getOutput(), agentId);
     }
 
     private void waitForServices(long timeout) {
@@ -72,33 +84,36 @@ public class ListAgentsCommand extends AbstractCommand {
         }
     }
 
-    private void listAgents(PrintStream out, List<AgentInformation> informationList) {
-        AgentListFormatter formatter = new AgentListFormatter();
-        formatter.addHeader();
+    private void displayAgentInfo(PrintStream out, String agentId) throws CommandException {
+        HostRef dummyRef = new HostRef(agentId, "dummy");
+        AgentInformation info = agentInfoDAO.getAgentInformation(dummyRef);
+        requireNonNull(info, translator.localize(LocaleResources.AGENT_NOT_FOUND, agentId));
 
-        for (AgentInformation info : informationList) {
-            formatter.addAgent(info);
-        }
+        List<BackendInformation> backendList = backendInfoDAO.getBackendInformation(dummyRef);
 
+        AgentInfoFormatter formatter = new AgentInfoFormatter();
+
+        formatter.addAgent(info, backendList);
         formatter.format(out);
     }
 
-    public void setAgentInfoDAO(AgentInfoDAO agentInfoDAO) {
+    public void setServices(AgentInfoDAO agentInfoDAO, BackendInfoDAO backendInfoDAO) {
         this.agentInfoDAO = agentInfoDAO;
-        if (agentInfoDAO == null) {
+        this.backendInfoDAO = backendInfoDAO;
+        if (agentInfoDAO == null || backendInfoDAO ==  null) {
             servicesUnavailable();
         } else {
-            servicesAvailable();
+            serviceAvailable();
         }
-
-
     }
 
-    private void servicesAvailable() {
+    private void serviceAvailable() {
         this.servicesAvailable.release();
     }
 
     private void servicesUnavailable() {
         this.servicesAvailable.drainPermits();
     }
+
+
 }

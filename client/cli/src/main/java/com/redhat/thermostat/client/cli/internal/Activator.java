@@ -48,6 +48,7 @@ import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class Activator implements BundleActivator {
@@ -55,8 +56,11 @@ public class Activator implements BundleActivator {
     private CommandRegistry reg = null;
     private MultipleServiceTracker tracker;
 
-    private MultipleServiceTracker agentTracker;
+    private MultipleServiceTracker listAgentTracker;
     private final ListAgentsCommand listAgentsCommand = new ListAgentsCommand();
+
+    private MultipleServiceTracker agentInfoTracker;
+    private final AgentInfoCommand agentInfoCommand = new AgentInfoCommand();
 
     @Override
     public void start(final BundleContext context) throws Exception {
@@ -91,10 +95,10 @@ public class Activator implements BundleActivator {
         });
         tracker.open();
 
-        Class<?>[] agentClasses = new Class[] {
+        Class<?>[] listAgentClasses = new Class[] {
                 AgentInfoDAO.class,
         };
-        agentTracker = new MultipleServiceTracker(context, agentClasses, new Action() {
+        listAgentTracker = new MultipleServiceTracker(context, listAgentClasses, new Action() {
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
                 AgentInfoDAO agentInfoDAO = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
@@ -106,15 +110,38 @@ public class Activator implements BundleActivator {
                 listAgentsCommand.setAgentInfoDAO(null);
             }
         });
-        agentTracker.open();
+        listAgentTracker.open();
 
         reg.registerCommand("list-agents", listAgentsCommand);
+
+        Class<?>[] agentInfoClasses = new Class[] {
+                AgentInfoDAO.class,
+                BackendInfoDAO.class,
+        };
+        agentInfoTracker = new MultipleServiceTracker(context, agentInfoClasses, new Action() {
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                AgentInfoDAO agentInfoDAO = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
+                BackendInfoDAO backendInfoDAO = (BackendInfoDAO) services.get(BackendInfoDAO.class.getName());
+
+                agentInfoCommand.setServices(agentInfoDAO, backendInfoDAO);
+            }
+
+            @Override
+            public void dependenciesUnavailable() {
+                agentInfoCommand.setServices(null, null);
+            }
+        });
+        agentInfoTracker.open();
+
+        reg.registerCommand("agent-info", agentInfoCommand);
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
         tracker.close();
-        agentTracker.close();
+        listAgentTracker.close();
+        agentInfoTracker.close();
         reg.unregisterCommands();
     }
 

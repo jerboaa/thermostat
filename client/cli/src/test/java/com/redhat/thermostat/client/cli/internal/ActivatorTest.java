@@ -94,6 +94,7 @@ public class ActivatorTest {
         assertCommandIsRegistered(ctx, "vm-info", VMInfoCommand.class);
         assertCommandIsRegistered(ctx, "vm-stat", VMStatCommand.class);
         assertCommandIsRegistered(ctx, "list-agents", ListAgentsCommand.class);
+        assertCommandIsRegistered(ctx, "agent-info", AgentInfoCommand.class);
 
         activator.stop(ctx);
 
