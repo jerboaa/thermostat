@@ -44,6 +44,7 @@ import static org.junit.Assert.fail;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.junit.Test;
 
@@ -56,7 +57,7 @@ public class KnownCategoryRegistryTest {
     @Test
     public void canAddCategories() {
         Set<String> categoryNames = new HashSet<>();
-        categoryNames.add("some-category"); // duplicate
+        categoryNames.add(DUPLICATE_CAT_NAME); // duplicate
         categoryNames.add("some-other-category");
         Iterable<CategoryRegistration> regs = getRegs(categoryNames);
         KnownCategoryRegistry reg = null;
@@ -95,6 +96,36 @@ public class KnownCategoryRegistryTest {
         } catch (IllegalStateException e) {
             // pass
         }
+    }
+    
+    /**
+     * Tests that {@code set.contains(null)} does not throw exceptions since
+     * plug-ins may supply any {@link Set} implementation. {@link TreeSet} for
+     * example throws a NPE if such a check is attempted.
+     * 
+     * See: http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=2077
+     */
+    @Test
+    public void testNullCheckWithTreeSet() {
+        String categoryName = "foo-category";
+        Set<String> descs = new TreeSet<>();
+        descs.add(categoryName);
+        try {
+            descs.add(null);
+            fail("Expected NPE when adding null to TreeSet");
+        } catch (NullPointerException e) {
+            // pre-condition passes
+        }
+        Iterable<CategoryRegistration> regs = getRegs(descs);
+        KnownCategoryRegistry registry = null;
+        try {
+            registry = new KnownCategoryRegistry(regs);
+            // pass
+        } catch (NullPointerException npe) {
+            npe.printStackTrace();
+            fail("Should not have thrown NPE");
+        }
+        assertTrue("category should be known", registry.getRegisteredCategoryNames().contains(categoryName));
     }
     
     @Test

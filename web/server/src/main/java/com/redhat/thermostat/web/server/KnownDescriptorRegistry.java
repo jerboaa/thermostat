@@ -66,8 +66,17 @@ final class KnownDescriptorRegistry {
         trustedSet = new HashSet<>();
         for (StatementDescriptorRegistration reg: trustedDescs) {
             Set<String> newCandidates = reg.getStatementDescriptors();
-            if (newCandidates.contains(null)) {
-                throw new IllegalStateException("null statement descriptor not acceptable!");
+            // Some Set implementations throw NPEs when contains() is called on
+            // a null value. Be sure we catch NPE since those impls can't contain
+            // null values anyway.
+            try {
+                if (newCandidates.contains(null)) {
+                    throw new IllegalStateException("null statement descriptor not acceptable!");
+                }
+                // Pass: Not containing null values.
+            } catch (NullPointerException npe) {
+                // Pass: Set impl does not support contains checks on null
+                //       values.
             }
             // prepare the reverse lookup metadata map
             StatementDescriptorMetadataFactory factory = (StatementDescriptorMetadataFactory) reg;

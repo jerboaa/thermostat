@@ -36,19 +36,22 @@
 
 package com.redhat.thermostat.web.server;
 
-import com.redhat.thermostat.storage.core.PreparedParameter;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+
+import org.junit.Test;
+
+import com.redhat.thermostat.storage.core.PreparedParameter;
+import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
+import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 
 public class KnownDescriptorRegistryTest {
 
@@ -80,6 +83,36 @@ public class KnownDescriptorRegistryTest {
         // only storage-core as maven dep which registers queries.
         // see DAOImplStatementDescriptorRegistration
         assertEquals(24, trustedDescs.size());
+    }
+    
+    /**
+     * Tests that {@code set.contains(null)} does not throw exceptions since
+     * plug-ins may supply any {@link Set} implementation. {@link TreeSet} for
+     * example throws a NPE if such a check is attempted.
+     * 
+     * See: http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=2077
+     */
+    @Test
+    public void testNullCheckWithTreeSet() {
+        String desc = "QUERY test WHERE 'a' = ?s";
+        Set<String> descs = new TreeSet<>();
+        descs.add(desc);
+        try {
+            descs.add(null);
+            fail("Expected NPE when adding null to TreeSet");
+        } catch (NullPointerException e) {
+            // pre-condition passes
+        }
+        Iterable<StatementDescriptorRegistration> regs = getRegs(descs);
+        KnownDescriptorRegistry registry = null;
+        try {
+            registry = new KnownDescriptorRegistry(regs);
+            // pass
+        } catch (NullPointerException npe) {
+            npe.printStackTrace();
+            fail("Should not have thrown NPE");
+        }
+        assertTrue("descriptor should be known", registry.getRegisteredDescriptors().contains(desc));
     }
     
     @Test

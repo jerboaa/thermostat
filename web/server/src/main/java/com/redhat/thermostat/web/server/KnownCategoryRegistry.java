@@ -64,9 +64,18 @@ final class KnownCategoryRegistry {
         trustedCategories = new HashSet<>();
         for (CategoryRegistration reg: registrations) {
             Set<String> currentRegs = reg.getCategoryNames();
-            if (currentRegs.contains(null)) {
-                String msg = "null name not allowed!";
-                throw new IllegalStateException(msg);
+            // Some Set implementations throw NPEs when contains() is called on
+            // a null value. Be sure we catch NPE since those impls can't contain
+            // null values anyway.
+            try {
+                if (currentRegs.contains(null)) {
+                    String msg = "null name not allowed!";
+                    throw new IllegalStateException(msg);
+                }
+                // Pass: Not containing null values.
+            } catch (NullPointerException npe) {
+                // Pass: Set impl does not support contains checks on null
+                //       values.
             }
             trustedCategories.addAll(currentRegs);
         }
