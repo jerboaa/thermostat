@@ -375,10 +375,9 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
         }
 
         private void updateMemoryChartAndDisplay() {
-            List<VmMemoryStat> vmInfo = null;
-            vmInfo = vmDao.getLatestVmMemoryStats(ref, desiredUpdateTimeStamp);
+            List<VmMemoryStat> vmInfo = vmDao.getLatestVmMemoryStats(ref, desiredUpdateTimeStamp);
 
-            for (VmMemoryStat memoryStats: vmInfo) {
+            for (VmMemoryStat memoryStats : vmInfo) {
                 long used = 0l;
                 long capacity = 0l;
                 Generation[] generations = memoryStats.getGenerations();

@@ -46,8 +46,8 @@ public class StatsModelTest {
 
     @Test
     public void testClone() {
-        
-        StatsModel source = new StatsModel();
+        long fluff = 10;
+        StatsModel source = new StatsModel(fluff);
         source.setName("fluffModel");
         source.setRange(100);
         source.addData(500, 2.0);

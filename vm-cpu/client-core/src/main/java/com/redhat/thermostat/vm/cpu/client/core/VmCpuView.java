@@ -44,7 +44,6 @@ import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
-import com.redhat.thermostat.vm.cpu.client.core.VmCpuView.Duration;
 
 public abstract class VmCpuView extends BasicView implements UIComponent {
 

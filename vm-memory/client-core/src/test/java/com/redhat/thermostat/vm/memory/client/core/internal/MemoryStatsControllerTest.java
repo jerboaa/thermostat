@@ -280,7 +280,7 @@ public class MemoryStatsControllerTest {
         verify(memoryStatDao, times(2)).getLatestVmMemoryStats(isA(VmRef.class), timeStampCaptor.capture());
 
         long timeStamp1 = timeStampCaptor.getAllValues().get(0);
-        assertTimeStampIsAround(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1), timeStamp1);
+        assertTimeStampIsAround(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(10), timeStamp1);
 
         long timeStamp2 = timeStampCaptor.getAllValues().get(1);
         assertTimeStampIsAround(DATA_TIMESTAMP, timeStamp2);
@@ -298,10 +298,10 @@ public class MemoryStatsControllerTest {
         verify(memoryStatDao, times(2)).getLatestVmMemoryStats(isA(VmRef.class), timeStampCaptor.capture());
 
         long timeStamp1 = timeStampCaptor.getAllValues().get(0);
-        assertTimeStampIsAround(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1), timeStamp1);
+        assertTimeStampIsAround(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(10), timeStamp1);
 
         long timeStamp2 = timeStampCaptor.getAllValues().get(1);
-        assertTimeStampIsAround(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1), timeStamp2);
+        assertTimeStampIsAround(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(10), timeStamp2);
     }
 
     private void assertTimeStampIsAround(long expected, long actual) {

@@ -91,7 +91,7 @@ public class MemoryMeter extends JComponent {
     private String primaryUnit;
     private String secondaryUnit;
 
-        public void setPrimaryScaleUnit(String primaryUnit) {
+    public void setPrimaryScaleUnit(String primaryUnit) {
         this.primaryUnit = primaryUnit;
     }
     

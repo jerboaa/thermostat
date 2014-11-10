@@ -129,6 +129,5 @@ class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
     public List<VmMemoryStat> getLatestVmMemoryStats(VmRef ref, long since) {
         return getter.getLatest(ref, since);
     }
-
 }
 

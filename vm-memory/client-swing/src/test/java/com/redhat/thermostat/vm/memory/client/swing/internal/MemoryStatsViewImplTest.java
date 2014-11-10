@@ -36,9 +36,9 @@
 
 package com.redhat.thermostat.vm.memory.client.swing.internal;
 
-import javax.swing.JFrame;
+import java.util.concurrent.TimeUnit;
 
-import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
+import javax.swing.JFrame;
 
 import org.fest.swing.annotation.GUITest;
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
@@ -46,12 +46,17 @@ import org.fest.swing.edt.GuiActionRunner;
 import org.fest.swing.edt.GuiTask;
 import org.fest.swing.fixture.FrameFixture;
 import org.fest.swing.fixture.JButtonFixture;
+import org.fest.swing.fixture.JPanelFixture;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+
+import com.redhat.thermostat.vm.memory.client.core.MemoryStatsView;
+
+import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
 @RunWith(CacioFESTRunner.class)
 public class MemoryStatsViewImplTest {
@@ -70,7 +75,7 @@ public class MemoryStatsViewImplTest {
         GuiActionRunner.execute(new GuiTask() {
             @Override
             protected void executeInEDT() throws Throwable {
-                view = new MemoryStatsViewImpl();
+                view = new MemoryStatsViewImpl(new MemoryStatsView.Duration(10, TimeUnit.MINUTES));
                 frame = new JFrame();
                 frame.add(view.getUiComponent());
 
@@ -95,6 +100,16 @@ public class MemoryStatsViewImplTest {
 
         JButtonFixture togglefixture = frameFixture.button("gcButton");
         togglefixture.requireDisabled();
+    }
+
+    @Category(GUITest.class)
+    @GUITest
+    @Test
+    public void testSincePanelIsVisible() {
+        frameFixture.show();
+
+        JPanelFixture sincePanel = frameFixture.panel("since-panel");
+        sincePanel.requireVisible();
     }
 }
 

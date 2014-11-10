@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.vm.memory.client.core;
 
+import java.util.concurrent.TimeUnit;
+
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionListener;
@@ -43,13 +45,40 @@ import com.redhat.thermostat.gc.remote.common.command.GCAction;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 
 public abstract class MemoryStatsView extends BasicView implements UIComponent {
+
+    //FIXME: Duplicate class : See VmCpuView
+    public static class Duration {
+        public final int value;
+        public final TimeUnit unit;
+
+        public Duration(int value, TimeUnit unit) {
+            this.value = value;
+            this.unit = unit;
+        }
+
+        public long getMilliseconds() {
+            return this.unit.toMillis(this.value);
+        }
+
+        @Override
+        public String toString() {
+            return value + " " + unit;
+        }
+    }
+
+    //FIXME: Duplicate enum : See VmCpuView
+    public enum UserAction {
+        USER_CHANGED_TIME_RANGE,
+    }
     
     public abstract void addRegion(Payload region);
     public abstract void updateRegion(Payload region);
     
     public abstract void setEnableGCAction(boolean enable);
     public abstract void addGCActionListener(ActionListener<GCAction> listener);
-    
+
+    public abstract void addUserActionListener(ActionListener<UserAction> actionListener);
+
     public abstract void requestRepaint();
 
     public abstract void displayWarning(LocalizedString string);

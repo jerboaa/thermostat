@@ -49,7 +49,6 @@ import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Size;
-import com.redhat.thermostat.common.Size.Unit;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.command.Request;
@@ -76,81 +75,111 @@ import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Space;
 public class MemoryStatsController implements InformationServiceController<VmRef> {
 
     private static final Translate<LocaleResources> translate = LocaleResources.createLocalizer();
+    private static final MemoryStatsView.Duration defaultDuration = new MemoryStatsView.Duration(10, TimeUnit.MINUTES);
 
     private final MemoryStatsView view;
     private final VmMemoryStatDAO vmDao;
    
     private final VmRef ref;
     private final Timer timer;
-    
+
     private final Map<String, Payload> regions;
     
     private VMCollector collector;
     
     class VMCollector implements Runnable {
 
-        private long desiredUpdateTimeStamp = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1);
+        private long desiredUpdateTimeStamp = System.currentTimeMillis() - defaultDuration.getMilliseconds();
 
         @Override
         public void run() {
             List<VmMemoryStat> vmInfo = vmDao.getLatestVmMemoryStats(ref, desiredUpdateTimeStamp);
             for (VmMemoryStat memoryStats: vmInfo) {
-                Generation[] generations = memoryStats.getGenerations();
-                
-                for (Generation generation : generations) {
-                    Space[] spaces = generation.getSpaces();
-                    for (Space space: spaces) {
-                        Payload payload = regions.get(space.getName());
-                        if (payload == null) {
-                            payload = new Payload();
-                            payload.setName(space.getName());
-                        }
-
-                        Size.Unit usedScale = bestUnitForRange(space.getUsed(), space.getCapacity());
-                        double used = Size.bytes(space.getUsed()).convertTo(usedScale).getValue();
-                        double maxUsed = Size.bytes(space.getCapacity()).convertTo(usedScale).getValue();
-                        
-                        payload.setUsed(used);
-                        payload.setMaxUsed(maxUsed);
-                        payload.setUsedUnit(usedScale);
-                        
-                        Size.Unit maxScale = bestUnitForRange(space.getCapacity(), space.getMaxCapacity());
-                        double capacity = Size.bytes(space.getCapacity()).convertTo(maxScale).getValue();
-                        double maxCapacity = Size.bytes(space.getMaxCapacity()).convertTo(maxScale).getValue();
-                        
-                        payload.setCapacity(capacity);
-                        payload.setMaxCapacity(maxCapacity);
-                        payload.setCapacityUnit(maxScale);
-                        
-                        String tooltip = space.getName() + ": used: " + String.format("%.2f", used) + " " + usedScale +
-                                ", capacity: " + String.format("%.2f", capacity) + " " + maxScale +
-                                ", max capacity: " + String.format("%.2f", maxCapacity) + " " + maxScale;
-                        
-                        payload.setTooltip(tooltip);
-                        
-                        StatsModel model = payload.getModel();
-                        if (model == null) {
-                            model = new StatsModel();
-                            model.setName(space.getName());
-                            model.setRange(3600);
-                        }
-                        
-                        // normalize this always in the same unit
-                        model.addData(memoryStats.getTimeStamp(), Size.bytes(space.getUsed()).convertTo(Unit.MiB).getValue());
-                        
-                        payload.setModel(model);
-                        if (regions.containsKey(space.getName())) {
-                            view.updateRegion(payload.clone());
-                        } else {
-                            view.addRegion(payload.clone());
-                            regions.put(space.getName(), payload);
-                        }
-                        
-                        view.requestRepaint();
-                        desiredUpdateTimeStamp = Math.max(desiredUpdateTimeStamp, memoryStats.getTimeStamp());
-                    }
-                }
+                update(memoryStats);
             }
+        }
+
+        private void update(VmMemoryStat memoryStats) {
+            Generation[] generations = memoryStats.getGenerations();
+            for (Generation generation : generations) {
+                updateGeneration(generation, memoryStats.getTimeStamp());
+            }
+        }
+
+        private void updateGeneration(Generation generation, long timeStamp) {
+            Space[] spaces = generation.getSpaces();
+            for (Space space: spaces) {
+                updateSpace(space, timeStamp);
+            }
+        }
+
+        private void updateSpace(Space space, long timeStamp) {
+            Payload payload = getPayload(space.getName());
+
+            updatePayloadModel(payload, timeStamp, space.getUsed());
+
+            setPayloadFields(payload, space.getUsed(), space.getCapacity(), space.getMaxCapacity());
+
+            updateViewAndRegion(payload);
+
+            desiredUpdateTimeStamp = Math.max(desiredUpdateTimeStamp, timeStamp);
+        }
+
+        private void updateViewAndRegion(Payload payload) {
+            if (regions.containsKey(payload.getName())) {
+                view.updateRegion(payload.clone());
+            } else {
+                view.addRegion(payload.clone());
+                regions.put(payload.getName(), payload);
+            }
+
+            view.requestRepaint();
+        }
+
+        private void updatePayloadModel(Payload payload, long timeStamp, long used) {
+            StatsModel model = payload.getModel();
+            if (model == null) {
+                model = new StatsModel(defaultDuration.getMilliseconds());
+                model.setName(payload.getName());
+            }
+            // normalize this always in the same unit
+            model.addData(timeStamp, Size.bytes(used).convertTo(Size.Unit.MiB).getValue());
+
+            payload.setModel(model);
+        }
+
+        private Payload getPayload(String payloadName) {
+            Payload payload = regions.get(payloadName);
+            if (payload == null) {
+                payload = new Payload();
+                payload.setName(payloadName);
+            }
+            return payload;
+        }
+
+
+        public void setPayloadFields(Payload payload, long used, long capacity, long maxCapacity) {
+            Size.Unit usedScale = bestUnitForRange(used, capacity);
+            double usedSpace = Size.bytes(used).convertTo(usedScale).getValue();
+            double maxUsed = Size.bytes(capacity).convertTo(usedScale).getValue();
+
+            payload.setUsed(usedSpace);
+            payload.setMaxUsed(maxUsed);
+            payload.setUsedUnit(usedScale);
+
+            Size.Unit maxScale = bestUnitForRange(capacity, maxCapacity);
+            double capacitySpace = Size.bytes(capacity).convertTo(maxScale).getValue();
+            double maxCapacitySpace = Size.bytes(maxCapacity).convertTo(maxScale).getValue();
+
+            payload.setCapacity(capacitySpace);
+            payload.setMaxCapacity(maxCapacitySpace);
+            payload.setCapacityUnit(maxScale);
+
+            String tooltip = payload.getName() + ": used: " + String.format("%.2f", usedSpace) + " " + usedScale +
+                    ", capacity: " + String.format("%.2f", capacitySpace) + " " + maxScale +
+                    ", max capacity: " + String.format("%.2f", maxCapacitySpace) + " " + maxScale;
+
+            payload.setTooltip(tooltip);
         }
     }
     
@@ -163,7 +192,7 @@ public class MemoryStatsController implements InformationServiceController<VmRef
         this.ref = ref;
         vmDao = vmMemoryStatDao;
         view = viewProvider.createView();
-        
+
         timer = appSvc.getTimerFactory().createTimer();
         
         collector = new VMCollector();
@@ -188,6 +217,26 @@ public class MemoryStatsController implements InformationServiceController<VmRef
                         
                     default:
                         throw new NotImplementedException("unknown event: " + actionEvent.getActionId());
+                }
+            }
+        });
+
+        view.addUserActionListener(new ActionListener<MemoryStatsView.UserAction>() {
+            @Override
+            public void actionPerformed(ActionEvent<MemoryStatsView.UserAction> e) {
+                switch (e.getActionId()) {
+                    case USER_CHANGED_TIME_RANGE:
+                        MemoryStatsView.Duration duration = (MemoryStatsView.Duration) e.getPayload();
+                        for (Map.Entry<String, Payload> entry : regions.entrySet()) {
+                            Payload p = entry.getValue();
+                            StatsModel model = p.getModel();
+                            if (model != null) {
+                                model.setTimeRangeToShow(duration.value, duration.unit);
+                            }
+                        }
+                        break;
+                    default:
+                        throw new AssertionError("Unhandled action type: " + e.getActionId());
                 }
             }
         });

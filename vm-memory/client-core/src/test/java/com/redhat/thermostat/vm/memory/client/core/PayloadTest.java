@@ -47,8 +47,9 @@ public class PayloadTest {
 
     @Test
     public void testClone() {
-        
-        StatsModel model = new StatsModel();
+        long fluff = 10;
+        StatsModel model = new StatsModel(fluff);
+
         model.setName("fluffModel");
         model.setRange(100);
         model.addData(500, 2.0);

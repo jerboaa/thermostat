@@ -40,6 +40,7 @@ import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.plaf.ColorUIResource;
 
@@ -61,14 +62,16 @@ public class StatsModel implements Cloneable {
     private String name;
     
     private TimeSeries dataSet;
-    
-    public StatsModel() {
+
+    private long range;
+
+    public StatsModel(long range) {
+        this.range = range;
         dataSet = new TimeSeries("");
     }
     
     BufferedImage getChart(int width, int height, ColorUIResource bgColor, ColorUIResource fgColor) {
         JFreeChart chart = createChart(bgColor, fgColor);
-        
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         chart.draw((Graphics2D) image.getGraphics(), new Rectangle2D.Double(0, 0, width, height), null);
         
@@ -97,14 +100,19 @@ public class StatsModel implements Cloneable {
             }
         }
     }
-    
+
+    public void setTimeRangeToShow(int timeValue, TimeUnit timeUnit) {
+        synchronized (lock) {
+            range = timeUnit.toMillis(timeValue);
+        }
+    }
+
     @Override
     protected StatsModel clone() {
         
-        StatsModel model = new StatsModel();
+        StatsModel model = new StatsModel(this.range);
         model.setName(name);
-        model.setRange(dataSet.getMaximumItemCount());
-        
+
         try {
             model.dataSet = dataSet.createCopy(0, dataSet.getItemCount() - 1);
         } catch (CloneNotSupportedException e) {
@@ -138,16 +146,17 @@ public class StatsModel implements Cloneable {
         plot.setDomainCrosshairVisible(false);
         plot.setRangeGridlinesVisible(false);
         plot.setRangeCrosshairVisible(false);
-                
+
         DateAxis dateAxis = new DateAxis();
-        
+        dateAxis.setAutoRange(true);
+        dateAxis.setFixedAutoRange(range);
         dateAxis.setTickLabelsVisible(false);
         dateAxis.setTickMarksVisible(false);
         dateAxis.setAxisLineVisible(false);
         dateAxis.setNegativeArrowVisible(false);
         dateAxis.setPositiveArrowVisible(false);
         dateAxis.setVisible(false);
-        
+
         NumberAxis numberAxis = new NumberAxis();
         numberAxis.setTickLabelsVisible(false);
         numberAxis.setTickMarksVisible(false);
@@ -156,11 +165,11 @@ public class StatsModel implements Cloneable {
         numberAxis.setPositiveArrowVisible(false);
         numberAxis.setVisible(false);
         numberAxis.setAutoRangeIncludesZero(false);
-        
+
         plot.setDomainAxis(dateAxis);
         plot.setRangeAxis(numberAxis);
         plot.setDataset(priceData);
-        
+
         plot.setInsets(new RectangleInsets(-1, -1, 0, 0));
         
         plot.setRenderer(new StandardXYItemRenderer(StandardXYItemRenderer.LINES));

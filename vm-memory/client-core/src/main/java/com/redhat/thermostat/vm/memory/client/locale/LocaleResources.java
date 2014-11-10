@@ -44,7 +44,8 @@ public enum LocaleResources {
     ERROR_PERFORMING_GC,
     MEMORY_REGIONS_HEADER,
 
-    RESOURCE_MISSING;
+    RESOURCE_MISSING,
+    CHART_DURATION_SELECTOR_LABEL;
     
     public static final String RESOURCE_BUNDLE =
             "com.redhat.thermostat.vm.memory.client.locale.strings";
