@@ -591,7 +591,7 @@ public class WebStorageEndPoint extends HttpServlet {
             Class<?> clazz = Class.forName(dataClassName);
             return clazz;
         } catch (ClassNotFoundException e) {
-            throw new IllegalStateException("Unknown data class!");
+            throw new IllegalStateException("Unknown data class: '" + dataClassName + "'");
         }
     }
 
