@@ -36,56 +36,45 @@
 
 package com.redhat.thermostat.web.common;
 
-import com.redhat.thermostat.storage.core.PreparedStatement;
+import java.util.Objects;
+import java.util.UUID;
 
 /**
- * Common response codes for prepared statement responses.
+ * Simple data structure which uniquely identifies shared state between
+ * client (WebStorage) and server (WebStorageEndPoint).
  *
  */
-public interface PreparedStatementResponseCode {
+public class SharedStateId {
 
-    /**
-     * Response code for successful prepared queries.
-     */
-    public static final int QUERY_SUCCESS = 0;
+    // The id of the statement
+    private final int id;
+    // A unique token only used once per webapp deployment.
+    private final UUID serverToken;
     
-    /**
-     * Generic error code for failed queries. Usually
-     * returned if get-more failed for an unknown reason.
-     */
-    public static final int QUERY_FAILURE = -100;
+    public SharedStateId(int id, UUID serverToken) {
+        this.id = id;
+        this.serverToken = serverToken;
+    }
     
+    public int getId() {
+        return id;
+    }
+
+    public UUID getServerToken() {
+        return serverToken;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == null || other.getClass() != SharedStateId.class) {
+            return false;
+        }
+        SharedStateId o = (SharedStateId)other;
+        return id == o.id && serverToken.equals(o.serverToken);
+    }
     
-    /**
-     * Failure code for expired cursors. Usually returned if
-     * get-more requests failed because the underlying cursor
-     * was null.
-     */
-    public static final int GET_MORE_NULL_CURSOR = -151;
-    
-    /**
-     * Response code if patching of a {@link PreparedStatement} failed during
-     * statement execution.
-     * <p>
-     * For example a patching failure could happen if there was a type mismatch
-     * between the descriptor and the parameter provided. Providing not all
-     * parameters and attempting execution of a {@link PreparedStatement} would
-     * be another example.
-     */
-    public static final int ILLEGAL_PATCH = -1;
-    
-    /**
-     * Failure code for mismatching server tokens. This is usually happening if
-     * client and server get out of sync due to re-deployment or the like.
-     * Client should recover from this automatically by clearing the client
-     * cache and preparing statements again.
-     */
-    public static final int PREP_STMT_BAD_STOKEN = -2;
-    
-    /**
-     * Failure to execute a prepared write statement for some unknown reason.
-     */
-    public static final int WRITE_GENERIC_FAILURE = -200;
-    
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, serverToken);
+    }
 }
-

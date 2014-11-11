@@ -36,12 +36,15 @@
 
 package com.redhat.thermostat.web.common.typeadapters;
 
+import java.util.UUID;
+
 import org.junit.experimental.categories.Category;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.redhat.thermostat.testutils.PerformanceTest;
+import com.redhat.thermostat.web.common.SharedStateId;
 import com.redhat.thermostat.web.common.WebPreparedStatementResponse;
 import com.redhat.thermostat.web.common.typeadapters.WebPreparedStatementResponseTypeAdapterFactory;
 
@@ -62,12 +65,15 @@ public class WebPreparedStatementResponseJSONPerformanceTest extends
     
     @Override
     protected Gson getSlowGson() {
-        return new GsonBuilder().create();
+        return new GsonBuilder()
+                .registerTypeAdapterFactory(new SharedStateIdTypeAdapterFactory())
+                .create();
     }
 
     @Override
     protected Gson getFasterGson() {
         return new GsonBuilder()
+                    .registerTypeAdapterFactory(new SharedStateIdTypeAdapterFactory())
                     .registerTypeAdapterFactory(new WebPreparedStatementResponseTypeAdapterFactory())
                     .create();
     }
@@ -95,14 +101,15 @@ public class WebPreparedStatementResponseJSONPerformanceTest extends
     protected String mutateJsonString(GsonContext ctx, int mutator) {
         int stmtId = (mutator + 1) * 20;
         int numFreeVars = mutator;
-        return String.format("{\"numFreeVars\":%d,\"stmtId\":%d}", numFreeVars, stmtId);
+        return String.format("{\"numFreeVars\":%d,\"stmtId\":{\"sid\":%d,\"stok\":\"%s\"}}", numFreeVars, stmtId, UUID.randomUUID().toString());
     }
 
     @Override
     protected WebPreparedStatementResponse mutateToBeSerializedInstance(int mutator) {
         WebPreparedStatementResponse response = new WebPreparedStatementResponse();
         response.setNumFreeVariables(3);
-        response.setStatementId(mutator);
+        SharedStateId id = new SharedStateId(mutator, UUID.randomUUID());
+        response.setStatementId(id);
         return response;
     }
 
@@ -128,7 +135,7 @@ public class WebPreparedStatementResponseJSONPerformanceTest extends
 
     @Override
     protected int getWarmDeserializationIterations() {
-        return 5000;
+        return 2000;
     }
 
     @Override
@@ -138,7 +145,7 @@ public class WebPreparedStatementResponseJSONPerformanceTest extends
 
     @Override
     protected double getSelfDeserializationDelta() {
-        return 0.3;
+        return 0;
     }
 
 }

@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.web.common.typeadapters;
 
+import java.util.UUID;
+
 import org.junit.experimental.categories.Category;
 
 import com.google.gson.Gson;
@@ -43,6 +45,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.testutils.PerformanceTest;
+import com.redhat.thermostat.web.common.SharedStateId;
 import com.redhat.thermostat.web.common.WebPreparedStatement;
 import com.redhat.thermostat.web.common.typeadapters.PojoTypeAdapterFactory;
 import com.redhat.thermostat.web.common.typeadapters.WebPreparedStatementTypeAdapterFactory;
@@ -66,6 +69,7 @@ public class WebPreparedStatementJSONPerformanceTest extends
     protected Gson getSlowGson() {
         return new GsonBuilder()
                     .registerTypeHierarchyAdapter(Pojo.class, new LegacyGSONConverter())
+                    .registerTypeAdapterFactory(new SharedStateIdTypeAdapterFactory())
                     .registerTypeAdapter(WebPreparedStatement.class, new LegacyWebPreparedStatementSerializer())
                     .create();
     }
@@ -74,6 +78,7 @@ public class WebPreparedStatementJSONPerformanceTest extends
     protected Gson getFasterGson() {
         return new GsonBuilder()
                     .registerTypeAdapterFactory(new PojoTypeAdapterFactory())
+                    .registerTypeAdapterFactory(new SharedStateIdTypeAdapterFactory())
                     .registerTypeAdapterFactory(new WebPreparedStatementTypeAdapterFactory())
                     .create();
     }
@@ -95,13 +100,13 @@ public class WebPreparedStatementJSONPerformanceTest extends
 
     @Override
     protected String mutateJsonString(GsonContext ctx, int mutator) {
-        return String.format("{\"sid\":%d,\"p\":{\"params\":[]}}", mutator);
+        return String.format("{\"sid\":{\"sid\":%d,\"stok\":\"" + UUID.randomUUID() + "\"},\"p\":{\"params\":[]}}", mutator);
     }
 
     @Override
     protected WebPreparedStatement mutateToBeSerializedInstance(int mutator) {
-        WebPreparedStatement retval = new WebPreparedStatement<>(0, 555);
-        retval.setStatementId(mutator);
+        SharedStateId id = new SharedStateId(mutator, UUID.randomUUID());
+        WebPreparedStatement retval = new WebPreparedStatement<>(0, id);
         return retval;
     }
 

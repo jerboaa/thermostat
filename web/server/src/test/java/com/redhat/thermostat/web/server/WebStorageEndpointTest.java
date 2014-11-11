@@ -132,12 +132,14 @@ import com.redhat.thermostat.storage.query.ExpressionFactory;
 import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
 import com.redhat.thermostat.web.common.PreparedStatementResponseCode;
+import com.redhat.thermostat.web.common.SharedStateId;
 import com.redhat.thermostat.web.common.WebPreparedStatement;
 import com.redhat.thermostat.web.common.WebPreparedStatementResponse;
 import com.redhat.thermostat.web.common.WebQueryResponse;
 import com.redhat.thermostat.web.common.typeadapters.PojoTypeAdapterFactory;
 import com.redhat.thermostat.web.common.typeadapters.PreparedParameterTypeAdapterFactory;
 import com.redhat.thermostat.web.common.typeadapters.PreparedParametersTypeAdapterFactory;
+import com.redhat.thermostat.web.common.typeadapters.SharedStateIdTypeAdapterFactory;
 import com.redhat.thermostat.web.common.typeadapters.WebPreparedStatementResponseTypeAdapterFactory;
 import com.redhat.thermostat.web.common.typeadapters.WebPreparedStatementTypeAdapterFactory;
 import com.redhat.thermostat.web.common.typeadapters.WebQueryResponseTypeAdapterFactory;
@@ -335,6 +337,7 @@ public class WebStorageEndpointTest {
         conn.setDoOutput(true);
         Gson gson = new GsonBuilder()
                         .registerTypeAdapterFactory(new PojoTypeAdapterFactory())
+                        .registerTypeAdapterFactory(new SharedStateIdTypeAdapterFactory())
                         .registerTypeAdapterFactory(new WebPreparedStatementResponseTypeAdapterFactory())
                         .registerTypeAdapterFactory(new WebQueryResponseTypeAdapterFactory())
                         .registerTypeAdapterFactory(new PreparedParameterTypeAdapterFactory())
@@ -348,7 +351,7 @@ public class WebStorageEndpointTest {
         Reader in = new InputStreamReader(conn.getInputStream());
         WebPreparedStatementResponse response = gson.fromJson(in, WebPreparedStatementResponse.class);
         assertEquals("descriptor not trusted, so expected number should be negative!", -1, response.getNumFreeVariables());
-        assertEquals(WebPreparedStatementResponse.ILLEGAL_STATEMENT, response.getStatementId());
+        assertEquals(WebPreparedStatementResponse.ILLEGAL_STATEMENT, response.getStatementId().getId());
         assertEquals("application/json; charset=UTF-8", conn.getContentType());
     }
 
@@ -371,8 +374,8 @@ public class WebStorageEndpointTest {
         TrustedPreparedQueryTestResult prepareQueryResult = prepareQuery(strDescriptor, moreBatches);
         
         Type typeToken = new TypeToken<WebQueryResponse<TestClass>>(){}.getType();
-        // now execute the query we've just prepared
-        WebPreparedStatement<TestClass> stmt = new WebPreparedStatement<>(1, 0);
+
+        WebPreparedStatement<TestClass> stmt = new WebPreparedStatement<>(1, prepareQueryResult.stmtId);
         stmt.setString(0, "fluff");
         
         // Execute the query, preserver the cookie
@@ -407,7 +410,7 @@ public class WebStorageEndpointTest {
         getMoreConn.setDoOutput(true);
         
         OutputStreamWriter out = new OutputStreamWriter(getMoreConn.getOutputStream());
-        String body = "prepared-stmt-id=" + stmt.getStatementId() + "&";
+        String body = "prepared-stmt-id=" + URLEncoder.encode(prepareQueryResult.gson.toJson(stmt.getStatementId()), "UTF-8") + "&";
         body += "cursor-id=" + cursorId + "&";
         body += "batch-size=" + batchSize;
         out.write(body);
@@ -442,8 +445,8 @@ public class WebStorageEndpointTest {
         TrustedPreparedQueryTestResult prepareQueryResult = prepareQuery(strDescriptor, moreBatches);
         
         Type typeToken = new TypeToken<WebQueryResponse<TestClass>>(){}.getType();
-        // now execute the query we've just prepared
-        WebPreparedStatement<TestClass> stmt = new WebPreparedStatement<>(1, 0);
+
+        WebPreparedStatement<TestClass> stmt = new WebPreparedStatement<>(1, prepareQueryResult.stmtId);
         stmt.setString(0, "fluff");
         
         // Execute the query, preserver the cookie
@@ -478,7 +481,7 @@ public class WebStorageEndpointTest {
         getMoreConn.setDoOutput(true);
         
         OutputStreamWriter out = new OutputStreamWriter(getMoreConn.getOutputStream());
-        String body = "prepared-stmt-id=" + stmt.getStatementId() + "&";
+        String body = "prepared-stmt-id=" + URLEncoder.encode(prepareQueryResult.gson.toJson(stmt.getStatementId()), "UTF-8") + "&";
         body += "cursor-id=" + cursorId + "&";
         body += "batch-size=" + batchSize;
         out.write(body);
@@ -533,11 +536,13 @@ public class WebStorageEndpointTest {
         private final Gson gson;
         private final Query<TestClass> mockMongoQuery;
         private final BatchCursor<TestClass> cursor;
+        private final SharedStateId stmtId;
         
-        private TrustedPreparedQueryTestResult(Gson gson, Query<TestClass> mockMongoQuery, BatchCursor<TestClass> cursor) {
+        private TrustedPreparedQueryTestResult(Gson gson, Query<TestClass> mockMongoQuery, BatchCursor<TestClass> cursor, SharedStateId stmtId) {
             this.cursor = cursor;
             this.gson = gson;
             this.mockMongoQuery = mockMongoQuery;
+            this.stmtId = stmtId;
         }
     }
     
@@ -585,6 +590,7 @@ public class WebStorageEndpointTest {
         conn.setDoOutput(true);
         Gson gson = new GsonBuilder()
                             .registerTypeAdapterFactory(new PojoTypeAdapterFactory())
+                            .registerTypeAdapterFactory(new SharedStateIdTypeAdapterFactory())
                             .registerTypeAdapterFactory(new WebPreparedStatementResponseTypeAdapterFactory())
                             .registerTypeAdapterFactory(new WebQueryResponseTypeAdapterFactory())
                             .registerTypeAdapterFactory(new PreparedParameterTypeAdapterFactory())
@@ -599,10 +605,10 @@ public class WebStorageEndpointTest {
         Reader in = new InputStreamReader(conn.getInputStream());
         WebPreparedStatementResponse response = gson.fromJson(in, WebPreparedStatementResponse.class);
         assertEquals(1, response.getNumFreeVariables());
-        assertEquals(0, response.getStatementId());
+        assertEquals(0, response.getStatementId().getId());
         assertEquals("application/json; charset=UTF-8", conn.getContentType());
         
-        return new TrustedPreparedQueryTestResult(gson, mockMongoQuery, cursor);
+        return new TrustedPreparedQueryTestResult(gson, mockMongoQuery, cursor, response.getStatementId());
     }
 
     private String setupPreparedQueryWithTrustedDescriptor() throws Exception {
@@ -715,6 +721,7 @@ public class WebStorageEndpointTest {
             conn.setDoOutput(true);
             Gson gson = new GsonBuilder()
                                 .registerTypeAdapterFactory(new PojoTypeAdapterFactory())
+                                .registerTypeAdapterFactory(new SharedStateIdTypeAdapterFactory())
                                 .registerTypeAdapterFactory(new WebPreparedStatementResponseTypeAdapterFactory())
                                 .registerTypeAdapterFactory(new WebQueryResponseTypeAdapterFactory())
                                 .registerTypeAdapterFactory(new PreparedParameterTypeAdapterFactory())
@@ -729,13 +736,13 @@ public class WebStorageEndpointTest {
             Reader in = new InputStreamReader(conn.getInputStream());
             WebPreparedStatementResponse response = gson.fromJson(in, WebPreparedStatementResponse.class);
             assertEquals(1, response.getNumFreeVariables());
-            assertEquals(0, response.getStatementId());
+            assertEquals(0, response.getStatementId().getId());
             assertEquals("application/json; charset=UTF-8", conn.getContentType());
             
             
             
             // now execute the query we've just prepared
-            WebPreparedStatement<TestClass> stmt = new WebPreparedStatement<>(1, 0);
+            WebPreparedStatement<TestClass> stmt = new WebPreparedStatement<>(1, response.getStatementId());
             stmt.setString(0, "fluff");
             
             url = new URL(endpoint + "/query-execute");
@@ -837,6 +844,7 @@ public class WebStorageEndpointTest {
         conn.setDoOutput(true);
         Gson gson = new GsonBuilder()
                             .registerTypeAdapterFactory(new PojoTypeAdapterFactory())
+                            .registerTypeAdapterFactory(new SharedStateIdTypeAdapterFactory())
                             .registerTypeAdapterFactory(new WebPreparedStatementResponseTypeAdapterFactory())
                             .registerTypeAdapterFactory(new WebQueryResponseTypeAdapterFactory())
                             .registerTypeAdapterFactory(new PreparedParameterTypeAdapterFactory())
@@ -851,13 +859,13 @@ public class WebStorageEndpointTest {
         Reader in = new InputStreamReader(conn.getInputStream());
         WebPreparedStatementResponse response = gson.fromJson(in, WebPreparedStatementResponse.class);
         assertEquals(0, response.getNumFreeVariables());
-        assertEquals(0, response.getStatementId());
+        assertEquals(0, response.getStatementId().getId());
         assertEquals("application/json; charset=UTF-8", conn.getContentType());
         
         
         
         // now execute the query we've just prepared
-        WebPreparedStatement<AggregateCount> stmt = new WebPreparedStatement<>(0, 0);
+        WebPreparedStatement<AggregateCount> stmt = new WebPreparedStatement<>(0, response.getStatementId());
         
         url = new URL(endpoint + "/query-execute");
         HttpURLConnection conn2 = (HttpURLConnection) url.openConnection();
@@ -968,6 +976,7 @@ public class WebStorageEndpointTest {
             conn.setDoOutput(true);
             Gson gson = new GsonBuilder()
                 .registerTypeAdapterFactory(new PojoTypeAdapterFactory())
+                .registerTypeAdapterFactory(new SharedStateIdTypeAdapterFactory())
                 .registerTypeAdapterFactory(new PreparedParameterTypeAdapterFactory())
                 .registerTypeAdapterFactory(new WebPreparedStatementTypeAdapterFactory())
                 .registerTypeAdapterFactory(new WebPreparedStatementResponseTypeAdapterFactory())
@@ -981,13 +990,13 @@ public class WebStorageEndpointTest {
             Reader in = new InputStreamReader(conn.getInputStream());
             WebPreparedStatementResponse response = gson.fromJson(in, WebPreparedStatementResponse.class);
             assertEquals(2, response.getNumFreeVariables());
-            assertEquals(0, response.getStatementId());
+            assertEquals(0, response.getStatementId().getId());
             assertEquals("application/json; charset=UTF-8", conn.getContentType());
             
             
             
             // now execute the ADD we've just prepared
-            WebPreparedStatement<TestClass> stmt = new WebPreparedStatement<>(2, 0);
+            WebPreparedStatement<TestClass> stmt = new WebPreparedStatement<>(2, response.getStatementId());
             stmt.setString(0, "fluff");
             stmt.setString(1, "test2");
             

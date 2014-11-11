@@ -62,6 +62,7 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
 import javax.servlet.ServletException;
@@ -106,11 +107,13 @@ import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
 import com.redhat.thermostat.web.common.PreparedStatementResponseCode;
+import com.redhat.thermostat.web.common.SharedStateId;
 import com.redhat.thermostat.web.common.WebPreparedStatement;
 import com.redhat.thermostat.web.common.WebPreparedStatementResponse;
 import com.redhat.thermostat.web.common.WebQueryResponse;
 import com.redhat.thermostat.web.common.typeadapters.PojoTypeAdapterFactory;
 import com.redhat.thermostat.web.common.typeadapters.PreparedParameterTypeAdapterFactory;
+import com.redhat.thermostat.web.common.typeadapters.SharedStateIdTypeAdapterFactory;
 import com.redhat.thermostat.web.common.typeadapters.WebPreparedStatementResponseTypeAdapterFactory;
 import com.redhat.thermostat.web.common.typeadapters.WebPreparedStatementTypeAdapterFactory;
 import com.redhat.thermostat.web.common.typeadapters.WebQueryResponseTypeAdapterFactory;
@@ -264,6 +267,7 @@ public class WebStorageTest {
     public void preparingFaultyDescriptorThrowsException() throws UnsupportedEncodingException, IOException {
         Gson gson = new GsonBuilder()
                 .registerTypeAdapterFactory(new WebPreparedStatementTypeAdapterFactory())
+                .registerTypeAdapterFactory(new SharedStateIdTypeAdapterFactory())
                 .registerTypeAdapterFactory(new WebPreparedStatementResponseTypeAdapterFactory())
                 .create();
 
@@ -272,7 +276,8 @@ public class WebStorageTest {
         StatementDescriptor<TestObj> desc = new StatementDescriptor<>(category, strDesc);
         
         WebPreparedStatementResponse fakeResponse = new WebPreparedStatementResponse();
-        fakeResponse.setStatementId(WebPreparedStatementResponse.DESCRIPTOR_PARSE_FAILED);
+        SharedStateId id = new SharedStateId(WebPreparedStatementResponse.DESCRIPTOR_PARSE_FAILED, UUID.randomUUID());
+        fakeResponse.setStatementId(id);
         prepareServer(gson.toJson(fakeResponse));
         try {
             storage.prepareStatement(desc);
@@ -289,6 +294,7 @@ public class WebStorageTest {
     public void preparingUnknownDescriptorThrowsException() throws UnsupportedEncodingException, IOException {
         Gson gson = new GsonBuilder()
                 .registerTypeAdapterFactory(new WebPreparedStatementTypeAdapterFactory())
+                .registerTypeAdapterFactory(new SharedStateIdTypeAdapterFactory())
                 .registerTypeAdapterFactory(new WebPreparedStatementResponseTypeAdapterFactory())
                 .create();
 
@@ -296,7 +302,8 @@ public class WebStorageTest {
         StatementDescriptor<TestObj> desc = new StatementDescriptor<>(category, strDesc);
         
         WebPreparedStatementResponse fakeResponse = new WebPreparedStatementResponse();
-        fakeResponse.setStatementId(WebPreparedStatementResponse.ILLEGAL_STATEMENT);
+        SharedStateId id = new SharedStateId(WebPreparedStatementResponse.ILLEGAL_STATEMENT, UUID.randomUUID());
+        fakeResponse.setStatementId(id);
         prepareServer(gson.toJson(fakeResponse));
         try {
             storage.prepareStatement(desc);
@@ -314,6 +321,7 @@ public class WebStorageTest {
     public void forbiddenExecuteQueryThrowsConsumingExcptn() throws UnsupportedEncodingException, IOException {
         Gson gson = new GsonBuilder()
                             .registerTypeAdapterFactory(new PojoTypeAdapterFactory())
+                            .registerTypeAdapterFactory(new SharedStateIdTypeAdapterFactory())
                             .registerTypeAdapterFactory(new WebPreparedStatementResponseTypeAdapterFactory())
                             .registerTypeAdapterFactory(new WebQueryResponseTypeAdapterFactory())
                             .registerTypeAdapterFactory(new PreparedParameterTypeAdapterFactory())
@@ -325,9 +333,10 @@ public class WebStorageTest {
         PreparedStatement<TestObj> stmt = null;
         
         int fakePrepStmtId = 5;
+        SharedStateId id = new SharedStateId(fakePrepStmtId, UUID.randomUUID());
         WebPreparedStatementResponse fakeResponse = new WebPreparedStatementResponse();
         fakeResponse.setNumFreeVariables(1);
-        fakeResponse.setStatementId(fakePrepStmtId);
+        fakeResponse.setStatementId(id);
         prepareServer(gson.toJson(fakeResponse));
         try {
             stmt = storage.prepareStatement(desc);
@@ -337,7 +346,7 @@ public class WebStorageTest {
         }
         assertTrue(stmt instanceof WebPreparedStatement);
         WebPreparedStatement<TestObj> webStmt = (WebPreparedStatement<TestObj>)stmt;
-        assertEquals(fakePrepStmtId, webStmt.getStatementId());
+        assertEquals(id, webStmt.getStatementId());
         PreparedParameters params = webStmt.getParams();
         assertEquals(1, params.getParams().length);
         assertNull(params.getParams()[0]);
@@ -367,9 +376,9 @@ public class WebStorageTest {
         // should fill the cache
         WebPreparedStatement<TestObj> stmt = (WebPreparedStatement<TestObj>)testStorage.prepareStatement(desc);
         int numParams = stmt.getParams().getParams().length;
-        int stmtId = stmt.getStatementId();
+        SharedStateId stmtId = stmt.getStatementId();
         assertEquals(0, numParams);
-        assertEquals(1, stmtId);
+        assertEquals(1, stmtId.getId());
         // this one should be cached, same stmtId and numParams as previous
         // one.
         stmt = (WebPreparedStatement<TestObj>)testStorage.prepareStatement(desc);
@@ -379,7 +388,7 @@ public class WebStorageTest {
                      " if it wasn't cached. Was it 2? Bad!",
                      0, numParams);
         assertEquals("PreparedStatementWebStorge increments a counter" +
-                     " if it wasn't cached. Was it 3? Bad!", 1, stmtId);
+                     " if it wasn't cached. Was it 3? Bad!", 1, stmtId.getId());
         // preparing a different descriptor should not be cached.
         strDesc = "QUERY test WHERE 'foo' = ?l";
         desc = new StatementDescriptor<>(category, strDesc);
@@ -391,7 +400,7 @@ public class WebStorageTest {
                      2, numParams);
         assertEquals("PreparedStatementWebStorge increments a counter" +
                      " if it wasn't cached. Triggers e.g. if it was erronously cached!",
-                     3, stmtId);
+                     3, stmtId.getId());
     }
     
     /**
@@ -423,11 +432,13 @@ public class WebStorageTest {
      * 
      * By setting hasMoreBatches to true in WebQueryResponse we signal that
      * there are more batches available via getMore().
+     * @throws IOException 
+     * @throws UnsupportedEncodingException 
      * 
      * @see {@link #canPrepareAndExecuteQueryMultiBatchFailure()}
      */
     @Test
-    public void canPrepareAndExecuteQueryMultiBatchSuccess() {
+    public void canPrepareAndExecuteQueryMultiBatchSuccess() throws UnsupportedEncodingException, IOException {
         WebQueryResponse<TestObj> fakeQueryResponse = new WebQueryResponse<>();
         fakeQueryResponse.setResponseCode(PreparedStatementResponseCode.QUERY_SUCCESS);
         fakeQueryResponse.setResultList(getTwoTestObjects());
@@ -459,7 +470,10 @@ public class WebStorageTest {
         path = requestURI.substring(requestURI.lastIndexOf('/'));
         assertEquals("/get-more", path);
         // Verify correctly passed parameters
-        String[] requestParams = requestBody.split("&");
+        StringReader reader = new StringReader(requestBody);
+        BufferedReader bufRead = new BufferedReader(reader);
+        String line = URLDecoder.decode(bufRead.readLine(), "UTF-8");
+        String[] requestParams = line.split("&");
         String prepStmtIdParam = requestParams[0];
         String cursorIdParam = requestParams[1];
         String batchSizeParam = requestParams[2];
@@ -467,7 +481,8 @@ public class WebStorageTest {
         String[] cursorIdArray = cursorIdParam.split("=");
         String[] batchSizeArray = batchSizeParam.split("=");
         assertEquals("prepared-stmt-id", prStmtArray[0]);
-        assertEquals("5", prStmtArray[1]);
+        SharedStateId prStmtId = gson.fromJson(prStmtArray[1], SharedStateId.class);
+        assertEquals(5, prStmtId.getId());
         assertEquals("cursor-id", cursorIdArray[0]);
         assertEquals("444", cursorIdArray[1]);
         assertEquals("batch-size", batchSizeArray[0]);
@@ -553,7 +568,8 @@ public class WebStorageTest {
         int fakePrepStmtId = 5;
         WebPreparedStatementResponse fakeResponse = new WebPreparedStatementResponse();
         fakeResponse.setNumFreeVariables(1);
-        fakeResponse.setStatementId(fakePrepStmtId);
+        SharedStateId id = new SharedStateId(fakePrepStmtId, UUID.randomUUID());
+        fakeResponse.setStatementId(id);
         prepareServer(gson.toJson(fakeResponse));
         try {
             stmt = storage.prepareStatement(desc);
@@ -563,7 +579,7 @@ public class WebStorageTest {
         }
         assertTrue(stmt instanceof WebPreparedStatement);
         WebPreparedStatement<TestObj> webStmt = (WebPreparedStatement<TestObj>)stmt;
-        assertEquals(fakePrepStmtId, webStmt.getStatementId());
+        assertEquals(fakePrepStmtId, webStmt.getStatementId().getId());
         PreparedParameters params = webStmt.getParams();
         assertEquals(1, params.getParams().length);
         assertNull(params.getParams()[0]);
@@ -595,6 +611,7 @@ public class WebStorageTest {
     private Gson getQueryGson() {
         return new GsonBuilder()
                     .registerTypeAdapterFactory(new PojoTypeAdapterFactory())
+                    .registerTypeAdapterFactory(new SharedStateIdTypeAdapterFactory())
                     .registerTypeAdapterFactory(new WebPreparedStatementResponseTypeAdapterFactory())
                     .registerTypeAdapterFactory(new WebQueryResponseTypeAdapterFactory())
                     .registerTypeAdapterFactory(new PreparedParameterTypeAdapterFactory())
@@ -610,6 +627,7 @@ public class WebStorageTest {
         obj2.setProperty1("fluffor2");
         Gson gson = new GsonBuilder()
                             .registerTypeAdapterFactory(new PojoTypeAdapterFactory())
+                            .registerTypeAdapterFactory(new SharedStateIdTypeAdapterFactory())
                             .registerTypeAdapterFactory(new WebPreparedStatementResponseTypeAdapterFactory())
                             .registerTypeAdapterFactory(new WebQueryResponseTypeAdapterFactory())
                             .registerTypeAdapterFactory(new PreparedParameterTypeAdapterFactory())
@@ -623,7 +641,8 @@ public class WebStorageTest {
         int fakePrepStmtId = 3;
         WebPreparedStatementResponse fakeResponse = new WebPreparedStatementResponse();
         fakeResponse.setNumFreeVariables(1);
-        fakeResponse.setStatementId(fakePrepStmtId);
+        SharedStateId id = new SharedStateId(fakePrepStmtId, UUID.randomUUID());
+        fakeResponse.setStatementId(id);
         prepareServer(gson.toJson(fakeResponse));
         try {
             stmt = storage.prepareStatement(desc);
@@ -633,7 +652,7 @@ public class WebStorageTest {
         }
         assertTrue(stmt instanceof WebPreparedStatement);
         WebPreparedStatement<TestObj> webStmt = (WebPreparedStatement<TestObj>)stmt;
-        assertEquals(fakePrepStmtId, webStmt.getStatementId());
+        assertEquals(fakePrepStmtId, webStmt.getStatementId().getId());
         PreparedParameters params = webStmt.getParams();
         assertEquals(1, params.getParams().length);
         assertNull(params.getParams()[0]);
@@ -661,6 +680,7 @@ public class WebStorageTest {
     public void forbiddenExecuteWriteReturnsGenericWriteFailure() {
         Gson gson = new GsonBuilder()
                             .registerTypeAdapterFactory(new PojoTypeAdapterFactory())
+                            .registerTypeAdapterFactory(new SharedStateIdTypeAdapterFactory())
                             .registerTypeAdapterFactory(new WebPreparedStatementResponseTypeAdapterFactory())
                             .registerTypeAdapterFactory(new WebQueryResponseTypeAdapterFactory())
                             .registerTypeAdapterFactory(new PreparedParameterTypeAdapterFactory())
@@ -674,7 +694,8 @@ public class WebStorageTest {
         int fakePrepStmtId = 3;
         WebPreparedStatementResponse fakeResponse = new WebPreparedStatementResponse();
         fakeResponse.setNumFreeVariables(1);
-        fakeResponse.setStatementId(fakePrepStmtId);
+        SharedStateId id = new SharedStateId(fakePrepStmtId, UUID.randomUUID());
+        fakeResponse.setStatementId(id);
         prepareServer(gson.toJson(fakeResponse));
         try {
             stmt = storage.prepareStatement(desc);
@@ -684,7 +705,7 @@ public class WebStorageTest {
         }
         assertTrue(stmt instanceof WebPreparedStatement);
         WebPreparedStatement<TestObj> webStmt = (WebPreparedStatement<TestObj>)stmt;
-        assertEquals(fakePrepStmtId, webStmt.getStatementId());
+        assertEquals(fakePrepStmtId, webStmt.getStatementId().getId());
         PreparedParameters params = webStmt.getParams();
         assertEquals(1, params.getParams().length);
         assertNull(params.getParams()[0]);
@@ -980,7 +1001,10 @@ public class WebStorageTest {
         @Override
         <T extends Pojo> WebPreparedStatementHolder sendPrepareStmtRequest(StatementDescriptor<T> desc)
                 throws DescriptorParsingException {
-            return new WebPreparedStatementHolder(TestObj.class, counter++, counter++); 
+            int numParams = counter++;
+            int stmtId = counter++;
+            SharedStateId id = new SharedStateId(stmtId, UUID.randomUUID());
+            return new WebPreparedStatementHolder(TestObj.class, numParams, id); 
         }
     }
 }

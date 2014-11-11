@@ -37,71 +37,77 @@
 package com.redhat.thermostat.web.common.typeadapters;
 
 import java.io.IOException;
+import java.util.UUID;
 
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 import com.redhat.thermostat.web.common.SharedStateId;
-import com.redhat.thermostat.web.common.WebPreparedStatementResponse;
 
-class WebPreparedStatementResponseTypeAdapter extends
-        TypeAdapter<WebPreparedStatementResponse> {
-    
-    private static final String NUM_FREE_VARS_NAME = "numFreeVars";
-    private static final String STMT_ID_NAME = "stmtId";
-    private final TypeAdapter<SharedStateId> sharedStateTa;
-    
-    WebPreparedStatementResponseTypeAdapter(TypeAdapter<SharedStateId> sharedStateTa) {
-        this.sharedStateTa = sharedStateTa;
-    }
+class SharedStateIdTypeAdapter extends TypeAdapter<SharedStateId> {
+
+    private static final String PROP_STMT_ID = "sid";
+    private static final String PROP_SERVER_TOKEN = "stok";
     
     @Override
-    public WebPreparedStatementResponse read(JsonReader reader)
-            throws IOException {
-        if (reader.peek() == JsonToken.NULL) {
-            reader.nextNull();
-            return null;
-        }
-        
-        WebPreparedStatementResponse response = new WebPreparedStatementResponse();
-        
-        reader.beginObject();
-        String name = reader.nextName();
-        if (name.equals(NUM_FREE_VARS_NAME)) {
-            response.setNumFreeVariables(reader.nextInt());
-        }
-        name = reader.nextName();
-        if (name.equals(STMT_ID_NAME)) {
-            SharedStateId id = sharedStateTa.read(reader);
-            response.setStatementId(id);
-        }
-        reader.endObject();
-        
-        return response;
-    }
-
-    @Override
-    public void write(JsonWriter writer, WebPreparedStatementResponse value)
-            throws IOException {
+    public void write(JsonWriter out, SharedStateId value) throws IOException {
+        // handle null
         if (value == null) {
-            writer.nullValue();
+            out.nullValue();
             return;
         }
         
-        int freeVars = value.getNumFreeVariables();
-        SharedStateId stmtId = value.getStatementId();
+        out.beginObject();
         
-        writer.beginObject();
+        // statement id
+        out.name(PROP_STMT_ID);
+        out.value(value.getId());
         
-        // Free variables
-        writer.name(NUM_FREE_VARS_NAME);
-        writer.value(freeVars);
-        // stmt id
-        writer.name(STMT_ID_NAME);
-        sharedStateTa.write(writer, stmtId);
-
-        writer.endObject();
+        // server token, may be null
+        if (value.getServerToken() != null) {
+            out.name(PROP_SERVER_TOKEN);
+            out.value(value.getServerToken().toString());
+        } else {
+            out.name(PROP_SERVER_TOKEN);
+            out.nullValue();
+        }
+        
+        out.endObject();
+        
     }
+
+    @Override
+    public SharedStateId read(JsonReader in) throws IOException {
+        // handle null
+        if (in.peek() == JsonToken.NULL) {
+            in.nextNull();
+            return null;
+        }
+        
+        in.beginObject();
+        
+        
+        // statement id
+        String name = in.nextName();
+        if (!name.equals(PROP_STMT_ID)) {
+            throw new IllegalStateException("Expected name " + PROP_STMT_ID + " but was " + name);
+        }
+        int stmtId = in.nextInt();
+        
+        UUID serverToken = null;
+        if (in.peek() == JsonToken.NAME) {
+            name = in.nextName();
+            if (!name.equals(PROP_SERVER_TOKEN)) {
+                throw new IllegalStateException("Expected name " + PROP_SERVER_TOKEN + " but was " + name);
+            }
+            String sToken = in.nextString();
+            serverToken = UUID.fromString(sToken);
+        }
+        in.endObject();
+        
+        return new SharedStateId(stmtId, serverToken);
+    }
+
 
 }

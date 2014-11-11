@@ -34,28 +34,20 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.common.typeadapters;
+package com.redhat.thermostat.storage.core;
 
-import com.google.gson.Gson;
-import com.google.gson.TypeAdapter;
-import com.google.gson.TypeAdapterFactory;
-import com.google.gson.reflect.TypeToken;
-import com.redhat.thermostat.web.common.SharedStateId;
-import com.redhat.thermostat.web.common.WebPreparedStatementResponse;
+/**
+ * 
+ * Exception thrown if execution of a {@link PreparedStatement} failed, but
+ * may succeed if the same statement gets executed a second time.
+ *
+ */
+@SuppressWarnings("serial")
+public class RetryableStatementExecutionException extends
+        StatementExecutionException {
 
-public class WebPreparedStatementResponseTypeAdapterFactory implements
-        TypeAdapterFactory {
-
-    @Override
-    public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
-        Class<?> rawType = type.getRawType();
-        if (rawType == WebPreparedStatementResponse.class) {
-            TypeAdapter<SharedStateId> sharedStateIdTa = gson.getAdapter(SharedStateId.class);
-            @SuppressWarnings("unchecked")
-            TypeAdapter<T> ta = (TypeAdapter<T>)new WebPreparedStatementResponseTypeAdapter(sharedStateIdTa);
-            return ta;
-        }
-        return null;
+    public RetryableStatementExecutionException(Throwable cause) {
+        super(cause);
     }
-
+    
 }

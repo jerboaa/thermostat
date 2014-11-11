@@ -47,6 +47,7 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.redhat.thermostat.storage.core.PreparedParameters;
+import com.redhat.thermostat.web.common.SharedStateId;
 import com.redhat.thermostat.web.common.WebPreparedStatement;
 
 /**
@@ -66,7 +67,7 @@ public class LegacyWebPreparedStatementSerializer implements
         JsonObject result = new JsonObject();
         JsonElement parameters = ctxt.serialize(stmt.getParams(), PreparedParameters.class);
         result.add(PROP_PARAMS, parameters);
-        JsonPrimitive stmtIdElem = new JsonPrimitive(stmt.getStatementId());
+        JsonElement stmtIdElem = ctxt.serialize(stmt.getStatementId(), SharedStateId.class);
         result.add(PROP_STMT_ID, stmtIdElem);
         return result;
     }
@@ -77,7 +78,7 @@ public class LegacyWebPreparedStatementSerializer implements
         JsonElement paramsElem = jsonElem.getAsJsonObject().get(PROP_PARAMS);
         JsonElement stmtIdElem = jsonElem.getAsJsonObject().get(PROP_STMT_ID);
         PreparedParameters params = ctxt.deserialize(paramsElem, PreparedParameters.class);
-        int stmtId = ctxt.deserialize(stmtIdElem, int.class);
+        SharedStateId stmtId = ctxt.deserialize(stmtIdElem, SharedStateId.class);
         WebPreparedStatement<?> stmt = new WebPreparedStatement<>();
         stmt.setStatementId(stmtId);
         stmt.setParams(params);

@@ -60,13 +60,13 @@ public class WebPreparedStatementResponse {
     }
     
     private int numFreeVariables;
-    private int statementId;
+    private SharedStateId statementId;
     
-    public int getStatementId() {
+    public SharedStateId getStatementId() {
         return statementId;
     }
 
-    public void setStatementId(int statementId) {
+    public void setStatementId(SharedStateId statementId) {
         this.statementId = statementId;
     }
 

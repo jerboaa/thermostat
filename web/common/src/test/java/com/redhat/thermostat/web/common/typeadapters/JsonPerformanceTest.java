@@ -72,10 +72,14 @@ public abstract class JsonPerformanceTest<T> {
     
     private final boolean debug;
     private final String testClass;
+    private final Gson oldGson;
+    private final Gson newGson;
     
     protected JsonPerformanceTest(boolean debug, String testClass) {
         this.debug = debug;
         this.testClass = testClass;
+        this.oldGson = getSlowGson();
+        this.newGson = getFasterGson();
     }
     
     /**
@@ -237,9 +241,7 @@ public abstract class JsonPerformanceTest<T> {
     }
     
     private double measureSerializationSpeed(final int iterations) {
-        final Gson oldGson = getSlowGson();
-        final Gson newGson = getFasterGson();
-        PerfTestResult result = runSerializationPerformanceTest(iterations, oldGson, newGson);
+        PerfTestResult result = runSerializationPerformanceTest(iterations);
         return result.getSpeedup();
     }
     
@@ -256,13 +258,11 @@ public abstract class JsonPerformanceTest<T> {
     }
     
     private double measureDeserializationSpeed(final int iterations) {
-        final Gson oldGson = getSlowGson();
-        final Gson newGson = getFasterGson();
-        PerfTestResult result = runDeserializationPerformanceTest(iterations, oldGson, newGson);
+        PerfTestResult result = runDeserializationPerformanceTest(iterations);
         return result.getSpeedup();
     }
     
-    private PerfTestResult runSerializationPerformanceTest(final int iterations, final Gson oldGson, final Gson newGson) {
+    private PerfTestResult runSerializationPerformanceTest(final int iterations) {
         List<String> list = new ArrayList<>();
         double oldSum = 0;
         double newSum = 0;
@@ -294,7 +294,7 @@ public abstract class JsonPerformanceTest<T> {
         return res;
     }
     
-    private PerfTestResult runDeserializationPerformanceTest(final int iterations, final Gson oldGson, final Gson newGson) {
+    private PerfTestResult runDeserializationPerformanceTest(final int iterations) {
         List<T> list = new ArrayList<>();
 
         double oldSum = 0;

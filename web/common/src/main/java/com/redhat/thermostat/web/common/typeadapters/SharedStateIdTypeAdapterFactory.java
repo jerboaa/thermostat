@@ -41,18 +41,15 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.TypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
 import com.redhat.thermostat.web.common.SharedStateId;
-import com.redhat.thermostat.web.common.WebPreparedStatementResponse;
 
-public class WebPreparedStatementResponseTypeAdapterFactory implements
-        TypeAdapterFactory {
+public class SharedStateIdTypeAdapterFactory implements TypeAdapterFactory {
 
     @Override
     public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
         Class<?> rawType = type.getRawType();
-        if (rawType == WebPreparedStatementResponse.class) {
-            TypeAdapter<SharedStateId> sharedStateIdTa = gson.getAdapter(SharedStateId.class);
+        if (rawType == SharedStateId.class) {
             @SuppressWarnings("unchecked")
-            TypeAdapter<T> ta = (TypeAdapter<T>)new WebPreparedStatementResponseTypeAdapter(sharedStateIdTa);
+            TypeAdapter<T> ta = (TypeAdapter<T>)new SharedStateIdTypeAdapter();
             return ta;
         }
         return null;

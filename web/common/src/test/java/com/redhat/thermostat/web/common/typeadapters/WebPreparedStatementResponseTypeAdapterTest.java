@@ -39,12 +39,15 @@ package com.redhat.thermostat.web.common.typeadapters;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import java.util.UUID;
+
 import org.junit.Before;
 import org.junit.Test;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
+import com.redhat.thermostat.web.common.SharedStateId;
 import com.redhat.thermostat.web.common.WebPreparedStatementResponse;
 
 public class WebPreparedStatementResponseTypeAdapterTest {
@@ -54,6 +57,7 @@ public class WebPreparedStatementResponseTypeAdapterTest {
     @Before
     public void setup() {
         gson = new GsonBuilder()
+                .registerTypeAdapterFactory(new SharedStateIdTypeAdapterFactory())
                 .registerTypeAdapterFactory(new WebPreparedStatementResponseTypeAdapterFactory())
                 .create();
     }
@@ -62,29 +66,35 @@ public class WebPreparedStatementResponseTypeAdapterTest {
     public void testSerializationDeserializationBasic() {
         WebPreparedStatementResponse response = new WebPreparedStatementResponse();
         response.setNumFreeVariables(6);
-        response.setStatementId(WebPreparedStatementResponse.ILLEGAL_STATEMENT);
+        
+        UUID uuid = UUID.randomUUID();
+        SharedStateId stmtId = new SharedStateId(WebPreparedStatementResponse.ILLEGAL_STATEMENT, uuid);
+        response.setStatementId(stmtId);
         
         String jsonStr = gson.toJson(response, WebPreparedStatementResponse.class);
-        String expectedString = "{\"numFreeVars\":6,\"stmtId\":-1}";
+        String expectedString = "{\"numFreeVars\":6,\"stmtId\":{\"sid\":-1,\"stok\":\""+ uuid.toString() + "\"}}";
         assertEquals(expectedString, jsonStr);
         
         WebPreparedStatementResponse actual = gson.fromJson(jsonStr, WebPreparedStatementResponse.class);
         
         assertEquals(6, actual.getNumFreeVariables());
-        assertEquals(WebPreparedStatementResponse.ILLEGAL_STATEMENT, actual.getStatementId());
+        assertEquals(stmtId, actual.getStatementId());
     }
     
-    @Test(expected=JsonSyntaxException.class)
-    public void failDeserializePrimitiveSetNull() {
-        String jsonString = "{\"numFreeVars\":11,\"stmtId\":null}";
-        gson.fromJson(jsonString, WebPreparedStatementResponse.class);
+    public void deserializeNull() {
+        String jsonString = "{\"numFreeVars\":11}";
+        WebPreparedStatementResponse resp = gson.fromJson(jsonString, WebPreparedStatementResponse.class);
+        assertNull(resp.getStatementId());
+        assertEquals(11, resp.getNumFreeVariables());
     }
     
     @Test
     public void canDeserializeBasic() {
-        String jsonString = "{\"numFreeVars\":11,\"stmtId\":6}";
+        UUID uuid = UUID.randomUUID();
+        SharedStateId stmtId = new SharedStateId(6, uuid);
+        String jsonString = "{\"numFreeVars\":11,\"stmtId\":{\"sid\":6,\"stok\":\""+ uuid.toString() + "\"}}";
         WebPreparedStatementResponse actual = gson.fromJson(jsonString, WebPreparedStatementResponse.class);
-        assertEquals(6, actual.getStatementId());
+        assertEquals(stmtId, actual.getStatementId());
         assertEquals(11, actual.getNumFreeVariables());
     }
     

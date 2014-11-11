@@ -103,6 +103,7 @@ import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.IllegalDescriptorException;
 import com.redhat.thermostat.storage.core.IllegalPatchException;
 import com.redhat.thermostat.storage.core.PreparedStatement;
+import com.redhat.thermostat.storage.core.RetryableStatementExecutionException;
 import com.redhat.thermostat.storage.core.SecureStorage;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
@@ -111,12 +112,14 @@ import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.web.common.PreparedStatementResponseCode;
+import com.redhat.thermostat.web.common.SharedStateId;
 import com.redhat.thermostat.web.common.WebPreparedStatement;
 import com.redhat.thermostat.web.common.WebPreparedStatementResponse;
 import com.redhat.thermostat.web.common.WebQueryResponse;
 import com.redhat.thermostat.web.common.typeadapters.PojoTypeAdapterFactory;
 import com.redhat.thermostat.web.common.typeadapters.PreparedParameterTypeAdapterFactory;
 import com.redhat.thermostat.web.common.typeadapters.PreparedParametersTypeAdapterFactory;
+import com.redhat.thermostat.web.common.typeadapters.SharedStateIdTypeAdapterFactory;
 import com.redhat.thermostat.web.common.typeadapters.WebPreparedStatementResponseTypeAdapterFactory;
 import com.redhat.thermostat.web.common.typeadapters.WebPreparedStatementTypeAdapterFactory;
 import com.redhat.thermostat.web.common.typeadapters.WebQueryResponseTypeAdapterFactory;
@@ -325,7 +328,7 @@ public class WebStorage implements Storage, SecureStorage {
         // statement execution
         private final transient Type parametrizedTypeToken;
         
-        public WebPreparedStatementImpl(Type parametrizedTypeToken, int numParams, int statementId) {
+        public WebPreparedStatementImpl(Type parametrizedTypeToken, int numParams, SharedStateId statementId) {
             super(numParams, statementId);
             this.parametrizedTypeToken = parametrizedTypeToken;
         }
@@ -380,6 +383,7 @@ public class WebStorage implements Storage, SecureStorage {
         categoryIds = new HashMap<>();
         gson = new GsonBuilder()
                 .registerTypeAdapterFactory(new PojoTypeAdapterFactory())
+                .registerTypeAdapterFactory(new SharedStateIdTypeAdapterFactory())
                 .registerTypeAdapterFactory(new WebPreparedStatementResponseTypeAdapterFactory())
                 .registerTypeAdapterFactory(new WebQueryResponseTypeAdapterFactory())
                 .registerTypeAdapterFactory(new PreparedParameterTypeAdapterFactory())
@@ -575,23 +579,28 @@ public class WebStorage implements Storage, SecureStorage {
         } catch (Exception e) {
             throw new StatementExecutionException(e);
         }
-        if (qResp.getResponseCode() == PreparedStatementResponseCode.QUERY_SUCCESS) {
-            // Return an empty cursor
+        switch(qResp.getResponseCode()) {
+        case PreparedStatementResponseCode.QUERY_SUCCESS:
             return new WebCursor<T>(this, qResp.getResultList(),
-                                    qResp.hasMoreBatches(),
-                                    qResp.getCursorId(), parametrizedTypeToken, stmt);
-        } else if (qResp.getResponseCode() == PreparedStatementResponseCode.ILLEGAL_PATCH) {
+                    qResp.hasMoreBatches(),
+                    qResp.getCursorId(), parametrizedTypeToken, stmt);
+        case PreparedStatementResponseCode.ILLEGAL_PATCH: {
             String msg = "Illegal statement argument. See server logs for details.";
             IllegalArgumentException iae = new IllegalArgumentException(msg);
             IllegalPatchException e = new IllegalPatchException(iae);
             throw new StatementExecutionException(e);
-        } else {
-            // We only handle success responses and illegal patches, like
-            // we do for other storages. This is just a defensive measure in
-            // order to fail early in case something unexpected comes back.
+        }
+        case PreparedStatementResponseCode.PREP_STMT_BAD_STOKEN: {
+            String msg = "Query failed to execute. Server changed token. Clearing prepared stmt cache!";
+            logger.log(Level.WARNING, msg);
+            clearPreparedStmtCache();
+            throw new RetryableStatementExecutionException(new RuntimeException(msg));
+        }
+        default: {
             String msg = "[query-execute] Unknown response from storage endpoint!";
             IllegalStateException ise = new IllegalStateException(msg);
             throw new StatementExecutionException(ise);
+        }
         }
     }
     
@@ -611,7 +620,8 @@ public class WebStorage implements Storage, SecureStorage {
      * @return
      */
     <T extends Pojo> WebQueryResponse<T> getMore(int cursorId, Type parametrizedTypeToken, Integer batchSize, WebPreparedStatement<T> stmt) {
-        NameValuePair preparedStmtIdParam = new BasicNameValuePair("prepared-stmt-id", Integer.toString(stmt.getStatementId()));
+        String stmtId = gson.toJson(stmt.getStatementId());
+        NameValuePair preparedStmtIdParam = new BasicNameValuePair("prepared-stmt-id", stmtId);
         NameValuePair cursorIdParam = new BasicNameValuePair("cursor-id", Integer.toString(cursorId));
         NameValuePair batchSizeParam = new BasicNameValuePair("batch-size", batchSize.toString());
         
@@ -656,6 +666,11 @@ public class WebStorage implements Storage, SecureStorage {
             IllegalArgumentException iae = new IllegalArgumentException(msg);
             IllegalPatchException e = new IllegalPatchException(iae);
             throw new StatementExecutionException(e);
+        } else if (responseCode == PreparedStatementResponseCode.PREP_STMT_BAD_STOKEN) {
+            String msg = "Write failed to execute. Server changed token. Clearing prepared stmt cache!";
+            logger.log(Level.WARNING, msg);
+            clearPreparedStmtCache();
+            throw new RetryableStatementExecutionException(new RuntimeException(msg));
         }
         return responseCode;
     }
@@ -754,6 +769,12 @@ public class WebStorage implements Storage, SecureStorage {
     int getCategoryId(Category<?> category) {
         return categoryIds.get(category);
     }
+    
+    private void clearPreparedStmtCache() {
+        synchronized(this.stmtCache) {
+            stmtCache.clear();
+        }
+    }
 
     @Override
     public <T extends Pojo> PreparedStatement<T> prepareStatement(StatementDescriptor<T> desc)
@@ -799,13 +820,13 @@ public class WebStorage implements Storage, SecureStorage {
             Reader reader = getContentAsReader(entity);
             WebPreparedStatementResponse result = gson.fromJson(reader, WebPreparedStatementResponse.class);
             int numParams = result.getNumFreeVariables();
-            int statementId = result.getStatementId();
-            if (statementId == WebPreparedStatementResponse.ILLEGAL_STATEMENT) {
+            SharedStateId statementId = result.getStatementId();
+            if (statementId.getId() == WebPreparedStatementResponse.ILLEGAL_STATEMENT) {
                 // we've got a descriptor the endpoint doesn't know about or
                 // refuses to accept for security reasons.
                 String msg = "Unknown query descriptor which endpoint of " + WebStorage.class.getName() + " refused to accept!";
                 throw new IllegalDescriptorException(msg, desc.getDescriptor());
-            } else if (statementId == WebPreparedStatementResponse.DESCRIPTOR_PARSE_FAILED) {
+            } else if (statementId.getId() == WebPreparedStatementResponse.DESCRIPTOR_PARSE_FAILED) {
                 String msg = "Statement descriptor failed to parse. " +
                              "Please check server logs for details!";
                 throw new DescriptorParsingException(msg);
@@ -826,9 +847,9 @@ public class WebStorage implements Storage, SecureStorage {
         
         private final Type typeToken;
         private final int numParams;
-        private final int statementId;
+        private final SharedStateId statementId;
         
-        WebPreparedStatementHolder(Type typeToken, int numParams, int statementId) {
+        WebPreparedStatementHolder(Type typeToken, int numParams, SharedStateId statementId) {
             this.typeToken = typeToken;
             this.numParams = numParams;
             this.statementId = statementId;

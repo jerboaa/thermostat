@@ -39,23 +39,24 @@ package com.redhat.thermostat.web.server;
 import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.web.common.SharedStateId;
 
 class PreparedStatementHolder<T extends Pojo> {
 
-    private final int id;
+    private final SharedStateId stmtId;
     private final PreparedStatement<T> stmt;
     private final Class<T> dataClass;
     private final StatementDescriptor<T> desc;
     
-    PreparedStatementHolder(int id, PreparedStatement<T> stmt, Class<T> dataClass, StatementDescriptor<T> desc) {
-        this.id = id;
+    PreparedStatementHolder(SharedStateId stmtId, PreparedStatement<T> stmt, Class<T> dataClass, StatementDescriptor<T> desc) {
+        this.stmtId = stmtId;
         this.stmt = stmt;
         this.dataClass = dataClass;
         this.desc = desc;
     }
 
-    int getId() {
-        return id;
+    SharedStateId getId() {
+        return stmtId;
     }
 
     PreparedStatement<T> getStmt() {

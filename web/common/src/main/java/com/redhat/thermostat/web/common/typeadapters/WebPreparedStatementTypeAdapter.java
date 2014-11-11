@@ -44,6 +44,7 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 import com.redhat.thermostat.storage.core.PreparedParameters;
+import com.redhat.thermostat.web.common.SharedStateId;
 import com.redhat.thermostat.web.common.WebPreparedStatement;
 
 @SuppressWarnings("rawtypes")
@@ -52,10 +53,12 @@ class WebPreparedStatementTypeAdapter extends TypeAdapter<WebPreparedStatement> 
     private static final String PROP_PARAMS = "p";
     private static final String PROP_STMT_ID = "sid";
     
-    private final Gson gson;
+    private final TypeAdapter<SharedStateId> sharedStateTa;
+    private final TypeAdapter<PreparedParameters> prepParamsTa;
     
     WebPreparedStatementTypeAdapter(Gson gson) {
-        this.gson = gson;
+        this.sharedStateTa = gson.getAdapter(SharedStateId.class);
+        this.prepParamsTa = gson.getAdapter(PreparedParameters.class);
     }
     
     @Override
@@ -71,12 +74,11 @@ class WebPreparedStatementTypeAdapter extends TypeAdapter<WebPreparedStatement> 
         
         // statement id
         out.name(PROP_STMT_ID);
-        out.value(value.getStatementId());
+        sharedStateTa.write(out, value.getStatementId());
 
         // prepared parameters
         out.name(PROP_PARAMS);
-        TypeAdapter<PreparedParameters> ta = gson.getAdapter(PreparedParameters.class);
-        ta.write(out, value.getParams());
+        prepParamsTa.write(out, value.getParams());
         
         out.endObject();        
     }
@@ -97,8 +99,8 @@ class WebPreparedStatementTypeAdapter extends TypeAdapter<WebPreparedStatement> 
         if (!name.equals(PROP_STMT_ID)) {
             throw new IllegalStateException("Expected name " + PROP_STMT_ID + " but was " + name);
         }
-        int stmtId = in.nextInt();
-
+        SharedStateId id = sharedStateTa.read(in);
+        
         // params
         PreparedParameters params = null;
         // params value might be null and missing.
@@ -107,15 +109,14 @@ class WebPreparedStatementTypeAdapter extends TypeAdapter<WebPreparedStatement> 
             if (!name.equals(PROP_PARAMS)) {
                 throw new IllegalStateException("Expected name " + PROP_PARAMS + " but was " + name);
             }
-            TypeAdapter<PreparedParameters> ta = gson.getAdapter(PreparedParameters.class);
-            params = ta.read(in);
+            params = prepParamsTa.read(in);
         }
         
         in.endObject();
         
         WebPreparedStatement<?> stmt = new WebPreparedStatement<>();
         stmt.setParams(params);
-        stmt.setStatementId(stmtId);
+        stmt.setStatementId(id);
         return stmt;
     }
 

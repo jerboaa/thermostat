@@ -40,6 +40,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import java.util.UUID;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -48,6 +50,7 @@ import com.google.gson.GsonBuilder;
 import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.PreparedParameters;
 import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.web.common.SharedStateId;
 import com.redhat.thermostat.web.common.WebPreparedStatement;
 import com.redhat.thermostat.web.common.WebPreparedStatementResponse;
 
@@ -59,6 +62,7 @@ public class WebPreparedStatementTypeAdapterTest {
     public void setup() {
         gson = new GsonBuilder()
                 .registerTypeAdapterFactory(new WebPreparedStatementTypeAdapterFactory())
+                .registerTypeAdapterFactory(new SharedStateIdTypeAdapterFactory())
                 .registerTypeAdapterFactory(new PreparedParameterTypeAdapterFactory())
                 .registerTypeAdapterFactory(new PojoTypeAdapterFactory())
                 .create();
@@ -67,10 +71,11 @@ public class WebPreparedStatementTypeAdapterTest {
     @Test
     public void canSerializeNullParams() {
         WebPreparedStatement<?> stmt = new WebPreparedStatement<>();
-        stmt.setStatementId(500);
+        UUID uuid = UUID.randomUUID();
+        stmt.setStatementId(new SharedStateId(500, uuid));
         stmt.setParams(null);
         
-        String expected = "{\"sid\":500}";
+        String expected = "{\"sid\":{\"sid\":500,\"stok\":\"" + uuid.toString() + "\"}}";
         
         String actual = gson.toJson(stmt);
         assertEquals(expected, actual);
@@ -78,28 +83,33 @@ public class WebPreparedStatementTypeAdapterTest {
     
     @Test
     public void canDeserializeNullParams() {
-        String json = "{\"sid\": 500}";
+        UUID uuid = UUID.randomUUID();
+        String json = "{\"sid\":{\"sid\":500,\"stok\":\"" + uuid.toString() + "\"}}";
         
         WebPreparedStatement<?> stmt = gson.fromJson(json, WebPreparedStatement.class);
-        assertEquals(500, stmt.getStatementId());
+        assertEquals(new SharedStateId(500, uuid), stmt.getStatementId());
         assertNull(stmt.getParams());
     }
     
     @Test
     public void canSerializeEmptyParams() {
-        WebPreparedStatement<?> stmt = new WebPreparedStatement<>(0, 555);
+        UUID uuid = UUID.randomUUID();
+        SharedStateId id = new SharedStateId(555, uuid);
+        WebPreparedStatement<?> stmt = new WebPreparedStatement<>(0, id);
         
-        String expected = "{\"sid\":555,\"p\":{\"params\":[]}}";
+        String expected = "{\"sid\":{\"sid\":555,\"stok\":\"" + uuid.toString() + "\"},\"p\":{\"params\":[]}}";
         String actual = gson.toJson(stmt);
         assertEquals(expected, actual);
     }
     
     @Test
     public void canDeserializeEmptyParams() {
-        String json = "{\"sid\":555,\"p\":{\"params\":[]}}";
+        UUID uuid = UUID.randomUUID();
+        SharedStateId id = new SharedStateId(555, uuid);
+        String json = "{\"sid\":{\"sid\":555,\"stok\":\"" + uuid.toString() + "\"},\"p\":{\"params\":[]}}";
         
         WebPreparedStatement<?> stmt = gson.fromJson(json, WebPreparedStatement.class);
-        assertEquals(555, stmt.getStatementId());
+        assertEquals(id, stmt.getStatementId());
         assertNotNull(stmt.getParams());
         assertEquals(0, stmt.getParams().getParams().length);
     }
@@ -114,7 +124,9 @@ public class WebPreparedStatementTypeAdapterTest {
         params.setBoolean(4, true);
         WebPreparedStatement<?> stmt = new WebPreparedStatement<>();
         stmt.setParams(params);
-        stmt.setStatementId(WebPreparedStatementResponse.DESCRIPTOR_PARSE_FAILED);
+        UUID uuid = UUID.randomUUID();
+        SharedStateId id = new SharedStateId(WebPreparedStatementResponse.DESCRIPTOR_PARSE_FAILED, uuid);
+        stmt.setStatementId(id);
         String jsonString = gson.toJson(stmt, WebPreparedStatement.class);
         WebPreparedStatement<?> newStmt = gson.fromJson(jsonString, WebPreparedStatement.class);
         assertNotNull(newStmt);
@@ -134,7 +146,7 @@ public class WebPreparedStatementTypeAdapterTest {
         assertEquals(String[].class, parameters[3].getType());
         assertEquals(true, parameters[4].getValue());
         assertEquals(boolean.class, parameters[4].getType());
-        assertEquals(WebPreparedStatementResponse.DESCRIPTOR_PARSE_FAILED, newStmt.getStatementId());
+        assertEquals(id, newStmt.getStatementId());
     }
     
     /*
@@ -153,13 +165,15 @@ public class WebPreparedStatementTypeAdapterTest {
         
         WebPreparedStatement<?> stmt = new WebPreparedStatement<>();
         stmt.setParams(params);
-        stmt.setStatementId(WebPreparedStatementResponse.DESCRIPTOR_PARSE_FAILED);
+        UUID uuid = UUID.randomUUID();
+        SharedStateId id = new SharedStateId(WebPreparedStatementResponse.DESCRIPTOR_PARSE_FAILED, uuid);
+        stmt.setStatementId(id);
         
         String jsonString = gson.toJson(stmt, WebPreparedStatement.class);
         assertNotNull(jsonString);
         
         WebPreparedStatement<?> result = gson.fromJson(jsonString, WebPreparedStatement.class);
-        assertEquals(WebPreparedStatementResponse.DESCRIPTOR_PARSE_FAILED, result.getStatementId());
+        assertEquals(id, result.getStatementId());
         assertNotNull(result.getParams());
     }
 }

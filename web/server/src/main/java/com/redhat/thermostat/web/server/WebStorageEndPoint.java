@@ -43,6 +43,7 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.lang.reflect.Array;
+import java.net.URLDecoder;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,6 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -100,12 +102,14 @@ import com.redhat.thermostat.storage.query.BinaryLogicalExpression;
 import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
 import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.web.common.PreparedStatementResponseCode;
+import com.redhat.thermostat.web.common.SharedStateId;
 import com.redhat.thermostat.web.common.WebPreparedStatement;
 import com.redhat.thermostat.web.common.WebPreparedStatementResponse;
 import com.redhat.thermostat.web.common.WebQueryResponse;
 import com.redhat.thermostat.web.common.typeadapters.PojoTypeAdapterFactory;
 import com.redhat.thermostat.web.common.typeadapters.PreparedParameterTypeAdapterFactory;
 import com.redhat.thermostat.web.common.typeadapters.PreparedParametersTypeAdapterFactory;
+import com.redhat.thermostat.web.common.typeadapters.SharedStateIdTypeAdapterFactory;
 import com.redhat.thermostat.web.common.typeadapters.WebPreparedStatementResponseTypeAdapterFactory;
 import com.redhat.thermostat.web.common.typeadapters.WebPreparedStatementTypeAdapterFactory;
 import com.redhat.thermostat.web.common.typeadapters.WebQueryResponseTypeAdapterFactory;
@@ -131,6 +135,7 @@ public class WebStorageEndPoint extends HttpServlet {
     private static final String TOKEN_MANAGER_KEY = "token-manager";
     private static final String USER_PRINCIPAL_CALLBACK_KEY = "user-principal-callback";
     private static final String CURSOR_MANAGER_KEY = "cursor-manager";
+    private static final String PREPARED_STMT_MANAGER_KEY = "prepared-stmt-manager";
     private static final int UNKNOWN_CURSOR_ID = -0xdeadbeef;
     private static final String CATEGORY_KEY_FORMAT = "%s|%s";
 
@@ -153,12 +158,9 @@ public class WebStorageEndPoint extends HttpServlet {
 
     private Map<String, Integer> categoryIds;
     private Map<Integer, Category<?>> categories;
-    
-    private Map<StatementDescriptor<?>, PreparedStatementHolder<?>> preparedStmts;
-    private Map<Integer, PreparedStatementHolder<?>> preparedStatementIds;
-    // Lock to be held for setting/getting prepared queries in the above maps
-    private Object preparedStmtLock = new Object();
-    private int currentPreparedStmtId;
+    // A unique server token, which gets reset on every Servlet.init() call.
+    // I.e. every reload/redeployment.
+    private UUID serverToken;
     
     // read-only set of all known statement descriptors we trust and allow
     private Set<String> knownStatementDescriptors;
@@ -176,6 +178,7 @@ public class WebStorageEndPoint extends HttpServlet {
         
         gson = new GsonBuilder()
                 .registerTypeAdapterFactory(new PojoTypeAdapterFactory())
+                .registerTypeAdapterFactory(new SharedStateIdTypeAdapterFactory())
                 .registerTypeAdapterFactory(new WebPreparedStatementResponseTypeAdapterFactory())
                 .registerTypeAdapterFactory(new WebQueryResponseTypeAdapterFactory())
                 .registerTypeAdapterFactory(new PreparedParameterTypeAdapterFactory())
@@ -184,8 +187,6 @@ public class WebStorageEndPoint extends HttpServlet {
                 .create();
         categoryIds = new HashMap<>();
         categories = new HashMap<>();
-        preparedStatementIds = new HashMap<>();
-        preparedStmts = new HashMap<>();
         TokenManager tokenManager = new TokenManager();
         String timeoutParam = getInitParameter(TOKEN_MANAGER_TIMEOUT_PARAM);
         if (timeoutParam != null) {
@@ -208,6 +209,10 @@ public class WebStorageEndPoint extends HttpServlet {
         PrincipalCallbackFactory cbFactory = new PrincipalCallbackFactory(info);
         PrincipalCallback callback = Objects.requireNonNull(cbFactory.getCallback());
         servletContext.setAttribute(USER_PRINCIPAL_CALLBACK_KEY, callback);
+        synchronized(servletContext) {
+            servletContext.setAttribute(PREPARED_STMT_MANAGER_KEY, new PreparedStatementManager());
+        }
+        serverToken = UUID.randomUUID();
     }
     
     @Override
@@ -350,7 +355,8 @@ public class WebStorageEndPoint extends HttpServlet {
         if (cat == null) {
             // bad category? we refuse to accept this
             logger.log(Level.WARNING, "Attepted to prepare a statement with an illegal category id");
-            response.setStatementId(WebPreparedStatementResponse.ILLEGAL_STATEMENT);
+            SharedStateId id = new SharedStateId(WebPreparedStatementResponse.ILLEGAL_STATEMENT, serverToken);
+            response.setStatementId(id);
             writeResponse(resp, response, WebPreparedStatementResponse.class);
             return;
         }
@@ -360,50 +366,46 @@ public class WebStorageEndPoint extends HttpServlet {
             String msg = "Attempted to prepare a statement descriptor which we " +
             		"don't trust! Descriptor was: ->" + desc.getDescriptor() + "<-";
             logger.log(Level.WARNING, msg);
-            response.setStatementId(WebPreparedStatementResponse.ILLEGAL_STATEMENT);
+            SharedStateId id = new SharedStateId(WebPreparedStatementResponse.ILLEGAL_STATEMENT, serverToken);
+            response.setStatementId(id);
             writeResponse(resp, response, WebPreparedStatementResponse.class);
             return;
         }
         
-        synchronized (preparedStmtLock) {
-            // see if we've prepared this query already
-            if (preparedStmts.containsKey(desc)) {
-                PreparedStatementHolder<T> holder = (PreparedStatementHolder<T>) preparedStmts
-                        .get(desc);
-                ParsedStatement<T> parsed = holder.getStmt()
-                        .getParsedStatement();
-                int freeVars = parsed.getNumParams();
-                response.setNumFreeVariables(freeVars);
-                response.setStatementId(holder.getId());
-                writeResponse(resp, response,
-                        WebPreparedStatementResponse.class);
-                return;
-            }
-            
-            // Prepare the target statement and put it into our prepared statement
-            // maps.
+        PreparedStatementManager prepStmtManager = getPreparedStmtManager();
+        // see if we've prepared this query already
+        PreparedStatementHolder<T> holder = prepStmtManager.getStatementHolder(desc);
+        if (holder != null) {
+            ParsedStatement<T> parsed = holder.getStmt().getParsedStatement();
+            int freeVars = parsed.getNumParams();
+            response.setNumFreeVariables(freeVars);
+            SharedStateId id = new SharedStateId(holder.getId().getId(), serverToken);
+            response.setStatementId(id);
+            writeResponse(resp, response, WebPreparedStatementResponse.class);
+            return;
+        } else {
+            // Prepare the target statement and track it via
+            // PreparedStatementManager
             PreparedStatement<T> targetPreparedStatement;
             try {
                 targetPreparedStatement = (PreparedStatement<T>) storage
                         .prepareStatement(desc);
             } catch (DescriptorParsingException e) {
                 logger.log(Level.WARNING, "Descriptor parse error!", e);
-                response.setStatementId(WebPreparedStatementResponse.DESCRIPTOR_PARSE_FAILED);
+                SharedStateId id = new SharedStateId(WebPreparedStatementResponse.DESCRIPTOR_PARSE_FAILED, serverToken);
+                response.setStatementId(id);
                 writeResponse(resp, response,
                         WebPreparedStatementResponse.class);
                 return;
             }
-            PreparedStatementHolder<T> holder = new PreparedStatementHolder<T>(
-                    currentPreparedStmtId, targetPreparedStatement,
-                    (Class<T>) cat.getDataClass(), desc);
-            preparedStmts.put(desc, holder);
-            preparedStatementIds.put(currentPreparedStmtId, holder);
+            SharedStateId stmtId = prepStmtManager.createAndPutHolder(
+                    serverToken, targetPreparedStatement, cat.getDataClass(),
+                    desc);
             ParsedStatement<?> parsed = targetPreparedStatement
                     .getParsedStatement();
             response.setNumFreeVariables(parsed.getNumParams());
-            response.setStatementId(currentPreparedStmtId);
+            response.setStatementId(stmtId);
             writeResponse(resp, response, WebPreparedStatementResponse.class);
-            currentPreparedStmtId++;
         }
     }
 
@@ -607,9 +609,22 @@ public class WebStorageEndPoint extends HttpServlet {
         @SuppressWarnings("unchecked")
         WebPreparedStatement<T> stmt = gson.fromJson(queryParam, WebPreparedStatement.class);
         
+        // Check if the server token the client knows about still matches.
+        // Bail out early otherwise.
+        SharedStateId stmtId = stmt.getStatementId();
+        if (!serverToken.equals(stmtId.getServerToken())) {
+            logger.log(Level.INFO, "Server token: '" + serverToken +
+                                   "' and client token '" + stmtId.getServerToken() +
+                                   "' out of sync.");
+            WebQueryResponse<T> response = new WebQueryResponse<>();
+            response.setResponseCode(PreparedStatementResponseCode.PREP_STMT_BAD_STOKEN);
+            writeResponse(resp, response, WebQueryResponse.class);
+            return;
+        }
         PreparedParameters p = stmt.getParams();
         PreparedParameter[] params = p.getParams();
-        PreparedStatementHolder<T> targetStmtHolder = getStatementHolderFromId(stmt.getStatementId());
+        PreparedStatementManager prepStmtManager = getPreparedStmtManager();
+        PreparedStatementHolder<T> targetStmtHolder = prepStmtManager.getStatementHolder(stmtId);
         PreparedStatement<T> targetStmt = targetStmtHolder.getStmt();
         ParsedStatement<T> parsed = targetStmt.getParsedStatement();
         Query<T> targetQuery = null;
@@ -665,6 +680,16 @@ public class WebStorageEndPoint extends HttpServlet {
         }
         writeQueryResponse(resp, response, resultsList, targetStmtHolder);
     }
+
+    private PreparedStatementManager getPreparedStmtManager() {
+        ServletContext servletContext = getServletContext();
+        PreparedStatementManager prepStmtManager = null;
+        synchronized(servletContext) {
+            prepStmtManager = (PreparedStatementManager)servletContext.getAttribute(PREPARED_STMT_MANAGER_KEY);
+        }
+        // If this throws a NPE this is certainly a bug.
+        return Objects.requireNonNull(prepStmtManager);
+    }
     
     private <T extends Pojo> void writeQueryResponse(HttpServletResponse resp, WebQueryResponse<T> response, List<T> resultsList, PreparedStatementHolder<T> targetStmtHolder) throws IOException {
         @SuppressWarnings("unchecked")
@@ -694,7 +719,8 @@ public class WebStorageEndPoint extends HttpServlet {
         String cursorIdParam = req.getParameter("cursor-id");
         String batchSizeParam = req.getParameter("batch-size");
         
-        int stmtId = Integer.parseInt(stmtIdParam);
+        // Statement Id is JSON encoded.
+        SharedStateId id = gson.fromJson(URLDecoder.decode(stmtIdParam, "UTF-8"), SharedStateId.class);
         int cursorId = Integer.parseInt(cursorIdParam);
         int batchSize = Integer.parseInt(batchSizeParam);
         
@@ -712,7 +738,8 @@ public class WebStorageEndPoint extends HttpServlet {
         @SuppressWarnings("unchecked")
         BatchCursor<T> batchCursor = (BatchCursor<T>)cursorManager.get(cursorId);
         
-        PreparedStatementHolder<T> targetStmtHolder = getStatementHolderFromId(stmtId);
+        PreparedStatementManager prepStmtManager = getPreparedStmtManager();
+        PreparedStatementHolder<T> targetStmtHolder = prepStmtManager.getStatementHolder(id);
         if (batchCursor == null) {
             // This either means:
             // 1. The underlying (backing-storage) cursor didn't have
@@ -790,9 +817,20 @@ public class WebStorageEndPoint extends HttpServlet {
         String queryParam = req.getParameter("prepared-stmt");
         WebPreparedStatement<T> stmt = gson.fromJson(queryParam, WebPreparedStatement.class);
         
+        // Check if the server token the client knows about still matches.
+        // Bail out early otherwise.
+        SharedStateId stmtId = stmt.getStatementId();
+        if (!serverToken.equals(stmtId.getServerToken())) {
+            logger.log(Level.INFO, "Server token: '" + serverToken +
+                                   "' and client token '" + stmtId.getServerToken() +
+                                   "' out of sync.");
+            writeResponse(resp, PreparedStatementResponseCode.PREP_STMT_BAD_STOKEN, int.class);
+            return;
+        }
         PreparedParameters p = stmt.getParams();
         PreparedParameter[] params = p.getParams();
-        PreparedStatementHolder<T> targetStmtHolder = getStatementHolderFromId(stmt.getStatementId());
+        PreparedStatementManager prepStmtManager = getPreparedStmtManager();
+        PreparedStatementHolder<T> targetStmtHolder = prepStmtManager.getStatementHolder(stmt.getStatementId());
         PreparedStatement<T> targetStmt = targetStmtHolder.getStmt();
         ParsedStatement<T> parsed = targetStmt.getParsedStatement();
         
@@ -858,12 +896,6 @@ public class WebStorageEndPoint extends HttpServlet {
         assert(authorizationExpression == null);
         // nothing to tag on
         return patchedQuery;
-    }
-
-    private <T extends Pojo> PreparedStatementHolder<T> getStatementHolderFromId(int statementId) {
-        @SuppressWarnings("unchecked") // we are the only ones adding them
-        PreparedStatementHolder<T> holder = (PreparedStatementHolder<T>)preparedStatementIds.get(statementId);
-        return holder;
     }
 
     private Category<?> getCategoryFromId(int categoryId) {

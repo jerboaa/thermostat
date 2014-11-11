@@ -47,9 +47,9 @@ public class WebPreparedStatement<T extends Pojo> implements
         PreparedStatement<T> {
     
     private PreparedParameters params;
-    private int statementId;
+    private SharedStateId statementId;
     
-    public WebPreparedStatement(int numParams, int statementId) {
+    public WebPreparedStatement(int numParams, SharedStateId statementId) {
         this.params = new PreparedParameters(numParams);
         this.statementId = statementId;
     }
@@ -58,11 +58,11 @@ public class WebPreparedStatement<T extends Pojo> implements
         // nothing. used for serialization
     }
 
-    public int getStatementId() {
+    public SharedStateId getStatementId() {
         return statementId;
     }
 
-    public void setStatementId(int statementId) {
+    public void setStatementId(SharedStateId statementId) {
         this.statementId = statementId;
     }
 
