@@ -200,6 +200,9 @@ public class FrameworkProvider {
         bundleConfigurations.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, extraPackages);
         bundleConfigurations.put(Constants.FRAMEWORK_STORAGE, osgiCacheStorage.toFile().getAbsolutePath());
         if (bootDelegation != null) {
+            if (printOSGiInfo) {
+                System.out.println("Boot delegation: " + bootDelegation);
+            }
             bundleConfigurations.put(Constants.FRAMEWORK_BOOTDELEGATION, bootDelegation);
         }
         Iterator<FrameworkFactory> factories = loader.iterator();
