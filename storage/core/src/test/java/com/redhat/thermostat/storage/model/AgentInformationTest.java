@@ -54,4 +54,15 @@ public class AgentInformationTest {
 
         assertEquals(new InetSocketAddress(HOST, PORT), info.getRequestQueueAddress());
     }
+
+    @Test
+    public void configurationIPv6AddressIsParsedCorrectly() {
+        final String HOST = "[1fff:0:a88:85a3::ac1f]";
+        final int PORT = 80;
+
+        AgentInformation info = new AgentInformation();
+        info.setConfigListenAddress(HOST + ":" + PORT);
+
+        assertEquals(new InetSocketAddress(HOST, PORT), info.getRequestQueueAddress());
+    }
 }
