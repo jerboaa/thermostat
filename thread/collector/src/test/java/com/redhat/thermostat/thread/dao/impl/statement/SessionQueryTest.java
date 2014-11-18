@@ -55,7 +55,7 @@ public class SessionQueryTest {
         Set<String> statements = session.describeStatements();
         assertEquals(2, statements.size());
 
-        String expected = "QUERY vm-thread-session WHERE 'vmId' = ?s AND 'timeStamp' >= ?l AND 'timeStamp' <= ?l SORT 'timeStamp' DESC LIMIT ?i";
+        String expected = "QUERY vm-thread-session WHERE 'vmId' = ?s AND 'timeStamp' >= ?l AND 'timeStamp' <= ?l SORT 'timeStamp' DSC LIMIT ?i";
         assertTrue(statements.contains(expected));
     }
 }
