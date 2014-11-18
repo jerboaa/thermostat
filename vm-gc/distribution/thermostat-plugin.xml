@@ -42,7 +42,7 @@
   <commands>
     <command>
       <name>gc</name>
-      <description>Performs Garbage Collection on the given vm</description>
+      <description>perform Garbage Collection on the given vm</description>
       <options>
         <option>
           <long>vmId</long>

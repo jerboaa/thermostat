@@ -42,7 +42,7 @@
   <commands>
     <command>
       <name>kill-vm</name>
-      <description>Attempts to kill the vm specified.</description>
+      <description>kill the specified vm</description>
       <options>
         <option>
           <long>vmId</long>
