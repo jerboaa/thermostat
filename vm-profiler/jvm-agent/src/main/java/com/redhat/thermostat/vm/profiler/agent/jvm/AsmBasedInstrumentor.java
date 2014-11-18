@@ -43,6 +43,7 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AdviceAdapter;
+import org.objectweb.asm.commons.JSRInlinerAdapter;
 
 public class AsmBasedInstrumentor extends ProfilerInstrumentor {
 
@@ -88,11 +89,9 @@ public class AsmBasedInstrumentor extends ProfilerInstrumentor {
                 String signature, String[] exceptions) {
             MethodVisitor mv = cv.visitMethod(access, name, desc, signature, exceptions);
 
-            if (mv == null) {
-                throw new AssertionError("mv is null");
-            }
             if (mv != null) {
-                mv = new InstrumentingMethodAdapter(mv, className, access, name, desc);
+                MethodVisitor instrumentor = new InstrumentingMethodAdapter(mv, className, access, name, desc);
+                mv = new JSRInlinerAdapter(instrumentor, access, name, desc, signature, exceptions);
             }
             return mv;
         }
