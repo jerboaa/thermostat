@@ -34,25 +34,11 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.dao.impl.descriptor;
-
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.model.Pojo;
-import java.util.Set;
+package com.redhat.thermostat.thread.dao.impl.statement.support;
 
 /**
  *
  */
-public abstract class Descriptor<T extends Pojo> {
-
-    protected Category<T> category;
-    protected void setCategory(Category<T> category) {
-        this.category = category;
-    }
-
-    public Category<T> getCategory() {
-        return category;
-    }
-
-    public abstract Set<String> describe();
+public interface ResultHandler<T> {
+    void onResult(T result);
 }

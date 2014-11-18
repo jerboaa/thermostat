@@ -34,49 +34,62 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.dao.impl;
+package com.redhat.thermostat.thread.dao.impl.statement.support;
 
-import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.thread.dao.impl.statement.support.CategoryBuilder;
-import com.redhat.thermostat.thread.model.ThreadSession;
-import com.redhat.thermostat.thread.model.ThreadSummary;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.logging.Logger;
+import java.util.Objects;
 
 /**
  *
  */
-public class ThreadDaoCategories {
+public class FieldDescriptor {
+    private Class<?> type;
+    private String name;
+    private boolean indexed;
 
-    private static final Logger logger = LoggingUtils.getLogger(ThreadDaoCategories.class);
-
-    public static class Categories {
-        public static final String SUMMARY = "vm-thread-summary";
-        public static final String SESSION = "vm-thread-session";
+    public void setType(Class<?> type) {
+        this.type = type;
     }
 
-    static final List<Class<? extends Pojo>> BEANS = new ArrayList<>();
-    static {
-        BEANS.add(ThreadSummary.class);
-        BEANS.add(ThreadSession.class);
+    public Class<?> getType() {
+        return type;
     }
 
-    public static void register(Collection<String> collection) {
-        for (Class<? extends Pojo> beanClass: BEANS) {
-            Category<? extends Pojo> category = new CategoryBuilder(beanClass).build();
-            collection.add(category.getName());
-        }
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public static void register(Storage storage) {
-        for (Class<? extends Pojo> beanClass: BEANS) {
-            Category<? extends Pojo> category = new CategoryBuilder(beanClass).build();
-            storage.registerCategory(category);
-        }
+    public String getName() {
+        return name;
+    }
+
+    public void setIndexed(boolean indexed) {
+        this.indexed = indexed;
+    }
+
+    public boolean isIndexed() {
+        return indexed;
+    }
+
+    @Override
+    public String toString() {
+        return "[FieldDescriptor: " +
+                "type = " + type +
+                ", name = '" + name + '\'' +
+                ", indexed = " + indexed +
+                ']';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        FieldDescriptor that = (FieldDescriptor) o;
+        return Objects.equals(name, that.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return name != null ? name.hashCode() : 0;
     }
 }

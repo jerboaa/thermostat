@@ -62,7 +62,7 @@ class ThreadSessionHelper {
     ThreadSession createSession() {
         ThreadSession session = new ThreadSession();
 
-        session.setSession(new SessionID().getId());
+        session.setSession(new SessionID().get());
         session.setTimeStamp(clock.getRealTimeMillis());
         session.setVmId(vmId);
         session.setAgentId(writerId.getWriterID());

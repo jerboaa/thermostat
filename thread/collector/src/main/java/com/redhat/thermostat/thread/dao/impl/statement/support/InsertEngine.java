@@ -34,23 +34,26 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.dao.impl.descriptor;
-
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.storage.testutils.StatementDescriptorTester;
+package com.redhat.thermostat.thread.dao.impl.statement.support;
 
 /**
  *
  */
-public class DescriptorTester {
+class InsertEngine extends StatementEngine {
 
-    public static <C extends Pojo> void testStatement(Category<C> category, String statement) throws Exception {
+    public InsertEngine() {
+        super(TypeMapper.Statement.Insert);
+        delimiter = TypeMapper.Symbol.InsertSeparator.id();
+        tokens.add(TypeMapper.Clause.Add.id());
+    }
 
-        StatementDescriptorTester<C> tester = new StatementDescriptorTester<>();
-        StatementDescriptor<C> desc = new StatementDescriptor<>(category, statement);
-        tester.testParseBasic(desc);
-        tester.testParseSemantic(desc);
+    public InsertEngine add(FieldDescriptor descriptor) {
+        super.add(descriptor, TypeMapper.Criteria.Equal);
+        return this;
+    }
+
+    @Override
+    protected void addPrologueClause() {
+        tokens.add(TypeMapper.Clause.Set.id());
     }
 }

@@ -34,49 +34,43 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.dao.impl;
+package com.redhat.thermostat.thread.dao.impl.statement.support;
 
-import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.thread.dao.impl.statement.support.CategoryBuilder;
-import com.redhat.thermostat.thread.model.ThreadSession;
-import com.redhat.thermostat.thread.model.ThreadSummary;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.logging.Logger;
+import java.util.UUID;
 
 /**
  *
  */
-public class ThreadDaoCategories {
+public class Id {
+    private String id;
 
-    private static final Logger logger = LoggingUtils.getLogger(ThreadDaoCategories.class);
-
-    public static class Categories {
-        public static final String SUMMARY = "vm-thread-summary";
-        public static final String SESSION = "vm-thread-session";
+    public Id() {
+        id = UUID.randomUUID().toString();
     }
 
-    static final List<Class<? extends Pojo>> BEANS = new ArrayList<>();
-    static {
-        BEANS.add(ThreadSummary.class);
-        BEANS.add(ThreadSession.class);
+    public Id(String id) {
+        this.id = id;
     }
 
-    public static void register(Collection<String> collection) {
-        for (Class<? extends Pojo> beanClass: BEANS) {
-            Category<? extends Pojo> category = new CategoryBuilder(beanClass).build();
-            collection.add(category.getName());
-        }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Id sessionID = (Id) o;
+
+        if (id != null ? !id.equals(sessionID.id) : sessionID.id != null)
+            return false;
+
+        return true;
     }
 
-    public static void register(Storage storage) {
-        for (Class<? extends Pojo> beanClass: BEANS) {
-            Category<? extends Pojo> category = new CategoryBuilder(beanClass).build();
-            storage.registerCategory(category);
-        }
+    public String get() {
+        return id;
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
     }
 }

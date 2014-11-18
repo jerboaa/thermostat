@@ -34,49 +34,76 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.dao.impl;
+package com.redhat.thermostat.thread.dao.impl.statement.support;
 
-import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.thread.dao.impl.statement.support.CategoryBuilder;
-import com.redhat.thermostat.thread.model.ThreadSession;
-import com.redhat.thermostat.thread.model.ThreadSummary;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Logger;
+
+import static com.redhat.thermostat.thread.dao.impl.statement.support.TypeMapper.Symbol.Quote;
+import static com.redhat.thermostat.thread.dao.impl.statement.support.TypeMapper.Symbol.Space;
 
 /**
  *
  */
-public class ThreadDaoCategories {
+abstract class StatementEngine {
 
-    private static final Logger logger = LoggingUtils.getLogger(ThreadDaoCategories.class);
+    protected List<String> tokens;
 
-    public static class Categories {
-        public static final String SUMMARY = "vm-thread-summary";
-        public static final String SESSION = "vm-thread-session";
+    private TypeMapper.Statement type;
+    protected String delimiter;
+
+    protected boolean addDelimiter;
+
+    protected StatementEngine(TypeMapper.Statement type) {
+        tokens = new LinkedList<>();
+        this.type = type;
+        addDelimiter = false;
     }
 
-    static final List<Class<? extends Pojo>> BEANS = new ArrayList<>();
-    static {
-        BEANS.add(ThreadSummary.class);
-        BEANS.add(ThreadSession.class);
-    }
+    protected StatementEngine add(FieldDescriptor descriptor, TypeMapper.Criteria criteria) {
 
-    public static void register(Collection<String> collection) {
-        for (Class<? extends Pojo> beanClass: BEANS) {
-            Category<? extends Pojo> category = new CategoryBuilder(beanClass).build();
-            collection.add(category.getName());
+        if (addDelimiter) {
+            tokens.add(delimiter);
         }
+
+        addDelimiter = true;
+
+        StringBuilder field = new StringBuilder();
+
+        field.append(Quote.id());
+        field.append(descriptor.getName());
+        field.append(Quote.id());
+
+        tokens.add(field.toString());
+
+        tokens.add(criteria.id());
+        tokens.add(TypeMapper.get(descriptor.getType()));
+
+        return this;
     }
 
-    public static void register(Storage storage) {
-        for (Class<? extends Pojo> beanClass: BEANS) {
-            Category<? extends Pojo> category = new CategoryBuilder(beanClass).build();
-            storage.registerCategory(category);
+    protected abstract void addPrologueClause();
+
+    public StatementEngine prologue(com.redhat.thermostat.storage.core.Category<? extends Pojo> category) {
+        tokens.add(category.getName());
+        addPrologueClause();
+        return this;
+    }
+
+    protected void buildImpl(StringBuilder builder) {}
+
+
+    public Statement build() {
+        StringBuilder builder = new StringBuilder();
+        for (String token : tokens) {
+            builder.append(token).append(Space.id());
         }
+        int position = builder.length() - 1;
+        builder.deleteCharAt(position);
+
+        buildImpl(builder);
+
+        return new Statement(builder.toString());
     }
 }

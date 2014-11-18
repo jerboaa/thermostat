@@ -34,49 +34,47 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.dao.impl;
-
-import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.thread.dao.impl.statement.support.CategoryBuilder;
-import com.redhat.thermostat.thread.model.ThreadSession;
-import com.redhat.thermostat.thread.model.ThreadSummary;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.logging.Logger;
+package com.redhat.thermostat.thread.dao.impl.statement.support;
 
 /**
  *
  */
-public class ThreadDaoCategories {
+public class WhereCriterion implements Criterion {
 
-    private static final Logger logger = LoggingUtils.getLogger(ThreadDaoCategories.class);
+    private Id id;
 
-    public static class Categories {
-        public static final String SUMMARY = "vm-thread-summary";
-        public static final String SESSION = "vm-thread-session";
+    private FieldDescriptor descriptor;
+    private TypeMapper.Criteria criteria;
+
+    public WhereCriterion(Id id,
+                          FieldDescriptor descriptor,
+                          TypeMapper.Criteria criteria)
+    {
+        this.descriptor = descriptor;
+        this.criteria = criteria;
+        this.id = id;
     }
 
-    static final List<Class<? extends Pojo>> BEANS = new ArrayList<>();
-    static {
-        BEANS.add(ThreadSummary.class);
-        BEANS.add(ThreadSession.class);
+    @Override
+    public Class<?> getType() {
+        return descriptor.getType();
     }
 
-    public static void register(Collection<String> collection) {
-        for (Class<? extends Pojo> beanClass: BEANS) {
-            Category<? extends Pojo> category = new CategoryBuilder(beanClass).build();
-            collection.add(category.getName());
-        }
+    @Override
+    public Id getId() {
+        return id;
     }
 
-    public static void register(Storage storage) {
-        for (Class<? extends Pojo> beanClass: BEANS) {
-            Category<? extends Pojo> category = new CategoryBuilder(beanClass).build();
-            storage.registerCategory(category);
-        }
+    public FieldDescriptor getFieldDescriptor() {
+        return descriptor;
+    }
+
+    public TypeMapper.Criteria getCriteria() {
+        return criteria;
+    }
+
+    @Override
+    public String toString() {
+        return "[" + criteria.name() + " -: " + descriptor + "]";
     }
 }

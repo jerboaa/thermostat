@@ -36,42 +36,17 @@
 
 package com.redhat.thermostat.thread.model;
 
-import java.util.UUID;
+import com.redhat.thermostat.thread.dao.impl.statement.support.Id;
 
 /**
  *
  */
-public class SessionID  {
-
-    private String id;
-
+public class SessionID extends Id {
     public SessionID() {
-        id = UUID.randomUUID().toString();
+        super();
     }
 
     public SessionID(String id) {
-        this.id = id;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        SessionID sessionID = (SessionID) o;
-
-        if (id != null ? !id.equals(sessionID.id) : sessionID.id != null)
-            return false;
-
-        return true;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    @Override
-    public int hashCode() {
-        return id != null ? id.hashCode() : 0;
+        super(id);
     }
 }

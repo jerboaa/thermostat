@@ -42,8 +42,19 @@ import com.redhat.thermostat.storage.core.Key;
  *
  */
 public class ThreadDaoKeys {
-    public static final Key<String> SESSION = new Key<>("session");
 
-    public static final Key<Long> LIVE_THREADS_KEY = new Key<Long>("currentLiveThreads");
-    public static final Key<Long> DAEMON_THREADS_KEY = new Key<Long>("currentDaemonThreads");
+    public static enum Keys {
+
+        vmId,
+        agentId,
+        timeStamp,
+        session,
+        currentLiveThreads,
+        currentDaemonThreads,
+
+    }
+
+    public static final Key<String> SESSION = new Key<>(Keys.session.name());
+    public static final Key<Long> LIVE_THREADS_KEY = new Key<Long>(Keys.currentLiveThreads.name());
+    public static final Key<Long> DAEMON_THREADS_KEY = new Key<Long>(Keys.currentDaemonThreads.name());
 }

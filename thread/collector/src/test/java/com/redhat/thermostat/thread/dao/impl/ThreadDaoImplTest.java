@@ -163,7 +163,6 @@ public class ThreadDaoImplTest {
         ThreadDaoImpl dao = new ThreadDaoImpl(storage);
         
         verify(storage).registerCategory(ThreadDao.THREAD_HARVESTING_STATUS);
-        verify(storage).registerCategory(ThreadDaoCategories.THREAD_SUMMARY);
     }
 
     @SuppressWarnings("unchecked")

@@ -34,29 +34,27 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.dao.impl.descriptor;
+package com.redhat.thermostat.thread.dao.impl.statement;
 
-import junit.framework.TestCase;
-import org.junit.Before;
+import com.redhat.thermostat.thread.dao.impl.statement.support.BeanAdapter;
+import com.redhat.thermostat.thread.dao.impl.statement.support.BeanAdapterBuilder;
+import com.redhat.thermostat.thread.model.ThreadSummary;
+import java.util.Set;
+import org.junit.Test;
 
-public class ThreadSessionDescriptorTest extends TestCase {
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
 
-    private ThreadSessionDescriptor descriptor;
+public class SummaryQueryTest {
+    @Test
+    public void testDescribe() throws Exception {
+        BeanAdapter<ThreadSummary> session =
+                new BeanAdapterBuilder<>(ThreadSummary.class,
+                                         new SummaryQuery()).build();
+        Set<String> statements = session.describeStatements();
+        assertEquals(2, statements.size());
 
-    @Before
-    public void setUp() {
-        descriptor = new ThreadSessionDescriptorBuilder().build();
-    }
-
-    public void testQuerySessions() throws Exception {
-        String expected =
-                "QUERY vm-thread-session WHERE 'vmId' = ?s AND 'timeStamp' >= ?l AND 'timeStamp' <= ?l SORT 'timeStamp' DSC LIMIT ?i";
-        assertEquals(expected, descriptor.querySessions);
-    }
-
-    public void testStatementAdd() throws Exception {
-        String expected =
-                "ADD vm-thread-session SET 'agentId' = ?s , 'vmId' = ?s , 'session' = ?s , 'timeStamp' = ?l";
-        assertEquals(expected, descriptor.statementAdd);
+        String expected = "QUERY vm-thread-summary WHERE 'vmId' = ?s AND 'session' = ?s AND 'timeStamp' >= ?l AND 'timeStamp' <= ?l SORT 'timeStamp' DESC LIMIT ?i";
+        assertTrue(statements.contains(expected));
     }
 }

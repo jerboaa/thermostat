@@ -34,36 +34,12 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.dao.impl.descriptor;
+package com.redhat.thermostat.thread.dao.impl.statement.support;
 
-import com.redhat.thermostat.thread.dao.impl.ThreadDaoCategories;
-import junit.framework.TestCase;
-import org.junit.Test;
-
-public class SummaryDescriptorBuilderTest extends TestCase {
-
-    @Test
-    public void testBuild() {
-        SummaryDescriptor summary = new SummaryDescriptorBuilder().build();
-        assertNotNull(summary);
-    }
-
-    @Test
-    public void testCategory() {
-        SummaryDescriptor summary = new SummaryDescriptorBuilder().build();
-        assertEquals(ThreadDaoCategories.THREAD_SUMMARY, summary.getCategory());
-    }
-
-    @Test
-    public void testAddDesc() throws Exception {
-        SummaryDescriptor summary = new SummaryDescriptorBuilder().build();
-        DescriptorTester.testStatement(summary.getCategory(), summary.addDesc);
-    }
-
-    @Test
-    public void testRangeDesc() throws Exception {
-
-        SummaryDescriptor summary = new SummaryDescriptorBuilder().build();
-        DescriptorTester.testStatement(summary.getCategory(), summary.rangeDesc);
-    }
+/**
+ *
+ */
+public interface Criterion {
+    Id getId();
+    Class<?> getType();
 }

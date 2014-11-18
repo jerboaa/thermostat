@@ -97,7 +97,7 @@ public class Activator implements BundleActivator {
         VmStatusListenerRegistrar vmListener = new VmStatusListenerRegistrar(context);
 
         /*
-         * dont register anything just yet, let the backend handle the
+         * dont register anything just yet, let the backend onResult the
          * registration, deregistration it when it's activated or deactivated
          */
 

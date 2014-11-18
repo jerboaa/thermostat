@@ -34,27 +34,23 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.dao.impl.descriptor;
+package com.redhat.thermostat.thread.dao.impl.statement.support;
 
 import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.storage.testutils.StatementDescriptorTester;
 
 /**
  *
  */
-abstract class DescriptorBuilder<T extends Pojo> {
+public class DescriptorTester {
 
-    protected String document;
-    protected Category<T> category;
+    public static <C extends Pojo> void testStatement(Category<C> category, String statement) throws Exception {
 
-    DescriptorBuilder(Category<T> category) {
-        this.document = category.getName();
-        this.category = category;
+        StatementDescriptorTester<C> tester = new StatementDescriptorTester<>();
+        StatementDescriptor<C> desc = new StatementDescriptor<>(category, statement);
+        tester.testParseBasic(desc);
+        tester.testParseSemantic(desc);
     }
-
-    public Category<T> getCategory() {
-        return category;
-    }
-
-    abstract public Descriptor<T> build();
 }

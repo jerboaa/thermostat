@@ -40,8 +40,11 @@ import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Persist;
 import com.redhat.thermostat.storage.model.BasePojo;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
+import com.redhat.thermostat.thread.dao.impl.ThreadDaoCategories;
+import com.redhat.thermostat.thread.dao.impl.statement.support.Category;
+import com.redhat.thermostat.thread.dao.impl.statement.support.Indexed;
 
-
+@Category(ThreadDaoCategories.Categories.SUMMARY)
 @Entity
 public class ThreadSummary extends BasePojo implements TimeStampedPojo {
 
@@ -92,11 +95,13 @@ public class ThreadSummary extends BasePojo implements TimeStampedPojo {
         this.daemonThreads = daemonThreads;
     }
 
+    @Indexed
     @Persist
     public long getTimeStamp() {
         return timestamp;
     }
 
+    @Indexed
     @Persist
     public void setTimeStamp(long timestamp) {
         this.timestamp = timestamp;
@@ -108,12 +113,14 @@ public class ThreadSummary extends BasePojo implements TimeStampedPojo {
                currentLiveThreads + ", daemonThreads: " + daemonThreads + "]";
     }
 
+    @Indexed
     @Persist
     public void setSession(String session) {
         this.session = session;
         sessionID = new SessionID(session);
     }
 
+    @Indexed
     @Persist
     public String getSession() {
         return session;

@@ -34,50 +34,54 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.dao.impl;
+package com.redhat.thermostat.thread.dao.impl.statement.support;
 
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.thread.dao.impl.statement.support.Category;
-import com.redhat.thermostat.thread.dao.impl.statement.support.CategoryBuilder;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import org.junit.Before;
 import org.junit.Test;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-public class ThreadDaoCategoriesTest {
+public class InsertEngineTest {
+    private com.redhat.thermostat.storage.core.Category category;
+    private FieldDescriptor descriptor0;
+    private FieldDescriptor descriptor1;
+    private FieldDescriptor descriptor2;
 
-    @Test
-    public void testRegister() throws Exception {
-        Set<String> set = new HashSet<>();
-        ThreadDaoCategories.register(set);
+    @Before
+    public void setup() {
+        category = mock(com.redhat.thermostat.storage.core.Category.class);
+        when(category.getName()).thenReturn("testCategory");
 
-        assertEquals(ThreadDaoCategories.BEANS.size(), set.size());
-        for (Class<? extends Pojo> categoryClass : ThreadDaoCategories.BEANS) {
-            String name = categoryClass.getAnnotation(Category.class).value();
-            assertTrue(set.contains(name));
-        }
+        descriptor0 = mock(FieldDescriptor.class);
+        when(descriptor0.getName()).thenReturn("descriptor0");
+        Class type = String.class;
+        when(descriptor0.getType()).thenReturn(type);
+
+        descriptor1 = mock(FieldDescriptor.class);
+        when(descriptor1.getName()).thenReturn("descriptor1");
+        type = long.class;
+        when(descriptor1.getType()).thenReturn(type);
+
+        descriptor2 = mock(FieldDescriptor.class);
+        when(descriptor2.getName()).thenReturn("descriptor2");
+        type = int.class;
+        when(descriptor2.getType()).thenReturn(type);
     }
 
     @Test
-    public void testRegisterInStorage() throws Exception {
-        Storage storage = mock(Storage.class);
+    public void testBuildInsert() throws Exception {
+        InsertEngine engine = new InsertEngine();
 
-        List<com.redhat.thermostat.storage.core.Category<?>> categories =
-                new ArrayList<>();
-        for (Class<? extends Pojo> categoryClass : ThreadDaoCategories.BEANS) {
-            categories.add(new CategoryBuilder(categoryClass).build());
-        }
+        engine.prologue(category);
+        engine.add(descriptor0);
+        engine.add(descriptor1);
+        engine.add(descriptor2);
 
-        ThreadDaoCategories.register(storage);
-        for (com.redhat.thermostat.storage.core.Category<?> category : categories) {
-            verify(storage).registerCategory(category);
-        }
+        Statement statement = engine.build();
+
+        String expected = "ADD testCategory SET 'descriptor0' = ?s , 'descriptor1' = ?l , 'descriptor2' = ?i";
+        assertEquals(expected, statement.get());
     }
 }

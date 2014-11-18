@@ -34,31 +34,31 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.dao.impl.descriptor;
+package com.redhat.thermostat.thread.dao.impl.statement.support;
 
-import junit.framework.TestCase;
-import org.junit.Before;
+/**
+ *
+ */
+public class LimitCriterion implements Criterion {
 
-public class SummaryDescriptorTest extends TestCase {
+    private Id id;
 
-    private SummaryDescriptor descriptor;
-    @Before
-    public void setUp() {
-        descriptor = new SummaryDescriptorBuilder().build();
+    public LimitCriterion(Id id) {
+        this.id = id;
     }
 
-    public void testGetSummaryRange() throws Exception {
-
-        String expected =
-                "QUERY vm-thread-summary WHERE 'session' = ?s AND 'timeStamp' >= ?l AND 'timeStamp' <= ?l SORT 'timeStamp' DSC LIMIT ?i";
-        assertEquals(expected, descriptor.rangeDesc);
+    @Override
+    public Id getId() {
+        return id;
     }
 
-    public void testAddSummary() throws Exception {
+    @Override
+    public Class<?> getType() {
+        return int.class;
+    }
 
-        String expected =
-                "ADD vm-thread-summary SET 'agentId' = ?s , 'vmId' = ?s , 'session' = ?s , 'currentLiveThreads' = ?l , 'currentDaemonThreads' = ?l , 'timeStamp' = ?l";
-        assertEquals(expected, descriptor.addDesc);
-
+    @Override
+    public String toString() {
+        return "Limit";
     }
 }

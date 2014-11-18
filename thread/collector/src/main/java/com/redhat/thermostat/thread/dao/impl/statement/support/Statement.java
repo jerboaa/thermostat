@@ -34,49 +34,49 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.dao.impl;
-
-import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.thread.dao.impl.statement.support.CategoryBuilder;
-import com.redhat.thermostat.thread.model.ThreadSession;
-import com.redhat.thermostat.thread.model.ThreadSummary;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.logging.Logger;
+package com.redhat.thermostat.thread.dao.impl.statement.support;
 
 /**
  *
  */
-public class ThreadDaoCategories {
+class Statement {
+    private String statement;
 
-    private static final Logger logger = LoggingUtils.getLogger(ThreadDaoCategories.class);
-
-    public static class Categories {
-        public static final String SUMMARY = "vm-thread-summary";
-        public static final String SESSION = "vm-thread-session";
+    public Statement(String statement) {
+        this.statement = statement;
     }
 
-    static final List<Class<? extends Pojo>> BEANS = new ArrayList<>();
-    static {
-        BEANS.add(ThreadSummary.class);
-        BEANS.add(ThreadSession.class);
+    public String get() {
+        return statement;
     }
 
-    public static void register(Collection<String> collection) {
-        for (Class<? extends Pojo> beanClass: BEANS) {
-            Category<? extends Pojo> category = new CategoryBuilder(beanClass).build();
-            collection.add(category.getName());
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (o == null) {
+            return false;
         }
+
+        if (o instanceof String && statement != null) {
+            return o.equals(statement);
+        }
+
+        if (getClass() != o.getClass()) return false;
+
+        Statement statement1 = (Statement) o;
+
+        if (statement != null ? !statement.equals(statement1.statement) :
+                                 statement1.statement != null)
+        {
+            return false;
+        }
+
+        return true;
     }
 
-    public static void register(Storage storage) {
-        for (Class<? extends Pojo> beanClass: BEANS) {
-            Category<? extends Pojo> category = new CategoryBuilder(beanClass).build();
-            storage.registerCategory(category);
-        }
+    @Override
+    public int hashCode() {
+        return statement != null ? statement.hashCode() : 0;
     }
 }

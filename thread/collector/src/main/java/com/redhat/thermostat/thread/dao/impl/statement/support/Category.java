@@ -34,35 +34,17 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.dao.impl.descriptor;
+package com.redhat.thermostat.thread.dao.impl.statement.support;
 
-import com.redhat.thermostat.thread.dao.impl.ThreadDaoCategories;
-import junit.framework.TestCase;
-import org.junit.Test;
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
-public class ThreadSessionDescriptorBuilderTest extends TestCase {
-
-    @Test
-    public void testBuild() {
-        ThreadSessionDescriptor descriptor = new ThreadSessionDescriptorBuilder().build();
-        assertNotNull(descriptor);
-    }
-
-    @Test
-    public void testCategory() {
-        ThreadSessionDescriptor descriptor = new ThreadSessionDescriptorBuilder().build();
-        assertEquals(ThreadDaoCategories.THREAD_SESSION, descriptor.getCategory());
-    }
-
-    @Test
-    public void testQuerySessions() throws Exception {
-        ThreadSessionDescriptor descriptor = new ThreadSessionDescriptorBuilder().build();
-        DescriptorTester.testStatement(descriptor.getCategory(), descriptor.querySessions);
-    }
-
-    @Test
-    public void testStatementAdd() throws Exception {
-        ThreadSessionDescriptor descriptor = new ThreadSessionDescriptorBuilder().build();
-        DescriptorTester.testStatement(descriptor.getCategory(), descriptor.statementAdd);
-    }
+/**
+ *
+ */
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Category {
+    String value();
 }

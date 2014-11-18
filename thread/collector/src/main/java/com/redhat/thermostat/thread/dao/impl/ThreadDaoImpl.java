@@ -49,10 +49,14 @@ import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.dao.impl.descriptor.SummaryDescriptor;
-import com.redhat.thermostat.thread.dao.impl.descriptor.SummaryDescriptorBuilder;
-import com.redhat.thermostat.thread.dao.impl.descriptor.ThreadSessionDescriptor;
-import com.redhat.thermostat.thread.dao.impl.descriptor.ThreadSessionDescriptorBuilder;
+import com.redhat.thermostat.thread.dao.impl.statement.SessionQuery;
+import com.redhat.thermostat.thread.dao.impl.statement.SummaryQuery;
+import com.redhat.thermostat.thread.dao.impl.statement.support.BeanAdapter;
+import com.redhat.thermostat.thread.dao.impl.statement.support.BeanAdapterBuilder;
+
+import com.redhat.thermostat.thread.dao.impl.statement.support.Query;
+import com.redhat.thermostat.thread.dao.impl.statement.support.QueryValues;
+import com.redhat.thermostat.thread.dao.impl.statement.support.ResultHandler;
 import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.ThreadContentionSample;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
@@ -71,8 +75,8 @@ public class ThreadDaoImpl implements ThreadDao {
     
     private static final Logger logger = LoggingUtils.getLogger(ThreadDaoImpl.class);
 
-    static final SummaryDescriptor SUMMARY = new SummaryDescriptorBuilder().build();
-    static final ThreadSessionDescriptor SESSIONS = new ThreadSessionDescriptorBuilder().build();
+    static final BeanAdapter<ThreadSummary> SUMMARY = new BeanAdapterBuilder<>(ThreadSummary.class, new SummaryQuery()).build();
+    static final BeanAdapter<ThreadSession> SESSIONS = new BeanAdapterBuilder<>(ThreadSession.class, new SessionQuery()).build();
 
     // Queries
 
@@ -457,50 +461,76 @@ public class ThreadDaoImpl implements ThreadDao {
 
     @Override
     public void saveSummary(ThreadSummary summary) {
-
         try {
-            SUMMARY.statementAdd(summary, storage);
+            SUMMARY.insert(summary, storage);
 
-        } catch (Exception ignore) { ignore.printStackTrace(); }
+        } catch (StatementExecutionException e) {
+            logger.log(Level.SEVERE, "Exception saving summary: " + summary, e);
+        }
     }
 
     @Override
     public List<ThreadSummary> getSummary(VmRef ref, SessionID session, Range<Long> range, int limit) {
+        final List<ThreadSummary> results = new ArrayList<>();
 
-        List<ThreadSummary> result = new ArrayList<>();
+        Query<ThreadSummary> query = SUMMARY.getQuery(SummaryQuery.id);
+
+        QueryValues values = query.createValues();
+        values.set(SummaryQuery.CriteriaId.getVmId, ref.getVmId());
+        values.set(SummaryQuery.CriteriaId.sessionID, session.get());
+        values.set(SummaryQuery.CriteriaId.timeStampGEQ, range.getMin());
+        values.set(SummaryQuery.CriteriaId.timeStampLEQ, range.getMax());
+        values.set(SummaryQuery.CriteriaId.limit, limit);
+
         try {
-            Cursor<ThreadSummary> cursor = SUMMARY.queryGet(ref, session, range, limit, storage);
-            while (cursor.hasNext()) {
-                ThreadSummary summary = cursor.next();
-                result.add(summary);
-            }
-        } catch (Exception ignore) { ignore.printStackTrace(); }
+            SUMMARY.query(values, new ResultHandler<ThreadSummary>() {
+                @Override
+                public void onResult(ThreadSummary result) {
+                    results.add(result);
+                }
+            }, storage);
 
-        return result;
+        } catch (StatementExecutionException e) {
+            e.printStackTrace();
+        }
+
+        return results;
     }
 
     @Override
     public List<ThreadSession> getSessions(VmRef ref, Range<Long> range, int limit) {
-        List<ThreadSession> result = new ArrayList<>();
+        final List<ThreadSession> results = new ArrayList<>();
 
-        Cursor<ThreadSession> cursor = null;
+        Query<ThreadSession> query = SESSIONS.getQuery(SessionQuery.id);
+
+        QueryValues values = query.createValues();
+        values.set(SessionQuery.CriteriaId.getVmId, ref.getVmId());
+        values.set(SessionQuery.CriteriaId.timeStampGEQ, range.getMin());
+        values.set(SessionQuery.CriteriaId.timeStampLEQ, range.getMax());
+        values.set(SessionQuery.CriteriaId.limit, limit);
 
         try {
-            cursor = SESSIONS.queryGet(ref, range, limit, storage);
-            while (cursor.hasNext()) {
-                ThreadSession summary = cursor.next();
-                result.add(summary);
-            }
-        } catch (Exception ignore) { ignore.printStackTrace(); }
+            SESSIONS.query(values, new ResultHandler<ThreadSession>() {
+                @Override
+                public void onResult(ThreadSession result) {
+                    results.add(result);
+                }
+            }, storage);
 
-        return result;
+        } catch (StatementExecutionException e) {
+            e.printStackTrace();
+        }
+
+        return results;
     }
 
     public void saveSession(ThreadSession session) {
         try {
-            SESSIONS.statementAdd(session, storage);
+            SESSIONS.insert(session, storage);
 
-        } catch (Exception ignore) { ignore.printStackTrace(); }
+        } catch (StatementExecutionException e) {
+            logger.log(Level.SEVERE, "Exception saving session: " + session, e);
+        }
     }
 
     @Override

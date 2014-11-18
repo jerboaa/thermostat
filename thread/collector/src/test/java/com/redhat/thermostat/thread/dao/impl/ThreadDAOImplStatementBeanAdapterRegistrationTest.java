@@ -59,7 +59,7 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class ThreadDAOImplStatementDescriptorRegistrationTest {
+public class ThreadDAOImplStatementBeanAdapterRegistrationTest {
 
     static class Triple<S, T, U> {
         final S first;
@@ -77,8 +77,8 @@ public class ThreadDAOImplStatementDescriptorRegistrationTest {
     public void registersAllDescriptors() {
         ThreadDaoImplStatementDescriptorRegistration reg = new ThreadDaoImplStatementDescriptorRegistration();
         Set<String> descriptors = reg.getStatementDescriptors();
-        assertEquals(19, descriptors.size());
-        assertFalse("null descriptor not allowed", descriptors.contains(null));
+        assertEquals(20, descriptors.size());
+        assertFalse("null statement not allowed", descriptors.contains(null));
     }
     
     /*
@@ -105,7 +105,7 @@ public class ThreadDAOImplStatementDescriptorRegistrationTest {
         // storage-core + this module
         assertEquals(2, registrations.size());
         assertNotNull(threadDaoReg);
-        assertEquals(19, threadDaoReg.getStatementDescriptors().size());
+        assertEquals(20, threadDaoReg.getStatementDescriptors().size());
     }
     
     private Triple<String, String, PreparedParameter[]> setupForMetaDataTest() {

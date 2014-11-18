@@ -60,8 +60,8 @@ public class ThreadDaoImplStatementDescriptorRegistration implements
         descs.add(ThreadDaoImpl.QUERY_LATEST_HARVESTING_STATUS);
 
         // TODO: this needs to go in an helper class
-        descs.addAll(ThreadDaoImpl.SUMMARY.describe());
-        descs.addAll(ThreadDaoImpl.SESSIONS.describe());
+        descs.addAll(ThreadDaoImpl.SUMMARY.describeStatements());
+        descs.addAll(ThreadDaoImpl.SESSIONS.describeStatements());
 
         descs.add(ThreadDaoImpl.DESC_ADD_THREAD_DEADLOCK_DATA);
         descs.add(ThreadDaoImpl.DESC_ADD_THREAD_HARVESTING_STATUS);
@@ -94,7 +94,7 @@ public class ThreadDaoImplStatementDescriptorRegistration implements
             PreparedParameter[] params) {
         if (descriptor.equals(ThreadDaoImpl.QUERY_THREAD_STATE_PER_THREAD) ||
                 descriptor.equals(ThreadDaoImpl.GET_LATEST_CONTENTION_SAMPLE)) {
-            // no agent/vm ids in descriptor.
+            // no agent/vm ids in statement.
             return new DescriptorMetadata();
         } else if (descriptor.equals(ThreadDaoImpl.QUERY_LATEST_THREAD_STATE_FOR_THREAD) ||
                 descriptor.equals(ThreadDaoImpl.QUERY_FIRST_THREAD_STATE_FOR_THREAD)) {
@@ -107,7 +107,7 @@ public class ThreadDaoImplStatementDescriptorRegistration implements
             DescriptorMetadata metadata = new DescriptorMetadata(agentId, vmId);
             return metadata;
         } else {
-            throw new IllegalArgumentException("Unknown descriptor ->" + descriptor + "<-");
+            throw new IllegalArgumentException("Unknown statement ->" + descriptor + "<-");
         }
     }
 

@@ -34,49 +34,28 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.dao.impl;
+package com.redhat.thermostat.thread.dao.impl.statement;
 
-import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.thread.dao.impl.statement.support.CategoryBuilder;
+import com.redhat.thermostat.thread.dao.impl.statement.support.BeanAdapter;
+import com.redhat.thermostat.thread.dao.impl.statement.support.BeanAdapterBuilder;
 import com.redhat.thermostat.thread.model.ThreadSession;
-import com.redhat.thermostat.thread.model.ThreadSummary;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.logging.Logger;
+import java.util.Set;
+import org.junit.Test;
 
-/**
- *
- */
-public class ThreadDaoCategories {
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
 
-    private static final Logger logger = LoggingUtils.getLogger(ThreadDaoCategories.class);
+public class SessionQueryTest {
 
-    public static class Categories {
-        public static final String SUMMARY = "vm-thread-summary";
-        public static final String SESSION = "vm-thread-session";
-    }
+    @Test
+    public void testDescribe() throws Exception {
+        BeanAdapter<ThreadSession> session =
+                new BeanAdapterBuilder<>(ThreadSession.class,
+                                         new SessionQuery()).build();
+        Set<String> statements = session.describeStatements();
+        assertEquals(2, statements.size());
 
-    static final List<Class<? extends Pojo>> BEANS = new ArrayList<>();
-    static {
-        BEANS.add(ThreadSummary.class);
-        BEANS.add(ThreadSession.class);
-    }
-
-    public static void register(Collection<String> collection) {
-        for (Class<? extends Pojo> beanClass: BEANS) {
-            Category<? extends Pojo> category = new CategoryBuilder(beanClass).build();
-            collection.add(category.getName());
-        }
-    }
-
-    public static void register(Storage storage) {
-        for (Class<? extends Pojo> beanClass: BEANS) {
-            Category<? extends Pojo> category = new CategoryBuilder(beanClass).build();
-            storage.registerCategory(category);
-        }
+        String expected = "QUERY vm-thread-session WHERE 'vmId' = ?s AND 'timeStamp' >= ?l AND 'timeStamp' <= ?l SORT 'timeStamp' DESC LIMIT ?i";
+        assertTrue(statements.contains(expected));
     }
 }

@@ -34,49 +34,64 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.dao.impl;
+package com.redhat.thermostat.thread.dao.impl.statement.support;
 
-import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.thread.dao.impl.statement.support.CategoryBuilder;
-import com.redhat.thermostat.thread.model.ThreadSession;
-import com.redhat.thermostat.thread.model.ThreadSummary;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.logging.Logger;
+import org.junit.Before;
+import org.junit.Test;
 
-/**
- *
- */
-public class ThreadDaoCategories {
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-    private static final Logger logger = LoggingUtils.getLogger(ThreadDaoCategories.class);
+public class QueryValuesTest {
 
-    public static class Categories {
-        public static final String SUMMARY = "vm-thread-summary";
-        public static final String SESSION = "vm-thread-session";
+    private Query query;
+    private List<Criterion> criterias;
+
+    private Criterion criterion0;
+    private Criterion criterion1;
+    private Criterion criterion2;
+
+    @Before
+    public void setup() {
+        query = mock(Query.class);
+        criterias = new ArrayList<>();
+
+        criterion0 = mock(Criterion.class);
+        when(criterion0.getType()).thenReturn((Class)  int.class);
+        when(criterion0.getId()).thenReturn(new Id("0"));
+
+        criterion1 = mock(Criterion.class);
+        when(criterion1.getType()).thenReturn((Class) String.class);
+        when(criterion1.getId()).thenReturn(new Id("1"));
+
+        criterion2 = mock(Criterion.class);
+        when(criterion2.getType()).thenReturn((Class) long.class);
+        when(criterion2.getId()).thenReturn(new Id("2"));
+
+        criterias.add(criterion0);
+        criterias.add(criterion1);
+        criterias.add(criterion2);
     }
 
-    static final List<Class<? extends Pojo>> BEANS = new ArrayList<>();
-    static {
-        BEANS.add(ThreadSummary.class);
-        BEANS.add(ThreadSession.class);
+    @Test(expected = IllegalArgumentException.class)
+    public void testSetWithWrongArguments() throws Exception {
+
+        QueryValues values = new QueryValues(query);
+        values.addCriteria(criterias);
+
+        values.set(criterion0, "wrong type");
     }
 
-    public static void register(Collection<String> collection) {
-        for (Class<? extends Pojo> beanClass: BEANS) {
-            Category<? extends Pojo> category = new CategoryBuilder(beanClass).build();
-            collection.add(category.getName());
-        }
-    }
+    @Test
+    public void testSet() throws Exception {
 
-    public static void register(Storage storage) {
-        for (Class<? extends Pojo> beanClass: BEANS) {
-            Category<? extends Pojo> category = new CategoryBuilder(beanClass).build();
-            storage.registerCategory(category);
-        }
+        QueryValues values = new QueryValues(query);
+        values.addCriteria(criterias);
+
+        values.set(criterion0, 10);
+        values.set(criterion1, "test");
+        values.set(criterion2, 42l);
     }
 }

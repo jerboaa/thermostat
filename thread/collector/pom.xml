@@ -61,6 +61,7 @@
       <artifactId>mockito-core</artifactId>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-common-core</artifactId>
@@ -117,11 +118,12 @@
               com.redhat.thermostat.thread.collector,
               com.redhat.thermostat.thread.dao,
               com.redhat.thermostat.thread.model,
+              com.redhat.thermostat.thread.dao.impl.statement.support,
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.thread.common.osgi,
               com.redhat.thermostat.thread.dao.impl,
-              com.redhat.thermostat.thread.dao.impl.descriptor,
+              com.redhat.thermostat.thread.dao.impl.statement,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
