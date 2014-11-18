@@ -50,9 +50,9 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 
-import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.ThermostatTable;
+import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
 import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
@@ -71,17 +71,7 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
     
     public SwingThreadTableView() {
         tablePanel = new ThreadTable();
-        tablePanel.addHierarchyListener(new ComponentVisibleListener() {
-            @Override
-            public void componentShown(Component component) {
-                SwingThreadTableView.this.notify(Action.VISIBLE);
-            }
-            
-            @Override
-            public void componentHidden(Component component) {
-                SwingThreadTableView.this.notify(Action.HIDDEN);
-            }
-        });
+        new ComponentVisibilityNotifier().initialize(tablePanel, notifier);
         
         table = new ThermostatTable(new ThreadViewTableModel(new ArrayList<ThreadTableBean>()));
         table.setName("threadBeansTable");

@@ -40,6 +40,7 @@ import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.UIDefaults;
 import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
+import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.thread.client.common.model.timeline.Timeline;
 import com.redhat.thermostat.thread.client.common.model.timeline.TimelineGroupDataModel;
@@ -53,6 +54,7 @@ import com.redhat.thermostat.thread.client.swing.impl.timeline.TimelineGroupThre
 import com.redhat.thermostat.thread.client.swing.impl.timeline.scrollbar.SwingTimelineScrollBarController;
 import com.redhat.thermostat.thread.client.swing.impl.timeline.scrollbar.TimelineScrollBar;
 import com.redhat.thermostat.thread.model.ThreadHeader;
+
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.event.ComponentAdapter;
@@ -60,6 +62,7 @@ import java.awt.event.ComponentEvent;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -93,18 +96,17 @@ public class SwingThreadTimelineView extends ThreadTimelineView implements Swing
         groupDataModel = new TimelineGroupThreadConverter(realGDM);
 
         contentPane = new JPanel();
+        new ComponentVisibilityNotifier().initialize(contentPane, notifier);
         contentPane.addHierarchyListener(new ComponentVisibleListener() {
             @Override
             public void componentShown(Component component) {
-                SwingThreadTimelineView.this.notify(Action.VISIBLE);
-
                 // TODO: this should be retrieved from state properties
                 requestFollowMode();
             }
             
             @Override
             public void componentHidden(Component component) {
-                SwingThreadTimelineView.this.notify(Action.HIDDEN);
+                // TODO should requestFollowMode be disabled?
             }
         });
 

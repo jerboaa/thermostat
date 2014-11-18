@@ -161,6 +161,7 @@
             <Bundle-SymbolicName>com.redhat.thermostat.client.swing</Bundle-SymbolicName>
             <Export-Package>
               com.redhat.thermostat.client.swing,
+              com.redhat.thermostat.client.swing.experimental,
               com.redhat.thermostat.client.swing.components,
               com.redhat.thermostat.client.swing.components.models,
               com.redhat.thermostat.client.swing.components.experimental,

@@ -62,9 +62,9 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
 import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
+import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.gc.remote.client.common.RequestGCAction;
@@ -111,17 +111,7 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
         
         visiblePanel.setHeader(t.localize(LocaleResources.MEMORY_REGIONS_HEADER));
 
-        visiblePanel.addHierarchyListener(new ComponentVisibleListener() {
-            @Override
-            public void componentShown(Component component) {
-                notifier.fireAction(Action.VISIBLE);
-            }
-
-            @Override
-            public void componentHidden(Component component) {
-                notifier.fireAction(Action.HIDDEN);
-            }
-        });
+        new ComponentVisibilityNotifier().initialize(visiblePanel, notifier);
 
         graphPanel = new JPanel();
         graphPanel.setLayout(new BoxLayout(graphPanel, BoxLayout.Y_AXIS));

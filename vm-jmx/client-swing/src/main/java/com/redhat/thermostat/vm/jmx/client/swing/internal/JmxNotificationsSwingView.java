@@ -64,7 +64,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.IconResource;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.ActionToggleButton;
@@ -73,6 +72,7 @@ import com.redhat.thermostat.client.swing.components.LocalizedLabel;
 import com.redhat.thermostat.client.swing.components.experimental.EventTimeline;
 import com.redhat.thermostat.client.swing.components.experimental.EventTimelineRangeChangeListener;
 import com.redhat.thermostat.client.swing.components.experimental.Timeline;
+import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.client.ui.Palette;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
@@ -153,17 +153,7 @@ public class JmxNotificationsSwingView extends JmxNotificationsView implements S
 
         contents.add(timeline, c);
 
-        contents.addHierarchyListener(new ComponentVisibleListener() {
-            @Override
-            public void componentShown(Component component) {
-                notifier.fireAction(Action.VISIBLE);
-            }
-
-            @Override
-            public void componentHidden(Component component) {
-                notifier.fireAction(Action.HIDDEN);
-            }
-        });
+        new ComponentVisibilityNotifier().initialize(contents, notifier);
 
         toolbarButton = new ActionToggleButton(IconResource.SAMPLE.getIcon(), translate.localize(LocaleResources.NOTIFICATIONS_ENABLE));
         toolbarButton.setName("toggleNotifications");

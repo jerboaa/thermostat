@@ -51,11 +51,13 @@ import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
 import com.redhat.thermostat.thread.client.common.view.ThreadView;
 import com.redhat.thermostat.thread.client.common.view.VmDeadLockView;
 import com.redhat.thermostat.thread.client.swing.impl.timeline.SwingTimelineDimensionModel;
+
 import java.awt.Component;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+
 import javax.swing.JOptionPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
@@ -92,6 +94,8 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
         this.dimensionModel = dimensionModel;
         
         panel = new ThreadMainPanel();
+        // TODO use ComponentVisiblityNotifier instead
+        // sadly, the BasicView.notifier field can not be accessed here
         panel.addHierarchyListener(new ComponentVisibleListener() {
             
             @Override

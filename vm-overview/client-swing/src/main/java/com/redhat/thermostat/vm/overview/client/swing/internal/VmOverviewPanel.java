@@ -46,12 +46,12 @@ import javax.swing.SwingUtilities;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.LayoutStyle.ComponentPlacement;
 
-import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.client.swing.components.LabelField;
 import com.redhat.thermostat.client.swing.components.SectionHeader;
 import com.redhat.thermostat.client.swing.components.ValueField;
+import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.overview.client.core.VmOverviewView;
@@ -78,17 +78,8 @@ public class VmOverviewPanel extends VmOverviewView implements SwingComponent {
     public VmOverviewPanel() {
         super();
         initializePanel();
-        visiblePanel.addHierarchyListener(new ComponentVisibleListener() {
-            @Override
-            public void componentShown(Component component) {
-                notifier.fireAction(Action.VISIBLE);
-            }
 
-            @Override
-            public void componentHidden(Component component) {
-                notifier.fireAction(Action.HIDDEN);
-            }
-        });
+        new ComponentVisibilityNotifier().initialize(visiblePanel, notifier);
     }
 
     @Override

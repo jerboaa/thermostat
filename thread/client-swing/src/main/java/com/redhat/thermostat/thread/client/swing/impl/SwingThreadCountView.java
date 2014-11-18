@@ -41,9 +41,9 @@ import java.awt.Component;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
-import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.ChartPanel;
+import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.thread.client.common.chart.LivingDaemonThreadDifferenceChart;
 import com.redhat.thermostat.thread.client.common.view.ThreadCountView;
 import javax.swing.SwingWorker;

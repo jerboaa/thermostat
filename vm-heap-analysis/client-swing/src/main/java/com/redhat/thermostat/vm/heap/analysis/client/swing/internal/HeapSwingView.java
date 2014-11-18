@@ -55,7 +55,6 @@ import javax.swing.OverlayLayout;
 import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.IconResource;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.ActionButton;
@@ -63,6 +62,7 @@ import com.redhat.thermostat.client.swing.components.ActionToggleButton;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.client.swing.components.Icon;
 import com.redhat.thermostat.client.swing.components.OverlayPanel;
+import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListView;
@@ -143,7 +143,7 @@ public class HeapSwingView extends HeapView implements SwingComponent {
         overlay.setAlignmentY(1.f);
 
         overview.setContent(stack);
-        overview.addHierarchyListener(new ViewVisibleListener());
+        new ComponentVisibilityNotifier().initialize(overview, notifier);
 
         Icon takeDumpIcon = new Icon(HeapIconResources.getIcon(HeapIconResources.TRIGGER_HEAP_DUMP));
         takeDumpIconButton = new ActionButton(takeDumpIcon, translator.localize(LocaleResources.TRIGGER_HEAP_DUMP));
@@ -190,18 +190,6 @@ public class HeapSwingView extends HeapView implements SwingComponent {
         
         fileChooser = new JFileChooser();
         fileChooser.setName("EXPORT_HEAP_DUMP_FILE_CHOOSER");
-    }
-    
-    private class ViewVisibleListener extends ComponentVisibleListener {
-        @Override
-        public void componentShown(Component component) {
-            HeapSwingView.this.notify(Action.VISIBLE);
-        }
-
-        @Override
-        public void componentHidden(Component component) {
-            HeapSwingView.this.notify(Action.HIDDEN);
-        }
     }
 
     @Override

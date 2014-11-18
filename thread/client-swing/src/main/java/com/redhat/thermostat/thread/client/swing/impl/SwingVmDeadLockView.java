@@ -48,8 +48,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
-import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
 import com.redhat.thermostat.thread.client.common.view.VmDeadLockView;
@@ -86,17 +86,7 @@ public class SwingVmDeadLockView extends VmDeadLockView implements SwingComponen
         JScrollPane scrollPane = new JScrollPane(description);
         actualComponent.add(scrollPane, c);
 
-        actualComponent.addHierarchyListener(new ComponentVisibleListener() {
-            @Override
-            public void componentShown(Component component) {
-                notifier.fireAction(Action.VISIBLE);
-            }
-
-            @Override
-            public void componentHidden(Component component) {
-                notifier.fireAction(Action.VISIBLE);
-            }
-        });
+        new ComponentVisibilityNotifier().initialize(actualComponent, notifier);
     }
 
     @Override

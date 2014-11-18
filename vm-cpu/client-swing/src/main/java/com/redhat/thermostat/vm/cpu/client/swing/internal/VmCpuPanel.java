@@ -52,9 +52,9 @@ import org.jfree.data.time.RegularTimePeriod;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
-import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
+import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.model.Range;
@@ -89,17 +89,7 @@ public class VmCpuPanel extends VmCpuView implements SwingComponent {
 
         initializePanel();
 
-        visiblePanel.addHierarchyListener(new ComponentVisibleListener() {
-            @Override
-            public void componentShown(Component component) {
-                notifier.fireAction(Action.VISIBLE);
-            }
-
-            @Override
-            public void componentHidden(Component component) {
-                notifier.fireAction(Action.HIDDEN);
-            }
-        });
+        new ComponentVisibilityNotifier().initialize(visiblePanel, notifier);
     }
 
     @Override
