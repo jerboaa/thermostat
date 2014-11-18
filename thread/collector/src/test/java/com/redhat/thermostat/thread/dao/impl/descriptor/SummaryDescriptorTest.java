@@ -34,55 +34,39 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.harvester;
+package com.redhat.thermostat.thread.dao.impl.descriptor;
 
-import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.model.ThreadHeader;
-import com.redhat.thermostat.thread.model.ThreadState;
+import junit.framework.TestCase;
+import org.junit.Before;
 
-import java.lang.management.ThreadInfo;
+public class SummaryDescriptorTest extends TestCase {
 
-public class ThreadStateHelper {
-
-    private ThreadDao threadDao;
-    private WriterID writerId;
-    private String vmId;
-
-    public ThreadStateHelper(ThreadDao threadDao, WriterID writerId, String vmId) {
-        this.writerId = writerId;
-        this.vmId = vmId;
-        this.threadDao = threadDao;
-    }
-iqQ:q!
-    
-    public ThreadState createThreadState(ThreadHeader header, ThreadInfo beanInfo,
-                                         long timestamp)
-    {
-        String wId = writerId.getWriterID();
-
-        ThreadState state = new ThreadState(wId, header);
-        state.setState(beanInfo.getThreadState().name());
-        state.setProbeStartTime(timestamp);
-        state.setProbeEndTime(timestamp);
-
-        return state;
+    private SummaryDescriptor descriptor;
+    @Before
+    public void setUp() {
+        descriptor = new SummaryDescriptorBuilder().build();
     }
 
-    public ThreadState saveThreadState(ThreadState thread) {
+    public void testGetSummaryRange() throws Exception {
 
-        ThreadHeader header = thread.getHeader();
-        ThreadState lastState = threadDao.getLastThreadState(header);
-        if (lastState == null || !lastState.getState().equals(thread.getState()))
-        {
-            threadDao.addThreadState(thread);
-            lastState = thread;
+        String expected =
+                "QUERY vm-thread-summary WHERE 'session' = ?s AND 'timeStamp' >= ?l AND 'timeStamp' <= ?l SORT 'timeStamp' DSC LIMIT ?i";
+        assertEquals(expected, descriptor.rangeDesc);
+    }
 
-        } else {
-            // update
-            lastState.setProbeEndTime(thread.getProbeEndTime());
-            threadDao.updateThreadState(lastState);
-        }
-        return lastState;
+    public void testGetSessionsRange() throws Exception {
+
+        String expected =
+                "QUERY vm-thread-summary WHERE 'vmId' = ?s AND 'timeStamp' >= ?l AND 'timeStamp' <= ?l SORT 'timeStamp' DSC LIMIT ?i";
+        assertEquals(expected, descriptor.sessionsDesc);
+
+    }
+
+    public void testAddSummary() throws Exception {
+
+        String expected =
+                "ADD vm-thread-summary SET 'agentId' = ?s , 'vmId' = ?s , 'session' = ?s , 'currentLiveThreads' = ?l , 'currentDaemonThreads' = ?l , 'timeStamp' = ?l";
+        assertEquals(expected, descriptor.addDesc);
+
     }
 }

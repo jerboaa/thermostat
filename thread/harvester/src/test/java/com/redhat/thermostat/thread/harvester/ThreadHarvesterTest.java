@@ -118,7 +118,7 @@ public class ThreadHarvesterTest {
     public void testStop() {
         ThreadDao dao = mock(ThreadDao.class);
         Request request = mock(Request.class);
-        
+
         final Harvester harverster = mock(Harvester.class);
         
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);

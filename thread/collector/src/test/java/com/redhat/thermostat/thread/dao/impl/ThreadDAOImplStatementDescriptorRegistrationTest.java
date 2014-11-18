@@ -146,16 +146,7 @@ public class ThreadDAOImplStatementDescriptorRegistrationTest {
         DescriptorMetadata data = factory.getDescriptorMetadata(ThreadDaoImpl.QUERY_LATEST_HARVESTING_STATUS, triple.third);
         assertThreadMetadata(triple, data);
     }
-    
-    @Test
-    public void canGetMetadataForLatestSummaryQuery() {
-        Triple<String, String, PreparedParameter[]> triple = setupForMetaDataTest(); 
-        
-        StatementDescriptorMetadataFactory factory = new ThreadDaoImplStatementDescriptorRegistration();
-        DescriptorMetadata data = factory.getDescriptorMetadata(ThreadDaoImpl.QUERY_LATEST_SUMMARY, triple.third);
-        assertThreadMetadata(triple, data);
-    }
-    
+
     @Test
     public void canGetMetadataForThreadHeader() {
         Triple<String, String, PreparedParameter[]> triple = setupForMetaDataTest();
@@ -213,15 +204,7 @@ public class ThreadDAOImplStatementDescriptorRegistrationTest {
         assertNull(data.getVmId());
     }
 
-    @Test
-    public void canGetMetadataQuerySummarySince() {
-        Triple<String, String, PreparedParameter[]> triple = setupForMetaDataTest();
 
-        StatementDescriptorMetadataFactory factory = new ThreadDaoImplStatementDescriptorRegistration();
-        DescriptorMetadata data = factory.getDescriptorMetadata(ThreadDaoImpl.QUERY_SUMMARY_SINCE, triple.third);
-        assertThreadMetadata(triple, data);
-    }
-    
     @Test
     public void canGetMetadataOldestThreadState() {
         Triple<String, String, PreparedParameter[]> triple = setupForMetaDataTest();

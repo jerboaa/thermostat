@@ -41,6 +41,7 @@ import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.ThreadContentionSample;
 import com.redhat.thermostat.thread.model.ThreadHeader;
+import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.ThreadState;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import java.lang.management.ThreadInfo;
@@ -83,11 +84,14 @@ class HarvesterHelper {
         this.contentionHelper = contentionHelper;
     }
 
-    synchronized void collectAndSaveThreadData(ThreadMXBean collectorBean) {
+    synchronized void collectAndSaveThreadData(SessionID session,
+                                               ThreadMXBean collectorBean)
+    {
         long timestamp = clock.getRealTimeMillis();
 
         ThreadSummary summary = summaryHelper.createThreadSummary(collectorBean,
-                                                                  timestamp);
+                                                                  timestamp,
+                                                                  session);
         summaryHelper.saveSummary(summary);
 
         // this two can't be null, but the check is there to allow for

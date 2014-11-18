@@ -39,6 +39,7 @@ package com.redhat.thermostat.thread.client.common.collector;
 import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.thread.dao.ThreadDao;
+import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.ThreadContentionSample;
 import com.redhat.thermostat.thread.model.ThreadHeader;
 import com.redhat.thermostat.thread.model.ThreadState;
@@ -54,9 +55,12 @@ public interface ThreadCollector {
     boolean startHarvester();
     boolean stopHarvester();
     boolean isHarvesterCollecting();
-    
-    ThreadSummary getLatestThreadSummary();
-    List<ThreadSummary> getThreadSummary(long since);
+
+    List<SessionID> getAvailableThreadSummarySessions(Range<Long> range);
+    SessionID getLastThreadSummarySession();
+
+    ThreadSummary getLatestThreadSummary(SessionID session);
+    List<ThreadSummary> getThreadSummary(SessionID session, Range<Long> range);
 
     /**
      * Return the range of all {@link ThreadState} data (timestamp of first and

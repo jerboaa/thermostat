@@ -89,12 +89,6 @@ public class ThreadDaoImplTest {
     @Test
     public void preparedQueryDescriptorsAreSane() {
 
-        String expectedQueryLatestSummary = "QUERY vm-thread-summary WHERE 'agentId' = ?s AND 'vmId' = ?s SORT 'timeStamp' DSC LIMIT 1";
-        assertEquals(expectedQueryLatestSummary, ThreadDaoImpl.QUERY_LATEST_SUMMARY);
-
-        String expectedQuerySummarySince = "QUERY vm-thread-summary WHERE 'agentId' = ?s AND 'vmId' = ?s AND 'timeStamp' > ?l SORT 'timeStamp' DSC";
-        assertEquals(expectedQuerySummarySince, ThreadDaoImpl.QUERY_SUMMARY_SINCE);
-
         String expectedQueryLatestHarvestingStatus = "QUERY vm-thread-harvesting WHERE 'agentId' = ?s AND 'vmId' = ?s SORT 'timeStamp' DSC LIMIT 1";
         assertEquals(expectedQueryLatestHarvestingStatus, ThreadDaoImpl.QUERY_LATEST_HARVESTING_STATUS);
 
@@ -112,13 +106,6 @@ public class ThreadDaoImplTest {
 
         String expectedQueryThreadLatestDeadlockInfo = "QUERY vm-deadlock-data WHERE 'agentId' = ?s AND 'vmId' = ?s SORT 'timeStamp' DSC LIMIT 1";
         assertEquals(expectedQueryThreadLatestDeadlockInfo, ThreadDaoImpl.QUERY_LATEST_DEADLOCK_INFO);
-
-        String addThreadSummary = "ADD vm-thread-summary SET 'agentId' = ?s , " +
-                                            "'vmId' = ?s , " +
-                                            "'currentLiveThreads' = ?l , " +
-                                            "'currentDaemonThreads' = ?l , " +
-                                            "'timeStamp' = ?l";
-        assertEquals(addThreadSummary, ThreadDaoImpl.DESC_ADD_THREAD_SUMMARY);
 
         String addThreadHarvesting = "ADD vm-thread-harvesting SET 'agentId' = ?s , " +
                                                     "'vmId' = ?s , " +
@@ -176,7 +163,7 @@ public class ThreadDaoImplTest {
         ThreadDaoImpl dao = new ThreadDaoImpl(storage);
         
         verify(storage).registerCategory(ThreadDao.THREAD_HARVESTING_STATUS);
-        verify(storage).registerCategory(ThreadDao.THREAD_SUMMARY);
+        verify(storage).registerCategory(ThreadDaoCategories.THREAD_SUMMARY);
     }
 
     @SuppressWarnings("unchecked")

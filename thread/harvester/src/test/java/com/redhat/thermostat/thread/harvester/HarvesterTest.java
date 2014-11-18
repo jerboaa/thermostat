@@ -40,6 +40,7 @@ import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.thread.dao.ThreadDao;
+import com.redhat.thermostat.thread.model.SessionID;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -56,6 +57,7 @@ import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -101,7 +103,6 @@ public class HarvesterTest {
             thenReturn(null);
 
         HarvesterHelper helper = mock(HarvesterHelper.class);
-
         Harvester harvester = new Harvester(pid, executor, pool, helper,
                                             deadlockHelper);
 
@@ -125,7 +126,6 @@ public class HarvesterTest {
         // Mostly the same as testStart, but we call harvester.start() twice
 
         HarvesterHelper helper = mock(HarvesterHelper.class);
-
         Harvester harvester = new Harvester(pid, executor, pool, helper,
                                             deadlockHelper);
 
@@ -150,7 +150,6 @@ public class HarvesterTest {
             thenReturn(future);
 
         HarvesterHelper helper = mock(HarvesterHelper.class);
-
         Harvester harvester = new Harvester(pid, executor, pool, helper,
                                             deadlockHelper);
 
@@ -174,7 +173,6 @@ public class HarvesterTest {
             thenReturn(future);
 
         HarvesterHelper helper = mock(HarvesterHelper.class);
-
         Harvester harvester = new Harvester(pid, executor, pool, helper,
                                             deadlockHelper);
 
@@ -200,7 +198,6 @@ public class HarvesterTest {
             thenReturn(future);
 
         HarvesterHelper helper = mock(HarvesterHelper.class);
-
         Harvester harvester = new Harvester(pid, executor, pool, helper,
                                             deadlockHelper);
 
@@ -234,7 +231,6 @@ public class HarvesterTest {
 
 
         HarvesterHelper helper = mock(HarvesterHelper.class);
-
         Harvester harvester = new Harvester(pid, executor, pool, helper,
                                             deadlockHelper);
 
@@ -245,7 +241,7 @@ public class HarvesterTest {
 
         harvesterRunnable.run();
 
-        verify(helper).collectAndSaveThreadData(sunBean);
+        verify(helper).collectAndSaveThreadData(any(SessionID.class), eq(sunBean));
     }
 
     @Test
@@ -281,7 +277,7 @@ public class HarvesterTest {
 
         harvesterRunnable.run();
 
-        verify(helper).collectAndSaveThreadData(mxBean);
+        verify(helper).collectAndSaveThreadData(any(SessionID.class), eq(mxBean));
     }
 
     @Test
@@ -289,6 +285,7 @@ public class HarvesterTest {
 
         final ThreadMXBean mxBean = mock(ThreadMXBean.class);
         HarvesterHelper helper = mock(HarvesterHelper.class);
+
         Harvester harvester = new Harvester(pid, executor, pool, helper,
                                             deadlockHelper)
         {
@@ -313,6 +310,7 @@ public class HarvesterTest {
 
         final ThreadMXBean mxBean = mock(ThreadMXBean.class);
         HarvesterHelper helper = mock(HarvesterHelper.class);
+
         Harvester harvester = new Harvester(pid, executor, pool, helper,
                                             deadlockHelper)
         {

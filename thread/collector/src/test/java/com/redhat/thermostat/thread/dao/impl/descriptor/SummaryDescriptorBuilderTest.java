@@ -34,46 +34,57 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.harvester;
+package com.redhat.thermostat.thread.dao.impl.descriptor;
 
-import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.model.SessionID;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.testutils.StatementDescriptorTester;
+import com.redhat.thermostat.thread.dao.impl.ThreadDaoCategories;
 import com.redhat.thermostat.thread.model.ThreadSummary;
+import junit.framework.TestCase;
+import org.junit.Test;
 
-import java.lang.management.ThreadMXBean;
+public class SummaryDescriptorBuilderTest extends TestCase {
 
-/*
- */
-class ThreadSummaryHelper {
+    @Test
+    public void testBuild() {
 
-    private String vmId;
-    private WriterID writerId;
-    private ThreadDao threadDao;
-
-    ThreadSummaryHelper(ThreadDao threadDao, WriterID writerId, String vmId) {
-        this.vmId = vmId;
-        this.writerId = writerId;
-        this.threadDao = threadDao;
+        SummaryDescriptor summary = new SummaryDescriptorBuilder().build();
+        assertNotNull(summary);
     }
 
-    ThreadSummary createThreadSummary(ThreadMXBean collectorBean, long timestamp, SessionID session) {
+    @Test
+    public void testCategory() {
 
-        String wId = writerId.getWriterID();
-
-        ThreadSummary summary = new ThreadSummary(wId);
-
-        summary.setCurrentLiveThreads(collectorBean.getThreadCount());
-        summary.setCurrentDaemonThreads(collectorBean.getDaemonThreadCount());
-        summary.setTimeStamp(timestamp);
-        summary.setVmId(vmId);
-
-        summary.setSession(session.getId());
-
-        return summary;
+        SummaryDescriptor summary = new SummaryDescriptorBuilder().build();
+        assertEquals(ThreadDaoCategories.THREAD_SUMMARY, summary.getCategory());
     }
 
-    public void saveSummary(ThreadSummary summary) {
-        threadDao.saveSummary(summary);
+    @Test
+    public void testAddDesc() throws Exception {
+        SummaryDescriptor summary = new SummaryDescriptorBuilder().build();
+        testStatement(summary.addDesc);
+    }
+
+    @Test
+    public void testRangeDesc() throws Exception {
+
+        SummaryDescriptor summary = new SummaryDescriptorBuilder().build();
+        testStatement(summary.rangeDesc);
+    }
+
+    @Test
+    public void testSessionDesc() throws Exception {
+
+        SummaryDescriptor summary = new SummaryDescriptorBuilder().build();
+        testStatement(summary.sessionsDesc);
+    }
+
+    private void testStatement(String statement) throws Exception {
+
+        StatementDescriptorTester<ThreadSummary> tester = new StatementDescriptorTester<>();
+        StatementDescriptor<ThreadSummary> desc =
+                new StatementDescriptor<>(ThreadDaoCategories.THREAD_SUMMARY, statement);
+        tester.testParseBasic(desc);
+        tester.testParseSemantic(desc);
     }
 }

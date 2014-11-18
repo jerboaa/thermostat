@@ -34,55 +34,25 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.harvester;
+package com.redhat.thermostat.thread.dao.impl.descriptor;
 
-import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.model.ThreadHeader;
-import com.redhat.thermostat.thread.model.ThreadState;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.model.Pojo;
+import java.util.Set;
 
-import java.lang.management.ThreadInfo;
+/**
+ *
+ */
+public abstract class Descriptor<T extends Pojo> {
 
-public class ThreadStateHelper {
-
-    private ThreadDao threadDao;
-    private WriterID writerId;
-    private String vmId;
-
-    public ThreadStateHelper(ThreadDao threadDao, WriterID writerId, String vmId) {
-        this.writerId = writerId;
-        this.vmId = vmId;
-        this.threadDao = threadDao;
-    }
-iqQ:q!
-    
-    public ThreadState createThreadState(ThreadHeader header, ThreadInfo beanInfo,
-                                         long timestamp)
-    {
-        String wId = writerId.getWriterID();
-
-        ThreadState state = new ThreadState(wId, header);
-        state.setState(beanInfo.getThreadState().name());
-        state.setProbeStartTime(timestamp);
-        state.setProbeEndTime(timestamp);
-
-        return state;
+    protected Category<T> category;
+    protected void setCategory(Category<T> category) {
+        this.category = category;
     }
 
-    public ThreadState saveThreadState(ThreadState thread) {
-
-        ThreadHeader header = thread.getHeader();
-        ThreadState lastState = threadDao.getLastThreadState(header);
-        if (lastState == null || !lastState.getState().equals(thread.getState()))
-        {
-            threadDao.addThreadState(thread);
-            lastState = thread;
-
-        } else {
-            // update
-            lastState.setProbeEndTime(thread.getProbeEndTime());
-            threadDao.updateThreadState(lastState);
-        }
-        return lastState;
+    public Category<T> getCategory() {
+        return category;
     }
+
+    public abstract Set<String> describe();
 }

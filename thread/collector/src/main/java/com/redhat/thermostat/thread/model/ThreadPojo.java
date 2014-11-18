@@ -45,6 +45,7 @@ public class ThreadPojo extends BasePojo {
 
     private ThreadHeader header;
     private String referenceID;
+    private String sessionID;
 
     private String vmId;
 
@@ -88,6 +89,15 @@ public class ThreadPojo extends BasePojo {
         return referenceID;
     }
 
+    @Persist
+    public void setSessionID(String sessionID) {
+        this.sessionID = sessionID;
+    }
+
+    public String getSessionID() {
+        return sessionID;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -98,6 +108,8 @@ public class ThreadPojo extends BasePojo {
 
         if (header != null ? !header.equals(that.header) : that.header != null)
             return false;
+        if (sessionID != null ? !sessionID.equals(that.sessionID) : that.sessionID != null)
+            return false;
 
         return true;
     }
@@ -106,6 +118,7 @@ public class ThreadPojo extends BasePojo {
     public int hashCode() {
         int result = super.hashCode();
         result = 31 * result + (header != null ? header.hashCode() : 0);
+        result = 31 * result + (sessionID != null ? sessionID.hashCode() : 0);
         return result;
     }
 }

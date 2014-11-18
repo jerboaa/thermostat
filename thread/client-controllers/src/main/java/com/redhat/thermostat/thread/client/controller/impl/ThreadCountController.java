@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.thread.client.controller.impl;
 
+import com.redhat.thermostat.common.model.Range;
+import com.redhat.thermostat.thread.model.SessionID;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -65,17 +67,24 @@ class ThreadCountController extends CommonController {
         @Override
         public void run() {
 
+            SessionID lastSession = collector.getLastThreadSummarySession();
+            if (lastSession == null) {
+                return;
+            }
+
             ThreadCountView view = (ThreadCountView) ThreadCountController.this.view;
             
             // load the very latest thread summary
-            ThreadSummary latestSummary = collector.getLatestThreadSummary();
+            ThreadSummary latestSummary = collector.getLatestThreadSummary(lastSession);
             if (latestSummary.getTimeStamp() != 0) {
                 view.setLiveThreads(Long.toString(latestSummary.getCurrentLiveThreads()));
                 view.setDaemonThreads(Long.toString(latestSummary.getCurrentDaemonThreads()));
             }
-            
+
+            long now = System.currentTimeMillis();
             long lastHour = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1);
-            List<ThreadSummary> summaries = collector.getThreadSummary(lastHour);
+
+            List<ThreadSummary> summaries = collector.getThreadSummary(lastSession, new Range<Long>(lastHour, now));
             if (summaries.size() != 0) {
                 for (ThreadSummary summary : summaries) {
                     model.addData(summary.getTimeStamp(), summary.getCurrentLiveThreads(), summary.getCurrentDaemonThreads());

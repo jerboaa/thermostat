@@ -36,20 +36,20 @@
 
 package com.redhat.thermostat.thread.client.controller.impl;
 
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.anyLong;
-
+import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.Timer;
+import com.redhat.thermostat.common.model.Range;
+import com.redhat.thermostat.thread.client.common.chart.LivingDaemonThreadDifferenceChart;
+import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
+import com.redhat.thermostat.thread.client.common.view.ThreadCountView;
+import com.redhat.thermostat.thread.model.SessionID;
+import com.redhat.thermostat.thread.model.ThreadSummary;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.junit.Assert.*;
-
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
-
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.xy.XYDataset;
 import org.junit.Before;
@@ -57,14 +57,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.common.ActionEvent;
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.Timer;
-import com.redhat.thermostat.thread.client.common.chart.LivingDaemonThreadDifferenceChart;
-import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
-import com.redhat.thermostat.thread.client.common.view.ThreadCountView;
-import com.redhat.thermostat.thread.model.ThreadSummary;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 // this is not a GUI test, but testGetThreadInformation uses AWT under the hood 
 @RunWith(CacioFESTRunner.class)
@@ -110,13 +109,18 @@ public class ThreadCountControllerTest {
         List<ThreadSummary> summaries = new ArrayList<>();
         summaries.add(summary);
         summaries.add(summary0);
-        
-        when(collector.getLatestThreadSummary()).thenReturn(summary);
-        when(collector.getThreadSummary(anyLong())).thenReturn(summaries);
-        
+
+        SessionID lastSession = mock(SessionID.class);
+        when(collector.getLastThreadSummarySession()).thenReturn(lastSession);
+
+        when(collector.getLatestThreadSummary(lastSession)).thenReturn(summary);
+        when(collector.getThreadSummary(any(SessionID.class), any(Range.class))).thenReturn(summaries);
+
         threadAction = captor.getValue();
         threadAction.run();
-        
+
+        verify(collector).getLatestThreadSummary(lastSession);
+
         verify(view).setLiveThreads("42");
         verify(view).setDaemonThreads("2");
         

@@ -63,7 +63,7 @@ public class ThreadDAOCategoryRegistrationTest {
         assertTrue(categories.contains(ThreadDao.DEADLOCK_INFO.getName()));
         assertTrue(categories.contains(ThreadDao.THREAD_HEADER.getName()));
         assertTrue(categories.contains(ThreadDao.THREAD_STATE.getName()));
-        assertTrue(categories.contains(ThreadDao.THREAD_SUMMARY.getName()));
+        assertTrue(categories.contains(ThreadDaoCategories.THREAD_SUMMARY.getName()));
         assertTrue(categories.contains(ThreadDao.THREAD_HARVESTING_STATUS.getName()));
         assertTrue(categories.contains(ThreadDao.THREAD_CONTENTION_SAMPLE.getName()));
     }

@@ -76,7 +76,13 @@
       <artifactId>thermostat-client-command</artifactId>
       <version>${project.version}</version>
     </dependency>
-    
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-storage-testutils</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
@@ -115,6 +121,7 @@
             <Private-Package>
               com.redhat.thermostat.thread.common.osgi,
               com.redhat.thermostat.thread.dao.impl,
+              com.redhat.thermostat.thread.dao.impl.descriptor,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>

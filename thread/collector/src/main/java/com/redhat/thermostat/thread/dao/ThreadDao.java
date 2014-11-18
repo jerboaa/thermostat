@@ -40,6 +40,7 @@ import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.ThreadContentionSample;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
 import com.redhat.thermostat.thread.model.ThreadHeader;
@@ -57,21 +58,6 @@ public interface ThreadDao {
     static final String CPU_TIME = "thread-cpu-time";
     static final String CONTENTION_MONITOR = "thread-contention-monitor";
     static final String THREAD_ALLOCATED_MEMORY = "thread-allocated-memory";
-
-    /*
-     * vm-thread-summary schema
-     */
-    static final Key<Long> LIVE_THREADS_KEY = new Key<Long>("currentLiveThreads");
-    static final Key<Long> DAEMON_THREADS_KEY = new Key<Long>("currentDaemonThreads");
-    static final Category<ThreadSummary> THREAD_SUMMARY =
-            new Category<>("vm-thread-summary", ThreadSummary.class,
-                    Arrays.<Key<?>>asList(
-                            Key.AGENT_ID,
-                            Key.VM_ID,
-                            Key.TIMESTAMP,
-                            LIVE_THREADS_KEY,
-                            DAEMON_THREADS_KEY),
-                    Arrays.<Key<?>>asList(Key.TIMESTAMP));
 
     /*
      * vm-thread-harvesting schema
@@ -145,13 +131,9 @@ public interface ThreadDao {
                                                  THREAD_CONTENTION_WAITED_TIME_KEY,
                                                  THREAD_HEADER_UUID, Key.TIMESTAMP));
 
-    /*
-     * API methods
-     */
-    
     void saveSummary(ThreadSummary summary);
-    ThreadSummary loadLastestSummary(VmRef ref);
-    List<ThreadSummary> loadSummary(VmRef ref, long since);
+    List<ThreadSummary> getSummary(VmRef ref, SessionID session, Range<Long> range, int limit);
+    List<SessionID> getAvailableThreadSummarySessions(VmRef ref, Range<Long> range, int limit);
 
     /**
      * Gets the total time interval for the entire data related to

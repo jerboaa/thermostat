@@ -38,14 +38,14 @@ package com.redhat.thermostat.thread.harvester;
 
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.thread.dao.ThreadDao;
+import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.ThreadHeader;
 import com.redhat.thermostat.thread.model.ThreadState;
 import com.redhat.thermostat.thread.model.ThreadSummary;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
+import org.junit.Before;
+import org.junit.Test;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -71,7 +71,7 @@ public class HarvesterHelperTest {
     private ThreadContentionHelper contentionHelper;
 
     private ThreadMXBean collectorBean;
-
+    private SessionID sessionID;
     @Before
     public void setUp() {
         summaryHelper = mock(ThreadSummaryHelper.class);
@@ -87,6 +87,8 @@ public class HarvesterHelperTest {
         when(clock.getRealTimeMillis()).thenReturn(DEFAULT_TIMESTAMP);
 
         vmId = "42";
+
+        sessionID = new SessionID("0xcafe");
     }
 
     @Test
@@ -94,7 +96,8 @@ public class HarvesterHelperTest {
 
         ThreadSummary summary = mock(ThreadSummary.class);
         when(summaryHelper.createThreadSummary(collectorBean,
-                                               DEFAULT_TIMESTAMP)).
+                                               DEFAULT_TIMESTAMP,
+                                               sessionID)).
             thenReturn(summary);
 
         HarvesterHelper harvester = new HarvesterHelper(threadDao, clock, vmId,
@@ -102,11 +105,12 @@ public class HarvesterHelperTest {
                                                         headerHelper,
                                                         stateHelper,
                                                         contentionHelper);
-        harvester.collectAndSaveThreadData(collectorBean);
+        harvester.collectAndSaveThreadData(sessionID, collectorBean);
 
         verify(clock).getRealTimeMillis();
         verify(summaryHelper).createThreadSummary(collectorBean,
-                                                  DEFAULT_TIMESTAMP);
+                                                  DEFAULT_TIMESTAMP,
+                                                  sessionID);
         verify(summaryHelper).saveSummary(summary);
     }
 
@@ -121,7 +125,7 @@ public class HarvesterHelperTest {
                                                         headerHelper,
                                                         stateHelper,
                                                         contentionHelper);
-        harvester.collectAndSaveThreadData(collectorBean);
+        harvester.collectAndSaveThreadData(sessionID, collectorBean);
         verify(collectorBean).getAllThreadIds();
 
         verify(collectorBean).getThreadInfo(ids, true, true);
@@ -164,7 +168,7 @@ public class HarvesterHelperTest {
                                                         headerHelper,
                                                         stateHelper,
                                                         contentionHelper);
-        harvester.collectAndSaveThreadData(collectorBean);
+        harvester.collectAndSaveThreadData(sessionID, collectorBean);
 
         verify(headerHelper, times(2)).checkAndSaveThreadHeader(header1);
         verify(headerHelper).checkAndSaveThreadHeader(header2);

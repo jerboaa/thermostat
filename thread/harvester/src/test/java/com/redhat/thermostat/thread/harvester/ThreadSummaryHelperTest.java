@@ -38,11 +38,11 @@ package com.redhat.thermostat.thread.harvester;
 
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.thread.dao.ThreadDao;
+import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.ThreadSummary;
+import java.lang.management.ThreadMXBean;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.lang.management.ThreadMXBean;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -64,6 +64,8 @@ public class ThreadSummaryHelperTest {
 
     private ThreadMXBean collectorBean;
 
+    private SessionID sessionID;
+
     @Before
     public void setUp() throws Exception {
         vmId = "testVM";
@@ -75,6 +77,8 @@ public class ThreadSummaryHelperTest {
         collectorBean = mock(ThreadMXBean.class);
         when(collectorBean.getThreadCount()).thenReturn(DEFAULT_THREAD_COUNT);
         when(collectorBean.getDaemonThreadCount()).thenReturn(DEFAULT_DAEMON_THREAD_COUNT);
+
+        sessionID = new SessionID("0xcafe");
     }
 
     @Test
@@ -84,7 +88,7 @@ public class ThreadSummaryHelperTest {
 
         long timestamp = -1l;
 
-        ThreadSummary summary = helper.createThreadSummary(collectorBean, timestamp);
+        ThreadSummary summary = helper.createThreadSummary(collectorBean, timestamp, sessionID);
 
         assertNotNull(summary);
 
@@ -94,6 +98,8 @@ public class ThreadSummaryHelperTest {
 
         assertEquals(summary.getAgentId(), DEFAULT_W_ID);
         assertEquals(summary.getVmId(), vmId);
+
+        assertEquals(summary.getSession(), sessionID.getId());
 
         assertEquals(summary.getCurrentLiveThreads(), DEFAULT_THREAD_COUNT);
         assertEquals(summary.getCurrentDaemonThreads(), DEFAULT_DAEMON_THREAD_COUNT);

@@ -49,13 +49,15 @@ import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.thread.dao.ThreadDao;
+import com.redhat.thermostat.thread.dao.impl.descriptor.SummaryDescriptor;
+import com.redhat.thermostat.thread.dao.impl.descriptor.SummaryDescriptorBuilder;
+import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.ThreadContentionSample;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
 import com.redhat.thermostat.thread.model.ThreadHeader;
 import com.redhat.thermostat.thread.model.ThreadState;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import com.redhat.thermostat.thread.model.VmDeadLockData;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -65,20 +67,11 @@ import java.util.logging.Logger;
 public class ThreadDaoImpl implements ThreadDao {
     
     private static final Logger logger = LoggingUtils.getLogger(ThreadDaoImpl.class);
-    
+
+    static final SummaryDescriptor SUMMARY = new SummaryDescriptorBuilder().build();
+
     // Queries
 
-    static final String QUERY_LATEST_SUMMARY = "QUERY "
-            + THREAD_SUMMARY.getName() + " WHERE '"
-            + Key.AGENT_ID.getName() + "' = ?s AND '" 
-            + Key.VM_ID.getName() + "' = ?s SORT '" 
-            + Key.TIMESTAMP.getName() + "' DSC LIMIT 1";
-    static final String QUERY_SUMMARY_SINCE = "QUERY "
-            + THREAD_SUMMARY.getName() + " WHERE '"
-            + Key.AGENT_ID.getName() + "' = ?s AND '" 
-            + Key.VM_ID.getName() + "' = ?s AND '"
-            + Key.TIMESTAMP.getName() + "' > ?l SORT '"
-            + Key.TIMESTAMP.getName() + "' DSC";
     static final String QUERY_LATEST_HARVESTING_STATUS = "QUERY "
             + THREAD_HARVESTING_STATUS.getName() + " WHERE '"
             + Key.AGENT_ID.getName() + "' = ?s AND '" 
@@ -135,18 +128,7 @@ public class ThreadDaoImpl implements ThreadDao {
             + THREAD_PROBE_START.getName() + "' ASC";
 
     // Data modifying descriptors
-    
-    // ADD vm-thread-summary SET 'agentId' = ?s , \
-    //                           'vmId' = ?s , \
-    //                           'currentLiveThreads' = ?l , \
-    //                           'currentDaemonThreads' = ?l , \
-    //                           'timeStamp' = ?l
-    static final String DESC_ADD_THREAD_SUMMARY = "ADD " + THREAD_SUMMARY.getName() +
-            " SET '" + Key.AGENT_ID.getName() + "' = ?s , " +
-                 "'" + Key.VM_ID.getName() + "' = ?s , " +
-                 "'" + LIVE_THREADS_KEY.getName() + "' = ?l , " +
-                 "'" + DAEMON_THREADS_KEY.getName() + "' = ?l , " +
-                 "'" + Key.TIMESTAMP.getName() + "' = ?l";
+
     // ADD vm-thread-harvesting SET 'agentId' = ?s , \
     //                              'vmId' = ?s , \
     //                              'timeStamp' = ?l , \
@@ -211,7 +193,9 @@ public class ThreadDaoImpl implements ThreadDao {
     
     public ThreadDaoImpl(Storage storage) {
         this.storage = storage;
-        storage.registerCategory(THREAD_SUMMARY);
+
+        storage.registerCategory(SUMMARY.getCategory());
+
         storage.registerCategory(THREAD_HARVESTING_STATUS);
         storage.registerCategory(THREAD_HEADER);
         storage.registerCategory(THREAD_STATE);
@@ -219,7 +203,7 @@ public class ThreadDaoImpl implements ThreadDao {
 
         storage.registerCategory(DEADLOCK_INFO);
     }
-    
+
     @Override
     public List<ThreadHeader> getThreads(VmRef ref) {
         
@@ -469,41 +453,43 @@ public class ThreadDaoImpl implements ThreadDao {
 
     @Override
     public void saveSummary(ThreadSummary summary) {
-        StatementDescriptor<ThreadSummary> desc = new StatementDescriptor<>(THREAD_SUMMARY, DESC_ADD_THREAD_SUMMARY);
-        PreparedStatement<ThreadSummary> prepared;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, summary.getAgentId());
-            prepared.setString(1, summary.getVmId());
-            prepared.setLong(2, summary.getCurrentLiveThreads());
-            prepared.setLong(3, summary.getCurrentDaemonThreads());
-            prepared.setLong(4, summary.getTimeStamp());
-            prepared.execute();
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-        }
-    }
-    
-    @Override
-    public ThreadSummary loadLastestSummary(VmRef ref) {
-        PreparedStatement<ThreadSummary> stmt = prepareQuery(THREAD_SUMMARY, QUERY_LATEST_SUMMARY, ref);
-        if (stmt == null) {
-            return null;
-        }
-        
-        return getFirstResult(stmt);
-    }
-    
-    @Override
-    public List<ThreadSummary> loadSummary(VmRef ref, long since) {
-        PreparedStatement<ThreadSummary> stmt = prepareQuery(THREAD_SUMMARY, QUERY_SUMMARY_SINCE, ref, since, null);
-        if (stmt == null) {
-            return Collections.emptyList();
-        }
 
-        return getAllResults(stmt);
+        try {
+            SUMMARY.statementAdd(summary, storage);
+
+        } catch (Exception ignore) { ignore.printStackTrace(); }
+    }
+
+    @Override
+    public List<ThreadSummary> getSummary(VmRef ref, SessionID session, Range<Long> range, int limit) {
+
+        List<ThreadSummary> result = new ArrayList<>();
+        try {
+            Cursor<ThreadSummary> cursor = SUMMARY.queryGet(ref, session, range, limit, storage);
+            while (cursor.hasNext()) {
+                ThreadSummary summary = cursor.next();
+                result.add(summary);
+            }
+        } catch (Exception ignore) { ignore.printStackTrace(); }
+
+        return result;
+    }
+
+    @Override
+    public List<SessionID> getAvailableThreadSummarySessions(VmRef ref, Range<Long> range, int limit) {
+        List<SessionID> result = new ArrayList<>();
+
+        Cursor<ThreadSummary> cursor = null;
+
+        try {
+            cursor = SUMMARY.queryGet(ref, range, limit, storage);
+            while (cursor.hasNext()) {
+                ThreadSummary summary = cursor.next();
+                result.add(new SessionID(summary.getSession()));
+            }
+        } catch (Exception ignore) { ignore.printStackTrace(); }
+
+        return result;
     }
 
     @Override

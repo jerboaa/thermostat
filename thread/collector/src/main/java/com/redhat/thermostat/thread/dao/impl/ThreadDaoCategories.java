@@ -34,55 +34,26 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.harvester;
+package com.redhat.thermostat.thread.dao.impl;
 
-import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.model.ThreadHeader;
-import com.redhat.thermostat.thread.model.ThreadState;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.thread.model.ThreadSummary;
+import java.util.Arrays;
 
-import java.lang.management.ThreadInfo;
+/**
+ *
+ */
+public class ThreadDaoCategories {
 
-public class ThreadStateHelper {
-
-    private ThreadDao threadDao;
-    private WriterID writerId;
-    private String vmId;
-
-    public ThreadStateHelper(ThreadDao threadDao, WriterID writerId, String vmId) {
-        this.writerId = writerId;
-        this.vmId = vmId;
-        this.threadDao = threadDao;
-    }
-iqQ:q!
-    
-    public ThreadState createThreadState(ThreadHeader header, ThreadInfo beanInfo,
-                                         long timestamp)
-    {
-        String wId = writerId.getWriterID();
-
-        ThreadState state = new ThreadState(wId, header);
-        state.setState(beanInfo.getThreadState().name());
-        state.setProbeStartTime(timestamp);
-        state.setProbeEndTime(timestamp);
-
-        return state;
-    }
-
-    public ThreadState saveThreadState(ThreadState thread) {
-
-        ThreadHeader header = thread.getHeader();
-        ThreadState lastState = threadDao.getLastThreadState(header);
-        if (lastState == null || !lastState.getState().equals(thread.getState()))
-        {
-            threadDao.addThreadState(thread);
-            lastState = thread;
-
-        } else {
-            // update
-            lastState.setProbeEndTime(thread.getProbeEndTime());
-            threadDao.updateThreadState(lastState);
-        }
-        return lastState;
-    }
+    public static final Category<ThreadSummary> THREAD_SUMMARY =
+            new Category<>("vm-thread-summary", ThreadSummary.class,
+                           Arrays.<Key<?>>asList(
+                                   Key.AGENT_ID,
+                                   Key.VM_ID,
+                                   ThreadDaoKeys.SESSION,
+                                   Key.TIMESTAMP,
+                                   ThreadDaoKeys.LIVE_THREADS_KEY,
+                                   ThreadDaoKeys.DAEMON_THREADS_KEY),
+                           Arrays.<Key<?>>asList(Key.TIMESTAMP, ThreadDaoKeys.SESSION));
 }

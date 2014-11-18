@@ -34,55 +34,16 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.harvester;
+package com.redhat.thermostat.thread.dao.impl;
 
-import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.model.ThreadHeader;
-import com.redhat.thermostat.thread.model.ThreadState;
+import com.redhat.thermostat.storage.core.Key;
 
-import java.lang.management.ThreadInfo;
+/**
+ *
+ */
+public class ThreadDaoKeys {
+    public static final Key<String> SESSION = new Key<>("session");
 
-public class ThreadStateHelper {
-
-    private ThreadDao threadDao;
-    private WriterID writerId;
-    private String vmId;
-
-    public ThreadStateHelper(ThreadDao threadDao, WriterID writerId, String vmId) {
-        this.writerId = writerId;
-        this.vmId = vmId;
-        this.threadDao = threadDao;
-    }
-iqQ:q!
-    
-    public ThreadState createThreadState(ThreadHeader header, ThreadInfo beanInfo,
-                                         long timestamp)
-    {
-        String wId = writerId.getWriterID();
-
-        ThreadState state = new ThreadState(wId, header);
-        state.setState(beanInfo.getThreadState().name());
-        state.setProbeStartTime(timestamp);
-        state.setProbeEndTime(timestamp);
-
-        return state;
-    }
-
-    public ThreadState saveThreadState(ThreadState thread) {
-
-        ThreadHeader header = thread.getHeader();
-        ThreadState lastState = threadDao.getLastThreadState(header);
-        if (lastState == null || !lastState.getState().equals(thread.getState()))
-        {
-            threadDao.addThreadState(thread);
-            lastState = thread;
-
-        } else {
-            // update
-            lastState.setProbeEndTime(thread.getProbeEndTime());
-            threadDao.updateThreadState(lastState);
-        }
-        return lastState;
-    }
+    public static final Key<Long> LIVE_THREADS_KEY = new Key<Long>("currentLiveThreads");
+    public static final Key<Long> DAEMON_THREADS_KEY = new Key<Long>("currentDaemonThreads");
 }

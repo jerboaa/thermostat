@@ -49,6 +49,7 @@ import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.collector.HarvesterCommand;
 import com.redhat.thermostat.thread.dao.ThreadDao;
+import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.ThreadContentionSample;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
 import com.redhat.thermostat.thread.model.ThreadHeader;
@@ -131,14 +132,33 @@ public class ThreadMXBeanCollector implements ThreadCollector {
         }
         return status.isHarvesting();
     }
-    
+
     @Override
-    public ThreadSummary getLatestThreadSummary() {
-        ThreadSummary summary = threadDao.loadLastestSummary(ref);
-        if (summary == null) {
+    public List<SessionID> getAvailableThreadSummarySessions(Range<Long> range) {
+        return threadDao.getAvailableThreadSummarySessions(ref, range, Integer.MAX_VALUE);
+    }
+
+    @Override
+    public SessionID getLastThreadSummarySession() {
+        List<SessionID> sessions =
+                threadDao.getAvailableThreadSummarySessions(ref,
+                                                            new Range<>(0l, Long.MAX_VALUE),
+                                                            1);
+        return sessions.isEmpty() ? null : sessions.get(0);
+    }
+
+    @Override
+    public ThreadSummary getLatestThreadSummary(SessionID session) {
+        List<ThreadSummary> summaries =
+                threadDao.getSummary(ref, session, new Range<>(0l, Long.MAX_VALUE), 1);
+        ThreadSummary summary = null;
+        if (summaries.isEmpty()) {
             // default to all 0
             summary = new ThreadSummary();
+        } else {
+            summary = summaries.get(0);
         }
+
         return summary;
     }
 
@@ -158,8 +178,8 @@ public class ThreadMXBeanCollector implements ThreadCollector {
     }
 
     @Override
-    public List<ThreadSummary> getThreadSummary(long since) {
-        List<ThreadSummary> summary = threadDao.loadSummary(ref, since);
+    public List<ThreadSummary> getThreadSummary(SessionID session, Range<Long> range) {
+        List<ThreadSummary> summary = threadDao.getSummary(ref, session, range, Integer.MAX_VALUE);
         return summary;
     }
 

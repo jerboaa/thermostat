@@ -34,55 +34,44 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.harvester;
+package com.redhat.thermostat.thread.model;
 
-import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.model.ThreadHeader;
-import com.redhat.thermostat.thread.model.ThreadState;
+import java.util.UUID;
 
-import java.lang.management.ThreadInfo;
+/**
+ *
+ */
+public class SessionID  {
 
-public class ThreadStateHelper {
+    private String id;
 
-    private ThreadDao threadDao;
-    private WriterID writerId;
-    private String vmId;
-
-    public ThreadStateHelper(ThreadDao threadDao, WriterID writerId, String vmId) {
-        this.writerId = writerId;
-        this.vmId = vmId;
-        this.threadDao = threadDao;
-    }
-iqQ:q!
-    
-    public ThreadState createThreadState(ThreadHeader header, ThreadInfo beanInfo,
-                                         long timestamp)
-    {
-        String wId = writerId.getWriterID();
-
-        ThreadState state = new ThreadState(wId, header);
-        state.setState(beanInfo.getThreadState().name());
-        state.setProbeStartTime(timestamp);
-        state.setProbeEndTime(timestamp);
-
-        return state;
+    public SessionID() {
+        id = UUID.randomUUID().toString();
     }
 
-    public ThreadState saveThreadState(ThreadState thread) {
+    public SessionID(String id) {
+        this.id = id;
+    }
 
-        ThreadHeader header = thread.getHeader();
-        ThreadState lastState = threadDao.getLastThreadState(header);
-        if (lastState == null || !lastState.getState().equals(thread.getState()))
-        {
-            threadDao.addThreadState(thread);
-            lastState = thread;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
-        } else {
-            // update
-            lastState.setProbeEndTime(thread.getProbeEndTime());
-            threadDao.updateThreadState(lastState);
-        }
-        return lastState;
+        SessionID sessionID = (SessionID) o;
+
+        if (id != null ? !id.equals(sessionID.id) : sessionID.id != null)
+            return false;
+
+        return true;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
     }
 }
