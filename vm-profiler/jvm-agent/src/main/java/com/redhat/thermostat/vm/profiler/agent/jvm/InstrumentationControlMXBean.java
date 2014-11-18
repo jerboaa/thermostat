@@ -45,7 +45,9 @@ public interface InstrumentationControlMXBean {
     /** Disable profiling */
     void stopProfiling();
 
-    /** @returns whether profiling is currently active or not */
+    /** @return whether profiling is currently active or not */
     boolean isProfiling();
 
+    /** @return the path to the profiling data file */
+    String getProfilingDataFile();
 }

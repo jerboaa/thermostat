@@ -34,51 +34,64 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.profiler.common.internal;
+package com.redhat.thermostat.vm.profiler.common;
 
-import java.util.Map;
+import com.redhat.thermostat.storage.core.Entity;
+import com.redhat.thermostat.storage.core.Persist;
+import com.redhat.thermostat.storage.model.BasePojo;
+import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
+@Entity
+public class ProfileInfo extends BasePojo implements TimeStampedPojo {
 
-import com.redhat.thermostat.common.MultipleServiceTracker;
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
+    private String vmId;
 
-public class Activator implements BundleActivator {
+    // FIXME should be two fields for start time and stop time
+    private long timeStamp;
 
-    private ServiceRegistration<ProfileDAO> daoRegistration;
-    private MultipleServiceTracker tracker;
+    private String profileId;
 
-    @Override
-    public void start(final BundleContext context) throws Exception {
-        Class<?>[] deps = new Class<?>[] {
-                Storage.class,
-        };
-        tracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
-            @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                Storage storage = (Storage) services.get(Storage.class.getName());
-                ProfileDAOImpl impl = new ProfileDAOImpl(storage);
-
-                daoRegistration = context.registerService(ProfileDAO.class, impl, null);
-            }
-            @Override
-            public void dependenciesUnavailable() {
-                daoRegistration.unregister();
-                daoRegistration = null;
-            }
-        });
-        tracker.open();
+    public ProfileInfo(String agentId, String vmId, long timeStamp, String profileId) {
+        super(agentId);
+        this.vmId = vmId;
+        this.timeStamp = timeStamp;
+        this.profileId = profileId;
     }
 
+    /* for deserialization */
+    public ProfileInfo() {
+        super(null); // fixed up by the deserializer
+    }
+
+    @Persist
+    public void setVmId(String vmId) {
+        this.vmId = vmId;
+    }
+
+    @Persist
+    public String getVmId() {
+        return this.vmId;
+    }
+
+    @Persist
+    public void setTimeStamp(long timeStamp) {
+        this.timeStamp = timeStamp;
+    }
+
+    @Persist
     @Override
-    public void stop(BundleContext context) throws Exception {
-        tracker.close();
+    public long getTimeStamp() {
+        return this.timeStamp;
+    }
+
+    @Persist
+    public String getProfileId() {
+        return profileId;
+    }
+
+    @Persist
+    public void setProfileId(String fileName) {
+        this.profileId = fileName;
     }
 
 }
-

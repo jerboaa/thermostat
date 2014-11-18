@@ -36,11 +36,22 @@
 
 package com.redhat.thermostat.vm.profiler.agent.jvm;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.OpenOption;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class InstrumentationControl implements InstrumentationControlMXBean {
@@ -49,6 +60,8 @@ public class InstrumentationControl implements InstrumentationControlMXBean {
     private final ProfilerInstrumentor classInstrumentor;
 
     private boolean profiling = false;
+
+    private String lastResults = null;
 
     public InstrumentationControl(Instrumentation instrumentation) {
         this.instrumentation = instrumentation;
@@ -60,6 +73,7 @@ public class InstrumentationControl implements InstrumentationControlMXBean {
     }
 
     private void addShutdownHookToPrintStatsOnEnd() {
+        System.out.println("AGENT: adding shutdown hooks");
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
@@ -89,7 +103,7 @@ public class InstrumentationControl implements InstrumentationControlMXBean {
 
     @Override
     public void stopProfiling() {
-        System.out.println("AGENT: stopProfiling()");
+        System.out.println("AGENT: stopProfiling() called");
         if (!profiling) {
             throw new IllegalStateException("Not profiling");
         }
@@ -97,13 +111,9 @@ public class InstrumentationControl implements InstrumentationControlMXBean {
 
         instrumentation.removeTransformer(classInstrumentor);
         retransformAlreadyLoadedClasses(instrumentation, classInstrumentor);
-    }
 
-    @Override
-    public boolean isProfiling() {
-        return profiling;
+        lastResults = writeProfilingResultsToDisk();
     }
-
     private void retransformAlreadyLoadedClasses(Instrumentation instrumentation, ProfilerInstrumentor profiler) {
         long start = System.nanoTime();
 
@@ -138,6 +148,44 @@ public class InstrumentationControl implements InstrumentationControlMXBean {
         }
         long end = System.nanoTime();
         System.out.println("AGENT: Retansforming took: " + (end - start) + "ns");
+    }
+
+    private String writeProfilingResultsToDisk() {
+        System.out.println("AGENT: Writing results to disk");
+        try {
+            Path output = createOutput();
+            OpenOption[] options =
+                    new OpenOption[] { StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING };
+
+            try (BufferedWriter out = Files.newBufferedWriter(output, StandardCharsets.UTF_8, options)) {
+                Map<String, AtomicLong> data = ProfileRecorder.getInstance().getData();
+                for (Map.Entry<String, AtomicLong> entry : data.entrySet()) {
+                    out.write(entry.getValue().get() + "\t" + entry.getKey());
+                }
+                System.out.println("AGENT: profiling data written to " + output.toString());
+                return output.toString();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private Path createOutput() throws IOException {
+        Set<PosixFilePermission> perm = PosixFilePermissions.fromString("rw-------");
+        FileAttribute<Set<PosixFilePermission>> attributes = PosixFilePermissions.asFileAttribute(perm);
+        return Files.createTempFile("thermostat", ".perfdata", attributes);
+    }
+
+    @Override
+    public boolean isProfiling() {
+        return profiling;
+    }
+
+    @Override
+    public String getProfilingDataFile() {
+        System.out.println("getProfilingDataFile() called. Returning : " + lastResults);
+        return lastResults;
     }
 
 }

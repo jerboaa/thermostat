@@ -49,26 +49,32 @@ import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
 
 public class Activator implements BundleActivator {
 
-    private MultipleServiceTracker profileCommandDepsTracker;
-    private ServiceRegistration<Command> registration;
+    private MultipleServiceTracker profileVmCommandDepsTracker;
+    private ServiceRegistration<Command> profileVmCommandRegistration;
 
     @Override
     public void start(final BundleContext context) throws Exception {
+        registerProfileVmCommand(context);
+    }
+
+    private void registerProfileVmCommand(final BundleContext context) {
         final ProfileVmCommand command = new ProfileVmCommand();
         Hashtable<String,? super Object> properties = new Hashtable<>();
         properties.put(Command.NAME, "profile-vm");
-        registration = context.registerService(Command.class, command, properties);
+        profileVmCommandRegistration = context.registerService(Command.class, command, properties);
 
         Class<?>[] classes = new Class<?>[] {
                 AgentInfoDAO.class,
                 VmInfoDAO.class,
                 RequestQueue.class,
+                ProfileDAO.class,
         };
 
-        profileCommandDepsTracker = new MultipleServiceTracker(context, classes, new Action() {
+        profileVmCommandDepsTracker = new MultipleServiceTracker(context, classes, new Action() {
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
                 AgentInfoDAO agentInfoDao = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
@@ -77,6 +83,8 @@ public class Activator implements BundleActivator {
                 command.setVmInfoDAO(vmInfoDao);
                 RequestQueue requestQueue = (RequestQueue) services.get(RequestQueue.class.getName());
                 command.setRequestQueue(requestQueue);
+                ProfileDAO profileDao = (ProfileDAO) services.get(ProfileDAO.class.getName());
+                command.setProfileDAO(profileDao);
             }
 
             @Override
@@ -87,15 +95,16 @@ public class Activator implements BundleActivator {
             }
         });
 
-        profileCommandDepsTracker.open();
+        profileVmCommandDepsTracker.open();
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        profileCommandDepsTracker.close();
-        profileCommandDepsTracker = null;
+        profileVmCommandDepsTracker.close();
+        profileVmCommandDepsTracker = null;
 
-        registration.unregister();
+        profileVmCommandRegistration.unregister();
+        profileVmCommandRegistration = null;
     }
 
 }

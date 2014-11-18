@@ -34,51 +34,55 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.profiler.common.internal;
+package com.redhat.thermostat.vm.profiler.client.cli.internal;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
+public abstract class AbstractCommand extends com.redhat.thermostat.common.cli.AbstractCommand {
 
-import com.redhat.thermostat.common.MultipleServiceTracker;
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
+    // TODO these changes should probably be promoted to the AbstractCommand public API
 
-public class Activator implements BundleActivator {
+    protected Map<Class<?>, BlockingQueue<?>> serviceHolder = new HashMap<>();
 
-    private ServiceRegistration<ProfileDAO> daoRegistration;
-    private MultipleServiceTracker tracker;
-
-    @Override
-    public void start(final BundleContext context) throws Exception {
-        Class<?>[] deps = new Class<?>[] {
-                Storage.class,
-        };
-        tracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
-            @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                Storage storage = (Storage) services.get(Storage.class.getName());
-                ProfileDAOImpl impl = new ProfileDAOImpl(storage);
-
-                daoRegistration = context.registerService(ProfileDAO.class, impl, null);
-            }
-            @Override
-            public void dependenciesUnavailable() {
-                daoRegistration.unregister();
-                daoRegistration = null;
-            }
-        });
-        tracker.open();
+    private <T> BlockingQueue<T> getHolder(Class<T> serviceClass) {
+        if (!serviceHolder.containsKey(serviceClass)) {
+            serviceHolder.put(serviceClass, new LinkedBlockingQueue<T>(1));
+        }
+        return (BlockingQueue<T>) serviceHolder.get(serviceClass);
     }
 
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        tracker.close();
+    /** Insert {@code item} if it's non-{@code null} otherwise remove it */
+    protected <T> void addOrRemoveService(Class<T> serviceClass, T item) {
+        BlockingQueue<T> holder = getHolder(serviceClass);
+        if (item == null) {
+            if (holder.peek() != null) {
+                holder.remove();
+            }
+        } else {
+            try {
+                holder.put(item);
+            } catch (InterruptedException e) {
+                throw new AssertionError("Should not happen");
+            }
+        }
+    }
+
+    protected <T> T getService(Class<T> serviceClass) {
+        BlockingQueue<T> holder = getHolder(serviceClass);
+        try {
+            // a crappy version of peek()-with-timeout
+            T retValue = holder.poll(500, TimeUnit.MILLISECONDS);
+            if (retValue != null) {
+                holder.add(retValue);
+            }
+            return retValue;
+        } catch (InterruptedException e) {
+            return null;
+        }
     }
 
 }
-

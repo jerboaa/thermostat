@@ -44,15 +44,22 @@ import org.junit.Test;
 
 import com.redhat.thermostat.agent.command.RequestReceiver;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.testutils.StubBundleContext;
+import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
 
 public class ActivatorTest {
 
     @Test
     public void requestHandlerIsRegistered() throws Exception {
         MXBeanConnectionPool pool = mock(MXBeanConnectionPool.class);
+        WriterID writerService = mock(WriterID.class);
+        ProfileDAO dao = mock(ProfileDAO.class);
+
         StubBundleContext context = new StubBundleContext();
         context.registerService(MXBeanConnectionPool.class, pool, null);
+        context.registerService(ProfileDAO.class, dao, null);
+        context.registerService(WriterID.class, writerService, null);
 
         Activator activator = new Activator();
 

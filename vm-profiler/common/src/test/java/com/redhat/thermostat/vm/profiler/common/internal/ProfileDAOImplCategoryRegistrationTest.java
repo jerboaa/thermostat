@@ -36,49 +36,18 @@
 
 package com.redhat.thermostat.vm.profiler.common.internal;
 
-import java.util.Map;
+import static org.junit.Assert.assertTrue;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
+import java.util.Set;
 
-import com.redhat.thermostat.common.MultipleServiceTracker;
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
+import org.junit.Test;
 
-public class Activator implements BundleActivator {
+public class ProfileDAOImplCategoryRegistrationTest {
 
-    private ServiceRegistration<ProfileDAO> daoRegistration;
-    private MultipleServiceTracker tracker;
-
-    @Override
-    public void start(final BundleContext context) throws Exception {
-        Class<?>[] deps = new Class<?>[] {
-                Storage.class,
-        };
-        tracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
-            @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                Storage storage = (Storage) services.get(Storage.class.getName());
-                ProfileDAOImpl impl = new ProfileDAOImpl(storage);
-
-                daoRegistration = context.registerService(ProfileDAO.class, impl, null);
-            }
-            @Override
-            public void dependenciesUnavailable() {
-                daoRegistration.unregister();
-                daoRegistration = null;
-            }
-        });
-        tracker.open();
+    @Test
+    public void includesProfileInfoCategory() {
+        ProfileDAOImplCategoryRegistration registration = new ProfileDAOImplCategoryRegistration();
+        Set<String> names = registration.getCategoryNames();
+        assertTrue(names.contains(ProfileDAOImpl.CATEGORY.getName()));
     }
-
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        tracker.close();
-    }
-
 }
-

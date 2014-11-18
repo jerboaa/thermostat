@@ -57,6 +57,9 @@ public class ProfilerAgent {
     }
 
     private static void initializeAgent(String args, Instrumentation instrumentation) {
+
+        System.out.println("AGENT: loaded");
+
         // This is the saner approach, but for now we are brute-forcing a
         // hardcoded path using a manifest entry
         // String jars = args;

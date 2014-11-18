@@ -46,6 +46,8 @@ import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.storage.core.WriterID;
+import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
 
 public class Activator implements BundleActivator {
 
@@ -56,7 +58,11 @@ public class Activator implements BundleActivator {
         final Properties configuration = new Properties();
         configuration.load(this.getClass().getResourceAsStream("settings.properties"));
 
-        Class<?>[] deps = new Class<?>[] { MXBeanConnectionPool.class };
+        Class<?>[] deps = new Class<?>[] {
+                MXBeanConnectionPool.class,
+                ProfileDAO.class,
+                WriterID.class,
+        };
         tracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
             private ReceiverRegistry requestHandlerRegisteration;
             private VmStatusListenerRegistrar vmStatusRegistrar;
@@ -74,15 +80,22 @@ public class Activator implements BundleActivator {
 
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
-                MXBeanConnectionPool pool = (MXBeanConnectionPool) services.get(MXBeanConnectionPool.class.getName());
+                MXBeanConnectionPool pool = get(MXBeanConnectionPool.class, services);
+                WriterID writerIdProvider = get(WriterID.class, services);
+                ProfileDAO dao = get(ProfileDAO.class, services);
+                String writerId = writerIdProvider.getWriterID();
+
                 VmProfiler profiler = new VmProfiler(configuration, pool);
-                profileRequestHandler = new ProfileVmRequestReceiver(profiler);
+                profileRequestHandler = new ProfileVmRequestReceiver(writerId, profiler, dao);
 
                 requestHandlerRegisteration = new ReceiverRegistry(context);
                 requestHandlerRegisteration.registerReceiver(profileRequestHandler);
 
                 vmStatusRegistrar = new VmStatusListenerRegistrar(context);
                 vmStatusRegistrar.register(profileRequestHandler);
+            }
+            private <T> T get(Class<T> klass, Map<String, Object> services) {
+                return (T) services.get(klass.getName());
             }
         });
 

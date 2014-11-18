@@ -37,7 +37,6 @@
 package com.redhat.thermostat.vm.profiler.common;
 
 import java.net.InetSocketAddress;
-import java.util.Objects;
 
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;

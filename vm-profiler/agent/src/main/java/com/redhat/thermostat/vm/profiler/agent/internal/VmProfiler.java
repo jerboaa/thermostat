@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.vm.profiler.agent.internal;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.Properties;
@@ -46,6 +47,8 @@ import javax.management.ObjectName;
 
 import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
+import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.sun.tools.attach.AgentInitializationException;
 import com.sun.tools.attach.AgentLoadException;
@@ -58,17 +61,19 @@ public class VmProfiler {
 
     private final MXBeanConnectionPool connectionPool;
     private final Attacher attacher;
+    private final Clock clock;
 
     private String agentJarPath;
     private String asmJarPath;
 
     public VmProfiler(Properties configuration, MXBeanConnectionPool connectionPool) {
-        this(configuration, connectionPool, new Attacher());
+        this(configuration, connectionPool, new Attacher(), new SystemClock());
     }
 
-    public VmProfiler(Properties configuration, MXBeanConnectionPool connectionPool, Attacher attacher) {
+    public VmProfiler(Properties configuration, MXBeanConnectionPool connectionPool, Attacher attacher, Clock clock) {
         this.connectionPool = connectionPool;
         this.attacher = attacher;
+        this.clock = clock;
 
         // requireNonNull protects against bad config with missing values
         agentJarPath = Objects.requireNonNull(configuration.getProperty("AGENT_JAR"));
@@ -98,22 +103,44 @@ public class VmProfiler {
         }
     }
 
-    public void stopProfiling(int pid) throws ProfilerException {
+    public void stopProfiling(int pid, ProfileUploader uploader) throws ProfilerException {
         invokeMethodOnInstrumentation(pid, "stopProfiling");
+
+        String profilingDataFile = (String) getInstrumentationAttribute(pid, "ProfilingDataFile");
+        try {
+            uploader.upload(clock.getRealTimeMillis(), new File(profilingDataFile));
+        } catch (IOException e) {
+            throw new ProfilerException("Unable to save profiling data into storage", e);
+        }
     }
 
-    private void invokeMethodOnInstrumentation(int pid, String name) throws ProfilerException {
+    private Object invokeMethodOnInstrumentation(int pid, String name) throws ProfilerException {
         try {
             MXBeanConnection connection = connectionPool.acquire(pid);
             try {
                 ObjectName instrumentation = new ObjectName("com.redhat.thermostat:type=InstrumentationControl");
                 MBeanServerConnection server = connection.get();
-                server.invoke(instrumentation, name, new Object[0], new String[0]);
+                return server.invoke(instrumentation, name, new Object[0], new String[0]);
             } finally {
                 connectionPool.release(pid, connection);
             }
         } catch (Exception e) {
-            throw new ProfilerException("Unable to start remote profiling", e);
+            throw new ProfilerException("Unable to communicate with remote profiler", e);
+        }
+    }
+
+    private Object getInstrumentationAttribute(int pid, String name) throws ProfilerException {
+        try {
+            MXBeanConnection connection = connectionPool.acquire(pid);
+            try {
+                ObjectName instrumentation = new ObjectName("com.redhat.thermostat:type=InstrumentationControl");
+                MBeanServerConnection server = connection.get();
+                return server.getAttribute(instrumentation, name);
+            } finally {
+                connectionPool.release(pid, connection);
+            }
+        } catch (Exception e) {
+            throw new ProfilerException("Unable to communicate with remote profiler", e);
         }
     }
 

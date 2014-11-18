@@ -34,51 +34,37 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.profiler.common.internal;
+package com.redhat.thermostat.vm.profiler.agent.internal;
 
-import java.util.Map;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.UUID;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
-
-import com.redhat.thermostat.common.MultipleServiceTracker;
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
+import com.redhat.thermostat.vm.profiler.common.ProfileInfo;
 
-public class Activator implements BundleActivator {
+public class ProfileUploader {
 
-    private ServiceRegistration<ProfileDAO> daoRegistration;
-    private MultipleServiceTracker tracker;
+    private final ProfileDAO dao;
+    private final String agentId;
+    private final String vmId;
 
-    @Override
-    public void start(final BundleContext context) throws Exception {
-        Class<?>[] deps = new Class<?>[] {
-                Storage.class,
-        };
-        tracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
-            @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                Storage storage = (Storage) services.get(Storage.class.getName());
-                ProfileDAOImpl impl = new ProfileDAOImpl(storage);
-
-                daoRegistration = context.registerService(ProfileDAO.class, impl, null);
-            }
-            @Override
-            public void dependenciesUnavailable() {
-                daoRegistration.unregister();
-                daoRegistration = null;
-            }
-        });
-        tracker.open();
+    public ProfileUploader(ProfileDAO dao, String agentId, String vmId, int pid) {
+        this.dao = dao;
+        this.agentId = agentId;
+        this.vmId = vmId;
     }
 
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        tracker.close();
+    public void upload(long timeStamp, File data) throws IOException {
+        // FIXME resource leak: file is never closed
+        upload(timeStamp, new FileInputStream(data));
     }
 
+    public void upload(long timeStamp, InputStream data) throws IOException {
+        String id = UUID.randomUUID().toString();
+        ProfileInfo info = new ProfileInfo(agentId, vmId, timeStamp, id);
+        dao.saveProfileData(info, data);
+    }
 }
-

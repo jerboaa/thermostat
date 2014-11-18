@@ -36,16 +36,16 @@
 
 package com.redhat.thermostat.vm.profiler.client.cli.internal;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.cli.HostVMArguments;
 import com.redhat.thermostat.client.command.RequestQueue;
-import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Console;
@@ -53,10 +53,13 @@ import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
+import com.redhat.thermostat.common.utils.StreamUtils;
 import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
 import com.redhat.thermostat.vm.profiler.common.ProfileRequest;
 
 public class ProfileVmCommand extends AbstractCommand {
@@ -65,23 +68,20 @@ public class ProfileVmCommand extends AbstractCommand {
 
     private static final String START_ARGUMENT = "start";
     private static final String STOP_ARGUMENT = "stop";
-
-    private final BlockingQueue<VmInfoDAO> vmInfoDAOHolder = new LinkedBlockingQueue<>(1);
-    private final BlockingQueue<AgentInfoDAO> agentInfoDAOHolder = new LinkedBlockingQueue<>(1);
-    private final BlockingQueue<RequestQueue> requestQueueHolder = new LinkedBlockingQueue<>(1);
+    private static final String SHOW_ARGUMENT = "show";
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
 
         HostVMArguments args = new HostVMArguments(ctx.getArguments(), true, true);
 
-        AgentInfoDAO agentInfoDAO = getFromHolder(agentInfoDAOHolder);
-        VmInfoDAO vmInfoDAO = getFromHolder(vmInfoDAOHolder);
+        AgentInfoDAO agentInfoDAO = getService(AgentInfoDAO.class);
+        VmInfoDAO vmInfoDAO = getService(VmInfoDAO.class);
 
         requireNonNull(agentInfoDAO, translator.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE));
         requireNonNull(vmInfoDAO, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
 
-        RequestQueue requestQueue = getFromHolder(requestQueueHolder);
+        RequestQueue requestQueue = getService(RequestQueue.class);
         requireNonNull(requestQueue, translator.localize(LocaleResources.QUEUE_SERVICE_UNAVAILABLE));
 
         AgentInformation agentInfo = agentInfoDAO.getAgentInformation(args.getHost());
@@ -105,6 +105,9 @@ public class ProfileVmCommand extends AbstractCommand {
             break;
         case STOP_ARGUMENT:
             sendStopProfilingRequest(ctx.getConsole(), requestQueue, target, args.getVM().getVmId());
+            break;
+        case SHOW_ARGUMENT:
+            showProfilingResults(ctx.getConsole(), args.getVM());
             break;
         default:
             throw new CommandException(translator.localize(LocaleResources.UNKNOWN_COMMAND, command));
@@ -166,41 +169,34 @@ public class ProfileVmCommand extends AbstractCommand {
 
     }
 
-    /** Insert {@code item} if it's non-{@code null} otherwise remove it */
-    private static <T> void addOrRemoveFromHoler(BlockingQueue<T> holder, T item) {
-        if (item == null) {
-            if (holder.peek() != null) {
-                holder.remove();
-            }
-        } else {
-            try {
-                holder.put(item);
-            } catch (InterruptedException e) {
-                throw new AssertionError("Should not happen");
-            }
-        }
+    private void showProfilingResults(Console console, VmRef vm) {
+        ProfileDAO dao = getService(ProfileDAO.class);
+        InputStream data = dao.loadLatestProfileData(vm);
+        displayProfilingData(console, data);
     }
 
-    private static <T> T getFromHolder(BlockingQueue<T> holder) {
+    private void displayProfilingData(Console console, InputStream data) {
         try {
-            // a crappy version of peek()-with-timeout
-            T retValue = holder.poll(500, TimeUnit.MILLISECONDS);
-            holder.add(retValue);
-            return retValue;
-        } catch (InterruptedException e) {
-            return null;
+            StreamUtils.copyStream(new BufferedInputStream(data), new BufferedOutputStream(console.getOutput()));
+        } catch (IOException e) {
+            console.getError().println("Error displaying data");
+            e.printStackTrace();
         }
     }
 
     void setAgentInfoDAO(AgentInfoDAO dao) {
-        addOrRemoveFromHoler(agentInfoDAOHolder, dao);
+        addOrRemoveService(AgentInfoDAO.class, dao);
     }
 
     void setVmInfoDAO(VmInfoDAO dao) {
-        addOrRemoveFromHoler(vmInfoDAOHolder, dao);
+        addOrRemoveService(VmInfoDAO.class, dao);
     }
 
     void setRequestQueue(RequestQueue queue) {
-        addOrRemoveFromHoler(requestQueueHolder, queue);
+        addOrRemoveService(RequestQueue.class, queue);
+    }
+
+    void setProfileDAO(ProfileDAO dao) {
+        addOrRemoveService(ProfileDAO.class, dao);
     }
 }

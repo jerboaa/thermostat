@@ -38,10 +38,12 @@ package com.redhat.thermostat.vm.profiler.agent.internal;
 
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
 import java.util.Properties;
 
 import javax.management.MBeanServerConnection;
@@ -52,6 +54,7 @@ import org.junit.Test;
 
 import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
+import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.vm.profiler.agent.internal.VmProfiler.Attacher;
 import com.sun.tools.attach.VirtualMachine;
 
@@ -64,11 +67,13 @@ public class VmProfilerTest {
     private MXBeanConnection connection;
     private MXBeanConnectionPool connectionPool;
     private Attacher attacher;
+    private Clock clock;
 
     private final int PID = 0;
 
     private final String AGENT_JAR = "foo";
     private final String ASM_JAR = "bar";
+    private final long TIME = 1_000_000_000;
 
     private ObjectName instrumentationName;
 
@@ -79,6 +84,9 @@ public class VmProfilerTest {
         Properties props = new Properties();
         props.setProperty("AGENT_JAR", AGENT_JAR);
         props.setProperty("ASM_JAR", ASM_JAR);
+
+        clock = mock(Clock.class);
+        when(clock.getRealTimeMillis()).thenReturn(TIME);
 
         attacher = mock(Attacher.class);
         vm = mock(VirtualMachine.class);
@@ -92,7 +100,7 @@ public class VmProfilerTest {
         connectionPool = mock(MXBeanConnectionPool.class);
         when(connectionPool.acquire(PID)).thenReturn(connection);
 
-        profiler = new VmProfiler(props, connectionPool, attacher);
+        profiler = new VmProfiler(props, connectionPool, attacher, clock);
     }
 
     @Test
@@ -110,11 +118,19 @@ public class VmProfilerTest {
 
     @Test
     public void stoppingProfilingLoadsJvmAgentAndMakesAnRmiCall() throws Exception {
-        profiler.stopProfiling(PID);
+        final String FILE = "foobar";
+        when(server.getAttribute(instrumentationName, "ProfilingDataFile")).thenReturn(FILE);
+
+        ProfileUploader uploader = mock(ProfileUploader.class);
+
+        profiler.stopProfiling(PID, uploader);
 
         verifyNoMoreInteractions(vm);
 
         verify(server).invoke(instrumentationName, "stopProfiling", new Object[0], new String[0]);
-        verify(connectionPool).release(PID, connection);
+        verify(uploader).upload(TIME, new File(FILE));
+        verify(connectionPool, times(2)).release(PID, connection);
+
+
     }
 }

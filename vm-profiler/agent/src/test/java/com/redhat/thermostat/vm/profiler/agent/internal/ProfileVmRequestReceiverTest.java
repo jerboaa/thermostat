@@ -37,6 +37,8 @@
 package com.redhat.thermostat.vm.profiler.agent.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -47,9 +49,12 @@ import com.redhat.thermostat.agent.VmStatusListener.Status;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
+import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
 import com.redhat.thermostat.vm.profiler.common.ProfileRequest;
 
 public class ProfileVmRequestReceiverTest {
+
+    private static final String AGENT_ID = "agent-id";
 
     private static final String VM_ID = "foo";
     private static final int VM_PID = 1;
@@ -57,12 +62,15 @@ public class ProfileVmRequestReceiverTest {
     private ProfileVmRequestReceiver requestReceiver;
 
     private VmProfiler profiler;
+    private ProfileDAO dao;
+    private ProfileUploader uploader;
 
     @Before
     public void setUp() {
         profiler = mock(VmProfiler.class);
+        dao = mock(ProfileDAO.class);
 
-        requestReceiver = new ProfileVmRequestReceiver(profiler);
+        requestReceiver = new ProfileVmRequestReceiver(AGENT_ID, profiler, dao);
     }
 
     @Test
@@ -98,7 +106,7 @@ public class ProfileVmRequestReceiverTest {
         result = requestReceiver.receive(request);
 
         assertEquals(ResponseType.OK, result.getType());
-        verify(profiler).stopProfiling(VM_PID);
+        verify(profiler).stopProfiling(eq(VM_PID), isA(ProfileUploader.class));
     }
 
     @Test

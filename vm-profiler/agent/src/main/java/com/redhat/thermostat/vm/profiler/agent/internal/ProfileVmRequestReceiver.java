@@ -46,6 +46,7 @@ import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
 import com.redhat.thermostat.vm.profiler.common.ProfileRequest;
 
 public class ProfileVmRequestReceiver implements RequestReceiver, VmStatusListener {
@@ -57,10 +58,16 @@ public class ProfileVmRequestReceiver implements RequestReceiver, VmStatusListen
     /** A pid that corresponds to an unknown */
     private static final int UNKNOWN_VMID = -1;
 
-    private final VmProfiler profiler;
+    private final String agentId;
 
-    public ProfileVmRequestReceiver(VmProfiler profiler) {
+    private final VmProfiler profiler;
+    private final ProfileDAO dao;
+
+    public ProfileVmRequestReceiver(String agentId, VmProfiler profiler, ProfileDAO dao) {
         this.profiler = profiler;
+        this.dao = dao;
+
+        this.agentId = agentId;
     }
 
     @Override
@@ -102,7 +109,8 @@ public class ProfileVmRequestReceiver implements RequestReceiver, VmStatusListen
         case ProfileRequest.STOP_PROFILING:
             logger.info("Stopping profiling " + pid);
             try {
-                profiler.stopProfiling(pid);
+                ProfileUploader uploader = new ProfileUploader(dao, agentId, vmId, pid);
+                profiler.stopProfiling(pid, uploader);
                 return OK;
             } catch (Exception e) {
                 logger.log(Level.INFO, "stop profiling failed", e);

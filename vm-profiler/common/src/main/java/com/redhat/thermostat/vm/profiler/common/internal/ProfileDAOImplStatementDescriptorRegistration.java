@@ -36,49 +36,33 @@
 
 package com.redhat.thermostat.vm.profiler.common.internal;
 
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
+import com.redhat.thermostat.storage.core.PreparedParameter;
+import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
+import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 
-import com.redhat.thermostat.common.MultipleServiceTracker;
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
-
-public class Activator implements BundleActivator {
-
-    private ServiceRegistration<ProfileDAO> daoRegistration;
-    private MultipleServiceTracker tracker;
+public class ProfileDAOImplStatementDescriptorRegistration implements StatementDescriptorRegistration {
 
     @Override
-    public void start(final BundleContext context) throws Exception {
-        Class<?>[] deps = new Class<?>[] {
-                Storage.class,
-        };
-        tracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
-            @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                Storage storage = (Storage) services.get(Storage.class.getName());
-                ProfileDAOImpl impl = new ProfileDAOImpl(storage);
-
-                daoRegistration = context.registerService(ProfileDAO.class, impl, null);
-            }
-            @Override
-            public void dependenciesUnavailable() {
-                daoRegistration.unregister();
-                daoRegistration = null;
-            }
-        });
-        tracker.open();
+    public DescriptorMetadata getDescriptorMetadata(String descriptor, PreparedParameter[] params) {
+        if (descriptor.equals(ProfileDAOImpl.DESC_ADD_PROFILE_INFO)
+                || descriptor.equals(ProfileDAOImpl.DESC_QUERY_LATEST)) {
+            String agentId = (String)params[0].getValue();
+            String vmId = (String)params[1].getValue();
+            DescriptorMetadata metadata = new DescriptorMetadata(agentId, vmId);
+            return metadata;
+        } else {
+            throw new IllegalArgumentException("Unknown descriptor: ->" + descriptor + "<-");
+        }
     }
 
     @Override
-    public void stop(BundleContext context) throws Exception {
-        tracker.close();
+    public Set<String> getStatementDescriptors() {
+        Set<String> results = new HashSet<>();
+        results.add(ProfileDAOImpl.DESC_ADD_PROFILE_INFO);
+        results.add(ProfileDAOImpl.DESC_QUERY_LATEST);
+        return results;
     }
-
 }
-

@@ -34,51 +34,56 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.profiler.common.internal;
+package com.redhat.thermostat.vm.profiler.agent.internal;
 
-import java.util.Map;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 
-import com.redhat.thermostat.common.MultipleServiceTracker;
-import com.redhat.thermostat.storage.core.Storage;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+
 import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
+import com.redhat.thermostat.vm.profiler.common.ProfileInfo;
 
-public class Activator implements BundleActivator {
+public class ProfileUploaderTest {
 
-    private ServiceRegistration<ProfileDAO> daoRegistration;
-    private MultipleServiceTracker tracker;
+    private ProfileDAO dao;
 
-    @Override
-    public void start(final BundleContext context) throws Exception {
-        Class<?>[] deps = new Class<?>[] {
-                Storage.class,
-        };
-        tracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
-            @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                Storage storage = (Storage) services.get(Storage.class.getName());
-                ProfileDAOImpl impl = new ProfileDAOImpl(storage);
+    private final String AGENT_ID = "agent-id";
+    private final String VM_ID = "vm-id";
+    private final int PID = -1;
+    private final long TIME = 1_000_000_000;
 
-                daoRegistration = context.registerService(ProfileDAO.class, impl, null);
-            }
-            @Override
-            public void dependenciesUnavailable() {
-                daoRegistration.unregister();
-                daoRegistration = null;
-            }
-        });
-        tracker.open();
+    private ProfileUploader uploader;
+
+    @Before
+    public void setUp() {
+        dao = mock(ProfileDAO.class);
+
+        uploader = new ProfileUploader(dao, AGENT_ID, VM_ID, PID);
     }
 
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        tracker.close();
-    }
+    @Test
+    public void uploadFile() throws Exception {
+        byte[] data = "Test Profile Data".getBytes(StandardCharsets.UTF_8);
+        ByteArrayInputStream input = new ByteArrayInputStream(data);
 
+        ArgumentCaptor<ProfileInfo> profileInfoCaptor = ArgumentCaptor.forClass(ProfileInfo.class);
+
+        uploader.upload(TIME, input);
+
+        verify(dao).saveProfileData(profileInfoCaptor.capture(), eq(input));
+        ProfileInfo profileInfo = profileInfoCaptor.getValue();
+        assertEquals(AGENT_ID, profileInfo.getAgentId());
+        assertEquals(VM_ID, profileInfo.getVmId());
+        assertEquals(TIME, profileInfo.getTimeStamp());
+        assertNotNull(profileInfo.getProfileId());
+    }
 }
-

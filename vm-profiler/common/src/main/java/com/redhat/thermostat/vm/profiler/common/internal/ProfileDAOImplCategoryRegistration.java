@@ -36,49 +36,17 @@
 
 package com.redhat.thermostat.vm.profiler.common.internal;
 
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
+import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
 
-import com.redhat.thermostat.common.MultipleServiceTracker;
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
-
-public class Activator implements BundleActivator {
-
-    private ServiceRegistration<ProfileDAO> daoRegistration;
-    private MultipleServiceTracker tracker;
+public class ProfileDAOImplCategoryRegistration implements CategoryRegistration {
 
     @Override
-    public void start(final BundleContext context) throws Exception {
-        Class<?>[] deps = new Class<?>[] {
-                Storage.class,
-        };
-        tracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
-            @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                Storage storage = (Storage) services.get(Storage.class.getName());
-                ProfileDAOImpl impl = new ProfileDAOImpl(storage);
-
-                daoRegistration = context.registerService(ProfileDAO.class, impl, null);
-            }
-            @Override
-            public void dependenciesUnavailable() {
-                daoRegistration.unregister();
-                daoRegistration = null;
-            }
-        });
-        tracker.open();
+    public Set<String> getCategoryNames() {
+        Set<String> names = new HashSet<>();
+        names.add(ProfileDAOImpl.CATEGORY.getName());
+        return names;
     }
-
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        tracker.close();
-    }
-
 }
-
