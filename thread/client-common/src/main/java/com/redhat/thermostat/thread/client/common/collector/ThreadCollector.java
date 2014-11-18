@@ -42,6 +42,7 @@ import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.ThreadContentionSample;
 import com.redhat.thermostat.thread.model.ThreadHeader;
+import com.redhat.thermostat.thread.model.ThreadSession;
 import com.redhat.thermostat.thread.model.ThreadState;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import com.redhat.thermostat.thread.model.VmDeadLockData;
@@ -56,8 +57,15 @@ public interface ThreadCollector {
     boolean stopHarvester();
     boolean isHarvesterCollecting();
 
-    List<SessionID> getAvailableThreadSummarySessions(Range<Long> range);
-    SessionID getLastThreadSummarySession();
+    /**
+     * Returns a list of sessions recorded during sampling.
+     */
+    List<ThreadSession> getThreadSessions(Range<Long> range);
+
+    /**
+     * Returns the last sampling session ID.
+     */
+    SessionID getLastThreadSession();
 
     ThreadSummary getLatestThreadSummary(SessionID session);
     List<ThreadSummary> getThreadSummary(SessionID session, Range<Long> range);

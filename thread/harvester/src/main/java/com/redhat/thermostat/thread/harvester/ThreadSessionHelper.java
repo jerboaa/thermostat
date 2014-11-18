@@ -36,43 +36,41 @@
 
 package com.redhat.thermostat.thread.harvester;
 
+import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.thread.dao.ThreadDao;
+import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.ThreadSession;
-import com.redhat.thermostat.thread.model.ThreadSummary;
-import java.lang.management.ThreadMXBean;
 
-/*
+/**
+ *
  */
-class ThreadSummaryHelper {
+class ThreadSessionHelper {
+    private final ThreadDao threadDao;
+    private final WriterID writerId;
+    private final String vmId;
+    private final Clock clock;
 
-    private String vmId;
-    private WriterID writerId;
-    private ThreadDao threadDao;
+    public ThreadSessionHelper(ThreadDao threadDao, WriterID writerId, String vmId, Clock clock) {
 
-    ThreadSummaryHelper(ThreadDao threadDao, WriterID writerId, String vmId) {
-        this.vmId = vmId;
-        this.writerId = writerId;
         this.threadDao = threadDao;
+        this.writerId = writerId;
+        this.vmId = vmId;
+        this.clock = clock;
     }
 
-    ThreadSummary createThreadSummary(ThreadMXBean collectorBean, long timestamp, ThreadSession session) {
+    ThreadSession createSession() {
+        ThreadSession session = new ThreadSession();
 
-        String wId = writerId.getWriterID();
+        session.setSession(new SessionID().getId());
+        session.setTimeStamp(clock.getRealTimeMillis());
+        session.setVmId(vmId);
+        session.setAgentId(writerId.getWriterID());
 
-        ThreadSummary summary = new ThreadSummary(wId);
-
-        summary.setCurrentLiveThreads(collectorBean.getThreadCount());
-        summary.setCurrentDaemonThreads(collectorBean.getDaemonThreadCount());
-        summary.setTimeStamp(timestamp);
-        summary.setVmId(vmId);
-
-        summary.setSession(session.getSession());
-
-        return summary;
+        return session;
     }
 
-    public void saveSummary(ThreadSummary summary) {
-        threadDao.saveSummary(summary);
+    void saveSession(ThreadSession session) {
+        threadDao.saveSession(session);
     }
 }

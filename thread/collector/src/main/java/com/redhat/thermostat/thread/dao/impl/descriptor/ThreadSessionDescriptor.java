@@ -45,8 +45,7 @@ import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.thread.model.SessionID;
-import com.redhat.thermostat.thread.model.ThreadSummary;
+import com.redhat.thermostat.thread.model.ThreadSession;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
@@ -55,39 +54,35 @@ import java.util.logging.Logger;
 /**
  *
  */
-public class SummaryDescriptor extends Descriptor<ThreadSummary> {
+public class ThreadSessionDescriptor extends Descriptor<ThreadSession> {
 
-    private static final Logger logger = LoggingUtils.getLogger(SummaryDescriptor.class);
+    private static final Logger logger = LoggingUtils.getLogger(ThreadSessionDescriptor.class);
 
-    protected String rangeDesc;
-    protected String addDesc;
+    protected String querySessions;
+    protected String statementAdd;
 
+    @Override
     public Set<String> describe() {
         Set<String> description = new HashSet<>();
-
-        description.add(rangeDesc);
-        description.add(addDesc);
-
+        description.add(querySessions);
         return description;
     }
 
-    public Cursor<ThreadSummary> queryGet(VmRef ref, SessionID session,
-                                                   Range<Long> range, int limit,
-                                                   Storage storage)
+    public Cursor<ThreadSession> queryGet(VmRef ref, Range<Long> range,
+                                          int limit, Storage storage)
             throws DescriptorParsingException, StatementExecutionException
     {
-        // "QUERY vm-thread-summary WHERE 'session' = ?s
-        //  AND 'timeStamp' >= ?l
-        //  AND 'timeStamp' <= ?l SORT 'timeStamp' DSC";
+        // "QUERY vm-thread-session WHERE 'vmId' = ?s , 'timeStamp' >= ?l
+        //  AND 'timeStamp' <= ?l SORT 'timeStamp' DSC LIMIT ?i";
 
-        StatementDescriptor<ThreadSummary> desc = null;
+        StatementDescriptor<ThreadSession> desc = null;
         try {
-            desc = new StatementDescriptor<>(getCategory(), rangeDesc);
-            PreparedStatement<ThreadSummary> prepared =
+            desc = new StatementDescriptor<>(getCategory(), querySessions);
+            PreparedStatement<ThreadSession> prepared =
                     storage.prepareStatement(desc);
 
             int i = 0;
-            prepared.setString(i++, session.getId());
+            prepared.setString(i++, ref.getVmId());
 
             prepared.setLong(i++, range.getMin());
             prepared.setLong(i++, range.getMax());
@@ -103,29 +98,26 @@ public class SummaryDescriptor extends Descriptor<ThreadSummary> {
         }
     }
 
-    public void statementAdd(ThreadSummary summary, Storage storage)
+    public void statementAdd(ThreadSession session, Storage storage)
             throws DescriptorParsingException, StatementExecutionException
     {
-        // "ADD vm-thread-summary SET 'agentId' = ?s , 'vmId' = ?s ,
-        // 'session' = ?s , 'currentLiveThreads' = ?l ,
-        // 'currentDaemonThreads' = ?l , 'timeStamp' = ?l";
+        // "ADD vm-thread-session SET 'agentId' = ?s , 'vmId' = ?s ,
+        // 'session' = ?s , 'timeStamp' = ?l"
 
-        StatementDescriptor<ThreadSummary> desc =
-                new StatementDescriptor<>(getCategory(), addDesc);
+        StatementDescriptor<ThreadSession> desc =
+                new StatementDescriptor<>(getCategory(), statementAdd);
 
-        PreparedStatement<ThreadSummary> prepared;
+        PreparedStatement<ThreadSession> prepared;
         try {
 
             prepared = storage.prepareStatement(desc);
 
             int i = 0;
-            prepared.setString(i++, summary.getAgentId());
-            prepared.setString(i++, summary.getVmId());
-            prepared.setString(i++, summary.getSession());
+            prepared.setString(i++, session.getAgentId());
+            prepared.setString(i++, session.getVmId());
+            prepared.setString(i++, session.getSession());
 
-            prepared.setLong(i++, summary.getCurrentLiveThreads());
-            prepared.setLong(i++, summary.getCurrentDaemonThreads());
-            prepared.setLong(i++, summary.getTimeStamp());
+            prepared.setLong(i++, session.getTimeStamp());
 
             prepared.execute();
 

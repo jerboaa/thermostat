@@ -34,45 +34,70 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.harvester;
+package com.redhat.thermostat.thread.model;
 
-import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.model.ThreadSession;
-import com.redhat.thermostat.thread.model.ThreadSummary;
-import java.lang.management.ThreadMXBean;
+import com.redhat.thermostat.storage.core.Entity;
+import com.redhat.thermostat.storage.core.Persist;
+import com.redhat.thermostat.storage.model.BasePojo;
+import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
-/*
+/**
+ *
  */
-class ThreadSummaryHelper {
+@Entity
+public class ThreadSession extends BasePojo implements TimeStampedPojo {
 
     private String vmId;
-    private WriterID writerId;
-    private ThreadDao threadDao;
+    private long timestamp;
+    private String session;
+    private SessionID sessionID;
 
-    ThreadSummaryHelper(ThreadDao threadDao, WriterID writerId, String vmId) {
+    public ThreadSession() {
+        this(null);
+    }
+
+    public ThreadSession(String writerId) {
+        super(writerId);
+    }
+
+    @Persist
+    public void setVmId(String vmId) {
         this.vmId = vmId;
-        this.writerId = writerId;
-        this.threadDao = threadDao;
     }
 
-    ThreadSummary createThreadSummary(ThreadMXBean collectorBean, long timestamp, ThreadSession session) {
-
-        String wId = writerId.getWriterID();
-
-        ThreadSummary summary = new ThreadSummary(wId);
-
-        summary.setCurrentLiveThreads(collectorBean.getThreadCount());
-        summary.setCurrentDaemonThreads(collectorBean.getDaemonThreadCount());
-        summary.setTimeStamp(timestamp);
-        summary.setVmId(vmId);
-
-        summary.setSession(session.getSession());
-
-        return summary;
+    @Persist
+    public String getVmId() {
+        return vmId;
     }
 
-    public void saveSummary(ThreadSummary summary) {
-        threadDao.saveSummary(summary);
+    @Persist
+    public long getTimeStamp() {
+        return timestamp;
+    }
+
+    @Persist
+    public void setTimeStamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    @Override
+    public String toString() {
+        return "[timestamp: " + timestamp + ", session: " +
+               ", vm: " + vmId + "]";
+    }
+
+    @Persist
+    public void setSession(String session) {
+        this.session = session;
+        sessionID = new SessionID(session);
+    }
+
+    @Persist
+    public String getSession() {
+        return session;
+    }
+
+    public SessionID getSessionID() {
+        return sessionID;
     }
 }

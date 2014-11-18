@@ -39,46 +39,44 @@ package com.redhat.thermostat.thread.dao.impl.descriptor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.thread.dao.impl.ThreadDaoCategories;
 import com.redhat.thermostat.thread.dao.impl.ThreadDaoKeys;
-import com.redhat.thermostat.thread.model.ThreadSummary;
+import com.redhat.thermostat.thread.model.ThreadSession;
 
 /**
  *
  */
-public class SummaryDescriptorBuilder extends DescriptorBuilder<ThreadSummary> {
+public class ThreadSessionDescriptorBuilder extends DescriptorBuilder<ThreadSession> {
 
-    public SummaryDescriptorBuilder() {
-        super(ThreadDaoCategories.THREAD_SUMMARY);
+    public ThreadSessionDescriptorBuilder() {
+        super(ThreadDaoCategories.THREAD_SESSION);
     }
 
     @Override
-    public SummaryDescriptor build() {
+    public ThreadSessionDescriptor build() {
 
-        SummaryDescriptor descriptor = new SummaryDescriptor();
+        ThreadSessionDescriptor descriptor = new ThreadSessionDescriptor();
         descriptor.setCategory(category);
 
-        StringBuilder summarySinceBuilder = new StringBuilder();
-        summarySinceBuilder.append("QUERY").append(" ");
-        summarySinceBuilder.append(document).append(" ");
-        summarySinceBuilder.append("WHERE").append(" '");
-        summarySinceBuilder.append(ThreadDaoKeys.SESSION.getName()).append("' = ?s AND '");
-        summarySinceBuilder.append(Key.TIMESTAMP.getName()).append("' >= ?l AND '");
-        summarySinceBuilder.append(Key.TIMESTAMP.getName()).append("' <= ?l SORT '");
-        summarySinceBuilder.append(Key.TIMESTAMP.getName()).append("' DSC LIMIT ?i");
+        StringBuilder querySessions = new StringBuilder();
+        querySessions.append("QUERY").append(" ");
+        querySessions.append(document).append(" ");
+        querySessions.append("WHERE").append(" '");
+        querySessions.append(Key.VM_ID.getName()).append("' = ?s AND '");
+        querySessions.append(Key.TIMESTAMP.getName()).append("' >= ?l AND '");
+        querySessions.append(Key.TIMESTAMP.getName()).append("' <= ?l SORT '");
+        querySessions.append(Key.TIMESTAMP.getName()).append("' DSC LIMIT ?i");
 
-        descriptor.rangeDesc = summarySinceBuilder.toString();
+        descriptor.querySessions = querySessions.toString();
 
-        StringBuilder addDesc = new StringBuilder();
-        addDesc.append("ADD").append(" ");
-        addDesc.append(document).append(" ");
-        addDesc.append("SET '");
-        addDesc.append(Key.AGENT_ID.getName()).append("' = ?s , '");
-        addDesc.append(Key.VM_ID.getName()).append("' = ?s , '");
-        addDesc.append(ThreadDaoKeys.SESSION.getName()).append("' = ?s , '");
-        addDesc.append(ThreadDaoKeys.LIVE_THREADS_KEY.getName()).append("' = ?l , '");
-        addDesc.append(ThreadDaoKeys.DAEMON_THREADS_KEY.getName()).append("' = ?l , '");
-        addDesc.append(Key.TIMESTAMP.getName()).append("' = ?l");
+        StringBuilder statementAdd = new StringBuilder();
+        statementAdd.append("ADD").append(" ");
+        statementAdd.append(document).append(" ");
+        statementAdd.append("SET").append(" '");
+        statementAdd.append(Key.AGENT_ID.getName()).append("' = ?s , '");
+        statementAdd.append(Key.VM_ID.getName()).append("' = ?s , '");
+        statementAdd.append(ThreadDaoKeys.SESSION.getName()).append("' = ?s , '");
+        statementAdd.append(Key.TIMESTAMP.getName()).append("' = ?l");
 
-        descriptor.addDesc = addDesc.toString();
+        descriptor.statementAdd = statementAdd.toString();
 
         return descriptor;
     }

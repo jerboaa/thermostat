@@ -38,8 +38,8 @@ package com.redhat.thermostat.thread.harvester;
 
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.ThreadHeader;
+import com.redhat.thermostat.thread.model.ThreadSession;
 import com.redhat.thermostat.thread.model.ThreadState;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import java.lang.management.ThreadInfo;
@@ -69,9 +69,10 @@ public class HarvesterHelperTest {
     private ThreadHeaderHelper headerHelper;
     private ThreadStateHelper stateHelper;
     private ThreadContentionHelper contentionHelper;
+    private ThreadSessionHelper threadSessionHelper;
 
     private ThreadMXBean collectorBean;
-    private SessionID sessionID;
+    private ThreadSession session;
     @Before
     public void setUp() {
         summaryHelper = mock(ThreadSummaryHelper.class);
@@ -88,7 +89,10 @@ public class HarvesterHelperTest {
 
         vmId = "42";
 
-        sessionID = new SessionID("0xcafe");
+        session = new ThreadSession();
+        session.setSession("0xcafe");
+
+        threadSessionHelper = mock(ThreadSessionHelper.class);
     }
 
     @Test
@@ -97,20 +101,21 @@ public class HarvesterHelperTest {
         ThreadSummary summary = mock(ThreadSummary.class);
         when(summaryHelper.createThreadSummary(collectorBean,
                                                DEFAULT_TIMESTAMP,
-                                               sessionID)).
+                                               session)).
             thenReturn(summary);
 
         HarvesterHelper harvester = new HarvesterHelper(threadDao, clock, vmId,
                                                         summaryHelper,
                                                         headerHelper,
                                                         stateHelper,
-                                                        contentionHelper);
-        harvester.collectAndSaveThreadData(sessionID, collectorBean);
+                                                        contentionHelper,
+                                                        threadSessionHelper);
+        harvester.collectAndSaveThreadData(session, collectorBean);
 
         verify(clock).getRealTimeMillis();
         verify(summaryHelper).createThreadSummary(collectorBean,
                                                   DEFAULT_TIMESTAMP,
-                                                  sessionID);
+                                                  session);
         verify(summaryHelper).saveSummary(summary);
     }
 
@@ -124,8 +129,9 @@ public class HarvesterHelperTest {
                                                         summaryHelper,
                                                         headerHelper,
                                                         stateHelper,
-                                                        contentionHelper);
-        harvester.collectAndSaveThreadData(sessionID, collectorBean);
+                                                        contentionHelper,
+                                                        threadSessionHelper);
+        harvester.collectAndSaveThreadData(session, collectorBean);
         verify(collectorBean).getAllThreadIds();
 
         verify(collectorBean).getThreadInfo(ids, true, true);
@@ -167,8 +173,9 @@ public class HarvesterHelperTest {
                                                         summaryHelper,
                                                         headerHelper,
                                                         stateHelper,
-                                                        contentionHelper);
-        harvester.collectAndSaveThreadData(sessionID, collectorBean);
+                                                        contentionHelper,
+                                                        threadSessionHelper);
+        harvester.collectAndSaveThreadData(session, collectorBean);
 
         verify(headerHelper, times(2)).checkAndSaveThreadHeader(header1);
         verify(headerHelper).checkAndSaveThreadHeader(header2);

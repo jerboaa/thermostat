@@ -42,7 +42,7 @@ import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.model.SessionID;
+import com.redhat.thermostat.thread.model.ThreadSession;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.util.concurrent.ScheduledExecutorService;
@@ -198,7 +198,7 @@ class Harvester {
     private class HarvesterAction implements Runnable {
 
         private boolean newSession;
-        private SessionID sessionID;
+        private ThreadSession session;
 
         private HarvesterAction(boolean newSession) {
             this.newSession = newSession;
@@ -230,11 +230,13 @@ class Harvester {
                 } catch (UnsupportedOperationException ignore) {}
 
                 if (newSession) {
-                    sessionID = new SessionID();
+                    session = harvesterHelper.createSession();
+                    harvesterHelper.saveSession(session);
+
                     newSession = false;
                 }
 
-                harvesterHelper.collectAndSaveThreadData(sessionID, collectorBean);
+                harvesterHelper.collectAndSaveThreadData(session, collectorBean);
 
             } else {
                 logger.log(Level.WARNING, "ThreadMXBean is null, is JMX available?");

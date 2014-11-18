@@ -46,6 +46,7 @@ import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.ChartPanel;
 import com.redhat.thermostat.thread.client.common.chart.LivingDaemonThreadDifferenceChart;
 import com.redhat.thermostat.thread.client.common.view.ThreadCountView;
+import javax.swing.SwingWorker;
 
 public class SwingThreadCountView extends ThreadCountView implements SwingComponent {
     
@@ -56,11 +57,26 @@ public class SwingThreadCountView extends ThreadCountView implements SwingCompon
         timelinePanel.addHierarchyListener(new ComponentVisibleListener() {
             @Override
             public void componentShown(Component component) {
-                SwingThreadCountView.this.notify(Action.VISIBLE);
+                SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+                    @Override
+                    protected Void doInBackground() throws Exception {
+                        SwingThreadCountView.this.notify(Action.VISIBLE);
+                        return null;
+                    }
+                };
+                worker.execute();
             }
+
             @Override
             public void componentHidden(Component component) {
-                SwingThreadCountView.this.notify(Action.HIDDEN);
+                SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+                    @Override
+                    protected Void doInBackground() throws Exception {
+                        SwingThreadCountView.this.notify(Action.HIDDEN);
+                        return null;
+                    }
+                };
+                worker.execute();
             }
         });
     }

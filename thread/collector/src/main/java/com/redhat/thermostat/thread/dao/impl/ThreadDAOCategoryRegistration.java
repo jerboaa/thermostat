@@ -52,15 +52,17 @@ public class ThreadDAOCategoryRegistration implements CategoryRegistration {
 
     @Override
     public Set<String> getCategoryNames() {
-        Set<String> categories = new HashSet<>(5);
+        Set<String> categories = new HashSet<>();
+
         categories.add(ThreadDao.DEADLOCK_INFO.getName());
         categories.add(ThreadDao.THREAD_HARVESTING_STATUS.getName());
         categories.add(ThreadDao.THREAD_HEADER.getName());
         categories.add(ThreadDao.THREAD_STATE.getName());
-        categories.add(ThreadDaoCategories.THREAD_SUMMARY.getName());
         categories.add(ThreadDao.THREAD_CONTENTION_SAMPLE.getName());
+
+        ThreadDaoCategories.register(categories);
+
         return categories;
     }
-
 }
 

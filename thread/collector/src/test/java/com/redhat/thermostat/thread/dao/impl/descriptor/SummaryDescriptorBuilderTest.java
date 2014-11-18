@@ -36,10 +36,7 @@
 
 package com.redhat.thermostat.thread.dao.impl.descriptor;
 
-import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.testutils.StatementDescriptorTester;
 import com.redhat.thermostat.thread.dao.impl.ThreadDaoCategories;
-import com.redhat.thermostat.thread.model.ThreadSummary;
 import junit.framework.TestCase;
 import org.junit.Test;
 
@@ -47,14 +44,12 @@ public class SummaryDescriptorBuilderTest extends TestCase {
 
     @Test
     public void testBuild() {
-
         SummaryDescriptor summary = new SummaryDescriptorBuilder().build();
         assertNotNull(summary);
     }
 
     @Test
     public void testCategory() {
-
         SummaryDescriptor summary = new SummaryDescriptorBuilder().build();
         assertEquals(ThreadDaoCategories.THREAD_SUMMARY, summary.getCategory());
     }
@@ -62,29 +57,13 @@ public class SummaryDescriptorBuilderTest extends TestCase {
     @Test
     public void testAddDesc() throws Exception {
         SummaryDescriptor summary = new SummaryDescriptorBuilder().build();
-        testStatement(summary.addDesc);
+        DescriptorTester.testStatement(summary.getCategory(), summary.addDesc);
     }
 
     @Test
     public void testRangeDesc() throws Exception {
 
         SummaryDescriptor summary = new SummaryDescriptorBuilder().build();
-        testStatement(summary.rangeDesc);
-    }
-
-    @Test
-    public void testSessionDesc() throws Exception {
-
-        SummaryDescriptor summary = new SummaryDescriptorBuilder().build();
-        testStatement(summary.sessionsDesc);
-    }
-
-    private void testStatement(String statement) throws Exception {
-
-        StatementDescriptorTester<ThreadSummary> tester = new StatementDescriptorTester<>();
-        StatementDescriptor<ThreadSummary> desc =
-                new StatementDescriptor<>(ThreadDaoCategories.THREAD_SUMMARY, statement);
-        tester.testParseBasic(desc);
-        tester.testParseSemantic(desc);
+        DescriptorTester.testStatement(summary.getCategory(), summary.rangeDesc);
     }
 }

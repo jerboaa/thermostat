@@ -34,45 +34,35 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.harvester;
+package com.redhat.thermostat.thread.dao.impl.descriptor;
 
-import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.model.ThreadSession;
-import com.redhat.thermostat.thread.model.ThreadSummary;
-import java.lang.management.ThreadMXBean;
+import com.redhat.thermostat.thread.dao.impl.ThreadDaoCategories;
+import junit.framework.TestCase;
+import org.junit.Test;
 
-/*
- */
-class ThreadSummaryHelper {
+public class ThreadSessionDescriptorBuilderTest extends TestCase {
 
-    private String vmId;
-    private WriterID writerId;
-    private ThreadDao threadDao;
-
-    ThreadSummaryHelper(ThreadDao threadDao, WriterID writerId, String vmId) {
-        this.vmId = vmId;
-        this.writerId = writerId;
-        this.threadDao = threadDao;
+    @Test
+    public void testBuild() {
+        ThreadSessionDescriptor descriptor = new ThreadSessionDescriptorBuilder().build();
+        assertNotNull(descriptor);
     }
 
-    ThreadSummary createThreadSummary(ThreadMXBean collectorBean, long timestamp, ThreadSession session) {
-
-        String wId = writerId.getWriterID();
-
-        ThreadSummary summary = new ThreadSummary(wId);
-
-        summary.setCurrentLiveThreads(collectorBean.getThreadCount());
-        summary.setCurrentDaemonThreads(collectorBean.getDaemonThreadCount());
-        summary.setTimeStamp(timestamp);
-        summary.setVmId(vmId);
-
-        summary.setSession(session.getSession());
-
-        return summary;
+    @Test
+    public void testCategory() {
+        ThreadSessionDescriptor descriptor = new ThreadSessionDescriptorBuilder().build();
+        assertEquals(ThreadDaoCategories.THREAD_SESSION, descriptor.getCategory());
     }
 
-    public void saveSummary(ThreadSummary summary) {
-        threadDao.saveSummary(summary);
+    @Test
+    public void testQuerySessions() throws Exception {
+        ThreadSessionDescriptor descriptor = new ThreadSessionDescriptorBuilder().build();
+        DescriptorTester.testStatement(descriptor.getCategory(), descriptor.querySessions);
+    }
+
+    @Test
+    public void testStatementAdd() throws Exception {
+        ThreadSessionDescriptor descriptor = new ThreadSessionDescriptorBuilder().build();
+        DescriptorTester.testStatement(descriptor.getCategory(), descriptor.statementAdd);
     }
 }

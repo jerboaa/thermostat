@@ -42,6 +42,7 @@ import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.ThreadContentionSample;
 import com.redhat.thermostat.thread.model.ThreadHeader;
 import com.redhat.thermostat.thread.model.SessionID;
+import com.redhat.thermostat.thread.model.ThreadSession;
 import com.redhat.thermostat.thread.model.ThreadState;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import java.lang.management.ThreadInfo;
@@ -58,6 +59,7 @@ class HarvesterHelper {
     private ThreadHeaderHelper headerHelper;
     private ThreadStateHelper stateHelper;
     private ThreadContentionHelper contentionHelper;
+    private ThreadSessionHelper sessionHelper;
 
     HarvesterHelper(ThreadDao threadDao, Clock clock, String vmId, WriterID writerId)
     {
@@ -65,14 +67,16 @@ class HarvesterHelper {
              new ThreadSummaryHelper(threadDao, writerId, vmId),
              new ThreadHeaderHelper(threadDao, writerId, vmId),
              new ThreadStateHelper(threadDao, writerId, vmId),
-             new ThreadContentionHelper(threadDao, writerId, vmId));
+             new ThreadContentionHelper(threadDao, writerId, vmId),
+             new ThreadSessionHelper(threadDao, writerId, vmId, clock));
     }
 
     HarvesterHelper(ThreadDao threadDao, Clock clock, String vmId,
                     ThreadSummaryHelper summaryHelper,
                     ThreadHeaderHelper headerHelper,
                     ThreadStateHelper stateHelper,
-                    ThreadContentionHelper contentionHelper)
+                    ThreadContentionHelper contentionHelper,
+                    ThreadSessionHelper sessionHelper)
     {
         this.vmId = vmId;
         this.clock = clock;
@@ -82,16 +86,18 @@ class HarvesterHelper {
         this.stateHelper = stateHelper;
 
         this.contentionHelper = contentionHelper;
+        this.sessionHelper = sessionHelper;
     }
 
-    synchronized void collectAndSaveThreadData(SessionID session,
+    synchronized void collectAndSaveThreadData(ThreadSession session,
                                                ThreadMXBean collectorBean)
     {
         long timestamp = clock.getRealTimeMillis();
 
-        ThreadSummary summary = summaryHelper.createThreadSummary(collectorBean,
-                                                                  timestamp,
-                                                                  session);
+        ThreadSummary summary =
+                summaryHelper.createThreadSummary(collectorBean,
+                                                  timestamp,
+                                                  session);
         summaryHelper.saveSummary(summary);
 
         // this two can't be null, but the check is there to allow for
@@ -127,5 +133,13 @@ class HarvesterHelper {
                                                                   timestamp);
             contentionHelper.saveContentionSample(contentionSample);
         }
+    }
+
+    public ThreadSession createSession() {
+        return sessionHelper.createSession();
+    }
+
+    public void saveSession(ThreadSession sessionID) {
+        sessionHelper.saveSession(sessionID);
     }
 }

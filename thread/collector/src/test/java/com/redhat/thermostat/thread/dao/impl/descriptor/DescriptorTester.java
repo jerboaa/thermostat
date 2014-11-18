@@ -34,45 +34,23 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.harvester;
+package com.redhat.thermostat.thread.dao.impl.descriptor;
 
-import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.model.ThreadSession;
-import com.redhat.thermostat.thread.model.ThreadSummary;
-import java.lang.management.ThreadMXBean;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.storage.testutils.StatementDescriptorTester;
 
-/*
+/**
+ *
  */
-class ThreadSummaryHelper {
+public class DescriptorTester {
 
-    private String vmId;
-    private WriterID writerId;
-    private ThreadDao threadDao;
+    public static <C extends Pojo> void testStatement(Category<C> category, String statement) throws Exception {
 
-    ThreadSummaryHelper(ThreadDao threadDao, WriterID writerId, String vmId) {
-        this.vmId = vmId;
-        this.writerId = writerId;
-        this.threadDao = threadDao;
-    }
-
-    ThreadSummary createThreadSummary(ThreadMXBean collectorBean, long timestamp, ThreadSession session) {
-
-        String wId = writerId.getWriterID();
-
-        ThreadSummary summary = new ThreadSummary(wId);
-
-        summary.setCurrentLiveThreads(collectorBean.getThreadCount());
-        summary.setCurrentDaemonThreads(collectorBean.getDaemonThreadCount());
-        summary.setTimeStamp(timestamp);
-        summary.setVmId(vmId);
-
-        summary.setSession(session.getSession());
-
-        return summary;
-    }
-
-    public void saveSummary(ThreadSummary summary) {
-        threadDao.saveSummary(summary);
+        StatementDescriptorTester<C> tester = new StatementDescriptorTester<>();
+        StatementDescriptor<C> desc = new StatementDescriptor<>(category, statement);
+        tester.testParseBasic(desc);
+        tester.testParseSemantic(desc);
     }
 }

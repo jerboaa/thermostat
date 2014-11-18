@@ -34,45 +34,29 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.harvester;
+package com.redhat.thermostat.thread.dao.impl.descriptor;
 
-import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.model.ThreadSession;
-import com.redhat.thermostat.thread.model.ThreadSummary;
-import java.lang.management.ThreadMXBean;
+import junit.framework.TestCase;
+import org.junit.Before;
 
-/*
- */
-class ThreadSummaryHelper {
+public class ThreadSessionDescriptorTest extends TestCase {
 
-    private String vmId;
-    private WriterID writerId;
-    private ThreadDao threadDao;
+    private ThreadSessionDescriptor descriptor;
 
-    ThreadSummaryHelper(ThreadDao threadDao, WriterID writerId, String vmId) {
-        this.vmId = vmId;
-        this.writerId = writerId;
-        this.threadDao = threadDao;
+    @Before
+    public void setUp() {
+        descriptor = new ThreadSessionDescriptorBuilder().build();
     }
 
-    ThreadSummary createThreadSummary(ThreadMXBean collectorBean, long timestamp, ThreadSession session) {
-
-        String wId = writerId.getWriterID();
-
-        ThreadSummary summary = new ThreadSummary(wId);
-
-        summary.setCurrentLiveThreads(collectorBean.getThreadCount());
-        summary.setCurrentDaemonThreads(collectorBean.getDaemonThreadCount());
-        summary.setTimeStamp(timestamp);
-        summary.setVmId(vmId);
-
-        summary.setSession(session.getSession());
-
-        return summary;
+    public void testQuerySessions() throws Exception {
+        String expected =
+                "QUERY vm-thread-session WHERE 'vmId' = ?s AND 'timeStamp' >= ?l AND 'timeStamp' <= ?l SORT 'timeStamp' DSC LIMIT ?i";
+        assertEquals(expected, descriptor.querySessions);
     }
 
-    public void saveSummary(ThreadSummary summary) {
-        threadDao.saveSummary(summary);
+    public void testStatementAdd() throws Exception {
+        String expected =
+                "ADD vm-thread-session SET 'agentId' = ?s , 'vmId' = ?s , 'session' = ?s , 'timeStamp' = ?l";
+        assertEquals(expected, descriptor.statementAdd);
     }
 }

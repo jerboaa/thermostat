@@ -44,6 +44,7 @@ import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.ThreadContentionSample;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
 import com.redhat.thermostat.thread.model.ThreadHeader;
+import com.redhat.thermostat.thread.model.ThreadSession;
 import com.redhat.thermostat.thread.model.ThreadState;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import com.redhat.thermostat.thread.model.VmDeadLockData;
@@ -133,7 +134,16 @@ public interface ThreadDao {
 
     void saveSummary(ThreadSummary summary);
     List<ThreadSummary> getSummary(VmRef ref, SessionID session, Range<Long> range, int limit);
-    List<SessionID> getAvailableThreadSummarySessions(VmRef ref, Range<Long> range, int limit);
+
+    /**
+     * Returns a list of sessions registered by thread sampling.
+     */
+    List<ThreadSession> getSessions(VmRef ref, Range<Long> range, int limit);
+
+    /**
+     * Save the given session to the database.
+     */
+    void saveSession(ThreadSession session);
 
     /**
      * Gets the total time interval for the entire data related to

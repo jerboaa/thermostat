@@ -51,10 +51,13 @@ import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.dao.impl.descriptor.SummaryDescriptor;
 import com.redhat.thermostat.thread.dao.impl.descriptor.SummaryDescriptorBuilder;
+import com.redhat.thermostat.thread.dao.impl.descriptor.ThreadSessionDescriptor;
+import com.redhat.thermostat.thread.dao.impl.descriptor.ThreadSessionDescriptorBuilder;
 import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.ThreadContentionSample;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
 import com.redhat.thermostat.thread.model.ThreadHeader;
+import com.redhat.thermostat.thread.model.ThreadSession;
 import com.redhat.thermostat.thread.model.ThreadState;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import com.redhat.thermostat.thread.model.VmDeadLockData;
@@ -69,6 +72,7 @@ public class ThreadDaoImpl implements ThreadDao {
     private static final Logger logger = LoggingUtils.getLogger(ThreadDaoImpl.class);
 
     static final SummaryDescriptor SUMMARY = new SummaryDescriptorBuilder().build();
+    static final ThreadSessionDescriptor SESSIONS = new ThreadSessionDescriptorBuilder().build();
 
     // Queries
 
@@ -194,7 +198,7 @@ public class ThreadDaoImpl implements ThreadDao {
     public ThreadDaoImpl(Storage storage) {
         this.storage = storage;
 
-        storage.registerCategory(SUMMARY.getCategory());
+        ThreadDaoCategories.register(storage);
 
         storage.registerCategory(THREAD_HARVESTING_STATUS);
         storage.registerCategory(THREAD_HEADER);
@@ -476,20 +480,27 @@ public class ThreadDaoImpl implements ThreadDao {
     }
 
     @Override
-    public List<SessionID> getAvailableThreadSummarySessions(VmRef ref, Range<Long> range, int limit) {
-        List<SessionID> result = new ArrayList<>();
+    public List<ThreadSession> getSessions(VmRef ref, Range<Long> range, int limit) {
+        List<ThreadSession> result = new ArrayList<>();
 
-        Cursor<ThreadSummary> cursor = null;
+        Cursor<ThreadSession> cursor = null;
 
         try {
-            cursor = SUMMARY.queryGet(ref, range, limit, storage);
+            cursor = SESSIONS.queryGet(ref, range, limit, storage);
             while (cursor.hasNext()) {
-                ThreadSummary summary = cursor.next();
-                result.add(new SessionID(summary.getSession()));
+                ThreadSession summary = cursor.next();
+                result.add(summary);
             }
         } catch (Exception ignore) { ignore.printStackTrace(); }
 
         return result;
+    }
+
+    public void saveSession(ThreadSession session) {
+        try {
+            SESSIONS.statementAdd(session, storage);
+
+        } catch (Exception ignore) { ignore.printStackTrace(); }
     }
 
     @Override

@@ -53,6 +53,7 @@ import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.ThreadContentionSample;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
 import com.redhat.thermostat.thread.model.ThreadHeader;
+import com.redhat.thermostat.thread.model.ThreadSession;
 import com.redhat.thermostat.thread.model.ThreadState;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import com.redhat.thermostat.thread.model.VmDeadLockData;
@@ -134,17 +135,15 @@ public class ThreadMXBeanCollector implements ThreadCollector {
     }
 
     @Override
-    public List<SessionID> getAvailableThreadSummarySessions(Range<Long> range) {
-        return threadDao.getAvailableThreadSummarySessions(ref, range, Integer.MAX_VALUE);
+    public List<ThreadSession> getThreadSessions(Range<Long> range) {
+        return threadDao.getSessions(ref, range, Integer.MAX_VALUE);
     }
 
     @Override
-    public SessionID getLastThreadSummarySession() {
-        List<SessionID> sessions =
-                threadDao.getAvailableThreadSummarySessions(ref,
-                                                            new Range<>(0l, Long.MAX_VALUE),
-                                                            1);
-        return sessions.isEmpty() ? null : sessions.get(0);
+    public SessionID getLastThreadSession() {
+        List<ThreadSession> sessions =
+                threadDao.getSessions(ref, new Range<>(0l, Long.MAX_VALUE), 1);
+        return sessions.isEmpty() ? null : new SessionID(sessions.get(0).getSession());
     }
 
     @Override

@@ -34,45 +34,32 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.harvester;
+package com.redhat.thermostat.thread.dao.impl;
 
-import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.model.ThreadSession;
-import com.redhat.thermostat.thread.model.ThreadSummary;
-import java.lang.management.ThreadMXBean;
+import com.redhat.thermostat.storage.core.Storage;
+import java.util.HashSet;
+import java.util.Set;
+import junit.framework.TestCase;
 
-/*
- */
-class ThreadSummaryHelper {
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
-    private String vmId;
-    private WriterID writerId;
-    private ThreadDao threadDao;
+public class ThreadDaoCategoriesTest extends TestCase {
 
-    ThreadSummaryHelper(ThreadDao threadDao, WriterID writerId, String vmId) {
-        this.vmId = vmId;
-        this.writerId = writerId;
-        this.threadDao = threadDao;
+    public void testRegister() throws Exception {
+        Set<String> set = new HashSet<>();
+        ThreadDaoCategories.register(set);
+
+        // no real need to check all, but adding more doesn't hurt
+        assertTrue(set.contains(ThreadDaoCategories.THREAD_SESSION.getName()));
+        assertTrue(set.contains(ThreadDaoCategories.THREAD_SUMMARY.getName()));
     }
 
-    ThreadSummary createThreadSummary(ThreadMXBean collectorBean, long timestamp, ThreadSession session) {
+    public void testRegisterInStorage() throws Exception {
+        Storage storage = mock(Storage.class);
+        ThreadDaoCategories.register(storage);
 
-        String wId = writerId.getWriterID();
-
-        ThreadSummary summary = new ThreadSummary(wId);
-
-        summary.setCurrentLiveThreads(collectorBean.getThreadCount());
-        summary.setCurrentDaemonThreads(collectorBean.getDaemonThreadCount());
-        summary.setTimeStamp(timestamp);
-        summary.setVmId(vmId);
-
-        summary.setSession(session.getSession());
-
-        return summary;
-    }
-
-    public void saveSummary(ThreadSummary summary) {
-        threadDao.saveSummary(summary);
+        verify(storage).registerCategory(ThreadDaoCategories.THREAD_SESSION);
+        verify(storage).registerCategory(ThreadDaoCategories.THREAD_SUMMARY);
     }
 }

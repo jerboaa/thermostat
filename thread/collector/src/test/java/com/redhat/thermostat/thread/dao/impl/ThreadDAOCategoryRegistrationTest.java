@@ -39,13 +39,12 @@ package com.redhat.thermostat.thread.dao.impl;
 import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
 import com.redhat.thermostat.storage.internal.dao.DAOImplCategoryRegistration;
 import com.redhat.thermostat.thread.dao.ThreadDao;
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Set;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -54,18 +53,28 @@ import static org.junit.Assert.assertTrue;
 
 public class ThreadDAOCategoryRegistrationTest {
 
+    private static final int EXPECTED_CATEGORIES = 7;
+
     @Test
     public void registersAllCategories() {
         ThreadDAOCategoryRegistration reg = new ThreadDAOCategoryRegistration();
         Set<String> categories = reg.getCategoryNames();
-        assertEquals(6, categories.size());
+        assertEquals(EXPECTED_CATEGORIES, categories.size());
+
         assertFalse("null descriptor not allowed", categories.contains(null));
+
         assertTrue(categories.contains(ThreadDao.DEADLOCK_INFO.getName()));
         assertTrue(categories.contains(ThreadDao.THREAD_HEADER.getName()));
         assertTrue(categories.contains(ThreadDao.THREAD_STATE.getName()));
-        assertTrue(categories.contains(ThreadDaoCategories.THREAD_SUMMARY.getName()));
         assertTrue(categories.contains(ThreadDao.THREAD_HARVESTING_STATUS.getName()));
         assertTrue(categories.contains(ThreadDao.THREAD_CONTENTION_SAMPLE.getName()));
+
+        Set<String> sourceCategories = new HashSet<>();
+        ThreadDaoCategories.register(sourceCategories);
+
+        for (String category : sourceCategories) {
+            assertTrue(categories.contains(category));
+        }
     }
     
     /*
@@ -92,7 +101,7 @@ public class ThreadDAOCategoryRegistrationTest {
         // storage-core + this module
         assertEquals(2, registrations.size());
         assertNotNull(threadCatReg);
-        assertEquals(6, threadCatReg.getCategoryNames().size());
+        assertEquals(EXPECTED_CATEGORIES, threadCatReg.getCategoryNames().size());
     }
 }
 

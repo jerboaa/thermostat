@@ -54,14 +54,6 @@ public class SummaryDescriptorTest extends TestCase {
         assertEquals(expected, descriptor.rangeDesc);
     }
 
-    public void testGetSessionsRange() throws Exception {
-
-        String expected =
-                "QUERY vm-thread-summary WHERE 'vmId' = ?s AND 'timeStamp' >= ?l AND 'timeStamp' <= ?l SORT 'timeStamp' DSC LIMIT ?i";
-        assertEquals(expected, descriptor.sessionsDesc);
-
-    }
-
     public void testAddSummary() throws Exception {
 
         String expected =

@@ -40,16 +40,15 @@ import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.model.SessionID;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-
+import com.redhat.thermostat.thread.model.ThreadSession;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -241,7 +240,7 @@ public class HarvesterTest {
 
         harvesterRunnable.run();
 
-        verify(helper).collectAndSaveThreadData(any(SessionID.class), eq(sunBean));
+        verify(helper).collectAndSaveThreadData(any(ThreadSession.class), eq(sunBean));
     }
 
     @Test
@@ -277,7 +276,7 @@ public class HarvesterTest {
 
         harvesterRunnable.run();
 
-        verify(helper).collectAndSaveThreadData(any(SessionID.class), eq(mxBean));
+        verify(helper).collectAndSaveThreadData(any(ThreadSession.class), eq(mxBean));
     }
 
     @Test

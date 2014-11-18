@@ -36,15 +36,24 @@
 
 package com.redhat.thermostat.thread.dao.impl;
 
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.thread.model.ThreadSession;
 import com.redhat.thermostat.thread.model.ThreadSummary;
+import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  */
 public class ThreadDaoCategories {
+
+    private static final Logger logger = LoggingUtils.getLogger(ThreadDaoCategories.class);
 
     public static final Category<ThreadSummary> THREAD_SUMMARY =
             new Category<>("vm-thread-summary", ThreadSummary.class,
@@ -56,4 +65,48 @@ public class ThreadDaoCategories {
                                    ThreadDaoKeys.LIVE_THREADS_KEY,
                                    ThreadDaoKeys.DAEMON_THREADS_KEY),
                            Arrays.<Key<?>>asList(Key.TIMESTAMP, ThreadDaoKeys.SESSION));
+
+
+    public static final Category<ThreadSession> THREAD_SESSION =
+            new Category<>("vm-thread-session", ThreadSession.class,
+                           Arrays.<Key<?>>asList(
+                                   Key.AGENT_ID,
+                                   Key.VM_ID,
+                                   ThreadDaoKeys.SESSION,
+                                   Key.TIMESTAMP),
+                           Arrays.<Key<?>>asList(Key.TIMESTAMP, Key.VM_ID));
+
+    public static void register(Collection<String> collection) {
+        for (Field field : ThreadDaoCategories.class.getDeclaredFields()) {
+            field.setAccessible(true);
+            if (field.getType().isAssignableFrom(Category.class)) {
+                Category category = null;
+                try {
+                    category = (Category) field.get(null);
+                    collection.add(category.getName());
+
+                } catch (IllegalAccessException e) {
+                    logger.log(Level.SEVERE, "Error while registering categories...", e);
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+    }
+
+    public static void register(Storage storage) {
+        for (Field field : ThreadDaoCategories.class.getDeclaredFields()) {
+            field.setAccessible(true);
+            if (field.getType().isAssignableFrom(Category.class)) {
+                Category category = null;
+                try {
+                    category = (Category) field.get(null);
+                    storage.registerCategory(category);
+
+                } catch (IllegalAccessException e) {
+                    logger.log(Level.SEVERE, "Error while registering categories...", e);
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+    }
 }

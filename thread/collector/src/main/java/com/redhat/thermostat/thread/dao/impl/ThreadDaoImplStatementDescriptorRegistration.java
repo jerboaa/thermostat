@@ -59,7 +59,9 @@ public class ThreadDaoImplStatementDescriptorRegistration implements
         descs.add(ThreadDaoImpl.QUERY_LATEST_DEADLOCK_INFO);
         descs.add(ThreadDaoImpl.QUERY_LATEST_HARVESTING_STATUS);
 
+        // TODO: this needs to go in an helper class
         descs.addAll(ThreadDaoImpl.SUMMARY.describe());
+        descs.addAll(ThreadDaoImpl.SESSIONS.describe());
 
         descs.add(ThreadDaoImpl.DESC_ADD_THREAD_DEADLOCK_DATA);
         descs.add(ThreadDaoImpl.DESC_ADD_THREAD_HARVESTING_STATUS);
