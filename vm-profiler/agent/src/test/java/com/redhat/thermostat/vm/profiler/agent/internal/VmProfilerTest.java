@@ -36,40 +36,53 @@
 
 package com.redhat.thermostat.vm.profiler.agent.internal;
 
+import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.io.IOException;
 import java.util.Properties;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
+import org.junit.Before;
+import org.junit.Test;
 
-import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.agent.command.ReceiverRegistry;
+import com.redhat.thermostat.vm.profiler.agent.internal.VmProfiler.Attacher;
+import com.sun.tools.attach.AgentInitializationException;
+import com.sun.tools.attach.AgentLoadException;
+import com.sun.tools.attach.AttachNotSupportedException;
+import com.sun.tools.attach.VirtualMachine;
 
-public class Activator implements BundleActivator {
+public class VmProfilerTest {
 
-    private ReceiverRegistry requestHandlerRegisteration;
-    private VmStatusListenerRegistrar vmStatusRegistrar;
-    private ProfileVmRequestReceiver profileRequestHandler;
+    private VmProfiler profiler;
+    private VirtualMachine vm;
+    private Attacher attacher;
 
-    @Override
-    public void start(final BundleContext context) throws Exception {
-        Properties configuration = new Properties();
-        configuration.load(this.getClass().getResourceAsStream("settings.properties"));
-        VmProfiler profiler = new VmProfiler(configuration);
-        profileRequestHandler = new ProfileVmRequestReceiver(profiler);
+    private final String AGENT_JAR = "foo";
+    private final String ASM_JAR = "bar";
 
-        requestHandlerRegisteration = new ReceiverRegistry(context);
-        requestHandlerRegisteration.registerReceiver(profileRequestHandler);
+    @Before
+    public void setUp() throws Exception {
+        Properties props = new Properties();
+        props.setProperty("AGENT_JAR", AGENT_JAR);
+        props.setProperty("ASM_JAR", ASM_JAR);
 
-        vmStatusRegistrar = new VmStatusListenerRegistrar(context);
-        vmStatusRegistrar.register(profileRequestHandler);
+        attacher = mock(Attacher.class);
+        vm = mock(VirtualMachine.class);
+        when(attacher.attach(isA(String.class))).thenReturn(vm);
+
+        profiler = new VmProfiler(props, attacher);
     }
 
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        requestHandlerRegisteration.unregisterReceivers();
-        requestHandlerRegisteration = null;
+    @Test
+    public void loadsJvmAgent() throws ProfilerException, AttachNotSupportedException, IOException, AgentLoadException, AgentInitializationException {
+        final int PID = 0;
 
-        vmStatusRegistrar.unregister(profileRequestHandler);
+        profiler.startProfiling(PID);
+
+        verify(attacher).attach(String.valueOf(PID));
+        verify(vm).loadAgent(AGENT_JAR, "");
+        verify(vm).detach();
     }
 }
-

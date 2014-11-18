@@ -34,42 +34,46 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.profiler.agent.internal;
+package com.redhat.thermostat.vm.profiler.agent.jvm;
 
-import java.util.Properties;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassWriter;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
+/** A {@link ClassWriter} that works with custom classloaders */
+public class ClassLoaderFriendlyClassWriter extends ClassWriter {
 
-import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.agent.command.ReceiverRegistry;
+    private ClassLoader loader;
 
-public class Activator implements BundleActivator {
-
-    private ReceiverRegistry requestHandlerRegisteration;
-    private VmStatusListenerRegistrar vmStatusRegistrar;
-    private ProfileVmRequestReceiver profileRequestHandler;
-
-    @Override
-    public void start(final BundleContext context) throws Exception {
-        Properties configuration = new Properties();
-        configuration.load(this.getClass().getResourceAsStream("settings.properties"));
-        VmProfiler profiler = new VmProfiler(configuration);
-        profileRequestHandler = new ProfileVmRequestReceiver(profiler);
-
-        requestHandlerRegisteration = new ReceiverRegistry(context);
-        requestHandlerRegisteration.registerReceiver(profileRequestHandler);
-
-        vmStatusRegistrar = new VmStatusListenerRegistrar(context);
-        vmStatusRegistrar.register(profileRequestHandler);
+    public ClassLoaderFriendlyClassWriter(ClassReader classReader, int flags, ClassLoader loader) {
+        super(classReader, flags);
+        this.loader = loader;
     }
 
+    // this plays nicer with custom classloaders
     @Override
-    public void stop(BundleContext context) throws Exception {
-        requestHandlerRegisteration.unregisterReceivers();
-        requestHandlerRegisteration = null;
-
-        vmStatusRegistrar.unregister(profileRequestHandler);
+    protected String getCommonSuperClass(String type1, String type2) {
+        // this is code from ClassWriter.getCommonSuperClass except with the
+        // hardcoded loader replaced with user-supplied classloader
+        Class<?> c, d;
+        try {
+            c = Class.forName(type1.replace('/', '.'), false, loader);
+            d = Class.forName(type2.replace('/', '.'), false, loader);
+        } catch (Exception e) {
+            throw new RuntimeException(e.toString());
+        }
+        if (c.isAssignableFrom(d)) {
+            return type1;
+        }
+        if (d.isAssignableFrom(c)) {
+            return type2;
+        }
+        if (c.isInterface() || d.isInterface()) {
+            return "java/lang/Object";
+        } else {
+            do {
+                c = c.getSuperclass();
+            } while (!c.isAssignableFrom(d));
+            return c.getName().replace('.', '/');
+        }
     }
 }
-

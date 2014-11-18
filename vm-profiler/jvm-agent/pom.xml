@@ -52,6 +52,22 @@
     thermostat and does not know about thermostat.  It is not OSGi, and
     has no dependencies on OSGi.
   -->
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestFile>src/main/resources/META-INF/MANIFEST.MF</manifestFile>
+            <manifestEntries>
+              <Boot-Class-Path>${thermostat.vm.profiler.dir}asm-all-${asm.version}.jar ${thermostat.vm.profiler.dir}thermostat-vm-profiler-jvm-agent-${project.version}.jar</Boot-Class-Path>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 
   <dependencies>
     <dependency>
@@ -63,6 +79,11 @@
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ow2.asm</groupId>
+      <artifactId>asm-all</artifactId>
+      <version>${asm.version}</version>
     </dependency>
   </dependencies>
 </project>

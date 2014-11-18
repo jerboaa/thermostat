@@ -112,6 +112,16 @@
       <artifactId>thermostat-vm-profiler-agent</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-profiler-jvm-agent</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.ow2.asm</groupId>
+      <artifactId>asm-all</artifactId>
+      <version>${asm.version}</version>
+    </dependency>
   </dependencies>
 
 </project>

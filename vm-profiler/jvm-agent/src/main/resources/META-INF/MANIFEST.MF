@@ -1,0 +1,4 @@
+Premain-Class: com.redhat.thermostat.vm.profiler.agent.jvm.ProfilerAgent
+Agent-Class: com.redhat.thermostat.vm.profiler.agent.jvm.ProfilerAgent
+Can-Retransform-Classes: true
+Comment: Boot-Class-Path added by build system

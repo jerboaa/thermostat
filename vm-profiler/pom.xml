@@ -50,6 +50,11 @@
 
   <name>Thermostat VM CPU plugin</name>
 
+  <properties>
+    <thermostat.vm.profiler.dir>${thermostat.home}plugins/vm-profiler/</thermostat.vm.profiler.dir>
+    <thermostat.vm.profiler.agent.asm.path>${thermostat.home}plugins/vm-profiler/asm-all-${asm.version}.jar</thermostat.vm.profiler.agent.asm.path>
+  </properties>
+
   <modules>
     <module>agent</module>
     <module>jvm-agent</module>

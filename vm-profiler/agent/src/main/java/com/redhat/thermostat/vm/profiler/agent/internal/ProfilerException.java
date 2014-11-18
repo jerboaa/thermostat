@@ -36,40 +36,9 @@
 
 package com.redhat.thermostat.vm.profiler.agent.internal;
 
-import java.util.Properties;
+public class ProfilerException extends Exception {
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-
-import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.agent.command.ReceiverRegistry;
-
-public class Activator implements BundleActivator {
-
-    private ReceiverRegistry requestHandlerRegisteration;
-    private VmStatusListenerRegistrar vmStatusRegistrar;
-    private ProfileVmRequestReceiver profileRequestHandler;
-
-    @Override
-    public void start(final BundleContext context) throws Exception {
-        Properties configuration = new Properties();
-        configuration.load(this.getClass().getResourceAsStream("settings.properties"));
-        VmProfiler profiler = new VmProfiler(configuration);
-        profileRequestHandler = new ProfileVmRequestReceiver(profiler);
-
-        requestHandlerRegisteration = new ReceiverRegistry(context);
-        requestHandlerRegisteration.registerReceiver(profileRequestHandler);
-
-        vmStatusRegistrar = new VmStatusListenerRegistrar(context);
-        vmStatusRegistrar.register(profileRequestHandler);
-    }
-
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        requestHandlerRegisteration.unregisterReceivers();
-        requestHandlerRegisteration = null;
-
-        vmStatusRegistrar.unregister(profileRequestHandler);
+    public ProfilerException(String message, Exception cause) {
+        super(message, cause);
     }
 }
-

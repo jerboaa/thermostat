@@ -36,30 +36,93 @@
 
 package com.redhat.thermostat.vm.profiler.agent.internal;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import com.redhat.thermostat.agent.VmStatusListener;
 import com.redhat.thermostat.agent.command.RequestReceiver;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.vm.profiler.common.ProfileRequest;
 
-public class ProfileVmRequestReceiver implements RequestReceiver {
+public class ProfileVmRequestReceiver implements RequestReceiver, VmStatusListener {
+
+    private static final Logger logger = LoggingUtils.getLogger(ProfileVmRequestReceiver.class);
+
+    private ConcurrentHashMap<String, Integer> vmIdToPid = new ConcurrentHashMap<>();
+
+    /** A pid that corresponds to an unknown */
+    private static final int UNKNOWN_VMID = -1;
+
+    private final VmProfiler profiler;
+
+    public ProfileVmRequestReceiver(VmProfiler profiler) {
+        this.profiler = profiler;
+    }
+
+    @Override
+    public void vmStatusChanged(Status newStatus, String vmId, int pid) {
+        if (newStatus == Status.VM_ACTIVE || newStatus == Status.VM_STARTED) {
+            // assert not already being profiled
+            vmIdToPid.putIfAbsent(vmId, pid);
+        } else {
+            // FIXME disable profiler if active?
+            vmIdToPid.remove(vmId, pid);
+        }
+    }
 
     @Override
     public Response receive(Request request) {
+        final Response OK = new Response(ResponseType.OK);
+        final Response ERROR = new Response(ResponseType.NOK);
+
         String value = request.getParameter(ProfileRequest.PROFILE_ACTION);
         String vmId = request.getParameter(ProfileRequest.VM_ID);
-        switch (value) {
-        case ProfileRequest.START_PROFILING:
-            System.out.println("Starting profiling");
-            break;
-        case ProfileRequest.STOP_PROFILING:
-            System.out.println("Stopping profiling");
-            break;
-        default:
-            return new Response(ResponseType.ERROR);
+
+        int pid = getPid(vmId);
+        if (pid == UNKNOWN_VMID) {
+            logger.warning("Unknown vmId: " + vmId + ". Known vmIds are : " + vmIdToPid.keySet().toString());
+            return ERROR;
         }
 
-        return new Response(ResponseType.OK);
+        switch (value) {
+        case ProfileRequest.START_PROFILING:
+            logger.info("Starting profiling " + pid);
+            try {
+                profiler.startProfiling(pid);
+                return OK;
+            } catch (Exception e) {
+                logger.log(Level.INFO, "start profiling failed", e);
+                return ERROR;
+            }
+            /* should not reach here */
+        case ProfileRequest.STOP_PROFILING:
+            logger.info("Stopping profiling " + pid);
+            try {
+                profiler.stopProfiling(pid);
+                return OK;
+            } catch (Exception e) {
+                logger.log(Level.INFO, "stop profiling failed", e);
+                return ERROR;
+            }
+            /* should not reach here */
+        default:
+            logger.warning("Unknown command: '" + value + "'");
+            return ERROR;
+        }
+    }
+
+    /** Return the pid or {@link #UNKNOWN_VMID} */
+    private int getPid(String vmId) {
+        Integer pid = vmIdToPid.get(vmId);
+        if (pid == null) {
+            return UNKNOWN_VMID;
+        } else {
+            return pid;
+        }
     }
 
 }

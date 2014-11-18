@@ -34,42 +34,33 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.profiler.agent.internal;
+package com.redhat.thermostat.vm.profiler.agent.jvm;
 
-import java.util.Properties;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
+public class ProfileRecorder {
 
-import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.agent.command.ReceiverRegistry;
+    private static final ProfileRecorder profileRecorder = new ProfileRecorder();
 
-public class Activator implements BundleActivator {
+    private ConcurrentHashMap<String,AtomicLong> profileData = new ConcurrentHashMap<>();
 
-    private ReceiverRegistry requestHandlerRegisteration;
-    private VmStatusListenerRegistrar vmStatusRegistrar;
-    private ProfileVmRequestReceiver profileRequestHandler;
-
-    @Override
-    public void start(final BundleContext context) throws Exception {
-        Properties configuration = new Properties();
-        configuration.load(this.getClass().getResourceAsStream("settings.properties"));
-        VmProfiler profiler = new VmProfiler(configuration);
-        profileRequestHandler = new ProfileVmRequestReceiver(profiler);
-
-        requestHandlerRegisteration = new ReceiverRegistry(context);
-        requestHandlerRegisteration.registerReceiver(profileRequestHandler);
-
-        vmStatusRegistrar = new VmStatusListenerRegistrar(context);
-        vmStatusRegistrar.register(profileRequestHandler);
+    public static ProfileRecorder getInstance() {
+        return profileRecorder;
     }
 
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        requestHandlerRegisteration.unregisterReceivers();
-        requestHandlerRegisteration = null;
+    public void addData(String dataName, long time) {
+        AtomicLong value = profileData.get(dataName);
+        if (value == null) {
+            value = profileData.putIfAbsent(dataName, new AtomicLong(time));
+        }
+        if (value != null) {
+            value.addAndGet(time);
+        }
+    }
 
-        vmStatusRegistrar.unregister(profileRequestHandler);
+    public Map<String, AtomicLong> getData() {
+        return profileData;
     }
 }
-
