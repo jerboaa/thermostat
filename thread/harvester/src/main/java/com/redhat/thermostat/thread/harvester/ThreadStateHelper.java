@@ -54,8 +54,7 @@ public class ThreadStateHelper {
         this.vmId = vmId;
         this.threadDao = threadDao;
     }
-iqQ:q!
-    
+
     public ThreadState createThreadState(ThreadHeader header, ThreadInfo beanInfo,
                                          long timestamp)
     {
