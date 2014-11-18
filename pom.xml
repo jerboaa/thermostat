@@ -165,6 +165,7 @@ thermostat-cmdc = thermostat-cmdc-grant-garbage-collect, \
                   thermostat-cmdc-grant-dump-heap, \
                   thermostat-cmdc-grant-thread-harvester, \
                   thermostat-cmdc-grant-killvm, \
+                  thermostat-cmdc-grant-profile-vm, \
                   thermostat-cmdc-grant-ping, \
                   thermostat-cmdc-grant-jmx-toggle-notifications
         </dev.roles.snippet>
@@ -335,6 +336,7 @@ password=${agent.dev.password}
     <module>vm-memory</module>
     <module>vm-heap-analysis</module>
     <module>vm-jmx</module>
+    <module>vm-profiler</module>
     <module>notes</module>
     <module>numa</module>
     <module>laf-utils</module>

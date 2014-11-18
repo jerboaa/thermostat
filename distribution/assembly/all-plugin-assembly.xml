@@ -64,6 +64,7 @@
         <include>com.redhat.thermostat:thermostat-vm-jmx-distribution</include>
         <include>com.redhat.thermostat:thermostat-vm-memory-distribution</include>
         <include>com.redhat.thermostat:thermostat-vm-overview-distribution</include>
+        <include>com.redhat.thermostat:thermostat-vm-profiler-distribution</include>
         <include>com.redhat.thermostat:thermostat-schema-info-distribution</include>
         <include>com.redhat.thermostat:thermostat-web-endpoint-distribution</include>
         <include>com.redhat.thermostat:thermostat-killvm-distribution</include>
