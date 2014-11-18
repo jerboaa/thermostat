@@ -37,95 +37,40 @@
 package com.redhat.thermostat.vm.profiler.agent.jvm;
 
 import java.lang.instrument.Instrumentation;
-import java.lang.instrument.UnmodifiableClassException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
+import java.lang.management.ManagementFactory;
+
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
 
 public class Main {
 
     private Instrumentation instrumentation;
+    private MBeanServer server;
 
     public Main(Instrumentation instrumentation) {
+        this(instrumentation, ManagementFactory.getPlatformMBeanServer());
+    }
+
+    public Main(Instrumentation instrumentation, MBeanServer server) {
         this.instrumentation = instrumentation;
+        this.server = server;
     }
 
     public void run() {
         // System.out.println("AGENT: My classloader is " + this.getClass().getClassLoader());
-        handleInitializationTasks();
-    }
 
-    public void handleInitializationTasks() {
-        long start = System.nanoTime();
-
-        // TODO defer any action till later to make sure the agent gets
-        // installed. Later actions can fail without hanging things.
-
-        addShutdownHookToPrintStatsOnEnd();
-        ProfilerInstrumentor profiler = installProfiler(instrumentation);
-
-        instrumentAlreadyLoadedClasses(instrumentation, profiler);
-        long end = System.nanoTime();
-        System.out.println("AGENT: done in : " + (end - start) + "ns");
-    }
-
-    private static ProfilerInstrumentor installProfiler(Instrumentation instrumentation) {
-        ProfilerInstrumentor inst = new AsmBasedInstrumentor();
-        instrumentation.addTransformer(inst, true);
-        return inst;
-    }
-
-    private static void instrumentAlreadyLoadedClasses(Instrumentation instrumentation, ProfilerInstrumentor profiler) {
-        long start = System.nanoTime();
-
-        List<Class<?>> toTransform = new ArrayList<>();
-
-        for (Class<?> klass : instrumentation.getAllLoadedClasses()) {
-            boolean skipThisClass = false;
-            if (!instrumentation.isModifiableClass(klass)) {
-                skipThisClass = true;
-            }
-            if (!profiler.shouldInstrument(klass)) {
-                skipThisClass = true;
-            }
-
-            if (skipThisClass) {
-                continue;
-            }
-
-            toTransform.add(klass);
+        InstrumentationControl control = new InstrumentationControl(instrumentation);
+        control.initialize();
+        try {
+            ObjectName name = new ObjectName("com.redhat.thermostat:type=InstrumentationControl");
+            server.registerMBean(control, name);
+        } catch (Exception e) {
+            System.err.println("Unable to attach agent");
+            e.printStackTrace();
         }
-
-        if (toTransform.size() > 0) {
-            System.out.println("AGENT: Retransforming " + toTransform.size() + " classes");
-            try {
-                instrumentation.retransformClasses(toTransform.toArray(new Class<?>[toTransform.size()]));
-            } catch (UnmodifiableClassException e) {
-                throw new AssertionError("Tried to modify an unmodifiable class", e);
-            } catch (InternalError e) {
-                e.printStackTrace();
-                System.err.println("Error retransforming already loaded classes.");
-            }
-        }
-        long end = System.nanoTime();
-        System.out.println("AGENT: Retansforming took: " + (end - start) + "ns");
     }
 
-    private static void addShutdownHookToPrintStatsOnEnd() {
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                System.out.println("=====");
-                System.out.println("Collected stats");
-                System.out.format("%15s\t%s%n", "Total time (ns)", "Method");
-                Map<String, AtomicLong> data = ProfileRecorder.getInstance().getData();
-                for (Map.Entry<String, AtomicLong> entry : data.entrySet()) {
-                    System.out.format("%15d\t%s%n", entry.getValue().get(), entry.getKey());
-                }
-                System.out.println("=====");
-            }
-        });
+    public static void main(String[] args) {
+        new Main(null).run();
     }
-
 }

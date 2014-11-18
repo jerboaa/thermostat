@@ -34,34 +34,18 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.profiler.agent.internal;
+package com.redhat.thermostat.vm.profiler.agent.jvm;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
+/** Adds and removes instrumentation to generate profiling data */
+public interface InstrumentationControlMXBean {
 
-import org.junit.Test;
+    /** Enable profiling. */
+    void startProfiling();
 
-import com.redhat.thermostat.agent.command.RequestReceiver;
-import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
-import com.redhat.thermostat.testutils.StubBundleContext;
+    /** Disable profiling */
+    void stopProfiling();
 
-public class ActivatorTest {
+    /** @returns whether profiling is currently active or not */
+    boolean isProfiling();
 
-    @Test
-    public void requestHandlerIsRegistered() throws Exception {
-        MXBeanConnectionPool pool = mock(MXBeanConnectionPool.class);
-        StubBundleContext context = new StubBundleContext();
-        context.registerService(MXBeanConnectionPool.class, pool, null);
-
-        Activator activator = new Activator();
-
-        activator.start(context);
-
-        assertTrue(context.isServiceRegistered(RequestReceiver.class.getName(), ProfileVmRequestReceiver.class));
-
-        activator.stop(context);
-
-        assertFalse(context.isServiceRegistered(RequestReceiver.class.getName(), ProfileVmRequestReceiver.class));
-    }
 }

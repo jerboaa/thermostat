@@ -34,34 +34,29 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.profiler.agent.internal;
+package com.redhat.thermostat.vm.profiler.agent.jvm;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+
+import java.lang.instrument.Instrumentation;
+
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.agent.command.RequestReceiver;
-import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
-import com.redhat.thermostat.testutils.StubBundleContext;
-
-public class ActivatorTest {
+public class MainTest {
 
     @Test
-    public void requestHandlerIsRegistered() throws Exception {
-        MXBeanConnectionPool pool = mock(MXBeanConnectionPool.class);
-        StubBundleContext context = new StubBundleContext();
-        context.registerService(MXBeanConnectionPool.class, pool, null);
+    public void registersAnMXBean() throws Exception {
+        Instrumentation instrumentation = mock(Instrumentation.class);
+        MBeanServer mbeanServer = mock(MBeanServer.class);
+        Main main = new Main(instrumentation, mbeanServer);
+        main.run();
 
-        Activator activator = new Activator();
-
-        activator.start(context);
-
-        assertTrue(context.isServiceRegistered(RequestReceiver.class.getName(), ProfileVmRequestReceiver.class));
-
-        activator.stop(context);
-
-        assertFalse(context.isServiceRegistered(RequestReceiver.class.getName(), ProfileVmRequestReceiver.class));
+        verify(mbeanServer).registerMBean(isA(InstrumentationControl.class), eq(new ObjectName("com.redhat.thermostat:type=InstrumentationControl")));
     }
 }

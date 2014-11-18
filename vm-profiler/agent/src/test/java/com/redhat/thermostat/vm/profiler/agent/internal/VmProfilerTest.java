@@ -39,31 +39,43 @@ package com.redhat.thermostat.vm.profiler.agent.internal;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
 import java.util.Properties;
+
+import javax.management.MBeanServerConnection;
+import javax.management.ObjectName;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.vm.profiler.agent.internal.VmProfiler.Attacher;
-import com.sun.tools.attach.AgentInitializationException;
-import com.sun.tools.attach.AgentLoadException;
-import com.sun.tools.attach.AttachNotSupportedException;
 import com.sun.tools.attach.VirtualMachine;
 
 public class VmProfilerTest {
 
     private VmProfiler profiler;
+
     private VirtualMachine vm;
+    private MBeanServerConnection server;
+    private MXBeanConnection connection;
+    private MXBeanConnectionPool connectionPool;
     private Attacher attacher;
+
+    private final int PID = 0;
 
     private final String AGENT_JAR = "foo";
     private final String ASM_JAR = "bar";
 
+    private ObjectName instrumentationName;
+
     @Before
     public void setUp() throws Exception {
+        instrumentationName = new ObjectName("com.redhat.thermostat:type=InstrumentationControl");
+
         Properties props = new Properties();
         props.setProperty("AGENT_JAR", AGENT_JAR);
         props.setProperty("ASM_JAR", ASM_JAR);
@@ -72,17 +84,37 @@ public class VmProfilerTest {
         vm = mock(VirtualMachine.class);
         when(attacher.attach(isA(String.class))).thenReturn(vm);
 
-        profiler = new VmProfiler(props, attacher);
+        server = mock(MBeanServerConnection.class);
+
+        connection = mock(MXBeanConnection.class);
+        when(connection.get()).thenReturn(server);
+
+        connectionPool = mock(MXBeanConnectionPool.class);
+        when(connectionPool.acquire(PID)).thenReturn(connection);
+
+        profiler = new VmProfiler(props, connectionPool, attacher);
     }
 
     @Test
-    public void loadsJvmAgent() throws ProfilerException, AttachNotSupportedException, IOException, AgentLoadException, AgentInitializationException {
-        final int PID = 0;
-
+    public void startingProfilingLoadsJvmAgentAndMakesAnRmiCall() throws Exception {
         profiler.startProfiling(PID);
 
         verify(attacher).attach(String.valueOf(PID));
         verify(vm).loadAgent(AGENT_JAR, "");
         verify(vm).detach();
+        verifyNoMoreInteractions(vm);
+
+        verify(server).invoke(instrumentationName, "startProfiling", new Object[0], new String[0]);
+        verify(connectionPool).release(PID, connection);
+    }
+
+    @Test
+    public void stoppingProfilingLoadsJvmAgentAndMakesAnRmiCall() throws Exception {
+        profiler.stopProfiling(PID);
+
+        verifyNoMoreInteractions(vm);
+
+        verify(server).invoke(instrumentationName, "stopProfiling", new Object[0], new String[0]);
+        verify(connectionPool).release(PID, connection);
     }
 }

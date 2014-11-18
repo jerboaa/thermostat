@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.vm.profiler.agent.internal;
 
+import java.util.Map;
 import java.util.Properties;
 
 import org.osgi.framework.BundleActivator;
@@ -43,33 +44,54 @@ import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
+import com.redhat.thermostat.common.MultipleServiceTracker;
 
 public class Activator implements BundleActivator {
 
-    private ReceiverRegistry requestHandlerRegisteration;
-    private VmStatusListenerRegistrar vmStatusRegistrar;
-    private ProfileVmRequestReceiver profileRequestHandler;
+    private MultipleServiceTracker tracker;
 
     @Override
     public void start(final BundleContext context) throws Exception {
-        Properties configuration = new Properties();
+        final Properties configuration = new Properties();
         configuration.load(this.getClass().getResourceAsStream("settings.properties"));
-        VmProfiler profiler = new VmProfiler(configuration);
-        profileRequestHandler = new ProfileVmRequestReceiver(profiler);
 
-        requestHandlerRegisteration = new ReceiverRegistry(context);
-        requestHandlerRegisteration.registerReceiver(profileRequestHandler);
+        Class<?>[] deps = new Class<?>[] { MXBeanConnectionPool.class };
+        tracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
+            private ReceiverRegistry requestHandlerRegisteration;
+            private VmStatusListenerRegistrar vmStatusRegistrar;
+            private ProfileVmRequestReceiver profileRequestHandler;
 
-        vmStatusRegistrar = new VmStatusListenerRegistrar(context);
-        vmStatusRegistrar.register(profileRequestHandler);
+            @Override
+            public void dependenciesUnavailable() {
+                requestHandlerRegisteration.unregisterReceivers();
+                requestHandlerRegisteration = null;
+
+                vmStatusRegistrar.unregister(profileRequestHandler);
+
+                profileRequestHandler = null;
+            }
+
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                MXBeanConnectionPool pool = (MXBeanConnectionPool) services.get(MXBeanConnectionPool.class.getName());
+                VmProfiler profiler = new VmProfiler(configuration, pool);
+                profileRequestHandler = new ProfileVmRequestReceiver(profiler);
+
+                requestHandlerRegisteration = new ReceiverRegistry(context);
+                requestHandlerRegisteration.registerReceiver(profileRequestHandler);
+
+                vmStatusRegistrar = new VmStatusListenerRegistrar(context);
+                vmStatusRegistrar.register(profileRequestHandler);
+            }
+        });
+
+        tracker.open();
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        requestHandlerRegisteration.unregisterReceivers();
-        requestHandlerRegisteration = null;
-
-        vmStatusRegistrar.unregister(profileRequestHandler);
+        tracker.close();
     }
 }
 

@@ -41,6 +41,11 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.logging.Logger;
 
+import javax.management.MBeanServerConnection;
+import javax.management.ObjectName;
+
+import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.sun.tools.attach.AgentInitializationException;
 import com.sun.tools.attach.AgentLoadException;
@@ -51,16 +56,18 @@ public class VmProfiler {
 
     private static final Logger logger = LoggingUtils.getLogger(VmProfiler.class);
 
+    private final MXBeanConnectionPool connectionPool;
     private final Attacher attacher;
 
     private String agentJarPath;
     private String asmJarPath;
 
-    public VmProfiler(Properties configuration) {
-        this(configuration, new Attacher());
+    public VmProfiler(Properties configuration, MXBeanConnectionPool connectionPool) {
+        this(configuration, connectionPool, new Attacher());
     }
 
-    public VmProfiler(Properties configuration, Attacher attacher) {
+    public VmProfiler(Properties configuration, MXBeanConnectionPool connectionPool, Attacher attacher) {
+        this.connectionPool = connectionPool;
         this.attacher = attacher;
 
         // requireNonNull protects against bad config with missing values
@@ -69,6 +76,12 @@ public class VmProfiler {
     }
 
     public void startProfiling(int pid) throws ProfilerException {
+        loadProfilerAgentIntoPid(pid);
+
+        invokeMethodOnInstrumentation(pid, "startProfiling");
+    }
+
+    private void loadProfilerAgentIntoPid(int pid) throws ProfilerException {
         try {
             VirtualMachine vm = attacher.attach(String.valueOf(pid));
             try {
@@ -86,7 +99,22 @@ public class VmProfiler {
     }
 
     public void stopProfiling(int pid) throws ProfilerException {
-        // TODO Auto-generated method stub
+        invokeMethodOnInstrumentation(pid, "stopProfiling");
+    }
+
+    private void invokeMethodOnInstrumentation(int pid, String name) throws ProfilerException {
+        try {
+            MXBeanConnection connection = connectionPool.acquire(pid);
+            try {
+                ObjectName instrumentation = new ObjectName("com.redhat.thermostat:type=InstrumentationControl");
+                MBeanServerConnection server = connection.get();
+                server.invoke(instrumentation, name, new Object[0], new String[0]);
+            } finally {
+                connectionPool.release(pid, connection);
+            }
+        } catch (Exception e) {
+            throw new ProfilerException("Unable to start remote profiling", e);
+        }
     }
 
     static class Attacher {
