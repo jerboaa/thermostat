@@ -41,6 +41,7 @@ import java.io.PrintStream;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.VmInfo;
 
 class VMListFormatter {
@@ -55,13 +56,14 @@ class VMListFormatter {
     private static final String VM_NAME = translator.localize(LocaleResources.COLUMN_HEADER_VM_NAME).getContents();
     private static final String VM_STATUS = translator.localize(LocaleResources.COLUMN_HEADER_VM_STATUS).getContents();
 
-    private static final String STATUS_ALIVE = translator.localize(LocaleResources.VM_STATUS_ALIVE).getContents();
-    private static final String STATUS_DEAD = translator.localize(LocaleResources.VM_STATUS_DEAD).getContents();
+    private static final String STATUS_RUNNING = translator.localize(LocaleResources.VM_STATUS_RUNNING).getContents();
+    private static final String STATUS_EXITED = translator.localize(LocaleResources.VM_STATUS_EXITED).getContents();
+    private static final String STATUS_UNKNOWN = translator.localize(LocaleResources.VM_STATUS_UNKNOWN).getContents();
 
     private final TableRenderer tableRenderer = new TableRenderer(NUM_COLUMNS);
 
-    void addVM(VmRef vm, VmInfo info) {
-        printVM(vm, info);
+    void addVM(VmRef vm, AgentInformation agentInfo, VmInfo info) {
+        printVM(vm, agentInfo, info);
     }
 
     void addHeader() {
@@ -72,12 +74,12 @@ class VMListFormatter {
         tableRenderer.render(out);
     }
 
-    private void printVM(VmRef vm, VmInfo info) {
+    private void printVM(VmRef vm, AgentInformation agentInfo, VmInfo info) {
         printLine(vm.getHostRef().getAgentId(),
                   vm.getHostRef().getHostName(),
                   vm.getVmId(),
                   vm.getPid().toString(),
-                  info.isAlive() ? STATUS_ALIVE : STATUS_DEAD,
+                  getAliveStatus(info.isAlive(agentInfo)),
                   vm.getName());
     }
 
@@ -85,5 +87,17 @@ class VMListFormatter {
         tableRenderer.printLine(hostId, host, vmId, pid, status, vmName);
     }
 
+    private String getAliveStatus(VmInfo.AliveStatus status) {
+        switch (status) {
+        case RUNNING:
+            return STATUS_RUNNING;
+        case EXITED:
+            return STATUS_EXITED;
+        case UNKNOWN:
+            return STATUS_UNKNOWN;
+        default:
+            throw new AssertionError("Unknown VM status");
+        }
+    }
 }
 

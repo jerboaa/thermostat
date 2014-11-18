@@ -48,8 +48,10 @@ import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.VmInfo;
 
 public class ListVMsCommand extends AbstractCommand {
@@ -76,6 +78,9 @@ public class ListVMsCommand extends AbstractCommand {
         Collection<HostRef> hosts = hostsDAO.getHosts();
         context.ungetService(hostsDAORef);
 
+        ServiceReference agentInfoDAORef = context.getServiceReference(AgentInfoDAO.class.getName());
+        AgentInfoDAO agentInfoDAO = (AgentInfoDAO) context.getService(agentInfoDAORef);
+
         ServiceReference vmsDAORef = context.getServiceReference(VmInfoDAO.class.getName());
         requireNonNull(vmsDAORef, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
         VmInfoDAO vmsDAO = (VmInfoDAO) context.getService(vmsDAORef);
@@ -83,10 +88,11 @@ public class ListVMsCommand extends AbstractCommand {
         VMListFormatter formatter = new VMListFormatter();
         formatter.addHeader();
         for (HostRef host : hosts) {
+            AgentInformation agentInfo = agentInfoDAO.getAgentInformation(host);
             Collection<VmRef> vms = vmsDAO.getVMs(host);
             for (VmRef vm : vms) {
                 VmInfo info = vmsDAO.getVmInfo(vm);
-                formatter.addVM(vm, info);
+                formatter.addVM(vm, agentInfo, info);
             }
         }
         formatter.format(ctx.getConsole().getOutput());

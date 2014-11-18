@@ -46,6 +46,16 @@ import com.redhat.thermostat.storage.core.Persist;
 @Entity
 public class VmInfo extends BasePojo {
 
+    public enum AliveStatus {
+        RUNNING,
+        EXITED,
+        /**
+         * We don't know what the status of this VM is. Possible cause: agent
+         * was shut down before the VM was.
+         */
+        UNKNOWN,
+    }
+
     @Entity
     public static class KeyValuePair implements Pojo {
     
@@ -253,10 +263,24 @@ public class VmInfo extends BasePojo {
         this.vmVersion = vmVersion;
     }
 
+    /**
+     * @deprecated This can incorrectly show a VM as running when the actual
+     *             status is unknown. Use {@link #isAlive(AgentInformation)}
+     *             instead.
+     */
+    @Deprecated
     public boolean isAlive() {
         return getStartTimeStamp() > getStopTimeStamp();
     }
-    
+
+    public AliveStatus isAlive(AgentInformation agentInfo) {
+        if (agentInfo.isAlive()) {
+            return (isAlive() ? AliveStatus.RUNNING : AliveStatus.EXITED);
+        } else {
+            return (isAlive() ? AliveStatus.UNKNOWN: AliveStatus.EXITED);
+        }
+    }
+
     public Map<String, String> getProperties() {
         return properties;
     }

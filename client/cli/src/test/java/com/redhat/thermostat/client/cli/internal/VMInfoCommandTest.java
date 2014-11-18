@@ -57,8 +57,10 @@ import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.DAOException;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.test.Bug;
 import com.redhat.thermostat.test.TestCommandContextFactory;
@@ -82,17 +84,25 @@ public class VMInfoCommandTest {
     }
 
     private VMInfoCommand cmd;
+    private AgentInfoDAO agentsDAO;
     private VmInfoDAO vmsDAO;
     private TestCommandContextFactory cmdCtxFactory;
     private VmRef vm;
     private StubBundleContext context;
+    private AgentInformation agentInfo;
 
     @Before
     public void setUp() {
         context = new StubBundleContext();
         setupCommandContextFactory();
 
+        agentsDAO = mock(AgentInfoDAO.class);
+
         vmsDAO = mock(VmInfoDAO.class);
+
+        agentInfo = new AgentInformation();
+        agentInfo.setAlive(true);
+
         setupDAOs();
     }
 
@@ -102,6 +112,7 @@ public class VMInfoCommandTest {
 
     private void setupDAOs() {
         HostRef host = new HostRef("123", "dummy");
+        when(agentsDAO.getAgentInformation(host)).thenReturn(agentInfo);
         vm = new VmRef(host, VM_ID, -1, "dummy");
         Calendar start = Calendar.getInstance();
         start.set(2012, 5, 7, 15, 32, 0);
@@ -116,6 +127,7 @@ public class VMInfoCommandTest {
 
     @Test
     public void testVmInfo() throws CommandException {
+        context.registerService(AgentInfoDAO.class, agentsDAO, null);
         context.registerService(VmInfoDAO.class, vmsDAO, null);
         cmd = new VMInfoCommand(context);
         SimpleArguments args = new SimpleArguments();
@@ -137,6 +149,7 @@ public class VMInfoCommandTest {
     
     @Test
     public void testVmInfoNoUid() throws CommandException {
+        context.registerService(AgentInfoDAO.class, agentsDAO, null);
         VmInfo info = vmsDAO.getVmInfo(vm);
         // Set parameters to those where user info cannot be obtained
         info.setUid(-1);
@@ -162,6 +175,7 @@ public class VMInfoCommandTest {
     
     @Test
     public void testVmInfoNoUsername() throws CommandException {
+        context.registerService(AgentInfoDAO.class, agentsDAO, null);
         VmInfo info = vmsDAO.getVmInfo(vm);
         // Set parameters to those where user info cannot be obtained
         info.setUid(2000);
@@ -187,6 +201,7 @@ public class VMInfoCommandTest {
     
     @Test
     public void testNoVmInfoDAO() throws CommandException {
+        context.registerService(AgentInfoDAO.class, agentsDAO, null);
         cmd = new VMInfoCommand(context);
         SimpleArguments args = new SimpleArguments();
         args.addArgument("vmId", "234");
@@ -202,6 +217,7 @@ public class VMInfoCommandTest {
 
     @Test
     public void testAllVmInfoForHost() throws CommandException {
+        context.registerService(AgentInfoDAO.class, agentsDAO, null);
         context.registerService(VmInfoDAO.class, vmsDAO, null);
         cmd = new VMInfoCommand(context);
         SimpleArguments args = new SimpleArguments();
@@ -222,6 +238,7 @@ public class VMInfoCommandTest {
 
     @Test
     public void testVmInfoUnknownVM() throws CommandException {
+        context.registerService(AgentInfoDAO.class, agentsDAO, null);
         context.registerService(VmInfoDAO.class, vmsDAO, null);
         cmd = new VMInfoCommand(context);
         SimpleArguments args = new SimpleArguments();
@@ -238,6 +255,7 @@ public class VMInfoCommandTest {
             url="http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=1046")
     @Test
     public void testStopTime() throws CommandException {
+        context.registerService(AgentInfoDAO.class, agentsDAO, null);
         context.registerService(VmInfoDAO.class, vmsDAO, null);
         cmd = new VMInfoCommand(context);
         Calendar start = Calendar.getInstance();
@@ -253,7 +271,38 @@ public class VMInfoCommandTest {
         String expected = "VM ID:           " + vmId + "\n" +
                           "Process ID:      234\n" +
                           "Start time:      Thu Jun 07 15:32:00 UTC 2012\n" +
-                          "Stop time:       <Running>\n" +
+                          "Stop time:       RUNNING\n" +
+                          "User ID:         2000(myUser)\n" +
+                          "Main class:      mainClass\n" +
+                          "Command line:    commandLine\n" +
+                          "Java version:    vmVersion\n" +
+                          "Virtual machine: vmName\n" +
+                          "VM arguments:    vmArguments\n";
+        assertEquals(expected, cmdCtxFactory.getOutput());
+    }
+
+    @Test
+    public void testStopTimeWhenAgentDied() throws CommandException {
+        context.registerService(AgentInfoDAO.class, agentsDAO, null);
+        context.registerService(VmInfoDAO.class, vmsDAO, null);
+
+        agentInfo.setAlive(false);
+
+        cmd = new VMInfoCommand(context);
+        Calendar start = Calendar.getInstance();
+        start.set(2012, 5, 7, 15, 32, 0);
+        final String vmId = "61a255db-1c27-43d6-aaee-28bb4788b8db";
+        VmInfo vmInfo = new VmInfo("foo", vmId, 234, start.getTimeInMillis(), Long.MIN_VALUE, "vmVersion", "javaHome", "mainClass", "commandLine", "vmName", "vmInfo", "vmVersion", "vmArguments", new HashMap<String,String>(), new HashMap<String,String>(), new String[0], 2000, "myUser");
+        when(vmsDAO.getVmInfo(vm)).thenReturn(vmInfo);
+
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("vmId", VM_ID);
+        args.addArgument("hostId", "123");
+        cmd.run(cmdCtxFactory.createContext(args));
+        String expected = "VM ID:           " + vmId + "\n" +
+                          "Process ID:      234\n" +
+                          "Start time:      Thu Jun 07 15:32:00 UTC 2012\n" +
+                          "Stop time:       UNKNOWN\n" +
                           "User ID:         2000(myUser)\n" +
                           "Main class:      mainClass\n" +
                           "Command line:    commandLine\n" +
@@ -265,6 +314,7 @@ public class VMInfoCommandTest {
 
     @Test
     public void testStorageRequired() {
+        context.registerService(AgentInfoDAO.class, agentsDAO, null);
         context.registerService(VmInfoDAO.class, vmsDAO, null);
         cmd = new VMInfoCommand(context);
         assertTrue(cmd.isStorageRequired());

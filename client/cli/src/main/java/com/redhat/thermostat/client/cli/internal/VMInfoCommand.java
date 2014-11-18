@@ -52,15 +52,18 @@ import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.DAOException;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.VmInfo;
 
 public class VMInfoCommand extends AbstractCommand {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private static final String STILL_ALIVE = translator.localize(LocaleResources.VM_STOP_TIME_RUNNING).getContents();
+    private static final String STATUS_RUNNING = translator.localize(LocaleResources.VM_STATUS_RUNNING).getContents();
+    private static final String STATUS_UNKNOWN = translator.localize(LocaleResources.VM_STATUS_UNKNOWN).getContents();
 
     private final BundleContext context;
 
@@ -75,6 +78,10 @@ public class VMInfoCommand extends AbstractCommand {
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
+        ServiceReference agentsDAORef = context.getServiceReference(AgentInfoDAO.class.getName());
+        requireNonNull(agentsDAORef, translator.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE));
+        AgentInfoDAO agentsDAO = (AgentInfoDAO) context.getService(agentsDAORef);
+
         ServiceReference vmsDAORef = context.getServiceReference(VmInfoDAO.class.getName());
         requireNonNull(vmsDAORef, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
         VmInfoDAO vmsDAO = (VmInfoDAO) context.getService(vmsDAORef);
@@ -82,11 +89,12 @@ public class VMInfoCommand extends AbstractCommand {
         HostVMArguments hostVMArgs = new HostVMArguments(ctx.getArguments(), true, false);
         HostRef host = hostVMArgs.getHost();
         VmRef vm = hostVMArgs.getVM();
+        AgentInformation agentInfo = agentsDAO.getAgentInformation(host);
         try {
             if (vm != null) {
-                getAndPrintVMInfo(ctx, vmsDAO, vm);
+                getAndPrintVMInfo(ctx, agentInfo, vmsDAO, vm);
             } else {
-                getAndPrintAllVMInfo(ctx, vmsDAO, host);
+                getAndPrintAllVMInfo(ctx, agentInfo, vmsDAO, host);
 
             }
         } catch (DAOException ex) {
@@ -96,14 +104,14 @@ public class VMInfoCommand extends AbstractCommand {
         }
     }
 
-    private void getAndPrintAllVMInfo(CommandContext ctx, VmInfoDAO vmsDAO, HostRef host) {
+    private void getAndPrintAllVMInfo(CommandContext ctx, AgentInformation agentInfo, VmInfoDAO vmsDAO, HostRef host) {
         Collection<VmRef> vms = vmsDAO.getVMs(host);
         for (VmRef vm : vms) {
-            getAndPrintVMInfo(ctx, vmsDAO, vm);
+            getAndPrintVMInfo(ctx, agentInfo, vmsDAO, vm);
         }
     }
 
-    private void getAndPrintVMInfo(CommandContext ctx, VmInfoDAO vmsDAO, VmRef vm) {
+    private void getAndPrintVMInfo(CommandContext ctx, AgentInformation agentInfo, VmInfoDAO vmsDAO, VmRef vm) {
 
         VmInfo vmInfo = vmsDAO.getVmInfo(vm);
 
@@ -111,11 +119,7 @@ public class VMInfoCommand extends AbstractCommand {
         table.printLine(translator.localize(LocaleResources.VM_INFO_VM_ID).getContents(), vmInfo.getVmId());
         table.printLine(translator.localize(LocaleResources.VM_INFO_PROCESS_ID).getContents(), String.valueOf(vmInfo.getVmPid()));
         table.printLine(translator.localize(LocaleResources.VM_INFO_START_TIME).getContents(), new Date(vmInfo.getStartTimeStamp()).toString());
-        if (vmInfo.isAlive()) {
-            table.printLine(translator.localize(LocaleResources.VM_INFO_STOP_TIME).getContents(), STILL_ALIVE);
-        } else {
-            table.printLine(translator.localize(LocaleResources.VM_INFO_STOP_TIME).getContents(), new Date(vmInfo.getStopTimeStamp()).toString());
-        }
+        table.printLine(translator.localize(LocaleResources.VM_INFO_STOP_TIME).getContents(), getVmStopTimeForDisplay(agentInfo, vmInfo));
         printUserInfo(vmInfo, table);
         table.printLine(translator.localize(LocaleResources.VM_INFO_MAIN_CLASS).getContents(), vmInfo.getMainClass());
         table.printLine(translator.localize(LocaleResources.VM_INFO_COMMAND_LINE).getContents(), vmInfo.getJavaCommandLine());
@@ -125,6 +129,19 @@ public class VMInfoCommand extends AbstractCommand {
         
         PrintStream out = ctx.getConsole().getOutput();
         table.render(out);
+    }
+
+    private String getVmStopTimeForDisplay(AgentInformation agentInfo, VmInfo vmInfo) {
+        switch (vmInfo.isAlive(agentInfo)) {
+        case RUNNING:
+            return STATUS_RUNNING;
+        case EXITED:
+            return new Date(vmInfo.getStopTimeStamp()).toString();
+        case UNKNOWN:
+            return STATUS_UNKNOWN;
+        default:
+            throw new AssertionError("Unknown VM status");
+        }
     }
 
     private void printUserInfo(VmInfo vmInfo, TableRenderer table) {

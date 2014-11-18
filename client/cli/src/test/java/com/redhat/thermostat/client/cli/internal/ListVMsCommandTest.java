@@ -55,8 +55,10 @@ import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.redhat.thermostat.testutils.StubBundleContext;
@@ -68,6 +70,7 @@ public class ListVMsCommandTest {
     private ListVMsCommand cmd;
     private TestCommandContextFactory cmdCtxFactory;
     private HostInfoDAO hostsDAO;
+    private AgentInfoDAO agentsDAO;
     private VmInfoDAO vmsDAO;
     private StubBundleContext context;
 
@@ -80,6 +83,7 @@ public class ListVMsCommandTest {
 
         hostsDAO = mock(HostInfoDAO.class);
         vmsDAO = mock(VmInfoDAO.class);
+        agentsDAO = mock(AgentInfoDAO.class);
     }
 
     private void setupCommandContextFactory() {
@@ -97,13 +101,17 @@ public class ListVMsCommandTest {
     @Test
     public void verifyOutputFormatOneLine() throws CommandException {
         context.registerService(HostInfoDAO.class, hostsDAO, null);
+        context.registerService(AgentInfoDAO.class, agentsDAO, null);
         context.registerService(VmInfoDAO.class, vmsDAO, null);
 
         HostRef host1 = new HostRef("123", "h1");
+        AgentInformation agent1 = new AgentInformation();
+        agent1.setAlive(true);
         String vmId = "vmId";
         VmRef vm1 = new VmRef(host1, vmId, 1, "n");
         VmInfo vm1Info = new VmInfo("foo", vmId, 1, 0, 1, "", "", "", "", "", "", "", "", null, null, null, -1, null);
         when(hostsDAO.getHosts()).thenReturn(Arrays.asList(host1));
+        when(agentsDAO.getAgentInformation(isA(HostRef.class))).thenReturn(agent1);
         when(vmsDAO.getVMs(host1)).thenReturn(Arrays.asList(vm1));
         when(vmsDAO.getVmInfo(eq(vm1))).thenReturn(vm1Info);
 
@@ -121,11 +129,16 @@ public class ListVMsCommandTest {
     @Test
     public void verifyOutputFormatMultiLines() throws CommandException {
         context.registerService(HostInfoDAO.class, hostsDAO, null);
+        context.registerService(AgentInfoDAO.class, agentsDAO, null);
         context.registerService(VmInfoDAO.class, vmsDAO, null);
 
         HostRef host1 = new HostRef("123", "h1");
         HostRef host2 = new HostRef("456", "longhostname");
         when(hostsDAO.getHosts()).thenReturn(Arrays.asList(host1, host2));
+
+        AgentInformation agent1 = new AgentInformation();
+        agent1.setAlive(true);
+        when(agentsDAO.getAgentInformation(isA(HostRef.class))).thenReturn(agent1);
 
         VmRef vm1 = new VmRef(host1, "vm1", 1, "n");
         VmRef vm2 = new VmRef(host1, "vm2", 2, "n1");
@@ -150,10 +163,45 @@ public class ListVMsCommandTest {
                      "123     h1           vm2   2      EXITED n1\n" +
                      "456     longhostname vm3   123456 EXITED longvmname\n", output);
     }
+
+    @Test
+    public void verifyUnknownStatusIfAgentExited() throws CommandException {
+        context.registerService(HostInfoDAO.class, hostsDAO, null);
+        context.registerService(AgentInfoDAO.class, agentsDAO, null);
+        context.registerService(VmInfoDAO.class, vmsDAO, null);
+
+        HostRef host1 = new HostRef("123", "h1");
+        when(hostsDAO.getHosts()).thenReturn(Arrays.asList(host1));
+
+        AgentInformation agent1 = new AgentInformation();
+        agent1.setAlive(false);
+        when(agentsDAO.getAgentInformation(isA(HostRef.class))).thenReturn(agent1);
+
+        VmRef vm1 = new VmRef(host1, "vm1", 1, "n");
+        VmRef vm2 = new VmRef(host1, "vm2", 2, "n1");
+
+        VmInfo vm1Info = new VmInfo("foo", "vm1", 1, 0, 1, "", "", "", "", "", "", "", "", null, null, null, -1, null);
+        VmInfo vm2Info = new VmInfo("foo", "vm1", 1, 0, Long.MIN_VALUE, "", "", "", "", "", "", "", "", null, null, null, -1, null);
+
+        when(vmsDAO.getVMs(host1)).thenReturn(Arrays.asList(vm1, vm2));
+        when(vmsDAO.getVmInfo(vm1)).thenReturn(vm1Info);
+        when(vmsDAO.getVmInfo(vm2)).thenReturn(vm2Info);
+
+        SimpleArguments args = new SimpleArguments();
+        CommandContext ctx = cmdCtxFactory.createContext(args);
+
+        cmd.run(ctx);
+
+        String output = cmdCtxFactory.getOutput();
+        assertEquals("HOST_ID HOST VM_ID VM_PID STATUS  VM_NAME\n" +
+                     "123     h1   vm1   1      EXITED  n\n" +
+                     "123     h1   vm2   2      UNKNOWN n1\n", output);
+    }
     
     @Test
     public void testNeedHostInfoDAO() throws CommandException {
         context.registerService(VmInfoDAO.class, vmsDAO, null);
+        context.registerService(AgentInfoDAO.class, agentsDAO, null);
 
         SimpleArguments args = new SimpleArguments();
         args.addArgument("--dbUrl", "fluff");
@@ -170,6 +218,7 @@ public class ListVMsCommandTest {
     @Test
     public void testNeedVmInfoDAO() throws CommandException {
         context.registerService(HostInfoDAO.class, hostsDAO, null);
+        context.registerService(AgentInfoDAO.class, agentsDAO, null);
 
         SimpleArguments args = new SimpleArguments();
         args.addArgument("--dbUrl", "fluff");
