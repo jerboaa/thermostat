@@ -38,6 +38,7 @@ package com.redhat.thermostat.vm.profiler.client.cli.internal;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -46,7 +47,7 @@ public abstract class AbstractCommand extends com.redhat.thermostat.common.cli.A
 
     // TODO these changes should probably be promoted to the AbstractCommand public API
 
-    protected Map<Class<?>, BlockingQueue<?>> serviceHolder = new HashMap<>();
+    private Map<Class<?>, BlockingQueue<?>> serviceHolder = new HashMap<>();
 
     private <T> BlockingQueue<T> getHolder(Class<T> serviceClass) {
         if (!serviceHolder.containsKey(serviceClass)) {
@@ -55,22 +56,24 @@ public abstract class AbstractCommand extends com.redhat.thermostat.common.cli.A
         return (BlockingQueue<T>) serviceHolder.get(serviceClass);
     }
 
-    /** Insert {@code item} if it's non-{@code null} otherwise remove it */
-    protected <T> void addOrRemoveService(Class<T> serviceClass, T item) {
+    protected <T> void addService(Class<T> serviceClass, T item) {
+        Objects.requireNonNull(item);
         BlockingQueue<T> holder = getHolder(serviceClass);
-        if (item == null) {
-            if (holder.peek() != null) {
-                holder.remove();
-            }
-        } else {
-            try {
-                holder.put(item);
-            } catch (InterruptedException e) {
-                throw new AssertionError("Should not happen");
-            }
+        try {
+            holder.put(item);
+        } catch (InterruptedException e) {
+            throw new AssertionError("Should not happen");
         }
     }
 
+    protected <T> void removeService(Class<T> serviceClass) {
+        BlockingQueue<T> holder = getHolder(serviceClass);
+        if (holder.peek() != null) {
+            holder.remove();
+        }
+    }
+
+    /** @return the service, or <code>null</code> */
     protected <T> T getService(Class<T> serviceClass) {
         BlockingQueue<T> holder = getHolder(serviceClass);
         try {

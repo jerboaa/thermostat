@@ -89,9 +89,10 @@ public class Activator implements BundleActivator {
 
             @Override
             public void dependenciesUnavailable() {
-                command.setAgentInfoDAO(null);
-                command.setVmInfoDAO(null);
-                command.setRequestQueue(null);
+                command.unsetAgentInfoDAO();
+                command.unsetVmInfoDAO();
+                command.unsetRequestQueue();
+                command.unsetProfileDAO();
             }
         });
 

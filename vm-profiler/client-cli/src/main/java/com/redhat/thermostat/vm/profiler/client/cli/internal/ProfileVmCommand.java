@@ -185,18 +185,34 @@ public class ProfileVmCommand extends AbstractCommand {
     }
 
     void setAgentInfoDAO(AgentInfoDAO dao) {
-        addOrRemoveService(AgentInfoDAO.class, dao);
+        addService(AgentInfoDAO.class, dao);
+    }
+
+    void unsetAgentInfoDAO() {
+        removeService(AgentInfoDAO.class);
     }
 
     void setVmInfoDAO(VmInfoDAO dao) {
-        addOrRemoveService(VmInfoDAO.class, dao);
+        addService(VmInfoDAO.class, dao);
+    }
+
+    void unsetVmInfoDAO() {
+        removeService(VmInfoDAO.class);
     }
 
     void setRequestQueue(RequestQueue queue) {
-        addOrRemoveService(RequestQueue.class, queue);
+        addService(RequestQueue.class, queue);
+    }
+
+    void unsetRequestQueue() {
+        removeService(RequestQueue.class);
     }
 
     void setProfileDAO(ProfileDAO dao) {
-        addOrRemoveService(ProfileDAO.class, dao);
+        addService(ProfileDAO.class, dao);
+    }
+
+    void unsetProfileDAO() {
+        removeService(ProfileDAO.class);
     }
 }
