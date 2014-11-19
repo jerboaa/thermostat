@@ -51,10 +51,14 @@ import com.redhat.thermostat.storage.model.TimeStampedPojo;
  */
 public class VmTimeIntervalPojoListGetter <T extends TimeStampedPojo> extends AbstractGetter<T> {
 
+    // The query for VmTimeIntervalPojoListGetter should query for since <= timestamp < to
+    // in order not to miss data for multiple consecutive queries of the form [a, b), [b, c), ...
+    // If the query were since < timestamp < to then queries of (a, b), (b, c), ... would
+    // result in missed data at the endpoints (b, ...)
     public static final String VM_INTERVAL_QUERY_FORMAT = "QUERY %s WHERE '"
             + Key.AGENT_ID.getName() + "' = ?s AND '"
             + Key.VM_ID.getName() + "' = ?s AND '" 
-            + Key.TIMESTAMP.getName() + "' > ?l AND '"
+            + Key.TIMESTAMP.getName() + "' >= ?l AND '"
             + Key.TIMESTAMP.getName() + "' < ?l SORT '"
             + Key.TIMESTAMP.getName() + "' DSC";
 
