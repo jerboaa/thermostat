@@ -36,8 +36,7 @@
 
 package com.redhat.thermostat.vm.memory.client.core;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Test;
 
 public class RangeModelTest {

@@ -45,8 +45,6 @@ import static org.mockito.Mockito.when;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 
-import junit.framework.AssertionFailedError;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -159,7 +157,7 @@ public class DumpHeapHelperTest {
         try {
             Class.forName(receiver);
         } catch (ClassNotFoundException e) {
-            throw new AssertionFailedError();
+            throw new AssertionError();
         }
     }
 

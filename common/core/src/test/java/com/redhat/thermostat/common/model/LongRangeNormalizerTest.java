@@ -36,8 +36,7 @@
 
 package com.redhat.thermostat.common.model;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.model.Range;

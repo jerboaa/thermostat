@@ -40,9 +40,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
 
-import junit.framework.Assert;
 
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 

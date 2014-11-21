@@ -49,9 +49,8 @@ import static org.mockito.Mockito.when;
 import java.io.PrintStream;
 import java.util.Collection;
 
-import junit.framework.Assert;
-
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
