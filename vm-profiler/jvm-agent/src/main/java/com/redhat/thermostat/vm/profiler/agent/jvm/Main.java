@@ -60,7 +60,6 @@ public class Main {
         // System.out.println("AGENT: My classloader is " + this.getClass().getClassLoader());
 
         InstrumentationControl control = new InstrumentationControl(instrumentation);
-        control.initialize();
         try {
             ObjectName name = new ObjectName("com.redhat.thermostat:type=InstrumentationControl");
             server.registerMBean(control, name);

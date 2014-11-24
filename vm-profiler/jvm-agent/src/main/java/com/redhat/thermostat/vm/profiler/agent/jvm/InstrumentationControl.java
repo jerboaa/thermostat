@@ -68,27 +68,6 @@ public class InstrumentationControl implements InstrumentationControlMXBean {
         this.classInstrumentor = new AsmBasedInstrumentor();
     }
 
-    void initialize() {
-        addShutdownHookToPrintStatsOnEnd();
-    }
-
-    private void addShutdownHookToPrintStatsOnEnd() {
-        System.out.println("AGENT: adding shutdown hooks");
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                System.out.println("=====");
-                System.out.println("Collected stats");
-                System.out.format("%15s\t%s%n", "Total time (ns)", "Method");
-                Map<String, AtomicLong> data = ProfileRecorder.getInstance().getData();
-                for (Map.Entry<String, AtomicLong> entry : data.entrySet()) {
-                    System.out.format("%15d\t%s%n", entry.getValue().get(), entry.getKey());
-                }
-                System.out.println("=====");
-            }
-        });
-    }
-
     @Override
     public void startProfiling() {
         System.out.println("AGENT: startProfiling()");
