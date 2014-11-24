@@ -41,40 +41,57 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult.MethodInfo;
 
 public class ProfilingResultParser {
 
     private static final Logger logger = LoggingUtils.getLogger(ProfilingResultParser.class);
 
-    public class ProfilingResult {
-        /** Method Name -> Time (ns) */
-        public final Map<String, Long> time;
-        public ProfilingResult(Map<String, Long> data) {
-            this.time = Collections.unmodifiableMap(data);
-        }
+    public ProfilingResult parse(InputStream in) {
+        Map<String, Long> result = readData(in);
+        return processData(result);
     }
 
-    public ProfilingResult parse(InputStream in) {
+    private Map<String, Long> readData(InputStream in) {
         Map<String, Long> result = new HashMap<String, Long>();
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split("\\s+");
-                long time = Long.valueOf(parts[0]);
+                long time = TimeUnit.NANOSECONDS.toMillis(Long.valueOf(parts[0]));
                 String name = parts[1];
                 result.put(name, time);
             }
         } catch (IOException e) {
             logger.log(Level.WARNING, "Unable to parse profiling data: ", e);
         }
-        return new ProfilingResult(result);
+
+        return result;
     }
+
+    private ProfilingResult processData(Map<String, Long> results) {
+        ArrayList<MethodInfo> info = new ArrayList<>();
+        long totalTime = 0;
+        for (Entry<String, Long> entry : results.entrySet()) {
+            totalTime += entry.getValue().longValue();
+        }
+
+        for (Entry<String, Long> entry : results.entrySet()) {
+            MethodInfo method = new MethodInfo(entry.getKey(), entry.getValue(), (entry.getValue() * 1.0 / totalTime) * 100);
+            info.add(method);
+        }
+
+        return new ProfilingResult(info);
+    }
+
 }

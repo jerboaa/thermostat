@@ -40,7 +40,6 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.util.Date;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Vector;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -64,7 +63,8 @@ import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifi
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.vm.profiler.client.core.ProfilingResultParser.ProfilingResult;
+import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult;
+import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult.MethodInfo;
 
 public class SwingVmProfileView extends VmProfileView implements SwingComponent {
 
@@ -141,10 +141,13 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
 
         Vector<String> columnNames = new Vector<>();
         columnNames.add(translator.localize(LocaleResources.PROFILER_RESULTS_METHOD).getContents());
-        columnNames.add(translator.localize(LocaleResources.PROFILER_RESULTS_TIME, "ns").getContents());
+        columnNames.add(translator.localize(LocaleResources.PROFILER_RESULTS_PERCENTAGE_TIME).getContents());
+        columnNames.add(translator.localize(LocaleResources.PROFILER_RESULTS_TIME, "ms").getContents());
         tableModel = new DefaultTableModel(columnNames, 0);
 
         JTable profileTable = new JTable(tableModel);
+        profileTable.setAutoCreateRowSorter(true);
+
         JScrollPane profileTablePane = new JScrollPane(profileTable);
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
@@ -213,10 +216,11 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
         // delete all existing data
         tableModel.setRowCount(0);
 
-        for (Entry<String, Long> methodAndTime : results.time.entrySet()) {
+        for (MethodInfo methodInfo: results.getMethodInfo()) {
             Object[] data = new Object[] {
-                    methodAndTime.getKey(),
-                    methodAndTime.getValue(),
+                    methodInfo.name,
+                    methodInfo.percentageTime,
+                    methodInfo.totalTimeInMillis,
             };
             tableModel.addRow(data);
         }

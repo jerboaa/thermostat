@@ -36,11 +36,11 @@
 
 package com.redhat.thermostat.vm.profiler.client.cli.internal;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
@@ -53,12 +53,14 @@ import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
-import com.redhat.thermostat.common.utils.StreamUtils;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult;
+import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult.MethodInfo;
+import com.redhat.thermostat.vm.profiler.client.core.ProfilingResultParser;
 import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
 import com.redhat.thermostat.vm.profiler.common.ProfileRequest;
 
@@ -172,16 +174,31 @@ public class ProfileVmCommand extends AbstractCommand {
     private void showProfilingResults(Console console, VmRef vm) {
         ProfileDAO dao = getService(ProfileDAO.class);
         InputStream data = dao.loadLatestProfileData(vm);
-        displayProfilingData(console, data);
+        parseAndDisplayProfilingData(console, data);
     }
 
-    private void displayProfilingData(Console console, InputStream data) {
-        try {
-            StreamUtils.copyStream(new BufferedInputStream(data), new BufferedOutputStream(console.getOutput()));
-        } catch (IOException e) {
-            console.getError().println("Error displaying data");
-            e.printStackTrace();
+    private void parseAndDisplayProfilingData(Console console, InputStream data) {
+        ProfilingResultParser parser = new ProfilingResultParser();
+        ProfilingResult results = parser.parse(data);
+
+        List<MethodInfo> methodInfos = new ArrayList<>(results.getMethodInfo());
+
+        Collections.sort(methodInfos, new Comparator<MethodInfo>() {
+            @Override
+            public int compare(MethodInfo o1, MethodInfo o2) {
+                return Double.compare(o2.percentageTime, o1.percentageTime);
+            }
+        });
+
+        ProfileResultFormatter formatter = new ProfileResultFormatter();
+
+        formatter.addHeader();
+
+        for (MethodInfo method : methodInfos) {
+            formatter.addMethodInfo(method);
         }
+
+        formatter.format(console.getOutput());
     }
 
     void setAgentInfoDAO(AgentInfoDAO dao) {

@@ -69,7 +69,7 @@ import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
-import com.redhat.thermostat.vm.profiler.client.core.ProfilingResultParser.ProfilingResult;
+import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult;
 import com.redhat.thermostat.vm.profiler.client.swing.internal.VmProfileView.Profile;
 import com.redhat.thermostat.vm.profiler.client.swing.internal.VmProfileView.ProfileAction;
 import com.redhat.thermostat.vm.profiler.common.ProfileDAO;

@@ -40,22 +40,29 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
+import java.util.List;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.vm.profiler.client.core.ProfilingResultParser.ProfilingResult;
+import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult.MethodInfo;
 
 public class ProfilingResultParserTest {
 
     @Test
     public void parsesCorrectly() throws Exception {
-        String data = "1 foo\n2 bar";
+        String data = "1000000 foo\n2000000 bar";
         ByteArrayInputStream in = new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8));
-        ProfilingResultParser parser = new ProfilingResultParser();
-        ProfilingResult result = parser.parse(in);
-        Map<String, Long> times = result.time;
-        assertEquals(1, (long) times.get("foo"));
-        assertEquals(2, (long) times.get("bar"));
+
+        ProfilingResult result = new ProfilingResultParser().parse(in);
+
+        List<MethodInfo> methods = result.getMethodInfo();
+
+        MethodInfo method0 = methods.get(0);
+        assertEquals("foo", method0.name);
+        assertEquals(1, method0.totalTimeInMillis);
+
+        MethodInfo method1 = methods.get(1);
+        assertEquals("bar", method1.name);
+        assertEquals(2, method1.totalTimeInMillis);
     }
 }

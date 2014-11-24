@@ -49,6 +49,9 @@ public enum LocaleResources {
     UNKNOWN_COMMAND,
     INTERRUPTED_WAITING_FOR_RESPONSE,
 
+    METHOD_PROFILE_HEADER_PERCENTAGE,
+    METHOD_PROFILE_HEADER_TIME,
+    METHOD_PROFILE_HEADER_NAME,
     ;
 
     static final String RESOURCE_BUNDLE = LocaleResources.class.getPackage().getName() + ".strings";

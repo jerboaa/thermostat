@@ -34,43 +34,33 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.profiler.client.swing.internal;
+package com.redhat.thermostat.vm.profiler.client.core;
 
+import java.util.Collections;
 import java.util.List;
 
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult;
+public class ProfilingResult {
 
-public abstract class VmProfileView extends BasicView implements UIComponent {
+    public static class MethodInfo {
 
-    static class Profile {
         public final String name;
-        public final long timeStamp;
-        public Profile(String name, long timeStamp) {
+        public final long totalTimeInMillis;
+        public final double percentageTime;
+
+        public MethodInfo(String name, long totalTime, double percentageTime) {
             this.name = name;
-            this.timeStamp = timeStamp;
+            this.totalTimeInMillis = totalTime;
+            this.percentageTime = percentageTime;
         }
     }
 
-    enum ProfileAction {
-        START_PROFILING,
-        STOP_PROFILING,
+    private List<MethodInfo> info;
 
-        PROFILE_SELECTED,
+    public ProfilingResult(List<MethodInfo> data) {
+        this.info = Collections.unmodifiableList(data);
     }
 
-    public abstract void addProfileActionListener(ActionListener<ProfileAction> listener);
-
-    public abstract void removeProfileActionlistener(ActionListener<ProfileAction> listener);
-
-    public abstract void setCurrentlyProfiling(boolean profiling);
-
-    public abstract void setAvailableProfilingRuns(List<Profile> data);
-
-    public abstract Profile getSelectedProfile();
-
-    public abstract void setProfilingDetailData(ProfilingResult results);
-
+    public List<MethodInfo> getMethodInfo() {
+        return info;
+    }
 }

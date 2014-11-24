@@ -34,43 +34,41 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.profiler.client.swing.internal;
+package com.redhat.thermostat.vm.profiler.client.cli.internal;
 
-import java.util.List;
+import java.io.OutputStream;
 
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult;
+import com.redhat.thermostat.common.cli.TableRenderer;
+import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult.MethodInfo;
 
-public abstract class VmProfileView extends BasicView implements UIComponent {
+public class ProfileResultFormatter {
 
-    static class Profile {
-        public final String name;
-        public final long timeStamp;
-        public Profile(String name, long timeStamp) {
-            this.name = name;
-            this.timeStamp = timeStamp;
-        }
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+
+    private static final int NUM_COLUMNS = 3;
+
+    private static final String HEADER_PERCENTAGE = translator.localize(LocaleResources.METHOD_PROFILE_HEADER_PERCENTAGE).getContents();
+    private static final String HEADER_TIME = translator.localize(LocaleResources.METHOD_PROFILE_HEADER_TIME).getContents();
+    private static final String HEADER_NAME = translator.localize(LocaleResources.METHOD_PROFILE_HEADER_NAME).getContents();
+
+    private TableRenderer renderer = new TableRenderer(NUM_COLUMNS);
+
+    public void addHeader() {
+        printLine(HEADER_PERCENTAGE, HEADER_TIME, HEADER_NAME);
     }
 
-    enum ProfileAction {
-        START_PROFILING,
-        STOP_PROFILING,
-
-        PROFILE_SELECTED,
+    public void addMethodInfo(MethodInfo methodInfo) {
+        printLine(String.format("%4f", methodInfo.percentageTime),
+                String.valueOf(methodInfo.totalTimeInMillis),
+                methodInfo.name);
     }
 
-    public abstract void addProfileActionListener(ActionListener<ProfileAction> listener);
+    public void format(OutputStream output) {
+        renderer.render(output);
+    }
 
-    public abstract void removeProfileActionlistener(ActionListener<ProfileAction> listener);
-
-    public abstract void setCurrentlyProfiling(boolean profiling);
-
-    public abstract void setAvailableProfilingRuns(List<Profile> data);
-
-    public abstract Profile getSelectedProfile();
-
-    public abstract void setProfilingDetailData(ProfilingResult results);
-
+    private void printLine(String percentage, String time, String name) {
+        renderer.printLine(percentage, time, name);
+    }
 }
