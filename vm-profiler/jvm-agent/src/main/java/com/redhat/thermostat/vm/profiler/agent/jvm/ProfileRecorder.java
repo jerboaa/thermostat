@@ -36,7 +36,11 @@
 
 package com.redhat.thermostat.vm.profiler.agent.jvm;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -44,13 +48,79 @@ public class ProfileRecorder {
 
     private static final ProfileRecorder profileRecorder = new ProfileRecorder();
 
-    private ConcurrentHashMap<String,AtomicLong> profileData = new ConcurrentHashMap<>();
+    /** shared between threads */
+    private ConcurrentHashMap<String, AtomicLong> profileData = new ConcurrentHashMap<>();
+
+    // TODO deal with thread id wrap-around
+
+    /**
+     * thread id -> info.
+     * <p>
+     * only the thread with the matching thread id is allowed to mutate 'info'
+     */
+    private Map<Long, Info> threads = new ConcurrentHashMap<>();
+
+    final static class Info {
+        public Deque<String> stackFrames = new ArrayDeque<>();
+        public long timeStamp = Long.MIN_VALUE;
+    }
 
     public static ProfileRecorder getInstance() {
         return profileRecorder;
     }
 
-    public void addData(String dataName, long time) {
+    /** called by instrumented code on every method enter */
+    public void enterMethod(String fullyQualifiedName) {
+        Objects.requireNonNull(fullyQualifiedName);
+
+        long currentTime = System.nanoTime();
+        long threadId = Thread.currentThread().getId();
+
+        Info info = threads.get(threadId);
+
+        if (info == null) {
+            info = new Info();
+            threads.put(threadId, info);
+        }
+
+        if (info.stackFrames.size() != 0) {
+            // update time for previous method on the stack
+            Long oldTime = info.timeStamp;
+            long diff = currentTime - oldTime;
+            addData(info.stackFrames.peek(), diff);
+        }
+
+        info.timeStamp = currentTime;
+        info.stackFrames.push(fullyQualifiedName);
+    }
+
+    /** called by instrumented code on every method exit */
+    public void exitMethod(String fullyQualifiedName) {
+        Objects.requireNonNull(fullyQualifiedName);
+
+        long currentTime = System.nanoTime();
+        long threadId = Thread.currentThread().getId();
+
+        Info info = threads.get(threadId);
+        Queue<String> stack = info.stackFrames;
+
+        Long oldTime = info.timeStamp;
+        long diff = currentTime - oldTime;
+
+        if (!fullyQualifiedName.equals(stack.peek())) {
+            System.out.println("name: '" + fullyQualifiedName + "'");
+            System.out.println("stack top: '" + stack.peek() + "'");
+            System.out.println("stack: " + stack);
+            throw new AssertionError("should not happen");
+        }
+
+        addData(stack.poll(), diff);
+
+        info.timeStamp = currentTime;
+    }
+
+    private void addData(String dataName, long time) {
+        Objects.requireNonNull(dataName);
         AtomicLong value = profileData.get(dataName);
         if (value == null) {
             value = profileData.putIfAbsent(dataName, new AtomicLong(time));

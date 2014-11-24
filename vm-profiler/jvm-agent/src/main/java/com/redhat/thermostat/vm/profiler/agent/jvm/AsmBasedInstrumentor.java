@@ -98,9 +98,6 @@ public class AsmBasedInstrumentor extends ProfilerInstrumentor {
     }
 
     static class InstrumentingMethodAdapter extends AdviceAdapter {
-
-        private int time;
-
         private String className;
         private String methodName;
 
@@ -113,22 +110,18 @@ public class AsmBasedInstrumentor extends ProfilerInstrumentor {
 
         @Override
         protected void onMethodEnter() {
-            mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/System", "nanoTime", "()J", false);
-            time = newLocal(Type.LONG_TYPE);
-            mv.visitVarInsn(Opcodes.LSTORE, time);
+            callProfilerRecorder("enterMethod");
         }
 
         @Override
         protected void onMethodExit(int opCode) {
-            mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/System", "nanoTime", "()J", false);
-            mv.visitVarInsn(Opcodes.LLOAD, time);
-            mv.visitInsn(Opcodes.LSUB);
-            int diff = newLocal(Type.LONG_TYPE);
-            mv.visitVarInsn(Opcodes.LSTORE, diff);
+            callProfilerRecorder("exitMethod");
+        }
+
+        private void callProfilerRecorder(String method) {
             mv.visitMethodInsn(Opcodes.INVOKESTATIC, RECORDER_CLASS_NAME, "getInstance", "()L" + RECORDER_CLASS_NAME + ";", false);
             mv.visitLdcInsn(className + "." + methodName + methodDesc);
-            mv.visitVarInsn(Opcodes.LLOAD, diff);
-            mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, RECORDER_CLASS_NAME, "addData", "(Ljava/lang/String;J)V", false);
+            mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, RECORDER_CLASS_NAME, method, "(Ljava/lang/String;)V", false);
         }
 
         // for debugging: insert opcodes to invoke System.exit()
