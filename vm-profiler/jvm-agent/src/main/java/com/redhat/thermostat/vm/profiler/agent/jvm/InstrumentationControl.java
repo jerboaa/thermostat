@@ -160,7 +160,7 @@ public class InstrumentationControl implements InstrumentationControlMXBean {
             try (BufferedWriter out = Files.newBufferedWriter(output, StandardCharsets.UTF_8, options)) {
                 Map<String, AtomicLong> data = ProfileRecorder.getInstance().getData();
                 for (Map.Entry<String, AtomicLong> entry : data.entrySet()) {
-                    out.write(entry.getValue().get() + "\t" + entry.getKey());
+                    out.write(entry.getValue().get() + "\t" + entry.getKey() + "\n");
                 }
                 System.out.println("AGENT: profiling data written to " + output.toString());
                 return output.toString();

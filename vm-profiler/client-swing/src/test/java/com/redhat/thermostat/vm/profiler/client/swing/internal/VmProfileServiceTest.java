@@ -34,39 +34,26 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.profiler.common.internal;
+package com.redhat.thermostat.vm.profiler.client.swing.internal;
 
-import java.util.HashSet;
-import java.util.Set;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
-import com.redhat.thermostat.storage.core.PreparedParameter;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
+import org.junit.Test;
 
-public class ProfileDAOImplStatementDescriptorRegistration implements StatementDescriptorRegistration {
+import com.redhat.thermostat.common.Filter;
+import com.redhat.thermostat.storage.core.VmRef;
 
-    @Override
-    public DescriptorMetadata getDescriptorMetadata(String descriptor, PreparedParameter[] params) {
-        if (descriptor.equals(ProfileDAOImpl.DESC_ADD_PROFILE_INFO)
-                || descriptor.equals(ProfileDAOImpl.DESC_QUERY_LATEST)
-                || descriptor.equals(ProfileDAOImpl.DESC_QUERY_BY_ID)
-                || descriptor.equals(ProfileDAOImpl.DESC_INTERVAL_QUERY)) {
-            String agentId = (String)params[0].getValue();
-            String vmId = (String)params[1].getValue();
-            DescriptorMetadata metadata = new DescriptorMetadata(agentId, vmId);
-            return metadata;
-        } else {
-            throw new IllegalArgumentException("Unknown descriptor: ->" + descriptor + "<-");
-        }
+public class VmProfileServiceTest {
+
+    @Test
+    public void worksWithDeadAndAliveVms() throws Exception {
+        VmRef vm = mock(VmRef.class);
+
+        VmProfileService service = new VmProfileService(null, null, null, null);
+        Filter<VmRef> filter = service.getFilter();
+
+        assertTrue(filter.matches(vm));
     }
 
-    @Override
-    public Set<String> getStatementDescriptors() {
-        Set<String> results = new HashSet<>();
-        results.add(ProfileDAOImpl.DESC_ADD_PROFILE_INFO);
-        results.add(ProfileDAOImpl.DESC_QUERY_BY_ID);
-        results.add(ProfileDAOImpl.DESC_QUERY_LATEST);
-        results.add(ProfileDAOImpl.DESC_INTERVAL_QUERY);
-        return results;
-    }
 }

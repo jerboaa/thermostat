@@ -34,39 +34,28 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.profiler.common.internal;
+package com.redhat.thermostat.vm.profiler.client.core;
 
-import java.util.HashSet;
-import java.util.Set;
+import static org.junit.Assert.assertEquals;
 
-import com.redhat.thermostat.storage.core.PreparedParameter;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
-public class ProfileDAOImplStatementDescriptorRegistration implements StatementDescriptorRegistration {
+import org.junit.Test;
 
-    @Override
-    public DescriptorMetadata getDescriptorMetadata(String descriptor, PreparedParameter[] params) {
-        if (descriptor.equals(ProfileDAOImpl.DESC_ADD_PROFILE_INFO)
-                || descriptor.equals(ProfileDAOImpl.DESC_QUERY_LATEST)
-                || descriptor.equals(ProfileDAOImpl.DESC_QUERY_BY_ID)
-                || descriptor.equals(ProfileDAOImpl.DESC_INTERVAL_QUERY)) {
-            String agentId = (String)params[0].getValue();
-            String vmId = (String)params[1].getValue();
-            DescriptorMetadata metadata = new DescriptorMetadata(agentId, vmId);
-            return metadata;
-        } else {
-            throw new IllegalArgumentException("Unknown descriptor: ->" + descriptor + "<-");
-        }
-    }
+import com.redhat.thermostat.vm.profiler.client.core.ProfilingResultParser.ProfilingResult;
 
-    @Override
-    public Set<String> getStatementDescriptors() {
-        Set<String> results = new HashSet<>();
-        results.add(ProfileDAOImpl.DESC_ADD_PROFILE_INFO);
-        results.add(ProfileDAOImpl.DESC_QUERY_BY_ID);
-        results.add(ProfileDAOImpl.DESC_QUERY_LATEST);
-        results.add(ProfileDAOImpl.DESC_INTERVAL_QUERY);
-        return results;
+public class ProfilingResultParserTest {
+
+    @Test
+    public void parsesCorrectly() throws Exception {
+        String data = "1 foo\n2 bar";
+        ByteArrayInputStream in = new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8));
+        ProfilingResultParser parser = new ProfilingResultParser();
+        ProfilingResult result = parser.parse(in);
+        Map<String, Long> times = result.time;
+        assertEquals(1, (long) times.get("foo"));
+        assertEquals(2, (long) times.get("bar"));
     }
 }

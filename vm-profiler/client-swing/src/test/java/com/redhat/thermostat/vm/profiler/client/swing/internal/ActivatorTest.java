@@ -34,39 +34,44 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.profiler.common.internal;
+package com.redhat.thermostat.vm.profiler.client.swing.internal;
 
-import java.util.HashSet;
-import java.util.Set;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
-import com.redhat.thermostat.storage.core.PreparedParameter;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
+import org.junit.Test;
 
-public class ProfileDAOImplStatementDescriptorRegistration implements StatementDescriptorRegistration {
+import com.redhat.thermostat.client.command.RequestQueue;
+import com.redhat.thermostat.client.core.InformationService;
+import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.testutils.StubBundleContext;
+import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
 
-    @Override
-    public DescriptorMetadata getDescriptorMetadata(String descriptor, PreparedParameter[] params) {
-        if (descriptor.equals(ProfileDAOImpl.DESC_ADD_PROFILE_INFO)
-                || descriptor.equals(ProfileDAOImpl.DESC_QUERY_LATEST)
-                || descriptor.equals(ProfileDAOImpl.DESC_QUERY_BY_ID)
-                || descriptor.equals(ProfileDAOImpl.DESC_INTERVAL_QUERY)) {
-            String agentId = (String)params[0].getValue();
-            String vmId = (String)params[1].getValue();
-            DescriptorMetadata metadata = new DescriptorMetadata(agentId, vmId);
-            return metadata;
-        } else {
-            throw new IllegalArgumentException("Unknown descriptor: ->" + descriptor + "<-");
-        }
-    }
+public class ActivatorTest {
 
-    @Override
-    public Set<String> getStatementDescriptors() {
-        Set<String> results = new HashSet<>();
-        results.add(ProfileDAOImpl.DESC_ADD_PROFILE_INFO);
-        results.add(ProfileDAOImpl.DESC_QUERY_BY_ID);
-        results.add(ProfileDAOImpl.DESC_QUERY_LATEST);
-        results.add(ProfileDAOImpl.DESC_INTERVAL_QUERY);
-        return results;
+    @Test
+    public void verifyActivatorRegistersGuiService() throws Exception {
+        StubBundleContext bundleContext = new StubBundleContext();
+
+        ApplicationService appService = mock(ApplicationService.class);
+        bundleContext.registerService(ApplicationService.class, appService, null);
+
+        AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
+        bundleContext.registerService(AgentInfoDAO.class, agentInfoDao, null);
+
+        ProfileDAO profielDao = mock(ProfileDAO.class);
+        bundleContext.registerService(ProfileDAO.class, profielDao, null);
+
+        RequestQueue requestQueue = mock(RequestQueue.class);
+        bundleContext.registerService(RequestQueue.class, requestQueue, null);
+
+        Activator activator = new Activator();
+
+        activator.start(bundleContext);
+
+        assertTrue(bundleContext.isServiceRegistered(InformationService.class.getName(), VmProfileService.class));
+
+        activator.stop(bundleContext);
     }
 }

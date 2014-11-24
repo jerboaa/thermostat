@@ -50,5 +50,7 @@ public class ProfileDAOImplStatementDescriptorRegistrationTest {
         Set<String> names = registration.getStatementDescriptors();
         assertTrue(names.contains(ProfileDAOImpl.DESC_ADD_PROFILE_INFO));
         assertTrue(names.contains(ProfileDAOImpl.DESC_QUERY_LATEST));
+        assertTrue(names.contains(ProfileDAOImpl.DESC_QUERY_BY_ID));
+        assertTrue(names.contains(ProfileDAOImpl.DESC_INTERVAL_QUERY));
     }
 }

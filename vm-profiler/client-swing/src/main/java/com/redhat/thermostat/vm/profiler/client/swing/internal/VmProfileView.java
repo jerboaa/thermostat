@@ -34,39 +34,43 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.profiler.common.internal;
+package com.redhat.thermostat.vm.profiler.client.swing.internal;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
-import com.redhat.thermostat.storage.core.PreparedParameter;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
+import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.vm.profiler.client.core.ProfilingResultParser.ProfilingResult;
 
-public class ProfileDAOImplStatementDescriptorRegistration implements StatementDescriptorRegistration {
+public abstract class VmProfileView extends BasicView implements UIComponent {
 
-    @Override
-    public DescriptorMetadata getDescriptorMetadata(String descriptor, PreparedParameter[] params) {
-        if (descriptor.equals(ProfileDAOImpl.DESC_ADD_PROFILE_INFO)
-                || descriptor.equals(ProfileDAOImpl.DESC_QUERY_LATEST)
-                || descriptor.equals(ProfileDAOImpl.DESC_QUERY_BY_ID)
-                || descriptor.equals(ProfileDAOImpl.DESC_INTERVAL_QUERY)) {
-            String agentId = (String)params[0].getValue();
-            String vmId = (String)params[1].getValue();
-            DescriptorMetadata metadata = new DescriptorMetadata(agentId, vmId);
-            return metadata;
-        } else {
-            throw new IllegalArgumentException("Unknown descriptor: ->" + descriptor + "<-");
+    static class Profile {
+        public final String name;
+        public final long timeStamp;
+        public Profile(String name, long timeStamp) {
+            this.name = name;
+            this.timeStamp = timeStamp;
         }
     }
 
-    @Override
-    public Set<String> getStatementDescriptors() {
-        Set<String> results = new HashSet<>();
-        results.add(ProfileDAOImpl.DESC_ADD_PROFILE_INFO);
-        results.add(ProfileDAOImpl.DESC_QUERY_BY_ID);
-        results.add(ProfileDAOImpl.DESC_QUERY_LATEST);
-        results.add(ProfileDAOImpl.DESC_INTERVAL_QUERY);
-        return results;
+    enum ProfileAction {
+        START_PROFILING,
+        STOP_PROFILING,
+
+        PROFILE_SELECTED,
     }
+
+    public abstract void addProfileActionListener(ActionListener<ProfileAction> listener);
+
+    public abstract void removeProfileActionlistener(ActionListener<ProfileAction> listener);
+
+    public abstract void setCurrentlyProfiling(boolean profiling);
+
+    public abstract void setAvailableProfilingRuns(List<Profile> data);
+
+    public abstract Profile getSelectedProfile();
+
+    public abstract void setProfilingDetailData(ProfilingResult results);
+
 }

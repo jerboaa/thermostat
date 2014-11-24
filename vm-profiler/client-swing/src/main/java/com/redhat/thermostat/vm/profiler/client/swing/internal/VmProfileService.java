@@ -34,39 +34,46 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.profiler.common.internal;
+package com.redhat.thermostat.vm.profiler.client.swing.internal;
 
-import java.util.HashSet;
-import java.util.Set;
+import com.redhat.thermostat.client.command.RequestQueue;
+import com.redhat.thermostat.client.core.InformationService;
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.common.AllPassFilter;
+import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.Filter;
+import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
 
-import com.redhat.thermostat.storage.core.PreparedParameter;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
+public class VmProfileService implements InformationService<VmRef> {
 
-public class ProfileDAOImplStatementDescriptorRegistration implements StatementDescriptorRegistration {
+    private ApplicationService service;
+    private AgentInfoDAO agentInfoDao;
+    private ProfileDAO dao;
+    private RequestQueue queue;
 
-    @Override
-    public DescriptorMetadata getDescriptorMetadata(String descriptor, PreparedParameter[] params) {
-        if (descriptor.equals(ProfileDAOImpl.DESC_ADD_PROFILE_INFO)
-                || descriptor.equals(ProfileDAOImpl.DESC_QUERY_LATEST)
-                || descriptor.equals(ProfileDAOImpl.DESC_QUERY_BY_ID)
-                || descriptor.equals(ProfileDAOImpl.DESC_INTERVAL_QUERY)) {
-            String agentId = (String)params[0].getValue();
-            String vmId = (String)params[1].getValue();
-            DescriptorMetadata metadata = new DescriptorMetadata(agentId, vmId);
-            return metadata;
-        } else {
-            throw new IllegalArgumentException("Unknown descriptor: ->" + descriptor + "<-");
-        }
+    public VmProfileService(ApplicationService service, AgentInfoDAO agentInfoDao, ProfileDAO dao, RequestQueue queue) {
+        this.service = service;
+        this.agentInfoDao = agentInfoDao;
+        this.dao = dao;
+        this.queue = queue;
     }
 
     @Override
-    public Set<String> getStatementDescriptors() {
-        Set<String> results = new HashSet<>();
-        results.add(ProfileDAOImpl.DESC_ADD_PROFILE_INFO);
-        results.add(ProfileDAOImpl.DESC_QUERY_BY_ID);
-        results.add(ProfileDAOImpl.DESC_QUERY_LATEST);
-        results.add(ProfileDAOImpl.DESC_INTERVAL_QUERY);
-        return results;
+    public int getOrderValue() {
+        return ORDER_CPU_GROUP + 20;
     }
+
+    @Override
+    public Filter<VmRef> getFilter() {
+        // we can't profile dead VMs, but we can still look at old profiling data.
+        return new AllPassFilter<>();
+    }
+
+    @Override
+    public InformationServiceController<VmRef> getInformationServiceController(VmRef ref) {
+        return new VmProfileController(service, agentInfoDao, dao, queue, ref);
+    }
+
 }

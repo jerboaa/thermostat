@@ -37,8 +37,10 @@
 package com.redhat.thermostat.vm.profiler.common;
 
 import java.io.InputStream;
+import java.util.List;
 
 import com.redhat.thermostat.annotations.Service;
+import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.storage.core.VmRef;
 
 @Service
@@ -46,7 +48,12 @@ public interface ProfileDAO {
 
     void saveProfileData(ProfileInfo info, InputStream data);
 
+    List<ProfileInfo> getAllProfileInfo(VmRef vm, Range<Long> timeRange);
+
+    InputStream loadProfileDataById(VmRef vm, String profileId);
+
     /** @return {@code null} if no data is available */
     InputStream loadLatestProfileData(VmRef vm);
+
 
 }

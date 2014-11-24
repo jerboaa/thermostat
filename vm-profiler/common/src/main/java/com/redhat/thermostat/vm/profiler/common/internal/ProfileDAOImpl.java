@@ -37,9 +37,11 @@
 package com.redhat.thermostat.vm.profiler.common.internal;
 
 import java.io.InputStream;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
@@ -50,6 +52,7 @@ import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.core.VmTimeIntervalPojoListGetter;
 import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
 import com.redhat.thermostat.vm.profiler.common.ProfileInfo;
 
@@ -77,11 +80,24 @@ public class ProfileDAOImpl implements ProfileDAO {
             + Key.VM_ID.getName() + "' = ?s SORT '"
             + Key.TIMESTAMP.getName() + "' DSC LIMIT 1";
 
+    static final String DESC_QUERY_BY_ID = "QUERY "
+            + CATEGORY.getName() + " WHERE '"
+            + Key.AGENT_ID.getName() + "' = ?s AND '"
+            + Key.VM_ID.getName() + "' = ?s AND '"
+            + Key.TIMESTAMP.getName() + "' = ?s LIMIT 1";
+
+    // internal information of VmTimeIntervalPojoListGetter being leaked :(
+    static final String DESC_INTERVAL_QUERY = String.format(
+            VmTimeIntervalPojoListGetter.VM_INTERVAL_QUERY_FORMAT, ProfileDAOImpl.CATEGORY.getName());
+
     private final Storage storage;
+    private final VmTimeIntervalPojoListGetter<ProfileInfo> getter;
 
     public ProfileDAOImpl(Storage storage) {
         this.storage = storage;
         this.storage.registerCategory(CATEGORY);
+
+        this.getter = new VmTimeIntervalPojoListGetter<>(storage, CATEGORY);
     }
 
     @Override
@@ -108,6 +124,18 @@ public class ProfileDAOImpl implements ProfileDAO {
     }
 
     @Override
+    public List<ProfileInfo> getAllProfileInfo(VmRef vm, Range<Long> timeRange) {
+        System.out.println("ProfileDAOImpl: getAllProfileInfo()");
+        return getter.getLatest(vm, timeRange.getMin(), timeRange.getMax());
+    }
+
+    @Override
+    public InputStream loadProfileDataById(VmRef vm, String profileId) {
+        // TODO should we check whether this profileId is valid by querying the DB first?
+        return getProfileData(profileId);
+    }
+
+    @Override
     public InputStream loadLatestProfileData(VmRef vm) {
         StatementDescriptor<ProfileInfo> desc = new StatementDescriptor<>(CATEGORY, DESC_QUERY_LATEST);
         PreparedStatement<ProfileInfo> prepared;
@@ -120,8 +148,7 @@ public class ProfileDAOImpl implements ProfileDAO {
                 return null;
             }
             ProfileInfo info = cursor.next();
-            String profileId = info.getProfileId();
-            return storage.loadFile(profileId);
+            return getProfileData(info.getProfileId());
         } catch (DescriptorParsingException e) {
             logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
         } catch (StatementExecutionException e) {
@@ -130,4 +157,7 @@ public class ProfileDAOImpl implements ProfileDAO {
         return null;
     }
 
+    private InputStream getProfileData(String profileId) {
+        return storage.loadFile(profileId);
+    }
 }

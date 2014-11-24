@@ -36,26 +36,66 @@
 
 package com.redhat.thermostat.vm.profiler.client.swing.internal;
 
+import java.util.Hashtable;
 import java.util.Map;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
+import com.redhat.thermostat.client.command.RequestQueue;
+import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
-import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
 
 public class Activator implements BundleActivator {
 
+    private ServiceRegistration<InformationService> registration;
+    private MultipleServiceTracker tracker;
+
     @Override
     public void start(final BundleContext context) throws Exception {
-        // TODO implement me
+
+        Class<?>[] deps = new Class<?>[] {
+                ApplicationService.class,
+                AgentInfoDAO.class,
+                ProfileDAO.class,
+                RequestQueue.class,
+        };
+
+        tracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                ApplicationService service = (ApplicationService) services.get(ApplicationService.class.getName());
+                AgentInfoDAO agentInfoDao = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
+                ProfileDAO profileDao = (ProfileDAO) services.get(ProfileDAO.class.getName());
+                RequestQueue queue = (RequestQueue) services.get(RequestQueue.class.getName());
+
+                InformationService<VmRef> profileService = new VmProfileService(service, agentInfoDao, profileDao, queue);
+
+                Hashtable<String,String> properties = new Hashtable<>();
+                properties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
+                properties.put(InformationService.KEY_SERVICE_ID, profileService.getClass().getName());
+
+                registration = context.registerService(InformationService.class, profileService, properties);
+            }
+
+            @Override
+            public void dependenciesUnavailable() {
+                registration.unregister();
+                registration = null;
+            }
+        });
+        tracker.open();
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        // TODO implement me
+        tracker.close();
     }
 
 }
-

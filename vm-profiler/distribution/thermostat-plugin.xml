@@ -89,6 +89,14 @@
     </commands>
     <extensions>
         <extension>
+            <name>gui</name>
+            <bundles>
+                <bundle><symbolic-name>com.redhat.thermostat.vm.profiler.common</symbolic-name><version>${project.version}</version></bundle>
+                <bundle><symbolic-name>com.redhat.thermostat.vm.profiler.client.core</symbolic-name><version>${project.version}</version></bundle>
+                <bundle><symbolic-name>com.redhat.thermostat.vm.profiler.client.swing</symbolic-name><version>${project.version}</version></bundle>
+            </bundles>
+        </extension>
+        <extension>
             <name>agent</name>
             <bundles>
                 <bundle><symbolic-name>com.redhat.thermostat.vm.profiler.common</symbolic-name><version>${project.version}</version></bundle>
