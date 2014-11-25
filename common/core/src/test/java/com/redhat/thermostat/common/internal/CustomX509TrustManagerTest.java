@@ -37,7 +37,7 @@
 package com.redhat.thermostat.common.internal;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 
@@ -114,8 +114,8 @@ public class CustomX509TrustManagerTest {
         File emptyKeyStore = new File(this.getClass()
                 .getResource("/empty.keystore").getFile());
         X509TrustManager tm = new CustomX509TrustManager(emptyKeyStore, null);
-        // Default list should not be empty
-        assertTrue(tm.getAcceptedIssuers().length > 0);
+        // Default list should not be null
+        assertNotNull(tm.getAcceptedIssuers());
         try {
             tm.checkClientTrusted(null, null);
         } catch (Exception e) {
