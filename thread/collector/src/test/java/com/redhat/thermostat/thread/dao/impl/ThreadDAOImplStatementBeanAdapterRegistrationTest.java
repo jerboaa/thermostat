@@ -36,13 +36,10 @@
 
 package com.redhat.thermostat.thread.dao.impl;
 
-import com.redhat.thermostat.storage.core.PreparedParameter;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorMetadataFactory;
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
-import com.redhat.thermostat.storage.internal.dao.DAOImplStatementDescriptorRegistration;
-
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -50,28 +47,12 @@ import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import org.junit.Test;
+
+import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
+import com.redhat.thermostat.storage.internal.dao.DAOImplStatementDescriptorRegistration;
 
 public class ThreadDAOImplStatementBeanAdapterRegistrationTest {
-
-    static class Triple<S, T, U> {
-        final S first;
-        final T second;
-        final U third;
-
-        public Triple(S first, T second, U third) {
-            this.first = first;
-            this.second = second;
-            this.third = third;
-        }
-    }
     
     @Test
     public void registersAllDescriptors() {
@@ -107,169 +88,6 @@ public class ThreadDAOImplStatementBeanAdapterRegistrationTest {
         assertNotNull(threadDaoReg);
         assertEquals(20, threadDaoReg.getStatementDescriptors().size());
     }
-    
-    private Triple<String, String, PreparedParameter[]> setupForMetaDataTest() {
-        PreparedParameter agentIdParam = mock(PreparedParameter.class);
-        PreparedParameter vmIdParam = mock(PreparedParameter.class);
-        String agentId = "agentId";
-        String vmId = "vmId";
-        when(agentIdParam.getValue()).thenReturn(agentId);
-        when(vmIdParam.getValue()).thenReturn(vmId);
-        PreparedParameter[] params = new PreparedParameter[] { agentIdParam,
-                vmIdParam };
-        return new Triple<String, String, PreparedParameter[]>(agentId, vmId,
-                params);
-    }
 
-    private void assertThreadMetadata(
-            Triple<String, String, PreparedParameter[]> triple,
-            DescriptorMetadata data) {
-        assertNotNull(data);
-        assertEquals(triple.first, data.getAgentId());
-        assertEquals(triple.second, data.getVmId());
-    }
-    
-    @Test
-    public void canGetMetadataForLatestDeadlockQuery() {
-        Triple<String, String, PreparedParameter[]> triple = setupForMetaDataTest(); 
-        
-        StatementDescriptorMetadataFactory factory = new ThreadDaoImplStatementDescriptorRegistration();
-        DescriptorMetadata data = factory.getDescriptorMetadata(ThreadDaoImpl.QUERY_LATEST_DEADLOCK_INFO, triple.third);
-        assertThreadMetadata(triple, data);
-    }
-
-    @Test
-    public void canGetMetadataForLatestHarvestingStatusQuery() {
-        Triple<String, String, PreparedParameter[]> triple = setupForMetaDataTest(); 
-        
-        StatementDescriptorMetadataFactory factory = new ThreadDaoImplStatementDescriptorRegistration();
-        DescriptorMetadata data = factory.getDescriptorMetadata(ThreadDaoImpl.QUERY_LATEST_HARVESTING_STATUS, triple.third);
-        assertThreadMetadata(triple, data);
-    }
-
-    @Test
-    public void canGetMetadataForThreadHeader() {
-        Triple<String, String, PreparedParameter[]> triple = setupForMetaDataTest();
-
-        StatementDescriptorMetadataFactory factory = new ThreadDaoImplStatementDescriptorRegistration();
-        DescriptorMetadata data = factory.getDescriptorMetadata(ThreadDaoImpl.QUERY_THREAD_HEADER, triple.third);
-        assertThreadMetadata(triple, data);
-    }
-
-    @Test
-    public void canGetMetadataAllThreadHeaders() {
-        Triple<String, String, PreparedParameter[]> triple = setupForMetaDataTest();
-
-        StatementDescriptorMetadataFactory factory = new ThreadDaoImplStatementDescriptorRegistration();
-        DescriptorMetadata data = factory.getDescriptorMetadata(ThreadDaoImpl.QUERY_ALL_THREAD_HEADERS, triple.third);
-        assertThreadMetadata(triple, data);
-    }
-
-    @Test
-    public void canGetMetadataLastThreadStateForThread() {
-        PreparedParameter str1 = new PreparedParameter();
-        str1.setType(String.class);
-        str1.setValue("foo-agent");
-        PreparedParameter str2 = new PreparedParameter();
-        str2.setType(String.class);
-        str2.setValue("something");
-        PreparedParameter[] params = new PreparedParameter[] {
-                str1, str2
-        };
-        StatementDescriptorMetadataFactory factory = new ThreadDaoImplStatementDescriptorRegistration();
-        DescriptorMetadata data = factory.getDescriptorMetadata(ThreadDaoImpl.QUERY_LATEST_THREAD_STATE_FOR_THREAD, params);
-        assertNotNull(data);
-        assertEquals("foo-agent", data.getAgentId());
-        assertFalse(data.hasVmId());
-        assertTrue(data.hasAgentId());
-    }
-    
-    @Test
-    public void canGetMetadataFirstThreadStateForThread() {
-        PreparedParameter str1 = new PreparedParameter();
-        str1.setType(String.class);
-        str1.setValue("foo-agent");
-        PreparedParameter str2 = new PreparedParameter();
-        str2.setType(String.class);
-        str2.setValue("something");
-        PreparedParameter[] params = new PreparedParameter[] {
-                str1, str2
-        };
-        StatementDescriptorMetadataFactory factory = new ThreadDaoImplStatementDescriptorRegistration();
-        DescriptorMetadata data = factory.getDescriptorMetadata(ThreadDaoImpl.QUERY_FIRST_THREAD_STATE_FOR_THREAD, params);
-        assertNotNull(data);
-        assertEquals("foo-agent", data.getAgentId());
-        assertFalse(data.hasVmId());
-        assertTrue(data.hasAgentId());
-        assertNull(data.getVmId());
-    }
-
-
-    @Test
-    public void canGetMetadataOldestThreadState() {
-        Triple<String, String, PreparedParameter[]> triple = setupForMetaDataTest();
-
-        StatementDescriptorMetadataFactory factory = new ThreadDaoImplStatementDescriptorRegistration();
-        DescriptorMetadata data = factory.getDescriptorMetadata(ThreadDaoImpl.QUERY_OLDEST_THREAD_STATE, triple.third);
-        assertThreadMetadata(triple, data);
-    }
-
-    @Test
-    public void canGetMetadataLatestThreadState() {
-        Triple<String, String, PreparedParameter[]> triple = setupForMetaDataTest();
-
-        StatementDescriptorMetadataFactory factory = new ThreadDaoImplStatementDescriptorRegistration();
-        DescriptorMetadata data = factory.getDescriptorMetadata(ThreadDaoImpl.QUERY_LATEST_THREAD_STATE, triple.third);
-        assertThreadMetadata(triple, data);
-    }
-
-    @Test
-    public void canGetMetadataThreadStatePerThread() {
-        PreparedParameter str1 = new PreparedParameter();
-        str1.setType(String.class);
-        str1.setValue("foo");
-        PreparedParameter long1 = new PreparedParameter();
-        long1.setType(long.class);
-        long1.setValue(1L);
-        PreparedParameter long2 = new PreparedParameter();
-        long2.setType(long.class);
-        long2.setValue(2L);
-        PreparedParameter[] params = new PreparedParameter[] {
-                str1, long1, long2
-        };
-        StatementDescriptorMetadataFactory factory = new ThreadDaoImplStatementDescriptorRegistration();
-        DescriptorMetadata data = factory.getDescriptorMetadata(ThreadDaoImpl.QUERY_THREAD_STATE_PER_THREAD, params);
-        assertNotNull(data);
-        assertNull(data.getAgentId());
-        assertNull(data.getVmId());
-    }
-    
-    @Test
-    public void canGetMetadataThreadLatestContentionSample() {
-        PreparedParameter str1 = new PreparedParameter();
-        str1.setType(String.class);
-        str1.setValue("foo");
-        PreparedParameter[] params = new PreparedParameter[] {
-                str1
-        };
-        StatementDescriptorMetadataFactory factory = new ThreadDaoImplStatementDescriptorRegistration();
-        DescriptorMetadata data = factory.getDescriptorMetadata(ThreadDaoImpl.GET_LATEST_CONTENTION_SAMPLE, params);
-        assertNotNull(data);
-        assertFalse(data.hasAgentId());
-        assertFalse(data.hasVmId());
-        assertNull(data.getAgentId());
-        assertNull(data.getVmId());
-    }
-
-    @Test
-    public void unknownDescriptorThrowsException() {
-        StatementDescriptorMetadataFactory factory = new ThreadDaoImplStatementDescriptorRegistration();
-        try {
-            factory.getDescriptorMetadata("QUERY foo-bar WHERE 'a' = 'b'", null);
-            fail("should have thrown exception");
-        } catch (IllegalArgumentException e) {
-            // pass
-        }
-    }
 }
 

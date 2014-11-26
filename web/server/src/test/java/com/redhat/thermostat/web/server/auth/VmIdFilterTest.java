@@ -37,11 +37,9 @@
 package com.redhat.thermostat.web.server.auth;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -52,7 +50,6 @@ import org.junit.Test;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.BinaryLogicalExpression;
 import com.redhat.thermostat.storage.query.BinarySetMembershipExpression;
@@ -84,7 +81,7 @@ public class VmIdFilterTest {
         roles.add(vmIdReadAll);
         
         VmIdFilter<?> filter = new VmIdFilter<>(roles);
-        FilterResult result = filter.applyFilter(null, null, null);
+        FilterResult result = filter.applyFilter(null, null);
         assertEquals(ResultType.ALL, result.getType());
         assertEquals(null, result.getFilterExpression());
     }
@@ -98,36 +95,19 @@ public class VmIdFilterTest {
         ExpressionFactory factory = new ExpressionFactory();
         Expression parentExpression = factory.equalTo(Key.AGENT_ID, "testKey");
         VmIdFilter<?> filter = new VmIdFilter<>(roles);
-        FilterResult result = filter.applyFilter(null, null, parentExpression);
+        FilterResult result = filter.applyFilter(null, parentExpression);
         assertEquals(ResultType.QUERY_EXPRESSION, result.getType());
         assertEquals(parentExpression, result.getFilterExpression());
     }
     
     @Test
     public void addsVmIdInQuery() {
-        performVmIdQueryTest(new DescriptorMetadata());
-    }
-    
-    /*
-     * We should not throw a NPE when the descriptor meta data is null. That is
-     * optional for filtering anyway and not all plugins may supply us with one.
-     */
-    @Test
-    public void addsVmIdInQueryIfMetadataNull() {
-        try {
-            performVmIdQueryTest(null);
-        } catch (NullPointerException e) {
-            fail("Should not have thrown NPE");
-        }
-    }
-    
-    private void performVmIdQueryTest(DescriptorMetadata metadata) {
         String vmId = UUID.randomUUID().toString();
         Set<BasicRole> roles = new HashSet<>();
         RolePrincipal vmIdRole = new RolePrincipal(VmIdFilter.VMS_BY_VM_ID_GRANT_ROLE_PREFIX + vmId);
         roles.add(vmIdRole);
         VmIdFilter<FooPojo> filter = new VmIdFilter<>(roles);
-        FilterResult result = filter.applyFilter(TEST_DESC_NON_NULL_VM_ID, metadata, null);
+        FilterResult result = filter.applyFilter(TEST_DESC_NON_NULL_VM_ID, null);
         assertEquals(ResultType.QUERY_EXPRESSION, result.getType());
         assertNotNull(result.getFilterExpression());
         Expression actual = result.getFilterExpression();
@@ -144,11 +124,10 @@ public class VmIdFilterTest {
         Set<BasicRole> roles = new HashSet<>();
         RolePrincipal vmIdRole = new RolePrincipal(VmIdFilter.VMS_BY_VM_ID_GRANT_ROLE_PREFIX + vmId);
         roles.add(vmIdRole);
-        DescriptorMetadata metadata = new DescriptorMetadata();
         VmIdFilter<FooPojo> filter = new VmIdFilter<>(roles);
         ExpressionFactory factory = new ExpressionFactory();
         Expression parentExpression = factory.equalTo(Key.AGENT_ID, "testKey");
-        FilterResult result = filter.applyFilter(TEST_DESC_NON_NULL_VM_ID, metadata, parentExpression);
+        FilterResult result = filter.applyFilter(TEST_DESC_NON_NULL_VM_ID, parentExpression);
         assertEquals(ResultType.QUERY_EXPRESSION, result.getType());
         assertNotNull(result.getFilterExpression());
         Expression actual = result.getFilterExpression();
@@ -170,9 +149,8 @@ public class VmIdFilterTest {
         RolePrincipal vm2Role = new RolePrincipal(VmIdFilter.VMS_BY_VM_ID_GRANT_ROLE_PREFIX + vmId2);
         roles.add(vm1Role);
         roles.add(vm2Role);
-        DescriptorMetadata metadata = new DescriptorMetadata();
         VmIdFilter<FooPojo> filter = new VmIdFilter<>(roles);
-        FilterResult result = filter.applyFilter(TEST_DESC_NON_NULL_VM_ID, metadata, null);
+        FilterResult result = filter.applyFilter(TEST_DESC_NON_NULL_VM_ID, null);
         assertEquals(ResultType.QUERY_EXPRESSION, result.getType());
         assertNotNull(result.getFilterExpression());
         Expression actual = result.getFilterExpression();
@@ -185,33 +163,12 @@ public class VmIdFilterTest {
     }
     
     @Test
-    public void returnsEmptyIfVmIdDoesNotMatch() {
-        String vmId = UUID.randomUUID().toString();
-        Set<BasicRole> roles = new HashSet<>();
-        RolePrincipal vmIdRole = new RolePrincipal(VmIdFilter.VMS_BY_VM_ID_GRANT_ROLE_PREFIX + vmId);
-        roles.add(vmIdRole);
-        String wrongVmId = "something other than vmId";
-        // assert precondition
-        assertFalse(vmId.equals(wrongVmId));
-        
-        DescriptorMetadata metadata = new DescriptorMetadata(null, wrongVmId);
-        assertTrue(metadata.hasVmId());
-        VmIdFilter<FooPojo> filter = new VmIdFilter<>(roles);
-        FilterResult result = filter.applyFilter(TEST_DESC_NON_NULL_VM_ID, metadata, null);
-        assertEquals(ResultType.EMPTY, result.getType());
-        assertNull(result.getFilterExpression());
-    }
-    
-    @Test
     public void returnsAllForUnrelatedQuery() {
         Set<BasicRole> roles = new HashSet<>();
         
-        DescriptorMetadata metadata = new DescriptorMetadata();
-        assertFalse(metadata.hasAgentId());
-        assertFalse(metadata.hasVmId());
         VmIdFilter<FooPojo> filter = new VmIdFilter<>(roles);
         // want to have a null retval of vmId
-        FilterResult result = filter.applyFilter(TEST_DESC_NULL_VM_ID, metadata, null);
+        FilterResult result = filter.applyFilter(TEST_DESC_NULL_VM_ID, null);
         assertEquals(ResultType.ALL, result.getType());
         assertNull(result.getFilterExpression());
     }
@@ -222,12 +179,9 @@ public class VmIdFilterTest {
         
         ExpressionFactory factory = new ExpressionFactory();
         Expression parentExpression = factory.equalTo(Key.AGENT_ID, "testKey");
-        DescriptorMetadata metadata = new DescriptorMetadata();
-        assertFalse(metadata.hasAgentId());
-        assertFalse(metadata.hasVmId());
         VmIdFilter<FooPojo> filter = new VmIdFilter<>(roles);
         // want to have a null retval of vmId
-        FilterResult result = filter.applyFilter(TEST_DESC_NULL_VM_ID, metadata, parentExpression);
+        FilterResult result = filter.applyFilter(TEST_DESC_NULL_VM_ID, parentExpression);
         assertEquals(ResultType.QUERY_EXPRESSION, result.getType());
         assertNotNull(result.getFilterExpression());
         assertEquals(parentExpression, result.getFilterExpression());

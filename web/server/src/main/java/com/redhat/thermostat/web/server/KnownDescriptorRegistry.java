@@ -37,13 +37,10 @@
 package com.redhat.thermostat.web.server;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
 
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorMetadataFactory;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 
 /**
@@ -55,14 +52,12 @@ final class KnownDescriptorRegistry {
     private static final ServiceLoader<StatementDescriptorRegistration> TRUSTED_DESCS = ServiceLoader
             .load(StatementDescriptorRegistration.class);
     private final Set<String> trustedSet;
-    private final Map<String, StatementDescriptorMetadataFactory> descriptorMetadataFactories;
     
     KnownDescriptorRegistry() {
         this(TRUSTED_DESCS);
     }
     
     KnownDescriptorRegistry(Iterable<StatementDescriptorRegistration> trustedDescs) {
-        descriptorMetadataFactories = new HashMap<>();
         trustedSet = new HashSet<>();
         for (StatementDescriptorRegistration reg: trustedDescs) {
             Set<String> newCandidates = reg.getStatementDescriptors();
@@ -78,11 +73,6 @@ final class KnownDescriptorRegistry {
                 // Pass: Set impl does not support contains checks on null
                 //       values.
             }
-            // prepare the reverse lookup metadata map
-            StatementDescriptorMetadataFactory factory = (StatementDescriptorMetadataFactory) reg;
-            for (String descKey: newCandidates) {
-                descriptorMetadataFactories.put(descKey, factory);
-            }
             trustedSet.addAll(newCandidates);
         }
     }
@@ -92,9 +82,5 @@ final class KnownDescriptorRegistry {
         return Collections.unmodifiableSet(trustedSet);
     }
     
-    final Map<String, StatementDescriptorMetadataFactory> getDescriptorMetadataFactories() {
-        // return a read-only mapping
-        return Collections.unmodifiableMap(descriptorMetadataFactories);
-    }
 }
 

@@ -73,17 +73,7 @@ public class VmCpuStatDAOImplStatementDescriptorRegistration implements
     @Override
     public DescriptorMetadata getDescriptorMetadata(String descriptor,
             PreparedParameter[] params) {
-        if (descriptor.equals(VmCpuStatDAOImplStatementDescriptorRegistration.latestDescriptor)
-                || descriptor.equals(VmCpuStatDAOImplStatementDescriptorRegistration.rangeDescriptor)
-                || descriptor.equals(VmCpuStatDAOImpl.DESC_LATEST_VM_CPU_STAT)
-                || descriptor.equals(VmCpuStatDAOImpl.DESC_OLDEST_VM_CPU_STAT)) {
-            String agentId = (String)params[0].getValue();
-            String vmId = (String)params[1].getValue();
-            DescriptorMetadata metadata = new DescriptorMetadata(agentId, vmId);
-            return metadata;
-        } else {
-            throw new IllegalArgumentException("Unknown descriptor: ->" + descriptor + "<-");
-        }
+        throw new AssertionError("Should not be used");
     }
 
 }

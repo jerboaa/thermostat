@@ -39,7 +39,6 @@ package com.redhat.thermostat.web.server.auth;
 import java.util.Set;
 
 import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
@@ -63,7 +62,7 @@ class HostnameFilter<T extends Pojo> extends AbstractFilter<T> {
 
     @Override
     public FilterResult applyFilter(StatementDescriptor<T> desc,
-            DescriptorMetadata metaData, Expression parentExpression) {
+            Expression parentExpression) {
         if (userRoles.contains(GRANT_HOSTS_READ_ALL)) {
             return allWithExpression(parentExpression);
         }

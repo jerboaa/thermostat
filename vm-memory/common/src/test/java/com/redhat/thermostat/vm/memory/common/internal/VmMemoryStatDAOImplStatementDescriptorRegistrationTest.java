@@ -96,54 +96,6 @@ public class VmMemoryStatDAOImplStatementDescriptorRegistrationTest {
         assertNotNull(vmMemoryDaoReg);
         assertEquals(3, vmMemoryDaoReg.getStatementDescriptors().size());
     }
-    
-    @Test
-    public void canGetMetadataForVmLatestVmMemoryStatsQuery() {
-        PreparedParameter agentIdParam = mock(PreparedParameter.class);
-        PreparedParameter vmIdParam = mock(PreparedParameter.class);
-        String agentId = "agentId";
-        String vmId = "vmId";
-        when(agentIdParam.getValue()).thenReturn(agentId);
-        when(vmIdParam.getValue()).thenReturn(vmId);
-        PreparedParameter[] params = new PreparedParameter[] { agentIdParam,
-                vmIdParam };
-        
-        String desc = String.format(VmLatestPojoListGetter.VM_LATEST_QUERY_FORMAT, 
-                VmMemoryStatDAO.vmMemoryStatsCategory.getName());
-        StatementDescriptorMetadataFactory factory = new VmMemoryStatDAOImplStatementDescriptorRegistration();
-        DescriptorMetadata data = factory.getDescriptorMetadata(desc, params);
-        assertNotNull(data);
-        assertEquals(agentId, data.getAgentId());
-        assertEquals(vmId, data.getVmId());
-    }
-    
-    @Test
-    public void canGetMetadataForVmLatestVmMemoryStats2Query() {
-        PreparedParameter agentIdParam = mock(PreparedParameter.class);
-        PreparedParameter vmIdParam = mock(PreparedParameter.class);
-        String agentId = "agentId";
-        String vmId = "vmId";
-        when(agentIdParam.getValue()).thenReturn(agentId);
-        when(vmIdParam.getValue()).thenReturn(vmId);
-        PreparedParameter[] params = new PreparedParameter[] { agentIdParam,
-                vmIdParam };
-        
-        StatementDescriptorMetadataFactory factory = new VmMemoryStatDAOImplStatementDescriptorRegistration();
-        DescriptorMetadata data = factory.getDescriptorMetadata(VmMemoryStatDAOImpl.QUERY_LATEST, params);
-        assertNotNull(data);
-        assertEquals(agentId, data.getAgentId());
-        assertEquals(vmId, data.getVmId());
-    }
-    
-    @Test
-    public void unknownDescriptorThrowsException() {
-        StatementDescriptorMetadataFactory factory = new VmMemoryStatDAOImplStatementDescriptorRegistration();
-        try {
-            factory.getDescriptorMetadata("QUERY foo-bar WHERE 'a' = 'b'", null);
-            fail("should have thrown exception");
-        } catch (IllegalArgumentException e) {
-            // pass
-        }
-    }
+
 }
 

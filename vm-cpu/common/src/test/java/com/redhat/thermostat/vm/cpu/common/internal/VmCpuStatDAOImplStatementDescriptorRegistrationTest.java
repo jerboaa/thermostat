@@ -40,9 +40,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -52,9 +49,6 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.core.PreparedParameter;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorMetadataFactory;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 import com.redhat.thermostat.storage.internal.dao.DAOImplStatementDescriptorRegistration;
 
@@ -94,61 +88,6 @@ public class VmCpuStatDAOImplStatementDescriptorRegistrationTest {
         assertNotNull(vmCpuStatReg);
         assertEquals(5, vmCpuStatReg.getStatementDescriptors().size());
     }
-    
-    @Test
-    public void canGetMetadataForLatestCpuStatQuery() {
-        String descriptor = VmCpuStatDAOImplStatementDescriptorRegistration.latestDescriptor;
 
-        assertValidDescriptor(descriptor);
-    }
-
-    @Test
-    public void canGetMetadataForRangeCpuStatQuery() {
-        String descriptor = VmCpuStatDAOImplStatementDescriptorRegistration.rangeDescriptor;
-
-        assertValidDescriptor(descriptor);
-    }
-
-    @Test
-    public void canGetMetadataForSingleOldestCpuStatQuery() {
-        String descriptor = VmCpuStatDAOImpl.DESC_OLDEST_VM_CPU_STAT;
-
-        assertValidDescriptor(descriptor);
-    }
-
-    @Test
-    public void canGetMetadataForSingleLatestCpuStatQuery() {
-        String descriptor = VmCpuStatDAOImpl.DESC_LATEST_VM_CPU_STAT;
-
-        assertValidDescriptor(descriptor);
-    }
-
-    private void assertValidDescriptor(String descriptor) {
-        PreparedParameter agentIdParam = mock(PreparedParameter.class);
-        PreparedParameter vmIdParam = mock(PreparedParameter.class);
-        String agentId = "agentId";
-        String vmId = "vmId";
-        when(agentIdParam.getValue()).thenReturn(agentId);
-        when(vmIdParam.getValue()).thenReturn(vmId);
-        PreparedParameter[] params = new PreparedParameter[] { agentIdParam,
-                vmIdParam };
-        
-        StatementDescriptorMetadataFactory factory = new VmCpuStatDAOImplStatementDescriptorRegistration();
-        DescriptorMetadata data = factory.getDescriptorMetadata(descriptor, params);
-        assertNotNull(data);
-        assertEquals(agentId, data.getAgentId());
-        assertEquals(vmId, data.getVmId());
-    }
-    
-    @Test
-    public void unknownDescriptorThrowsException() {
-        StatementDescriptorMetadataFactory factory = new VmCpuStatDAOImplStatementDescriptorRegistration();
-        try {
-            factory.getDescriptorMetadata("QUERY foo-bar WHERE 'a' = 'b'", null);
-            fail("should have thrown exception");
-        } catch (IllegalArgumentException e) {
-            // pass
-        }
-    }
 }
 

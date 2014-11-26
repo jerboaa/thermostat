@@ -36,13 +36,11 @@
 
 package com.redhat.thermostat.web.server.auth;
 
-import java.util.Objects;
 import java.util.Set;
 
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.storage.query.ExpressionFactory;
@@ -64,35 +62,23 @@ class AgentIdFilter<T extends Pojo> extends AbstractFilter<T> {
 
     @Override
     public FilterResult applyFilter(StatementDescriptor<T> desc,
-            DescriptorMetadata metaData, Expression parentExpression) {
+                                    Expression parentExpression) {
         if (userRoles.contains(GRANT_AGENTS_READ_ALL)) {
             return allWithExpression(parentExpression);
         }
         Category<T> category = desc.getCategory();
         // user cannot read all agents
         if (category.getKey(Key.AGENT_ID.getName()) != null) {
-            if (metaData != null && metaData.hasAgentId()) {
-                // if given agent ID not in granted list, return empty
-                String agentId = Objects.requireNonNull(metaData.getAgentId());
-                RolePrincipal agentIdGrantRole = new RolePrincipal(AGENTS_BY_AGENT_ID_GRANT_ROLE_PREFIX + agentId);
-                if (!userRoles.contains(agentIdGrantRole)) {
-                    return new FilterResult(ResultType.EMPTY);
-                } else {
-                    // agentId allowed
-                    return allWithExpression(parentExpression);
-                }
-            } else {
-                // tag on in clause for agentId
-                ExpressionFactory factory = new ExpressionFactory();
-                Set<String> agentIds = getGrantedAgentsByAgentId();
-                Expression filterExpression = factory.in(Key.AGENT_ID, agentIds, String.class);
-                FilterResult result = new FilterResult(ResultType.QUERY_EXPRESSION);
-                if (parentExpression != null) {
-                    filterExpression = factory.and(parentExpression, filterExpression);
-                }
-                result.setFilterExpression(filterExpression);
-                return result;
+            // tag on in clause for agentId
+            ExpressionFactory factory = new ExpressionFactory();
+            Set<String> agentIds = getGrantedAgentsByAgentId();
+            Expression filterExpression = factory.in(Key.AGENT_ID, agentIds, String.class);
+            FilterResult result = new FilterResult(ResultType.QUERY_EXPRESSION);
+            if (parentExpression != null) {
+                filterExpression = factory.and(parentExpression, filterExpression);
             }
+            result.setFilterExpression(filterExpression);
+            return result;
         } else {
             // can't do anything here, let it through for next stage.
             return allWithExpression(parentExpression);

@@ -53,7 +53,7 @@ public class WebAppTestStatementDescriptorRegistration implements
     @Override
     public DescriptorMetadata getDescriptorMetadata(String descriptor,
             PreparedParameter[] params) {
-        return WebAppTest.METADATA_MAPPING.get(descriptor);
+        throw new AssertionError("Should not be used");
     }
 
 }

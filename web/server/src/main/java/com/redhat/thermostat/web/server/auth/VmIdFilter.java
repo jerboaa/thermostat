@@ -41,7 +41,6 @@ import java.util.Set;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.storage.query.ExpressionFactory;
@@ -63,33 +62,23 @@ class VmIdFilter<T extends Pojo> extends AbstractFilter<T> {
 
     @Override
     public FilterResult applyFilter(StatementDescriptor<T> desc,
-            DescriptorMetadata metaData, Expression parentExpression) {
+                                    Expression parentExpression) {
         if (userRoles.contains(GRANT_VMS_BY_ID_READ_ALL)) {
             return allWithExpression(parentExpression);
         }
         // perform filtering on vmId
         Category<T> category = desc.getCategory();
         if (category.getKey(Key.VM_ID.getName()) != null) {
-            if (metaData != null && metaData.hasVmId()) {
-                String vmId = metaData.getVmId();
-                RolePrincipal grantedByVmId = new RolePrincipal(VMS_BY_VM_ID_GRANT_ROLE_PREFIX + vmId);
-                if (!userRoles.contains(grantedByVmId)) {
-                    return new FilterResult(ResultType.EMPTY);
-                } else {
-                    return allWithExpression(parentExpression);
-                }
-            } else {
-                // add vmId IN clause
-                ExpressionFactory factory = new ExpressionFactory();
-                Set<String> vmIds = getGrantedVmsByVmId();
-                Expression filterExpression = factory.in(Key.VM_ID, vmIds, String.class);
-                if (parentExpression != null) {
-                    filterExpression = factory.and(parentExpression, filterExpression);
-                }
-                FilterResult result = new FilterResult(ResultType.QUERY_EXPRESSION);
-                result.setFilterExpression(filterExpression);
-                return result;
+            // add vmId IN clause
+            ExpressionFactory factory = new ExpressionFactory();
+            Set<String> vmIds = getGrantedVmsByVmId();
+            Expression filterExpression = factory.in(Key.VM_ID, vmIds, String.class);
+            if (parentExpression != null) {
+                filterExpression = factory.and(parentExpression, filterExpression);
             }
+            FilterResult result = new FilterResult(ResultType.QUERY_EXPRESSION);
+            result.setFilterExpression(filterExpression);
+            return result;
         } else {
             // can't do much
             return allWithExpression(parentExpression);

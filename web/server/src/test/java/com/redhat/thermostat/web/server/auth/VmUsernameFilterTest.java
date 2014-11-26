@@ -48,7 +48,6 @@ import org.junit.Test;
 
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
@@ -68,7 +67,7 @@ public class VmUsernameFilterTest {
         roles.add(vmUsernameReadAll);
         
         VmUsernameFilter<?> filter = new VmUsernameFilter<>(roles);
-        FilterResult result = filter.applyFilter(null, null, null);
+        FilterResult result = filter.applyFilter(null, null);
         assertEquals(ResultType.ALL, result.getType());
         assertEquals(null, result.getFilterExpression());
     }
@@ -82,22 +81,13 @@ public class VmUsernameFilterTest {
         ExpressionFactory factory = new ExpressionFactory();
         Expression parentExpression = factory.equalTo(Key.AGENT_ID, "testKey");
         VmUsernameFilter<?> filter = new VmUsernameFilter<>(roles);
-        FilterResult result = filter.applyFilter(null, null, parentExpression);
+        FilterResult result = filter.applyFilter(null, parentExpression);
         assertEquals(ResultType.QUERY_EXPRESSION, result.getType());
         assertEquals(parentExpression, result.getFilterExpression());
     }
     
     @Test
     public void addsVmUsernameInQueryForVmInfo() {
-        performVmInfoTest(new DescriptorMetadata());
-    }
-    
-    @Test
-    public void testMetadataNull() {
-        performVmInfoTest(null);
-    }
-    
-    private void performVmInfoTest(DescriptorMetadata metadata) {
         String testUsername = "fooBar";
         Set<BasicRole> roles = new HashSet<>();
         RolePrincipal vmUsernameRole = new RolePrincipal(VmUsernameFilter.VMS_BY_USERNAME_GRANT_ROLE_PREFIX + testUsername);
@@ -109,7 +99,7 @@ public class VmUsernameFilterTest {
         usernames.add(testUsername);
         Expression expected = new ExpressionFactory().in(VmInfoDAO.usernameKey, usernames, String.class);
         VmUsernameFilter<VmInfo> filter = new VmUsernameFilter<>(roles);
-        FilterResult result = filter.applyFilter(desc, metadata, null);
+        FilterResult result = filter.applyFilter(desc, null);
         assertEquals(ResultType.QUERY_EXPRESSION, result.getType());
         assertNotNull(result.getFilterExpression());
         Expression actual = result.getFilterExpression();
@@ -124,7 +114,6 @@ public class VmUsernameFilterTest {
         RolePrincipal vmUsernameRole = new RolePrincipal(VmUsernameFilter.VMS_BY_USERNAME_GRANT_ROLE_PREFIX + testUsername);
         roles.add(vmUsernameRole);
         
-        DescriptorMetadata metadata = new DescriptorMetadata();
         StatementDescriptor<VmInfo> desc = new StatementDescriptor<>(VmInfoDAO.vmInfoCategory, "QUERY " + VmInfoDAO.vmInfoCategory.getName());
         
         Set<String> usernames = new HashSet<>();
@@ -134,7 +123,7 @@ public class VmUsernameFilterTest {
         Expression expectedIn = factory.in(VmInfoDAO.usernameKey, usernames, String.class);
         Expression expected = factory.and(parentExpression, expectedIn);
         VmUsernameFilter<VmInfo> filter = new VmUsernameFilter<>(roles);
-        FilterResult result = filter.applyFilter(desc, metadata, parentExpression);
+        FilterResult result = filter.applyFilter(desc, parentExpression);
         assertEquals(ResultType.QUERY_EXPRESSION, result.getType());
         assertNotNull(result.getFilterExpression());
         Expression actual = result.getFilterExpression();
@@ -146,11 +135,10 @@ public class VmUsernameFilterTest {
     public void byPassesFilterForUnrelatedQuery() {
         Set<BasicRole> roles = new HashSet<>();
         
-        DescriptorMetadata metadata = new DescriptorMetadata();
         StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, "QUERY " + AgentInfoDAO.CATEGORY.getName());
         
         VmUsernameFilter<AgentInformation> filter = new VmUsernameFilter<>(roles);
-        FilterResult result = filter.applyFilter(desc, metadata, null);
+        FilterResult result = filter.applyFilter(desc, null);
         assertEquals(ResultType.ALL, result.getType());
         assertNull(result.getFilterExpression());
     }
@@ -159,13 +147,12 @@ public class VmUsernameFilterTest {
     public void byPassesFilterForUnrelatedQueryAndParentExpression() {
         Set<BasicRole> roles = new HashSet<>();
         
-        DescriptorMetadata metadata = new DescriptorMetadata();
         StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, "QUERY " + AgentInfoDAO.CATEGORY.getName());
         
         ExpressionFactory factory = new ExpressionFactory();
         Expression parentExpression = factory.equalTo(Key.AGENT_ID, "testKey");
         VmUsernameFilter<AgentInformation> filter = new VmUsernameFilter<>(roles);
-        FilterResult result = filter.applyFilter(desc, metadata, parentExpression);
+        FilterResult result = filter.applyFilter(desc, parentExpression);
         assertEquals(ResultType.QUERY_EXPRESSION, result.getType());
         assertNotNull(result.getFilterExpression());
         assertEquals(parentExpression, result.getFilterExpression());

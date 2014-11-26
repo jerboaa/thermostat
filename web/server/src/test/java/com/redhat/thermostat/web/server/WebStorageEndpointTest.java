@@ -303,7 +303,7 @@ public class WebStorageEndpointTest {
         String strDescriptor = "QUERY " + category.getName() + " WHERE '" + key1.getName() + "' = ?s SORT '" + key1.getName() + "' DSC LIMIT 42";
         // setup a statement descriptor set so as to mimic a not trusted desc
         String wrongDescriptor = "QUERY something-other WHERE 'a' = true";
-        setupTrustedStatementRegistry(wrongDescriptor, null);
+        setupTrustedStatementRegistry(wrongDescriptor);
         
         String[] roleNames = new String[] {
                 Roles.REGISTER_CATEGORY,
@@ -609,8 +609,7 @@ public class WebStorageEndpointTest {
         String strDescriptor = "QUERY " + category.getName() + " WHERE '" + key1.getName() + "' = ?s SORT '" + key1.getName() + "' DSC LIMIT 42";
         // metadata which basically does no filtering. There's another test which
         // asserts only allowed data (via ACL) gets returned.
-        DescriptorMetadata metadata = new DescriptorMetadata();        
-        setupTrustedStatementRegistry(strDescriptor, metadata);
+        setupTrustedStatementRegistry(strDescriptor);
         
         Set<BasicRole> roles = new HashSet<>();
         roles.add(new RolePrincipal(Roles.REGISTER_CATEGORY));
@@ -653,8 +652,7 @@ public class WebStorageEndpointTest {
         try {
             String strDescriptor = "QUERY " + category.getName() + " WHERE '" +
                     key1.getName() + "' = ?s SORT '" + key1.getName() + "' DSC LIMIT 42";
-            DescriptorMetadata metadata = new DescriptorMetadata();
-            setupTrustedStatementRegistry(strDescriptor, metadata);
+            setupTrustedStatementRegistry(strDescriptor);
             
             Set<BasicRole> roles = new HashSet<>();
             roles.add(new RolePrincipal(Roles.REGISTER_CATEGORY));
@@ -785,8 +783,7 @@ public class WebStorageEndpointTest {
     @Test
     public void authorizedPreparedAggregateQuery() throws Exception {
         String strDescriptor = "QUERY-COUNT " + category.getName();
-        DescriptorMetadata metadata = new DescriptorMetadata();
-        setupTrustedStatementRegistry(strDescriptor, metadata);
+        setupTrustedStatementRegistry(strDescriptor);
         
         Set<BasicRole> roles = new HashSet<>();
         roles.add(new RolePrincipal(Roles.REGISTER_CATEGORY));
@@ -899,10 +896,10 @@ public class WebStorageEndpointTest {
         KnownCategoryRegistryFactory.setInstance(registry);
     }
     
-    private void setupTrustedStatementRegistry(String strDescriptor, DescriptorMetadata metadata) {
+    private void setupTrustedStatementRegistry(String strDescriptor) {
         Set<String> descs = new HashSet<>();
         descs.add(strDescriptor);
-        StatementDescriptorRegistration reg = new TestStatementDescriptorRegistration(descs, metadata);
+        StatementDescriptorRegistration reg = new TestStatementDescriptorRegistration(descs);
         List<StatementDescriptorRegistration> regs = new ArrayList<>(1);
         regs.add(reg);
         KnownDescriptorRegistry registry = new KnownDescriptorRegistry(regs);
@@ -920,8 +917,7 @@ public class WebStorageEndpointTest {
         try {
             String strDescriptor = "ADD " + category.getName() + " SET '" +
                     key1.getName() + "' = ?s , '" + key2.getName() + "' = ?s";
-            DescriptorMetadata metadata = new DescriptorMetadata();
-            setupTrustedStatementRegistry(strDescriptor, metadata);
+            setupTrustedStatementRegistry(strDescriptor);
             
             Set<BasicRole> roles = new HashSet<>();
             roles.add(new RolePrincipal(Roles.REGISTER_CATEGORY));
@@ -1775,17 +1771,15 @@ public class WebStorageEndpointTest {
     private static class TestStatementDescriptorRegistration implements StatementDescriptorRegistration {
 
         private final Set<String> descriptorSet;
-        private final DescriptorMetadata metadata;
-        private TestStatementDescriptorRegistration(Set<String> descriptorSet, DescriptorMetadata metadata) {
+        private TestStatementDescriptorRegistration(Set<String> descriptorSet) {
             assertEquals(1, descriptorSet.size());
             this.descriptorSet = descriptorSet;
-            this.metadata = metadata;
         }
         
         @Override
         public DescriptorMetadata getDescriptorMetadata(String descriptor,
                 PreparedParameter[] params) {
-            return metadata;
+            throw new AssertionError("should not be used");
         }
 
         @Override

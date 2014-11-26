@@ -50,7 +50,7 @@ import java.util.Set;
  *
  */
 public class ThreadDaoImplStatementDescriptorRegistration implements
-        StatementDescriptorRegistration, StatementDescriptorMetadataFactory {
+        StatementDescriptorRegistration {
 
     private final Set<String> descs;
     
@@ -92,23 +92,7 @@ public class ThreadDaoImplStatementDescriptorRegistration implements
     @Override
     public DescriptorMetadata getDescriptorMetadata(String descriptor,
             PreparedParameter[] params) {
-        if (descriptor.equals(ThreadDaoImpl.QUERY_THREAD_STATE_PER_THREAD) ||
-                descriptor.equals(ThreadDaoImpl.GET_LATEST_CONTENTION_SAMPLE)) {
-            // no agent/vm ids in statement.
-            return new DescriptorMetadata();
-        } else if (descriptor.equals(ThreadDaoImpl.QUERY_LATEST_THREAD_STATE_FOR_THREAD) ||
-                descriptor.equals(ThreadDaoImpl.QUERY_FIRST_THREAD_STATE_FOR_THREAD)) {
-            String agentId = (String)params[0].getValue();
-            return new DescriptorMetadata(agentId);
-        } else if (descs.contains(descriptor)) {
-            // All other queries have agentId/vmId parameters
-            String agentId = (String)params[0].getValue();
-            String vmId = (String)params[1].getValue();
-            DescriptorMetadata metadata = new DescriptorMetadata(agentId, vmId);
-            return metadata;
-        } else {
-            throw new IllegalArgumentException("Unknown statement ->" + descriptor + "<-");
-        }
+        throw new AssertionError("Should not be used");
     }
 
 }

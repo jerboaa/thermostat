@@ -61,17 +61,7 @@ public class VmNotesStatementDescriptorRegistration implements StatementDescript
 
     @Override
     public DescriptorMetadata getDescriptorMetadata(String descriptor, PreparedParameter[] params) {
-        String agentId;
-        String vmId;
-        if (descriptor.equals(VmNoteDAOImpl.UPDATE_VM_NOTE)) {
-            agentId = (String)params[2].getValue();
-            vmId = (String)params[3].getValue();
-        } else {
-            agentId = (String)params[0].getValue();
-            vmId = (String)params[1].getValue();
-        }
-        DescriptorMetadata metadata = new DescriptorMetadata(agentId, vmId);
-        return metadata;
+        throw new AssertionError("Should not be used");
     }
 
 }

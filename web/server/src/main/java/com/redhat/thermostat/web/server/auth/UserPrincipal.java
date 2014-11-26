@@ -45,7 +45,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.web.server.auth.FilterResult.ResultType;
@@ -109,7 +108,7 @@ public class UserPrincipal implements Serializable, Principal {
      * @return An {@link FilterResult} which can be used to make a decision on
      *         which records to return.
      */
-    public <T extends Pojo> FilterResult getReadFilter(StatementDescriptor<T> desc, DescriptorMetadata metaData) {
+    public <T extends Pojo> FilterResult getReadFilter(StatementDescriptor<T> desc) {
         if (getRoles().contains(GRANT_READ_ALL)) {
             // user can see everything, no filtering is happening at all.
             return new FilterResult(ResultType.ALL);
@@ -120,7 +119,7 @@ public class UserPrincipal implements Serializable, Principal {
         Expression parentExpression = null;
         FilterResult overallResult = null;
         for (StatementFilter<T> filter: filters) {
-            overallResult = filter.applyFilter(desc, metaData, parentExpression);
+            overallResult = filter.applyFilter(desc, parentExpression);
             switch (overallResult.getType()) {
             case ALL: // fall-through, expression == null
             case QUERY_EXPRESSION:

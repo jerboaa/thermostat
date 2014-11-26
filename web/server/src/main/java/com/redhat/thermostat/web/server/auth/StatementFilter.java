@@ -38,7 +38,6 @@ package com.redhat.thermostat.web.server.auth;
 
 import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
 
@@ -54,8 +53,6 @@ interface StatementFilter<T extends Pojo> {
      * 
      * @param desc
      *            The statement descriptor to apply the filter to.
-     * @param metaData
-     *            Metadata pertaining to the given descriptor.
      * @param parentExpression
      *            The Expression as constructed by the previous Filter. May be
      *            null.
@@ -63,7 +60,7 @@ interface StatementFilter<T extends Pojo> {
      *         result type was QUERY_EXPRESSION.
      */
     FilterResult applyFilter(StatementDescriptor<T> desc,
-            DescriptorMetadata metaData, Expression parentExpression);
+            Expression parentExpression);
     
 }
 

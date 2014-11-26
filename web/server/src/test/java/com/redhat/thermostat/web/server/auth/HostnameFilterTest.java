@@ -40,7 +40,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -49,7 +48,6 @@ import org.junit.Test;
 
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
@@ -69,7 +67,7 @@ public class HostnameFilterTest {
         roles.add(hostnameReadAll);
         
         HostnameFilter<?> filter = new HostnameFilter<>(roles);
-        FilterResult result = filter.applyFilter(null, null, null);
+        FilterResult result = filter.applyFilter(null, null);
         assertEquals(ResultType.ALL, result.getType());
         assertEquals(null, result.getFilterExpression());
     }
@@ -83,26 +81,13 @@ public class HostnameFilterTest {
         ExpressionFactory factory = new ExpressionFactory();
         Expression parentExpression = factory.equalTo(Key.AGENT_ID, "testKey");
         HostnameFilter<?> filter = new HostnameFilter<>(roles);
-        FilterResult result = filter.applyFilter(null, null, parentExpression);
+        FilterResult result = filter.applyFilter(null, parentExpression);
         assertEquals(ResultType.QUERY_EXPRESSION, result.getType());
         assertEquals(parentExpression, result.getFilterExpression());
     }
     
     @Test
     public void addsHostnameInQueryForHostInfo() {
-        performHostInfoTest(new DescriptorMetadata());
-    }
-    
-    @Test
-    public void testNullMetadata() {
-        try {
-            performHostInfoTest(null);
-        } catch (NullPointerException e) {
-            fail("Should not have thrown NPE for this test");
-        }
-    }
-    
-    private void performHostInfoTest(DescriptorMetadata metadata) {
         String testHostname = "testhost.example.com";
         Set<BasicRole> roles = new HashSet<>();
         RolePrincipal hostnameRole = new RolePrincipal(HostnameFilter.HOSTS_BY_HOSTNAME_GRANT_ROLE_PREFIX + testHostname);
@@ -114,7 +99,7 @@ public class HostnameFilterTest {
         hostnames.add(testHostname);
         Expression expected = new ExpressionFactory().in(HostInfoDAO.hostNameKey, hostnames, String.class);
         HostnameFilter<HostInfo> filter = new HostnameFilter<>(roles);
-        FilterResult result = filter.applyFilter(desc, metadata, null);
+        FilterResult result = filter.applyFilter(desc, null);
         assertEquals(ResultType.QUERY_EXPRESSION, result.getType());
         assertNotNull(result.getFilterExpression());
         Expression actual = result.getFilterExpression();
@@ -129,7 +114,6 @@ public class HostnameFilterTest {
         RolePrincipal hostnameRole = new RolePrincipal(HostnameFilter.HOSTS_BY_HOSTNAME_GRANT_ROLE_PREFIX + testHostname);
         roles.add(hostnameRole);
         
-        DescriptorMetadata metadata = new DescriptorMetadata();
         StatementDescriptor<HostInfo> desc = new StatementDescriptor<>(HostInfoDAO.hostInfoCategory, "QUERY " + HostInfoDAO.hostInfoCategory.getName());
         
         Set<String> hostnames = new HashSet<>();
@@ -139,7 +123,7 @@ public class HostnameFilterTest {
         Expression expectedIn = factory.in(HostInfoDAO.hostNameKey, hostnames, String.class);
         Expression expected = factory.and(parentExpression, expectedIn);
         HostnameFilter<HostInfo> filter = new HostnameFilter<>(roles);
-        FilterResult result = filter.applyFilter(desc, metadata, parentExpression);
+        FilterResult result = filter.applyFilter(desc, parentExpression);
         assertEquals(ResultType.QUERY_EXPRESSION, result.getType());
         assertNotNull(result.getFilterExpression());
         Expression actual = result.getFilterExpression();
@@ -151,12 +135,10 @@ public class HostnameFilterTest {
     public void byPassesFilterForUnrelatedQuery() {
         Set<BasicRole> roles = new HashSet<>();
         
-        DescriptorMetadata metadata = new DescriptorMetadata();
-
         StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, "QUERY " + AgentInfoDAO.CATEGORY.getName());
         
         HostnameFilter<AgentInformation> filter = new HostnameFilter<>(roles);
-        FilterResult result = filter.applyFilter(desc, metadata, null);
+        FilterResult result = filter.applyFilter(desc, null);
         assertEquals(ResultType.ALL, result.getType());
         assertNull(result.getFilterExpression());
     }
@@ -165,13 +147,12 @@ public class HostnameFilterTest {
     public void byPassesFilterForUnrelatedQueryAndParentExpression() {
         Set<BasicRole> roles = new HashSet<>();
         
-        DescriptorMetadata metadata = new DescriptorMetadata();
         StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, "QUERY " + AgentInfoDAO.CATEGORY.getName());
         
         ExpressionFactory factory = new ExpressionFactory();
         Expression parentExpression = factory.equalTo(Key.AGENT_ID, "testKey");
         HostnameFilter<AgentInformation> filter = new HostnameFilter<>(roles);
-        FilterResult result = filter.applyFilter(desc, metadata, parentExpression);
+        FilterResult result = filter.applyFilter(desc, parentExpression);
         assertEquals(ResultType.QUERY_EXPRESSION, result.getType());
         assertNotNull(result.getFilterExpression());
         assertEquals(parentExpression, result.getFilterExpression());

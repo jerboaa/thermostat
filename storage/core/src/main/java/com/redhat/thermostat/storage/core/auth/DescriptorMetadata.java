@@ -43,7 +43,10 @@ import com.redhat.thermostat.storage.core.StatementDescriptor;
  * Data describing a statement descriptor.
  *
  * @see StatementDescriptor
+ * @deprecated This class will be removed in the next release.
  */
+// FIXME: Thermostat 2.0 Remove this unused class.
+@Deprecated
 public final class DescriptorMetadata {
 
     private final String agentId;

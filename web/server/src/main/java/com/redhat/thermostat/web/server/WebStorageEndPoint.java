@@ -93,8 +93,6 @@ import com.redhat.thermostat.storage.core.Statement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageCredentials;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorMetadataFactory;
 import com.redhat.thermostat.storage.core.experimental.BatchCursor;
 import com.redhat.thermostat.storage.model.AggregateResult;
 import com.redhat.thermostat.storage.model.Pojo;
@@ -164,8 +162,6 @@ public class WebStorageEndPoint extends HttpServlet {
     
     // read-only set of all known statement descriptors we trust and allow
     private Set<String> knownStatementDescriptors;
-    // read-only map of known descriptors => descriptor metadata
-    private Map<String, StatementDescriptorMetadataFactory> descMetadataFactories;
     // read-only set of all known categories which we allow to get registered.
     private Set<String> knownCategoryNames;
 
@@ -201,7 +197,6 @@ public class WebStorageEndPoint extends HttpServlet {
         // Set the set of statement descriptors which we trust
         KnownDescriptorRegistry descRegistry = KnownDescriptorRegistryFactory.getInstance();
         knownStatementDescriptors = descRegistry.getRegisteredDescriptors();
-        descMetadataFactories = descRegistry.getDescriptorMetadataFactories();
         // Set the set of category names which we allow to get registered
         KnownCategoryRegistry categoryRegistry = KnownCategoryRegistryFactory.getInstance();
         knownCategoryNames = categoryRegistry.getRegisteredCategoryNames();
@@ -630,11 +625,9 @@ public class WebStorageEndPoint extends HttpServlet {
         }
         
         StatementDescriptor<T> desc = targetStmtHolder.getStatementDescriptor();
-        StatementDescriptorMetadataFactory factory = descMetadataFactories.get(desc.getDescriptor());
-        DescriptorMetadata actualMetadata = factory.getDescriptorMetadata(desc.getDescriptor(), params);
         
         UserPrincipal userPrincipal = getUserPrincipal(req);
-        targetQuery = getQueryForPrincipal(userPrincipal, targetQuery, desc, actualMetadata);
+        targetQuery = getQueryForPrincipal(userPrincipal, targetQuery, desc);
         // While the signature still says the retval of query execute is
         // cursor, we return an instance of AdvancedCursor instead for new code.
         // This is the case for MongoStorage. However, in order to work
@@ -832,9 +825,9 @@ public class WebStorageEndPoint extends HttpServlet {
      */
     private <T extends Pojo> Query<T> getQueryForPrincipal(
             UserPrincipal userPrincipal, Query<T> patchedQuery,
-            StatementDescriptor<T> desc, DescriptorMetadata metaData) {
+            StatementDescriptor<T> desc) {
         Expression whereExpression = patchedQuery.getWhereExpression();
-        FilterResult result = userPrincipal.getReadFilter(desc, metaData);
+        FilterResult result = userPrincipal.getReadFilter(desc);
         Expression authorizationExpression = null;
         switch (result.getType()) {
         case ALL: // fall-through. same as next case.

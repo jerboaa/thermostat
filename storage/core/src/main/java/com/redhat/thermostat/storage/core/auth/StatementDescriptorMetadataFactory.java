@@ -42,7 +42,9 @@ import com.redhat.thermostat.storage.core.PreparedParameter;
  * Factory for {@link DescriptorMetadata}. The web storage entpoint uses these
  * factories in order to instantiate DescriptorMetadata objects for descriptors.
  * 
+ * @deprecated This interface will be removed in the next release.
  */
+@Deprecated
 public interface StatementDescriptorMetadataFactory {
 
     /**

@@ -53,7 +53,6 @@ import org.junit.Test;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.HostInfo;
@@ -124,7 +123,7 @@ public class UserPrincipalTest {
         roles.add(readEverything);
         SimplePrincipal testMe = new SimplePrincipal("test me");
         testMe.setRoles(roles);
-        FilterResult result = testMe.getReadFilter(null, null);
+        FilterResult result = testMe.getReadFilter(null);
         assertEquals(ResultType.ALL, result.getType());
         assertNull(result.getFilterExpression());
     }
@@ -153,14 +152,8 @@ public class UserPrincipalTest {
         testMe.setRoles(roles);
         StatementDescriptor<VmInfo> desc = new StatementDescriptor<>(VmInfoDAO.vmInfoCategory, "QUERY " + VmInfoDAO.vmInfoCategory.getName());
         
-        // fake a query for a category with agentId attributes and vmId
-        // attributes present, but no specific agentId/vmId present.
-        DescriptorMetadata metadata = new DescriptorMetadata();
-        assertFalse(metadata.hasAgentId());
-        assertFalse(metadata.hasVmId());
-        
         // should pass through agentId -> hostname -> vmId -> vmUsername filters
-        FilterResult result = testMe.getReadFilter(desc, metadata);
+        FilterResult result = testMe.getReadFilter(desc);
         
         assertEquals(ResultType.QUERY_EXPRESSION, result.getType());
         assertNotNull(result.getFilterExpression());
@@ -206,20 +199,27 @@ public class UserPrincipalTest {
         Category<FooPojo> agentAndVmIdCat = new Category<>("agentAndVmIdCat", FooPojo.class, keys);
         StatementDescriptor<FooPojo> desc = new StatementDescriptor<>(agentAndVmIdCat, "QUERY agentAndVmIdCat");
         
-        // fake a query for a category with agentId attributes and vmId
-        // attributes present and also specific agentId/vmId present.
-        DescriptorMetadata metadata = new DescriptorMetadata(agentId, vmId);
-        assertTrue(metadata.hasAgentId());
-        assertTrue(metadata.hasVmId());
-        
         // should pass through agentId -> hostname -> vmId -> vmUsername filters
-        FilterResult result = testMe.getReadFilter(desc, metadata);
+        FilterResult result = testMe.getReadFilter(desc);
         
         // should return all, since ACL allows specific agentId/vmIds
-        assertEquals(ResultType.ALL, result.getType());
-        assertNull(result.getFilterExpression());
+        assertEquals(ResultType.QUERY_EXPRESSION, result.getType());
+        Expression expected = getExpectedAgentIdVmIdExpression(agentId, vmId);
+        assertEquals(expected, result.getFilterExpression());
     }
     
+    private Expression getExpectedAgentIdVmIdExpression(String agentId,
+            String vmId) {
+        ExpressionFactory factory = new ExpressionFactory();
+        Set<String> agentIdSet = new HashSet<>();
+        agentIdSet.add(agentId);
+        Expression agentIdExp = factory.in(Key.AGENT_ID, agentIdSet, String.class);
+        Set<String> vmIdSet = new HashSet<>();
+        vmIdSet.add(vmId);
+        Expression vmIdExp = factory.in(Key.VM_ID, vmIdSet, String.class);
+        return factory.and(agentIdExp, vmIdExp);
+    }
+
     @Test
     public void testEntireFilterChainSpecificAgentIdVmIdPlusHostname() {
         String agentId = "someAgentID";
@@ -243,24 +243,23 @@ public class UserPrincipalTest {
         testMe.setRoles(roles);
         StatementDescriptor<HostInfo> desc = new StatementDescriptor<>(HostInfoDAO.hostInfoCategory, "QUERY " + HostInfoDAO.hostInfoCategory.getName());
         
-        // fake a query for a category with agentId attributes and vmId
-        // attributes present and also specific agentId/vmId present.
-        DescriptorMetadata metadata = new DescriptorMetadata(agentId, vmId);
-        assertTrue(metadata.hasAgentId());
-        assertTrue(metadata.hasVmId());
-        
         // should pass through agentId -> hostname -> vmId -> vmUsername filters
-        FilterResult result = testMe.getReadFilter(desc, metadata);
+        FilterResult result = testMe.getReadFilter(desc);
         
         // should return query expression in order to allow only specific
-        // hostname
+        // hostname and specific agent id. Since the category does not
+        // include vmId, nothing is added by the vm id filter.
         assertEquals(ResultType.QUERY_EXPRESSION, result.getType());
         assertNotNull(result.getFilterExpression());
         Expression actual = result.getFilterExpression();
         ExpressionFactory factory = new ExpressionFactory();
+        Set<String> agentIdSet = new HashSet<>();
+        agentIdSet.add(agentId);
+        Expression agentIdExp = factory.in(Key.AGENT_ID, agentIdSet, String.class);
         Set<String> hostnames = new HashSet<>();
         hostnames.add(hostname);
-        Expression expected = factory.in(HostInfoDAO.hostNameKey, hostnames, String.class);
+        Expression hostnameExp = factory.in(HostInfoDAO.hostNameKey, hostnames, String.class);
+        Expression expected = factory.and(agentIdExp, hostnameExp);
         assertEquals(expected, actual);
     }
     
@@ -287,14 +286,8 @@ public class UserPrincipalTest {
         testMe.setRoles(roles);
         StatementDescriptor<VmInfo> desc = new StatementDescriptor<>(VmInfoDAO.vmInfoCategory, "QUERY " + VmInfoDAO.vmInfoCategory.getName());
         
-        // fake a query for a category with agentId attributes and vmId
-        // attributes present and also specific agentId/vmId present.
-        DescriptorMetadata metadata = new DescriptorMetadata(agentId, vmId);
-        assertTrue(metadata.hasAgentId());
-        assertTrue(metadata.hasVmId());
-        
         // should pass through agentId -> hostname -> vmId -> vmUsername filters
-        FilterResult result = testMe.getReadFilter(desc, metadata);
+        FilterResult result = testMe.getReadFilter(desc);
         
         // should return query expression in order to allow only specific
         // owning vm username.
@@ -304,7 +297,15 @@ public class UserPrincipalTest {
         ExpressionFactory factory = new ExpressionFactory();
         Set<String> usernames = new HashSet<>();
         usernames.add(vmUserame);
-        Expression expected = factory.in(VmInfoDAO.usernameKey, usernames, String.class);
+        Expression userNameExp = factory.in(VmInfoDAO.usernameKey, usernames, String.class);
+        Set<String> agentIdSet = new HashSet<>();
+        agentIdSet.add(agentId);
+        Expression agentIdExp = factory.in(Key.AGENT_ID, agentIdSet, String.class);
+        Set<String> vmIdSet = new HashSet<>();
+        vmIdSet.add(vmId);
+        Expression vmIdExp = factory.in(Key.VM_ID, vmIdSet, String.class);
+        Expression lhs = factory.and(agentIdExp, vmIdExp);
+        Expression expected = factory.and(lhs, userNameExp);
         assertEquals(expected, actual);
     }
     

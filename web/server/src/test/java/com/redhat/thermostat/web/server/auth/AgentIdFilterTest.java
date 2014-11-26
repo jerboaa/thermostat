@@ -37,11 +37,9 @@
 package com.redhat.thermostat.web.server.auth;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -52,7 +50,6 @@ import org.junit.Test;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.BinaryLogicalExpression;
 import com.redhat.thermostat.storage.query.BinarySetMembershipExpression;
@@ -84,7 +81,7 @@ public class AgentIdFilterTest {
         roles.add(agentReadAll);
         
         AgentIdFilter<?> filter = new AgentIdFilter<>(roles);
-        FilterResult result = filter.applyFilter(null, null, null);
+        FilterResult result = filter.applyFilter(null, null);
         assertEquals(ResultType.ALL, result.getType());
         assertEquals(null, result.getFilterExpression());
     }
@@ -98,7 +95,7 @@ public class AgentIdFilterTest {
         ExpressionFactory factory = new ExpressionFactory();
         Expression parentExpression = factory.equalTo(Key.AGENT_ID, "testKey");
         AgentIdFilter<?> filter = new AgentIdFilter<>(roles);
-        FilterResult result = filter.applyFilter(null, null, parentExpression);
+        FilterResult result = filter.applyFilter(null, parentExpression);
         assertEquals(ResultType.QUERY_EXPRESSION, result.getType());
         assertEquals(parentExpression, result.getFilterExpression());
     }
@@ -109,10 +106,9 @@ public class AgentIdFilterTest {
         Set<BasicRole> roles = new HashSet<>();
         RolePrincipal agent1Role = new RolePrincipal(AgentIdFilter.AGENTS_BY_AGENT_ID_GRANT_ROLE_PREFIX + agentId);
         roles.add(agent1Role);
-        DescriptorMetadata metadata = new DescriptorMetadata();
         AgentIdFilter<FooPojo> filter = new AgentIdFilter<>(roles);
         // returning non-null agent id key will work
-        FilterResult result = filter.applyFilter(TEST_DESC_NON_NULL_AGENT_ID, metadata, null);
+        FilterResult result = filter.applyFilter(TEST_DESC_NON_NULL_AGENT_ID, null);
         assertEquals(ResultType.QUERY_EXPRESSION, result.getType());
         assertNotNull(result.getFilterExpression());
         Expression actual = result.getFilterExpression();
@@ -125,24 +121,6 @@ public class AgentIdFilterTest {
     
     @Test
     public void addsAgentIdInQueryToParentExpression() {
-        performAgentIdQueryTest(new DescriptorMetadata());
-    }
-    
-    /*
-     * We shouldn't throw NPEs if no meta data is supplied by a plug-in. It's
-     * treated as if it was a query with no explicit agent/writer id in the
-     * descriptor.  
-     */
-    @Test
-    public void addsAgentIdInQueryWhenMetadataNull() {
-        try {
-            performAgentIdQueryTest(null);
-        } catch (NullPointerException e) {
-            fail("Should not have thrown NPE");
-        }
-    }
-    
-    private void performAgentIdQueryTest(DescriptorMetadata metadata) {
         String agentId = UUID.randomUUID().toString();
         Set<BasicRole> roles = new HashSet<>();
         RolePrincipal agent1Role = new RolePrincipal(AgentIdFilter.AGENTS_BY_AGENT_ID_GRANT_ROLE_PREFIX + agentId);
@@ -150,7 +128,7 @@ public class AgentIdFilterTest {
         AgentIdFilter<FooPojo> filter = new AgentIdFilter<>(roles);
         ExpressionFactory factory = new ExpressionFactory();
         Expression parentExpression = factory.equalTo(Key.AGENT_ID, "testKey");
-        FilterResult result = filter.applyFilter(TEST_DESC_NON_NULL_AGENT_ID, metadata, parentExpression);
+        FilterResult result = filter.applyFilter(TEST_DESC_NON_NULL_AGENT_ID, parentExpression);
         assertEquals(ResultType.QUERY_EXPRESSION, result.getType());
         assertNotNull(result.getFilterExpression());
         Expression actual = result.getFilterExpression();
@@ -171,9 +149,8 @@ public class AgentIdFilterTest {
         RolePrincipal agent2Role = new RolePrincipal(AgentIdFilter.AGENTS_BY_AGENT_ID_GRANT_ROLE_PREFIX + agentId2);
         roles.add(agent1Role);
         roles.add(agent2Role);
-        DescriptorMetadata metadata = new DescriptorMetadata();
         AgentIdFilter<FooPojo> filter = new AgentIdFilter<>(roles);
-        FilterResult result = filter.applyFilter(TEST_DESC_NON_NULL_AGENT_ID, metadata, null);
+        FilterResult result = filter.applyFilter(TEST_DESC_NON_NULL_AGENT_ID, null);
         assertEquals(ResultType.QUERY_EXPRESSION, result.getType());
         assertNotNull(result.getFilterExpression());
         Expression actual = result.getFilterExpression();
@@ -186,32 +163,12 @@ public class AgentIdFilterTest {
     }
     
     @Test
-    public void returnsEmptyIfAgentIdDoesNotMatch() {
-        String agentId = UUID.randomUUID().toString();
-        Set<BasicRole> roles = new HashSet<>();
-        RolePrincipal agentReadAll = new RolePrincipal(AgentIdFilter.AGENTS_BY_AGENT_ID_GRANT_ROLE_PREFIX + agentId);
-        roles.add(agentReadAll);
-        String wrongAgentId = "something else than agentId";
-        // assert precondition
-        assertFalse(agentId.equals(wrongAgentId));
-        
-        DescriptorMetadata metadata = new DescriptorMetadata(wrongAgentId);
-        assertTrue(metadata.hasAgentId());
-        AgentIdFilter<FooPojo> filter = new AgentIdFilter<>(roles);
-        FilterResult result = filter.applyFilter(TEST_DESC_NON_NULL_AGENT_ID, metadata, null);
-        assertEquals(ResultType.EMPTY, result.getType());
-        assertNull(result.getFilterExpression());
-    }
-    
-    @Test
     public void returnsAllForUnrelatedQuery() {
         Set<BasicRole> roles = new HashSet<>();
         
-        DescriptorMetadata metadata = new DescriptorMetadata();
-        assertFalse(metadata.hasAgentId());
         // want for the agent id key to not be present in category
         AgentIdFilter<FooPojo> filter = new AgentIdFilter<>(roles);
-        FilterResult result = filter.applyFilter(TEST_DESC_NULL_AGENT_ID, metadata, null);
+        FilterResult result = filter.applyFilter(TEST_DESC_NULL_AGENT_ID, null);
         assertEquals(ResultType.ALL, result.getType());
         assertNull(result.getFilterExpression());
     }
@@ -221,11 +178,9 @@ public class AgentIdFilterTest {
         Set<BasicRole> roles = new HashSet<>();
         
         Expression parentExpression = new ExpressionFactory().equalTo(Key.AGENT_ID, "testKey");
-        DescriptorMetadata metadata = new DescriptorMetadata();
-        assertFalse(metadata.hasAgentId());
         AgentIdFilter<FooPojo> filter = new AgentIdFilter<>(roles);
         // want for the agent id key to not be present in category
-        FilterResult result = filter.applyFilter(TEST_DESC_NULL_AGENT_ID, metadata, parentExpression);
+        FilterResult result = filter.applyFilter(TEST_DESC_NULL_AGENT_ID, parentExpression);
         assertEquals(ResultType.QUERY_EXPRESSION, result.getType());
         assertNotNull(result.getFilterExpression());
         assertEquals(parentExpression, result.getFilterExpression());

@@ -94,7 +94,6 @@ import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageCredentials;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
@@ -139,12 +138,6 @@ public class WebAppTest extends IntegrationTest {
      * WebAppTestStatementDescriptorRegistration
      */
     public static final Set<String> TRUSTED_DESCRIPTORS;
-    /*
-     * Map which maps a string descriptor to DescriptorMetadata.
-     * See also: WebAppTestStatementDescriptorRegistration
-     * 
-     */
-    public static final Map<String, DescriptorMetadata> METADATA_MAPPING;
     // descriptive name -> descriptor mapping
     private static final Map<String, String> DESCRIPTOR_MAP;
     
@@ -176,15 +169,11 @@ public class WebAppTest extends IntegrationTest {
         descMap.put(KEY_AUTHORIZED_QUERY_OR, "QUERY cpu-stats WHERE 'timeStamp' > ?l OR 'timeStamp' < ?l SORT 'timeStamp' ASC");
         descMap.put(KEY_STORAGE_PURGE, "QUERY vm-cpu-stats");
         Set<String> trustedDescriptors = new HashSet<>();
-        Map<String, DescriptorMetadata> metadata = new HashMap<>();
-        DescriptorMetadata descMetadata = new DescriptorMetadata();
         for (String val: descMap.values()) {
             trustedDescriptors.add(val);
-            metadata.put(val, descMetadata);
         }
         TRUSTED_DESCRIPTORS = trustedDescriptors;
         DESCRIPTOR_MAP = descMap;
-        METADATA_MAPPING = metadata;
     }
     
     

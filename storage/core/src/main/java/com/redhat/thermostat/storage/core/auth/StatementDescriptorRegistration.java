@@ -47,6 +47,7 @@ import java.util.Set;
  * the set of all trusted statement descriptors.
  *
  */
+// FIXME: Thermostat 2.0 This interface should no longer extend StatementDescriptorMetadataFactory
 public interface StatementDescriptorRegistration extends StatementDescriptorMetadataFactory {
 
     /**

@@ -96,53 +96,6 @@ public class NumaDAOImplStatementDescriptorRegistrationTest {
         assertNotNull(numaReg);
         assertEquals(4, numaReg.getStatementDescriptors().size());
     }
-    
-    @Test
-    public void canGetMetadataForHostLatestQuery() {
-        PreparedParameter agentIdParam = mock(PreparedParameter.class);
-        String agentId = "agentId";
-        when(agentIdParam.getValue()).thenReturn(agentId);
-        PreparedParameter[] params = new PreparedParameter[] {
-                agentIdParam
-        };
-        
-        StatementDescriptorMetadataFactory factory = new NumaDAOImplStatementDescriptorRegistration();
-        String desc = String.format(
-                HostLatestPojoListGetter.HOST_LATEST_QUERY_FORMAT,
-                NumaDAO.numaStatCategory.getName());
-        DescriptorMetadata data = factory.getDescriptorMetadata(desc, params);
-        assertNotNull(data);
-        assertTrue(data.hasAgentId());
-        assertFalse(data.hasVmId());
-        assertEquals(agentId, data.getAgentId());
-    }
-    
-    @Test
-    public void canGetMetadataForNumaInfoQuery() {
-        PreparedParameter agentIdParam = mock(PreparedParameter.class);
-        String agentId = "agentId";
-        when(agentIdParam.getValue()).thenReturn(agentId);
-        PreparedParameter[] params = new PreparedParameter[] {
-                agentIdParam
-        };
-        
-        StatementDescriptorMetadataFactory factory = new NumaDAOImplStatementDescriptorRegistration();
-        DescriptorMetadata data = factory.getDescriptorMetadata(NumaDAOImpl.QUERY_NUMA_INFO, params);
-        assertNotNull(data);
-        assertTrue(data.hasAgentId());
-        assertFalse(data.hasVmId());
-        assertEquals(agentId, data.getAgentId());
-    }
-    
-    @Test
-    public void unknownDescriptorThrowsException() {
-        StatementDescriptorMetadataFactory factory = new NumaDAOImplStatementDescriptorRegistration();
-        try {
-            factory.getDescriptorMetadata("QUERY foo-bar WHERE 'a' = 'b'", null);
-            fail("should have thrown exception");
-        } catch (IllegalArgumentException e) {
-            // pass
-        }
-    }
+
 }
 

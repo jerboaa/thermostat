@@ -40,9 +40,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -52,9 +49,6 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.core.PreparedParameter;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorMetadataFactory;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 import com.redhat.thermostat.storage.internal.dao.DAOImplStatementDescriptorRegistration;
 
@@ -94,33 +88,6 @@ public class CpuStatDAOImplStatementDescriptorRegistrationTest {
         assertNotNull(cpuStatReg);
         assertEquals(2, cpuStatReg.getStatementDescriptors().size());
     }
-    
-    @Test
-    public void canGetMetadataForHostLatestQuery() {
-        PreparedParameter agentIdParam = mock(PreparedParameter.class);
-        String agentId = "agentId";
-        when(agentIdParam.getValue()).thenReturn(agentId);
-        PreparedParameter[] params = new PreparedParameter[] {
-                agentIdParam
-        };
-        
-        StatementDescriptorMetadataFactory factory = new CpuStatDAOImplStatementDescriptorRegistration();
-        DescriptorMetadata data = factory.getDescriptorMetadata(CpuStatDAOImplStatementDescriptorRegistration.DESCRIPTOR, params);
-        assertNotNull(data);
-        assertTrue(data.hasAgentId());
-        assertFalse(data.hasVmId());
-        assertEquals(agentId, data.getAgentId());
-    }
-    
-    @Test
-    public void unknownDescriptorThrowsException() {
-        StatementDescriptorMetadataFactory factory = new CpuStatDAOImplStatementDescriptorRegistration();
-        try {
-            factory.getDescriptorMetadata("QUERY foo-bar WHERE 'a' = 'b'", null);
-            fail("should have thrown exception");
-        } catch (IllegalArgumentException e) {
-            // pass
-        }
-    }
+
 }
 

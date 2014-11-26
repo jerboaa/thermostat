@@ -43,7 +43,6 @@ import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -131,7 +130,7 @@ public class KnownDescriptorRegistryTest {
 
     private Iterable<StatementDescriptorRegistration> getRegs(Set<String> descs) {
         StatementDescriptorRegistration reg = new TestStatementDescriptorRegistration(
-                descs, null);
+                descs);
         StatementDescriptorRegistration[] regs = new StatementDescriptorRegistration[] { reg };
         return Arrays.asList(regs);
     }
@@ -139,11 +138,9 @@ public class KnownDescriptorRegistryTest {
     private static class TestStatementDescriptorRegistration implements StatementDescriptorRegistration {
 
         private final Set<String> descs;
-        private final Map<String, DescriptorMetadata> metadata;
         
-        private TestStatementDescriptorRegistration(Set<String> descs, Map<String, DescriptorMetadata> metadata) {
+        private TestStatementDescriptorRegistration(Set<String> descs) {
             this.descs = descs;
-            this.metadata = metadata;
         }
         
         @Override
@@ -154,7 +151,7 @@ public class KnownDescriptorRegistryTest {
         @Override
         public DescriptorMetadata getDescriptorMetadata(String descriptor,
                 PreparedParameter[] params) {
-            return metadata.get(descriptor);
+            throw new AssertionError("should not be used");
         }
         
     }

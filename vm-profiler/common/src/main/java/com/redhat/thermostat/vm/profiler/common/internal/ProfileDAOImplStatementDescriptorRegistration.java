@@ -47,17 +47,7 @@ public class ProfileDAOImplStatementDescriptorRegistration implements StatementD
 
     @Override
     public DescriptorMetadata getDescriptorMetadata(String descriptor, PreparedParameter[] params) {
-        if (descriptor.equals(ProfileDAOImpl.DESC_ADD_PROFILE_INFO)
-                || descriptor.equals(ProfileDAOImpl.DESC_QUERY_LATEST)
-                || descriptor.equals(ProfileDAOImpl.DESC_QUERY_BY_ID)
-                || descriptor.equals(ProfileDAOImpl.DESC_INTERVAL_QUERY)) {
-            String agentId = (String)params[0].getValue();
-            String vmId = (String)params[1].getValue();
-            DescriptorMetadata metadata = new DescriptorMetadata(agentId, vmId);
-            return metadata;
-        } else {
-            throw new IllegalArgumentException("Unknown descriptor: ->" + descriptor + "<-");
-        }
+        throw new AssertionError("Should not be used");
     }
 
     @Override

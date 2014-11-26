@@ -69,16 +69,7 @@ public class JmxNotificationDAOImplStatementDescriptorRegistration implements
     @Override
     public DescriptorMetadata getDescriptorMetadata(String descriptor,
             PreparedParameter[] params) {
-        if (descs.contains(descriptor)) {
-            // both queries we know about have agent/vmId parameters
-            String agentId = (String)params[0].getValue();
-            String vmId = (String)params[1].getValue();
-            DescriptorMetadata metadata = new DescriptorMetadata(agentId, vmId);
-            return metadata;
-        } else {
-            throw new IllegalArgumentException("Unknown descriptor: ->"
-                    + descriptor + "<-");
-        }
+        throw new AssertionError("Should not be used");
     }
 
 }

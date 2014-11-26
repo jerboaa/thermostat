@@ -41,7 +41,6 @@ import java.util.Set;
 
 import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorMetadataFactory;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 
 /**
@@ -50,7 +49,7 @@ import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
  *
  */
 public class DAOImplStatementDescriptorRegistration implements
-        StatementDescriptorRegistration, StatementDescriptorMetadataFactory {
+        StatementDescriptorRegistration {
     
     @Override
     public Set<String> getStatementDescriptors() {
@@ -86,56 +85,7 @@ public class DAOImplStatementDescriptorRegistration implements
     @Override
     public DescriptorMetadata getDescriptorMetadata(String descriptor,
             PreparedParameter[] params) {
-        if (descriptor.equals(AgentInfoDAOImpl.QUERY_AGENT_INFO)) {
-            String agentId = (String)params[0].getValue();
-            DescriptorMetadata metadata = new DescriptorMetadata(agentId);
-            return metadata;
-        } else if (descriptor.equals(AgentInfoDAOImpl.QUERY_ALIVE_AGENTS)) {
-            DescriptorMetadata metadata = new DescriptorMetadata();
-            return metadata;
-        } else if (descriptor.equals(AgentInfoDAOImpl.QUERY_ALL_AGENTS) ||
-                descriptor.equals(AgentInfoDAOImpl.AGGREGATE_COUNT_ALL_AGENTS)) {
-            DescriptorMetadata metadata = new DescriptorMetadata();
-            return metadata;
-        } else if (descriptor.equals(BackendInfoDAOImpl.QUERY_BACKEND_INFO)) {
-            String agentId = (String)params[0].getValue();
-            DescriptorMetadata metadata = new DescriptorMetadata(agentId);
-            return metadata;
-        } else if (descriptor.equals(HostInfoDAOImpl.QUERY_HOST_INFO)) {
-            String agentId = (String)params[0].getValue();
-            DescriptorMetadata metadata = new DescriptorMetadata(agentId);
-            return metadata;
-        } else if (descriptor.equals(HostInfoDAOImpl.QUERY_ALL_HOSTS) ||
-                descriptor.equals(HostInfoDAOImpl.AGGREGATE_COUNT_ALL_HOSTS)) {
-            DescriptorMetadata metadata = new DescriptorMetadata();
-            return metadata;
-        } else if (descriptor.equals(NetworkInterfaceInfoDAOImpl.QUERY_NETWORK_INFO)) {
-            String agentId = (String)params[0].getValue();
-            DescriptorMetadata metadata = new DescriptorMetadata(agentId);
-            return metadata;
-        } else if (descriptor.equals(VmInfoDAOImpl.QUERY_ALL_VMS) ||
-                descriptor.equals(VmInfoDAOImpl.AGGREGATE_COUNT_ALL_VMS)) {
-            DescriptorMetadata metadata = new DescriptorMetadata();
-            return metadata;
-        } else if (descriptor.equals(VmInfoDAOImpl.QUERY_VM_FROM_ID)) {
-            String vmId = (String)params[0].getValue();
-            DescriptorMetadata metadata = new DescriptorMetadata(null, vmId);
-            return metadata;
-        } else if (descriptor.equals(VmInfoDAOImpl.QUERY_ALL_VMS_FOR_HOST)) {
-            String agentId = (String)params[0].getValue();
-            DescriptorMetadata metadata = new DescriptorMetadata(agentId);
-            return metadata;
-        } else if (descriptor.equals(VmInfoDAOImpl.QUERY_VM_INFO)) {
-            String agentId = (String)params[0].getValue();
-            String vmId = (String)params[1].getValue();
-            DescriptorMetadata metadata = new DescriptorMetadata(agentId, vmId);
-            return metadata;
-        } else if (descriptor.equals(SchemaInfoDAOImpl.QUERY_ALL_COLLECTIONS)) {
-            DescriptorMetadata metadata = new DescriptorMetadata();
-            return metadata;
-        } else {
-            throw new IllegalArgumentException("Unknown descriptor: ->" + descriptor + "<-");
-        }
+        throw new AssertionError("Should not be used");
     }
 
 }

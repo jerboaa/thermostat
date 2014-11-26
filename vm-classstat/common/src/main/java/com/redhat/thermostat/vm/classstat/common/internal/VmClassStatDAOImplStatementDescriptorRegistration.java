@@ -67,14 +67,7 @@ public class VmClassStatDAOImplStatementDescriptorRegistration implements
     @Override
     public DescriptorMetadata getDescriptorMetadata(String descriptor,
             PreparedParameter[] params) {
-        if (descriptor.equals(QUERY)) {
-            String agentId = (String)params[0].getValue();
-            String vmId = (String)params[1].getValue();
-            DescriptorMetadata metadata = new DescriptorMetadata(agentId, vmId);
-            return metadata;
-        } else {
-            throw new IllegalArgumentException("Unknown descriptor ->" + descriptor + "<-");
-        }
+        throw new AssertionError("Should not be used");
     }
 
 }

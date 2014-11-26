@@ -62,13 +62,7 @@ public class HostNotesStatementDescriptorRegistration implements StatementDescri
     @Override
     public DescriptorMetadata getDescriptorMetadata(String descriptor, PreparedParameter[] params) {
         String agentId;
-        if (descriptor.equals(HostNoteDAOImpl.UPDATE_HOST_NOTE)) {
-            agentId = (String)params[2].getValue();
-        } else {
-            agentId = (String)params[0].getValue();
-        }
-        DescriptorMetadata metadata = new DescriptorMetadata(agentId);
-        return metadata;
+        throw new AssertionError("Should not be used");
     }
 
 }
