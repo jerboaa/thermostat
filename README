@@ -85,6 +85,14 @@ Thermostat Core consists of:
 2.1.2.
    The resulting Thermostat system can now be found under the directory
    distribution/target/image.
+
+   Please note that the resulting build is non-relocatable. If you move it to
+   some other directory, it will not work. Use the thermostat.home maven
+   property to set that at build time:
+
+   mvn -Dthermostat.home=/path/to/install/thermostat
+
+   You will have to move the resulting build to the path manually.
            
 --------------------------------------------------------------------------------
 3. RUNNING THERMOSTAT
