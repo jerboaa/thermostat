@@ -53,11 +53,15 @@ public class ThreadPoolSizeRetriever {
     
     /*
      * Boolean. If set to true no bound is enforced. Otherwise an upper bound
-     * of 100 (DEFAULT_THREAD_POOL_SIZE) is enforced.
+     * of DEFAULT_THREAD_POOL_SIZE_MAX is enforced.
      */
     static final String THREAD_POOL_SIZE_UNBOUNDED = "com.redhat.thermostat.storage.queue.unbounded";
     
     /*
+     * The configured upper bound without the THREAD_POOL_SIZE_UNBOUNDED
+     * property set.
+     *
+     *
      * Default process limit (ulimit -u) on Linux is 1024. Since this includes
      * threads (threads are tasks on Linux), consider the following reasoning.
      * 
@@ -79,7 +83,12 @@ public class ThreadPoolSizeRetriever {
      * Hence a default of 100 should work well: 100 (agent) + 100 (webapp) +
      * 100 (mongodb) + 200 (jetty) = 500. 500 + 400 = 900. 900 < 1024
      */
-    static final int DEFAULT_THREAD_POOL_SIZE = 100;
+    static final int DEFAULT_THREAD_POOL_SIZE_MAX = 100;
+    
+    /*
+     * The default thread pool size if no properties are set to override it.
+     */
+    static final int DEFAULT_THREAD_POOL_SIZE = determineDefaultThreadPoolSize();
 
     public int getPoolSize() {
         Integer candidate = getPoolSizeFromProperty();
@@ -92,13 +101,19 @@ public class ThreadPoolSizeRetriever {
             throw new InvalidConfigurationException("Value of property " +
                     THREAD_POOL_SIZE +": " + candidate + " <= 0");
         }
-        if (isPoolSizeCapped() && candidate > DEFAULT_THREAD_POOL_SIZE) {
+        if (isPoolSizeCapped() && candidate > DEFAULT_THREAD_POOL_SIZE_MAX) {
             throw new InvalidConfigurationException("Value of property " +
-                    THREAD_POOL_SIZE +": " + candidate + " > " + DEFAULT_THREAD_POOL_SIZE
+                    THREAD_POOL_SIZE +": " + candidate + " > " + DEFAULT_THREAD_POOL_SIZE_MAX
                     + " and property " + THREAD_POOL_SIZE_UNBOUNDED + " unset or set to false");
         }
         logger.log(Level.CONFIG, "Using a thread pool size of " + candidate + " for QueuedStorage");
         return candidate;
+    }
+
+    private static int determineDefaultThreadPoolSize() {
+        // Make the number of default thread pool size a function of available
+        // processors.
+        return Runtime.getRuntime().availableProcessors() * 2;
     }
 
     private Integer getPoolSizeFromProperty() {
