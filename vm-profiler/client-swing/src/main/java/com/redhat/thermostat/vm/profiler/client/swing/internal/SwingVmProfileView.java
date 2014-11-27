@@ -59,6 +59,7 @@ import com.redhat.thermostat.client.swing.IconResource;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.ActionToggleButton;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
+import com.redhat.thermostat.client.swing.components.ThermostatTable;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
@@ -145,7 +146,7 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
         columnNames.add(translator.localize(LocaleResources.PROFILER_RESULTS_TIME, "ms").getContents());
         tableModel = new DefaultTableModel(columnNames, 0);
 
-        JTable profileTable = new JTable(tableModel);
+        JTable profileTable = new ThermostatTable(tableModel);
         profileTable.setAutoCreateRowSorter(true);
 
         JScrollPane profileTablePane = new JScrollPane(profileTable);
