@@ -25,17 +25,22 @@ ifeq ($(BUILD_DOCS),true)
     MAVEN_JAVADOC = javadoc:aggregate
 endif
 
-all: core verify-archetype-ext verify-archetype-multimodule
-
 # Default to just building core
+all: core
+
 core:
 	$(MAVEN) -f $(POM) $(MAVEN_FLAGS) $(MAVEN_SKIP_TEST) clean $(GOAL) $(MAVEN_JAVADOC)
+
+verify-archetypes: skip-tests-and-install verify-archetype-ext verify-archetype-multimodule
 
 verify-archetype-ext:
 	$(BASH) distribution/tools/verify-archetype-ext.sh $(REPO_LOC) $(THERMOSTAT_HOME)
 
 verify-archetype-multimodule:
 	$(BASH) distribution/tools/verify-archetype-multimodule.sh $(REPO_LOC) $(THERMOSTAT_HOME)
+
+skip-tests-and-install: clean-repo create-repo-dir
+	$(MAVEN) -f $(POM) $(MAVEN_FLAGS) $(REPO_FLAG) -Dmaven.test.skip=true clean install
 
 # 
 # Cleaning the repo prevents things like not seeing build failures
