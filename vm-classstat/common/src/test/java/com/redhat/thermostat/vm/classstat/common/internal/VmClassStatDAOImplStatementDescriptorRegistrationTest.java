@@ -58,10 +58,10 @@ public class VmClassStatDAOImplStatementDescriptorRegistrationTest {
     public void registersAllDescriptors() {
         VmClassStatDAOImplStatementDescriptorRegistration reg = new VmClassStatDAOImplStatementDescriptorRegistration();
         Set<String> descriptors = reg.getStatementDescriptors();
-        assertEquals(2, descriptors.size());
+        assertEquals(5, descriptors.size());
         assertFalse("null descriptor not allowed", descriptors.contains(null));
     }
-    
+
     /*
      * The web storage end-point uses service loader in order to determine the
      * list of trusted/known registrations. This test is to ensure service loading
@@ -86,8 +86,8 @@ public class VmClassStatDAOImplStatementDescriptorRegistrationTest {
         // storage-core + this module
         assertEquals(2, registrations.size());
         assertNotNull(vmClassStatReg);
-        assertEquals(2, vmClassStatReg.getStatementDescriptors().size());
+        assertEquals(5, vmClassStatReg.getStatementDescriptors().size());
     }
-    
+
 }
 

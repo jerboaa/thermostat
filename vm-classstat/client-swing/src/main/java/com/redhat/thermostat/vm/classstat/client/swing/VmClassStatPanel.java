@@ -37,12 +37,17 @@
 package com.redhat.thermostat.vm.classstat.client.swing;
 
 import java.awt.Component;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
-import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 
+import com.redhat.thermostat.client.core.experimental.Duration;
+import com.redhat.thermostat.client.swing.components.experimental.SingleValueChartPanel;
+import com.redhat.thermostat.common.model.Range;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
@@ -56,9 +61,7 @@ import org.jfree.data.time.TimeSeriesCollection;
 
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
-import com.redhat.thermostat.client.swing.components.RecentTimeSeriesChartPanel;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
-import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.shared.locale.Translate;
@@ -70,9 +73,18 @@ public class VmClassStatPanel extends VmClassStatView implements SwingComponent 
 
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
+    private static final int DEFAULT_VALUE = 10;
+    private static final TimeUnit DEFAULT_UNIT = TimeUnit.MINUTES;
+
+    private Duration duration;
+
     private HeaderPanel visiblePanel;
     
     private final TimeSeriesCollection dataset = new TimeSeriesCollection();
+
+    private SingleValueChartPanel chartPanel;
+
+    private ActionNotifier<UserAction> userActionActionNotifier = new ActionNotifier<VmClassStatView.UserAction>(this);
 
     private final ActionNotifier<Action> notifier = new ActionNotifier<Action>(this);
 
@@ -80,6 +92,8 @@ public class VmClassStatPanel extends VmClassStatView implements SwingComponent 
         visiblePanel = new HeaderPanel();
         // any name works
         dataset.addSeries(new TimeSeries("class-stat"));
+
+        duration = new Duration(DEFAULT_VALUE, DEFAULT_UNIT);
 
         visiblePanel.setHeader(t.localize(LocaleResources.VM_LOADED_CLASSES));
 
@@ -104,9 +118,17 @@ public class VmClassStatPanel extends VmClassStatView implements SwingComponent 
         axis.setRangeType(RangeType.POSITIVE);
         axis.setAutoRangeMinimumSize(10);
 
-        JComponent chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
+        chartPanel = new SingleValueChartPanel(chart, duration);
 
         visiblePanel.setContent(chartPanel);
+
+        chartPanel.addPropertyChangeListener(SingleValueChartPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {
+            @Override
+            public void propertyChange(final PropertyChangeEvent evt) {
+                duration = (Duration) evt.getNewValue();
+                userActionActionNotifier.fireAction(UserAction.USER_CHANGED_TIME_RANGE);
+            }
+        });
 
         new ComponentVisibilityNotifier().initialize(visiblePanel, notifier);
     }
@@ -138,6 +160,31 @@ public class VmClassStatPanel extends VmClassStatView implements SwingComponent 
             }
         });
 
+    }
+
+    @Override
+    public void addUserActionListener(final ActionListener<UserAction> listener) {
+        userActionActionNotifier.addActionListener(listener);
+    }
+
+    @Override
+    public void removeUserActionListener(final ActionListener<UserAction> listener) {
+        userActionActionNotifier.removeActionListener(listener);
+    }
+
+    @Override
+    public Duration getUserDesiredDuration() {
+        return duration;
+    }
+
+    @Override
+    public void setVisibleDataRange(final int time, final TimeUnit unit) {
+        chartPanel.setTimeRangeToShow(time, unit);
+    }
+
+    @Override
+    public void setAvailableDataRange(final Range<Long> availableDataRange) {
+        // FIXME indicate the total data range to the user somehow
     }
 
     @Override

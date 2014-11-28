@@ -49,6 +49,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
@@ -56,7 +57,6 @@ import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.vm.cpu.client.core.VmCpuView;
-import com.redhat.thermostat.vm.cpu.client.core.VmCpuView.Duration;
 import com.redhat.thermostat.vm.cpu.client.core.VmCpuViewProvider;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;

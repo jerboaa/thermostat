@@ -34,15 +34,24 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.cpu.client.swing.internal;
+package com.redhat.thermostat.client.swing.components.experimental;
+
+import com.redhat.thermostat.client.core.experimental.Duration;
+import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.swing.components.ValueField;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.shared.locale.Translate;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.XYPlot;
+
+import javax.swing.text.JTextComponent;
+import java.util.concurrent.TimeUnit;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.concurrent.TimeUnit;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
@@ -50,23 +59,9 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Document;
-import javax.swing.text.JTextComponent;
 
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.XYPlot;
 
-import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.swing.components.ValueField;
-import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.vm.cpu.client.core.VmCpuView;
-import com.redhat.thermostat.vm.cpu.client.core.VmCpuView.Duration;
-
-public class VmCpuChartPanel extends JPanel {
+public class SingleValueChartPanel extends JPanel {
 
     static final TimeUnit[] DEFAULT_TIMEUNITS = new TimeUnit[] { TimeUnit.DAYS, TimeUnit.HOURS, TimeUnit.MINUTES };
 
@@ -74,7 +69,6 @@ public class VmCpuChartPanel extends JPanel {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private static final long serialVersionUID = -1733906800911900456L;
     private static final int MINIMUM_DRAW_SIZE = 100;
 
     private ChartPanel chartPanel;
@@ -82,7 +76,7 @@ public class VmCpuChartPanel extends JPanel {
     private JPanel labelContainer;
     private JTextComponent label;
 
-    public VmCpuChartPanel(JFreeChart chart, Duration duration) {
+    public SingleValueChartPanel(JFreeChart chart, Duration duration) {
 
         this.setLayout(new BorderLayout());
 
@@ -139,7 +133,13 @@ public class VmCpuChartPanel extends JPanel {
         final JComboBox<TimeUnit> unitSelector = new JComboBox<>();
         unitSelector.setModel(new DefaultComboBoxModel<>(DEFAULT_TIMEUNITS));
 
-        TimeUnitChangeListener timeUnitChangeListener = new TimeUnitChangeListener(duration.value, duration.unit);
+        TimeUnitChangeListener timeUnitChangeListener = new TimeUnitChangeListener(new ActionListener() {
+            @Override
+            public void actionPerformed(final com.redhat.thermostat.common.ActionEvent actionEvent) {
+                Duration d = (Duration) actionEvent.getPayload();
+                SingleValueChartPanel.this.firePropertyChange(PROPERTY_VISIBLE_TIME_RANGE, null, d);
+            }
+        }, duration.value, duration.unit);
 
         durationSelector.getDocument().addDocumentListener(timeUnitChangeListener);
         unitSelector.addActionListener(timeUnitChangeListener);
@@ -187,57 +187,6 @@ public class VmCpuChartPanel extends JPanel {
             }
         });
     }
-
-    private class TimeUnitChangeListener implements DocumentListener, ActionListener {
-
-        private int value;
-        private TimeUnit unit;
-
-        public TimeUnitChangeListener(int defaultValue, TimeUnit defaultUnit) {
-            this.value = defaultValue;
-            this.unit = defaultUnit;
-        }
-
-        @Override
-        public void removeUpdate(DocumentEvent event) {
-            changed(event.getDocument());
-        }
-
-        @Override
-        public void insertUpdate(DocumentEvent event) {
-            changed(event.getDocument());
-        }
-
-        @Override
-        public void changedUpdate(DocumentEvent event) {
-            changed(event.getDocument());
-        }
-
-        private void changed(Document doc) {
-            try {
-                this.value = Integer.valueOf(doc.getText(0, doc.getLength()));
-            } catch (NumberFormatException nfe) {
-                // ignore
-            } catch (BadLocationException ble) {
-                // ignore
-            }
-            chartChanged();
-        }
-
-        private void chartChanged() {
-            VmCpuChartPanel.this.firePropertyChange(PROPERTY_VISIBLE_TIME_RANGE, null, new VmCpuView.Duration(value, unit));
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            @SuppressWarnings("unchecked") // We are a TimeUnitChangeListener, specifically.
-            JComboBox<TimeUnit> comboBox = (JComboBox<TimeUnit>) e.getSource();
-            TimeUnit time = (TimeUnit) comboBox.getSelectedItem();
-            this.unit = time;
-            chartChanged();
-        }
-    }
-
 
 }
 

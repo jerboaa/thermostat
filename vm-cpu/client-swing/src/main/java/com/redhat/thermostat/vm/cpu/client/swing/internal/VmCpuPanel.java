@@ -45,6 +45,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.SwingUtilities;
 
+import com.redhat.thermostat.client.core.experimental.Duration;
+import com.redhat.thermostat.client.swing.components.experimental.SingleValueChartPanel;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.time.FixedMillisecond;
@@ -77,7 +79,7 @@ public class VmCpuPanel extends VmCpuView implements SwingComponent {
     private final TimeSeriesCollection data = new TimeSeriesCollection();
     private final TimeSeries cpuTimeSeries = new TimeSeries("cpu-stats");
 
-    private VmCpuChartPanel chartPanel;
+    private SingleValueChartPanel chartPanel;
 
     private ActionNotifier<UserAction> userActionNotifier = new ActionNotifier<VmCpuView.UserAction>(this);
 
@@ -110,11 +112,11 @@ public class VmCpuPanel extends VmCpuView implements SwingComponent {
 
         chart.getXYPlot().getRangeAxis().setLowerBound(0.0);
 
-        chartPanel = new VmCpuChartPanel(chart, duration);
+        chartPanel = new SingleValueChartPanel(chart, duration);
 
         visiblePanel.setContent(chartPanel);
 
-        chartPanel.addPropertyChangeListener(VmCpuChartPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {
+        chartPanel.addPropertyChangeListener(SingleValueChartPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
                 duration = (Duration) evt.getNewValue();

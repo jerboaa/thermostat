@@ -121,6 +121,7 @@
             <Export-Package>
               com.redhat.thermostat.client.ui,
               com.redhat.thermostat.client.locale,
+              com.redhat.thermostat.client.core.experimental,
               <!-- Interfaces for views, controllers, etc. -->
               com.redhat.thermostat.client.core,
               com.redhat.thermostat.client.core.progress,

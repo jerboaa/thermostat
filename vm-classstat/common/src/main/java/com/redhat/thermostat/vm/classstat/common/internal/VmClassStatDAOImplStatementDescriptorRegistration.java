@@ -41,6 +41,7 @@ import java.util.Set;
 
 import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.VmLatestPojoListGetter;
+import com.redhat.thermostat.storage.core.VmTimeIntervalPojoListGetter;
 import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
@@ -53,13 +54,18 @@ import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
 public class VmClassStatDAOImplStatementDescriptorRegistration implements
         StatementDescriptorRegistration {
     
-    static final String QUERY = String.format(VmLatestPojoListGetter.VM_LATEST_QUERY_FORMAT,
+    static final String LATEST = String.format(VmLatestPojoListGetter.VM_LATEST_QUERY_FORMAT,
+            VmClassStatDAO.vmClassStatsCategory.getName());
+    static final String RANGE = String.format(VmTimeIntervalPojoListGetter.VM_INTERVAL_QUERY_FORMAT,
             VmClassStatDAO.vmClassStatsCategory.getName());
 
     @Override
     public Set<String> getStatementDescriptors() {
         Set<String> descs = new HashSet<>(1);
-        descs.add(QUERY);
+        descs.add(LATEST);
+        descs.add(RANGE);
+        descs.add(VmClassStatDAOImpl.DESC_LATEST_VM_CLASS_STAT);
+        descs.add(VmClassStatDAOImpl.DESC_OLDEST_VM_CLASS_STAT);
         descs.add(VmClassStatDAOImpl.DESC_ADD_VM_CLASS_STAT);
         return descs;
     }

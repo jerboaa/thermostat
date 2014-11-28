@@ -56,7 +56,13 @@ public interface VmClassStatDAO {
 
     public List<VmClassStat> getLatestClassStats(VmRef ref, long since);
 
+    public List<VmClassStat> getClassStats(VmRef ref, long since, long to);
+
     public void putVmClassStat(VmClassStat stat);
+
+    public abstract VmClassStat getOldest(VmRef ref);
+
+    public abstract VmClassStat getLatest(VmRef ref);
 
 }
 

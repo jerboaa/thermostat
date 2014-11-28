@@ -41,26 +41,12 @@ import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
 
 public abstract class VmCpuView extends BasicView implements UIComponent {
-
-    public static class Duration {
-        public final int value;
-        public final TimeUnit unit;
-
-        public Duration(int value, TimeUnit unit) {
-            this.value = value;
-            this.unit = unit;
-        }
-
-        @Override
-        public String toString() {
-            return value + " " + unit;
-        }
-    }
 
     public enum UserAction {
         USER_CHANGED_TIME_RANGE,

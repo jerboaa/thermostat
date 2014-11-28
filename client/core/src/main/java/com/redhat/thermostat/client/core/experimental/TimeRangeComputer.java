@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.cpu.client.core.internal;
+package com.redhat.thermostat.client.core.experimental;
 
 import java.util.ArrayList;
 import java.util.Collections;

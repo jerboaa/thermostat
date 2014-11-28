@@ -37,7 +37,6 @@
 package com.redhat.thermostat.vm.classstat.client.core.internal;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -45,7 +44,9 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import com.redhat.thermostat.client.core.experimental.Duration;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -71,9 +72,12 @@ public class VmClassStatControllerTest {
         stats.add(stat1);
 
         VmClassStatDAO vmClassStatDAO = mock(VmClassStatDAO.class);
-        when(vmClassStatDAO.getLatestClassStats(any(VmRef.class), anyInt())).thenReturn(stats).thenReturn(new ArrayList<VmClassStat>());
 
         VmRef ref = mock(VmRef.class);
+
+        when(vmClassStatDAO.getLatestClassStats(any(VmRef.class), any(Long.class))).thenThrow(new AssertionError("Unbounded queries are bad!"));
+        when(vmClassStatDAO.getOldest(ref)).thenReturn(stat1);
+        when(vmClassStatDAO.getLatest(ref)).thenReturn(stat1);
 
         Timer timer = mock(Timer.class);
         ArgumentCaptor<Runnable> timerActionCaptor = ArgumentCaptor.forClass(Runnable.class);
@@ -87,7 +91,9 @@ public class VmClassStatControllerTest {
         VmClassStatView view = mock(VmClassStatView.class);
         ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
-        
+
+        when(view.getUserDesiredDuration()).thenReturn(new Duration(1, TimeUnit.MINUTES));
+
         VmClassStatViewProvider viewProvider = mock(VmClassStatViewProvider.class);
         when(viewProvider.createView()).thenReturn(view);
 

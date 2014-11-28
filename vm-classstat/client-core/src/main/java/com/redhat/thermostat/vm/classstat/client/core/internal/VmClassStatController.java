@@ -43,16 +43,20 @@ import java.util.concurrent.TimeUnit;
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
+import com.redhat.thermostat.client.core.experimental.Duration;
+import com.redhat.thermostat.client.core.experimental.TimeRangeController;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
+import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.model.DiscreteTimeData;
+import com.redhat.thermostat.client.core.experimental.SingleValueSupplier;
+import com.redhat.thermostat.client.core.experimental.SingleValueStat;
 import com.redhat.thermostat.vm.classstat.client.core.VmClassStatView;
 import com.redhat.thermostat.vm.classstat.client.core.VmClassStatViewProvider;
 import com.redhat.thermostat.vm.classstat.client.locale.LocaleResources;
@@ -63,19 +67,46 @@ public class VmClassStatController implements InformationServiceController<VmRef
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
+    private TimeRangeController timeRangeController;
+
     private class UpdateChartData implements Runnable {
         @Override
         public void run() {
-            long timeStamp = lastSeenTimeStamp;
-            List<VmClassStat> latestClassStats = dao.getLatestClassStats(ref, timeStamp);
-            List<DiscreteTimeData<Long>> timeData = new ArrayList<>();
-            for (VmClassStat stat : latestClassStats) {
-                timeData.add(new DiscreteTimeData<Long>(stat.getTimeStamp(), stat.getLoadedClasses()));
-                timeStamp = Math.max(timeStamp, stat.getTimeStamp());
-            }
-            classesView.addClassCount(timeData);
-            lastSeenTimeStamp = timeStamp;
+
+            VmClassStat oldest = dao.getOldest(ref);
+            VmClassStat latest = dao.getLatest(ref);
+
+            Range<Long> newAvailableRange = new Range<>(oldest.getTimeStamp(), latest.getTimeStamp());
+
+            SingleValueSupplier singleValueSupplier = new SingleValueSupplier() {
+                @Override
+                public List getStats(final VmRef ref, final long since, final long to) {
+                    List<VmClassStat> stats = dao.getClassStats(ref, since, to);
+                    List<SingleValueStat<Long>> singleValueStats = new ArrayList<>();
+                    for (final VmClassStat stat : stats ) {
+                        singleValueStats.add(new SingleValueStat<Long>() {
+                            @Override
+                            public Long getValue() {
+                                return stat.getLoadedClasses();
+                            }
+
+                            @Override
+                            public long getTimeStamp() {
+                                return stat.getTimeStamp();
+                            }
+                        });
+                    }
+                    return singleValueStats;
+                }
+            };
+
+            timeRangeController.update(userDesiredDuration, newAvailableRange, singleValueSupplier, ref);
+            classesView.setAvailableDataRange(timeRangeController.getAvailableRange());
+
+            List classCount = timeRangeController.getDataToDisplay();
+            classesView.addClassCount(classCount);
         }
+
     }
 
     private final VmClassStatView classesView;
@@ -83,7 +114,7 @@ public class VmClassStatController implements InformationServiceController<VmRef
     private final VmClassStatDAO dao;
     private final Timer timer;
 
-    private volatile long lastSeenTimeStamp = Long.MIN_VALUE;
+    private Duration userDesiredDuration;
 
     public VmClassStatController(ApplicationService appSvc, VmClassStatDAO vmClassStatDao, VmRef ref, VmClassStatViewProvider viewProvider) {
         this.ref = ref;
@@ -113,6 +144,27 @@ public class VmClassStatController implements InformationServiceController<VmRef
                 }
             }
         });
+
+        classesView.addUserActionListener(new ActionListener<VmClassStatView.UserAction>() {
+
+            @Override
+            public void actionPerformed(final ActionEvent<VmClassStatView.UserAction> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                case USER_CHANGED_TIME_RANGE:
+                    Duration duration = classesView.getUserDesiredDuration();
+                    userDesiredDuration = duration;
+                    classesView.setVisibleDataRange(duration.value, duration.unit);
+                    break;
+                default:
+                    throw new AssertionError("Unhandled action type");
+                }
+            }
+        });
+
+        userDesiredDuration = classesView.getUserDesiredDuration();
+
+        timeRangeController = new TimeRangeController();
+
     }
 
     private void start() {

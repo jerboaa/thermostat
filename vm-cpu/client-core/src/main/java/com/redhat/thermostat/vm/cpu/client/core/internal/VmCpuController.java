@@ -37,13 +37,14 @@
 package com.redhat.thermostat.vm.cpu.client.core.internal;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.client.core.experimental.Duration;
+import com.redhat.thermostat.client.core.experimental.TimeRangeController;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
@@ -54,9 +55,9 @@ import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.model.DiscreteTimeData;
+import com.redhat.thermostat.client.core.experimental.SingleValueSupplier;
+import com.redhat.thermostat.client.core.experimental.SingleValueStat;
 import com.redhat.thermostat.vm.cpu.client.core.VmCpuView;
-import com.redhat.thermostat.vm.cpu.client.core.VmCpuView.Duration;
 import com.redhat.thermostat.vm.cpu.client.core.VmCpuViewProvider;
 import com.redhat.thermostat.vm.cpu.client.core.VmCpuView.UserAction;
 import com.redhat.thermostat.vm.cpu.client.locale.LocaleResources;
@@ -73,10 +74,9 @@ public class VmCpuController implements InformationServiceController<VmRef> {
 
     private final Timer timer;
 
-    private Range<Long> availableRange = new Range<Long>(Long.MAX_VALUE, Long.MIN_VALUE);
-    private Range<Long> displayedRange = new Range<Long>(Long.MAX_VALUE, Long.MIN_VALUE);
-
     private Duration userDesiredDuration;
+
+    private TimeRangeController timeRangeController;
 
     public VmCpuController(ApplicationService appSvc, VmCpuStatDAO vmCpuStatDao, VmRef ref, VmCpuViewProvider provider) {
         this.ref = ref;
@@ -118,7 +118,7 @@ public class VmCpuController implements InformationServiceController<VmRef> {
             public void actionPerformed(ActionEvent<UserAction> actionEvent) {
                 switch (actionEvent.getActionId()) {
                 case USER_CHANGED_TIME_RANGE:
-                    Duration duration = (Duration) view.getUserDesiredDuration();
+                    Duration duration = view.getUserDesiredDuration();
                     userDesiredDuration = duration;
                     view.setVisibleDataRange(duration.value, duration.unit);
                     break;
@@ -129,6 +129,8 @@ public class VmCpuController implements InformationServiceController<VmRef> {
         });
 
         userDesiredDuration = view.getUserDesiredDuration();
+
+        timeRangeController = new TimeRangeController();
     }
 
     private void start() {
@@ -136,54 +138,38 @@ public class VmCpuController implements InformationServiceController<VmRef> {
     }
 
     private void updateData() {
-        long now = System.currentTimeMillis();
-        long userVisibleTimeDelta = (userDesiredDuration.unit.toMillis(userDesiredDuration.value));
-        Range<Long> desiredRange = new Range<Long>(now - userVisibleTimeDelta, now);
-
         VmCpuStat oldest = dao.getOldest(ref);
         VmCpuStat latest = dao.getLatest(ref);
 
         Range<Long> newAvailableRange = new Range<>(oldest.getTimeStamp(), latest.getTimeStamp());
 
-        if (availableRange.equals(newAvailableRange)) {
-            return;
-        }
+        SingleValueSupplier singleValueSupplier = new SingleValueSupplier() {
+            @Override
+            public List getStats(final VmRef ref, final long since, final long to) {
+                List<VmCpuStat> stats = dao.getVmCpuStats(ref, since, to);
+                List<SingleValueStat<Double>> singleValueStats = new ArrayList<>();
+                for (final VmCpuStat stat : stats ) {
+                    singleValueStats.add(new SingleValueStat<Double>() {
+                        @Override
+                        public Double getValue() {
+                            return stat.getCpuLoad();
+                        }
 
-        availableRange = newAvailableRange;
+                        @Override
+                        public long getTimeStamp() {
+                            return stat.getTimeStamp();
+                        }
+                    });
+                }
+                return singleValueStats;
+           }
+        };
 
-        view.setAvailableDataRange(availableRange);
+        timeRangeController.update(userDesiredDuration, newAvailableRange, singleValueSupplier, ref);
+        view.setAvailableDataRange(timeRangeController.getAvailableRange());
 
-        List<Range<Long>> additionalIntervals = TimeRangeComputer.computeAdditionalRangesToFetch(availableRange, desiredRange, displayedRange);
-
-        long displayedMin = Math.min(displayedRange.getMin(), Long.MAX_VALUE);
-        long displayedMax = Math.max(displayedRange.getMax(), Long.MIN_VALUE);
-
-        for (Range<Long> interval : additionalIntervals) {
-            List<VmCpuStat> stats = dao.getVmCpuStats(ref, interval.getMin(), interval.getMax());
-            appendToVmCpuCharts(stats);
-
-            displayedMin = Math.min(displayedMin, interval.getMin());
-            displayedMax = Math.max(displayedMax, interval.getMax());
-        }
-
-        // the view does not show data older than the delta
-        displayedMin = Math.max(displayedMin, displayedMax - userVisibleTimeDelta);
-
-        // System.out.println("Wanted to display " + new Date(desiredRange.getMin()) + " to " + new Date(desiredRange.getMax()));
-        displayedRange = new Range<>(displayedMin, displayedMax);
-        // System.out.println("Displayed from " + new Date(displayedRange.getMin()) + " to " + new Date(displayedRange.getMax()));
-
-    }
-
-    private void appendToVmCpuCharts(List<VmCpuStat> stats) {
-        List<DiscreteTimeData<? extends Number>> toDisplay = new ArrayList<>(stats.size());
-        for (VmCpuStat stat: stats) {
-            DiscreteTimeData<? extends Number> data =
-                    new DiscreteTimeData<Number>(stat.getTimeStamp(), stat.getCpuLoad());
-            toDisplay.add(data);
-        }
-
-        view.addData(toDisplay);
+        List data = timeRangeController.getDataToDisplay();
+        view.addData(data);
     }
 
     private void stop() {

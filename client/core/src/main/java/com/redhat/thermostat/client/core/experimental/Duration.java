@@ -34,37 +34,21 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.classstat.client.core;
+package com.redhat.thermostat.client.core.experimental;
 
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.client.core.experimental.Duration;
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.model.Range;
-import com.redhat.thermostat.storage.model.DiscreteTimeData;
+public class Duration {
+    public final int value;
+    public final TimeUnit unit;
 
-public abstract class VmClassStatView extends BasicView implements UIComponent {
-
-    public enum UserAction {
-        USER_CHANGED_TIME_RANGE,
+    public Duration(int value, TimeUnit unit) {
+        this.value = value;
+        this.unit = unit;
     }
 
-    public abstract void addUserActionListener(ActionListener<UserAction> listener);
-
-    public abstract void removeUserActionListener(ActionListener<UserAction> listener);
-
-    public abstract Duration getUserDesiredDuration();
-
-    public abstract void setVisibleDataRange(int time, TimeUnit unit);
-
-    public abstract void setAvailableDataRange(Range<Long> availableDataRange);
-
-    public abstract void clearClassCount();
-
-    public abstract void addClassCount(List<DiscreteTimeData<Long>> data);
-
+    @Override
+    public String toString() {
+        return value + " " + unit;
+    }
 }
-

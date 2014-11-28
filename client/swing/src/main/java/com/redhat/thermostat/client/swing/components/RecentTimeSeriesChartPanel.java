@@ -40,8 +40,6 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.concurrent.TimeUnit;
 
 import javax.swing.DefaultComboBoxModel;
@@ -50,12 +48,10 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 
+import com.redhat.thermostat.client.core.experimental.Duration;
+import com.redhat.thermostat.client.swing.components.experimental.TimeUnitChangeListener;
 import org.jfree.chart.ChartPanel;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
@@ -125,7 +121,13 @@ public class RecentTimeSeriesChartPanel extends JPanel {
         int defaultValue = controller.getTimeValue();
         TimeUnit defaultUnit = controller.getTimeUnit();
 
-        TimeUnitChangeListener timeUnitChangeListener = new TimeUnitChangeListener(controller, defaultValue, defaultUnit);
+        TimeUnitChangeListener timeUnitChangeListener = new TimeUnitChangeListener(new com.redhat.thermostat.common.ActionListener() {
+            @Override
+            public void actionPerformed(final com.redhat.thermostat.common.ActionEvent actionEvent) {
+                Duration d = (Duration) actionEvent.getPayload();
+                controller.setTime(d.value, d.unit);
+            }
+        }, defaultValue, defaultUnit);
 
         durationSelector.getDocument().addDocumentListener(timeUnitChangeListener);
         unitSelector.addActionListener(timeUnitChangeListener);
@@ -166,56 +168,5 @@ public class RecentTimeSeriesChartPanel extends JPanel {
         });
     }
 
-    private static class TimeUnitChangeListener implements DocumentListener, ActionListener {
-
-        private final RecentTimeSeriesChartController controller;
-        private int value;
-        private TimeUnit unit;
-
-        public TimeUnitChangeListener(RecentTimeSeriesChartController controller, int defaultValue, TimeUnit defaultUnit) {
-            this.controller = controller;
-            this.value = defaultValue;
-            this.unit = defaultUnit;
-        }
-
-        @Override
-        public void removeUpdate(DocumentEvent event) {
-            changed(event.getDocument());
-        }
-
-        @Override
-        public void insertUpdate(DocumentEvent event) {
-            changed(event.getDocument());
-        }
-
-        @Override
-        public void changedUpdate(DocumentEvent event) {
-            changed(event.getDocument());
-        }
-
-        private void changed(Document doc) {
-            try {
-                this.value = Integer.valueOf(doc.getText(0, doc.getLength()));
-            } catch (NumberFormatException nfe) {
-                // ignore
-            } catch (BadLocationException ble) {
-                // ignore
-            }
-            updateChartParameters();
-        }
-
-        private void updateChartParameters() {
-            controller.setTime(value, unit);
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            @SuppressWarnings("unchecked") // We are a TimeUnitChangeListener, specifically.
-            JComboBox<TimeUnit> comboBox = (JComboBox<TimeUnit>) e.getSource();
-            TimeUnit time = (TimeUnit) comboBox.getSelectedItem();
-            this.unit = time;
-            updateChartParameters();
-        }
-    }
 }
 
