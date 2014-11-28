@@ -46,7 +46,8 @@ public class ProfileDAOImplCategoryRegistration implements CategoryRegistration 
     @Override
     public Set<String> getCategoryNames() {
         Set<String> names = new HashSet<>();
-        names.add(ProfileDAOImpl.CATEGORY.getName());
+        names.add(ProfileDAOImpl.PROFILE_INFO_CATEGORY.getName());
+        names.add(ProfileDAOImpl.PROFILE_STATUS_CATEGORY.getName());
         return names;
     }
 }

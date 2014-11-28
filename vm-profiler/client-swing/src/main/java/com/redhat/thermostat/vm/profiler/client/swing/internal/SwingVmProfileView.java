@@ -38,6 +38,8 @@ package com.redhat.thermostat.vm.profiler.client.swing.internal;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.util.Date;
 import java.util.List;
 import java.util.Vector;
@@ -45,19 +47,24 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
+import javax.swing.JToggleButton;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
+import javax.swing.WindowConstants;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 
-import com.redhat.thermostat.client.swing.IconResource;
 import com.redhat.thermostat.client.swing.SwingComponent;
-import com.redhat.thermostat.client.swing.components.ActionToggleButton;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.client.swing.components.ThermostatTable;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
@@ -73,17 +80,19 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
 
     private static final double SPLIT_PANE_RATIO = 0.3;
 
-    private final CopyOnWriteArrayList<ActionListener<ProfileAction>> listeners =
-            new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArrayList<ActionListener<ProfileAction>> listeners = new CopyOnWriteArrayList<>();
 
     private HeaderPanel mainContainer;
 
-    private ActionToggleButton startStopProfilingButton;
+    private JToggleButton startButton;
+    private JToggleButton stopButton;
 
     private DefaultListModel<Profile> listModel;
     private JList<Profile> profileList;
 
     private DefaultTableModel tableModel;
+
+    private JLabel currentStatusLabel;
 
     static class ProfileItemRenderer extends DefaultListCellRenderer {
         @Override
@@ -104,27 +113,58 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
     public SwingVmProfileView() {
         listModel = new DefaultListModel<>();
 
-        startStopProfilingButton = new ActionToggleButton(
-                IconResource.RECORD.getIcon());
-        updateProfilingButtonStatus(false);
+        mainContainer = new HeaderPanel(translator.localize(LocaleResources.PROFILER_HEADING));
+        new ComponentVisibilityNotifier().initialize(mainContainer, notifier);
 
-        startStopProfilingButton.addActionListener(new java.awt.event.ActionListener() {
+        JPanel contentContainer = new JPanel(new BorderLayout());
+        mainContainer.setContent(contentContainer);
+
+        JComponent actionsPanel = createActionsPanel();
+        contentContainer.add(actionsPanel, BorderLayout.PAGE_START);
+
+        JComponent profilingResultsPanel = createInformationPanel();
+        contentContainer.add(profilingResultsPanel, BorderLayout.CENTER);
+    }
+
+    private JPanel createActionsPanel() {
+        GridBagLayout layout = new GridBagLayout();
+        JPanel actionsPanel = new JPanel(layout);
+
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        constraints.weightx = 1.0;
+
+        currentStatusLabel = new JLabel("Current Status: {0}");
+        actionsPanel.add(currentStatusLabel, constraints);
+
+        constraints.fill = GridBagConstraints.NONE;
+        constraints.weightx = 0.0;
+        startButton = new JToggleButton(translator.localize(LocaleResources.START_PROFILING).getContents());
+        startButton.addActionListener(new java.awt.event.ActionListener() {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
-                if (startStopProfilingButton.isSelected()) {
-                    updateProfilingButtonStatus(true);
+                JToggleButton button = (JToggleButton) e.getSource();
+                if (button.isSelected()) {
                     fireProfileAction(ProfileAction.START_PROFILING);
-                } else {
-                    updateProfilingButtonStatus(false);
+                }
+            }
+        });
+        actionsPanel.add(startButton, constraints);
+        stopButton = new JToggleButton(translator.localize(LocaleResources.STOP_PROFILING).getContents());
+        stopButton.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                JToggleButton button = (JToggleButton) e.getSource();
+                if (button.isSelected()) {
                     fireProfileAction(ProfileAction.STOP_PROFILING);
                 }
             }
         });
+        actionsPanel.add(stopButton, constraints);
+        return actionsPanel;
+    }
 
-        mainContainer = new HeaderPanel(translator.localize(LocaleResources.PROFILER_HEADING));
-        mainContainer.addToolBarButton(startStopProfilingButton);
-        new ComponentVisibilityNotifier().initialize(mainContainer, notifier);
-
+    private JComponent createInformationPanel() {
         profileList = new JList<>(listModel);
         profileList.setCellRenderer(new ProfileItemRenderer());
         profileList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -156,7 +196,7 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
         splitPane.setDividerLocation(SPLIT_PANE_RATIO);
         splitPane.setResizeWeight(0.5);
 
-        mainContainer.add(splitPane, BorderLayout.CENTER);
+        return splitPane;
     }
 
     @Override
@@ -183,16 +223,40 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
     }
 
     @Override
-    public void setCurrentlyProfiling(boolean currentlyProfiling) {
-        updateProfilingButtonStatus(currentlyProfiling);
+    public void enableStartProfiling(final boolean start) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                startButton.setEnabled(start);
+            }
+        });
     }
 
-    private void updateProfilingButtonStatus(boolean currentlyProfiling) {
-        if (currentlyProfiling) {
-            startStopProfilingButton.setText(translator.localize(LocaleResources.STOP_PROFILING).getContents());
-        } else {
-            startStopProfilingButton.setText(translator.localize(LocaleResources.START_PROFILING).getContents());
-        }
+    @Override
+    public void enableStopProfiling(final boolean stop) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                stopButton.setEnabled(stop);
+            }
+        });
+    }
+
+    @Override
+    public void setProfilingStatus(final String text, final boolean active) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                currentStatusLabel.setText(text);
+                if (active) {
+                    startButton.setSelected(true);
+                    stopButton.setSelected(false);
+                } else {
+                    startButton.setSelected(false);
+                    stopButton.setSelected(true);
+                }
+            }
+        });
     }
 
     @Override
@@ -232,4 +296,17 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
         return mainContainer;
     }
 
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                JFrame window = new JFrame();
+                SwingVmProfileView view = new SwingVmProfileView();
+                window.add(view.getUiComponent());
+                window.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+                window.pack();
+                window.setVisible(true);
+            }
+        });
+    }
 }

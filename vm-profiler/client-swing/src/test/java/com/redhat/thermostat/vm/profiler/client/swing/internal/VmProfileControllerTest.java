@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.vm.profiler.client.swing.internal;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -44,7 +44,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -75,6 +74,7 @@ import com.redhat.thermostat.vm.profiler.client.swing.internal.VmProfileView.Pro
 import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
 import com.redhat.thermostat.vm.profiler.common.ProfileInfo;
 import com.redhat.thermostat.vm.profiler.common.ProfileRequest;
+import com.redhat.thermostat.vm.profiler.common.ProfileStatusChange;
 
 public class VmProfileControllerTest {
 
@@ -84,6 +84,9 @@ public class VmProfileControllerTest {
     private static final InetSocketAddress AGENT_ADDRESS = new InetSocketAddress(AGENT_HOST, AGENT_PORT);
     private static final String VM_ID = "some-vm-id";
     private static final String PROFILE_ID = "some-profile-id";
+
+    private static final long SOME_TIMESTAMP = 1000000000;
+    private static final long PROFILE_TIMESTAMP = SOME_TIMESTAMP - 100;
 
     private Timer timer;
     private ApplicationService appService;
@@ -96,7 +99,6 @@ public class VmProfileControllerTest {
 
     private VmProfileController controller;
     private HostRef agent;
-
 
     @Before
     public void setUp() {
@@ -156,9 +158,6 @@ public class VmProfileControllerTest {
 
     @Test
     public void timerUpdatesView() throws Exception {
-        final long SOME_TIMESTAMP = 1000000000;
-        final long PROFILE_TIMESTAMP = SOME_TIMESTAMP - 100;
-
         when(clock.getRealTimeMillis()).thenReturn(SOME_TIMESTAMP);
         controller = createController();
 
@@ -171,6 +170,9 @@ public class VmProfileControllerTest {
                 new Range<>(SOME_TIMESTAMP - TimeUnit.DAYS.toMillis(1) , SOME_TIMESTAMP)))
             .thenReturn(Arrays.asList(profile));
 
+        ProfileStatusChange status = new ProfileStatusChange(AGENT_ID, VM_ID, PROFILE_TIMESTAMP, false);
+        when(profileDao.getLatestStatus(vm)).thenReturn(status);
+
         Runnable runnable = runnableCaptor.getValue();
         runnable.run();
 
@@ -179,6 +181,10 @@ public class VmProfileControllerTest {
         List<Profile> resultList = listCaptor.getValue();
         assertEquals(1, resultList.size());
         assertEquals(PROFILE_TIMESTAMP, resultList.get(0).timeStamp);
+
+        verify(view).setProfilingStatus("Currently profiling: no", false);
+        verify(view).enableStartProfiling(true);
+        verify(view).enableStopProfiling(false);
     }
 
     @Test
@@ -190,11 +196,37 @@ public class VmProfileControllerTest {
 
         listenerCaptor.getValue().actionPerformed(new ActionEvent<>(view, ProfileAction.START_PROFILING));
 
+        verify(view).enableStartProfiling(false);
+        verify(view).enableStopProfiling(false);
+
         ArgumentCaptor<Request> requestCaptor = ArgumentCaptor.forClass(Request.class);
         verify(queue).putRequest(requestCaptor.capture());
         Request expectedRequest = ProfileRequest.create(AGENT_ADDRESS, VM_ID, ProfileRequest.START_PROFILING);
         Request actualRequest = requestCaptor.getValue();
         assertRequestEquals(actualRequest, expectedRequest);
+    }
+
+    @Test
+    public void startProfilingWaitsForDaoResultToEnableViewControls() {
+        controller = createController();
+
+        ArgumentCaptor<ActionListener> listenerCaptor = ArgumentCaptor.forClass(ActionListener.class);
+        verify(view).addProfileActionListener(listenerCaptor.capture());
+
+        listenerCaptor.getValue().actionPerformed(new ActionEvent<>(view, ProfileAction.START_PROFILING));
+
+        verify(view).enableStartProfiling(false);
+        verify(view).enableStopProfiling(false);
+
+        ProfileStatusChange status = new ProfileStatusChange(AGENT_ID, VM_ID, PROFILE_TIMESTAMP, true);
+        when(profileDao.getLatestStatus(vm)).thenReturn(status);
+
+        ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
+        verify(timer).setAction(runnableCaptor.capture());
+
+        runnableCaptor.getValue().run();
+
+        verify(view).enableStopProfiling(true);
     }
 
     @Test
@@ -215,10 +247,27 @@ public class VmProfileControllerTest {
         assertRequestEquals(actualRequest, expectedRequest);
     }
 
-    private void assertRequestEquals(Request actual, Request expected) {
-        assertEquals(expected.getParameterNames(), actual.getParameterNames());
-        assertEquals(expected.getReceiver(), actual.getReceiver());
-        assertEquals(expected.getType(), actual.getType());
+    @Test
+    public void stopProfilingWaitsForDaoResultToEnableViewControls() {
+        controller = createController();
+
+        ArgumentCaptor<ActionListener> listenerCaptor = ArgumentCaptor.forClass(ActionListener.class);
+        verify(view).addProfileActionListener(listenerCaptor.capture());
+
+        listenerCaptor.getValue().actionPerformed(new ActionEvent<>(view, ProfileAction.STOP_PROFILING));
+
+        verify(view).enableStartProfiling(false);
+        verify(view).enableStopProfiling(false);
+
+        ProfileStatusChange status = new ProfileStatusChange(AGENT_ID, VM_ID, PROFILE_TIMESTAMP, false);
+        when(profileDao.getLatestStatus(vm)).thenReturn(status);
+
+        ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
+        verify(timer).setAction(runnableCaptor.capture());
+
+        runnableCaptor.getValue().run();
+
+        verify(view).enableStartProfiling(true);
     }
 
     @Test
@@ -243,4 +292,11 @@ public class VmProfileControllerTest {
     private VmProfileController createController() {
         return new VmProfileController(appService, agentInfoDao, profileDao, queue, clock, view, vm);
     }
+
+    private void assertRequestEquals(Request actual, Request expected) {
+        assertEquals(expected.getParameterNames(), actual.getParameterNames());
+        assertEquals(expected.getReceiver(), actual.getReceiver());
+        assertEquals(expected.getType(), actual.getType());
+    }
+
 }

@@ -63,6 +63,7 @@ import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult.MethodInfo;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResultParser;
 import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
 import com.redhat.thermostat.vm.profiler.common.ProfileRequest;
+import com.redhat.thermostat.vm.profiler.common.ProfileStatusChange;
 
 public class ProfileVmCommand extends AbstractCommand {
 
@@ -70,6 +71,7 @@ public class ProfileVmCommand extends AbstractCommand {
 
     private static final String START_ARGUMENT = "start";
     private static final String STOP_ARGUMENT = "stop";
+    private static final String STATUS_ARGUMENT = "status";
     private static final String SHOW_ARGUMENT = "show";
 
     @Override
@@ -88,8 +90,7 @@ public class ProfileVmCommand extends AbstractCommand {
 
         AgentInformation agentInfo = agentInfoDAO.getAgentInformation(args.getHost());
         if (agentInfo == null) {
-            ctx.getConsole().getError().println("error: agent '" + args.getHost().getAgentId() + "' not found'");
-            return;
+            throw new CommandException(translator.localize(LocaleResources.AGENT_NOT_FOUND, args.getHost().getAgentId()));
         }
 
         InetSocketAddress target = agentInfo.getRequestQueueAddress();
@@ -107,6 +108,9 @@ public class ProfileVmCommand extends AbstractCommand {
             break;
         case STOP_ARGUMENT:
             sendStopProfilingRequest(ctx.getConsole(), requestQueue, target, args.getVM().getVmId());
+            break;
+        case STATUS_ARGUMENT:
+            showProfilingStatus(ctx.getConsole(), args.getVM());
             break;
         case SHOW_ARGUMENT:
             showProfilingResults(ctx.getConsole(), args.getVM());
@@ -169,6 +173,22 @@ public class ProfileVmCommand extends AbstractCommand {
             throw new CommandException(translator.localize(LocaleResources.INTERRUPTED_WAITING_FOR_RESPONSE));
         }
 
+    }
+
+    private void showProfilingStatus(Console console, VmRef vm) {
+        ProfileDAO dao = getService(ProfileDAO.class);
+        ProfileStatusChange latest = dao.getLatestStatus(vm);
+        boolean profiling = false;
+        if (latest != null) {
+            profiling = latest.isStarted();
+        }
+        String message;
+        if (profiling) {
+            message = translator.localize(LocaleResources.STATUS_CURRENTLY_PROFILING).getContents();
+        } else {
+            message = translator.localize(LocaleResources.STATUS_CURRENTLY_NOT_PROFILING).getContents();
+        }
+        console.getOutput().println(message);
     }
 
     private void showProfilingResults(Console console, VmRef vm) {

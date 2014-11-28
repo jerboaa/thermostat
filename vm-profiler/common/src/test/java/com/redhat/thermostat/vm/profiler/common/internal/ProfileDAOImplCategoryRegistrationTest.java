@@ -48,6 +48,7 @@ public class ProfileDAOImplCategoryRegistrationTest {
     public void includesProfileInfoCategory() {
         ProfileDAOImplCategoryRegistration registration = new ProfileDAOImplCategoryRegistration();
         Set<String> names = registration.getCategoryNames();
-        assertTrue(names.contains(ProfileDAOImpl.CATEGORY.getName()));
+        assertTrue(names.contains(ProfileDAOImpl.PROFILE_INFO_CATEGORY.getName()));
+        assertTrue(names.contains(ProfileDAOImpl.PROFILE_STATUS_CATEGORY.getName()));
     }
 }

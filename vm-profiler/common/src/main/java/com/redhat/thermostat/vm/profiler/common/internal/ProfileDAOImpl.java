@@ -53,8 +53,10 @@ import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.core.VmTimeIntervalPojoListGetter;
+import com.redhat.thermostat.storage.model.BasePojo;
 import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
 import com.redhat.thermostat.vm.profiler.common.ProfileInfo;
+import com.redhat.thermostat.vm.profiler.common.ProfileStatusChange;
 
 public class ProfileDAOImpl implements ProfileDAO {
 
@@ -62,42 +64,63 @@ public class ProfileDAOImpl implements ProfileDAO {
 
     private static final Key<String> KEY_PROFILE_ID = new Key<>("profileId");
 
-    static final Category<ProfileInfo> CATEGORY = new Category<>(
+    static final Category<ProfileInfo> PROFILE_INFO_CATEGORY = new Category<>(
             "profile-info",
             ProfileInfo.class,
             Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, KEY_PROFILE_ID);
 
-    static final String DESC_ADD_PROFILE_INFO = ""
-            + "ADD " + CATEGORY.getName() + " SET "
+    static final String PROFILE_INFO_DESC_ADD = ""
+            + "ADD " + PROFILE_INFO_CATEGORY.getName() + " SET "
             + " '" + Key.AGENT_ID.getName() + "' = ?s ,"
             + " '" + Key.VM_ID.getName() + "' = ?s ,"
             + " '" + Key.TIMESTAMP.getName() + "' = ?l ,"
             + " '" + KEY_PROFILE_ID.getName() + "' = ?s";
 
-    static final String DESC_QUERY_LATEST = "QUERY "
-            + CATEGORY.getName() + " WHERE '"
+    static final String PROFILE_INFO_DESC_QUERY_LATEST = "QUERY "
+            + PROFILE_INFO_CATEGORY.getName() + " WHERE '"
             + Key.AGENT_ID.getName() + "' = ?s AND '"
             + Key.VM_ID.getName() + "' = ?s SORT '"
             + Key.TIMESTAMP.getName() + "' DSC LIMIT 1";
 
-    static final String DESC_QUERY_BY_ID = "QUERY "
-            + CATEGORY.getName() + " WHERE '"
+    static final String PROFILE_INFO_DESC_QUERY_BY_ID = "QUERY "
+            + PROFILE_INFO_CATEGORY.getName() + " WHERE '"
             + Key.AGENT_ID.getName() + "' = ?s AND '"
             + Key.VM_ID.getName() + "' = ?s AND '"
             + Key.TIMESTAMP.getName() + "' = ?s LIMIT 1";
 
     // internal information of VmTimeIntervalPojoListGetter being leaked :(
-    static final String DESC_INTERVAL_QUERY = String.format(
-            VmTimeIntervalPojoListGetter.VM_INTERVAL_QUERY_FORMAT, ProfileDAOImpl.CATEGORY.getName());
+    static final String PROFILE_INFO_DESC_INTERVAL_QUERY = String.format(
+            VmTimeIntervalPojoListGetter.VM_INTERVAL_QUERY_FORMAT, ProfileDAOImpl.PROFILE_INFO_CATEGORY.getName());
+
+    private static final Key<Boolean> KEY_PROFILE_STARTED = new Key<>("started");
+
+    static final Category<ProfileStatusChange> PROFILE_STATUS_CATEGORY = new Category<>(
+            "profile-status",
+            ProfileStatusChange.class,
+            Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, KEY_PROFILE_STARTED);
+
+    static final String PROFILE_STATUS_DESC_ADD = ""
+            + "ADD " + PROFILE_STATUS_CATEGORY.getName() + " SET "
+            + " '" + Key.AGENT_ID.getName() + "' = ?s ,"
+            + " '" + Key.VM_ID.getName() + "' = ?s ,"
+            + " '" + Key.TIMESTAMP.getName() + "' = ?l ,"
+            + " '" + KEY_PROFILE_STARTED.getName() + "' = ?b";
+
+    static final String PROFILE_STATUS_DESC_QUERY_LATEST = "QUERY "
+            + PROFILE_STATUS_CATEGORY.getName() + " WHERE '"
+            + Key.AGENT_ID.getName() + "' = ?s AND '"
+            + Key.VM_ID.getName() + "' = ?s SORT '"
+            + Key.TIMESTAMP.getName() + "' DSC LIMIT 1";
 
     private final Storage storage;
     private final VmTimeIntervalPojoListGetter<ProfileInfo> getter;
 
     public ProfileDAOImpl(Storage storage) {
         this.storage = storage;
-        this.storage.registerCategory(CATEGORY);
+        this.storage.registerCategory(PROFILE_INFO_CATEGORY);
+        this.storage.registerCategory(PROFILE_STATUS_CATEGORY);
 
-        this.getter = new VmTimeIntervalPojoListGetter<>(storage, CATEGORY);
+        this.getter = new VmTimeIntervalPojoListGetter<>(storage, PROFILE_INFO_CATEGORY);
     }
 
     @Override
@@ -107,7 +130,7 @@ public class ProfileDAOImpl implements ProfileDAO {
     }
 
     private void addProfileInfoToStorage(ProfileInfo info) {
-        StatementDescriptor<ProfileInfo> desc = new StatementDescriptor<>(CATEGORY, DESC_ADD_PROFILE_INFO);
+        StatementDescriptor<ProfileInfo> desc = new StatementDescriptor<>(PROFILE_INFO_CATEGORY, PROFILE_INFO_DESC_ADD);
         PreparedStatement<ProfileInfo> prepared;
         try {
             prepared = storage.prepareStatement(desc);
@@ -131,24 +154,58 @@ public class ProfileDAOImpl implements ProfileDAO {
 
     @Override
     public InputStream loadProfileDataById(VmRef vm, String profileId) {
-        // TODO should we check whether this profileId is valid by querying the DB first?
         return getProfileData(profileId);
     }
 
     @Override
     public InputStream loadLatestProfileData(VmRef vm) {
-        StatementDescriptor<ProfileInfo> desc = new StatementDescriptor<>(CATEGORY, DESC_QUERY_LATEST);
-        PreparedStatement<ProfileInfo> prepared;
+        ProfileInfo info = loadLatest(vm, PROFILE_INFO_CATEGORY, PROFILE_INFO_DESC_QUERY_LATEST);
+        if (info == null) {
+            return null;
+        }
+
+        return getProfileData(info.getProfileId());
+    }
+
+    private InputStream getProfileData(String profileId) {
+        return storage.loadFile(profileId);
+    }
+
+    @Override
+    public void addStatus(ProfileStatusChange status) {
+        StatementDescriptor<ProfileStatusChange> desc = new StatementDescriptor<>(PROFILE_STATUS_CATEGORY, PROFILE_STATUS_DESC_ADD);
+        PreparedStatement<ProfileStatusChange> prepared;
+        try {
+            prepared = storage.prepareStatement(desc);
+            prepared.setString(0, status.getAgentId());
+            prepared.setString(1, status.getVmId());
+            prepared.setLong(2, status.getTimeStamp());
+            prepared.setBoolean(3, status.isStarted());
+            prepared.execute();
+        } catch (DescriptorParsingException e) {
+            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
+        } catch (StatementExecutionException e) {
+            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+        }
+    }
+
+    @Override
+    public ProfileStatusChange getLatestStatus(VmRef vm) {
+        return loadLatest(vm, PROFILE_STATUS_CATEGORY, PROFILE_STATUS_DESC_QUERY_LATEST);
+    }
+
+    private <T extends BasePojo> T loadLatest(VmRef vm, Category<T> category, String queryDesc) {
+        StatementDescriptor<T> desc = new StatementDescriptor<>(category, queryDesc);
+        PreparedStatement<T> prepared;
         try {
             prepared = storage.prepareStatement(desc);
             prepared.setString(0, vm.getHostRef().getAgentId());
             prepared.setString(1, vm.getVmId());
-            Cursor<ProfileInfo> cursor = prepared.executeQuery();
+            Cursor<T> cursor = prepared.executeQuery();
             if (!cursor.hasNext()) {
                 return null;
             }
-            ProfileInfo info = cursor.next();
-            return getProfileData(info.getProfileId());
+            return cursor.next();
         } catch (DescriptorParsingException e) {
             logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
         } catch (StatementExecutionException e) {
@@ -157,7 +214,4 @@ public class ProfileDAOImpl implements ProfileDAO {
         return null;
     }
 
-    private InputStream getProfileData(String profileId) {
-        return storage.loadFile(profileId);
-    }
 }

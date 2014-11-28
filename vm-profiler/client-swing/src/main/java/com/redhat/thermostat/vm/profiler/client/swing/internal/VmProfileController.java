@@ -55,6 +55,8 @@ import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.command.Request;
+import com.redhat.thermostat.common.command.RequestResponseListener;
+import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
@@ -67,6 +69,7 @@ import com.redhat.thermostat.vm.profiler.client.swing.internal.VmProfileView.Pro
 import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
 import com.redhat.thermostat.vm.profiler.common.ProfileInfo;
 import com.redhat.thermostat.vm.profiler.common.ProfileRequest;
+import com.redhat.thermostat.vm.profiler.common.ProfileStatusChange;
 
 public class VmProfileController implements InformationServiceController<VmRef> {
 
@@ -84,6 +87,10 @@ public class VmProfileController implements InformationServiceController<VmRef> 
 
     private Clock clock;
 
+    private boolean profilingStartOrStopRequested = false;
+
+    private ProfileStatusChange previousStatus;
+
     public VmProfileController(ApplicationService service,
             AgentInfoDAO agentInfoDao, ProfileDAO dao,
             RequestQueue queue,
@@ -94,7 +101,7 @@ public class VmProfileController implements InformationServiceController<VmRef> 
     VmProfileController(ApplicationService service,
             AgentInfoDAO agentInfoDao, ProfileDAO dao,
             RequestQueue queue, Clock clock,
-            VmProfileView view, VmRef vm) {
+            final VmProfileView view, VmRef vm) {
         this.service = service;
         this.agentInfoDao = agentInfoDao;
         this.profileDao = dao;
@@ -112,8 +119,10 @@ public class VmProfileController implements InformationServiceController<VmRef> 
         updater.setAction(new Runnable() {
             @Override
             public void run() {
+                updateViewWithCurrentProfilingStatus();
                 updateViewWithProfiledRuns();
             }
+
         });
 
         view.addActionListener(new ActionListener<BasicView.Action>() {
@@ -138,10 +147,10 @@ public class VmProfileController implements InformationServiceController<VmRef> 
                 ProfileAction id = actionEvent.getActionId();
                 switch (id) {
                 case START_PROFILING:
-                    sendProfilingRequest(true);
+                    startProfiling(view);
                     break;
                 case STOP_PROFILING:
-                    sendProfilingRequest(false);
+                    stopProfiling(view);
                     break;
                 case PROFILE_SELECTED:
                     updateViewWithProfileRunData();
@@ -150,14 +159,83 @@ public class VmProfileController implements InformationServiceController<VmRef> 
                     throw new AssertionError("Unknown event: " + id);
                 }
             }
+
         });
     }
 
-    private void sendProfilingRequest(boolean start) {
+    private void startProfiling(final VmProfileView view) {
+        disableViewControlsAndSendRequest(view, true);
+    }
+
+    private void stopProfiling(final VmProfileView view) {
+        disableViewControlsAndSendRequest(view, false);
+    }
+
+    private void disableViewControlsAndSendRequest(VmProfileView view, boolean start) {
+        // disable the UI until we get a update in storage
+        view.enableStartProfiling(false);
+        view.enableStopProfiling(false);
+
+        sendProfilingRequest(start);
+    }
+
+    private void sendProfilingRequest(final boolean start) {
         InetSocketAddress address = agentInfoDao.getAgentInformation(vm.getHostRef()).getRequestQueueAddress();
         String action = start ? ProfileRequest.START_PROFILING : ProfileRequest.STOP_PROFILING;
         Request req = ProfileRequest.create(address, vm.getVmId(), action);
+        req.addListener(new RequestResponseListener() {
+            @Override
+            public void fireComplete(Request request, Response response) {
+                switch (response.getType()) {
+                case OK:
+                    updateViewWithCurrentProfilingStatus();
+                    break;
+                default:
+                    // FIXME show message to user
+
+                    profilingStartOrStopRequested = false;
+                    break;
+                }
+            }
+        });
         queue.putRequest(req);
+        profilingStartOrStopRequested = true;
+    }
+
+    private void updateViewWithCurrentProfilingStatus() {
+        boolean currentlyActive = false;
+
+        ProfileStatusChange currentStatus = profileDao.getLatestStatus(vm);
+        if (currentStatus != null) {
+            currentlyActive = currentStatus.isStarted();
+        }
+
+        String message;
+        if (currentlyActive) {
+            message = translator.localize(LocaleResources.PROFILER_CURRENT_STATUS_ACTIVE).getContents();
+        } else {
+            message = translator.localize(LocaleResources.PROFILER_CURRENT_STATUS_INACTIVE).getContents();
+        }
+
+        if (profilingStartOrStopRequested) {
+            boolean statusChanged = (previousStatus == null && currentStatus != null)
+                    || (currentStatus != null && !(currentStatus.equals(previousStatus)));
+            if (statusChanged) {
+                view.enableStartProfiling(!currentlyActive);
+                view.enableStopProfiling(currentlyActive);
+
+                view.setProfilingStatus(message, currentlyActive);
+
+                profilingStartOrStopRequested = false;
+            }
+        } else {
+            view.enableStartProfiling(!currentlyActive);
+            view.enableStopProfiling(currentlyActive);
+
+            view.setProfilingStatus(message, currentlyActive);
+        }
+
+        previousStatus = currentStatus;
     }
 
     private void updateViewWithProfiledRuns() {

@@ -36,6 +36,27 @@
 
 package com.redhat.thermostat.vm.profiler.common.internal;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import com.redhat.thermostat.storage.core.Storage;
+
 public class ProfileDAOImplTest {
 
+    private Storage storage;
+
+    @Before
+    public void setUp() {
+        storage = mock(Storage.class);
+    }
+    @Test
+    public void registersCategories() throws Exception {
+        new ProfileDAOImpl(storage);
+
+        verify(storage).registerCategory(ProfileDAOImpl.PROFILE_INFO_CATEGORY);
+        verify(storage).registerCategory(ProfileDAOImpl.PROFILE_STATUS_CATEGORY);
+    }
 }

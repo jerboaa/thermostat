@@ -65,7 +65,17 @@ public abstract class VmProfileView extends BasicView implements UIComponent {
 
     public abstract void removeProfileActionlistener(ActionListener<ProfileAction> listener);
 
-    public abstract void setCurrentlyProfiling(boolean profiling);
+    /*
+     * Because of the latency between asking for starting profiling and actually
+     * starting profiling, we use a lot more states than 'enabled/disabled' for
+     * indicating profiling in the UI
+     */
+
+    /** Enable (or disable) UI that starts profiling */
+    public abstract void enableStartProfiling(boolean start);
+    /** Enable (or disable) UI that stops profiling */
+    public abstract void enableStopProfiling(boolean stop);
+    public abstract void setProfilingStatus(String text, boolean enabled);
 
     public abstract void setAvailableProfilingRuns(List<Profile> data);
 

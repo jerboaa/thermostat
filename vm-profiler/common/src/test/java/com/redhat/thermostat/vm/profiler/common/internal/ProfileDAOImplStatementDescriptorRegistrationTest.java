@@ -48,9 +48,13 @@ public class ProfileDAOImplStatementDescriptorRegistrationTest {
     public void includesProfileInfoCategory() {
         ProfileDAOImplStatementDescriptorRegistration registration = new ProfileDAOImplStatementDescriptorRegistration();
         Set<String> names = registration.getStatementDescriptors();
-        assertTrue(names.contains(ProfileDAOImpl.DESC_ADD_PROFILE_INFO));
-        assertTrue(names.contains(ProfileDAOImpl.DESC_QUERY_LATEST));
-        assertTrue(names.contains(ProfileDAOImpl.DESC_QUERY_BY_ID));
-        assertTrue(names.contains(ProfileDAOImpl.DESC_INTERVAL_QUERY));
+
+        assertTrue(names.contains(ProfileDAOImpl.PROFILE_INFO_DESC_ADD));
+        assertTrue(names.contains(ProfileDAOImpl.PROFILE_INFO_DESC_QUERY_LATEST));
+        assertTrue(names.contains(ProfileDAOImpl.PROFILE_INFO_DESC_QUERY_BY_ID));
+        assertTrue(names.contains(ProfileDAOImpl.PROFILE_INFO_DESC_INTERVAL_QUERY));
+
+        assertTrue(names.contains(ProfileDAOImpl.PROFILE_STATUS_DESC_ADD));
+        assertTrue(names.contains(ProfileDAOImpl.PROFILE_STATUS_DESC_QUERY_LATEST));
     }
 }

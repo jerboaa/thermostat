@@ -40,9 +40,7 @@ import java.util.Map;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.storage.core.Storage;

@@ -58,6 +58,7 @@ import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
 import com.redhat.thermostat.vm.profiler.common.ProfileRequest;
+import com.redhat.thermostat.vm.profiler.common.ProfileStatusChange;
 
 public class ProfileVmRequestReceiver implements RequestReceiver, VmStatusListener {
 
@@ -136,7 +137,7 @@ public class ProfileVmRequestReceiver implements RequestReceiver, VmStatusListen
 
         switch (value) {
         case ProfileRequest.START_PROFILING:
-            return startProfiling(pid);
+            return startProfiling(vmId, pid);
         case ProfileRequest.STOP_PROFILING:
             return stopProfiling(vmId, pid, true);
         default:
@@ -155,11 +156,12 @@ public class ProfileVmRequestReceiver implements RequestReceiver, VmStatusListen
         }
     }
 
-    private Response startProfiling(int pid) {
+    private Response startProfiling(String vmId, int pid) {
         logger.info("Starting profiling " + pid);
         try {
             profiler.startProfiling(pid);
             currentlyProfiledVms.add(pid);
+            dao.addStatus(new ProfileStatusChange(agentId, vmId, clock.getRealTimeMillis(), true));
             return OK;
         } catch (Exception e) {
             logger.log(Level.INFO, "start profiling failed", e);
@@ -177,6 +179,7 @@ public class ProfileVmRequestReceiver implements RequestReceiver, VmStatusListen
             } else {
                 findAndUploadProfilingResultsStoredOnDisk(pid, uploader);
             }
+            dao.addStatus(new ProfileStatusChange(agentId, vmId, clock.getRealTimeMillis(), false));
             currentlyProfiledVms.remove((Integer) pid);
             return OK;
         } catch (Exception e) {

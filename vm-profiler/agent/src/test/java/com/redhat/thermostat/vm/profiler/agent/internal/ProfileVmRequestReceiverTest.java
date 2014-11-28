@@ -42,6 +42,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -60,8 +61,8 @@ import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.vm.profiler.agent.internal.ProfileVmRequestReceiver.ProfileUploaderCreator;
 import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
-import com.redhat.thermostat.vm.profiler.common.ProfileInfo;
 import com.redhat.thermostat.vm.profiler.common.ProfileRequest;
+import com.redhat.thermostat.vm.profiler.common.ProfileStatusChange;
 
 public class ProfileVmRequestReceiverTest {
 
@@ -108,6 +109,8 @@ public class ProfileVmRequestReceiverTest {
 
         assertEquals(ResponseType.OK, result.getType());
         verify(profiler).startProfiling(VM_PID);
+
+        verify(dao).addStatus(new ProfileStatusChange(AGENT_ID, VM_ID, TIMESTAMP, true));
     }
 
     @Test
@@ -126,6 +129,7 @@ public class ProfileVmRequestReceiverTest {
 
         assertEquals(ResponseType.OK, result.getType());
         verify(profiler).stopProfiling(eq(VM_PID), isA(ProfileUploader.class));
+        verify(dao, times(2)).addStatus(isA(ProfileStatusChange.class));
     }
 
     @Test
@@ -136,6 +140,7 @@ public class ProfileVmRequestReceiverTest {
         Request request = ProfileRequest.create(null, VM_ID, ProfileRequest.START_PROFILING);
         Response result = requestReceiver.receive(request);
         assertEquals(ResponseType.NOK, result.getType());
+        verify(dao, never()).addStatus(isA(ProfileStatusChange.class));
     }
 
     @Test
@@ -156,6 +161,7 @@ public class ProfileVmRequestReceiverTest {
 
         verify(profiler, never()).stopProfiling(anyInt(), isA(ProfileUploader.class));
         verify(uploader).upload(TIMESTAMP, profilingResults);
+        verify(dao, times(2)).addStatus(isA(ProfileStatusChange.class));
 
         profilingResults.delete();
     }

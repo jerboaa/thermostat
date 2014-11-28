@@ -55,5 +55,9 @@ public interface ProfileDAO {
     /** @return {@code null} if no data is available */
     InputStream loadLatestProfileData(VmRef vm);
 
+    void addStatus(ProfileStatusChange change);
+
+    /** @return {@code null} if no data is available */
+    ProfileStatusChange getLatestStatus(VmRef vm);
 
 }

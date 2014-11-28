@@ -53,10 +53,12 @@ public class ProfileDAOImplStatementDescriptorRegistration implements StatementD
     @Override
     public Set<String> getStatementDescriptors() {
         Set<String> results = new HashSet<>();
-        results.add(ProfileDAOImpl.DESC_ADD_PROFILE_INFO);
-        results.add(ProfileDAOImpl.DESC_QUERY_BY_ID);
-        results.add(ProfileDAOImpl.DESC_QUERY_LATEST);
-        results.add(ProfileDAOImpl.DESC_INTERVAL_QUERY);
+        results.add(ProfileDAOImpl.PROFILE_INFO_DESC_ADD);
+        results.add(ProfileDAOImpl.PROFILE_INFO_DESC_QUERY_BY_ID);
+        results.add(ProfileDAOImpl.PROFILE_INFO_DESC_QUERY_LATEST);
+        results.add(ProfileDAOImpl.PROFILE_INFO_DESC_INTERVAL_QUERY);
+        results.add(ProfileDAOImpl.PROFILE_STATUS_DESC_ADD);
+        results.add(ProfileDAOImpl.PROFILE_STATUS_DESC_QUERY_LATEST);
         return results;
     }
 }
