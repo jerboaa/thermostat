@@ -145,13 +145,16 @@ public class InstrumentationControl implements InstrumentationControlMXBean {
 
         if (toTransform.size() > 0) {
             System.out.println("AGENT: Retransforming " + toTransform.size() + " classes");
-            try {
-                instrumentation.retransformClasses(toTransform.toArray(new Class<?>[toTransform.size()]));
-            } catch (UnmodifiableClassException e) {
-                throw new AssertionError("Tried to modify an unmodifiable class", e);
-            } catch (InternalError e) {
-                e.printStackTrace();
-                System.err.println("Error retransforming already loaded classes.");
+            for (Class<?> klass : toTransform) {
+                try {
+                    instrumentation.retransformClasses(klass);
+                } catch (UnmodifiableClassException e) {
+                    throw new AssertionError("Tried to modify an unmodifiable class", e);
+                } catch (Error e) {
+                    System.err.println("Failed to trasnform: " + klass.getName());
+                    System.err.println("Unable to retransform all classes. Some classes may not have been instrumented correctly!");
+                    e.printStackTrace();
+                }
             }
         }
         long end = System.nanoTime();

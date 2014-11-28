@@ -108,10 +108,10 @@ public class ProfileRecorder {
         long diff = currentTime - oldTime;
 
         if (!fullyQualifiedName.equals(stack.peek())) {
-            System.out.println("name: '" + fullyQualifiedName + "'");
-            System.out.println("stack top: '" + stack.peek() + "'");
-            System.out.println("stack: " + stack);
-            throw new AssertionError("should not happen");
+            throw new AssertionError("should not happen:\n"
+                    + "name: '" + fullyQualifiedName + "'\n"
+                    + "stack top: '" + stack.peek() + "'\n"
+                    + "stack: " + stack);
         }
 
         addData(stack.poll(), diff);

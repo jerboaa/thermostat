@@ -39,11 +39,12 @@ package com.redhat.thermostat.vm.profiler.agent.jvm;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.JSRInlinerAdapter;
+import org.objectweb.asm.util.CheckClassAdapter;
 
 public class AsmBasedInstrumentor extends ProfilerInstrumentor {
 
@@ -59,7 +60,13 @@ public class AsmBasedInstrumentor extends ProfilerInstrumentor {
             ClassWriter writer = new ClassLoaderFriendlyClassWriter(reader, ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS, cl);
             InstrumentingClassAdapter instrumentor = new InstrumentingClassAdapter(writer);
             reader.accept(instrumentor, ClassReader.SKIP_FRAMES);
-            return writer.toByteArray();
+            byte[] data = writer.toByteArray();
+
+            // check that the bytecode is valid
+            reader = new ClassReader(data);
+            reader.accept(new CheckClassAdapter(new ClassWriter(0)), 0);
+
+            return data;
 
         } catch (Exception e) {
             System.err.println("Error transforming: " + className);
@@ -87,19 +94,62 @@ public class AsmBasedInstrumentor extends ProfilerInstrumentor {
         @Override
         public MethodVisitor visitMethod(int access, String name, String desc,
                 String signature, String[] exceptions) {
+
             MethodVisitor mv = cv.visitMethod(access, name, desc, signature, exceptions);
 
-            if (mv != null) {
+            // FIXME instrument constructors
+            if (mv != null && !(name.equals("<init>"))) {
                 MethodVisitor instrumentor = new InstrumentingMethodAdapter(mv, className, access, name, desc);
                 mv = new JSRInlinerAdapter(instrumentor, access, name, desc, signature, exceptions);
             }
+
             return mv;
         }
     }
 
+    /**
+     * Inserts a try-finally around the an arbitrary method and calls
+     * {@link ProfileRecorder} to record method execution times.
+     * <p>
+     * Functionally, it should transform:
+     *
+     * <pre>
+     * public Object foo(int bar) {
+     *     // do something
+     *     return object;
+     * }
+     * </pre>
+     *
+     * to
+     *
+     * <pre>
+     * public Object foo(int bar) {
+     *     ProfilerData.enterMethod(&quot;description&quot;);
+     *     try {
+     *         // do something
+     *         return object
+     *     } finally {
+     *         profilerData.exitMethod(&quot;description&quot;);
+     *     }
+     * }
+     * </pre>
+     *
+     * Java bytecode has no concept of {@code finally} in a {@code try}-
+     * {@code catch}-{@code finally} block. The {@code finally} code needs to be
+     * duplicated in a {@code catch} block as well as in the normal-return
+     * block. Because there may already be exception-handling code in the
+     * method, it adds an exception-table entry in the last place that covers
+     * the entire method.
+     */
     static class InstrumentingMethodAdapter extends AdviceAdapter {
+
+        private static final String EXIT_METHOD = "exitMethod";
+
         private String className;
         private String methodName;
+
+        private Label startFinally = new Label();
+        private Label endFinally = new Label();
 
         protected InstrumentingMethodAdapter(MethodVisitor mv, String className, int access, String methodName, String desc) {
             super(Opcodes.ASM5, mv, access, methodName, desc);
@@ -109,13 +159,40 @@ public class AsmBasedInstrumentor extends ProfilerInstrumentor {
         }
 
         @Override
+        public void visitCode() {
+            super.visitCode();
+
+            mv.visitLabel(startFinally);
+        }
+
+        @Override
         protected void onMethodEnter() {
             callProfilerRecorder("enterMethod");
         }
 
         @Override
         protected void onMethodExit(int opCode) {
-            callProfilerRecorder("exitMethod");
+            // An ATHROW will be caught in the catch-all-exceptions block and handled there
+            if (opCode != ATHROW) {
+                callProfilerRecorder(EXIT_METHOD);
+            }
+        }
+
+        @Override
+        public void visitMaxs(int maxStack, int maxLocals) {
+
+            // add a catch-all-exceptions handler
+            mv.visitLabel(endFinally);
+            callProfilerRecorder(EXIT_METHOD);
+            mv.visitInsn(ATHROW);
+
+            // This is important. This catch-all-exceptions handler must be the
+            // last entry in the exception table so it only gets invoked if
+            // there is no other handler and the exception would have been
+            // thrown to the caller.
+            mv.visitTryCatchBlock(startFinally, endFinally, endFinally, null);
+
+            super.visitMaxs(maxStack, maxLocals);
         }
 
         private void callProfilerRecorder(String method) {
