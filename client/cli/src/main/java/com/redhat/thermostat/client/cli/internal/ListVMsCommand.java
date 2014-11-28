@@ -89,10 +89,14 @@ public class ListVMsCommand extends AbstractCommand {
         formatter.addHeader();
         for (HostRef host : hosts) {
             AgentInformation agentInfo = agentInfoDAO.getAgentInformation(host);
-            Collection<VmRef> vms = vmsDAO.getVMs(host);
-            for (VmRef vm : vms) {
-                VmInfo info = vmsDAO.getVmInfo(vm);
-                formatter.addVM(vm, agentInfo, info);
+            if (agentInfo != null) {
+                Collection<VmRef> vms = vmsDAO.getVMs(host);
+                for (VmRef vm : vms) {
+                    VmInfo info = vmsDAO.getVmInfo(vm);
+                    formatter.addVM(vm, agentInfo, info);
+                }
+            } else {
+                ctx.getConsole().getError().println(translator.localize(LocaleResources.ENCOUNTERED_NULL_AGENT, host.getName()));
             }
         }
         formatter.format(ctx.getConsole().getOutput());
