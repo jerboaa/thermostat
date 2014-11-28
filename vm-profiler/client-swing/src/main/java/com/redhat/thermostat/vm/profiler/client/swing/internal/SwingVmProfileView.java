@@ -40,6 +40,7 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Vector;
@@ -184,7 +185,21 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
         columnNames.add(translator.localize(LocaleResources.PROFILER_RESULTS_METHOD).getContents());
         columnNames.add(translator.localize(LocaleResources.PROFILER_RESULTS_PERCENTAGE_TIME).getContents());
         columnNames.add(translator.localize(LocaleResources.PROFILER_RESULTS_TIME, "ms").getContents());
-        tableModel = new DefaultTableModel(columnNames, 0);
+        tableModel = new DefaultTableModel(columnNames, 0) {
+            @Override
+            public java.lang.Class<?> getColumnClass(int columnIndex) {
+                switch (columnIndex) {
+                case 0:
+                    return String.class;
+                case 1:
+                    return Double.class;
+                case 2:
+                    return Long.class;
+                default:
+                    throw new AssertionError("Unknown column index");
+                }
+            }
+        };
 
         JTable profileTable = new ThermostatTable(tableModel);
         profileTable.setAutoCreateRowSorter(true);
@@ -306,6 +321,15 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
                 window.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
                 window.pack();
                 window.setVisible(true);
+
+                List<MethodInfo> data = new ArrayList<>();
+                data.add(new MethodInfo("foo", 1000, 1.0));
+                data.add(new MethodInfo("foo2", 10001, 100001));
+                data.add(new MethodInfo("bar", 200, 3.5));
+                data.add(new MethodInfo("baz", 100000, 9.8));
+                data.add(new MethodInfo("spam", 5000, 0.99999));
+                ProfilingResult results = new ProfilingResult(data);
+                view.setProfilingDetailData(results);
             }
         });
     }
