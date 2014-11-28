@@ -40,6 +40,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
+import java.lang.management.ManagementFactory;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
@@ -58,23 +59,51 @@ public class InstrumentationControl implements InstrumentationControlMXBean {
 
     private final Instrumentation instrumentation;
     private final ProfilerInstrumentor classInstrumentor;
+    private final ProfileRecorder recorder;
+    private final ResultsFileCreator resultsFileCreator;
 
     private boolean profiling = false;
 
+    private boolean resultsWrittenToDisk = true;
     private String lastResults = null;
 
     public InstrumentationControl(Instrumentation instrumentation) {
+        this(instrumentation, new AsmBasedInstrumentor(), ProfileRecorder.getInstance(), new ResultsFileCreator());
+    }
+
+    public InstrumentationControl(Instrumentation instrumentation,
+            ProfilerInstrumentor instrumentor,
+            ProfileRecorder recorder,
+            ResultsFileCreator resultsFileCreator) {
         this.instrumentation = instrumentation;
-        this.classInstrumentor = new AsmBasedInstrumentor();
+        this.classInstrumentor = instrumentor;
+        this.recorder = recorder;
+        this.resultsFileCreator = resultsFileCreator;
+
+        addShutdownHookToSaveData();
+    }
+
+    private void addShutdownHookToSaveData() {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                onVmShutdown();
+            }
+        });
+    }
+
+    /** package private for testing */
+    void onVmShutdown() {
+        writeResultsToDiskIfNotWritten();
     }
 
     @Override
     public void startProfiling() {
-        System.out.println("AGENT: startProfiling()");
         if (profiling) {
             throw new IllegalStateException("Already started");
         }
         profiling = true;
+        resultsWrittenToDisk = false;
 
         instrumentation.addTransformer(classInstrumentor, true);
         retransformAlreadyLoadedClasses(instrumentation, classInstrumentor);
@@ -82,7 +111,6 @@ public class InstrumentationControl implements InstrumentationControlMXBean {
 
     @Override
     public void stopProfiling() {
-        System.out.println("AGENT: stopProfiling() called");
         if (!profiling) {
             throw new IllegalStateException("Not profiling");
         }
@@ -91,8 +119,9 @@ public class InstrumentationControl implements InstrumentationControlMXBean {
         instrumentation.removeTransformer(classInstrumentor);
         retransformAlreadyLoadedClasses(instrumentation, classInstrumentor);
 
-        lastResults = writeProfilingResultsToDisk();
+        writeProfilingResultsToDisk();
     }
+
     private void retransformAlreadyLoadedClasses(Instrumentation instrumentation, ProfilerInstrumentor profiler) {
         long start = System.nanoTime();
 
@@ -129,31 +158,28 @@ public class InstrumentationControl implements InstrumentationControlMXBean {
         System.out.println("AGENT: Retansforming took: " + (end - start) + "ns");
     }
 
-    private String writeProfilingResultsToDisk() {
-        System.out.println("AGENT: Writing results to disk");
-        try {
-            Path output = createOutput();
-            OpenOption[] options =
-                    new OpenOption[] { StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING };
-
-            try (BufferedWriter out = Files.newBufferedWriter(output, StandardCharsets.UTF_8, options)) {
-                Map<String, AtomicLong> data = ProfileRecorder.getInstance().getData();
-                for (Map.Entry<String, AtomicLong> entry : data.entrySet()) {
-                    out.write(entry.getValue().get() + "\t" + entry.getKey() + "\n");
-                }
-                System.out.println("AGENT: profiling data written to " + output.toString());
-                return output.toString();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
+    private void writeResultsToDiskIfNotWritten() {
+        if (!resultsWrittenToDisk) {
+            writeProfilingResultsToDisk();
         }
     }
 
-    private Path createOutput() throws IOException {
-        Set<PosixFilePermission> perm = PosixFilePermissions.fromString("rw-------");
-        FileAttribute<Set<PosixFilePermission>> attributes = PosixFilePermissions.asFileAttribute(perm);
-        return Files.createTempFile("thermostat", ".perfdata", attributes);
+    private void writeProfilingResultsToDisk() {
+        try {
+            ResultsFile resultsFile = resultsFileCreator.get();
+            String path = resultsFile.getPath();
+            try (BufferedWriter out = resultsFile.getWriter()) {
+                Map<String, AtomicLong> data = recorder.getData();
+                for (Map.Entry<String, AtomicLong> entry : data.entrySet()) {
+                    out.write(entry.getValue().get() + "\t" + entry.getKey() + "\n");
+                }
+                System.out.println("AGENT: profiling data written to " + path);
+                resultsWrittenToDisk = true;
+                lastResults = path;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -163,8 +189,46 @@ public class InstrumentationControl implements InstrumentationControlMXBean {
 
     @Override
     public String getProfilingDataFile() {
-        System.out.println("getProfilingDataFile() called. Returning : " + lastResults);
         return lastResults;
     }
 
+    static class ResultsFileCreator {
+
+        ResultsFile get() throws IOException {
+            Path output = createOutput();
+            return new ResultsFile(output);
+        }
+
+        private Path createOutput() throws IOException {
+            Set<PosixFilePermission> perm = PosixFilePermissions.fromString("rw-------");
+            FileAttribute<Set<PosixFilePermission>> attributes = PosixFilePermissions.asFileAttribute(perm);
+            // Include the pid so agent can find it. Surround pid with - to
+            // avoid false prefix-based matches. Otherwise the agent searching
+            // for "-12" may find "-123" as a valid match.
+            return Files.createTempFile("thermostat-" + getProcessId() + "-", ".perfdata", attributes);
+        }
+
+        private String getProcessId() {
+            return ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
+        }
+    }
+
+    static class ResultsFile {
+
+        private final Path path;
+
+        ResultsFile(Path path) { this.path = path; }
+
+        String getPath() { return path.toString(); }
+
+        /** Caller must close the writer when done */
+        BufferedWriter getWriter() throws IOException {
+            OpenOption[] options = new OpenOption[] {
+                    StandardOpenOption.WRITE,
+                    StandardOpenOption.TRUNCATE_EXISTING
+            };
+
+            return Files.newBufferedWriter(path, StandardCharsets.UTF_8, options);
+        }
+    }
 }

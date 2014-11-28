@@ -36,12 +36,22 @@
 
 package com.redhat.thermostat.vm.profiler.agent.internal;
 
+import java.io.File;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.VmStatusListener;
 import com.redhat.thermostat.agent.command.RequestReceiver;
+import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
@@ -53,39 +63,68 @@ public class ProfileVmRequestReceiver implements RequestReceiver, VmStatusListen
 
     private static final Logger logger = LoggingUtils.getLogger(ProfileVmRequestReceiver.class);
 
-    private ConcurrentHashMap<String, Integer> vmIdToPid = new ConcurrentHashMap<>();
-
     /** A pid that corresponds to an unknown */
     private static final int UNKNOWN_VMID = -1;
 
+    private static final Response OK = new Response(ResponseType.OK);
+    private static final Response ERROR = new Response(ResponseType.NOK);
+
+    static class FileTimeStampLatestFirst implements Comparator<File> {
+        @Override
+        public int compare(File o1, File o2) {
+            return Long.compare(o2.lastModified(), o1.lastModified());
+        }
+    }
+
+    static class ProfileUploaderCreator {
+        ProfileUploader create(ProfileDAO dao, String agentId, String vmId, int pid) {
+            return new ProfileUploader(dao, agentId, vmId, pid);
+        }
+    }
+
+    private final ConcurrentHashMap<String, Integer> vmIdToPid = new ConcurrentHashMap<>();
+
     private final String agentId;
 
+    private final Clock clock;
     private final VmProfiler profiler;
     private final ProfileDAO dao;
+    private ProfileUploaderCreator uploaderCreator;
+
+    private List<Integer> currentlyProfiledVms = new ArrayList<>();
 
     public ProfileVmRequestReceiver(String agentId, VmProfiler profiler, ProfileDAO dao) {
+        this(agentId, new SystemClock(), profiler, dao, new ProfileUploaderCreator());
+    }
+
+    public ProfileVmRequestReceiver(String agentId, Clock clock, VmProfiler profiler, ProfileDAO dao, ProfileUploaderCreator uploaderCreator) {
+        this.clock = clock;
         this.profiler = profiler;
         this.dao = dao;
+        this.uploaderCreator = uploaderCreator;
 
         this.agentId = agentId;
     }
 
     @Override
-    public void vmStatusChanged(Status newStatus, String vmId, int pid) {
+    public synchronized void vmStatusChanged(Status newStatus, String vmId, int pid) {
         if (newStatus == Status.VM_ACTIVE || newStatus == Status.VM_STARTED) {
-            // assert not already being profiled
+            // TODO assert not already being profiled
             vmIdToPid.putIfAbsent(vmId, pid);
         } else {
-            // FIXME disable profiler if active?
+            disableProfilerIfActive(vmId, pid);
             vmIdToPid.remove(vmId, pid);
         }
     }
 
-    @Override
-    public Response receive(Request request) {
-        final Response OK = new Response(ResponseType.OK);
-        final Response ERROR = new Response(ResponseType.NOK);
+    private void disableProfilerIfActive(String vmId, int pid) {
+        if (currentlyProfiledVms.contains(pid)) {
+            stopProfiling(vmId, pid, false);
+        }
+    }
 
+    @Override
+    public synchronized Response receive(Request request) {
         String value = request.getParameter(ProfileRequest.PROFILE_ACTION);
         String vmId = request.getParameter(ProfileRequest.VM_ID);
 
@@ -97,26 +136,9 @@ public class ProfileVmRequestReceiver implements RequestReceiver, VmStatusListen
 
         switch (value) {
         case ProfileRequest.START_PROFILING:
-            logger.info("Starting profiling " + pid);
-            try {
-                profiler.startProfiling(pid);
-                return OK;
-            } catch (Exception e) {
-                logger.log(Level.INFO, "start profiling failed", e);
-                return ERROR;
-            }
-            /* should not reach here */
+            return startProfiling(pid);
         case ProfileRequest.STOP_PROFILING:
-            logger.info("Stopping profiling " + pid);
-            try {
-                ProfileUploader uploader = new ProfileUploader(dao, agentId, vmId, pid);
-                profiler.stopProfiling(pid, uploader);
-                return OK;
-            } catch (Exception e) {
-                logger.log(Level.INFO, "stop profiling failed", e);
-                return ERROR;
-            }
-            /* should not reach here */
+            return stopProfiling(vmId, pid, true);
         default:
             logger.warning("Unknown command: '" + value + "'");
             return ERROR;
@@ -131,6 +153,59 @@ public class ProfileVmRequestReceiver implements RequestReceiver, VmStatusListen
         } else {
             return pid;
         }
+    }
+
+    private Response startProfiling(int pid) {
+        logger.info("Starting profiling " + pid);
+        try {
+            profiler.startProfiling(pid);
+            currentlyProfiledVms.add(pid);
+            return OK;
+        } catch (Exception e) {
+            logger.log(Level.INFO, "start profiling failed", e);
+            return ERROR;
+        }
+    }
+
+    private Response stopProfiling(String vmId, int pid, boolean alive) {
+        logger.info("Stopping profiling " + pid);
+        try {
+            ProfileUploader uploader = uploaderCreator.create(dao, agentId, vmId, pid);
+            if (alive) {
+                // if the VM is alive, communicate with it directly
+                profiler.stopProfiling(pid, uploader);
+            } else {
+                findAndUploadProfilingResultsStoredOnDisk(pid, uploader);
+            }
+            currentlyProfiledVms.remove((Integer) pid);
+            return OK;
+        } catch (Exception e) {
+            logger.log(Level.INFO, "stop profiling failed", e);
+            return ERROR;
+        }
+    }
+
+    private void findAndUploadProfilingResultsStoredOnDisk(final int pid, ProfileUploader uploader) throws IOException {
+        long timeStamp = clock.getRealTimeMillis();
+        // look for latest profiling data that it might have emitted on shutdown
+        File file = findProfilingResultFile(pid);
+        uploader.upload(timeStamp, file);
+    }
+
+    private File findProfilingResultFile(final int pid) {
+        // from InstrumentationControl:
+        // return Files.createTempFile("thermostat-" + getProcessId(), ".perfdata", attributes);
+        String tmpDir = System.getProperty("java.io.tmpdir");
+        File[] files = new File(tmpDir).listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.startsWith("thermostat-" + pid + "-") && name.endsWith(".perfdata");
+            }
+        });
+
+        List<File> filesSortedByTimeStamp = Arrays.asList(files);
+        Collections.sort(filesSortedByTimeStamp, new FileTimeStampLatestFirst());
+        return filesSortedByTimeStamp.get(0);
     }
 
 }

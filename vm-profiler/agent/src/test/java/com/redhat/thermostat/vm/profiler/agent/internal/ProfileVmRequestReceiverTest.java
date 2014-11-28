@@ -37,19 +37,30 @@
 package com.redhat.thermostat.vm.profiler.agent.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.agent.VmStatusListener.Status;
+import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
+import com.redhat.thermostat.vm.profiler.agent.internal.ProfileVmRequestReceiver.ProfileUploaderCreator;
 import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
+import com.redhat.thermostat.vm.profiler.common.ProfileInfo;
 import com.redhat.thermostat.vm.profiler.common.ProfileRequest;
 
 public class ProfileVmRequestReceiverTest {
@@ -58,19 +69,27 @@ public class ProfileVmRequestReceiverTest {
 
     private static final String VM_ID = "foo";
     private static final int VM_PID = 1;
+    private static final long TIMESTAMP = 99;
 
     private ProfileVmRequestReceiver requestReceiver;
 
+    private Clock clock;
     private VmProfiler profiler;
     private ProfileDAO dao;
     private ProfileUploader uploader;
 
     @Before
     public void setUp() {
+        clock = mock(Clock.class);
+        when(clock.getRealTimeMillis()).thenReturn(TIMESTAMP);
+
         profiler = mock(VmProfiler.class);
         dao = mock(ProfileDAO.class);
+        uploader = mock(ProfileUploader.class);
+        ProfileUploaderCreator uploaderCreator = mock(ProfileUploaderCreator.class);
+        when(uploaderCreator.create(dao, AGENT_ID, VM_ID, VM_PID)).thenReturn(uploader);
 
-        requestReceiver = new ProfileVmRequestReceiver(AGENT_ID, profiler, dao);
+        requestReceiver = new ProfileVmRequestReceiver(AGENT_ID, clock, profiler, dao, uploaderCreator);
     }
 
     @Test
@@ -94,9 +113,9 @@ public class ProfileVmRequestReceiverTest {
     @Test
     public void startAndStopProfiling() throws ProfilerException {
         Request request;
-        request = ProfileRequest.create(null, VM_ID, ProfileRequest.START_PROFILING);
 
         requestReceiver.vmStatusChanged(Status.VM_STARTED, VM_ID, VM_PID);
+        request = ProfileRequest.create(null, VM_ID, ProfileRequest.START_PROFILING);
         Response result = requestReceiver.receive(request);
 
         assertEquals(ResponseType.OK, result.getType());
@@ -117,5 +136,27 @@ public class ProfileVmRequestReceiverTest {
         Request request = ProfileRequest.create(null, VM_ID, ProfileRequest.START_PROFILING);
         Response result = requestReceiver.receive(request);
         assertEquals(ResponseType.NOK, result.getType());
+    }
+
+    @Test
+    public void readsProfilingResultsOnVmExit() throws Exception {
+        Request request;
+
+        requestReceiver.vmStatusChanged(Status.VM_STARTED, VM_ID, VM_PID);
+        request = ProfileRequest.create(null, VM_ID, ProfileRequest.START_PROFILING);
+        requestReceiver.receive(request);
+
+        // simulate target vm exiting
+        File profilingResults = new File(System.getProperty("java.io.tmpdir"), "thermostat-" + VM_PID + "-foobar.perfdata");
+        try (BufferedWriter writer = Files.newBufferedWriter(profilingResults.toPath(), StandardCharsets.UTF_8)) {
+            writer.append("test file, please ignore");
+        }
+
+        requestReceiver.vmStatusChanged(Status.VM_STOPPED, VM_ID, VM_PID);
+
+        verify(profiler, never()).stopProfiling(anyInt(), isA(ProfileUploader.class));
+        verify(uploader).upload(TIMESTAMP, profilingResults);
+
+        profilingResults.delete();
     }
 }
