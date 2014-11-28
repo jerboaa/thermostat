@@ -134,6 +134,7 @@ public class WebStorageTest {
     private Map<String,String> headers;
     private String method;
     private String requestURI;
+    private UUID serverNonce;
 
     private static Category<TestObj> category;
     private static Key<String> key1;
@@ -156,7 +157,7 @@ public class WebStorageTest {
 
     @Before
     public void setUp() throws Exception {
-
+        serverNonce = UUID.randomUUID();
         port = FreePortFinder.findFreePort(new TryPort() {
             @Override
             public void tryPort(int port) throws Exception {
@@ -251,8 +252,8 @@ public class WebStorageTest {
     private void registerCategory() {
 
         // Return 42 for categoryId.
-        Gson gson = new Gson();
-        responseBody = gson.toJson(42);
+        Gson gson = new GsonBuilder().registerTypeAdapterFactory(new SharedStateIdTypeAdapterFactory()).create();
+        responseBody = gson.toJson(new SharedStateId(42, serverNonce));
 
         storage.registerCategory(category);
     }

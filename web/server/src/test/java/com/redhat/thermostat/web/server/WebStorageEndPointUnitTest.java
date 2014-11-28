@@ -38,12 +38,16 @@ package com.redhat.thermostat.web.server;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Matchers.eq;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -52,10 +56,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 
 import org.junit.After;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.web.server.auth.WebStoragePathHandler;
 
@@ -67,9 +73,10 @@ import com.redhat.thermostat.web.server.auth.WebStoragePathHandler;
  */
 public class WebStorageEndPointUnitTest {
 
+    private static final String TH_HOME_PROP_NAME = "THERMOSTAT_HOME";
     @After
     public void tearDown() {
-        System.clearProperty("THERMOSTAT_HOME");
+        System.clearProperty(TH_HOME_PROP_NAME);
     }
     
     /*
@@ -84,9 +91,9 @@ public class WebStorageEndPointUnitTest {
      */
     @Test
     public void testCheckThermostatHome() {
-        System.setProperty("THERMOSTAT_HOME", "/root");
+        System.setProperty(TH_HOME_PROP_NAME, "/root");
         WebStorageEndPoint endpoint = new WebStorageEndPoint();
-        assertTrue("THERMOSTAT_HOME clearly set, do we create paths where we shouldn't?",
+        assertTrue(TH_HOME_PROP_NAME + " clearly set, do we create paths where we shouldn't?",
                 endpoint.isThermostatHomeSet());
     }
     
@@ -154,18 +161,18 @@ public class WebStorageEndPointUnitTest {
             fail("Thermostat home was not set in config, should not get here!");
         } catch (RuntimeException e) {
             // pass
-            assertTrue(e.getMessage().contains("THERMOSTAT_HOME"));
+            assertTrue(e.getMessage().contains(TH_HOME_PROP_NAME));
         } catch (ServletException e) {
             fail(e.getMessage());
         }
         // set config with non-existing dir
-        when(config.getInitParameter("THERMOSTAT_HOME")).thenReturn("not-existing");
+        when(config.getInitParameter(TH_HOME_PROP_NAME)).thenReturn("not-existing");
         try {
             endpoint.init(config);
             fail("Thermostat home was set in config but file does not exist, should have died!");
         } catch (RuntimeException e) {
             // pass
-            assertTrue(e.getMessage().contains("THERMOSTAT_HOME"));
+            assertTrue(e.getMessage().contains(TH_HOME_PROP_NAME));
         } catch (ServletException e) {
             fail(e.getMessage());
         }
@@ -173,25 +180,15 @@ public class WebStorageEndPointUnitTest {
     
     @Test
     public void initThrowsRuntimeExceptionIfSSLPropertiesNotReadable() throws Exception {
-        Path testThermostatHome = null;
-        File etcDir = null;
+        ThCreatorResult result = null;
         try {
-            testThermostatHome = Files.createTempDirectory(
-                    "foo-thermostat-home-", new FileAttribute[] {});
-            File thFile = testThermostatHome.toFile();
-            etcDir = new File(thFile, "etc");
-            etcDir.mkdir();
-            assertTrue(etcDir.exists());
-            assertTrue(etcDir.canWrite());
-            File sslProperties = new File(etcDir, "ssl.properties");
-            sslProperties.createNewFile();
-            assertTrue(sslProperties.canRead());
+            result = creatWorkingThermostatHome();
             // explicitly remove read perms from etc directory
-            etcDir.setExecutable(false);
-            assertFalse(sslProperties.canRead());
+            result.etcDir.setExecutable(false);
+            assertFalse(result.sslProperties.canRead());
 
             WebStorageEndPoint endpoint = new WebStorageEndPoint();
-            System.setProperty("THERMOSTAT_HOME", thFile.getAbsolutePath());
+            System.setProperty(TH_HOME_PROP_NAME, result.thermostatHome.toFile().getAbsolutePath());
             try {
                 endpoint.init(mock(ServletConfig.class));
                 fail("should have failed to initialize! can't read ssl.properties");
@@ -199,9 +196,9 @@ public class WebStorageEndPointUnitTest {
                 assertTrue(e.getMessage().contains("ssl.properties"));
             }
         } finally {
-            etcDir.setExecutable(true);
-            if (testThermostatHome != null) {
-                WebstorageEndpointTestUtils.deleteDirectoryRecursive(testThermostatHome);
+            result.etcDir.setExecutable(true);
+            if (result.thermostatHome != null) {
+                WebstorageEndpointTestUtils.deleteDirectoryRecursive(result.thermostatHome);
             }
         }
     }
@@ -214,7 +211,7 @@ public class WebStorageEndPointUnitTest {
                     "bar-thermostat-home-", new FileAttribute[] {});
             File thFile = testThermostatHome.toFile();
             WebStorageEndPoint endpoint = new WebStorageEndPoint();
-            System.setProperty("THERMOSTAT_HOME", thFile.getAbsolutePath());
+            System.setProperty(TH_HOME_PROP_NAME, thFile.getAbsolutePath());
             try {
                 endpoint.init(mock(ServletConfig.class));
                 fail("should have failed to initialize, ssl.properties not existing!");
@@ -225,6 +222,57 @@ public class WebStorageEndPointUnitTest {
             if (testThermostatHome != null) {
                 WebstorageEndpointTestUtils.deleteDirectoryRecursive(testThermostatHome);
             }
+        }
+    }
+    
+    /**
+     * Verifies that Servlet.init() sets servlet context attributes correctly.
+     * @throws ServletException 
+     * @throws IOException 
+     */
+    @Test
+    public void testSetServletAttribute() throws ServletException, IOException {
+        final ServletContext mockContext = mock(ServletContext.class);
+        when(mockContext.getServerInfo()).thenReturn("jetty/9.1.0.v20131115");
+        @SuppressWarnings("serial")
+        WebStorageEndPoint endpoint = new WebStorageEndPoint() {
+            @Override
+            public ServletContext getServletContext() {
+                return mockContext;
+            }
+        };
+        ServletConfig config = mock(ServletConfig.class);
+        ThCreatorResult result = creatWorkingThermostatHome();
+        System.setProperty(TH_HOME_PROP_NAME, result.thermostatHome.toFile().getAbsolutePath());
+        endpoint.init(config);
+        ArgumentCaptor<CategoryManager> managerCaptor = ArgumentCaptor.forClass(CategoryManager.class);
+        verify(mockContext).setAttribute(eq("category-manager"), managerCaptor.capture());
+        assertNotNull(managerCaptor.getValue());
+    }
+    
+    private ThCreatorResult creatWorkingThermostatHome() throws IOException {
+        Path testThermostatHome = Files.createTempDirectory(
+                "foo-thermostat-home-", new FileAttribute[] {});
+        File thFile = testThermostatHome.toFile();
+        File etcDir = new File(thFile, "etc");
+        etcDir.mkdir();
+        assertTrue(etcDir.exists());
+        assertTrue(etcDir.canWrite());
+        File sslProperties = new File(etcDir, "ssl.properties");
+        sslProperties.createNewFile();
+        assertTrue(sslProperties.canRead());
+        return new ThCreatorResult(testThermostatHome, etcDir, sslProperties);
+    }
+    
+    private static class ThCreatorResult {
+        private final Path thermostatHome;
+        private final File etcDir;
+        private final File sslProperties;
+        
+        ThCreatorResult(Path thermostatHome, File etcFile, File sslProperties) {
+            this.thermostatHome = thermostatHome;
+            this.etcDir = etcFile;
+            this.sslProperties = sslProperties;
         }
     }
     

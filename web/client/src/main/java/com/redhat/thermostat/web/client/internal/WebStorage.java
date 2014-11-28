@@ -96,6 +96,7 @@ import com.redhat.thermostat.common.ssl.SslInitException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
 import com.redhat.thermostat.storage.core.AuthToken;
+import com.redhat.thermostat.storage.core.Categories;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Connection;
 import com.redhat.thermostat.storage.core.Cursor;
@@ -103,6 +104,7 @@ import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.IllegalDescriptorException;
 import com.redhat.thermostat.storage.core.IllegalPatchException;
 import com.redhat.thermostat.storage.core.PreparedStatement;
+import com.redhat.thermostat.storage.core.RetryableDescriptorParsingException;
 import com.redhat.thermostat.storage.core.RetryableStatementExecutionException;
 import com.redhat.thermostat.storage.core.SecureStorage;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
@@ -110,6 +112,7 @@ import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.StorageException;
+import com.redhat.thermostat.storage.model.AggregateResult;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.web.common.PreparedStatementResponseCode;
 import com.redhat.thermostat.web.common.SharedStateId;
@@ -348,7 +351,7 @@ public class WebStorage implements Storage, SecureStorage {
 
     private String endpoint;
 
-    private Map<Category<?>, Integer> categoryIds;
+    private Map<Category<?>, SharedStateId> categoryIds;
     private Gson gson;
     // The shared http client we use for execution (uses the context below)
     private HttpClient httpClient;
@@ -548,7 +551,7 @@ public class WebStorage implements Storage, SecureStorage {
         try (CloseableHttpEntity entity = post(endpoint + "/register-category",
                 formparams)) {
             Reader reader = getContentAsReader(entity);
-            Integer id = gson.fromJson(reader, Integer.class);
+            SharedStateId id = gson.fromJson(reader, SharedStateId.class);
             categoryIds.put(category, id);
         }
     }
@@ -766,7 +769,7 @@ public class WebStorage implements Storage, SecureStorage {
         // Nothing to do here.
     }
 
-    int getCategoryId(Category<?> category) {
+    SharedStateId getCategoryId(Category<?> category) {
         return categoryIds.get(category);
     }
     
@@ -808,11 +811,11 @@ public class WebStorage implements Storage, SecureStorage {
     <T extends Pojo> WebPreparedStatementHolder sendPrepareStmtRequest(StatementDescriptor<T> desc)
             throws DescriptorParsingException {
         String strDesc = desc.getDescriptor();
-        int categoryId = getCategoryId(desc.getCategory());
+        SharedStateId categoryId = getCategoryId(desc.getCategory());
         NameValuePair nameParam = new BasicNameValuePair("query-descriptor",
                 strDesc);
         NameValuePair categoryParam = new BasicNameValuePair("category-id",
-                gson.toJson(categoryId, Integer.class));
+                gson.toJson(categoryId, SharedStateId.class));
         List<NameValuePair> formparams = Arrays
                 .asList(nameParam, categoryParam);
         try (CloseableHttpEntity entity = post(endpoint + "/prepare-statement",
@@ -821,24 +824,56 @@ public class WebStorage implements Storage, SecureStorage {
             WebPreparedStatementResponse result = gson.fromJson(reader, WebPreparedStatementResponse.class);
             int numParams = result.getNumFreeVariables();
             SharedStateId statementId = result.getStatementId();
-            if (statementId.getId() == WebPreparedStatementResponse.ILLEGAL_STATEMENT) {
-                // we've got a descriptor the endpoint doesn't know about or
-                // refuses to accept for security reasons.
-                String msg = "Unknown query descriptor which endpoint of " + WebStorage.class.getName() + " refused to accept!";
-                throw new IllegalDescriptorException(msg, desc.getDescriptor());
-            } else if (statementId.getId() == WebPreparedStatementResponse.DESCRIPTOR_PARSE_FAILED) {
-                String msg = "Statement descriptor failed to parse. " +
-                             "Please check server logs for details!";
-                throw new DescriptorParsingException(msg);
-            } else {
-                // We need this ugly trick in order for WebQueryResponse
-                // deserialization to work properly. I.e. GSON needs this type
-                // info hint.
-                Class<T> dataClass = desc.getCategory().getDataClass();
-                Type typeToken = new WebQueryResponse<T>().getRuntimeParametrizedType(dataClass);
-                return new WebPreparedStatementHolder(typeToken, numParams, statementId);
+            int stmtId = statementId.getId();
+            switch (stmtId) {
+                case WebPreparedStatementResponse.ILLEGAL_STATEMENT: {
+                    // we've got a descriptor the endpoint doesn't know about or
+                    // refuses to accept for security reasons.
+                    String msg = "Unknown query descriptor which endpoint of " + WebStorage.class.getName() + " refused to accept!";
+                    throw new IllegalDescriptorException(msg, desc.getDescriptor());
+                }
+                case WebPreparedStatementResponse.DESCRIPTOR_PARSE_FAILED: {
+                    String msg = "Statement descriptor failed to parse. " +
+                            "Please check server logs for details!";
+                    throw new DescriptorParsingException(msg);
+                }
+                case WebPreparedStatementResponse.CATEGORY_OUT_OF_SYNC: {
+                    // We tried to prepare a statement and the server's
+                    // representation of category IDs changed. Thus, be sure to
+                    // clear the category state and get their new IDs.
+                    String msg = "Preparing statement failed. Server changed category state. Clearing category ID for statement: " +
+                                    desc.getDescriptor();
+                    logger.log(Level.WARNING, msg);
+                    sendCategoryReRegistrationRequest(desc.getCategory());
+                    throw new RetryableDescriptorParsingException(msg);
+                }
+                default: {
+                    // Common case where stmtId is the actual ID of the statement
+                    // and not an error code.
+                    assert(stmtId >= 0); // negative values are error codes
+                    // We need this ugly trick in order for WebQueryResponse
+                    // deserialization to work properly. I.e. GSON needs this type
+                    // info hint.
+                    Class<T> dataClass = desc.getCategory().getDataClass();
+                    Type typeToken = new WebQueryResponse<T>().getRuntimeParametrizedType(dataClass);
+                    return new WebPreparedStatementHolder(typeToken, numParams, statementId);
+                }
             }
         }
+    }
+    
+    private synchronized <T extends Pojo> void sendCategoryReRegistrationRequest(Category<T> category) {
+        // There are two possible cases. Category is an aggregate category or
+        // it is not. For aggregate categories we need to re-register the
+        // original first and then the aggregate category.
+        Class<T> dataClass = category.getDataClass();
+        if (AggregateResult.class.isAssignableFrom(dataClass)) {
+            Category<?> nonAggregateCategory = Categories.getByName(category.getName());
+            categoryIds.remove(nonAggregateCategory);
+            registerCategory(nonAggregateCategory);
+        }
+        categoryIds.remove(category);
+        registerCategory(category);
     }
     
     // Container used for parameter caching in order to avoid unneccessary

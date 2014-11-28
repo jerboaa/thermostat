@@ -41,15 +41,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.io.Writer;
 import java.lang.reflect.Array;
 import java.net.URLDecoder;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -113,6 +110,7 @@ import com.redhat.thermostat.web.common.typeadapters.SharedStateIdTypeAdapterFac
 import com.redhat.thermostat.web.common.typeadapters.WebPreparedStatementResponseTypeAdapterFactory;
 import com.redhat.thermostat.web.common.typeadapters.WebPreparedStatementTypeAdapterFactory;
 import com.redhat.thermostat.web.common.typeadapters.WebQueryResponseTypeAdapterFactory;
+import com.redhat.thermostat.web.server.CategoryManager.CategoryIdentifier;
 import com.redhat.thermostat.web.server.auth.FilterResult;
 import com.redhat.thermostat.web.server.auth.PrincipalCallback;
 import com.redhat.thermostat.web.server.auth.PrincipalCallbackFactory;
@@ -135,9 +133,9 @@ public class WebStorageEndPoint extends HttpServlet {
     private static final String TOKEN_MANAGER_KEY = "token-manager";
     private static final String USER_PRINCIPAL_CALLBACK_KEY = "user-principal-callback";
     private static final String CURSOR_MANAGER_KEY = "cursor-manager";
-    private static final String PREPARED_STMT_MANAGER_KEY = "prepared-stmt-manager";
+    static final String CATEGORY_MANAGER_KEY = "category-manager";
+    static final String PREPARED_STMT_MANAGER_KEY = "prepared-stmt-manager";
     private static final int UNKNOWN_CURSOR_ID = -0xdeadbeef;
-    private static final String CATEGORY_KEY_FORMAT = "%s|%s";
 
     // our strings can contain non-ASCII characters. Use UTF-8
     // see also PR 1344
@@ -154,12 +152,6 @@ public class WebStorageEndPoint extends HttpServlet {
     public static final String STORAGE_PASSWORD = "storage.password";
     public static final String STORAGE_CLASS = "storage.class";
     
-    private int currentCategoryId;
-
-    private Map<String, Integer> categoryIds;
-    private Map<Integer, Category<?>> categories;
-    // A unique server token, which gets reset on every Servlet.init() call.
-    // I.e. every reload/redeployment.
     private UUID serverToken;
     
     // read-only set of all known statement descriptors we trust and allow
@@ -185,8 +177,6 @@ public class WebStorageEndPoint extends HttpServlet {
                 .registerTypeAdapterFactory(new WebPreparedStatementTypeAdapterFactory())
                 .registerTypeAdapterFactory(new PreparedParametersTypeAdapterFactory())
                 .create();
-        categoryIds = new HashMap<>();
-        categories = new HashMap<>();
         TokenManager tokenManager = new TokenManager();
         String timeoutParam = getInitParameter(TOKEN_MANAGER_TIMEOUT_PARAM);
         if (timeoutParam != null) {
@@ -210,6 +200,7 @@ public class WebStorageEndPoint extends HttpServlet {
         PrincipalCallback callback = Objects.requireNonNull(cbFactory.getCallback());
         servletContext.setAttribute(USER_PRINCIPAL_CALLBACK_KEY, callback);
         synchronized(servletContext) {
+            servletContext.setAttribute(CATEGORY_MANAGER_KEY, new CategoryManager());
             servletContext.setAttribute(PREPARED_STMT_MANAGER_KEY, new PreparedStatementManager());
         }
         serverToken = UUID.randomUUID();
@@ -349,63 +340,82 @@ public class WebStorageEndPoint extends HttpServlet {
         }
         String queryDescrParam = req.getParameter("query-descriptor");
         String categoryIdParam = req.getParameter("category-id");
-        Integer catId = gson.fromJson(categoryIdParam, Integer.class);
-        Category<T> cat = (Category<T>)getCategoryFromId(catId);
-        WebPreparedStatementResponse response = new WebPreparedStatementResponse();
-        if (cat == null) {
-            // bad category? we refuse to accept this
-            logger.log(Level.WARNING, "Attepted to prepare a statement with an illegal category id");
-            SharedStateId id = new SharedStateId(WebPreparedStatementResponse.ILLEGAL_STATEMENT, serverToken);
-            response.setStatementId(id);
-            writeResponse(resp, response, WebPreparedStatementResponse.class);
-            return;
-        }
-        StatementDescriptor<T> desc = new StatementDescriptor<>(cat, queryDescrParam);
-        // Check if descriptor is trusted (i.e. known)
-        if (!knownStatementDescriptors.contains(desc.getDescriptor())) {
-            String msg = "Attempted to prepare a statement descriptor which we " +
-            		"don't trust! Descriptor was: ->" + desc.getDescriptor() + "<-";
-            logger.log(Level.WARNING, msg);
-            SharedStateId id = new SharedStateId(WebPreparedStatementResponse.ILLEGAL_STATEMENT, serverToken);
-            response.setStatementId(id);
-            writeResponse(resp, response, WebPreparedStatementResponse.class);
-            return;
-        }
-        
-        PreparedStatementManager prepStmtManager = getPreparedStmtManager();
-        // see if we've prepared this query already
-        PreparedStatementHolder<T> holder = prepStmtManager.getStatementHolder(desc);
-        if (holder != null) {
-            ParsedStatement<T> parsed = holder.getStmt().getParsedStatement();
-            int freeVars = parsed.getNumParams();
-            response.setNumFreeVariables(freeVars);
-            SharedStateId id = new SharedStateId(holder.getId().getId(), serverToken);
+        SharedStateId catId = gson.fromJson(URLDecoder.decode(categoryIdParam, "UTF-8"), SharedStateId.class);
+        // Check if server token of the given category id is still valid. If it is
+        // different it means that the server has been reloaded/redeployed
+        // while the client remained up. Of course, it does not rule out a
+        // malicious client which sends a bad token on purpose. In either case
+        // it should be OK to solely send back a distinct error code indicating
+        // this situation.
+        if (!serverToken.equals(catId.getServerToken())) {
+            logger.log(Level.INFO, "Server token: '" + serverToken +
+                    "' and client token '" + catId.getServerToken() +
+                    "' out of sync.");
+            WebPreparedStatementResponse response = new WebPreparedStatementResponse();
+            SharedStateId id = new SharedStateId(WebPreparedStatementResponse.CATEGORY_OUT_OF_SYNC, serverToken);
             response.setStatementId(id);
             writeResponse(resp, response, WebPreparedStatementResponse.class);
             return;
         } else {
-            // Prepare the target statement and track it via
-            // PreparedStatementManager
-            PreparedStatement<T> targetPreparedStatement;
-            try {
-                targetPreparedStatement = (PreparedStatement<T>) storage
-                        .prepareStatement(desc);
-            } catch (DescriptorParsingException e) {
-                logger.log(Level.WARNING, "Descriptor parse error!", e);
-                SharedStateId id = new SharedStateId(WebPreparedStatementResponse.DESCRIPTOR_PARSE_FAILED, serverToken);
+            CategoryManager catManager = getCategoryManager();
+            Category<T> cat = (Category<T>)catManager.getCategory(catId);
+            WebPreparedStatementResponse response = new WebPreparedStatementResponse();
+            if (cat == null) {
+                // bad category? we refuse to accept this
+                logger.log(Level.WARNING, "Attepted to prepare a statement with an illegal category id: '" + 
+                                          catId + "'. server token was: '" + serverToken + "'");
+                SharedStateId id = new SharedStateId(WebPreparedStatementResponse.ILLEGAL_STATEMENT, serverToken);
                 response.setStatementId(id);
-                writeResponse(resp, response,
-                        WebPreparedStatementResponse.class);
+                writeResponse(resp, response, WebPreparedStatementResponse.class);
                 return;
             }
-            SharedStateId stmtId = prepStmtManager.createAndPutHolder(
-                    serverToken, targetPreparedStatement, cat.getDataClass(),
-                    desc);
-            ParsedStatement<?> parsed = targetPreparedStatement
-                    .getParsedStatement();
-            response.setNumFreeVariables(parsed.getNumParams());
-            response.setStatementId(stmtId);
-            writeResponse(resp, response, WebPreparedStatementResponse.class);
+            StatementDescriptor<T> desc = new StatementDescriptor<>(cat, queryDescrParam);
+            // Check if descriptor is trusted (i.e. known)
+            if (!knownStatementDescriptors.contains(desc.getDescriptor())) {
+                String msg = "Attempted to prepare a statement descriptor which we " +
+                		"don't trust! Descriptor was: ->" + desc.getDescriptor() + "<-";
+                logger.log(Level.WARNING, msg);
+                SharedStateId id = new SharedStateId(WebPreparedStatementResponse.ILLEGAL_STATEMENT, serverToken);
+                response.setStatementId(id);
+                writeResponse(resp, response, WebPreparedStatementResponse.class);
+                return;
+            }
+            
+            PreparedStatementManager prepStmtManager = getPreparedStmtManager();
+            // see if we've prepared this query already
+            PreparedStatementHolder<T> holder = prepStmtManager.getStatementHolder(desc);
+            if (holder != null) {
+                ParsedStatement<T> parsed = holder.getStmt().getParsedStatement();
+                int freeVars = parsed.getNumParams();
+                response.setNumFreeVariables(freeVars);
+                SharedStateId id = new SharedStateId(holder.getId().getId(), serverToken);
+                response.setStatementId(id);
+                writeResponse(resp, response, WebPreparedStatementResponse.class);
+                return;
+            } else {
+                // Prepare the target statement and track it via
+                // PreparedStatementManager
+                PreparedStatement<T> targetPreparedStatement;
+                try {
+                    targetPreparedStatement = (PreparedStatement<T>) storage
+                            .prepareStatement(desc);
+                } catch (DescriptorParsingException e) {
+                    logger.log(Level.WARNING, "Descriptor parse error!", e);
+                    SharedStateId id = new SharedStateId(WebPreparedStatementResponse.DESCRIPTOR_PARSE_FAILED, serverToken);
+                    response.setStatementId(id);
+                    writeResponse(resp, response,
+                            WebPreparedStatementResponse.class);
+                    return;
+                }
+                SharedStateId stmtId = prepStmtManager.createAndPutHolder(
+                        serverToken, targetPreparedStatement, cat.getDataClass(),
+                        desc);
+                ParsedStatement<?> parsed = targetPreparedStatement
+                        .getParsedStatement();
+                response.setNumFreeVariables(parsed.getNumParams());
+                response.setStatementId(stmtId);
+                writeResponse(resp, response, WebPreparedStatementResponse.class);
+            }
         }
     }
 
@@ -518,26 +528,22 @@ public class WebStorageEndPoint extends HttpServlet {
         }
     }
 
-    @SuppressWarnings("unchecked") // need to adapt categories
+    @SuppressWarnings("unchecked") // we adapt categories in an unchecked fashion
     @WebStoragePathHandler( path = "register-category" )
     private synchronized void registerCategory(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         if (! isAuthorized(req, resp, Roles.REGISTER_CATEGORY)) {
             return;
         }
-        
         String categoryName = req.getParameter("name");
         String dataClassName = req.getParameter("data-class");
-        // We need to index into the category map using name + data class since
-        // we have a different category for aggregate queries. For them the
-        // category name will be the same, but the data class will be different.
-        String categoryKey = String.format(CATEGORY_KEY_FORMAT, categoryName, dataClassName);
         String categoryParam = req.getParameter("category");
-        int id;
-        if (categoryIds.containsKey(categoryKey)) {
-            id = categoryIds.get(categoryKey);
-        } else {
+        CategoryIdentifier catIdentifier = new CategoryIdentifier(categoryName, dataClassName);
+        CategoryManager catManager = getCategoryManager();
+        SharedStateId id = catManager.getCategoryId(catIdentifier);
+        if (id == null) {
             Class<?> dataClass = getDataClassFromName(dataClassName);
             Category<?> category = null;
+            boolean isAggregateCat = false;
             if ((AggregateResult.class.isAssignableFrom(dataClass))) {
                 // Aggregate category case
                 Category<?> original = Categories.getByName(categoryName);
@@ -552,7 +558,7 @@ public class WebStorageEndPoint extends HttpServlet {
                 @SuppressWarnings({ "rawtypes" })
                 CategoryAdapter adapter = new CategoryAdapter(original);
                 category = adapter.getAdapted(dataClass);
-                logger.log(Level.FINEST, "(id: " + currentCategoryId + ") not registering aggregate category " + category );
+                isAggregateCat = true;
             } else {
                 // Regular, non-aggregate category. Those categories we actually
                 // need to register with backing storage.
@@ -569,20 +575,19 @@ public class WebStorageEndPoint extends HttpServlet {
                 // deserialized Category in the Categories class.
                 category = gson.fromJson(categoryParam, Category.class);
                 storage.registerCategory(category);
-                logger.log(Level.FINEST, "(id: " + currentCategoryId + ") registered non-aggreate category: " + category);
             }
-            id = currentCategoryId;
-            categoryIds.put(categoryKey, id);
-            categories.put(id, category);
-            currentCategoryId++;
+            id = catManager.putCategory(serverToken, category, catIdentifier);
+            if (isAggregateCat) {
+                logger.log(Level.FINEST, "(id: " + id.getId() + ") did not register aggregate category " + category );
+            } else {
+                logger.log(Level.FINEST, "(id: " + id.getId() + ") registered non-aggreate category: " + category);
+            }
         }
         resp.setStatus(HttpServletResponse.SC_OK);
         resp.setContentType(RESPONSE_JSON_CONTENT_TYPE);
-        Writer writer = resp.getWriter();
-        gson.toJson(id, writer);
-        writer.flush();
+        writeResponse(resp, id, SharedStateId.class);
     }
-
+    
     private Class<?> getDataClassFromName(String dataClassName) {
         try {
             Class<?> clazz = Class.forName(dataClassName);
@@ -680,15 +685,25 @@ public class WebStorageEndPoint extends HttpServlet {
         }
         writeQueryResponse(resp, response, resultsList, targetStmtHolder);
     }
-
-    private PreparedStatementManager getPreparedStmtManager() {
+    
+    // package-private for testing
+    @SuppressWarnings("unchecked")
+    <T> T getServletContextAttribute(final String attributeName) {
         ServletContext servletContext = getServletContext();
-        PreparedStatementManager prepStmtManager = null;
+        T attributeVal = null;
         synchronized(servletContext) {
-            prepStmtManager = (PreparedStatementManager)servletContext.getAttribute(PREPARED_STMT_MANAGER_KEY);
+            attributeVal = (T)servletContext.getAttribute(attributeName);
         }
         // If this throws a NPE this is certainly a bug.
-        return Objects.requireNonNull(prepStmtManager);
+        return Objects.requireNonNull(attributeVal);
+    }
+    
+    private CategoryManager getCategoryManager() {
+        return getServletContextAttribute(CATEGORY_MANAGER_KEY);
+    }
+
+    private PreparedStatementManager getPreparedStmtManager() {
+        return getServletContextAttribute(PREPARED_STMT_MANAGER_KEY);
     }
     
     private <T extends Pojo> void writeQueryResponse(HttpServletResponse resp, WebQueryResponse<T> response, List<T> resultsList, PreparedStatementHolder<T> targetStmtHolder) throws IOException {
@@ -896,11 +911,6 @@ public class WebStorageEndPoint extends HttpServlet {
         assert(authorizationExpression == null);
         // nothing to tag on
         return patchedQuery;
-    }
-
-    private Category<?> getCategoryFromId(int categoryId) {
-        Category<?> category = categories.get(categoryId);
-        return category;
     }
 
     private void writeResponse(HttpServletResponse resp,

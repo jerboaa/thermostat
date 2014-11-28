@@ -51,6 +51,13 @@ public class WebPreparedStatementResponse {
      */
     public static final int DESCRIPTOR_PARSE_FAILED = -2;
     
+    /**
+     * Response code indicating that the server token
+     * of the client and the token the server is using
+     * did not match.
+     */
+    public static final int CATEGORY_OUT_OF_SYNC = -3;
+    
     public WebPreparedStatementResponse() {
         // Should always be set using the setter before it
         // is retrieved. Since 0 is a bad default for this,

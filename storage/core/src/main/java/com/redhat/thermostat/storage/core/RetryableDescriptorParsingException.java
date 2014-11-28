@@ -34,52 +34,19 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.common;
-
-import java.util.Objects;
-import java.util.UUID;
+package com.redhat.thermostat.storage.core;
 
 /**
- * Simple data structure which uniquely identifies shared state between
- * client (WebStorage) and server (WebStorageEndPoint).
+ * Exception thrown if parsing of a prepared statement descriptor
+ * failed but retrying to prepare the same descriptor may succeed.
  *
  */
-public class SharedStateId {
+@SuppressWarnings("serial")
+public class RetryableDescriptorParsingException extends
+        DescriptorParsingException {
 
-    // The id of the statement
-    private final int id;
-    // A unique token only used once per webapp deployment.
-    private final UUID serverToken;
-    
-    public SharedStateId(int id, UUID serverToken) {
-        this.id = id;
-        this.serverToken = serverToken;
-    }
-    
-    public int getId() {
-        return id;
+    public RetryableDescriptorParsingException(String msg) {
+        super(msg);
     }
 
-    public UUID getServerToken() {
-        return serverToken;
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        if (other == null || other.getClass() != SharedStateId.class) {
-            return false;
-        }
-        SharedStateId o = (SharedStateId)other;
-        return id == o.id && serverToken.equals(o.serverToken);
-    }
-    
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, serverToken);
-    }
-    
-    @Override
-    public String toString() {
-        return serverToken + ":" + id;
-    }
 }

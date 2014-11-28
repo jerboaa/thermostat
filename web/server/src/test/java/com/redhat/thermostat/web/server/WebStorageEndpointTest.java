@@ -57,6 +57,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -187,7 +188,6 @@ public class WebStorageEndpointTest {
     private Server server;
     private int port;
     private BackingStorage mockStorage;
-    private Integer categoryId;
 
     private static Key<String> key1;
     private static Key<Integer> key2;
@@ -325,7 +325,7 @@ public class WebStorageEndpointTest {
         // This makes register category work for the "test" category.
         // Undone via @After
         setupTrustedCategory(categoryName);
-        registerCategory(testuser, password);
+        SharedStateId catId = registerCategoryAndGetId(category, testuser, password);
         
         String endpoint = getEndpoint();
         URL url = new URL(endpoint + "/prepare-statement");
@@ -344,7 +344,7 @@ public class WebStorageEndpointTest {
                         .registerTypeAdapterFactory(new WebPreparedStatementTypeAdapterFactory())
                         .create();
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-        String body = "query-descriptor=" + URLEncoder.encode(strDescriptor, "UTF-8") + "&category-id=" + categoryId;
+        String body = "query-descriptor=" + URLEncoder.encode(strDescriptor, "UTF-8") + "&category-id=" + getURLEncodedCategoryIdJson(gson, catId);
         out.write(body + "\n");
         out.flush();
 
@@ -368,10 +368,11 @@ public class WebStorageEndpointTest {
     public void authorizedPrepareQueryWithTrustedDescriptorSuccessfulGetMore() throws Exception {
         // Get the trusted descriptor
         String strDescriptor = setupPreparedQueryWithTrustedDescriptor();
+        SharedStateId catId = registerCategoryAndGetId(category, "ignored1", "ignored2");
         
         // Prepare the query
         boolean moreBatches = true;
-        TrustedPreparedQueryTestResult prepareQueryResult = prepareQuery(strDescriptor, moreBatches);
+        TrustedPreparedQueryTestResult prepareQueryResult = prepareQuery(catId, strDescriptor, moreBatches);
         
         Type typeToken = new TypeToken<WebQueryResponse<TestClass>>(){}.getType();
 
@@ -439,10 +440,11 @@ public class WebStorageEndpointTest {
     public void authorizedPrepareQueryWithTrustedDescriptorGetMoreFail() throws Exception {
         // Get the trusted descriptor
         String strDescriptor = setupPreparedQueryWithTrustedDescriptor();
+        SharedStateId catId = registerCategoryAndGetId(category, "ignored1", "ignored2");
         
         // Prepare the query
         boolean moreBatches = false;
-        TrustedPreparedQueryTestResult prepareQueryResult = prepareQuery(strDescriptor, moreBatches);
+        TrustedPreparedQueryTestResult prepareQueryResult = prepareQuery(catId, strDescriptor, moreBatches);
         
         Type typeToken = new TypeToken<WebQueryResponse<TestClass>>(){}.getType();
 
@@ -547,7 +549,7 @@ public class WebStorageEndpointTest {
     }
     
     @SuppressWarnings("unchecked")
-    private TrustedPreparedQueryTestResult prepareQuery(String strDescriptor, boolean moreBatches) throws Exception {
+    private TrustedPreparedQueryTestResult prepareQuery(SharedStateId catId, String strDescriptor, boolean moreBatches) throws Exception {
         TestClass expected1 = new TestClass();
         expected1.setKey1("fluff1");
         expected1.setKey2(42);
@@ -598,7 +600,7 @@ public class WebStorageEndpointTest {
                             .registerTypeAdapterFactory(new PreparedParametersTypeAdapterFactory())
                             .create();
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-        String body = "query-descriptor=" + URLEncoder.encode(strDescriptor, "UTF-8") + "&category-id=" + categoryId;
+        String body = "query-descriptor=" + URLEncoder.encode(strDescriptor, "UTF-8") + "&category-id=" + getURLEncodedCategoryIdJson(gson, catId);
         out.write(body + "\n");
         out.flush();
 
@@ -637,7 +639,6 @@ public class WebStorageEndpointTest {
         // This makes register category work for the "test" category.
         // Undone via @After
         setupTrustedCategory(categoryName);
-        registerCategory("ignored1", "ignored2");
         return strDescriptor;
     }
     
@@ -681,7 +682,7 @@ public class WebStorageEndpointTest {
             // This makes register category work for the "test" category.
             // Undone via @After
             setupTrustedCategory(categoryName);
-            registerCategory("ignored1", "ignored2");
+            SharedStateId catId = registerCategoryAndGetId(category, "ignored1", "ignored2");
             
             TestClass expected1 = new TestClass();
             expected1.setKey1("fluff1");
@@ -729,7 +730,7 @@ public class WebStorageEndpointTest {
                                 .registerTypeAdapterFactory(new PreparedParametersTypeAdapterFactory())
                                 .create();
             OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-            String body = "query-descriptor=" + URLEncoder.encode(strDescriptor, "UTF-8") + "&category-id=" + categoryId;
+            String body = "query-descriptor=" + URLEncoder.encode(strDescriptor, "UTF-8") + "&category-id=" + getURLEncodedCategoryIdJson(gson, catId);
             out.write(body + "\n");
             out.flush();
     
@@ -814,7 +815,7 @@ public class WebStorageEndpointTest {
         // prepare-statement does this under the hood
         AggregateQuery2<AggregateCount> mockMongoQuery = mock(AggregateQuery2.class);
         Category<AggregateCount> adapted = new CategoryAdapter(category).getAdapted(AggregateCount.class);
-        registerCategory(adapted, "no-matter", "no-matter");
+        SharedStateId catId = registerCategoryAndGetId(adapted, "no-matter", "no-matter");
         when(mockStorage.createAggregateQuery(eq(AggregateFunction.COUNT), eq(adapted))).thenReturn(mockMongoQuery);
 
         Cursor<AggregateCount> cursor = mock(Cursor.class);
@@ -852,7 +853,7 @@ public class WebStorageEndpointTest {
                             .registerTypeAdapterFactory(new PreparedParametersTypeAdapterFactory())
                             .create();
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-        String body = "query-descriptor=" + URLEncoder.encode(strDescriptor, "UTF-8") + "&category-id=" + categoryId;
+        String body = "query-descriptor=" + URLEncoder.encode(strDescriptor, "UTF-8") + "&category-id=" + getURLEncodedCategoryIdJson(gson, catId);
         out.write(body + "\n");
         out.flush();
 
@@ -946,7 +947,7 @@ public class WebStorageEndpointTest {
             // This makes register category work for the "test" category.
             // Undone via @After
             setupTrustedCategory(categoryName);
-            registerCategory("ignored1", "ignored2");
+            SharedStateId catId = registerCategoryAndGetId(category, "ignored1", "ignored2");
             
             // prepare-statement does this under the hood
             Add<TestClass> mockMongoAdd = mock(Add.class);
@@ -983,7 +984,7 @@ public class WebStorageEndpointTest {
                 .registerTypeAdapterFactory(new PreparedParametersTypeAdapterFactory())
                 .create();
             OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-            String body = "query-descriptor=" + URLEncoder.encode(strDescriptor, "UTF-8") + "&category-id=" + categoryId;
+            String body = "query-descriptor=" + URLEncoder.encode(strDescriptor, "UTF-8") + "&category-id=" + getURLEncodedCategoryIdJson(gson, catId);
             out.write(body + "\n");
             out.flush();
     
@@ -1019,6 +1020,10 @@ public class WebStorageEndpointTest {
         } finally {
             category = oldCategory; 
         }
+    }
+    
+    private String getURLEncodedCategoryIdJson(Gson gson, SharedStateId catId) throws UnsupportedEncodingException {
+        return URLEncoder.encode(gson.toJson(catId), "UTF-8");
     }
     
     @Test
@@ -1100,7 +1105,7 @@ public class WebStorageEndpointTest {
             // This makes register category work for the "test" category.
             // Undone via @After
             setupTrustedCategory(categoryName);
-            registerCategory(testuser, password);
+            registerCategoryAndGetId(category, testuser, password);
         }
         
         String endpoint = getEndpoint();
@@ -1134,16 +1139,16 @@ public class WebStorageEndpointTest {
         
         // First the originating category has to be registered, then the adapted
         // one.
-        Integer realId = registerCategoryAndGetId(wantedCategory, "no-matter", "no-matter");
-        Integer aggregateId = registerCategoryAndGetId(aggregate, "no-matter", "no-matter");
+        SharedStateId realId = registerCategoryAndGetId(wantedCategory, "no-matter", "no-matter");
+        SharedStateId aggregateId = registerCategoryAndGetId(aggregate, "no-matter", "no-matter");
         
-        assertTrue("Aggregate categories need their own ID", aggregateId != realId);
+        assertTrue("Aggregate categories need their own ID", realId.getId() != aggregateId.getId());
         
         verify(mockStorage).registerCategory(eq(wantedCategory));
         verifyNoMoreInteractions(mockStorage);
     }
     
-    private Integer registerCategoryAndGetId(Category<?> cat, String username, String password) throws Exception {
+    private SharedStateId registerCategoryAndGetId(Category<?> cat, String username, String password) throws Exception {
         String endpoint = getEndpoint();
         URL url = new URL(endpoint + "/register-category");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -1154,12 +1159,12 @@ public class WebStorageEndpointTest {
         conn.setDoInput(true);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-        Gson gson = new Gson();
+        Gson gson = new GsonBuilder().registerTypeAdapterFactory(new SharedStateIdTypeAdapterFactory()).create();
         out.write("name=" + cat.getName() + "&data-class=" + cat.getDataClass().getName() + "&category=" + gson.toJson(cat));
         out.flush();
         assertEquals(200, conn.getResponseCode());
         Reader reader = new InputStreamReader(conn.getInputStream());
-        Integer id = gson.fromJson(reader, Integer.class);
+        SharedStateId id = gson.fromJson(reader, SharedStateId.class);
         return id;
     }
     
@@ -1444,41 +1449,6 @@ public class WebStorageEndpointTest {
                 Roles.ACCESS_REALM
         };
         doUnauthorizedTest("purge", failMsg, insufficientRoles, false);
-    }
-
-    private void registerCategory(String username, String password) {
-        registerCategory(category, username, password);
-    }
-    
-    private void registerCategory(Category<?> category, String username, String password) {
-        try {
-            String endpoint = getEndpoint();
-            URL url = new URL(endpoint + "/register-category");
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            String enc = "UTF-8";
-            conn.setRequestProperty("Content-Encoding", enc);
-            conn.setDoOutput(true);
-            conn.setDoInput(true);
-            conn.setRequestMethod("POST");
-            sendAuthentication(conn, username, password);
-            OutputStream out = conn.getOutputStream();
-            Gson gson = new Gson();
-            OutputStreamWriter writer = new OutputStreamWriter(out);
-            writer.write("name=");
-            writer.write(URLEncoder.encode(category.getName(), enc));
-            writer.write("&category=");
-            writer.write(URLEncoder.encode(gson.toJson(category), enc));
-            writer.write("&data-class=");
-            writer.write(URLEncoder.encode(category.getDataClass().getName(), enc));
-            writer.flush();
-
-            InputStream in = conn.getInputStream();
-            Reader reader = new InputStreamReader(in);
-            Integer id = gson.fromJson(reader, Integer.class);
-            categoryId = id;
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
     }
 
     private String getEndpoint() {
