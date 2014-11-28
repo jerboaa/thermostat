@@ -28,6 +28,9 @@ endif
 # Default to just building core
 all: core
 
+# At release, also check archetypes
+for-release: core verify-archetypes
+
 core:
 	$(MAVEN) -f $(POM) $(MAVEN_FLAGS) $(MAVEN_SKIP_TEST) clean $(GOAL) $(MAVEN_JAVADOC)
 
@@ -67,4 +70,4 @@ plugin_docs.html:
 	$(XSLTPROC) distribution/tools/plugin-docs-html.xslt merged-plugin-docs.xml > $@
 
 # We only have phony targets
-.PHONY:	all core verify-archetype-ext verify-archetype-multimodule core-install create-repo-dir clean-repo echo-repo plugin-docs
+.PHONY:	all for-release core verify-archetypes verify-archetype-ext verify-archetype-multimodule skip-tests-and-install core-install create-repo-dir clean-repo echo-repo plugin-docs

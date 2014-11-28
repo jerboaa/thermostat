@@ -152,7 +152,9 @@ echo ""
 find_and_warn_incomplete
 echo ""
 echo "Before you commit, tag, or release, be sure to run a full build and"
-echo "run all tests.  The easiest way to do this is to run \"make\" from"
-echo "the root of the repository."
+echo "run all tests.  The easiest way to do this is to run \"make for-release\""
+echo "from the root of the repository.  In addition to the full build with"
+echo "unit and integration tests, this also runs tests which verify the maven"
+echo "archetypes that plugin developers rely on to set up their projects."
 exit 0
 
