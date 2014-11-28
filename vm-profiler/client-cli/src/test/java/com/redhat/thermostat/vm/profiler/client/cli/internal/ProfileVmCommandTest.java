@@ -40,6 +40,9 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -138,5 +141,43 @@ public class ProfileVmCommandTest {
         cmd.run(ctx);
 
         assertEquals("Currently profiling: Yes\n", cmdCtxFactory.getOutput());
+    }
+
+    @Test
+    public void showSubCommandFailsWhenNoDataToDisplay() throws Exception {
+        AgentInformation agentInfo = mock(AgentInformation.class);
+        when(agentsDao.getAgentInformation(AGENT)).thenReturn(agentInfo);
+
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("hostId", AGENT_ID);
+        args.addArgument("vmId", VM_ID);
+        args.addNonOptionArgument("show");
+        CommandContext ctx = cmdCtxFactory.createContext(args);
+
+        cmd.run(ctx);
+
+        assertEquals("Profiling data not available\n", cmdCtxFactory.getError());
+    }
+
+    @Test
+    public void showSubCommandDisplaysData() throws Exception {
+        AgentInformation agentInfo = mock(AgentInformation.class);
+        when(agentsDao.getAgentInformation(AGENT)).thenReturn(agentInfo);
+
+        String data = "1000000 foo\n3000000 bar";
+        ByteArrayInputStream in = new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8));
+        when(profileDao.loadLatestProfileData(VM)).thenReturn(in);
+
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("hostId", AGENT_ID);
+        args.addArgument("vmId", VM_ID);
+        args.addNonOptionArgument("show");
+        CommandContext ctx = cmdCtxFactory.createContext(args);
+
+        cmd.run(ctx);
+
+        assertEquals("% Time    Time (ms) Method Name\n" +
+                     "75.000000 3         bar\n" +
+                     "25.000000 1         foo\n", cmdCtxFactory.getOutput());
     }
 }

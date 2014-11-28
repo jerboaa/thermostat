@@ -194,6 +194,10 @@ public class ProfileVmCommand extends AbstractCommand {
     private void showProfilingResults(Console console, VmRef vm) {
         ProfileDAO dao = getService(ProfileDAO.class);
         InputStream data = dao.loadLatestProfileData(vm);
+        if (data == null) {
+            console.getError().println(translator.localize(LocaleResources.PROFILING_DATA_NOT_AVAILABLE).getContents());
+            return;
+        }
         parseAndDisplayProfilingData(console, data);
     }
 
