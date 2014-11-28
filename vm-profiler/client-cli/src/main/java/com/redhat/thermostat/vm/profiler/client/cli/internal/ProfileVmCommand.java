@@ -125,13 +125,13 @@ public class ProfileVmCommand extends AbstractCommand {
                 console, queue, target, ProfileRequest.START_PROFILING, vmId);
 
         if (response.getType() == ResponseType.OK) {
-            console.getOutput().println("Started profiling " + vmId);
+            console.getOutput().println(translator.localize(LocaleResources.STARTED_PROFILING, vmId).getContents());
         } else if (response.getType() == ResponseType.NOOP) {
-            console.getOutput().println("Profiling already active for " + vmId);
+            console.getOutput().println(translator.localize(LocaleResources.ALREADY_PROFILING, vmId).getContents());
         } else if (response.getType() == ResponseType.NOK) {
-            console.getError().println("Unable to start profiling " + vmId);
+            console.getError().println(translator.localize(LocaleResources.UNABLE_TO_START_PROFILING, vmId).getContents());
         } else {
-            console.getError().println("Unable to use profiling");
+            console.getError().println(translator.localize(LocaleResources.UNABLE_TO_USE_PROFILING).getContents());
         }
     }
 
@@ -140,13 +140,13 @@ public class ProfileVmCommand extends AbstractCommand {
                 console, queue, target, ProfileRequest.STOP_PROFILING, vmId);
 
         if (response.getType() == ResponseType.OK) {
-            console.getOutput().println("Stopped profiling " + vmId);
+            console.getOutput().println(translator.localize(LocaleResources.STOPPED_PROFILING, vmId).getContents());
         } else if (response.getType() == ResponseType.NOOP) {
-            console.getOutput().println("Profiling was *not* active for " + vmId + ". No action taken");
+            console.getOutput().println(translator.localize(LocaleResources.NOT_PROFILING, vmId).getContents());
         } else if (response.getType() == ResponseType.NOK) {
-            console.getError().println("Unable to stop profiling " + vmId);
+            console.getError().println(translator.localize(LocaleResources.UNABLE_TO_STOP_PROFILING, vmId).getContents());
         } else {
-            console.getError().println("Unable to use profiling");
+            console.getError().println(translator.localize(LocaleResources.UNABLE_TO_USE_PROFILING).getContents());
         }
     }
 
