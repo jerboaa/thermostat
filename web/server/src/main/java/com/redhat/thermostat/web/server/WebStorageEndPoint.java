@@ -395,6 +395,7 @@ public class WebStorageEndPoint extends HttpServlet {
                         .getParsedStatement();
                 response.setNumFreeVariables(parsed.getNumParams());
                 response.setStatementId(stmtId);
+                logger.log(Level.INFO, "Server: prepare-statement: stmt: " + desc + " got assigned id: " + stmtId.getId());
                 writeResponse(resp, response, WebPreparedStatementResponse.class);
             }
         }
@@ -835,7 +836,7 @@ public class WebStorageEndPoint extends HttpServlet {
             // perform the patching of the target statement.
             targetStatement = (DataModifyingStatement<T>)parsed.patchStatement(params);
         } catch (IllegalPatchException e) {
-            logger.log(Level.INFO, "Failed to execute write", e);
+            logger.log(Level.INFO, "Failed to execute write. Stmt id was: " + stmtId, e);
             writeResponse(resp, PreparedStatementResponseCode.ILLEGAL_PATCH, int.class);
             return;
         }

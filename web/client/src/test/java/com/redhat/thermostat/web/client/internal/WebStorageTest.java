@@ -41,12 +41,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.when;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -58,9 +61,11 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -90,6 +95,7 @@ import com.redhat.thermostat.storage.core.AuthToken;
 import com.redhat.thermostat.storage.core.BackingStorage;
 import com.redhat.thermostat.storage.core.Categories;
 import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.core.Cursor;
@@ -103,6 +109,7 @@ import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.core.experimental.BatchCursor;
+import com.redhat.thermostat.storage.model.AggregateResult;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
@@ -402,6 +409,57 @@ public class WebStorageTest {
         assertEquals("PreparedStatementWebStorge increments a counter" +
                      " if it wasn't cached. Triggers e.g. if it was erronously cached!",
                      3, stmtId.getId());
+    }
+    
+    @Test
+    public void prepareStatementCachesStatements2() throws DescriptorParsingException {
+        WebPreparedStatementCache cache = mock(WebPreparedStatementCache.class);
+        final WebPreparedStatementHolder holder = mock(WebPreparedStatementHolder.class);
+        WebStorage testStorage = new WebStorage(cache, null) {
+            <T extends Pojo> WebPreparedStatementHolder sendPrepareStmtRequest(StatementDescriptor<T> desc, final int invokationCount)
+                    throws DescriptorParsingException {
+                if (invokationCount != 0) {
+                    throw new AssertionError("expected invokation count 0 but was: " + invokationCount);
+                }
+                return holder;
+            }
+        };
+        String strDesc = "QUERY test WHERE 'property1' = ?s";
+        StatementDescriptor<TestObj> desc = new StatementDescriptor<>(category, strDesc);
+        testStorage.prepareStatement(desc);
+        verify(cache).get(desc);
+        verify(cache).put(desc, holder);
+    }
+    
+    @Test
+    public void verifySendCategoryReRegistrationRequest() {
+        @SuppressWarnings("unchecked")
+        Map<Category<?>, SharedStateId> categoryMap = mock(Map.class);
+        final List<Category<?>> interceptedCategories = new ArrayList<>();
+        WebStorage testStorage = new WebStorage(categoryMap) {
+            @Override
+            public void registerCategory(Category<?> category) throws StorageException {
+                interceptedCategories.add(category);
+            }
+        };
+        // verify aggregate categories
+        Category<TestAggregate> aggregateCategory = new CategoryAdapter<TestObj, TestAggregate>(category).getAdapted(TestAggregate.class);
+        testStorage.sendCategoryReRegistrationRequest(aggregateCategory);
+        verify(categoryMap).remove(aggregateCategory);
+        verify(categoryMap).remove(category);
+        assertEquals(2, interceptedCategories.size());
+        assertEquals("Expected actual category to be re-registered first", category, interceptedCategories.get(0));
+        assertEquals("Expected aggregate category to be re-registered second", aggregateCategory, interceptedCategories.get(1));
+        
+        interceptedCategories.clear();
+        
+        // verify regular categories
+        testStorage.sendCategoryReRegistrationRequest(category);
+        // earlier test above did invoke it already once
+        verify(categoryMap, times(2)).remove(category);
+        assertEquals(1, interceptedCategories.size());
+        assertEquals(category, interceptedCategories.get(0));
+        verifyNoMoreInteractions(categoryMap);
     }
     
     /**
@@ -945,6 +1003,155 @@ public class WebStorageTest {
         assertTrue(listener.disconnectEvent);
     }
     
+    @Test
+    public void verifyDoWriteExecuteMorethanOne() {
+        try {
+            storage.doWriteExecute(null, 2);
+            fail("Expected excecution exception since invoked count > 1");
+        } catch (StatementExecutionException e) {
+            Throwable cause = e.getCause();
+            // pass
+            assertEquals("Failed to recover from out-of-sync state with server", cause.getMessage());
+        }
+    }
+    
+    @Test
+    public void verifyDoExecuteQueryMorethanOne() {
+        try {
+            storage.doExecuteQuery(null, null, 2);
+            fail("Expected descriptor parsing exception since invoked count > 1");
+        } catch (StatementExecutionException e) {
+            Throwable cause = e.getCause();
+            // pass
+            assertEquals("Failed to recover from out-of-sync state with server", cause.getMessage());
+        }
+    }
+    
+    @Test
+    public void verifySendPreparedStatementRequestMoreThanOne() {
+        try {
+            storage.sendPrepareStmtRequest(null, 2);
+            fail("Expected descriptor parsing exception since invoked count > 1");
+        } catch (DescriptorParsingException e) {
+            // pass
+            assertEquals("Failed to recover from out-of-sync state with server", e.getMessage());
+        }
+    }
+    
+    /**
+     * Test the base case in {@link WebStorage#handlePreparedStmtStateOutOfSync(WebPreparedStatement)}.
+     * with null transition cache and non-null statement cache. This simulates the
+     * case where state got out of sync and handlePreparedStmtStateOutOfSync() is
+     * called the first time after that out-of-sync-event happened. In that case
+     * it is expected for prepareStatement() and sendCategoryReRegistrationRequest()
+     * to be called.
+     * 
+     * @throws DescriptorParsingException 
+     * 
+     */
+    @Test
+    public void testHandleStatementStateOutOfSyncBaseCase() throws DescriptorParsingException {
+        WebPreparedStatementHolder mockHolder = mock(WebPreparedStatementHolder.class);
+        SharedStateId id = new SharedStateId(300, UUID.randomUUID());
+        when(mockHolder.getStatementId()).thenReturn(id);
+        @SuppressWarnings("unchecked")
+        Category<Pojo> foo = mock(Category.class);
+        StatementDescriptor<Pojo> desc = new StatementDescriptor<>(foo, "testing");
+        WebPreparedStatementCache stmtCache = mock(WebPreparedStatementCache.class);
+        // this is called twice. Once for creating the snapshot and another time
+        // for getting the descriptor.
+        when(stmtCache.get(id)).thenReturn(desc).thenReturn(desc);
+        final boolean[] sendCategoryReRegistrationRequest = new boolean[1];
+        final boolean[] prepareStatement = new boolean[1];
+        final WebPreparedStatement<?> newStmt = mock(WebPreparedStatement.class);
+        WebStorage webStorage = new WebStorage(stmtCache, null) {
+            
+            @Override
+            protected synchronized <T extends Pojo> void sendCategoryReRegistrationRequest(Category<T> category) {
+                sendCategoryReRegistrationRequest[0] = true;
+            }
+            
+            @SuppressWarnings("unchecked")
+            @Override
+            public <T extends Pojo> PreparedStatement<T> prepareStatement(StatementDescriptor<T> desc)
+                    throws DescriptorParsingException {
+                prepareStatement[0] = true;
+                return (PreparedStatement<T>)newStmt;
+            }
+        };
+        @SuppressWarnings("unchecked")
+        WebPreparedStatement<Pojo> mockStmt = mock(WebPreparedStatement.class);
+        PreparedParameters mockParams = new PreparedParameters(3);
+        when(mockStmt.getParams()).thenReturn(mockParams);
+        when(mockStmt.getStatementId()).thenReturn(id);
+        
+        WebPreparedStatementCache stmtCacheSnapshot = mock(WebPreparedStatementCache.class);
+        when(stmtCache.createSnapshot()).thenReturn(stmtCacheSnapshot);
+        webStorage.handlePreparedStmtStateOutOfSync(mockStmt);
+        verify(stmtCache).createSnapshot();
+        verify(stmtCache).get(id);
+        verify(stmtCache).remove(id);
+        assertTrue("expected sendCategoryReRegistrationRequest() to be called", sendCategoryReRegistrationRequest[0]);
+        assertTrue("expected prepareStatement() to be called", prepareStatement[0]);
+        verify(newStmt).setParams(mockParams);
+        verifyNoMoreInteractions(stmtCache);
+    }
+    
+    /**
+     * Test the transition case in {@link WebStorage#handlePreparedStmtStateOutOfSync(WebPreparedStatement)}.
+     * with non-null transition cache and non-null statement cache.
+     * 
+     * This simulates the case where state got out of sync and handlePreparedStmtStateOutOfSync() is
+     * called <strong>not</strong> the first time after an out-of-sync-event happened. I.e.
+     * the base-case path has been entered first when a similar statement tried
+     * to execute, in turn, getting the statement id removed from the main
+     * statement cache.
+     * 
+     * In that case it is expected for the transition cache to become active
+     * allowing the statement to execute successfully. 
+     * 
+     * @throws DescriptorParsingException 
+     * 
+     */
+    @Test
+    public void testHandleStatementStateOutOfSyncTransitionCase() throws DescriptorParsingException {
+        WebPreparedStatementHolder mockHolder = mock(WebPreparedStatementHolder.class);
+        SharedStateId id = new SharedStateId(300, UUID.randomUUID());
+        when(mockHolder.getStatementId()).thenReturn(id);
+        @SuppressWarnings("unchecked")
+        Category<Pojo> foo = mock(Category.class);
+        StatementDescriptor<Pojo> desc = new StatementDescriptor<>(foo, "testing");
+        WebPreparedStatementCache stmtCache = mock(WebPreparedStatementCache.class);
+        // no setup for the id in stmtCache, however the transitionCache,
+        // a snapshot cache - created when the first call to handlePreparedStatementStateOutOfSync()
+        // came in - still "knows" about this record.
+        ExpirableWebPreparedStatementCache transitionCache = mock(ExpirableWebPreparedStatementCache.class);
+        when(transitionCache.isExpired()).thenReturn(false);
+        when(transitionCache.get(id)).thenReturn(desc);
+        when(transitionCache.get(desc)).thenReturn(mockHolder);
+        SharedStateId updatedId = new SharedStateId(301, UUID.randomUUID());
+        WebPreparedStatementHolder newHolder = mock(WebPreparedStatementHolder.class);
+        when(mockHolder.getStatementId()).thenReturn(id);
+        // called twice. once for equality check. once for getting the id and
+        // using it to update the prepared statement id.
+        when(newHolder.getStatementId()).thenReturn(updatedId).thenReturn(updatedId);
+        when(stmtCache.get(desc)).thenReturn(newHolder);
+        WebStorage webStorage = new WebStorage(stmtCache, transitionCache);
+        @SuppressWarnings("unchecked")
+        WebPreparedStatement<Pojo> mockStmt = mock(WebPreparedStatement.class);
+        when(mockStmt.getStatementId()).thenReturn(id);
+        WebPreparedStatement<Pojo> result = webStorage.handlePreparedStmtStateOutOfSync(mockStmt);
+        verify(mockStmt).setStatementId(updatedId);
+        assertSame(mockStmt, result);
+        verify(stmtCache).get(id);
+        verify(stmtCache).get(desc);
+        verify(transitionCache).isExpired();
+        verify(transitionCache).get(id);
+        verify(transitionCache).get(desc);
+        verifyNoMoreInteractions(stmtCache);
+        verifyNoMoreInteractions(transitionCache);
+    }
+    
     static class MyListener implements ConnectionListener {
 
         private CountDownLatch latch;
@@ -1000,13 +1207,17 @@ public class WebStorageTest {
         }
         
         @Override
-        <T extends Pojo> WebPreparedStatementHolder sendPrepareStmtRequest(StatementDescriptor<T> desc)
+        <T extends Pojo> WebPreparedStatementHolder sendPrepareStmtRequest(StatementDescriptor<T> desc, int invokationCounter)
                 throws DescriptorParsingException {
             int numParams = counter++;
             int stmtId = counter++;
             SharedStateId id = new SharedStateId(stmtId, UUID.randomUUID());
             return new WebPreparedStatementHolder(TestObj.class, numParams, id); 
         }
+    }
+    
+    private static class TestAggregate implements AggregateResult {
+        // nothing
     }
 }
 

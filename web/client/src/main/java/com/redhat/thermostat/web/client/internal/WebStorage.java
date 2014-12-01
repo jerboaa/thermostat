@@ -51,7 +51,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.WeakHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -104,8 +104,6 @@ import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.IllegalDescriptorException;
 import com.redhat.thermostat.storage.core.IllegalPatchException;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.RetryableDescriptorParsingException;
-import com.redhat.thermostat.storage.core.RetryableStatementExecutionException;
 import com.redhat.thermostat.storage.core.SecureStorage;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
@@ -134,6 +132,10 @@ public class WebStorage implements Storage, SecureStorage {
 
     private static final String HTTP_PREFIX = "http";
     private static final String HTTPS_PREFIX = "https";
+    
+    // Transition cache is valid for 30 seconds starting from the current time.
+    private static final long TRANSITION_CACHE_OFFSET = TimeUnit.NANOSECONDS.convert(30, TimeUnit.SECONDS);
+    
     static final Logger logger = LoggingUtils.getLogger(WebStorage.class);
     
     private static class CloseableHttpEntity implements Closeable, HttpEntity {
@@ -338,13 +340,13 @@ public class WebStorage implements Storage, SecureStorage {
         
         @Override
         public int execute() throws StatementExecutionException {
-            return doWriteExecute(this);
+            return doWriteExecute(this, 0);
         }
 
         @Override
         public Cursor<T> executeQuery()
                 throws StatementExecutionException {
-            return doExecuteQuery(this, parametrizedTypeToken);
+            return doExecuteQuery(this, parametrizedTypeToken, 0);
         }
         
     }
@@ -361,11 +363,25 @@ public class WebStorage implements Storage, SecureStorage {
     private StorageCredentials creds;
     private SecureRandom random;
     private WebConnection conn;
-    private Map<StatementDescriptor<?>, WebPreparedStatementHolder> stmtCache;
+    private WebPreparedStatementCache stmtCache;
+    // Temporary cache used for recovering after a server endpoint re-deployment.
+    // Will only be valid for 30 seconds for any server endpoint re-deployment.
+    private ExpirableWebPreparedStatementCache transitionStmtCache;
     
     // for testing
     WebStorage(String url, StorageCredentials creds, HttpClient client) {
         init(url, creds, client);
+    }
+    
+    // for testing
+    WebStorage(WebPreparedStatementCache stmtCache, ExpirableWebPreparedStatementCache transitionCache) {
+        this.stmtCache = stmtCache;
+        this.transitionStmtCache = transitionCache;
+    }
+    
+    // for testing
+    WebStorage(Map<Category<?>, SharedStateId> categoryIds) {
+        this.categoryIds = categoryIds;
     }
 
     public WebStorage(String url, StorageCredentials creds, SSLConfiguration sslConf) throws StorageException {
@@ -402,10 +418,7 @@ public class WebStorage implements Storage, SecureStorage {
         
         this.endpoint = url;
         this.creds = creds;
-        // Use weak map in order for it to not eat up too much memory. The sole
-        // purpose is to cache values and prevent some unnecessary network
-        // overhead.
-        this.stmtCache = new WeakHashMap<>();
+        this.stmtCache = new WebPreparedStatementCache();
     }
 
     // package private for testing
@@ -568,11 +581,15 @@ public class WebStorage implements Storage, SecureStorage {
      *            Type parametrizedTypeToken = new
      *            TypeToken&lt;WebQueryResponse&lt;AgentInformation&gt;&gt;().getType();
      *            </pre>
+     * @param invocationCount The number of recursive invocations performed so far.
      * @return A cursor for the generic type.
      * @throws StatementExecutionException
-     *             If execution of the statement failed.
+     *             If execution of the statement failed. In particular, if
+     *             the state got out of sync, it tried to recover and then
+     *             failed again.
      */
-    private <T extends Pojo> Cursor<T> doExecuteQuery(WebPreparedStatement<T> stmt, Type parametrizedTypeToken) throws StatementExecutionException {
+    <T extends Pojo> Cursor<T> doExecuteQuery(final WebPreparedStatement<T> stmt, Type parametrizedTypeToken, final int invocationCount) throws StatementExecutionException {
+        checkRecursiveInvocationCount(invocationCount);
         NameValuePair queryParam = new BasicNameValuePair("prepared-stmt", gson.toJson(stmt, WebPreparedStatement.class));
         List<NameValuePair> formparams = Arrays.asList(queryParam);
         WebQueryResponse<T> qResp = null;
@@ -594,16 +611,29 @@ public class WebStorage implements Storage, SecureStorage {
             throw new StatementExecutionException(e);
         }
         case PreparedStatementResponseCode.PREP_STMT_BAD_STOKEN: {
-            String msg = "Query failed to execute. Server changed token. Clearing prepared stmt cache!";
-            logger.log(Level.WARNING, msg);
-            clearPreparedStmtCache();
-            throw new RetryableStatementExecutionException(new RuntimeException(msg));
+            // Try to recover from this situation. If this path is
+            // entered more than once than we'll fail on method entry.
+            try {
+                WebPreparedStatement<T> newStmt = handlePreparedStmtStateOutOfSync(stmt);
+                return doExecuteQuery(newStmt, parametrizedTypeToken, invocationCount + 1);
+            } catch (DescriptorParsingException e) {
+                throw new StatementExecutionException(e);
+            }
         }
         default: {
             String msg = "[query-execute] Unknown response from storage endpoint!";
             IllegalStateException ise = new IllegalStateException(msg);
             throw new StatementExecutionException(ise);
         }
+        }
+    }
+    
+    private void checkRecursiveInvocationCount(int invocationCount) throws StatementExecutionException {
+        if (invocationCount > 1) {
+            // Initial invokation == 0, potential recovery-invocation == 1
+            String msg = "Failed to recover from out-of-sync state with server";
+            logger.log(Level.WARNING, msg);
+            throw new StatementExecutionException(new IllegalStateException(msg));
         }
     }
     
@@ -646,6 +676,9 @@ public class WebStorage implements Storage, SecureStorage {
      * 
      * @param stmt
      *            The prepared statement to execute
+     * @param invocationCount
+     *            The number of times this method has been recursively called,
+     *            starting at 0.
      * @return The response code of executing the underlying data modifying
      *         statement.
      * @throws StatementExecutionException
@@ -653,8 +686,9 @@ public class WebStorage implements Storage, SecureStorage {
      *             values set as prepared parameters did not work or were
      *             partially missing for the prepared statement.
      */
-    private <T extends Pojo> int doWriteExecute(WebPreparedStatement<T> stmt)
+    <T extends Pojo> int doWriteExecute(final WebPreparedStatement<T> stmt, final int invocationCount)
             throws StatementExecutionException {
+        checkRecursiveInvocationCount(invocationCount);
         NameValuePair queryParam = new BasicNameValuePair("prepared-stmt", gson.toJson(stmt, WebPreparedStatement.class));
         List<NameValuePair> formparams = Arrays.asList(queryParam);
         int responseCode = PreparedStatementResponseCode.WRITE_GENERIC_FAILURE;
@@ -665,15 +699,19 @@ public class WebStorage implements Storage, SecureStorage {
             throw new StatementExecutionException(e);
         }
         if (responseCode == PreparedStatementResponseCode.ILLEGAL_PATCH) {
-            String msg = "Illegal statement argument. See server logs for details.";
+            String msg = "Illegal statement argument. See server logs for details. Invokation count: " + invocationCount;
             IllegalArgumentException iae = new IllegalArgumentException(msg);
             IllegalPatchException e = new IllegalPatchException(iae);
             throw new StatementExecutionException(e);
         } else if (responseCode == PreparedStatementResponseCode.PREP_STMT_BAD_STOKEN) {
-            String msg = "Write failed to execute. Server changed token. Clearing prepared stmt cache!";
-            logger.log(Level.WARNING, msg);
-            clearPreparedStmtCache();
-            throw new RetryableStatementExecutionException(new RuntimeException(msg));
+            // Try to recover from this situation. If this path is
+            // entered more than once than we'll fail on method entry.
+            try {
+                WebPreparedStatement<T> newStmt = handlePreparedStmtStateOutOfSync(stmt);
+                return doWriteExecute(newStmt, invocationCount + 1);
+            } catch (DescriptorParsingException e) {
+                throw new StatementExecutionException(e);
+            }
         }
         return responseCode;
     }
@@ -773,10 +811,101 @@ public class WebStorage implements Storage, SecureStorage {
         return categoryIds.get(category);
     }
     
-    private void clearPreparedStmtCache() {
-        synchronized(this.stmtCache) {
-            stmtCache.clear();
+    /**
+     * Package private for testing
+     * 
+     * This method handles the recovery mechanism which needs to be done before
+     * an already failed {@link WebPreparedStatement} can be re-submitted
+     * because some state maintained in the client (here) and on the server
+     * need to be in agreement.
+     * 
+     * Here is how the recovery mechanism works:
+     * 
+     * Pre: client and server agree on an ID for every statement. Any single
+     *      statement is uniquely identifiable via the (server-token, int-id)
+     *      pair. When this method is called we already know that when we first
+     *      tried to execute the statement we had an out-dated server-token in
+     *      record. Thus, we need to refresh the local cache with updated
+     *      statement IDs.
+     * 
+     * Getting the local cache back in sync can be done by:
+     * 1. Removing the old values from the current statement cache and 
+     * 2. Re-registering the underlying category and re-preparing the statement
+     *  
+     * The above two steps will be done once per statement descriptor. This will
+     * update the statement cache accordingly. However, since there may be other
+     * statements in the local queue waiting to be executed. Those pending
+     * statements still have old statement IDs in record. This is where the
+     * transition cache comes into play. There is no need to re-register categories
+     * and re-prepare statements for the same descriptor. It was already done
+     * once and the main statement cache updated accordingly. The transition cache is then used
+     * to get the descriptor from an old statement ID. I.e. whenever the transition
+     * cache is used it is no longer equal to the main statement cache. In a way
+     * the transition cache is a tool to get a descriptor for an now out-dated
+     * statement ID. Once we have the descriptor again we can look it up in the
+     * regular statement cache in (which has been updated previously) in order
+     * to get the updated values for the statement ID.
+     *  
+     * @param origStmt The original statement that failed to execute.
+     * @return A fixed-up statement which should succeed to execute if tried
+     *         again.
+     * @throws DescriptorParsingException If re-preparing a statement failed.
+     */
+    synchronized <T extends Pojo> WebPreparedStatement<T> handlePreparedStmtStateOutOfSync(final WebPreparedStatement<T> origStmt) throws DescriptorParsingException {
+        SharedStateId id = origStmt.getStatementId();
+        String msg = "Prepared statement failed to execute. Server changed token. Trying to recover stmt with id: " + id;
+        logger.log(Level.FINE, msg);
+        // Transition stmt cache needs to be created in 2 cases:
+        // 1. It might be null if it was the first time the server
+        //    re-deployed.
+        // 2. The server did re-deploy at least once and the time it happened
+        //    is more than TRANSITION_CACHE_OFFSET in the past. Case for
+        //    multiple re-deployments of the server parts.
+        if (transitionStmtCache == null || transitionStmtCache.isExpired()) {
+            // Create a transition cache which expires soon in the future
+            // in order to allow successful executions of queued statements which
+            // did not yet run and have old statement IDs in record.
+            logger.log(Level.FINE, "Re-creating transition cache");
+            WebPreparedStatementCache cacheSnapshot = stmtCache.createSnapshot();
+            long timeExpires = System.nanoTime() + TRANSITION_CACHE_OFFSET;
+            transitionStmtCache = new ExpirableWebPreparedStatementCache(cacheSnapshot, timeExpires);
         }
+        StatementDescriptor<T> desc = stmtCache.get(id);
+        // If the above returned null we most likely tried to execute a statement
+        // with an old server token. Attempt to use the transition cache in order
+        // to still be able to execute it successfully.
+        if (desc == null) {
+            desc = transitionStmtCache.get(id);
+            if (desc == null) {
+                throw new IllegalStateException("Irrecoverable error. GC happened or transition cache expired.");
+            }
+            WebPreparedStatementHolder transCacheHolder = transitionStmtCache.get(desc);
+            WebPreparedStatementHolder cacheHolder = stmtCache.get(desc);
+            if (transCacheHolder.getStatementId().equals(cacheHolder.getStatementId())) {
+                throw new IllegalStateException("Should not happen!");
+            }
+            // Transition case:
+            //
+            // Fetch the new mapping from the stmt cache since the statement id
+            // must have changed but category-registration and preparing the
+            // updated statement was done already.
+            SharedStateId stmtId = cacheHolder.getStatementId();
+            logger.log(Level.FINE, "Returning fixed-up statement using updated statement id: " + stmtId);
+            origStmt.setStatementId(stmtId);
+            return origStmt;
+        }
+        // Base case: re-register category and re-prepare statement. This will
+        //            be done *once* for every statement.
+        logger.log(Level.FINE, "Re-register category + prepareStatement + setting params: " + desc);
+        sendCategoryReRegistrationRequest(desc.getCategory());
+        stmtCache.remove(id);
+        // prepareStatement() will return a raw statement (no parameters will be
+        // set in this new datastructure). In order to make it executable right
+        // away we need to set the params via the params we have in record in the
+        // original stmt.
+        WebPreparedStatement<T> newStmt = (WebPreparedStatement<T>)prepareStatement(desc);
+        newStmt.setParams(origStmt.getParams());
+        return newStmt;
     }
 
     @Override
@@ -786,30 +915,29 @@ public class WebStorage implements Storage, SecureStorage {
          * Avoid two network round-trips for statements which have already
          * been prepared. Note that this makes preparing statements not entirely
          * stateless, since the prepared statement ID might change if the
-         * web endpoint reboots, but the agent/client does not and keeps old IDs
-         * in the cache. This will likely produce statement execution errors.
-         * So if that happens you've just found the likely cause :)
+         * web endpoint reloads. If those IDs get out-of-sync we do our best
+         * to correct this situation by clearing the relevant cache entry and
+         * preparing the statement again.
          */
-        WebPreparedStatementHolder holder = null;
-        synchronized(this.stmtCache) {
-            if (this.stmtCache.containsKey(desc)) {
-                // note this is a WeakHashMap and may return null here
-                holder = stmtCache.get(desc);
-            }
-        }
+        WebPreparedStatementHolder holder = stmtCache.get(desc);
+        // note this is a WeakHashMap-backed cache and may return null
         if (holder == null) {
             // Cache-miss, send request over the wire and cache result.
-            holder = sendPrepareStmtRequest(desc);
-            synchronized(this.stmtCache) {
-                this.stmtCache.put(desc, holder);
-            }
+            holder = sendPrepareStmtRequest(desc, 0);
+            stmtCache.put(desc, holder);
         }
-        return new WebPreparedStatementImpl<>(holder.typeToken, holder.numParams, holder.statementId);
+        return new WebPreparedStatementImpl<>(holder.getTypeToken(), holder.getNumParams(), holder.getStatementId());
     }
     
     // package-private for testing
-    <T extends Pojo> WebPreparedStatementHolder sendPrepareStmtRequest(StatementDescriptor<T> desc)
+    <T extends Pojo> WebPreparedStatementHolder sendPrepareStmtRequest(StatementDescriptor<T> desc, final int invokationCount)
             throws DescriptorParsingException {
+        if (invokationCount > 1) {
+            // Initial invokation == 0, potential recovery-invocation == 1
+            String msg = "Failed to recover from out-of-sync state with server";
+            logger.log(Level.WARNING, msg);
+            throw new DescriptorParsingException(msg);
+        }
         String strDesc = desc.getDescriptor();
         SharedStateId categoryId = getCategoryId(desc.getCategory());
         NameValuePair nameParam = new BasicNameValuePair("query-descriptor",
@@ -842,10 +970,10 @@ public class WebStorage implements Storage, SecureStorage {
                     // representation of category IDs changed. Thus, be sure to
                     // clear the category state and get their new IDs.
                     String msg = "Preparing statement failed. Server changed category state. Clearing category ID for statement: " +
-                                    desc.getDescriptor();
-                    logger.log(Level.WARNING, msg);
+                                    desc.getDescriptor() + " and trying to recover.";
+                    logger.log(Level.FINE, msg);
                     sendCategoryReRegistrationRequest(desc.getCategory());
-                    throw new RetryableDescriptorParsingException(msg);
+                    return sendPrepareStmtRequest(desc, invokationCount + 1);
                 }
                 default: {
                     // Common case where stmtId is the actual ID of the statement
@@ -862,7 +990,8 @@ public class WebStorage implements Storage, SecureStorage {
         }
     }
     
-    private synchronized <T extends Pojo> void sendCategoryReRegistrationRequest(Category<T> category) {
+    // package private for testing
+    synchronized <T extends Pojo> void sendCategoryReRegistrationRequest(Category<T> category) {
         // There are two possible cases. Category is an aggregate category or
         // it is not. For aggregate categories we need to re-register the
         // original first and then the aggregate category.
@@ -874,21 +1003,6 @@ public class WebStorage implements Storage, SecureStorage {
         }
         categoryIds.remove(category);
         registerCategory(category);
-    }
-    
-    // Container used for parameter caching in order to avoid unneccessary
-    // network overhead.
-    static class WebPreparedStatementHolder {
-        
-        private final Type typeToken;
-        private final int numParams;
-        private final SharedStateId statementId;
-        
-        WebPreparedStatementHolder(Type typeToken, int numParams, SharedStateId statementId) {
-            this.typeToken = typeToken;
-            this.numParams = numParams;
-            this.statementId = statementId;
-        }
     }
 
 

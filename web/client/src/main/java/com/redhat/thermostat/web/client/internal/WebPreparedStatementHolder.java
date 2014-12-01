@@ -34,19 +34,41 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.core;
+package com.redhat.thermostat.web.client.internal;
+
+import java.lang.reflect.Type;
+
+import com.redhat.thermostat.web.common.SharedStateId;
 
 /**
- * Exception thrown if parsing of a prepared statement descriptor
- * failed but retrying to prepare the same descriptor may succeed.
+ * Container used for parameter caching in order to avoid unneccessary
+ * network overhead.
+ *
+ * @see {@link WebStorage}
+ * @see {@link WebPreparedStatementCache}
  *
  */
-@SuppressWarnings("serial")
-public class RetryableDescriptorParsingException extends
-        DescriptorParsingException {
-
-    public RetryableDescriptorParsingException(String msg) {
-        super(msg);
+class WebPreparedStatementHolder {
+    
+    private final Type typeToken;
+    private final int numParams;
+    private final SharedStateId statementId;
+    
+    WebPreparedStatementHolder(Type typeToken, int numParams, SharedStateId statementId) {
+        this.typeToken = typeToken;
+        this.numParams = numParams;
+        this.statementId = statementId;
     }
 
+    Type getTypeToken() {
+        return typeToken;
+    }
+
+    int getNumParams() {
+        return numParams;
+    }
+
+    SharedStateId getStatementId() {
+        return statementId;
+    }
 }
