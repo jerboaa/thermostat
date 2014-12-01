@@ -78,7 +78,8 @@ public class IntegrationTest {
 
     public static final long TIMEOUT_IN_SECONDS = 30;
 
-    public static final String SHELL_PROMPT = "Thermostat >";
+    public static final String SHELL_DISCONNECT_PROMPT = "Thermostat (D) >";
+    public static final String SHELL_CONNECT_PROMPT = "Thermostat (C) >";
 
     private static final String THERMOSTAT_HOME = "THERMOSTAT_HOME";
     private static final String USER_THERMOSTAT_HOME = "USER_THERMOSTAT_HOME";

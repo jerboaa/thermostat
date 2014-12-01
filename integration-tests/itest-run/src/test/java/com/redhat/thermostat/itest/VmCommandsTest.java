@@ -130,15 +130,15 @@ public class VmCommandsTest extends IntegrationTest {
         String storageURL = "mongodb://127.0.0.1:27518";
         Spawn shell = spawnThermostat("shell");
 
-        shell.expect(SHELL_PROMPT);
+        shell.expect(SHELL_DISCONNECT_PROMPT);
         shell.send("list-vms -d " + storageURL + "\n");
         handleAuthPrompt(shell, storageURL, "", "");
 
-        shell.expect(SHELL_PROMPT);
+        shell.expect(SHELL_CONNECT_PROMPT);
 
         shell.send("dump-heap\n");
 
-        shell.expect(SHELL_PROMPT);
+        shell.expect(SHELL_CONNECT_PROMPT);
 
         shell.send("exit\n");
         shell.expectClose();

@@ -74,10 +74,10 @@ public class StorageConnectionTest extends IntegrationTest {
     public void testConnect() throws ExpectJException, TimeoutException, IOException {
         Spawn shell = spawnThermostat(true, "shell");
 
-        shell.expect(SHELL_PROMPT);
+        shell.expect(SHELL_DISCONNECT_PROMPT);
         shell.send("connect -d mongodb://127.0.0.1:27518\n");
         handleAuthPrompt(shell, "mongodb://127.0.0.1:27518", "", "");
-        shell.expect(SHELL_PROMPT);
+        shell.expect(SHELL_CONNECT_PROMPT);
         shell.send("exit\n");
         shell.expectClose();
 
@@ -89,9 +89,9 @@ public class StorageConnectionTest extends IntegrationTest {
     public void testDisconnectWithoutConnecting() throws ExpectJException, TimeoutException, IOException {
         Spawn shell = spawnThermostat("shell");
 
-        shell.expect(SHELL_PROMPT);
+        shell.expect(SHELL_DISCONNECT_PROMPT);
         shell.send("disconnect\n");
-        shell.expect(SHELL_PROMPT);
+        shell.expect(SHELL_DISCONNECT_PROMPT);
         shell.send("exit\n");
         shell.expectClose();
 
@@ -104,10 +104,10 @@ public class StorageConnectionTest extends IntegrationTest {
     public void testConnectAndDisconnectInShell() throws IOException, TimeoutException, ExpectJException {
         Spawn shell = spawnThermostat(true, "shell");
 
-        shell.expect(SHELL_PROMPT);
+        shell.expect(SHELL_DISCONNECT_PROMPT);
         shell.send("connect -d mongodb://127.0.0.1:27518\n");
         handleAuthPrompt(shell, "mongodb://127.0.0.1:27518", "", "");
-        shell.expect(SHELL_PROMPT);
+        shell.expect(SHELL_CONNECT_PROMPT);
         shell.send("disconnect\n");
         shell.send("exit\n");
         shell.expectClose();

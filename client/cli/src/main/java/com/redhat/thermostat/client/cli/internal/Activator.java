@@ -40,6 +40,9 @@ import java.util.Map;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
@@ -47,6 +50,7 @@ import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.shared.config.CommonPaths;
+import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.utils.keyring.Keyring;
@@ -61,6 +65,9 @@ public class Activator implements BundleActivator {
 
     private MultipleServiceTracker agentInfoTracker;
     private final AgentInfoCommand agentInfoCommand = new AgentInfoCommand();
+
+    private ServiceTracker dbServiceTracker;
+    private ShellCommand shellCommand;
 
     @Override
     public void start(final BundleContext context) throws Exception {
@@ -84,7 +91,8 @@ public class Activator implements BundleActivator {
                 CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
                 ClientPreferences prefs = new ClientPreferences(paths);
                 reg.registerCommand("connect", new ConnectCommand(prefs, keyring));
-                reg.registerCommand("shell", new ShellCommand(context, paths));
+                shellCommand = new ShellCommand(context, paths);
+                reg.registerCommand("shell", shellCommand);
             }
 
             @Override
@@ -135,6 +143,25 @@ public class Activator implements BundleActivator {
         agentInfoTracker.open();
 
         reg.registerCommand("agent-info", agentInfoCommand);
+
+        dbServiceTracker = new ServiceTracker(context, DbService.class.getName(), new ServiceTrackerCustomizer() {
+            @Override
+            public Object addingService(ServiceReference serviceReference) {
+                shellCommand.dbServiceAvailable();
+                return context.getService(serviceReference);
+            }
+
+            @Override
+            public void modifiedService(ServiceReference serviceReference, Object o) {
+                //Do nothing
+            }
+
+            @Override
+            public void removedService(ServiceReference serviceReference, Object o) {
+                shellCommand.dbServiceUnavailable();
+            }
+        });
+        dbServiceTracker.open();
     }
 
     @Override
@@ -142,6 +169,7 @@ public class Activator implements BundleActivator {
         tracker.close();
         listAgentTracker.close();
         agentInfoTracker.close();
+        dbServiceTracker.close();
         reg.unregisterCommands();
     }
 

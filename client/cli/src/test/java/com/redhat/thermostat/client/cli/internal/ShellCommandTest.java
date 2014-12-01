@@ -70,6 +70,8 @@ public class ShellCommandTest {
     static private final String VERSION = "Thermostat some version";
     static private final String VERSION_OUTPUT = VERSION + "\n";
 
+    static private final String PROMPT = "Thermostat (D) > ";
+
     private ShellCommand cmd;
 
     private BundleContext bundleContext;
@@ -130,7 +132,7 @@ public class ShellCommandTest {
         Arguments args = new SimpleArguments();
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
-        assertEquals(VERSION_OUTPUT + "Thermostat > quit\n", ctxFactory.getOutput());
+        assertEquals(VERSION_OUTPUT + PROMPT + "quit\n", ctxFactory.getOutput());
         assertEquals("", ctxFactory.getError());
     }
 
@@ -141,7 +143,7 @@ public class ShellCommandTest {
         Arguments args = new SimpleArguments();
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
-        assertEquals(VERSION_OUTPUT + "Thermostat > q\n", ctxFactory.getOutput());
+        assertEquals(VERSION_OUTPUT + PROMPT + "q\n", ctxFactory.getOutput());
         assertEquals("", ctxFactory.getError());
     }
 
@@ -152,7 +154,7 @@ public class ShellCommandTest {
         Arguments args = new SimpleArguments();
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
-        assertEquals(VERSION_OUTPUT + "Thermostat > ", ctxFactory.getOutput());
+        assertEquals(VERSION_OUTPUT + PROMPT, ctxFactory.getOutput());
         assertEquals("", ctxFactory.getError());
     }
 
@@ -163,7 +165,7 @@ public class ShellCommandTest {
         Arguments args = new SimpleArguments();
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
-        assertEquals(VERSION_OUTPUT + "Thermostat > \nThermostat > exit\n", ctxFactory.getOutput());
+        assertEquals(VERSION_OUTPUT + PROMPT + "\n" + PROMPT + "exit\n", ctxFactory.getOutput());
     }
 
     @Test
@@ -187,7 +189,7 @@ public class ShellCommandTest {
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
 
-        assertEquals(VERSION_OUTPUT + "Thermostat > old-history-value\nThermostat > exit\n", ctxFactory.getOutput());
+        assertEquals(VERSION_OUTPUT + PROMPT + "old-history-value\n" + PROMPT + "exit\n", ctxFactory.getOutput());
         assertEquals("", ctxFactory.getError());
 
         verify(launcher).run(new String[] {"old-history-value"}, true);
@@ -213,7 +215,7 @@ public class ShellCommandTest {
         verify(mockHistory).add("add-to-history");
         verify(mockHistory).flush();
 
-        assertEquals(VERSION_OUTPUT + "Thermostat > add-to-history\nThermostat > exit\n", ctxFactory.getOutput());
+        assertEquals(VERSION_OUTPUT + PROMPT + "add-to-history\n" + PROMPT + "exit\n", ctxFactory.getOutput());
         assertEquals("", ctxFactory.getError());
     }
 

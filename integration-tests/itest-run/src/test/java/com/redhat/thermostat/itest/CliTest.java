@@ -132,10 +132,10 @@ public class CliTest extends IntegrationTest {
     public void testShell() throws Exception {
         Spawn shell = spawnThermostat("shell");
 
-        shell.expect(SHELL_PROMPT);
+        shell.expect(SHELL_DISCONNECT_PROMPT);
         shell.send("help\n");
 
-        shell.expect(SHELL_PROMPT);
+        shell.expect(SHELL_DISCONNECT_PROMPT);
 
         assertMatchesShellHelpCommandList(shell.getCurrentStandardOutContents());
 
@@ -148,7 +148,7 @@ public class CliTest extends IntegrationTest {
     public void testShellPrintsVersionOnStartup() throws Exception {
         Spawn shell = spawnThermostat("shell");
 
-        shell.expect(SHELL_PROMPT);
+        shell.expect(SHELL_DISCONNECT_PROMPT);
 
         String stdOut = shell.getCurrentStandardOutContents();
         assertTrue(stdOut.contains("Thermostat version "));
@@ -158,17 +158,17 @@ public class CliTest extends IntegrationTest {
     public void versionArgumentInShellIsNotAllowed() throws Exception {
         Spawn shell = spawnThermostat("shell");
 
-        shell.expect(SHELL_PROMPT);
+        shell.expect(SHELL_DISCONNECT_PROMPT);
         shell.send("--version\n");
 
-        shell.expect(SHELL_PROMPT);
+        shell.expect(SHELL_DISCONNECT_PROMPT);
 
         String stdOut = shell.getCurrentStandardOutContents();
         String stdErr = shell.getCurrentStandardErrContents();
 
         assertMatchesShellHelpCommandList(shell.getCurrentStandardOutContents());
         // use the Pattern.DOTALL flag (?s) so that line terminators match with
-        // ".*". stdOut contains the SHELL_PROMPT too.
+        // ".*". stdOut contains the SHELL_DISCONNECT_PROMPT too.
         assertTrue(stdOut.matches("(?s)^.*\nunknown command '--version'\n.*$"));
         assertEquals(stdErr, "");
         
@@ -226,9 +226,9 @@ public class CliTest extends IntegrationTest {
         // test '!' events
         Spawn shell = spawnThermostat("shell");
 
-        shell.expect(SHELL_PROMPT);
+        shell.expect(SHELL_DISCONNECT_PROMPT);
         shell.send("what!?!\n");
-        shell.expect(SHELL_PROMPT);
+        shell.expect(SHELL_DISCONNECT_PROMPT);
         shell.send("exit\n");
         shell.expectClose();
 

@@ -49,7 +49,6 @@ import jline.console.history.History;
 import jline.console.history.PersistentHistory;
 
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.common.Version;
@@ -70,13 +69,13 @@ public class ShellCommand extends AbstractCommand {
 
     private static final String[] exitKeywords = { "exit", "quit", "q" };
 
-    private static final String PROMPT = "Thermostat > ";
-
     private HistoryProvider historyProvider;
     private Version version;
 
     private BundleContext bundleContext;
-    
+
+    private final ShellPrompt shellPrompt;
+
     static class HistoryProvider {
 
         private CommonPaths paths;
@@ -104,6 +103,8 @@ public class ShellCommand extends AbstractCommand {
         this.historyProvider = provider;
         this.bundleContext = context;
         this.version = version;
+
+        this.shellPrompt = new ShellPrompt();
     }
     
     @Override
@@ -150,7 +151,7 @@ public class ShellCommand extends AbstractCommand {
     private boolean handleConsoleInput(ConsoleReader reader, Console console) throws IOException, CommandException {
         String line;
         try {
-            line = reader.readLine(PROMPT);
+            line = reader.readLine(shellPrompt.getPrompt());
         } catch (IllegalArgumentException iae) {
             if (iae.getMessage().endsWith(": event not found")) {
                 console.getError().println(iae.getMessage());
@@ -187,6 +188,14 @@ public class ShellCommand extends AbstractCommand {
     @Override
     public boolean isStorageRequired() {
         return false;
+    }
+
+    public void dbServiceAvailable() {
+        this.shellPrompt.storageConnected();
+    }
+
+    public void dbServiceUnavailable() {
+        this.shellPrompt.storageDisconnected();
     }
 
 }
