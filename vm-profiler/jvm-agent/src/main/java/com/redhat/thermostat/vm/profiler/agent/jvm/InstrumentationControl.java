@@ -176,7 +176,6 @@ public class InstrumentationControl implements InstrumentationControlMXBean {
                 for (Map.Entry<String, AtomicLong> entry : data.entrySet()) {
                     out.write(entry.getValue().get() + "\t" + entry.getKey() + "\n");
                 }
-                System.out.println("AGENT: profiling data written to " + path);
                 resultsWrittenToDisk = true;
                 lastResults = path;
             }

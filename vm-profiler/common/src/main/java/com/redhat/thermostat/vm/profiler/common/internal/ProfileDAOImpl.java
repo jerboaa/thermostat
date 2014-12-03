@@ -148,7 +148,6 @@ public class ProfileDAOImpl implements ProfileDAO {
 
     @Override
     public List<ProfileInfo> getAllProfileInfo(VmRef vm, Range<Long> timeRange) {
-        System.out.println("ProfileDAOImpl: getAllProfileInfo()");
         return getter.getLatest(vm, timeRange.getMin(), timeRange.getMax());
     }
 
