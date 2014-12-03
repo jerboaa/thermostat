@@ -39,7 +39,6 @@ package com.redhat.thermostat.vm.profiler.agent.jvm;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -71,8 +70,6 @@ public class ProfileRecorder {
 
     /** called by instrumented code on every method enter */
     public void enterMethod(String fullyQualifiedName) {
-        Objects.requireNonNull(fullyQualifiedName);
-
         long currentTime = System.nanoTime();
         long threadId = Thread.currentThread().getId();
 
@@ -96,8 +93,6 @@ public class ProfileRecorder {
 
     /** called by instrumented code on every method exit */
     public void exitMethod(String fullyQualifiedName) {
-        Objects.requireNonNull(fullyQualifiedName);
-
         long currentTime = System.nanoTime();
         long threadId = Thread.currentThread().getId();
 
@@ -120,7 +115,6 @@ public class ProfileRecorder {
     }
 
     private void addData(String dataName, long time) {
-        Objects.requireNonNull(dataName);
         AtomicLong value = profileData.get(dataName);
         if (value == null) {
             value = profileData.putIfAbsent(dataName, new AtomicLong(time));
