@@ -42,6 +42,7 @@ import static org.mockito.Mockito.mock;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.agent.VmStatusListener;
 import com.redhat.thermostat.agent.command.RequestReceiver;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.storage.core.WriterID;
@@ -65,10 +66,12 @@ public class ActivatorTest {
 
         activator.start(context);
 
-        assertTrue(context.isServiceRegistered(RequestReceiver.class.getName(), ProfileVmRequestReceiver.class));
+        assertTrue(context.isServiceRegistered(RequestReceiver.class.getName(), ProfilerRequestReceiver.class));
+        assertTrue(context.isServiceRegistered(VmStatusListener.class.getName(), ProfilerVmStatusListener.class));
 
         activator.stop(context);
 
-        assertFalse(context.isServiceRegistered(RequestReceiver.class.getName(), ProfileVmRequestReceiver.class));
+        assertFalse(context.isServiceRegistered(RequestReceiver.class.getName(), ProfilerRequestReceiver.class));
+        assertFalse(context.isServiceRegistered(VmStatusListener.class.getName(), ProfilerVmStatusListener.class));
     }
 }

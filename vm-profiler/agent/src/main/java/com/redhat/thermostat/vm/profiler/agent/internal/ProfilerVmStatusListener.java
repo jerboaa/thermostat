@@ -34,37 +34,25 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.profiler.common;
+package com.redhat.thermostat.vm.profiler.agent.internal;
 
-import java.net.InetSocketAddress;
+import com.redhat.thermostat.agent.VmStatusListener;
 
-import com.redhat.thermostat.common.command.Request;
-import com.redhat.thermostat.common.command.Request.RequestType;
+public class ProfilerVmStatusListener implements VmStatusListener {
 
-public class ProfileRequest {
+    private final VmProfiler profiler;
 
-    public static Request create(InetSocketAddress address, String vmId, String action) {
-        Request request = new Request(RequestType.RESPONSE_EXPECTED, address);
-        request.setReceiver("com.redhat.thermostat.vm.profiler.agent.internal.ProfilerRequestReceiver");
-        request.setParameter(Request.ACTION, ProfileRequest.NAME);
-        request.setParameter(ProfileRequest.PROFILE_ACTION, action);
-        request.setParameter(ProfileRequest.VM_ID, vmId);
-        return request;
+    public ProfilerVmStatusListener(VmProfiler profiler) {
+        this.profiler = profiler;
     }
 
-    /** Value of Request.ACTION */
-    public static final String NAME = "profile-vm";
+    @Override
+    public void vmStatusChanged(Status newStatus, String vmId, int pid) {
+        if (newStatus == Status.VM_ACTIVE || newStatus == Status.VM_STARTED) {
+            profiler.vmStarted(vmId, pid);
+        } else {
+            profiler.vmStopped(vmId, pid);
+        }
+    }
 
-    /* Other parameters */
-
-    /** Key that specifies what action to take */
-    public static final String PROFILE_ACTION = "profile-action";
-
-    /** value for {@link #PROFILE_ACTION} */
-    public static final String START_PROFILING = "start";
-    /** value for {@link #PROFILE_ACTION} */
-    public static final String STOP_PROFILING = "stop";
-
-    /** Key that specifies the VM's id */
-    public static final String VM_ID = "vm-id";
 }

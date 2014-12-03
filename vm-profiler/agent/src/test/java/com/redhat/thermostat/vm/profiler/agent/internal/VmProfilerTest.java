@@ -36,101 +36,150 @@
 
 package com.redhat.thermostat.vm.profiler.agent.internal;
 
-import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Properties;
-
-import javax.management.MBeanServerConnection;
-import javax.management.ObjectName;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
-import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.common.Clock;
-import com.redhat.thermostat.vm.profiler.agent.internal.VmProfiler.Attacher;
-import com.sun.tools.attach.VirtualMachine;
+import com.redhat.thermostat.vm.profiler.agent.internal.VmProfiler.ProfileUploaderCreator;
+import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
+import com.redhat.thermostat.vm.profiler.common.ProfileStatusChange;
 
 public class VmProfilerTest {
 
+    private static final String AGENT_ID = "some-agent";
+    private static final String VM_ID = "some-vm";
+    private static final int PID = 0;
+
+    private static final String AGENT_JAR = "foo";
+    private static final String ASM_JAR = "bar";
+    private static final long TIMESTAMP = 1_000_000_000;
+
     private VmProfiler profiler;
 
-    private VirtualMachine vm;
-    private MBeanServerConnection server;
-    private MXBeanConnection connection;
-    private MXBeanConnectionPool connectionPool;
-    private Attacher attacher;
+    private RemoteProfilerCommunicator remote;
     private Clock clock;
+    private ProfileDAO dao;
 
-    private final int PID = 0;
-
-    private final String AGENT_JAR = "foo";
-    private final String ASM_JAR = "bar";
-    private final long TIME = 1_000_000_000;
-
-    private ObjectName instrumentationName;
+    private ProfileUploader uploader;
+    private ProfileUploaderCreator profileUploaderCreator;
 
     @Before
     public void setUp() throws Exception {
-        instrumentationName = new ObjectName("com.redhat.thermostat:type=InstrumentationControl");
-
         Properties props = new Properties();
         props.setProperty("AGENT_JAR", AGENT_JAR);
         props.setProperty("ASM_JAR", ASM_JAR);
 
+        dao = mock(ProfileDAO.class);
+
         clock = mock(Clock.class);
-        when(clock.getRealTimeMillis()).thenReturn(TIME);
+        when(clock.getRealTimeMillis()).thenReturn(TIMESTAMP);
 
-        attacher = mock(Attacher.class);
-        vm = mock(VirtualMachine.class);
-        when(attacher.attach(isA(String.class))).thenReturn(vm);
+        uploader = mock(ProfileUploader.class);
+        profileUploaderCreator = mock(ProfileUploaderCreator.class);
+        when(profileUploaderCreator.create(dao, AGENT_ID, VM_ID, PID)).thenReturn(uploader);
 
-        server = mock(MBeanServerConnection.class);
+        remote = mock(RemoteProfilerCommunicator.class);
 
-        connection = mock(MXBeanConnection.class);
-        when(connection.get()).thenReturn(server);
+        profiler = new VmProfiler(AGENT_ID, props, dao, clock, profileUploaderCreator, remote);
+    }
 
-        connectionPool = mock(MXBeanConnectionPool.class);
-        when(connectionPool.acquire(PID)).thenReturn(connection);
+    @Test (expected=ProfilerException.class)
+    public void doesNotProfileNotStartedVms() throws Exception {
+        profiler.startProfiling(VM_ID);
+    }
 
-        profiler = new VmProfiler(props, connectionPool, attacher, clock);
+    @Test (expected=ProfilerException.class)
+    public void doesNotProfileDeadVms() throws Exception {
+        profiler.vmStarted(VM_ID, PID);
+        profiler.vmStopped(VM_ID, PID);
+        profiler.startProfiling(VM_ID);
+    }
+
+    @Test (expected=ProfilerException.class)
+    public void doesNotStartingProfilingTwice() throws Exception {
+        profiler.vmStarted(VM_ID, PID);
+        profiler.startProfiling(VM_ID);
+        profiler.startProfiling(VM_ID);
     }
 
     @Test
     public void startingProfilingLoadsJvmAgentAndMakesAnRmiCall() throws Exception {
-        profiler.startProfiling(PID);
+        profiler.vmStarted(VM_ID, PID);
+        profiler.startProfiling(VM_ID);
 
-        verify(attacher).attach(String.valueOf(PID));
-        verify(vm).loadAgent(AGENT_JAR, "");
-        verify(vm).detach();
-        verifyNoMoreInteractions(vm);
+        verify(remote).loadAgentIntoPid(PID, AGENT_JAR, "");
+        verify(remote).startProfiling(PID);
+        verify(dao).addStatus(new ProfileStatusChange(AGENT_ID, VM_ID, TIMESTAMP, true));
+        verifyNoMoreInteractions(remote);
+    }
 
-        verify(server).invoke(instrumentationName, "startProfiling", new Object[0], new String[0]);
-        verify(connectionPool).release(PID, connection);
+    @Test (expected=ProfilerException.class)
+    public void doesNotStopProfilingAnUnknownVm() throws Exception {
+        profiler.stopProfiling(VM_ID);
+    }
+
+    @Test (expected=ProfilerException.class)
+    public void doesNotStopProfilingNonProfiledVm() throws Exception {
+        profiler.vmStarted(VM_ID, PID);
+        profiler.stopProfiling(VM_ID);
+    }
+
+    @Test (expected=ProfilerException.class)
+    public void errorOnStoppingTwice() throws Exception {
+        final String FILE = "foobar";
+        when(remote.getProfilingDataFile(PID)).thenReturn(FILE);
+
+        profiler.vmStarted(VM_ID, PID);
+        profiler.startProfiling(VM_ID);
+        profiler.stopProfiling(VM_ID);
+        profiler.stopProfiling(VM_ID);
     }
 
     @Test
-    public void stoppingProfilingLoadsJvmAgentAndMakesAnRmiCall() throws Exception {
+    public void stoppingProfilingMakesInvokesStopUsingRmiAndUploadsData() throws Exception {
+
         final String FILE = "foobar";
-        when(server.getAttribute(instrumentationName, "ProfilingDataFile")).thenReturn(FILE);
+        when(remote.getProfilingDataFile(PID)).thenReturn(FILE);
 
-        ProfileUploader uploader = mock(ProfileUploader.class);
+        profiler.vmStarted(VM_ID, PID);
+        profiler.startProfiling(VM_ID);
+        profiler.stopProfiling(VM_ID);
 
-        profiler.stopProfiling(PID, uploader);
+        verify(dao).addStatus(new ProfileStatusChange(AGENT_ID, VM_ID, TIMESTAMP, false));
 
-        verifyNoMoreInteractions(vm);
+        verify(remote).stopProfiling(PID);
+        verify(uploader).upload(TIMESTAMP, new File(FILE));
+        verifyNoMoreInteractions(uploader);
+    }
 
-        verify(server).invoke(instrumentationName, "stopProfiling", new Object[0], new String[0]);
-        verify(uploader).upload(TIME, new File(FILE));
-        verify(connectionPool, times(2)).release(PID, connection);
+    @Test
+    public void gathersAndUploadsProfileDataOnVmExit() throws Exception {
+        // this is written on the target vm exit
+        File profilingResults = new File(System.getProperty("java.io.tmpdir"), "thermostat-" + PID + "-foobar.perfdata");
+        try (BufferedWriter writer = Files.newBufferedWriter(profilingResults.toPath(), StandardCharsets.UTF_8)) {
+            writer.append("test file, please ignore");
+        }
 
+        profiler.vmStarted(VM_ID, PID);
+        profiler.startProfiling(VM_ID);
+        profiler.vmStopped(VM_ID, PID);
 
+        verify(remote, never()).stopProfiling(PID);
+        verify(uploader).upload(TIMESTAMP, profilingResults);
+        verify(dao).addStatus(new ProfileStatusChange(AGENT_ID, VM_ID, TIMESTAMP, false));
+
+        profilingResults.delete();
     }
 }

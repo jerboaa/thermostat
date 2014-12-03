@@ -38,7 +38,12 @@ package com.redhat.thermostat.vm.profiler.agent.internal;
 
 public class ProfilerException extends Exception {
 
+    public ProfilerException(String message) {
+        super(message);
+    }
+
     public ProfilerException(String message, Exception cause) {
         super(message, cause);
     }
+
 }

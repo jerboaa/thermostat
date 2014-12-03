@@ -66,16 +66,18 @@ public class Activator implements BundleActivator {
         tracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
             private ReceiverRegistry requestHandlerRegisteration;
             private VmStatusListenerRegistrar vmStatusRegistrar;
-            private ProfileVmRequestReceiver profileRequestHandler;
+            private ProfilerRequestReceiver profileRequestHandler;
+            private ProfilerVmStatusListener livenessListener;
 
             @Override
             public void dependenciesUnavailable() {
                 requestHandlerRegisteration.unregisterReceivers();
                 requestHandlerRegisteration = null;
-
-                vmStatusRegistrar.unregister(profileRequestHandler);
-
                 profileRequestHandler = null;
+
+                vmStatusRegistrar.unregister(livenessListener);
+                livenessListener = null;
+
             }
 
             @Override
@@ -85,14 +87,15 @@ public class Activator implements BundleActivator {
                 ProfileDAO dao = get(ProfileDAO.class, services);
                 String writerId = writerIdProvider.getWriterID();
 
-                VmProfiler profiler = new VmProfiler(configuration, pool);
-                profileRequestHandler = new ProfileVmRequestReceiver(writerId, profiler, dao);
+                VmProfiler profiler = new VmProfiler(writerId, configuration, dao, pool);
+                profileRequestHandler = new ProfilerRequestReceiver(profiler);
 
                 requestHandlerRegisteration = new ReceiverRegistry(context);
                 requestHandlerRegisteration.registerReceiver(profileRequestHandler);
 
+                livenessListener = new ProfilerVmStatusListener(profiler);
                 vmStatusRegistrar = new VmStatusListenerRegistrar(context);
-                vmStatusRegistrar.register(profileRequestHandler);
+                vmStatusRegistrar.register(livenessListener);
             }
             private <T> T get(Class<T> klass, Map<String, Object> services) {
                 return (T) services.get(klass.getName());

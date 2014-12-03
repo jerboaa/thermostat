@@ -37,116 +37,178 @@
 package com.redhat.thermostat.vm.profiler.agent.internal;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.logging.Logger;
 
-import javax.management.MBeanServerConnection;
-import javax.management.ObjectName;
-
-import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.sun.tools.attach.AgentInitializationException;
-import com.sun.tools.attach.AgentLoadException;
-import com.sun.tools.attach.AttachNotSupportedException;
-import com.sun.tools.attach.VirtualMachine;
+import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
+import com.redhat.thermostat.vm.profiler.common.ProfileStatusChange;
 
 public class VmProfiler {
 
-    private static final Logger logger = LoggingUtils.getLogger(VmProfiler.class);
-
-    private final MXBeanConnectionPool connectionPool;
-    private final Attacher attacher;
-    private final Clock clock;
-
-    private String agentJarPath;
-    private String asmJarPath;
-
-    public VmProfiler(Properties configuration, MXBeanConnectionPool connectionPool) {
-        this(configuration, connectionPool, new Attacher(), new SystemClock());
+    static class MostRecentFileFirst implements Comparator<File> {
+        @Override
+        public int compare(File o1, File o2) {
+            return Long.compare(o2.lastModified(), o1.lastModified());
+        }
     }
 
-    public VmProfiler(Properties configuration, MXBeanConnectionPool connectionPool, Attacher attacher, Clock clock) {
-        this.connectionPool = connectionPool;
-        this.attacher = attacher;
+    static class ProfileUploaderCreator {
+        ProfileUploader create(ProfileDAO dao, String agentId, String vmId, int pid) {
+            return new ProfileUploader(dao, agentId, vmId, pid);
+        }
+    }
+
+    private static final Logger logger = LoggingUtils.getLogger(VmProfiler.class);
+
+    private final List<Integer> currentlyProfiledVmPids = new ArrayList<>();
+
+    private final VmIdToPidMapper vmIdToPid = new VmIdToPidMapper();
+
+    private final String agentId;
+    private final Clock clock;
+    private final ProfileDAO dao;
+    private final ProfileUploaderCreator uploaderCreator;
+    private final RemoteProfilerCommunicator remote;
+
+    private final String agentJarPath;
+    private final String asmJarPath;
+
+    public VmProfiler(String agentId, Properties configuration, ProfileDAO dao, MXBeanConnectionPool pool) {
+        this(agentId, configuration, dao, new SystemClock(), new ProfileUploaderCreator(), new RemoteProfilerCommunicator(pool));
+    }
+
+    VmProfiler(String agentId, Properties configuration,
+            ProfileDAO dao,
+            Clock clock, ProfileUploaderCreator creator, RemoteProfilerCommunicator remote) {
+        this.agentId = agentId;
         this.clock = clock;
+        this.dao = dao;
+        this.uploaderCreator = creator;
+        this.remote = remote;
 
         // requireNonNull protects against bad config with missing values
         agentJarPath = Objects.requireNonNull(configuration.getProperty("AGENT_JAR"));
         asmJarPath = Objects.requireNonNull(configuration.getProperty("ASM_JAR"));
     }
 
-    public void startProfiling(int pid) throws ProfilerException {
-        loadProfilerAgentIntoPid(pid);
-
-        invokeMethodOnInstrumentation(pid, "startProfiling");
+    public synchronized void vmStarted(String vmId, int pid) {
+        // assert not already being profiled
+        if (currentlyProfiledVmPids.contains((Integer) pid)) {
+            throw new IllegalStateException("VM " + pid + " is already being profiled");
+        }
+        vmIdToPid.add(vmId, pid);
     }
 
-    private void loadProfilerAgentIntoPid(int pid) throws ProfilerException {
+    public synchronized void vmStopped(String vmId, int pid) {
         try {
-            VirtualMachine vm = attacher.attach(String.valueOf(pid));
-            try {
-                String jarsToLoad = ""; // asmJarPath + ":" + agentJarPath;
-                logger.info("Asking " + pid + " to load agent '" + agentJarPath + "' with arguments '" + jarsToLoad + "'");
-                vm.loadAgent(agentJarPath, jarsToLoad);
-            } catch (AgentLoadException | AgentInitializationException e) {
-                throw new ProfilerException("Error starting profiler", e);
-            } finally {
-                vm.detach();
-            }
-        } catch (IOException | AttachNotSupportedException e) {
-            throw new ProfilerException("Error starting profiler", e);
+            disableProfilerIfActive(vmId, pid);
+        } catch (ProfilerException e) {
+            logger.warning(e.getMessage());
+        }
+        vmIdToPid.remove(vmId, pid);
+    }
+
+    private void disableProfilerIfActive(String vmId, int pid) throws ProfilerException {
+        if (currentlyProfiledVmPids.contains(pid)) {
+            stopProfiling(vmId, false);
         }
     }
 
-    public void stopProfiling(int pid, ProfileUploader uploader) throws ProfilerException {
-        invokeMethodOnInstrumentation(pid, "stopProfiling");
+    public synchronized void startProfiling(String vmId) throws ProfilerException {
+        int pid = vmIdToPid.getPid(vmId);
+        if (pid == VmIdToPidMapper.UNKNOWN_VMID) {
+            throw new ProfilerException("Unknown VmId " + vmId);
+        }
 
-        String profilingDataFile = (String) getInstrumentationAttribute(pid, "ProfilingDataFile");
+        if (currentlyProfiledVmPids.contains((Integer) pid)) {
+            throw new ProfilerException("Already profiling the VM");
+        }
+
+        // TODO make this adjustable at run-time
+        // eg: asmJarPath + ":" + agentJarPath;
+        String jarsToLoad = "";
+        logger.info("Asking " + pid + " to load agent '" + agentJarPath + "' with arguments '" + jarsToLoad + "'");
+        // FIXME Only load the first time
+        remote.loadAgentIntoPid(pid, agentJarPath, jarsToLoad);
+
+        remote.startProfiling(pid);
+
+        currentlyProfiledVmPids.add(pid);
+        dao.addStatus(new ProfileStatusChange(agentId, vmId, clock.getRealTimeMillis(), true));
+    }
+
+    public synchronized void stopProfiling(String vmId) throws ProfilerException {
+        stopProfiling(vmId, true);
+    }
+
+    private void stopProfiling(String vmId, boolean alive) throws ProfilerException {
+        int pid = vmIdToPid.getPid(vmId);
+        if (pid == VmIdToPidMapper.UNKNOWN_VMID) {
+            throw new ProfilerException("VmId not found: " + vmId);
+        }
+
+        if (!currentlyProfiledVmPids.contains(pid)) {
+            throw new ProfilerException("Vm is not being profiled: " + vmId);
+        }
+
+        ProfileUploader uploader = uploaderCreator.create(dao, agentId, vmId, pid);
+        if (alive) {
+            stopRemoteProfilerAndUploadResults(pid, uploader);
+        } else {
+            findAndUploadProfilingResultsStoredOnDisk(pid, uploader);
+        }
+        dao.addStatus(new ProfileStatusChange(agentId, vmId, clock.getRealTimeMillis(), false));
+        currentlyProfiledVmPids.remove((Integer) pid);
+    }
+
+    private void stopRemoteProfilerAndUploadResults(int pid, ProfileUploader uploader) throws ProfilerException {
+        remote.stopProfiling(pid);
+
+        String profilingDataFile = remote.getProfilingDataFile(pid);
+        upload(uploader, clock.getRealTimeMillis(), new File(profilingDataFile));
+    }
+
+    private void findAndUploadProfilingResultsStoredOnDisk(final int pid, ProfileUploader uploader) throws ProfilerException {
+        long timeStamp = clock.getRealTimeMillis();
+        // look for latest profiling data that it might have emitted on shutdown
+        File file = findProfilingResultFile(pid);
+        upload(uploader, timeStamp, file);
+    }
+
+    private File findProfilingResultFile(final int pid) {
+        // from InstrumentationControl:
+        // return Files.createTempFile("thermostat-" + getProcessId() + "-", ".perfdata", attributes);
+        String tmpDir = System.getProperty("java.io.tmpdir");
+        File[] files = new File(tmpDir).listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.startsWith("thermostat-" + pid + "-") && name.endsWith(".perfdata");
+            }
+        });
+
+        List<File> filesSortedByTimeStamp = Arrays.asList(files);
+        Collections.sort(filesSortedByTimeStamp, new MostRecentFileFirst());
+        return filesSortedByTimeStamp.get(0);
+    }
+
+    private void upload(ProfileUploader uploader, long timeStamp, File file) throws ProfilerException {
         try {
-            uploader.upload(clock.getRealTimeMillis(), new File(profilingDataFile));
+            uploader.upload(clock.getRealTimeMillis(), file);
         } catch (IOException e) {
             throw new ProfilerException("Unable to save profiling data into storage", e);
         }
     }
 
-    private Object invokeMethodOnInstrumentation(int pid, String name) throws ProfilerException {
-        try {
-            MXBeanConnection connection = connectionPool.acquire(pid);
-            try {
-                ObjectName instrumentation = new ObjectName("com.redhat.thermostat:type=InstrumentationControl");
-                MBeanServerConnection server = connection.get();
-                return server.invoke(instrumentation, name, new Object[0], new String[0]);
-            } finally {
-                connectionPool.release(pid, connection);
-            }
-        } catch (Exception e) {
-            throw new ProfilerException("Unable to communicate with remote profiler", e);
-        }
-    }
-
-    private Object getInstrumentationAttribute(int pid, String name) throws ProfilerException {
-        try {
-            MXBeanConnection connection = connectionPool.acquire(pid);
-            try {
-                ObjectName instrumentation = new ObjectName("com.redhat.thermostat:type=InstrumentationControl");
-                MBeanServerConnection server = connection.get();
-                return server.getAttribute(instrumentation, name);
-            } finally {
-                connectionPool.release(pid, connection);
-            }
-        } catch (Exception e) {
-            throw new ProfilerException("Unable to communicate with remote profiler", e);
-        }
-    }
-
-    static class Attacher {
-        VirtualMachine attach(String pid) throws AttachNotSupportedException, IOException {
-            return VirtualMachine.attach(pid);
-        }
-    }
 }

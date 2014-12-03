@@ -34,37 +34,51 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.profiler.common;
+package com.redhat.thermostat.vm.profiler.agent.internal;
 
-import java.net.InetSocketAddress;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
-import com.redhat.thermostat.common.command.Request;
-import com.redhat.thermostat.common.command.Request.RequestType;
+import org.junit.Before;
+import org.junit.Test;
 
-public class ProfileRequest {
+import com.redhat.thermostat.agent.VmStatusListener.Status;
 
-    public static Request create(InetSocketAddress address, String vmId, String action) {
-        Request request = new Request(RequestType.RESPONSE_EXPECTED, address);
-        request.setReceiver("com.redhat.thermostat.vm.profiler.agent.internal.ProfilerRequestReceiver");
-        request.setParameter(Request.ACTION, ProfileRequest.NAME);
-        request.setParameter(ProfileRequest.PROFILE_ACTION, action);
-        request.setParameter(ProfileRequest.VM_ID, vmId);
-        return request;
+
+public class ProfilerVmStatusListenerTest {
+
+    private static final String VM_ID = "foo";
+    private static final int VM_PID = 1;
+
+    private VmProfiler profiler;
+
+    private ProfilerVmStatusListener listener;
+
+    @Before
+    public void setUp() {
+        profiler = mock(VmProfiler.class);
+        listener = new ProfilerVmStatusListener(profiler);
     }
 
-    /** Value of Request.ACTION */
-    public static final String NAME = "profile-vm";
+    @Test
+    public void forwardsStartEventToProfiler() throws Exception {
+        listener.vmStatusChanged(Status.VM_STARTED, VM_ID, VM_PID);
+        verify(profiler).vmStarted(VM_ID, VM_PID);
+    }
 
-    /* Other parameters */
+    @Test
+    public void forwardsActiveEventToProfiler() throws Exception {
+        listener.vmStatusChanged(Status.VM_ACTIVE, VM_ID, VM_PID);
+        verify(profiler).vmStarted(VM_ID, VM_PID);
+    }
 
-    /** Key that specifies what action to take */
-    public static final String PROFILE_ACTION = "profile-action";
+    @Test
+    public void forwardsStopEventToProfiler() throws Exception {
+        listener.vmStatusChanged(Status.VM_STOPPED, VM_ID, VM_PID);
+        verify(profiler).vmStopped(VM_ID, VM_PID);
+    }
 
-    /** value for {@link #PROFILE_ACTION} */
-    public static final String START_PROFILING = "start";
-    /** value for {@link #PROFILE_ACTION} */
-    public static final String STOP_PROFILING = "stop";
-
-    /** Key that specifies the VM's id */
-    public static final String VM_ID = "vm-id";
 }

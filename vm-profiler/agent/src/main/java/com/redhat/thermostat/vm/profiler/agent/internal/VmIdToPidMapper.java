@@ -34,37 +34,33 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.profiler.common;
+package com.redhat.thermostat.vm.profiler.agent.internal;
 
-import java.net.InetSocketAddress;
+import java.util.concurrent.ConcurrentHashMap;
 
-import com.redhat.thermostat.common.command.Request;
-import com.redhat.thermostat.common.command.Request.RequestType;
+class VmIdToPidMapper {
 
-public class ProfileRequest {
+    /** A pid that corresponds to an unknown */
+    static final int UNKNOWN_VMID = -1;
 
-    public static Request create(InetSocketAddress address, String vmId, String action) {
-        Request request = new Request(RequestType.RESPONSE_EXPECTED, address);
-        request.setReceiver("com.redhat.thermostat.vm.profiler.agent.internal.ProfilerRequestReceiver");
-        request.setParameter(Request.ACTION, ProfileRequest.NAME);
-        request.setParameter(ProfileRequest.PROFILE_ACTION, action);
-        request.setParameter(ProfileRequest.VM_ID, vmId);
-        return request;
+    private final ConcurrentHashMap<String, Integer> vmIdToPid = new ConcurrentHashMap<>();
+
+    void add(String vmId, int pid) {
+        vmIdToPid.putIfAbsent(vmId, pid);
     }
 
-    /** Value of Request.ACTION */
-    public static final String NAME = "profile-vm";
+    /** Return the pid or {@link #UNKNOWN_VMID} */
+    int getPid(String vmId) {
+        Integer pid = vmIdToPid.get(vmId);
+        if (pid == null) {
+            return UNKNOWN_VMID;
+        } else {
+            return pid;
+        }
+    }
 
-    /* Other parameters */
+    void remove(String vmId, int pid) {
+        vmIdToPid.remove(vmId, pid);
+    }
 
-    /** Key that specifies what action to take */
-    public static final String PROFILE_ACTION = "profile-action";
-
-    /** value for {@link #PROFILE_ACTION} */
-    public static final String START_PROFILING = "start";
-    /** value for {@link #PROFILE_ACTION} */
-    public static final String STOP_PROFILING = "stop";
-
-    /** Key that specifies the VM's id */
-    public static final String VM_ID = "vm-id";
 }
