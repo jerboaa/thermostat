@@ -34,49 +34,26 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.dao.impl;
+package com.redhat.thermostat.storage.internal.statement;
 
-import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.storage.core.experimental.statement.CategoryBuilder;
-import com.redhat.thermostat.thread.model.ThreadSession;
-import com.redhat.thermostat.thread.model.ThreadSummary;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.logging.Logger;
 
-/**
- *
+/*
+ * NOTE class copied from storage-test-utils for internal testing of Statement
+ * Adapters
  */
-public class ThreadDaoCategories {
+public final class StatementDescriptorTester<T extends Pojo> {
 
-    private static final Logger logger = LoggingUtils.getLogger(ThreadDaoCategories.class);
-
-    public static class Categories {
-        public static final String SUMMARY = "vm-thread-summary";
-        public static final String SESSION = "vm-thread-session";
+    public void testParseBasic(StatementDescriptor<T> desc)
+            throws DescriptorParsingException {
+        TestParser<T> testParser = new TestParser<>(desc, ParserType.BASIC);
+        testParser.parse();
     }
-
-    static final List<Class<? extends Pojo>> BEANS = new ArrayList<>();
-    static {
-        BEANS.add(ThreadSummary.class);
-        BEANS.add(ThreadSession.class);
-    }
-
-    public static void register(Collection<String> collection) {
-        for (Class<? extends Pojo> beanClass: BEANS) {
-            Category<? extends Pojo> category = new CategoryBuilder(beanClass).build();
-            collection.add(category.getName());
-        }
-    }
-
-    public static void register(Storage storage) {
-        for (Class<? extends Pojo> beanClass: BEANS) {
-            Category<? extends Pojo> category = new CategoryBuilder(beanClass).build();
-            storage.registerCategory(category);
-        }
+    
+    public void testParseSemantic(StatementDescriptor<T> desc) throws DescriptorParsingException {
+        TestParser<T> testParser = new TestParser<>(desc, ParserType.SEMANTIC);
+        testParser.parse();
     }
 }

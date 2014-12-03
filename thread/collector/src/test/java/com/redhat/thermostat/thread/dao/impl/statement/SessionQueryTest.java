@@ -36,8 +36,8 @@
 
 package com.redhat.thermostat.thread.dao.impl.statement;
 
-import com.redhat.thermostat.thread.dao.impl.statement.support.BeanAdapter;
-import com.redhat.thermostat.thread.dao.impl.statement.support.BeanAdapterBuilder;
+import com.redhat.thermostat.storage.core.experimental.statement.BeanAdapter;
+import com.redhat.thermostat.storage.core.experimental.statement.BeanAdapterBuilder;
 import com.redhat.thermostat.thread.model.ThreadSession;
 import java.util.Set;
 import org.junit.Test;

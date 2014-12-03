@@ -34,78 +34,37 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.model;
+package com.redhat.thermostat.storage.core.experimental.statement;
 
-import com.redhat.thermostat.storage.core.Entity;
-import com.redhat.thermostat.storage.core.Persist;
-import com.redhat.thermostat.storage.model.BasePojo;
-import com.redhat.thermostat.storage.model.TimeStampedPojo;
-import com.redhat.thermostat.thread.dao.impl.ThreadDaoCategories;
-import com.redhat.thermostat.storage.core.experimental.statement.Category;
-import com.redhat.thermostat.storage.core.experimental.statement.Indexed;
+import org.junit.Test;
 
-/**
- *
- */
-@Category(ThreadDaoCategories.Categories.SESSION)
-@Entity
-public class ThreadSession extends BasePojo implements TimeStampedPojo {
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-    private String vmId;
-    private long timestamp;
-    private String session;
-    private SessionID sessionID;
+public class StatementTest {
 
-    public ThreadSession() {
-        this(null);
+    @Test
+    public void testEquals() throws Exception {
+        Statement statement = new Statement("test");
+        Statement statement2 = new Statement("test");
+
+        assertTrue(statement.equals("test"));
+        assertTrue(statement.equals(statement2));
+
+        statement2 = new Statement("fluff");
+        assertFalse(statement.equals("fluff"));
+        assertFalse(statement.equals(statement2));
     }
 
-    public ThreadSession(String writerId) {
-        super(writerId);
-    }
+    @Test
+    public void testHashCode() throws Exception {
+        Statement statement = new Statement("test");
+        Statement statement2 = new Statement("test");
 
-    @Indexed
-    @Persist
-    public void setVmId(String vmId) {
-        this.vmId = vmId;
-    }
+        assertEquals(statement.hashCode(), statement2.hashCode());
 
-    @Indexed
-    @Persist
-    public String getVmId() {
-        return vmId;
-    }
-
-    @Persist
-    public long getTimeStamp() {
-        return timestamp;
-    }
-
-    @Persist
-    public void setTimeStamp(long timestamp) {
-        this.timestamp = timestamp;
-    }
-
-    @Override
-    public String toString() {
-        return "[timestamp: " + timestamp + ", session: " +
-               ", vm: " + vmId + "]";
-    }
-
-    @Indexed
-    @Persist
-    public void setSession(String session) {
-        this.session = session;
-        sessionID = new SessionID(session);
-    }
-
-    @Indexed
-    @Persist
-    public String getSession() {
-        return session;
-    }
-
-    public SessionID getSessionID() {
-        return sessionID;
+        statement2 = new Statement("fluff");
+        assertFalse(statement.hashCode() == statement2.hashCode());
     }
 }

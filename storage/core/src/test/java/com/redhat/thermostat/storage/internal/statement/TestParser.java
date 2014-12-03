@@ -34,78 +34,33 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.model;
+package com.redhat.thermostat.storage.internal.statement;
 
-import com.redhat.thermostat.storage.core.Entity;
-import com.redhat.thermostat.storage.core.Persist;
-import com.redhat.thermostat.storage.model.BasePojo;
-import com.redhat.thermostat.storage.model.TimeStampedPojo;
-import com.redhat.thermostat.thread.dao.impl.ThreadDaoCategories;
-import com.redhat.thermostat.storage.core.experimental.statement.Category;
-import com.redhat.thermostat.storage.core.experimental.statement.Indexed;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
+import com.redhat.thermostat.storage.core.ParsedStatement;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.model.Pojo;
 
-/**
- *
+/*
+ * NOTE class copied from storage-test-utils for internal testing
  */
-@Category(ThreadDaoCategories.Categories.SESSION)
-@Entity
-public class ThreadSession extends BasePojo implements TimeStampedPojo {
+public final class TestParser<T extends Pojo> implements StatementDescriptorParser<T> {
 
-    private String vmId;
-    private long timestamp;
-    private String session;
-    private SessionID sessionID;
-
-    public ThreadSession() {
-        this(null);
+    private final StatementDescriptor<T> desc;
+    private final DescriptorParserImplFactory factory;
+    private final ParserType type;
+    
+    public TestParser(StatementDescriptor<T> desc, ParserType type) {
+        this.desc = desc;
+        this.factory = new DescriptorParserImplFactory();
+        this.type = type;
     }
-
-    public ThreadSession(String writerId) {
-        super(writerId);
-    }
-
-    @Indexed
-    @Persist
-    public void setVmId(String vmId) {
-        this.vmId = vmId;
-    }
-
-    @Indexed
-    @Persist
-    public String getVmId() {
-        return vmId;
-    }
-
-    @Persist
-    public long getTimeStamp() {
-        return timestamp;
-    }
-
-    @Persist
-    public void setTimeStamp(long timestamp) {
-        this.timestamp = timestamp;
-    }
-
+    
     @Override
-    public String toString() {
-        return "[timestamp: " + timestamp + ", session: " +
-               ", vm: " + vmId + "]";
+    public ParsedStatement<T> parse() throws DescriptorParsingException {
+        StatementDescriptorParser<T> actualParser = factory.getParser(type, desc);
+        actualParser.parse();
+        return null; // Always return null. Testing utility only.
     }
 
-    @Indexed
-    @Persist
-    public void setSession(String session) {
-        this.session = session;
-        sessionID = new SessionID(session);
-    }
-
-    @Indexed
-    @Persist
-    public String getSession() {
-        return session;
-    }
-
-    public SessionID getSessionID() {
-        return sessionID;
-    }
 }

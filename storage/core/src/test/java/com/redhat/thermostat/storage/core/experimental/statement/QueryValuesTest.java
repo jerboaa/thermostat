@@ -34,78 +34,64 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.model;
+package com.redhat.thermostat.storage.core.experimental.statement;
 
-import com.redhat.thermostat.storage.core.Entity;
-import com.redhat.thermostat.storage.core.Persist;
-import com.redhat.thermostat.storage.model.BasePojo;
-import com.redhat.thermostat.storage.model.TimeStampedPojo;
-import com.redhat.thermostat.thread.dao.impl.ThreadDaoCategories;
-import com.redhat.thermostat.storage.core.experimental.statement.Category;
-import com.redhat.thermostat.storage.core.experimental.statement.Indexed;
+import java.util.ArrayList;
+import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
 
-/**
- *
- */
-@Category(ThreadDaoCategories.Categories.SESSION)
-@Entity
-public class ThreadSession extends BasePojo implements TimeStampedPojo {
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-    private String vmId;
-    private long timestamp;
-    private String session;
-    private SessionID sessionID;
+public class QueryValuesTest {
 
-    public ThreadSession() {
-        this(null);
+    private Query query;
+    private List<Criterion> criterias;
+
+    private Criterion criterion0;
+    private Criterion criterion1;
+    private Criterion criterion2;
+
+    @Before
+    public void setup() {
+        query = mock(Query.class);
+        criterias = new ArrayList<>();
+
+        criterion0 = mock(Criterion.class);
+        when(criterion0.getType()).thenReturn((Class)  int.class);
+        when(criterion0.getId()).thenReturn(new Id("0"));
+
+        criterion1 = mock(Criterion.class);
+        when(criterion1.getType()).thenReturn((Class) String.class);
+        when(criterion1.getId()).thenReturn(new Id("1"));
+
+        criterion2 = mock(Criterion.class);
+        when(criterion2.getType()).thenReturn((Class) long.class);
+        when(criterion2.getId()).thenReturn(new Id("2"));
+
+        criterias.add(criterion0);
+        criterias.add(criterion1);
+        criterias.add(criterion2);
     }
 
-    public ThreadSession(String writerId) {
-        super(writerId);
+    @Test(expected = IllegalArgumentException.class)
+    public void testSetWithWrongArguments() throws Exception {
+
+        QueryValues values = new QueryValues(query);
+        values.addCriteria(criterias);
+
+        values.set(criterion0, "wrong type");
     }
 
-    @Indexed
-    @Persist
-    public void setVmId(String vmId) {
-        this.vmId = vmId;
-    }
+    @Test
+    public void testSet() throws Exception {
 
-    @Indexed
-    @Persist
-    public String getVmId() {
-        return vmId;
-    }
+        QueryValues values = new QueryValues(query);
+        values.addCriteria(criterias);
 
-    @Persist
-    public long getTimeStamp() {
-        return timestamp;
-    }
-
-    @Persist
-    public void setTimeStamp(long timestamp) {
-        this.timestamp = timestamp;
-    }
-
-    @Override
-    public String toString() {
-        return "[timestamp: " + timestamp + ", session: " +
-               ", vm: " + vmId + "]";
-    }
-
-    @Indexed
-    @Persist
-    public void setSession(String session) {
-        this.session = session;
-        sessionID = new SessionID(session);
-    }
-
-    @Indexed
-    @Persist
-    public String getSession() {
-        return session;
-    }
-
-    public SessionID getSessionID() {
-        return sessionID;
+        values.set(criterion0, 10);
+        values.set(criterion1, "test");
+        values.set(criterion2, 42l);
     }
 }

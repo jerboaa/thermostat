@@ -36,14 +36,14 @@
 
 package com.redhat.thermostat.thread.dao.impl.statement;
 
-import com.redhat.thermostat.thread.dao.impl.statement.support.FieldDescriptor;
-import com.redhat.thermostat.thread.dao.impl.statement.support.Id;
-import com.redhat.thermostat.thread.dao.impl.statement.support.LimitCriterion;
-import com.redhat.thermostat.thread.dao.impl.statement.support.Query;
-import com.redhat.thermostat.thread.dao.impl.statement.support.SortCriterion;
-import com.redhat.thermostat.thread.dao.impl.statement.support.StatementUtils;
-import com.redhat.thermostat.thread.dao.impl.statement.support.TypeMapper;
-import com.redhat.thermostat.thread.dao.impl.statement.support.WhereCriterion;
+import com.redhat.thermostat.storage.core.experimental.statement.FieldDescriptor;
+import com.redhat.thermostat.storage.core.experimental.statement.Id;
+import com.redhat.thermostat.storage.core.experimental.statement.LimitCriterion;
+import com.redhat.thermostat.storage.core.experimental.statement.Query;
+import com.redhat.thermostat.storage.core.experimental.statement.SortCriterion;
+import com.redhat.thermostat.storage.core.experimental.statement.StatementUtils;
+import com.redhat.thermostat.storage.core.experimental.statement.TypeMapper;
+import com.redhat.thermostat.storage.core.experimental.statement.WhereCriterion;
 import com.redhat.thermostat.thread.model.ThreadSession;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import java.util.List;

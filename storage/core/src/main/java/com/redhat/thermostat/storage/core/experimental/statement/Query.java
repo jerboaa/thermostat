@@ -34,49 +34,69 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.dao.impl;
+package com.redhat.thermostat.storage.core.experimental.statement;
 
-import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.storage.core.experimental.statement.CategoryBuilder;
-import com.redhat.thermostat.thread.model.ThreadSession;
-import com.redhat.thermostat.thread.model.ThreadSummary;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Logger;
+import java.util.Map;
 
 /**
  *
  */
-public class ThreadDaoCategories {
+public abstract class Query<T extends Pojo> {
 
-    private static final Logger logger = LoggingUtils.getLogger(ThreadDaoCategories.class);
+    protected final class Criteria {
+        private List<Criterion> criteria;
+        private Map<Id, Criterion> map;
 
-    public static class Categories {
-        public static final String SUMMARY = "vm-thread-summary";
-        public static final String SESSION = "vm-thread-session";
-    }
+        Criteria() {
+            criteria = new ArrayList<>();
+            map = new HashMap<>();
+        }
 
-    static final List<Class<? extends Pojo>> BEANS = new ArrayList<>();
-    static {
-        BEANS.add(ThreadSummary.class);
-        BEANS.add(ThreadSession.class);
-    }
-
-    public static void register(Collection<String> collection) {
-        for (Class<? extends Pojo> beanClass: BEANS) {
-            Category<? extends Pojo> category = new CategoryBuilder(beanClass).build();
-            collection.add(category.getName());
+        public void add(Criterion criterion) {
+            Id id = criterion.getId();
+            if (map.containsKey(id)) {
+                throw new IllegalArgumentException("Already contains criteria" +
+                                                   " with this id." +
+                                                   " New: " + criterion +
+                                                   " Old: " + map.get(id));
+            }
+            map.put(id, criterion);
+            criteria.add(criterion);
         }
     }
 
-    public static void register(Storage storage) {
-        for (Class<? extends Pojo> beanClass: BEANS) {
-            Category<? extends Pojo> category = new CategoryBuilder(beanClass).build();
-            storage.registerCategory(category);
+    private List<Criterion> describedQuery;
+    private Criteria criteria;
+
+    public Query() {
+        criteria = new Criteria();
+    }
+
+    public abstract Id getId();
+
+    public final List<Criterion> describe() {
+        if (describedQuery == null) {
+            describe(criteria);
+            describedQuery = Collections.unmodifiableList(criteria.criteria);
         }
+        return describedQuery;
+    }
+
+    protected abstract void describe(Criteria criteria);
+
+    public final QueryValues createValues() {
+        if (describedQuery == null) {
+            throw new IllegalStateException("Query must be described first");
+        }
+
+        QueryValues setter = new QueryValues(this);
+        setter.addCriteria(describedQuery);
+
+        return setter;
     }
 }

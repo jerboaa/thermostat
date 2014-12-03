@@ -51,12 +51,12 @@ import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.dao.impl.statement.SessionQuery;
 import com.redhat.thermostat.thread.dao.impl.statement.SummaryQuery;
-import com.redhat.thermostat.thread.dao.impl.statement.support.BeanAdapter;
-import com.redhat.thermostat.thread.dao.impl.statement.support.BeanAdapterBuilder;
+import com.redhat.thermostat.storage.core.experimental.statement.BeanAdapter;
+import com.redhat.thermostat.storage.core.experimental.statement.BeanAdapterBuilder;
 
-import com.redhat.thermostat.thread.dao.impl.statement.support.Query;
-import com.redhat.thermostat.thread.dao.impl.statement.support.QueryValues;
-import com.redhat.thermostat.thread.dao.impl.statement.support.ResultHandler;
+import com.redhat.thermostat.storage.core.experimental.statement.Query;
+import com.redhat.thermostat.storage.core.experimental.statement.QueryValues;
+import com.redhat.thermostat.storage.core.experimental.statement.ResultHandler;
 import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.ThreadContentionSample;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;

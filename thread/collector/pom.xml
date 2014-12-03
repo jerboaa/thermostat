@@ -118,7 +118,6 @@
               com.redhat.thermostat.thread.collector,
               com.redhat.thermostat.thread.dao,
               com.redhat.thermostat.thread.model,
-              com.redhat.thermostat.thread.dao.impl.statement.support,
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.thread.common.osgi,

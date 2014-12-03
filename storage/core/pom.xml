@@ -66,6 +66,7 @@
               com.redhat.thermostat.storage.connect,
               com.redhat.thermostat.storage.core,
               com.redhat.thermostat.storage.core.experimental,
+              com.redhat.thermostat.storage.core.experimental.statement,
               com.redhat.thermostat.storage.core.auth,
               com.redhat.thermostat.storage.config,
               com.redhat.thermostat.storage.model,

@@ -34,78 +34,49 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.model;
-
-import com.redhat.thermostat.storage.core.Entity;
-import com.redhat.thermostat.storage.core.Persist;
-import com.redhat.thermostat.storage.model.BasePojo;
-import com.redhat.thermostat.storage.model.TimeStampedPojo;
-import com.redhat.thermostat.thread.dao.impl.ThreadDaoCategories;
-import com.redhat.thermostat.storage.core.experimental.statement.Category;
-import com.redhat.thermostat.storage.core.experimental.statement.Indexed;
+package com.redhat.thermostat.storage.core.experimental.statement;
 
 /**
  *
  */
-@Category(ThreadDaoCategories.Categories.SESSION)
-@Entity
-public class ThreadSession extends BasePojo implements TimeStampedPojo {
+class Statement {
+    private String statement;
 
-    private String vmId;
-    private long timestamp;
-    private String session;
-    private SessionID sessionID;
-
-    public ThreadSession() {
-        this(null);
+    public Statement(String statement) {
+        this.statement = statement;
     }
 
-    public ThreadSession(String writerId) {
-        super(writerId);
-    }
-
-    @Indexed
-    @Persist
-    public void setVmId(String vmId) {
-        this.vmId = vmId;
-    }
-
-    @Indexed
-    @Persist
-    public String getVmId() {
-        return vmId;
-    }
-
-    @Persist
-    public long getTimeStamp() {
-        return timestamp;
-    }
-
-    @Persist
-    public void setTimeStamp(long timestamp) {
-        this.timestamp = timestamp;
+    public String get() {
+        return statement;
     }
 
     @Override
-    public String toString() {
-        return "[timestamp: " + timestamp + ", session: " +
-               ", vm: " + vmId + "]";
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (o == null) {
+            return false;
+        }
+
+        if (o instanceof String && statement != null) {
+            return o.equals(statement);
+        }
+
+        if (getClass() != o.getClass()) return false;
+
+        Statement statement1 = (Statement) o;
+
+        if (statement != null ? !statement.equals(statement1.statement) :
+                                 statement1.statement != null)
+        {
+            return false;
+        }
+
+        return true;
     }
 
-    @Indexed
-    @Persist
-    public void setSession(String session) {
-        this.session = session;
-        sessionID = new SessionID(session);
-    }
-
-    @Indexed
-    @Persist
-    public String getSession() {
-        return session;
-    }
-
-    public SessionID getSessionID() {
-        return sessionID;
+    @Override
+    public int hashCode() {
+        return statement != null ? statement.hashCode() : 0;
     }
 }

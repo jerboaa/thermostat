@@ -41,8 +41,8 @@ import com.redhat.thermostat.storage.core.Persist;
 import com.redhat.thermostat.storage.model.BasePojo;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 import com.redhat.thermostat.thread.dao.impl.ThreadDaoCategories;
-import com.redhat.thermostat.thread.dao.impl.statement.support.Category;
-import com.redhat.thermostat.thread.dao.impl.statement.support.Indexed;
+import com.redhat.thermostat.storage.core.experimental.statement.Category;
+import com.redhat.thermostat.storage.core.experimental.statement.Indexed;
 
 @Category(ThreadDaoCategories.Categories.SUMMARY)
 @Entity
