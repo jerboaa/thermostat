@@ -47,6 +47,7 @@ import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.redhat.thermostat.client.cli.internal.ShellPrompt;
 import com.redhat.thermostat.common.utils.StreamUtils;
 
 import expectj.Executor;
@@ -78,8 +79,8 @@ public class IntegrationTest {
 
     public static final long TIMEOUT_IN_SECONDS = 30;
 
-    public static final String SHELL_DISCONNECT_PROMPT = "Thermostat (D) >";
-    public static final String SHELL_CONNECT_PROMPT = "Thermostat (C) >";
+    public static final String SHELL_DISCONNECT_PROMPT = "Thermostat - >";
+    public static final String SHELL_CONNECT_PROMPT = "Thermostat + >";
 
     private static final String THERMOSTAT_HOME = "THERMOSTAT_HOME";
     private static final String USER_THERMOSTAT_HOME = "USER_THERMOSTAT_HOME";

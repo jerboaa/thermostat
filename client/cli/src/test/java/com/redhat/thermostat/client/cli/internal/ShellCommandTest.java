@@ -70,7 +70,7 @@ public class ShellCommandTest {
     static private final String VERSION = "Thermostat some version";
     static private final String VERSION_OUTPUT = VERSION + "\n";
 
-    static private final String PROMPT = "Thermostat (D) > ";
+    static private final String PROMPT = "Thermostat " + ShellPrompt.DISCONNECTED_TOKEN + " > ";
 
     private ShellCommand cmd;
 

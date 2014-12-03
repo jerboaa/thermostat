@@ -38,9 +38,12 @@ package com.redhat.thermostat.client.cli.internal;
 
 public class ShellPrompt {
 
-    private static final String PROMPT_FORMAT = "Thermostat (%s) > ";
+    public static final String CONNECTED_TOKEN = "+";
+    public static final String DISCONNECTED_TOKEN = "-";
 
-    private String connectedToken = "D";
+    private static final String PROMPT_FORMAT = "Thermostat %s > ";
+
+    private String connectedToken = DISCONNECTED_TOKEN; //Default to disconnected
 
     public ShellPrompt() {
     }
@@ -50,11 +53,11 @@ public class ShellPrompt {
     }
 
     public void storageConnected() {
-        connectedToken = "C";
+        connectedToken = CONNECTED_TOKEN;
     }
 
     public void storageDisconnected() {
-        connectedToken = "D";
+        connectedToken = DISCONNECTED_TOKEN;
     }
 
 }

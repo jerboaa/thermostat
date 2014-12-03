@@ -183,13 +183,7 @@ public class CliTest extends IntegrationTest {
         shell.expectClose();
 
         String stdOut = shell.getCurrentStandardOutContents();
-
-        String[] lines = stdOut.split("\n");
-        String usage = lines[0];
-        assertTrue(usage.matches("^usage: thermostat shell$"));
-        String description = lines[1];
-        assertTrue(description.matches("^\\s+launches the Thermostat interactive shell$"));
-        assertTrue(lines[3].matches("thermostat shell"));
+        verifyShellHelpOutput(stdOut);
     }
 
     @Test
@@ -198,13 +192,19 @@ public class CliTest extends IntegrationTest {
         shell.expectClose();
 
         String stdOut = shell.getCurrentStandardOutContents();
+        verifyShellHelpOutput(stdOut);
+    }
 
-        String[] lines = stdOut.split("\n");
-        String usage = lines[0];
-        assertTrue(usage.matches("^usage: thermostat shell$"));
-        String description = lines[1];
-        assertTrue(description.matches("^\\s+launches the Thermostat interactive shell$"));
-        assertTrue(lines[3].matches("thermostat shell"));
+    private void verifyShellHelpOutput(String actual) {
+        String expected = "usage: thermostat shell\n"
+                        + "                  launches the Thermostat interactive shell. The prompt displays\n"
+                        + "                  a \"-\" to indicate that it is disconnected or a \"+\" to indicate\n"
+                        + "                  that it is connected to storage\n"
+                        + "\n"
+                        + "thermostat shell\n"
+                        + "     --help    show usage of command\n";
+
+        assertEquals(expected, actual);
     }
 
     @Test
@@ -214,8 +214,9 @@ public class CliTest extends IntegrationTest {
         String stdOut = shell.getCurrentStandardOutContents();
         String expectedOut = "Could not parse options: Unrecognized option: --foo\n"
                            + "usage: thermostat shell\n"
-                           + "                  launches the Thermostat interactive shell\n"
-                           + "\n"
+                           + "                  launches the Thermostat interactive shell. The prompt displays\n"
+                           + "                  a \"-\" to indicate that it is disconnected or a \"+\" to indicate\n"
+                           + "                  that it is connected to storage\n\n"
                            + "thermostat shell\n"
                            + "     --help    show usage of command\n";
         assertEquals(expectedOut, stdOut);

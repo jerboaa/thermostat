@@ -54,7 +54,7 @@ public class ShellPromptTest {
     public void testConnectedPrompt() {
         shellPrompt.storageConnected();
 
-        String expected = "Thermostat (C) > ";
+        String expected = "Thermostat " + ShellPrompt.CONNECTED_TOKEN +  " > ";
         assertEquals(expected, shellPrompt.getPrompt());
     }
 
@@ -62,7 +62,7 @@ public class ShellPromptTest {
     public void testDisconnectedPrompt() {
         shellPrompt.storageDisconnected();
 
-        String expected = "Thermostat (D) > ";
+        String expected = "Thermostat " + ShellPrompt.DISCONNECTED_TOKEN + " > ";
         assertEquals(expected, shellPrompt.getPrompt());
     }
 }
