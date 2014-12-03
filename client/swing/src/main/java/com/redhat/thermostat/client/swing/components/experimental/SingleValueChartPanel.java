@@ -63,17 +63,13 @@ import javax.swing.SwingUtilities;
 
 public class SingleValueChartPanel extends JPanel {
 
-    static final TimeUnit[] DEFAULT_TIMEUNITS = new TimeUnit[] { TimeUnit.DAYS, TimeUnit.HOURS, TimeUnit.MINUTES };
-
     public static final String PROPERTY_VISIBLE_TIME_RANGE = "visibleTimeRange";
-
-    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private static final int MINIMUM_DRAW_SIZE = 100;
 
     private ChartPanel chartPanel;
 
-    private JPanel labelContainer;
+    private RecentTimeControlPanel recentTimeControlPanel;
     private JTextComponent label;
 
     public SingleValueChartPanel(JFreeChart chart, Duration duration) {
@@ -108,62 +104,10 @@ public class SingleValueChartPanel extends JPanel {
         chartPanel.setMinimumDrawWidth(MINIMUM_DRAW_SIZE);
         chartPanel.setMaximumDrawWidth(Integer.MAX_VALUE);
 
+        recentTimeControlPanel = new RecentTimeControlPanel(duration);
         add(chartPanel, BorderLayout.CENTER);
-        add(getControlsAndAdditionalDisplay(duration), BorderLayout.SOUTH);
+        add(recentTimeControlPanel, BorderLayout.SOUTH);
 
-    }
-
-    private Component getControlsAndAdditionalDisplay(Duration duration) {
-        JPanel container = new JPanel();
-        container.setOpaque(false);
-
-        container.setLayout(new BorderLayout());
-
-        container.add(getChartControls(duration), BorderLayout.LINE_START);
-        container.add(getAdditionalDataDisplay(), BorderLayout.LINE_END);
-
-        return container;
-    }
-
-    private Component getChartControls(Duration duration) {
-        JPanel container = new JPanel();
-        container.setOpaque(false);
-
-        final JTextField durationSelector = new JTextField(5);
-        final JComboBox<TimeUnit> unitSelector = new JComboBox<>();
-        unitSelector.setModel(new DefaultComboBoxModel<>(DEFAULT_TIMEUNITS));
-
-        TimeUnitChangeListener timeUnitChangeListener = new TimeUnitChangeListener(new ActionListener() {
-            @Override
-            public void actionPerformed(final com.redhat.thermostat.common.ActionEvent actionEvent) {
-                Duration d = (Duration) actionEvent.getPayload();
-                SingleValueChartPanel.this.firePropertyChange(PROPERTY_VISIBLE_TIME_RANGE, null, d);
-            }
-        }, duration.value, duration.unit);
-
-        durationSelector.getDocument().addDocumentListener(timeUnitChangeListener);
-        unitSelector.addActionListener(timeUnitChangeListener);
-
-        durationSelector.setText(String.valueOf(duration.value));
-        unitSelector.setSelectedItem(duration.unit);
-
-        container.add(new JLabel(translator.localize(LocaleResources.CHART_DURATION_SELECTOR_LABEL).getContents()));
-        container.add(durationSelector);
-        container.add(unitSelector);
-
-        return container;
-    }
-
-    private Component getAdditionalDataDisplay() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setOpaque(false);
-        labelContainer = new JPanel();
-        labelContainer.setOpaque(false);
-        GridBagConstraints constraints = new GridBagConstraints();
-        constraints.fill = GridBagConstraints.BOTH;
-        constraints.anchor = GridBagConstraints.CENTER;
-        panel.add(labelContainer, constraints);
-        return panel;
     }
 
     public void setTimeRangeToShow(int timeValue, TimeUnit timeUnit) {
@@ -180,7 +124,7 @@ public class SingleValueChartPanel extends JPanel {
             public void run() {
                 if (label == null) {
                     label = new ValueField(text);
-                    labelContainer.add(label);
+                    recentTimeControlPanel.addTextComponent(label);
                 }
 
                 label.setText(text);

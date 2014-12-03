@@ -37,41 +37,26 @@
 package com.redhat.thermostat.client.swing.components;
 
 import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.util.concurrent.TimeUnit;
 
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
 
 import com.redhat.thermostat.client.core.experimental.Duration;
-import com.redhat.thermostat.client.swing.components.experimental.TimeUnitChangeListener;
+import com.redhat.thermostat.client.swing.components.experimental.RecentTimeControlPanel;
 import org.jfree.chart.ChartPanel;
 
-import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
-import com.redhat.thermostat.shared.locale.Translate;
 
 public class RecentTimeSeriesChartPanel extends JPanel {
-
-    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private static final long serialVersionUID = -1733906800911900456L;
     private static final int MINIMUM_DRAW_SIZE = 100;
 
-    private final RecentTimeSeriesChartController controller;
-
-    private JPanel labelContainer;
+    private RecentTimeControlPanel recentTimeControlPanel;
     private JTextComponent label;
 
     public RecentTimeSeriesChartPanel(RecentTimeSeriesChartController controller) {
-        this.controller = controller;
 
         this.setLayout(new BorderLayout());
 
@@ -92,66 +77,11 @@ public class RecentTimeSeriesChartPanel extends JPanel {
         cp.setMaximumDrawHeight(Integer.MAX_VALUE);
         cp.setMinimumDrawWidth(MINIMUM_DRAW_SIZE);
         cp.setMaximumDrawWidth(Integer.MAX_VALUE);
-
-        add(getControlsAndAdditionalDisplay(), BorderLayout.SOUTH);
+        Duration duration = new Duration(controller.getTimeValue(), controller.getTimeUnit());
+        recentTimeControlPanel = new RecentTimeControlPanel(duration);
+        add(recentTimeControlPanel, BorderLayout.SOUTH);
 
         add(cp, BorderLayout.CENTER);
-    }
-
-    private Component getControlsAndAdditionalDisplay() {
-        JPanel container = new JPanel();
-        container.setOpaque(false);
-
-        container.setLayout(new BorderLayout());
-
-        container.add(getChartControls(), BorderLayout.LINE_START);
-        container.add(getAdditionalDataDisplay(), BorderLayout.LINE_END);
-
-        return container;
-    }
-
-    private Component getChartControls() {
-        JPanel container = new JPanel();
-        container.setOpaque(false);
-
-        final JTextField durationSelector = new JTextField(5);
-        final JComboBox<TimeUnit> unitSelector = new JComboBox<>();
-        unitSelector.setModel(new DefaultComboBoxModel<>(controller.getTimeUnits()));
-
-        int defaultValue = controller.getTimeValue();
-        TimeUnit defaultUnit = controller.getTimeUnit();
-
-        TimeUnitChangeListener timeUnitChangeListener = new TimeUnitChangeListener(new com.redhat.thermostat.common.ActionListener() {
-            @Override
-            public void actionPerformed(final com.redhat.thermostat.common.ActionEvent actionEvent) {
-                Duration d = (Duration) actionEvent.getPayload();
-                controller.setTime(d.value, d.unit);
-            }
-        }, defaultValue, defaultUnit);
-
-        durationSelector.getDocument().addDocumentListener(timeUnitChangeListener);
-        unitSelector.addActionListener(timeUnitChangeListener);
-
-        durationSelector.setText(String.valueOf(defaultValue));
-        unitSelector.setSelectedItem(defaultUnit);
-
-        container.add(new JLabel(translator.localize(LocaleResources.CHART_DURATION_SELECTOR_LABEL).getContents()));
-        container.add(durationSelector);
-        container.add(unitSelector);
-
-        return container;
-    }
-
-    private Component getAdditionalDataDisplay() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setOpaque(false);
-        labelContainer = new JPanel();
-        labelContainer.setOpaque(false);
-        GridBagConstraints constraints = new GridBagConstraints();
-        constraints.fill = GridBagConstraints.BOTH;
-        constraints.anchor = GridBagConstraints.CENTER;
-        panel.add(labelContainer, constraints);
-        return panel;
     }
 
     public void setDataInformationLabel(final String text) {
@@ -160,7 +90,7 @@ public class RecentTimeSeriesChartPanel extends JPanel {
             public void run() {
                 if (label == null) {
                     label = new ValueField(text);
-                    labelContainer.add(label);
+                    recentTimeControlPanel.addTextComponent(label);
                 }
 
                 label.setText(text);
