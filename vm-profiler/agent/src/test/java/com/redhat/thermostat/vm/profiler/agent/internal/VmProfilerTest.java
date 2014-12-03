@@ -38,6 +38,7 @@ package com.redhat.thermostat.vm.profiler.agent.internal;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -125,6 +126,37 @@ public class VmProfilerTest {
         verifyNoMoreInteractions(remote);
     }
 
+    @Test
+    public void onlyLoadsAgentOnceForRepeatedProfiling() throws Exception {
+        final String FILE = "foobar";
+        when(remote.getProfilingDataFile(PID)).thenReturn(FILE);
+
+        profiler.vmStarted(VM_ID, PID);
+        profiler.startProfiling(VM_ID);
+        profiler.stopProfiling(VM_ID);
+        profiler.startProfiling(VM_ID);
+
+        verify(remote, times(1)).loadAgentIntoPid(PID, AGENT_JAR, "");
+        verify(remote, times(2)).startProfiling(PID);
+    }
+
+    @Test
+    public void loadsAgentMultipleTimesForNewProcesses() throws Exception {
+        final String FILE = "foobar";
+        when(remote.getProfilingDataFile(PID)).thenReturn(FILE);
+
+        profiler.vmStarted(VM_ID, PID);
+        profiler.startProfiling(VM_ID);
+        profiler.stopProfiling(VM_ID);
+        profiler.vmStopped(VM_ID, PID);
+        // it's not likely that the vmId and the pid will be reused, but just to be sure
+        profiler.vmStarted(VM_ID, PID);
+        profiler.startProfiling(VM_ID);
+
+        verify(remote, times(2)).loadAgentIntoPid(PID, AGENT_JAR, "");
+        verify(remote, times(2)).startProfiling(PID);
+    }
+
     @Test (expected=ProfilerException.class)
     public void doesNotStopProfilingAnUnknownVm() throws Exception {
         profiler.stopProfiling(VM_ID);
@@ -149,7 +181,6 @@ public class VmProfilerTest {
 
     @Test
     public void stoppingProfilingMakesInvokesStopUsingRmiAndUploadsData() throws Exception {
-
         final String FILE = "foobar";
         when(remote.getProfilingDataFile(PID)).thenReturn(FILE);
 

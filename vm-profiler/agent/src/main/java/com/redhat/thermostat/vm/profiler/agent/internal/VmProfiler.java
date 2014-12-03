@@ -72,6 +72,7 @@ public class VmProfiler {
 
     private static final Logger logger = LoggingUtils.getLogger(VmProfiler.class);
 
+    private final List<Integer> vmsWithAgentLoaded = new ArrayList<>();
     private final List<Integer> currentlyProfiledVmPids = new ArrayList<>();
 
     private final VmIdToPidMapper vmIdToPid = new VmIdToPidMapper();
@@ -118,6 +119,7 @@ public class VmProfiler {
             logger.warning(e.getMessage());
         }
         vmIdToPid.remove(vmId, pid);
+        vmsWithAgentLoaded.remove((Integer)pid);
     }
 
     private void disableProfilerIfActive(String vmId, int pid) throws ProfilerException {
@@ -136,12 +138,15 @@ public class VmProfiler {
             throw new ProfilerException("Already profiling the VM");
         }
 
-        // TODO make this adjustable at run-time
-        // eg: asmJarPath + ":" + agentJarPath;
-        String jarsToLoad = "";
-        logger.info("Asking " + pid + " to load agent '" + agentJarPath + "' with arguments '" + jarsToLoad + "'");
-        // FIXME Only load the first time
-        remote.loadAgentIntoPid(pid, agentJarPath, jarsToLoad);
+        if (!vmsWithAgentLoaded.contains((Integer)pid)) {
+            // TODO make this adjustable at run-time
+            // eg: asmJarPath + ":" + agentJarPath;
+            String jarsToLoad = "";
+            logger.info("Asking " + pid + " to load agent '" + agentJarPath + "' with arguments '" + jarsToLoad + "'");
+
+            remote.loadAgentIntoPid(pid, agentJarPath, jarsToLoad);
+            vmsWithAgentLoaded.add(pid);
+        }
 
         remote.startProfiling(pid);
 
