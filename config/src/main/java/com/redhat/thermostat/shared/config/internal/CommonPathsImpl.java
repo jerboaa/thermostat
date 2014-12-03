@@ -119,7 +119,7 @@ public class CommonPathsImpl implements CommonPaths {
         }
         this.systemHome = new File(home);
         if (!systemHome.exists()) {
-            systemHome.mkdirs();
+            throw new InvalidConfigurationException(t.localize(LocaleResources.SYSHOME_DOESNT_EXIST, home));
         }
         if (!systemHome.isDirectory()) {
             throw new InvalidConfigurationException(t.localize(LocaleResources.SYSHOME_NOT_A_DIR, home));

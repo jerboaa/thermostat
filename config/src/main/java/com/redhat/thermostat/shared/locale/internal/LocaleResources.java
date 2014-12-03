@@ -41,6 +41,7 @@ import com.redhat.thermostat.shared.locale.Translate;
 public enum LocaleResources {
 
     SYSHOME_NO_HOME,
+    SYSHOME_DOESNT_EXIST,
     SYSHOME_NOT_A_DIR,
     USERHOME_NOT_A_DIR,
     GENERAL_NOT_A_DIR,
