@@ -137,6 +137,11 @@
       <artifactId>jetty-jaas</artifactId>
       <version>${jetty.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.toolchain</groupId>
+      <artifactId>jetty-schemas</artifactId>
+      <version>${jetty-schemas.version}</version>
+    </dependency>
     <!-- This will likely have to match what jetty-project's pom uses -->
     <dependency>
       <groupId>javax.servlet</groupId>

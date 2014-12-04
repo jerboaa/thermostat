@@ -266,6 +266,7 @@ password=${agent.dev.password}
     <httpcomponents.client.version>4.3.4</httpcomponents.client.version>
     <gson.version>2.2.2</gson.version>
     <jetty.version>9.1.0.v20131115</jetty.version>
+    <jetty-schemas.version>3.1.M0</jetty-schemas.version>
     <!-- web-endpoint-plugin requires the javax.servlet bundle to be started.
          Jetty 9 drags in version 3.1.0. That is, if you change the jetty
          version, please also make sure the javax.servlet api version is

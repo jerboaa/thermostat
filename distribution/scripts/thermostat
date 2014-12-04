@@ -65,6 +65,8 @@ SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-prox
 # FIXME: Remove once jfreechart is a real OSGi bundle upstream
 SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_LIBS}/jfreechart-@jfreechart.version@.jar"
 SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_LIBS}/jcommon-@jcommon.version@.jar"
+# Needed to parse web.xml files without network connection See PR 2029.
+SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_HOME}/plugins/embedded-web-endpoint/jetty-schemas-@jetty-schemas.version@.jar"
 SERVICE_CLASSPATH="${TOOLS_JAR}:${SERVICE_CLASSPATH}"
 
 THERMOSTAT_MAIN="com.redhat.thermostat.main.Thermostat"
