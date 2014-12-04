@@ -55,8 +55,7 @@ import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.client.core.experimental.SingleValueSupplier;
-import com.redhat.thermostat.client.core.experimental.SingleValueStat;
+import com.redhat.thermostat.storage.model.DiscreteTimeData;
 import com.redhat.thermostat.vm.cpu.client.core.VmCpuView;
 import com.redhat.thermostat.vm.cpu.client.core.VmCpuViewProvider;
 import com.redhat.thermostat.vm.cpu.client.core.VmCpuView.UserAction;
@@ -76,7 +75,7 @@ public class VmCpuController implements InformationServiceController<VmRef> {
 
     private Duration userDesiredDuration;
 
-    private TimeRangeController timeRangeController;
+    private TimeRangeController<VmCpuStat> timeRangeController;
 
     public VmCpuController(ApplicationService appSvc, VmCpuStatDAO vmCpuStatDao, VmRef ref, VmCpuViewProvider provider) {
         this.ref = ref;
@@ -130,7 +129,7 @@ public class VmCpuController implements InformationServiceController<VmRef> {
 
         userDesiredDuration = view.getUserDesiredDuration();
 
-        timeRangeController = new TimeRangeController();
+        timeRangeController = new TimeRangeController<>();
     }
 
     private void start() {
@@ -138,37 +137,30 @@ public class VmCpuController implements InformationServiceController<VmRef> {
     }
 
     private void updateData() {
+        final List<DiscreteTimeData<? extends Number>> data = new ArrayList<>();
+
         VmCpuStat oldest = dao.getOldest(ref);
         VmCpuStat latest = dao.getLatest(ref);
 
         Range<Long> newAvailableRange = new Range<>(oldest.getTimeStamp(), latest.getTimeStamp());
 
-        SingleValueSupplier singleValueSupplier = new SingleValueSupplier() {
+        TimeRangeController.StatsSupplier<VmCpuStat> singleValueSupplier = new TimeRangeController.StatsSupplier<VmCpuStat>() {
             @Override
-            public List getStats(final VmRef ref, final long since, final long to) {
-                List<VmCpuStat> stats = dao.getVmCpuStats(ref, since, to);
-                List<SingleValueStat<Double>> singleValueStats = new ArrayList<>();
-                for (final VmCpuStat stat : stats ) {
-                    singleValueStats.add(new SingleValueStat<Double>() {
-                        @Override
-                        public Double getValue() {
-                            return stat.getCpuLoad();
-                        }
+            public List<VmCpuStat> getStats(final VmRef ref, final long since, final long to) {
+                return dao.getVmCpuStats(ref, since, to);
 
-                        @Override
-                        public long getTimeStamp() {
-                            return stat.getTimeStamp();
-                        }
-                    });
-                }
-                return singleValueStats;
            }
         };
 
-        timeRangeController.update(userDesiredDuration, newAvailableRange, singleValueSupplier, ref);
-        view.setAvailableDataRange(timeRangeController.getAvailableRange());
+        TimeRangeController.SingleArgRunnable<VmCpuStat> runnable = new TimeRangeController.SingleArgRunnable<VmCpuStat>() {
+            @Override
+            public void run(VmCpuStat arg) {
+                data.add(new DiscreteTimeData<>(arg.getTimeStamp(), arg.getCpuLoad()));
+            }
+        };
 
-        List data = timeRangeController.getDataToDisplay();
+        timeRangeController.update(userDesiredDuration, newAvailableRange, singleValueSupplier, ref, runnable);
+        view.setAvailableDataRange(timeRangeController.getAvailableRange());
         view.addData(data);
     }
 

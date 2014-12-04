@@ -66,7 +66,7 @@ public class VmMemoryStatDAOImplStatementDescriptorRegistrationTest {
     public void registersAllDescriptors() {
         VmMemoryStatDAOImplStatementDescriptorRegistration reg = new VmMemoryStatDAOImplStatementDescriptorRegistration();
         Set<String> descriptors = reg.getStatementDescriptors();
-        assertEquals(3, descriptors.size());
+        assertEquals(5, descriptors.size());
         assertFalse("null descriptor not allowed", descriptors.contains(null));
     }
     
@@ -94,7 +94,7 @@ public class VmMemoryStatDAOImplStatementDescriptorRegistrationTest {
         // storage-core + this module
         assertEquals(2, registrations.size());
         assertNotNull(vmMemoryDaoReg);
-        assertEquals(3, vmMemoryDaoReg.getStatementDescriptors().size());
+        assertEquals(5, vmMemoryDaoReg.getStatementDescriptors().size());
     }
 
 }

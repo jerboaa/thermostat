@@ -55,8 +55,7 @@ import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.client.core.experimental.SingleValueSupplier;
-import com.redhat.thermostat.client.core.experimental.SingleValueStat;
+import com.redhat.thermostat.storage.model.DiscreteTimeData;
 import com.redhat.thermostat.vm.classstat.client.core.VmClassStatView;
 import com.redhat.thermostat.vm.classstat.client.core.VmClassStatViewProvider;
 import com.redhat.thermostat.vm.classstat.client.locale.LocaleResources;
@@ -67,46 +66,37 @@ public class VmClassStatController implements InformationServiceController<VmRef
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private TimeRangeController timeRangeController;
+    private TimeRangeController<VmClassStat> timeRangeController;
 
     private class UpdateChartData implements Runnable {
         @Override
         public void run() {
+            final List<DiscreteTimeData<Long>> data = new ArrayList<>();
 
             VmClassStat oldest = dao.getOldest(ref);
             VmClassStat latest = dao.getLatest(ref);
 
             Range<Long> newAvailableRange = new Range<>(oldest.getTimeStamp(), latest.getTimeStamp());
 
-            SingleValueSupplier singleValueSupplier = new SingleValueSupplier() {
+            TimeRangeController.StatsSupplier<VmClassStat> singleValueSupplier = new TimeRangeController.StatsSupplier() {
                 @Override
-                public List getStats(final VmRef ref, final long since, final long to) {
-                    List<VmClassStat> stats = dao.getClassStats(ref, since, to);
-                    List<SingleValueStat<Long>> singleValueStats = new ArrayList<>();
-                    for (final VmClassStat stat : stats ) {
-                        singleValueStats.add(new SingleValueStat<Long>() {
-                            @Override
-                            public Long getValue() {
-                                return stat.getLoadedClasses();
-                            }
-
-                            @Override
-                            public long getTimeStamp() {
-                                return stat.getTimeStamp();
-                            }
-                        });
-                    }
-                    return singleValueStats;
+                public List<VmClassStat> getStats(final VmRef ref, final long since, final long to) {
+                    return dao.getClassStats(ref, since, to);
                 }
             };
 
-            timeRangeController.update(userDesiredDuration, newAvailableRange, singleValueSupplier, ref);
+            TimeRangeController.SingleArgRunnable<VmClassStat> runnable = new TimeRangeController.SingleArgRunnable<VmClassStat>() {
+                @Override
+                public void run(VmClassStat arg) {
+                    data.add(new DiscreteTimeData<>(arg.getTimeStamp(), arg.getLoadedClasses()));
+                }
+            };
+
+            timeRangeController.update(userDesiredDuration, newAvailableRange, singleValueSupplier, ref, runnable);
             classesView.setAvailableDataRange(timeRangeController.getAvailableRange());
 
-            List classCount = timeRangeController.getDataToDisplay();
-            classesView.addClassCount(classCount);
+            classesView.addClassCount(data);
         }
-
     }
 
     private final VmClassStatView classesView;
@@ -163,8 +153,7 @@ public class VmClassStatController implements InformationServiceController<VmRef
 
         userDesiredDuration = classesView.getUserDesiredDuration();
 
-        timeRangeController = new TimeRangeController();
-
+        timeRangeController = new TimeRangeController<>();
     }
 
     private void start() {

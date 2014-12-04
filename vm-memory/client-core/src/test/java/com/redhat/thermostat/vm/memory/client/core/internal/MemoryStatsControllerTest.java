@@ -52,7 +52,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -82,24 +81,26 @@ import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Space;
 public class MemoryStatsControllerTest {
 
     private Generation[] generations = new Generation[2];
-    
+
     private VmInfoDAO infoDao;
     private VmMemoryStatDAO memoryStatDao;
     private MemoryStatsView view;
     private Timer timer;
-    
+
     private ActionListener<MemoryStatsView.Action> viewListener;
     private ActionListener<GCAction> gcActionListener;
 
     private MemoryStatsController controller;
-    
+
     private Space canary;
 
     private AgentInfoDAO agentDAO;
     private GCRequest gcRequest;
-    
+
     private VmRef ref;
-    
+
+    private Long[] timestamps = new Long[5];
+
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Before
     public void setUp() {
@@ -112,23 +113,23 @@ public class MemoryStatsControllerTest {
         timer = mock(Timer.class);
         ArgumentCaptor<Runnable> actionCaptor = ArgumentCaptor.forClass(Runnable.class);
         doNothing().when(timer).setAction(actionCaptor.capture());
-        
+
         TimerFactory timerFactory = mock(TimerFactory.class);
         when(timerFactory.createTimer()).thenReturn(timer);
         ApplicationService appSvc = mock(ApplicationService.class);
         when(appSvc.getTimerFactory()).thenReturn(timerFactory);
-        
+
         VmInfo vmOverallInformation = mock(VmInfo.class);
         when(vmOverallInformation.isAlive()).thenReturn(vmIsAlive);
         infoDao = mock(VmInfoDAO.class);
         when(infoDao.getVmInfo(any(VmRef.class))).thenReturn(vmOverallInformation);
 
         List<VmMemoryStat> vmInfo = new ArrayList<>();
-        
+
         for (int i = 0; i < 2; i++) {
             Generation generation = new Generation();
             generation.setName("fluff" + i);
-            VmMemoryStat.Space[] spaces = new VmMemoryStat.Space[2 + (1 - i)]; 
+            VmMemoryStat.Space[] spaces = new VmMemoryStat.Space[2 + (1 - i)];
             for (int j = 0; j < 2; j++) {
                 Space space = new Space();
                 space.setName("fluffer" + i + j);
@@ -149,21 +150,27 @@ public class MemoryStatsControllerTest {
             generation.setSpaces(spaces);
             generations[i] = generation;
         }
-        
-        long timestamp = 1;
+
+        long timestamp = System.currentTimeMillis();
         String vmID = "vmId";
         for (int i = 0; i < 5; i++) {
-            VmMemoryStat vmMemory = new VmMemoryStat("foo-agent", timestamp++, vmID, generations);
+            timestamps[i] = timestamp;
+            VmMemoryStat vmMemory = new VmMemoryStat("foo-agent", timestamp, vmID, generations);
             vmInfo.add(vmMemory);
+            timestamp++;
         }
-        
+
         memoryStatDao = mock(VmMemoryStatDAO.class);
-        when(memoryStatDao.getLatestVmMemoryStats(any(VmRef.class), anyLong())).thenReturn(vmInfo);
-        
+
+        when(memoryStatDao.getVmMemoryStats(any(VmRef.class), anyLong(), anyLong())).thenReturn(vmInfo);
+
+        when(memoryStatDao.getOldestMemoryStat(any(VmRef.class))).thenReturn(vmInfo.get(0));
+        when(memoryStatDao.getLatestMemoryStat(any(VmRef.class))).thenReturn(vmInfo.get(4));
+
         view = mock(MemoryStatsView.class);
         MemoryStatsViewProvider viewProvider = mock(MemoryStatsViewProvider.class);
         when(viewProvider.createView()).thenReturn(view);
-        
+
         ArgumentCaptor<ActionListener> viewArgumentCaptor =
                 ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
@@ -171,18 +178,18 @@ public class MemoryStatsControllerTest {
         ArgumentCaptor<ActionListener> gcArgumentCaptor =
                 ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addGCActionListener(gcArgumentCaptor.capture());
-        
+
         ref = mock(VmRef.class);
-        
+
         agentDAO = mock(AgentInfoDAO.class);
         gcRequest = mock(GCRequest.class);
-        
+
         controller = new MemoryStatsController(appSvc, infoDao, memoryStatDao, ref, viewProvider, agentDAO, gcRequest);
-        
+
         viewListener = viewArgumentCaptor.getValue();
         gcActionListener = gcArgumentCaptor.getValue();
     }
-    
+
     @Test
     public void testStartStopTimer() {
         viewListener.actionPerformed(new ActionEvent<>(view, MemoryStatsView.Action.VISIBLE));
@@ -207,28 +214,28 @@ public class MemoryStatsControllerTest {
         gcActionListener.actionPerformed(new ActionEvent<>(view, GCAction.REQUEST_GC));
         verify(gcRequest).sendGCRequestToAgent(eq(ref), eq(agentDAO), isA(RequestResponseListener.class));
     }
-    
+
     @Test
     public void testPayloadContainSpaces() {
-        MemoryStatsController.VMCollector collettor = controller.getCollector();
-        collettor.run();
-        
+        Runnable collector = controller.getCollector();
+        collector.run();
+
         Map<String, Payload> regions = controller.getRegions();
         assertEquals(5, regions.size());
-        
+
         assertTrue(regions.containsKey("fluffer00"));
         assertTrue(regions.containsKey("fluffer01"));
         assertTrue(regions.containsKey("fluffer10"));
         assertTrue(regions.containsKey("fluffer11"));
-        
+
         assertTrue(regions.containsKey("canary"));
     }
-    
+
     @Test
     public void testValues() {
-        MemoryStatsController.VMCollector collettor = controller.getCollector();
-        collettor.run();
-        
+        Runnable collector = controller.getCollector();
+        collector.run();
+
         Map<String, Payload> regions = controller.getRegions();
 
         Payload payload = regions.get("fluffer00");
@@ -236,77 +243,61 @@ public class MemoryStatsControllerTest {
         assertEquals(10000, payload.getMaxCapacity(), 0);
         assertEquals(1000, payload.getCapacity(), 0);
         assertEquals(100, payload.getUsed(), 0);
-        
+
         payload = regions.get("canary");
         assertEquals("canary", payload.getName());
         assertEquals(3, payload.getMaxCapacity(), 0);
         assertEquals(2, payload.getCapacity(), 0);
         assertEquals(1, payload.getUsed(), 0);
-        
+
         // the value above all ensure the same scale is used
         String tooltip = payload.getName() + ": used: " + String.format("%.2f", payload.getUsed()) + " " +
                          payload.getUsedUnit() + ", capacity: " +
                          String.format("%.2f", payload.getCapacity()) + " " + payload.getUsedUnit() +
                          ", max capacity: " + String.format("%.2f", payload.getMaxCapacity()) + " " +
                          payload.getUsedUnit();
-        
+
         assertEquals(tooltip, payload.getTooltip());
     }
-    
+
 
     @Test
-    public void testTimerFetchesMemoryDataDeltaOnly() {
+    public void testTimerFetchesMemoryDataDeltaOnly() throws InterruptedException {
         ArgumentCaptor<Long> timeStampCaptor = ArgumentCaptor.forClass(Long.class);
 
-        final long DATA_TIMESTAMP = System.currentTimeMillis() + 1000000000;
+        Runnable timerAction = controller.getCollector();
+        timerAction.run();
+
         Space space = new Space();
         space.setCapacity(10);
         space.setMaxCapacity(20);
         space.setUsed(5);
         Generation gen = new Generation();
         gen.setName("foobar");
-        gen.setSpaces(new Space[] { space });
+        gen.setSpaces(new Space[]{space });
         VmMemoryStat stat = new VmMemoryStat();
+        final long DATA_TIMESTAMP = System.currentTimeMillis() + 100;
         stat.setTimeStamp(DATA_TIMESTAMP);
         stat.setGenerations(new Generation[] { gen });
 
-        when(memoryStatDao.getLatestVmMemoryStats(isA(VmRef.class), anyLong())).thenReturn(Arrays.asList(stat));
+        when(memoryStatDao.getVmMemoryStats(any(VmRef.class), anyLong(), anyLong())).thenReturn(Arrays.asList(stat));
+        when(memoryStatDao.getLatestMemoryStat(any(VmRef.class))).thenReturn(stat);
 
-        Runnable timerAction = controller.getCollector();
-
+        Thread.sleep(100l);
         timerAction.run();
-        timerAction.run();
 
-        verify(memoryStatDao, times(2)).getLatestVmMemoryStats(isA(VmRef.class), timeStampCaptor.capture());
+        verify(memoryStatDao, times(2)).getVmMemoryStats(isA(VmRef.class), timeStampCaptor.capture(), timeStampCaptor.capture());
 
         long timeStamp1 = timeStampCaptor.getAllValues().get(0);
-        assertTimeStampIsAround(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(10), timeStamp1);
+        assertTimeStampIsAround(timestamps[0], timeStamp1);
 
-        long timeStamp2 = timeStampCaptor.getAllValues().get(1);
+        long timeStamp2 = timeStampCaptor.getAllValues().get(3);
         assertTimeStampIsAround(DATA_TIMESTAMP, timeStamp2);
     }
 
-    @Test
-    public void testTimerFetchesMemoryDataDeltaOnlyEvenWithNoData() {
-        ArgumentCaptor<Long> timeStampCaptor = ArgumentCaptor.forClass(Long.class);
-
-        Runnable timerAction = controller.getCollector();
-
-        timerAction.run();
-        timerAction.run();
-
-        verify(memoryStatDao, times(2)).getLatestVmMemoryStats(isA(VmRef.class), timeStampCaptor.capture());
-
-        long timeStamp1 = timeStampCaptor.getAllValues().get(0);
-        assertTimeStampIsAround(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(10), timeStamp1);
-
-        long timeStamp2 = timeStampCaptor.getAllValues().get(1);
-        assertTimeStampIsAround(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(10), timeStamp2);
-    }
 
     private void assertTimeStampIsAround(long expected, long actual) {
-        assertTrue(actual <= expected + 1000);
-        assertTrue(actual >= expected - 1000);
+        assertTrue(actual <= expected + 500);
+        assertTrue(actual >= expected - 500);
     }
 }
-

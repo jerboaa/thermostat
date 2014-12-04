@@ -42,6 +42,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.client.core.experimental.Duration;
+import com.redhat.thermostat.client.core.experimental.TimeRangeController;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
@@ -55,6 +57,7 @@ import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
+import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.gc.remote.common.GCRequest;
 import com.redhat.thermostat.gc.remote.common.command.GCAction;
 import com.redhat.thermostat.shared.locale.LocalizedString;
@@ -86,6 +89,10 @@ public class MemoryStatsController implements InformationServiceController<VmRef
     private final Map<String, Payload> regions;
     
     private VMCollector collector;
+
+    private Duration userDesiredDuration = new Duration(defaultDuration.value, defaultDuration.unit);
+
+    private TimeRangeController<VmMemoryStat> timeRangeController;
     
     class VMCollector implements Runnable {
 
@@ -93,10 +100,28 @@ public class MemoryStatsController implements InformationServiceController<VmRef
 
         @Override
         public void run() {
-            List<VmMemoryStat> vmInfo = vmDao.getLatestVmMemoryStats(ref, desiredUpdateTimeStamp);
-            for (VmMemoryStat memoryStats: vmInfo) {
-                update(memoryStats);
-            }
+            VmMemoryStat oldest = vmDao.getOldestMemoryStat(ref);
+            VmMemoryStat latest = vmDao.getLatestMemoryStat(ref);
+
+            Range<Long> newAvailableRange = new Range<>(oldest.getTimeStamp(), latest.getTimeStamp());
+
+            timeRangeController = new TimeRangeController<>();
+
+            TimeRangeController.StatsSupplier<VmMemoryStat> statsSupplier = new TimeRangeController.StatsSupplier<VmMemoryStat>() {
+                @Override
+                public List<VmMemoryStat> getStats(VmRef ref, long since, long to) {
+                    return vmDao.getVmMemoryStats(ref, since, to);
+                }
+            };
+
+            TimeRangeController.SingleArgRunnable<VmMemoryStat> runnable = new TimeRangeController.SingleArgRunnable<VmMemoryStat>() {
+                @Override
+                public void run(VmMemoryStat arg) {
+                    update(arg);
+                }
+            };
+
+            timeRangeController.update(userDesiredDuration, newAvailableRange, statsSupplier, ref, runnable);
         }
 
         private void update(VmMemoryStat memoryStats) {

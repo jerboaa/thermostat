@@ -50,17 +50,32 @@ import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.core.VmTimeIntervalPojoListGetter;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;
 
 class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
 
     private static final Logger logger = LoggingUtils.getLogger(VmMemoryStatDAOImpl.class);
-    static final String QUERY_LATEST = "QUERY "
-            + vmMemoryStatsCategory.getName() + " WHERE '"
-            + Key.AGENT_ID.getName() + "' = ?s AND '" 
-            + Key.VM_ID.getName() + "' = ?s SORT '" 
-            + Key.TIMESTAMP.getName() + "' DSC LIMIT 1";
+    // QUERY vm-cpu-stats WHERE 'agentId' = ?s AND \
+    //                        'vmId' = ?s \
+    //                        SORT 'timeStamp' ASC  \
+    //                        LIMIT 1
+    static final String DESC_OLDEST_VM_MEMORY_STAT = "QUERY " + vmMemoryStatsCategory.getName() + " " +
+            "WHERE '" + Key.AGENT_ID.getName() + "' = ?s " +
+            "AND '" + Key.VM_ID.getName() + "' = ?s " +
+            "SORT '" + Key.TIMESTAMP.getName() + "' ASC " +
+            "LIMIT 1";
+
+    // QUERY vm-cpu-stats WHERE 'agentId' = ?s AND \
+    //                        'vmId' = ?s \
+    //                        SORT 'timeStamp' DSC  \
+    //                        LIMIT 1
+    static final String DESC_LATEST_VM_MEMORY_STAT = "QUERY " + vmMemoryStatsCategory.getName() + " " +
+            "WHERE '" + Key.AGENT_ID.getName() + "' = ?s " +
+            "AND '" + Key.VM_ID.getName() + "' = ?s " +
+            "SORT '" + Key.TIMESTAMP.getName() + "' DSC " +
+            "LIMIT 1";
     // ADD vm-memory-stats SET 'agentId' = ?s , \
     //                         'vmId' = ?s , \
     //                         'timeStamp' = ?s , \
@@ -73,38 +88,42 @@ class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
     
     private final Storage storage;
     private final VmLatestPojoListGetter<VmMemoryStat> getter;
+    private final VmTimeIntervalPojoListGetter<VmMemoryStat> otherGetter;
 
     VmMemoryStatDAOImpl(Storage storage) {
         this.storage = storage;
         storage.registerCategory(vmMemoryStatsCategory);
         getter = new VmLatestPojoListGetter<>(storage, vmMemoryStatsCategory);
+        otherGetter = new VmTimeIntervalPojoListGetter<>(storage, vmMemoryStatsCategory);
     }
 
     @Override
     public VmMemoryStat getLatestMemoryStat(VmRef ref) {
-        StatementDescriptor<VmMemoryStat> desc = new StatementDescriptor<>(vmMemoryStatsCategory, QUERY_LATEST);
-        PreparedStatement<VmMemoryStat> stmt;
-        Cursor<VmMemoryStat> cursor;
+        return runAgentAndVmIdQuery(ref, DESC_LATEST_VM_MEMORY_STAT);
+    }
+
+    @Override
+    public VmMemoryStat getOldestMemoryStat(VmRef ref) {
+        return runAgentAndVmIdQuery(ref, DESC_OLDEST_VM_MEMORY_STAT);
+    }
+
+    private VmMemoryStat runAgentAndVmIdQuery(VmRef ref, String descriptor) {
+        StatementDescriptor<VmMemoryStat> desc = new StatementDescriptor<>(vmMemoryStatsCategory, descriptor);
+        PreparedStatement<VmMemoryStat> prepared;
         try {
-            stmt = storage.prepareStatement(desc);
-            stmt.setString(0, ref.getHostRef().getAgentId());
-            stmt.setString(1, ref.getVmId());
-            cursor = stmt.executeQuery();
+            prepared = storage.prepareStatement(desc);
+            prepared.setString(0, ref.getHostRef().getAgentId());
+            prepared.setString(1, ref.getVmId());
+            Cursor<VmMemoryStat> cursor = prepared.executeQuery();
+            if (cursor.hasNext()) {
+                return cursor.next();
+            }
         } catch (DescriptorParsingException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
-            return null;
+            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
         } catch (StatementExecutionException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
-            return null;
+            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
         }
-        
-        VmMemoryStat result = null;
-        if (cursor.hasNext()) {
-            result = cursor.next();
-        }
-        return result;
+        return null;
     }
 
     @Override
@@ -128,6 +147,11 @@ class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
     @Override
     public List<VmMemoryStat> getLatestVmMemoryStats(VmRef ref, long since) {
         return getter.getLatest(ref, since);
+    }
+
+    @Override
+    public List<VmMemoryStat> getVmMemoryStats(VmRef ref, long since, long to) {
+        return otherGetter.getLatest(ref, since, to);
     }
 }
 
