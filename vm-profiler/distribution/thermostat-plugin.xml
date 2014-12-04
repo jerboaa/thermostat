@@ -40,7 +40,18 @@
     <commands>
         <command>
             <name>profile-vm</name>
-            <description>profile a target vm</description>
+            <description>
+            Profile a target vm. This is an instrumenting profiler that
+            modifies the bytecode of the target application to record method
+            execution times of all code. This command takes a subcommand that
+            describes what to do. 'start' sarts profiling a VM, 'stop' stops
+            the profiling, 'status' shows the current status (whether the
+            profiler is active or not), and 'show' displays the results of the
+            last profiling session. The results are only available after
+            profiling has stopped. The instrumentation (performed on both
+            'start' and 'stop') can take a while for programs with lots of
+            classes.
+            </description>
             <arguments>
             	<argument>action</argument>
             </arguments>

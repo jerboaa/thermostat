@@ -366,7 +366,7 @@ public class PluginConfigurationParser {
             } else if (node.getNodeName().equals("usage")) {
                 usage = node.getTextContent().trim();
             } else if (node.getNodeName().equals("description")) {
-                description = node.getTextContent().trim();
+                description = parseDescription(node);
             } else if (node.getNodeName().equals("arguments")) {
                 arguments = parseArguments(pluginName, name, node);
             } else if (node.getNodeName().equals("options")) {
@@ -430,6 +430,17 @@ public class PluginConfigurationParser {
         }
 
         return new BundleInformation(name, version);
+    }
+
+    private String parseDescription(Node descriptionNode) {
+        String text = descriptionNode.getTextContent().trim();
+        String[] lines = text.split("(" + System.lineSeparator() + ")+");
+        StringBuilder result = new StringBuilder();
+        for (String line : lines) {
+            result.append(line.trim());
+            result.append(" ");
+        }
+        return result.toString().trim();
     }
 
     private List<String> parseArguments(String pluginName, String commandName, Node argumentsNode) {

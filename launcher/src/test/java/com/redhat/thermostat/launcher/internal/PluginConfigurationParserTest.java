@@ -297,6 +297,36 @@ public class PluginConfigurationParserTest {
     }
 
     @Test
+    public void testNewLinesAreRemovedFromDescription() throws UnsupportedEncodingException {
+        String newLine = System.lineSeparator();
+        String config = "<?xml version=\"1.0\"?>\n" +
+                "<plugin>\n" +
+                "  <commands>\n" +
+                "    <command type='provides'>\n" +
+                "      <name>test</name>\n" +
+                "      <description>  Line 1.  " + newLine + "Line 2. Line 3." + newLine + "Line 4.</description>\n" +
+                "      <environments>" +
+                "        <environment>shell</environment>" +
+                "        <environment>cli</environment>" +
+                "      </environments>" +
+                "    </command>\n" +
+                "  </commands>\n" +
+                "</plugin>";
+
+        PluginConfiguration result = new PluginConfigurationParser()
+                .parse("test", new ByteArrayInputStream(config.getBytes("UTF-8")));
+
+        assertEquals(0, result.getExtendedCommands().size());
+
+        List<NewCommand> newCommands = result.getNewCommands();
+        assertEquals(1, newCommands.size());
+
+        NewCommand command = newCommands.get(0);
+        assertEquals("test", command.getCommandName());
+        assertEquals("Line 1. Line 2. Line 3. Line 4.", command.getDescription());
+    }
+
+    @Test
     public void testArgumentParsing() throws UnsupportedEncodingException {
         String config = "<?xml version=\"1.0\"?>\n" +
                 "<plugin>\n" +
