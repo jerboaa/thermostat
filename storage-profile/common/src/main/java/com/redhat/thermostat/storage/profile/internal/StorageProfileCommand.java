@@ -276,9 +276,11 @@ public class StorageProfileCommand implements Command, CategoryRegistration, Sta
     private void measureQueryDistinctItems(Console console, final int ITERATIONS) {
         try {
 
-            // populate data
+            // populate data, populate it with more than 100 records which is
+            // the default cursor batch size so as to test retrieving multiple
+            // batches too.
             StatementDescriptor<SimpleData> addDesc = new StatementDescriptor<>(PROFILE_CATEGORY, INSERT_DATA);
-            final int DATA_COUNT = 100;
+            final int DATA_COUNT = 155;
             for (int i = 0; i < DATA_COUNT; i++) {
                 PreparedStatement<SimpleData> statement = storage.prepareStatement(addDesc);
                 statement.setString(0, "FOO");
@@ -295,8 +297,13 @@ public class StorageProfileCommand implements Command, CategoryRegistration, Sta
             for (int i = 0; i < ITERATIONS; i++) {
                 PreparedStatement<SimpleData> statement = storage.prepareStatement(desc);
                 Cursor<SimpleData> results = statement.executeQuery();
+                int dataReturned = 0;
                 while (results.hasNext()) {
                     /* discard = */ results.next();
+                    dataReturned++;
+                }
+                if (dataReturned != DATA_COUNT) {
+                    throw new AssertionError("Expected " + DATA_COUNT + " results, but got only " + dataReturned);
                 }
             }
             long end = System.nanoTime();
