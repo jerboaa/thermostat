@@ -37,14 +37,14 @@
 package com.redhat.thermostat.storage.core.experimental.statement;
 
 import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.Persist;
 import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.model.TimeStampedPojo;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -58,49 +58,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 public class BeanAdapterTest {
-
-    @Category("testCategory")
-    private static class SampleBean implements TimeStampedPojo {
-
-        private long timeStamp;
-        private int vmId;
-        private String name;
-
-        @Indexed
-        @Persist
-        public int getVmId() {
-            return vmId;
-        }
-
-        @Indexed
-        @Persist
-        public void setVmId(int vmId) {
-            this.vmId = vmId;
-        }
-
-        @Persist
-        public String getName() {
-            return name;
-        }
-
-        @Persist
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        @Indexed
-        @Persist
-        public void setTimeStamp(long timeStamp) {
-            this.timeStamp = timeStamp;
-        }
-
-        @Indexed
-        @Persist
-        @Override
-        public long getTimeStamp() {
-            return timeStamp;
-        }
-    }
 
     private Storage storage;
     private PreparedStatement<SampleBean> insert;

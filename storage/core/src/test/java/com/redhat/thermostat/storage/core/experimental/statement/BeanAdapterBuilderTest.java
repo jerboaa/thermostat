@@ -37,10 +37,8 @@
 package com.redhat.thermostat.storage.core.experimental.statement;
 
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
-import com.redhat.thermostat.storage.core.Persist;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.internal.statement.StatementDescriptorTester;
-import com.redhat.thermostat.storage.model.TimeStampedPojo;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -53,49 +51,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class BeanAdapterBuilderTest {
-
-    @Category("testCategory")
-    private static class SampleBean implements TimeStampedPojo {
-
-        private long timeStamp;
-        private int vmId;
-        private String name;
-
-        @Indexed
-        @Persist
-        public int getVmId() {
-            return vmId;
-        }
-
-        @Indexed
-        @Persist
-        public void setVmId(int vmId) {
-            this.vmId = vmId;
-        }
-
-        @Persist
-        public String getName() {
-            return name;
-        }
-
-        @Persist
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        @Indexed
-        @Persist
-        public void setTimeStamp(long timeStamp) {
-            this.timeStamp = timeStamp;
-        }
-
-        @Indexed
-        @Persist
-        @Override
-        public long getTimeStamp() {
-            return timeStamp;
-        }
-    }
 
     private List<Query<SampleBean>> queries;
 

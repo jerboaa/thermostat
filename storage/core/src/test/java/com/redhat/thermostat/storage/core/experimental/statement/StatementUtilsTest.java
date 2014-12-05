@@ -36,98 +36,15 @@
 
 package com.redhat.thermostat.storage.core.experimental.statement;
 
-import com.redhat.thermostat.storage.core.Persist;
-import com.redhat.thermostat.storage.model.TimeStampedPojo;
 import java.util.List;
 import java.util.Map;
+
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class StatementUtilsTest {
-
-    @Category("testCategory")
-    private static class SampleBean implements TimeStampedPojo {
-
-        private long timeStamp;
-        private int vmId;
-        private String name;
-
-        @Indexed
-        @Persist
-        public int getVmId() {
-            return vmId;
-        }
-
-        @Indexed
-        @Persist
-        public void setVmId(int vmId) {
-            this.vmId = vmId;
-        }
-
-        @Persist
-        public String getName() {
-            return name;
-        }
-
-        @Persist
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        @Indexed
-        @Persist
-        public void setTimeStamp(long timeStamp) {
-            this.timeStamp = timeStamp;
-        }
-
-        @Indexed
-        @Persist
-        @Override
-        public long getTimeStamp() {
-            return timeStamp;
-        }
-    }
-
-    @Category("testCategory2")
-    private static class InvalidSampleBean implements TimeStampedPojo {
-
-        private long timeStamp;
-        private int vmId;
-        private String name;
-
-        public int getVmId() {
-            return vmId;
-        }
-
-        @Indexed
-        @Persist
-        public void setVmId(int vmId) {
-            this.vmId = vmId;
-        }
-
-        @Persist
-        public String getName() {
-            return name;
-        }
-
-        @Persist
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public void setTimeStamp(long timeStamp) {
-            this.timeStamp = timeStamp;
-        }
-
-        @Indexed
-        @Persist
-        @Override
-        public long getTimeStamp() {
-            return timeStamp;
-        }
-    }
 
     @Test
     public void testAnnotationSupport() {

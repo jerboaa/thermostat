@@ -36,44 +36,48 @@
 
 package com.redhat.thermostat.storage.core.experimental.statement;
 
-import com.redhat.thermostat.storage.core.Key;
-import java.util.Collection;
-import java.util.List;
-import org.junit.Test;
+import com.redhat.thermostat.storage.core.Persist;
+import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+@Category("testCategory")
+public class SampleBean implements TimeStampedPojo {
 
-public class CategoryBuilderTest {
+    private long timeStamp;
+    private int vmId;
+    private String name;
 
-    private static final String CATEGORY_NAME = "testCategory";
-    @Test
-    public void testBuild() throws Exception {
-        CategoryBuilder<SampleBean> builder =  new CategoryBuilder<>(SampleBean.class);
-        com.redhat.thermostat.storage.core.Category<SampleBean> category =
-                builder.build();
+    @Indexed
+    @Persist
+    public int getVmId() {
+        return vmId;
+    }
 
-        assertNotNull(category);
-        assertEquals(CATEGORY_NAME, category.getName());
-        assertEquals(SampleBean.class, category.getDataClass());
+    @Indexed
+    @Persist
+    public void setVmId(int vmId) {
+        this.vmId = vmId;
+    }
 
-        List<Key<?>> indexed = category.getIndexedKeys();
-        assertEquals(2, indexed.size());
+    @Persist
+    public String getName() {
+        return name;
+    }
 
-        Key key0 = new Key("vmId");
-        Key key1 = new Key("timeStamp");
+    @Persist
+    public void setName(String name) {
+        this.name = name;
+    }
 
-        assertTrue(indexed.contains(key0));
-        assertTrue(indexed.contains(key1));
+    @Indexed
+    @Persist
+    public void setTimeStamp(long timeStamp) {
+        this.timeStamp = timeStamp;
+    }
 
-        Collection<Key<?>> keys = category.getKeys();
-        assertEquals(3, keys.size());
-
-        Key key2 = new Key("name");
-
-        assertTrue(keys.contains(key0));
-        assertTrue(keys.contains(key1));
-        assertTrue(keys.contains(key2));
+    @Indexed
+    @Persist
+    @Override
+    public long getTimeStamp() {
+        return timeStamp;
     }
 }

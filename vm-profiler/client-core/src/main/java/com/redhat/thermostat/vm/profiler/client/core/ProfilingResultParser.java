@@ -42,6 +42,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -57,8 +59,8 @@ public class ProfilingResultParser {
     private static final Logger logger = LoggingUtils.getLogger(ProfilingResultParser.class);
 
     public ProfilingResult parse(InputStream in) {
-        Map<String, Long> result = readData(in);
-        return processData(result);
+        Map<String, Long> methodAndTimes = readData(in);
+        return convertToResult(methodAndTimes);
     }
 
     private Map<String, Long> readData(InputStream in) {
@@ -79,7 +81,7 @@ public class ProfilingResultParser {
         return result;
     }
 
-    private ProfilingResult processData(Map<String, Long> results) {
+    private ProfilingResult convertToResult(Map<String, Long> results) {
         ArrayList<MethodInfo> info = new ArrayList<>();
         long totalTime = 0;
         for (Entry<String, Long> entry : results.entrySet()) {
@@ -90,6 +92,13 @@ public class ProfilingResultParser {
             MethodInfo method = new MethodInfo(entry.getKey(), entry.getValue(), (entry.getValue() * 1.0 / totalTime) * 100);
             info.add(method);
         }
+
+        Collections.sort(info, new Comparator<MethodInfo>() {
+            @Override
+            public int compare(MethodInfo o1, MethodInfo o2) {
+                return Long.compare(o1.totalTimeInMillis, o2.totalTimeInMillis);
+            }
+        });
 
         return new ProfilingResult(info);
     }
