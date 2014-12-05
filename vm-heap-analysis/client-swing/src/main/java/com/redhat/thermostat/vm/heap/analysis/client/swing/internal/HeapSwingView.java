@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
@@ -82,6 +83,9 @@ import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
 public class HeapSwingView extends HeapView implements SwingComponent {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+
+    private static final Color WHITE = new Color(255, 255, 255, 255);
+    private static final Color BLACK = new Color(0, 0, 0, 0);
 
     private StatsPanel stats;
 
@@ -217,6 +221,9 @@ public class HeapSwingView extends HeapView implements SwingComponent {
                 charts.setMaximumDrawHeight(Integer.MAX_VALUE);
                 charts.setMaximumDrawWidth(Integer.MAX_VALUE);
                 
+                charts.getChart().getPlot().setBackgroundPaint(WHITE);
+                charts.getChart().getPlot().setOutlinePaint(BLACK);
+
                 charts.setOpaque(false);
                 
                 stats.setChartPanel(charts);

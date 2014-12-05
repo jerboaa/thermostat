@@ -37,6 +37,7 @@
 package com.redhat.thermostat.vm.gc.client.swing.internal;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -83,6 +84,10 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     private static final String GC_ALGO_LABEL_NAME = translator.localize(LocaleResources.VM_GC_CONFIGURED_COLLECTOR).getContents();
+
+    private static final Color WHITE = new Color(255,255,255,0);
+    private static final Color BLACK = new Color(0,0,0,0);
+    private static final float TRANSPARENT = 0.0f;
     
     private HeaderPanel visiblePanel = new HeaderPanel();
     private JPanel chartPanelContainer = new JPanel();
@@ -187,6 +192,10 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
 
         chart.getXYPlot().setDomainCrosshairLockedOnData(true);
         chart.getXYPlot().setDomainCrosshairVisible(true);
+
+        chart.getPlot().setBackgroundPaint(WHITE);
+        chart.getPlot().setBackgroundImageAlpha(TRANSPARENT);
+        chart.getPlot().setOutlinePaint(BLACK);
 
         final RecentTimeSeriesChartPanel chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
 

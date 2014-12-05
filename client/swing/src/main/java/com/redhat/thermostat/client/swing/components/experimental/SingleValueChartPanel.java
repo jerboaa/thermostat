@@ -36,34 +36,29 @@
 
 package com.redhat.thermostat.client.swing.components.experimental;
 
-import com.redhat.thermostat.client.core.experimental.Duration;
-import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.swing.components.ValueField;
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.shared.locale.Translate;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.util.concurrent.TimeUnit;
+
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+import javax.swing.text.JTextComponent;
+
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.XYPlot;
 
-import javax.swing.text.JTextComponent;
-import java.util.concurrent.TimeUnit;
-
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
+import com.redhat.thermostat.client.core.experimental.Duration;
+import com.redhat.thermostat.client.swing.components.ValueField;
 
 
 public class SingleValueChartPanel extends JPanel {
 
     public static final String PROPERTY_VISIBLE_TIME_RANGE = "visibleTimeRange";
+
+    private static final Color WHITE = new Color(255,255,255,0);
+    private static final Color BLACK = new Color(0,0,0,0);
+    private static final float TRANSPARENT = 0.0f;
 
     private static final int MINIMUM_DRAW_SIZE = 100;
 
@@ -85,6 +80,10 @@ public class SingleValueChartPanel extends JPanel {
 
         chart.getXYPlot().getDomainAxis().setAutoRange(true);
         chart.getXYPlot().getDomainAxis().setFixedAutoRange(duration.unit.toMillis(duration.value));
+
+        chart.getPlot().setBackgroundPaint(WHITE);
+        chart.getPlot().setBackgroundImageAlpha(TRANSPARENT);
+        chart.getPlot().setOutlinePaint(BLACK);
 
         chartPanel = new ChartPanel(chart);
 
