@@ -192,6 +192,15 @@ public class StorageProfileCommand implements Command, CategoryRegistration, Sta
                 statement.setLong(2, i);
                 statement.execute();
             }
+            // The way how this is used assumes that all queued items have been
+            // executed when measureAdd() returns. However this may not always
+            // be the case and thus clearAndVerifyAllData() may be called already
+            // while some insert jobs are still about to get inserted.
+            // This waitForDataCount() call essentially acts as a barrier to not
+            // proceed until all inserts have completed. Otherwise there is no
+            // way to ensure that after a remove stmt the count will reach 0.
+            // Some inserts scheduled above might insert after the remove.
+            waitForDataCount(console, ITERATIONS);
             long end = System.nanoTime();
             console.getOutput().println("ADD (x" + ITERATIONS + ") took " + nanosToMicroSeconds(end-start));
             console.getOutput().println("ADD avg was " + nanosToMicroSeconds(1.0 * (end-start) / ITERATIONS));
