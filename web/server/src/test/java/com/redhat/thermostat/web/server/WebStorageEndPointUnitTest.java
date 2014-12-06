@@ -79,24 +79,6 @@ public class WebStorageEndPointUnitTest {
         System.clearProperty(TH_HOME_PROP_NAME);
     }
     
-    /*
-     * Tests whether isThermostatHomeSet() works as expected.
-     * 
-     * In particular, this tests sets thermostat home to a known-to-be-read-only
-     * for non-root users. That will make isThermostatHomeSet() return false
-     * due to creating paths failing.
-     * 
-     * Regression test for the following bug:
-     * http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=1637
-     */
-    @Test
-    public void testCheckThermostatHome() {
-        System.setProperty(TH_HOME_PROP_NAME, "/root");
-        WebStorageEndPoint endpoint = new WebStorageEndPoint();
-        assertTrue(TH_HOME_PROP_NAME + " clearly set, do we create paths where we shouldn't?",
-                endpoint.isThermostatHomeSet());
-    }
-    
     /**
      * Makes sure that all paths we dispatch to, dispatch to
      * {@link WebStoragePathHandler} annotated methods.

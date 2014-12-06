@@ -37,12 +37,13 @@
 package com.redhat.thermostat.shared.config.internal;
 
 import static org.junit.Assert.fail;
-
 import static com.redhat.thermostat.testutils.TestUtils.deleteRecursively;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFilePermissions;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -83,8 +84,8 @@ public class CommonPathsImplTest {
         }
     }
 
-    private String setupTempDir(String tempPrefix, String propertyKey) throws IOException {
-        File tmpDir = Files.createTempDirectory(tempPrefix).toFile();
+    private String setupTempDir(String tempPrefix, String propertyKey, FileAttribute<?>... attrs) throws IOException {
+        File tmpDir = Files.createTempDirectory(tempPrefix, attrs).toFile();
         if (!tmpDir.exists()) {
             tmpDir.mkdirs();
         }
@@ -266,6 +267,28 @@ public class CommonPathsImplTest {
             fail("Should have thrown InvalidConfigurationException");
         } catch (InvalidConfigurationException e) {
             // pass
+        }
+    }
+
+    @Test
+    public void instantiationThrowsExceptionThermostatHomeNotReadable() throws IOException {
+        String thermostatHome = null;
+        try {
+            thermostatHome = setupTempDir("CommonPathsImplTest.instantiationThrowsExceptionThermostatHomeNotReadable",
+                    THERMOSTAT_HOME_PROPERTY,
+                    PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("-wx--x---")));
+            new CommonPathsImpl();
+            fail("Should have thrown InvalidConfigurationException");
+        } catch (InvalidConfigurationException e) {
+            // pass
+        } finally {
+            if (thermostatHome != null) {
+                // Don't use deleteTempDir because it can't list contents of unreadable dir
+                File tmpDir = new File(thermostatHome);
+                if (tmpDir.exists()) {
+                    tmpDir.delete();
+                }
+            }
         }
     }
 }

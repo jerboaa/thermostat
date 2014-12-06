@@ -121,6 +121,9 @@ public class CommonPathsImpl implements CommonPaths {
         if (!systemHome.exists()) {
             throw new InvalidConfigurationException(t.localize(LocaleResources.SYSHOME_DOESNT_EXIST, home));
         }
+        if (!systemHome.canRead()) {
+            throw new InvalidConfigurationException(t.localize(LocaleResources.SYSHOME_CANNOT_READ, home));
+        }
         if (!systemHome.isDirectory()) {
             throw new InvalidConfigurationException(t.localize(LocaleResources.SYSHOME_NOT_A_DIR, home));
         }

@@ -166,7 +166,7 @@ public class WebStorageEndPoint extends HttpServlet {
         
         // check if thermostat home is set and readable
         // Side effect: sets this.paths
-        checkThermostatHome();
+        sanityCheckNecessaryFiles();
         
         gson = new GsonBuilder()
                 .registerTypeAdapterFactory(new PojoTypeAdapterFactory())
@@ -277,36 +277,17 @@ public class WebStorageEndPoint extends HttpServlet {
     }
 
     // Side effect: sets this.paths
-    // package-private for testing
-    boolean isThermostatHomeSet() {
+    private void sanityCheckNecessaryFiles() {
         try {
-            // this throws config exception if neither the property
-            // nor the env var is set
+            // Throws config exception if basic sanity checks for
+            // THERMOSTAT_HOME don't pass.
             paths = new CommonPathsImpl();
-            return true;
         } catch (InvalidConfigurationException e) {
-            return false;
-        }
-    }
-
-    // Side effect: sets this.paths
-    private void checkThermostatHome() {
-        if (!isThermostatHomeSet()) {
-            String msg = "THERMOSTAT_HOME context parameter not set!";
-            logger.log(Level.SEVERE, msg);
-            throw new RuntimeException(msg);
+            logger.log(Level.SEVERE, e.getMessage());
+            throw new RuntimeException(e);
         }
         File thermostatHomeFile = getThermostatHome();
         String notReadableMsg = " is not readable or does not exist!";
-        if (!thermostatHomeFile.canRead()) {
-            // This is bad news. If we can't at least read THERMOSTAT_HOME
-            // we are bound to fail in some weird ways at some later point.
-            String msg = "THERMOSTAT_HOME = "
-                    + thermostatHomeFile.getAbsolutePath()
-                    + notReadableMsg;
-            logger.log(Level.SEVERE, msg);
-            throw new RuntimeException(msg);
-        }
         // we need to be able to read ssl config for backing storage
         // paths got set in isThermostatHomeSet()
         File sslProperties = new File(paths.getSystemConfigurationDirectory(), "ssl.properties");
