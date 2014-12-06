@@ -38,8 +38,11 @@ package com.redhat.thermostat.shared.config.internal;
 
 import static org.junit.Assert.fail;
 
+import static com.redhat.thermostat.testutils.TestUtils.deleteRecursively;
+
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -51,117 +54,215 @@ import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 
 public class CommonPathsImplTest {
 
+    private static final char s = File.separatorChar;
+    private static final String THERMOSTAT_HOME_PROPERTY = "THERMOSTAT_HOME";
+    private static final String USER_THERMOSTAT_HOME_PROPERTY = "USER_THERMOSTAT_HOME";
+    private static final String THERMOSTAT_SYSTEM_USER_PROPERTY = "THERMOSTAT_SYSTEM_USER";
+
+    private String savedHome, savedUserHome, savedSystemUser;
+
     @Before
     public void setUp() {
-        System.clearProperty("THERMOSTAT_HOME");
-        System.clearProperty("USER_THERMOSTAT_HOME");
-        System.clearProperty("THERMOSTAT_SYSTEM_USER");
+        savedHome = System.clearProperty(THERMOSTAT_HOME_PROPERTY);
+        savedUserHome = System.clearProperty(USER_THERMOSTAT_HOME_PROPERTY);
+        savedSystemUser = System.clearProperty(THERMOSTAT_SYSTEM_USER_PROPERTY);
     }
 
     @After
     public void tearDown() {
-        System.clearProperty("THERMOSTAT_HOME");
-        System.clearProperty("USER_THERMOSTAT_HOME");
-        System.clearProperty("THERMOSTAT_SYSTEM_USER");
+        restoreProperty(THERMOSTAT_HOME_PROPERTY, savedHome);
+        restoreProperty(USER_THERMOSTAT_HOME_PROPERTY, savedUserHome);
+        restoreProperty(THERMOSTAT_SYSTEM_USER_PROPERTY, savedSystemUser);
+    }
+
+    private void restoreProperty(String key, String oldValue) {
+        if (oldValue == null) {
+            System.clearProperty(key);
+        } else {
+            System.setProperty(key, oldValue);
+        }
+    }
+
+    private String setupTempDir(String tempPrefix, String propertyKey) throws IOException {
+        File tmpDir = Files.createTempDirectory(tempPrefix).toFile();
+        if (!tmpDir.exists()) {
+            tmpDir.mkdirs();
+        }
+        String path = tmpDir.getAbsolutePath();
+        System.setProperty(propertyKey, path);
+        return path;
+    }
+
+    private void deleteTempDir(String tmpPath) throws IOException {
+        File tmpDir = new File(tmpPath);
+        if (tmpDir.exists()) {
+            deleteRecursively(tmpDir);
+        }
+    }
+
+    private String concatPath(String prefix, String ... pathElements) {
+        StringBuilder sb = new StringBuilder(prefix);
+        for (String pathElement : pathElements) {
+            sb.append(s);
+            sb.append(pathElement);
+        }
+        return sb.toString();
     }
 
     @Test
     public void testSystemLocations() throws InvalidConfigurationException, IOException {
-        String thermostatHome = "/tmp";
-        System.setProperty("THERMOSTAT_HOME", thermostatHome);
+        String thermostatHome = null;
+        try {
+            thermostatHome = setupTempDir("CommonPathsImplTest.testSystemLocations",
+                    THERMOSTAT_HOME_PROPERTY);
+            CommonPaths config = new CommonPathsImpl();
 
-        char s = File.separatorChar;
-
-        CommonPaths config = new CommonPathsImpl();
-
-        Assert.assertEquals(thermostatHome, config.getSystemThermostatHome().getCanonicalPath());
-
-        Assert.assertEquals(thermostatHome + s + "libs" + s + "native",
-                config.getSystemNativeLibsRoot().getCanonicalPath());
-        Assert.assertEquals(thermostatHome + s + "etc", config.getSystemConfigurationDirectory().getCanonicalPath());
-        Assert.assertEquals(thermostatHome + s + "libs", config.getSystemLibRoot().getCanonicalPath());
-        Assert.assertEquals(thermostatHome + s + "plugins", config.getSystemPluginRoot().getCanonicalPath());
-        Assert.assertEquals(thermostatHome + s + "etc" + s + "plugins.d", config.getSystemPluginConfigurationDirectory().getCanonicalPath());
+            Assert.assertEquals(thermostatHome,
+                    config.getSystemThermostatHome().getCanonicalPath());
+            Assert.assertEquals(concatPath(thermostatHome, "libs", "native"),
+                    config.getSystemNativeLibsRoot().getCanonicalPath());
+            Assert.assertEquals(concatPath(thermostatHome, "etc"),
+                    config.getSystemConfigurationDirectory().getCanonicalPath());
+            Assert.assertEquals(concatPath(thermostatHome, "libs"),
+                    config.getSystemLibRoot().getCanonicalPath());
+            Assert.assertEquals(concatPath(thermostatHome, "plugins"),
+                    config.getSystemPluginRoot().getCanonicalPath());
+            Assert.assertEquals(concatPath(thermostatHome, "etc", "plugins.d"),
+                    config.getSystemPluginConfigurationDirectory().getCanonicalPath());
+        } finally {
+            if (thermostatHome != null) {
+                deleteTempDir(thermostatHome);
+            }
+        }
     }
 
     @Test
     public void testUserLocations() throws InvalidConfigurationException, IOException {
-        String thermostatHome = "/tmp";
-        System.setProperty("THERMOSTAT_HOME", thermostatHome);
-        char s = File.separatorChar;
-        String userHome = System.getProperty("user.home") + s + ".thermostat";
-        CommonPaths config = new CommonPathsImpl();
+        String thermostatHome = null;
+        try {
+            thermostatHome = setupTempDir("CommonPathsImplTest.testUserLocations",
+                    THERMOSTAT_HOME_PROPERTY);
+            String userHome = System.getProperty("user.home") + s + ".thermostat";
+            CommonPaths config = new CommonPathsImpl();
 
-        Assert.assertEquals(userHome + s + "etc" + s + "agent.properties",
-                config.getUserAgentConfigurationFile().getCanonicalPath());
-        Assert.assertEquals(userHome + s + "etc" + s + "agent.auth",
-                config.getUserAgentAuthConfigFile().getCanonicalPath());
-        Assert.assertEquals(userHome + s + "etc" + s + "db.properties",
-                config.getUserStorageConfigurationFile().getCanonicalPath());
-
-        Assert.assertEquals(userHome + s + "data" + s + "db",
-                config.getUserStorageDirectory().getCanonicalPath());
-        Assert.assertEquals(userHome + s + "run" + s + "db.pid",
-                config.getUserStoragePidFile().getCanonicalPath());
-        Assert.assertEquals(userHome + s + "logs" + s + "db.log",
-                config.getUserStorageLogFile().getCanonicalPath());
-
-        Assert.assertEquals(userHome + s + "data" + s + "plugins",
-                config.getUserPluginRoot().getCanonicalPath());
-        Assert.assertEquals(userHome + s + "etc" + s + "plugins.d",
-                config.getUserPluginConfigurationDirectory().getCanonicalPath());
+            Assert.assertEquals(concatPath(userHome, "etc", "agent.properties"),
+                    config.getUserAgentConfigurationFile().getCanonicalPath());
+            Assert.assertEquals(concatPath(userHome, "etc", "agent.auth"),
+                    config.getUserAgentAuthConfigFile().getCanonicalPath());
+            Assert.assertEquals(concatPath(userHome, "etc", "db.properties"),
+                    config.getUserStorageConfigurationFile().getCanonicalPath());
+            Assert.assertEquals(concatPath(userHome, "data", "db"),
+                    config.getUserStorageDirectory().getCanonicalPath());
+            Assert.assertEquals(concatPath(userHome, "run", "db.pid"),
+                    config.getUserStoragePidFile().getCanonicalPath());
+            Assert.assertEquals(concatPath(userHome, "logs", "db.log"),
+                    config.getUserStorageLogFile().getCanonicalPath());
+            Assert.assertEquals(concatPath(userHome, "data", "plugins"),
+                    config.getUserPluginRoot().getCanonicalPath());
+            Assert.assertEquals(concatPath(userHome, "etc", "plugins.d"),
+                    config.getUserPluginConfigurationDirectory().getCanonicalPath());
+        } finally {
+            if (thermostatHome != null) {
+                deleteTempDir(thermostatHome);
+            }
+        }
     }
 
     @Test
     public void testPrivilegedUserLocations() throws InvalidConfigurationException, IOException {
-        String thermostatHome = "/tmp/thermostat_test";
-        System.setProperty("THERMOSTAT_HOME", thermostatHome);
-        System.setProperty("THERMOSTAT_SYSTEM_USER", "");
-        CommonPaths config = new CommonPathsImpl(thermostatHome);
+        String thermostatHomeAndFakeRoot = null;
+        try {
+            thermostatHomeAndFakeRoot = setupTempDir("CommonPathsImplTest.testPrivilegedUserLocations",
+                    THERMOSTAT_HOME_PROPERTY);
+            System.setProperty(THERMOSTAT_SYSTEM_USER_PROPERTY, "");
+            CommonPaths config = new CommonPathsImpl(thermostatHomeAndFakeRoot);
 
-        // the paths are unix specific, but so are the paths in Configuration
-
-        Assert.assertEquals("/tmp/thermostat_test/etc/thermostat/agent.properties", config.getUserAgentConfigurationFile().getCanonicalPath());
-        Assert.assertEquals("/tmp/thermostat_test/etc/thermostat/agent.auth", config.getUserAgentAuthConfigFile().getCanonicalPath());
-        Assert.assertEquals("/tmp/thermostat_test/etc/thermostat/db.properties", config.getUserStorageConfigurationFile().getCanonicalPath());
-
-        Assert.assertEquals("/tmp/thermostat_test/var/lib/thermostat/db", config.getUserStorageDirectory().getCanonicalPath());
-        Assert.assertEquals("/tmp/thermostat_test/var/run/thermostat/db.pid", config.getUserStoragePidFile().getAbsolutePath());
-        Assert.assertEquals("/tmp/thermostat_test/var/log/thermostat/db.log", config.getUserStorageLogFile().getCanonicalPath());
-
-        Assert.assertEquals("/tmp/thermostat_test/var/lib/thermostat/plugins", config.getUserPluginRoot().getCanonicalPath());
-        Assert.assertEquals("/tmp/thermostat_test/etc/thermostat/plugins.d", config.getUserPluginConfigurationDirectory().getCanonicalPath());
+            Assert.assertEquals(concatPath(thermostatHomeAndFakeRoot, "etc", "thermostat", "agent.properties"),
+                    config.getUserAgentConfigurationFile().getCanonicalPath());
+            Assert.assertEquals(concatPath(thermostatHomeAndFakeRoot, "etc", "thermostat", "agent.auth"),
+                    config.getUserAgentAuthConfigFile().getCanonicalPath());
+            Assert.assertEquals(concatPath(thermostatHomeAndFakeRoot, "etc", "thermostat", "db.properties"),
+                    config.getUserStorageConfigurationFile().getCanonicalPath());
+            Assert.assertEquals(concatPath(thermostatHomeAndFakeRoot, "var", "lib", "thermostat", "db"),
+                    config.getUserStorageDirectory().getCanonicalPath());
+            Assert.assertEquals(concatPath(thermostatHomeAndFakeRoot, "var", "run", "thermostat", "db.pid"),
+                    config.getUserStoragePidFile().getAbsolutePath());
+            Assert.assertEquals(concatPath(thermostatHomeAndFakeRoot, "var", "log", "thermostat", "db.log"),
+                    config.getUserStorageLogFile().getCanonicalPath());
+            Assert.assertEquals(concatPath(thermostatHomeAndFakeRoot, "var", "lib", "thermostat", "plugins"),
+                    config.getUserPluginRoot().getCanonicalPath());
+            Assert.assertEquals(concatPath(thermostatHomeAndFakeRoot, "etc", "thermostat", "plugins.d"),
+                    config.getUserPluginConfigurationDirectory().getCanonicalPath());
+        } finally {
+            if (thermostatHomeAndFakeRoot != null) {
+                deleteTempDir(thermostatHomeAndFakeRoot);
+            }
+        }
     }
 
     @Test
     public void testPrivilegedUserLocationsWithPrefix() throws InvalidConfigurationException, IOException {
-        String thermostatHome = "/tmp";
-        String prefix = "/tmp/opt/custom/prefix";
-        System.setProperty("THERMOSTAT_HOME", thermostatHome);
-        System.setProperty("USER_THERMOSTAT_HOME", prefix);
-        System.setProperty("THERMOSTAT_SYSTEM_USER", "");
-        CommonPaths config = new CommonPathsImpl();
+        String thermostatHome = null;
+        String prefix = null;
+        try {
+            thermostatHome = setupTempDir("CommonPathsImplTest.testPrivilegedUserLocationsWithPrefix",
+                    THERMOSTAT_HOME_PROPERTY);
+            prefix = setupTempDir("CommonPathsImplTest.testPrivilegedUserLocationsWithPrefix_prefix",
+                    USER_THERMOSTAT_HOME_PROPERTY);
+            System.setProperty(THERMOSTAT_SYSTEM_USER_PROPERTY, "");
+            CommonPaths config = new CommonPathsImpl();
 
-        // the paths are unix specific, but so are the paths in Configuration
-
-        Assert.assertEquals(prefix + "/etc/thermostat/agent.properties", config.getUserAgentConfigurationFile().getCanonicalPath());
-        Assert.assertEquals(prefix + "/etc/thermostat/agent.auth", config.getUserAgentAuthConfigFile().getCanonicalPath());
-        Assert.assertEquals(prefix + "/etc/thermostat/db.properties", config.getUserStorageConfigurationFile().getCanonicalPath());
-
-        Assert.assertEquals(prefix + "/var/lib/thermostat/db", config.getUserStorageDirectory().getCanonicalPath());
-        Assert.assertEquals(prefix + "/var/run/thermostat/db.pid", config.getUserStoragePidFile().getAbsolutePath());
-        Assert.assertEquals(prefix + "/var/log/thermostat/db.log", config.getUserStorageLogFile().getCanonicalPath());
-
-        Assert.assertEquals(prefix + "/var/lib/thermostat/plugins", config.getUserPluginRoot().getCanonicalPath());
-
-        Assert.assertEquals(prefix + "/etc/thermostat/plugins.d", config.getUserPluginConfigurationDirectory().getCanonicalPath());
+            Assert.assertEquals(concatPath(prefix, "etc", "thermostat", "agent.properties"),
+                    config.getUserAgentConfigurationFile().getCanonicalPath());
+            Assert.assertEquals(concatPath(prefix, "etc", "thermostat", "agent.auth"),
+                    config.getUserAgentAuthConfigFile().getCanonicalPath());
+            Assert.assertEquals(concatPath(prefix, "etc", "thermostat", "db.properties"),
+                    config.getUserStorageConfigurationFile().getCanonicalPath());
+            Assert.assertEquals(concatPath(prefix, "var", "lib", "thermostat", "db"),
+                    config.getUserStorageDirectory().getCanonicalPath());
+            Assert.assertEquals(concatPath(prefix, "var", "run", "thermostat", "db.pid"),
+                    config.getUserStoragePidFile().getAbsolutePath());
+            Assert.assertEquals(concatPath(prefix, "var", "log", "thermostat", "db.log"),
+                    config.getUserStorageLogFile().getCanonicalPath());
+            Assert.assertEquals(concatPath(prefix, "var", "lib", "thermostat", "plugins"),
+                    config.getUserPluginRoot().getCanonicalPath());
+            Assert.assertEquals(concatPath(prefix, "etc", "thermostat", "plugins.d"),
+                    config.getUserPluginConfigurationDirectory().getCanonicalPath());
+        } finally {
+            if (thermostatHome != null) {
+                deleteTempDir(thermostatHome);
+            }
+            if (prefix != null) {
+                deleteTempDir(prefix);
+            }
+        }
     }
 
     @Test
-    public void instantiationThrowsException() {
+    public void instantiationThrowsExceptionUndefinedThermostatHome() {
         try {
             new CommonPathsImpl();
             // The web archive uses this. See WebStorageEndPoint#init();
+            fail("Should have thrown InvalidConfigurationException");
+        } catch (InvalidConfigurationException e) {
+            // pass
+        }
+    }
+
+    @Test
+    public void instantiationThrowsExceptionThermostatHomeNotExists() throws IOException {
+        String thermostatHome = null;
+        try  {
+            thermostatHome = setupTempDir("CommonPathsImplTest.testPrivilegedUserLocationsWithPrefix",
+                    THERMOSTAT_HOME_PROPERTY);
+        } finally {
+            if (thermostatHome != null) {
+                deleteTempDir(thermostatHome);
+            }
+        }
+
+        try {
+            new CommonPathsImpl();
             fail("Should have thrown InvalidConfigurationException");
         } catch (InvalidConfigurationException e) {
             // pass
