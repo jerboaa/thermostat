@@ -36,39 +36,44 @@
 
 package com.redhat.thermostat.shared.config;
 
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-import org.junit.After;
-import org.junit.Before;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.io.File;
+
 import org.junit.Test;
 
-import com.redhat.thermostat.shared.config.internal.CommonPathsImpl;
-
-public class NativeLibrayResolverTest {
-
-    private static final String THERMOSTAT_HOME = "THERMOSTAT_HOME";
-
-    private String saved;
-
-    @Before
-    public void setUp() {
-        saved = System.setProperty(THERMOSTAT_HOME, "../foo/");
-        NativeLibraryResolver.setCommonPaths(new CommonPathsImpl());
-    }
-
-    @After
-    public void tearDown() {
-        if (saved == null) {
-            System.clearProperty(THERMOSTAT_HOME);
-        } else {
-            System.setProperty(THERMOSTAT_HOME, null);
-        }
-    }
+public class NativeLibraryResolverTest {
 
     @Test
     public void testGetAbsoluteLibraryPath() {
-        String absPath = NativeLibraryResolver.getAbsoluteLibraryPath("foo");
-        assertFalse(absPath.startsWith(".."));
+        String mockNativeLibRoot = "/arbitrary/path";
+        String libName = "foo";
+        CommonPaths cp = mock(CommonPaths.class);
+        when(cp.getSystemNativeLibsRoot()).thenReturn(new File(mockNativeLibRoot));
+
+        NativeLibraryResolver.setCommonPaths(cp);
+        String absPath = NativeLibraryResolver.getAbsoluteLibraryPath(libName);
+
+        assertNotNull(absPath);
+        assertTrue(absPath.startsWith(mockNativeLibRoot));
+        assertTrue(absPath.contains(libName));
+    }
+
+    @Test
+    public void testExceptionThrownOnMissingPaths() {
+        NativeLibraryResolver.setCommonPaths(null);
+        try {
+            NativeLibraryResolver.getAbsoluteLibraryPath("");
+        } catch (IllegalStateException ex) {
+            // Expected
+            return;
+        }
+        fail("Should throw exception if CommonPaths not set.");
     }
 }
 
