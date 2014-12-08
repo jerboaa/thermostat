@@ -42,10 +42,13 @@ import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
@@ -65,14 +68,17 @@ import org.jfree.chart.renderer.xy.XYBarRenderer;
 import org.jfree.data.RangeType;
 import org.jfree.data.xy.IntervalXYDataset;
 
+import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
-import com.redhat.thermostat.client.swing.components.RecentTimeSeriesChartPanel;
 import com.redhat.thermostat.client.swing.components.SectionHeader;
+import com.redhat.thermostat.client.swing.components.experimental.RecentTimeControlPanel;
+import com.redhat.thermostat.client.swing.components.experimental.SingleValueChartPanel;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
 import com.redhat.thermostat.client.ui.SampledDataset;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.model.IntervalTimeData;
@@ -88,6 +94,9 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
     private static final Color WHITE = new Color(255,255,255,0);
     private static final Color BLACK = new Color(0,0,0,0);
     private static final float TRANSPARENT = 0.0f;
+
+    private static final int DEFAULT_VALUE = 10;
+    private static final TimeUnit DEFAULT_UNIT = TimeUnit.MINUTES;
     
     private HeaderPanel visiblePanel = new HeaderPanel();
     private JPanel chartPanelContainer = new JPanel();
@@ -95,8 +104,12 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
     private JLabel gcAlgoLabelDescr;
     private JLabel commonNameLabel;
 
+    private ActionNotifier<UserAction> userActionNotifier = new ActionNotifier<>(this);
+
     private final Map<String, SampledDataset> dataset = new HashMap<>();
+    private final Map<String, List<IntervalTimeData<Double>>> addedData = new HashMap<>();
     private final Map<String, JPanel> subPanels = new HashMap<>();
+    private final Map<String, Duration> subPanelDurations = new HashMap<>();
 
     private final GridBagConstraints gcPanelConstraints;
 
@@ -112,6 +125,16 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
         gcPanelConstraints.weighty = 1;
 
         new ComponentVisibilityNotifier().initialize(visiblePanel, notifier);
+    }
+
+    @Override
+    public void addUserActionListener(ActionListener<UserAction> listener) {
+        userActionNotifier.addActionListener(listener);
+    }
+
+    @Override
+    public void removeUserActionListener(ActionListener<UserAction> listener) {
+        userActionNotifier.removeActionListener(listener);
     }
 
     @Override
@@ -169,7 +192,7 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
         return commonPanel;
     }
 
-    private JPanel createCollectorDetailsPanel(IntervalXYDataset collectorData, LocalizedString title, String units) {
+    private JPanel createCollectorDetailsPanel(IntervalXYDataset collectorData, LocalizedString title, String units, final String tag) {
         JPanel detailsPanel = new JPanel();
         detailsPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         detailsPanel.setLayout(new BorderLayout());
@@ -197,8 +220,10 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
         chart.getPlot().setBackgroundImageAlpha(TRANSPARENT);
         chart.getPlot().setOutlinePaint(BLACK);
 
-        final RecentTimeSeriesChartPanel chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
-
+        Duration defaultDuration = new Duration(DEFAULT_VALUE, DEFAULT_UNIT);
+        final RecentTimeSeriesChartController chartController = new RecentTimeSeriesChartController(chart);
+        final SingleValueChartPanel chartPanel = new SingleValueChartPanel(chart, defaultDuration);
+        subPanelDurations.put(tag, defaultDuration);
         chart.addProgressListener(new ChartProgressListener() {
 
             @Override
@@ -209,6 +234,16 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
 
                 double rangeCrossHairValue = event.getChart().getXYPlot().getRangeCrosshairValue();
                 chartPanel.setDataInformationLabel(String.valueOf(rangeCrossHairValue));
+            }
+        });
+
+        chartPanel.addPropertyChangeListener(RecentTimeControlPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                VmGcPanel.this.userActionNotifier.fireAction(UserAction.USER_CHANGED_TIME_RANGE);
+                Duration duration = (Duration) evt.getNewValue();
+                subPanelDurations.put(tag, duration);
+                chartController.setTime(duration.value, duration.unit);
             }
         });
 
@@ -241,7 +276,8 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
             public void run() {
                 SampledDataset newData = new SampledDataset();
                 dataset.put(tag, newData);
-                JPanel subPanel = createCollectorDetailsPanel(newData, title, units);
+                addedData.put(tag, new ArrayList<IntervalTimeData<Double>>());
+                JPanel subPanel = createCollectorDetailsPanel(newData, title, units, tag);
                 subPanels.put(tag, subPanel);
                 chartPanelContainer.add(subPanel, gcPanelConstraints);
                 gcPanelConstraints.gridy++;
@@ -256,7 +292,9 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
             @Override
             public void run() {
                 dataset.remove(tag);
+                addedData.remove(tag);
                 JPanel subPanel = subPanels.remove(tag);
+                subPanelDurations.remove(tag);
                 chartPanelContainer.remove(subPanel);
                 gcPanelConstraints.gridy--;
                 containerPanel.revalidate();
@@ -271,8 +309,12 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
             @Override
             public void run() {
                 SampledDataset series = dataset.get(tag);
+                List<IntervalTimeData<Double>> data = addedData.get(tag);
                 for (IntervalTimeData<Double> timeData: copy) {
-                    series.add(timeData.getStartTimeInMillis(), timeData.getEndTimeInMillis(), timeData.getData());
+                    if (!data.contains(timeData)) {
+                        data.add(timeData);
+                        series.add(timeData.getStartTimeInMillis(), timeData.getEndTimeInMillis(), timeData.getData());
+                    }
                 }
                 series.fireSeriesChanged();
             }
@@ -303,6 +345,22 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
                 }
             });
         }
+    }
+
+    @Override
+    public Duration getUserDesiredDuration() {
+        //Return the greatest duration of all controllers
+        long timestamp = 0l;
+        Duration maxDuration = new Duration(10, TimeUnit.MINUTES); //Default of 10 minutes if there are no controllers
+
+        for (Duration duration: subPanelDurations.values()) {
+            long time = duration.unit.toMillis(duration.value);
+            if (time > timestamp) {
+                timestamp = time;
+                maxDuration = duration;
+            }
+        }
+        return maxDuration;
     }
 }
 

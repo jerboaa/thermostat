@@ -37,14 +37,25 @@
 package com.redhat.thermostat.vm.gc.client.core;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.model.IntervalTimeData;
 import com.redhat.thermostat.vm.gc.common.GcCommonNameMapper.CollectorCommonName;
 
 public abstract class VmGcView extends BasicView implements UIComponent {
+
+    public enum UserAction {
+        USER_CHANGED_TIME_RANGE,
+    }
+
+    public abstract void addUserActionListener(ActionListener<UserAction> listener);
+
+    public abstract void removeUserActionListener(ActionListener<UserAction> listener);
 
     public abstract void addChart(String tag, LocalizedString title, String valueUnit);
 
@@ -55,5 +66,7 @@ public abstract class VmGcView extends BasicView implements UIComponent {
     public abstract void clearData(String tag);
 
     public abstract void setCommonCollectorName(CollectorCommonName commonName);
+
+    public abstract Duration getUserDesiredDuration();
 }
 

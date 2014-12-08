@@ -38,6 +38,7 @@ package com.redhat.thermostat.vm.gc.client.core.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +48,7 @@ import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
@@ -88,7 +90,7 @@ public class VmGcController implements InformationServiceController<VmRef> {
 
     private final Timer timer;
 
-    private long lastSeenTimeStamp = Long.MIN_VALUE;
+    private long lastSeenTimeStamp;
 
     public VmGcController(ApplicationService appSvc, VmMemoryStatDAO vmMemoryStatDao, VmGcStatDAO vmGcStatDao, VmRef ref, VmGcViewProvider provider) {
         this.ref = ref;
@@ -113,6 +115,24 @@ public class VmGcController implements InformationServiceController<VmRef> {
                 }
             }
         });
+
+        view.addUserActionListener(new ActionListener<VmGcView.UserAction>() {
+            @Override
+            public void actionPerformed(ActionEvent<VmGcView.UserAction> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                    case USER_CHANGED_TIME_RANGE:
+                        Duration userDuration = view.getUserDesiredDuration();
+                        lastSeenTimeStamp = System.currentTimeMillis() - userDuration.unit.toMillis(userDuration.value);
+                        doUpdateCollectorData();
+                        break;
+                    default:
+                        throw new AssertionError("Unhandled action type");
+                }
+            }
+        });
+
+        Duration userDuration = view.getUserDesiredDuration(); //Has default of 10 minutes
+        lastSeenTimeStamp = System.currentTimeMillis() - userDuration.unit.toMillis(userDuration.value);
 
         timer.setAction(new Runnable() {
             @Override
@@ -145,7 +165,7 @@ public class VmGcController implements InformationServiceController<VmRef> {
                 collectorName, generationName);
     }
 
-    private void doUpdateCollectorData() {
+    private synchronized void doUpdateCollectorData() {
         CollectorCommonName commonName = getCommonName();
         view.setCommonCollectorName(commonName);
         
@@ -162,6 +182,7 @@ public class VmGcController implements InformationServiceController<VmRef> {
             }
             if (lastValueSeen.containsKey(collector)) {
                 if (stat.getTimeStamp() <= lastValueSeen.get(collector).getTimeStamp()) {
+                    //FIXME: algorithm does not handle this condition at the moment
                     System.out.println("new gc collector value is older than previous value");
                 }
                 VmGcStat last = lastValueSeen.get(collector);

@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.vm.gc.client.core.internal;
 
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Matchers.isNotNull;
@@ -54,6 +55,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
@@ -106,7 +108,7 @@ public class VmGcControllerTest {
 
         // Setup DAO
         VmGcStatDAO vmGcStatDAO = mock(VmGcStatDAO.class);
-        when(vmGcStatDAO.getLatestVmGcStats(isA(VmRef.class), eq(Long.MIN_VALUE))).thenReturn(stats);
+        when(vmGcStatDAO.getLatestVmGcStats(isA(VmRef.class), isA(Long.class))).thenReturn(stats);
         VmMemoryStatDAO vmMemoryStatDAO = mock(VmMemoryStatDAO.class);
         when(vmMemoryStatDAO.getLatestMemoryStat(isA(VmRef.class))).thenReturn(memoryStat);
         // the following set should map to Concurrent Collector
@@ -120,6 +122,8 @@ public class VmGcControllerTest {
         view = mock(VmGcView.class);
         ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
+
+        when(view.getUserDesiredDuration()).thenReturn(new Duration(1, TimeUnit.MINUTES));
 
         VmGcViewProvider viewProvider = mock(VmGcViewProvider.class);
         when(viewProvider.createView()).thenReturn(view);

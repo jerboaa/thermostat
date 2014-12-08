@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.storage.model;
 
+import java.util.Objects;
+
 public class IntervalTimeData<T> {
 
     private long start;
@@ -60,5 +62,23 @@ public class IntervalTimeData<T> {
         return data;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        IntervalTimeData that = (IntervalTimeData) o;
+
+        if (end != that.end) return false;
+        if (start != that.start) return false;
+        if (!Objects.equals(data, that.data)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(start, end, data);
+    }
 }
 
