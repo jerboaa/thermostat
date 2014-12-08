@@ -38,6 +38,8 @@ package com.redhat.thermostat.client.swing.components.experimental;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.concurrent.TimeUnit;
 
 import javax.swing.JPanel;
@@ -104,6 +106,13 @@ public class SingleValueChartPanel extends JPanel {
         chartPanel.setMaximumDrawWidth(Integer.MAX_VALUE);
 
         recentTimeControlPanel = new RecentTimeControlPanel(duration);
+        recentTimeControlPanel.addPropertyChangeListener(RecentTimeControlPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {
+            @Override
+            public void propertyChange(final PropertyChangeEvent evt) {
+                Duration d = (Duration) evt.getNewValue();
+                SingleValueChartPanel.this.firePropertyChange(RecentTimeControlPanel.PROPERTY_VISIBLE_TIME_RANGE, null, d);
+            }
+        });
         add(chartPanel, BorderLayout.CENTER);
         add(recentTimeControlPanel, BorderLayout.SOUTH);
 

@@ -37,6 +37,8 @@
 package com.redhat.thermostat.client.swing.components;
 
 import java.awt.BorderLayout;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -56,7 +58,7 @@ public class RecentTimeSeriesChartPanel extends JPanel {
     private RecentTimeControlPanel recentTimeControlPanel;
     private JTextComponent label;
 
-    public RecentTimeSeriesChartPanel(RecentTimeSeriesChartController controller) {
+    public RecentTimeSeriesChartPanel(final RecentTimeSeriesChartController controller) {
 
         this.setLayout(new BorderLayout());
 
@@ -79,6 +81,13 @@ public class RecentTimeSeriesChartPanel extends JPanel {
         cp.setMaximumDrawWidth(Integer.MAX_VALUE);
         Duration duration = new Duration(controller.getTimeValue(), controller.getTimeUnit());
         recentTimeControlPanel = new RecentTimeControlPanel(duration);
+        recentTimeControlPanel.addPropertyChangeListener(RecentTimeControlPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {
+            @Override
+            public void propertyChange(final PropertyChangeEvent evt) {
+                Duration d = (Duration) evt.getNewValue();
+                controller.setTime(d.value, d.unit);
+            }
+        });
         add(recentTimeControlPanel, BorderLayout.SOUTH);
 
         add(cp, BorderLayout.CENTER);
