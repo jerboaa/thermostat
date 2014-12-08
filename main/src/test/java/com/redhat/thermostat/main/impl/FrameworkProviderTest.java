@@ -78,12 +78,17 @@ import com.redhat.thermostat.shared.config.internal.CommonPathsImpl;
 @PrepareForTest({FrameworkProvider.class})
 public class FrameworkProviderTest {
 
+    private static final String THERMOSTAT_HOME_PROPERTY = "THERMOSTAT_HOME";
+    private static final String USER_THERMOSTAT_HOME_PROPERTY = "USER_THERMOSTAT_HOME";
+
     private BundleContext mockContext;
 
     private Framework framework;
 
     private FakeBundleManager bundleManager;
     private Launcher launcher;
+    private CommonPaths paths;
+    private String savedHome, savedUserHome;
 
     static class FakeBundleManager extends BundleManager /* extends BundleManagerImpl */ {
 
@@ -116,10 +121,11 @@ public class FrameworkProviderTest {
     @Before
     public void setUp() throws Exception {
         Path tempDir;
-        tempDir = Files.createTempDirectory("test");
+        tempDir = Files.createTempDirectory("FrameworkProviderTest");
         tempDir.toFile().deleteOnExit();
-        System.setProperty("THERMOSTAT_HOME", tempDir.toString());
-        System.setProperty("USER_THERMOSTAT_HOME", tempDir.toString());
+        savedHome = System.setProperty(THERMOSTAT_HOME_PROPERTY, tempDir.toString());
+        savedUserHome = System.setProperty(USER_THERMOSTAT_HOME_PROPERTY, tempDir.toString());
+        paths = new CommonPathsImpl();
 
         File tempEtc = new File(tempDir.toFile(), "etc");
         tempEtc.mkdirs();
@@ -179,13 +185,23 @@ public class FrameworkProviderTest {
 
     @After
     public void clearSystemProperties() {
-        System.clearProperty("THERMOSTAT_HOME");
-        System.clearProperty("USER_THERMOSTAT_HOME");
+        if (savedHome == null) {
+            System.clearProperty(THERMOSTAT_HOME_PROPERTY);
+        } else {
+            System.setProperty(THERMOSTAT_HOME_PROPERTY, savedHome);
+            savedHome = null;
+        }
+        if (savedUserHome == null) {
+            System.clearProperty(USER_THERMOSTAT_HOME_PROPERTY);
+        } else {
+            System.setProperty(USER_THERMOSTAT_HOME_PROPERTY, savedUserHome);
+            savedUserHome = null;
+        }
+        paths = null;
     }
 
     @Test
     public void testStartRunsOSGiFramework() throws Exception {
-        CommonPaths paths = new CommonPathsImpl();
         FrameworkProvider provider = new FrameworkProvider(paths, false, false, null);
 
         provider.start(new String[] {});
@@ -196,7 +212,6 @@ public class FrameworkProviderTest {
 
     @Test
     public void testStartRunsLauncher() throws Exception {
-        CommonPaths paths = new CommonPathsImpl();
         FrameworkProvider provider = new FrameworkProvider(paths, false, false, null);
 
         provider.start(new String[] {});
@@ -206,7 +221,6 @@ public class FrameworkProviderTest {
 
     @Test
     public void testPrintOSGiInfoParameterIsPassedToBundleManager() {
-        CommonPaths paths = new CommonPathsImpl();
         FrameworkProvider provider = new FrameworkProvider(paths, true, false, null);
 
         provider.start(new String[] {});
@@ -216,7 +230,6 @@ public class FrameworkProviderTest {
 
     @Test
     public void testIgnoreBundleVersionsParameterIsPassedToBundleManager() {
-        CommonPaths paths = new CommonPathsImpl();
         FrameworkProvider provider = new FrameworkProvider(paths, false, true, null);
 
         provider.start(new String[] {});
@@ -226,7 +239,6 @@ public class FrameworkProviderTest {
 
     @Test(expected=RuntimeException.class)
     public void testErrorThrownOnEmptyBootDelegationParameter() {
-        CommonPaths paths = new CommonPathsImpl();
         FrameworkProvider provider = new FrameworkProvider(paths, false, true, "");
 
         provider.start(new String[] {});
@@ -234,7 +246,6 @@ public class FrameworkProviderTest {
 
     @Test
     public void testNullBootDelegationIsNotSetInConfiguration() {
-        CommonPaths paths = new CommonPathsImpl();
         FrameworkProvider provider = new FrameworkProvider(paths, false, false, null);
 
         provider.start(new String[] {});
@@ -245,7 +256,6 @@ public class FrameworkProviderTest {
 
     @Test
     public void testPackagesListedInBootDelegationArePassedToFramework() {
-        CommonPaths paths = new CommonPathsImpl();
         FrameworkProvider provider = new FrameworkProvider(paths, false, true, "foo");
 
         provider.start(new String[] {});
