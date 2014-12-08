@@ -131,10 +131,10 @@ public class WebStorageEndPoint extends HttpServlet {
     static final String FILES_WRITE_GRANT_ROLE_PREFIX = "thermostat-files-grant-write-filename-";
     private static final String TOKEN_MANAGER_TIMEOUT_PARAM = "token-manager-timeout";
     private static final String TOKEN_MANAGER_KEY = "token-manager";
-    private static final String USER_PRINCIPAL_CALLBACK_KEY = "user-principal-callback";
     private static final String CURSOR_MANAGER_KEY = "cursor-manager";
     static final String CATEGORY_MANAGER_KEY = "category-manager";
     static final String PREPARED_STMT_MANAGER_KEY = "prepared-stmt-manager";
+    static final String SERVER_TOKEN_KEY = "server-token";
     private static final int UNKNOWN_CURSOR_ID = -0xdeadbeef;
 
     // our strings can contain non-ASCII characters. Use UTF-8
@@ -152,12 +152,12 @@ public class WebStorageEndPoint extends HttpServlet {
     public static final String STORAGE_PASSWORD = "storage.password";
     public static final String STORAGE_CLASS = "storage.class";
     
-    private UUID serverToken;
-    
     // read-only set of all known statement descriptors we trust and allow
     private Set<String> knownStatementDescriptors;
     // read-only set of all known categories which we allow to get registered.
     private Set<String> knownCategoryNames;
+    // the principal callback used for retrieving the JAAS user principal
+    private PrincipalCallback principalCallback;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -177,13 +177,6 @@ public class WebStorageEndPoint extends HttpServlet {
                 .registerTypeAdapterFactory(new WebPreparedStatementTypeAdapterFactory())
                 .registerTypeAdapterFactory(new PreparedParametersTypeAdapterFactory())
                 .create();
-        TokenManager tokenManager = new TokenManager();
-        String timeoutParam = getInitParameter(TOKEN_MANAGER_TIMEOUT_PARAM);
-        if (timeoutParam != null) {
-            tokenManager.setTimeout(Integer.parseInt(timeoutParam));
-        }
-        ServletContext servletContext = getServletContext();
-        servletContext.setAttribute(TOKEN_MANAGER_KEY, tokenManager);
         
         // Set the set of statement descriptors which we trust
         KnownDescriptorRegistry descRegistry = KnownDescriptorRegistryFactory.getInstance();
@@ -192,18 +185,27 @@ public class WebStorageEndPoint extends HttpServlet {
         KnownCategoryRegistry categoryRegistry = KnownCategoryRegistryFactory.getInstance();
         knownCategoryNames = categoryRegistry.getRegisteredCategoryNames();
         
-        // finally set callback for retrieving our JAAS user principal
+        ServletContext servletContext = getServletContext();
+        
         String serverInfo = servletContext.getServerInfo();
         ServletContainerInfoFactory factory = new ServletContainerInfoFactory(serverInfo);
         ServletContainerInfo info = factory.getInfo();
         PrincipalCallbackFactory cbFactory = new PrincipalCallbackFactory(info);
-        PrincipalCallback callback = Objects.requireNonNull(cbFactory.getCallback());
-        servletContext.setAttribute(USER_PRINCIPAL_CALLBACK_KEY, callback);
+        principalCallback = Objects.requireNonNull(cbFactory.getCallback());
+        
+        TokenManager tokenManager = new TokenManager();
+        String timeoutParam = getInitParameter(TOKEN_MANAGER_TIMEOUT_PARAM);
+        if (timeoutParam != null) {
+            tokenManager.setTimeout(Integer.parseInt(timeoutParam));
+        }
+        // The following get set as servlet context attributes in order
+        // to support clustered deployments.
         synchronized(servletContext) {
+            servletContext.setAttribute(TOKEN_MANAGER_KEY, tokenManager);
             servletContext.setAttribute(CATEGORY_MANAGER_KEY, new CategoryManager());
             servletContext.setAttribute(PREPARED_STMT_MANAGER_KEY, new PreparedStatementManager());
+            servletContext.setAttribute(SERVER_TOKEN_KEY, UUID.randomUUID());
         }
-        serverToken = UUID.randomUUID();
     }
     
     @Override
@@ -328,6 +330,7 @@ public class WebStorageEndPoint extends HttpServlet {
         // malicious client which sends a bad token on purpose. In either case
         // it should be OK to solely send back a distinct error code indicating
         // this situation.
+        final UUID serverToken = getServerToken();
         if (!serverToken.equals(catId.getServerToken())) {
             logger.log(Level.INFO, "Server token: '" + serverToken +
                     "' and client token '" + catId.getServerToken() +
@@ -558,7 +561,7 @@ public class WebStorageEndPoint extends HttpServlet {
                 category = gson.fromJson(categoryParam, Category.class);
                 storage.registerCategory(category);
             }
-            id = catManager.putCategory(serverToken, category, catIdentifier);
+            id = catManager.putCategory(getServerToken(), category, catIdentifier);
             if (isAggregateCat) {
                 logger.log(Level.FINEST, "(id: " + id.getId() + ") did not register aggregate category " + category );
             } else {
@@ -599,6 +602,7 @@ public class WebStorageEndPoint extends HttpServlet {
         // Check if the server token the client knows about still matches.
         // Bail out early otherwise.
         SharedStateId stmtId = stmt.getStatementId();
+        final UUID serverToken = getServerToken();
         if (!serverToken.equals(stmtId.getServerToken())) {
             logger.log(Level.INFO, "Server token: '" + serverToken +
                                    "' and client token '" + stmtId.getServerToken() +
@@ -678,6 +682,10 @@ public class WebStorageEndPoint extends HttpServlet {
         }
         // If this throws a NPE this is certainly a bug.
         return Objects.requireNonNull(attributeVal);
+    }
+    
+    private UUID getServerToken() {
+        return getServletContextAttribute(SERVER_TOKEN_KEY);
     }
     
     private CategoryManager getCategoryManager() {
@@ -817,6 +825,7 @@ public class WebStorageEndPoint extends HttpServlet {
         // Check if the server token the client knows about still matches.
         // Bail out early otherwise.
         SharedStateId stmtId = stmt.getStatementId();
+        final UUID serverToken = getServerToken();
         if (!serverToken.equals(stmtId.getServerToken())) {
             logger.log(Level.INFO, "Server token: '" + serverToken +
                                    "' and client token '" + stmtId.getServerToken() +
@@ -848,10 +857,7 @@ public class WebStorageEndPoint extends HttpServlet {
     
     private UserPrincipal getUserPrincipal(HttpServletRequest req) {
         Principal principal = req.getUserPrincipal();
-        
-        ServletContext context = getServletContext();
-        PrincipalCallback callback = (PrincipalCallback)context.getAttribute(USER_PRINCIPAL_CALLBACK_KEY);
-        return callback.getUserPrincipal(principal);
+        return principalCallback.getUserPrincipal(principal);
     }
 
     /*

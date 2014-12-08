@@ -54,6 +54,7 @@ import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -227,9 +228,18 @@ public class WebStorageEndPointUnitTest {
         ThCreatorResult result = creatWorkingThermostatHome();
         System.setProperty(TH_HOME_PROP_NAME, result.thermostatHome.toFile().getAbsolutePath());
         endpoint.init(config);
-        ArgumentCaptor<CategoryManager> managerCaptor = ArgumentCaptor.forClass(CategoryManager.class);
-        verify(mockContext).setAttribute(eq("category-manager"), managerCaptor.capture());
-        assertNotNull(managerCaptor.getValue());
+        ArgumentCaptor<CategoryManager> categoryManagerCaptor = ArgumentCaptor.forClass(CategoryManager.class);
+        ArgumentCaptor<PreparedStatementManager> prepStmtManagerCaptor = ArgumentCaptor.forClass(PreparedStatementManager.class);
+        ArgumentCaptor<TokenManager> tokenManagerCaptor = ArgumentCaptor.forClass(TokenManager.class);
+        ArgumentCaptor<UUID> serverTokenCaptor = ArgumentCaptor.forClass(UUID.class);
+        verify(mockContext).setAttribute(eq("category-manager"), categoryManagerCaptor.capture());
+        verify(mockContext).setAttribute(eq("prepared-stmt-manager"), prepStmtManagerCaptor.capture());
+        verify(mockContext).setAttribute(eq("token-manager"), tokenManagerCaptor.capture());
+        verify(mockContext).setAttribute(eq("server-token"), serverTokenCaptor.capture());
+        assertNotNull(categoryManagerCaptor.getValue());
+        assertNotNull(prepStmtManagerCaptor.getValue());
+        assertNotNull(tokenManagerCaptor.getValue());
+        assertNotNull(serverTokenCaptor.getValue());
     }
     
     private ThCreatorResult creatWorkingThermostatHome() throws IOException {
