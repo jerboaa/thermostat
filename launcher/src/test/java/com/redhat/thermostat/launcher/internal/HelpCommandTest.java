@@ -128,6 +128,32 @@ public class HelpCommandTest {
     }
 
     @Test
+    public void verifyHelpShortensCommandDescriptions() {
+        Collection<CommandInfo> infoList = new ArrayList<CommandInfo>();
+
+        CommandInfo info1 = mock(CommandInfo.class);
+        when(info1.getName()).thenReturn("test1");
+        when(info1.getDescription()).thenReturn("A test command. This command does some test stuff."
+                + "This is a very, very long description that provides too much information for the summary");
+        when(info1.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI, Environment.SHELL));
+
+        infoList.add(info1);
+
+        when(infos.getCommandInfos()).thenReturn(infoList);
+
+        HelpCommand cmd = new HelpCommand();
+        cmd.setEnvironment(Environment.CLI);
+        cmd.setCommandInfoSource(infos);
+
+        Arguments args = mock(Arguments.class);
+        cmd.run(ctxFactory.createContext(args));
+        String expected = "list of commands:\n\n"
+                        + " test1         a test command\n";
+        String actual = ctxFactory.getOutput();
+        assertEquals(expected, actual);
+    }
+
+    @Test
     public void verifyHelpKnownCmdPrintsCommandUsage() {
         CommandInfo testCommandInfo = mock(CommandInfo.class);
         when(testCommandInfo.getName()).thenReturn("test1");
