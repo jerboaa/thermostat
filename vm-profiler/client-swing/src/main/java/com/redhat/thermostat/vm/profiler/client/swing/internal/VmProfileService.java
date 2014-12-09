@@ -44,18 +44,21 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
 
 public class VmProfileService implements InformationService<VmRef> {
 
     private ApplicationService service;
     private AgentInfoDAO agentInfoDao;
+    private VmInfoDAO vmInfoDao;
     private ProfileDAO dao;
     private RequestQueue queue;
 
-    public VmProfileService(ApplicationService service, AgentInfoDAO agentInfoDao, ProfileDAO dao, RequestQueue queue) {
+    public VmProfileService(ApplicationService service, AgentInfoDAO agentInfoDao, VmInfoDAO vmInfoDao, ProfileDAO dao, RequestQueue queue) {
         this.service = service;
         this.agentInfoDao = agentInfoDao;
+        this.vmInfoDao = vmInfoDao;
         this.dao = dao;
         this.queue = queue;
     }
@@ -73,7 +76,7 @@ public class VmProfileService implements InformationService<VmRef> {
 
     @Override
     public InformationServiceController<VmRef> getInformationServiceController(VmRef ref) {
-        return new VmProfileController(service, agentInfoDao, dao, queue, ref);
+        return new VmProfileController(service, agentInfoDao, vmInfoDao, dao, queue, ref);
     }
 
 }

@@ -50,6 +50,7 @@ import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
 
 public class Activator implements BundleActivator {
@@ -63,6 +64,7 @@ public class Activator implements BundleActivator {
         Class<?>[] deps = new Class<?>[] {
                 ApplicationService.class,
                 AgentInfoDAO.class,
+                VmInfoDAO.class,
                 ProfileDAO.class,
                 RequestQueue.class,
         };
@@ -72,10 +74,11 @@ public class Activator implements BundleActivator {
             public void dependenciesAvailable(Map<String, Object> services) {
                 ApplicationService service = (ApplicationService) services.get(ApplicationService.class.getName());
                 AgentInfoDAO agentInfoDao = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
+                VmInfoDAO vmInfoDao = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
                 ProfileDAO profileDao = (ProfileDAO) services.get(ProfileDAO.class.getName());
                 RequestQueue queue = (RequestQueue) services.get(RequestQueue.class.getName());
 
-                InformationService<VmRef> profileService = new VmProfileService(service, agentInfoDao, profileDao, queue);
+                InformationService<VmRef> profileService = new VmProfileService(service, agentInfoDao, vmInfoDao, profileDao, queue);
 
                 Hashtable<String,String> properties = new Hashtable<>();
                 properties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());

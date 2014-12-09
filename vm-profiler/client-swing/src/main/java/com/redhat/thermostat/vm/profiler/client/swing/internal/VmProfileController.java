@@ -60,8 +60,12 @@ import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.model.VmInfo.AliveStatus;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResultParser;
 import com.redhat.thermostat.vm.profiler.client.swing.internal.VmProfileView.Profile;
@@ -78,6 +82,7 @@ public class VmProfileController implements InformationServiceController<VmRef> 
     private ApplicationService service;
     private ProfileDAO profileDao;
     private AgentInfoDAO agentInfoDao;
+    private VmInfoDAO vmInfoDao;
     private RequestQueue queue;
     private VmRef vm;
 
@@ -92,18 +97,19 @@ public class VmProfileController implements InformationServiceController<VmRef> 
     private ProfileStatusChange previousStatus;
 
     public VmProfileController(ApplicationService service,
-            AgentInfoDAO agentInfoDao, ProfileDAO dao,
+            AgentInfoDAO agentInfoDao, VmInfoDAO vmInfoDao, ProfileDAO dao,
             RequestQueue queue,
             VmRef vm) {
-        this(service, agentInfoDao, dao, queue, new SystemClock(), new SwingVmProfileView(), vm);
+        this(service, agentInfoDao, vmInfoDao, dao, queue, new SystemClock(), new SwingVmProfileView(), vm);
     }
 
     VmProfileController(ApplicationService service,
-            AgentInfoDAO agentInfoDao, ProfileDAO dao,
+            AgentInfoDAO agentInfoDao, VmInfoDAO vmInfoDao, ProfileDAO dao,
             RequestQueue queue, Clock clock,
             final VmProfileView view, VmRef vm) {
         this.service = service;
         this.agentInfoDao = agentInfoDao;
+        this.vmInfoDao = vmInfoDao;
         this.profileDao = dao;
         this.queue = queue;
         this.clock = clock;
@@ -217,7 +223,11 @@ public class VmProfileController implements InformationServiceController<VmRef> 
             message = translator.localize(LocaleResources.PROFILER_CURRENT_STATUS_INACTIVE).getContents();
         }
 
-        if (profilingStartOrStopRequested) {
+        if (!isAlive()) {
+            view.enableStartProfiling(false);
+            view.enableStopProfiling(false);
+            view.setProfilingStatus(message, currentlyActive);
+        } else if (profilingStartOrStopRequested) {
             boolean statusChanged = (previousStatus == null && currentStatus != null)
                     || (currentStatus != null && !(currentStatus.equals(previousStatus)));
             if (statusChanged) {
@@ -236,6 +246,15 @@ public class VmProfileController implements InformationServiceController<VmRef> 
         }
 
         previousStatus = currentStatus;
+    }
+
+    private boolean isAlive() {
+        HostRef agent = vm.getHostRef();
+        AgentInformation agentInfo = agentInfoDao.getAgentInformation(agent);
+        if (!agentInfo.isAlive()) {
+            return false;
+        }
+        return vmInfoDao.getVmInfo(vm).isAlive(agentInfo) == AliveStatus.RUNNING;
     }
 
     private void updateViewWithProfiledRuns() {

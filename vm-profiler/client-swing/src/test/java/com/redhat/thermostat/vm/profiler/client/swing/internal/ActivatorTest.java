@@ -45,6 +45,7 @@ import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
 
@@ -59,6 +60,9 @@ public class ActivatorTest {
 
         AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
         bundleContext.registerService(AgentInfoDAO.class, agentInfoDao, null);
+
+        VmInfoDAO vmInfoDao = mock(VmInfoDAO.class);
+        bundleContext.registerService(VmInfoDAO.class, vmInfoDao, null);
 
         ProfileDAO profielDao = mock(ProfileDAO.class);
         bundleContext.registerService(ProfileDAO.class, profielDao, null);

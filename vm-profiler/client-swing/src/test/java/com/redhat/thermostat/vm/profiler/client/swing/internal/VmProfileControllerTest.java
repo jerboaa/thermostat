@@ -37,6 +37,7 @@
 package com.redhat.thermostat.vm.profiler.client.swing.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -67,7 +68,10 @@ import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.model.VmInfo;
+import com.redhat.thermostat.storage.model.VmInfo.AliveStatus;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult;
 import com.redhat.thermostat.vm.profiler.client.swing.internal.VmProfileView.Profile;
 import com.redhat.thermostat.vm.profiler.client.swing.internal.VmProfileView.ProfileAction;
@@ -91,6 +95,7 @@ public class VmProfileControllerTest {
     private Timer timer;
     private ApplicationService appService;
     private AgentInfoDAO agentInfoDao;
+    private VmInfoDAO vmInfoDao;
     private ProfileDAO profileDao;
     private RequestQueue queue;
     private Clock clock;
@@ -99,6 +104,7 @@ public class VmProfileControllerTest {
 
     private VmProfileController controller;
     private HostRef agent;
+    private VmInfo vmInfo;
 
     @Before
     public void setUp() {
@@ -111,6 +117,10 @@ public class VmProfileControllerTest {
         when(appService.getTimerFactory()).thenReturn(timerFactory);
 
         agentInfoDao = mock(AgentInfoDAO.class);
+        vmInfoDao = mock(VmInfoDAO.class);
+        vmInfo = mock(VmInfo.class);
+        when(vmInfo.isAlive(any(AgentInformation.class))).thenReturn(AliveStatus.RUNNING);
+        when(vmInfoDao.getVmInfo(isA(VmRef.class))).thenReturn(vmInfo);
         profileDao = mock(ProfileDAO.class);
         queue = mock(RequestQueue.class);
 
@@ -125,6 +135,7 @@ public class VmProfileControllerTest {
         when(vm.getVmId()).thenReturn(VM_ID);
 
         AgentInformation agentInfo = new AgentInformation();
+        agentInfo.setAlive(true);
         agentInfo.setConfigListenAddress(AGENT_HOST + ":" + AGENT_PORT);
         when(agentInfoDao.getAgentInformation(agent)).thenReturn(agentInfo);
     }
@@ -184,6 +195,23 @@ public class VmProfileControllerTest {
 
         verify(view).setProfilingStatus("Currently profiling: no", false);
         verify(view).enableStartProfiling(true);
+        verify(view).enableStopProfiling(false);
+    }
+
+    @Test
+    public void timerDisablesViewActionsForDeadVMs() throws Exception {
+        when(clock.getRealTimeMillis()).thenReturn(SOME_TIMESTAMP);
+        controller = createController();
+
+        ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
+        verify(timer).setAction(runnableCaptor.capture());
+
+        when(vmInfo.isAlive(isA(AgentInformation.class))).thenReturn(AliveStatus.EXITED);
+
+        Runnable runnable = runnableCaptor.getValue();
+        runnable.run();
+
+        verify(view).enableStartProfiling(false);
         verify(view).enableStopProfiling(false);
     }
 
@@ -290,7 +318,7 @@ public class VmProfileControllerTest {
     }
 
     private VmProfileController createController() {
-        return new VmProfileController(appService, agentInfoDao, profileDao, queue, clock, view, vm);
+        return new VmProfileController(appService, agentInfoDao, vmInfoDao, profileDao, queue, clock, view, vm);
     }
 
     private void assertRequestEquals(Request actual, Request expected) {
