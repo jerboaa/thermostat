@@ -6,66 +6,62 @@ CONTENT:
 
 1.  REQUIREMENTS
 2.  BUILDING THERMOSTAT
-2.1   BUILDING THERMOSTAT CORE
 3.  RUNNING THERMOSTAT
-3.1   RUNNING THERMOSTAT CORE
-3.1.1 PASSING JVM SPECIFIC OPTIONS
-3.1.2 GNOME KEYRING
+3.1 PASSING JVM SPECIFIC OPTIONS
+3.2 GNOME KEYRING
 4.  EXTENDING THERMOSTAT
 5.  SYSTEM PROPERTIES
-6.  REFERENCES
+6.  LICENSE
+7.  REFERENCES
 
 
 --------------------------------------------------------------------------------
 1. REQUIREMENTS
 
-* OpenJDK7
+* OpenJDK 7 (or OpenJDK 8)
 
-Thermostat requires at least Java 7 to build and run. Thermostat has been tested
-with OpenJDK7. Other VMs or versions may or may not work.
+  Thermostat requires at least Java 7 to build and run. Thermostat has been
+  tested with OpenJDK 7. Other VMs or versions may or may not work.
 
 * Maven (it will download all the java dependencies for you)
 * Make + GCC
 * MongoDB server
 
-Thermostat requires mongodb (http://www.mongodb.org/) server >= 2.0.0
+  Thermostat requires mongodb (http://www.mongodb.org/) server >= 2.0.0.
+
+  On Fedora, you can obtain it via:
+
+    yum install mongodb-server
 
 * Either a /etc/os-release file or lsb_release
 * Gnome Keyring Daemon development libraries plus pkg-configs
 * GTK 2+ development libraries plus pkg-configs
 
-Gnome Keyring/GTK2+ development libraries are required at build time.
+  Gnome Keyring/GTK2+ development libraries are required at build time.
 
-You should check your distribution for the exact name of the libraries, on Fedora
-based distributions you can obtain it via:
+  You should check your distribution for the exact name of the libraries, on
+  Fedora based distributions you can obtain it via:
 
-   yum install libgnome-keyring-devel gtk2-devel
+    yum install libgnome-keyring-devel gtk2-devel
 
-on RHEL/Centos 6.x via:
+  on RHEL/CentOS 6.x via:
 
-   yum install gnome-keyring-devel gtk2-devel
+    yum install gnome-keyring-devel gtk2-devel
 
-On Debian (and probably Ubuntu):
+  On Debian (and probably Ubuntu):
 
-   aptitude install libgnome-keyring-dev libgtk2.0-dev
+    aptitude install libgnome-keyring-dev libgtk2.0-dev
 
 --------------------------------------------------------------------------------
 2. BUILDING THERMOSTAT
 
-Thermostat consists of "Thermostat Core" and "Thermostat Eclipse". Building
-"Thermostat Eclipse" is optional. If you are a first-time Thermostat user, you
-might want to try try "Thermostat Core" first.
-
-Thermostat Core consists of:
+Thermostat consists of:
   * CLI client
   * Swing GUI client
   * The thermostat agent
-  * The web service layer (plugged-in optionally)
+  * The web service layer
 
---------------------------------------------------------------------------------
-2.1. BUILDING THERMOSTAT CORE
-
-2.1.1.
+2.1.
    Run "mvn clean install". All tests should pass and the build should
    succeed. It requires a graphical environment for the ui tests.
 
@@ -82,7 +78,7 @@ Thermostat Core consists of:
    
    mvn -q -Dmaven.test.skip=true clean install
    
-2.1.2.
+2.2.
    The resulting Thermostat system can now be found under the directory
    distribution/target/image.
 
@@ -97,13 +93,19 @@ Thermostat Core consists of:
 --------------------------------------------------------------------------------
 3. RUNNING THERMOSTAT
 
---------------------------------------------------------------------------------
-3.1. RUNNING THERMOSTAT CORE
-
   cd into distribution/target/image directory just created
 
+  On first run, set up thermostat using:
+  bin/thermostat-setup
+
+  Or, alternatively, for development:
+  bin/thermostat-devsetup
+
+  This sets up authentication. thermostat-devsetup is NOT recommended for
+  production use.
+
   To start the agent and the db:
-  bin/thermostat service
+  bin/thermostat web-storage-service
 
   To start the gui client:
   bin/thermostat gui
@@ -114,10 +116,10 @@ Thermostat Core consists of:
   Use the help command in order to find out about all available commands:
   bin/thermostat help
 
-See also the user guide in the REFERECES section of this document.
+See also the user guide in the REFERENCES section of this document.
 
 
-3.1.1. PASSING JVM SPECIFIC OPTIONS TO THERMOSTAT
+3.1. PASSING JVM SPECIFIC OPTIONS TO THERMOSTAT
 
 In some cases, it may be desirable to pass arguments to the virtual machine,
 for example to increase memory or change the look and feel for the Swing Client.
@@ -133,7 +135,7 @@ bin/thermostat gui \
     -J-Dswing.defaultlaf=javax.swing.plaf.nimbus.NimbusLookAndFeel
 
 
-3.1.2. GNOME KEYRING AND THERMOSTAT
+3.2. GNOME KEYRING AND THERMOSTAT
 
 Thermostat includes support to store user credentials in the Gnome Keyring
 daemon, if the user wishes.  If this is not available at runtime, no credentials
@@ -142,7 +144,11 @@ will be stored.
 --------------------------------------------------------------------------------
 4. EXTENDING THERMOSTAT
 
-The README.api file contains a list of public/support API of thermostat.
+Please see the HACKING file for more development information on thermostat
+itself.
+
+If you are writing a plugin for thermostat, the README.api file contains a list
+of public/support API of thermostat.
 
 --------------------------------------------------------------------------------
 5. SYSTEM PROPERTIES
@@ -153,7 +159,7 @@ of specific areas of the platform.
 
 Here follows the description for the release
 referred by this README. Please, refer to 
-[3.1.1. PASSING JVM SPECIFIC OPTIONS TO THERMOSTAT] for an explanation
+[3.1. PASSING JVM SPECIFIC OPTIONS TO THERMOSTAT] for an explanation
 on how to pass system properties to Thermostat.
 
 IMPORTANT NOTE: Those properties should be considered internal and
@@ -192,7 +198,7 @@ and 1.0 for fully opaque, the default value is 0.90.
 
   thermostat.storage.mongo.profile=<boolean>
 
-Thermostat has some intstrumentation code to perform analysis of the
+Thermostat has some instrumentation code to perform analysis of the
 backend databases. In the case of MongoDB, it is possible to run additional
 analysis by using Mongo profiling features. The default is to run MongoDB
 without profiling support, to turn profiling on this property should be set
@@ -201,9 +207,9 @@ to start the database backend, is ignored otherwise.
 
   thermostat.storage.mongo.profile.slowms=<integer>
 
-This property has only effect in conjuction with
+This property has only effect in conjunction with
 "thermostat.storage.mongo.profile=true" and controls the threshold in
-milliseconds to decide if a database operation is considere a "slow". The
+milliseconds to decide if a database operation is considered "slow". The
 default is 100.
 
 * Queued Storage Thread Pool Size
@@ -219,7 +225,14 @@ The above upper bound can be lifted by setting the following property to true:
   com.redhat.thermostat.storage.queue.unbounded=<boolean>
 
 --------------------------------------------------------------------------------
-6. REFERENCES
+6. LICENSE
+
+Thermostat itself is licensed under GPLv2 with Classpath Exception. Please see
+the LICENSE file for more details about the licenses of Thermostat and other
+projects used.
+
+--------------------------------------------------------------------------------
+7. REFERENCES
 
   User Guide:
     http://icedtea.classpath.org/wiki/Thermostat/UserGuide
