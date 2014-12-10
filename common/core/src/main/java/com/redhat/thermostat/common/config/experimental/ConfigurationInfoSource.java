@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.config;
+package com.redhat.thermostat.common.config.experimental;
 
 import java.io.IOException;
 import java.util.Map;
