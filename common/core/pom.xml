@@ -83,6 +83,7 @@
               com.redhat.thermostat.common.tools,
               com.redhat.thermostat.common,
               com.redhat.thermostat.common.config,
+              com.redhat.thermostat.common.config.experimental,
               com.redhat.thermostat.common.utils,
               com.redhat.thermostat.common.ssl,
               com.redhat.thermostat.common.model,
