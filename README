@@ -93,16 +93,26 @@ Thermostat consists of:
 --------------------------------------------------------------------------------
 3. RUNNING THERMOSTAT
 
+  DISCLAIMER: These are simplified instructions as to how to set up and run
+              Thermostat on a local system. For production systems see
+              instructions in our user guide (see REFERENCES).
+
   cd into distribution/target/image directory just created
 
-  On first run, set up thermostat using:
+  On first run, set up thermostat using the interactive script:
   bin/thermostat-setup
 
   Or, alternatively, for development:
   bin/thermostat-devsetup
 
-  This sets up authentication. thermostat-devsetup is NOT recommended for
-  production use.
+  This sets up a mongodb user for the thermostat database. That user will be used
+  by the thermostat web application to connect to mongodb. Note that Thermostat
+  users and their respective roles will have to get defined via the following
+  files:
+  etc/thermostat-users.properties (users with password)
+  etc/thermostat-roles.properties (role memberships for users)
+
+  thermostat-devsetup is NOT recommended for production use.
 
   To start the agent and the db:
   bin/thermostat web-storage-service
