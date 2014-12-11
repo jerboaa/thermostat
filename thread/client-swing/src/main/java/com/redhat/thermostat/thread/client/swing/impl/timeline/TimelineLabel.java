@@ -37,7 +37,6 @@
 package com.redhat.thermostat.thread.client.swing.impl.timeline;
 
 import com.redhat.thermostat.client.swing.UIDefaults;
-import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
 import com.redhat.thermostat.client.swing.components.Icon;
 import com.redhat.thermostat.client.swing.components.LabelField;
 import com.redhat.thermostat.client.ui.Palette;
@@ -68,20 +67,25 @@ class TimelineLabel extends DataPane {
         nameLabel.setHorizontalAlignment(SwingConstants.CENTER);
         nameLabel.setVerticalAlignment(SwingConstants.CENTER);
         nameLabel.setForeground((Color) defaults.getSelectedComponentBGColor());
-        nameLabel.setBorder(new EmptyBorder(2, 2, 2, 2));
+
+        // make same small space around the label, a bit higher left and right
+        // to account for the missing icon
+        nameLabel.setBorder(new EmptyBorder(2, 4, 2, 4));
 
         nameLabel.setHorizontalTextPosition(SwingConstants.LEFT);
 
-        infoOn = new FontAwesomeIcon('\uf05a', 12, Palette.DARK_GRAY.getColor());
-        infoOff = new FontAwesomeIcon('\uf05a', 12, Palette.PALE_GRAY.getColor());
-
-        nameLabel.setIcon(infoOff);
+        // FIXME && TODO: comment this out for now, the functionality this is
+        // meant for is not yet implemented in the controller
+//        infoOn = new FontAwesomeIcon('\uf05a', 12, Palette.DARK_GRAY.getColor());
+//        infoOff = new FontAwesomeIcon('\uf05a', 12, Palette.PALE_GRAY.getColor());
+//
+//        nameLabel.setIcon(infoOff);
 
         add(nameLabel);
     }
 
     public void onMouseHover(boolean hover) {
-        nameLabel.setIcon(hover ? infoOn : infoOff);
+//        nameLabel.setIcon(hover ? infoOn : infoOff);
         repaint();
     }
 }
