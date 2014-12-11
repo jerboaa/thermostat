@@ -87,8 +87,8 @@ public class ThermostatTable extends JTable {
         revalidate();
     }
     
-    public JScrollPane wrap() {        
-        JScrollPane scrollPane = new JScrollPane(this);
+    public JScrollPane wrap() {
+        ThermostatScrollPane scrollPane = new ThermostatScrollPane(this);
         repackCells();
         return scrollPane;
     }
