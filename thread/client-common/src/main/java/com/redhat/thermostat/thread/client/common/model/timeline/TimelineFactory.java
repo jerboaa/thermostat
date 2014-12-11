@@ -37,6 +37,7 @@
 package com.redhat.thermostat.thread.client.common.model.timeline;
 
 import com.redhat.thermostat.client.ui.Palette;
+import com.redhat.thermostat.thread.client.common.chart.ChartColors;
 import com.redhat.thermostat.thread.model.ThreadState;
 
 /**
@@ -46,34 +47,8 @@ public class TimelineFactory {
 
     public static TimelineProbe createTimelineProbe(ThreadState state)
     {
-        Palette color = null;
-
         Thread.State threadState = Thread.State.valueOf(state.getState());
-        switch (threadState) {
-        case NEW:
-            color = Palette.GREEN;
-            break;
-
-        case RUNNABLE:
-            color = Palette.ADWAITA_BLU;
-            break;
-
-        case BLOCKED:
-            color = Palette.VIOLET;
-            break;
-
-        case WAITING:
-            color = Palette.GRANITA_ORANGE;
-            break;
-
-        case TIMED_WAITING:
-            color = Palette.ADWAITA_BLU;
-            break;
-
-        case TERMINATED:
-            color = Palette.LIGHT_GRAY;
-            break;
-        }
+        Palette color = ChartColors.getPaletteColor(threadState);
         return new TimelineProbe(color, state.getState(), state.getTimeStamp());
     }
 }

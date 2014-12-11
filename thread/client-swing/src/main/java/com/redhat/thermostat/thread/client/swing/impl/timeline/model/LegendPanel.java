@@ -34,34 +34,35 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.swing.impl;
+package com.redhat.thermostat.thread.client.swing.impl.timeline.model;
 
+import com.redhat.thermostat.client.swing.GraphicsUtils;
+import com.redhat.thermostat.client.swing.UIDefaults;
+import com.redhat.thermostat.thread.client.common.chart.ChartColors;
+import com.redhat.thermostat.thread.client.swing.experimental.components.DataPane;
+import com.redhat.thermostat.thread.client.swing.experimental.components.Separator;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-
 import javax.swing.Icon;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
 
-import com.redhat.thermostat.client.swing.GraphicsUtils;
-import com.redhat.thermostat.thread.client.common.chart.ChartColors;
+/**
+ *
+ */
+public class LegendPanel extends DataPane {
 
-@SuppressWarnings("serial")
-public class ThreadTimelineLegendPanel extends JPanel {
-    
-    public ThreadTimelineLegendPanel() {
-        setLayout(new FlowLayout(FlowLayout.RIGHT, 10, 10));
-        setPreferredSize(new Dimension(getWidth(), 40));
-        
+    public LegendPanel(UIDefaults defaults) {
+        setBorder(new Separator(defaults, Separator.Side.TOP.TOP, Separator.Type.SOLID));
+        setLayout(new FlowLayout(FlowLayout.RIGHT, 10, 6));
+        setPreferredSize(new Dimension(getWidth(), 30));
+
         for (Thread.State state : Thread.State.values()) {
-            
+
             Color color = ChartColors.getColor(state);
             // no chart is black, it's just the default colour
             if (!color.equals(Color.BLACK)) {
@@ -71,24 +72,24 @@ public class ThreadTimelineLegendPanel extends JPanel {
             }
         }
     }
-    
+
     private class ColorIcon implements Icon {
-        
+
         private Color color;
         private ColorIcon(Color color) {
             this.color = color;
         }
-        
+
         @Override
         public int getIconHeight() {
-            return 16;
+            return 12;
         }
-        
+
         @Override
         public int getIconWidth() {
-            return 16;
+            return 12;
         }
-        
+
         @Override
         public void paintIcon(Component c, Graphics g, int x, int y) {
             Graphics2D graphics = GraphicsUtils.getInstance().createAAGraphics(g);
@@ -97,23 +98,4 @@ public class ThreadTimelineLegendPanel extends JPanel {
             graphics.dispose();
         }
     }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            
-            @Override
-            public void run() {
-                JFrame frame = new JFrame();
-                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-               
-                ThreadTimelineLegendPanel panel = new ThreadTimelineLegendPanel();
-                
-                frame.add(panel);
-                frame.setSize(800, 150);
-                
-                frame.setVisible(true);
-            }
-        });
-    }
 }
-

@@ -41,6 +41,7 @@ import com.redhat.thermostat.client.swing.components.ThermostatScrollBar;
 import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.thread.client.swing.experimental.components.ContentPane;
+import com.redhat.thermostat.thread.client.swing.impl.timeline.model.LegendPanel;
 import com.redhat.thermostat.thread.client.swing.impl.timeline.model.RangeChangeEvent;
 import com.redhat.thermostat.thread.client.swing.impl.timeline.model.RangeChangeListener;
 import com.redhat.thermostat.thread.client.swing.impl.timeline.model.RatioChangeEvent;
@@ -68,6 +69,8 @@ public class TimelineViewComponent extends ContentPane {
 
     public void initComponents() {
 
+        ContentPane contentPane = new ContentPane();
+
         this.model = new TimelineModel();
 
         viewport = new TimelineViewport();
@@ -80,18 +83,23 @@ public class TimelineViewComponent extends ContentPane {
         header.initComponents();
         scrollPane.setColumnHeaderView(header);
 
-        add(scrollPane, BorderLayout.CENTER);
+        contentPane.add(scrollPane, BorderLayout.CENTER);
 
         scrollBar = new ThermostatScrollBar(ThermostatScrollBar.HORIZONTAL);
         model.setScrollBarModel(scrollBar.getModel());
 
         scrollBar.addAdjustmentListener(new TimelineAdjustmentListener(model));
 
-        add(scrollBar, BorderLayout.SOUTH);
+        contentPane.add(scrollBar, BorderLayout.SOUTH);
         scrollBar.setEnabled(false);
         scrollBar.setVisible(false);
 
         header.setControlsEnabled(false);
+
+        add(contentPane, BorderLayout.CENTER);
+
+        LegendPanel legend = new LegendPanel(uiDefaults);
+        add(legend, BorderLayout.SOUTH);
 
         model.addRatioChangeListener(new RatioChangeListener() {
             @Override

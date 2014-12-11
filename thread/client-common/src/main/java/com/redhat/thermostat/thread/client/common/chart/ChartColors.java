@@ -55,15 +55,15 @@ public class ChartColors {
         
         switch (state) {
         case TIMED_WAITING:
-            result = Palette.PALE_RED;
+            result = Palette.GRANITA_ORANGE;
             break;
             
         case NEW:
-            result = Palette.POMP_AND_POWER_VIOLET;
+            result = Palette.GREEN;
             break;
 
         case RUNNABLE:
-            result = Palette.PRUSSIAN_BLUE;
+            result = Palette.ADWAITA_BLU;
             break;
 
         case TERMINATED:
@@ -75,11 +75,11 @@ public class ChartColors {
             break;
 
         case WAITING:
-            result = Palette.GRANITA_ORANGE;            
+            result = Palette.PALE_RED;
             break;
 
         default:
-            result = Palette.BLACK;            
+            result = Palette.LIGHT_GRAY;
             break;
         }
         return result;
