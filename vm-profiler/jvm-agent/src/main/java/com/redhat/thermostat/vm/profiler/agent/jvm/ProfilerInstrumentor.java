@@ -45,7 +45,7 @@ import java.util.regex.Pattern;
 
 public abstract class ProfilerInstrumentor implements ClassFileTransformer {
 
-    private static List<Pattern> ignorePackageRegexps = new ArrayList<>();
+    private static List<Pattern> ignorePackageRegexps = new ArrayList<Pattern>();
 
     static {
         // jdk packages

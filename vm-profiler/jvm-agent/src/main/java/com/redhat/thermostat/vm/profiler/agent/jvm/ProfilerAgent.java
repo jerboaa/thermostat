@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException;
 import java.util.jar.JarFile;
 
 /**
@@ -97,7 +98,22 @@ public class ProfilerAgent {
             Object main = constructor.newInstance(instrumentation);
             Method runMethod = klass.getMethod("run");
             runMethod.invoke(main);
-        } catch (ReflectiveOperationException | SecurityException e) {
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            System.err.println("Unable to initialize agent");
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+            System.err.println("Unable to initialize agent");
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+            System.err.println("Unable to initialize agent");
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+            System.err.println("Unable to initialize agent");
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+            System.err.println("Unable to initialize agent");
+        } catch (SecurityException e) {
             e.printStackTrace();
             System.err.println("Unable to initialize agent");
         }

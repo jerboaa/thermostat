@@ -48,10 +48,13 @@
   <name>JVM-side agent for the Thermostat VM Profiler</name>
 
   <!--
-    This is a stand alone agent for the JVM. It runs outside of
-    thermostat and does not know about thermostat.  It is not OSGi, and
-    has no dependencies on OSGi.
+    This is a stand alone agent for the JVM. It is meant to be loaded
+    into target JVMs. It runs outside of thermostat and does not know
+    about thermostat. It is not OSGi, and has no dependencies on OSGi
+    and does not know about OSGi. It must be compiled with the target
+    bytecode format for the oldest supported JVM version.
   -->
+
   <build>
     <plugins>
       <plugin>
@@ -64,6 +67,14 @@
               <Boot-Class-Path>${thermostat.vm.profiler.dir}asm-all-${asm.version}.jar ${thermostat.vm.profiler.dir}thermostat-vm-profiler-jvm-agent-${project.version}.jar</Boot-Class-Path>
             </manifestEntries>
           </archive>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
         </configuration>
       </plugin>
     </plugins>

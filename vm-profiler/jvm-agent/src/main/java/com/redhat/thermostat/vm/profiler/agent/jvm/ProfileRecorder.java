@@ -48,7 +48,7 @@ public class ProfileRecorder {
     private static final ProfileRecorder profileRecorder = new ProfileRecorder();
 
     /** shared between threads */
-    private ConcurrentHashMap<String, AtomicLong> profileData = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, AtomicLong> profileData = new ConcurrentHashMap<String, AtomicLong>();
 
     // TODO deal with thread id wrap-around
 
@@ -57,10 +57,10 @@ public class ProfileRecorder {
      * <p>
      * only the thread with the matching thread id is allowed to mutate 'info'
      */
-    private Map<Long, Info> threads = new ConcurrentHashMap<>();
+    private Map<Long, Info> threads = new ConcurrentHashMap<Long, Info>();
 
     final static class Info {
-        public Deque<String> stackFrames = new ArrayDeque<>();
+        public Deque<String> stackFrames = new ArrayDeque<String>();
         public long timeStamp = Long.MIN_VALUE;
     }
 

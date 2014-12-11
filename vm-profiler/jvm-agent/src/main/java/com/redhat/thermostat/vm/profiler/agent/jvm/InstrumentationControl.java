@@ -125,7 +125,7 @@ public class InstrumentationControl implements InstrumentationControlMXBean {
     private void retransformAlreadyLoadedClasses(Instrumentation instrumentation, ProfilerInstrumentor profiler) {
         long start = System.nanoTime();
 
-        List<Class<?>> toTransform = new ArrayList<>();
+        List<Class<?>> toTransform = new ArrayList<Class<?>>();
 
         for (Class<?> klass : instrumentation.getAllLoadedClasses()) {
             boolean skipThisClass = false;
@@ -171,13 +171,25 @@ public class InstrumentationControl implements InstrumentationControlMXBean {
         try {
             ResultsFile resultsFile = resultsFileCreator.get();
             String path = resultsFile.getPath();
-            try (BufferedWriter out = resultsFile.getWriter()) {
+            BufferedWriter out = null;
+            try {
+                out = resultsFile.getWriter();
                 Map<String, AtomicLong> data = recorder.getData();
+                System.out.println("AGENT: Writing " + data.size() + " results to: " + path);
                 for (Map.Entry<String, AtomicLong> entry : data.entrySet()) {
                     out.write(entry.getValue().get() + "\t" + entry.getKey() + "\n");
                 }
                 resultsWrittenToDisk = true;
                 lastResults = path;
+            } finally {
+                try {
+                    if (out != null) {
+                        out.close();
+                    }
+                } catch (IOException e) {
+                    // well, we are screwed
+                    e.printStackTrace();
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();

@@ -133,7 +133,7 @@ public class InstrumentationControlTest {
     public void stopProfilingSavesProfilingResultsToDisk() throws Exception {
         final String DATA_LOCATION = "foobar";
 
-        Map<String, AtomicLong> profileData = new HashMap<>();
+        Map<String, AtomicLong> profileData = new HashMap<String, AtomicLong>();
         profileData.put("foo", new AtomicLong(1));
         when(recorder.getData()).thenReturn(profileData);
 
@@ -151,7 +151,7 @@ public class InstrumentationControlTest {
     public void vmShutdownSaveDataToDisk() throws Exception {
         final String DATA_LOCATION = "foobar";
 
-        Map<String, AtomicLong> profileData = new HashMap<>();
+        Map<String, AtomicLong> profileData = new HashMap<String, AtomicLong>();
         profileData.put("foo", new AtomicLong(1));
         when(recorder.getData()).thenReturn(profileData);
 
