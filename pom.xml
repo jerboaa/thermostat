@@ -120,7 +120,7 @@ client-tester=tester
         </dev.users.snippet>
         <dev.roles.snippet>
 # Roles for our two dev users
-${agent.dev.username}=thermostat-agent, thermostat-grant-write-files-all-agent, thermostat-agent-query-roles
+${agent.dev.username}=thermostat-agent, thermostat-grant-write-files-all-agent
 # client-tester needs thermostat-purge role for clean-data command to work
 client-tester=thermostat-grant-read-all-client, thermostat-cmdc, thermostat-purge
 # Agent recursive role
@@ -132,17 +132,6 @@ thermostat-agent = thermostat-cmdc-verify, \
                    thermostat-realm, \
                    thermostat-save-file, \
                    thermostat-write
-# The thread-monitor feature requires agents to read thread headers before
-# it can determine if there need to get more headers put into the DB.
-# See ThreadHeaderHelper.checkAndSaveThreadHeader(). In particular this line:
-#  ThreadHeader inStorage = threadDao.getThread(template);
-# FIXME: We should have a way of granting an agent read privs only for
-#        records of this agent. In order to be able to do this, we'd have
-#        to know agentIds ahead of time, which we don't. It's generated at
-#        start-up.
-thermostat-agent-query-roles = thermostat-query, \
-                   thermostat-agents-grant-read-agentId-ALL, \
-                   thermostat-vms-grant-read-vmId-ALL
 # Grant agent to write any file
 thermostat-grant-write-files-all-agent = thermostat-files-grant-write-filename-ALL
                    
