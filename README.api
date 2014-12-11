@@ -42,6 +42,7 @@ The public supported API of thermostat consists of the following packages:
  - com.redhat.thermostat.storage.model
  - com.redhat.thermostat.storage.monitor
  - com.redhat.thermostat.storage.query
+ - com.redhat.thermostat.storage.testutils
  - com.redhat.thermostat.utils.keyring
 
 
@@ -53,7 +54,9 @@ A number of packages are public (either OSGi or not) but should be considered
 internal.
 
  - c.r.t.main
+ - c.r.t.shared.perflog
  - c.r.t.*.experimental (and subpackages)
+ - c.r.t.*.internal (and subpackages)
  - c.r.t.storage.mongodb (and subpackages)
  - c.r.t.web (and subpackages)
  - c.r.t.client.filter.vm.core
