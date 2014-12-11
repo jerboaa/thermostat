@@ -54,7 +54,6 @@ class HarvesterHelper {
 
     private ThreadSummaryHelper summaryHelper;
     private ThreadStateHelper stateHelper;
-    private ThreadContentionHelper contentionHelper;
     private ThreadSessionHelper sessionHelper;
 
     HarvesterHelper(ThreadDao threadDao, Clock clock, String vmId, WriterID writerId)
@@ -62,14 +61,12 @@ class HarvesterHelper {
         this(clock, vmId,
              new ThreadSummaryHelper(threadDao, writerId, vmId),
              new ThreadStateHelper(threadDao, writerId, vmId),
-             new ThreadContentionHelper(threadDao, writerId, vmId),
              new ThreadSessionHelper(threadDao, writerId, vmId, clock));
     }
 
     HarvesterHelper(Clock clock, String vmId,
                     ThreadSummaryHelper summaryHelper,
                     ThreadStateHelper stateHelper,
-                    ThreadContentionHelper contentionHelper,
                     ThreadSessionHelper sessionHelper)
     {
         this.vmId = vmId;
@@ -77,8 +74,6 @@ class HarvesterHelper {
 
         this.summaryHelper = summaryHelper;
         this.stateHelper = stateHelper;
-
-        this.contentionHelper = contentionHelper;
         this.sessionHelper = sessionHelper;
     }
 
@@ -116,13 +111,6 @@ class HarvesterHelper {
                                                   session.getSessionID(),
                                                   timestamp);
             stateHelper.saveThreadState(state);
-//
-//            // contention information
-//            ThreadContentionSample contentionSample =
-//                    contentionHelper.createThreadContentionSample(header,
-//                                                                  beanInfo,
-//                                                                  timestamp);
-//            contentionHelper.saveContentionSample(contentionSample);
         }
     }
 

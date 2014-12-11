@@ -65,7 +65,6 @@ public class HarvesterHelperTest {
 
     private ThreadSummaryHelper summaryHelper;
     private ThreadStateHelper stateHelper;
-    private ThreadContentionHelper contentionHelper;
     private ThreadSessionHelper threadSessionHelper;
 
     private ThreadMXBean collectorBean;
@@ -74,8 +73,6 @@ public class HarvesterHelperTest {
     public void setUp() {
         summaryHelper = mock(ThreadSummaryHelper.class);
         stateHelper = mock(ThreadStateHelper.class);
-
-        contentionHelper = mock(ThreadContentionHelper.class);
 
         threadDao = mock(ThreadDao.class);
         collectorBean = mock(ThreadMXBean.class);
@@ -103,7 +100,6 @@ public class HarvesterHelperTest {
         HarvesterHelper harvester = new HarvesterHelper(clock, vmId,
                                                         summaryHelper,
                                                         stateHelper,
-                                                        contentionHelper,
                                                         threadSessionHelper);
         harvester.collectAndSaveThreadData(session, collectorBean);
 
@@ -123,7 +119,6 @@ public class HarvesterHelperTest {
         HarvesterHelper harvester = new HarvesterHelper(clock, vmId,
                                                         summaryHelper,
                                                         stateHelper,
-                                                        contentionHelper,
                                                         threadSessionHelper);
         harvester.collectAndSaveThreadData(session, collectorBean);
         verify(collectorBean).getAllThreadIds();
@@ -156,7 +151,6 @@ public class HarvesterHelperTest {
         HarvesterHelper harvester = new HarvesterHelper(clock, vmId,
                                                         summaryHelper,
                                                         stateHelper,
-                                                        contentionHelper,
                                                         threadSessionHelper);
         harvester.collectAndSaveThreadData(session, collectorBean);
 

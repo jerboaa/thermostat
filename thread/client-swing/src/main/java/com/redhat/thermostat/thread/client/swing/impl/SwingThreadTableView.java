@@ -36,27 +36,27 @@
 
 package com.redhat.thermostat.thread.client.swing.impl;
 
+import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.client.swing.components.ThermostatTable;
+import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
+import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.thread.client.common.ThreadTableBean;
+import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
+import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
 import java.awt.Component;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
-
+import java.util.Map;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
-
-import com.redhat.thermostat.client.swing.SwingComponent;
-import com.redhat.thermostat.client.swing.components.ThermostatTable;
-import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
-import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
-import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
-import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 
 public class SwingThreadTableView extends ThreadTableView implements SwingComponent {
 
@@ -66,14 +66,18 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
     
     private ThermostatTable table;
     private ThreadTable tablePanel;
-    
+
+    private Map<ThreadTableBean, Integer> beans;
+
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     
     public SwingThreadTableView() {
+
+        beans = new HashMap<>();
         tablePanel = new ThreadTable();
         new ComponentVisibilityNotifier().initialize(tablePanel, notifier);
         
-        table = new ThermostatTable(new ThreadViewTableModel(new ArrayList<ThreadTableBean>()));
+        table = new ThermostatTable(new ThreadViewTableModel());
         table.setName("threadBeansTable");
         table.getModel().addTableModelListener(new TableModelListener() {
             @Override
@@ -117,14 +121,26 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
             }
         });
     }
-    
+
+    @Override
+    public void clear() {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                ThreadViewTableModel model = (ThreadViewTableModel) table.getModel();
+                model.setRowCount(0);
+                beans.clear();
+            }
+        });
+    }
+
     @Override
     public Component getUiComponent() {
         return tablePanel;
     }
     
     @Override
-    public void display(final List<ThreadTableBean> infos) {
+    public void display(final ThreadTableBean tableBean) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -140,8 +156,14 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
                 if (selectedRow != -1) {
                     info = model.infos.get(selectedRow);
                 }
-                
-                model.infos = infos;
+
+                // update the infos
+                Integer beanIndex = beans.get(tableBean);
+                if (beanIndex == null) {
+                    beanIndex = Integer.valueOf(model.infos.size());
+                    beans.put(tableBean, beanIndex);
+                    model.infos.add(tableBean);
+                }
 
                 if (info != null) {
                     int index = 0;
@@ -159,7 +181,17 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
                     table.repackCells();
                     tableRepacked = true;
                 }
-                
+            }
+        });
+    }
+
+    @Override
+    public void submitChanges() {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                ThreadViewTableModel model =
+                        (ThreadViewTableModel) table.getModel();
                 model.fireTableDataChanged();
             }
         });
@@ -180,10 +212,10 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
                 t.localize(LocaleResources.SLEEPING).getContents(),
                 t.localize(LocaleResources.MONITOR).getContents(), //, "Heap", "CPU Time", "User CPU Time"
         };
-        
+
         private List<ThreadTableBean> infos;
-        public ThreadViewTableModel(List<ThreadTableBean> infos) {
-            this.infos = infos;
+        public ThreadViewTableModel() {
+            this.infos = new ArrayList<>();
         }
     
         @Override

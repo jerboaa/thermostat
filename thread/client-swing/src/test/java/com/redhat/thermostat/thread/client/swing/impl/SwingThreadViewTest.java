@@ -148,7 +148,7 @@ public class SwingThreadViewTest {
 //    @GUITest
 //    @Test
 //    public void verifTableViewLinksToDetailsView() throws InvocationTargetException, InterruptedException {
-//        
+//
 //        final boolean listenerCalled[] = new boolean[1];
 //
 //        ThreadTableBean bean1 = mock(ThreadTableBean.class);

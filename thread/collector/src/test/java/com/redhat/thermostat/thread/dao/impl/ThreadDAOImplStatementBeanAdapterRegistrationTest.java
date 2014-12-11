@@ -36,21 +36,19 @@
 
 package com.redhat.thermostat.thread.dao.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
+import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
+import com.redhat.thermostat.storage.internal.dao.DAOImplStatementDescriptorRegistration;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Set;
-
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
-import com.redhat.thermostat.storage.internal.dao.DAOImplStatementDescriptorRegistration;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class ThreadDAOImplStatementBeanAdapterRegistrationTest {
     
@@ -58,7 +56,7 @@ public class ThreadDAOImplStatementBeanAdapterRegistrationTest {
     public void registersAllDescriptors() {
         ThreadDaoImplStatementDescriptorRegistration reg = new ThreadDaoImplStatementDescriptorRegistration();
         Set<String> descriptors = reg.getStatementDescriptors();
-        assertEquals(20, descriptors.size());
+        assertEquals(14, descriptors.size());
         assertFalse("null statement not allowed", descriptors.contains(null));
     }
     
@@ -86,7 +84,7 @@ public class ThreadDAOImplStatementBeanAdapterRegistrationTest {
         // storage-core + this module
         assertEquals(2, registrations.size());
         assertNotNull(threadDaoReg);
-        assertEquals(20, threadDaoReg.getStatementDescriptors().size());
+        assertEquals(14, threadDaoReg.getStatementDescriptors().size());
     }
 
 }

@@ -62,14 +62,27 @@ public class ThreadStateHelper {
     {
         ThreadState state = new ThreadState(writerId.getWriterID());
 
-        state.setState(beanInfo.getThreadState().name());
+        // generic information
         state.setTimeStamp(timestamp);
         state.setSession(sessionID.get());
         state.setVmId(vmId);
+
+        // ids
         state.setName(beanInfo.getThreadName());
         state.setId(beanInfo.getThreadId());
+
+        // execution information
+        state.setState(beanInfo.getThreadState().name());
         state.setSuspended(beanInfo.isSuspended());
         state.setInNative(beanInfo.isInNative());
+
+        // synchronization statistics
+        state.setBlockedCount(beanInfo.getBlockedCount());
+        state.setBlockedTime(beanInfo.getBlockedTime());
+        state.setWaitedCount(beanInfo.getWaitedCount());
+        state.setWaitedTime(beanInfo.getWaitedTime());
+
+        // TODO: lock information
 
         return state;
     }

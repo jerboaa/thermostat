@@ -133,7 +133,6 @@ public class ThreadTimelineController extends CommonController {
                 collector.getThreadStates(session,
                                           threadStateResultHandler,
                                           range);
-                threadStateResultHandler.results = 0;
             }
         }
     }
@@ -142,8 +141,6 @@ public class ThreadTimelineController extends CommonController {
         private ThreadInfo key;
         private Set<ThreadInfo> knownStates;
 
-        int results;
-
         public ThreadStateResultHandler() {
             this.key = new ThreadInfo();
             knownStates = new HashSet<>();
@@ -151,8 +148,6 @@ public class ThreadTimelineController extends CommonController {
 
         @Override
         public void onResult(ThreadState state) {
-
-            results++;
 
             key.setName(state.getName());
             key.setId(state.getId());

@@ -36,14 +36,14 @@
 
 package com.redhat.thermostat.thread.client.common.view;
 
-import java.util.List;
-
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 
 public abstract class ThreadTableView extends BasicView {
+
+    public abstract void clear();
 
     public static enum ThreadSelectionAction {
         SHOW_THREAD_DETAILS
@@ -61,7 +61,9 @@ public abstract class ThreadTableView extends BasicView {
     public void removeThreadSelectionActionListener(ActionListener<ThreadSelectionAction> listener) {
         threadTableNotifier.removeActionListener(listener);
     }
-    
-    public abstract void display(List<ThreadTableBean> arrayList);
+
+    public abstract void submitChanges();
+
+    public abstract void display(ThreadTableBean tableBean);
 }
 

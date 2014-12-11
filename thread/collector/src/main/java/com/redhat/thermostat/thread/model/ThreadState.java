@@ -59,6 +59,10 @@ public class ThreadState extends BasePojo implements TimeStampedPojo {
     private long id;
     private boolean suspended;
     private boolean inNative;
+    private long blockedCount;
+    private long blockedTime;
+    private long waitedCount;
+    private long waitedTime;
 
     public ThreadState() {
         this(null);
@@ -191,5 +195,45 @@ public class ThreadState extends BasePojo implements TimeStampedPojo {
         result = 31 * result + (suspended ? 1 : 0);
         result = 31 * result + (inNative ? 1 : 0);
         return result;
+    }
+
+    @Persist
+    public void setBlockedCount(long blockedCount) {
+        this.blockedCount = blockedCount;
+    }
+
+    @Persist
+    public long getBlockedCount() {
+        return blockedCount;
+    }
+
+    @Persist
+    public void setBlockedTime(long blockedTime) {
+        this.blockedTime = blockedTime;
+    }
+
+    @Persist
+    public long getBlockedTime() {
+        return blockedTime;
+    }
+
+    @Persist
+    public void setWaitedCount(long waitedCount) {
+        this.waitedCount = waitedCount;
+    }
+
+    @Persist
+    public long getWaitedCount() {
+        return waitedCount;
+    }
+
+    @Persist
+    public void setWaitedTime(long waitedTime) {
+        this.waitedTime = waitedTime;
+    }
+
+    @Persist
+    public long getWaitedTime() {
+        return waitedTime;
     }
 }

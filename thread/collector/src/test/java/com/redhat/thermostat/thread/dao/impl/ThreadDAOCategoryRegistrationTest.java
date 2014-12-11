@@ -53,7 +53,7 @@ import static org.junit.Assert.assertTrue;
 
 public class ThreadDAOCategoryRegistrationTest {
 
-    private static final int EXPECTED_CATEGORIES = 7;
+    private static final int EXPECTED_CATEGORIES = 6;
 
     @Test
     public void registersAllCategories() {
