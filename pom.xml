@@ -41,7 +41,7 @@
 
   <groupId>com.redhat.thermostat</groupId>
   <artifactId>thermostat</artifactId>
-  <version>1.1.1-SNAPSHOT</version>
+  <version>1.1.2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Thermostat</name>
@@ -76,7 +76,7 @@
       <activation>
         <property>
           <name>environment.type</name>
-          <value>dev</value>
+          <value>!release</value>
         </property>
       </activation>
       <properties>

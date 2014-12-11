@@ -42,7 +42,7 @@
   <parent>
     <groupId>com.redhat.thermostat</groupId>
     <artifactId>thermostat</artifactId>
-    <version>1.1.1-SNAPSHOT</version>
+    <version>1.1.2-SNAPSHOT</version>
   </parent>
 
   <artifactId>thermostat-distribution</artifactId>
@@ -264,7 +264,7 @@
       <activation>
         <property>
           <name>environment.type</name>
-          <value>dev</value>
+          <value>!release</value>
         </property>
       </activation>
       <dependencies>
@@ -302,7 +302,10 @@
     <profile> <!-- release-build -->
       <id>release-build</id>
       <activation>
-        <activeByDefault>true</activeByDefault>
+        <property>
+          <name>environment.type</name>
+          <value>release</value>
+        </property>
       </activation>
       <dependencies>
         <dependency>
