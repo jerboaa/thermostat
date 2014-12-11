@@ -244,7 +244,7 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
         @Override
         public Class<?> getColumnClass(int column) {
             switch (column) {
-            case 1:
+            case 0:
             case 2:
             case 3:
             case 6:
