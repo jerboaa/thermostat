@@ -71,6 +71,7 @@ import com.redhat.thermostat.client.swing.components.ThermostatTable;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult.MethodInfo;
@@ -133,12 +134,25 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
 
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.fill = GridBagConstraints.HORIZONTAL;
+        constraints.anchor = GridBagConstraints.PAGE_START;
         constraints.weightx = 1.0;
+        constraints.gridy = 0;
+        constraints.gridx = 0;
+        constraints.gridwidth = 3;
+        constraints.ipady = 5;
 
+        String wrappedText = "<html>" + translator.localize(LocaleResources.PROFILER_DESCRIPTION).getContents() + "</html>";
+        JLabel descriptionLabel = new JLabel(wrappedText);
+        actionsPanel.add(descriptionLabel, constraints);
+
+        constraints.gridy = 1;
+        constraints.gridx = 0;
+        constraints.gridwidth = 1;
         currentStatusLabel = new JLabel("Current Status: {0}");
         actionsPanel.add(currentStatusLabel, constraints);
 
         constraints.fill = GridBagConstraints.NONE;
+        constraints.gridx = GridBagConstraints.RELATIVE;
         constraints.weightx = 0.0;
         startButton = new JToggleButton(translator.localize(LocaleResources.START_PROFILING).getContents());
         startButton.addActionListener(new java.awt.event.ActionListener() {
