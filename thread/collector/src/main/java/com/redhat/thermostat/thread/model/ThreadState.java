@@ -94,12 +94,14 @@ public class ThreadState extends BasePojo implements TimeStampedPojo {
         this.vmId = vmId;
     }
 
+    @Indexed
     @Persist
     @Override
     public long getTimeStamp() {
         return timeStamp;
     }
 
+    @Indexed
     @Persist
     public void setTimeStamp(long timeStamp) {
         this.timeStamp = timeStamp;
