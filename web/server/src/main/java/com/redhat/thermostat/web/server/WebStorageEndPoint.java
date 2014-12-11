@@ -158,6 +158,18 @@ public class WebStorageEndPoint extends HttpServlet {
     private Set<String> knownCategoryNames;
     // the principal callback used for retrieving the JAAS user principal
     private PrincipalCallback principalCallback;
+    // a registry for timers which starts/stops registered timers on init()
+    // destroy()
+    private TimerRegistry timerRegistry;
+    
+    public WebStorageEndPoint() {
+        // default constructor
+    }
+    
+    // Package private for testing
+    WebStorageEndPoint(TimerRegistry timerRegistry) {
+        this.timerRegistry = timerRegistry;
+    }
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -193,7 +205,8 @@ public class WebStorageEndPoint extends HttpServlet {
         PrincipalCallbackFactory cbFactory = new PrincipalCallbackFactory(info);
         principalCallback = Objects.requireNonNull(cbFactory.getCallback());
         
-        TokenManager tokenManager = new TokenManager();
+        timerRegistry = new TimerRegistry();
+        TokenManager tokenManager = new TokenManager(timerRegistry);
         String timeoutParam = getInitParameter(TOKEN_MANAGER_TIMEOUT_PARAM);
         if (timeoutParam != null) {
             tokenManager.setTimeout(Integer.parseInt(timeoutParam));
@@ -210,6 +223,7 @@ public class WebStorageEndPoint extends HttpServlet {
     
     @Override
     public void destroy() {
+        timerRegistry.shutDown();
         logger.log(Level.INFO, "Going to shut down web service");
         if (storage != null) {
             // See IcedTea BZ#1315. Shut down storage in order
@@ -653,7 +667,7 @@ public class WebStorageEndPoint extends HttpServlet {
                     // Not yet set for this user, create a new cursor manager
                     // and start the sweeper timer so as to prevent memory
                     // leaks due to cursors kept as a reference in cursor manager
-                    cursorManager = new CursorManager();
+                    cursorManager = new CursorManager(timerRegistry);
                     cursorManager.startSweeperTimer();
                     userSession.setAttribute(CURSOR_MANAGER_KEY, cursorManager);
                 }

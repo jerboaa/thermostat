@@ -53,15 +53,24 @@ class TokenManager {
 
     private static final int TOKEN_LENGTH = 256;
 
-    private SecureRandom random = new SecureRandom();
+    private final SecureRandom random = new SecureRandom();
 
-    private Map<String,byte[]> tokens = Collections.synchronizedMap(new HashMap<String,byte[]>());
+    private final Map<String,byte[]> tokens = Collections.synchronizedMap(new HashMap<String,byte[]>());
 
-    // Maybe use a ScheduledExecutorService if this turns out to not scale well enough.
-    private Timer timer = new Timer();
+    private final TokenManagerTimer timer;
 
     private int timeout = 30 * 1000;
 
+    TokenManager(TimerRegistry registry) {
+        this(registry, new TokenManagerTimer());
+    }
+    
+    // for testing
+    TokenManager(TimerRegistry registry, TokenManagerTimer timer) {
+        this.timer = timer;
+        registry.registerTimer(timer);
+    }
+    
     void setTimeout(int timeout) {
         this.timeout = timeout;
     }
@@ -142,5 +151,29 @@ class TokenManager {
         return tokens.get(sha256);
     }
 
+    static class TokenManagerTimer implements StoppableTimer {
+        
+        private static final String NAME = NAME_PREFIX + "token-manager";
+        private final Timer timer;
+        
+        // for testing
+        TokenManagerTimer(Timer timer) {
+            this.timer = timer;
+        }
+
+        TokenManagerTimer() {
+            this(new Timer(NAME));
+        }
+
+        @Override
+        public void stop() {
+            timer.cancel();
+        }
+        
+        void schedule(TimerTask task, int timeout) {
+            timer.schedule(task, timeout);
+        }
+        
+    }
 }
 

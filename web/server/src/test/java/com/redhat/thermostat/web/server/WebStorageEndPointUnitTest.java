@@ -242,6 +242,14 @@ public class WebStorageEndPointUnitTest {
         assertNotNull(serverTokenCaptor.getValue());
     }
     
+    @Test
+    public void testShutDownCancelsTimers() {
+        TimerRegistry registry = mock(TimerRegistry.class);
+        WebStorageEndPoint endpoint = new WebStorageEndPoint(registry);
+        endpoint.destroy();
+        verify(registry).shutDown();
+    }
+    
     private ThCreatorResult creatWorkingThermostatHome() throws IOException {
         Path testThermostatHome = Files.createTempDirectory(
                 "foo-thermostat-home-", new FileAttribute[] {});

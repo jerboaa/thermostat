@@ -54,27 +54,23 @@ final class CursorManager {
 
     public static final int CURSOR_NOT_STORED = -1;
     private final Map<Integer, CursorHolder> cursors;
+    private final TimerRegistry registry;
     private int cursorIdCounter;
-    private final Timer sweeperTimer;
-    
-    CursorManager() {
-        this(new Timer());
-    }
     
     // test-only
-    CursorManager(Map<Integer, CursorHolder> cursors, Timer timer) {
-        this.sweeperTimer = timer;
+    CursorManager(TimerRegistry registry, Map<Integer, CursorHolder> cursors) {
+        this.registry = registry;
         this.cursors = cursors;
     }
     
-    CursorManager(Timer timer) {
+    CursorManager(TimerRegistry registry) {
         this.cursors = new HashMap<>();
-        this.sweeperTimer = timer;
+        this.registry = registry;
     }
     
     // test-only
     CursorManager(int cursorIdCounter) {
-        this();
+        this(null);
         this.cursorIdCounter = cursorIdCounter;
     }
     
@@ -139,12 +135,9 @@ final class CursorManager {
     }
     
     void startSweeperTimer() {
-        startSweeperTimer(new CursorSweeper(this));
-    }
-    
-    // This is here in order to facilitate better testing.
-    void startSweeperTimer(final TimerTask task) {
-        sweeperTimer.scheduleAtFixedRate(task, 0, CursorHolder.TIMEOUT);
+        CursorTimer sweeperTimer = new CursorTimer(new CursorSweeper(this));
+        sweeperTimer.scheduleTask();
+        registry.registerTimer(sweeperTimer);
     }
     
     /**
@@ -206,6 +199,35 @@ final class CursorManager {
             manager.expireCursors();
         }
 
+    }
+    
+    static class CursorTimer implements StoppableTimer {
+
+        private static final String NAME = NAME_PREFIX + "cursor-manager";
+        private final Timer timer;
+        private final TimerTask task;
+        boolean taskScheduled = false;
+        
+        CursorTimer(TimerTask task) {
+            this(task, new Timer(NAME));
+        }
+        
+        // for testing
+        CursorTimer(TimerTask task, Timer timer) {
+            this.timer = timer;
+            this.task = task;
+        }
+        
+        void scheduleTask() {
+            timer.scheduleAtFixedRate(task, 0, CursorHolder.TIMEOUT);
+            taskScheduled = true;
+        }
+
+        @Override
+        public void stop() {
+            timer.cancel();
+        }
+        
     }
     
 }

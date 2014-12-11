@@ -40,11 +40,18 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Matchers.isA;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.junit.Test;
+
+import com.redhat.thermostat.web.server.TokenManager.TokenManagerTimer;
 
 public class TokenManagerTest {
 
@@ -62,7 +69,7 @@ public class TokenManagerTest {
      */
     @Test
     public void generateTokenTest() {
-        TokenManager tokenManager = new TokenManager();
+        TokenManager tokenManager = new TokenManager(mock(TimerRegistry.class));
         String clientToken = "something";
         String action = "myAction";
         byte[] token = tokenManager.generateToken(clientToken.getBytes(), action);
@@ -77,7 +84,7 @@ public class TokenManagerTest {
         byte[] expected = new byte[] {
                 (byte)0xff, 0x6f, 0x6d, 0x65, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x57, 0x65, 0x48, 0x61, 0x73, 0x68 
         };
-        TokenManager tokenManager = new TokenManager();
+        TokenManager tokenManager = new TokenManager(mock(TimerRegistry.class));
         String actual = tokenManager.convertBytesToHexString(expected);
         assertEquals(expected.length * 2, actual.length());
         assertEquals("ff6f6d65537472696e67576548617368", actual);
@@ -85,7 +92,7 @@ public class TokenManagerTest {
     
     @Test
     public void generateAndVerifyTokenTest() {
-        TokenManager tokenManager = new TokenManager();
+        TokenManager tokenManager = new TokenManager(mock(TimerRegistry.class));
         String clientToken = "something";
         String action = "myAction";
         byte[] token = tokenManager.generateToken(clientToken.getBytes(), action);
@@ -93,6 +100,37 @@ public class TokenManagerTest {
         // try again with different action name, which should not verify
         String wrongAction = "someAction";
         assertFalse(tokenManager.verifyToken(clientToken.getBytes(), token, wrongAction));
+    }
+    
+    @Test
+    public void instantiationRegistersTimer() {
+        TimerRegistry registry = mock(TimerRegistry.class);
+        new TokenManager(registry);
+        verify(registry).registerTimer(isA(TokenManagerTimer.class));
+        registry = mock(TimerRegistry.class);
+        TokenManagerTimer timer = mock(TokenManagerTimer.class);
+        new TokenManager(registry, timer);
+        verify(registry).registerTimer(timer);
+    }
+    
+    // TokenManagerTimer tests
+    
+    @Test
+    public void tokenManagerTimerCanScheduleTasks() {
+        Timer mockTimer = mock(Timer.class);
+        TokenManagerTimer timer = new TokenManagerTimer(mockTimer);
+        TimerTask task = mock(TimerTask.class);
+        int timeout = -100;
+        timer.schedule(task, timeout);
+        verify(mockTimer).schedule(task, -100);
+    }
+    
+    @Test
+    public void tokenManagerTimerCanStopTimer() {
+        Timer mockTimer = mock(Timer.class);
+        TokenManagerTimer timer = new TokenManagerTimer(mockTimer);
+        timer.stop();
+        verify(mockTimer).cancel();
     }
 }
 
