@@ -133,25 +133,6 @@ public interface ThreadDao {
      */
     void addThreadState(ThreadState thread);
 
-    /**
-     */
-    void saveContentionSample(ThreadContentionSample contentionSample);
-
-    /**
-     */
-    ThreadContentionSample getLatestContentionSample(VmRef ref, SessionID session);
-
-
-    /**
-     * Return the oldest session registered in the database.
-     */
-    ThreadSession getFirstSession(VmRef ref);
-
-    /**
-     * Return the newest session registered in the database.
-     */
-    ThreadSession getLastSession(VmRef ref);
-
     void getThreadStates(VmRef ref, SessionID session,
                          ResultHandler<ThreadState> handler,
                          Range<Long> range, int limit, Sort order);

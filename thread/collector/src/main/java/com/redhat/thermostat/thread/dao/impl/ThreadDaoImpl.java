@@ -211,20 +211,6 @@ public class ThreadDaoImpl implements ThreadDao {
     }
 
     @Override
-    public ThreadSession getFirstSession(VmRef ref) {
-        Range<Long> range = new Range<>(Long.MIN_VALUE, Long.MAX_VALUE);
-        List<ThreadSession> results = getSessions(ref, range, 1, Sort.ASCENDING);
-        return results.isEmpty() ? null : results.get(0);
-    }
-
-    @Override
-    public ThreadSession getLastSession(VmRef ref) {
-        Range<Long> range = new Range<>(Long.MIN_VALUE, Long.MAX_VALUE);
-        List<ThreadSession> results = getSessions(ref, range, 1, Sort.DESCENDING);
-        return results.isEmpty() ? null : results.get(0);
-    }
-
-    @Override
     public List<ThreadSession> getSessions(VmRef ref, Range<Long> range,
                                            int limit, Sort order)
     {
@@ -324,74 +310,6 @@ public class ThreadDaoImpl implements ThreadDao {
         }
     }
 
-    @Override
-    public void saveContentionSample(ThreadContentionSample contentionSample) {
-
-//        StatementDescriptor<ThreadContentionSample> desc =
-//                new StatementDescriptor<>(THREAD_CONTENTION_SAMPLE,
-//                                          ADD_CONTENTION_SAMPLE);
-//        PreparedStatement<ThreadContentionSample> prepared;
-//        ThreadHeader header = contentionSample.getHeader();
-//        if (header == null || header.getReferenceID() == null) {
-//            throw new IllegalArgumentException("header or header.getReferenceID() can't be null");
-//        }
-//
-//        try {
-//            prepared = storage.prepareStatement(desc);
-//
-//            prepared.setString(0, header.getAgentId());
-//            prepared.setString(1, header.getVmId());
-//
-//            prepared.setLong(2, contentionSample.getBlockedCount());
-//            prepared.setLong(3, contentionSample.getBlockedTime());
-//            prepared.setLong(4, contentionSample.getWaitedCount());
-//            prepared.setLong(5, contentionSample.getWaitedTime());
-//
-//            prepared.setString(6, header.getReferenceID());
-//
-//            prepared.setLong(7, contentionSample.getTimeStamp());
-//
-//            prepared.execute();
-//
-//        } catch (DescriptorParsingException e) {
-//            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-//        } catch (StatementExecutionException e) {
-//            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-//        }
-    }
-
-    @Override
-    public ThreadContentionSample getLatestContentionSample(VmRef ref, SessionID session) {
-
-        ThreadContentionSample sample = null;
-
-//        StatementDescriptor<ThreadContentionSample> desc =
-//                new StatementDescriptor<>(THREAD_CONTENTION_SAMPLE,
-//                                          GET_LATEST_CONTENTION_SAMPLE);
-//        PreparedStatement<ThreadContentionSample> prepared;
-//
-//        if (thread == null || thread.getReferenceID() == null) {
-//            throw new IllegalArgumentException("header or header.getReferenceID() can't be null");
-//        }
-//
-//        try {
-//            prepared = storage.prepareStatement(desc);
-//
-//            prepared.setString(0, thread.getReferenceID());
-//            Cursor<ThreadContentionSample> cursor = prepared.executeQuery();
-//            if (cursor.hasNext()) {
-//                sample = cursor.next();
-//                sample.setHeader(thread);
-//            }
-//
-//        } catch (DescriptorParsingException e) {
-//            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-//        } catch (StatementExecutionException e) {
-//            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-//        }
-
-        return sample;
-    }
 
     /**************************************************************************/
 
@@ -418,25 +336,6 @@ public class ThreadDaoImpl implements ThreadDao {
             logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
         }
         return stmt;
-    }
-
-    private <T extends Pojo> List<T> getAllResults(PreparedStatement<T> stmt) {
-        Cursor<T> cursor;
-        try {
-            cursor = stmt.executeQuery();
-        } catch (StatementExecutionException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Executing query '" + stmt + "' failed!", e);
-            return Collections.emptyList();
-        }
-
-        List<T> result = new ArrayList<>();
-        while (cursor.hasNext()) {
-            T info = cursor.next();
-            result.add(info);
-        }
-
-        return result;
     }
 
     private <T extends Pojo> T getFirstResult(PreparedStatement<T> stmt) {
