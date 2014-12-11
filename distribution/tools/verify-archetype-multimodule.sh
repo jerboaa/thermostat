@@ -59,7 +59,7 @@ function launch_and_wait_for_web_storage() {
   TRIES=0
   while [[ ! -f $WSS_OUTPUT || ! `grep -e "Agent id:" < $WSS_OUTPUT` ]]; do
     # don't wait forever
-    if [ $TRIES -ge 10 ]; then
+    if [ $TRIES -ge 20 ]; then
       return -1
     fi
     sleep 1
