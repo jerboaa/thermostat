@@ -36,16 +36,6 @@
 
 package com.redhat.thermostat.thread.client.controller.osgi;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.Objects;
-
-import com.redhat.thermostat.thread.client.common.model.timeline.TimelineDimensionModel;
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
-
 import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Constants;
@@ -57,6 +47,13 @@ import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
 import com.redhat.thermostat.thread.client.controller.ThreadInformationService;
 import com.redhat.thermostat.thread.client.controller.impl.ThreadInformationServiceImpl;
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Objects;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 public class Activator implements BundleActivator {
 
@@ -69,7 +66,6 @@ public class Activator implements BundleActivator {
                 ApplicationService.class,
                 VmInfoDAO.class,
                 ThreadViewProvider.class,
-                TimelineDimensionModel.class,
         };
         
         Action action = new Action() {
@@ -82,11 +78,13 @@ public class Activator implements BundleActivator {
                 ApplicationService applicationService = (ApplicationService) services.get(ApplicationService.class.getName());
                 VmInfoDAO vmInfoDao = Objects.requireNonNull((VmInfoDAO) services.get(VmInfoDAO.class.getName()));
                 ThreadViewProvider viewFactory = (ThreadViewProvider) services.get(ThreadViewProvider.class.getName());
-                TimelineDimensionModel timelineDimensionModel = (TimelineDimensionModel) services.get(TimelineDimensionModel.class.getName());
 
-                ThreadInformationService vmInfoService = new ThreadInformationServiceImpl(applicationService, vmInfoDao,
-                                                                                          collectorFactory, viewFactory,
-                                                                                          timelineDimensionModel);
+                ThreadInformationService vmInfoService =
+                        new ThreadInformationServiceImpl(applicationService,
+                                                         vmInfoDao,
+                                                         collectorFactory,
+                                                         viewFactory);
+
                 Dictionary<String, String> properties = new Hashtable<>();
                 properties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
                 properties.put(InformationService.KEY_SERVICE_ID, ThreadInformationService.SERVICE_ID);

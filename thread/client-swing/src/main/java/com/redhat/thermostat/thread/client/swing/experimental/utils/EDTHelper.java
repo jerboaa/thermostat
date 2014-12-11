@@ -34,33 +34,38 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.model;
+package com.redhat.thermostat.thread.client.swing.experimental.utils;
 
-import org.junit.Test;
+import com.redhat.thermostat.client.swing.EdtHelper;
+import com.redhat.thermostat.common.utils.LoggingUtils;
+import java.lang.reflect.InvocationTargetException;
+import java.util.concurrent.Callable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.SwingUtilities;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+/**
+ *
+ */
+public class EDTHelper {
+    private static final Logger logger = LoggingUtils.getLogger(EDTHelper.class);
+    private EdtHelper delegate;
+    public EDTHelper() {
+        delegate = new EdtHelper();
+    }
 
-public class ThreadPojoTest {
+    public <T> T callAndWait(Callable<T> c) {
+        T result = null;
+        try {
+            result = delegate.callAndWait(c);
 
-    @Test
-    public void testEqualsAndHashCode() throws Exception {
+        } catch (InvocationTargetException | InterruptedException e) {
+            logger.log(Level.WARNING, "Exception while waiting for task", e);
+        }
+        return result;
+    }
 
-        ThreadHeader header1 = new ThreadHeader("1234");
-        header1.setReferenceID("vm42");
-        header1.setThreadName("main");
-        header1.setThreadId(1);
-
-        ThreadPojo pojo1 = new ThreadPojo("1234", header1);
-        ThreadPojo pojo2 = new ThreadPojo("1234", header1);
-
-        assertEquals(pojo1, pojo2);
-        assertEquals(pojo1.hashCode(), pojo2.hashCode());
-
-        ThreadHeader header2 = new ThreadHeader("12344");
-        pojo2.setHeader(header2);
-
-        assertFalse(pojo1.equals(pojo2));
-        assertFalse(pojo1.hashCode() == pojo2.hashCode());
+    public void callLater(Runnable run) {
+        SwingUtilities.invokeLater(run);
     }
 }

@@ -63,7 +63,9 @@ public abstract class Query<T extends Pojo> {
                 throw new IllegalArgumentException("Already contains criteria" +
                                                    " with this id." +
                                                    " New: " + criterion +
-                                                   " Old: " + map.get(id));
+                                                   " (id = " + id + ")" +
+                                                   " Old: " + map.get(id) +
+                                                   " query id: " + getId());
             }
             map.put(id, criterion);
             criteria.add(criterion);

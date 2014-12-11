@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.storage.core.experimental.statement;
 
+import java.util.Objects;
+
 /**
  *
  */
@@ -50,6 +52,10 @@ public class WhereCriterion implements Criterion {
                           FieldDescriptor descriptor,
                           TypeMapper.Criteria criteria)
     {
+        Objects.requireNonNull(id, "id must be not null");
+        Objects.requireNonNull(criteria, "criteria must be not null");
+        Objects.requireNonNull(descriptor, "descriptor must be not null");
+
         this.descriptor = descriptor;
         this.criteria = criteria;
         this.id = id;

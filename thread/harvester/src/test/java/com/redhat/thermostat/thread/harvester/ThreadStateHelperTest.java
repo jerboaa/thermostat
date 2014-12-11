@@ -37,24 +37,17 @@
 package com.redhat.thermostat.thread.harvester;
 
 import com.redhat.thermostat.storage.core.WriterID;
-
 import com.redhat.thermostat.thread.dao.ThreadDao;
-
-import com.redhat.thermostat.thread.model.ThreadHeader;
+import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.ThreadState;
-
+import java.lang.management.ThreadInfo;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import java.lang.management.ThreadInfo;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -64,12 +57,13 @@ public class ThreadStateHelperTest {
 
     private static String DEFAULT_W_ID = "0xcafe";
     private static String DEFAULT_HEADER_REF_ID = "42";
+    private static String DEFAULT_SESSION_ID = "This Session";
 
     private String vmId;
     private WriterID writerId;
     private ThreadDao threadDao;
 
-    private ThreadHeader header;
+    private SessionID sessionID;
 
     @Before
     public void setUp() throws Exception {
@@ -79,50 +73,33 @@ public class ThreadStateHelperTest {
 
         threadDao = mock(ThreadDao.class);
 
-        header = mock(ThreadHeader.class);
-        when(header.getReferenceID()).thenReturn(DEFAULT_HEADER_REF_ID);
+        sessionID = mock(SessionID.class);
+        when(sessionID.get()).thenReturn(DEFAULT_SESSION_ID);
     }
 
     @Test
     public void testCreateThreadState() throws Exception {
-        ThreadStateHelper helper =
-                new ThreadStateHelper(threadDao, writerId, vmId);
+        ThreadStateHelper helper = new ThreadStateHelper(threadDao, writerId, vmId);
 
         ThreadInfo info = mock(ThreadInfo.class);
         when(info.getThreadState()).thenReturn(Thread.State.BLOCKED);
 
         long timestamp = -1l;
 
-        ThreadState state = helper.createThreadState(header, info, timestamp);
+        ThreadState state = helper.createThreadState(info, sessionID, timestamp);
         assertNotNull(state);
 
-        assertEquals(state.getProbeStartTime(), timestamp);
-        assertEquals(state.getProbeEndTime(), timestamp);
-        assertEquals(state.getState(), Thread.State.BLOCKED.name());
-        assertEquals(state.getHeader(), header);
-        assertEquals(state.getReferenceID(), DEFAULT_HEADER_REF_ID);
+        assertEquals(timestamp, state.getTimeStamp());
+        assertEquals(Thread.State.BLOCKED.name(), state.getState());
+        assertEquals(DEFAULT_SESSION_ID, state.getSession());
     }
 
     @Test
     public void testSaveThreadState() throws Exception {
-        // this test assumes there is no data in the database yet,
-        // so a database entry will be created with the template
-        // object as input
-        ThreadStateHelper helper =
-                new ThreadStateHelper(threadDao, writerId, vmId);
-
-        ThreadHeader header = mock(ThreadHeader.class);
+        ThreadStateHelper helper = new ThreadStateHelper(threadDao, writerId, vmId);
         ThreadState state = mock(ThreadState.class);
-        when(state.getState()).thenReturn(Thread.State.BLOCKED.name());
-        when(state.getHeader()).thenReturn(header);
 
-        when(threadDao.getLastThreadState(header)).thenReturn(null);
-
-        ThreadState result = helper.saveThreadState(state);
-        assertNotNull(result);
-
-        verify(threadDao).getLastThreadState(header);
-        verify(state, times(0)).getState();
+        helper.saveThreadState(state);
 
         ArgumentCaptor<ThreadState> captor =
                 ArgumentCaptor.forClass(ThreadState.class);
@@ -130,77 +107,5 @@ public class ThreadStateHelperTest {
 
         ThreadState argumentToDao = captor.getValue();
         assertEquals(argumentToDao, state);
-        assertEquals(result, state);
-    }
-
-    @Test
-    public void testSaveThreadStateInsertNew() throws Exception {
-        // this test assumes there is already data in the database,
-        // but the data object has a different state, hence a new one
-        // will be created. This is mostly similar in behaviour to the
-        // first test, except that the dao returns a non null state
-        // object
-        ThreadStateHelper helper =
-                new ThreadStateHelper(threadDao, writerId, vmId);
-
-        ThreadHeader header = mock(ThreadHeader.class);
-        ThreadState state = mock(ThreadState.class);
-        when(state.getState()).thenReturn(Thread.State.BLOCKED.name());
-        when(state.getHeader()).thenReturn(header);
-
-        ThreadState inDao = mock(ThreadState.class);
-        when(inDao.getState()).thenReturn(Thread.State.TIMED_WAITING.name());
-        when(inDao.getHeader()).thenReturn(header);
-
-        when(threadDao.getLastThreadState(header)).thenReturn(inDao);
-
-        ThreadState result = helper.saveThreadState(state);
-        assertNotNull(result);
-
-        verify(threadDao).getLastThreadState(header);
-        verify(inDao).getState();
-
-        ArgumentCaptor<ThreadState> captor =
-                ArgumentCaptor.forClass(ThreadState.class);
-        verify(threadDao).addThreadState(captor.capture());
-
-        ThreadState argumentToDao = captor.getValue();
-        assertEquals(argumentToDao, state);
-        assertEquals(result, state);
-    }
-
-    @Test
-    public void testSaveThreadStateUpdateExisting() throws Exception {
-        // this test assumes there is already data in the database,
-        // and the object has the same state as the one passed as input,
-        // so an update will be performed
-        ThreadStateHelper helper =
-                new ThreadStateHelper(threadDao, writerId, vmId);
-
-        ThreadHeader header = mock(ThreadHeader.class);
-        ThreadState state = mock(ThreadState.class);
-        when(state.getState()).thenReturn(Thread.State.BLOCKED.name());
-        when(state.getHeader()).thenReturn(header);
-        when(state.getProbeEndTime()).thenReturn(42l);
-
-        ThreadState inDao = mock(ThreadState.class);
-        when(inDao.getState()).thenReturn(Thread.State.BLOCKED.name());
-        when(inDao.getHeader()).thenReturn(header);
-
-        when(threadDao.getLastThreadState(header)).thenReturn(inDao);
-
-        ThreadState result = helper.saveThreadState(state);
-        assertNotNull(result);
-
-        verify(threadDao).getLastThreadState(header);
-        verify(inDao).getState();
-        verify(state).getProbeEndTime();
-
-        verify(inDao).setProbeEndTime(42l);
-
-        verify(threadDao).updateThreadState(inDao);
-
-        assertEquals(result, inDao);
-        assertNotSame(result, state);
     }
 }

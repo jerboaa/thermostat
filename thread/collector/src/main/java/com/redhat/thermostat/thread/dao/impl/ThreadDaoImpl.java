@@ -47,20 +47,20 @@ import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.model.Pojo;
-import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.dao.impl.statement.SessionQuery;
-import com.redhat.thermostat.thread.dao.impl.statement.SummaryQuery;
 import com.redhat.thermostat.storage.core.experimental.statement.BeanAdapter;
 import com.redhat.thermostat.storage.core.experimental.statement.BeanAdapterBuilder;
-
+import com.redhat.thermostat.storage.core.experimental.statement.Id;
 import com.redhat.thermostat.storage.core.experimental.statement.Query;
 import com.redhat.thermostat.storage.core.experimental.statement.QueryValues;
 import com.redhat.thermostat.storage.core.experimental.statement.ResultHandler;
+import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.thread.dao.ThreadDao;
+import com.redhat.thermostat.thread.dao.impl.statement.StateQueries;
+import com.redhat.thermostat.thread.dao.impl.statement.SessionQueries;
+import com.redhat.thermostat.thread.dao.impl.statement.SummaryQuery;
 import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.ThreadContentionSample;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
-import com.redhat.thermostat.thread.model.ThreadHeader;
 import com.redhat.thermostat.thread.model.ThreadSession;
 import com.redhat.thermostat.thread.model.ThreadState;
 import com.redhat.thermostat.thread.model.ThreadSummary;
@@ -75,10 +75,9 @@ public class ThreadDaoImpl implements ThreadDao {
     
     private static final Logger logger = LoggingUtils.getLogger(ThreadDaoImpl.class);
 
-    static final BeanAdapter<ThreadSummary> SUMMARY = new BeanAdapterBuilder<>(ThreadSummary.class, new SummaryQuery()).build();
-    static final BeanAdapter<ThreadSession> SESSIONS = new BeanAdapterBuilder<>(ThreadSession.class, new SessionQuery()).build();
-
-    // Queries
+    static final BeanAdapter<ThreadSummary> ThreadSummaryAdapter = new BeanAdapterBuilder<>(ThreadSummary.class, new SummaryQuery()).build();
+    static final BeanAdapter<ThreadSession> ThreadSessionAdapter = new BeanAdapterBuilder<>(ThreadSession.class, SessionQueries.asList()).build();
+    static final BeanAdapter<ThreadState> ThreadStateAdapter = new BeanAdapterBuilder<>(ThreadState.class, StateQueries.asList()).build();
 
     static final String QUERY_LATEST_HARVESTING_STATUS = "QUERY "
             + THREAD_HARVESTING_STATUS.getName() + " WHERE '"
@@ -86,100 +85,24 @@ public class ThreadDaoImpl implements ThreadDao {
             + Key.VM_ID.getName() + "' = ?s SORT '" 
             + Key.TIMESTAMP.getName() + "' DSC LIMIT 1";
 
-    static final String QUERY_LATEST_THREAD_STATE_FOR_THREAD = "QUERY "
-            + THREAD_STATE.getName() + " WHERE '"
-            + Key.AGENT_ID.getName() + "' = ?s AND '"
-            + THREAD_HEADER_UUID.getName() + "' = ?s SORT '"
-            + THREAD_PROBE_END.getName() + "' DSC LIMIT 1";
-
-    static final String QUERY_FIRST_THREAD_STATE_FOR_THREAD = "QUERY "
-            + THREAD_STATE.getName() + " WHERE '"
-            + Key.AGENT_ID.getName() + "' = ?s AND '"
-            + THREAD_HEADER_UUID.getName() + "' = ?s SORT '"
-            + THREAD_PROBE_START.getName() + "' ASC LIMIT 1";
-
-    static final String QUERY_OLDEST_THREAD_STATE = "QUERY "
-            + THREAD_STATE.getName() + " WHERE '"
-            + Key.AGENT_ID.getName() + "' = ?s AND '"
-            + Key.VM_ID.getName() + "' = ?s SORT '"
-            + THREAD_PROBE_START.getName() + "' ASC LIMIT 1";
-    
-    static final String QUERY_LATEST_THREAD_STATE= "QUERY "
-            + THREAD_STATE.getName() + " WHERE '"
-            + Key.AGENT_ID.getName() + "' = ?s AND '"
-            + Key.VM_ID.getName() + "' = ?s SORT '"
-            + THREAD_PROBE_END.getName() + "' DSC LIMIT 1";
-    
     static final String QUERY_LATEST_DEADLOCK_INFO = "QUERY "
             + DEADLOCK_INFO.getName() + " WHERE '"
             + Key.AGENT_ID.getName() + "' = ?s AND '" 
             + Key.VM_ID.getName() + "' = ?s SORT '" 
             + Key.TIMESTAMP.getName() + "' DSC LIMIT 1";
 
-    static final String QUERY_THREAD_HEADER = "QUERY "
-            + THREAD_HEADER.getName() + " WHERE '"
-            + Key.AGENT_ID.getName() + "' = ?s AND '"
-            + Key.VM_ID.getName() + "' = ?s AND '"
-            + THREAD_NAME_KEY.getName() + "' = ?s AND '"
-            + THREAD_ID_KEY.getName() + "' = ?l LIMIT 1";
-    static final String QUERY_ALL_THREAD_HEADERS = "QUERY "
-            + THREAD_HEADER.getName() + " WHERE '"
-            + Key.AGENT_ID.getName() + "' = ?s AND '"
-            + Key.VM_ID.getName() + "' = ?s SORT '"
-            + Key.TIMESTAMP.getName() + "' DSC";
-
-    static final String QUERY_THREAD_STATE_PER_THREAD = "QUERY "
-            + THREAD_STATE.getName() + " WHERE '"
-            + THREAD_HEADER_UUID.getName() + "' = ?s AND '"
-            + THREAD_PROBE_END.getName() + "' >= ?l AND '"
-            + THREAD_PROBE_START.getName() + "' <= ?l SORT '"
-            + THREAD_PROBE_START.getName() + "' ASC";
-
-    // Data modifying descriptors
-
-    // ADD vm-thread-harvesting SET 'agentId' = ?s , \
-    //                              'vmId' = ?s , \
-    //                              'timeStamp' = ?l , \
-    //                              'harvesting' = ?b
     static final String DESC_ADD_THREAD_HARVESTING_STATUS = "ADD " + THREAD_HARVESTING_STATUS.getName() +
             " SET '" + Key.AGENT_ID.getName() + "' = ?s , " +
                  "'" + Key.VM_ID.getName() + "' = ?s , " +
                  "'" + Key.TIMESTAMP.getName() + "' = ?l , " +
                  "'" + HARVESTING_STATUS_KEY.getName() + "' = ?b";
 
-    // ADD vm-deadlock-data SET 'agentId' = ?s , \
-    //                          'vmId' = ?s , \
-    //                          'timeStamp' = ?l , \
-    //                          'deadLockDescription' = ?s
     static final String DESC_ADD_THREAD_DEADLOCK_DATA = "ADD " + DEADLOCK_INFO.getName() +
             " SET '" + Key.AGENT_ID.getName() + "' = ?s , " +
                  "'" + Key.VM_ID.getName() + "' = ?s , " +
                  "'" + Key.TIMESTAMP.getName() + "' = ?l , " +
                  "'" + DEADLOCK_DESCRIPTION_KEY.getName() + "' = ?s";
 
-    static final String ADD_THREAD_HEADER =
-            "ADD " + THREAD_HEADER.getName() + " " +
-            "SET '" + Key.AGENT_ID.getName() + "' = ?s , "    +
-                "'" + Key.VM_ID.getName() + "' = ?s , "       +
-                "'" + THREAD_NAME_KEY.getName() + "' = ?s , " +
-                "'" + THREAD_ID_KEY.getName() + "' = ?l , "   +
-                "'" + Key.TIMESTAMP.getName() + "' = ?l , "   +
-                "'" + THREAD_HEADER_UUID.getName() + "' = ?s";
-
-    static final String ADD_THREAD_STATE =
-            "ADD "  + THREAD_STATE.getName() + " "               +
-            "SET '" + Key.AGENT_ID.getName() + "' = ?s , "       +
-                "'" + Key.VM_ID.getName() + "' = ?s , "          +
-                "'" + THREAD_STATE_KEY.getName() + "' = ?s , "   +
-                "'" + THREAD_PROBE_START.getName() + "' = ?l , " +
-                "'" + THREAD_PROBE_END.getName() + "' = ?l , "   +
-                "'" + THREAD_HEADER_UUID.getName() + "' = ?s";
-
-    static final String DESC_UPDATE_THREAD_STATE =
-            "UPDATE "  + THREAD_STATE.getName() + " "                 +
-            "SET '"    + THREAD_PROBE_END.getName() + "' = ?l "       +
-            "WHERE '"  + THREAD_HEADER_UUID.getName() + "' = ?s AND " +
-                  "'"  + THREAD_PROBE_START.getName() + "' = ?l";
 
     static final String ADD_CONTENTION_SAMPLE =
             "ADD "  + THREAD_CONTENTION_SAMPLE.getName() + " "               +
@@ -189,12 +112,12 @@ public class ThreadDaoImpl implements ThreadDao {
                     "'" + THREAD_CONTENTION_BLOCKED_TIME_KEY.getName() + "' = ?l , "  +
                     "'" + THREAD_CONTENTION_WAITED_COUNT_KEY.getName() + "' = ?l , "  +
                     "'" + THREAD_CONTENTION_WAITED_TIME_KEY.getName() + "' = ?l , "  +
-                    "'" + THREAD_HEADER_UUID.getName() + "' = ?s , " +
+                    "'" + ThreadDaoKeys.THREAD_HEADER_UUID.getName() + "' = ?s , " +
                     "'" + Key.TIMESTAMP.getName() + "' = ?l";
 
     static final String GET_LATEST_CONTENTION_SAMPLE= "QUERY "
             + THREAD_CONTENTION_SAMPLE.getName() + " WHERE '"
-            + THREAD_HEADER_UUID.getName() + "' = ?s SORT '"
+            + ThreadDaoKeys.THREAD_HEADER_UUID.getName() + "' = ?s SORT '"
             + Key.TIMESTAMP.getName() + "' DSC LIMIT 1";
 
     private Storage storage;
@@ -205,264 +128,15 @@ public class ThreadDaoImpl implements ThreadDao {
         ThreadDaoCategories.register(storage);
 
         storage.registerCategory(THREAD_HARVESTING_STATUS);
-        storage.registerCategory(THREAD_HEADER);
-        storage.registerCategory(THREAD_STATE);
         storage.registerCategory(THREAD_CONTENTION_SAMPLE);
 
         storage.registerCategory(DEADLOCK_INFO);
     }
 
     @Override
-    public List<ThreadHeader> getThreads(VmRef ref) {
-        
-        List<ThreadHeader> result = null;
-        
-        StatementDescriptor<ThreadHeader> desc =
-                new StatementDescriptor<>(THREAD_HEADER, QUERY_ALL_THREAD_HEADERS);
-
-        PreparedStatement<ThreadHeader> stmt;
-        try {
-            
-            stmt = storage.prepareStatement(desc);
-            stmt.setString(0, ref.getHostRef().getAgentId());
-            stmt.setString(1, ref.getVmId());
-
-            result = getAllResults(stmt);
-            
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        }
-        
-        return result;
-    }
-    
-    @Override
-    public ThreadHeader getThread(ThreadHeader thread) {
-
-        ThreadHeader result = null;
-        
-        StatementDescriptor<ThreadHeader> desc =
-                new StatementDescriptor<>(THREAD_HEADER, QUERY_THREAD_HEADER);
-
-        PreparedStatement<ThreadHeader> prepared;
-
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, thread.getAgentId());
-            prepared.setString(1, thread.getVmId());
-            prepared.setString(2, thread.getThreadName());
-            prepared.setLong(3, thread.getThreadId());
-
-            result = getFirstResult(prepared);
-
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        }
-
-        return result;
-    }
-    
-    @Override
-    public void saveThread(ThreadHeader thread) {
-        StatementDescriptor<ThreadHeader> desc =
-                new StatementDescriptor<>(THREAD_HEADER, ADD_THREAD_HEADER);
-
-        PreparedStatement<ThreadHeader> prepared;
-
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, thread.getAgentId());
-            prepared.setString(1, thread.getVmId());
-            prepared.setString(2, thread.getThreadName());
-            prepared.setLong(3, thread.getThreadId());
-            prepared.setLong(4, thread.getTimeStamp());
-            prepared.setString(5, thread.getReferenceID());
-
-            prepared.execute();
-
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-        }
-    }
-
-    @Override
-    public ThreadState getLastThreadState(ThreadHeader header) {
-
-        ThreadState result = null;
-        StatementDescriptor<ThreadState> desc =
-                new StatementDescriptor<>(THREAD_STATE,
-                                          QUERY_LATEST_THREAD_STATE_FOR_THREAD);
-
-        PreparedStatement<ThreadState> prepared;
-        try {
-
-            prepared = storage.prepareStatement(desc);
-            String refId = header.getReferenceID();
-            if (refId == null) {
-                throw new IllegalArgumentException("header.getReferenceID() can't be null");
-            }
-
-            prepared.setString(0, header.getAgentId());
-            prepared.setString(1, header.getReferenceID());
-
-            result = getFirstResult(prepared);
-            if (result != null) {
-                result.setHeader(header);
-            }
-
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        }
-
-        return result;
-    }
-
-    public ThreadState getFirstThreadState(ThreadHeader header) {
-
-        ThreadState result = null;
-        StatementDescriptor<ThreadState> desc =
-                new StatementDescriptor<>(THREAD_STATE,
-                                          QUERY_FIRST_THREAD_STATE_FOR_THREAD);
-
-        PreparedStatement<ThreadState> prepared;
-        try {
-
-            prepared = storage.prepareStatement(desc);
-            String refId = header.getReferenceID();
-            if (refId == null) {
-                throw new IllegalArgumentException("header.getReferenceID() can't be null");
-            }
-
-            prepared.setString(0, header.getAgentId());
-            prepared.setString(1, header.getReferenceID());
-
-            result = getFirstResult(prepared);
-            if (result != null) {
-                result.setHeader(header);
-            }
-
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        }
-
-        return result;
-    }
-
-    @Override
-    public void addThreadState(ThreadState thread) {
-        StatementDescriptor<ThreadState> desc =
-                new StatementDescriptor<>(THREAD_STATE, ADD_THREAD_STATE);
-
-        PreparedStatement<ThreadState> prepared;
-        try {
-
-            prepared = storage.prepareStatement(desc);
-
-            ThreadHeader header = thread.getHeader();
-
-            prepared.setString(0, header.getAgentId());
-            prepared.setString(1, header.getVmId());
-
-            prepared.setString(2, thread.getState());
-
-            prepared.setLong(3, thread.getProbeStartTime());
-            prepared.setLong(4, thread.getProbeEndTime());
-
-            prepared.setString(5, header.getReferenceID());
-
-            prepared.execute();
-
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-        }
-    }
-
-    @Override
-    public void updateThreadState(ThreadState thread) {
-
-        StatementDescriptor<ThreadState> desc =
-                new StatementDescriptor<>(THREAD_STATE, DESC_UPDATE_THREAD_STATE);
-
-        PreparedStatement<ThreadState> prepared;
-        try {
-
-            prepared = storage.prepareStatement(desc);
-
-            ThreadHeader header = thread.getHeader();
-
-            prepared.setLong(0, thread.getProbeEndTime());
-            prepared.setString(1, header.getReferenceID());
-            prepared.setLong(2, thread.getProbeStartTime());
-
-            prepared.execute();
-
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-        }
-    }
-
-    @Override
-    public List<ThreadState> getThreadStates(ThreadHeader thread, Range<Long> range) {
-
-        List<ThreadState> result = new ArrayList<>();
-
-        StatementDescriptor<ThreadState> desc =
-                new StatementDescriptor<>(THREAD_STATE, QUERY_THREAD_STATE_PER_THREAD);
-
-        PreparedStatement<ThreadState> prepared;
-        try {
-
-            prepared = storage.prepareStatement(desc);
-
-            prepared.setString(0, thread.getReferenceID());
-            prepared.setLong(1, range.getMin());
-            prepared.setLong(2, range.getMax());
-
-            Cursor<ThreadState> cursor = prepared.executeQuery();
-            while (cursor.hasNext()) {
-                ThreadState state = cursor.next();
-                state.setHeader(thread);
-                result.add(state);
-            }
-
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
-        }
-        return result;
-    }
-
-    @Override
-    public Range<Long> getThreadStateTotalTimeRange(VmRef ref) {
-
-        PreparedStatement<ThreadState> stmt;
-
-        stmt = prepareQuery(THREAD_STATE, QUERY_OLDEST_THREAD_STATE, ref);
-        ThreadState oldestData = getFirstResult(stmt);
-        if (oldestData == null) {
-            return null;
-        }
-
-        long oldestTimeStamp = oldestData.getRange().getMin();
-
-        stmt = prepareQuery(THREAD_STATE, QUERY_LATEST_THREAD_STATE, ref);
-        ThreadState latestData = getFirstResult(stmt);
-        long latestTimeStamp = latestData.getRange().getMax();
-
-        return new Range<Long>(oldestTimeStamp, latestTimeStamp);
-    }
-
-    @Override
     public void saveSummary(ThreadSummary summary) {
         try {
-            SUMMARY.insert(summary, storage);
+            ThreadSummaryAdapter.insert(summary, storage);
 
         } catch (StatementExecutionException e) {
             logger.log(Level.SEVERE, "Exception saving summary: " + summary, e);
@@ -470,20 +144,59 @@ public class ThreadDaoImpl implements ThreadDao {
     }
 
     @Override
+    public void addThreadState(ThreadState thread) {
+        try {
+            ThreadStateAdapter.insert(thread, storage);
+
+        } catch (StatementExecutionException e) {
+            logger.log(Level.SEVERE, "Exception saving thread state: " + thread, e);
+        }
+    }
+
+    @Override
+    public void getThreadStates(VmRef ref, SessionID session,
+                                final ResultHandler<ThreadState> handler,
+                                Range<Long> range, int limit, Sort order)
+    {
+        Id id = order.equals(Sort.ASCENDING) ? StateQueries.getAscending :
+                                               StateQueries.getDescending;
+
+        Query<ThreadState> query = ThreadStateAdapter.getQuery(id);
+
+        QueryValues values = query.createValues();
+        values.set(StateQueries.CriteriaId.vmId, ref.getVmId());
+        values.set(StateQueries.CriteriaId.agentId, ref.getHostRef().getAgentId());
+        values.set(StateQueries.CriteriaId.sessionID, session.get());
+
+        values.set(StateQueries.CriteriaId.timeStampGEQ, range.getMin());
+        values.set(StateQueries.CriteriaId.timeStampLEQ, range.getMax());
+        values.set(StateQueries.CriteriaId.limit, limit);
+
+        try {
+            ThreadStateAdapter.query(values, handler, storage);
+
+        } catch (StatementExecutionException e) {
+            logger.log(Level.SEVERE, "Exception retrieving thread summary", e);
+        }
+    }
+
+    @Override
     public List<ThreadSummary> getSummary(VmRef ref, SessionID session, Range<Long> range, int limit) {
         final List<ThreadSummary> results = new ArrayList<>();
 
-        Query<ThreadSummary> query = SUMMARY.getQuery(SummaryQuery.id);
+        Query<ThreadSummary> query = ThreadSummaryAdapter.getQuery(SummaryQuery.id);
 
         QueryValues values = query.createValues();
-        values.set(SummaryQuery.CriteriaId.getVmId, ref.getVmId());
+        values.set(SummaryQuery.CriteriaId.vmId, ref.getVmId());
+        values.set(SummaryQuery.CriteriaId.agentId, ref.getHostRef().getAgentId());
         values.set(SummaryQuery.CriteriaId.sessionID, session.get());
+
         values.set(SummaryQuery.CriteriaId.timeStampGEQ, range.getMin());
         values.set(SummaryQuery.CriteriaId.timeStampLEQ, range.getMax());
         values.set(SummaryQuery.CriteriaId.limit, limit);
 
         try {
-            SUMMARY.query(values, new ResultHandler<ThreadSummary>() {
+            ThreadSummaryAdapter.query(values, new ResultHandler<ThreadSummary>() {
                 @Override
                 public void onResult(ThreadSummary result) {
                     results.add(result);
@@ -491,26 +204,47 @@ public class ThreadDaoImpl implements ThreadDao {
             }, storage);
 
         } catch (StatementExecutionException e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "Exception retrieving thread summary", e);
         }
 
         return results;
     }
 
     @Override
-    public List<ThreadSession> getSessions(VmRef ref, Range<Long> range, int limit) {
+    public ThreadSession getFirstSession(VmRef ref) {
+        Range<Long> range = new Range<>(Long.MIN_VALUE, Long.MAX_VALUE);
+        List<ThreadSession> results = getSessions(ref, range, 1, Sort.ASCENDING);
+        return results.isEmpty() ? null : results.get(0);
+    }
+
+    @Override
+    public ThreadSession getLastSession(VmRef ref) {
+        Range<Long> range = new Range<>(Long.MIN_VALUE, Long.MAX_VALUE);
+        List<ThreadSession> results = getSessions(ref, range, 1, Sort.DESCENDING);
+        return results.isEmpty() ? null : results.get(0);
+    }
+
+    @Override
+    public List<ThreadSession> getSessions(VmRef ref, Range<Long> range,
+                                           int limit, Sort order)
+    {
         final List<ThreadSession> results = new ArrayList<>();
 
-        Query<ThreadSession> query = SESSIONS.getQuery(SessionQuery.id);
+        Id id = order.equals(Sort.ASCENDING) ? SessionQueries.getRangeAscending :
+                                               SessionQueries.getRangeDescending;
+
+        Query<ThreadSession> query = ThreadSessionAdapter.getQuery(id);
 
         QueryValues values = query.createValues();
-        values.set(SessionQuery.CriteriaId.getVmId, ref.getVmId());
-        values.set(SessionQuery.CriteriaId.timeStampGEQ, range.getMin());
-        values.set(SessionQuery.CriteriaId.timeStampLEQ, range.getMax());
-        values.set(SessionQuery.CriteriaId.limit, limit);
+        values.set(SessionQueries.CriteriaId.vmId, ref.getVmId());
+        values.set(SessionQueries.CriteriaId.agentId, ref.getHostRef().getAgentId());
+
+        values.set(SessionQueries.CriteriaId.timeStampGEQ, range.getMin());
+        values.set(SessionQueries.CriteriaId.timeStampLEQ, range.getMax());
+        values.set(SessionQueries.CriteriaId.limit, limit);
 
         try {
-            SESSIONS.query(values, new ResultHandler<ThreadSession>() {
+            ThreadSessionAdapter.query(values, new ResultHandler<ThreadSession>() {
                 @Override
                 public void onResult(ThreadSession result) {
                     results.add(result);
@@ -518,7 +252,7 @@ public class ThreadDaoImpl implements ThreadDao {
             }, storage);
 
         } catch (StatementExecutionException e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "Exception retrieving thread session", e);
         }
 
         return results;
@@ -526,7 +260,7 @@ public class ThreadDaoImpl implements ThreadDao {
 
     public void saveSession(ThreadSession session) {
         try {
-            SESSIONS.insert(session, storage);
+            ThreadSessionAdapter.insert(session, storage);
 
         } catch (StatementExecutionException e) {
             logger.log(Level.SEVERE, "Exception saving session: " + session, e);
@@ -593,68 +327,68 @@ public class ThreadDaoImpl implements ThreadDao {
     @Override
     public void saveContentionSample(ThreadContentionSample contentionSample) {
 
-        StatementDescriptor<ThreadContentionSample> desc =
-                new StatementDescriptor<>(THREAD_CONTENTION_SAMPLE,
-                                          ADD_CONTENTION_SAMPLE);
-        PreparedStatement<ThreadContentionSample> prepared;
-        ThreadHeader header = contentionSample.getHeader();
-        if (header == null || header.getReferenceID() == null) {
-            throw new IllegalArgumentException("header or header.getReferenceID() can't be null");
-        }
-
-        try {
-            prepared = storage.prepareStatement(desc);
-
-            prepared.setString(0, header.getAgentId());
-            prepared.setString(1, header.getVmId());
-
-            prepared.setLong(2, contentionSample.getBlockedCount());
-            prepared.setLong(3, contentionSample.getBlockedTime());
-            prepared.setLong(4, contentionSample.getWaitedCount());
-            prepared.setLong(5, contentionSample.getWaitedTime());
-
-            prepared.setString(6, header.getReferenceID());
-
-            prepared.setLong(7, contentionSample.getTimeStamp());
-
-            prepared.execute();
-
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-        }
+//        StatementDescriptor<ThreadContentionSample> desc =
+//                new StatementDescriptor<>(THREAD_CONTENTION_SAMPLE,
+//                                          ADD_CONTENTION_SAMPLE);
+//        PreparedStatement<ThreadContentionSample> prepared;
+//        ThreadHeader header = contentionSample.getHeader();
+//        if (header == null || header.getReferenceID() == null) {
+//            throw new IllegalArgumentException("header or header.getReferenceID() can't be null");
+//        }
+//
+//        try {
+//            prepared = storage.prepareStatement(desc);
+//
+//            prepared.setString(0, header.getAgentId());
+//            prepared.setString(1, header.getVmId());
+//
+//            prepared.setLong(2, contentionSample.getBlockedCount());
+//            prepared.setLong(3, contentionSample.getBlockedTime());
+//            prepared.setLong(4, contentionSample.getWaitedCount());
+//            prepared.setLong(5, contentionSample.getWaitedTime());
+//
+//            prepared.setString(6, header.getReferenceID());
+//
+//            prepared.setLong(7, contentionSample.getTimeStamp());
+//
+//            prepared.execute();
+//
+//        } catch (DescriptorParsingException e) {
+//            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
+//        } catch (StatementExecutionException e) {
+//            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+//        }
     }
 
     @Override
-    public ThreadContentionSample getLatestContentionSample(ThreadHeader thread) {
+    public ThreadContentionSample getLatestContentionSample(VmRef ref, SessionID session) {
 
         ThreadContentionSample sample = null;
 
-        StatementDescriptor<ThreadContentionSample> desc =
-                new StatementDescriptor<>(THREAD_CONTENTION_SAMPLE,
-                                          GET_LATEST_CONTENTION_SAMPLE);
-        PreparedStatement<ThreadContentionSample> prepared;
-
-        if (thread == null || thread.getReferenceID() == null) {
-            throw new IllegalArgumentException("header or header.getReferenceID() can't be null");
-        }
-
-        try {
-            prepared = storage.prepareStatement(desc);
-
-            prepared.setString(0, thread.getReferenceID());
-            Cursor<ThreadContentionSample> cursor = prepared.executeQuery();
-            if (cursor.hasNext()) {
-                sample = cursor.next();
-                sample.setHeader(thread);
-            }
-
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-        }
+//        StatementDescriptor<ThreadContentionSample> desc =
+//                new StatementDescriptor<>(THREAD_CONTENTION_SAMPLE,
+//                                          GET_LATEST_CONTENTION_SAMPLE);
+//        PreparedStatement<ThreadContentionSample> prepared;
+//
+//        if (thread == null || thread.getReferenceID() == null) {
+//            throw new IllegalArgumentException("header or header.getReferenceID() can't be null");
+//        }
+//
+//        try {
+//            prepared = storage.prepareStatement(desc);
+//
+//            prepared.setString(0, thread.getReferenceID());
+//            Cursor<ThreadContentionSample> cursor = prepared.executeQuery();
+//            if (cursor.hasNext()) {
+//                sample = cursor.next();
+//                sample.setHeader(thread);
+//            }
+//
+//        } catch (DescriptorParsingException e) {
+//            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
+//        } catch (StatementExecutionException e) {
+//            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+//        }
 
         return sample;
     }

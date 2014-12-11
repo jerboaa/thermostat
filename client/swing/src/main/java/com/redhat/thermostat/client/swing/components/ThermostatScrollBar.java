@@ -36,13 +36,11 @@
 
 package com.redhat.thermostat.client.swing.components;
 
-import com.redhat.thermostat.client.swing.components.ThermostatThinScrollBar;
-
 /**
  * This widget implements standard sized scrollbars.
  */
 @SuppressWarnings("serial")
-class ThermostatScrollBar extends ThermostatThinScrollBar {
+public class ThermostatScrollBar extends ThermostatThinScrollBar {
     public ThermostatScrollBar() {
         this(ThermostatScrollBar.VERTICAL);
     }

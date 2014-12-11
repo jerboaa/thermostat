@@ -64,8 +64,6 @@ public class ThreadDAOCategoryRegistrationTest {
         assertFalse("null descriptor not allowed", categories.contains(null));
 
         assertTrue(categories.contains(ThreadDao.DEADLOCK_INFO.getName()));
-        assertTrue(categories.contains(ThreadDao.THREAD_HEADER.getName()));
-        assertTrue(categories.contains(ThreadDao.THREAD_STATE.getName()));
         assertTrue(categories.contains(ThreadDao.THREAD_HARVESTING_STATUS.getName()));
         assertTrue(categories.contains(ThreadDao.THREAD_CONTENTION_SAMPLE.getName()));
 

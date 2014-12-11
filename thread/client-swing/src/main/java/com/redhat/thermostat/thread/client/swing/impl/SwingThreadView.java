@@ -50,7 +50,6 @@ import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
 import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
 import com.redhat.thermostat.thread.client.common.view.ThreadView;
 import com.redhat.thermostat.thread.client.common.view.VmDeadLockView;
-import com.redhat.thermostat.thread.client.swing.impl.timeline.SwingTimelineDimensionModel;
 
 import java.awt.Component;
 import java.awt.event.ItemEvent;
@@ -86,13 +85,11 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
     private int threadDetailsPaneID = 0;
     
     private UIDefaults uiDefaults;
-    private SwingTimelineDimensionModel dimensionModel;
-    
-    public SwingThreadView(UIDefaults uiDefaults, SwingTimelineDimensionModel dimensionModel) {
+
+    public SwingThreadView(UIDefaults uiDefaults) {
         
         this.uiDefaults = uiDefaults;
-        this.dimensionModel = dimensionModel;
-        
+
         panel = new ThreadMainPanel();
         // TODO use ComponentVisiblityNotifier instead
         // sadly, the BasicView.notifier field can not be accessed here
@@ -158,7 +155,7 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
         topPane = new ThermostatTabbedPane();
         topPane.setName("topTabbedPane");
         
-        threadTimelineView = new SwingThreadTimelineView(uiDefaults, dimensionModel);
+        threadTimelineView = new SwingThreadTimelineView(uiDefaults);
         topPane.addTab(t.localize(LocaleResources.TIMELINE).getContents(), threadTimelineView.getUiComponent());
         
         threadCountView = new SwingThreadCountView();

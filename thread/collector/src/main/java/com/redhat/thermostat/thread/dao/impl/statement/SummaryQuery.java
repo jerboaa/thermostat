@@ -57,11 +57,12 @@ public class SummaryQuery extends Query<ThreadSummary> {
     public static final Id id = new Id(SummaryQuery.class.getSimpleName());
 
     public static class CriteriaId {
-        public static final Id getVmId = new Id("0");
-        public static final Id timeStampGEQ = new Id("1");
-        public static final Id timeStampLEQ = new Id("2");
-        public static final Id sessionID = new Id("3");
-        public static final Id limit = new Id("4");
+        public static final Id vmId = new Id("vmId");
+        public static final Id agentId = new Id("agentId");
+        public static final Id timeStampGEQ = new Id("timeStampGEQ");
+        public static final Id timeStampLEQ = new Id("timeStampLEQ");
+        public static final Id sessionID = new Id("sessionID");
+        public static final Id limit = new Id("limit");
 
     }
 
@@ -76,7 +77,9 @@ public class SummaryQuery extends Query<ThreadSummary> {
                 (ThreadSession.class);
         final Map<String, FieldDescriptor> map = StatementUtils.createDescriptorMap(descriptors);
 
-        criteria.add(new WhereCriterion(CriteriaId.getVmId, map.get("vmId"),
+        criteria.add(new WhereCriterion(CriteriaId.vmId, map.get("vmId"),
+                                        TypeMapper.Criteria.Equal));
+        criteria.add(new WhereCriterion(CriteriaId.agentId, map.get("agentId"),
                                         TypeMapper.Criteria.Equal));
         criteria.add(new WhereCriterion(CriteriaId.sessionID, map.get("session"),
                                         TypeMapper.Criteria.Equal));

@@ -34,46 +34,14 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.model;
+package com.redhat.thermostat.thread.client.swing.impl.timeline.model;
 
-import org.junit.Test;
+import java.util.EventListener;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+/**
+ *
+ */
+public interface RangeChangeListener extends EventListener {
 
-public class ThreadHeaderTest {
-
-    @Test
-    public void testEqualsAndHashCode() throws Exception {
-        // same thread, will they be equals?
-        ThreadHeader header1 = new ThreadHeader("1234");
-        header1.setReferenceID("vm42");
-        header1.setThreadName("main");
-        header1.setThreadId(1);
-
-        ThreadHeader header2 = new ThreadHeader("1234");
-        header2.setReferenceID("vm42");
-        header2.setThreadName("main");
-        header2.setThreadId(1);
-
-        assertEquals(header1, header2);
-        assertEquals(header1.hashCode(), header2.hashCode());
-    }
-
-    @Test
-    public void testNotEqualsAndHashCode() throws Exception {
-        // same thread, will they be equals?
-        ThreadHeader header1 = new ThreadHeader("1234");
-        header1.setReferenceID("vm42");
-        header1.setThreadName("main");
-        header1.setThreadId(2);
-
-        ThreadHeader header2 = new ThreadHeader("1234");
-        header2.setReferenceID("vm42");
-        header2.setThreadName("main");
-        header2.setThreadId(1);
-
-        assertFalse(header1.equals(header2));
-        assertFalse(header1.hashCode() == header2.hashCode());
-    }
+    public void rangeChanged(RangeChangeEvent event);
 }

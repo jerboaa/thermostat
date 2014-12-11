@@ -34,28 +34,45 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.dao.impl.statement;
+package com.redhat.thermostat.thread.client.swing.impl.timeline;
 
-import com.redhat.thermostat.storage.core.experimental.statement.BeanAdapter;
-import com.redhat.thermostat.storage.core.experimental.statement.BeanAdapterBuilder;
-import com.redhat.thermostat.thread.model.ThreadSession;
-import java.util.Set;
-import org.junit.Test;
+import com.redhat.thermostat.thread.client.swing.experimental.components.ContentPane;
+import java.awt.Dimension;
+import java.awt.Rectangle;
+import javax.swing.BoxLayout;
+import javax.swing.Scrollable;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+/**
+ *
+ */
+public class TimelineViewport extends ContentPane implements Scrollable {
 
-public class SessionQueryTest {
+    public TimelineViewport() {
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+    }
 
-    @Test
-    public void testDescribe() throws Exception {
-        BeanAdapter<ThreadSession> session =
-                new BeanAdapterBuilder<>(ThreadSession.class,
-                                         new SessionQuery()).build();
-        Set<String> statements = session.describeStatements();
-        assertEquals(2, statements.size());
+    @Override
+    public Dimension getPreferredScrollableViewportSize() {
+        return getPreferredSize();
+    }
 
-        String expected = "QUERY vm-thread-session WHERE 'vmId' = ?s AND 'timeStamp' >= ?l AND 'timeStamp' <= ?l SORT 'timeStamp' DSC LIMIT ?i";
-        assertTrue(statements.contains(expected));
+    @Override
+    public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
+        return 1;
+    }
+
+    @Override
+    public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) {
+        return 1;
+    }
+
+    @Override
+    public boolean getScrollableTracksViewportWidth() {
+        return true;
+    }
+
+    @Override
+    public boolean getScrollableTracksViewportHeight() {
+        return false;
     }
 }

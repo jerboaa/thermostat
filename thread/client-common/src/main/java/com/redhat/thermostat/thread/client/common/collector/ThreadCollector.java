@@ -37,11 +37,10 @@
 package com.redhat.thermostat.thread.client.common.collector;
 
 import com.redhat.thermostat.common.model.Range;
+import com.redhat.thermostat.storage.core.experimental.statement.ResultHandler;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.SessionID;
-import com.redhat.thermostat.thread.model.ThreadContentionSample;
-import com.redhat.thermostat.thread.model.ThreadHeader;
 import com.redhat.thermostat.thread.model.ThreadSession;
 import com.redhat.thermostat.thread.model.ThreadState;
 import com.redhat.thermostat.thread.model.ThreadSummary;
@@ -58,6 +57,11 @@ public interface ThreadCollector {
     boolean isHarvesterCollecting();
 
     /**
+     * Returns the range of all known threads probes.
+     */
+    Range<Long> getThreadRange(SessionID session);
+
+    /**
      * Returns a list of sessions recorded during sampling.
      */
     List<ThreadSession> getThreadSessions(Range<Long> range);
@@ -71,25 +75,6 @@ public interface ThreadCollector {
     List<ThreadSummary> getThreadSummary(SessionID session, Range<Long> range);
 
     /**
-     * Return the range of all {@link ThreadState} data (timestamp of first and
-     * last ThreadState entry in storage) for this virtual machine.
-     */
-    Range<Long> getThreadStateTotalTimeRange();
-
-    /**
-     * Return the range of {@link ThreadState} for the given
-     * {@link ThreadHeader} (timestamp of first and
-     * last ThreadState entry in storage).
-     */
-    Range<Long> getThreadStateRange(ThreadHeader thread);
-
-    /**
-     * Returns a list with all the {@link ThreadState} information for the
-     * given {@link ThreadHeader}, in the given range, in ascending order.
-     */
-    List<ThreadState> getThreadStates(ThreadHeader thread, Range<Long> range);
-
-    /**
      * Check for deadlocks. {@link #getLatestDeadLockData} needs to be called to
      * obtain the data.
      */
@@ -97,16 +82,9 @@ public interface ThreadCollector {
 
     /** Return the latest deadlock data */
     VmDeadLockData getLatestDeadLockData();
-    
-    /**
-     * Returns a list with all {@link ThreadHeader}s listed in the storage.
-     */
-    List<ThreadHeader> getThreads();
 
-    /**
-     * Returns the latest {@link ThreadContentionSample} available for this
-     * {@link ThreadHeader}.
-     */
-    ThreadContentionSample getLatestContentionSample(ThreadHeader thread);
+    void getThreadStates(SessionID session,
+                         ResultHandler<ThreadState> handler,
+                         Range<Long> range);
 }
 

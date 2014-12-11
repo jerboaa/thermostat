@@ -47,7 +47,6 @@ public class ThreadModelPojosTest {
     private static final Class<?>[] CLASSES_LIST = new Class[] {
         ThreadHarvestingStatus.class,
         ThreadState.class,
-        ThreadHeader.class,
         ThreadSummary.class,
         ThreadContentionSample.class,
         VmDeadLockData.class,

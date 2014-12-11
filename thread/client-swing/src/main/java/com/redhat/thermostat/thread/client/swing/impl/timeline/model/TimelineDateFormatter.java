@@ -34,47 +34,19 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.swing.impl.timeline;
+package com.redhat.thermostat.thread.client.swing.impl.timeline.model;
 
-import com.redhat.thermostat.client.swing.components.DebugBorder;
-import java.awt.Component;
-import java.awt.Graphics;
-import java.awt.Insets;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
+ *
  */
-class TimelineBorder extends DebugBorder {
-    private boolean isOpaque;
+public class TimelineDateFormatter {
+    private static final DateFormat DATE_FORMAT = new SimpleDateFormat("HH:mm:ss.SSS");
 
-    public TimelineBorder() {
-        this(false);
-    }
-
-    public TimelineBorder(boolean opaque) {
-        this.isOpaque = opaque;
-    }
-
-    @Override
-    public boolean isBorderOpaque() {
-        return isOpaque;
-    }
-
-    @Override
-    public void paintBorder(Component c, Graphics g, int x, int y, int width,
-                            int height)
-    {
-        g.setColor(c.getForeground());
-        g.drawLine(0, c.getHeight() - 1, c.getWidth() - 1, c.getHeight() - 1);
-    }
-
-    @Override
-    public Insets getBorderInsets(Component c, Insets insets) {
-
-        insets.top = 0;
-        insets.left = 0;
-        insets.right = 0;
-        insets.bottom = 1;
-
-        return insets;
+    public static String format(long timeStamp) {
+        return DATE_FORMAT.format(new Date(timeStamp));
     }
 }

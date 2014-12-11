@@ -36,53 +36,71 @@
 
 package com.redhat.thermostat.thread.model;
 
-import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Persist;
+import com.redhat.thermostat.storage.core.experimental.statement.Category;
+import com.redhat.thermostat.storage.core.experimental.statement.Indexed;
+import com.redhat.thermostat.storage.model.BasePojo;
+import com.redhat.thermostat.storage.model.TimeStampedPojo;
+import com.redhat.thermostat.thread.dao.impl.ThreadDaoCategories;
 
 /**
  * Represents a single delta variation of a Thread state.
  */
+@Category(ThreadDaoCategories.Categories.STATE)
 @Entity
-public class ThreadState extends ThreadPojo {
+public class ThreadState extends BasePojo implements TimeStampedPojo {
 
-    private long probeStartTime;
-    private long probeEndTime;
-    
+    private long timeStamp;
+    private String vmId;
+    private String name;
     private String state;
+    private String session;
+    private long id;
+    private boolean suspended;
+    private boolean inNative;
 
     public ThreadState() {
-        this(null, null);
+        this(null);
     }
     
-    public ThreadState(String wID, ThreadHeader header) {
-        super(wID, header);
+    public ThreadState(String writerId) {
+        super(writerId);
     }
 
     @Persist
-    public void setProbeEndTime(long probeEndTime) {
-        this.probeEndTime = probeEndTime;
+    public String getName() {
+        return name;
     }
 
     @Persist
-    public void setProbeStartTime(long probeStartTime) {
-        this.probeStartTime = probeStartTime;
+    public void setName(String name) {
+        this.name = name;
     }
-    
+
+    @Indexed
     @Persist
-    public long getProbeEndTime() {
-        return probeEndTime;
+    public String getVmId() {
+        return vmId;
     }
-    
+
+    @Indexed
     @Persist
-    public long getProbeStartTime() {
-        return probeStartTime;
+    public void setVmId(String vmId) {
+        this.vmId = vmId;
     }
-    
-    public Range<Long> getRange() {
-        return new Range<Long>(probeStartTime, probeEndTime);
+
+    @Persist
+    @Override
+    public long getTimeStamp() {
+        return timeStamp;
     }
-    
+
+    @Persist
+    public void setTimeStamp(long timeStamp) {
+        this.timeStamp = timeStamp;
+    }
+
     @Persist
     public String getState() {
         return state;
@@ -95,27 +113,69 @@ public class ThreadState extends ThreadPojo {
 
     @Override
     public String toString() {
-        ThreadHeader header = getHeader();
-        String name = null;
-        if (header != null) {
-            name = header.getThreadName();
-        }
-        return "ThreadState: [name: " + name + "state: " + getState() + ", range: " + getRange() + "]";
+        return "ThreadState: [name: " + name + " state: " + getState() +
+               ", timestamp: " + timeStamp + "]";
+    }
+
+    @Persist
+    public void setSession(String session) {
+        this.session = session;
+    }
+
+    @Persist
+    public String getSession() {
+        return session;
+    }
+
+    @Persist
+    public void setSuspended(boolean suspended) {
+        this.suspended = suspended;
+    }
+
+    @Persist
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    @Persist
+    public long getId() {
+        return id;
+    }
+
+    @Persist
+    public boolean isSuspended() {
+        return suspended;
+    }
+
+    @Persist
+    public void setInNative(boolean inNative) {
+        this.inNative = inNative;
+    }
+
+    @Persist
+    public boolean isInNative() {
+        return inNative;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
 
         ThreadState that = (ThreadState) o;
 
-        if (probeEndTime != that.probeEndTime) return false;
-        if (probeStartTime != that.probeStartTime) return false;
-
-        if (!super.equals(o)) return false;
-
-        if (state != that.state) return false;
+        if (id != that.id) return false;
+        if (inNative != that.inNative) return false;
+        if (suspended != that.suspended) return false;
+        if (name != null ? !name.equals(that.name) : that.name != null)
+            return false;
+        if (session != null ? !session.equals(that.session) : that.session != null)
+            return false;
+        if (state != null ? !state.equals(that.state) : that.state != null)
+            return false;
+        if (vmId != null ? !vmId.equals(that.vmId) : that.vmId != null)
+            return false;
 
         return true;
     }
@@ -123,9 +183,13 @@ public class ThreadState extends ThreadPojo {
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (int) (probeStartTime ^ (probeStartTime >>> 32));
-        result = 31 * result + (int) (probeEndTime ^ (probeEndTime >>> 32));
+        result = 31 * result + (vmId != null ? vmId.hashCode() : 0);
+        result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + (state != null ? state.hashCode() : 0);
+        result = 31 * result + (session != null ? session.hashCode() : 0);
+        result = 31 * result + (int) (id ^ (id >>> 32));
+        result = 31 * result + (suspended ? 1 : 0);
+        result = 31 * result + (inNative ? 1 : 0);
         return result;
     }
 }

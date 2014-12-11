@@ -40,9 +40,7 @@ import com.redhat.thermostat.client.swing.UIDefaults;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
-import com.redhat.thermostat.thread.client.common.model.timeline.TimelineDimensionModel;
 import com.redhat.thermostat.thread.client.swing.SwingThreadViewService;
-import com.redhat.thermostat.thread.client.swing.impl.timeline.SwingTimelineDimensionModel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -72,17 +70,11 @@ public class Activator implements BundleActivator {
             
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
-                
-                SwingTimelineDimensionModel dimensionModel = new SwingTimelineDimensionModel();
-                
+
                 UIDefaults uiDefaults = (UIDefaults) services.get(UIDefaults.class.getName());
                 ServiceRegistration reg = context.registerService(ThreadViewProvider.class.getName(),
-                                              new SwingThreadViewService(uiDefaults, dimensionModel),
+                                              new SwingThreadViewService(uiDefaults),
                                               null);
-                regs.add(reg);
-
-                reg = context.registerService(TimelineDimensionModel.class.getName(),
-                                              dimensionModel, null);
                 regs.add(reg);
             }
         });

@@ -34,23 +34,31 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.swing.impl.timeline;
+package com.redhat.thermostat.thread.dao.impl.statement;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import com.redhat.thermostat.storage.core.experimental.statement.BeanAdapter;
+import com.redhat.thermostat.storage.core.experimental.statement.BeanAdapterBuilder;
+import com.redhat.thermostat.thread.model.ThreadSession;
+import java.util.Set;
+import org.junit.Test;
 
-/**
- * Formatter class for {@link TimelineRange}
- */
-public class TimelineRangeModelFormatter {
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-    private static DateFormat df = new SimpleDateFormat("yyyy.MM.dd, HH:mm:ss");
+public class SessionQueriesTest {
 
-    public static String getFormattedString(long range) {
-        if (range < 0) {
-            return " - ";
-        }
-        return df.format(new Date(range));
+    @Test
+    public void testDescribe() throws Exception {
+        BeanAdapter<ThreadSession> session =
+                new BeanAdapterBuilder<>(ThreadSession.class,
+                                         SessionQueries.asList()).build();
+        Set<String> statements = session.describeStatements();
+        assertEquals(3, statements.size());
+
+        String expected = "QUERY vm-thread-session WHERE 'vmId' = ?s AND 'agentId' = ?s AND 'timeStamp' >= ?l AND 'timeStamp' <= ?l SORT 'timeStamp' ASC LIMIT ?i";
+        assertTrue(statements.contains(expected));
+
+        expected = "QUERY vm-thread-session WHERE 'vmId' = ?s AND 'agentId' = ?s AND 'timeStamp' >= ?l AND 'timeStamp' <= ?l SORT 'timeStamp' DSC LIMIT ?i";
+        assertTrue(statements.contains(expected));
     }
 }

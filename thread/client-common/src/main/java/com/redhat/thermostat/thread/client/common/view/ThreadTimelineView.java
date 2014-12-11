@@ -37,74 +37,21 @@
 package com.redhat.thermostat.thread.client.common.view;
 
 import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.model.Range;
-import com.redhat.thermostat.thread.client.common.model.timeline.Timeline;
-import com.redhat.thermostat.thread.client.common.model.timeline.TimelineGroupDataModel;
-import com.redhat.thermostat.thread.model.ThreadHeader;
-import java.util.List;
+import com.redhat.thermostat.thread.client.common.model.timeline.ThreadInfo;
+import com.redhat.thermostat.thread.client.common.model.timeline.TimelineProbe;
 
 public abstract class ThreadTimelineView extends BasicView {
 
-    public static enum ThreadTimelineViewAction {
-        THREAD_TIMELINE_SELECTED,
-        SWITCH_TO_FOLLOW_MODE,
-        SWITCH_TO_STATIC_MODE,
-    }
-
-    public static enum TimelineSelectorState {
-        FOLLOWING,
-        STATIC,
-    }
-
-    protected final ActionNotifier<ThreadTimelineViewAction> threadTimelineNotifier;
-    
-    public ThreadTimelineView() {
-        threadTimelineNotifier = new ActionNotifier<>(this);
-    }
-    
-    public void addThreadSelectionActionListener(ActionListener<ThreadTimelineViewAction> listener) {
-        threadTimelineNotifier.addActionListener(listener);
-    }
-    
-    public void removeThreadSelectionActionListener(ActionListener<ThreadTimelineViewAction> listener) {
-        threadTimelineNotifier.removeActionListener(listener);
-    }
-
-    protected void requestFollowMode() {
-        threadTimelineNotifier.fireAction(ThreadTimelineViewAction.SWITCH_TO_FOLLOW_MODE);
-    }
-
-    protected void requestStaticMode(Range<Long> pageRange) {
-        threadTimelineNotifier.fireAction(ThreadTimelineViewAction.SWITCH_TO_STATIC_MODE, pageRange);
-    }
-
     /**
-     * Returns the {@link TimelineGroupDataModel} for this view.
+     * Add this thread to the list of threads visible on screen
      */
-    public abstract TimelineGroupDataModel getGroupDataModel();
+    public abstract void addThread(ThreadInfo thread);
 
-    /**
-     * Ensures that the Timeline selector is in one of the possible states.
-     */
-    public abstract void ensureTimelineState(TimelineSelectorState following);
+    public abstract void setTotalRange(Range<Long> totalRange);
 
-    /**
-     * Update the list of all {@link ThreadHeader} currently displayed by
-     * this view.
-     */
-    public abstract void updateThreadList(List<ThreadHeader> threads);
+    public abstract void addProbe(ThreadInfo info, TimelineProbe state);
 
-    /**
-     * Display the given {@link Timeline} associated to this {@link ThreadHeader}.
-     */
-    public abstract void displayTimeline(ThreadHeader thread, Timeline threadTimeline);
-
-    /**
-     * Notify the View that all the changes may be delivered to the rendering
-     * thread.
-     */
-    public abstract void submitChanges();
+    public abstract void clear();
 }
 

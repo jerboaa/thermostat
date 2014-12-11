@@ -36,59 +36,98 @@
 
 package com.redhat.thermostat.thread.client.swing.impl.timeline;
 
-import com.redhat.thermostat.client.swing.GraphicsUtils;
-import com.redhat.thermostat.common.model.LongRangeNormalizer;
-import com.redhat.thermostat.common.model.Range;
-import com.redhat.thermostat.thread.client.common.model.timeline.Timeline;
-import com.redhat.thermostat.thread.client.common.model.timeline.TimelineInfo;
+import com.redhat.thermostat.client.swing.UIDefaults;
+import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
+import com.redhat.thermostat.thread.client.common.model.timeline.ThreadInfo;
+import com.redhat.thermostat.thread.client.swing.experimental.components.ContentPane;
+import com.redhat.thermostat.thread.client.swing.experimental.components.Separator;
+import com.redhat.thermostat.thread.client.swing.impl.timeline.model.TimelineModel;
 import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
-@SuppressWarnings("serial")
-public class TimelineComponent extends TimelineBaseComponent {
+/**
+ *
+ */
+public class TimelineComponent extends RulerComponent {
 
-    private static final int MIN_HEIGHT = 42;
+    private static final int MIN_HEIGHT = 50;
+    private final ThreadInfo threadInfo;
+
+    private ContentPane labelPane;
 
     private TimelineLabel label;
-    private Timeline timeline;
 
-    public TimelineComponent(TimelineGroupThreadConverter timelinePageModel,
-                             SwingTimelineDimensionModel dimensionModel,
-                             String name)
+    private ThermostatScrollPane scrollPane;
+    private TimelineContainer timelineContainer;
+
+    public TimelineComponent(UIDefaults uiDefaults, ThreadInfo threadInfo,
+                             TimelineModel model)
     {
-        // TODO: get those from color properties
-        super(timelinePageModel, dimensionModel);
-
-        setLayout(new BorderLayout());
-        label = new TimelineLabel(name);
-        add(label, BorderLayout.LINE_START);
+        super(uiDefaults, model);
+        this.threadInfo = threadInfo;
     }
 
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
+    public void initComponents() {
+        setName(threadInfo.getName());
 
-        Graphics2D graphics = GraphicsUtils.getInstance().createAAGraphics(g);
+        initModel();
 
-        Range<Long> pageRange = timelinePageModel.getDataModel().getPageRange();
+        initLabelPane();
+        initThreadPane();
 
-        int y = MIN_HEIGHT / 2;
+        setBorder(new Separator(uiDefaults, Separator.Side.BOTTOM,
+                                Separator.Type.SOLID));
 
-        LongRangeNormalizer normalizer = new LongRangeNormalizer(pageRange, 0, getWidth());
-        if (timeline != null) {
-            for (TimelineInfo sample : timeline) {
-                graphics.setColor(sample.getColor().getColor());
-                Range<Long> sampleRange = sample.getRange();
+        Hover hover = new Hover();
+        addMouseListener(hover);
+    }
 
-                int x0 = (int) normalizer.getValueNormalized(sampleRange.getMin());
-                int x1 = (int) normalizer.getValueNormalized(sampleRange.getMax());
-
-                graphics.fillRect(x0, y, x1 - x0 + 1, 5);
+    private void initModel() {
+        model.getScrollBarModel().addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                repaint();
             }
-        }
-        graphics.dispose();
+        });
+    }
+
+    private void initThreadPane() {
+
+        timelineContainer = new TimelineContainer(model);
+        timelineContainer.setName(threadInfo.getName());
+
+        scrollPane = new ThermostatScrollPane(timelineContainer);
+        scrollPane.setHorizontalScrollBarPolicy(ThermostatScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.setVerticalScrollBarPolicy(ThermostatScrollPane.VERTICAL_SCROLLBAR_NEVER);
+
+        add(scrollPane, BorderLayout.CENTER);
+
+        scrollPane.getHorizontalScrollBar().setModel(model.getScrollBarModel());
+    }
+
+    public TimelineContainer getTimelineContainer() {
+        return timelineContainer;
+    }
+
+    private void initLabelPane() {
+        label = new TimelineLabel(uiDefaults, getName());
+        labelPane = new ContentPane();
+
+        labelPane.setOpaque(false);
+        labelPane.setLayout(new GridBagLayout());
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 1.f;
+
+        labelPane.add(label, gbc);
+        add(labelPane, BorderLayout.NORTH);
     }
 
     @Override
@@ -96,32 +135,20 @@ public class TimelineComponent extends TimelineBaseComponent {
         return MIN_HEIGHT;
     }
 
-    @Override
-    public Dimension getPreferredSize() {
-        Dimension pref = super.getPreferredSize();
-        pref.height = getHeight();
-        return pref;
-    }
+    private class Hover extends MouseAdapter {
+        @Override
+        public void mouseEntered(MouseEvent e) {
+            onMouseHover(true);
+        }
 
-    @Override
-    public Dimension getMinimumSize() {
-        return getPreferredSize();
-    }
+        @Override
+        public void mouseExited(MouseEvent e) {
+            onMouseHover(false);
+        }
 
-    @Override
-    public Dimension getSize() {
-        return getPreferredSize();
-    }
-
-    public void setTimeline(Timeline timeline) {
-        this.timeline = timeline;
-        if (timeline != null && timeline.size() > 0) {
-            label.setForeground(timeline.last().getColor().getColor());
+        public void onMouseHover(boolean hover) {
+            label.onMouseHover(hover);
+            repaint();
         }
     }
-
-    public Timeline getTimeline() {
-        return timeline;
-    }
 }
-

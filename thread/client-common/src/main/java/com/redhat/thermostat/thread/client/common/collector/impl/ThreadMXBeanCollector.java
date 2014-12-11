@@ -45,29 +45,31 @@ import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.core.experimental.statement.ResultHandler;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.collector.HarvesterCommand;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.SessionID;
-import com.redhat.thermostat.thread.model.ThreadContentionSample;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
-import com.redhat.thermostat.thread.model.ThreadHeader;
 import com.redhat.thermostat.thread.model.ThreadSession;
 import com.redhat.thermostat.thread.model.ThreadState;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import com.redhat.thermostat.thread.model.VmDeadLockData;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 
 public class ThreadMXBeanCollector implements ThreadCollector {
-    
+
+    private static final Range<Long> FULL_RANGE = new Range<>(0l, Long.MAX_VALUE);
+    private static final int ALL = -1;
+    private static final int FIRST = 1;
+
     private static final String CMD_CHANNEL_ACTION_NAME = "thread-harvester";
     private static final Logger logger = LoggingUtils.getLogger(ThreadMXBeanCollector.class);
 
@@ -99,7 +101,7 @@ public class ThreadMXBeanCollector implements ThreadCollector {
         
         return harvester;
     }
-    
+
     @Override
     public boolean startHarvester() {
         
@@ -136,13 +138,14 @@ public class ThreadMXBeanCollector implements ThreadCollector {
 
     @Override
     public List<ThreadSession> getThreadSessions(Range<Long> range) {
-        return threadDao.getSessions(ref, range, Integer.MAX_VALUE);
+        return threadDao.getSessions(ref, range, ALL, ThreadDao.Sort.ASCENDING);
     }
 
     @Override
     public SessionID getLastThreadSession() {
         List<ThreadSession> sessions =
-                threadDao.getSessions(ref, new Range<>(0l, Long.MAX_VALUE), 1);
+                threadDao.getSessions(ref, FULL_RANGE, FIRST,
+                                      ThreadDao.Sort.DESCENDING);
         return sessions.isEmpty() ? null : new SessionID(sessions.get(0).getSession());
     }
 
@@ -162,33 +165,47 @@ public class ThreadMXBeanCollector implements ThreadCollector {
     }
 
     @Override
-    public Range<Long> getThreadStateRange(ThreadHeader thread) {
+    public Range<Long> getThreadRange(SessionID session) {
 
-        Range<Long> result = null;
+        final long[] timestamps = new long[2];
+        timestamps[0] = 0l;
+        timestamps[1] = Long.MAX_VALUE;
 
-        ThreadState last = threadDao.getLastThreadState(thread);
-        ThreadState first = threadDao.getFirstThreadState(thread);
+        threadDao.getThreadStates(ref, session,
+                                  new ResultHandler<ThreadState>() {
+                                      @Override
+                                      public void onResult(ThreadState result) {
+                                          timestamps[1] = result.getTimeStamp();
+                                      }
+                                  },
+                                  FULL_RANGE, FIRST, ThreadDao.Sort.DESCENDING);
 
-        if (last != null && first != null) {
-            result = new Range<>(first.getProbeStartTime(), last.getProbeEndTime());
-        }
+        threadDao.getThreadStates(ref, session,
+                                  new ResultHandler<ThreadState>() {
+                                      @Override
+                                      public void onResult(ThreadState result) {
+                                          timestamps[0] = result.getTimeStamp();
+                                      }
+                                  },
+                                  FULL_RANGE, FIRST, ThreadDao.Sort.ASCENDING);
 
-        return result;
+        return new Range<>(timestamps[0], timestamps[1]);
+    }
+
+    @Override
+    public void getThreadStates(SessionID session,
+                                ResultHandler<ThreadState> handler,
+                                Range<Long> range)
+    {
+        threadDao.getThreadStates(ref, session, handler, range,
+                                  ALL,
+                                  ThreadDao.Sort.ASCENDING);
     }
 
     @Override
     public List<ThreadSummary> getThreadSummary(SessionID session, Range<Long> range) {
         List<ThreadSummary> summary = threadDao.getSummary(ref, session, range, Integer.MAX_VALUE);
         return summary;
-    }
-
-    @Override
-    public Range<Long> getThreadStateTotalTimeRange() {
-        return threadDao.getThreadStateTotalTimeRange(ref);
-    }
-
-    public List<ThreadState> getThreadStates(ThreadHeader thread, Range<Long> range) {
-        return threadDao.getThreadStates(thread, range);
     }
 
     @Override
@@ -207,10 +224,10 @@ public class ThreadMXBeanCollector implements ThreadCollector {
         postAndWait(harvester);
     }
 
-    @Override
-    public ThreadContentionSample getLatestContentionSample(ThreadHeader thread) {
-        return threadDao.getLatestContentionSample(thread);
-    }
+//    @Override
+//    public ThreadContentionSample getLatestContentionSample(ThreadHeader thread) {
+//        return threadDao.getLatestContentionSample(thread);
+//    }
 
     private boolean postAndWait(Request harvester) {
         final CountDownLatch latch = new CountDownLatch(1);
@@ -237,11 +254,6 @@ public class ThreadMXBeanCollector implements ThreadCollector {
             logger.log(Level.WARNING, "Failed to enqueue request", e);
         } catch (InterruptedException ignore) {}
         return result[0];
-    }
-
-    @Override
-    public List<ThreadHeader> getThreads() {
-        return threadDao.getThreads(ref);
     }
 
     private void enqueueRequest(Request req) throws CommandChannelException {

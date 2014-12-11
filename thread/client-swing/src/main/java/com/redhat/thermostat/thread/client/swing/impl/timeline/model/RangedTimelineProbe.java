@@ -34,62 +34,29 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.common.model.timeline;
+package com.redhat.thermostat.thread.client.swing.impl.timeline.model;
 
 import com.redhat.thermostat.common.model.Range;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
+import com.redhat.thermostat.thread.client.common.model.timeline.TimelineProbe;
 
 /**
  *
  */
-public class TimelineGroupDataModel {
+public class RangedTimelineProbe extends TimelineProbe {
 
-    public enum RangeChangeProperty {
-        TOTAL_RANGE,
-        PAGE_RANGE
+    private long probeEnd;
+
+    public RangedTimelineProbe(TimelineProbe probe, long probeStop)
+    {
+        super(probe.getColor(), probe.getState(), probe.getTimeStamp());
+        this.probeEnd = probeStop;
     }
 
-    private Range<Long> totalRange;
-    private Range<Long> pageRange;
-
-    private PropertyChangeSupport propertyChangeSupport;
-
-    public TimelineGroupDataModel() {
-        this(new Range<>(0L, Long.MAX_VALUE), new Range<Long>(0L, Long.MAX_VALUE));
+    public void setProbeEnd(long probeEnd) {
+        this.probeEnd = probeEnd;
     }
 
-    public TimelineGroupDataModel(Range<Long> totalRange, Range<Long> pageRange) {
-        this.totalRange = totalRange;
-        this.pageRange = pageRange;
-        propertyChangeSupport = new PropertyChangeSupport(this);
-    }
-
-    public Range<Long> getTotalRange() {
-        return totalRange;
-    }
-
-    public void setTotalRange(Range<Long> totalRange) {
-        Range<Long> old = this.totalRange;
-        this.totalRange = totalRange;
-        fireRangeChangeEvent(RangeChangeProperty.TOTAL_RANGE, old, this.totalRange);
-    }
-
-    public Range<Long> getPageRange() {
-        return pageRange;
-    }
-
-    public void setPageRange(Range<Long> pageRange) {
-        Range<Long> old = this.pageRange;
-        this.pageRange = pageRange;
-        fireRangeChangeEvent(RangeChangeProperty.PAGE_RANGE, old, this.pageRange);
-    }
-
-    public void addPropertyChangeListener(RangeChangeProperty property, PropertyChangeListener listener) {
-        propertyChangeSupport.addPropertyChangeListener(property.name(), listener);
-    }
-
-    private void fireRangeChangeEvent(RangeChangeProperty property, Range<Long> oldRange, Range<Long> newRange) {
-        propertyChangeSupport.firePropertyChange(property.name(), oldRange, newRange);
+    public Range<Long> getRange() {
+        return new Range<>(getTimeStamp(), probeEnd);
     }
 }

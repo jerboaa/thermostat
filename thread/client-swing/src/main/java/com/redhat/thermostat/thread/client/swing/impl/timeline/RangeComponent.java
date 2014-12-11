@@ -34,55 +34,31 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.harvester;
+package com.redhat.thermostat.thread.client.swing.impl.timeline;
 
-import java.lang.management.ThreadInfo;
-
-import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.model.ThreadHeader;
-import com.redhat.thermostat.thread.model.ThreadState;
+import com.redhat.thermostat.thread.client.swing.experimental.components.ContentPane;
+import com.redhat.thermostat.thread.client.swing.impl.timeline.model.RangedTimelineProbe;
+import java.awt.Graphics;
+import java.awt.Rectangle;
 
 /**
+ *
  */
-class ThreadHeaderHelper {
+public class RangeComponent extends ContentPane {
+    private RangedTimelineProbe info;
 
-    private ThreadDao threadDao;
-    private String vmId;
-    private WriterID writerId;
-
-    public ThreadHeaderHelper(ThreadDao threadDao, WriterID writerId, String vmId)
-    {
-        this.threadDao = threadDao;
-        this.vmId = vmId;
-        this.writerId = writerId;
+    public RangeComponent(RangedTimelineProbe info) {
+        this.info = info;
     }
 
-    public ThreadHeader createThreadHeader(ThreadInfo beanInfo, long timestamp)
-    {
-        String wId = writerId.getWriterID();
-
-        ThreadHeader header = new ThreadHeader(wId);
-        header.setThreadName(beanInfo.getThreadName());
-        header.setThreadId(beanInfo.getThreadId());
-        header.setTimeStamp(timestamp);
-        header.setVmId(vmId);
-
-        return header;
+    public RangedTimelineProbe getInfo() {
+        return info;
     }
 
-    /**
-     * Checks if the template is in the database. If the template is not in
-     * the database, it is added and the same object is returned, otherwise
-     * the database object is returned with the correct referenceID field.
-     * The input template header itself is never updated.
-     */
-    public ThreadHeader checkAndSaveThreadHeader(ThreadHeader template) {
-        ThreadHeader inStorage = threadDao.getThread(template);
-        if (inStorage == null || !template.equals(inStorage)) {
-            threadDao.saveThread(template);
-            inStorage = template;
-        }
-        return inStorage;
+    @Override
+    protected void paintComponent(Graphics g) {
+        g.setColor(info.getColor().getColor());
+        Rectangle bounds = g.getClipBounds();
+        g.fillRect(bounds.x, bounds.y, bounds.width - 1, bounds.height - 1);
     }
 }

@@ -38,9 +38,7 @@ package com.redhat.thermostat.thread.dao.impl;
 
 import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorMetadataFactory;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -53,35 +51,21 @@ public class ThreadDaoImplStatementDescriptorRegistration implements
         StatementDescriptorRegistration {
 
     private final Set<String> descs;
-    
+
     public ThreadDaoImplStatementDescriptorRegistration() {
         descs = new HashSet<>();
         descs.add(ThreadDaoImpl.QUERY_LATEST_DEADLOCK_INFO);
         descs.add(ThreadDaoImpl.QUERY_LATEST_HARVESTING_STATUS);
 
         // TODO: this needs to go in an helper class
-        descs.addAll(ThreadDaoImpl.SUMMARY.describeStatements());
-        descs.addAll(ThreadDaoImpl.SESSIONS.describeStatements());
+        descs.addAll(ThreadDaoImpl.ThreadSummaryAdapter.describeStatements());
+        descs.addAll(ThreadDaoImpl.ThreadSessionAdapter.describeStatements());
+        descs.addAll(ThreadDaoImpl.ThreadStateAdapter.describeStatements());
 
         descs.add(ThreadDaoImpl.DESC_ADD_THREAD_DEADLOCK_DATA);
         descs.add(ThreadDaoImpl.DESC_ADD_THREAD_HARVESTING_STATUS);
-
-        descs.add(ThreadDaoImpl.ADD_THREAD_HEADER);
-        descs.add(ThreadDaoImpl.QUERY_THREAD_HEADER);
-        descs.add(ThreadDaoImpl.QUERY_ALL_THREAD_HEADERS);
-
-        descs.add(ThreadDaoImpl.ADD_THREAD_STATE);
-        descs.add(ThreadDaoImpl.QUERY_LATEST_THREAD_STATE_FOR_THREAD);
-        descs.add(ThreadDaoImpl.QUERY_FIRST_THREAD_STATE_FOR_THREAD);
-
-        descs.add(ThreadDaoImpl.QUERY_OLDEST_THREAD_STATE);
-        descs.add(ThreadDaoImpl.QUERY_LATEST_THREAD_STATE);
-
-        descs.add(ThreadDaoImpl.QUERY_THREAD_STATE_PER_THREAD);
-
         descs.add(ThreadDaoImpl.ADD_CONTENTION_SAMPLE);
         descs.add(ThreadDaoImpl.GET_LATEST_CONTENTION_SAMPLE);
-        descs.add(ThreadDaoImpl.DESC_UPDATE_THREAD_STATE);
     }
     
     @Override

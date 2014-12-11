@@ -36,73 +36,52 @@
 
 package com.redhat.thermostat.thread.client.swing.impl.timeline;
 
-import com.redhat.thermostat.client.swing.GraphicsUtils;
-import com.redhat.thermostat.client.swing.components.experimental.TimelineUtils;
+import com.redhat.thermostat.client.swing.UIDefaults;
+import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
+import com.redhat.thermostat.client.swing.components.Icon;
+import com.redhat.thermostat.client.swing.components.LabelField;
 import com.redhat.thermostat.client.ui.Palette;
+import com.redhat.thermostat.shared.locale.LocalizedString;
+import com.redhat.thermostat.thread.client.swing.experimental.components.DataPane;
+import com.redhat.thermostat.thread.client.swing.experimental.components.Separator;
 import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.GradientPaint;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Paint;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+import javax.swing.SwingConstants;
+import javax.swing.border.EmptyBorder;
 
 /**
+ *
  */
-public class TimelineLabel extends JPanel {
+class TimelineLabel extends DataPane {
+    private LabelField nameLabel;
+    private Icon infoOn;
+    private Icon infoOff;
 
-    private String text;
+    TimelineLabel(UIDefaults defaults, String text) {
+        super(Palette.WHITE, Palette.LIGHT_GRAY);
 
-    public TimelineLabel(String text) {
-        setOpaque(false);
-        setBorder(new TimelineBorder(true));
+        setBorder(new Separator(defaults, Separator.Side.BOTTOM, Separator.Type.SOLID));
 
-        this.text = text;
+        nameLabel = new LabelField(LocalizedString.EMPTY_STRING);
+        nameLabel.setFont(defaults.getDefaultFont().deriveFont(10.f));
 
-        JLabel nameLabel = new JLabel(text);
-        nameLabel.setFont(TimelineUtils.FONT);
-        nameLabel.setForeground(Palette.THERMOSTAT_BLU.getColor());
+        nameLabel.setText(text);
+        nameLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        nameLabel.setVerticalAlignment(SwingConstants.CENTER);
+        nameLabel.setForeground((Color) defaults.getSelectedComponentBGColor());
+        nameLabel.setBorder(new EmptyBorder(2, 2, 2, 2));
+
+        nameLabel.setHorizontalTextPosition(SwingConstants.LEFT);
+
+        infoOn = new FontAwesomeIcon('\uf05a', 12, Palette.DARK_GRAY.getColor());
+        infoOff = new FontAwesomeIcon('\uf05a', 12, Palette.PALE_GRAY.getColor());
+
+        nameLabel.setIcon(infoOff);
 
         add(nameLabel);
     }
 
-    @Override
-    public int getHeight() {
-        return 20;
-    }
-
-    @Override
-    public Dimension getPreferredSize() {
-        Dimension dim = super.getPreferredSize();
-        dim.height = getHeight();
-        return dim;
-    }
-
-    @Override
-    public Dimension getSize() {
-        return getPreferredSize();
-    }
-
-    @Override
-    protected void paintComponent(Graphics g) {
-
-        GraphicsUtils utils = GraphicsUtils.getInstance();
-
-        Graphics2D graphics = utils.createAAGraphics(g);
-
-        Color up = utils.deriveWithAlpha(Palette.WHITE.getColor(), 200);
-        Color bottom = utils.deriveWithAlpha(Palette.GRAY.getColor(), 200);
-
-        Paint gradient = new GradientPaint(0, 0, up, 0, getHeight(), bottom);
-        graphics.setPaint(gradient);
-
-        graphics.fillRect(0, 0, getWidth(), getHeight());
-
-        graphics.dispose();
-    }
-
-    public String getText() {
-        return text;
+    public void onMouseHover(boolean hover) {
+        nameLabel.setIcon(hover ? infoOn : infoOff);
+        repaint();
     }
 }

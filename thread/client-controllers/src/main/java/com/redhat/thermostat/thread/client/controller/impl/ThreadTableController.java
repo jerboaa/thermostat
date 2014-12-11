@@ -41,13 +41,6 @@ import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
-import com.redhat.thermostat.thread.model.ThreadContentionSample;
-import com.redhat.thermostat.thread.model.ThreadHeader;
-import com.redhat.thermostat.thread.model.ThreadState;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class ThreadTableController extends CommonController {
     
@@ -55,7 +48,7 @@ public class ThreadTableController extends CommonController {
     private ThreadCollector collector;
 
     private Range<Long> lastRangeChecked;
-    private Map<ThreadHeader, ThreadTableBean> threadStates;
+//    private Map<ThreadHeader, ThreadTableBean> threadStates;
 
     public ThreadTableController(ThreadTableView threadTableView,
                                  ThreadCollector collector,
@@ -64,7 +57,7 @@ public class ThreadTableController extends CommonController {
         super(timer, threadTableView);
         timer.setAction(new ThreadTableControllerAction());
 
-        threadStates = new HashMap<>();
+//        threadStates = new HashMap<>();
         this.collector = collector;
         this.threadTableView = threadTableView;
     }
@@ -74,78 +67,78 @@ public class ThreadTableController extends CommonController {
         @Override
         public void run() {
 
-            if (lastRangeChecked == null) {
-                lastRangeChecked = collector.getThreadStateTotalTimeRange();
-            } else {
-                lastRangeChecked = new Range<>(lastRangeChecked.getMax(),
-                                               System.currentTimeMillis());
-            }
-
-            List<ThreadTableBean> tableBeans = new ArrayList<>();
-
-            List<ThreadHeader> threads = collector.getThreads();
-
-            for (ThreadHeader thread : threads) {
-
-                ThreadTableBean bean = threadStates.get(thread);
-                if (bean == null) {
-                    bean = new ThreadTableBean();
-                    bean.setName(thread.getThreadName());
-                    bean.setId(thread.getThreadId());
-
-                    threadStates.put(thread, bean);
-                }
-
-                List<ThreadState> states = collector.getThreadStates(thread, lastRangeChecked);
-                for (ThreadState state : states) {
-
-                    Thread.State threadState = Thread.State.valueOf(state.getState());
-
-                    Range<Long> range = state.getRange();
-                    long currentRangeInCollection = range.getMax() - range.getMin();
-                    long currentStateInBean = getCurrentStateInBean(bean, threadState);
-
-                    currentStateInBean += currentRangeInCollection;
-                    setCurrentStateInBean(bean, threadState, currentStateInBean);
-
-                    double totalRunningTime = bean.getRunningTime()  +
-                                              bean.getMonitorTime()  +
-                                              bean.getSleepingTime() +
-                                              bean.getWaitingTime();
-
-                    if (totalRunningTime > 0) {
-                        double percent = (bean.getRunningTime() / totalRunningTime) * 100;
-                        bean.setRunningPercent(percent);
-
-                        percent = (bean.getWaitingTime() / totalRunningTime) * 100;
-                        bean.setWaitingPercent(percent);
-
-                        percent = (bean.getMonitorTime() / totalRunningTime) * 100;
-                        bean.setMonitorPercent(percent);
-
-                        percent = (bean.getSleepingTime() / totalRunningTime) * 100;
-                        bean.setSleepingPercent(percent);
-                    }
-                }
-
-                // check the latest stat regarding wait and block count
-                ThreadContentionSample sample = collector.getLatestContentionSample(thread);
-                if (sample != null) {
-                    bean.setBlockedCount(sample.getBlockedCount());
-                    bean.setWaitedCount(sample.getWaitedCount());
-                }
-
-                // finally, the time range for this thread
-                Range<Long> dataRange = collector.getThreadStateRange(thread);
-                if (dataRange != null) {
-                    bean.setStartTimeStamp(dataRange.getMin());
-                    bean.setStopTimeStamp(dataRange.getMax());
-                }
-
-                tableBeans.add(bean);
-            }
-
-            threadTableView.display(tableBeans);
+//            if (lastRangeChecked == null) {
+//                lastRangeChecked = collector.getThreadStateTotalTimeRange();
+//            } else {
+//                lastRangeChecked = new Range<>(lastRangeChecked.getMax(),
+//                                               System.currentTimeMillis());
+//            }
+//
+//            List<ThreadTableBean> tableBeans = new ArrayList<>();
+//
+//            List<ThreadHeader> threads = collector.getThreads();
+//
+//            for (ThreadHeader thread : threads) {
+//
+//                ThreadTableBean bean = threadStates.get(thread);
+//                if (bean == null) {
+//                    bean = new ThreadTableBean();
+//                    bean.setName(thread.getThreadName());
+//                    bean.setId(thread.getThreadId());
+//
+//                    threadStates.put(thread, bean);
+//                }
+//
+//                List<ThreadState> states = collector.getThreadStates(thread, lastRangeChecked);
+//                for (ThreadState state : states) {
+//
+//                    Thread.State threadState = Thread.State.valueOf(state.getState());
+//
+//                    Range<Long> range = state.getRange();
+//                    long currentRangeInCollection = range.getMax() - range.getMin();
+//                    long currentStateInBean = getCurrentStateInBean(bean, threadState);
+//
+//                    currentStateInBean += currentRangeInCollection;
+//                    setCurrentStateInBean(bean, threadState, currentStateInBean);
+//
+//                    double totalRunningTime = bean.getRunningTime()  +
+//                                              bean.getMonitorTime()  +
+//                                              bean.getSleepingTime() +
+//                                              bean.getWaitingTime();
+//
+//                    if (totalRunningTime > 0) {
+//                        double percent = (bean.getRunningTime() / totalRunningTime) * 100;
+//                        bean.setRunningPercent(percent);
+//
+//                        percent = (bean.getWaitingTime() / totalRunningTime) * 100;
+//                        bean.setWaitingPercent(percent);
+//
+//                        percent = (bean.getMonitorTime() / totalRunningTime) * 100;
+//                        bean.setMonitorPercent(percent);
+//
+//                        percent = (bean.getSleepingTime() / totalRunningTime) * 100;
+//                        bean.setSleepingPercent(percent);
+//                    }
+//                }
+//
+//                // check the latest stat regarding wait and block count
+//                ThreadContentionSample sample = collector.getLatestContentionSample(thread);
+//                if (sample != null) {
+//                    bean.setBlockedCount(sample.getBlockedCount());
+//                    bean.setWaitedCount(sample.getWaitedCount());
+//                }
+//
+//                // finally, the time range for this thread
+//                Range<Long> dataRange = collector.getThreadStateRange(thread);
+//                if (dataRange != null) {
+//                    bean.setStartTimeStamp(dataRange.getMin());
+//                    bean.setStopTimeStamp(dataRange.getMax());
+//                }
+//
+//                tableBeans.add(bean);
+//            }
+//
+//            threadTableView.display(tableBeans);
         }
     }
 

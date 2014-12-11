@@ -38,7 +38,6 @@ package com.redhat.thermostat.thread.harvester;
 
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.model.ThreadHeader;
 import com.redhat.thermostat.thread.model.ThreadSession;
 import com.redhat.thermostat.thread.model.ThreadState;
 import com.redhat.thermostat.thread.model.ThreadSummary;
@@ -50,7 +49,6 @@ import org.junit.Test;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -66,7 +64,6 @@ public class HarvesterHelperTest {
     private String vmId;
 
     private ThreadSummaryHelper summaryHelper;
-    private ThreadHeaderHelper headerHelper;
     private ThreadStateHelper stateHelper;
     private ThreadContentionHelper contentionHelper;
     private ThreadSessionHelper threadSessionHelper;
@@ -76,7 +73,6 @@ public class HarvesterHelperTest {
     @Before
     public void setUp() {
         summaryHelper = mock(ThreadSummaryHelper.class);
-        headerHelper = mock(ThreadHeaderHelper.class);
         stateHelper = mock(ThreadStateHelper.class);
 
         contentionHelper = mock(ThreadContentionHelper.class);
@@ -104,9 +100,8 @@ public class HarvesterHelperTest {
                                                session)).
             thenReturn(summary);
 
-        HarvesterHelper harvester = new HarvesterHelper(threadDao, clock, vmId,
+        HarvesterHelper harvester = new HarvesterHelper(clock, vmId,
                                                         summaryHelper,
-                                                        headerHelper,
                                                         stateHelper,
                                                         contentionHelper,
                                                         threadSessionHelper);
@@ -125,9 +120,8 @@ public class HarvesterHelperTest {
         long[] ids = new long[] {0l, 1l, 2l};
         when(collectorBean.getAllThreadIds()).thenReturn(ids);
 
-        HarvesterHelper harvester = new HarvesterHelper(threadDao, clock, vmId,
+        HarvesterHelper harvester = new HarvesterHelper(clock, vmId,
                                                         summaryHelper,
-                                                        headerHelper,
                                                         stateHelper,
                                                         contentionHelper,
                                                         threadSessionHelper);
@@ -151,34 +145,20 @@ public class HarvesterHelperTest {
 
         when(collectorBean.getThreadInfo(any(long[].class), eq(true), eq(true))).thenReturn(infos);
 
-        ThreadHeader header1 = mock(ThreadHeader.class);
-        ThreadHeader header2 = mock(ThreadHeader.class);
-
-        when(headerHelper.createThreadHeader(infos[0], DEFAULT_TIMESTAMP)).thenReturn(header1);
-        when(headerHelper.createThreadHeader(infos[1], DEFAULT_TIMESTAMP)).thenReturn(header2);
-        when(headerHelper.createThreadHeader(infos[2], DEFAULT_TIMESTAMP)).thenReturn(header1);
-
-        when(headerHelper.checkAndSaveThreadHeader(header1)).thenReturn(header1);
-        when(headerHelper.checkAndSaveThreadHeader(header2)).thenReturn(header2);
-
         ThreadState state1 = mock(ThreadState.class);
         ThreadState state2 = mock(ThreadState.class);
         ThreadState state3 = mock(ThreadState.class);
 
-        when(stateHelper.createThreadState(header1, infos[0], DEFAULT_TIMESTAMP)).thenReturn(state1);
-        when(stateHelper.createThreadState(header2, infos[1], DEFAULT_TIMESTAMP)).thenReturn(state2);
-        when(stateHelper.createThreadState(header1, infos[2], DEFAULT_TIMESTAMP)).thenReturn(state3);
+        when(stateHelper.createThreadState(eq(infos[0]),eq(session.getSessionID()), eq(DEFAULT_TIMESTAMP))).thenReturn(state1);
+        when(stateHelper.createThreadState(eq(infos[1]), eq(session.getSessionID()), eq(DEFAULT_TIMESTAMP))).thenReturn(state2);
+        when(stateHelper.createThreadState(eq(infos[2]), eq(session.getSessionID()), eq(DEFAULT_TIMESTAMP))).thenReturn(state3);
 
-        HarvesterHelper harvester = new HarvesterHelper(threadDao, clock, vmId,
+        HarvesterHelper harvester = new HarvesterHelper(clock, vmId,
                                                         summaryHelper,
-                                                        headerHelper,
                                                         stateHelper,
                                                         contentionHelper,
                                                         threadSessionHelper);
         harvester.collectAndSaveThreadData(session, collectorBean);
-
-        verify(headerHelper, times(2)).checkAndSaveThreadHeader(header1);
-        verify(headerHelper).checkAndSaveThreadHeader(header2);
 
         verify(stateHelper).saveThreadState(state1);
         verify(stateHelper).saveThreadState(state2);

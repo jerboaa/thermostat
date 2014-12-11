@@ -49,15 +49,15 @@ class ThreadSummaryHelper {
     private String vmId;
     private WriterID writerId;
     private ThreadDao threadDao;
-
     ThreadSummaryHelper(ThreadDao threadDao, WriterID writerId, String vmId) {
         this.vmId = vmId;
         this.writerId = writerId;
         this.threadDao = threadDao;
     }
 
-    ThreadSummary createThreadSummary(ThreadMXBean collectorBean, long timestamp, ThreadSession session) {
-
+    ThreadSummary createThreadSummary(ThreadMXBean collectorBean,
+                                      long timestamp, ThreadSession session)
+    {
         String wId = writerId.getWriterID();
 
         ThreadSummary summary = new ThreadSummary(wId);

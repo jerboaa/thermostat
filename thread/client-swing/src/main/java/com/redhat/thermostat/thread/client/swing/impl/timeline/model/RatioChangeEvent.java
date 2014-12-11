@@ -34,25 +34,29 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.common.model.timeline;
+package com.redhat.thermostat.thread.client.swing.impl.timeline.model;
 
-import java.beans.PropertyChangeListener;
-
-import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
+import java.util.EventObject;
 
 /**
- * Model to define the size of the timeline with respect to the physical
- * dimension of the {@link ThreadTimelineView}.
+ *
  */
-public interface TimelineDimensionModel {
-    
-    /**
-     * This property defines the total length in milliseconds of the
-     * {@link ThreadTimelineView}.
-     */
-    public static final String LENGTH_PROPERTY = "LENGTH_PROPERTY";
-    
-    long getLengthInMillis();
-    
-    public void addPropertyChangeListener(String property, PropertyChangeListener listener);
+public class RatioChangeEvent extends EventObject {
+    private final TimelineModel source;
+    private final double ratio;
+
+    public RatioChangeEvent(TimelineModel source, double ratio) {
+        super(source);
+        this.source = source;
+        this.ratio = ratio;
+    }
+
+    @Override
+    public TimelineModel getSource() {
+        return (TimelineModel) super.getSource();
+    }
+
+    public double getRatio() {
+        return ratio;
+    }
 }

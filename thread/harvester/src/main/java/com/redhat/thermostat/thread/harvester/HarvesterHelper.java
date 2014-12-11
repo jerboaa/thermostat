@@ -39,8 +39,6 @@ package com.redhat.thermostat.thread.harvester;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.model.ThreadContentionSample;
-import com.redhat.thermostat.thread.model.ThreadHeader;
 import com.redhat.thermostat.thread.model.ThreadSession;
 import com.redhat.thermostat.thread.model.ThreadState;
 import com.redhat.thermostat.thread.model.ThreadSummary;
@@ -55,24 +53,21 @@ class HarvesterHelper {
     private String vmId;
 
     private ThreadSummaryHelper summaryHelper;
-    private ThreadHeaderHelper headerHelper;
     private ThreadStateHelper stateHelper;
     private ThreadContentionHelper contentionHelper;
     private ThreadSessionHelper sessionHelper;
 
     HarvesterHelper(ThreadDao threadDao, Clock clock, String vmId, WriterID writerId)
     {
-        this(threadDao, clock, vmId,
+        this(clock, vmId,
              new ThreadSummaryHelper(threadDao, writerId, vmId),
-             new ThreadHeaderHelper(threadDao, writerId, vmId),
              new ThreadStateHelper(threadDao, writerId, vmId),
              new ThreadContentionHelper(threadDao, writerId, vmId),
              new ThreadSessionHelper(threadDao, writerId, vmId, clock));
     }
 
-    HarvesterHelper(ThreadDao threadDao, Clock clock, String vmId,
+    HarvesterHelper(Clock clock, String vmId,
                     ThreadSummaryHelper summaryHelper,
-                    ThreadHeaderHelper headerHelper,
                     ThreadStateHelper stateHelper,
                     ThreadContentionHelper contentionHelper,
                     ThreadSessionHelper sessionHelper)
@@ -81,7 +76,6 @@ class HarvesterHelper {
         this.clock = clock;
 
         this.summaryHelper = summaryHelper;
-        this.headerHelper = headerHelper;
         this.stateHelper = stateHelper;
 
         this.contentionHelper = contentionHelper;
@@ -116,21 +110,19 @@ class HarvesterHelper {
 
             ThreadInfo beanInfo = threadInfos[i];
 
-            // common header
-            ThreadHeader header = headerHelper.createThreadHeader(beanInfo, timestamp);
-            header = headerHelper.checkAndSaveThreadHeader(header);
-
             // state information
-            ThreadState state = stateHelper.createThreadState(header, beanInfo,
-                                                              timestamp);
+            ThreadState state =
+                    stateHelper.createThreadState(beanInfo,
+                                                  session.getSessionID(),
+                                                  timestamp);
             stateHelper.saveThreadState(state);
-
-            // contention information
-            ThreadContentionSample contentionSample =
-                    contentionHelper.createThreadContentionSample(header,
-                                                                  beanInfo,
-                                                                  timestamp);
-            contentionHelper.saveContentionSample(contentionSample);
+//
+//            // contention information
+//            ThreadContentionSample contentionSample =
+//                    contentionHelper.createThreadContentionSample(header,
+//                                                                  beanInfo,
+//                                                                  timestamp);
+//            contentionHelper.saveContentionSample(contentionSample);
         }
     }
 

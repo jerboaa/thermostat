@@ -38,9 +38,6 @@ package com.redhat.thermostat.thread.harvester;
 
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.model.ThreadContentionSample;
-import com.redhat.thermostat.thread.model.ThreadHeader;
-import java.lang.management.ThreadInfo;
 
 /**
  */
@@ -56,23 +53,23 @@ public class ThreadContentionHelper {
         this.vmId = vmId;
     }
 
-    public ThreadContentionSample createThreadContentionSample(ThreadHeader header,
-                                                               ThreadInfo beanInfo,
-                                                               long timestamp)
-    {
-        String wId = writerId.getWriterID();
-
-        ThreadContentionSample sample = new ThreadContentionSample(wId, header);
-        sample.setTimeStamp(timestamp);
-        sample.setBlockedCount(beanInfo.getBlockedCount());
-        sample.setBlockedTime(beanInfo.getBlockedTime());
-        sample.setWaitedCount(beanInfo.getWaitedCount());
-        sample.setWaitedTime(beanInfo.getWaitedTime());
-
-        return sample;
-    }
-
-    public void saveContentionSample(ThreadContentionSample contentionSample) {
-        threadDao.saveContentionSample(contentionSample);
-    }
+//    public ThreadContentionSample createThreadContentionSample(ThreadHeader header,
+//                                                               ThreadInfo beanInfo,
+//                                                               long timestamp)
+//    {
+//        String wId = writerId.getWriterID();
+//
+//        ThreadContentionSample sample = new ThreadContentionSample(wId);
+//        sample.setTimeStamp(timestamp);
+//        sample.setBlockedCount(beanInfo.getBlockedCount());
+//        sample.setBlockedTime(beanInfo.getBlockedTime());
+//        sample.setWaitedCount(beanInfo.getWaitedCount());
+//        sample.setWaitedTime(beanInfo.getWaitedTime());
+//
+//        return sample;
+//    }
+//
+//    public void saveContentionSample(ThreadContentionSample contentionSample) {
+//        threadDao.saveContentionSample(contentionSample);
+//    }
 }

@@ -38,21 +38,17 @@ package com.redhat.thermostat.thread.client.controller.impl;
 
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.model.Range;
+import com.redhat.thermostat.storage.core.experimental.statement.ResultHandler;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
-import com.redhat.thermostat.thread.client.common.model.timeline.Timeline;
-import com.redhat.thermostat.thread.client.common.model.timeline.TimelineDimensionModel;
-import com.redhat.thermostat.thread.client.common.model.timeline.TimelineGroupDataModel;
+import com.redhat.thermostat.thread.client.common.model.timeline.ThreadInfo;
 import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
-import com.redhat.thermostat.thread.model.ThreadHeader;
-import java.util.ArrayList;
-import java.util.List;
+import com.redhat.thermostat.thread.model.SessionID;
+import com.redhat.thermostat.thread.model.ThreadState;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -60,72 +56,109 @@ import static org.mockito.Mockito.when;
 
 public class ThreadTimelineControllerTest {
 
-    private ArgumentCaptor<Runnable> timerActionCaptor;
-    private Timer timer;
-
     private ThreadTimelineView view;
     private ThreadCollector collector;
-    private TimelineDimensionModel timelineDimensionModel;
-    private TimelineGroupDataModel groupDataModel;
-
-    private Range<Long> totalRange = new Range<>(0l, 30_000l);
+    private Timer timer;
+    private SessionID session;
 
     @Before
-    public void setUp() throws Exception {
-        timer = mock(Timer.class);
-        timerActionCaptor = ArgumentCaptor.forClass(Runnable.class);
-        doNothing().when(timer).setAction(timerActionCaptor.capture());
-
+    public void setup() {
         view = mock(ThreadTimelineView.class);
         collector = mock(ThreadCollector.class);
-        timelineDimensionModel = mock(TimelineDimensionModel.class);
-        when(timelineDimensionModel.getLengthInMillis()).thenReturn(25_000l);
-        when(collector.getThreadStateTotalTimeRange()).thenReturn(totalRange);
+        timer = mock(Timer.class);
+        session = mock(SessionID.class);
 
-        groupDataModel = mock(TimelineGroupDataModel.class);
-        when(view.getGroupDataModel()).thenReturn(groupDataModel);
+        when(collector.getLastThreadSession()).thenReturn(session);
     }
 
     @Test
-    public void testTimelineController() {
-
-        Range<Long> pageRange = new Range<>(5_000l, 30_000l);
-        ArgumentCaptor<Range> pageRangeCaptor = ArgumentCaptor.forClass(Range.class);
-        doNothing().when(groupDataModel).setPageRange(pageRangeCaptor.capture());
-
-        ThreadHeader thread1 = mock(ThreadHeader.class);
-        ThreadHeader thread2 = mock(ThreadHeader.class);
-
-        List<ThreadHeader> threads = new ArrayList<>();
-
-        threads.add(thread1);
-        threads.add(thread2);
-
-        when(collector.getThreads()).thenReturn(threads);
+    public void verifySession() {
+        ArgumentCaptor<Runnable> captor =
+                ArgumentCaptor.forClass(Runnable.class);
+        doNothing().when(timer).setAction(captor.capture());
 
         ThreadTimelineController controller =
-                new ThreadTimelineController(view, collector, timer,
-                                             timelineDimensionModel);
+                new ThreadTimelineController(view, collector, timer);
+        Runnable timerAction = captor.getValue();
 
-        Runnable controllerRunnable = timerActionCaptor.getValue();
+        timerAction.run();
 
-        controllerRunnable.run();
+        verify(collector).getLastThreadSession();
+    }
 
-        // check that the thread list is correctly passed to the view
-        verify(view).updateThreadList(threads);
+    @Test
+    public void verifyRange() {
+        ArgumentCaptor<Runnable> captor =
+                ArgumentCaptor.forClass(Runnable.class);
+        doNothing().when(timer).setAction(captor.capture());
 
-        // verify group model gets updated with the page and total data
-        verify(groupDataModel).setTotalRange(totalRange);
-        Range<Long> pageRangeResult = pageRangeCaptor.getValue();
-        assertEquals(pageRangeResult, pageRange);
+        Range<Long> range = new Range<>(0l, 10l);
+        when(collector.getThreadRange(session)).thenReturn(range);
 
-        // check that the thread state is queried for each of the thread headers
-        verify(collector).getThreadStates(eq(thread1), any(Range.class));
-        verify(collector).getThreadStates(eq(thread2), any(Range.class));
+        ThreadTimelineController controller =
+                new ThreadTimelineController(view, collector, timer);
+        Runnable timerAction = captor.getValue();
 
-        verify(view).displayTimeline(eq(thread1), any(Timeline.class));
-        verify(view).displayTimeline(eq(thread2), any(Timeline.class));
+        timerAction.run();
 
-        verify(view).submitChanges();
+        verify(collector).getThreadRange(session);
+        verify(view).setTotalRange(range);
+    }
+
+    @Test
+    public void testAllBeansAreLoaded() {
+        ArgumentCaptor<Runnable> captor =
+                ArgumentCaptor.forClass(Runnable.class);
+        doNothing().when(timer).setAction(captor.capture());
+
+        ArgumentCaptor<ResultHandler> captor2 =
+                ArgumentCaptor.forClass(ResultHandler.class);
+        doNothing().when(collector).getThreadStates(any(SessionID.class),
+                                                    captor2.capture(),
+                                                    any(Range.class));
+
+        Range<Long> range = new Range<>(0l, 10l);
+        when(collector.getThreadRange(session)).thenReturn(range);
+
+        ThreadTimelineController controller =
+                new ThreadTimelineController(view, collector, timer);
+        Runnable timerAction = captor.getValue();
+
+        timerAction.run();
+
+        ResultHandler handler = captor2.getValue();
+
+        ThreadState state0 = mock(ThreadState.class);
+        when(state0.getName()).thenReturn("state0");
+        when(state0.getId()).thenReturn(0l);
+        when(state0.getState()).thenReturn("NEW");
+
+        ThreadState state1 = mock(ThreadState.class);
+        when(state1.getName()).thenReturn("state1");
+        when(state1.getId()).thenReturn(1l);
+        when(state1.getState()).thenReturn("NEW");
+
+        ThreadState state2 = mock(ThreadState.class);
+        when(state2.getName()).thenReturn("state2");
+        when(state2.getId()).thenReturn(2l);
+        when(state2.getState()).thenReturn("NEW");
+
+        handler.onResult(state0);
+        handler.onResult(state1);
+        handler.onResult(state2);
+
+        ThreadInfo info = new ThreadInfo();
+        info.setName("state0");
+        info.setId(0l);
+
+        verify(view).addThread(info);
+
+        info.setName("state1");
+        info.setId(1l);
+        verify(view).addThread(info);
+
+        info.setName("state2");
+        info.setId(2l);
+        verify(view).addThread(info);
     }
 }

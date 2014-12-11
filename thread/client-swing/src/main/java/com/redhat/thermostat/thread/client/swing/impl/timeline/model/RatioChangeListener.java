@@ -34,22 +34,13 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.swing.impl.timeline;
+package com.redhat.thermostat.thread.client.swing.impl.timeline.model;
 
-import javax.swing.JList;
-import javax.swing.JPanel;
-import javax.swing.ListCellRenderer;
+import java.util.EventListener;
 
-@SuppressWarnings("serial")
-public class TimelineCellRenderer extends JPanel implements ListCellRenderer<TimelineComponent> {
-
-    @Override
-    public TimelineComponent getListCellRendererComponent(JList<? extends TimelineComponent> list,
-                                                          TimelineComponent value,
-                                                          int index, boolean isSelected,
-                                                          boolean cellHasFocus)
-    {
-        value.setSelected(isSelected);
-        return value;
-    }
+/**
+ *
+ */
+public interface RatioChangeListener extends EventListener {
+    public void ratioChanged(RatioChangeEvent event);
 }

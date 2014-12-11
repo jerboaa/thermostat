@@ -115,8 +115,10 @@
             <Private-Package>
               com.redhat.thermostat.thread.client.swing.osgi,
               com.redhat.thermostat.thread.client.swing.impl,
-              com.redhat.thermostat.thread.client.swing.impl.timeline,
-              com.redhat.thermostat.thread.client.swing.impl.timeline.scrollbar,
+                com.redhat.thermostat.thread.client.swing.impl.timeline,
+                com.redhat.thermostat.thread.client.swing.impl.timeline.model,
+                com.redhat.thermostat.thread.client.swing.experimental.components,
+                com.redhat.thermostat.thread.client.swing.experimental.utils,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>

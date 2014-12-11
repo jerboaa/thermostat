@@ -38,50 +38,43 @@ package com.redhat.thermostat.thread.harvester;
 
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.model.ThreadHeader;
+import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.ThreadState;
-
 import java.lang.management.ThreadInfo;
 
 public class ThreadStateHelper {
 
     private ThreadDao threadDao;
-    private WriterID writerId;
-    private String vmId;
+    private final WriterID writerId;
+    private final String vmId;
 
-    public ThreadStateHelper(ThreadDao threadDao, WriterID writerId, String vmId) {
+    public ThreadStateHelper(ThreadDao threadDao,
+                             WriterID writerId, String vmId)
+    {
+        this.threadDao = threadDao;
         this.writerId = writerId;
         this.vmId = vmId;
-        this.threadDao = threadDao;
     }
 
-    public ThreadState createThreadState(ThreadHeader header, ThreadInfo beanInfo,
+    public ThreadState createThreadState(ThreadInfo beanInfo,
+                                         SessionID sessionID,
                                          long timestamp)
     {
-        String wId = writerId.getWriterID();
+        ThreadState state = new ThreadState(writerId.getWriterID());
 
-        ThreadState state = new ThreadState(wId, header);
         state.setState(beanInfo.getThreadState().name());
-        state.setProbeStartTime(timestamp);
-        state.setProbeEndTime(timestamp);
+        state.setTimeStamp(timestamp);
+        state.setSession(sessionID.get());
+        state.setVmId(vmId);
+        state.setName(beanInfo.getThreadName());
+        state.setId(beanInfo.getThreadId());
+        state.setSuspended(beanInfo.isSuspended());
+        state.setInNative(beanInfo.isInNative());
 
         return state;
     }
 
-    public ThreadState saveThreadState(ThreadState thread) {
-
-        ThreadHeader header = thread.getHeader();
-        ThreadState lastState = threadDao.getLastThreadState(header);
-        if (lastState == null || !lastState.getState().equals(thread.getState()))
-        {
-            threadDao.addThreadState(thread);
-            lastState = thread;
-
-        } else {
-            // update
-            lastState.setProbeEndTime(thread.getProbeEndTime());
-            threadDao.updateThreadState(lastState);
-        }
-        return lastState;
+    public void saveThreadState(ThreadState thread) {
+        threadDao.addThreadState(thread);
     }
 }

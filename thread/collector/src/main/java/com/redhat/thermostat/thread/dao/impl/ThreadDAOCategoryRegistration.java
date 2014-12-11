@@ -56,8 +56,6 @@ public class ThreadDAOCategoryRegistration implements CategoryRegistration {
 
         categories.add(ThreadDao.DEADLOCK_INFO.getName());
         categories.add(ThreadDao.THREAD_HARVESTING_STATUS.getName());
-        categories.add(ThreadDao.THREAD_HEADER.getName());
-        categories.add(ThreadDao.THREAD_STATE.getName());
         categories.add(ThreadDao.THREAD_CONTENTION_SAMPLE.getName());
 
         ThreadDaoCategories.register(categories);

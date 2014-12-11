@@ -39,9 +39,10 @@ package com.redhat.thermostat.thread.dao.impl;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.core.experimental.statement.CategoryBuilder;
+import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.thread.model.ThreadSession;
+import com.redhat.thermostat.thread.model.ThreadState;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -58,12 +59,15 @@ public class ThreadDaoCategories {
     public static class Categories {
         public static final String SUMMARY = "vm-thread-summary";
         public static final String SESSION = "vm-thread-session";
+        public static final String STATE = "vm-thread-state";
+
     }
 
     static final List<Class<? extends Pojo>> BEANS = new ArrayList<>();
     static {
         BEANS.add(ThreadSummary.class);
         BEANS.add(ThreadSession.class);
+        BEANS.add(ThreadState.class);
     }
 
     public static void register(Collection<String> collection) {

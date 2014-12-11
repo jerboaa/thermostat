@@ -36,130 +36,64 @@
 
 package com.redhat.thermostat.thread.client.swing.impl;
 
-import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.UIDefaults;
-import com.redhat.thermostat.client.swing.components.ThermostatScrollPane;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.common.model.Range;
-import com.redhat.thermostat.thread.client.common.model.timeline.Timeline;
-import com.redhat.thermostat.thread.client.common.model.timeline.TimelineGroupDataModel;
+import com.redhat.thermostat.thread.client.common.model.timeline.ThreadInfo;
+import com.redhat.thermostat.thread.client.common.model.timeline.TimelineProbe;
 import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
-import com.redhat.thermostat.thread.client.swing.impl.timeline.HeaderController;
-import com.redhat.thermostat.thread.client.swing.impl.timeline.SwingTimelineDimensionModel;
-import com.redhat.thermostat.thread.client.swing.impl.timeline.ThreadTimelineHeader;
-import com.redhat.thermostat.thread.client.swing.impl.timeline.TimelineCellRenderer;
+import com.redhat.thermostat.thread.client.swing.experimental.utils.EDTHelper;
+import com.redhat.thermostat.thread.client.swing.impl.timeline.RangeComponent;
 import com.redhat.thermostat.thread.client.swing.impl.timeline.TimelineComponent;
-import com.redhat.thermostat.thread.client.swing.impl.timeline.TimelineGroupThreadConverter;
-import com.redhat.thermostat.thread.client.swing.impl.timeline.scrollbar.SwingTimelineScrollBarController;
-import com.redhat.thermostat.thread.client.swing.impl.timeline.scrollbar.TimelineScrollBar;
-import com.redhat.thermostat.thread.model.ThreadHeader;
-
-import java.awt.BorderLayout;
+import com.redhat.thermostat.thread.client.swing.impl.timeline.TimelineContainer;
+import com.redhat.thermostat.thread.client.swing.impl.timeline.TimelineViewComponent;
+import com.redhat.thermostat.thread.client.swing.impl.timeline.model.RangedTimelineProbe;
+import com.redhat.thermostat.thread.client.swing.impl.timeline.model.TimelineDateFormatter;
 import java.awt.Component;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-
-import javax.swing.DefaultListModel;
-import javax.swing.JList;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.ListSelectionModel;
-import javax.swing.SwingUtilities;
 
 public class SwingThreadTimelineView extends ThreadTimelineView implements SwingComponent  {
 
-    private SwingTimelineScrollBarController scrollBarController;
-    private Map<ThreadHeader, TimelineComponent> timelineMap;
+    private final UIDefaults uiDefaults;
+    private TimelineViewComponent contentPane;
 
-    private TimelineGroupThreadConverter groupDataModel;
-    private SwingTimelineDimensionModel dimensionModel;
+    private ComponentVisibilityNotifier visibilityNotifier;
 
-    private DefaultListModel<TimelineComponent> timelineModel;
-    private JList<TimelineComponent> timelines;
+    private Map<ThreadInfo, TimelineComponent> timelines;
 
-    private ThreadTimelineHeader header;
-    private JPanel contentPane;
-    private JScrollPane scrollPane;
+    private EDTHelper edt;
 
-    public SwingThreadTimelineView(UIDefaults uiDefaults,
-                                   final SwingTimelineDimensionModel dimensionModel)
-    {
-        timelineMap = new HashMap<>();
+    public SwingThreadTimelineView(UIDefaults uiDefaults) {
+        this.uiDefaults = uiDefaults;
 
-        this.dimensionModel = dimensionModel;
+        edt = new EDTHelper();
+        timelines = new HashMap<>();
 
-        TimelineGroupDataModel realGDM = new TimelineGroupDataModel();
-        groupDataModel = new TimelineGroupThreadConverter(realGDM);
+        this.contentPane = new TimelineViewComponent(uiDefaults);
+        clear();
 
-        contentPane = new JPanel();
-        new ComponentVisibilityNotifier().initialize(contentPane, notifier);
-        contentPane.addHierarchyListener(new ComponentVisibleListener() {
-            @Override
-            public void componentShown(Component component) {
-                // TODO: this should be retrieved from state properties
-                requestFollowMode();
-            }
-            
-            @Override
-            public void componentHidden(Component component) {
-                // TODO should requestFollowMode be disabled?
-            }
-        });
-
-        contentPane.setLayout(new BorderLayout(0, 0));
-
-        JPanel timelineBottomControls = new JPanel();
-        timelineBottomControls.setLayout(new BorderLayout(0, 0));
-
-        TimelineScrollBar scrollbar = setupTimelineScrollBar(uiDefaults);
-        timelineBottomControls.add(scrollbar, BorderLayout.NORTH);
-
-        createScrollPane();
-        contentPane.add(scrollPane, BorderLayout.CENTER);
-
-        ThreadTimelineLegendPanel timelineLegend = new ThreadTimelineLegendPanel();
-        timelineBottomControls.add(timelineLegend, BorderLayout.SOUTH);
-
-        contentPane.add(timelineBottomControls, BorderLayout.SOUTH);
-        contentPane.addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-            dimensionModel.setWidth(contentPane.getWidth());
-            }
-        });
+        visibilityNotifier = new ComponentVisibilityNotifier();
+        visibilityNotifier.initialize(contentPane, notifier);
     }
 
-    TimelineScrollBar setupTimelineScrollBar(UIDefaults uiDefaults) {
+    @Override
+    public void addThread(final ThreadInfo thread) {
+        edt.callLater(new Runnable() {
+            @Override
+            public void run() {
+                if (!timelines.containsKey(thread)) {
+                    TimelineComponent timeline =
+                            new TimelineComponent(uiDefaults, thread,
+                                                  contentPane.getModel());
+                    timeline.initComponents();
 
-        TimelineScrollBar scrollbar = new TimelineScrollBar(uiDefaults);
-        scrollBarController = new SwingTimelineScrollBarController(this, scrollbar,
-                                                                   groupDataModel,
-                                                                   dimensionModel);
-        scrollBarController.initScrollbar(this);
-        return scrollbar;
-    }
-
-    private void createScrollPane() {
-
-        timelineModel = new DefaultListModel<>();
-        timelines = new JList<>(timelineModel);
-        timelines.setCellRenderer(new TimelineCellRenderer());
-        timelines.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-
-        scrollPane = new ThermostatScrollPane(timelines);
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-
-        header = new ThreadTimelineHeader(groupDataModel, dimensionModel);
-        header.setName("TimelineRulerHeader_thread");
-
-        scrollPane.setColumnHeaderView(header);
-        groupDataModel.addPropertyChangeListener(TimelineGroupDataModel.RangeChangeProperty.PAGE_RANGE,
-                                                 new HeaderController(header, timelines));
+                    timelines.put(thread, timeline);
+                    contentPane.addTimeline(timeline);
+                }
+            }
+        });
     }
 
     @Override
@@ -168,70 +102,64 @@ public class SwingThreadTimelineView extends ThreadTimelineView implements Swing
     }
 
     @Override
-    public void ensureTimelineState(final TimelineSelectorState following) {
-        SwingUtilities.invokeLater(new Runnable() {
+    public void setTotalRange(final Range<Long> totalRange) {
+        edt.callLater(new Runnable() {
             @Override
             public void run() {
-                scrollBarController.ensureTimelineState(following);
+                contentPane.getModel().setRange(totalRange);
             }
         });
     }
-    
+
     @Override
-    public void updateThreadList(final List<ThreadHeader> threads) {
-        SwingUtilities.invokeLater(new Runnable() {
+    public void clear() {
+        edt.callLater(new Runnable() {
             @Override
             public void run() {
-                // TODO: remove timelines that are not in the list, but
-                // still present onscreen
-                for (ThreadHeader thread : threads) {
-                    if (!timelineMap.containsKey(thread)) {
-                        TimelineComponent timeline =
-                                new TimelineComponent(groupDataModel,
-                                                      dimensionModel,
-                                                      thread.getThreadName());
-                        timelineMap.put(thread, timeline);
-                        timelineModel.addElement(timeline);
+                timelines.clear();
+                contentPane.removeAll();
+                contentPane.initComponents();
+                contentPane.revalidate();
+            }
+        });
+    }
+
+    @Override
+    public void addProbe(final ThreadInfo info, final TimelineProbe state) {
+        edt.callLater(new Runnable() {
+            @Override
+            public void run() {
+                TimelineComponent component = timelines.get(info);
+                TimelineContainer timelineContainer =
+                        component.getTimelineContainer();
+                RangeComponent rangeComponent =
+                        timelineContainer.getLastRangeComponent();
+
+                if (rangeComponent == null) {
+                    setRangedComponent(state, timelineContainer);
+
+                } else {
+                    RangedTimelineProbe probe = rangeComponent.getInfo();
+                    probe.setProbeEnd(state.getTimeStamp());
+                    if (!probe.getColor().equals(state.getColor())) {
+                        setRangedComponent(state, timelineContainer);
                     }
                 }
+                timelineContainer.revalidate();
             }
         });
     }
 
-    @Override
-    public TimelineGroupDataModel getGroupDataModel() {
-        return groupDataModel.getDataModel();
-    }
-
-    @Override
-    public void displayTimeline(final ThreadHeader thread,
-                                final Timeline threadTimeline)
+    private void setRangedComponent(TimelineProbe state,
+                                    TimelineContainer timelineContainer)
     {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                TimelineComponent timeline = timelineMap.get(thread);
-                if (timeline != null) {
-                    timeline.setTimeline(threadTimeline);
-                }
-            }
-        });
-    }
-    @Override
-    public void submitChanges() {
-        contentPane.revalidate();
-    }
-
-
-    // rise visibility so other classes here can use those methods through us
-    @Override
-    public void requestFollowMode() {
-        super.requestFollowMode();
-    }
-
-    @Override
-    public void requestStaticMode(Range<Long> pageRange) {
-        super.requestStaticMode(pageRange);
+        RangedTimelineProbe probe =
+                new RangedTimelineProbe(state, state.getTimeStamp());
+        RangeComponent rangeComponent = new RangeComponent(probe);
+        rangeComponent.setToolTipText(state.getState() + " - " +
+                                      TimelineDateFormatter.format(state.
+                                              getTimeStamp()));
+        timelineContainer.add(rangeComponent);
     }
 }
 

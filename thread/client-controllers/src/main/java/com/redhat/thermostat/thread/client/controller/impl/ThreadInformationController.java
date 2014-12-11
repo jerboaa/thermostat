@@ -36,9 +36,6 @@
 
 package com.redhat.thermostat.thread.client.controller.impl;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
@@ -54,11 +51,12 @@ import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
-import com.redhat.thermostat.thread.client.common.model.timeline.TimelineDimensionModel;
 import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
-import com.redhat.thermostat.thread.client.common.view.ThreadView;
 import com.redhat.thermostat.thread.client.common.view.ThreadTableView.ThreadSelectionAction;
+import com.redhat.thermostat.thread.client.common.view.ThreadView;
 import com.redhat.thermostat.thread.client.common.view.ThreadView.ThreadAction;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ThreadInformationController implements InformationServiceController<VmRef> {
 
@@ -70,17 +68,12 @@ public class ThreadInformationController implements InformationServiceController
 
     private ApplicationService appService;
 
-    private TimelineDimensionModel timelineDimensionModel;
-
     public ThreadInformationController(VmRef ref, ApplicationService appService,
                                        VmInfoDAO vmInfoDao,
                                        ThreadCollectorFactory collectorFactory, 
-                                       ThreadViewProvider viewFactory,
-                                       TimelineDimensionModel timelineDimensionModel)
+                                       ThreadViewProvider viewFactory)
     {
         this.appService = appService;
-
-        this.timelineDimensionModel = timelineDimensionModel;
 
         view = viewFactory.createView();
         view.setApplicationService(appService, ref.getVmId() + "-" + ref.getHostRef().getAgentId());
@@ -169,8 +162,9 @@ public class ThreadInformationController implements InformationServiceController
         threadTableController.initialize();
         
         CommonController threadTimeline =
-                new ThreadTimelineController(view.createThreadTimelineView(), collector,
-                                             tf.createTimer(), timelineDimensionModel);
+                new ThreadTimelineController(view.createThreadTimelineView(),
+                                             collector,
+                                             tf.createTimer());
         threadTimeline.initialize();
     }
 }

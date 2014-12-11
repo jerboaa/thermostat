@@ -34,16 +34,18 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.swing.impl.timeline.scrollbar;
+package com.redhat.thermostat.thread.client.swing.experimental.components;
 
-import com.redhat.thermostat.client.swing.UIDefaults;
-import com.redhat.thermostat.client.swing.components.ThermostatThinScrollBar;
+import com.redhat.thermostat.client.ui.Palette;
+import java.awt.BorderLayout;
+import javax.swing.JPanel;
 
-@SuppressWarnings("serial")
-public class TimelineScrollBar extends ThermostatThinScrollBar {
-
-    public TimelineScrollBar(UIDefaults uiDefaults) {
-        super(TimelineScrollBar.HORIZONTAL);
-        setUI(new TimelineScrollBarUI(uiDefaults));
+/**
+ * Basic panel that should be used for all custom panels in Thermostat.
+ */
+public class ContentPane extends JPanel {
+    public ContentPane() {
+        setBackground(Palette.WHITE.getColor());
+        setLayout(new BorderLayout());
     }
 }

@@ -66,11 +66,13 @@ public abstract class CommonController {
             public void actionPerformed(ActionEvent<Action> actionEvent) {
                 switch (actionEvent.getActionId()) {
                 case VISIBLE:
+                    onViewVisible();
                     timer.start();
                     break;
 
                 case HIDDEN:
                     timer.stop();
+                    onViewHidden();
                     break;
 
                 default:
@@ -79,5 +81,8 @@ public abstract class CommonController {
             }
         });
     }
+
+    protected void onViewVisible() {}
+    protected void onViewHidden() {}
 }
 

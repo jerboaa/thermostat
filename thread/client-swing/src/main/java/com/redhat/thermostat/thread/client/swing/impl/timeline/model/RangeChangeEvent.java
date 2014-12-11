@@ -34,25 +34,31 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.swing.impl.timeline;
+package com.redhat.thermostat.thread.client.swing.impl.timeline.model;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import javax.swing.JComponent;
+import com.redhat.thermostat.common.model.Range;
+import java.util.EventObject;
 
 /**
+ *
  */
-public class HeaderController implements PropertyChangeListener {
+public class RangeChangeEvent extends EventObject {
 
-    private JComponent[] toRepaint;
-    public HeaderController(JComponent ... toRepaint) {
-        this.toRepaint = toRepaint;
+    private final TimelineModel source;
+    private final Range<Long> range;
+
+    public RangeChangeEvent(TimelineModel source, Range<Long> range) {
+        super(source);
+        this.source = source;
+        this.range = range;
     }
 
     @Override
-    public void propertyChange(PropertyChangeEvent evt) {
-        for (JComponent component : toRepaint) {
-            component.repaint();
-        }
+    public TimelineModel getSource() {
+        return (TimelineModel) super.getSource();
+    }
+
+    public Range<Long> getRange() {
+        return range;
     }
 }

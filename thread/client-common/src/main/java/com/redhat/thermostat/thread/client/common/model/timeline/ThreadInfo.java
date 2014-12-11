@@ -36,43 +36,57 @@
 
 package com.redhat.thermostat.thread.client.common.model.timeline;
 
-import com.redhat.thermostat.client.ui.Palette;
-import com.redhat.thermostat.common.model.Range;
+import java.util.Objects;
 
-public class TimelineInfo {
+public class ThreadInfo {
 
-    private Palette colour;
-    private Range<Long> timeStamp;
-    
-    public TimelineInfo() {
-        timeStamp = new Range<>(0l, Long.MAX_VALUE);
-        colour = Palette.BLACK; 
-    }
-    
-    public TimelineInfo(Palette colour, Range<Long> timeStamp) {
-        this.timeStamp = timeStamp;
-        this.colour = colour;
-    }
-    
-    public Palette getColor() {
-        return colour;
-    }
-    
-    public void setColor(Palette colour) {
-        this.colour = colour;
-    }
-    
-    public void setRange(Range<Long> timestamp) {
-        this.timeStamp = timestamp;
+    private long id;
+    private String name;
+
+    public ThreadInfo() {
+        name = "";
+        id = -1;
     }
 
-    public Range<Long> getRange() {
-        return timeStamp;
+    public ThreadInfo(ThreadInfo source) {
+        name = source.getName();
+        id = source.getId();
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public void setName(String name) {
+        Objects.requireNonNull(name);
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
     }
 
     @Override
-    public String toString() {
-        return "TimelineInfo [colour=" + colour + ", timeStamp=" + timeStamp + "]";
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ThreadInfo that = (ThreadInfo) o;
+
+        if (id != that.id) return false;
+        if (!name.equals(that.name)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) (id ^ (id >>> 32));
+        result = 31 * result + name.hashCode();
+        return result;
     }
 }
-

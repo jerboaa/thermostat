@@ -50,7 +50,6 @@ import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
-import com.redhat.thermostat.thread.client.common.model.timeline.TimelineDimensionModel;
 import com.redhat.thermostat.thread.client.common.view.ThreadCountView;
 import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
 import com.redhat.thermostat.thread.client.common.view.ThreadTableView.ThreadSelectionAction;
@@ -87,12 +86,8 @@ public class ThreadInformationControllerTest {
     private ThreadTimelineView threadTimelineView;
     private ThreadCountView threadCountView;
 
-    private TimelineDimensionModel timelineDimensionModel;
-
     @Before
     public void setUp() {
-
-        timelineDimensionModel = mock(TimelineDimensionModel.class);
 
         appService = mock(ApplicationService.class);
         vmInfo = mock(VmInfo.class);
@@ -154,8 +149,7 @@ public class ThreadInformationControllerTest {
 
         controller = new ThreadInformationController(ref, appService, vmInfoDao,
                                                      collectorFactory,
-                                                     viewFactory,
-                                                     timelineDimensionModel);
+                                                     viewFactory);
     }
     
     @Test
@@ -195,8 +189,7 @@ public class ThreadInformationControllerTest {
 
         controller = new ThreadInformationController(ref, appService, vmInfoDao,
                                                      collectorFactory,
-                                                     viewFactory,
-                                                     timelineDimensionModel);
+                                                     viewFactory);
 
         verify(collector).isHarvesterCollecting();
         verify(view, times(1)).setRecording(false, false);

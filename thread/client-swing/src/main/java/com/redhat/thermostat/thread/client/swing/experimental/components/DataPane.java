@@ -34,45 +34,49 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.swing.impl.timeline;
+package com.redhat.thermostat.thread.client.swing.experimental.components;
 
-import com.redhat.thermostat.thread.client.common.model.timeline.TimelineGroupDataModel;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
-import javax.swing.SwingUtilities;
+import com.redhat.thermostat.client.swing.GraphicsUtils;
+import com.redhat.thermostat.client.ui.Palette;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.LinearGradientPaint;
 
-/*
- */
-public class TimelineGroupThreadConverter implements PropertyChangeListener {
+public class DataPane extends ContentPane {
 
-    private TimelineGroupDataModel source;
-    private PropertyChangeSupport propertyChangeSupport;
+    private final Palette top;
+    private final Palette bottom;
 
-    public TimelineGroupThreadConverter(TimelineGroupDataModel source) {
+    public DataPane() {
+        this(Palette.WHITE, Palette.LIGHT_GRAY);
+    }
 
-        this.source = source;
-        propertyChangeSupport = new PropertyChangeSupport(this);
-
-        source.addPropertyChangeListener(TimelineGroupDataModel.RangeChangeProperty.PAGE_RANGE, this);
-        source.addPropertyChangeListener(TimelineGroupDataModel.RangeChangeProperty.TOTAL_RANGE, this);
+    public DataPane(Palette top, Palette bottom) {
+        this.top = top;
+        this.bottom = bottom;
+        setLayout(new BorderLayout());
     }
 
     @Override
-    public void propertyChange(final PropertyChangeEvent evt) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                propertyChangeSupport.firePropertyChange(evt.getPropertyName(), evt.getOldValue(), evt.getNewValue());
-            }
-        });
-    }
+    protected void paintComponent(Graphics g) {
 
-    public void addPropertyChangeListener(TimelineGroupDataModel.RangeChangeProperty property, PropertyChangeListener listener) {
-        propertyChangeSupport.addPropertyChangeListener(property.name(), listener);
-    }
-
-    public TimelineGroupDataModel getDataModel() {
-        return source;
+        Color top = this.top.getColor();
+        Color bottom = this.bottom.getColor();
+        Graphics2D graphics = GraphicsUtils.getInstance().createAAGraphics(g);
+        final float[] fractions = {.0f, .2f, .4f, 1.f};
+        final Color[] colors = {
+                top,
+                top,
+                top,
+                bottom,
+        };
+        LinearGradientPaint paint = new LinearGradientPaint(0, 0, 0,
+                                                            getHeight(),
+                                                            fractions, colors);
+        graphics.setPaint(paint);
+        graphics.fillRect(0, 0, getWidth(), getHeight());
+        graphics.dispose();
     }
 }

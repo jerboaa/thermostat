@@ -36,50 +36,35 @@
 
 package com.redhat.thermostat.thread.client.common.model.timeline;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.Iterator;
+import com.redhat.thermostat.client.ui.Palette;
 
-public class Timeline implements Iterable<TimelineInfo> {
+public class TimelineProbe {
 
-    private Deque<TimelineInfo> infos;
+    private String state;
+    private final long timeStamp;
+    private Palette colour;
 
-    private String name;
-    private long id;
-
-    public Timeline(String name, long id) {
-        this.name = name;
-        this.id = id;
-        infos = new ArrayDeque<>();
+    public TimelineProbe(Palette color, String state, long timeStamp) {
+        this.colour = color;
+        this.state = state;
+        this.timeStamp = timeStamp;
     }
 
-    public String getName() {
-        return name;
+    public long getTimeStamp() {
+        return timeStamp;
     }
 
-    public long getId() {
-        return id;
+    public Palette getColor() {
+        return colour;
     }
 
-    public TimelineInfo last() {
-        return infos.peekLast();
+    public String getState() {
+        return state;
     }
 
     @Override
-    public Iterator<TimelineInfo> iterator() {
-        return infos.iterator();
-    }
-
-    public TimelineInfo[] toArray() {
-        return (TimelineInfo[]) infos.toArray();
-    }
-
-    public void add(TimelineInfo info) {
-        infos.add(info);
-    }
-
-    public int size() {
-        return infos.size();
+    public String toString() {
+        return "TimelineInfo [colour = " + colour + ", " + timeStamp + "]";
     }
 }
 

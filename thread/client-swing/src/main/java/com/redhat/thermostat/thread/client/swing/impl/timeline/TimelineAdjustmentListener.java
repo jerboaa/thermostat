@@ -36,43 +36,42 @@
 
 package com.redhat.thermostat.thread.client.swing.impl.timeline;
 
-import java.util.Locale;
-import java.util.TimeZone;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import com.redhat.thermostat.thread.client.swing.impl.timeline.model.TimelineModel;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
+import javax.swing.BoundedRangeModel;
 
-import static org.junit.Assert.assertEquals;
+/**
+ *
+ */
+public class TimelineAdjustmentListener implements AdjustmentListener {
 
-public class TimelineRangeModelFormatterTest {
+    private TimelineModel model;
+    private boolean followMode;
 
-    private static Locale defaultLocale;
-    private static TimeZone defaultTimeZone;
-
-    @BeforeClass
-    public static void setUp() {
-        defaultLocale = Locale.getDefault();
-        Locale.setDefault(Locale.US);
-
-        defaultTimeZone = TimeZone.getDefault();
-        TimeZone.setDefault(TimeZone.getTimeZone("Etc/UTC"));
+    public TimelineAdjustmentListener(TimelineModel model) {
+        this.model = model;
     }
 
-    @AfterClass
-    public static void tearDown() {
-        TimeZone.setDefault(defaultTimeZone);
-        Locale.setDefault(defaultLocale);
-    }
+    @Override
+    public void adjustmentValueChanged(AdjustmentEvent e) {
+        BoundedRangeModel scrollBarModel = model.getScrollBarModel();
+        if (scrollBarModel.getValueIsAdjusting()) {
+            followMode = false;
+            return;
+        }
 
-    @Test
-    public void testGetFormattedString() throws Exception {
-        String range = TimelineRangeModelFormatter.getFormattedString(5_000l);
-        assertEquals("1970.01.01, 00:00:05", range);
-    }
+        int max = scrollBarModel.getMaximum();
+        int currentExtent = scrollBarModel.getValue() +
+                scrollBarModel.getExtent();
 
-    @Test
-    public void testGetFormattedStringNegative() throws Exception {
-        String range = TimelineRangeModelFormatter.getFormattedString(-1l);
-        assertEquals(" - ", range);
+        if (currentExtent == max) {
+            followMode = true;
+        }
+
+        if (followMode) {
+            int value = max - scrollBarModel.getExtent();
+            scrollBarModel.setValue(value);
+        }
     }
 }

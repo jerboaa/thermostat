@@ -34,48 +34,46 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.model;
+package com.redhat.thermostat.thread.client.common.model.timeline;
 
-import org.junit.Test;
+import com.redhat.thermostat.client.ui.Palette;
+import com.redhat.thermostat.thread.model.ThreadState;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+/**
+ *
+ */
+public class TimelineFactory {
 
-public class ThreadStateTest {
+    public static TimelineProbe createTimelineProbe(ThreadState state)
+    {
+        Palette color = null;
 
-    @Test
-    public void testEqualsAndHashCode() throws Exception {
+        Thread.State threadState = Thread.State.valueOf(state.getState());
+        switch (threadState) {
+        case NEW:
+            color = Palette.GREEN;
+            break;
 
-        ThreadHeader header1 = new ThreadHeader("1234");
-        header1.setReferenceID("vm42");
-        header1.setThreadName("main");
-        header1.setThreadId(1);
+        case RUNNABLE:
+            color = Palette.ADWAITA_BLU;
+            break;
 
-        ThreadState state1 = new ThreadState("1234", header1);
-        state1.setProbeStartTime(0l);
-        state1.setProbeEndTime(1l);
-        state1.setState("NEW");
+        case BLOCKED:
+            color = Palette.VIOLET;
+            break;
 
-        ThreadState state2 = new ThreadState("1234", header1);
-        state2.setProbeStartTime(0l);
-        state2.setProbeEndTime(1l);
-        state2.setState("NEW");
+        case WAITING:
+            color = Palette.GRANITA_ORANGE;
+            break;
 
-        assertEquals(state1, state2);
-        assertEquals(state1.hashCode(), state2.hashCode());
+        case TIMED_WAITING:
+            color = Palette.ADWAITA_BLU;
+            break;
 
-        ThreadHeader header2 = new ThreadHeader("12344");
-        state2.setHeader(header2);
-
-        assertFalse(state1.equals(state2));
-        assertFalse(state1.hashCode() == state2.hashCode());
-
-        state2.setHeader(header1);
-        state2.setProbeStartTime(1l);
-        state2.setProbeEndTime(1l);
-        state2.setState("NEW");
-
-        assertFalse(state1.equals(state2));
-        assertFalse(state1.hashCode() == state2.hashCode());
+        case TERMINATED:
+            color = Palette.LIGHT_GRAY;
+            break;
+        }
+        return new TimelineProbe(color, state.getState(), state.getTimeStamp());
     }
 }
