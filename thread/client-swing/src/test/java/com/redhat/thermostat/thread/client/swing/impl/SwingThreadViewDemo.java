@@ -54,6 +54,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import org.mockito.Mockito;
 
+import static org.mockito.Mockito.when;
+
 /**
  *
  */
@@ -167,7 +169,10 @@ public class SwingThreadViewDemo {
 
     private static UIDefaults createUIDefaults() {
         UIDefaults defaults = Mockito.mock(UIDefaults.class);
-        Mockito.when(defaults.getDefaultFont()).thenReturn(new JLabel().getFont());
+        when(defaults.getDefaultFont()).thenReturn(new JLabel().getFont());
+        when(defaults.getIconColor()).thenReturn(Palette.EARL_GRAY.getColor());
+        when(defaults.getSelectedComponentBGColor()).thenReturn(Palette.ADWAITA_BLU.getColor());
+
         return defaults;
     }
 }

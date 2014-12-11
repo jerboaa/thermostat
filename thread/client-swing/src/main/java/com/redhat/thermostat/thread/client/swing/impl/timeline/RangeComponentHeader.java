@@ -38,7 +38,11 @@ package com.redhat.thermostat.thread.client.swing.impl.timeline;
 
 import com.redhat.thermostat.client.swing.UIDefaults;
 import com.redhat.thermostat.client.swing.components.FontAwesomeIcon;
+import com.redhat.thermostat.client.swing.components.Icon;
+import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
 import com.redhat.thermostat.thread.client.swing.experimental.components.ContentPane;
+import com.redhat.thermostat.thread.client.swing.experimental.components.DataPane;
 import com.redhat.thermostat.thread.client.swing.impl.timeline.model.TimelineModel;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
@@ -51,9 +55,15 @@ import javax.swing.JLabel;
  */
 public class RangeComponentHeader extends ContentPane {
 
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
+
     private final TimelineModel model;
     private final UIDefaults defaults;
-    private ContentPane controls;
+    private DataPane controls;
+
+    private JLabel zoomOut;
+    private JLabel restoreZoom;
+    private JLabel zoomIn;
 
     public RangeComponentHeader(TimelineModel model, UIDefaults defaults) {
         this.model = model;
@@ -61,11 +71,15 @@ public class RangeComponentHeader extends ContentPane {
     }
 
     public void initComponents() {
-        controls = new ContentPane();
+        controls = new DataPane();
         controls.setLayout(new GridLayout(1, 0, 5, 5));
 
-        JLabel zoomOut = new JLabel(new FontAwesomeIcon('\uf066', 15,
-                                                        defaults.getIconColor()));
+        Icon baseIcon = new FontAwesomeIcon('\uf066', 15, defaults.getIconColor());
+        Icon hoverIcon = new FontAwesomeIcon('\uf066', 15,
+                                             defaults.getSelectedComponentBGColor());
+        zoomOut = new JLabel(baseIcon);
+        zoomOut.setToolTipText(t.localize(LocaleResources.ZOOM_OUT).getContents());
+        zoomOut.addMouseListener(new Hover(zoomOut, baseIcon, hoverIcon));
         zoomOut.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -75,8 +89,12 @@ public class RangeComponentHeader extends ContentPane {
         });
         controls.add(zoomOut);
 
-        JLabel restoreZoom = new JLabel(new FontAwesomeIcon('\uf03b', 15,
-                                                        defaults.getIconColor()));
+        baseIcon = new FontAwesomeIcon('\uf03b', 15, defaults.getIconColor());
+        hoverIcon = new FontAwesomeIcon('\uf03b', 15,
+                                        defaults.getSelectedComponentBGColor());
+        restoreZoom = new JLabel(baseIcon);
+        restoreZoom.setToolTipText(t.localize(LocaleResources.RESTORE_ZOOM).getContents());
+        restoreZoom.addMouseListener(new Hover(restoreZoom, baseIcon, hoverIcon));
         restoreZoom.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -85,8 +103,12 @@ public class RangeComponentHeader extends ContentPane {
         });
         controls.add(restoreZoom);
 
-        JLabel zoomIn = new JLabel(new FontAwesomeIcon('\uf065', 15,
-                                                       defaults.getIconColor()));
+        baseIcon = new FontAwesomeIcon('\uf065', 15, defaults.getIconColor());
+        hoverIcon = new FontAwesomeIcon('\uf065', 15,
+                                        defaults.getSelectedComponentBGColor());
+        zoomIn = new JLabel(baseIcon);
+        zoomIn.setToolTipText(t.localize(LocaleResources.ZOOM_IN).getContents());
+        zoomIn.addMouseListener(new Hover(zoomIn, baseIcon, hoverIcon));
         zoomIn.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -97,5 +119,40 @@ public class RangeComponentHeader extends ContentPane {
         controls.add(zoomIn);
 
         add(controls, BorderLayout.EAST);
+    }
+
+    public void setControlsEnabled(boolean b) {
+        zoomIn.setEnabled(b);
+        zoomOut.setEnabled(b);
+        restoreZoom.setEnabled(b);
+    }
+
+    private class Hover extends MouseAdapter {
+
+        private final JLabel label;
+        private final Icon baseIcon;
+        private final Icon hoverIcon;
+
+        public Hover(JLabel label, Icon baseIcon, Icon hoverIcon) {
+
+            this.label = label;
+            this.baseIcon = baseIcon;
+            this.hoverIcon = hoverIcon;
+        }
+
+        @Override
+        public void mouseEntered(MouseEvent e) {
+            onMouseHover(true);
+        }
+
+        @Override
+        public void mouseExited(MouseEvent e) {
+            onMouseHover(false);
+        }
+
+        public void onMouseHover(boolean hover) {
+            label.setIcon(hover ? hoverIcon : baseIcon);
+            repaint();
+        }
     }
 }

@@ -60,6 +60,7 @@ public class TimelineViewComponent extends ContentPane {
 
     private ThermostatScrollBar scrollBar;
     private UIDefaults uiDefaults;
+    private RangeComponentHeader header;
 
     public TimelineViewComponent(UIDefaults uiDefaults) {
         this.uiDefaults = uiDefaults;
@@ -75,7 +76,7 @@ public class TimelineViewComponent extends ContentPane {
         scrollPane.setVerticalScrollBarPolicy(ThermostatScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
         scrollPane.setHorizontalScrollBarPolicy(ThermostatScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
-        RangeComponentHeader header = new RangeComponentHeader(model, uiDefaults);
+        header = new RangeComponentHeader(model, uiDefaults);
         header.initComponents();
         scrollPane.setColumnHeaderView(header);
 
@@ -89,6 +90,8 @@ public class TimelineViewComponent extends ContentPane {
         add(scrollBar, BorderLayout.SOUTH);
         scrollBar.setEnabled(false);
         scrollBar.setVisible(false);
+
+        header.setControlsEnabled(false);
 
         model.addRatioChangeListener(new RatioChangeListener() {
             @Override
@@ -106,6 +109,13 @@ public class TimelineViewComponent extends ContentPane {
 
     private void checkEnableScrollbar() {
         Range<Long> range = model.getRange();
+        // no data, so no scrolling
+        if (range == null) {
+            scrollBar.setVisible(false);
+            scrollBar.setEnabled(false);
+            return;
+        }
+
         Rectangle bounds = getBounds();
         long length = bounds.x + bounds.width;
         length = Math.round(length / model.getMagnificationRatio());
@@ -121,10 +131,8 @@ public class TimelineViewComponent extends ContentPane {
 
     public void addTimeline(TimelineComponent timeline) {
         viewport.add(timeline);
+        header.setControlsEnabled(true);
         checkEnableScrollbar();
-
-        timeline.
-
         revalidate();
         repaint();
     }

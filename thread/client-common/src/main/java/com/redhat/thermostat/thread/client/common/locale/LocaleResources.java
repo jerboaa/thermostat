@@ -72,6 +72,12 @@ public enum LocaleResources {
     THREAD_DETAILS_EMTPY,
 
     CHECK_FOR_DEADLOCKS,
+
+
+    RESTORE_ZOOM,
+    ZOOM_IN,
+    ZOOM_OUT,
+
     ;
 
     public static final String RESOURCE_BUNDLE =

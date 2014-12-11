@@ -175,6 +175,7 @@ public class SwingThreadViewDemo3 {
         UIDefaults defaults = mock(UIDefaults.class);
         when(defaults.getDefaultFont()).thenReturn(new JLabel().getFont());
         when(defaults.getIconColor()).thenReturn(Palette.EARL_GRAY.getColor());
+        when(defaults.getSelectedComponentBGColor()).thenReturn(Palette.ADWAITA_BLU.getColor());
 
         return defaults;
     }
