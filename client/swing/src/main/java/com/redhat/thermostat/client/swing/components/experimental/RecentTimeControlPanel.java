@@ -100,6 +100,9 @@ public class RecentTimeControlPanel extends JPanel {
         durationSelector.setText(String.valueOf(duration.value));
         unitSelector.setSelectedItem(duration.unit);
 
+        durationSelector.setName("durationSelector");
+        unitSelector.setName("unitSelector");
+
         container.add(new JLabel(translator.localize(LocaleResources.CHART_DURATION_SELECTOR_LABEL).getContents()));
         container.add(durationSelector);
         container.add(unitSelector);

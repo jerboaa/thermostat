@@ -135,6 +135,7 @@ public class SingleValueChartPanel extends JPanel {
                     recentTimeControlPanel.addTextComponent(label);
                 }
 
+                label.setName("crossHair");
                 label.setText(text);
             }
         });
