@@ -124,7 +124,7 @@ public class ThreadTableController extends CommonController {
         }
 
         @Override
-        public void onResult(ThreadState thread) {
+        public boolean onResult(ThreadState thread) {
 
             ThreadInfo key = new ThreadInfo();
             key.setName(thread.getName());
@@ -165,6 +165,8 @@ public class ThreadTableController extends CommonController {
             bean.setStopTimeStamp(thread.getTimeStamp());
 
             threadTableView.display(bean);
+
+            return true;
         }
     }
 

@@ -158,10 +158,11 @@ public class BeanAdapter<T extends Pojo> {
         }
 
         Cursor<T> cursor = prepared.executeQuery();
-        while (cursor.hasNext()) {
+        boolean needMoreResults = true;
+        while (cursor.hasNext() && needMoreResults) {
             T result = cursor.next();
             try {
-                handler.onResult(result);
+                needMoreResults = handler.onResult(result);
 
             } catch (Throwable t) {
                 logger.log(Level.SEVERE, "Exception executing results", t);

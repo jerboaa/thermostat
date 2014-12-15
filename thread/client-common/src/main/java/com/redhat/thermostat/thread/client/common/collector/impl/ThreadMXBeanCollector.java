@@ -174,8 +174,9 @@ public class ThreadMXBeanCollector implements ThreadCollector {
         threadDao.getThreadStates(ref, session,
                                   new ResultHandler<ThreadState>() {
                                       @Override
-                                      public void onResult(ThreadState result) {
+                                      public boolean onResult(ThreadState result) {
                                           timestamps[1] = result.getTimeStamp();
+                                          return false;
                                       }
                                   },
                                   FULL_RANGE, FIRST, ThreadDao.Sort.DESCENDING);
@@ -183,8 +184,9 @@ public class ThreadMXBeanCollector implements ThreadCollector {
         threadDao.getThreadStates(ref, session,
                                   new ResultHandler<ThreadState>() {
                                       @Override
-                                      public void onResult(ThreadState result) {
+                                      public boolean onResult(ThreadState result) {
                                           timestamps[0] = result.getTimeStamp();
+                                          return false;
                                       }
                                   },
                                   FULL_RANGE, FIRST, ThreadDao.Sort.ASCENDING);
@@ -223,11 +225,6 @@ public class ThreadMXBeanCollector implements ThreadCollector {
 
         postAndWait(harvester);
     }
-
-//    @Override
-//    public ThreadContentionSample getLatestContentionSample(ThreadHeader thread) {
-//        return threadDao.getLatestContentionSample(thread);
-//    }
 
     private boolean postAndWait(Request harvester) {
         final CountDownLatch latch = new CountDownLatch(1);

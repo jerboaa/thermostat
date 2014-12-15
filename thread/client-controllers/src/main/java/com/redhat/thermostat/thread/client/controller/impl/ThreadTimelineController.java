@@ -147,7 +147,7 @@ public class ThreadTimelineController extends CommonController {
         }
 
         @Override
-        public void onResult(ThreadState state) {
+        public boolean onResult(ThreadState state) {
 
             key.setName(state.getName());
             key.setId(state.getId());
@@ -160,6 +160,8 @@ public class ThreadTimelineController extends CommonController {
 
             TimelineProbe probe = TimelineFactory.createTimelineProbe(state);
             view.addProbe(info, probe);
+
+            return true;
         }
     }
 }

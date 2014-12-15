@@ -55,18 +55,16 @@ import com.redhat.thermostat.storage.core.experimental.statement.QueryValues;
 import com.redhat.thermostat.storage.core.experimental.statement.ResultHandler;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.dao.impl.statement.StateQueries;
 import com.redhat.thermostat.thread.dao.impl.statement.SessionQueries;
+import com.redhat.thermostat.thread.dao.impl.statement.StateQueries;
 import com.redhat.thermostat.thread.dao.impl.statement.SummaryQuery;
 import com.redhat.thermostat.thread.model.SessionID;
-import com.redhat.thermostat.thread.model.ThreadContentionSample;
 import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
 import com.redhat.thermostat.thread.model.ThreadSession;
 import com.redhat.thermostat.thread.model.ThreadState;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import com.redhat.thermostat.thread.model.VmDeadLockData;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -198,8 +196,9 @@ public class ThreadDaoImpl implements ThreadDao {
         try {
             ThreadSummaryAdapter.query(values, new ResultHandler<ThreadSummary>() {
                 @Override
-                public void onResult(ThreadSummary result) {
+                public boolean onResult(ThreadSummary result) {
                     results.add(result);
+                    return true;
                 }
             }, storage);
 
@@ -232,8 +231,9 @@ public class ThreadDaoImpl implements ThreadDao {
         try {
             ThreadSessionAdapter.query(values, new ResultHandler<ThreadSession>() {
                 @Override
-                public void onResult(ThreadSession result) {
+                public boolean onResult(ThreadSession result) {
                     results.add(result);
+                    return true;
                 }
             }, storage);
 

@@ -53,6 +53,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -185,8 +186,9 @@ public class BeanAdapterTest {
         final boolean [] called = new boolean[1];
         ResultHandler<SampleBean> handler = new ResultHandler<SampleBean>() {
             @Override
-            public void onResult(SampleBean result) {
+            public boolean onResult(SampleBean result) {
                 called[0] = true;
+                return true;
             }
         };
 
@@ -227,8 +229,9 @@ public class BeanAdapterTest {
         final boolean [] called = new boolean[1];
         ResultHandler<SampleBean> handler = new ResultHandler<SampleBean>() {
             @Override
-            public void onResult(SampleBean result) {
+            public boolean onResult(SampleBean result) {
                 called[0] = true;
+                return true;
             }
         };
 
@@ -240,5 +243,43 @@ public class BeanAdapterTest {
         verify(query).setInt(3, 2);
 
         assertTrue(called[0]);
+    }
+
+    @Test
+    public void testSkipResultsOnHandlerRequest() throws Exception {
+        when(storage.prepareStatement(any(StatementDescriptor.class))).thenReturn(query);
+        Cursor cursor = mock(Cursor.class);
+
+        final SampleBean sample0 = mock(SampleBean.class);
+        final SampleBean sample1 = mock(SampleBean.class);
+        final SampleBean sample2 = mock(SampleBean.class);
+
+        when(query.executeQuery()).thenReturn(cursor);
+        when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(true);
+        when(cursor.next()).thenReturn(sample0).thenReturn(sample1).thenReturn(sample2);
+
+        BeanAdapterBuilder<SampleBean> builder =
+                new BeanAdapterBuilder<>(SampleBean.class, queries);
+
+        BeanAdapter<SampleBean> adapter = builder.build();
+        Query range = adapter.getQuery(RANGE);
+        QueryValues values = range.createValues();
+        values.set(new Id("0"), "fluff");
+        values.set(new Id("1"), 10l);
+        values.set(new Id("2"), 20l);
+        values.set(new Id("3"), 2);
+
+        ResultHandler<SampleBean> handler = new ResultHandler<SampleBean>() {
+            @Override
+            public boolean onResult(SampleBean result) {
+                if (result.equals(sample1)) {
+                    return false;
+                }
+                return true;
+            }
+        };
+        adapter.query(values, handler, storage);
+
+        verify(cursor, times(2)).next();
     }
 }

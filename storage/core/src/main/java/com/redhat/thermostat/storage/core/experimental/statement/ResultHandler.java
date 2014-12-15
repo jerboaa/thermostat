@@ -40,5 +40,13 @@ package com.redhat.thermostat.storage.core.experimental.statement;
  *
  */
 public interface ResultHandler<T> {
-    void onResult(T result);
+    /**
+     * The return value indicates whether or not the statement engine should
+     * continue returning results as long as they are available. If the handler
+     * return {@code false}, the engine will not invoke this method anymore;
+     * it is still possible that the statement engine has more results already
+     * loaded in memory as a result of caching or other optimisation, however
+     * no more interaction with this handler will be performed.
+     */
+    boolean onResult(T result);
 }
