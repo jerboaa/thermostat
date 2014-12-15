@@ -49,6 +49,7 @@ public class RangeComponent extends ContentPane {
 
     public RangeComponent(RangedTimelineProbe info) {
         this.info = info;
+        setOpaque(false);
     }
 
     public RangedTimelineProbe getInfo() {

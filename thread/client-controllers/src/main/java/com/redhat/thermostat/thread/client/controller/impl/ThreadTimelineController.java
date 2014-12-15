@@ -57,9 +57,7 @@ public class ThreadTimelineController extends CommonController {
     private ThreadTimelineView view;
     private ThreadCollector collector;
 
-    private static final String lock = new String("ThreadTimelineController");
-
-    private boolean requestClear;
+    private volatile boolean stopLooping;
 
     public ThreadTimelineController(ThreadTimelineView view,
                                     ThreadCollector collector,
@@ -95,46 +93,52 @@ public class ThreadTimelineController extends CommonController {
 
         @Override
         public void run() {
-
-            synchronized (lock) {
-
-                // FIXME: show only the last sessions for now, support for
-                // filtering over sessions will come later
-                SessionID session = collector.getLastThreadSession();
-                if (session == null) {
-                    // ok, no data, let's skip this round
-                    return;
-                }
-
-                if (lastSession == null ||
-                    !session.get().equals(lastSession.get()))
-                {
-                    // since we only visualise one sessions at a time and this
-                    // is a new session needs, let's clear the view
-                    resetState();
-                }
-                lastSession = session;
-
-                // get the full range of known timelines per vm
-                Range<Long> totalRange = collector.getThreadRange(session);
-                if (totalRange == null) {
-                    // this just means we don't have any data yet
-                    return;
-                }
-
-                if (!totalRange.equals(lastRange)) {
-                    view.setTotalRange(totalRange);
-                }
-                lastRange = totalRange;
-
-                range = new Range<>(lastUpdate, totalRange.getMax());
-                lastUpdate = totalRange.getMax();
-
-                collector.getThreadStates(session,
-                                          threadStateResultHandler,
-                                          range);
+            // FIXME: show only the last sessions for now, support for
+            // filtering over sessions will come later
+            SessionID session = collector.getLastThreadSession();
+            if (session == null) {
+                // ok, no data, let's skip this round
+                return;
             }
+
+            if (lastSession == null ||
+                !session.get().equals(lastSession.get()))
+            {
+                // since we only visualise one session at a time and this is
+                // a new session, let's clear the view
+                resetState();
+            }
+            lastSession = session;
+
+            // get the full range of known timelines per vm
+            Range<Long> totalRange = collector.getThreadRange(session);
+            if (totalRange == null) {
+                // this just means we don't have any data yet
+                return;
+            }
+
+            if (!totalRange.equals(lastRange)) {
+                view.setTotalRange(totalRange);
+            }
+            lastRange = totalRange;
+
+            range = new Range<>(lastUpdate, totalRange.getMax());
+            lastUpdate = totalRange.getMax();
+
+            collector.getThreadStates(session,
+                                      threadStateResultHandler,
+                                      range);
         }
+    }
+
+    @Override
+    protected void onViewVisible() {
+        stopLooping = false;
+    }
+
+    @Override
+    protected void onViewHidden() {
+        stopLooping = true;
     }
 
     private class ThreadStateResultHandler implements ResultHandler<ThreadState> {
@@ -161,7 +165,8 @@ public class ThreadTimelineController extends CommonController {
             TimelineProbe probe = TimelineFactory.createTimelineProbe(state);
             view.addProbe(info, probe);
 
-            return true;
+            boolean _stopLooping = stopLooping;
+            return !_stopLooping;
         }
     }
 }

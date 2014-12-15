@@ -54,6 +54,8 @@ public class ThreadTableController extends CommonController {
     private ThreadTableView threadTableView;
     private ThreadCollector collector;
 
+    private volatile boolean stopLooping;
+
     public ThreadTableController(ThreadTableView threadTableView,
                                  ThreadCollector collector,
                                  Timer timer)
@@ -62,6 +64,16 @@ public class ThreadTableController extends CommonController {
         this.threadTableView = threadTableView;
         this.collector = collector;
         timer.setAction(new ThreadTableControllerAction());
+    }
+
+    @Override
+    protected void onViewVisible() {
+        stopLooping = false;
+    }
+
+    @Override
+    protected void onViewHidden() {
+        stopLooping = true;
     }
 
     private class ThreadTableControllerAction implements Runnable {
@@ -93,8 +105,8 @@ public class ThreadTableController extends CommonController {
             }
             if (lastSession == null ||
                     !session.get().equals(lastSession.get())) {
-                // since we only visualise one sessions at a time and this
-                // is a new session needs, let's clear the view
+                // since we only visualise one session at a time and this is
+                // a new session, let's clear the view
                 resetState();
             }
             lastSession = session;
@@ -166,7 +178,8 @@ public class ThreadTableController extends CommonController {
 
             threadTableView.display(bean);
 
-            return true;
+            boolean _stopLooping = stopLooping;
+            return !_stopLooping;
         }
     }
 
