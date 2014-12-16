@@ -174,7 +174,6 @@
                     <include>thermostat-roles.properties</include>
                     <include>thermostat_jaas.conf</include>
                     <include>devsetup.input</include>
-                    <include>agent_proxy_jaas.conf</include>
                     <include>db.properties</include>
                     <include>logging.properties</include>
                     <include>osgi-export.properties</include>
@@ -237,8 +236,6 @@
                 <copy file="${main.basedir}/agent/core/target/libHostNameWrapper.so"
                       todir="${project.build.directory}/image/libs/native" />
                 <copy file="${main.basedir}/agent/core/target/libUserNameUtilWrapper.so"
-                      todir="${project.build.directory}/image/libs/native" />
-                <copy file="${main.basedir}/agent/proxy/server/target/libAgentProxy.so"
                       todir="${project.build.directory}/image/libs/native" />
                 <copy file="${main.basedir}/laf-utils/target/libGTKThemeUtils.so"
                       todir="${project.build.directory}/image/libs/native" />

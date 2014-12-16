@@ -40,6 +40,10 @@
 JAVA_DIR="@java.dir@"
 JAVA="@java.home@/bin/java"
 
+if [ "$#" -lt 2 ]; then
+  echo "usage: $0 <pidOfTargetJvm> <userNameOfJvmOwner>" >&2
+fi
+
 if [ x"$THERMOSTAT_INSTALL_DIR" = x ] ; then
   THERMOSTAT_INSTALL_DIR="@thermostat.home@"
 fi
@@ -56,13 +60,10 @@ TOOLS_JAR="@java.home@/../lib/tools.jar"
 # JARs necessary for the server
 SERVICE_CLASSPATH="${THERMOSTAT_LIBS}/thermostat-common-core-@project.version@.jar"
 SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-shared-config-@project.version@.jar"
-SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-proxy-common-@project.version@.jar"
 SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-proxy-server-@project.version@.jar"
 SERVICE_CLASSPATH="${TOOLS_JAR}:${SERVICE_CLASSPATH}"
 
 AGENT_PROXY_CLASS="com.redhat.thermostat.agent.proxy.server.AgentProxy"
-
-JAAS_CONFIG="${THERMOSTAT_HOME}/etc/agent_proxy_jaas.conf"
 
 # Set this to remote debug
 if [ x"$THERMOSTAT_DEBUG" != x ] ; then
@@ -70,6 +71,9 @@ if [ x"$THERMOSTAT_DEBUG" != x ] ; then
 fi
 
 # Start server
-${JAVA} -cp ${SERVICE_CLASSPATH} ${DEBUG_OPTS} "-Djava.security.auth.login.config=${JAAS_CONFIG}" \
-"-Djava.rmi.server.randomIDs=true" ${AGENT_PROXY_CLASS} "$1"
-
+# Drop permissions, if root
+if [ "$(/bin/id -u)" -eq 0 ]; then
+  /bin/su "$2" -c "${JAVA} -cp ${SERVICE_CLASSPATH} ${DEBUG_OPTS} ${AGENT_PROXY_CLASS} $1"
+else
+  ${JAVA} -cp ${SERVICE_CLASSPATH} ${DEBUG_OPTS} ${AGENT_PROXY_CLASS} $1
+fi

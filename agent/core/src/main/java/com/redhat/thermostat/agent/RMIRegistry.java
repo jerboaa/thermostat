@@ -45,8 +45,13 @@ import com.redhat.thermostat.annotations.Service;
 /**
  * Maintains an RMI registry used for inter-process communication between
  * the Thermostat agent and other helper processes on the same host.
+ * 
+ * <p>
+ * <b> RMI is no longer used by the Thermostat agent. Invoking any of this
+ * service's methods will result in a {@link RemoteException}. </b>
  */
 @Service
+@Deprecated
 public interface RMIRegistry {
 
     /**

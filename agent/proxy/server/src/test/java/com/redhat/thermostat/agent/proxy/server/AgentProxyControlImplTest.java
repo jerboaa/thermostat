@@ -47,10 +47,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
-import java.rmi.RemoteException;
+import java.io.IOException;
 import java.util.Properties;
-
-import javax.security.auth.Subject;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -84,9 +82,7 @@ public class AgentProxyControlImplTest {
     
     @Test
     public void testAttach() throws Exception {
-        Subject subject = new Subject();
-        addPrincipal(subject);
-        control.attach(subject);
+        control.attach();
         
         verify(vmUtils).attach("0");
         verify(vm, times(2)).getAgentProperties();
@@ -94,80 +90,37 @@ public class AgentProxyControlImplTest {
         verify(vm).loadAgent("/path/to/java/home" + File.separator + "lib" + File.separator + "management-agent.jar");
     }
 
-    @Test(expected=SecurityException.class)
-    public void testAttachDenied() throws Exception {
-        Subject subject = new Subject();
-        control.attach(subject);
-    }
-    
     @Test
     public void testIsAttached() throws Exception {
-        Subject subject = new Subject();
-        addPrincipal(subject);
-        
-        assertFalse(control.isAttached(subject));
-        control.attach(subject);
-        assertTrue(control.isAttached(subject));
-    }
-    
-    @Test(expected=SecurityException.class)
-    public void testIsAttachedDenied() throws Exception {
-        Subject subject = new Subject();
-        control.isAttached(subject);
+        assertFalse(control.isAttached());
+        control.attach();
+        assertTrue(control.isAttached());
     }
     
     @Test
     public void testGetAddress() throws Exception {
-        Subject subject = new Subject();
-        addPrincipal(subject);
-        
-        control.attach(subject);
-        String addr = control.getConnectorAddress(subject);
+        control.attach();
+        String addr = control.getConnectorAddress();
         assertEquals("myJmxUrl", addr);
     }
     
-    @Test(expected=SecurityException.class)
-    public void testGetAddressDenied() throws Exception {
-        Subject subject = new Subject();
-        control.getConnectorAddress(subject);
-    }
-    
-    @Test(expected=RemoteException.class)
+    @Test(expected=IOException.class)
     public void testGetAddressNotAttached() throws Exception {
-        Subject subject = new Subject();
-        addPrincipal(subject);
-        
-        control.getConnectorAddress(subject);
+        control.getConnectorAddress();
     }
     
     @Test
     public void testDetach() throws Exception {
-        Subject subject = new Subject();
-        addPrincipal(subject);
-        
-        control.attach(subject);
-        control.detach(subject);
+        control.attach();
+        control.detach();
         verify(vm).detach();
     }
     
     @Test
     public void testDetachNotAttached() throws Exception {
-        Subject subject = new Subject();
-        addPrincipal(subject);
-        
-        control.detach(subject);
+        control.detach();
         verify(vm, never()).detach();
     }
     
-    @Test(expected=SecurityException.class)
-    public void testDetachDenied() throws Exception {
-        Subject subject = new Subject();
-        control.detach(subject);
-    }
-
-    private void addPrincipal(Subject subject) {
-        subject.getPrincipals().add(new AgentProxyPrincipal("TEST"));
-    }
-
 }
 

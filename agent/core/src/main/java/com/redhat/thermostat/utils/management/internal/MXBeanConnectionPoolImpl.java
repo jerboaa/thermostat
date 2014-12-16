@@ -38,46 +38,34 @@ package com.redhat.thermostat.utils.management.internal;
 
 import java.io.File;
 import java.io.IOException;
-import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import com.redhat.thermostat.agent.RMIRegistry;
-import com.redhat.thermostat.agent.internal.RMIRegistryImpl;
+import com.redhat.thermostat.agent.utils.ProcDataSource;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
+import com.redhat.thermostat.agent.utils.username.UserNameUtil;
 import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.tools.ApplicationException;
-import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.utils.management.internal.ProcessUserInfoBuilder.ProcessUserInfo;
 
 public class MXBeanConnectionPoolImpl implements MXBeanConnectionPool {
 
-    private static final Logger logger = LoggingUtils.getLogger(MXBeanConnectionPoolImpl.class);
-    
     // pid -> (usageCount, actualObject)
     private Map<Integer, Pair<Integer, MXBeanConnectionImpl>> pool = new HashMap<>();
 
     private final ConnectorCreator creator;
-    private final RMIRegistryImpl registry;
     private final File binPath;
+    private final ProcessUserInfoBuilder userInfoBuilder;
 
-    public MXBeanConnectionPoolImpl(RMIRegistryImpl registry, File binPath) {
-        this(new ConnectorCreator(), registry, binPath);
+    public MXBeanConnectionPoolImpl(File binPath, UserNameUtil userNameUtil) {
+        this(new ConnectorCreator(), binPath, new ProcessUserInfoBuilder(new ProcDataSource(), userNameUtil));
     }
 
-    MXBeanConnectionPoolImpl(ConnectorCreator connectorCreator, RMIRegistryImpl registry, File binPath) {
+    MXBeanConnectionPoolImpl(ConnectorCreator connectorCreator, File binPath, ProcessUserInfoBuilder userInfoBuilder) {
         this.creator = connectorCreator;
-        this.registry = registry;
         this.binPath = binPath;
-        
-        // Start RMI registry
-        try {
-            registry.start();
-        } catch (RemoteException e) {
-            logger.log(Level.SEVERE, "Unable to start RMI registry", e);
-        }
+        this.userInfoBuilder = userInfoBuilder;
     }
 
     @Override
@@ -85,16 +73,14 @@ public class MXBeanConnectionPoolImpl implements MXBeanConnectionPool {
         Pair<Integer, MXBeanConnectionImpl> data = pool.get(pid);
         if (data == null) {
             MXBeanConnector connector = null;
-            try {
-                connector = creator.create(registry, pid, binPath);
-                connector.attach();
-                MXBeanConnectionImpl connection = connector.connect();
-                data = new Pair<Integer, MXBeanConnectionImpl>(1, connection);
-            } finally {
-                if (connector != null) {
-                    connector.close();
-                }
+            ProcessUserInfo info = userInfoBuilder.build(pid);
+            String username = info.getUsername();
+            if (username == null) {
+                throw new IOException("Unable to determine owner of " + pid);
             }
+            connector = creator.create(pid, username, binPath);
+            MXBeanConnectionImpl connection = connector.connect();
+            data = new Pair<Integer, MXBeanConnectionImpl>(1, connection);
         } else {
             data = new Pair<>(data.getFirst() + 1, data.getSecond());
         }
@@ -117,17 +103,9 @@ public class MXBeanConnectionPoolImpl implements MXBeanConnectionPool {
         }
     }
     
-    public void shutdown() {
-        try {
-            registry.stop();
-        } catch (RemoteException e) {
-            logger.log(Level.SEVERE, "Unable to stop RMI registry", e);
-        }
-    }
-
     static class ConnectorCreator {
-        public MXBeanConnector create(RMIRegistry registry, int pid, File binPath) throws IOException, ApplicationException {
-            MXBeanConnector connector = new MXBeanConnector(registry, pid, binPath);
+        public MXBeanConnector create(int pid, String user, File binPath) throws IOException, ApplicationException {
+            MXBeanConnector connector = new MXBeanConnector(pid, user, binPath);
             return connector;
         }
     }

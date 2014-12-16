@@ -36,106 +36,99 @@
 
 package com.redhat.thermostat.agent.proxy.server;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.rmi.RemoteException;
-import java.rmi.registry.Registry;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.io.IOException;
+import java.io.PrintStream;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.agent.proxy.common.AgentProxyListener;
-import com.redhat.thermostat.agent.proxy.common.AgentProxyLogin;
+import com.redhat.thermostat.agent.proxy.server.AgentProxy.ControlCreator;
 
 public class AgentProxyTest {
     
-    private AgentProxyNativeUtils nativeUtils;
-    private RegistryUtils registryUtils;
-    private Registry registry;
-    private AgentProxyLogin loginStub;
-    private AgentProxyListener listener;
-    private Timer timeoutTimer;
+    private static final String JMX_URL = "service:jmx:rmi://myHost:1099/blah";
+    
+    private AgentProxyControlImpl control;
+    private PrintStream outStream;
 
     @Before
     public void setup() throws Exception {
-        registry = mock(Registry.class);
-        listener = mock(AgentProxyListener.class);
-        when(registry.lookup(AgentProxyListener.REMOTE_PREFIX + "0")).thenReturn(listener);
-        registryUtils = mock(RegistryUtils.class);
-        when(registryUtils.getRegistry()).thenReturn(registry);
-        loginStub = mock(AgentProxyLogin.class);
-        when(registryUtils.exportObject(any(AgentProxyLogin.class))).thenReturn(loginStub);
-        
-        nativeUtils = mock(AgentProxyNativeUtils.class);
-        ProcessUserInfoBuilder builder = mock(ProcessUserInfoBuilder.class);
-        when(builder.build(0)).thenReturn(new UnixCredentials(9000, 9001, 0));
-        timeoutTimer = mock(Timer.class);
-        AgentProxy.setRegistryUtils(registryUtils);
-        AgentProxy.setNativeUtils(nativeUtils);
-        AgentProxy.setProcessUserInfoBuilder(builder);
-        AgentProxy.setTimeoutTimer(timeoutTimer);
+        ControlCreator creator = mock(ControlCreator.class);
+        control = mock(AgentProxyControlImpl.class);
+        when(control.getConnectorAddress()).thenReturn(JMX_URL);
+        outStream = mock(PrintStream.class);
+        when(creator.create(0)).thenReturn(control);
+        AgentProxy.setControlCreator(creator);
+        AgentProxy.setOutStream(outStream);
+    }
+    
+    @After
+    public void teardown() throws Exception {
+        AgentProxy.setControlCreator(new ControlCreator());
+        AgentProxy.setOutStream(System.out);
     }
     
     @Test
     public void testMainSuccess() throws Exception {
-        assertFalse(AgentProxy.isBound());
-        
         // Invoke main with PID of 0
         AgentProxy.main(new String[] { "0" });
         
-        assertTrue(AgentProxy.isBound());
-        
-        // Verify timeout set
-        verify(timeoutTimer).schedule(any(TimerTask.class), any(Long.class));
-        
-        // Verify native library loaded and credentials properly set
-        verify(nativeUtils).loadLibrary();
-        verify(nativeUtils).setCredentials(9000, 9001);
-        
-        // Verify login object exported
-        AgentProxyLogin proxyLogin = AgentProxy.getAgentProxyLogin();
-        verify(registryUtils).exportObject(proxyLogin);
-        verify(registry).rebind(AgentProxyLogin.REMOTE_PREFIX + "0", loginStub);
-        
-        // Verify listener notified with positive response
-        verify(listener).serverStarted();
-        
-        // Shutdown server
-        ShutdownListener shutdownListener = AgentProxy.getShutdownListener();
-        shutdownListener.shutdown();
-        
-        // Verify login object unexported
-        verify(registry).unbind(AgentProxyLogin.REMOTE_PREFIX + "0");
-        verify(registryUtils).unexportObject(proxyLogin);
-        
-        assertFalse(AgentProxy.isBound());
+        verify(control).attach();
+        verify(control).getConnectorAddress();
+        verify(control).detach();
+        verify(outStream).println(JMX_URL);
     }
     
     @Test
-    public void testMainFailure() throws Exception {
+    public void testMainAttachFails() throws Exception {
         // Simulate failure binding the login object
-        RemoteException ex = new RemoteException("TEST");
-        doThrow(ex).when(registry).rebind(AgentProxyLogin.REMOTE_PREFIX + "0", loginStub);
+        doThrow(new IOException()).when(control).attach();
         
         // Invoke main with PID of 0
         AgentProxy.main(new String[] { "0" });
         
-        // Verify listener notified with negative response
-        ArgumentCaptor<Exception> errorCaptor = ArgumentCaptor.forClass(Exception.class);
-        verify(listener).serverFailedToStart(errorCaptor.capture());
-        assertEquals(ex, errorCaptor.getValue().getCause());
+        verify(control).attach();
+        verify(control, never()).getConnectorAddress();
+        verify(control, never()).detach();
+        verify(outStream, never()).println(JMX_URL);
+    }
+    
+    @Test
+    public void testMainGetAddressFails() throws Exception {
+        // Simulate failure binding the login object
+        doThrow(new IOException()).when(control).getConnectorAddress();
         
-        assertFalse(AgentProxy.isBound());
+        // Invoke main with PID of 0
+        AgentProxy.main(new String[] { "0" });
+        
+        verify(control).attach();
+        verify(control).getConnectorAddress();
+        
+        // Should detach, but not print URL
+        verify(control).detach();
+        verify(outStream, never()).println(JMX_URL);
+    }
+    
+    @Test
+    public void testMainDetachFails() throws Exception {
+        // Simulate failure binding the login object
+        doThrow(new IOException()).when(control).detach();
+        
+        // Invoke main with PID of 0
+        AgentProxy.main(new String[] { "0" });
+        
+        // All should be called
+        verify(control).attach();
+        verify(control).getConnectorAddress();
+        verify(control).detach();
+        verify(outStream).println(JMX_URL);
     }
 
 }

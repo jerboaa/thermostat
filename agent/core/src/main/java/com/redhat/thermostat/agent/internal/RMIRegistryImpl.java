@@ -36,121 +36,32 @@
 
 package com.redhat.thermostat.agent.internal;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.rmi.NoSuchObjectException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.rmi.server.RMIClientSocketFactory;
-import java.rmi.server.RMIServerSocketFactory;
-import java.rmi.server.RMISocketFactory;
-import java.rmi.server.UnicastRemoteObject;
-import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.RMIRegistry;
-import com.redhat.thermostat.common.utils.LoggingUtils;
 
+@Deprecated
 public class RMIRegistryImpl implements RMIRegistry {
     
-    private static final Logger logger = LoggingUtils.getLogger(RMIRegistryImpl.class);
-
-    private RegistryWrapper registryWrapper;
-    private ServerSocketCreator serverSockCreator;
-    private Registry registry;
-    
-    public RMIRegistryImpl() {
-        this(new RegistryWrapper(), new ServerSocketCreator());
-    }
-    
-    RMIRegistryImpl(RegistryWrapper registryWrapper, ServerSocketCreator serverSockCreator) {
-        this.registryWrapper = registryWrapper;
-        this.serverSockCreator = serverSockCreator;
-    }
-    
-    public void start() throws RemoteException {
-        this.registry = registryWrapper.createRegistry(Registry.REGISTRY_PORT /* TODO customize */,
-                RMISocketFactory.getDefaultSocketFactory(),
-                new RMIServerSocketFactory() {
-                    
-                    @Override
-                    public ServerSocket createServerSocket(int port) throws IOException {
-                        // Allow only local connections
-                        return serverSockCreator.createSocket(port, 0, InetAddress.getLoopbackAddress());
-                    }
-                });
-        logger.fine("Starting RMI registry");
+    RMIRegistryImpl() {
     }
     
     @Override
     public Registry getRegistry() throws RemoteException {
-        // We get a class loading problem when returning the local registry reference,
-        // this returns a remote stub reference instead
-        return registryWrapper.getRegistry();
-    }
-    
-    public void stop() throws RemoteException {
-        if (registry != null) {
-            registryWrapper.destroyRegistry(registry);
-            registry = null;
-            logger.fine("Shutting down RMI registry");
-        }
+        throw new RemoteException("RMI is no longer used");
     }
     
     @Override
     public Remote export(Remote obj) throws RemoteException {
-        if (registry == null) {
-            throw new RemoteException("RMI registry is not running");
-        }
-        return registryWrapper.export(obj, 0);
+        throw new RemoteException("RMI is no longer used");
     }
     
     @Override
     public boolean unexport(Remote obj) throws RemoteException {
-        if (registry == null) {
-            throw new RemoteException("RMI registry is not running");
-        }
-        return registryWrapper.unexport(obj, true);
+        throw new RemoteException("RMI is no longer used");
     }
     
-    /*
-     * For testing purposes only.
-     */
-    Registry getRegistryImpl() {
-        return registry;
-    }
-    
-    static class RegistryWrapper {
-        Registry createRegistry(int port, RMIClientSocketFactory csf,
-                RMIServerSocketFactory ssf) throws RemoteException {
-            return LocateRegistry.createRegistry(port, csf, ssf);
-        }
-        
-        Registry getRegistry() throws RemoteException {
-            return LocateRegistry.getRegistry(InetAddress.getLoopbackAddress().getHostName());
-        }
-        
-        void destroyRegistry(Registry registry) throws NoSuchObjectException {
-            // Shuts down RMI registry
-            UnicastRemoteObject.unexportObject(registry, true);
-        }
-        
-        Remote export(Remote obj, int port) throws RemoteException {
-            return UnicastRemoteObject.exportObject(obj, 0);
-        }
-        
-        boolean unexport(Remote obj, boolean force) throws NoSuchObjectException {
-            return UnicastRemoteObject.unexportObject(obj, force);
-        }
-    }
-    
-    static class ServerSocketCreator {
-        ServerSocket createSocket(int port, int backlog, InetAddress bindAddr) throws IOException {
-            return new ServerSocket(port, backlog, bindAddr);
-        }
-    }
-
 }
 

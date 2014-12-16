@@ -49,33 +49,6 @@
   <name>Thermostat Agent Proxy Server</name>
 
   <build>
-    <plugins>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>1.2.1</version>
-        <executions>  
-          <execution>
-            <phase>compile</phase>
-            <goals>
-              <goal>exec</goal>
-            </goals>
-          </execution>  
-        </executions>
-        <configuration>
-          <executable>make</executable>
-          <arguments>
-            <argument>all</argument>
-          </arguments>
-          <systemProperties>
-            <systemProperty>
-              <key>JAVA_HOME</key>
-              <value>${java.home}</value>
-            </systemProperty>
-          </systemProperties>
-        </configuration>
-      </plugin>
-    </plugins>
     <pluginManagement>
       <plugins>
         <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
@@ -108,11 +81,6 @@
   </build>
 
   <dependencies>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-agent-proxy-common</artifactId>
-      <version>${project.version}</version>
-    </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-common-core</artifactId>

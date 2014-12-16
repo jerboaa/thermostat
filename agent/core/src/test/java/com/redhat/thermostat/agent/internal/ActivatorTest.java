@@ -89,8 +89,6 @@ public class ActivatorTest {
         activator.setPool(pool);
 
         activator.stop(context);
-
-        verify(pool).shutdown();
     }
 }
 

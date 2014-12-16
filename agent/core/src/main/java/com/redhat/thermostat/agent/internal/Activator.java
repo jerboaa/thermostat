@@ -62,14 +62,15 @@ public class Activator implements BundleActivator {
         context.registerService(RMIRegistry.class, registry, null);
         ServiceReference<CommonPaths> pathsRef = context.getServiceReference(CommonPaths.class);
         CommonPaths paths = context.getService(pathsRef);
-        pool = new MXBeanConnectionPoolImpl(registry, paths.getSystemBinRoot());
+        UserNameUtilImpl usernameUtil = new UserNameUtilImpl();
+        context.registerService(UserNameUtil.class, usernameUtil, null);
+        pool = new MXBeanConnectionPoolImpl(paths.getSystemBinRoot(), usernameUtil);
         context.registerService(MXBeanConnectionPool.class, pool, null);
         StorageCredentials creds = new AgentStorageCredentials(paths.getUserAgentAuthConfigFile());
         context.registerService(StorageCredentials.class, creds, null);
         AgentConfigsUtils.setConfigFiles(paths.getSystemAgentConfigurationFile(), paths.getUserAgentConfigurationFile());
         paths = null;
         context.ungetService(pathsRef);
-        context.registerService(UserNameUtil.class, new UserNameUtilImpl(), null);
         VmBlacklistImpl blacklist = new VmBlacklistImpl();
         blacklist.addVmFilter(new AgentProxyFilter());
         context.registerService(VmBlacklist.class, blacklist, null);
@@ -78,10 +79,7 @@ public class Activator implements BundleActivator {
     @Override
     public void stop(BundleContext context) throws Exception {
         // Services automatically unregistered by framework
-        if (pool != null) {
-            pool.shutdown();
-            pool = null;
-        }
+        pool = null;
     }
 
     // Testing hook.

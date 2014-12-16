@@ -40,17 +40,13 @@ import java.io.File;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.Properties;
-import java.util.Set;
 import java.util.logging.Logger;
 
-import javax.security.auth.Subject;
-
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.sun.tools.attach.AgentInitializationException;
 import com.sun.tools.attach.AgentLoadException;
 import com.sun.tools.attach.AttachNotSupportedException;
 import com.sun.tools.attach.VirtualMachine;
-
-import com.redhat.thermostat.common.utils.LoggingUtils;
 
 class AgentProxyControlImpl {
     
@@ -74,65 +70,45 @@ class AgentProxyControlImpl {
         this.vmUtils = vmUtils;
     }
 
-    void attach(Subject user) throws RemoteException, SecurityException {
-        authCheck(user);
-        try {
-            vm = vmUtils.attach(String.valueOf(pid));
-            attached = true;
-            
-            Properties props = vm.getAgentProperties();
-            connectorAddress = props.getProperty(CONNECTOR_ADDRESS_PROPERTY);
-            if (connectorAddress == null) {
-                String home = null;
-                String agent = null;
-                try {
-                    props = vm.getSystemProperties();
-                    home = props.getProperty("java.home");
-                    agent = home + File.separator + "lib" + File.separator + "management-agent.jar";
-                    logger.fine("Loading '" + agent + "' into VM (pid: " + pid + ")");
-                    vm.loadAgent(agent);
+    void attach() throws AttachNotSupportedException, IOException {
+        vm = vmUtils.attach(String.valueOf(pid));
+        attached = true;
 
-                    props = vm.getAgentProperties();
-                    connectorAddress = props.getProperty(CONNECTOR_ADDRESS_PROPERTY);
-                } catch (IOException | AgentLoadException | AgentInitializationException e) {
-                    throw new RemoteException("Failed to load agent ('" + agent + "', from home '" + home + "') into VM (pid: " + pid + ")", e);
-                }
+        Properties props = vm.getAgentProperties();
+        connectorAddress = props.getProperty(CONNECTOR_ADDRESS_PROPERTY);
+        if (connectorAddress == null) {
+            String home = null;
+            String agent = null;
+            try {
+                props = vm.getSystemProperties();
+                home = props.getProperty("java.home");
+                agent = home + File.separator + "lib" + File.separator + "management-agent.jar";
+                logger.fine("Loading '" + agent + "' into VM (pid: " + pid + ")");
+                vm.loadAgent(agent);
+
+                props = vm.getAgentProperties();
+                connectorAddress = props.getProperty(CONNECTOR_ADDRESS_PROPERTY);
+            } catch (IOException | AgentLoadException | AgentInitializationException e) {
+                throw new RemoteException("Failed to load agent ('" + agent + "', from home '" + home + "') into VM (pid: " + pid + ")", e);
             }
-        } catch (AttachNotSupportedException | IOException e) {
-            throw new RemoteException("Failed to attach to VM (pid: " + pid + ")", e);
         }
     }
 
-    boolean isAttached(Subject user) throws RemoteException, SecurityException {
-        authCheck(user);
+    boolean isAttached() {
         return attached;
     }
 
-    String getConnectorAddress(Subject user) throws RemoteException, SecurityException {
-        authCheck(user);
+    String getConnectorAddress() throws IOException {
         if (!attached) {
-            throw new RemoteException("Agent not attached to target VM");
+            throw new IOException("Agent not attached to target VM");
         }
         return connectorAddress;
     }
 
-    void detach(Subject user) throws RemoteException, SecurityException {
-        authCheck(user);
-        try {
-            if (attached) {
-                vm.detach();
-                attached = false;
-            }
-        } catch (IOException e) {
-            throw new RemoteException("Failed to detach from VM", e);
-        }
-    }
-    
-    private void authCheck(Subject user) throws SecurityException {
-        // If we've added our Principal, we've authenticated this user
-        Set<AgentProxyPrincipal> principals = user.getPrincipals(AgentProxyPrincipal.class);
-        if (principals.isEmpty()) {
-            throw new SecurityException("Access Denied");
+    void detach() throws IOException {
+        if (attached) {
+            vm.detach();
+            attached = false;
         }
     }
     

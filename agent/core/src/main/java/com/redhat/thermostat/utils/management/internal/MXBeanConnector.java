@@ -36,40 +36,32 @@
 
 package com.redhat.thermostat.utils.management.internal;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
-import java.rmi.RemoteException;
 
 import javax.management.MBeanServerConnection;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
-import com.redhat.thermostat.agent.RMIRegistry;
 import com.redhat.thermostat.common.tools.ApplicationException;
 
-class MXBeanConnector implements Closeable {
+class MXBeanConnector {
     
-    private final AgentProxyClient client;
     private final JMXConnectionCreator jmxCreator;
+    private final String serviceURL;
     
-    public MXBeanConnector(RMIRegistry registry, int pid, File binPath) throws IOException, ApplicationException {
-        this(new AgentProxyClient(registry, pid, binPath), new JMXConnectionCreator());
+    public MXBeanConnector(int pid, String user, File binPath) throws IOException, ApplicationException {
+        this(new AgentProxyClient(pid, user, binPath), new JMXConnectionCreator());
     }
     
     MXBeanConnector(AgentProxyClient client, JMXConnectionCreator jmxCreator) throws IOException, ApplicationException {
-        this.client = client;
         this.jmxCreator = jmxCreator;
-        client.createProxy();
-    }
-    
-    public synchronized void attach() throws Exception {
-        client.attach();
+        this.serviceURL = client.getJMXServiceURL();
     }
     
     public synchronized MXBeanConnectionImpl connect() throws IOException {
-        JMXServiceURL url = new JMXServiceURL(client.getConnectorAddress());
+        JMXServiceURL url = new JMXServiceURL(serviceURL);
         JMXConnector connection = jmxCreator.create(url);
         MBeanServerConnection mbsc = null;
         try {
@@ -83,15 +75,6 @@ class MXBeanConnector implements Closeable {
         return new MXBeanConnectionImpl(connection, mbsc);
     }
     
-    public boolean isAttached() throws RemoteException {
-        return client.isAttached();
-    }
-    
-    @Override
-    public synchronized void close() throws IOException {
-        client.detach();
-    }
-
     static class JMXConnectionCreator {
         JMXConnector create(JMXServiceURL url) throws IOException {
             return JMXConnectorFactory.connect(url);

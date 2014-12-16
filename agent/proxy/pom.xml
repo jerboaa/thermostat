@@ -51,7 +51,6 @@
   <name>Thermostat Agent Proxy</name>
 
   <modules>
-    <module>common</module>
     <module>server</module>
   </modules>
 

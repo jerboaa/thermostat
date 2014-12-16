@@ -37,50 +37,21 @@
 package com.redhat.thermostat.agent.proxy.server;
 
 import java.io.IOException;
-import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
-import java.rmi.registry.Registry;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.io.PrintStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.agent.proxy.common.AgentProxyListener;
-import com.redhat.thermostat.agent.proxy.common.AgentProxyLogin;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.sun.tools.attach.AttachNotSupportedException;
 
 public class AgentProxy {
     
     private static final Logger logger = LoggingUtils.getLogger(AgentProxy.class);
-    private static final long TIMEOUT_MS = 300000L; // 5 minutes should be more than enough
-    private static final ShutdownListener shutdownListener = new ShutdownListener() {
-        @Override
-        public void shutdown() throws RemoteException {
-            shutdownProxy();
-        }
-    };
-    private static final TimerTask timeoutTask = new TimerTask() {
-        @Override
-        public void run() {
-            try {
-                shutdownProxy();
-                logger.warning("Server timed out");
-            } catch (RemoteException e) {
-                logger.log(Level.SEVERE, "Exception while shutting down "
-                        + "timed out server" , e);
-            }
-        }
-    };
-
-    private static String name = null;
+    
     private static int pid = -1;
-    private static Registry registry = null;
-    private static boolean bound = false;
-    private static AgentProxyLogin agent = null;
-    private static RegistryUtils registryUtils = new RegistryUtils();
-    private static AgentProxyNativeUtils nativeUtils = new AgentProxyNativeUtils();
-    private static ProcessUserInfoBuilder builder = new ProcessUserInfoBuilder(new ProcDataSource());
-    private static Timer timeoutTimer = new Timer(true);
+    private static AgentProxyControlImpl agent = null;
+    private static ControlCreator creator = new ControlCreator();
+    private static PrintStream outStream = System.out;
     
     public static void main(String[] args) {
         if (args.length < 1) {
@@ -94,87 +65,27 @@ public class AgentProxy {
             usage();
         }
         
-        // Schedule a timeout
-        timeoutTimer.schedule(timeoutTask, TIMEOUT_MS);
-        
-        // Load the native library
-        nativeUtils.loadLibrary();
-
-        // Look for registered status listener
-        AgentProxyListener listener;
-        try {
-            String listenerName = AgentProxyListener.REMOTE_PREFIX + String.valueOf(pid);
-            registry = registryUtils.getRegistry();
-            listener = (AgentProxyListener) registry.lookup(listenerName);
-        } catch (RemoteException e) {
-            throw new RuntimeException("Failed to locate registry", e);
-        } catch (NotBoundException e) {
-            throw new RuntimeException("No listener registered", e);
-        }
-
         // Start proxy agent
-        Exception ex = null;
+        agent = creator.create(pid);
+        
         try {
-            setupProxy(pid);
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Failed to setup agent proxy for " + pid, e);
-            ex = e;
+            agent.attach();
+        } catch (AttachNotSupportedException | IOException e) {
+            logger.log(Level.SEVERE, "Failed to attach to VM (pid: " + pid + ")", e);
+            return;
         }
         
-        // Notify listener of result
         try {
-            if (ex == null) {
-                // Success
-                listener.serverStarted();
-            }
-            else {
-                // Send exception to client
-                listener.serverFailedToStart(ex);
-            }
-        } catch (RemoteException e) {
-            throw new RuntimeException("Failed to notify listener", e);
+            String connectorAddress = agent.getConnectorAddress();
+            outStream.println(connectorAddress);
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Failed to retrieve JMX connection URL", e);
         }
-    }
-
-    private static void setupProxy(int pid) throws Exception {
+        
         try {
-            UnixCredentials creds;
-            try {
-                creds = builder.build(pid);
-            } catch (IOException e) {
-                throw new Exception("Failed to read credentials", e);
-            }
-            
-            try {
-                // Set UID/GID to owner of target VM
-                nativeUtils.setCredentials(creds.getUid(), creds.getGid());
-            } catch (Exception e) {
-                throw new Exception("Failed to set credentials to " + creds.getUid() 
-                        + ":" + creds.getGid() , e);
-            }
-
-            agent = new AgentProxyLoginImpl(creds, pid, shutdownListener);
-            name = AgentProxyLogin.REMOTE_PREFIX + String.valueOf(pid);
-            AgentProxyLogin stub = (AgentProxyLogin) registryUtils.exportObject(agent);
-            registry.rebind(name, stub);
-            bound = true;
-            logger.info(name + " bound to RMI registry");
-        } catch (RemoteException e) {
-            throw new Exception("Failed to create remote object", e);
-        }
-    }
-    
-    private static void shutdownProxy() throws RemoteException {
-        // Unbind from RMI registry
-        if (bound) {
-            try {
-                registry.unbind(name);
-                registryUtils.unexportObject(agent);
-                logger.info(name + " unbound from RMI registry");
-                bound = false;
-            } catch (NotBoundException e) {
-                throw new RemoteException("Object not bound", e);
-            }
+            agent.detach();
+        } catch (IOException e) {
+            logger.log(Level.WARNING, "Failed to detach from VM (pid: " + pid + ")", e); 
         }
     }
 
@@ -182,53 +93,25 @@ public class AgentProxy {
         throw new RuntimeException("usage: java " + AgentProxy.class.getName() + " <pidOfTargetJvm>");
     }
     
-    /*
-     * For testing purposes only.
-     */
-    static AgentProxyLogin getAgentProxyLogin() {
-        return agent;
+    static class ControlCreator {
+        AgentProxyControlImpl create(int pid) {
+            return new AgentProxyControlImpl(pid);
+        }
     }
     
     /*
      * For testing purposes only.
      */
-    static ShutdownListener getShutdownListener() {
-        return shutdownListener;
+    static void setControlCreator(ControlCreator creator) {
+        AgentProxy.creator = creator;
     }
     
     /*
      * For testing purposes only.
      */
-    static boolean isBound() {
-        return bound;
-    }
-
-    /*
-     * For testing purposes only.
-     */
-    static void setRegistryUtils(RegistryUtils registryUtils) {
-        AgentProxy.registryUtils = registryUtils;
+    static void setOutStream(PrintStream stream) {
+        AgentProxy.outStream = stream;
     }
     
-    /*
-     * For testing purposes only.
-     */
-    static void setNativeUtils(AgentProxyNativeUtils nativeUtils) {
-        AgentProxy.nativeUtils = nativeUtils;
-    }
-    
-    /*
-     * For testing purposes only.
-     */
-    static void setProcessUserInfoBuilder(ProcessUserInfoBuilder builder) {
-        AgentProxy.builder = builder;
-    }
-    
-    /*
-     * For testing purposes only.
-     */
-    static void setTimeoutTimer(Timer timeoutTimer) {
-        AgentProxy.timeoutTimer = timeoutTimer;
-    }
 }
 

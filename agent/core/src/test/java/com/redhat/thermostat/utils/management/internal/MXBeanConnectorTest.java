@@ -37,7 +37,6 @@
 package com.redhat.thermostat.utils.management.internal;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -53,6 +52,8 @@ import com.redhat.thermostat.utils.management.internal.MXBeanConnector.JMXConnec
 
 public class MXBeanConnectorTest {
     
+    private static final String JMX_URL = "service:jmx:rmi://myHost:1099/blah";
+    
     private MXBeanConnector connector;
     private JMXConnectionCreator jmxCreator;
     private AgentProxyClient client;
@@ -61,47 +62,24 @@ public class MXBeanConnectorTest {
     public void setup() throws Exception {
         jmxCreator = mock(JMXConnectionCreator.class);
         client = mock(AgentProxyClient.class);
+        when(client.getJMXServiceURL()).thenReturn(JMX_URL);
         connector = new MXBeanConnector(client, jmxCreator);
     }
     
     @Test
     public void testInit() throws Exception {
-        // MXBeanConnector constructor calls createProxy
-        verify(client).createProxy();
-    }
-    
-    @Test
-    public void testAttach() throws Exception {
-        connector.attach();
-        verify(client).attach();
-    }
-    
-    @Test
-    public void testIsAttached() throws Exception {
-        when(client.isAttached()).thenReturn(true);
-        boolean result = connector.isAttached();
-        verify(client).isAttached();
-        assertTrue(result);
-    }
-    
-    @Test
-    public void testClose() throws Exception {
-        connector.close();
-        verify(client).detach();
+        // MXBeanConnector constructor calls getJMXServiceURL
+        verify(client).getJMXServiceURL();
     }
     
     @Test
     public void testConnect() throws Exception {
-        String jmxUrl = "service:jmx:rmi://myHost:1099/blah";
-        when(client.getConnectorAddress()).thenReturn(jmxUrl);
-        
         JMXConnector jmxConnector = mock(JMXConnector.class);
-        when(jmxCreator.create(new JMXServiceURL(jmxUrl))).thenReturn(jmxConnector);
+        when(jmxCreator.create(new JMXServiceURL(JMX_URL))).thenReturn(jmxConnector);
         MBeanServerConnection connection = mock(MBeanServerConnection.class);
         when(jmxConnector.getMBeanServerConnection()).thenReturn(connection);
         
         MXBeanConnectionImpl result = connector.connect();
-        verify(client).getConnectorAddress();
         assertEquals(connection, result.get());
     }
 

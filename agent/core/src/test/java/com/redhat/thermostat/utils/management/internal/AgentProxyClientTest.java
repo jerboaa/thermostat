@@ -37,186 +37,117 @@
 package com.redhat.thermostat.utils.management.internal;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.rmi.RemoteException;
-import java.rmi.registry.Registry;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
+import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.agent.internal.RMIRegistryImpl;
-import com.redhat.thermostat.agent.proxy.common.AgentProxyControl;
-import com.redhat.thermostat.agent.proxy.common.AgentProxyListener;
-import com.redhat.thermostat.agent.proxy.common.AgentProxyLogin;
-import com.redhat.thermostat.common.tools.ApplicationException;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.utils.management.internal.AgentProxyClient.ProcessCreator;
 
 public class AgentProxyClientTest {
     
     private AgentProxyClient client;
-    private RMIRegistryImpl rmi;
-    private Registry registry;
     private ProcessCreator procCreator;
-    private CountDownLatch latch;
-    private AgentProxyListener listenerStub;
-    private AgentProxyLogin proxyLogin;
-    private AgentProxyControl proxyControl;
+    private String user;
     private File binPath;
     
     @Before
     public void setup() throws Exception {
-        rmi = mock(RMIRegistryImpl.class);
-        listenerStub = mock(AgentProxyListener.class);
-        when(rmi.export(any(AgentProxyListener.class))).thenReturn(listenerStub);
-        registry = mock(Registry.class);
-        when(rmi.getRegistry()).thenReturn(registry);
-        proxyLogin = mock(AgentProxyLogin.class);
-        when(registry.lookup(AgentProxyLogin.REMOTE_PREFIX + "0")).thenReturn(proxyLogin);
-        proxyControl = mock(AgentProxyControl.class);
-        when(proxyLogin.login()).thenReturn(proxyControl);
-        
         procCreator = mock(ProcessCreator.class);
         binPath = new File("/path/to/thermostat/bin");
-        latch = mock(CountDownLatch.class);
+        user = "Hello";
+        client = new AgentProxyClient(9000, user, binPath, procCreator);
     }
     
     @Test
     public void testCreateProxy() throws Exception {
-        createClient();
+        Process proxy = mock(Process.class);
+        final String jmxUrl = "myJmxUrl";
+        when(proxy.getInputStream()).thenReturn(new ByteArrayInputStream(jmxUrl.getBytes()));
+        when(proxy.getErrorStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
+        when(procCreator.createAndRunProcess(any(String[].class))).thenReturn(proxy);
         
-        // Verify listener exported and bound
-        verify(rmi).export(client);
-        verify(registry).rebind(AgentProxyListener.REMOTE_PREFIX + "0", listenerStub);
+        // Check returned URL
+        String result = client.getJMXServiceURL();
+        assertEquals(jmxUrl, result);
         
-        // Verify server created
-        String progName = "/path/to/thermostat/bin" + File.separator + "thermostat-agent-proxy";
-        verify(procCreator).createAndRunProcess(new String[] { progName, "0" });
-        verify(latch).countDown();
+        // Check process arguments
+        ArgumentCaptor<String[]> argsCaptor = ArgumentCaptor.forClass(String[].class);
+        verify(procCreator).createAndRunProcess(argsCaptor.capture());
+        String[] args = argsCaptor.getValue();
+        assertEquals(3, args.length);
+        assertEquals("/path/to/thermostat/bin/thermostat-agent-proxy", args[0]);
+        assertEquals("9000", args[1]);
+        assertEquals("Hello", args[2]);
         
-        // Verify listener removed
-        verify(registry).unbind(AgentProxyListener.REMOTE_PREFIX + "0");
-        verify(rmi).unexport(client);
+        // Check cleanup
+        verify(proxy).waitFor();
+    }
+    
+    @Test
+    public void testErrorHandler() throws Exception {
+        Process proxy = mock(Process.class);
+        final String errors = "This is an error\nThis is also an error\nOh no!\n";
+        when(proxy.getInputStream()).thenReturn(new ByteArrayInputStream(new byte[0]));
+        when(proxy.getErrorStream()).thenReturn(new ByteArrayInputStream(errors.getBytes()));
+        when(procCreator.createAndRunProcess(any(String[].class))).thenReturn(proxy);
         
-        // Verify login
-        verify(registry).lookup(AgentProxyLogin.REMOTE_PREFIX + "0");
-        verify(proxyLogin).login();
+        List<LogRecord> logMessages = new ArrayList<>();
+        TestLogHandler logHandler = new TestLogHandler(logMessages);
+        LoggingUtils.getLogger(AgentProxyClient.class).addHandler(logHandler);
         
-        // Check returned proxy control
-        assertEquals(proxyControl, client.getProxy());
+        try {
+            try {
+                client.getJMXServiceURL();
+                fail("Expected exception");
+            } catch (IOException e) {
+                // Expected
+            }
+            assertEquals(3, logMessages.size());
+            assertEquals("This is an error", logMessages.get(0).getMessage());
+            assertEquals("This is also an error", logMessages.get(1).getMessage());
+            assertEquals("Oh no!", logMessages.get(2).getMessage());
+        } finally {
+            LoggingUtils.getLogger(AgentProxyClient.class).removeHandler(logHandler);
+        }
+    }
+    
+    private static class TestLogHandler extends Handler {
+        
+        private List<LogRecord> logMessages;
+        public TestLogHandler(List<LogRecord> logMessages) {
+            this.logMessages = logMessages;
+        }
+        
+        @Override
+        public void publish(LogRecord record) {
+            logMessages.add(record);
+        }
+        
+        @Override
+        public void flush() {
+            // Do nothing
+        }
+        
+        @Override
+        public void close() throws SecurityException {
+            // Do nothing
+        }
     }
 
-    private void createClient() throws InterruptedException, IOException,
-            ApplicationException {
-        client = new AgentProxyClient(rmi, 0, binPath, latch, procCreator);
-        
-        doAnswer(new Answer<Boolean>() {
-            @Override
-            public Boolean answer(InvocationOnMock invocation) throws Throwable {
-                // Trigger server started
-                client.serverStarted();
-                return true;
-            }
-        }).when(latch).await(any(Long.class), any(TimeUnit.class));
-        
-        client.createProxy();
-    }
-    
-    @Test
-    public void testCreateProxyFailed() throws Exception {
-        client = new AgentProxyClient(rmi, 0, binPath, latch, procCreator);
-        
-        final Exception error = mock(Exception.class);
-        doAnswer(new Answer<Boolean>() {
-            @Override
-            public Boolean answer(InvocationOnMock invocation) throws Throwable {
-                // Trigger server started
-                client.serverFailedToStart(error);
-                return true;
-            }
-        }).when(latch).await(any(Long.class), any(TimeUnit.class));
-        
-        try {
-            client.createProxy();
-            fail("Expected RemoteException");
-        } catch (RemoteException e) {
-            assertEquals(error, e.getCause());
-        }
-        
-        // Verify listener exported and bound
-        verify(rmi).export(client);
-        verify(registry).rebind(AgentProxyListener.REMOTE_PREFIX + "0", listenerStub);
-        
-        // Verify server created
-        String progName = "/path/to/thermostat/bin" + File.separator + "thermostat-agent-proxy";
-        verify(procCreator).createAndRunProcess(new String[] { progName, "0" });
-        verify(latch).countDown();
-        
-        // Verify listener removed
-        verify(registry).unbind(AgentProxyListener.REMOTE_PREFIX + "0");
-        verify(rmi).unexport(client);
-    }
-    
-    @Test
-    public void testCreateProxyTimeout() throws Exception {
-        when(latch.await(any(Long.class), any(TimeUnit.class))).thenReturn(false);
-        client = new AgentProxyClient(rmi, 0, binPath, latch, procCreator);
-        
-        try {
-            client.createProxy();
-            fail("Expected RemoteException");
-        } catch (RemoteException e) {
-            // Verify listener exported and bound
-            verify(rmi).export(client);
-            verify(registry).rebind(AgentProxyListener.REMOTE_PREFIX + "0", listenerStub);
-            
-            // Verify server created
-            String progName = "/path/to/thermostat/bin" + File.separator + "thermostat-agent-proxy";
-            verify(procCreator).createAndRunProcess(new String[] { progName, "0" });
-            
-            // Verify listener removed
-            verify(registry).unbind(AgentProxyListener.REMOTE_PREFIX + "0");
-            verify(rmi).unexport(client);
-        }
-    }
-    
-    @Test
-    public void testAttach() throws Exception {
-        createClient();
-        
-        client.attach();
-        verify(proxyControl).attach();
-    }
-    
-    @Test
-    public void testIsAttached() throws Exception {
-        createClient();
-        when(proxyControl.isAttached()).thenReturn(true);
-        
-        boolean result = client.isAttached();
-        verify(proxyControl).isAttached();
-        assertTrue(result);
-    }
-    
-    @Test
-    public void testDetach() throws Exception {
-        createClient();
-        
-        client.detach();
-        verify(proxyControl).detach();
-    }
-    
 }
 

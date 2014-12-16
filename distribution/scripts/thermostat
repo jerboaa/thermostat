@@ -60,8 +60,6 @@ SERVICE_CLASSPATH="${THERMOSTAT_LIBS}/org.apache.felix.framework-@felix.framewor
 SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-launcher-@project.version@.jar"
 SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-main-@project.version@.jar"
 SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-shared-config-@project.version@.jar"
-# This needs to be on the classpath for the RMI registry to find it
-SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-agent-proxy-common-@project.version@.jar"
 # FIXME: Remove once jfreechart is a real OSGi bundle upstream
 SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_LIBS}/jfreechart-@jfreechart.version@.jar"
 SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_LIBS}/jcommon-@jcommon.version@.jar"

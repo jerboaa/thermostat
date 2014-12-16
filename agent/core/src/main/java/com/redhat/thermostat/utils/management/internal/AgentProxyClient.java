@@ -36,141 +36,107 @@
 
 package com.redhat.thermostat.utils.management.internal;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
-import java.rmi.registry.Registry;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.agent.RMIRegistry;
-import com.redhat.thermostat.agent.proxy.common.AgentProxyControl;
-import com.redhat.thermostat.agent.proxy.common.AgentProxyListener;
-import com.redhat.thermostat.agent.proxy.common.AgentProxyLogin;
 import com.redhat.thermostat.common.tools.ApplicationException;
-import com.redhat.thermostat.common.utils.LoggedExternalProcess;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
-class AgentProxyClient implements AgentProxyListener {
+class AgentProxyClient {
     
-    private static final long SERVER_TIMEOUT_MS = 5000L;
     private static final String SERVER_NAME = "thermostat-agent-proxy";
     private static final Logger logger = LoggingUtils.getLogger(AgentProxyClient.class);
     
-    private final RMIRegistry registry;
     private final int pid;
     private final ProcessCreator procCreator;
     private final File binPath;
-    private final CountDownLatch started;
+    private final String username;
     
-    private AgentProxyControl proxy;
-    private Exception serverError;
-    
-    AgentProxyClient(RMIRegistry registry, int pid, File binPath) {
-        this(registry, pid, binPath, new CountDownLatch(1), 
-                new ProcessCreator());
+    AgentProxyClient(int pid, String user, File binPath) {
+        this(pid, user, binPath, new ProcessCreator());
     }
 
-    AgentProxyClient(RMIRegistry registry, int pid, File binPath,
-            CountDownLatch started, ProcessCreator procCreator) {
-        this.registry = registry;
+    AgentProxyClient(int pid, String user, File binPath, ProcessCreator procCreator) {
         this.pid = pid;
         this.binPath = binPath;
-        this.started = started;
         this.procCreator = procCreator;
+        this.username = user;
     }
 
-    void createProxy() throws IOException, ApplicationException {
-        // Export our listener
-        AgentProxyListener stub = (AgentProxyListener) registry.export(this);
-        String listenerName = REMOTE_PREFIX + String.valueOf(pid);
-        Registry reg = registry.getRegistry();
-        reg.rebind(listenerName, stub);
-        logger.fine("Registered proxy listener for " + pid);
-
-        // Start the agent proxy, and wait until it exports itself
+    String getJMXServiceURL() throws IOException, ApplicationException {
+        // Start the agent proxy
+        Process proxy = null;
+        Thread errReaderThread = null;
         try {
-            startProcess();
-        } finally {
-            // Got started event or timed out, unregister our listener
+            proxy = startProcess();
+
+            final InputStream errStream = proxy.getErrorStream();
+
+            // Log stderr in a separate thread
+            errReaderThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    BufferedReader errReader = new BufferedReader(new InputStreamReader(errStream));
+                    String line;
+                    try {
+                        while ((line = errReader.readLine()) != null 
+                                && !Thread.currentThread().isInterrupted()) {
+                            logger.info(line);
+                        }
+                        errReader.close();
+                    } catch (IOException e) {
+                        logger.log(Level.WARNING, "Failed to read error stream", e);
+                    }
+                }
+            });
+            errReaderThread.start();
+
+            // Get JMX service URL from stdout
+            BufferedReader outReader = new BufferedReader(new InputStreamReader(proxy.getInputStream()));
+            String url = outReader.readLine();
+
+            // Wait for process to terminate
             try {
-                reg.unbind(listenerName);
-                registry.unexport(this);
-            } catch (NotBoundException e) {
-                throw new RemoteException("Error unregistering listener", e);
+                proxy.waitFor();
+            } catch (InterruptedException e) {
+                errReaderThread.interrupt();
+                Thread.currentThread().interrupt();
             }
-        }
+            outReader.close();
+            if (url == null) {
+                throw new IOException("Failed to determine JMX service URL from proxy process");
+            }
 
-        // Check if server started successfully
-        if (serverError != null) {
-            throw new RemoteException("Server failed to start", serverError);
-        }
-
-        // Lookup server
-        String serverName = AgentProxyLogin.REMOTE_PREFIX + String.valueOf(pid);
-        try {
-            // Need to authenticate in order to obtain proxy object
-            AgentProxyLogin proxyLogin = (AgentProxyLogin) reg.lookup(serverName);
-            proxy = proxyLogin.login();
-        } catch (NotBoundException e) {
-            throw new RemoteException("Unable to find remote interface", e);
+            return url;
+        } finally {
+            if (proxy != null) {
+                proxy.destroy();
+            }
+            if (errReaderThread != null) {
+                try {
+                    errReaderThread.join();
+                } catch (InterruptedException e) {
+                    errReaderThread.interrupt();
+                    Thread.currentThread().interrupt();
+                }
+            }
         }
     }
 
-    private void startProcess() throws IOException, ApplicationException {
+    private Process startProcess() throws IOException, ApplicationException {
         String serverPath = binPath + File.separator + SERVER_NAME;
-        procCreator.createAndRunProcess(new String[] { serverPath, String.valueOf(pid) });
-        try {
-            boolean result = started.await(SERVER_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-            if (!result) {
-                throw new RemoteException("Timeout while waiting for server");
-            }
-        } catch (InterruptedException e) {
-            // Restore interrupted status
-            Thread.currentThread().interrupt();
-        }
-    }
-    
-    void attach() throws RemoteException {
-        proxy.attach();
-    }
-    
-    boolean isAttached() throws RemoteException {
-        return proxy.isAttached();
-    }
-    
-    String getConnectorAddress() throws RemoteException {
-        return proxy.getConnectorAddress();
-    }
-    
-    void detach() throws RemoteException {
-        proxy.detach();
-    }
-    
-    @Override
-    public void serverStarted() throws RemoteException {
-        started.countDown();
-    }
-
-    @Override
-    public void serverFailedToStart(Exception error) throws RemoteException {
-        serverError = error;
-        started.countDown();
-    }
-    
-    /*
-     * For testing purposes only.
-     */
-    AgentProxyControl getProxy() {
-        return proxy;
+        return procCreator.createAndRunProcess(new String[] { serverPath, String.valueOf(pid), username });
     }
     
     static class ProcessCreator {
         Process createAndRunProcess(String[] args) throws IOException, ApplicationException {
-            LoggedExternalProcess process = new LoggedExternalProcess(args);
-            return process.runAndReturnProcess();
+            ProcessBuilder process = new ProcessBuilder(args);
+            return process.start();
         }
     }
     
