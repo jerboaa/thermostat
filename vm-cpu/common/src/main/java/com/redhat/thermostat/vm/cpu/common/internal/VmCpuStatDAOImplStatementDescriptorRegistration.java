@@ -40,6 +40,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.redhat.thermostat.storage.core.PreparedParameter;
+import com.redhat.thermostat.storage.core.VmBoundaryPojoGetter;
 import com.redhat.thermostat.storage.core.VmLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.VmTimeIntervalPojoListGetter;
 import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
@@ -58,13 +59,18 @@ public class VmCpuStatDAOImplStatementDescriptorRegistration implements
             VmCpuStatDAO.vmCpuStatCategory.getName());
     static final String rangeDescriptor = String.format(VmTimeIntervalPojoListGetter.VM_INTERVAL_QUERY_FORMAT,
             VmCpuStatDAO.vmCpuStatCategory.getName());
+    static final String latestStatDescriptor = String.format(VmBoundaryPojoGetter.DESC_LATEST_VM_STAT,
+            VmCpuStatDAO.vmCpuStatCategory.getName());
+    static final String oldestStatDescriptor = String.format(VmBoundaryPojoGetter.DESC_OLDEST_VM_STAT,
+            VmCpuStatDAO.vmCpuStatCategory.getName());
+
 
     @Override
     public Set<String> getStatementDescriptors() {
         Set<String> descs = new HashSet<>();
         descs.add(VmCpuStatDAOImpl.DESC_ADD_VM_CPU_STAT);
-        descs.add(VmCpuStatDAOImpl.DESC_LATEST_VM_CPU_STAT);
-        descs.add(VmCpuStatDAOImpl.DESC_OLDEST_VM_CPU_STAT);
+        descs.add(latestStatDescriptor);
+        descs.add(oldestStatDescriptor);
         descs.add(latestDescriptor);
         descs.add(rangeDescriptor);
         return descs;

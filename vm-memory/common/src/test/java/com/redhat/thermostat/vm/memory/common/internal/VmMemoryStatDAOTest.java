@@ -114,8 +114,6 @@ public class VmMemoryStatDAOTest {
     
     @Test
     public void preparedQueryDescriptorsAreSane() {
-        String expectedQueryThreadCaps = "QUERY vm-memory-stats WHERE 'agentId' = ?s AND 'vmId' = ?s SORT 'timeStamp' DSC LIMIT 1";
-        assertEquals(expectedQueryThreadCaps, VmMemoryStatDAOImpl.DESC_LATEST_VM_MEMORY_STAT);
         String addVmMemoryStat = "ADD vm-memory-stats SET 'agentId' = ?s , " +
                                         "'vmId' = ?s , " +
                                         "'timeStamp' = ?l , " +

@@ -48,6 +48,7 @@ import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.VmBoundaryPojoGetter;
 import com.redhat.thermostat.storage.core.VmLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.core.VmTimeIntervalPojoListGetter;
@@ -67,45 +68,27 @@ class VmClassStatDAOImpl implements VmClassStatDAO {
                  "'" + Key.TIMESTAMP.getName() + "' = ?l , " +
                  "'" + loadedClassesKey.getName() + "' = ?l";
 
-    // LATEST vm-cpu-stats WHERE 'agentId' = ?s AND \
-    //                        'vmId' = ?s \
-    //                        SORT 'timeStamp' ASC  \
-    //                        LIMIT 1
-    static final String DESC_OLDEST_VM_CLASS_STAT = "QUERY " + vmClassStatsCategory.getName() +
-            " WHERE '" + Key.AGENT_ID.getName() + "' = ?s " +
-            "   AND '" + Key.VM_ID.getName() + "' = ?s " +
-            "  SORT '" + Key.TIMESTAMP.getName() + "' ASC " +
-            "  LIMIT 1";
-
-    // LATEST vm-cpu-stats WHERE 'agentId' = ?s AND \
-    //                        'vmId' = ?s \
-    //                        SORT 'timeStamp' DSC  \
-    //                        LIMIT 1
-    static final String DESC_LATEST_VM_CLASS_STAT = "QUERY " + vmClassStatsCategory.getName() +
-            " WHERE '" + Key.AGENT_ID.getName() + "' = ?s " +
-            "   AND '" + Key.VM_ID.getName() + "' = ?s " +
-            "  SORT '" + Key.TIMESTAMP.getName() + "' DSC " +
-            "  LIMIT 1";
-
     private final Storage storage;
-    private final VmLatestPojoListGetter<VmClassStat> getter;
-    private final VmTimeIntervalPojoListGetter<VmClassStat> otherGetter;
+    private final VmLatestPojoListGetter<VmClassStat> latestGetter;
+    private final VmTimeIntervalPojoListGetter<VmClassStat> intervalGetter;
+    private final VmBoundaryPojoGetter<VmClassStat> boundaryGetter;
 
     VmClassStatDAOImpl(Storage storage) {
         this.storage = storage;
         storage.registerCategory(vmClassStatsCategory);
-        this.getter = new VmLatestPojoListGetter<>(storage, vmClassStatsCategory);
-        this.otherGetter = new VmTimeIntervalPojoListGetter<>(storage, vmClassStatsCategory);
+        this.latestGetter = new VmLatestPojoListGetter<>(storage, vmClassStatsCategory);
+        this.intervalGetter = new VmTimeIntervalPojoListGetter<>(storage, vmClassStatsCategory);
+        this.boundaryGetter = new VmBoundaryPojoGetter<>(storage, vmClassStatsCategory);
     }
 
     @Override
     public List<VmClassStat> getLatestClassStats(VmRef ref, long lastUpdateTime) {
-        return getter.getLatest(ref, lastUpdateTime);
+        return latestGetter.getLatest(ref, lastUpdateTime);
     }
 
     @Override
     public List<VmClassStat> getClassStats(VmRef ref, long since, long to) {
-        return otherGetter.getLatest(ref, since, to);
+        return intervalGetter.getLatest(ref, since, to);
     }
 
     @Override
@@ -128,31 +111,13 @@ class VmClassStatDAOImpl implements VmClassStatDAO {
 
     @Override
     public VmClassStat getOldest(final VmRef ref) {
-        return runAgentAndVmIdQuery(ref, DESC_OLDEST_VM_CLASS_STAT);
+        return boundaryGetter.getOldestStat(ref);
     }
 
     @Override
     public VmClassStat getLatest(final VmRef ref) {
-        return runAgentAndVmIdQuery(ref, DESC_LATEST_VM_CLASS_STAT);
+        return boundaryGetter.getLatestStat(ref);
     }
 
-    private VmClassStat runAgentAndVmIdQuery(final VmRef ref, final String descriptor) {
-        StatementDescriptor<VmClassStat> desc = new StatementDescriptor<>(vmClassStatsCategory, descriptor);
-        PreparedStatement<VmClassStat> prepared;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, ref.getHostRef().getAgentId());
-            prepared.setString(1, ref.getVmId());
-            Cursor<VmClassStat> cursor = prepared.executeQuery();
-            if (cursor.hasNext()) {
-                return cursor.next();
-            }
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-        }
-        return null;
-    }
 }
 
