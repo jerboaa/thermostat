@@ -54,8 +54,13 @@ public class ApplicationServiceImpl implements ApplicationService {
     // when used carelessly).
     private ExecutorService executor = Executors.newCachedThreadPool();
 
-    // TODO: this is hardcoded, should really go into the configuration file
-    private TimerFactory timers = new ThreadPoolTimerFactory(100);
+    private TimerFactory timers;
+
+    public ApplicationServiceImpl() {
+        // TODO merge with QueuedStorage's determine-number-of-threads implementation
+        int poolSize = Runtime.getRuntime().availableProcessors() * 2;
+        timers = new ThreadPoolTimerFactory(poolSize);
+    }
 
     @Override
     public ApplicationCache getApplicationCache() {
