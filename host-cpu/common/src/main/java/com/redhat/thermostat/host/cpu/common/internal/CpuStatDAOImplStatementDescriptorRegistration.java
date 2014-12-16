@@ -40,7 +40,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
+import com.redhat.thermostat.storage.core.HostBoundaryPojoGetter;
 import com.redhat.thermostat.storage.core.HostLatestPojoListGetter;
+import com.redhat.thermostat.storage.core.HostTimeIntervalPojoListGetter;
 import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
@@ -53,15 +55,26 @@ import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 public class CpuStatDAOImplStatementDescriptorRegistration implements
         StatementDescriptorRegistration {
     
-    static final String DESCRIPTOR = String.format(
+    static final String LATEST = String.format(
             HostLatestPojoListGetter.HOST_LATEST_QUERY_FORMAT,
             CpuStatDAO.cpuStatCategory.getName());
-
+    static final String RANGE = String.format(
+            HostTimeIntervalPojoListGetter.HOST_INTERVAL_QUERY_FORMAT,
+            CpuStatDAO.cpuStatCategory.getName());
+    static final String LATEST_STAT = String.format(
+            HostBoundaryPojoGetter.DESC_LATEST_HOST_STAT,
+            CpuStatDAO.cpuStatCategory.getName());
+    static final String OLDEST_STAT = String.format(
+            HostBoundaryPojoGetter.DESC_OLDEST_HOST_STAT,
+            CpuStatDAO.cpuStatCategory.getName());
     @Override
     public Set<String> getStatementDescriptors() {
-        Set<String> descs = new HashSet<>(1);
-        descs.add(DESCRIPTOR);
+        Set<String> descs = new HashSet<>(5);
+        descs.add(LATEST);
+        descs.add(RANGE);
         descs.add(CpuStatDAOImpl.DESC_ADD_CPU_STAT);
+        descs.add(LATEST_STAT);
+        descs.add(OLDEST_STAT);
         return descs;
     }
 

@@ -37,24 +37,23 @@
 package com.redhat.thermostat.client.core.experimental;
 
 import com.redhat.thermostat.common.model.Range;
-import com.redhat.thermostat.storage.core.VmRef;
 
 import java.util.List;
 
-public class TimeRangeController <T> {
+public class TimeRangeController <T, R> {
 
     public interface SingleArgRunnable <T> {
         public void run(T arg);
     }
 
-    public interface StatsSupplier<T> {
-        public abstract List<T> getStats(VmRef ref, long since, long to);
+    public interface StatsSupplier<T, R> {
+        public abstract List<T> getStats(R ref, long since, long to);
     }
 
     private Range<Long> availableRange = new Range<>(Long.MAX_VALUE, Long.MIN_VALUE);
     private Range<Long> displayedRange = new Range<>(Long.MAX_VALUE, Long.MIN_VALUE);
 
-    public void update(Duration userDesiredDuration, Range<Long> newAvailableRange, StatsSupplier<T> dao, VmRef ref, SingleArgRunnable<T> updater) {
+    public void update(Duration userDesiredDuration, Range<Long> newAvailableRange, StatsSupplier<T, R> dao, R ref, SingleArgRunnable<T> updater) {
         long now = System.currentTimeMillis();
         long userVisibleTimeDelta = (userDesiredDuration.unit.toMillis(userDesiredDuration.value));
         Range<Long> desiredRange = new Range<>(now - userVisibleTimeDelta, now);

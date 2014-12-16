@@ -43,6 +43,7 @@ import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.host.cpu.common.model.CpuStat;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.HostTimeIntervalPojoListGetter;
 import com.redhat.thermostat.storage.core.Key;
 
 @Service
@@ -56,6 +57,12 @@ public interface CpuStatDAO {
     List<CpuStat> getLatestCpuStats(HostRef ref, long since);
 
     void putCpuStat(CpuStat stat);
+
+    List<CpuStat> getCpuStats(HostRef ref, long since, long to);
+
+    CpuStat getOldest(HostRef ref);
+
+    CpuStat getLatest(HostRef ref);
 
 }
 

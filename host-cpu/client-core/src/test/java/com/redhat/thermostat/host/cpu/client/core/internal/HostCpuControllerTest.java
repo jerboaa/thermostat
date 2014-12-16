@@ -56,6 +56,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
@@ -64,7 +65,6 @@ import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.host.cpu.client.core.HostCpuView;
 import com.redhat.thermostat.host.cpu.client.core.HostCpuViewProvider;
-import com.redhat.thermostat.host.cpu.client.core.internal.HostCpuController;
 import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
 import com.redhat.thermostat.host.cpu.common.model.CpuStat;
 import com.redhat.thermostat.shared.locale.LocalizedString;
@@ -106,10 +106,16 @@ public class HostCpuControllerTest {
         CpuStat cpuStat1 = new CpuStat("foo", 1l, new double[] {10.0, 20.0, 30.0});
         CpuStat cpuStat2 = new CpuStat("foo", 2l, new double[] {15.0, 25.0, 35.0});
         CpuStatDAO cpuStatDAO = mock(CpuStatDAO.class);
-        when(cpuStatDAO.getLatestCpuStats(any(HostRef.class), anyLong())).thenReturn(Arrays.asList(cpuStat1, cpuStat2));
+
+        when(cpuStatDAO.getOldest(any(HostRef.class))).thenReturn(cpuStat1);
+        when(cpuStatDAO.getLatest(any(HostRef.class))).thenReturn(cpuStat2);
+
+        when(cpuStatDAO.getCpuStats(any(HostRef.class), anyLong(), anyLong())).thenReturn(Arrays.asList(cpuStat1, cpuStat2));
 
         // Set up View
         view = mock(HostCpuView.class);
+        when(view.getUserDesiredDuration()).thenReturn(new Duration(10, TimeUnit.MINUTES));
+
         ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
         HostCpuViewProvider viewProvider = mock(HostCpuViewProvider.class);

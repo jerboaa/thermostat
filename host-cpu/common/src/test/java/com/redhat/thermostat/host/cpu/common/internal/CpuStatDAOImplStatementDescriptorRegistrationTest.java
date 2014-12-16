@@ -58,7 +58,7 @@ public class CpuStatDAOImplStatementDescriptorRegistrationTest {
     public void registersAllDescriptors() {
         CpuStatDAOImplStatementDescriptorRegistration reg = new CpuStatDAOImplStatementDescriptorRegistration();
         Set<String> descriptors = reg.getStatementDescriptors();
-        assertEquals(2, descriptors.size());
+        assertEquals(5, descriptors.size());
         assertFalse("null descriptor not allowed", descriptors.contains(null));
     }
     
@@ -86,7 +86,7 @@ public class CpuStatDAOImplStatementDescriptorRegistrationTest {
         // storage-core + this module
         assertEquals(2, registrations.size());
         assertNotNull(cpuStatReg);
-        assertEquals(2, cpuStatReg.getStatementDescriptors().size());
+        assertEquals(5, cpuStatReg.getStatementDescriptors().size());
     }
 
 }

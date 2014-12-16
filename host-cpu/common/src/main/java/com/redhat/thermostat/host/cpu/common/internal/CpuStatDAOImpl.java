@@ -43,9 +43,12 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
 import com.redhat.thermostat.host.cpu.common.model.CpuStat;
+import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
+import com.redhat.thermostat.storage.core.HostBoundaryPojoGetter;
 import com.redhat.thermostat.storage.core.HostLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.HostTimeIntervalPojoListGetter;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
@@ -62,20 +65,24 @@ class CpuStatDAOImpl implements CpuStatDAO {
                            " SET '" + Key.AGENT_ID.getName() + "' = ?s , " +
                                 "'" + cpuLoadKey.getName() + "' = ?d[ , " +
                                 "'" + Key.TIMESTAMP.getName() + "' = ?l";
-    
+
     private final Storage storage;
 
-    private final HostLatestPojoListGetter<CpuStat> getter;
+    private final HostLatestPojoListGetter<CpuStat> latestGetter;
+    private final HostTimeIntervalPojoListGetter<CpuStat> intervalGetter;
+    private final HostBoundaryPojoGetter<CpuStat> boundaryGetter;
 
     CpuStatDAOImpl(Storage storage) {
         this.storage = storage;
         storage.registerCategory(cpuStatCategory);
-        this.getter = new HostLatestPojoListGetter<>(storage, cpuStatCategory);
+        this.latestGetter = new HostLatestPojoListGetter<>(storage, cpuStatCategory);
+        this.intervalGetter = new HostTimeIntervalPojoListGetter<>(storage, cpuStatCategory);
+        this.boundaryGetter = new HostBoundaryPojoGetter<>(storage, cpuStatCategory);
     }
 
     @Override
     public List<CpuStat> getLatestCpuStats(HostRef ref, long lastTimeStamp) {
-        return getter.getLatest(ref, lastTimeStamp);
+        return latestGetter.getLatest(ref, lastTimeStamp);
     }
 
     @Override
@@ -93,6 +100,21 @@ class CpuStatDAOImpl implements CpuStatDAO {
         } catch (StatementExecutionException e) {
             logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
         }
+    }
+
+    @Override
+    public List<CpuStat> getCpuStats(HostRef ref, long since, long to) {
+        return intervalGetter.getLatest(ref, since, to);
+    }
+
+    @Override
+    public CpuStat getOldest(HostRef ref) {
+        return boundaryGetter.getOldestStat(ref);
+    }
+
+    @Override
+    public CpuStat getLatest(HostRef ref) {
+        return boundaryGetter.getLatestStat(ref);
     }
 }
 

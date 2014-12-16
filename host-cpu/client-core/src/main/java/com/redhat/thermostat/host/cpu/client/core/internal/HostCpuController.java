@@ -41,6 +41,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.client.core.experimental.Duration;
+import com.redhat.thermostat.client.core.experimental.TimeRangeController;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
@@ -49,6 +51,7 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
+import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.host.cpu.client.core.HostCpuView;
 import com.redhat.thermostat.host.cpu.client.core.HostCpuViewProvider;
 import com.redhat.thermostat.host.cpu.client.locale.LocaleResources;
@@ -73,7 +76,8 @@ public class HostCpuController implements InformationServiceController<HostRef> 
     private final HostRef ref;
 
     private int chartsAdded = 0;
-    private long lastSeenTimeStamp = Long.MIN_VALUE;
+
+    private TimeRangeController<CpuStat, HostRef> timeRangeController;
 
     public HostCpuController(ApplicationService appSvc, HostInfoDAO hostInfoDao, CpuStatDAO cpuStatDAO, HostRef ref, HostCpuViewProvider provider) {
         this.ref = ref;
@@ -112,6 +116,7 @@ public class HostCpuController implements InformationServiceController<HostRef> 
             }
         });
 
+        timeRangeController = new TimeRangeController<>();
     }
 
     // TODO: Consider doing this in a background thread (move to view and use SwingWorker or such).
@@ -133,16 +138,38 @@ public class HostCpuController implements InformationServiceController<HostRef> 
     }
 
     private void doCpuChartUpdate() {
-        List<CpuStat> cpuStats = cpuStatDAO.getLatestCpuStats(ref, lastSeenTimeStamp);
+        CpuStat oldest = cpuStatDAO.getOldest(ref);
+        CpuStat latest = cpuStatDAO.getLatest(ref);
+
+        final List<CpuStat> cpuStats = new ArrayList<>();
+
+        Range<Long> newAvailableRange = new Range<>(oldest.getTimeStamp(), latest.getTimeStamp());
+
+        TimeRangeController.StatsSupplier<CpuStat, HostRef> statsSupplier = new TimeRangeController.StatsSupplier<CpuStat, HostRef>() {
+            @Override
+            public List<CpuStat> getStats(HostRef ref, long since, long to) {
+                return cpuStatDAO.getCpuStats(ref, since, to);
+            }
+        };
+
+        TimeRangeController.SingleArgRunnable<CpuStat> statCollector = new TimeRangeController.SingleArgRunnable<CpuStat>() {
+            @Override
+            public void run(CpuStat arg) {
+                cpuStats.add(arg);
+            }
+        };
+
         List<List<DiscreteTimeData<Double>>> results = new ArrayList<>();
+
+        timeRangeController.update(view.getUserDesiredDuration(), newAvailableRange, statsSupplier, ref, statCollector);
+
         for (CpuStat stat : cpuStats) {
             double[] data = stat.getPerProcessorUsage();
             for (int i = 0 ; i < data.length; i++) {
                 if (results.size() == i) {
                     results.add(new ArrayList<DiscreteTimeData<Double>>());
                 }
-                results.get(i).add(new DiscreteTimeData<Double>(stat.getTimeStamp(), data[i]));
-                lastSeenTimeStamp = Math.max(lastSeenTimeStamp, stat.getTimeStamp());
+                results.get(i).add(new DiscreteTimeData<>(stat.getTimeStamp(), data[i]));
             }
         }
 

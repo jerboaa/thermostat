@@ -38,6 +38,7 @@ package com.redhat.thermostat.host.cpu.client.core;
 
 import java.util.List;
 
+import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.shared.locale.LocalizedString;
@@ -55,5 +56,6 @@ public abstract class HostCpuView extends BasicView implements UIComponent {
 
     public abstract void addCpuUsageData(int cpuIndex, List<DiscreteTimeData<Double>> data);
 
+    public abstract Duration getUserDesiredDuration();
 }
 

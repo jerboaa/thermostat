@@ -62,6 +62,7 @@ import com.redhat.thermostat.gc.remote.common.GCRequest;
 import com.redhat.thermostat.gc.remote.common.command.GCAction;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.storage.core.Ref;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
@@ -92,7 +93,7 @@ public class MemoryStatsController implements InformationServiceController<VmRef
 
     private Duration userDesiredDuration = new Duration(defaultDuration.value, defaultDuration.unit);
 
-    private TimeRangeController<VmMemoryStat> timeRangeController;
+    private TimeRangeController<VmMemoryStat, VmRef> timeRangeController;
     
     class VMCollector implements Runnable {
 
@@ -107,7 +108,7 @@ public class MemoryStatsController implements InformationServiceController<VmRef
 
             timeRangeController = new TimeRangeController<>();
 
-            TimeRangeController.StatsSupplier<VmMemoryStat> statsSupplier = new TimeRangeController.StatsSupplier<VmMemoryStat>() {
+            TimeRangeController.StatsSupplier<VmMemoryStat, VmRef> statsSupplier = new TimeRangeController.StatsSupplier<VmMemoryStat, VmRef>() {
                 @Override
                 public List<VmMemoryStat> getStats(VmRef ref, long since, long to) {
                     return vmDao.getVmMemoryStats(ref, since, to);

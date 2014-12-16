@@ -45,6 +45,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -60,6 +61,7 @@ import org.jfree.data.time.RegularTimePeriod;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
+import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.LabelField;
 import com.redhat.thermostat.client.swing.components.RecentTimeSeriesChartPanel;
@@ -89,6 +91,8 @@ public class HostCpuPanel extends HostCpuView implements SwingComponent {
     private final Map<Integer, TimeSeries> datasets = new HashMap<>();
     private final Map<String, Color> colors = new HashMap<>();
     private final Map<String, JLabel> labels = new HashMap<>();
+
+    private RecentTimeSeriesChartController chartController;
 
     private JFreeChart chart;
 
@@ -174,6 +178,14 @@ public class HostCpuPanel extends HostCpuView implements SwingComponent {
     }
 
     @Override
+    public Duration getUserDesiredDuration() {
+        if (chartController == null) {
+            return new Duration(10, TimeUnit.MINUTES);
+        }
+        return new Duration(chartController.getTimeValue(), chartController.getTimeUnit());
+    }
+
+    @Override
     public void clearCpuUsageData() {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -217,7 +229,8 @@ public class HostCpuPanel extends HostCpuView implements SwingComponent {
         chart.getPlot().setBackgroundImageAlpha(0.0f);
         chart.getPlot().setOutlinePaint(new Color(0,0,0,0));
 
-        JPanel chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
+        chartController = new RecentTimeSeriesChartController(chart);
+        JPanel chartPanel = new RecentTimeSeriesChartPanel(chartController);
         chartPanel.setOpaque(false);
 
         legendPanel = new JPanel(new WrapLayout(FlowLayout.LEADING));

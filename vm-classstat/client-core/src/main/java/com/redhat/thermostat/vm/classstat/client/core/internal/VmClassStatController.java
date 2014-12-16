@@ -54,6 +54,7 @@ import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.storage.core.Ref;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
 import com.redhat.thermostat.vm.classstat.client.core.VmClassStatView;
@@ -66,7 +67,7 @@ public class VmClassStatController implements InformationServiceController<VmRef
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private TimeRangeController<VmClassStat> timeRangeController;
+    private TimeRangeController<VmClassStat, VmRef> timeRangeController;
 
     private class UpdateChartData implements Runnable {
         @Override
@@ -78,7 +79,7 @@ public class VmClassStatController implements InformationServiceController<VmRef
 
             Range<Long> newAvailableRange = new Range<>(oldest.getTimeStamp(), latest.getTimeStamp());
 
-            TimeRangeController.StatsSupplier<VmClassStat> singleValueSupplier = new TimeRangeController.StatsSupplier() {
+            TimeRangeController.StatsSupplier<VmClassStat, VmRef> singleValueSupplier = new TimeRangeController.StatsSupplier<VmClassStat, VmRef>() {
                 @Override
                 public List<VmClassStat> getStats(final VmRef ref, final long since, final long to) {
                     return dao.getClassStats(ref, since, to);
