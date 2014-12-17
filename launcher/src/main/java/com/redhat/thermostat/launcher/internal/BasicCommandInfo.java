@@ -47,14 +47,16 @@ import com.redhat.thermostat.launcher.BundleInformation;
 public class BasicCommandInfo implements CommandInfo {
 
     private final String name;
+    private final String summary;
     private final String description;
     private final String usage;
     private final Options options;
     private final Set<Environment> environments;
     private final List<BundleInformation> bundles;
 
-    public BasicCommandInfo(String name, String description, String usage, Options options, Set<Environment> environments, List<BundleInformation> bundles) {
+    public BasicCommandInfo(String name, String summary, String description, String usage, Options options, Set<Environment> environments, List<BundleInformation> bundles) {
         this.name = name;
+        this.summary = summary;
         this.description = description;
         this.usage = usage;
         this.options = options;
@@ -65,6 +67,11 @@ public class BasicCommandInfo implements CommandInfo {
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public String getSummary() {
+        return summary;
     }
 
     @Override
@@ -94,7 +101,7 @@ public class BasicCommandInfo implements CommandInfo {
 
     @Override
     public String toString() {
-        return String.format("%s (description='%s', dependencies='%s')", name, description, bundles.toString());
+        return String.format("%s (summary='%s', description='%s', dependencies='%s')", name, summary, description, bundles.toString());
     }
 }
 

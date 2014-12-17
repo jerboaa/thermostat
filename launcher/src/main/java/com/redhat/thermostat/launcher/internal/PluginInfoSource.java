@@ -173,6 +173,7 @@ public class PluginInfoSource implements CommandInfoSource, ConfigurationInfoSou
                 usage = usageBuilder.getUsage(commandName, command.getOptions(), command.getPositionalArguments().toArray(new String[0]));
             }
             BasicCommandInfo info = new BasicCommandInfo(commandName,
+                    command.getSummary(),
                     command.getDescription(),
                     usage,
                     command.getOptions(),
@@ -194,6 +195,7 @@ public class PluginInfoSource implements CommandInfoSource, ConfigurationInfoSou
                 updatedBundles.addAll(old.getBundles());
                 updatedBundles.addAll(entry.getValue());
                 BasicCommandInfo updated = new BasicCommandInfo(old.getName(),
+                        old.getSummary(),
                         old.getDescription(),
                         old.getUsage(),
                         old.getOptions(),
@@ -212,7 +214,7 @@ public class PluginInfoSource implements CommandInfoSource, ConfigurationInfoSou
         }
         List<BundleInformation> bundles = additionalBundlesForExistingCommands.get(name);
         if (bundles != null) {
-            return new BasicCommandInfo(name, null, null, null, null, bundles);
+            return createCommandInfo(name, bundles);
         }
         throw new CommandInfoNotFoundException(name);
     }
@@ -222,9 +224,13 @@ public class PluginInfoSource implements CommandInfoSource, ConfigurationInfoSou
         List<CommandInfo> result = new ArrayList<>();
         result.addAll(allNewCommands.values());
         for (Entry<String, List<BundleInformation>> entry : additionalBundlesForExistingCommands.entrySet()) {
-            result.add(new BasicCommandInfo(entry.getKey(), null, null, null, null, entry.getValue()));
+            result.add(createCommandInfo(entry.getKey(), entry.getValue()));
         }
         return result;
+    }
+
+    private BasicCommandInfo createCommandInfo(String name, List<BundleInformation> bundles) {
+        return new BasicCommandInfo(name, null, null, null, null, null, bundles);
     }
 
     public Map<String, String> getConfiguration(String pluginID, String fileName) throws IOException {

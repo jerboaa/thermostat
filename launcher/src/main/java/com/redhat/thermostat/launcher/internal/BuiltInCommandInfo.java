@@ -59,6 +59,7 @@ public class BuiltInCommandInfo implements CommandInfo {
 
     private static final Logger logger = LoggingUtils.getLogger(BuiltInCommandInfo.class);
     private static final String PROPERTY_BUNDLES = "bundles";
+    private static final String PROPERTY_SUMMARY = "summary";
     private static final String PROPERTY_DESC = "description";
     private static final String PROPERTY_USAGE = "usage";
     private static final String PROPERTY_OPTIONS = "options";
@@ -70,7 +71,7 @@ public class BuiltInCommandInfo implements CommandInfo {
     private static final String PROP_OPTREQUIRED = ".required";
     private static final String PROP_OPTDESC = ".description";
     
-    private String name, description, usage;
+    private String name, summary, description, usage;
     private Options options;
     private EnumSet<Environment> environment;
     private List<BundleInformation> dependencies;
@@ -82,6 +83,8 @@ public class BuiltInCommandInfo implements CommandInfo {
             String key = (String) entry.getKey();
             if (key.equals(PROPERTY_BUNDLES)) {
                 learnDependencies((String) entry.getValue());
+            } else if (key.equals(PROPERTY_SUMMARY)) {
+                summary = properties.getProperty(key);
             } else if (key.equals(PROPERTY_DESC)) {
                 description = properties.getProperty(key);
             } else if (key.equals(PROPERTY_USAGE)) {
@@ -359,18 +362,27 @@ public class BuiltInCommandInfo implements CommandInfo {
         return result;
     }
 
+    @Override
     public String getName() {
         return name;
     }
 
+    @Override
+    public String getSummary() {
+        return summary;
+    }
+
+    @Override
     public String getDescription() {
         return description;
     }
 
+    @Override
     public String getUsage() {
         return usage;
     }
 
+    @Override
     public Options getOptions() {
         return options;
     }

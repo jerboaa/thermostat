@@ -49,6 +49,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.List;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
@@ -294,6 +295,65 @@ public class PluginConfigurationParserTest {
         Configurations resConf = result.getConfigurations();
         assertTrue(!resConf.containsFile(configName));
 
+    }
+
+    @Test
+    public void testSummaryIsReadCorrectly() throws UnsupportedEncodingException {
+        String config = "<?xml version=\"1.0\"?>\n" +
+                "<plugin>\n" +
+                "  <commands>\n" +
+                "    <command type='provides'>\n" +
+                "      <name>test</name>\n" +
+                "      <summary>some summary</summary>\n" +
+                "      <description>some description</description>\n" +
+                "      <environments>" +
+                "        <environment>shell</environment>" +
+                "        <environment>cli</environment>" +
+                "      </environments>" +
+                "    </command>\n" +
+                "  </commands>\n" +
+                "</plugin>";
+
+        PluginConfiguration result = new PluginConfigurationParser()
+                .parse("test", new ByteArrayInputStream(config.getBytes("UTF-8")));
+
+        assertEquals(0, result.getExtendedCommands().size());
+
+        List<NewCommand> newCommands = result.getNewCommands();
+        assertEquals(1, newCommands.size());
+
+        NewCommand command = newCommands.get(0);
+        assertEquals("test", command.getCommandName());
+        assertEquals("some summary", command.getSummary());
+    }
+
+    @Test
+    public void testFirstSentenceOfDescriptionIsUsedAsTheSummaryIfSummaryIsMissing() throws UnsupportedEncodingException {
+        String config = "<?xml version=\"1.0\"?>\n" +
+                "<plugin>\n" +
+                "  <commands>\n" +
+                "    <command type='provides'>\n" +
+                "      <name>test</name>\n" +
+                "      <description>Some description. Some other long stuff.</description>\n" +
+                "      <environments>" +
+                "        <environment>shell</environment>" +
+                "        <environment>cli</environment>" +
+                "      </environments>" +
+                "    </command>\n" +
+                "  </commands>\n" +
+                "</plugin>";
+
+        PluginConfiguration result = new PluginConfigurationParser()
+                .parse("test", new ByteArrayInputStream(config.getBytes("UTF-8")));
+
+        assertEquals(0, result.getExtendedCommands().size());
+
+        List<NewCommand> newCommands = result.getNewCommands();
+        assertEquals(1, newCommands.size());
+
+        NewCommand command = newCommands.get(0);
+        assertEquals("test", command.getCommandName());
+        assertEquals("some description", command.getSummary());
     }
 
     @Test

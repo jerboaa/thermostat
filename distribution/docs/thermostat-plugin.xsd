@@ -7,15 +7,37 @@
 
 <!-- definition of simple elements -->
 <xs:element name="name" type="xs:string"/>
+
 <xs:element name="symbolic-name" type="xs:string"/>
+
 <xs:element name="version" type="xs:string"/>
+
 <xs:element name="usage" type="xs:string"/>
-<xs:element name="description" type="xs:string"/>
+
+<xs:element name="summary" type="xs:string">
+  <xs:annotation>
+    <xs:documentation>A very short summary of what this command does.
+    Ideally around 50 characters.</xs:documentation>
+  </xs:annotation>
+</xs:element>
+
+<xs:element name="description" type="xs:string">
+  <xs:annotation>
+    <xs:documentation>A complete description of what this command
+    does. Can be long.</xs:documentation>
+  </xs:annotation>
+</xs:element>
+
 <xs:element name="short" type="xs:string"/>
+
 <xs:element name="long" type="xs:string"/>
+
 <xs:element name="argument" type="xs:string"/>
+
 <xs:element name="required" type="xs:boolean"/>
+
 <xs:element name="id" type="xs:string"/>
+
 <xs:element name="configuration" type="xs:string"/>
 
 
@@ -69,6 +91,7 @@
     <xs:sequence>
       <xs:element ref="name"/>
       <xs:element ref="usage" minOccurs="0" maxOccurs="1"/>
+      <xs:element ref="summary" minOccurs="0" maxOccurs="1"/>
       <xs:element ref="description"/>
       <xs:element ref="arguments" minOccurs="0" maxOccurs="1"/>
       <xs:element ref="options" minOccurs="0" maxOccurs="1"/>

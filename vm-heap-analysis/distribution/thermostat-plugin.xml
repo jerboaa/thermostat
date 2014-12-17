@@ -42,6 +42,7 @@
   <commands>
     <command>
       <name>dump-heap</name>
+      <summary>trigger a heap dump on the VM</summary>
       <description>trigger a heap dump on the VM</description>
       <options>
         <option>
@@ -95,6 +96,7 @@
     </command>
     <command>
       <name>find-objects</name>
+      <summary>finds objects in a heapdump</summary>
       <description>finds objects in a heapdump</description>
       <arguments>
         <argument>pattern</argument>
@@ -151,6 +153,7 @@
     </command>
     <command>
       <name>find-root</name>
+      <summary>finds the shortest path from an object to a GC root</summary>
       <description>finds the shortest path from an object to a GC root</description>
       <options>
         <option>
@@ -210,6 +213,7 @@
     </command>
     <command>
       <name>list-heap-dumps</name>
+      <summary>list all heap dumps</summary>
       <description>list all heap dumps</description>
       <options>
         <option>
@@ -263,6 +267,7 @@
     </command>
     <command>
       <name>object-info</name>
+      <summary>prints information about an object in a heap dump</summary>
       <description>prints information about an object in a heap dump</description>
       <options>
         <option>
@@ -316,6 +321,7 @@
     </command>
     <command>
       <name>save-heap-dump-to-file</name>
+      <summary>saves a heap dump to a local file</summary>
       <description>saves a heap dump to a local file</description>
       <options>
         <option>
@@ -369,6 +375,7 @@
     </command>
     <command>
       <name>show-heap-histogram</name>
+      <summary>show the heap histogram</summary>
       <description>show the heap histogram</description>
       <options>
         <option>

@@ -48,6 +48,7 @@ import com.redhat.thermostat.launcher.BundleInformation;
 public class TestCommandInfo implements CommandInfo {
 
     private String name;
+    private String summary;
     private String description;
     private String usage;
 
@@ -61,6 +62,15 @@ public class TestCommandInfo implements CommandInfo {
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public String getSummary() {
+        return summary;
+    }
+
+    public void setSummary(String summary) {
+        this.summary = summary;
     }
 
     @Override

@@ -42,6 +42,7 @@
   <commands>
     <command>
       <name>validate</name>
+      <summary>validates a thermostat plug-in XML file</summary>
       <description>validates a thermostat plug-in XML file against the schema</description>
       <arguments>
         <argument>file</argument>

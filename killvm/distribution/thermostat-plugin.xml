@@ -42,6 +42,7 @@
   <commands>
     <command>
       <name>kill-vm</name>
+      <summary>kill the specified vm</summary>
       <description>kill the specified vm</description>
       <options>
         <option>

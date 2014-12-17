@@ -130,6 +130,7 @@ public class CompoundCommandInfoSource implements CommandInfoSource {
         }
         String name = info1.getName();
 
+        String summary = selectBest(info1.getSummary(), info2.getSummary());
         String description = selectBest(info1.getDescription(), info2.getDescription());
         String usage = selectBest(info1.getUsage(), info2.getUsage());
         Options options = selectBest(info1.getOptions(), info2.getOptions());
@@ -139,7 +140,7 @@ public class CompoundCommandInfoSource implements CommandInfoSource {
         bundles.addAll(info2.getBundles());
 
 
-        return new BasicCommandInfo(name, description, usage, options, environment, bundles);
+        return new BasicCommandInfo(name, summary, description, usage, options, environment, bundles);
     }
 
     private <T> T selectBest(T first, T second) {

@@ -163,6 +163,7 @@ public class LauncherImplTest {
         // option is properly set up
         Option logLevel = new Option("l", "logLevel", true, null);
         options1.addOption(logLevel);
+        when(info1.getSummary()).thenReturn("description 1");
         when(info1.getDescription()).thenReturn("description 1");
         when(info1.getOptions()).thenReturn(options1);
         when(info1.getEnvironments()).thenReturn(EnumSet.of(Environment.SHELL, Environment.CLI));
@@ -175,7 +176,7 @@ public class LauncherImplTest {
         options2.addOption(opt3);
         Option opt4 = new Option(null, "arg4", true, null);
         options2.addOption(opt4);
-        when(info2.getDescription()).thenReturn("description 2");
+        when(info2.getSummary()).thenReturn("description 2");
         when(info2.getOptions()).thenReturn(options2);
         when(info2.getEnvironments()).thenReturn(EnumSet.of(Environment.SHELL, Environment.CLI));
 
@@ -183,7 +184,7 @@ public class LauncherImplTest {
         CommandInfo info3 = mock(CommandInfo.class);
         when(info3.getName()).thenReturn(name3);
         cmd3.setStorageRequired(true);
-        when(info3.getDescription()).thenReturn("description 3");
+        when(info3.getSummary()).thenReturn("description 3");
         when(info3.getOptions()).thenReturn(new Options());
         when(info3.getEnvironments()).thenReturn(EnumSet.of(Environment.SHELL, Environment.CLI));
 
@@ -193,14 +194,14 @@ public class LauncherImplTest {
         CommandInfo info4 = mock(CommandInfo.class);
         when(info4.getName()).thenReturn(name4);
         cmd4.setStorageRequired(false);
-        when(info4.getDescription()).thenReturn("description 4");
+        when(info4.getSummary()).thenReturn("description 4");
         when(info4.getOptions()).thenReturn(new Options());
         when(info4.getEnvironments()).thenReturn(EnumSet.of(Environment.SHELL, Environment.CLI));
         
         AbstractStateNotifyingCommand basicCmd = mock(AbstractStateNotifyingCommand.class);
         CommandInfo basicInfo = mock(CommandInfo.class);
         when(basicInfo.getName()).thenReturn("basic");
-        when(basicInfo.getDescription()).thenReturn("nothing that means anything");
+        when(basicInfo.getSummary()).thenReturn("nothing that means anything");
         when(basicInfo.getEnvironments()).thenReturn(EnumSet.of(Environment.SHELL, Environment.CLI));
         when(basicCmd.isStorageRequired()).thenReturn(false);
         Options options = new Options();
@@ -210,7 +211,7 @@ public class LauncherImplTest {
 
         CommandInfo helpCommandInfo = mock(CommandInfo.class);
         when(helpCommandInfo.getName()).thenReturn("help");
-        when(helpCommandInfo.getDescription()).thenReturn("print help information");
+        when(helpCommandInfo.getSummary()).thenReturn("print help information");
         when(helpCommandInfo.getBundles()).thenReturn(new ArrayList<BundleInformation>());
         when(helpCommandInfo.getOptions()).thenReturn(new Options());
         when(helpCommandInfo.getUsage()).thenReturn("thermostat help");

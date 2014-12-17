@@ -48,27 +48,28 @@ import org.junit.Test;
 
 import com.redhat.thermostat.launcher.BundleInformation;
 
-
 public class BasicCommandInfoTest {
 
     @Test
     public void testBasics() {
         final String NAME = "the_name";
+        final String SUMMARY = "some-summary";
         final String DESCRIPTION = "some-description";
         final String USAGE = "some-usage";
         final Options OPTIONS = new Options();
         final Set<Environment> ENVIRONMENT = EnumSet.noneOf(Environment.class);
         final List<BundleInformation> BUNDLES = Collections.emptyList();
 
-        BasicCommandInfo info = new BasicCommandInfo(NAME, DESCRIPTION, USAGE, OPTIONS, ENVIRONMENT, BUNDLES);
+        BasicCommandInfo info = new BasicCommandInfo(NAME, SUMMARY, DESCRIPTION, USAGE, OPTIONS, ENVIRONMENT, BUNDLES);
 
         assertEquals(NAME, info.getName());
+        assertEquals(SUMMARY, info.getSummary());
         assertEquals(DESCRIPTION, info.getDescription());
         assertEquals(USAGE, info.getUsage());
         assertEquals(OPTIONS, info.getOptions());
         assertEquals(BUNDLES, info.getBundles());
 
-        assertEquals(String.format("%s (description='%s', dependencies='%s')", NAME, DESCRIPTION, BUNDLES.toString()),
+        assertEquals(String.format("%s (summary='%s', description='%s', dependencies='%s')", NAME, SUMMARY, DESCRIPTION, BUNDLES.toString()),
                 info.toString());
     }
 }

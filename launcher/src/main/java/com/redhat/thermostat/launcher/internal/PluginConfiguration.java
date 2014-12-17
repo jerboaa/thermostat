@@ -114,18 +114,20 @@ public class PluginConfiguration {
 
         private final String commandName;
         private final String usage;
+        private final String summary;
         private final String description;
         private final List<String> positionalArguments;
         private final Options options;
         private final Set<Environment> environment;
         private final List<BundleInformation> bundles;
 
-        public NewCommand(String name, String usage, String description,
+        public NewCommand(String name, String usage, String summary, String description,
                 List<String> positionalArguments, Options options,
                 Set<Environment> environment,
                 List<BundleInformation> bundles) {
             this.commandName = name;
             this.usage = usage;
+            this.summary = summary;
             this.description = description;
             this.positionalArguments = positionalArguments;
             this.options = options;
@@ -144,6 +146,10 @@ public class PluginConfiguration {
          */
         public String getUsage() {
             return usage;
+        }
+
+        public String getSummary() {
+            return summary;
         }
 
         public String getDescription() {

@@ -91,7 +91,8 @@ import com.redhat.thermostat.plugin.validator.PluginValidator;
   &lt;commands&gt;
     &lt;command&gt;
       &lt;name&gt;platform&lt;/name&gt;
-      &lt;description&gt;launches a bare bone Platform Client&lt;/description&gt;
+      &lt;summary&gt;launches a bare bone Platform Client&lt;/summary&gt;
+      &lt;description&gt;launches a bare bone Platform Client. Can also do bar if optA is used.&lt;/description&gt;
       &lt;arguments&gt;
         &lt;argument&gt;argument1&lt;/argument&gt;
       &lt;/arguments&gt;
@@ -155,7 +156,8 @@ import com.redhat.thermostat.plugin.validator.PluginValidator;
     &lt;/command&gt;
     &lt;command&gt;
       &lt;name&gt;platform2&lt;/name&gt;
-      &lt;description&gt;launches a bare bone Platform Client&lt;/description&gt;
+      &lt;summary&gt;launches a bare bone Platform Client&lt;/summary&gt;
+      &lt;description&gt;launches a bare bone Platform Client. Can also do bar if foo is used.&lt;/description&gt;
       &lt;arguments&gt;
         &lt;argument&gt;argument2&lt;/argument&gt;
       &lt;/arguments&gt;
@@ -213,7 +215,6 @@ public class PluginConfigurationParser {
         PluginConfiguration config = null;
         try (FileInputStream fis = new FileInputStream(configurationFile)) {
             config = parse(configurationFile.getParentFile().getName(), fis);
-
         } catch (IOException ioFisClosed) {
             // ignore if fis closing fails
         }
@@ -352,6 +353,7 @@ public class PluginConfigurationParser {
     private NewCommand parseNewCommand(String pluginName, Node commandNode) {
         String name = null;
         String usage = null;
+        String summary = null;
         String description = null;
         List<String> arguments = new ArrayList<>();
         Options options = new Options();
@@ -365,6 +367,8 @@ public class PluginConfigurationParser {
                 name = node.getTextContent().trim();
             } else if (node.getNodeName().equals("usage")) {
                 usage = node.getTextContent().trim();
+            } else if (node.getNodeName().equals("summary")) {
+                summary = node.getTextContent().trim();
             } else if (node.getNodeName().equals("description")) {
                 description = parseDescription(node);
             } else if (node.getNodeName().equals("arguments")) {
@@ -378,6 +382,12 @@ public class PluginConfigurationParser {
             }
         }
 
+        if (summary == null) {
+            logger.warning("plugin " + pluginName + " does not provide a summary for " + name +
+                    ". A summary will be auto-generated.");
+            summary = createSummary(description);
+        }
+
         if (bundles.isEmpty()) {
             logger.warning("plugin " + pluginName  + " provides a new command " + name + " but supplies no bundles");
         }
@@ -387,7 +397,7 @@ public class PluginConfigurationParser {
                     "name='" + name + "', description='" + description + "', options='" + options + "'");
             return null;
         } else {
-            return new NewCommand(name, usage, description, arguments, options, availableInEnvironments, bundles);
+            return new NewCommand(name, usage, summary, description, arguments, options, availableInEnvironments, bundles);
         }
     }
 
@@ -594,6 +604,26 @@ public class PluginConfigurationParser {
         }
 
         return result;
+    }
+
+    private String createSummary(String fullDescription) {
+        int firstDot = fullDescription.indexOf('.');
+        if (firstDot == -1) {
+            return fullDescription;
+        }
+
+        String firstSentence = fullDescription.substring(0, firstDot);
+        String shortDescription = firstSentence.trim();
+        shortDescription = lowerCaseFirstLetter(shortDescription);
+        return shortDescription;
+    }
+
+    private String lowerCaseFirstLetter(String shortDescription) {
+        if (Character.isUpperCase(shortDescription.charAt(0))) {
+            shortDescription = shortDescription.substring(0, 1).toLowerCase()
+                    + shortDescription.substring(1);
+        }
+        return shortDescription;
     }
 
 

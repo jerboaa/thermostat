@@ -42,6 +42,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
@@ -113,29 +114,7 @@ public class HelpCommand extends AbstractCommand  {
     }
 
     private void printCommandSummary(TableRenderer renderer, CommandInfo info) {
-        renderer.printLine(" " + info.getName(), createShortDescription(info));
-    }
-
-    private String createShortDescription(CommandInfo info) {
-        String fullDescription = info.getDescription();
-
-        int firstDot = fullDescription.indexOf('.');
-        if (firstDot == -1) {
-            return fullDescription;
-        }
-
-        String firstSentence = fullDescription.substring(0, firstDot);
-        String shortDescription = firstSentence.trim();
-        shortDescription = lowerCaseFirstLetter(shortDescription);
-        return shortDescription;
-    }
-
-    private String lowerCaseFirstLetter(String shortDescription) {
-        if (Character.isUpperCase(shortDescription.charAt(0))) {
-            shortDescription = shortDescription.substring(0, 1).toLowerCase()
-                    + shortDescription.substring(1);
-        }
-        return shortDescription;
+        renderer.printLine(" " + info.getName(), info.getSummary());
     }
 
     private void printCommandUsage(CommandContext ctx, String cmdName) {

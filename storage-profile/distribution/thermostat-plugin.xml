@@ -42,7 +42,12 @@
   <commands>
     <command>
       <name>storage-profile</name>
-      <description>profile how fast storage operations are</description>
+      <summary>profile how fast storage operations are</summary>
+      <description>
+      Profile how fast storage operations are. Runs a set of tests that
+      exercies various aspects of storage to see how well it performs for that
+      given workload.
+      </description>
       <options>
         <option common="true">
           <long>dbUrl</long>

@@ -40,6 +40,7 @@
     <commands>
         <command>
             <name>profile-vm</name>
+            <summary>instrument and profile a target vm</summary>
             <description>
             Profile a target vm. This is an instrumenting profiler that
             modifies the bytecode of the target application to record method

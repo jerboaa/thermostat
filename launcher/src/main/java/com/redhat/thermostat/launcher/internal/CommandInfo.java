@@ -52,7 +52,14 @@ public interface CommandInfo {
     public String getName();
 
     /**
-     * A short description for the command indicating what it does.
+     * A very short description of the command indicating what it does. Ideally
+     * a small sentence.
+     */
+    public String getSummary();
+
+    /**
+     * A description of the command indicating what it does. Unlike
+     * {@link #getSummary()}, this can be as detailed as needed.
      */
     public String getDescription();
 
