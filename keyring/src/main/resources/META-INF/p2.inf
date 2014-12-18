@@ -1,9 +1,0 @@
-# Instructs Eclipse update manager to auto-start this bundle, and also adds
-# -Djava.library.path=path/to/eclipse-home where native libs are to be found
-instructions.configure = \
-org.eclipse.equinox.p2.touchpoint.eclipse.setStartLevel(startLevel: 4); \
-org.eclipse.equinox.p2.touchpoint.eclipse.markStarted(started: true); \
-org.eclipse.equinox.p2.touchpoint.eclipse.addJvmArg(jvmArg: -Djava.library.path=${installFolder});
-instructions.unconfigure = \
-org.eclipse.equinox.p2.touchpoint.eclipse.setStartLevel(startLevel: -1); \
-org.eclipse.equinox.p2.touchpoint.eclipse.markStarted(started: false);
