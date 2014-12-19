@@ -63,7 +63,6 @@
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-Activator>com.redhat.thermostat.storage.internal.Activator</Bundle-Activator>
             <Export-Package>
-              com.redhat.thermostat.storage.connect,
               com.redhat.thermostat.storage.core,
               com.redhat.thermostat.storage.core.experimental,
               com.redhat.thermostat.storage.core.experimental.statement,
@@ -84,10 +83,8 @@
                  same way. -->
             <DynamicImport-Package>com.redhat.thermostat.*</DynamicImport-Package>
             <Private-Package>
-              com.redhat.thermostat.storage.connect.internal,
-              com.redhat.thermostat.storage.internal.dao,
               com.redhat.thermostat.storage.internal,
-              com.redhat.thermostat.storage.internal.test,
+              com.redhat.thermostat.storage.internal.dao,
               com.redhat.thermostat.storage.internal.statement,
               com.redhat.thermostat.storage.monitor.internal,
             </Private-Package>

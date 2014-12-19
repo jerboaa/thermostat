@@ -165,7 +165,6 @@
               com.redhat.thermostat.client.swing.components,
               com.redhat.thermostat.client.swing.components.models,
               com.redhat.thermostat.client.swing.components.experimental,
-              com.redhat.thermostat.client.swing.vmlist,
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.client.swing.internal,

@@ -133,7 +133,6 @@
               com.redhat.thermostat.client.cli,
             </Export-Package>
             <Private-Package>
-              META_INF.services,
               com.redhat.thermostat.client.cli.internal,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->

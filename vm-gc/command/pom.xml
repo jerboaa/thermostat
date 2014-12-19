@@ -120,9 +120,7 @@
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-SymbolicName>com.redhat.thermostat.vm.gc.command</Bundle-SymbolicName>
             <Bundle-Activator>com.redhat.thermostat.vm.gc.command.internal.Activator</Bundle-Activator>
-            <Export-Package>
-              com.redhat.thermostat.vm.gc.command
-            </Export-Package>
+            <Export-Package/>
             <Private-Package>
               com.redhat.thermostat.vm.gc.command.internal,
               com.redhat.thermostat.vm.gc.command.locale,

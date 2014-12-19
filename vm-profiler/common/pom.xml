@@ -75,7 +75,6 @@
             <Bundle-Activator>com.redhat.thermostat.vm.profiler.common.internal.Activator</Bundle-Activator>
             <Export-Package>
               com.redhat.thermostat.vm.profiler.common,
-              com.redhat.thermostat.vm.profiler.common.model
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.vm.profiler.common.internal
