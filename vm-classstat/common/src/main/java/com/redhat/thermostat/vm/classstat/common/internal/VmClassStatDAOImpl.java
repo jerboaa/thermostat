@@ -41,7 +41,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
@@ -115,8 +114,8 @@ class VmClassStatDAOImpl implements VmClassStatDAO {
     }
 
     @Override
-    public VmClassStat getLatest(final VmRef ref) {
-        return boundaryGetter.getLatestStat(ref);
+    public VmClassStat getNewest(final VmRef ref) {
+        return boundaryGetter.getNewestStat(ref);
     }
 
 }

@@ -40,7 +40,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.redhat.thermostat.numa.common.NumaDAO;
+import com.redhat.thermostat.storage.core.HostBoundaryPojoGetter;
 import com.redhat.thermostat.storage.core.HostLatestPojoListGetter;
+import com.redhat.thermostat.storage.core.HostTimeIntervalPojoListGetter;
 import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
@@ -54,13 +56,27 @@ public class NumaDAOImplStatementDescriptorRegistration implements
         StatementDescriptorRegistration {
     
     private final Set<String> descs;
-    
+
+    static final String latestDescriptor = String.format(
+            HostLatestPojoListGetter.HOST_LATEST_QUERY_FORMAT,
+            NumaDAO.numaStatCategory.getName());
+    static final String intervalDescriptor = String.format(
+            HostTimeIntervalPojoListGetter.HOST_INTERVAL_QUERY_FORMAT,
+            NumaDAO.numaStatCategory.getName());
+    static final String latestStatDescriptor = String.format(
+            HostBoundaryPojoGetter.DESC_NEWEST_HOST_STAT,
+            NumaDAO.numaStatCategory.getName());
+    static final String oldestStatDescriptor = String.format(
+            HostBoundaryPojoGetter.DESC_OLDEST_HOST_STAT,
+            NumaDAO.numaStatCategory.getName());
+
     public NumaDAOImplStatementDescriptorRegistration() {
-        descs = new HashSet<>(2);
-        String descriptor = String.format(
-                HostLatestPojoListGetter.HOST_LATEST_QUERY_FORMAT,
-                NumaDAO.numaStatCategory.getName());
-        descs.add(descriptor);
+        descs = new HashSet<>(7);
+
+        descs.add(latestDescriptor);
+        descs.add(intervalDescriptor);
+        descs.add(latestStatDescriptor);
+        descs.add(oldestStatDescriptor);
         descs.add(NumaDAOImpl.QUERY_NUMA_INFO);
         descs.add(NumaDAOImpl.DESC_ADD_NUMA_HOST_INFO);
         descs.add(NumaDAOImpl.DESC_ADD_NUMA_STAT);

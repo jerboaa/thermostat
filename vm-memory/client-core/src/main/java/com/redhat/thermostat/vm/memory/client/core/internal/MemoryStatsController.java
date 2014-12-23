@@ -62,7 +62,6 @@ import com.redhat.thermostat.gc.remote.common.GCRequest;
 import com.redhat.thermostat.gc.remote.common.command.GCAction;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.storage.core.Ref;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
@@ -102,9 +101,9 @@ public class MemoryStatsController implements InformationServiceController<VmRef
         @Override
         public void run() {
             VmMemoryStat oldest = vmDao.getOldestMemoryStat(ref);
-            VmMemoryStat latest = vmDao.getLatestMemoryStat(ref);
+            VmMemoryStat newest = vmDao.getNewestMemoryStat(ref);
 
-            Range<Long> newAvailableRange = new Range<>(oldest.getTimeStamp(), latest.getTimeStamp());
+            Range<Long> newAvailableRange = new Range<>(oldest.getTimeStamp(), newest.getTimeStamp());
 
             timeRangeController = new TimeRangeController<>();
 

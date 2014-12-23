@@ -55,7 +55,7 @@ public interface VmCpuStatDAO {
 
     public abstract VmCpuStat getOldest(VmRef ref);
 
-    public abstract VmCpuStat getLatest(VmRef ref);
+    public abstract VmCpuStat getNewest(VmRef ref);
 
     public abstract List<VmCpuStat> getLatestVmCpuStats(VmRef ref, long since);
 

@@ -54,7 +54,6 @@ import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.storage.core.Ref;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
 import com.redhat.thermostat.vm.cpu.client.core.VmCpuView;
@@ -141,9 +140,9 @@ public class VmCpuController implements InformationServiceController<VmRef> {
         final List<DiscreteTimeData<? extends Number>> data = new ArrayList<>();
 
         VmCpuStat oldest = dao.getOldest(ref);
-        VmCpuStat latest = dao.getLatest(ref);
+        VmCpuStat newest = dao.getNewest(ref);
 
-        Range<Long> newAvailableRange = new Range<>(oldest.getTimeStamp(), latest.getTimeStamp());
+        Range<Long> newAvailableRange = new Range<>(oldest.getTimeStamp(), newest.getTimeStamp());
 
         TimeRangeController.StatsSupplier<VmCpuStat, VmRef> singleValueSupplier = new TimeRangeController.StatsSupplier<VmCpuStat, VmRef>() {
             @Override

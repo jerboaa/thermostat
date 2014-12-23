@@ -62,7 +62,7 @@ public class CpuStatDAOImplStatementDescriptorRegistration implements
             HostTimeIntervalPojoListGetter.HOST_INTERVAL_QUERY_FORMAT,
             CpuStatDAO.cpuStatCategory.getName());
     static final String LATEST_STAT = String.format(
-            HostBoundaryPojoGetter.DESC_LATEST_HOST_STAT,
+            HostBoundaryPojoGetter.DESC_NEWEST_HOST_STAT,
             CpuStatDAO.cpuStatCategory.getName());
     static final String OLDEST_STAT = String.format(
             HostBoundaryPojoGetter.DESC_OLDEST_HOST_STAT,

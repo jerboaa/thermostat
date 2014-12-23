@@ -76,8 +76,8 @@ public class HostBoundaryPojoGetterTest {
 
     @Test
     public void verifyLatestQueryDescriptorFormat() {
-        String latestExpected = "QUERY %s WHERE 'agentId' = ?s SORT 'timeStamp' DSC LIMIT 1";
-        assertEquals(latestExpected, HostBoundaryPojoGetter.DESC_LATEST_HOST_STAT);
+        String newestExpected = "QUERY %s WHERE 'agentId' = ?s SORT 'timeStamp' DSC LIMIT 1";
+        assertEquals(newestExpected, HostBoundaryPojoGetter.DESC_NEWEST_HOST_STAT);
     }
 
     @Test
@@ -91,7 +91,7 @@ public class HostBoundaryPojoGetterTest {
         Storage storage = mock(Storage.class);
         HostBoundaryPojoGetter<TestPojo> getter = new HostBoundaryPojoGetter<>(storage, cat);
 
-        String actualLatestDesc = getter.getLatestQueryDesc();
+        String actualLatestDesc = getter.getNewestQueryDesc();
         String latestExpected = "QUERY host-boundary-category WHERE 'agentId' = ?s SORT 'timeStamp' DSC LIMIT 1";
         assertEquals(latestExpected, actualLatestDesc);
     }
@@ -141,10 +141,10 @@ public class HostBoundaryPojoGetterTest {
 
         HostBoundaryPojoGetter<TestPojo> getter = new HostBoundaryPojoGetter<>(storage, cat);
 
-        TestPojo oldest = getter.getLatestStat(hostRef);
+        TestPojo newest = getter.getNewestStat(hostRef);
 
-        assertEquals(t2, oldest.getTimeStamp());
-        assertEquals(lc2, oldest.getData());
+        assertEquals(t2, newest.getTimeStamp());
+        assertEquals(lc2, newest.getData());
     }
 
     @SuppressWarnings("unchecked")

@@ -62,7 +62,7 @@ public interface VmClassStatDAO {
 
     public abstract VmClassStat getOldest(VmRef ref);
 
-    public abstract VmClassStat getLatest(VmRef ref);
+    public abstract VmClassStat getNewest(VmRef ref);
 
 }
 

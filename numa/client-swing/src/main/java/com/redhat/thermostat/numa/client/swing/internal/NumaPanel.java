@@ -44,6 +44,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
@@ -64,6 +65,7 @@ import org.jfree.data.time.RegularTimePeriod;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
+import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.RecentTimeSeriesChartPanel;
 import com.redhat.thermostat.client.swing.components.SectionHeader;
@@ -94,6 +96,7 @@ public class NumaPanel extends NumaView implements SwingComponent {
     private final Map<String, Color> colors = new HashMap<>();
 
     private JFreeChart chart;
+    private RecentTimeSeriesChartController chartController;
 
     public NumaPanel() {
         super();
@@ -217,6 +220,14 @@ public class NumaPanel extends NumaView implements SwingComponent {
     }
 
     @Override
+    public Duration getUserDesiredDuration() {
+        if (chartController == null) {
+            return new Duration(10, TimeUnit.MINUTES);
+        }
+        return new Duration(chartController.getTimeValue(), chartController.getTimeUnit());
+    }
+
+    @Override
     public void addActionListener(ActionListener<Action> listener) {
         notifier.addActionListener(listener);
     }
@@ -232,7 +243,8 @@ public class NumaPanel extends NumaView implements SwingComponent {
 
         chart = createNumaChart();
 
-        JPanel chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
+        chartController = new RecentTimeSeriesChartController(chart);
+        JPanel chartPanel = new RecentTimeSeriesChartPanel(chartController);
         chartPanel.setOpaque(false);
 
         JLabel lblNuma = new SectionHeader(translator.localize(LocaleResources.NUMA_SECTION_OVERVIEW));

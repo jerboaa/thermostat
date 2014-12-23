@@ -36,11 +36,13 @@
 
 package com.redhat.thermostat.numa.client.core.internal;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.client.core.experimental.TimeRangeController;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
@@ -48,6 +50,7 @@ import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
+import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.numa.client.core.NumaView;
 import com.redhat.thermostat.numa.client.core.NumaView.GraphVisibilityChangeListener;
 import com.redhat.thermostat.numa.client.core.NumaViewProvider;
@@ -71,7 +74,7 @@ public class NumaController implements InformationServiceController<HostRef> {
     private final Timer backgroundUpdateTimer;
     private final GraphVisibilityChangeListener listener = new ShowHideGraph();
 
-    private long lastSeenTimeStamp = Long.MIN_VALUE;
+    private TimeRangeController<NumaStat, HostRef> timeRangeController;
 
     private int numberOfNumaNodes;
 
@@ -102,6 +105,8 @@ public class NumaController implements InformationServiceController<HostRef> {
                 }
             }
         });
+
+        timeRangeController = new TimeRangeController<>();
 
         backgroundUpdateTimer = appSvc.getTimerFactory().createTimer();
         backgroundUpdateTimer.setAction(new Runnable() {
@@ -136,7 +141,29 @@ public class NumaController implements InformationServiceController<HostRef> {
     }
 
     private void doNumaChartUpdate() {
-        List<NumaStat> stats = numaDAO.getLatestNumaStats(ref, lastSeenTimeStamp);
+        final List<NumaStat> stats = new ArrayList<>();
+
+        NumaStat oldest = numaDAO.getOldest(ref);
+        NumaStat latest = numaDAO.getNewest(ref);
+
+        Range<Long> newAvailableRange = new Range<>(oldest.getTimeStamp(), latest.getTimeStamp());
+
+        TimeRangeController.StatsSupplier<NumaStat, HostRef> statsSupplier = new TimeRangeController.StatsSupplier<NumaStat, HostRef>() {
+            @Override
+            public List<NumaStat> getStats(HostRef ref, long since, long to) {
+                return numaDAO.getNumaStats(ref, since, to);
+            }
+        };
+
+        TimeRangeController.SingleArgRunnable<NumaStat> statCollector = new TimeRangeController.SingleArgRunnable<NumaStat>() {
+            @Override
+            public void run(NumaStat arg) {
+                stats.add(arg);
+            }
+        };
+
+        timeRangeController.update(view.getUserDesiredDuration(), newAvailableRange, statsSupplier, ref, statCollector);
+
         for (int i = 0; i < numberOfNumaNodes; i++) {
             List<DiscreteTimeData<? extends Number>> numaHitRatio = new LinkedList<>();
 
@@ -145,8 +172,7 @@ public class NumaController implements InformationServiceController<HostRef> {
                 long numaHitVal = stat.getNodeStats()[i].getNumaHit();
                 long numaMissVal = stat.getNodeStats()[i].getNumaMiss();
                 double hitRatio = 100 * numaHitVal / (numaHitVal + numaMissVal);
-                numaHitRatio.add(new DiscreteTimeData<Double>(timeStamp, hitRatio));
-                lastSeenTimeStamp = Math.max(lastSeenTimeStamp, stat.getTimeStamp());
+                numaHitRatio.add(new DiscreteTimeData<>(timeStamp, hitRatio));
             }
 
             view.addNumaData("node" + i, numaHitRatio);

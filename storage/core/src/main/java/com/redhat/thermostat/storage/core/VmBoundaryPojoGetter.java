@@ -48,7 +48,7 @@ public class VmBoundaryPojoGetter <T extends TimeStampedPojo> {
     //                        'vmId' = ?s \
     //                        SORT 'timeStamp' DSC  \
     //                        LIMIT 1
-    public static final String DESC_LATEST_VM_STAT = "QUERY %s " +
+    public static final String DESC_NEWEST_VM_STAT = "QUERY %s " +
             "WHERE '" + Key.AGENT_ID.getName() + "' = ?s " +
             "AND '" + Key.VM_ID.getName() + "' = ?s " +
             "SORT '" + Key.TIMESTAMP.getName() + "' DSC " +
@@ -68,18 +68,18 @@ public class VmBoundaryPojoGetter <T extends TimeStampedPojo> {
 
     private final Storage storage;
     private final Category<T> cat;
-    private final String queryLatest;
+    private final String queryNewest;
     private final String queryOldest;
 
     public VmBoundaryPojoGetter(Storage storage, Category<T> cat) {
         this.storage = storage;
         this.cat = cat;
-        this.queryLatest = String.format(DESC_LATEST_VM_STAT, cat.getName());
+        this.queryNewest = String.format(DESC_NEWEST_VM_STAT, cat.getName());
         this.queryOldest = String.format(DESC_OLDEST_VM_STAT, cat.getName());
     }
 
-    public T getLatestStat(VmRef ref) {
-        return runAgentAndVmIdQuery(ref, queryLatest);
+    public T getNewestStat(VmRef ref) {
+        return runAgentAndVmIdQuery(ref, queryNewest);
     }
 
     public T getOldestStat(VmRef ref) {
@@ -106,8 +106,8 @@ public class VmBoundaryPojoGetter <T extends TimeStampedPojo> {
     }
 
     //Package private for testing
-    String getLatestQueryDesc() {
-        return queryLatest;
+    String getNewestQueryDesc() {
+        return queryNewest;
     }
 
     String getOldestQueryDesc() {

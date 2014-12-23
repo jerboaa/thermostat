@@ -137,7 +137,7 @@ public class VmMemoryStatDAOTest {
     @Test
     public void testGetLatest() throws DescriptorParsingException, StatementExecutionException {
         VmMemoryStatDAO impl = new VmMemoryStatDAOImpl(storage);
-        impl.getLatestMemoryStat(vmRef);
+        impl.getNewestMemoryStat(vmRef);
 
         verify(storage).prepareStatement(anyDescriptor());
         verify(stmt).setString(0, vmRef.getHostRef().getAgentId());
@@ -170,7 +170,7 @@ public class VmMemoryStatDAOTest {
         when(stmt.executeQuery()).thenReturn(cursor);
 
         VmMemoryStatDAO impl = new VmMemoryStatDAOImpl(storage);
-        VmMemoryStat latest = impl.getLatestMemoryStat(vmRef);
+        VmMemoryStat latest = impl.getNewestMemoryStat(vmRef);
         assertTrue(latest == null);
     }
 

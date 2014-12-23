@@ -43,7 +43,6 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
 import com.redhat.thermostat.host.cpu.common.model.CpuStat;
-import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostBoundaryPojoGetter;
 import com.redhat.thermostat.storage.core.HostLatestPojoListGetter;
@@ -113,8 +112,8 @@ class CpuStatDAOImpl implements CpuStatDAO {
     }
 
     @Override
-    public CpuStat getLatest(HostRef ref) {
-        return boundaryGetter.getLatestStat(ref);
+    public CpuStat getNewest(HostRef ref) {
+        return boundaryGetter.getNewestStat(ref);
     }
 }
 

@@ -108,7 +108,7 @@ public class HostCpuControllerTest {
         CpuStatDAO cpuStatDAO = mock(CpuStatDAO.class);
 
         when(cpuStatDAO.getOldest(any(HostRef.class))).thenReturn(cpuStat1);
-        when(cpuStatDAO.getLatest(any(HostRef.class))).thenReturn(cpuStat2);
+        when(cpuStatDAO.getNewest(any(HostRef.class))).thenReturn(cpuStat2);
 
         when(cpuStatDAO.getCpuStats(any(HostRef.class), anyLong(), anyLong())).thenReturn(Arrays.asList(cpuStat1, cpuStat2));
 

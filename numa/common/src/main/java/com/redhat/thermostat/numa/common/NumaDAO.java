@@ -61,5 +61,11 @@ public interface NumaDAO {
     void putNumaStat(NumaStat stat);
 
     List<NumaStat> getLatestNumaStats(HostRef ref, long lastSeenTimeStamp);
+
+    List<NumaStat> getNumaStats(HostRef ref, long since, long to);
+
+    NumaStat getNewest(HostRef ref);
+
+    NumaStat getOldest(HostRef ref);
 }
 

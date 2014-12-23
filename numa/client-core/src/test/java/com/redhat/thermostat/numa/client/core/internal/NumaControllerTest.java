@@ -58,6 +58,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
@@ -98,10 +99,14 @@ public class NumaControllerTest {
         NumaDAO numaDAO = mock(NumaDAO.class);
 
         List<NumaStat> stats = createTestData();
-        when(numaDAO.getLatestNumaStats(eq(hostRef), anyLong())).thenReturn(stats);
+        when(numaDAO.getNumaStats(eq(hostRef), anyLong(), anyLong())).thenReturn(stats);
+        when(numaDAO.getOldest(eq(hostRef))).thenReturn(stats.get(0));
+        when(numaDAO.getNewest(eq(hostRef))).thenReturn(stats.get(stats.size() - 1));
+
         when(numaDAO.getNumberOfNumaNodes(hostRef)).thenReturn(3);
         NumaViewProvider numaViewProvider = mock(NumaViewProvider.class);
         view = mock(NumaView.class);
+        when(view.getUserDesiredDuration()).thenReturn(new Duration(10, TimeUnit.MINUTES));
         graphVisibilityListener = ArgumentCaptor.forClass(GraphVisibilityChangeListener.class);
         actionListener = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addGraphVisibilityListener(graphVisibilityListener.capture());

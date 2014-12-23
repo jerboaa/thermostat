@@ -81,9 +81,9 @@ public class VmBoundaryPojoGetterTest {
 
     @Test
     public void verifyLatestQueryDescriptorFormat() {
-        String latestExpected = "QUERY %s WHERE 'agentId' = ?s AND " +
+        String newestExpected = "QUERY %s WHERE 'agentId' = ?s AND " +
                 "'vmId' = ?s SORT 'timeStamp' DSC LIMIT 1";
-        assertEquals(latestExpected, VmBoundaryPojoGetter.DESC_LATEST_VM_STAT);
+        assertEquals(newestExpected, VmBoundaryPojoGetter.DESC_NEWEST_VM_STAT);
     }
 
     @Test
@@ -98,10 +98,10 @@ public class VmBoundaryPojoGetterTest {
         Storage storage = mock(Storage.class);
         VmBoundaryPojoGetter<TestPojo> getter = new VmBoundaryPojoGetter<>(storage, cat);
 
-        String actualLatestDesc = getter.getLatestQueryDesc();
-        String latestExpected = "QUERY vm-boundary-category WHERE 'agentId' = ?s AND " +
+        String actualLatestDesc = getter.getNewestQueryDesc();
+        String newestExpected = "QUERY vm-boundary-category WHERE 'agentId' = ?s AND " +
                 "'vmId' = ?s SORT 'timeStamp' DSC LIMIT 1";
-        assertEquals(latestExpected, actualLatestDesc);
+        assertEquals(newestExpected, actualLatestDesc);
     }
 
     @Test
@@ -150,10 +150,10 @@ public class VmBoundaryPojoGetterTest {
 
         VmBoundaryPojoGetter<TestPojo> getter = new VmBoundaryPojoGetter<>(storage, cat);
 
-        TestPojo oldest = getter.getLatestStat(vmRef);
+        TestPojo newest = getter.getNewestStat(vmRef);
 
-        assertEquals(t2, oldest.getTimeStamp());
-        assertEquals(lc2, oldest.getData());
+        assertEquals(t2, newest.getTimeStamp());
+        assertEquals(lc2, newest.getData());
     }
 
     @SuppressWarnings("unchecked")

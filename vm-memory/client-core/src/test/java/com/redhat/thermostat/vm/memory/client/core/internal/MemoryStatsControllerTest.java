@@ -165,7 +165,7 @@ public class MemoryStatsControllerTest {
         when(memoryStatDao.getVmMemoryStats(any(VmRef.class), anyLong(), anyLong())).thenReturn(vmInfo);
 
         when(memoryStatDao.getOldestMemoryStat(any(VmRef.class))).thenReturn(vmInfo.get(0));
-        when(memoryStatDao.getLatestMemoryStat(any(VmRef.class))).thenReturn(vmInfo.get(4));
+        when(memoryStatDao.getNewestMemoryStat(any(VmRef.class))).thenReturn(vmInfo.get(4));
 
         view = mock(MemoryStatsView.class);
         MemoryStatsViewProvider viewProvider = mock(MemoryStatsViewProvider.class);
@@ -281,7 +281,7 @@ public class MemoryStatsControllerTest {
         stat.setGenerations(new Generation[] { gen });
 
         when(memoryStatDao.getVmMemoryStats(any(VmRef.class), anyLong(), anyLong())).thenReturn(Arrays.asList(stat));
-        when(memoryStatDao.getLatestMemoryStat(any(VmRef.class))).thenReturn(stat);
+        when(memoryStatDao.getNewestMemoryStat(any(VmRef.class))).thenReturn(stat);
 
         Thread.sleep(100l);
         timerAction.run();

@@ -75,7 +75,7 @@ public class VmCpuControllerTest {
         VmCpuStatDAO vmCpuStatDAO = mock(VmCpuStatDAO.class);
         when(vmCpuStatDAO.getLatestVmCpuStats(any(VmRef.class), any(Long.class))).thenThrow(new AssertionError("Unbounded queries are bad!"));
         when(vmCpuStatDAO.getOldest(ref)).thenReturn(stat1);
-        when(vmCpuStatDAO.getLatest(ref)).thenReturn(stat1);
+        when(vmCpuStatDAO.getNewest(ref)).thenReturn(stat1);
 
         Timer timer = mock(Timer.class);
         ArgumentCaptor<Runnable> timerActionCaptor = ArgumentCaptor.forClass(Runnable.class);

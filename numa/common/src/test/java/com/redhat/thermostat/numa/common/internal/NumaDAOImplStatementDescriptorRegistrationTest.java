@@ -66,7 +66,7 @@ public class NumaDAOImplStatementDescriptorRegistrationTest {
     public void registersAllDescriptors() {
         NumaDAOImplStatementDescriptorRegistration reg = new NumaDAOImplStatementDescriptorRegistration();
         Set<String> descriptors = reg.getStatementDescriptors();
-        assertEquals(4, descriptors.size());
+        assertEquals(7, descriptors.size());
         assertFalse("null descriptor not allowed", descriptors.contains(null));
     }
     
@@ -94,7 +94,7 @@ public class NumaDAOImplStatementDescriptorRegistrationTest {
         // storage-core + this module
         assertEquals(2, registrations.size());
         assertNotNull(numaReg);
-        assertEquals(4, numaReg.getStatementDescriptors().size());
+        assertEquals(7, numaReg.getStatementDescriptors().size());
     }
 
 }

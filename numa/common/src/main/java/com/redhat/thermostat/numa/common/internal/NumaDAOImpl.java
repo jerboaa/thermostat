@@ -46,8 +46,10 @@ import com.redhat.thermostat.numa.common.NumaHostInfo;
 import com.redhat.thermostat.numa.common.NumaStat;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
+import com.redhat.thermostat.storage.core.HostBoundaryPojoGetter;
 import com.redhat.thermostat.storage.core.HostLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.HostTimeIntervalPojoListGetter;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
@@ -57,6 +59,7 @@ import com.redhat.thermostat.storage.core.Storage;
 public class NumaDAOImpl implements NumaDAO {
 
     private static final Logger logger = LoggingUtils.getLogger(NumaDAOImpl.class);
+
     static final String QUERY_NUMA_INFO = "QUERY "
             + numaHostCategory.getName() + " WHERE '" 
             + Key.AGENT_ID.getName() + "' = ?s LIMIT 1";
@@ -74,13 +77,17 @@ public class NumaDAOImpl implements NumaDAO {
                  "'" + hostNumNumaNodes.getName() + "' = ?i";
     
     private final Storage storage;
-    private final HostLatestPojoListGetter<NumaStat> getter;
+    private final HostLatestPojoListGetter<NumaStat> latestGetter;
+    private final HostTimeIntervalPojoListGetter<NumaStat> intervalGetter;
+    private final HostBoundaryPojoGetter<NumaStat> boundaryGetter;
 
     NumaDAOImpl(Storage storage) {
         this.storage = storage;
         storage.registerCategory(numaStatCategory);
         storage.registerCategory(numaHostCategory);
-        this.getter = new HostLatestPojoListGetter<>(storage, numaStatCategory);
+        this.latestGetter = new HostLatestPojoListGetter<>(storage, numaStatCategory);
+        this.intervalGetter = new HostTimeIntervalPojoListGetter<>(storage, numaStatCategory);
+        this.boundaryGetter = new HostBoundaryPojoGetter<>(storage, numaStatCategory);
     }
 
     @Override
@@ -102,7 +109,22 @@ public class NumaDAOImpl implements NumaDAO {
 
     @Override
     public List<NumaStat> getLatestNumaStats(HostRef ref, long lastTimeStamp) {
-        return getter.getLatest(ref, lastTimeStamp);
+        return latestGetter.getLatest(ref, lastTimeStamp);
+    }
+
+    @Override
+    public List<NumaStat> getNumaStats(HostRef ref, long since, long to) {
+        return intervalGetter.getLatest(ref, since, to);
+    }
+
+    @Override
+    public NumaStat getNewest(HostRef ref) {
+        return boundaryGetter.getNewestStat(ref);
+    }
+
+    @Override
+    public NumaStat getOldest(HostRef ref) {
+        return boundaryGetter.getOldestStat(ref);
     }
 
     @Override

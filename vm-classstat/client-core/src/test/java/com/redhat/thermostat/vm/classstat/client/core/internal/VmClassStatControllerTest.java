@@ -77,7 +77,7 @@ public class VmClassStatControllerTest {
 
         when(vmClassStatDAO.getLatestClassStats(any(VmRef.class), any(Long.class))).thenThrow(new AssertionError("Unbounded queries are bad!"));
         when(vmClassStatDAO.getOldest(ref)).thenReturn(stat1);
-        when(vmClassStatDAO.getLatest(ref)).thenReturn(stat1);
+        when(vmClassStatDAO.getNewest(ref)).thenReturn(stat1);
 
         Timer timer = mock(Timer.class);
         ArgumentCaptor<Runnable> timerActionCaptor = ArgumentCaptor.forClass(Runnable.class);

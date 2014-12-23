@@ -54,7 +54,6 @@ import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.storage.core.Ref;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
 import com.redhat.thermostat.vm.classstat.client.core.VmClassStatView;
@@ -75,9 +74,9 @@ public class VmClassStatController implements InformationServiceController<VmRef
             final List<DiscreteTimeData<Long>> data = new ArrayList<>();
 
             VmClassStat oldest = dao.getOldest(ref);
-            VmClassStat latest = dao.getLatest(ref);
+            VmClassStat newest = dao.getNewest(ref);
 
-            Range<Long> newAvailableRange = new Range<>(oldest.getTimeStamp(), latest.getTimeStamp());
+            Range<Long> newAvailableRange = new Range<>(oldest.getTimeStamp(), newest.getTimeStamp());
 
             TimeRangeController.StatsSupplier<VmClassStat, VmRef> singleValueSupplier = new TimeRangeController.StatsSupplier<VmClassStat, VmRef>() {
                 @Override

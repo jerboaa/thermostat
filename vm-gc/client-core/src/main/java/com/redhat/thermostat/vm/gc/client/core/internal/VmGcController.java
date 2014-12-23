@@ -38,7 +38,6 @@ package com.redhat.thermostat.vm.gc.client.core.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -218,7 +217,7 @@ public class VmGcController implements InformationServiceController<VmRef> {
     }
 
     public String getCollectorGeneration(String collectorName) {
-        VmMemoryStat info = memDao.getLatestMemoryStat(ref);
+        VmMemoryStat info = memDao.getNewestMemoryStat(ref);
 
         for (Generation g: info.getGenerations()) {
             if (g.getCollector().equals(collectorName)) {

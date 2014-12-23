@@ -55,7 +55,7 @@ public interface VmMemoryStatDAO {
             Arrays.<Key<?>>asList(Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, generationsKey),
             Arrays.<Key<?>>asList(Key.TIMESTAMP));
 
-    public VmMemoryStat getLatestMemoryStat(VmRef ref);
+    public VmMemoryStat getNewestMemoryStat(VmRef ref);
 
     public VmMemoryStat getOldestMemoryStat(VmRef ref);
 

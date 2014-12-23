@@ -41,7 +41,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.core.experimental.TimeRangeController;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.core.views.UIComponent;
@@ -139,11 +138,11 @@ public class HostCpuController implements InformationServiceController<HostRef> 
 
     private void doCpuChartUpdate() {
         CpuStat oldest = cpuStatDAO.getOldest(ref);
-        CpuStat latest = cpuStatDAO.getLatest(ref);
+        CpuStat newest = cpuStatDAO.getNewest(ref);
 
         final List<CpuStat> cpuStats = new ArrayList<>();
 
-        Range<Long> newAvailableRange = new Range<>(oldest.getTimeStamp(), latest.getTimeStamp());
+        Range<Long> newAvailableRange = new Range<>(oldest.getTimeStamp(), newest.getTimeStamp());
 
         TimeRangeController.StatsSupplier<CpuStat, HostRef> statsSupplier = new TimeRangeController.StatsSupplier<CpuStat, HostRef>() {
             @Override

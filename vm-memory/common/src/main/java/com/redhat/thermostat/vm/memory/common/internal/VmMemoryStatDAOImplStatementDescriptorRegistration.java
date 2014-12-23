@@ -59,7 +59,7 @@ public class VmMemoryStatDAOImplStatementDescriptorRegistration implements
             VmMemoryStatDAO.vmMemoryStatsCategory.getName());
     static final String rangeDescriptor = String.format(VmTimeIntervalPojoListGetter.VM_INTERVAL_QUERY_FORMAT,
             VmMemoryStatDAO.vmMemoryStatsCategory.getName());
-    static final String latestStatDescriptor = String.format(VmBoundaryPojoGetter.DESC_LATEST_VM_STAT,
+    static final String latestStatDescriptor = String.format(VmBoundaryPojoGetter.DESC_NEWEST_VM_STAT,
             VmMemoryStatDAO.vmMemoryStatsCategory.getName());
     static final String oldestStatDescriptor = String.format(VmBoundaryPojoGetter.DESC_OLDEST_VM_STAT,
             VmMemoryStatDAO.vmMemoryStatsCategory.getName());

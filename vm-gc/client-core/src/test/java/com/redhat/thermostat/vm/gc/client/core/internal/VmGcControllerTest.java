@@ -110,7 +110,7 @@ public class VmGcControllerTest {
         VmGcStatDAO vmGcStatDAO = mock(VmGcStatDAO.class);
         when(vmGcStatDAO.getLatestVmGcStats(isA(VmRef.class), isA(Long.class))).thenReturn(stats);
         VmMemoryStatDAO vmMemoryStatDAO = mock(VmMemoryStatDAO.class);
-        when(vmMemoryStatDAO.getLatestMemoryStat(isA(VmRef.class))).thenReturn(memoryStat);
+        when(vmMemoryStatDAO.getNewestMemoryStat(isA(VmRef.class))).thenReturn(memoryStat);
         // the following set should map to Concurrent Collector
         Set<String> cms = new HashSet<>();
         cms.add("CMS");

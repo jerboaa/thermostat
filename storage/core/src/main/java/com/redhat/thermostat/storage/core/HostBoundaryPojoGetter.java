@@ -47,7 +47,7 @@ public class HostBoundaryPojoGetter<T extends TimeStampedPojo> {
     // QUERY %s WHERE 'agentId' = ?s AND \
     //                        SORT 'timeStamp' DSC  \
     //                        LIMIT 1
-    public static final String DESC_LATEST_HOST_STAT = "QUERY %s " +
+    public static final String DESC_NEWEST_HOST_STAT = "QUERY %s " +
             "WHERE '" + Key.AGENT_ID.getName() + "' = ?s " +
             "SORT '" + Key.TIMESTAMP.getName() + "' DSC " +
             "LIMIT 1";
@@ -64,18 +64,18 @@ public class HostBoundaryPojoGetter<T extends TimeStampedPojo> {
 
     private final Storage storage;
     private final Category<T> cat;
-    private final String queryLatest;
+    private final String queryNewest;
     private final String queryOldest;
 
     public HostBoundaryPojoGetter(Storage storage, Category<T> cat) {
         this.storage = storage;
         this.cat = cat;
-        this.queryLatest = String.format(DESC_LATEST_HOST_STAT, cat.getName());
+        this.queryNewest = String.format(DESC_NEWEST_HOST_STAT, cat.getName());
         this.queryOldest= String.format(DESC_OLDEST_HOST_STAT, cat.getName());
     }
 
-    public T getLatestStat(HostRef ref) {
-        return runAgentIdQuery(ref, queryLatest);
+    public T getNewestStat(HostRef ref) {
+        return runAgentIdQuery(ref, queryNewest);
     }
 
     public T getOldestStat(HostRef ref) {
@@ -101,8 +101,8 @@ public class HostBoundaryPojoGetter<T extends TimeStampedPojo> {
     }
 
     //Package private for testing
-    String getLatestQueryDesc() {
-        return queryLatest;
+    String getNewestQueryDesc() {
+        return queryNewest;
     }
 
     String getOldestQueryDesc() {

@@ -59,7 +59,7 @@ public class VmClassStatDAOImplStatementDescriptorRegistration implements
             VmClassStatDAO.vmClassStatsCategory.getName());
     static final String RANGE = String.format(VmTimeIntervalPojoListGetter.VM_INTERVAL_QUERY_FORMAT,
             VmClassStatDAO.vmClassStatsCategory.getName());
-    static final String LATEST_STAT = String.format(VmBoundaryPojoGetter.DESC_LATEST_VM_STAT,
+    static final String LATEST_STAT = String.format(VmBoundaryPojoGetter.DESC_NEWEST_VM_STAT,
             VmClassStatDAO.vmClassStatsCategory.getName());
     static final String OLDEST_STAT = String.format(VmBoundaryPojoGetter.DESC_OLDEST_VM_STAT,
             VmClassStatDAO.vmClassStatsCategory.getName());

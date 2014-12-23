@@ -62,7 +62,7 @@ public interface CpuStatDAO {
 
     CpuStat getOldest(HostRef ref);
 
-    CpuStat getLatest(HostRef ref);
+    CpuStat getNewest(HostRef ref);
 
 }
 
