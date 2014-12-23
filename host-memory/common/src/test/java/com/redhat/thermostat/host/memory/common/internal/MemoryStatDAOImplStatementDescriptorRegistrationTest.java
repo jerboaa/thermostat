@@ -58,7 +58,7 @@ public class MemoryStatDAOImplStatementDescriptorRegistrationTest {
     public void registersAllDescriptors() {
         MemoryStatDAOImplStatementDescriptorRegistration reg = new MemoryStatDAOImplStatementDescriptorRegistration();
         Set<String> descriptors = reg.getStatementDescriptors();
-        assertEquals(2, descriptors.size());
+        assertEquals(5, descriptors.size());
         assertFalse("null descriptor not allowed", descriptors.contains(null));
     }
     
@@ -86,7 +86,7 @@ public class MemoryStatDAOImplStatementDescriptorRegistrationTest {
         // storage-core + this module
         assertEquals(2, registrations.size());
         assertNotNull(memoryStatReg);
-        assertEquals(2, memoryStatReg.getStatementDescriptors().size());
+        assertEquals(5, memoryStatReg.getStatementDescriptors().size());
     }
 
 }

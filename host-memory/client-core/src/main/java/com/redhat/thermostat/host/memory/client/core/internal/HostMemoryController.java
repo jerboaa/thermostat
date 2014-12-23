@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.client.core.experimental.TimeRangeController;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
@@ -50,6 +51,7 @@ import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
+import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryView;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryViewProvider;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryView.GraphVisibilityChangeListener;
@@ -76,7 +78,7 @@ public class HostMemoryController implements InformationServiceController<HostRe
     private final Timer backgroundUpdateTimer;
     private final GraphVisibilityChangeListener listener = new ShowHideGraph();
 
-    private long lastSeenTimeStamp = Long.MIN_VALUE;
+    private TimeRangeController<MemoryStat, HostRef> timeRangeController;
 
     public HostMemoryController(ApplicationService appSvc, HostInfoDAO hostInfoDAO, MemoryStatDAO memoryStatDAO, final HostRef ref, HostMemoryViewProvider provider) {
         this.ref = ref;
@@ -108,6 +110,8 @@ public class HostMemoryController implements InformationServiceController<HostRe
                 }
             }
         });
+
+        timeRangeController = new TimeRangeController<>();
 
         backgroundUpdateTimer = appSvc.getTimerFactory().createTimer();
         backgroundUpdateTimer.setAction(new Runnable() {
@@ -144,23 +148,39 @@ public class HostMemoryController implements InformationServiceController<HostRe
     }
 
     private void doMemoryChartUpdate() {
-        List<DiscreteTimeData<? extends Number>> memFree = new LinkedList<>();
-        List<DiscreteTimeData<? extends Number>> memTotal = new LinkedList<>();
-        List<DiscreteTimeData<? extends Number>> memUsed = new LinkedList<>();
-        List<DiscreteTimeData<? extends Number>> buf = new LinkedList<>();
-        List<DiscreteTimeData<? extends Number>> swapTotal = new LinkedList<>();
-        List<DiscreteTimeData<? extends Number>> swapFree = new LinkedList<>();
+        final List<DiscreteTimeData<? extends Number>> memFree = new LinkedList<>();
+        final List<DiscreteTimeData<? extends Number>> memTotal = new LinkedList<>();
+        final List<DiscreteTimeData<? extends Number>> memUsed = new LinkedList<>();
+        final List<DiscreteTimeData<? extends Number>> buf = new LinkedList<>();
+        final List<DiscreteTimeData<? extends Number>> swapTotal = new LinkedList<>();
+        final List<DiscreteTimeData<? extends Number>> swapFree = new LinkedList<>();
 
-        for (MemoryStat stat : memoryStatDAO.getLatestMemoryStats(ref, lastSeenTimeStamp)) {
-            long timeStamp = stat.getTimeStamp();
-            memFree.add(new DiscreteTimeData<Long>(timeStamp, stat.getFree()));
-            memTotal.add(new DiscreteTimeData<Long>(timeStamp, stat.getTotal()));
-            memUsed.add(new DiscreteTimeData<Long>(timeStamp, stat.getTotal() - stat.getFree()));
-            buf.add(new DiscreteTimeData<Long>(timeStamp, stat.getBuffers()));
-            swapTotal.add(new DiscreteTimeData<Long>(timeStamp, stat.getSwapTotal()));
-            swapFree.add(new DiscreteTimeData<Long>(timeStamp, stat.getSwapFree()));
-            lastSeenTimeStamp = Math.max(lastSeenTimeStamp, stat.getTimeStamp());
-        }
+        MemoryStat oldest = memoryStatDAO.getOldest(ref);
+        MemoryStat newest = memoryStatDAO.getNewest(ref);
+
+        Range<Long> newAvailableRange = new Range<>(oldest.getTimeStamp(), newest.getTimeStamp());
+
+        TimeRangeController.StatsSupplier<MemoryStat, HostRef> statsSupplier = new TimeRangeController.StatsSupplier<MemoryStat, HostRef>() {
+            @Override
+            public List<MemoryStat> getStats(HostRef ref, long since, long to) {
+                return memoryStatDAO.getMemoryStats(ref, since, to);
+            }
+        };
+
+        TimeRangeController.SingleArgRunnable<MemoryStat> statCollector = new TimeRangeController.SingleArgRunnable<MemoryStat>() {
+            @Override
+            public void run(MemoryStat stat) {
+                long timeStamp = stat.getTimeStamp();
+                memFree.add(new DiscreteTimeData<>(timeStamp, stat.getFree()));
+                memTotal.add(new DiscreteTimeData<>(timeStamp, stat.getTotal()));
+                memUsed.add(new DiscreteTimeData<>(timeStamp, stat.getTotal() - stat.getFree()));
+                buf.add(new DiscreteTimeData<>(timeStamp, stat.getBuffers()));
+                swapTotal.add(new DiscreteTimeData<>(timeStamp, stat.getSwapTotal()));
+                swapFree.add(new DiscreteTimeData<>(timeStamp, stat.getSwapFree()));
+            }
+        };
+
+        timeRangeController.update(view.getUserDesiredDuration(), newAvailableRange, statsSupplier, ref, statCollector);
 
         view.addMemoryData(MemoryType.MEMORY_FREE.name(), memFree);
         view.addMemoryData(MemoryType.MEMORY_TOTAL.name(), memTotal);

@@ -40,7 +40,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
+import com.redhat.thermostat.storage.core.HostBoundaryPojoGetter;
 import com.redhat.thermostat.storage.core.HostLatestPojoListGetter;
+import com.redhat.thermostat.storage.core.HostTimeIntervalPojoListGetter;
 import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
@@ -53,13 +55,22 @@ import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 public class MemoryStatDAOImplStatementDescriptorRegistration implements
         StatementDescriptorRegistration {
 
-    static final String descriptor = String.format(HostLatestPojoListGetter.HOST_LATEST_QUERY_FORMAT, 
+    static final String latestDescriptor = String.format(HostLatestPojoListGetter.HOST_LATEST_QUERY_FORMAT,
+            MemoryStatDAO.memoryStatCategory.getName());
+    static final String intervalDescriptor = String.format(HostTimeIntervalPojoListGetter.HOST_INTERVAL_QUERY_FORMAT,
+            MemoryStatDAO.memoryStatCategory.getName());
+    static final String latestStatDescriptor = String.format(HostBoundaryPojoGetter.DESC_NEWEST_HOST_STAT,
+            MemoryStatDAO.memoryStatCategory.getName());
+    static final String oldestStatDescriptor = String.format(HostBoundaryPojoGetter.DESC_OLDEST_HOST_STAT,
             MemoryStatDAO.memoryStatCategory.getName());
     
     @Override
     public Set<String> getStatementDescriptors() {
-        Set<String> descs = new HashSet<>(1);
-        descs.add(descriptor);
+        Set<String> descs = new HashSet<>(5);
+        descs.add(latestDescriptor);
+        descs.add(intervalDescriptor);
+        descs.add(latestStatDescriptor);
+        descs.add(oldestStatDescriptor);
         descs.add(MemoryStatDAOImpl.DESC_ADD_MEMORY_STAT);
         return descs;
     }

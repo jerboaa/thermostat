@@ -43,9 +43,12 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
 import com.redhat.thermostat.host.memory.common.model.MemoryStat;
+import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
+import com.redhat.thermostat.storage.core.HostBoundaryPojoGetter;
 import com.redhat.thermostat.storage.core.HostLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.HostTimeIntervalPojoListGetter;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
@@ -74,20 +77,39 @@ public class MemoryStatDAOImpl implements MemoryStatDAO {
                  "'" + memorySwapTotalKey.getName() + "' = ?l , " +
                  "'" + memorySwapFreeKey.getName() + "' = ?l , " +
                  "'" + memoryCommitLimitKey.getName() + "' = ?l";
-    
+
     private final Storage storage;
 
-    private final HostLatestPojoListGetter<MemoryStat> getter;
+    private final HostLatestPojoListGetter<MemoryStat> latestGetter;
+    private final HostTimeIntervalPojoListGetter<MemoryStat> intervalGetter;
+    private final HostBoundaryPojoGetter<MemoryStat> boundaryGetter;
 
     MemoryStatDAOImpl(Storage storage) {
         this.storage = storage;
         storage.registerCategory(memoryStatCategory);
-        this.getter = new HostLatestPojoListGetter<>(storage, memoryStatCategory);
+        this.latestGetter = new HostLatestPojoListGetter<>(storage, memoryStatCategory);
+        this.intervalGetter = new HostTimeIntervalPojoListGetter<>(storage, memoryStatCategory);
+        this.boundaryGetter = new HostBoundaryPojoGetter<>(storage, memoryStatCategory);
     }
 
     @Override
     public List<MemoryStat> getLatestMemoryStats(HostRef ref, long lastTimeStamp) {
-        return getter.getLatest(ref, lastTimeStamp);
+        return latestGetter.getLatest(ref, lastTimeStamp);
+    }
+
+    @Override
+    public List<MemoryStat> getMemoryStats(HostRef ref, long since, long to) {
+        return intervalGetter.getLatest(ref, since, to);
+    }
+
+    @Override
+    public MemoryStat getNewest(HostRef ref) {
+        return boundaryGetter.getNewestStat(ref);
+    }
+
+    @Override
+    public MemoryStat getOldest(HostRef ref) {
+        return boundaryGetter.getOldestStat(ref);
     }
 
     @Override

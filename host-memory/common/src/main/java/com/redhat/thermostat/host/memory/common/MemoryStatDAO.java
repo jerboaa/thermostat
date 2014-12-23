@@ -63,6 +63,12 @@ public interface MemoryStatDAO {
 
     public List<MemoryStat> getLatestMemoryStats(HostRef ref, long since);
 
+    public List<MemoryStat> getMemoryStats(HostRef ref, long since, long to);
+
+    public MemoryStat getNewest(HostRef ref);
+
+    public MemoryStat getOldest(HostRef ref);
+
     void putMemoryStat(MemoryStat stat);
 }
 

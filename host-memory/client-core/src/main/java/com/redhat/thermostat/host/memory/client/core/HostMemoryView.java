@@ -38,6 +38,7 @@ package com.redhat.thermostat.host.memory.client.core;
 
 import java.util.List;
 
+import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.shared.locale.LocalizedString;
@@ -68,6 +69,8 @@ public abstract class HostMemoryView extends BasicView implements UIComponent {
     public abstract void addGraphVisibilityListener(GraphVisibilityChangeListener listener);
 
     public abstract void removeGraphVisibilityListener(GraphVisibilityChangeListener listener);
+
+    public abstract Duration getUserDesiredDuration();
 
 }
 

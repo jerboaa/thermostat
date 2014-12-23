@@ -47,10 +47,12 @@ import static org.mockito.Mockito.when;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
@@ -58,7 +60,6 @@ import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryView;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryViewProvider;
-import com.redhat.thermostat.host.memory.client.core.internal.HostMemoryController;
 import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
 import com.redhat.thermostat.host.memory.common.model.MemoryStat;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -79,7 +80,9 @@ public class HostMemoryControllerTest {
         List<MemoryStat> memoryStats = new LinkedList<>();
         memoryStats.add(memoryStat);
         MemoryStatDAO memoryStatDAO = mock(MemoryStatDAO.class);
-        when(memoryStatDAO.getLatestMemoryStats(any(HostRef.class), anyLong())).thenReturn(memoryStats);
+        when(memoryStatDAO.getMemoryStats(any(HostRef.class), anyLong(), anyLong())).thenReturn(memoryStats);
+        when(memoryStatDAO.getOldest(any(HostRef.class))).thenReturn(memoryStat);
+        when(memoryStatDAO.getNewest(any(HostRef.class))).thenReturn(memoryStat);
 
         Timer timer = mock(Timer.class);
         ArgumentCaptor<Runnable> timerActionCaptor = ArgumentCaptor.forClass(Runnable.class);
@@ -93,6 +96,7 @@ public class HostMemoryControllerTest {
         HostRef ref = mock(HostRef.class);
 
         HostMemoryView view = mock(HostMemoryView.class);
+        when(view.getUserDesiredDuration()).thenReturn(new Duration(10, TimeUnit.MINUTES));
         ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
 

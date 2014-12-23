@@ -45,6 +45,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -62,6 +63,7 @@ import org.jfree.data.time.RegularTimePeriod;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
+import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.LabelField;
 import com.redhat.thermostat.client.swing.components.RecentTimeSeriesChartPanel;
@@ -97,6 +99,7 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
     private final Map<String, Color> colors = new HashMap<>();
 
     private JFreeChart chart;
+    private RecentTimeSeriesChartController chartController;
 
     public HostMemoryPanel() {
         super();
@@ -246,7 +249,8 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
 
         chart = createMemoryChart();
 
-        JPanel chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
+        chartController = new RecentTimeSeriesChartController(chart);
+        JPanel chartPanel = new RecentTimeSeriesChartPanel(chartController);
         chartPanel.setOpaque(false);
 
         JLabel lblMemory = new SectionHeader(translator.localize(LocaleResources.HOST_MEMORY_SECTION_OVERVIEW));
@@ -346,6 +350,14 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
             fireShowHideHandlers(source.isSelected(), source.getActionCommand());
         }
 
+    }
+
+    @Override
+    public Duration getUserDesiredDuration() {
+        if (chartController == null) {
+            return new Duration(10, TimeUnit.MINUTES);
+        }
+        return new Duration(chartController.getTimeValue(), chartController.getTimeUnit());
     }
 }
 
