@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.thread.client.swing.impl;
 
+import com.redhat.thermostat.client.swing.NonEditableTableModel;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.ThermostatTable;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
@@ -43,6 +44,7 @@ import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
 import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
+
 import java.awt.Component;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -52,11 +54,11 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
-import javax.swing.table.DefaultTableModel;
 
 public class SwingThreadTableView extends ThreadTableView implements SwingComponent {
 
@@ -198,7 +200,7 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
     }
 
     @SuppressWarnings("serial")
-    private class ThreadViewTableModel extends DefaultTableModel {
+    private class ThreadViewTableModel extends NonEditableTableModel {
 
         private String [] columns = {
                 t.localize(LocaleResources.NAME).getContents(),
@@ -234,11 +236,6 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
                 return 0;
             }
             return infos.size();
-        }
-        
-        @Override
-        public boolean isCellEditable(int row, int column) {
-            return false;
         }
         
         @Override

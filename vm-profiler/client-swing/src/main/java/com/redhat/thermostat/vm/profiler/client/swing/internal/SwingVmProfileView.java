@@ -65,6 +65,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 
+import com.redhat.thermostat.client.swing.NonEditableTableModel;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.client.swing.components.ThermostatTable;
@@ -199,7 +200,7 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
         columnNames.add(translator.localize(LocaleResources.PROFILER_RESULTS_METHOD).getContents());
         columnNames.add(translator.localize(LocaleResources.PROFILER_RESULTS_PERCENTAGE_TIME).getContents());
         columnNames.add(translator.localize(LocaleResources.PROFILER_RESULTS_TIME, "ms").getContents());
-        tableModel = new DefaultTableModel(columnNames, 0) {
+        tableModel = new NonEditableTableModel(columnNames, 0) {
             @Override
             public java.lang.Class<?> getColumnClass(int columnIndex) {
                 switch (columnIndex) {
@@ -215,13 +216,10 @@ public class SwingVmProfileView extends VmProfileView implements SwingComponent 
             }
         };
 
-        JTable profileTable = new ThermostatTable(tableModel);
-        profileTable.setAutoCreateRowSorter(true);
-
-        JScrollPane profileTablePane = new JScrollPane(profileTable);
+        ThermostatTable profileTable = new ThermostatTable(tableModel);
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-                profileListPane, profileTablePane);
+                profileListPane, profileTable.wrap());
         splitPane.setDividerLocation(SPLIT_PANE_RATIO);
         splitPane.setResizeWeight(0.5);
 

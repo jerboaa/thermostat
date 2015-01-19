@@ -46,11 +46,11 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.SwingUtilities;
-import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumnModel;
 
+import com.redhat.thermostat.client.swing.NonEditableTableModel;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.LabelField;
 import com.redhat.thermostat.client.swing.components.SectionHeader;
@@ -87,12 +87,7 @@ public class HostOverviewPanel extends HostOverviewView implements SwingComponen
     private final ValueField osName = new ValueField("");
     private final ValueField osKernel = new ValueField("");
 
-    private final DefaultTableModel networkTableModel = new DefaultTableModel() {
-        @Override
-        public boolean isCellEditable(int row, int column) {
-            return false;
-        }
-    };
+    private final NonEditableTableModel networkTableModel = new NonEditableTableModel();
 
     private Object[] networkTableColumns;
     private Object[][] networkTableData;

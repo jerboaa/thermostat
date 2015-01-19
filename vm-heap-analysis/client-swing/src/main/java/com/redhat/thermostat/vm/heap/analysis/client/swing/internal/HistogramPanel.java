@@ -44,8 +44,8 @@ import java.util.List;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.table.DefaultTableModel;
 
+import com.redhat.thermostat.client.swing.NonEditableTableModel;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.client.swing.components.ThermostatTable;
@@ -96,7 +96,7 @@ public class HistogramPanel extends HeapHistogramView implements SwingComponent 
         }
     }
 
-    private class HistogramTableModel extends DefaultTableModel {
+    private class HistogramTableModel extends NonEditableTableModel {
 
         private final String[] columnNames = new String[] {
             translator.localize(LocaleResources.HEAP_DUMP_HISTOGRAM_COLUMN_CLASS).getContents(),
@@ -163,10 +163,6 @@ public class HistogramPanel extends HeapHistogramView implements SwingComponent 
             return 0;
         }
 
-        @Override
-        public boolean isCellEditable(int row, int column) {
-            return false;
-        }
     }
 
     @Override
