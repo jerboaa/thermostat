@@ -228,12 +228,11 @@ public class PluginInfoSourceTest {
     }
 
     @Test
-    public void testConfigurationSimple() throws IOException {
-        String pluginID = "com.redhat.thermostat.simple";
+    public void testConfigurationSysConfig() throws IOException {
+        String pluginID = "com.redhat.thermostat.sys";
         String configName = "config.conf";
 
         String sysConfString = "key1=value1";
-        String userConfString = "key2=value2";
 
         Path pluginDir = sysPluginRootDir.resolve(pluginID);
         Files.createDirectory(pluginDir);
@@ -242,6 +241,30 @@ public class PluginInfoSourceTest {
         when(parserResult.hasValidID()).thenReturn(true);
 
         createTempDirAndFile(sysConfRootDir, pluginID, configName, sysConfString);
+
+        PluginInfoSource source = new PluginInfoSource(jarRootDir.toFile(), sysPluginRootDir.toFile(),
+                userPluginRootDir.toFile(), sysConfRootDir.toFile(), userConfRootDir.toFile(),
+                parser, usageBuilder);
+
+        Map<String, String> confMap = source.getConfiguration(pluginID, configName);
+
+        assertTrue(confMap.containsKey("key1"));
+        assertTrue(confMap.containsValue("value1"));
+    }
+
+    @Test
+    public void testConfigurationUserConfig() throws IOException {
+        String pluginID = "com.redhat.thermostat.user";
+        String configName = "config.conf";
+
+        String userConfString = "key1=value1";
+
+        Path pluginDir = userPluginRootDir.resolve(pluginID);
+        Files.createDirectory(pluginDir);
+
+        when(parserResult.getPluginID()).thenReturn(new PluginID(pluginID));
+        when(parserResult.hasValidID()).thenReturn(true);
+
         createTempDirAndFile(userConfRootDir, pluginID, configName, userConfString);
 
         PluginInfoSource source = new PluginInfoSource(jarRootDir.toFile(), sysPluginRootDir.toFile(),
@@ -251,11 +274,7 @@ public class PluginInfoSourceTest {
         Map<String, String> confMap = source.getConfiguration(pluginID, configName);
 
         assertTrue(confMap.containsKey("key1"));
-        assertTrue(confMap.containsKey("key2"));
-
         assertTrue(confMap.containsValue("value1"));
-        assertTrue(confMap.containsValue("value2"));
-
     }
 
     @Test
@@ -355,7 +374,7 @@ public class PluginInfoSourceTest {
     }
     @Test
     public void testConfigurationCustomPath() throws IOException {
-        String pluginID = "com.redhat.thermostat.XMLSimple";
+        String pluginID = "com.redhat.thermostat.custom";
 
         String configName = "config.conf";
         String confString = "key1=value1";
@@ -392,6 +411,55 @@ public class PluginInfoSourceTest {
 
         when(parserResult.getPluginID()).thenReturn(new PluginID(pluginID));
         when(parserResult.hasValidID()).thenReturn(true);
+
+        PluginInfoSource source = new PluginInfoSource(jarRootDir.toFile(), sysPluginRootDir.toFile(),
+                userPluginRootDir.toFile(), sysConfRootDir.toFile(), userConfRootDir.toFile(),
+                parser, usageBuilder);
+
+        Map<String, String> confMap = source.getConfiguration(pluginID, configName);
+
+        assertTrue(confMap.isEmpty());
+    }
+
+    @Test
+    public void testValuelessConfiguration() throws IOException {
+        String pluginID = "com.redhat.thermostat.simple";
+        String configName = "config.conf";
+
+        String sysConfString = "keywithnovalue";
+
+        Path pluginDir = sysPluginRootDir.resolve(pluginID);
+        Files.createDirectory(pluginDir);
+
+        when(parserResult.getPluginID()).thenReturn(new PluginID(pluginID));
+        when(parserResult.hasValidID()).thenReturn(true);
+
+        createTempDirAndFile(sysConfRootDir, pluginID, configName, sysConfString);
+
+        PluginInfoSource source = new PluginInfoSource(jarRootDir.toFile(), sysPluginRootDir.toFile(),
+                userPluginRootDir.toFile(), sysConfRootDir.toFile(), userConfRootDir.toFile(),
+                parser, usageBuilder);
+
+        Map<String, String> confMap = source.getConfiguration(pluginID, configName);
+
+        assertTrue(confMap.containsKey(sysConfString));
+        assertEquals("", confMap.get(sysConfString));
+    }
+
+    @Test
+    public void testCommentInConfiguration() throws IOException {
+        String pluginID = "com.redhat.thermostat.simple";
+        String configName = "config.conf";
+
+        String sysConfString = "#comment";
+
+        Path pluginDir = sysPluginRootDir.resolve(pluginID);
+        Files.createDirectory(pluginDir);
+
+        when(parserResult.getPluginID()).thenReturn(new PluginID(pluginID));
+        when(parserResult.hasValidID()).thenReturn(true);
+
+        createTempDirAndFile(sysConfRootDir, pluginID, configName, sysConfString);
 
         PluginInfoSource source = new PluginInfoSource(jarRootDir.toFile(), sysPluginRootDir.toFile(),
                 userPluginRootDir.toFile(), sysConfRootDir.toFile(), userConfRootDir.toFile(),

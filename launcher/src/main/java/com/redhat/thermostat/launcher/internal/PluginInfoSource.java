@@ -238,12 +238,11 @@ public class PluginInfoSource implements CommandInfoSource, ConfigurationInfoSou
         if (config != null && config.containsFile(fileName)) {
             String filePath = config.getFullFilePath(fileName);
             File file = new File(filePath);
-            Map<String, String> confMap = null;
-            confMap = loadConfMap(config, file);
+            Map<String, String> confMap = loadConfMap(file);
             return Collections.unmodifiableMap(confMap);
         } else {
-            Map<String, String> sysMap = null;
-            Map<String, String> userMap = null;
+            Map<String, String> sysMap = new HashMap<>();
+            Map<String, String> userMap = new HashMap<>();
 
             String sysPath = this.sysConfRootDir + "/" + pluginID + "/" + fileName;
             String userPath = this.userConfRootdir + "/" + pluginID + "/" + fileName;
@@ -251,25 +250,28 @@ public class PluginInfoSource implements CommandInfoSource, ConfigurationInfoSou
             File sysFile = new File(sysPath);
             File userFile = new File(userPath);
 
-            sysMap = loadConfMap(config, sysFile);
-            userMap = loadConfMap(config, userFile);
-
+            if (sysFile.exists()) {
+                sysMap = loadConfMap(sysFile);
+            }
+            if (userFile.exists()) {
+                userMap = loadConfMap(userFile);
+            }
             return Collections.unmodifiableMap(combineMap(userMap, sysMap));
         }
     }
 
-    private Map<String, String> loadConfMap(Configurations config, File confFile) {
-        try (FileInputStream stream = new FileInputStream(confFile);) {
+    private Map<String, String> loadConfMap(File confFile) {
+        try (FileInputStream stream = new FileInputStream(confFile)) {
             Properties properties = new Properties();
             properties.load(stream);
 
-            Map<String, String> returnMap = new HashMap<String, String>();
+            Map<String, String> returnMap = new HashMap<>();
             for (Entry<Object, Object> entry : properties.entrySet()) {
                 returnMap.put((String)entry.getKey(), (String)entry.getValue());
             }
             return returnMap;
         } catch (IOException e) {
-            logger.warning("Plugin file: " + confFile.getAbsolutePath() + " does not exist or is not a valid file");
+            logger.warning("Plugin config file: " + confFile.getAbsolutePath() + " could not be parsed. ");
             return Collections.emptyMap();
         }
     }
