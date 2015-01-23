@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 Red Hat, Inc.
+ * Copyright 2012-2015 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -33,7 +33,7 @@
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
- 
+
 package com.redhat.thermostat.backend;
 
 import org.osgi.framework.BundleContext;
