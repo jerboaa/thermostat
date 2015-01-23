@@ -56,10 +56,19 @@
   <fileSets>
     <fileSet>
       <includes>
-        <include>thermostat-plugin.xml</include>
+        <include>*</include>
       </includes>
-      <filtered>true</filtered>
+      <excludes>
+        <exclude>thermostat-plugin.xml</exclude>
+      </excludes>
     </fileSet>
   </fileSets>
+  <files>
+    <file>
+      <source>thermostat-plugin.xml</source>
+      <outputDirectory>/</outputDirectory>
+      <filtered>true</filtered>
+    </file>
+  </files>
 </assembly>
 
