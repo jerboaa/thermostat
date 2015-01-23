@@ -240,6 +240,8 @@ password=${agent.dev.password}
     <jline.version>2.9</jline.version>
     <lucene.version>4.7.0_1</lucene.version>
     <lucene.osgi-version>4.7.0.1</lucene.osgi-version>
+    <lucene-analysis.bundle.symbolic-name>org.apache.servicemix.bundles.lucene-analyzers-common</lucene-analysis.bundle.symbolic-name>
+    <lucene-core.bundle.symbolic-name>org.apache.servicemix.bundles.lucene</lucene-core.bundle.symbolic-name>
     <!--
          felix 4.0 is compliant with osgi 4.3
          for osgi clients, 4.3 is backwards compatible with 4.2

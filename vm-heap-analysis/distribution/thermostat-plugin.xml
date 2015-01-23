@@ -90,8 +90,8 @@
         <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
         <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
-        <bundle><symbolic-name>org.apache.servicemix.bundles.lucene</symbolic-name><version>${lucene.osgi-version}</version></bundle>
-        <bundle><symbolic-name>org.apache.servicemix.bundles.lucene-analyzers-common</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+        <bundle><symbolic-name>${lucene-core.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+        <bundle><symbolic-name>${lucene-analysis.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
       </bundles>
     </command>
     <command>
@@ -147,8 +147,8 @@
         <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
         <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
-        <bundle><symbolic-name>org.apache.servicemix.bundles.lucene</symbolic-name><version>${lucene.osgi-version}</version></bundle>
-        <bundle><symbolic-name>org.apache.servicemix.bundles.lucene-analyzers-common</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+        <bundle><symbolic-name>${lucene-core.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+        <bundle><symbolic-name>${lucene-analysis.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
       </bundles>
     </command>
     <command>
@@ -207,8 +207,8 @@
         <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
         <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
-        <bundle><symbolic-name>org.apache.servicemix.bundles.lucene</symbolic-name><version>${lucene.osgi-version}</version></bundle>
-        <bundle><symbolic-name>org.apache.servicemix.bundles.lucene-analyzers-common</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+        <bundle><symbolic-name>${lucene-core.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+        <bundle><symbolic-name>${lucene-analysis.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
       </bundles>
     </command>
     <command>
@@ -261,8 +261,8 @@
         <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
         <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
-        <bundle><symbolic-name>org.apache.servicemix.bundles.lucene</symbolic-name><version>${lucene.osgi-version}</version></bundle>
-        <bundle><symbolic-name>org.apache.servicemix.bundles.lucene-analyzers-common</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+        <bundle><symbolic-name>${lucene-core.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+        <bundle><symbolic-name>${lucene-analysis.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
       </bundles>
     </command>
     <command>
@@ -315,8 +315,8 @@
         <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
         <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
-        <bundle><symbolic-name>org.apache.servicemix.bundles.lucene</symbolic-name><version>${lucene.osgi-version}</version></bundle>
-        <bundle><symbolic-name>org.apache.servicemix.bundles.lucene-analyzers-common</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+        <bundle><symbolic-name>${lucene-core.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+        <bundle><symbolic-name>${lucene-analysis.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
       </bundles>
     </command>
     <command>
@@ -369,8 +369,8 @@
         <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
         <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
-        <bundle><symbolic-name>org.apache.servicemix.bundles.lucene</symbolic-name><version>${lucene.osgi-version}</version></bundle>
-        <bundle><symbolic-name>org.apache.servicemix.bundles.lucene-analyzers-common</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+        <bundle><symbolic-name>${lucene-core.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+        <bundle><symbolic-name>${lucene-analysis.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
       </bundles>
     </command>
     <command>
@@ -416,8 +416,8 @@
         <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
         <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
-        <bundle><symbolic-name>org.apache.servicemix.bundles.lucene</symbolic-name><version>${lucene.osgi-version}</version></bundle>
-        <bundle><symbolic-name>org.apache.servicemix.bundles.lucene-analyzers-common</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+        <bundle><symbolic-name>${lucene-core.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+        <bundle><symbolic-name>${lucene-analysis.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
       </bundles>
     </command>
   </commands>
@@ -432,8 +432,8 @@
         <bundle><symbolic-name>com.redhat.thermostat.common.command</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.client.core</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.client.swing</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>org.apache.servicemix.bundles.lucene</symbolic-name><version>${lucene.osgi-version}</version></bundle>
-        <bundle><symbolic-name>org.apache.servicemix.bundles.lucene-analyzers-common</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+        <bundle><symbolic-name>${lucene-core.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+        <bundle><symbolic-name>${lucene-analysis.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
       </bundles>
     </extension>
     <extension>
@@ -441,8 +441,8 @@
       <bundles>
         <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.common</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.vm.heap.analysis.agent</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>org.apache.servicemix.bundles.lucene</symbolic-name><version>${lucene.osgi-version}</version></bundle>
-        <bundle><symbolic-name>org.apache.servicemix.bundles.lucene-analyzers-common</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+        <bundle><symbolic-name>${lucene-core.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+        <bundle><symbolic-name>${lucene-analysis.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
       </bundles>
     </extension>
   </extensions>
