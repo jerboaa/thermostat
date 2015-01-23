@@ -1,9 +1,8 @@
-Thank you for downloading Thermostat.
 
-
-CONTENT:
+CONTENTS:
 --------------------------------------------------------------------------------
 
+0.  ABOUT
 1.  REQUIREMENTS
 2.  BUILDING THERMOSTAT
 3.  RUNNING THERMOSTAT
@@ -16,12 +15,32 @@ CONTENT:
 
 
 --------------------------------------------------------------------------------
+0. ABOUT
+
+Thermostat is a monitoring, profiling and serviceability tool for Java
+applications. It allows users to examine, trace and profile various
+attributes of a running JVM (and its environment) to understand how it
+is behaving.
+
+Please use the discussion list for any questions, concerns or
+comments.
+
+Additional resources:
+- Homepage: http://icedtea.classpath.org/thermostat/
+- Wiki: http://icedtea.classpath.org/wiki/Thermostat
+- Discussion List: http://icedtea.classpath.org/mailman/listinfo/thermostat
+- Bug tracker: http://icedtea.classpath.org/bugzilla/
+
+
+--------------------------------------------------------------------------------
 1. REQUIREMENTS
 
 * OpenJDK 7 (or OpenJDK 8)
 
-  Thermostat requires at least Java 7 to build and run. Thermostat has been
-  tested with OpenJDK 7. Other VMs or versions may or may not work.
+  Thermostat requires at least Java 7 to build and run. Thermostat has
+  been tested with OpenJDK 7 and 8. Other VMs or versions may or may
+  not work. Thermostat needs a full JDK to run. It will not work
+  correctly with just a JRE.
 
 * Maven (it will download all the java dependencies for you)
 * Make + GCC

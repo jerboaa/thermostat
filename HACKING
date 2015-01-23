@@ -1,10 +1,154 @@
+HACKING
+=======
+
+This guide provides an introduction and some rules for developing
+Thermostat.
+
+See also: http://icedtea.classpath.org/wiki/Thermostat/DevelopmentStyleGuide
+
+
+Layout
+------
+
+Thermostat code is organized in a few different ways.
+
+The core functionality is split into `common`, `client`, and `agent`
+modules (and their submodules).
+
+The rest is split functionally: `storage` contains storage-related
+code, `launcher` is the main launcher and so on. To introduce a new
+functional component of thermostat, put it in its own top-level
+directory and make it a new module.
+
+Major new features should go into their own module(s). Each module is
+an OSGi bundle.
+
+Plugins shipped with thermostat are put into their own separate
+top-level modules in the source. Examples include `host-cpu` and
+`vm-gc`. For the sake of consistency, name a vm-specific plugin with a
+`vm-` prefix and a host-only plugin with a `host-` prefix.
+
+A module that gathers a particular data is generally split as follows:
+
+- `common`: shared code between the agent and the client
+- `agent`: code that should only be executed on the agent
+- `client`: code that should be executed client-side only
+- `cli`: code that is meant for the command line only
+- `swing`: code meant for the graphical runtime environment only
+- `distribution`: a non-code module that bundles the entire plugin
+  into a single zip file.
+
+Use a single package as the module root package. Base it on the name
+of the module. For a `vm-foo` module, use
+`com.redhat.thermostat.vm.foo`. Avoid vague terms like `thermostat`
+and `utils` in the package names.
+
+POM Files
+---------
+
+Define the version for any dependency in the root (or main) `pom.xml`
+file. Define it as a property named `project-name.version`. Example:
+`commons-cli.version`.
+
+If the OSGi version differs from the project version, define it as a
+separate property `project-name.osgi-version`. Example:
+`commons-codec.osgi-version`.
+
 
 Code Style
-==========
+----------
 
 The standard license header goes on top of every file. It's enforced
 using a maven plugin. Use `mvn license:format` to generate/update it.
 The license template is defined in `src/license/header.txt`.
 
-See also: http://icedtea.classpath.org/wiki/Thermostat/DevelopmentStyleGuide
+Above all, be consistent with the style of code you are modifying.
+
+Formatting Style:
+- Spaces instead of tabs
+- Avoid trailing spaces
+
+Use this style:
+
+    public class Foo {
+        public void foo(Bar bar, Baz baz) {
+            try {
+                if (possible) {
+                    doFoo(bar);
+                }
+            } catch (FooException | BarExcetpion e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+
+Tests
+-----
+
+Every class `Foo` should have a unit test named `FooTest`. The test
+should be in the same package. Test-specific hooks should be package
+private in the original class.
+
+GUI code should be unit tested using FEST and Caciocavallo.
+
+For complex features, an integeration test should also be added if
+possible. Integration tests go in the `integration-tests` module.
+
+
+Documentation
+-------------
+
+Add appropriate documentation, for both developers and users.
+
+Use the active voice for all user-facing documentation.
+
+Classes that are part of the public API should have some documentation
+describing their use and linking to other relevant classes.
+
+Commands should have both summaries and descriptions. Write both the
+summary and description in active and action-oriented style. For the
+summary prefer direct and short forms: 'foo the bar' over 'foos the
+bar by bazing the ...'.
+
+A command's summary is displayed as a short help message. Make it short.
+Do not capitalize it, or end it with a period.
+
+A command's description is displayed as a long help message. Make it
+fully describe the command, including its actions and side-effects.
+Describe all options. Use full sentences, each ending with a period.
+
+
+Commits
+-------
+
+All commits must build and pass all unit tests.
+
+Commits require review. Before pushing a commit, make sure it is
+reviewed on the mailing list by at least one other developer and any
+concerns have been resolved.
+
+Commit messages are normally of the form:
+
+    Short summary of the fix
+
+    A detailed description of fix with additional details, like steps to
+    reproduce the problem, explanation of any subtle changes, links to
+    docs or anything that might help when examining this changeset in the
+    future to figure out why a change was done.
+
+    Also, try and keep commit message lines to under 80 characters.
+
+    You can also link a bug using the PR notation. Something like "This
+    commit fixes PR666", which refers to a bug with the id 666 on
+    http://icedtea.classpath.org/bugzilla/
+
+    The last few lines are important. They list the reviewers and a link to
+    the mailing list thread (or the equivalent) where this patch was
+    reviewed.
+
+    Reviewed-by: userid1, userid2, userid3
+    Review-thread: http://link.to.mailing.list.discussion.example.com/
+
 
