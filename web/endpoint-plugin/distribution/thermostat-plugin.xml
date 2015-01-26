@@ -73,7 +73,6 @@
         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.process</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.agent.cli</symbolic-name><version>${project.version}</version></bundle>
-        <bundle><symbolic-name>com.redhat.thermostat.agent.proxy.common</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.common.command</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.agent.command</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.killvm.agent</symbolic-name><version>${project.version}</version></bundle>
