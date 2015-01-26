@@ -180,6 +180,14 @@
                   </includes>
                 </resource>
                 <resource>
+                  <directory>config</directory>
+                  <targetPath>image/etc/plugins.d</targetPath>
+                  <filtering>true</filtering>
+                  <includes>
+                    <include>shell-command/shell-prompt.conf</include>
+                  </includes>
+                </resource>
+                <resource>
                   <directory>tools</directory>
                   <targetPath>tools</targetPath>
                   <filtering>true</filtering>

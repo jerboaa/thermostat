@@ -55,6 +55,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.utils.keyring.Keyring;
@@ -82,6 +83,8 @@ public class ActivatorTest {
         when(userConfig.isFile()).thenReturn(false);
         when(paths.getUserClientConfigurationFile()).thenReturn(userConfig);
         ctx.registerService(CommonPaths.class, paths, null);
+        ConfigurationInfoSource configurationInfoSource = mock(ConfigurationInfoSource.class);
+        ctx.registerService(ConfigurationInfoSource.class, configurationInfoSource, null);
         
         Activator activator = new Activator();
         
@@ -98,7 +101,7 @@ public class ActivatorTest {
 
         activator.stop(ctx);
 
-        assertEquals(2, ctx.getAllServices().size());
+        assertEquals(3, ctx.getAllServices().size());
     }
 
     @Test

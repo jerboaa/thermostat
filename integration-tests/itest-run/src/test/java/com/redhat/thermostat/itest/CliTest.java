@@ -52,6 +52,16 @@ import expectj.Spawn;
  * Integration tests to exercise the basics of the thermostat command line.
  */
 public class CliTest extends IntegrationTest {
+
+    private static final String SHELL_USAGE_STRING = "usage: thermostat shell\n" +
+            "                  launches the Thermostat interactive shell. The prompt can be\n" +
+            "                  customized by editing the shell-prompt.conf file located in\n" +
+            "                  $SYSTEM_THERMOSTAT_HOME/etc/plugins.d/shell-command. You can\n" +
+            "                  also create your own shell-prompt.conf file and place it in\n" +
+            "                  $USER_THERMOSTAT_HOME/etc/plugins.d/shell-command. This will\n" +
+            "                  override the properties from the system config file. See the\n" +
+            "                  system shell-prompt.conf file for instructions on how to write\n" +
+            "                  the config file.\n";
     
     @Before
     public void setup() {
@@ -196,14 +206,9 @@ public class CliTest extends IntegrationTest {
     }
 
     private void verifyShellHelpOutput(String actual) {
-        String expected = "usage: thermostat shell\n"
-                        + "                  launches the Thermostat interactive shell. The prompt displays\n"
-                        + "                  a \"-\" to indicate that it is disconnected or a \"+\" to indicate\n"
-                        + "                  that it is connected to storage\n"
-                        + "\n"
+        String expected = SHELL_USAGE_STRING + "\n"
                         + "thermostat shell\n"
                         + "     --help    show usage of command\n";
-
         assertEquals(expected, actual);
     }
 
@@ -213,10 +218,7 @@ public class CliTest extends IntegrationTest {
         shell.expectClose();
         String stdOut = shell.getCurrentStandardOutContents();
         String expectedOut = "Could not parse options: Unrecognized option: --foo\n"
-                           + "usage: thermostat shell\n"
-                           + "                  launches the Thermostat interactive shell. The prompt displays\n"
-                           + "                  a \"-\" to indicate that it is disconnected or a \"+\" to indicate\n"
-                           + "                  that it is connected to storage\n\n"
+                           + SHELL_USAGE_STRING + "\n"
                            + "thermostat shell\n"
                            + "     --help    show usage of command\n";
         assertEquals(expectedOut, stdOut);

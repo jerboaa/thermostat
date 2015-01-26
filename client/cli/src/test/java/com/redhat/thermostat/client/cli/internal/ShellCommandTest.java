@@ -62,6 +62,7 @@ import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
+import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 
@@ -70,13 +71,14 @@ public class ShellCommandTest {
     static private final String VERSION = "Thermostat some version";
     static private final String VERSION_OUTPUT = VERSION + "\n";
 
-    static private final String PROMPT = "Thermostat " + ShellPrompt.DISCONNECTED_TOKEN + " > ";
+    static private final String PROMPT = "Thermostat " + ShellPrompt.DEFAULT_DISCONNECTED_TOKEN + " > ";
 
     private ShellCommand cmd;
 
     private BundleContext bundleContext;
     private HistoryProvider historyProvider;
     private Version version;
+    private ConfigurationInfoSource config;
 
     @Before
     public void setUp() {
@@ -84,8 +86,9 @@ public class ShellCommandTest {
         historyProvider = mock(HistoryProvider.class);
         version = mock(Version.class);
         when(version.getVersionInfo()).thenReturn(VERSION);
+        config = mock(ConfigurationInfoSource.class);
 
-        cmd = new ShellCommand(bundleContext, version, historyProvider);
+        cmd = new ShellCommand(bundleContext, version, historyProvider, config);
     }
 
     @After

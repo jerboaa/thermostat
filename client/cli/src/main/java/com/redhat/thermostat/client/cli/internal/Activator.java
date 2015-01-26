@@ -49,6 +49,7 @@ import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 import com.redhat.thermostat.common.config.ClientPreferences;
+import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
@@ -58,7 +59,7 @@ import com.redhat.thermostat.utils.keyring.Keyring;
 public class Activator implements BundleActivator {
 
     private CommandRegistry reg = null;
-    private MultipleServiceTracker tracker;
+    private MultipleServiceTracker connectTracker;
 
     private MultipleServiceTracker listAgentTracker;
     private final ListAgentsCommand listAgentsCommand = new ListAgentsCommand();
@@ -66,6 +67,7 @@ public class Activator implements BundleActivator {
     private MultipleServiceTracker agentInfoTracker;
     private final AgentInfoCommand agentInfoCommand = new AgentInfoCommand();
 
+    private MultipleServiceTracker shellTracker;
     private ServiceTracker dbServiceTracker;
     private ShellCommand shellCommand;
 
@@ -83,7 +85,7 @@ public class Activator implements BundleActivator {
             Keyring.class,
             CommonPaths.class,
         };
-        tracker = new MultipleServiceTracker(context, classes, new Action() {
+        connectTracker = new MultipleServiceTracker(context, classes, new Action() {
 
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
@@ -91,8 +93,6 @@ public class Activator implements BundleActivator {
                 CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
                 ClientPreferences prefs = new ClientPreferences(paths);
                 reg.registerCommand("connect", new ConnectCommand(prefs, keyring));
-                shellCommand = new ShellCommand(context, paths);
-                reg.registerCommand("shell", shellCommand);
             }
 
             @Override
@@ -101,7 +101,7 @@ public class Activator implements BundleActivator {
             }
             
         });
-        tracker.open();
+        connectTracker.open();
 
         Class<?>[] listAgentClasses = new Class[] {
                 AgentInfoDAO.class,
@@ -144,11 +144,33 @@ public class Activator implements BundleActivator {
 
         reg.registerCommand("agent-info", agentInfoCommand);
 
+        Class<?>[] shellClasses = new Class[] {
+                CommonPaths.class,
+                ConfigurationInfoSource.class,
+        };
+
+        shellTracker = new MultipleServiceTracker(context, shellClasses, new Action() {
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                CommonPaths paths = (CommonPaths) services.get(CommonPaths.class.getName());
+                ConfigurationInfoSource config = (ConfigurationInfoSource) services.get(ConfigurationInfoSource.class.getName());
+                shellCommand = new ShellCommand(context, paths, config);
+                reg.registerCommand("shell", shellCommand);
+            }
+
+            @Override
+            public void dependenciesUnavailable() {
+                reg.unregisterCommand("shell");
+            }
+        });
+        shellTracker.open();
+
         dbServiceTracker = new ServiceTracker(context, DbService.class.getName(), new ServiceTrackerCustomizer() {
             @Override
             public Object addingService(ServiceReference serviceReference) {
-                shellCommand.dbServiceAvailable();
-                return context.getService(serviceReference);
+                DbService dbService = (DbService) context.getService(serviceReference);
+                shellCommand.dbServiceAvailable(dbService);
+                return dbService;
             }
 
             @Override
@@ -166,9 +188,10 @@ public class Activator implements BundleActivator {
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        tracker.close();
+        connectTracker.close();
         listAgentTracker.close();
         agentInfoTracker.close();
+        shellTracker.close();
         dbServiceTracker.close();
         reg.unregisterCommands();
     }

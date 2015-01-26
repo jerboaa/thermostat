@@ -36,28 +36,134 @@
 
 package com.redhat.thermostat.client.cli.internal;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.storage.core.DbService;
+
 public class ShellPrompt {
 
-    public static final String CONNECTED_TOKEN = "+";
-    public static final String DISCONNECTED_TOKEN = "-";
+    public static final String DEFAULT_CONNECTED_TOKEN = "+";
+    public static final String DEFAULT_DISCONNECTED_TOKEN = "-";
 
-    private static final String PROMPT_FORMAT = "Thermostat %s > ";
+    private static final String SHELL_PROMPT_FORMAT_KEY = "shell-prompt";
+    private static final String CONNECT_PROMPT_FORMAT_KEY = "connected-prompt";
+    private static final String DISCONNECT_PROMPT_FORMAT_KEY = "disconnected-prompt";
 
-    private String connectedToken = DISCONNECTED_TOKEN; //Default to disconnected
+    private static final String DEFAULT_PROMPT_FORMAT = "Thermostat %connect > ";
+
+    private static final Logger logger = LoggingUtils.getLogger(ShellCommand.class);
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
+
+    private Map<String, String> promptConfig = new HashMap<>();
+
+    private enum Tokens {
+        CONNECT("%connect", DEFAULT_DISCONNECTED_TOKEN), //Default to disconnected
+
+        CONNECTION_URL("%url", ""),
+
+        PROTOCOL("%protocol", ""),
+        HOST("%host", ""),
+        PORT("%port", ""),
+
+        //TODO: implement tokens below
+        USER("%user", ""),
+        SECURE("%secure", ""),
+        ;
+
+        private String token;
+        private String defaultValue;
+
+        private Tokens(String token, String defaultValue) {
+            this.token = token;
+            this.defaultValue = defaultValue;
+        }
+
+        public String getToken() {
+            return this.token;
+        }
+
+        public String getDefaultValue() {
+            return this.defaultValue;
+        }
+    }
 
     public ShellPrompt() {
+        promptConfig.put(SHELL_PROMPT_FORMAT_KEY, DEFAULT_PROMPT_FORMAT);
+        promptConfig.put(CONNECT_PROMPT_FORMAT_KEY, DEFAULT_CONNECTED_TOKEN);
+        promptConfig.put(DISCONNECT_PROMPT_FORMAT_KEY, DEFAULT_DISCONNECTED_TOKEN);
     }
 
     public String getPrompt() {
-        return String.format(PROMPT_FORMAT, connectedToken);
+        String format = promptConfig.get(SHELL_PROMPT_FORMAT_KEY);
+        return replaceTokens(format);
     }
 
-    public void storageConnected() {
-        connectedToken = CONNECTED_TOKEN;
+    private String replaceTokens(String prompt) {
+        for (Tokens t : Tokens.values()) {
+            String token = t.getToken();
+            prompt = prompt.replaceAll(token,
+                    promptConfig.containsKey(token) ? promptConfig.get(token) : t.getDefaultValue());
+        }
+        return prompt;
+    }
+
+    public void storageConnected(DbService dbService) {
+        String connectionURL = dbService.getConnectionUrl();
+
+        buildUrlTokens(connectionURL);
+
+        buildConnectToken(CONNECT_PROMPT_FORMAT_KEY);
     }
 
     public void storageDisconnected() {
-        connectedToken = DISCONNECTED_TOKEN;
+        clearUrlTokens();
+
+        buildConnectToken(DISCONNECT_PROMPT_FORMAT_KEY);
     }
 
+    private void buildConnectToken(String promptFormatKey) {
+        //Reset connect token beforehand since replaceTokens will use the value
+        promptConfig.put(Tokens.CONNECT.getToken(), "");
+        promptConfig.put(Tokens.CONNECT.getToken(), replaceTokens(promptConfig.get(promptFormatKey)));
+    }
+
+    private void buildUrlTokens(String connectionURL) {
+        try {
+            URI uri = new URI(connectionURL);
+            promptConfig.put(Tokens.CONNECTION_URL.getToken(), uri.toString());
+            promptConfig.put(Tokens.PROTOCOL.getToken(), uri.getScheme());
+            promptConfig.put(Tokens.HOST.getToken(), uri.getHost());
+
+            int port = uri.getPort();
+            promptConfig.put(Tokens.PORT.getToken(), (port >= 0) ? String.valueOf(port) : "");
+        } catch (URISyntaxException e) {
+            logger.log(Level.WARNING, t.localize(LocaleResources.INVALID_DB_URL, connectionURL).getContents());
+            promptConfig.put(Tokens.CONNECT.getToken(), connectionURL);
+        }
+    }
+
+    private void clearUrlTokens() {
+        promptConfig.put(Tokens.CONNECTION_URL.getToken(), "");
+        promptConfig.put(Tokens.PROTOCOL.getToken(), "");
+        promptConfig.put(Tokens.HOST.getToken(), "");
+        promptConfig.put(Tokens.PORT.getToken(), "");
+    }
+
+    public void overridePromptConfig(Map<String, String> newConfig) {
+        for (Map.Entry<String, String> entry : newConfig.entrySet()) {
+            this.promptConfig.put(entry.getKey(), entry.getValue());
+        }
+
+        if (newConfig.containsKey(DISCONNECT_PROMPT_FORMAT_KEY)) {
+            buildConnectToken(DISCONNECT_PROMPT_FORMAT_KEY);
+        }
+    }
 }

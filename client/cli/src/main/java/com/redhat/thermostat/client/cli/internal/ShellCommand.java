@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.cli.internal;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -56,11 +57,13 @@ import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Console;
+import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.storage.core.DbService;
 
 public class ShellCommand extends AbstractCommand {
 
@@ -95,16 +98,23 @@ public class ShellCommand extends AbstractCommand {
         }
     }
 
-    public ShellCommand(BundleContext context, CommonPaths paths) {
-        this(context, new Version(), new HistoryProvider(paths));
+    public ShellCommand(BundleContext context, CommonPaths paths, ConfigurationInfoSource config) {
+        this(context, new Version(), new HistoryProvider(paths), config);
     }
 
-    ShellCommand(BundleContext context, Version version, HistoryProvider provider) {
+    ShellCommand(BundleContext context, Version version, HistoryProvider provider, ConfigurationInfoSource config) {
         this.historyProvider = provider;
         this.bundleContext = context;
         this.version = version;
 
         this.shellPrompt = new ShellPrompt();
+
+        try {
+            Map<String, String> promptConfig = config.getConfiguration("shell-command", "shell-prompt.conf");
+            this.shellPrompt.overridePromptConfig(promptConfig);
+        } catch (IOException e) {
+            //Do nothing
+        }
     }
     
     @Override
@@ -190,13 +200,12 @@ public class ShellCommand extends AbstractCommand {
         return false;
     }
 
-    public void dbServiceAvailable() {
-        this.shellPrompt.storageConnected();
+    public void dbServiceAvailable(DbService dbService) {
+        this.shellPrompt.storageConnected(dbService);
     }
 
     public void dbServiceUnavailable() {
         this.shellPrompt.storageDisconnected();
     }
-
 }
 
