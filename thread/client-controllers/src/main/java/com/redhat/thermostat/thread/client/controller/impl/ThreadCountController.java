@@ -41,10 +41,10 @@ import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.thread.client.common.chart.LivingDaemonThreadDifferenceChart;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.client.common.view.ThreadCountView;
-import com.redhat.thermostat.thread.model.SessionID;
-import com.redhat.thermostat.thread.model.ThreadSession;
 import com.redhat.thermostat.thread.model.ThreadSummary;
+
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 class ThreadCountController extends CommonController {
@@ -70,11 +70,9 @@ class ThreadCountController extends CommonController {
             ThreadCountView view = (ThreadCountView) ThreadCountController.this.view;
 
             // load the very latest thread summary
-            SessionID lastSession = collector.getLastThreadSession();
-            if (lastSession == null) {
-                return;
-            }
-            ThreadSummary latestSummary = collector.getLatestThreadSummary(lastSession);
+            ThreadSummary latestSummary = collector.getLatestThreadSummary();
+            Objects.requireNonNull(latestSummary);
+
             if (latestSummary.getTimeStamp() != 0) {
                 view.setLiveThreads(Long.toString(latestSummary.getCurrentLiveThreads()));
                 view.setDaemonThreads(Long.toString(latestSummary.getCurrentDaemonThreads()));
@@ -91,15 +89,12 @@ class ThreadCountController extends CommonController {
             Range<Long> range = new Range<>(lastHour, now);
 
             boolean updateModel = false;
-            List<ThreadSession> sessions = collector.getThreadSessions(range);
-            for (ThreadSession session : sessions) {
-                List<ThreadSummary> summaries = collector.getThreadSummary(session.getSessionID(), range);
-                if (summaries.size() != 0) {
-                    for (ThreadSummary summary : summaries) {
-                        model.addData(summary.getTimeStamp(), summary.getCurrentLiveThreads(), summary.getCurrentDaemonThreads());
-                    }
-                    updateModel = true;
+            List<ThreadSummary> summaries = collector.getThreadSummary(range);
+            if (summaries.size() != 0) {
+                for (ThreadSummary summary : summaries) {
+                    model.addData(summary.getTimeStamp(), summary.getCurrentLiveThreads(), summary.getCurrentDaemonThreads());
                 }
+                updateModel = true;
             }
 
             if (updateModel) {

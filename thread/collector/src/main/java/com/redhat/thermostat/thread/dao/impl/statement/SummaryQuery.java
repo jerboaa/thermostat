@@ -61,9 +61,7 @@ public class SummaryQuery extends Query<ThreadSummary> {
         public static final Id agentId = new Id("agentId");
         public static final Id timeStampGEQ = new Id("timeStampGEQ");
         public static final Id timeStampLEQ = new Id("timeStampLEQ");
-        public static final Id sessionID = new Id("sessionID");
         public static final Id limit = new Id("limit");
-
     }
 
     @Override
@@ -80,8 +78,6 @@ public class SummaryQuery extends Query<ThreadSummary> {
         criteria.add(new WhereCriterion(CriteriaId.vmId, map.get("vmId"),
                                         TypeMapper.Criteria.Equal));
         criteria.add(new WhereCriterion(CriteriaId.agentId, map.get("agentId"),
-                                        TypeMapper.Criteria.Equal));
-        criteria.add(new WhereCriterion(CriteriaId.sessionID, map.get("session"),
                                         TypeMapper.Criteria.Equal));
         criteria.add(new WhereCriterion(CriteriaId.timeStampGEQ, map.get("timeStamp"),
                                         TypeMapper.Criteria.GreaterEqual));

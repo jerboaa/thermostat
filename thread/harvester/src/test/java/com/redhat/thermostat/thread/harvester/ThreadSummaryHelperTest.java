@@ -36,50 +36,36 @@
 
 package com.redhat.thermostat.thread.harvester;
 
-import com.redhat.thermostat.storage.core.WriterID;
-import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.model.ThreadSession;
-import com.redhat.thermostat.thread.model.ThreadSummary;
-import java.lang.management.ThreadMXBean;
-import org.junit.Before;
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import com.redhat.thermostat.thread.dao.ThreadDao;
+import com.redhat.thermostat.thread.model.ThreadSummary;
 
 /*
  */
 public class ThreadSummaryHelperTest {
 
-    private static final String DEFAULT_W_ID = "0xcafe";
+    private static final String DEFAULT_WRITER_ID = "0xcafe";
     private static final int DEFAULT_THREAD_COUNT = 42;
     private static final int DEFAULT_DAEMON_THREAD_COUNT = 7;
 
     private String vmId;
-    private WriterID writerId;
+    private String writerId;
     private ThreadDao threadDao;
-
-    private ThreadMXBean collectorBean;
-
-    private ThreadSession session;
 
     @Before
     public void setUp() throws Exception {
         vmId = "testVM";
-        writerId  = mock(WriterID.class);
-        when(writerId.getWriterID()).thenReturn(DEFAULT_W_ID);
+        writerId  = DEFAULT_WRITER_ID;
 
         threadDao = mock(ThreadDao.class);
 
-        collectorBean = mock(ThreadMXBean.class);
-        when(collectorBean.getThreadCount()).thenReturn(DEFAULT_THREAD_COUNT);
-        when(collectorBean.getDaemonThreadCount()).thenReturn(DEFAULT_DAEMON_THREAD_COUNT);
-
-        session = new ThreadSession();
-        session.setSession("0xcafe");
     }
 
     @Test
@@ -89,18 +75,13 @@ public class ThreadSummaryHelperTest {
 
         long timestamp = -1l;
 
-        ThreadSummary summary = helper.createThreadSummary(collectorBean, timestamp, session);
+        ThreadSummary summary = helper.createThreadSummary(
+                timestamp, DEFAULT_THREAD_COUNT, DEFAULT_DAEMON_THREAD_COUNT);
 
         assertNotNull(summary);
 
-        verify(writerId).getWriterID();
-        verify(collectorBean).getThreadCount();
-        verify(collectorBean).getDaemonThreadCount();
-
-        assertEquals(summary.getAgentId(), DEFAULT_W_ID);
+        assertEquals(summary.getAgentId(), DEFAULT_WRITER_ID);
         assertEquals(summary.getVmId(), vmId);
-
-        assertEquals(summary.getSession(), session.getSession());
 
         assertEquals(summary.getCurrentLiveThreads(), DEFAULT_THREAD_COUNT);
         assertEquals(summary.getCurrentDaemonThreads(), DEFAULT_DAEMON_THREAD_COUNT);

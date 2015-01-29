@@ -34,57 +34,39 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.common.collector;
+package com.redhat.thermostat.thread.harvester;
 
-import com.redhat.thermostat.common.model.Range;
-import com.redhat.thermostat.storage.core.experimental.statement.ResultHandler;
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import java.util.Objects;
+
+import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
+import com.redhat.thermostat.backend.VmListenerBackend;
+import com.redhat.thermostat.backend.VmUpdateListener;
+import com.redhat.thermostat.common.Version;
+import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.model.SessionID;
-import com.redhat.thermostat.thread.model.ThreadSession;
-import com.redhat.thermostat.thread.model.ThreadState;
-import com.redhat.thermostat.thread.model.ThreadSummary;
-import com.redhat.thermostat.thread.model.VmDeadLockData;
-import java.util.List;
 
-public interface ThreadCollector {
-    
-    void setAgentInfoDao(AgentInfoDAO agentDao);
-    void setThreadDao(ThreadDao threadDao);
+public class ThreadCountBackend extends VmListenerBackend {
 
-    boolean startHarvester();
-    boolean stopHarvester();
-    boolean isHarvesterCollecting();
+    private ThreadDao threadDao;
 
-    /**
-     * Returns the range of all known threads probes.
-     */
-    Range<Long> getThreadRange(SessionID session);
+    public ThreadCountBackend(ThreadDao threadDao, Version version,
+            VmStatusListenerRegistrar registrar, WriterID writerId) {
+        super("VM Thread Counting Backend",
+              "Gathers thread counts for a JVM",
+              "Red Hat, Inc.", version.getVersionNumber(), true, registrar, writerId);
+        this.threadDao = threadDao;
+    }
 
-    /**
-     * Returns a list of sessions recorded during sampling.
-     */
-    List<ThreadSession> getThreadSessions(Range<Long> range);
+    @Override
+    public int getOrderValue() {
+        return ORDER_THREAD_GROUP;
+    }
 
-    /**
-     * Returns the last sampling session ID.
-     */
-    SessionID getLastThreadSession();
+    @Override
+    protected VmUpdateListener createVmListener(String writerId, String vmId, int pid) {
+        System.out.println("new vm listener created");
+        Objects.requireNonNull(threadDao);
+        return new ThreadCountUpdater(threadDao, writerId, vmId);
+    }
 
-    ThreadSummary getLatestThreadSummary();
-    List<ThreadSummary> getThreadSummary(Range<Long> range);
-
-    /**
-     * Check for deadlocks. {@link #getLatestDeadLockData} needs to be called to
-     * obtain the data.
-     */
-    void requestDeadLockCheck();
-
-    /** Return the latest deadlock data */
-    VmDeadLockData getLatestDeadLockData();
-
-    void getThreadStates(SessionID session,
-                         ResultHandler<ThreadState> handler,
-                         Range<Long> range);
 }
-

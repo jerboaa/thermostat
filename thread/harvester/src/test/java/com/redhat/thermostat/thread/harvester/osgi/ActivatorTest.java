@@ -34,57 +34,58 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.common.collector;
+package com.redhat.thermostat.thread.harvester.osgi;
 
-import com.redhat.thermostat.common.model.Range;
-import com.redhat.thermostat.storage.core.experimental.statement.ResultHandler;
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Version;
+
+import com.redhat.thermostat.backend.VmUpdateListener;
+import com.redhat.thermostat.storage.core.WriterID;
+import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.model.SessionID;
-import com.redhat.thermostat.thread.model.ThreadSession;
-import com.redhat.thermostat.thread.model.ThreadState;
-import com.redhat.thermostat.thread.model.ThreadSummary;
-import com.redhat.thermostat.thread.model.VmDeadLockData;
-import java.util.List;
+import com.redhat.thermostat.thread.harvester.ThreadCountBackend;
 
-public interface ThreadCollector {
-    
-    void setAgentInfoDao(AgentInfoDAO agentDao);
-    void setThreadDao(ThreadDao threadDao);
+public class ActivatorTest {
 
-    boolean startHarvester();
-    boolean stopHarvester();
-    boolean isHarvesterCollecting();
+    private Bundle bundle;
+    private Version version;
+    private WriterID writerId;
+    private ThreadDao threadDao;
 
-    /**
-     * Returns the range of all known threads probes.
-     */
-    Range<Long> getThreadRange(SessionID session);
+    @Before
+    public void setUp() {
+        version = new Version("0.1.2");
 
-    /**
-     * Returns a list of sessions recorded during sampling.
-     */
-    List<ThreadSession> getThreadSessions(Range<Long> range);
+        bundle = mock(Bundle.class);
+        when(bundle.getVersion()).thenReturn(version);
 
-    /**
-     * Returns the last sampling session ID.
-     */
-    SessionID getLastThreadSession();
+        writerId = mock(WriterID.class);
 
-    ThreadSummary getLatestThreadSummary();
-    List<ThreadSummary> getThreadSummary(Range<Long> range);
+        threadDao = mock(ThreadDao.class);
+    }
 
-    /**
-     * Check for deadlocks. {@link #getLatestDeadLockData} needs to be called to
-     * obtain the data.
-     */
-    void requestDeadLockCheck();
+    @Ignore("Activator assumes that Harvester is always registered and fails with NullPointerException")
+    @Test
+    public void verifyThreadCountUpdaterIsRegistered() throws Exception {
+        StubBundleContext bundleContext = new StubBundleContext();
+        bundleContext.setBundle(bundle);
 
-    /** Return the latest deadlock data */
-    VmDeadLockData getLatestDeadLockData();
+        bundleContext.registerService(WriterID.class, writerId, null);
+        bundleContext.registerService(ThreadDao.class, threadDao, null);
 
-    void getThreadStates(SessionID session,
-                         ResultHandler<ThreadState> handler,
-                         Range<Long> range);
+        Activator activator = new Activator();
+
+        activator.start(bundleContext);
+
+        assertTrue(bundleContext.isServiceRegistered(VmUpdateListener.class.getName(), ThreadCountBackend.class));
+
+        activator.stop(bundleContext);
+    }
 }
-

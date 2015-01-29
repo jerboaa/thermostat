@@ -54,9 +54,6 @@ public class ThreadSummary extends BasePojo implements TimeStampedPojo {
     
     private long timestamp;
 
-    private String session;
-    private SessionID sessionID;
-
     public ThreadSummary() {
         this(null);
     }
@@ -97,6 +94,7 @@ public class ThreadSummary extends BasePojo implements TimeStampedPojo {
 
     @Indexed
     @Persist
+    @Override
     public long getTimeStamp() {
         return timestamp;
     }
@@ -113,21 +111,5 @@ public class ThreadSummary extends BasePojo implements TimeStampedPojo {
                currentLiveThreads + ", daemonThreads: " + daemonThreads + "]";
     }
 
-    @Indexed
-    @Persist
-    public void setSession(String session) {
-        this.session = session;
-        sessionID = new SessionID(session);
-    }
-
-    @Indexed
-    @Persist
-    public String getSession() {
-        return session;
-    }
-
-    public SessionID getSessionID() {
-        return sessionID;
-    }
 }
 

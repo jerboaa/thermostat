@@ -34,57 +34,53 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.common.collector;
+package com.redhat.thermostat.thread.harvester;
 
-import com.redhat.thermostat.common.model.Range;
-import com.redhat.thermostat.storage.core.experimental.statement.ResultHandler;
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.model.SessionID;
-import com.redhat.thermostat.thread.model.ThreadSession;
-import com.redhat.thermostat.thread.model.ThreadState;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import com.redhat.thermostat.backend.VmUpdate;
+import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.thread.model.ThreadSummary;
-import com.redhat.thermostat.thread.model.VmDeadLockData;
-import java.util.List;
 
-public interface ThreadCollector {
-    
-    void setAgentInfoDao(AgentInfoDAO agentDao);
-    void setThreadDao(ThreadDao threadDao);
+public class ThreadCountUpdaterTest {
 
-    boolean startHarvester();
-    boolean stopHarvester();
-    boolean isHarvesterCollecting();
+    private Clock clock;
+    private ThreadSummaryHelper summaryHelper;
+    private VmUpdate update;
 
-    /**
-     * Returns the range of all known threads probes.
-     */
-    Range<Long> getThreadRange(SessionID session);
+    @Before
+    public void setUp() {
+        clock = mock(Clock.class);
 
-    /**
-     * Returns a list of sessions recorded during sampling.
-     */
-    List<ThreadSession> getThreadSessions(Range<Long> range);
+        summaryHelper = mock(ThreadSummaryHelper.class);
 
-    /**
-     * Returns the last sampling session ID.
-     */
-    SessionID getLastThreadSession();
+        update = mock(VmUpdate.class);
+    }
 
-    ThreadSummary getLatestThreadSummary();
-    List<ThreadSummary> getThreadSummary(Range<Long> range);
+    @Test
+    public void testThreadSummarySaved() throws Exception {
+        final long SOME_TIMESTAMP = 1;
+        final long LIVE_THREADS = 2;
+        final long DAEMON_THREADS = 3;
 
-    /**
-     * Check for deadlocks. {@link #getLatestDeadLockData} needs to be called to
-     * obtain the data.
-     */
-    void requestDeadLockCheck();
+        when(clock.getRealTimeMillis()).thenReturn(SOME_TIMESTAMP);
 
-    /** Return the latest deadlock data */
-    VmDeadLockData getLatestDeadLockData();
+        ThreadSummary summary = mock(ThreadSummary.class);
+        when(summaryHelper.createThreadSummary(SOME_TIMESTAMP, LIVE_THREADS, DAEMON_THREADS)).
+            thenReturn(summary);
 
-    void getThreadStates(SessionID session,
-                         ResultHandler<ThreadState> handler,
-                         Range<Long> range);
+        when(update.getPerformanceCounterLong("java.threads.live")).thenReturn(LIVE_THREADS);
+        when(update.getPerformanceCounterLong("java.threads.daemon")).thenReturn(DAEMON_THREADS);
+
+        ThreadCountUpdater updater = new ThreadCountUpdater(clock, summaryHelper);
+        updater.countersUpdated(update);
+
+        verify(summaryHelper).saveSummary(summary);
+    }
+
 }
-

@@ -37,6 +37,7 @@
 package com.redhat.thermostat.thread.harvester.osgi;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -56,6 +57,7 @@ import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.harvester.ThreadBackend;
+import com.redhat.thermostat.thread.harvester.ThreadCountBackend;
 import com.redhat.thermostat.thread.harvester.ThreadHarvester;
 
 public class Activator implements BundleActivator {
@@ -69,9 +71,39 @@ public class Activator implements BundleActivator {
     private ReceiverRegistry registry;
     private ThreadHarvester harvester;
     private ThreadBackend backend;
+
+    private MultipleServiceTracker threadCountTracker;
     
     @Override
     public void start(final BundleContext context) throws Exception {
+        final Version VERSION = new Version(context.getBundle());
+        final VmStatusListenerRegistrar VM_STATUS_REGISTRAR
+            = new VmStatusListenerRegistrar(context);
+
+        Class<?>[] threadCountDeps = new Class<?>[] {
+                WriterID.class,
+                ThreadDao.class,
+        };
+        threadCountTracker = new MultipleServiceTracker(context, threadCountDeps, new Action() {
+
+            private ServiceRegistration<Backend> registration;
+
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                WriterID writerId = (WriterID) services.get(WriterID.class.getName());
+                ThreadDao dao = (ThreadDao) services.get(ThreadDao.class.getName());
+                Objects.requireNonNull(dao);
+                ThreadCountBackend threadCountBackend = new ThreadCountBackend(dao, VERSION, VM_STATUS_REGISTRAR, writerId);
+                registration = context.registerService(Backend.class, threadCountBackend, null);
+            }
+
+            @Override
+            public void dependenciesUnavailable() {
+                registration.unregister();
+                registration = null;
+            }
+        });
+        threadCountTracker.open();
         
         Class<?>[] deps = new Class<?>[] {
                 MXBeanConnectionPool.class,
@@ -94,14 +126,13 @@ public class Activator implements BundleActivator {
         connectionPoolTracker.open();
 
         registry = new ReceiverRegistry(context);
-        VmStatusListenerRegistrar vmListener = new VmStatusListenerRegistrar(context);
 
         /*
-         * dont register anything just yet, let the backend onResult the
+         * dont register anything just yet, let the backend handle the
          * registration, deregistration it when it's activated or deactivated
          */
 
-        backend = new ThreadBackend(new Version(context.getBundle()), vmListener, registry, harvester);
+        backend = new ThreadBackend(VERSION, VM_STATUS_REGISTRAR, registry, harvester);
         backendRegistration = context.registerService(Backend.class, backend, null);
 
         threadDaoTracker = new ServiceTracker(context, ThreadDao.class.getName(), null) {
@@ -129,6 +160,8 @@ public class Activator implements BundleActivator {
         if (backend.isActive()) {
             backend.deactivate();
         }
+
+        threadCountTracker.close();
 
         backendRegistration.unregister();
 

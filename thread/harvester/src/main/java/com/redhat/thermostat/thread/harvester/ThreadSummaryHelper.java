@@ -36,38 +36,28 @@
 
 package com.redhat.thermostat.thread.harvester;
 
-import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.model.ThreadSession;
 import com.redhat.thermostat.thread.model.ThreadSummary;
-import java.lang.management.ThreadMXBean;
 
-/*
- */
 class ThreadSummaryHelper {
 
     private String vmId;
-    private WriterID writerId;
+    private String writerId;
     private ThreadDao threadDao;
-    ThreadSummaryHelper(ThreadDao threadDao, WriterID writerId, String vmId) {
+
+    ThreadSummaryHelper(ThreadDao threadDao, String writerId, String vmId) {
         this.vmId = vmId;
         this.writerId = writerId;
         this.threadDao = threadDao;
     }
 
-    ThreadSummary createThreadSummary(ThreadMXBean collectorBean,
-                                      long timestamp, ThreadSession session)
-    {
-        String wId = writerId.getWriterID();
+    ThreadSummary createThreadSummary(long timestamp, long liveThreads, long daemonThreads) {
+        ThreadSummary summary = new ThreadSummary(writerId);
 
-        ThreadSummary summary = new ThreadSummary(wId);
-
-        summary.setCurrentLiveThreads(collectorBean.getThreadCount());
-        summary.setCurrentDaemonThreads(collectorBean.getDaemonThreadCount());
+        summary.setCurrentLiveThreads(liveThreads);
+        summary.setCurrentDaemonThreads(daemonThreads);
         summary.setTimeStamp(timestamp);
         summary.setVmId(vmId);
-
-        summary.setSession(session.getSession());
 
         return summary;
     }

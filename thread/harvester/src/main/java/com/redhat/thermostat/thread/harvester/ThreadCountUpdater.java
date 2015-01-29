@@ -34,57 +34,51 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.common.collector;
+package com.redhat.thermostat.thread.harvester;
 
-import com.redhat.thermostat.common.model.Range;
-import com.redhat.thermostat.storage.core.experimental.statement.ResultHandler;
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import com.redhat.thermostat.backend.VmUpdate;
+import com.redhat.thermostat.backend.VmUpdateException;
+import com.redhat.thermostat.backend.VmUpdateListener;
+import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.common.SystemClock;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.model.SessionID;
-import com.redhat.thermostat.thread.model.ThreadSession;
-import com.redhat.thermostat.thread.model.ThreadState;
 import com.redhat.thermostat.thread.model.ThreadSummary;
-import com.redhat.thermostat.thread.model.VmDeadLockData;
-import java.util.List;
 
-public interface ThreadCollector {
-    
-    void setAgentInfoDao(AgentInfoDAO agentDao);
-    void setThreadDao(ThreadDao threadDao);
+public class ThreadCountUpdater implements VmUpdateListener {
 
-    boolean startHarvester();
-    boolean stopHarvester();
-    boolean isHarvesterCollecting();
+    private static final Logger logger = LoggingUtils.getLogger(ThreadCountUpdater.class);
 
-    /**
-     * Returns the range of all known threads probes.
-     */
-    Range<Long> getThreadRange(SessionID session);
+    private final Clock clock;
+    private final ThreadSummaryHelper summaryHelper;
 
-    /**
-     * Returns a list of sessions recorded during sampling.
-     */
-    List<ThreadSession> getThreadSessions(Range<Long> range);
+    public ThreadCountUpdater(ThreadDao threadDao, String writerId, String vmId) {
+        this(new SystemClock(), new ThreadSummaryHelper(threadDao, writerId, vmId));
+    }
 
-    /**
-     * Returns the last sampling session ID.
-     */
-    SessionID getLastThreadSession();
+    ThreadCountUpdater(Clock clock, ThreadSummaryHelper summaryHelper) {
+        this.clock = clock;
+        this.summaryHelper = summaryHelper;
+    }
 
-    ThreadSummary getLatestThreadSummary();
-    List<ThreadSummary> getThreadSummary(Range<Long> range);
+    @Override
+    public void countersUpdated(VmUpdate update) {
+        long timeStamp = clock.getRealTimeMillis();
 
-    /**
-     * Check for deadlocks. {@link #getLatestDeadLockData} needs to be called to
-     * obtain the data.
-     */
-    void requestDeadLockCheck();
+        try {
+            int liveThreads = (int) (long)
+                    update.getPerformanceCounterLong("java.threads.live");
+            int daemonThreads = (int) (long)
+                    update.getPerformanceCounterLong("java.threads.daemon");
 
-    /** Return the latest deadlock data */
-    VmDeadLockData getLatestDeadLockData();
+            ThreadSummary summary = summaryHelper.createThreadSummary(timeStamp, liveThreads, daemonThreads);
 
-    void getThreadStates(SessionID session,
-                         ResultHandler<ThreadState> handler,
-                         Range<Long> range);
+            summaryHelper.saveSummary(summary);
+        } catch (VmUpdateException e) {
+            logger.log(Level.WARNING, "Unable to get counter", e);
+        }
+    }
 }
-

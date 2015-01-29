@@ -41,7 +41,6 @@ import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.ThreadSession;
 import com.redhat.thermostat.thread.model.ThreadState;
-import com.redhat.thermostat.thread.model.ThreadSummary;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 
@@ -52,27 +51,23 @@ class HarvesterHelper {
     private Clock clock;
     private String vmId;
 
-    private ThreadSummaryHelper summaryHelper;
     private ThreadStateHelper stateHelper;
     private ThreadSessionHelper sessionHelper;
 
     HarvesterHelper(ThreadDao threadDao, Clock clock, String vmId, WriterID writerId)
     {
         this(clock, vmId,
-             new ThreadSummaryHelper(threadDao, writerId, vmId),
              new ThreadStateHelper(threadDao, writerId, vmId),
              new ThreadSessionHelper(threadDao, writerId, vmId, clock));
     }
 
     HarvesterHelper(Clock clock, String vmId,
-                    ThreadSummaryHelper summaryHelper,
                     ThreadStateHelper stateHelper,
                     ThreadSessionHelper sessionHelper)
     {
         this.vmId = vmId;
         this.clock = clock;
 
-        this.summaryHelper = summaryHelper;
         this.stateHelper = stateHelper;
         this.sessionHelper = sessionHelper;
     }
@@ -81,12 +76,6 @@ class HarvesterHelper {
                                                ThreadMXBean collectorBean)
     {
         long timestamp = clock.getRealTimeMillis();
-
-        ThreadSummary summary =
-                summaryHelper.createThreadSummary(collectorBean,
-                                                  timestamp,
-                                                  session);
-        summaryHelper.saveSummary(summary);
 
         // this two can't be null, but the check is there to allow for
         // nicer tests

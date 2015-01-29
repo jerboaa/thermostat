@@ -104,7 +104,7 @@ public interface ThreadDao {
                                                  ThreadDaoKeys.THREAD_HEADER_UUID, Key.TIMESTAMP));
 
     void saveSummary(ThreadSummary summary);
-    List<ThreadSummary> getSummary(VmRef ref, SessionID session, Range<Long> range, int limit);
+    List<ThreadSummary> getSummary(VmRef ref, Range<Long> range, int limit);
 
     /**
      * Returns a list of sessions registered by thread sampling.

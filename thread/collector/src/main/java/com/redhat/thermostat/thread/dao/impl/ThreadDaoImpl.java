@@ -179,7 +179,7 @@ public class ThreadDaoImpl implements ThreadDao {
     }
 
     @Override
-    public List<ThreadSummary> getSummary(VmRef ref, SessionID session, Range<Long> range, int limit) {
+    public List<ThreadSummary> getSummary(VmRef ref, Range<Long> range, int limit) {
         final List<ThreadSummary> results = new ArrayList<>();
 
         Query<ThreadSummary> query = ThreadSummaryAdapter.getQuery(SummaryQuery.id);
@@ -187,7 +187,6 @@ public class ThreadDaoImpl implements ThreadDao {
         QueryValues values = query.createValues();
         values.set(SummaryQuery.CriteriaId.vmId, ref.getVmId());
         values.set(SummaryQuery.CriteriaId.agentId, ref.getHostRef().getAgentId());
-        values.set(SummaryQuery.CriteriaId.sessionID, session.get());
 
         values.set(SummaryQuery.CriteriaId.timeStampGEQ, range.getMin());
         values.set(SummaryQuery.CriteriaId.timeStampLEQ, range.getMax());

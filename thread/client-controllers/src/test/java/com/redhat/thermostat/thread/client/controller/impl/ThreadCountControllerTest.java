@@ -47,10 +47,13 @@ import com.redhat.thermostat.thread.client.common.view.ThreadCountView;
 import com.redhat.thermostat.thread.model.SessionID;
 import com.redhat.thermostat.thread.model.ThreadSession;
 import com.redhat.thermostat.thread.model.ThreadSummary;
+
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
+
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
+
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.xy.XYDataset;
 import org.junit.Before;
@@ -60,8 +63,7 @@ import org.mockito.ArgumentCaptor;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -115,20 +117,16 @@ public class ThreadCountControllerTest {
         SessionID lastSession = mock(SessionID.class);
         when(collector.getLastThreadSession()).thenReturn(lastSession);
 
-        when(collector.getLatestThreadSummary(lastSession)).thenReturn(summary);
+        when(collector.getLatestThreadSummary()).thenReturn(summary);
 
         List<ThreadSession> sessions = new ArrayList<>();
-        ThreadSession session0 = mock(ThreadSession.class);
-        SessionID id = new SessionID("0xcafe");
-        when(session0.getSessionID()).thenReturn(id);
-        sessions.add(session0);
-        when(collector.getThreadSessions(any(Range.class))).thenReturn(sessions);
-        when(collector.getThreadSummary(eq(id), any(Range.class))).thenReturn(summaries);
+        when(collector.getThreadSessions(isA(Range.class))).thenReturn(sessions);
+        when(collector.getThreadSummary(isA(Range.class))).thenReturn(summaries);
 
         threadAction = captor.getValue();
         threadAction.run();
 
-        verify(collector).getLatestThreadSummary(lastSession);
+        verify(collector).getLatestThreadSummary();
 
         verify(view).setLiveThreads("42");
         verify(view).setDaemonThreads("2");

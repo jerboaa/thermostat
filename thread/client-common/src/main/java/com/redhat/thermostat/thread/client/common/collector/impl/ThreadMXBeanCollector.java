@@ -83,10 +83,12 @@ public class ThreadMXBeanCollector implements ThreadCollector {
         this.ref = ref;
     }
 
+    @Override
     public void setThreadDao(ThreadDao threadDao) {
         this.threadDao = threadDao;
     }
 
+    @Override
     public void setAgentInfoDao(AgentInfoDAO agentDao) {
         this.agentDao = agentDao;
     }
@@ -150,9 +152,8 @@ public class ThreadMXBeanCollector implements ThreadCollector {
     }
 
     @Override
-    public ThreadSummary getLatestThreadSummary(SessionID session) {
-        List<ThreadSummary> summaries =
-                threadDao.getSummary(ref, session, new Range<>(0l, Long.MAX_VALUE), 1);
+    public ThreadSummary getLatestThreadSummary() {
+        List<ThreadSummary> summaries = threadDao.getSummary(ref, FULL_RANGE, FIRST);
         ThreadSummary summary = null;
         if (summaries.isEmpty()) {
             // default to all 0
@@ -205,8 +206,8 @@ public class ThreadMXBeanCollector implements ThreadCollector {
     }
 
     @Override
-    public List<ThreadSummary> getThreadSummary(SessionID session, Range<Long> range) {
-        List<ThreadSummary> summary = threadDao.getSummary(ref, session, range, Integer.MAX_VALUE);
+    public List<ThreadSummary> getThreadSummary(Range<Long> range) {
+        List<ThreadSummary> summary = threadDao.getSummary(ref, range, Integer.MAX_VALUE);
         return summary;
     }
 
