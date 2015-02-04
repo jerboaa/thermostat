@@ -170,6 +170,15 @@ public class ProgressHandle {
         notifier.fireAction(Status.STOPPED);
     }
 
+    public void runTask(Runnable task) {
+        try {
+            this.start();
+            task.run();
+        } finally {
+            this.stop();
+        }
+    }
+
     public void addProgressListener(ActionListener<ProgressHandle.Status> listener) {
         notifier.addActionListener(listener);
     }

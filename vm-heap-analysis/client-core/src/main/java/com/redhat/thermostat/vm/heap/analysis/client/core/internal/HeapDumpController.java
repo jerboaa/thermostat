@@ -245,7 +245,6 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
         appService.getApplicationExecutor().execute(new Runnable() {
             @Override
             public void run() {
-
                 LocalizedString taskName = translator.localize(LocaleResources.HEAP_DUMP_IN_PROGRESS);
                 
                 final ProgressHandle handle = new ProgressHandle(taskName);
@@ -253,26 +252,28 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
                 handle.setIndeterminate(true);
                 notifier.register(handle);
 
-                HeapDump dump = localHeapDump.getDump();
-                File file = localHeapDump.getFile();
+                final HeapDump dump = localHeapDump.getDump();
+                final File file = localHeapDump.getFile();
                 if (dump == null || file == null) {
                     // this is here mainly for the tests, since we don't
                     // expect files or dumps to be null
                     return;
                 }
                 
-                handle.start();
-                try (InputStream in = heapDAO.getHeapDumpData(dump.getInfo())) {
-                    Files.copy(in, file.toPath());
-                    
-                } catch (IOException e) {
-                    LocalizedString message = translator.localize(LocaleResources.ERROR_EXPORTING_FILE);
-                    view.displayWarning(message);
-                    Logger.getLogger(HeapDumpController.class.getSimpleName()).
-                        log(Level.WARNING, message.getContents(), e);
-                } finally {
-                    handle.stop();
-                }
+                handle.runTask(new Runnable() {
+                    @Override
+                    public void run() {
+                        try (InputStream in = heapDAO.getHeapDumpData(dump.getInfo())) {
+                            Files.copy(in, file.toPath());
+
+                        } catch (IOException e) {
+                            LocalizedString message = translator.localize(LocaleResources.ERROR_EXPORTING_FILE);
+                            view.displayWarning(message);
+                            Logger.getLogger(HeapDumpController.class.getSimpleName()).
+                                    log(Level.WARNING, message.getContents(), e);
+                        }
+                    }
+                });
             }
         });
     }
@@ -294,16 +295,27 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
     
     private void requestDump(final HeapDumper heapDumper) {
         appService.getApplicationExecutor().execute(new Runnable() {
-            
             @Override
             public void run() {
-                try {
-                    heapDumper.dump();
-                    view.enableHeapDumping();
-                    view.notifyHeapDumpComplete();
-                } catch (CommandException e) {
-                    view.displayWarning(e.getTranslatedMessage());
-                }
+                LocalizedString taskName = translator.localize(LocaleResources.HEAP_DUMP_IN_PROGRESS);
+
+                final ProgressHandle handle = new ProgressHandle(taskName);
+                handle.setTask(taskName);
+                handle.setIndeterminate(true);
+                notifier.register(handle);
+
+                handle.runTask(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            heapDumper.dump();
+                            view.enableHeapDumping();
+                            view.notifyHeapDumpComplete();
+                        } catch (CommandException e) {
+                            view.displayWarning(e.getTranslatedMessage());
+                        }
+                    }
+                });
             }
         });
     }

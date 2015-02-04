@@ -77,7 +77,7 @@ public enum LocaleResources {
     
     DUMPS_LIST,
     LIST_DUMPS_ACTION,
-    
+
     ;
 
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.vm.heap.analysis.client.locale.strings";
