@@ -42,8 +42,8 @@
   <commands>
     <command>
       <name>list-categories</name>
-      <summary>lists all registered categories</summary>
-      <description>lists all registered categories in Storage</description>
+      <summary>list all registered categories</summary>
+      <description>List all registered categories in the Storage.</description>
       <environments>
         <environment>cli</environment>
         <environment>shell</environment>

@@ -54,7 +54,7 @@ import expectj.Spawn;
 public class CliTest extends IntegrationTest {
 
     private static final String SHELL_USAGE_STRING = "usage: thermostat shell\n" +
-            "                  launches the Thermostat interactive shell. The prompt can be\n" +
+            "                  Launch the Thermostat interactive shell. The prompt can be\n" +
             "                  customized by editing the shell-prompt.conf file located in\n" +
             "                  $SYSTEM_THERMOSTAT_HOME/etc/plugins.d/shell-command. You can\n" +
             "                  also create your own shell-prompt.conf file and place it in\n" +

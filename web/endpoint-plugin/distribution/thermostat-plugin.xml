@@ -42,8 +42,12 @@
   <commands>
     <command>
       <name>web-storage-service</name>
-      <summary>starts mongodb storage, an embedded servlet container and an agent</summary>
-      <description>starts mongodb storage, an embedded servlet container with the web archive deployed and then connects an agent to this web endpoint</description>
+      <summary>start mongodb storage, an embedded servlet container and an agent</summary>
+      <description>
+        Start mongodb storage, an embedded servlet container with the web
+        archive deployed and then connect an agent to this web endpoint. Do all
+        this as a foreground process. On exit, shut them all down.
+      </description>
       <environments>
         <environment>cli</environment>
       </environments>
