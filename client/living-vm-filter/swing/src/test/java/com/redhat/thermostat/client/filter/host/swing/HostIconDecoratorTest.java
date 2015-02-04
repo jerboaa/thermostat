@@ -36,58 +36,62 @@
 
 package com.redhat.thermostat.client.filter.host.swing;
 
-import java.awt.Paint;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import com.redhat.thermostat.client.swing.IconResource;
+import java.awt.Color;
+
+import org.junit.Before;
+import org.junit.Test;
+
 import com.redhat.thermostat.client.swing.UIDefaults;
-import com.redhat.thermostat.client.swing.components.CompositeIcon;
-import com.redhat.thermostat.client.swing.components.Icon;
 import com.redhat.thermostat.client.ui.PlatformIcon;
-import com.redhat.thermostat.client.ui.ReferenceFieldIconDecorator;
 import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.Ref;
+import com.redhat.thermostat.storage.core.VmRef;
 
-public class HostIconDecorator implements ReferenceFieldIconDecorator {
-    
-    private static Icon ICON;
-    private static Icon SELECTED;
+public class HostIconDecoratorTest {
 
-    public static HostIconDecorator createInstance(UIDefaults uiDefaults) {
-        return new HostIconDecorator(uiDefaults);
+    private HostIconDecorator decorator;
+
+    @Before
+    public void setUp() {
+        final int SOME_SIZE = 10;
+        final Color SOME_COLOR = Color.BLACK;
+        UIDefaults ui = mock(UIDefaults.class);
+        when(ui.getReferenceFieldDefaultIconSize()).thenReturn(SOME_SIZE);
+        when(ui.getReferenceFieldIconColor()).thenReturn(SOME_COLOR);
+
+        decorator = HostIconDecorator.createInstance(ui);
     }
 
-    private HostIconDecorator(UIDefaults uiDefaults) {
-        int size = uiDefaults.getReferenceFieldDefaultIconSize();
-        Paint fg = uiDefaults.getReferenceFieldIconColor();
-        Paint selected = uiDefaults.getReferenceFieldIconSelectedColor();
-        
-        Icon hostIcon = IconUtils.resizeIcon(IconResource.HOST_24.getIcon(), size);
-        
-        ICON = CompositeIcon.createDefaultComposite(hostIcon, fg);
-        SELECTED = CompositeIcon.createDefaultComposite(hostIcon, selected);
+    @Test
+    public void verifyGetIconProducesAnIconForHosts() {
+        HostRef hostRef = mock(HostRef.class);
+        PlatformIcon icon = decorator.getIcon(null, hostRef);
+        assertNotNull(icon);
     }
-    
-    @Override
-    public int getOrderValue() {
-        return ORDER_FIRST;
+
+    @Test
+    public void testGetIconIgnoresVmRef() {
+        VmRef vmRef = mock(VmRef.class);
+        PlatformIcon icon = decorator.getIcon(null, vmRef);
+        assertNull(icon);
     }
-    
-    @Override
-    public PlatformIcon getIcon(PlatformIcon originalIcon, Ref reference) {
-        if (reference instanceof HostRef) {
-            return ICON;
-        } else {
-            return originalIcon;
-        }
+
+    @Test
+    public void verifyGetSelectedIconProducesAnIconForHosts() {
+        HostRef hostRef = mock(HostRef.class);
+        PlatformIcon icon = decorator.getSelectedIcon(null, hostRef);
+        assertNotNull(icon);
     }
-    
-    @Override
-    public PlatformIcon getSelectedIcon(PlatformIcon originalIcon, Ref reference) {
-        if (reference instanceof HostRef) {
-            return SELECTED;
-        } else {
-            return originalIcon;
-        }
+
+    @Test
+    public void testGetSelectedIconIgnoresVmRef() {
+        VmRef vmRef = mock(VmRef.class);
+        PlatformIcon icon = decorator.getSelectedIcon(null, vmRef);
+        assertNull(icon);
     }
+
 }
-

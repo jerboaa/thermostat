@@ -126,17 +126,9 @@ public class VMFilterActivator implements BundleActivator {
                 registeredServices.add(registration);
                 
                 HostIconDecorator hostIconDecorator =
-                            HostIconDecorator.getInstance(uiDefaults);
-                decoratorProperties = new Hashtable<>();
-                decoratorProperties.put(ReferenceFieldIconDecorator.ID,
-                                        ReferenceFieldDecoratorLayout.ICON_MAIN.name());
-                
-                registration = context.registerService(ReferenceFieldIconDecorator.class.getName(),
-                                                       hostIconDecorator, decoratorProperties);
-                registeredServices.add(registration);
-                
+                            HostIconDecorator.createInstance(uiDefaults);
                 DeadHostIconDecorator deadHostIconDecorator =
-                            DeadHostIconDecorator.getInstance(hostDao, uiDefaults);
+                            DeadHostIconDecorator.createInstance(hostDao, uiDefaults, hostIconDecorator);
                 decoratorProperties = new Hashtable<>();
                 decoratorProperties.put(ReferenceFieldIconDecorator.ID,
                                         ReferenceFieldDecoratorLayout.ICON_MAIN.name());

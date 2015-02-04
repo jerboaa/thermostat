@@ -49,31 +49,27 @@ import com.redhat.thermostat.storage.dao.HostInfoDAO;
 
 public class DeadHostIconDecorator implements ReferenceFieldIconDecorator {
 
-    private static Icon UNCONNECTED;
-    private static Icon UNCONNECTED_SELECTED;
+    private final Icon UNCONNECTED;
+    private final Icon UNCONNECTED_SELECTED;
 
-    private static HostInfoDAO dao;
+    private final ReferenceFieldIconDecorator parent;
+    private final HostInfoDAO dao;
     
-    private static DeadHostIconDecorator theInstance;
-    
-    public static synchronized DeadHostIconDecorator getInstance(HostInfoDAO dao, UIDefaults uiDefaults) {
-        
-        if (theInstance == null) {
-            DeadHostIconDecorator.dao = dao;
-            
-            int size = uiDefaults.getIconDecorationSize();
-            Paint color = uiDefaults.getDecorationIconColor();
-
-            UNCONNECTED = new FontAwesomeIcon('\uf127', size, color);
-            UNCONNECTED_SELECTED = new FontAwesomeIcon('\uf127', size, color);
-            
-            theInstance = new DeadHostIconDecorator();
-        }
-        
-        return theInstance;
+    public static DeadHostIconDecorator createInstance(HostInfoDAO dao, UIDefaults uiDefaults, HostIconDecorator parent) {
+        return new DeadHostIconDecorator(dao, uiDefaults, parent);
     }
     
-    private DeadHostIconDecorator() {}
+    private DeadHostIconDecorator(HostInfoDAO dao, UIDefaults uiDefaults, HostIconDecorator parent) {
+        this.dao = dao;
+
+        int size = uiDefaults.getIconDecorationSize();
+        Paint color = uiDefaults.getDecorationIconColor();
+
+        UNCONNECTED = new FontAwesomeIcon('\uf127', size, color);
+        UNCONNECTED_SELECTED = new FontAwesomeIcon('\uf127', size, color);
+
+        this.parent = parent;
+    }
     
     @Override
     public int getOrderValue() {
@@ -82,12 +78,14 @@ public class DeadHostIconDecorator implements ReferenceFieldIconDecorator {
     
     @Override
     public PlatformIcon getIcon(PlatformIcon originalIcon, Ref reference) {
-        return doOverlay(originalIcon, reference, UNCONNECTED);
+        PlatformIcon parentDecoreatedIcon = parent.getIcon(originalIcon, reference);
+        return doOverlay(parentDecoreatedIcon, reference, UNCONNECTED);
     }
     
     @Override
     public PlatformIcon getSelectedIcon(PlatformIcon originalIcon, Ref reference) {
-        return doOverlay(originalIcon, reference, UNCONNECTED_SELECTED);
+        PlatformIcon parentDecoratedIcon = parent.getSelectedIcon(originalIcon, reference);
+        return doOverlay(parentDecoratedIcon, reference, UNCONNECTED_SELECTED);
     }
     
     public PlatformIcon doOverlay(PlatformIcon originalIcon, Ref reference, Icon overlay) {

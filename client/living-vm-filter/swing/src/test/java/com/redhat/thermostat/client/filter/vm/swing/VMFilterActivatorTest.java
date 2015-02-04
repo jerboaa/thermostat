@@ -75,7 +75,6 @@ public class VMFilterActivatorTest {
 
         assertTrue(ctx.isServiceRegistered(ReferenceFieldLabelDecorator.class.getName(), VMLabelDecorator.class));
         assertTrue(ctx.isServiceRegistered(ReferenceFieldLabelDecorator.class.getName(), HostInfoLabelDecorator.class));
-        assertTrue(ctx.isServiceRegistered(ReferenceFieldIconDecorator.class.getName(), HostIconDecorator.class));
         assertTrue(ctx.isServiceRegistered(ReferenceFieldIconDecorator.class.getName(), DeadHostIconDecorator.class));
 
         assertTrue(ctx.isServiceRegistered(ReferenceFieldIconDecorator.class.getName(), VMIconDecorator.class));
