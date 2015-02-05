@@ -73,8 +73,8 @@ public class ShellPrompt {
         HOST("%host", ""),
         PORT("%port", ""),
 
-        //TODO: implement tokens below
         USER("%user", ""),
+        //TODO: implement tokens below
         SECURE("%secure", ""),
         ;
 
@@ -119,12 +119,14 @@ public class ShellPrompt {
         String connectionURL = dbService.getConnectionUrl();
 
         buildUrlTokens(connectionURL);
+        promptConfig.put(Tokens.USER.getToken(), dbService.getUserName());
 
         buildConnectToken(CONNECT_PROMPT_FORMAT_KEY);
     }
 
     public void storageDisconnected() {
         clearUrlTokens();
+        promptConfig.put(Tokens.USER.getToken(), Tokens.USER.getDefaultValue());
 
         buildConnectToken(DISCONNECT_PROMPT_FORMAT_KEY);
     }
@@ -151,10 +153,10 @@ public class ShellPrompt {
     }
 
     private void clearUrlTokens() {
-        promptConfig.put(Tokens.CONNECTION_URL.getToken(), "");
-        promptConfig.put(Tokens.PROTOCOL.getToken(), "");
-        promptConfig.put(Tokens.HOST.getToken(), "");
-        promptConfig.put(Tokens.PORT.getToken(), "");
+        promptConfig.put(Tokens.CONNECTION_URL.getToken(), Tokens.CONNECTION_URL.getDefaultValue());
+        promptConfig.put(Tokens.PROTOCOL.getToken(), Tokens.PROTOCOL.getDefaultValue());
+        promptConfig.put(Tokens.HOST.getToken(), Tokens.HOST.getDefaultValue());
+        promptConfig.put(Tokens.PORT.getToken(), Tokens.PORT.getDefaultValue());
     }
 
     public void overridePromptConfig(Map<String, String> newConfig) {

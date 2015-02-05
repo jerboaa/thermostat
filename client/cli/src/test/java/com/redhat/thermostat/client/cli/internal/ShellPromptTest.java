@@ -185,6 +185,26 @@ public class ShellPromptTest {
     }
 
     @Test
+    public void testUserToken() {
+        String expected = "username";
+
+        String customPrompt = "%user";
+        Map<String, String> customConfig = new HashMap<>();
+        customConfig.put("shell-prompt", customPrompt);
+
+        shellPrompt.overridePromptConfig(customConfig);
+
+        String url = "http://blob:9/meow";
+        DbService dbService = mock(DbService.class);
+        when(dbService.getConnectionUrl()).thenReturn(url);
+        when(dbService.getUserName()).thenReturn(expected);
+
+        shellPrompt.storageConnected(dbService);
+
+        assertEquals(expected, shellPrompt.getPrompt());
+    }
+
+    @Test
     public void testConnectString() {
         String connectString = "%url";
         String url = "http://blob:9/meow";
