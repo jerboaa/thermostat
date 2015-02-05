@@ -335,6 +335,30 @@ public class DbServiceImplTest {
         DbService dbService = new DbServiceImpl(context, connectionURL);
         assertEquals(connectionURL, dbService.getConnectionUrl());
     }
+
+    @Test
+    public void canGetUsername() {
+        String connectionURL = "http://test.example.com:8082";
+
+        DbService dbService = new DbServiceImpl(context, connectionURL);
+        dbService.connect();
+
+        assertEquals("username", dbService.getUserName());
+    }
+
+    @Test
+    public void testDisconnectUnsetsUsername() {
+        String connectionURL = "http://test.example.com:8082";
+
+        DbService dbService = new DbServiceImpl(context, connectionURL);
+        dbService.connect();
+
+        assertEquals("username", dbService.getUserName());
+
+        dbService.disconnect();
+
+        assertEquals(Connection.UNSET_USERNAME, dbService.getUserName());
+    }
     
     @Test
     public void testAddListener() {
@@ -444,6 +468,7 @@ public class DbServiceImplTest {
         @Override
         public void connect() {
             connectCalled = true;
+            setUsername("username");
             fireChanged(ConnectionStatus.CONNECTED);
         }
 

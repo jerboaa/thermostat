@@ -91,6 +91,12 @@ public interface DbService {
     String getConnectionUrl();
 
     /**
+     * @returns the username which was used for the connection
+     * @see Connection#getUsername()
+     */
+    String getUserName();
+
+    /**
      * Registers the supplied ConnectionListener to be notified when the status
      * of the database connection changes.
      * 

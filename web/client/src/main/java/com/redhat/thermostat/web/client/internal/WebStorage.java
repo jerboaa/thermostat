@@ -216,6 +216,7 @@ public class WebStorage implements Storage, SecureStorage {
         @Override
         public void disconnect() {
             connected = false;
+            setUsername(Connection.UNSET_USERNAME);
             fireChanged(ConnectionStatus.DISCONNECTED);
         }
 
@@ -229,6 +230,7 @@ public class WebStorage implements Storage, SecureStorage {
                 fireChanged(ConnectionStatus.CONNECTED);
             } catch (Exception ex) {
                 logger.log(Level.WARNING, "Could not connect to storage!", ex);
+                setUsername(Connection.UNSET_USERNAME);
                 fireChanged(ConnectionStatus.FAILED_TO_CONNECT);
             }
         }
@@ -236,6 +238,7 @@ public class WebStorage implements Storage, SecureStorage {
         private void initAuthentication()
                 throws MalformedURLException {
             String username = creds.getUsername();
+            setUsername(username);
             char[] password = creds.getPassword();
             if (username != null && password != null) {
                 URL endpointURL = new URL(endpoint);

@@ -68,9 +68,13 @@ public abstract class Connection {
         public void changed(ConnectionStatus newStatus);
     }
 
+    public final static String UNSET_USERNAME = null;
+
     protected boolean connected = false;
 
     private String url;
+
+    private String username = UNSET_USERNAME;
 
     private List<Connection.ConnectionListener> listeners = new CopyOnWriteArrayList<>();
 
@@ -89,6 +93,22 @@ public abstract class Connection {
      */
     public String getUrl() {
         return url;
+    }
+
+    /**
+     *
+     * @param username
+     */
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    /**
+     *
+     * @return the username used to connect or {@link #UNSET_USERNAME} otherwise
+     */
+    public String getUsername() {
+        return this.username;
     }
 
     @Override

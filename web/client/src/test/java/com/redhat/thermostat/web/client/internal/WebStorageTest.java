@@ -53,6 +53,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -96,6 +97,7 @@ import com.redhat.thermostat.storage.core.BackingStorage;
 import com.redhat.thermostat.storage.core.Categories;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.CategoryAdapter;
+import com.redhat.thermostat.storage.core.Connection;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.core.Cursor;
@@ -1150,6 +1152,89 @@ public class WebStorageTest {
         verify(transitionCache).get(desc);
         verifyNoMoreInteractions(stmtCache);
         verifyNoMoreInteractions(transitionCache);
+    }
+
+    @Test
+    public void testConnectedUsernameIsSet() {
+        String expected = "username";
+
+        storage = new WebStorage("http://localhost:" + port + "/",
+                new TrivialStorageCredentials(expected, new char[]{ 'p' }), mock(SSLConfiguration.class));
+
+        CountDownLatch latch = new CountDownLatch(1);
+        MyListener listener = new MyListener(latch);
+        storage.getConnection().addListener(listener);
+
+        Connection c = storage.getConnection();
+        c.connect();
+
+        // wait for connection to happen
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        assertTrue(listener.connectEvent);
+        assertFalse(listener.failedToConnectEvent);
+
+        assertEquals(expected, c.getUsername());
+    }
+
+    @Test
+    public void testFailedConnectUsernameIsUnset() throws IOException {
+        String expected = Connection.UNSET_USERNAME;
+
+        HttpClient client = mock(HttpClient.class);
+        Mockito.doThrow(RuntimeException.class).when(client).execute(any(HttpUriRequest.class), any(HttpContext.class));
+
+        storage = new WebStorage("http://localhost:" + port + "/",
+                new TrivialStorageCredentials("username", new char[]{ 'p' }), client);
+
+        CountDownLatch latch = new CountDownLatch(1);
+        MyListener listener = new MyListener(latch);
+        storage.getConnection().addListener(listener);
+
+        Connection c = storage.getConnection();
+        c.connect();
+
+        // wait for connection to happen
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        assertTrue(listener.failedToConnectEvent);
+        assertFalse(listener.connectEvent);
+
+        assertEquals(expected, c.getUsername());
+    }
+
+    @Test
+    public void testDisconnectedUsernameIsUnset() {
+        String expected = Connection.UNSET_USERNAME;
+
+        storage = new WebStorage("http://localhost:" + port + "/",
+                new TrivialStorageCredentials("username", new char[]{ 'p' }), mock(SSLConfiguration.class));
+
+        CountDownLatch latch = new CountDownLatch(1);
+        MyListener listener = new MyListener(latch);
+        storage.getConnection().addListener(listener);
+
+        Connection c = storage.getConnection();
+        c.disconnect();
+
+        // wait for connections to finish
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        assertFalse(listener.connectEvent);
+        assertFalse(listener.failedToConnectEvent);
+        assertTrue(listener.disconnectEvent);
+
+        assertEquals(expected, c.getUsername());
     }
     
     static class MyListener implements ConnectionListener {

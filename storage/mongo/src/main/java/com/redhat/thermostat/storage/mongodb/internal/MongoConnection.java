@@ -91,6 +91,7 @@ class MongoConnection extends Connection {
 
         } catch (IOException | MongoException | InvalidConfigurationException | IllegalArgumentException e) {
             logger.log(Level.WARNING, "Failed to connect to storage", e);
+            setUsername(Connection.UNSET_USERNAME);
             fireChanged(ConnectionStatus.FAILED_TO_CONNECT);
             throw new ConnectionException(e.getMessage(), e);
         }
@@ -99,6 +100,7 @@ class MongoConnection extends Connection {
 
     private void authenticateIfNecessary() {
         String username = creds.getUsername();
+        setUsername(username);
         char[] password = creds.getPassword();
         try {
             if (username != null && password != null) {
@@ -124,6 +126,7 @@ class MongoConnection extends Connection {
         if (m != null) {
             m.close();
         }
+        setUsername(Connection.UNSET_USERNAME);
         fireChanged(ConnectionStatus.DISCONNECTED);
     }
 

@@ -48,6 +48,7 @@ import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
+import com.redhat.thermostat.storage.core.Connection;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.core.ConnectionException;
@@ -68,6 +69,7 @@ public class DbServiceImpl implements DbService {
     private Storage storage;
     private BundleContext context;
     private String dbUrl;
+    private String userName;
     @SuppressWarnings("rawtypes")
     private static ServiceReference sslConfRef, storageCredsRef;
     
@@ -128,12 +130,15 @@ public class DbServiceImpl implements DbService {
                 latch, ConnectionStatus.CONNECTED);
         // Install listener in order to ensure connection is synchronous.
         addConnectionListener(listener);
-        this.storage.getConnection().connect();
+        Connection connection = this.storage.getConnection();
+        connection.connect();
         try {
             // Wait for connection to finish.
             // The synchronous connection listener gets removed once connection
             // has finished.
             latch.await();
+            // Grab username after connection completes
+            this.userName = connection.getUsername();
         } catch (InterruptedException e) {
             logger.log(Level.WARNING, e.getMessage(), e);
         }
@@ -166,6 +171,7 @@ public class DbServiceImpl implements DbService {
             // The synchronous connection listener gets removed once connection
             // has finished.
             latch.await();
+            this.userName = Connection.UNSET_USERNAME;
         } catch (InterruptedException e) {
             logger.log(Level.WARNING, e.getMessage(), e);
         }
@@ -179,9 +185,14 @@ public class DbServiceImpl implements DbService {
         return dbUrl;
     }
 
+    @Override
+    public String getUserName() {
+        return this.userName;
+    }
+
     /**
      * Factory method for creating a DbService instance.
-     * 
+     *
      * @param username
      * @param password
      * @param dbUrl
