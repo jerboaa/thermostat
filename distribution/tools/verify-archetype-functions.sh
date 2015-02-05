@@ -46,7 +46,7 @@ function is_keeptmp_ok() {
   if [ "x$1" ==  "x" -o "x$1" == "x--keepTmp" ]; then
     return 0
   fi
-  return -1
+  return 1
 }
 
 function check_usage() {
