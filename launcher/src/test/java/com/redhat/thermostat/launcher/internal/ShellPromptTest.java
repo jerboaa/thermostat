@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.cli.internal;
+package com.redhat.thermostat.launcher.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;

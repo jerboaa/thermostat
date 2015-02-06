@@ -41,7 +41,6 @@ import com.redhat.thermostat.shared.locale.Translate;
 public enum LocaleResources {
 
     MISSING_INFO,
-    MISSING_LAUNCHER,
 
     HOST_SERVICE_UNAVAILABLE,
     VM_SERVICE_UNAVAILABLE,
@@ -59,8 +58,6 @@ public enum LocaleResources {
 
     COMMAND_DISCONNECT_NOT_CONNECTED,
     COMMAND_DISCONNECT_ERROR,
-
-    COMMAND_SHELL_IO_EXCEPTION,
 
     COMMAND_INTERRUPTED,
 
@@ -117,7 +114,6 @@ public enum LocaleResources {
     VM_STAT_INVALID_SINCE_ARGUMENT,
 
     ENCOUNTERED_NULL_AGENT,
-    INVALID_DB_URL
     ;
 
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.client.cli.strings";

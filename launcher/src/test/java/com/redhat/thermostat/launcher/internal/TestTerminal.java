@@ -36,45 +36,19 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import com.redhat.thermostat.shared.locale.Translate;
+import jline.UnixTerminal;
 
-public enum LocaleResources {
+public class TestTerminal extends UnixTerminal {
 
-    MISSING_LAUNCHER,
-
-    CANNOT_GET_COMMAND_INFO,
-    UNKNOWN_COMMAND,
-    COMMAND_COULD_NOT_LOAD_BUNDLES,
-    COMMAND_DESCRIBED_BUT_NOT_AVAILALBE,
-    COMMAND_AVAILABLE_INSIDE_SHELL,
-    COMMAND_AVAILABLE_INSIDE_SHELL_ONLY,
-    COMMAND_AVAILABLE_OUTSIDE_SHELL,
-    COMMAND_AVAILABLE_OUTSIDE_SHELL_ONLY,
-
-    COMMAND_HELP_COMMAND_LIST_HEADER,
-
-    COMMAND_SHELL_IO_EXCEPTION,
-
-    OPTION_DB_URL_DESC,
-    OPTION_LOG_LEVEL_DESC,
-    OPTION_HELP_DESC,
-
-    MISSING_OPTION,
-    MISSING_OPTIONS,
-    PARSE_EXCEPTION_MESSAGE,
-
-    LAUNCHER_USER_AUTH_PROMPT_ERROR,
-    LAUNCHER_MALFORMED_URL,
-    LAUNCHER_CONNECTION_ERROR,
-    LAUNCHER_FIRST_LAUNCH_MSG,
-
-    INVALID_DB_URL,
-    ;
-
-    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.launcher.internal.strings";
-
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+    public TestTerminal() throws Exception {
+        super();
     }
+
+    @Override
+    public void restore() throws Exception {
+        super.restore();
+        throw new Exception();
+    }
+
 }
 

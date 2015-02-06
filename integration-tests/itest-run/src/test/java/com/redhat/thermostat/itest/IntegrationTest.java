@@ -47,7 +47,6 @@ import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.redhat.thermostat.client.cli.internal.ShellPrompt;
 import com.redhat.thermostat.common.utils.StreamUtils;
 
 import expectj.Executor;

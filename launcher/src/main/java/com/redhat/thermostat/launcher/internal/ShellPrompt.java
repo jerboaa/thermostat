@@ -34,11 +34,10 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.cli.internal;
+package com.redhat.thermostat.launcher.internal;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;

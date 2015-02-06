@@ -42,9 +42,12 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.contains;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockingDetails;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
@@ -57,7 +60,9 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
+import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -94,7 +99,7 @@ public class ActivatorTest {
     public void setUp() throws Exception {
         Path tempDir = createStubThermostatHome();
         System.setProperty("THERMOSTAT_HOME", tempDir.toString());
-        
+
         context = new StubBundleContext();
         setupOsgiRegistryImplMock();
 
@@ -144,35 +149,51 @@ public class ActivatorTest {
                 .withParameterTypes(BundleContext.class, Class[].class, Action.class)
                 .withArguments(eq(context), any(Class[].class), actionCaptor.capture())
                 .thenReturn(mockTracker);
-        
+
         Activator activator = new Activator();
         activator.start(context);
 
         assertCommandIsRegistered(context, "help", HelpCommand.class);
 
-        verify(mockTracker).open();
-        
+        verify(mockTracker, times(2)).open();
+
         Action action = actionCaptor.getValue();
         assertNotNull(action);
         activator.stop(context);
-        verify(mockTracker).close();
+        verify(mockTracker, times(2)).close();
     }
     
     @Test
-    public void testServiceTrackerCustomizer() throws Exception {
+    public void testServiceTrackerCustomizerForLauncherDepsTracker() throws Exception {
         StubBundleContext context = new StubBundleContext();
         ArgumentCaptor<Action> actionCaptor = ArgumentCaptor.forClass(Action.class);
-        MultipleServiceTracker mockTracker = mock(MultipleServiceTracker.class);
+        MultipleServiceTracker launcherDepsTracker = mock(MultipleServiceTracker.class);
+        Class[] launcherDeps = new Class[] {
+                Keyring.class,
+                CommonPaths.class,
+        };
         whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
-                any(Class[].class), actionCaptor.capture()).thenReturn(mockTracker);
-        
+                eq(launcherDeps), actionCaptor.capture()).thenReturn(launcherDepsTracker);
+
+        MultipleServiceTracker unusedTracker = mock(MultipleServiceTracker.class);
+        Class[] shellDeps = new Class[] {
+                CommonPaths.class,
+                ConfigurationInfoSource.class,
+        };
+        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
+                eq(shellDeps), actionCaptor.capture()).thenReturn(unusedTracker);
+
         Activator activator = new Activator();
         context.registerService(Keyring.class, mock(Keyring.class), null);
+        ConfigurationInfoSource configurationInfoSource = mock(ConfigurationInfoSource.class);
+        when(configurationInfoSource.getConfiguration("shell-command", "shell-prompt.conf")).thenReturn(new HashMap<String, String>());
+        context.registerService(ConfigurationInfoSource.class, configurationInfoSource, null);
+
         activator.start(context);
         
         assertTrue(context.isServiceRegistered(Command.class.getName(), HelpCommand.class));
         
-        Action action = actionCaptor.getValue();
+        Action action = actionCaptor.getAllValues().get(0);
         assertNotNull(action);
         Keyring keyringService = mock(Keyring.class);
         CommonPaths paths = mock(CommonPaths.class);
@@ -189,6 +210,7 @@ public class ActivatorTest {
         Map<String, Object> services = new HashMap<>();
         services.put(Keyring.class.getName(), keyringService);
         services.put(CommonPaths.class.getName(), paths);
+        services.put(ConfigurationInfoSource.class.getName(), configurationInfoSource);
         action.dependenciesAvailable(services);
         
         assertTrue(context.isServiceRegistered(CommandInfoSource.class.getName(), mock(CompoundCommandInfoSource.class).getClass()));
@@ -204,16 +226,70 @@ public class ActivatorTest {
         assertFalse(context.isServiceRegistered(BundleManager.class.getName(), BundleManagerImpl.class));
         assertFalse(context.isServiceRegistered(Launcher.class.getName(), LauncherImpl.class));
     }
-    
+
+    @Test
+    public void testServiceTrackerCustomizerForShellTracker() throws Exception {
+        StubBundleContext context = new StubBundleContext();
+        ArgumentCaptor<Action> actionCaptor = ArgumentCaptor.forClass(Action.class);
+        MultipleServiceTracker unusedTracker = mock(MultipleServiceTracker.class);
+        Class[] launcherDeps = new Class[] {
+                Keyring.class,
+                CommonPaths.class,
+        };
+        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
+                eq(launcherDeps), actionCaptor.capture()).thenReturn(unusedTracker);
+
+        MultipleServiceTracker shellTracker = mock(MultipleServiceTracker.class);
+        Class[] shellDeps = new Class[] {
+                CommonPaths.class,
+                ConfigurationInfoSource.class,
+        };
+        whenNew(MultipleServiceTracker.class).withParameterTypes(BundleContext.class, Class[].class, Action.class).withArguments(eq(context),
+                eq(shellDeps), actionCaptor.capture()).thenReturn(shellTracker);
+
+        Activator activator = new Activator();
+        ConfigurationInfoSource configurationInfoSource = mock(ConfigurationInfoSource.class);
+        when(configurationInfoSource.getConfiguration("shell-command", "shell-prompt.conf")).thenReturn(new HashMap<String, String>());
+        context.registerService(ConfigurationInfoSource.class, configurationInfoSource, null);
+
+        activator.start(context);
+
+        Action action = actionCaptor.getAllValues().get(1);
+
+        assertNotNull(action);
+        CommonPaths paths = mock(CommonPaths.class);
+        when(paths.getSystemLibRoot()).thenReturn(new File(""));
+        when(paths.getSystemPluginRoot()).thenReturn(new File(""));
+        when(paths.getUserPluginRoot()).thenReturn(new File(""));
+        when(paths.getUserClientConfigurationFile()).thenReturn(new File(""));
+        when(paths.getSystemPluginConfigurationDirectory()).thenReturn(new File(""));
+        when(paths.getUserPluginConfigurationDirectory()).thenReturn(new File(""));
+        @SuppressWarnings("rawtypes")
+        ServiceRegistration pathsReg = context.registerService(CommonPaths.class, paths, null);
+        Map<String, Object> services = new HashMap<>();
+        services.put(CommonPaths.class.getName(), paths);
+        services.put(ConfigurationInfoSource.class.getName(), configurationInfoSource);
+        action.dependenciesAvailable(services);
+
+        assertTrue(context.isServiceRegistered(Command.class.getName(), ShellCommand.class));
+
+        action.dependenciesUnavailable();
+        pathsReg.unregister();
+
+        assertFalse(context.isServiceRegistered(CommandInfoSource.class.getName(), CompoundCommandInfoSource.class));
+        assertFalse(context.isServiceRegistered(BundleManager.class.getName(), BundleManagerImpl.class));
+        assertFalse(context.isServiceRegistered(Launcher.class.getName(), LauncherImpl.class));
+    }
+
     private Path createStubThermostatHome() throws Exception {
         Path tempDir = Files.createTempDirectory("test");
         tempDir.toFile().deleteOnExit();
         System.setProperty("THERMOSTAT_HOME", tempDir.toString());
-        
+
         File tempEtc = new File(tempDir.toFile(), "etc");
         tempEtc.mkdirs();
         tempEtc.deleteOnExit();
-        
+
         File tempProps = new File(tempEtc, "osgi-export.properties");
         tempProps.createNewFile();
         tempProps.deleteOnExit();
@@ -221,7 +297,7 @@ public class ActivatorTest {
         File tempBundleProps = new File(tempEtc, "bundles.properties");
         tempBundleProps.createNewFile();
         tempBundleProps.deleteOnExit();
-        
+
         File tempLibs = new File(tempDir.toFile(), "libs");
         tempLibs.mkdirs();
         tempLibs.deleteOnExit();
