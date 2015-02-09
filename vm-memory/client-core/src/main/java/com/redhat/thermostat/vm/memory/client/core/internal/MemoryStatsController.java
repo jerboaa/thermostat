@@ -105,8 +105,6 @@ public class MemoryStatsController implements InformationServiceController<VmRef
 
             Range<Long> newAvailableRange = new Range<>(oldest.getTimeStamp(), newest.getTimeStamp());
 
-            timeRangeController = new TimeRangeController<>();
-
             TimeRangeController.StatsSupplier<VmMemoryStat, VmRef> statsSupplier = new TimeRangeController.StatsSupplier<VmMemoryStat, VmRef>() {
                 @Override
                 public List<VmMemoryStat> getStats(VmRef ref, long since, long to) {
@@ -288,6 +286,7 @@ public class MemoryStatsController implements InformationServiceController<VmRef
             view.setEnableGCAction(false);
         }
 
+        timeRangeController = new TimeRangeController<>();
     }
     
     // for testing

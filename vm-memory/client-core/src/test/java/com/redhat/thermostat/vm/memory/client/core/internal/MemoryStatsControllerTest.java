@@ -283,16 +283,21 @@ public class MemoryStatsControllerTest {
         when(memoryStatDao.getVmMemoryStats(any(VmRef.class), anyLong(), anyLong())).thenReturn(Arrays.asList(stat));
         when(memoryStatDao.getNewestMemoryStat(any(VmRef.class))).thenReturn(stat);
 
-        Thread.sleep(100l);
         timerAction.run();
 
         verify(memoryStatDao, times(2)).getVmMemoryStats(isA(VmRef.class), timeStampCaptor.capture(), timeStampCaptor.capture());
 
-        long timeStamp1 = timeStampCaptor.getAllValues().get(0);
-        assertTimeStampIsAround(timestamps[0], timeStamp1);
+        List<Long> times = timeStampCaptor.getAllValues();
 
-        long timeStamp2 = timeStampCaptor.getAllValues().get(3);
-        assertTimeStampIsAround(DATA_TIMESTAMP, timeStamp2);
+        long start1 = times.get(0);
+        assertTimeStampIsAround(timestamps[0], start1);
+
+        long end1 = times.get(1);
+        long start2 = times.get(2);
+        assertEquals(end1, start2);
+
+        long end2 = times.get(3);
+        assertTimeStampIsAround(DATA_TIMESTAMP, end2);
     }
 
 
