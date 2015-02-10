@@ -324,8 +324,20 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
         appService.getApplicationExecutor().execute(new Runnable() {
             @Override
             public void run() {
-                showHeapDumpDetails(dump);
-                appService.getApplicationCache().addAttribute(ref, dump);
+                LocalizedString taskName = translator.localize(LocaleResources.HEAP_DUMP_LOADING_IN_PROGRESS);
+
+                final ProgressHandle handle = new ProgressHandle(taskName);
+                handle.setTask(taskName);
+                handle.setIndeterminate(true);
+                notifier.register(handle);
+
+                handle.runTask(new Runnable() {
+                    @Override
+                    public void run() {
+                        showHeapDumpDetails(dump);
+                        appService.getApplicationCache().addAttribute(ref, dump);
+                    }
+                });
             }
         });
     }

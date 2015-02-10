@@ -73,6 +73,7 @@ public enum LocaleResources {
 
     TRIGGER_HEAP_DUMP,
     HEAP_DUMP_IN_PROGRESS,
+    HEAP_DUMP_LOADING_IN_PROGRESS,
     PROCESS_EXITED,
     
     DUMPS_LIST,
