@@ -47,6 +47,7 @@ import java.util.logging.Logger;
 import jline.Terminal;
 import jline.TerminalFactory;
 import jline.console.ConsoleReader;
+import jline.console.completer.FileNameCompleter;
 import jline.console.history.FileHistory;
 import jline.console.history.History;
 import jline.console.history.PersistentHistory;
@@ -241,7 +242,13 @@ public class ShellCommand extends AbstractCommand {
                         options.add("-" + option.getOpt());
                     }
                 }
-                commands.add(new StringsCompleter(options));
+
+                if (info.getName().equals("validate") || info.getName().equals("save-heap-dump-to-file")) {
+                    AggregateCompleter optionsAndFiles = new AggregateCompleter(new StringsCompleter(options), new FileNameCompleter());
+                    commands.add(optionsAndFiles);
+                } else {
+                    commands.add(new StringsCompleter(options));
+                }
 
                 completers.add(new ArgumentCompleter(new ArrayList<>(commands)));
             }

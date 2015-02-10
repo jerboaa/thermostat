@@ -43,6 +43,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -433,6 +434,70 @@ public class ShellCommandTest {
 
     }
 
+    @Test
+    public void testFilesTabComplete() throws CommandException, IOException {
+        ServiceReference ref = mock(ServiceReference.class);
+        when(bundleContext.getServiceReference(Launcher.class.getName())).thenReturn(ref);
+        Launcher launcher = mock(Launcher.class);
+        when(bundleContext.getService(ref)).thenReturn(launcher);
+
+        File temp = File.createTempFile("temp-file", ".tmp");
+
+        TestCommandContextFactory ctxFactory = new TestCommandContextFactory(bundleContext);
+        ctxFactory.setInput("validate /tmp/temp-fi\t\nexit\n");
+        Arguments args = new SimpleArguments();
+        CommandContext ctx = ctxFactory.createContext(args);
+        cmd.run(ctx);
+
+        String tabOutput = getTabOutput(ctxFactory);
+        assertTrue(tabOutput.contains(temp.getName()));
+        assertEquals("", ctxFactory.getError());
+        temp.delete();
+    }
+
+    @Test
+    public void testFilesTabCompleteAfterOptions() throws CommandException, IOException {
+        ServiceReference ref = mock(ServiceReference.class);
+        when(bundleContext.getServiceReference(Launcher.class.getName())).thenReturn(ref);
+        Launcher launcher = mock(Launcher.class);
+        when(bundleContext.getService(ref)).thenReturn(launcher);
+
+        File temp = File.createTempFile("temp-file", ".tmp");
+
+        TestCommandContextFactory ctxFactory = new TestCommandContextFactory(bundleContext);
+        ctxFactory.setInput("validate --dbUrl -a -l -d /tmp/temp-fi\t\nexit\n");
+        Arguments args = new SimpleArguments();
+        CommandContext ctx = ctxFactory.createContext(args);
+        cmd.run(ctx);
+
+        String tabOutput = getTabOutput(ctxFactory);
+        assertTrue(tabOutput.contains(temp.getName()));
+        assertEquals("", ctxFactory.getError());
+        temp.delete();
+    }
+
+    @Test
+    public void testFilesDoNotTabCompleteWithoutCommand() throws CommandException, IOException {
+        ServiceReference ref = mock(ServiceReference.class);
+        when(bundleContext.getServiceReference(Launcher.class.getName())).thenReturn(ref);
+        Launcher launcher = mock(Launcher.class);
+        when(bundleContext.getService(ref)).thenReturn(launcher);
+
+        File temp = File.createTempFile("temp-file", ".tmp");
+
+        TestCommandContextFactory ctxFactory = new TestCommandContextFactory(bundleContext);
+        ctxFactory.setInput("/tmp/temp-fi\t\nexit\n");
+        Arguments args = new SimpleArguments();
+        CommandContext ctx = ctxFactory.createContext(args);
+        cmd.run(ctx);
+
+        String tabOutput = getTabOutput(ctxFactory);
+        assertFalse(tabOutput.contains(temp.getName()));
+        assertEquals("", tabOutput);
+        assertEquals("", ctxFactory.getError());
+        temp.delete();
+    }
+
     public void setupCommandInfoSource() {
 
         Collection<CommandInfo> infoList = new ArrayList<>();
@@ -488,6 +553,32 @@ public class ShellCommandTest {
         when(info2.getOptions().getOptions()).thenReturn(new ArrayList(optionsList2));
 
         infoList.add(info2);
+
+        CommandInfo info3 = mock(CommandInfo.class);
+        when(info3.getName()).thenReturn("validate");
+        when(info3.getDescription()).thenReturn("mock validate command");
+        when(info3.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI, Environment.SHELL));
+
+        ArrayList<Option> optionsList3 = new ArrayList<>();
+        Option option7 = mock(Option.class);
+        when(option7.getLongOpt()).thenReturn("dbUrl");
+        when(option7.getOpt()).thenReturn("d");
+        Option option8 = mock(Option.class);
+        when(option8.getLongOpt()).thenReturn("loglevel");
+        when(option8.getOpt()).thenReturn("l");
+        Option option9 = mock(Option.class);
+        when(option9.getLongOpt()).thenReturn("agent");
+        when(option9.getOpt()).thenReturn("a");
+        optionsList3.add(option7);
+        optionsList3.add(option8);
+        optionsList3.add(option9);
+
+        Options options3 = mock(Options.class);
+        when(info3.getOptions()).thenReturn(options3);
+        when(options3.getOptions()).thenReturn(new ArrayList(optionsList3));
+        when(info3.getOptions().getOptions()).thenReturn(new ArrayList(optionsList3));
+
+        infoList.add(info3);
 
         when(infos.getCommandInfos()).thenReturn(infoList);
         cmd.setCommandInfoSource(infos);
