@@ -55,10 +55,13 @@ import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
 import com.redhat.thermostat.thread.client.common.view.ThreadTableView.ThreadSelectionAction;
 import com.redhat.thermostat.thread.client.common.view.ThreadView;
 import com.redhat.thermostat.thread.client.common.view.ThreadView.ThreadAction;
+import com.redhat.thermostat.thread.client.controller.impl.cache.AppCache;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class ThreadInformationController implements InformationServiceController<VmRef> {
+
+    private VmRef ref;
 
     private static final Logger logger = LoggingUtils.getLogger(ThreadInformationController.class);
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
@@ -68,18 +71,21 @@ public class ThreadInformationController implements InformationServiceController
 
     private ApplicationService appService;
 
+    private AppCache cache;
+
     public ThreadInformationController(VmRef ref, ApplicationService appService,
                                        VmInfoDAO vmInfoDao,
                                        ThreadCollectorFactory collectorFactory, 
                                        ThreadViewProvider viewFactory)
     {
         this.appService = appService;
+        this.ref = ref;
+
+        collector = collectorFactory.getCollector(ref);
 
         view = viewFactory.createView();
         view.setApplicationService(appService, ref.getVmId() + "-" + ref.getHostRef().getAgentId());
-        
-        collector = collectorFactory.getCollector(ref);
-        
+
         initControllers();
         
         view.setRecording(isRecording(), false);
@@ -89,7 +95,7 @@ public class ThreadInformationController implements InformationServiceController
             view.setEnableRecordingControl(false);
         }
     }
-    
+
     private boolean isRecording() {
         
         return collector.isHarvesterCollecting();
@@ -156,7 +162,7 @@ public class ThreadInformationController implements InformationServiceController
         CommonController threadCountController =
                 new ThreadCountController(view.createThreadCountView(), collector, tf.createTimer());
         threadCountController.initialize();
-        
+
         CommonController threadTableController =
                 new ThreadTableController(threadTableView, collector, tf.createTimer());
         threadTableController.initialize();

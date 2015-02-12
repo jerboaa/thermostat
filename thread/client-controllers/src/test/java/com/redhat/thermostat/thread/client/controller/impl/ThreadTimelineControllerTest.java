@@ -67,7 +67,6 @@ public class ThreadTimelineControllerTest {
         collector = mock(ThreadCollector.class);
         timer = mock(Timer.class);
         session = mock(SessionID.class);
-
         when(collector.getLastThreadSession()).thenReturn(session);
     }
 

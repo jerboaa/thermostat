@@ -132,6 +132,7 @@
             <Private-Package>
               com.redhat.thermostat.thread.client.controller.osgi,
               com.redhat.thermostat.thread.client.controller.impl,
+              com.redhat.thermostat.thread.client.controller.impl.cache,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>

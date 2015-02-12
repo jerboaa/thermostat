@@ -38,6 +38,7 @@ package com.redhat.thermostat.thread.client.controller.impl;
 
 import com.redhat.thermostat.client.core.NameMatchingRefFilter;
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.common.ApplicationCache;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.storage.core.VmRef;
@@ -45,6 +46,8 @@ import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
 import com.redhat.thermostat.thread.client.controller.ThreadInformationService;
+import com.redhat.thermostat.thread.client.controller.impl.cache.AppCache;
+import com.redhat.thermostat.thread.client.controller.impl.cache.AppCacheKey;
 
 public class ThreadInformationServiceImpl implements ThreadInformationService {
     
@@ -72,10 +75,30 @@ public class ThreadInformationServiceImpl implements ThreadInformationService {
         return filter;
     }
 
+    private AppCache getCache(VmRef ref) {
+        ApplicationCache applicationCache = service.getApplicationCache();
+        AppCache cache = (AppCache) applicationCache.getAttribute(ref.getVmId());
+        if (cache == null) {
+            AppCacheKey mainKey = new AppCacheKey(ref.getVmId(), ThreadInformationController.class);
+            cache = new AppCache(mainKey, applicationCache);
+            applicationCache.addAttribute(ref.getVmId(), cache);
+        }
+        return cache;
+    }
+
     @Override
     public InformationServiceController<VmRef> getInformationServiceController(VmRef ref) {
-        return new ThreadInformationController(ref, service, vmInfoDao,
-                                               collectorFactory, viewFactory);
+        AppCache cache = getCache(ref);
+        AppCacheKey key = new AppCacheKey(ref.getVmId(), ThreadInformationController.class);
+        ThreadInformationController controller = cache.retrieve(key);
+        if (controller == null) {
+            controller = new ThreadInformationController(ref, service,
+                                                         vmInfoDao,
+                                                         collectorFactory,
+                                                         viewFactory);
+            cache.save(key, controller);
+        }
+        return controller;
     }
 
     @Override

@@ -64,9 +64,10 @@ public class ThreadTimelineController extends CommonController {
                                     Timer timer)
     {
         super(timer, view);
-        timer.setAction(new ThreadTimelineControllerAction());
         this.view = view;
         this.collector = collector;
+
+        timer.setAction(new ThreadTimelineControllerAction());
     }
 
     private class ThreadTimelineControllerAction implements Runnable {
