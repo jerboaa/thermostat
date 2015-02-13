@@ -86,6 +86,7 @@ public class ShellCommandTest {
     private Version version;
     private ConfigurationInfoSource config;
     private CommandInfoSource infos;
+    private File dir;
 
     @Before
     public void setUp() {
@@ -98,6 +99,10 @@ public class ShellCommandTest {
         infos = mock(CommandInfoSource.class);
         cmd = new ShellCommand(bundleContext, version, historyProvider, config);
         setupCommandInfoSource();
+
+        dir = new File(System.getProperty("java.io.tmpdir") + File.separator + "shellcommand");
+        dir.deleteOnExit();
+        dir.mkdirs();
     }
 
     @After
@@ -441,18 +446,19 @@ public class ShellCommandTest {
         Launcher launcher = mock(Launcher.class);
         when(bundleContext.getService(ref)).thenReturn(launcher);
 
-        File temp = File.createTempFile("temp-file", ".tmp");
+        String filename = "testFilesTabComplete";
+        createTempFile(filename);
+        createTempFile(filename+"12345678");
 
         TestCommandContextFactory ctxFactory = new TestCommandContextFactory(bundleContext);
-        ctxFactory.setInput("validate /tmp/temp-fi\t\nexit\n");
+        ctxFactory.setInput("validate " + dir.getAbsolutePath() + File.separator + "testFil\t\nexit\n");
         Arguments args = new SimpleArguments();
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
 
         String tabOutput = getTabOutput(ctxFactory);
-        assertTrue(tabOutput.contains(temp.getName()));
+        assertTrue(tabOutput.contains(filename));
         assertEquals("", ctxFactory.getError());
-        temp.delete();
     }
 
     @Test
@@ -462,18 +468,19 @@ public class ShellCommandTest {
         Launcher launcher = mock(Launcher.class);
         when(bundleContext.getService(ref)).thenReturn(launcher);
 
-        File temp = File.createTempFile("temp-file", ".tmp");
+        String filename = "testFilesTabCompleteAfterOptions";
+        createTempFile(filename);
+        createTempFile(filename + "12345678");
 
         TestCommandContextFactory ctxFactory = new TestCommandContextFactory(bundleContext);
-        ctxFactory.setInput("validate --dbUrl -a -l -d /tmp/temp-fi\t\nexit\n");
+        ctxFactory.setInput("validate --dbUrl -a -l -d " + dir.getAbsolutePath() + File.separator + "testFil\t\nexit\n");
         Arguments args = new SimpleArguments();
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
 
         String tabOutput = getTabOutput(ctxFactory);
-        assertTrue(tabOutput.contains(temp.getName()));
+        assertTrue(tabOutput.contains(filename));
         assertEquals("", ctxFactory.getError());
-        temp.delete();
     }
 
     @Test
@@ -483,22 +490,29 @@ public class ShellCommandTest {
         Launcher launcher = mock(Launcher.class);
         when(bundleContext.getService(ref)).thenReturn(launcher);
 
-        File temp = File.createTempFile("temp-file", ".tmp");
+        String filename = "testFilesDoNotTabCompleteWithoutCommand";
+        createTempFile(filename);
+        createTempFile(filename + "12345678");
 
         TestCommandContextFactory ctxFactory = new TestCommandContextFactory(bundleContext);
-        ctxFactory.setInput("/tmp/temp-fi\t\nexit\n");
+        ctxFactory.setInput(dir.getAbsolutePath() + File.separator + "testFil\t\nexit\n");
         Arguments args = new SimpleArguments();
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
 
         String tabOutput = getTabOutput(ctxFactory);
-        assertFalse(tabOutput.contains(temp.getName()));
+        assertFalse(tabOutput.contains(filename));
         assertEquals("", tabOutput);
         assertEquals("", ctxFactory.getError());
-        temp.delete();
     }
 
-    public void setupCommandInfoSource() {
+    private void createTempFile(String name) throws IOException {
+        File file = new File(dir, name);
+        file.deleteOnExit();
+        file.createNewFile();
+    }
+
+    private void setupCommandInfoSource() {
 
         Collection<CommandInfo> infoList = new ArrayList<>();
 
