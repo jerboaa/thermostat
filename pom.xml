@@ -240,7 +240,9 @@ password=${agent.dev.password}
     <junit.version>4.10</junit.version>
     <mockito.version>1.9.5</mockito.version>
     <fest.version>1.2.1</fest.version>
-    <powermock.version>1.5.4</powermock.version>
+    <!-- PowerMock 1.5.6 and up has the fix for finding default methods (issue 513). This
+         makes launcher tests fail with JDK 9 where Path.resolve(String) is a default method. -->
+    <powermock.version>1.5.6</powermock.version>
     <easymock.version>3.1</easymock.version>
     <expectj.version>2.0.7</expectj.version>
 
