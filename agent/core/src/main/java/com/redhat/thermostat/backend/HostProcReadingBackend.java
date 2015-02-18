@@ -34,51 +34,68 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.host.cpu.agent.internal;
+package com.redhat.thermostat.backend;
 
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.agent.utils.ProcDataSource;
-import com.redhat.thermostat.agent.utils.SysConf;
-import com.redhat.thermostat.backend.HostProcReadingBackend;
-import com.redhat.thermostat.common.Clock;
-import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.Version;
-import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
-import com.redhat.thermostat.storage.core.WriterID;
 
-public class HostCpuBackend extends HostProcReadingBackend {
+/**
+ * A backend that reads data from /proc for the host.
+ * <p>
+ * Register this as a {@link Backend}.
+ */
+public abstract class HostProcReadingBackend extends BaseBackend {
 
-    private final CpuStatBuilder cpuStatBuilder;
-    private CpuStatDAO cpuStats;
+    static final long PROC_CHECK_INTERVAL = 1000; // TODO make this configurable.
 
-    public HostCpuBackend(ScheduledExecutorService executor,
-            CpuStatDAO cpuStatDAO, Version version, final WriterID writerId) {
-        super("Host CPU Backend",
-                "Gathers CPU statistics about a host",
-                "Red Hat, Inc.",
-                version, executor);
+    private ScheduledExecutorService executor;
+    private boolean started;
 
-        this.cpuStats = cpuStatDAO;
-        Clock clock = new SystemClock();
-        long ticksPerSecond = SysConf.getClockTicksPerSecond();
-        ProcDataSource source = new ProcDataSource();
-        cpuStatBuilder = new CpuStatBuilder(clock, source, ticksPerSecond, writerId);
+    protected HostProcReadingBackend(String name, String description, String vendor,
+            Version version,
+            ScheduledExecutorService executor) {
+        super(name, description, vendor,
+              version.getVersionNumber(), true);
+        this.executor = executor;
     }
 
     @Override
-    public void readAndProcessProcData() {
-        if (!cpuStatBuilder.isInitialized()) {
-            cpuStatBuilder.initialize();
-        } else {
-            cpuStats.putCpuStat(cpuStatBuilder.build());
+    public boolean activate() {
+        if (!started) {
+            executor.scheduleAtFixedRate(new Runnable() {
+                @Override
+                public void run() {
+                    readAndProcessProcData();
+                }
+            }, 0, PROC_CHECK_INTERVAL, TimeUnit.MILLISECONDS);
+
+            started = true;
         }
+        return started;
     }
 
     @Override
-    public int getOrderValue() {
-        return ORDER_CPU_GROUP;
+    public boolean deactivate() {
+        if (started) {
+            executor.shutdown();
+
+            started = false;
+        }
+        return !started;
     }
+
+    @Override
+    public boolean isActive() {
+        return started;
+    }
+
+    @Override
+    public void setObserveNewJvm(boolean newValue) {
+        throw new IllegalArgumentException("This backend does not observe jvms!");
+    }
+
+    protected abstract void readAndProcessProcData();
 
 }
-

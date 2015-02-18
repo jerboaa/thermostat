@@ -37,29 +37,24 @@
 package com.redhat.thermostat.host.memory.agent.internal;
 
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.agent.utils.ProcDataSource;
-import com.redhat.thermostat.backend.BaseBackend;
+import com.redhat.thermostat.backend.HostProcReadingBackend;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
 import com.redhat.thermostat.storage.core.WriterID;
 
-public class HostMemoryBackend extends BaseBackend {
+public class HostMemoryBackend extends HostProcReadingBackend {
 
-    private static final long PROC_CHECK_INTERVAL = 1000; // TODO make this configurable.
-    
     private final MemoryStatBuilder memoryStatBuilder;
     private MemoryStatDAO memoryStats;
-    private ScheduledExecutorService executor;
-    private boolean started;
 
     public HostMemoryBackend(ScheduledExecutorService executor, MemoryStatDAO memoryStatDAO, Version version, final WriterID writerId) {
         super("Host Memory Backend",
                 "Gathers memory statistics about a host",
                 "Red Hat, Inc.",
-                version.getVersionNumber(), true);
-        this.executor = executor;
+                version, executor);
+
         this.memoryStats = memoryStatDAO;
 
         ProcDataSource source = new ProcDataSource();
@@ -67,29 +62,8 @@ public class HostMemoryBackend extends BaseBackend {
     }
 
     @Override
-    public boolean activate() {
-        if (!started) {
-            executor.scheduleAtFixedRate(new Runnable() {
-                @Override
-                public void run() {
-                    memoryStats.putMemoryStat(memoryStatBuilder.build());
-                }
-            }, 0, PROC_CHECK_INTERVAL, TimeUnit.MILLISECONDS);
-            started = true;
-        }
-        return true;
-    }
-
-    @Override
-    public boolean deactivate() {
-        executor.shutdown();
-        started = false;
-        return true;
-    }
-    
-    @Override
-    public boolean isActive() {
-        return started;
+    public void readAndProcessProcData() {
+        memoryStats.putMemoryStat(memoryStatBuilder.build());
     }
 
     @Override

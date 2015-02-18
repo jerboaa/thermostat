@@ -38,19 +38,14 @@ package com.redhat.thermostat.vm.cpu.agent.internal;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.agent.VmStatusListener;
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.agent.utils.ProcDataSource;
 import com.redhat.thermostat.agent.utils.SysConf;
-import com.redhat.thermostat.backend.BaseBackend;
+import com.redhat.thermostat.backend.VmProcReadingBackend;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.Version;
@@ -59,28 +54,21 @@ import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
 
-public class VmCpuBackend extends BaseBackend implements VmStatusListener {
+public class VmCpuBackend extends VmProcReadingBackend {
 
     private static final Logger LOGGER = LoggingUtils.getLogger(VmCpuBackend.class);
-    static final long PROC_CHECK_INTERVAL = 1000; // TODO make this configurable.
 
     private final VmCpuStatDAO vmCpuStats;
-    private final ScheduledExecutorService executor;
-    private final VmStatusListenerRegistrar registrar;
     private VmCpuStatBuilder vmCpuStatBuilder;
-    private boolean started;
-
-    private final Map<Integer, String> pidsToMonitor = new ConcurrentHashMap<>();
 
     public VmCpuBackend(ScheduledExecutorService executor, VmCpuStatDAO vmCpuStatDao, Version version,
             VmStatusListenerRegistrar registrar, WriterID writerId) {
         super("VM CPU Backend",
                 "Gathers CPU statistics about a JVM",
                 "Red Hat, Inc.",
-                version.getVersionNumber(), true);
-        this.executor = executor;
+                version, executor, registrar);
+
         this.vmCpuStats = vmCpuStatDao;
-        this.registrar = registrar;
 
         Clock clock = new SystemClock();
         long ticksPerSecond = SysConf.getClockTicksPerSecond();
@@ -89,55 +77,6 @@ public class VmCpuBackend extends BaseBackend implements VmStatusListener {
         int numCpus = getCpuCount(source);
         vmCpuStatBuilder = new VmCpuStatBuilder(clock, numCpus, ticksPerSecond,
                                                 builder, writerId);
-    }
-
-    @Override
-    public boolean activate() {
-        if (!started) {
-            registrar.register(this);
-
-            executor.scheduleAtFixedRate(new Runnable() {
-                @Override
-                public void run() {
-                    for (Entry<Integer, String> entry : pidsToMonitor.entrySet()) {
-                        String vmId = entry.getValue();
-                        Integer pid = entry.getKey();
-                        if (vmCpuStatBuilder.knowsAbout(pid)) {
-                            VmCpuStat dataBuilt = vmCpuStatBuilder.build(vmId, pid);
-                            if (dataBuilt != null) {
-                                vmCpuStats.putVmCpuStat(dataBuilt);
-                            }
-                        } else {
-                            vmCpuStatBuilder.learnAbout(pid);
-                        }
-                    }
-                }
-            }, 0, PROC_CHECK_INTERVAL, TimeUnit.MILLISECONDS);
-
-            started = true;
-        }
-        return started;
-    }
-
-    @Override
-    public boolean deactivate() {
-        if (started) {
-            executor.shutdown();
-            registrar.unregister(this);
-
-            started = false;
-        }
-        return !started;
-    }
-    
-    @Override
-    public boolean isActive() {
-        return started;
-    }
-
-    @Override
-    public int getOrderValue() {
-        return ORDER_CPU_GROUP + 50;
     }
 
     private int getCpuCount(ProcDataSource dataSource) {
@@ -157,25 +96,28 @@ public class VmCpuBackend extends BaseBackend implements VmStatusListener {
         return cpuCount;
     }
 
-    /*
-     * Methods implementing VmStatusListener
-     */
     @Override
-    public void vmStatusChanged(Status newStatus, String vmId, int pid) {
-        switch (newStatus) {
-        case VM_STARTED:
-            /* fall-through */
-        case VM_ACTIVE:
-            pidsToMonitor.put(pid, vmId);
-            break;
-        case VM_STOPPED:
-            pidsToMonitor.remove(pid);
-            vmCpuStatBuilder.forgetAbout(pid);
-            break;
-        }
-
+    public int getOrderValue() {
+        return ORDER_CPU_GROUP + 50;
     }
-    
+
+    @Override
+    public void readAndProcessProcData(String vmId, int pid) {
+        if (vmCpuStatBuilder.knowsAbout(pid)) {
+            VmCpuStat dataBuilt = vmCpuStatBuilder.build(vmId, pid);
+            if (dataBuilt != null) {
+                vmCpuStats.putVmCpuStat(dataBuilt);
+            }
+        } else {
+            vmCpuStatBuilder.learnAbout(pid);
+        }
+    }
+
+    @Override
+    protected void vmStopped(String vmId, int pid) {
+        vmCpuStatBuilder.forgetAbout(pid);
+    }
+
     /*
      * For testing purposes only.
      */

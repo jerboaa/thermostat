@@ -36,16 +36,11 @@
 
 package com.redhat.thermostat.vm.io.agent.internal;
 
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.agent.VmStatusListener;
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.agent.utils.ProcDataSource;
-import com.redhat.thermostat.backend.BaseBackend;
+import com.redhat.thermostat.backend.VmProcReadingBackend;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.storage.core.WriterID;
@@ -53,17 +48,10 @@ import com.redhat.thermostat.vm.io.common.Constants;
 import com.redhat.thermostat.vm.io.common.VmIoStat;
 import com.redhat.thermostat.vm.io.common.VmIoStatDAO;
 
-public class VmIoBackend extends BaseBackend implements VmStatusListener {
-
-    static final long PROC_CHECK_INTERVAL = 1000; // TODO make this configurable.
+public class VmIoBackend extends VmProcReadingBackend {
 
     private final VmIoStatDAO vmIoStats;
-    private final ScheduledExecutorService executor;
-    private final VmStatusListenerRegistrar registrar;
     private VmIoStatBuilder vmIoStatBuilder;
-    private boolean started;
-
-    private final Map<Integer, String> pidsToMonitor = new ConcurrentHashMap<>();
 
     public VmIoBackend(Clock clock, ScheduledExecutorService executor, Version version,
             VmIoStatDAO vmIoStatDao,
@@ -80,74 +68,23 @@ public class VmIoBackend extends BaseBackend implements VmStatusListener {
         super("VM IO Backend",
               "Gathers IO statistics about a JVM",
               "Red Hat, Inc.",
-              version.getVersionNumber(), true);
-        this.executor = executor;
+              version, executor, registrar);
+
         this.vmIoStats = vmIoStatDao;
-        this.registrar = registrar;
         this.vmIoStatBuilder = vmIoStatBuilder;
     }
 
     @Override
-    public boolean activate() {
-        if (!started) {
-            registrar.register(this);
-
-            executor.scheduleAtFixedRate(new Runnable() {
-                @Override
-                public void run() {
-                    for (Entry<Integer, String> entry : pidsToMonitor.entrySet()) {
-                        String vmId = entry.getValue();
-                        Integer pid = entry.getKey();
-                        VmIoStat dataBuilt = vmIoStatBuilder.build(vmId, pid);
-                        if (dataBuilt != null) {
-                            vmIoStats.putVmIoStat(dataBuilt);
-                        }
-                    }
-                }
-            }, 0, PROC_CHECK_INTERVAL, TimeUnit.MILLISECONDS);
-
-            started = true;
+    public void readAndProcessProcData(String vmId, int pid) {
+        VmIoStat dataBuilt = vmIoStatBuilder.build(vmId, pid);
+        if (dataBuilt != null) {
+            vmIoStats.putVmIoStat(dataBuilt);
         }
-        return started;
-    }
-
-    @Override
-    public boolean deactivate() {
-        if (started) {
-            executor.shutdown();
-            registrar.unregister(this);
-
-            started = false;
-        }
-        return !started;
-    }
-
-    @Override
-    public boolean isActive() {
-        return started;
     }
 
     @Override
     public int getOrderValue() {
         return Constants.ORDER_VALUE;
-    }
-
-    /*
-     * Methods implementing VmStatusListener
-     */
-    @Override
-    public void vmStatusChanged(Status newStatus, String vmId, int pid) {
-        switch (newStatus) {
-        case VM_STARTED:
-            /* fall-through */
-        case VM_ACTIVE:
-            pidsToMonitor.put(pid, vmId);
-            break;
-        case VM_STOPPED:
-            pidsToMonitor.remove(pid);
-            break;
-        }
-
     }
 
 }
