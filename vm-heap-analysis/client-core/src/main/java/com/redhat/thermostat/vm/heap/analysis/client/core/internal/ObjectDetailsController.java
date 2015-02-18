@@ -56,6 +56,7 @@ import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaField;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 import com.sun.tools.hat.internal.model.JavaHeapObjectVisitor;
+import com.sun.tools.hat.internal.model.JavaThing;
 
 public class ObjectDetailsController {
 
@@ -102,11 +103,15 @@ public class ObjectDetailsController {
                 JavaHeapObject heapObject = heapDump.findObject(obj.objectId);
 
                 @SuppressWarnings("unchecked")
-                Enumeration<JavaHeapObject> referrers = heapObject.getReferers();
+                Enumeration<JavaThing> referrers = heapObject.getReferers();
 
                 List<HeapObjectUI> objects = new ArrayList<>();
                 while (referrers.hasMoreElements()) {
-                    heapObject = referrers.nextElement();
+                    // Theoretically, referrer.nextElement() can return any
+                    // subclass of JavaThing. But after parsing the heap (which
+                    // we do before displaying it in UI) only JavaHeapObject
+                    // instances are returned.
+                    heapObject = (JavaHeapObject) referrers.nextElement();
                     objects.add(new HeapObjectUI(heapObject.getIdString(), PrintObjectUtils.objectToString(heapObject)));
                 }
                 return objects;

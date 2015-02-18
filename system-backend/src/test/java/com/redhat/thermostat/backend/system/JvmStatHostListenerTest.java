@@ -183,7 +183,7 @@ public class JvmStatHostListenerTest {
         // Trigger a change event
         VmStatusChangeEvent event = mock(VmStatusChangeEvent.class);
         when(event.getMonitoredHost()).thenReturn(host);
-        when(event.getStarted()).thenReturn(Collections.emptySet());
+        when(event.getStarted()).thenReturn(Collections.<Integer>emptySet());
         when(event.getTerminated()).thenReturn(stopped);
         hostListener.vmStatusChanged(event);
         
@@ -205,7 +205,7 @@ public class JvmStatHostListenerTest {
         VmStatusChangeEvent event = mock(VmStatusChangeEvent.class);
         when(event.getMonitoredHost()).thenReturn(host);
         when(event.getStarted()).thenReturn(started);
-        when(event.getTerminated()).thenReturn(Collections.emptySet());
+        when(event.getTerminated()).thenReturn(Collections.<Integer>emptySet());
         hostListener.vmStatusChanged(event);
         
         ArgumentCaptor<String> vmIdCaptor = ArgumentCaptor.forClass(String.class);
@@ -213,7 +213,7 @@ public class JvmStatHostListenerTest {
         // Stop VM
         event = mock(VmStatusChangeEvent.class);
         when(event.getMonitoredHost()).thenReturn(host);
-        when(event.getStarted()).thenReturn(Collections.emptySet());
+        when(event.getStarted()).thenReturn(Collections.<Integer>emptySet());
         when(event.getTerminated()).thenReturn(started);
         hostListener.vmStatusChanged(event);
         
@@ -221,7 +221,7 @@ public class JvmStatHostListenerTest {
         event = mock(VmStatusChangeEvent.class);
         when(event.getMonitoredHost()).thenReturn(host);
         when(event.getStarted()).thenReturn(started);
-        when(event.getTerminated()).thenReturn(Collections.emptySet());
+        when(event.getTerminated()).thenReturn(Collections.<Integer>emptySet());
         hostListener.vmStatusChanged(event);
         
         verify(notifier, times(2)).notifyVmStatusChange(eq(Status.VM_STARTED), vmIdCaptor.capture(), eq(1));
@@ -244,7 +244,7 @@ public class JvmStatHostListenerTest {
         VmStatusChangeEvent event = mock(VmStatusChangeEvent.class);
         when(event.getMonitoredHost()).thenReturn(host);
         when(event.getStarted()).thenReturn(started);
-        when(event.getTerminated()).thenReturn(Collections.emptySet());
+        when(event.getTerminated()).thenReturn(Collections.<Integer>emptySet());
         hostListener.vmStatusChanged(event);
     }
 

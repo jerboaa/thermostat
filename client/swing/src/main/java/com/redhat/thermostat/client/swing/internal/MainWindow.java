@@ -411,7 +411,7 @@ public class MainWindow extends JFrame implements MainView {
     private static void printTree(PrintStream out, TreeNode node, int depth) {
         out.println(StringUtils.repeat("  ", depth) + node.toString());
         @SuppressWarnings("unchecked")
-        List<TreeNode> children = Collections.list(node.children());
+        List<? extends TreeNode> children = Collections.list(node.children());
         for (TreeNode child : children) {
             printTree(out, child, depth + 1);
         }
