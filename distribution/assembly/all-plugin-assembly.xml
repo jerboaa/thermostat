@@ -61,6 +61,7 @@
         <include>com.redhat.thermostat:thermostat-vm-cpu-distribution</include>
         <include>com.redhat.thermostat:thermostat-vm-gc-distribution</include>
         <include>com.redhat.thermostat:thermostat-vm-heap-analysis-distribution</include>
+        <include>com.redhat.thermostat:thermostat-vm-io-distribution</include>
         <include>com.redhat.thermostat:thermostat-vm-jmx-distribution</include>
         <include>com.redhat.thermostat:thermostat-vm-memory-distribution</include>
         <include>com.redhat.thermostat:thermostat-vm-overview-distribution</include>

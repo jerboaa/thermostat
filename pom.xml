@@ -338,6 +338,7 @@ password=${agent.dev.password}
     <module>vm-classstat</module>
     <module>vm-memory</module>
     <module>vm-heap-analysis</module>
+    <module>vm-io</module>
     <module>vm-jmx</module>
     <module>vm-profiler</module>
     <module>notes</module>

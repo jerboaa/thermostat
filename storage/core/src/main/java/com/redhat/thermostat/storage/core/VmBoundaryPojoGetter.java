@@ -110,6 +110,7 @@ public class VmBoundaryPojoGetter <T extends TimeStampedPojo> {
         return queryNewest;
     }
 
+    //Package private for testing
     String getOldestQueryDesc() {
         return queryOldest;
     }

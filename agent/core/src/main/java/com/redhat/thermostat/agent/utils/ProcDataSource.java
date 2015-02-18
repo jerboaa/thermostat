@@ -41,7 +41,7 @@ import java.io.IOException;
 import java.io.Reader;
 
 /**
- * Wrapper for files under /proc. See proc(5) for details about this.
+ * Wrapper for files under {@code /proc/}. See proc(5) for details about this.
  */
 public class ProcDataSource {
 
@@ -50,9 +50,10 @@ public class ProcDataSource {
     private static final String MEMINFO_FILE = "/proc/meminfo";
     private static final String CPUINFO_FILE = "/proc/cpuinfo";
 
+    private static final String PID_ENVIRON_FILE = "/proc/${pid}/environ";
+    private static final String PID_IO_FILE = "/proc/${pid}/io";
     private static final String PID_STAT_FILE = "/proc/${pid}/stat";
     private static final String PID_STATUS_FILE = "/proc/${pid}/status";
-    private static final String PID_ENVIRON_FILE = "/proc/${pid}/environ";
 
     /**
      * Returns a reader for /proc/cpuinfo
@@ -83,6 +84,20 @@ public class ProcDataSource {
     }
 
     /**
+     * Returns a reader for /proc/$PID/environ
+     */
+    public Reader getEnvironReader(int pid) throws IOException {
+        return new FileReader(getPidFile(PID_ENVIRON_FILE, pid));
+    }
+
+    /**
+     * Returns a reader for /proc/$PID/io
+     */
+    public Reader getIoReader(int pid) throws IOException {
+        return new FileReader(getPidFile(PID_IO_FILE, pid));
+    }
+
+    /**
      * Returns a reader for /proc/$PID/stat
      */
     public Reader getStatReader(int pid) throws IOException {
@@ -94,13 +109,6 @@ public class ProcDataSource {
      */
     public Reader getStatusReader(int pid) throws IOException {
         return new FileReader(getPidFile(PID_STATUS_FILE, pid));
-    }
-
-    /**
-     * Returns a reader for /proc/$PID/environ
-     */
-    public Reader getEnvironReader(int pid) throws IOException {
-        return new FileReader(getPidFile(PID_ENVIRON_FILE, pid));
     }
 
     private String getPidFile(String fileName, int pid) {

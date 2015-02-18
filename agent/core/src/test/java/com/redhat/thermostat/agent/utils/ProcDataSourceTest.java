@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.agent.utils;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -73,7 +73,6 @@ public class ProcDataSourceTest {
         assertNotNull(r);
     }
 
-
     @Test
     public void testGetEnvironReader() throws IOException {
         int pid = TestUtils.getProcessId();
@@ -81,5 +80,25 @@ public class ProcDataSourceTest {
         assertNotNull(r);
     }
 
+    @Test
+    public void testIoReader() throws Exception {
+        int pid = TestUtils.getProcessId();
+        Reader r = new ProcDataSource().getIoReader(pid);
+        assertNotNull(r);
+    }
+
+    @Test
+    public void testStatReader() throws Exception {
+        int pid = TestUtils.getProcessId();
+        Reader r = new ProcDataSource().getStatReader(pid);
+        assertNotNull(r);
+    }
+
+    @Test
+    public void testStatusReader() throws Exception {
+        int pid = TestUtils.getProcessId();
+        Reader r = new ProcDataSource().getStatusReader(pid);
+        assertNotNull(r);
+    }
 }
 
