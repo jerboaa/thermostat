@@ -440,6 +440,99 @@ public class ShellCommandTest {
     }
 
     @Test
+    public void testFullOptionCompletesInline() throws CommandException {
+        ServiceReference ref = mock(ServiceReference.class);
+        when(bundleContext.getServiceReference(Launcher.class.getName())).thenReturn(ref);
+        Launcher launcher = mock(Launcher.class);
+        when(bundleContext.getService(ref)).thenReturn(launcher);
+
+        TestCommandContextFactory ctxFactory = new TestCommandContextFactory(bundleContext);
+
+        String input = "test2longn";
+        ctxFactory.setInput(input + "\t\nexit\n");
+        Arguments args = new SimpleArguments();
+        CommandContext ctx = ctxFactory.createContext(args);
+        cmd.run(ctx);
+
+        String tabOutput = getTabOutput(ctxFactory);
+        String inline = getTabbedInline(ctxFactory, input);
+
+        assertEquals(0, tabOutput.length());
+        assertTrue(inline.endsWith("test2longname"));
+        assertEquals("", ctxFactory.getError());
+    }
+
+    @Test
+    public void testSimilarOptionCompletesCommonPortionInline() throws CommandException {
+        ServiceReference ref = mock(ServiceReference.class);
+        when(bundleContext.getServiceReference(Launcher.class.getName())).thenReturn(ref);
+        Launcher launcher = mock(Launcher.class);
+        when(bundleContext.getService(ref)).thenReturn(launcher);
+
+        TestCommandContextFactory ctxFactory = new TestCommandContextFactory(bundleContext);
+
+        String input = "tes";
+        ctxFactory.setInput(input + "\t\nexit\n");
+        Arguments args = new SimpleArguments();
+        CommandContext ctx = ctxFactory.createContext(args);
+        cmd.run(ctx);
+
+        String tabOutput = getTabOutput(ctxFactory);
+        String inline = getTabbedInline(ctxFactory, input);
+
+        assertTrue(tabOutput.length() != 0);
+        assertTrue(inline.endsWith("test"));
+        assertEquals("", ctxFactory.getError());
+    }
+
+    @Test
+    public void testSubOptionCompletesInline() throws CommandException {
+        ServiceReference ref = mock(ServiceReference.class);
+        when(bundleContext.getServiceReference(Launcher.class.getName())).thenReturn(ref);
+        Launcher launcher = mock(Launcher.class);
+        when(bundleContext.getService(ref)).thenReturn(launcher);
+
+        TestCommandContextFactory ctxFactory = new TestCommandContextFactory(bundleContext);
+
+        String input = "test2longname --Pas";
+        ctxFactory.setInput(input + "\t\nexit\n");
+        Arguments args = new SimpleArguments();
+        CommandContext ctx = ctxFactory.createContext(args);
+        cmd.run(ctx);
+
+        String tabOutput = getTabOutput(ctxFactory);
+        String inline = getTabbedInline(ctxFactory, input);
+
+        assertEquals(0, tabOutput.length());
+        assertTrue(inline.endsWith("--Paste"));
+        assertEquals("", ctxFactory.getError());
+    }
+
+    @Test
+    public void testSimilarSubOptionCompletesCommonPortionInline() throws CommandException {
+        ServiceReference ref = mock(ServiceReference.class);
+        when(bundleContext.getServiceReference(Launcher.class.getName())).thenReturn(ref);
+        Launcher launcher = mock(Launcher.class);
+        when(bundleContext.getService(ref)).thenReturn(launcher);
+
+        TestCommandContextFactory ctxFactory = new TestCommandContextFactory(bundleContext);
+
+        String input = "test2longname --cop";
+        ctxFactory.setInput(input + "\t\nexit\n");
+        Arguments args = new SimpleArguments();
+        CommandContext ctx = ctxFactory.createContext(args);
+        cmd.run(ctx);
+
+        String tabOutput = getTabOutput(ctxFactory);
+        String inline = getTabbedInline(ctxFactory, input);
+
+        assertTrue(tabOutput.contains("--copy"));
+        assertTrue(tabOutput.contains("--copy&paste"));
+        assertTrue(inline.endsWith("--copy"));
+        assertEquals("", ctxFactory.getError());
+    }
+
+    @Test
     public void testFilesTabComplete() throws CommandException, IOException {
         ServiceReference ref = mock(ServiceReference.class);
         when(bundleContext.getServiceReference(Launcher.class.getName())).thenReturn(ref);
@@ -506,10 +599,129 @@ public class ShellCommandTest {
         assertEquals("", ctxFactory.getError());
     }
 
+    @Test
+    public void testFileTabCompletesInline() throws CommandException, IOException {
+        ServiceReference ref = mock(ServiceReference.class);
+        when(bundleContext.getServiceReference(Launcher.class.getName())).thenReturn(ref);
+        Launcher launcher = mock(Launcher.class);
+        when(bundleContext.getService(ref)).thenReturn(launcher);
+
+        File tempDir = makeTempDir("testFileTabCompletesInline");
+
+        String filename = "testFileTabCompletesInline";
+        createTempFile(filename, tempDir);
+
+        TestCommandContextFactory ctxFactory = new TestCommandContextFactory(bundleContext);
+        String input = "validate " + tempDir.getAbsolutePath() + File.separator + "testFil";
+        ctxFactory.setInput(input + "\t\nexit\n");
+        Arguments args = new SimpleArguments();
+        CommandContext ctx = ctxFactory.createContext(args);
+        cmd.run(ctx);
+
+        String inline = getTabbedInline(ctxFactory, input);
+        String tabOutput = getTabOutput(ctxFactory);
+
+        setupCommandInfoSource();
+        assertEquals(0, tabOutput.length());
+        assertTrue(inline.endsWith(filename));
+        assertEquals("", ctxFactory.getError());
+    }
+
+    @Test
+    public void testFilesDoNotTabCompleteInlineFullCommand() throws CommandException, IOException {
+        ServiceReference ref = mock(ServiceReference.class);
+        when(bundleContext.getServiceReference(Launcher.class.getName())).thenReturn(ref);
+        Launcher launcher = mock(Launcher.class);
+        when(bundleContext.getService(ref)).thenReturn(launcher);
+
+        File tempDir = makeTempDir("testNotFullCommand");
+
+        String filename = "testFileTabCompletesInline";
+        String similarName = "testFileTabNumber";
+        createTempFile(filename, tempDir);
+        createTempFile(similarName + "1234567", tempDir);
+        createTempFile(similarName + "987654321", tempDir);
+        createTempFile(similarName + "456123", tempDir);
+
+        TestCommandContextFactory ctxFactory = new TestCommandContextFactory(bundleContext);
+        String input = "validate " + tempDir.getAbsolutePath() + File.separator + "testFil";
+        ctxFactory.setInput(input + "\t\nexit\n");
+        Arguments args = new SimpleArguments();
+        CommandContext ctx = ctxFactory.createContext(args);
+        cmd.run(ctx);
+
+        String inline = getTabbedInline(ctxFactory, input);
+        String tabOutput = getTabOutput(ctxFactory);
+
+        assertTrue(tabOutput.contains(filename));
+        assertFalse(inline.contains(filename));
+        assertFalse(inline.contains(similarName));
+        assertTrue(inline.endsWith("testFileTab"));
+        assertEquals("", ctxFactory.getError());
+    }
+
+    @Test
+    public void testFilesTabCompleteCommonPortionInline() throws CommandException, IOException {
+        ServiceReference ref = mock(ServiceReference.class);
+        when(bundleContext.getServiceReference(Launcher.class.getName())).thenReturn(ref);
+        Launcher launcher = mock(Launcher.class);
+        when(bundleContext.getService(ref)).thenReturn(launcher);
+
+        File tempDir = makeTempDir("testFilesTabCompleteCommonPortionInline");
+
+        String filename = "testFileTabCompletesInline";
+        String commonPortion = "testFileTab";
+        createTempFile(filename,tempDir);
+        createTempFile(commonPortion + "1234567", tempDir);
+        createTempFile(commonPortion + "987654321", tempDir);
+        createTempFile(commonPortion + "456123", tempDir);
+
+        TestCommandContextFactory ctxFactory = new TestCommandContextFactory(bundleContext);
+        String input = "validate " + tempDir.getAbsolutePath() + File.separator + "testFil";
+        ctxFactory.setInput(input + "\t\nexit\n");
+        Arguments args = new SimpleArguments();
+        CommandContext ctx = ctxFactory.createContext(args);
+        cmd.run(ctx);
+
+        String inline = getTabbedInline(ctxFactory, input);
+        String tabOutput = getTabOutput(ctxFactory);
+
+        assertTrue(tabOutput.contains(filename));
+        assertFalse(inline.contains(filename));
+        assertTrue(inline.endsWith(commonPortion));
+        assertEquals("", ctxFactory.getError());
+    }
+
     private void createTempFile(String name) throws IOException {
         File file = new File(dir, name);
         file.deleteOnExit();
         file.createNewFile();
+    }
+
+    private void createTempFile(String name, File dir) throws IOException {
+        File file = new File(dir, name);
+        file.deleteOnExit();
+        file.createNewFile();
+    }
+
+    private String getTabbedInline(TestCommandContextFactory ctxFactory, String input) {
+        String inline = "";
+        String[] lines = ctxFactory.getOutput().split("\n");
+        for(String line : lines) {
+            if (line.contains(input)) {
+                inline = line.split(PROMPT + input)[1];
+                inline = inline.replaceAll(" ", "");
+                return inline;
+            }
+        }
+        return inline;
+    }
+
+    private File makeTempDir(String name) {
+        File tempDir = new File(System.getProperty("java.io.tmpdir") + File.separator + "sc-" + name);
+        tempDir.deleteOnExit();
+        tempDir.mkdirs();
+        return tempDir;
     }
 
     private void setupCommandInfoSource() {
