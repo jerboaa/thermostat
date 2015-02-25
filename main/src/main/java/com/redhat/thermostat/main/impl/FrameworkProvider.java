@@ -68,24 +68,16 @@ public class FrameworkProvider {
     private static final String PROPS_FILE = "/com/redhat/thermostat/main/impl/bootstrapbundles.properties";
     private static final String BUNDLELIST = "bundles";
 
-    private CommonPaths paths;
-    private boolean printOSGiInfo;
-    private boolean ignoreBundleVersions;
-    private String bootDelegation;
-
+    private final CommonPaths paths;
+    private final FrameworkOptions frameworkOptions;
+    
     // The framework cache location; Must not be shared between apps!
     private Path osgiCacheStorage;
+    
 
-    public FrameworkProvider(CommonPaths paths, boolean printOSGiInfo, boolean ignoreBundleVersions, String bootDelegation) {
+    public FrameworkProvider(CommonPaths paths, FrameworkOptions options) {
         this.paths = paths;
-
-        this.printOSGiInfo = printOSGiInfo;
-        this.ignoreBundleVersions = ignoreBundleVersions;
-        this.bootDelegation = bootDelegation;
-
-        if ("".equals(bootDelegation)) {
-            throw new RuntimeException("Unexpected string used with boot delegation: '" + bootDelegation + "'");
-        }
+        this.frameworkOptions = options;
     }
 
     // This is our ticket into OSGi land. Unfortunately, we to use a bit of reflection here.
@@ -134,7 +126,7 @@ public class FrameworkProvider {
     private void prepareFramework(final Framework framework) throws BundleException, IOException {
         framework.init();
         framework.start();
-        if (printOSGiInfo) {
+        if (frameworkOptions.printOsgiInfo()) {
             System.out.println(DEBUG_PREFIX + "OSGi framework has started.");
         }
 
@@ -144,11 +136,11 @@ public class FrameworkProvider {
                 try {
                     framework.stop();
                     framework.waitForStop(0);
-                    if (printOSGiInfo) {
+                    if (frameworkOptions.printOsgiInfo()) {
                         System.out.println(DEBUG_PREFIX + "OSGi framework has shut down.");
                     }
                     recursivelyDeleteDirectory(osgiCacheStorage.toFile());
-                    if (printOSGiInfo) {
+                    if (frameworkOptions.printOsgiInfo()) {
                         System.out.println(DEBUG_PREFIX + "Removed OSGi cache directory: "
                                 + osgiCacheStorage.toFile().getAbsolutePath());
                     }
@@ -169,7 +161,8 @@ public class FrameworkProvider {
         }
         directory.delete();
     }
-
+    
+    
     private Framework makeFramework() throws FileNotFoundException, IOException {
         File osgiCacheDir = new File(paths.getUserCacheDirectory(), "osgi-cache");
         if (!osgiCacheDir.isDirectory() && !osgiCacheDir.mkdirs()) {
@@ -188,7 +181,7 @@ public class FrameworkProvider {
         // 
         // This fixes Thermostat BZ 1110.
         osgiCacheStorage = Files.createTempDirectory(osgiCacheDir.toPath(), null);
-        if (printOSGiInfo) {
+        if (frameworkOptions.printOsgiInfo()) {
             System.out.println(DEBUG_PREFIX + "OSGi cache location: "
                     + osgiCacheStorage.toFile().getAbsolutePath());
         }
@@ -199,11 +192,11 @@ public class FrameworkProvider {
         String extraPackages = getOSGiPublicPackages();
         bundleConfigurations.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, extraPackages);
         bundleConfigurations.put(Constants.FRAMEWORK_STORAGE, osgiCacheStorage.toFile().getAbsolutePath());
-        if (bootDelegation != null) {
-            if (printOSGiInfo) {
-                System.out.println("Boot delegation: " + bootDelegation);
+        if (frameworkOptions.bootDelegationValue() != null) {
+            if (frameworkOptions.printOsgiInfo()) {
+                System.out.println("Boot delegation: " + frameworkOptions.bootDelegationValue());
             }
-            bundleConfigurations.put(Constants.FRAMEWORK_BOOTDELEGATION, bootDelegation);
+            bundleConfigurations.put(Constants.FRAMEWORK_BOOTDELEGATION, frameworkOptions.bootDelegationValue());
         }
         Iterator<FrameworkFactory> factories = loader.iterator();
         if (factories.hasNext()) {
@@ -234,17 +227,17 @@ public class FrameworkProvider {
                 locations.add(location);
             }
         }
-        BundleManager.preLoadBundles(framework, locations, printOSGiInfo);
+        BundleManager.preLoadBundles(framework, locations, frameworkOptions.printOsgiInfo());
     }
 
     private void setLoaderVerbosity(Framework framework) throws InterruptedException {
         Object loader = getService(framework, BundleManager.class.getName());
-        callVoidReflectedMethod(loader, "setPrintOSGiInfo", printOSGiInfo);
+        callVoidReflectedMethod(loader, "setPrintOSGiInfo", frameworkOptions.printOsgiInfo());
     }
 
     private void setIgnoreBundleVersions(Framework framework) throws InterruptedException {
         Object loader = getService(framework, BundleManager.class.getName());
-        callVoidReflectedMethod(loader, "setIgnoreBundleVersions", ignoreBundleVersions);
+        callVoidReflectedMethod(loader, "setIgnoreBundleVersions", frameworkOptions.ignoreBundleVersions());
     }
 
     private void runLauncher(Framework framework, String[] args) throws InterruptedException {
@@ -313,5 +306,6 @@ public class FrameworkProvider {
             return file.toURI().toString();
         }
     }
+
 }
 

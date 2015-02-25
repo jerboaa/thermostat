@@ -49,6 +49,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -202,7 +204,8 @@ public class FrameworkProviderTest {
 
     @Test
     public void testStartRunsOSGiFramework() throws Exception {
-        FrameworkProvider provider = new FrameworkProvider(paths, false, false, null);
+        FrameworkOptions opts = new FrameworkOptions(new String[] {});
+        FrameworkProvider provider = new FrameworkProvider(paths, opts);
 
         provider.start(new String[] {});
 
@@ -212,7 +215,8 @@ public class FrameworkProviderTest {
 
     @Test
     public void testStartRunsLauncher() throws Exception {
-        FrameworkProvider provider = new FrameworkProvider(paths, false, false, null);
+        FrameworkOptions opts = new FrameworkOptions(new String[] {});
+        FrameworkProvider provider = new FrameworkProvider(paths, opts);
 
         provider.start(new String[] {});
 
@@ -221,7 +225,9 @@ public class FrameworkProviderTest {
 
     @Test
     public void testPrintOSGiInfoParameterIsPassedToBundleManager() {
-        FrameworkProvider provider = new FrameworkProvider(paths, true, false, null);
+        FrameworkOptions opts = mock(FrameworkOptions.class);
+        when(opts.printOsgiInfo()).thenReturn(true);
+        FrameworkProvider provider = new FrameworkProvider(paths, opts);
 
         provider.start(new String[] {});
 
@@ -230,23 +236,20 @@ public class FrameworkProviderTest {
 
     @Test
     public void testIgnoreBundleVersionsParameterIsPassedToBundleManager() {
-        FrameworkProvider provider = new FrameworkProvider(paths, false, true, null);
+        FrameworkOptions opts = mock(FrameworkOptions.class);
+        when(opts.ignoreBundleVersions()).thenReturn(true);
+        FrameworkProvider provider = new FrameworkProvider(paths, opts);
 
         provider.start(new String[] {});
 
         assertEquals(true, bundleManager.ignoreBundleVersion);
     }
 
-    @Test(expected=RuntimeException.class)
-    public void testErrorThrownOnEmptyBootDelegationParameter() {
-        FrameworkProvider provider = new FrameworkProvider(paths, false, true, "");
-
-        provider.start(new String[] {});
-    }
-
     @Test
     public void testNullBootDelegationIsNotSetInConfiguration() {
-        FrameworkProvider provider = new FrameworkProvider(paths, false, false, null);
+        FrameworkOptions opts = mock(FrameworkOptions.class);
+        when(opts.bootDelegationValue()).thenReturn(null);
+        FrameworkProvider provider = new FrameworkProvider(paths, opts);
 
         provider.start(new String[] {});
 
@@ -256,11 +259,14 @@ public class FrameworkProviderTest {
 
     @Test
     public void testPackagesListedInBootDelegationArePassedToFramework() {
-        FrameworkProvider provider = new FrameworkProvider(paths, false, true, "foo");
+        FrameworkOptions opts = mock(FrameworkOptions.class);
+        when(opts.bootDelegationValue()).thenReturn("foo");
+        FrameworkProvider provider = new FrameworkProvider(paths, opts);
 
         provider.start(new String[] {});
 
         Map<String, String> config = TestFrameworkFactory.getConfig();
         assertEquals("foo", config.get(Constants.FRAMEWORK_BOOTDELEGATION));
     }
+
 }

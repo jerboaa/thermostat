@@ -37,6 +37,7 @@
 package com.redhat.thermostat.main;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doCallRealMethod;
@@ -48,6 +49,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.main.impl.FrameworkOptions;
 import com.redhat.thermostat.main.impl.FrameworkProvider;
 import com.redhat.thermostat.shared.config.CommonPaths;
 
@@ -55,30 +57,24 @@ public class ThermostatTest {
 
     private FrameworkProvider provider;
     private CommonPaths paths;
-    private ArgumentCaptor<Boolean> printOsgiInfoCaptor;
-    private ArgumentCaptor<Boolean> ignoreBundleVersionsCaptor;
+    private ArgumentCaptor<FrameworkOptions> optsCaptor;
     private Thermostat thermostat;
-    private ArgumentCaptor<String> bootDelgationCaptor;
 
     @Before
     public void setUp() {
         provider = mock(FrameworkProvider.class);
         paths = mock(CommonPaths.class);
+        
 
-        printOsgiInfoCaptor = ArgumentCaptor.forClass(Boolean.class);
-        ignoreBundleVersionsCaptor = ArgumentCaptor.forClass(Boolean.class);
-        bootDelgationCaptor = ArgumentCaptor.forClass(String.class);
+        optsCaptor = ArgumentCaptor.forClass(FrameworkOptions.class);
 
         thermostat = mock(Thermostat.class);
 
         when(thermostat
                 .createFrameworkProvider(eq(paths),
-                        printOsgiInfoCaptor.capture(),
-                        ignoreBundleVersionsCaptor.capture(),
-                        bootDelgationCaptor.capture()))
+                        optsCaptor.capture()))
                 .thenReturn(provider);
         doCallRealMethod().when(thermostat).start(eq(paths), any(String[].class));
-
     }
 
     @Test
@@ -87,7 +83,8 @@ public class ThermostatTest {
         thermostat.start(paths, args);
 
         verify(provider).start(eq(new String[]{}));
-        assertEquals(false, printOsgiInfoCaptor.getValue());
+        FrameworkOptions opts = optsCaptor.getValue();
+        assertEquals(false, opts.printOsgiInfo());
     }
 
     @Test
@@ -96,7 +93,8 @@ public class ThermostatTest {
         thermostat.start(paths, args);
 
         verify(provider).start(eq(new String[]{}));
-        assertEquals(true, printOsgiInfoCaptor.getValue());
+        FrameworkOptions opts = optsCaptor.getValue();
+        assertEquals(true, opts.printOsgiInfo());
     }
 
     @Test
@@ -105,7 +103,8 @@ public class ThermostatTest {
         thermostat.start(paths, args);
 
         verify(provider).start(eq(new String[]{}));
-        assertEquals(false, ignoreBundleVersionsCaptor.getValue());
+        FrameworkOptions opts = optsCaptor.getValue();
+        assertEquals(false, opts.ignoreBundleVersions());
     }
 
     @Test
@@ -114,7 +113,8 @@ public class ThermostatTest {
         thermostat.start(paths, args);
 
         verify(provider).start(eq(new String[]{}));
-        assertEquals(true, ignoreBundleVersionsCaptor.getValue());
+        FrameworkOptions opts = optsCaptor.getValue();
+        assertEquals(true, opts.ignoreBundleVersions());
     }
 
     @Test
@@ -123,7 +123,8 @@ public class ThermostatTest {
         thermostat.start(paths, args);
 
         verify(provider).start(eq(new String[]{}));
-        assertEquals(null, bootDelgationCaptor.getValue());
+        FrameworkOptions opts = optsCaptor.getValue();
+        assertNull(opts.bootDelegationValue());
     }
 
     @Test
@@ -132,16 +133,16 @@ public class ThermostatTest {
         thermostat.start(paths, args);
 
         verify(provider).start(eq(new String[]{}));
-        assertEquals("foo", bootDelgationCaptor.getValue());
+        FrameworkOptions opts = optsCaptor.getValue();
+        assertEquals("foo", opts.bootDelegationValue());
     }
 
-    @Test
-    public void verifyBootDelegationIsPassedAlong2() {
+    @Test(expected=RuntimeException.class)
+    public void verifyBootDelegationFailsForIllegalValue() {
         String[] args = {"--boot-delegation="};
+        // This throws runtime exception due to empty boot delegation
+        // string.
         thermostat.start(paths, args);
-
-        verify(provider).start(eq(new String[]{}));
-        assertEquals("", bootDelgationCaptor.getValue());
     }
 
     @Test

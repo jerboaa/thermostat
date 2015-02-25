@@ -41,6 +41,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import com.redhat.thermostat.main.impl.FrameworkOptions;
 import com.redhat.thermostat.main.impl.FrameworkProvider;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.internal.CommonPathsImpl;
@@ -58,36 +59,15 @@ public class Thermostat {
     }
 
     public void start(CommonPaths paths, String[] args) {
-        boolean printOSGiInfo = false;
-        boolean ignoreBundleVersions = false;
-        String bootDelegation = null;
+        FrameworkOptions frameworkOptions = new FrameworkOptions(args);
 
-        List<String> toProcess = new ArrayList<>(Arrays.asList(args));
-        Iterator<String> iter = toProcess.iterator();
-        while (iter.hasNext()) {
-            String arg = iter.next();
-            if ("--print-osgi-info".equals(arg)) {
-                printOSGiInfo = true;
-                iter.remove();
-            }
-            if ("--ignore-bundle-versions".equals(arg)) {
-                ignoreBundleVersions = true;
-                iter.remove();
-            }
-            if (arg.startsWith("--boot-delegation=")) {
-                int startIndex = "--boot-delegation=".length();
-                bootDelegation = arg.substring(startIndex);
-                iter.remove();
-            }
-        }
-
-        FrameworkProvider frameworkProvider = createFrameworkProvider(paths, printOSGiInfo, ignoreBundleVersions, bootDelegation);
-        frameworkProvider.start(toProcess.toArray(new String[0]));
+        FrameworkProvider frameworkProvider = createFrameworkProvider(paths, frameworkOptions);
+        frameworkProvider.start(frameworkOptions.getOtherOptions());
     }
 
     /* allow overriding for unit testing */
-    protected FrameworkProvider createFrameworkProvider(CommonPaths paths, boolean printOSGiInfo, boolean ignoreBundleVersions, String bootDelegation) {
-        return new FrameworkProvider(paths, printOSGiInfo, ignoreBundleVersions, bootDelegation);
+    protected FrameworkProvider createFrameworkProvider(CommonPaths paths, FrameworkOptions options) {
+        return new FrameworkProvider(paths, options);
     }
 }
 
