@@ -61,7 +61,6 @@ public class Activator implements BundleActivator {
     @Override
     public void start(BundleContext context) throws Exception {
         Class<?>[] serviceDeps = new Class<?>[] {
-                HostInfoDAO.class,
                 AgentInfoDAO.class,
                 VmInfoDAO.class,
                 GCRequest.class,
@@ -71,17 +70,16 @@ public class Activator implements BundleActivator {
         serviceTracker = new MultipleServiceTracker(context, serviceDeps, new MultipleServiceTracker.Action() {
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
-                HostInfoDAO hostDAO = (HostInfoDAO) services.get(HostInfoDAO.class.getName());
                 AgentInfoDAO agentDao = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
                 VmInfoDAO vmInfoDAO = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
                 GCRequest request = (GCRequest) services.get(GCRequest.class.getName());
 
-                command.setServices(request, agentDao, hostDAO, vmInfoDAO);
+                command.setServices(request, agentDao, vmInfoDAO);
             }
 
             @Override
             public void dependenciesUnavailable() {
-                command.setServices(null, null, null, null);
+                command.setServices(null, null, null);
             }
         });
 

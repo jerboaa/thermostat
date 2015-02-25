@@ -55,7 +55,6 @@ import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.test.TestCommandContextFactory;
@@ -65,7 +64,6 @@ public class GCCommandTest {
     private GCCommand command;
     private TestCommandContextFactory cmdCtxFactory;
 
-    private HostInfoDAO hostInfoDAO;
     private VmInfoDAO vmInfoDAO;
     private AgentInfoDAO agentInfoDAO;
     private GCRequest gcRequest;
@@ -75,7 +73,6 @@ public class GCCommandTest {
     public void setup() {
         cmdCtxFactory = new TestCommandContextFactory();
 
-        hostInfoDAO = mock(HostInfoDAO.class);
         vmInfoDAO = mock(VmInfoDAO.class);
         agentInfoDAO = mock(AgentInfoDAO.class);
         gcRequest = mock(GCRequest.class);
@@ -143,7 +140,7 @@ public class GCCommandTest {
     }
 
     private void setServices() {
-        command.setServices(gcRequest, agentInfoDAO, hostInfoDAO, vmInfoDAO);
+        command.setServices(gcRequest, agentInfoDAO, vmInfoDAO);
     }
 
 }

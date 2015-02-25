@@ -49,7 +49,6 @@ import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.vm.gc.command.locale.LocaleResources;
@@ -61,7 +60,6 @@ public class GCCommand extends AbstractCommand {
     private GCRequest request;
     private AgentInfoDAO agentInfoDAO;
     private VmInfoDAO vmInfoDAO;
-    private HostInfoDAO hostInfoDAO;
     private final GCCommandListener listener;
     private Semaphore servicesAvailable = new Semaphore(0);
 
@@ -73,7 +71,6 @@ public class GCCommand extends AbstractCommand {
     public void run(CommandContext ctx) throws CommandException {
         waitForServices(500l);
 
-        requireNonNull(hostInfoDAO, translator.localize(LocaleResources.HOST_SERVICE_UNAVAILABLE));
         requireNonNull(vmInfoDAO, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
         requireNonNull(agentInfoDAO, translator.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE));
         requireNonNull(request, translator.localize(LocaleResources.GCREQUEST_SERVICE_UNAVAILABLE));
@@ -120,13 +117,12 @@ public class GCCommand extends AbstractCommand {
         }
     }
 
-    public void setServices(GCRequest request, AgentInfoDAO agentInfoDAO, HostInfoDAO hostInfoDAO, VmInfoDAO vmInfoDAO) {
+    public void setServices(GCRequest request, AgentInfoDAO agentInfoDAO, VmInfoDAO vmInfoDAO) {
         this.request = request;
         this.agentInfoDAO = agentInfoDAO;
-        this.hostInfoDAO = hostInfoDAO;
         this.vmInfoDAO = vmInfoDAO;
 
-        if (request == null || agentInfoDAO == null || hostInfoDAO == null || vmInfoDAO == null) {
+        if (request == null || agentInfoDAO == null || vmInfoDAO == null) {
             servicesUnavailable();
         } else {
             servicesAvailable();
