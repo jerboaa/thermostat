@@ -42,8 +42,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -58,6 +56,7 @@ import org.osgi.framework.launch.Framework;
 import org.osgi.framework.launch.FrameworkFactory;
 import org.osgi.util.tracker.ServiceTracker;
 
+import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.shared.config.CommonPaths;
@@ -67,13 +66,12 @@ public class FrameworkProvider {
     private static final String DEBUG_PREFIX = "FrameworkProvider: ";
     private static final String PROPS_FILE = "/com/redhat/thermostat/main/impl/bootstrapbundles.properties";
     private static final String BUNDLELIST = "bundles";
+    // Use help cache location for any thermostat invocation that didn't provide a command.
+    // Since help is part of the bootstrap bundle set this is correct.
+    private static final String DEFAULT_CACHE_LOCATION = "help";
 
     private final CommonPaths paths;
     private final FrameworkOptions frameworkOptions;
-    
-    // The framework cache location; Must not be shared between apps!
-    private Path osgiCacheStorage;
-    
 
     public FrameworkProvider(CommonPaths paths, FrameworkOptions options) {
         this.paths = paths;
@@ -85,7 +83,11 @@ public class FrameworkProvider {
     // by the bundle classloader.
     public void start(String[] args) {
         try {
-            Framework framework = makeFramework();
+            String cacheSubDir = DEFAULT_CACHE_LOCATION;
+            if (args.length > 0 && !args[0].equals(Version.VERSION_OPTION)) {
+                cacheSubDir = args[0];
+            }
+            Framework framework = makeFramework(cacheSubDir);
             prepareFramework(framework);
             loadBootstrapBundles(framework);
             setLoaderVerbosity(framework);
@@ -139,11 +141,6 @@ public class FrameworkProvider {
                     if (frameworkOptions.printOsgiInfo()) {
                         System.out.println(DEBUG_PREFIX + "OSGi framework has shut down.");
                     }
-                    recursivelyDeleteDirectory(osgiCacheStorage.toFile());
-                    if (frameworkOptions.printOsgiInfo()) {
-                        System.out.println(DEBUG_PREFIX + "Removed OSGi cache directory: "
-                                + osgiCacheStorage.toFile().getAbsolutePath());
-                    }
                 } catch (Exception e) {
                     throw new RuntimeException("Error shutting down framework.", e);
                 }
@@ -152,38 +149,24 @@ public class FrameworkProvider {
 
     }
 
-    private void recursivelyDeleteDirectory(File directory) {
-        for (File file: directory.listFiles()) {
-            if (file.isDirectory()) {
-                recursivelyDeleteDirectory(file);
-            }
-            file.delete();
-        }
-        directory.delete();
-    }
-    
-    
-    private Framework makeFramework() throws FileNotFoundException, IOException {
+    private Framework makeFramework(String cacheSubDir) throws FileNotFoundException, IOException {
         File osgiCacheDir = new File(paths.getUserCacheDirectory(), "osgi-cache");
         if (!osgiCacheDir.isDirectory() && !osgiCacheDir.mkdirs()) {
             throw new RuntimeException("Unable to create " + osgiCacheDir);
         }
 
-        // Create temporary directory which will be used as cache for OSGi bundles. See
+        // Create a unique directory per command which will be used as cache for OSGi bundles. See
         // http://www.osgi.org/javadoc/r4v43/core/org/osgi/framework/Constants.html#FRAMEWORK_STORAGE
         // for details about what this location is used for.
         // 
         // Agent, swing gui client application must not use the same location as this tricks the framework
         // into thinking that some bundles are installed and loaded when that might not actually be the case.
-        // Note that we do not specify the org.osgi.framework.storage.clean property and the default is to NOT
-        // clean the cache, which is when we might run into trouble if this location is shared. This
-        // temp directory will be deleted on VM shutdown.
         // 
         // This fixes Thermostat BZ 1110.
-        osgiCacheStorage = Files.createTempDirectory(osgiCacheDir.toPath(), null);
+        final File osgiCacheStorage = new File(osgiCacheDir, cacheSubDir);
         if (frameworkOptions.printOsgiInfo()) {
             System.out.println(DEBUG_PREFIX + "OSGi cache location: "
-                    + osgiCacheStorage.toFile().getAbsolutePath());
+                    + osgiCacheStorage.getAbsolutePath());
         }
         
         ServiceLoader<FrameworkFactory> loader = ServiceLoader.load(FrameworkFactory.class,
@@ -191,7 +174,10 @@ public class FrameworkProvider {
         Map<String, String> bundleConfigurations = new HashMap<String, String>();
         String extraPackages = getOSGiPublicPackages();
         bundleConfigurations.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, extraPackages);
-        bundleConfigurations.put(Constants.FRAMEWORK_STORAGE, osgiCacheStorage.toFile().getAbsolutePath());
+        bundleConfigurations.put(Constants.FRAMEWORK_STORAGE, osgiCacheStorage.getAbsolutePath());
+        if (frameworkOptions.cleanOsgiCache()) {
+            bundleConfigurations.put(Constants.FRAMEWORK_STORAGE_CLEAN, Constants.FRAMEWORK_STORAGE_CLEAN_ONFIRSTINIT);
+        }
         if (frameworkOptions.bootDelegationValue() != null) {
             if (frameworkOptions.printOsgiInfo()) {
                 System.out.println("Boot delegation: " + frameworkOptions.bootDelegationValue());
