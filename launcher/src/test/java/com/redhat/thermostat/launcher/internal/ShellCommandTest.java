@@ -732,6 +732,7 @@ public class ShellCommandTest {
         when(info1.getName()).thenReturn("test1");
         when(info1.getDescription()).thenReturn("test command 1");
         when(info1.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI, Environment.SHELL));
+        when(info1.needsFileTabCompletions()).thenReturn(false);
 
         ArrayList<Option> optionsList1 = new ArrayList<>();
         Option option1 = mock(Option.class);
@@ -758,6 +759,7 @@ public class ShellCommandTest {
         when(info2.getName()).thenReturn("test2longname");
         when(info2.getDescription()).thenReturn("test command 2");
         when(info2.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI, Environment.SHELL));
+        when(info2.needsFileTabCompletions()).thenReturn(false);
 
         ArrayList<Option> optionsList2 = new ArrayList<>();
         Option option4 = mock(Option.class);
@@ -784,6 +786,7 @@ public class ShellCommandTest {
         when(info3.getName()).thenReturn("validate");
         when(info3.getDescription()).thenReturn("mock validate command");
         when(info3.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI, Environment.SHELL));
+        when(info3.needsFileTabCompletions()).thenReturn(true);
 
         ArrayList<Option> optionsList3 = new ArrayList<>();
         Option option7 = mock(Option.class);

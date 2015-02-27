@@ -243,7 +243,7 @@ public class ShellCommand extends AbstractCommand {
                     }
                 }
 
-                if (info.getName().equals("validate") || info.getName().equals("save-heap-dump-to-file")) {
+                if (info.needsFileTabCompletions()) {
                     AggregateCompleter optionsAndFiles = new AggregateCompleter(new StringsCompleter(options), new FileNameCompleter());
                     commands.add(optionsAndFiles);
                 } else {

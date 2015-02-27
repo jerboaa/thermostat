@@ -57,6 +57,7 @@
         <bundle><symbolic-name>com.redhat.thermostat.configuration</symbolic-name><version>${project.version}</version></bundle>
         <bundle><symbolic-name>com.redhat.thermostat.plugin.validator</symbolic-name><version>${project.version}</version></bundle>
       </bundles>
+      <add-file-completion>true</add-file-completion>
     </command>
   </commands>
 </plugin>

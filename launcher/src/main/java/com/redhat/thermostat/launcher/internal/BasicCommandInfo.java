@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -53,8 +52,9 @@ public class BasicCommandInfo implements CommandInfo {
     private final Options options;
     private final Set<Environment> environments;
     private final List<BundleInformation> bundles;
+    private final boolean fileTabCompletionNeeded;
 
-    public BasicCommandInfo(String name, String summary, String description, String usage, Options options, Set<Environment> environments, List<BundleInformation> bundles) {
+    public BasicCommandInfo(String name, String summary, String description, String usage, Options options, Set<Environment> environments, List<BundleInformation> bundles, boolean fileTabCompletionNeeded) {
         this.name = name;
         this.summary = summary;
         this.description = description;
@@ -62,6 +62,7 @@ public class BasicCommandInfo implements CommandInfo {
         this.options = options;
         this.environments = environments;
         this.bundles = bundles;
+        this.fileTabCompletionNeeded = fileTabCompletionNeeded;
     }
 
     @Override
@@ -87,6 +88,11 @@ public class BasicCommandInfo implements CommandInfo {
     @Override
     public Options getOptions() {
         return options;
+    }
+
+    @Override
+    public boolean needsFileTabCompletions() {
+        return fileTabCompletionNeeded;
     }
 
     @Override

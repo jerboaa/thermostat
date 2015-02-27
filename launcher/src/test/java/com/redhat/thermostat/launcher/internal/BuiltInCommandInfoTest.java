@@ -311,5 +311,16 @@ public class BuiltInCommandInfoTest {
         assertTrue(commandEnv.contains(Environment.CLI));
         assertTrue(commandEnv.contains(Environment.SHELL));
     }
+
+    @Test
+    public void verifyFileUsage() {
+        Properties props = new Properties();
+        String name = "name";
+        String usage = "true";
+        props.put("add-file-completion", usage);
+        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props);
+
+        assertTrue(info.needsFileTabCompletions());
+    }
 }
 

@@ -39,7 +39,6 @@ package com.redhat.thermostat.launcher.internal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map.Entry;
@@ -64,6 +63,7 @@ public class BuiltInCommandInfo implements CommandInfo {
     private static final String PROPERTY_USAGE = "usage";
     private static final String PROPERTY_OPTIONS = "options";
     private static final String PROPERTY_ENVIRONMENTS = "environments";
+    private static final String PROPERTY_FILE_COMPLETION = "add-file-completion";
 
     private static final String PROP_SHORTOPT = ".short";
     private static final String PROP_LONGOPT = ".long";
@@ -75,6 +75,7 @@ public class BuiltInCommandInfo implements CommandInfo {
     private Options options;
     private EnumSet<Environment> environment;
     private List<BundleInformation> dependencies;
+    private boolean fileTabCompletionNeeded;
 
     BuiltInCommandInfo(String commandName, Properties properties) {
         options = new Options();
@@ -93,6 +94,8 @@ public class BuiltInCommandInfo implements CommandInfo {
                 learnOptions((String) entry.getValue(), properties);
             } else if (key.equals(PROPERTY_ENVIRONMENTS)) {
                 environment = parseEnvironment(properties.getProperty(key));
+            } else if (key.equals(PROPERTY_FILE_COMPLETION)) {
+                fileTabCompletionNeeded = Boolean.parseBoolean(properties.getProperty(key));
             }
         }
     }
@@ -395,6 +398,11 @@ public class BuiltInCommandInfo implements CommandInfo {
     @Override
     public List<BundleInformation> getBundles() {
         return dependencies;
+    }
+
+    @Override
+    public boolean needsFileTabCompletions() {
+        return fileTabCompletionNeeded;
     }
 }
 

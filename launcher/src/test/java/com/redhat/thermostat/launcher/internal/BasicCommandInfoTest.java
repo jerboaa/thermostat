@@ -59,8 +59,9 @@ public class BasicCommandInfoTest {
         final Options OPTIONS = new Options();
         final Set<Environment> ENVIRONMENT = EnumSet.noneOf(Environment.class);
         final List<BundleInformation> BUNDLES = Collections.emptyList();
+        final boolean ADD_FILE_COMPLETION = true;
 
-        BasicCommandInfo info = new BasicCommandInfo(NAME, SUMMARY, DESCRIPTION, USAGE, OPTIONS, ENVIRONMENT, BUNDLES);
+        BasicCommandInfo info = new BasicCommandInfo(NAME, SUMMARY, DESCRIPTION, USAGE, OPTIONS, ENVIRONMENT, BUNDLES, ADD_FILE_COMPLETION);
 
         assertEquals(NAME, info.getName());
         assertEquals(SUMMARY, info.getSummary());
@@ -68,6 +69,7 @@ public class BasicCommandInfoTest {
         assertEquals(USAGE, info.getUsage());
         assertEquals(OPTIONS, info.getOptions());
         assertEquals(BUNDLES, info.getBundles());
+        assertEquals(ADD_FILE_COMPLETION, info.needsFileTabCompletions());
 
         assertEquals(String.format("%s (summary='%s', description='%s', dependencies='%s')", NAME, SUMMARY, DESCRIPTION, BUNDLES.toString()),
                 info.toString());

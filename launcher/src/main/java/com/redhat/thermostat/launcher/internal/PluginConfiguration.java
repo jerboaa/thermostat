@@ -120,11 +120,13 @@ public class PluginConfiguration {
         private final Options options;
         private final Set<Environment> environment;
         private final List<BundleInformation> bundles;
+        private final boolean fileTabCompletionNeeded;
 
         public NewCommand(String name, String usage, String summary, String description,
                 List<String> positionalArguments, Options options,
                 Set<Environment> environment,
-                List<BundleInformation> bundles) {
+                List<BundleInformation> bundles,
+                boolean fileTabCompletionNeeded) {
             this.commandName = name;
             this.usage = usage;
             this.summary = summary;
@@ -133,6 +135,7 @@ public class PluginConfiguration {
             this.options = options;
             this.environment = environment;
             this.bundles = bundles;
+            this.fileTabCompletionNeeded = fileTabCompletionNeeded;
         }
 
         public String getCommandName() {
@@ -175,6 +178,9 @@ public class PluginConfiguration {
             return Collections.unmodifiableList(bundles);
         }
 
+        public boolean needsFileTabCompletions() {
+            return fileTabCompletionNeeded;
+        }
     }
 
     public static class PluginID {

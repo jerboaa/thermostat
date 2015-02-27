@@ -80,6 +80,11 @@ public interface CommandInfo {
      */
     public Options getOptions();
 
+    /**
+     * Returns whether the command will get tab completions for files
+     */
+    public boolean needsFileTabCompletions();
+
     List<BundleInformation> getBundles();
 
 }

@@ -372,6 +372,7 @@
         <bundle><symbolic-name>${lucene-core.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
         <bundle><symbolic-name>${lucene-analysis.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
       </bundles>
+      <add-file-completion>true</add-file-completion>
     </command>
     <command>
       <name>show-heap-histogram</name>

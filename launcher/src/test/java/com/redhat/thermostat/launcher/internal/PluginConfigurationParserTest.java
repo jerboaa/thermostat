@@ -595,5 +595,98 @@ public class PluginConfigurationParserTest {
         assertNull(dbUrlOption);
     }
 
+    @Test
+    public void testUsesFileWithTrueEntry() throws UnsupportedEncodingException {
+        String config = "<?xml version=\"1.0\"?>\n" +
+                "<plugin>\n" +
+                "  <commands>\n" +
+                "    <command type='provides'>\n" +
+                "      <name>test</name>\n" +
+                "      <summary>some summary</summary>\n" +
+                "      <description>some description</description>\n" +
+                "      <environments>" +
+                "        <environment>shell</environment>" +
+                "        <environment>cli</environment>" +
+                "      </environments>" +
+                "      <add-file-completion>true</add-file-completion>" +
+                "    </command>\n" +
+                "  </commands>\n" +
+                "</plugin>";
+
+        PluginConfiguration result = new PluginConfigurationParser()
+                .parse("test", new ByteArrayInputStream(config.getBytes("UTF-8")));
+
+        assertEquals(0, result.getExtendedCommands().size());
+
+        List<NewCommand> newCommands = result.getNewCommands();
+        assertEquals(1, newCommands.size());
+
+        NewCommand command = newCommands.get(0);
+        assertEquals("test", command.getCommandName());
+        assertTrue(command.needsFileTabCompletions());
+    }
+
+    @Test
+    public void testUsesFileWithFalseEntry() throws UnsupportedEncodingException {
+        String config = "<?xml version=\"1.0\"?>\n" +
+                "<plugin>\n" +
+                "  <commands>\n" +
+                "    <command type='provides'>\n" +
+                "      <name>test</name>\n" +
+                "      <summary>some summary</summary>\n" +
+                "      <description>some description</description>\n" +
+                "      <environments>" +
+                "        <environment>shell</environment>" +
+                "        <environment>cli</environment>" +
+                "      </environments>" +
+                "      <add-file-completion>false</add-file-completion>" +
+                "    </command>\n" +
+                "  </commands>\n" +
+                "</plugin>";
+
+        PluginConfiguration result = new PluginConfigurationParser()
+                .parse("test", new ByteArrayInputStream(config.getBytes("UTF-8")));
+
+        assertEquals(0, result.getExtendedCommands().size());
+
+        List<NewCommand> newCommands = result.getNewCommands();
+        assertEquals(1, newCommands.size());
+
+        NewCommand command = newCommands.get(0);
+        assertEquals("test", command.getCommandName());
+        assertFalse(command.needsFileTabCompletions());
+    }
+
+    @Test
+    public void testUsesFileWithInvalidEntry() throws UnsupportedEncodingException {
+        String config = "<?xml version=\"1.0\"?>\n" +
+                "<plugin>\n" +
+                "  <commands>\n" +
+                "    <command type='provides'>\n" +
+                "      <name>test</name>\n" +
+                "      <summary>some summary</summary>\n" +
+                "      <description>some description</description>\n" +
+                "      <environments>" +
+                "        <environment>shell</environment>" +
+                "        <environment>cli</environment>" +
+                "      </environments>" +
+                "      <add-file-completion>invalid</add-file-completion>" +
+                "    </command>\n" +
+                "  </commands>\n" +
+                "</plugin>";
+
+        PluginConfiguration result = new PluginConfigurationParser()
+                .parse("test", new ByteArrayInputStream(config.getBytes("UTF-8")));
+
+        assertEquals(0, result.getExtendedCommands().size());
+
+        List<NewCommand> newCommands = result.getNewCommands();
+        assertEquals(1, newCommands.size());
+
+        NewCommand command = newCommands.get(0);
+        assertEquals("test", command.getCommandName());
+        assertFalse(command.needsFileTabCompletions());
+    }
+
 }
 
