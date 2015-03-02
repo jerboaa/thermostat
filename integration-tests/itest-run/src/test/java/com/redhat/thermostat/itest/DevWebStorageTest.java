@@ -42,6 +42,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
+import java.util.Map;
 
 import org.junit.After;
 import org.junit.Test;
@@ -92,12 +93,12 @@ public class DevWebStorageTest extends IntegrationTest {
     }
 
     private void runWebStorageTest() throws Exception {
-        SpawnResult spawnResult = spawnThermostatAndGetProcess("web-storage-service");
+        Map<String, String> testProperties = getVerboseModeProperties();
+        SpawnResult spawnResult = spawnThermostatWithPropertiesSetAndGetProcess(testProperties, "web-storage-service");
         Spawn service = spawnResult.spawn;
 
         try {
-            // This depends on the log level
-            service.expectErr("agent started");
+            service.expect("Agent started.");
         } finally {
             // service.stop only stops the agent/webservice.
             killRecursively(spawnResult.process);
