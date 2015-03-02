@@ -43,7 +43,7 @@
     <command>
       <name>dump-heap</name>
       <summary>trigger a heap dump on the VM</summary>
-      <description>trigger a heap dump on the VM</description>
+      <description>Trigger a heap dump on the VM.</description>
       <options>
         <option>
           <long>hostId</long>
@@ -214,7 +214,7 @@
     <command>
       <name>list-heap-dumps</name>
       <summary>list all heap dumps</summary>
-      <description>list all heap dumps</description>
+      <description>List all heap dumps.</description>
       <options>
         <option>
           <long>hostId</long>
