@@ -75,7 +75,7 @@ public class Activator implements BundleActivator {
 
             @Override
             public void dependenciesUnavailable() {
-                agentApplication.shutdown();
+                agentApplication.shutdown(ExitStatus.EXIT_SUCCESS);
                 reg.unregisterCommands();
             }
         });
@@ -87,7 +87,7 @@ public class Activator implements BundleActivator {
         if (agentApplication != null) {
             // Bundle may be shut down *before* deps become available and
             // app is set.
-            agentApplication.shutdown();
+            agentApplication.shutdown(ExitStatus.EXIT_SUCCESS);
         }
         reg.unregisterCommands();
         tracker.close();

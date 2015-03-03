@@ -52,6 +52,7 @@ import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.Console;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.Launcher;
@@ -122,7 +123,9 @@ public class ServiceCommand extends AbstractCommand implements ActionListener<Ap
                     String dbUrl = (String) payload;
                     String[] agentArgs =  new String[] {"agent", "-d", dbUrl};
                     logger.fine("starting agent now...");
-                    launcher.run(agentArgs, false);
+                    listeners.clear();
+                    listeners.add(new AgentStartedListener(cmdCtx.getConsole()));
+                    launcher.run(agentArgs, listeners, false);
                     break;
                 case FAIL:
                     storageFailed = true;
@@ -147,6 +150,36 @@ public class ServiceCommand extends AbstractCommand implements ActionListener<Ap
     @Override
     public boolean isStorageRequired() {
         return false;
+    }
+    
+    private static class AgentStartedListener implements ActionListener<ApplicationState> {
+
+        private final Console console;
+
+        private AgentStartedListener(Console console) {
+            this.console = console;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent<ApplicationState> actionEvent) {
+            if (actionEvent.getSource() instanceof AbstractStateNotifyingCommand) {
+                AbstractStateNotifyingCommand agent = (AbstractStateNotifyingCommand) actionEvent.getSource();
+                // Implementation detail: there is a single AgentCommand instance registered
+                // as an OSGi service. We remove ourselves as listener so that we don't get
+                // notified in the case that the command is invoked by some other means later.
+                agent.getNotifier().removeActionListener(this);
+
+                switch (actionEvent.getActionId()) {
+                case START:
+                    logger.fine("Agent started via service. Agent ID was: " + actionEvent.getPayload());
+                    break;
+                case FAIL:
+                    console.getError().println(translator.localize(LocaleResources.STARTING_AGENT_FAILED).getContents());
+                    break;
+                }
+            }
+
+        }
     }
 
 }

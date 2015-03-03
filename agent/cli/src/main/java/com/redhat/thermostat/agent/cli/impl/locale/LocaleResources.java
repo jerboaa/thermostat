@@ -43,6 +43,7 @@ public enum LocaleResources {
     SERVICE_FAILED_TO_START_DB,
     LAUNCHER_UNAVAILABLE,
     UNEXPECTED_RESULT_STORAGE,
+    STARTING_AGENT_FAILED,
     ;
 
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.agent.cli.impl.strings";

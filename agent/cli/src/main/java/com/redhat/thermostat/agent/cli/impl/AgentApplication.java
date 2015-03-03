@@ -62,9 +62,9 @@ import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.cli.Arguments;
-import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
@@ -173,12 +173,12 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
                     logger.log(Level.SEVERE, e.getMessage());
                     // log stack trace as info only
                     logger.log(Level.INFO, e.getMessage(), e);
-                    shutdown();
+                    shutdown(ExitStatus.EXIT_ERROR);
                 } catch (ConnectionException e) {
                     logger.log(Level.SEVERE, "Could not connect to storage (" + e.getMessage() + ")");
                     // log stack trace as info only
                     logger.log(Level.INFO, "Could nto connect to storage", e);
-                    shutdown();
+                    shutdown(ExitStatus.EXIT_ERROR);
                 }
                 
                 return configServer;
@@ -214,7 +214,7 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
         }
     }
     
-    public void shutdown() {
+    public void shutdown(int shutDownStatus) {
         // Exit application
         if (shutdownLatch != null) {
             shutdownLatch.countDown();
@@ -225,6 +225,12 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
         }
         if (configServerTracker != null) {
             configServerTracker.close();
+        }
+        this.exitStatus.setExitStatus(shutDownStatus);
+        if (shutDownStatus == ExitStatus.EXIT_SUCCESS) {
+            getNotifier().fireAction(ApplicationState.STOP);
+        } else {
+            getNotifier().fireAction(ApplicationState.FAIL);
         }
     }
     
@@ -254,7 +260,7 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
             if (Boolean.getBoolean(VERBOSE_MODE_PROPERTY)) {
                 System.out.println(VERBOSE_MODE_AGENT_STOPPED_MSG);
             }
-            shutdown();
+            shutdown(ExitStatus.EXIT_SUCCESS);
         }
         
     }
@@ -266,8 +272,7 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
             
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Could not get BackendRegistry instance.", e);
-            exitStatus.setExitStatus(ExitStatus.EXIT_ERROR);
-            shutdown();
+            shutdown(ExitStatus.EXIT_ERROR);
             // Since this would throw NPE's down the line if we continue in this
             // method, let's fail right and early :)
             throw new RuntimeException(e);
@@ -284,8 +289,7 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
             logger.log(Level.SEVERE,
                     "Agent could not start, probably because a configured backend could not be activated.",
                     le);
-            exitStatus.setExitStatus(ExitStatus.EXIT_ERROR);
-            shutdown();
+            shutdown(ExitStatus.EXIT_ERROR);
         }
         logger.fine("Agent started.");
         // Hook for integration tests. Print a well known message to stdout
@@ -295,6 +299,7 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
         }
 
         logger.info("Agent id: " + agent.getId());
+        getNotifier().fireAction(ApplicationState.START, agent.getId());
         return agent;
     }
     
@@ -325,7 +330,7 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
                 if (shutdownLatch.getCount() > 0) {
                     // In the rare case we lose one of our deps, gracefully shutdown
                     logger.severe("Storage unexpectedly became unavailable");
-                    shutdown();
+                    shutdown(ExitStatus.EXIT_ERROR);
                 }
             }
             
