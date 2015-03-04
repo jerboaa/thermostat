@@ -48,18 +48,27 @@ import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.gc.remote.common.GCRequest;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 
 public class Activator implements BundleActivator {
 
-    private MultipleServiceTracker serviceTracker;
-    private ServiceRegistration registration;
+    private final GCCommand gcCommand = new GCCommand(new GCCommandListener());
+    private final ShowGcNameCommand showGcNameCmd = new ShowGcNameCommand();
+    
+    private MultipleServiceTracker showGcNameCmdTracker;
+    private MultipleServiceTracker gcCommandDepsServiceTracker;
+    private ServiceRegistration gcCommandRegistration;
+    private ServiceRegistration showGcNameCmdRegistration;
 
-    private final GCCommand command = new GCCommand(new GCCommandListener());
 
     @Override
     public void start(BundleContext context) throws Exception {
+        Class<?>[] agentVmDeps = new Class<?>[] {
+                VmInfoDAO.class,
+                VmGcStatDAO.class,
+        };
+        
         Class<?>[] serviceDeps = new Class<?>[] {
                 AgentInfoDAO.class,
                 VmInfoDAO.class,
@@ -67,32 +76,54 @@ public class Activator implements BundleActivator {
                 RequestQueue.class,
         };
 
-        serviceTracker = new MultipleServiceTracker(context, serviceDeps, new MultipleServiceTracker.Action() {
+        gcCommandDepsServiceTracker = new MultipleServiceTracker(context, serviceDeps, new MultipleServiceTracker.Action() {
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
                 AgentInfoDAO agentDao = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
                 VmInfoDAO vmInfoDAO = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
                 GCRequest request = (GCRequest) services.get(GCRequest.class.getName());
 
-                command.setServices(request, agentDao, vmInfoDAO);
+                gcCommand.setServices(request, agentDao, vmInfoDAO);
             }
 
             @Override
             public void dependenciesUnavailable() {
-                command.setServices(null, null, null);
+                gcCommand.setServices(null, null, null);
+            }
+        });
+        
+        showGcNameCmdTracker = new MultipleServiceTracker(context, agentVmDeps, new MultipleServiceTracker.Action() {
+            
+            @Override
+            public void dependenciesUnavailable() {
+                showGcNameCmd.servicesUnavailable();
+            }
+            
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                VmInfoDAO vmInfoDAO = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
+                VmGcStatDAO vmGcStatDAO = (VmGcStatDAO) services.get(VmGcStatDAO.class.getName());
+                showGcNameCmd.setVmInfo(vmInfoDAO);
+                showGcNameCmd.setVmGcStat(vmGcStatDAO);
             }
         });
 
-        serviceTracker.open();
+        gcCommandDepsServiceTracker.open();
+        showGcNameCmdTracker.open();
 
         Hashtable<String,String> properties = new Hashtable<>();
-        properties.put(Command.NAME, "gc");
-        registration = context.registerService(Command.class.getName(), command, properties);
+        properties.put(Command.NAME, GCCommand.REGISTER_NAME);
+        gcCommandRegistration = context.registerService(Command.class.getName(), gcCommand, properties);
+        properties = new Hashtable<>();
+        properties.put(Command.NAME, ShowGcNameCommand.REGISTER_NAME);
+        showGcNameCmdRegistration = context.registerService(Command.class.getName(), showGcNameCmd, properties);
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        serviceTracker.close();
-        registration.unregister();
+        gcCommandDepsServiceTracker.close();
+        showGcNameCmdTracker.close();
+        gcCommandRegistration.unregister();
+        showGcNameCmdRegistration.unregister();
     }
 }

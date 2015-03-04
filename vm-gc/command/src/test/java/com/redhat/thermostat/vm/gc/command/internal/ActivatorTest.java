@@ -51,7 +51,8 @@ public class ActivatorTest {
 
         activator.start(context);
 
-        assertCommandIsRegistered(context, "gc", GCCommand.class);
+        assertCommandIsRegistered(context, GCCommand.REGISTER_NAME, GCCommand.class);
+        assertCommandIsRegistered(context, ShowGcNameCommand.REGISTER_NAME, ShowGcNameCommand.class);
 
         activator.stop(context);
 

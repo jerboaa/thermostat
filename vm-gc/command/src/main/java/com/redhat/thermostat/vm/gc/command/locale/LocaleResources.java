@@ -45,13 +45,20 @@ public enum LocaleResources {
     AGENT_SERVICE_UNAVAILABLE,
     VM_SERVICE_UNAVAILABLE,
     LISTENER_UNAVAILABLE,
-    VM_NOT_FOUND, COMMAND_INTERRUPTED, GC_ERROR_RESULT, GC_SUCCESS_RESULT, GC_UNKNOWN_RESULT;
+    VM_NOT_FOUND,
+    COMMAND_INTERRUPTED,
+    GC_ERROR_RESULT,
+    GC_SUCCESS_RESULT,
+    GC_UNKNOWN_RESULT,
+    GC_STAT_DAO_SERVICE_UNAVAILABLE,
+    GC_COMMON_NAME_SUCCESS_MSG,
+    ;
 
     static final String RESOURCE_BUNDLE =
             "com.redhat.thermostat.gc.command.locale.strings";
 
     public static Translate<LocaleResources> createLocalizer() {
-        return new Translate(RESOURCE_BUNDLE, LocaleResources.class);
+        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
     }
 
 }

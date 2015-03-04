@@ -55,6 +55,8 @@ import com.redhat.thermostat.vm.gc.command.locale.LocaleResources;
 
 public class GCCommand extends AbstractCommand {
 
+    // The name as which this command gets registered
+    static final String REGISTER_NAME = "gc";
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private GCRequest request;
@@ -84,11 +86,11 @@ public class GCCommand extends AbstractCommand {
         attemptGC(vmId);
     }
 
-    private void waitForServices(long timeout) {
+    private void waitForServices(long timeout) throws CommandException {
         try {
             servicesAvailable.tryAcquire(timeout, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
-            translator.localize(LocaleResources.COMMAND_INTERRUPTED);
+            throw new CommandException(translator.localize(LocaleResources.COMMAND_INTERRUPTED));
         }
     }
 

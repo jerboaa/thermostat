@@ -79,9 +79,18 @@ public class VmCommandsTest extends IntegrationTest {
         // TODO include required options to test meaningfully
         vmStat.expectClose();
 
-        System.out.println(vmStat.getCurrentStandardOutContents());
         assertCommandIsFound(vmStat.getCurrentStandardOutContents(), vmStat.getCurrentStandardErrContents());
         assertNoExceptions(vmStat.getCurrentStandardOutContents(), vmStat.getCurrentStandardErrContents());
+    }
+    
+    @Test
+    public void testGcCommonName() throws Exception {
+        Spawn gcCommonName = commandAgainstMongo("show-gc-name");
+        // TODO include required options to test meaningfully
+        gcCommonName.expectClose();
+
+        assertCommandIsFound(gcCommonName.getCurrentStandardOutContents(), gcCommonName.getCurrentStandardErrContents());
+        assertNoExceptions(gcCommonName.getCurrentStandardOutContents(), gcCommonName.getCurrentStandardErrContents());
     }
 
     @Test
