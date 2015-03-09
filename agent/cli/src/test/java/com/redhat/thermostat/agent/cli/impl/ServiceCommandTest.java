@@ -46,6 +46,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.Collection;
 
@@ -69,6 +70,7 @@ import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class ServiceCommandTest {
 
+    private ByteArrayOutputStream stdErrOut;
     private Launcher mockLauncher;
     private ServiceCommand serviceCommand;
     private CommandContext mockCommandContext;
@@ -95,7 +97,8 @@ public class ServiceCommandTest {
         when(mockActionEvent.getSource()).thenReturn(mockStorageCommand);
         mockCommandContext = mock(CommandContext.class);
         Console console = mock(Console.class);
-        PrintStream err = mock(PrintStream.class);
+        stdErrOut = new ByteArrayOutputStream();
+        PrintStream err = new PrintStream(stdErrOut);
         when(console.getError()).thenReturn(err);
         when(mockCommandContext.getConsole()).thenReturn(console);
         
@@ -183,6 +186,7 @@ public class ServiceCommandTest {
             Assert.assertEquals(e.getLocalizedMessage(), "Service failed to start due to error starting storage.");
         }
         Assert.assertTrue(exTriggered);
+        Assert.assertEquals("Test Exception\n", stdErrOut.toString());
         
         verify(mockLauncher, times(2)).run(eq(STORAGE_START_ARGS), isA(Collection.class), anyBoolean());
         verify(mockLauncher, times(1)).run(eq(STORAGE_STOP_ARGS), anyBoolean());
@@ -215,6 +219,40 @@ public class ServiceCommandTest {
             exTriggered = true;
         }
         Assert.assertTrue(exTriggered);
+        Assert.assertEquals("Test Exception\n", stdErrOut.toString());
+        
+        verify(mockLauncher, times(1)).run(eq(STORAGE_START_ARGS), isA(Collection.class), anyBoolean());
+        verify(mockLauncher, never()).run(eq(STORAGE_STOP_ARGS), anyBoolean());
+        verify(mockLauncher, never()).run(eq(AGENT_ARGS), anyBoolean());
+        verify(mockActionEvent, times(1)).getActionId();
+    }
+    
+    @Test(timeout=1000)
+    public void testStorageFailStartUnknown()  throws CommandException {
+        doAnswer(new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                listeners = (Collection<ActionListener<ApplicationState>>)args[1];
+                
+                when(mockActionEvent.getActionId()).thenReturn(ApplicationState.FAIL);
+                // Return a null payload in order to trigger unknown path
+                when(mockActionEvent.getPayload()).thenReturn(null);
+                
+                for(ActionListener<ApplicationState> listener : listeners) {
+                    listener.actionPerformed(mockActionEvent);
+                }
+                return null;
+            }
+        }).when(mockLauncher).run(eq(STORAGE_START_ARGS), isA(Collection.class), anyBoolean());
+        
+        boolean exTriggered = false;
+        try {
+            serviceCommand.run(mockCommandContext);
+        } catch (CommandException e) {
+            exTriggered = true;
+        }
+        Assert.assertTrue(exTriggered);
+        Assert.assertEquals("Unexpected result from storage.\n", stdErrOut.toString());
         
         verify(mockLauncher, times(1)).run(eq(STORAGE_START_ARGS), isA(Collection.class), anyBoolean());
         verify(mockLauncher, never()).run(eq(STORAGE_STOP_ARGS), anyBoolean());

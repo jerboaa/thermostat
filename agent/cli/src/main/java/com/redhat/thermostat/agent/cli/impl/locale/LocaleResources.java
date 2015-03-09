@@ -40,8 +40,6 @@ import com.redhat.thermostat.shared.locale.Translate;
 
 public enum LocaleResources {
 
-    STARTING_AGENT,
-
     SERVICE_FAILED_TO_START_DB,
     LAUNCHER_UNAVAILABLE,
     UNEXPECTED_RESULT_STORAGE,
