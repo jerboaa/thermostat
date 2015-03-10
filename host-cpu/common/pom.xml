@@ -41,7 +41,7 @@
   <parent>
     <artifactId>thermostat-host-cpu</artifactId>
     <groupId>com.redhat.thermostat</groupId>
-    <version>1.99.0-SNAPSHOT</version>
+    <version>1.99.1-SNAPSHOT</version>
   </parent>
   <artifactId>thermostat-host-cpu-common</artifactId>
   <packaging>bundle</packaging>

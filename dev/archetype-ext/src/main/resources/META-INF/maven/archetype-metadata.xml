@@ -46,7 +46,7 @@
       <defaultValue>The name of your Thermostat extension goes here</defaultValue>
     </requiredProperty>
     <requiredProperty key="thermostatVersion">
-      <defaultValue>1.99.0-SNAPSHOT</defaultValue>
+      <defaultValue>1.99.1-SNAPSHOT</defaultValue>
     </requiredProperty>
   </requiredProperties>
 

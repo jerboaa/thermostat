@@ -41,7 +41,7 @@
   <parent>
     <artifactId>thermostat-vm-classstat</artifactId>
     <groupId>com.redhat.thermostat</groupId>
-    <version>1.99.0-SNAPSHOT</version>
+    <version>1.99.1-SNAPSHOT</version>
   </parent>
   <artifactId>thermostat-vm-classstat-client-swing</artifactId>
   <packaging>bundle</packaging>
