@@ -36,102 +36,75 @@
 
 package com.redhat.thermostat.itest;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import expectj.Spawn;
-
 public class PluginTest extends IntegrationTest {
 
-    private static final String PLUGIN_HOME = getSystemPluginHome();
+    protected static final String SYSTEM_PLUGIN_HOME = getSystemPluginHome();
+    protected static final String USER_PLUGIN_HOME = getUserThermostatHome() + File.separator + "data" + File.separator + "plugins";
+    protected static final String USER_PLUGIN_INSTALL_LOCATION = USER_PLUGIN_HOME + File.separator + "user";
+    protected static final String SYSTEM_PLUGIN_INSTALL_LOCATION = SYSTEM_PLUGIN_HOME + File.separator + "new";
 
-    private static NewCommandPlugin fooPlugin = new NewCommandPlugin("foo", "provides foo command", PLUGIN_HOME + File.separator + "new");
-    private static NewCommandPlugin userPlugin = new NewCommandPlugin(
-            "user",
-            "a plugin that is provided by the user",
-            getUserThermostatHome() + File.separator + "data" + File.separator + "plugins" + File.separator + "user");
-    private static UnknownExtendsPlugin unknownExtension = new UnknownExtendsPlugin(PLUGIN_HOME + File.separator + "unknown");
-
-    @BeforeClass
-    public static void setUpOnce() {
-        fooPlugin.install();
-        userPlugin.install();
-        unknownExtension.install();
-    }
-    
-    @Before
-    public void setup() {
-        createFakeSetupCompleteFile();
-    }
-
-    @AfterClass
-    public static void tearDownOnce() {
-        unknownExtension.uninstall();
-        userPlugin.uninstall();
-        fooPlugin.uninstall();
-    }
-    
-    @After
-    public void tearDown() throws IOException {
-        removeSetupCompleteStampFiles();
-    }
-
-    @Test
-    public void testHelpIsOkay() throws Exception {
-        Spawn shell = spawnThermostat("help");
-        shell.expectClose();
-
-        String stdOut = shell.getCurrentStandardOutContents();
-
-        assertTrue(stdOut.contains("list of commands"));
-        assertTrue(stdOut.contains("help"));
-        assertTrue(stdOut.contains("agent"));
-        assertTrue(stdOut.contains("gui"));
-        assertTrue(stdOut.contains("ping"));
-        assertTrue(stdOut.contains("shell"));
-
-        assertTrue(stdOut.contains(fooPlugin.command));
-        assertTrue(stdOut.contains(fooPlugin.description));
-
-        assertTrue(stdOut.contains(userPlugin.command));
-
-        assertFalse(stdOut.contains(unknownExtension.command));
-
-        // TODO assertEquals("", stdErr);
+    protected abstract static class BasicPlugin {
+        private final String command;
+        private final String pluginHome;
+        
+        protected BasicPlugin(String command, String pluginHome) {
+            this.command = command;
+            this.pluginHome = pluginHome;
+        }
+        
+        protected String getCommandName() {
+            return command;
+        }
+        
+        protected String getPluginHome() {
+            return pluginHome;
+        }
+        
+        protected void doInstall(String thermostatPluginXml) {
+            File home = new File(getPluginHome());
+            if (!home.isDirectory() && !home.mkdirs()) {
+                throw new AssertionError("could not create directory: " + getPluginHome());
+            }
+            try (FileWriter writer = new FileWriter(getPluginHome() + File.separator + "thermostat-plugin.xml")) {
+                writer.write(thermostatPluginXml);
+            } catch (IOException e) {
+                throw new AssertionError("unable to write plugin configuration", e);
+            }
+        }
+        
+        protected void uninstall() {
+            if (!new File(getPluginHome()).exists()) {
+                return;
+            }
+            if (!new File(getPluginHome(), "thermostat-plugin.xml").delete()) {
+                throw new AssertionError("Could not delete plugin file");
+            }
+            if (!new File(getPluginHome()).delete()) {
+                throw new AssertionError("Could not delete plugin directory");
+            }
+        }
+        
+        protected abstract void install();
     }
 
     /**
      * This plugin provides a new command
      */
-    private static class NewCommandPlugin {
+    protected static class NewCommandPlugin extends BasicPlugin {
 
-        private final String pluginHome;
-        private final String command;
         private final String description;
 
         public NewCommandPlugin(String command, String description, String pluginLocation) {
-            this.pluginHome = pluginLocation;
-
-            this.command = command;
+            super(command, pluginLocation);
             this.description = description;
         }
 
-        private void install() {
-            File home = new File(pluginHome);
-            if (!home.isDirectory() && !home.mkdirs()) {
-                throw new AssertionError("could not create directory: " + pluginHome);
-            }
-
+        @Override
+        protected void install() {
             String pluginContents = "" +
                     "<?xml version=\"1.0\"?>\n" +
                     "<plugin xmlns=\"http://icedtea.classpath.org/thermostat/plugins/v1.0\"\n" +
@@ -139,7 +112,7 @@ public class PluginTest extends IntegrationTest {
                     " xsi:schemaLocation=\"http://icedtea.classpath.org/thermostat/plugins/v1.0 thermost-plugin.xsd\">\n" +
                     "  <commands>" +
                     "    <command>" +
-                    "      <name>" + command + "</name>" +
+                    "      <name>" + getCommandName() + "</name>" +
                     "      <description>" + description + "</description>" +
                     "      <options>" +
                     "        <option>" +
@@ -160,48 +133,22 @@ public class PluginTest extends IntegrationTest {
                     "    </command>" +
                     "  </commands>" +
                     "</plugin>";
-
-            try (FileWriter writer = new FileWriter(pluginHome + File.separator + "thermostat-plugin.xml")) {
-                writer.write(pluginContents);
-            } catch (IOException e) {
-                throw new AssertionError("unable to write plugin configuration", e);
-            }
-
+            super.doInstall(pluginContents);
         }
 
-        private void uninstall() {
-            if (!new File(pluginHome).exists()) {
-                return;
-            }
-            if (!new File(pluginHome, "thermostat-plugin.xml").delete()) {
-                throw new AssertionError("Could not delete plugin file");
-            }
-            if (!new File(pluginHome).delete()) {
-                throw new AssertionError("Could not delete plugin directory");
-            }
-        }
     }
 
     /**
      * This plugin extends an unknown command
      */
-    private static class UnknownExtendsPlugin {
-
-        private final String pluginHome;
-        private final String command;
+    protected static class UnknownExtendsPlugin extends BasicPlugin {
 
         public UnknownExtendsPlugin(String pluginLocation) {
-            this.pluginHome = pluginLocation;
-
-            this.command = "unknown-command";
+            super("unknown-command", pluginLocation);
         }
 
-        private void install() {
-            File home = new File(pluginHome);
-            if (!home.isDirectory() && !home.mkdir()) {
-                throw new AssertionError("could not create directory: " + pluginHome);
-            }
-
+        @Override
+        protected void install() {
             String pluginContents = "" +
                     "<?xml version=\"1.0\"?>\n" +
                     "<plugin xmlns=\"http://icedtea.classpath.org/thermostat/plugins/v1.0\"\n" +
@@ -209,7 +156,7 @@ public class PluginTest extends IntegrationTest {
                     " xsi:schemaLocation=\"http://icedtea.classpath.org/thermostat/plugins/v1.0 thermost-plugin.xsd\">\n" +
                     "  <extensions>" +
                     "    <extension>" +
-                    "      <name>" + command + "</name>" +
+                    "      <name>" + getCommandName() + "</name>" +
                     "      <bundles>" +
                     "        <bundle>" +
                     "          <symbolic-name>bar</symbolic-name>" +
@@ -220,25 +167,9 @@ public class PluginTest extends IntegrationTest {
                     "  </extensions>" +
                     "</plugin>";
 
-            try (FileWriter writer = new FileWriter(pluginHome + File.separator + "thermostat-plugin.xml")) {
-                writer.write(pluginContents);
-            } catch (IOException e) {
-                throw new AssertionError("unable to write plugin configuration", e);
-            }
-
+            super.doInstall(pluginContents);
         }
 
-        private void uninstall() {
-            if (!new File(pluginHome).exists()) {
-                return;
-            }
-            if (!new File(pluginHome, "thermostat-plugin.xml").delete()) {
-                throw new AssertionError("Could not delete plugin file");
-            }
-            if (!new File(pluginHome).delete()) {
-                throw new AssertionError("Could not delete plugin directory");
-            }
-        }
     }
 
 }
