@@ -42,7 +42,7 @@
   <parent>
     <groupId>com.redhat.thermostat</groupId>
     <artifactId>thermostat-storage</artifactId>
-    <version>1.99.1-SNAPSHOT</version>
+    <version>1.99.2-SNAPSHOT</version>
   </parent>
   
   <artifactId>thermostat-storage-core</artifactId>

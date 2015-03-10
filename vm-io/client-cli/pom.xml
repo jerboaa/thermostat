@@ -41,7 +41,7 @@
   <parent>
     <artifactId>thermostat-vm-io</artifactId>
     <groupId>com.redhat.thermostat</groupId>
-    <version>1.99.1-SNAPSHOT</version>
+    <version>1.99.2-SNAPSHOT</version>
   </parent>
   <artifactId>thermostat-vm-io-client-cli</artifactId>
   <packaging>bundle</packaging>
