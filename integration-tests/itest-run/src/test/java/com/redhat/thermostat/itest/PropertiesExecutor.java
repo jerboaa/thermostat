@@ -34,22 +34,34 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.cli.impl.locale;
+package com.redhat.thermostat.itest;
 
-import com.redhat.thermostat.shared.locale.Translate;
+import java.util.Map;
 
-public enum LocaleResources {
-
-    SERVICE_FAILED_TO_START_DB,
-    LAUNCHER_UNAVAILABLE,
-    UNEXPECTED_RESULT_STORAGE,
-    ;
-
-    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.agent.cli.impl.strings";
-
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+class PropertiesExecutor extends EnvironmentExecutor {
+    
+    private static final String ARG_TEMPLATE = "-J-D%s=%s";
+    
+    // main constructor
+    public PropertiesExecutor(String script, String args, Map<String, String> props) {
+        super(script, prependProperties(args, props), IntegrationTest.DEFAULT_ENVIRONMENT);
     }
-
+    
+    // Test-only
+    PropertiesExecutor(String script, String args, Map<String, String> props, String[] env) {
+        super(script, prependProperties(args, props), env);
+    }
+    
+    static private String prependProperties(String args, Map<String, String> props) {
+        String retval = "";
+        for (String key: props.keySet()) {
+            retval = retval + String.format(ARG_TEMPLATE, key, props.get(key)) + " ";
+        }
+        retval = retval.trim();
+        if (retval.length() == 0) {
+            return args;
+        } else {
+            return retval + " " + args;
+        }
+    }
 }
-

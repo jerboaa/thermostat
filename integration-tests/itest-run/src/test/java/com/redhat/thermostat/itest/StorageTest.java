@@ -37,6 +37,7 @@
 package com.redhat.thermostat.itest;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
@@ -79,11 +80,12 @@ public class StorageTest extends IntegrationTest {
 
     @Test
     public void testServiceStartAndKilling() throws Exception {
-        SpawnResult spawnResult = spawnThermostatAndGetProcess("service");
+        Map<String, String> testProperties = getVerboseModeProperties();
+        SpawnResult spawnResult = spawnThermostatWithPropertiesSetAndGetProcess(testProperties, "service");
         Spawn service = spawnResult.spawn;
 
         try {
-            service.expectErr("agent started");
+            service.expect("Agent started.");
         } finally {
             killRecursively(spawnResult.process);
             try {

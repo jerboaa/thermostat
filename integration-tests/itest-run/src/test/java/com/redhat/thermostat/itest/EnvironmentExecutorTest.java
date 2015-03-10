@@ -34,22 +34,20 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.cli.impl.locale;
+package com.redhat.thermostat.itest;
 
-import com.redhat.thermostat.shared.locale.Translate;
+import static org.junit.Assert.assertEquals;
 
-public enum LocaleResources {
+import org.junit.Test;
 
-    SERVICE_FAILED_TO_START_DB,
-    LAUNCHER_UNAVAILABLE,
-    UNEXPECTED_RESULT_STORAGE,
-    ;
-
-    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.agent.cli.impl.strings";
-
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+public class EnvironmentExecutorTest {
+    
+    @Test
+    public void testExecutor() {
+        String[] env = new String[] { "env1=bar1" };
+        EnvironmentExecutor executor = new EnvironmentExecutor("thermostat", "bar baz", env);
+        assertEquals("thermostat bar baz", executor.toString());
+        assertEquals(1, executor.getEnv().length);
+        assertEquals("env1=bar1", executor.getEnv()[0]);
     }
-
 }
-

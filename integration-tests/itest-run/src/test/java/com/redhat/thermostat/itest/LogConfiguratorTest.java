@@ -34,22 +34,33 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.cli.impl.locale;
+package com.redhat.thermostat.itest;
 
-import com.redhat.thermostat.shared.locale.Translate;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-public enum LocaleResources {
+import java.io.File;
+import java.util.Properties;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.SimpleFormatter;
 
-    SERVICE_FAILED_TO_START_DB,
-    LAUNCHER_UNAVAILABLE,
-    UNEXPECTED_RESULT_STORAGE,
-    ;
+import org.junit.Test;
 
-    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.agent.cli.impl.strings";
+public class LogConfiguratorTest {
 
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+    @Test
+    public void canGetLoggingProperties() {
+        File loggingProps = mock(File.class);
+        File dest = mock(File.class);
+        String logPath = "/path/to/log.file";
+        when(dest.getAbsolutePath()).thenReturn(logPath);
+        LogConfigurator configurator = new LogConfigurator(Level.OFF, loggingProps, dest);
+        Properties expected = configurator.getLoggingProperties();
+        assertEquals(FileHandler.class.getName(), expected.get("com.redhat.thermostat.handlers"));
+        assertEquals(logPath, expected.get("java.util.logging.FileHandler.pattern"));
+        assertEquals(SimpleFormatter.class.getName(), expected.get("java.util.logging.FileHandler.formatter"));
+        assertEquals(Level.OFF.toString(), expected.get("com.redhat.thermostat.level"));
     }
-
 }
-

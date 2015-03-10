@@ -34,22 +34,12 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.cli.impl.locale;
+package com.redhat.thermostat.itest;
 
-import com.redhat.thermostat.shared.locale.Translate;
+class LocaleExecutor extends EnvironmentExecutor {
 
-public enum LocaleResources {
-
-    SERVICE_FAILED_TO_START_DB,
-    LAUNCHER_UNAVAILABLE,
-    UNEXPECTED_RESULT_STORAGE,
-    ;
-
-    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.agent.cli.impl.strings";
-
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+    public LocaleExecutor(String script, String args) {
+        super(script, args, IntegrationTest.DEFAULT_ENV_WITH_LANG_C);
     }
 
 }
-

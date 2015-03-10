@@ -39,6 +39,8 @@ package com.redhat.thermostat.agent.cli.impl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -51,6 +53,7 @@ import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.tools.ApplicationState;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.shared.locale.Translate;
 
@@ -61,6 +64,7 @@ import com.redhat.thermostat.shared.locale.Translate;
 public class ServiceCommand extends AbstractCommand implements ActionListener<ApplicationState> {
     
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+    private static final Logger logger = LoggingUtils.getLogger(ServiceCommand.class);
 
     private List<ActionListener<ApplicationState>> listeners;
     private Semaphore agentBarrier = new Semaphore(0);
@@ -117,7 +121,7 @@ public class ServiceCommand extends AbstractCommand implements ActionListener<Ap
                     }
                     String dbUrl = (String) payload;
                     String[] agentArgs =  new String[] {"agent", "-d", dbUrl};
-                    cmdCtx.getConsole().getError().println(translator.localize(LocaleResources.STARTING_AGENT).getContents());
+                    logger.fine("starting agent now...");
                     launcher.run(agentArgs, false);
                     break;
                 case FAIL:
@@ -129,6 +133,7 @@ public class ServiceCommand extends AbstractCommand implements ActionListener<Ap
                     }
                     Exception ex = (Exception) payload;
                     cmdCtx.getConsole().getError().println(ex.getMessage());
+                    logger.log(Level.WARNING, ex.getMessage(), ex);
                     break;
                 }
             } catch (CommandException e) {

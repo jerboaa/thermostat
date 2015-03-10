@@ -34,22 +34,53 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.cli.impl.locale;
+package com.redhat.thermostat.itest;
 
-import com.redhat.thermostat.shared.locale.Translate;
+import java.io.IOException;
 
-public enum LocaleResources {
+import expectj.Executor;
 
-    SERVICE_FAILED_TO_START_DB,
-    LAUNCHER_UNAVAILABLE,
-    UNEXPECTED_RESULT_STORAGE,
-    ;
+/**
+ * Runs any script in $THERMOSTAT_HOME/bin with the given name, args
+ * and enviroment.
+ *
+ */
+class EnvironmentExecutor implements Executor {
 
-    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.agent.cli.impl.strings";
+    private final String[] env;
+    private final String args;
+    private final String script;
 
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+    /**
+     * 
+     * @param script The script name (e.g. "thermostat")
+     * @param args The space separated list of arguments
+     * @param env List of environment variables in key=value pair format.
+     */
+    public EnvironmentExecutor(String script, String args, String[] env) {
+        this.args = args;
+        this.env = env;
+        this.script = script;
     }
 
-}
+    @Override
+    public Process execute() throws IOException {
+        String command = buildCommand();
+        Process p = Runtime.getRuntime().exec(command, env);
+        return p;
+    }
 
+    @Override
+    public String toString() {
+        return script + " " + args;
+    }
+    
+    private String buildCommand() {
+        return IntegrationTest.getSystemBinRoot() + "/" + script + " " + args;
+    }
+    
+    // for testing
+    String[] getEnv() {
+        return env;
+    }
+}

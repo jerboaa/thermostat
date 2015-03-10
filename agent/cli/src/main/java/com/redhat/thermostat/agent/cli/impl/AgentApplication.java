@@ -62,6 +62,7 @@ import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.cli.Arguments;
+import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -79,6 +80,16 @@ import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 @SuppressWarnings("restriction")
 public final class AgentApplication extends AbstractStateNotifyingCommand {
 
+    /**
+     * Property for turning on verbose mode. This is there so as to be able to
+     * run integration tests independent of log levels.
+     */
+    private static final String VERBOSE_MODE_PROPERTY = "thermostat.agent.verbose";
+    // Messages printed in verbose mode. Integration tests use this. Be careful
+    // when you change those!
+    private static final String VERBOSE_MODE_AGENT_STOPPED_MSG = "Agent stopped.";
+    private static final String VERBOSE_MODE_AGENT_STARTED_MSG = "Agent started.";
+    
     private static final Logger logger = LoggingUtils.getLogger(AgentApplication.class);
     
     private final BundleContext bundleContext;
@@ -237,7 +248,12 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
                 // there will be no way to actually stop Thermostat.
                 ex.printStackTrace();
             }
-            logger.fine("Agent stopped.");       
+            logger.fine("Agent stopped.");
+            // Hook for integration tests. Print a well known message to stdout
+            // if verbose mode is turned on via the system property.
+            if (Boolean.getBoolean(VERBOSE_MODE_PROPERTY)) {
+                System.out.println(VERBOSE_MODE_AGENT_STOPPED_MSG);
+            }
             shutdown();
         }
         
@@ -272,9 +288,13 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
             shutdown();
         }
         logger.fine("Agent started.");
+        // Hook for integration tests. Print a well known message to stdout
+        // if verbose mode is turned on via the system property.
+        if (Boolean.getBoolean(VERBOSE_MODE_PROPERTY)) {
+            System.out.println(VERBOSE_MODE_AGENT_STARTED_MSG);
+        }
 
         logger.info("Agent id: " + agent.getId());
-        logger.info("agent started.");
         return agent;
     }
     

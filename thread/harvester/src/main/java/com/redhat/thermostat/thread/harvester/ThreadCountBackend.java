@@ -64,7 +64,6 @@ public class ThreadCountBackend extends VmListenerBackend {
 
     @Override
     protected VmUpdateListener createVmListener(String writerId, String vmId, int pid) {
-        System.out.println("new vm listener created");
         Objects.requireNonNull(threadDao);
         return new ThreadCountUpdater(threadDao, writerId, vmId);
     }

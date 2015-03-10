@@ -34,22 +34,43 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.cli.impl.locale;
+package com.redhat.thermostat.itest;
 
-import com.redhat.thermostat.shared.locale.Translate;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-public enum LocaleResources {
+import java.util.HashMap;
+import java.util.Map;
 
-    SERVICE_FAILED_TO_START_DB,
-    LAUNCHER_UNAVAILABLE,
-    UNEXPECTED_RESULT_STORAGE,
-    ;
+import org.junit.Test;
 
-    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.agent.cli.impl.strings";
-
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+public class PropertiesExecutorTest {
+    
+    @Test
+    public void testExecutorEmptyProps() {
+        Map<String, String> props = new HashMap<>();
+        PropertiesExecutor executor = getPropertiesExecutor(props);
+        assertEquals("thermostat bar baz", executor.toString());
     }
-
+    
+    @Test
+    public void testExecutorWithSomePropsSet() {
+        Map<String, String> props = new HashMap<>();
+        props.put("prop1", "propval1");
+        props.put("prop2", "propval2");
+        PropertiesExecutor executor = getPropertiesExecutor(props);
+        // props are converted to a string in random order. Make assertions
+        // not depend on any specific order.
+        assertTrue(executor.toString().startsWith("thermostat"));
+        assertTrue(executor.toString().endsWith("bar baz"));
+        assertTrue(executor.toString().contains("-J-Dprop2=propval2"));
+        assertTrue(executor.toString().contains("-J-Dprop1=propval1"));
+    }
+    
+    private PropertiesExecutor getPropertiesExecutor(Map<String, String> props) {
+        String[] emptyEnv = new String[] {};
+        PropertiesExecutor executor = new PropertiesExecutor("thermostat", "bar baz", props, emptyEnv);
+        assertEquals(0, executor.getEnv().length);
+        return executor;
+    }
 }
-

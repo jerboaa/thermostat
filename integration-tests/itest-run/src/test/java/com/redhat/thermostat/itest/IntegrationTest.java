@@ -45,7 +45,10 @@ import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
 
 import com.redhat.thermostat.common.utils.StreamUtils;
 
@@ -63,8 +66,38 @@ import expectj.Spawn;
  */
 public class IntegrationTest {
     
+    /**
+     * Configure the log level to FINEST, and configure a file handler so as for
+     * log messages to go to USER_THERMOSTAT_HOME/integration-tests.log rather
+     * than stdout. This is to ensure integration tests pass without dependency
+     * on log levels. See:
+     *   http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=1594
+     */
+    static {
+        createUserThermostatHomeAndEtc();
+        File loggingProperties = new File(getUserThermostatHome() + File.separator + "etc" + File.separator + "logging.properties");
+        File logFile = new File(getUserThermostatHome() + File.separator + "integration-tests.log");
+        LogConfigurator configurator = new LogConfigurator(Level.FINEST, loggingProperties, logFile);
+        configurator.writeConfiguration();
+    }
+    
     public static final String ITEST_USER_HOME_PROP = "com.redhat.thermostat.itest.thermostatUserHome";
     public static final String ITEST_THERMOSTAT_HOME_PROP = "com.redhat.thermostat.itest.thermostatHome";
+
+    private static final String AGENT_VERBOSE_MODE_PROP = "thermostat.agent.verbose";
+    private static final String THERMOSTAT_HOME = "THERMOSTAT_HOME";
+    private static final String USER_THERMOSTAT_HOME = "USER_THERMOSTAT_HOME";
+
+    public static final String[] DEFAULT_ENVIRONMENT = new String[] {
+        THERMOSTAT_HOME + "=" + IntegrationTest.getThermostatHome(),
+        USER_THERMOSTAT_HOME + "=" + IntegrationTest.getUserThermostatHome(),
+    };
+    
+    public static final String[] DEFAULT_ENV_WITH_LANG_C = new String [] {
+        THERMOSTAT_HOME + "=" + IntegrationTest.getThermostatHome(),
+        USER_THERMOSTAT_HOME + "=" + IntegrationTest.getUserThermostatHome(),
+        "LANG=C"
+    };
     
     public static class SpawnResult {
         final Process process;
@@ -81,9 +114,14 @@ public class IntegrationTest {
     public static final String SHELL_DISCONNECT_PROMPT = "Thermostat - >";
     public static final String SHELL_CONNECT_PROMPT = "Thermostat + >";
 
-    private static final String THERMOSTAT_HOME = "THERMOSTAT_HOME";
-    private static final String USER_THERMOSTAT_HOME = "USER_THERMOSTAT_HOME";
     private static final String THERMOSTAT_SCRIPT = "thermostat";
+    
+    private static void createUserThermostatHomeAndEtc() {
+        File userThHome = new File(getUserThermostatHome());
+        userThHome.mkdir();
+        File etcThHome = new File(userThHome, "etc");
+        etcThHome.mkdir();
+    }
     
     /**
      * Utility method for creating the setup file - and its parent directories
@@ -109,6 +147,7 @@ public class IntegrationTest {
         }
     }
     
+
     /**
      * Utility method for removing stamp files which may get created by certain
      * integration test runs. For example a test which runs the "service"
@@ -136,6 +175,13 @@ public class IntegrationTest {
         } catch (NoSuchFileException e) {
             // wanted to delete that file, so that should be fine.
         }
+    }
+    
+    protected static Map<String, String> getVerboseModeProperties() {
+        Map<String, String> testProperties = new HashMap<>();
+        // See AgentApplication.VERBOSE_MODE_PROPERTY
+        testProperties.put(AGENT_VERBOSE_MODE_PROP, Boolean.TRUE.toString());
+        return testProperties;
     }
 
     /* This is a mirror of paths from c.r.t.shared.Configuration */
@@ -262,18 +308,31 @@ public class IntegrationTest {
         return result.toString();
     }
 
-	public static SpawnResult spawnThermostatAndGetProcess(String... args) throws IOException {
-	    return runComandAndGetProcess(THERMOSTAT_SCRIPT, args);
-	}
-	
-	private static SpawnResult runComandAndGetProcess(String script, String[] args) throws IOException {
-	    String toExecute = convertArgsToString(args);
+    public static SpawnResult spawnThermostatAndGetProcess(String... args)
+            throws IOException {
+        return runComandAndGetProcess(THERMOSTAT_SCRIPT, args);
+    }
+
+    public static SpawnResult spawnThermostatWithPropertiesSetAndGetProcess(
+            Map<String, String> props, String... args) throws IOException {
+        return runCommandAndGetProcess(THERMOSTAT_SCRIPT, args, props);
+    }
+
+    private static SpawnResult runComandAndGetProcess(String script,
+            String[] args) throws IOException {
+        return runCommandAndGetProcess(THERMOSTAT_SCRIPT, args,
+                new HashMap<String, String>());
+    }
+
+    private static SpawnResult runCommandAndGetProcess(String script, String[] args, Map<String, String> props) throws IOException {
+        String toExecute = convertArgsToString(args);
 
         final Process[] process = new Process[1];
 
         ExpectJ expect = new ExpectJ(TIMEOUT_IN_SECONDS);
 
-        Spawn spawn = expect.spawn(new SimpleExecutor(script, toExecute) {
+        Spawn spawn = expect.spawn(new PropertiesExecutor(script, toExecute,
+                props) {
             @Override
             public Process execute() throws IOException {
                 Process p = super.execute();
@@ -283,6 +342,7 @@ public class IntegrationTest {
         });
 
         return new SpawnResult(process[0], spawn);
+
     }
 
     protected static boolean isDevelopmentBuild() {
@@ -384,73 +444,6 @@ public class IntegrationTest {
     public static void handleAuthPrompt(Spawn spawn, String url, String user, String password) throws IOException {
         spawn.send(user + "\r");
         spawn.send(password + "\r");
-        
-    }
-
-    private static class LocaleExecutor extends EnvironmentExecutor {
-
-        public static final String[] ENV_WITH_LANG_C = {
-                THERMOSTAT_HOME + "=" + getThermostatHome(),
-                USER_THERMOSTAT_HOME + "=" + getUserThermostatHome(),
-                "LANG=C"
-        };
-
-        public LocaleExecutor(String script, String args) {
-            super(script, args, ENV_WITH_LANG_C);
-        }
-
-    }
-
-    private static class SimpleExecutor extends EnvironmentExecutor {
-
-        public static final String[] ENV_WITH = {
-                THERMOSTAT_HOME + "=" + getThermostatHome(),
-                USER_THERMOSTAT_HOME + "=" + getUserThermostatHome(),
-        };
-
-        public SimpleExecutor(String script, String args) {
-            super(script, args, ENV_WITH);
-        }
-    }
-
-    /**
-     * Runs any script in $THERMOSTAT_HOME/bin with the given name, args
-     * and enviroment.
-     *
-     */
-    private static class EnvironmentExecutor implements Executor {
-
-        private final String[] env;
-        private final String args;
-        private final String script;
-
-        /**
-         * 
-         * @param script The script name (e.g. "thermostat")
-         * @param args The space separated list of arguments
-         * @param env List of environment variables in key=value pair format.
-         */
-        public EnvironmentExecutor(String script, String args, String[] env) {
-            this.args = args;
-            this.env = env;
-            this.script = script;
-        }
-
-        @Override
-        public Process execute() throws IOException {
-            String command = buildCommand();
-            Process p = Runtime.getRuntime().exec(command, env);
-            return p;
-        }
-
-        @Override
-        public String toString() {
-            return args;
-        }
-        
-        private String buildCommand() {
-            return getSystemBinRoot() + "/" + script + " " + args;
-        }
     }
 }
 
