@@ -37,17 +37,87 @@
 package com.redhat.thermostat.itest;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.Test;
 
 public class EnvironmentExecutorTest {
     
+    private static final String FAKE_BIN_ROOT = "";
+    private static final String[] ARGS = new String[] {
+        "bar", "baz"
+    };
+    private static final String SCRIPT = "thermostat";
+    
     @Test
     public void testExecutor() {
-        String[] env = new String[] { "env1=bar1" };
-        EnvironmentExecutor executor = new EnvironmentExecutor("thermostat", "bar baz", env);
+        Map<String, String> env = new HashMap<>();
+        env.put("env1", "bar1");
+        EnvironmentExecutor executor = new EnvironmentExecutor(FAKE_BIN_ROOT, SCRIPT, ARGS, env);
         assertEquals("thermostat bar baz", executor.toString());
-        assertEquals(1, executor.getEnv().length);
-        assertEquals("env1=bar1", executor.getEnv()[0]);
+        assertEquals(1, executor.getEnv().keySet().size());
+        assertEquals("bar1", executor.getEnv().get("env1"));
+    }
+    
+    @Test
+    public void executeUpdatesEnvironment() throws IOException {
+        String sharedEnvVar = "override-me-on-execute";
+        Map<String, String> overrideEnv = new HashMap<>();
+        final Map<String, String> processBuilderDefaultEnv = new HashMap<>();
+        
+        processBuilderDefaultEnv.put(sharedEnvVar, "old-value");
+        processBuilderDefaultEnv.put("LANG", "C");
+        overrideEnv.put(sharedEnvVar, "new-value");
+        
+        // Precondition
+        assertTrue("expected processbuilder env *and* override env to contain " 
+                   + sharedEnvVar,
+                       overrideEnv.containsKey(sharedEnvVar) &&
+                       processBuilderDefaultEnv.containsKey(sharedEnvVar));
+        
+        TestEnvironmentExecutor testExecutor = new TestEnvironmentExecutor(FAKE_BIN_ROOT, SCRIPT, ARGS, overrideEnv) {
+            
+            @Override
+            protected Map<String, String> getBuilderEnvironment(ProcessBuilder builder) {
+                return processBuilderDefaultEnv;
+            }
+        };
+        
+        // This should update the environment
+        testExecutor.execute();
+        assertTrue(testExecutor.executeCalled);
+        
+        Map<String, String> actualEnv = testExecutor.updatedEnvironment;
+        assertEquals("env var " + sharedEnvVar + " should have been overridden",
+                "new-value", actualEnv.get(sharedEnvVar));
+        assertEquals("env var we didn't override should stay untouched",
+                "C", actualEnv.get("LANG"));
+    }
+    
+    private static class TestEnvironmentExecutor extends EnvironmentExecutor {
+        
+        TestEnvironmentExecutor(String binRoot, String script, String[] args,
+                Map<String, String> env) {
+            super(binRoot, script, args, env);
+        }
+
+        private Map<String, String> updatedEnvironment;
+        private boolean executeCalled;
+        
+        @Override
+        protected Process startProcess(ProcessBuilder builder) {
+            executeCalled = true;
+            return null;
+        }
+        
+        @Override
+        protected void updateEnvironment(Map<String, String> toUpdate) {
+            super.updateEnvironment(toUpdate);
+            updatedEnvironment = toUpdate;
+        }
     }
 }

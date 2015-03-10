@@ -38,7 +38,7 @@ package com.redhat.thermostat.itest;
 
 class LocaleExecutor extends EnvironmentExecutor {
 
-    public LocaleExecutor(String script, String args) {
+    public LocaleExecutor(String script, String[] args) {
         super(script, args, IntegrationTest.DEFAULT_ENV_WITH_LANG_C);
     }
 

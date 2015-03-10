@@ -66,6 +66,16 @@ import expectj.Spawn;
  */
 public class IntegrationTest {
     
+    public static final String ITEST_USER_HOME_PROP = "com.redhat.thermostat.itest.thermostatUserHome";
+    public static final String ITEST_THERMOSTAT_HOME_PROP = "com.redhat.thermostat.itest.thermostatHome";
+    
+    private static final String AGENT_VERBOSE_MODE_PROP = "thermostat.agent.verbose";
+    private static final String THERMOSTAT_HOME = "THERMOSTAT_HOME";
+    private static final String USER_THERMOSTAT_HOME = "USER_THERMOSTAT_HOME";
+    
+    public static final Map<String, String> DEFAULT_ENVIRONMENT;
+    public static final Map<String, String> DEFAULT_ENV_WITH_LANG_C;
+    
     /**
      * Configure the log level to FINEST, and configure a file handler so as for
      * log messages to go to USER_THERMOSTAT_HOME/integration-tests.log rather
@@ -79,25 +89,14 @@ public class IntegrationTest {
         File logFile = new File(getUserThermostatHome() + File.separator + "integration-tests.log");
         LogConfigurator configurator = new LogConfigurator(Level.FINEST, loggingProperties, logFile);
         configurator.writeConfiguration();
+        
+        // Set up environment maps.
+        DEFAULT_ENVIRONMENT = new HashMap<>();
+        DEFAULT_ENVIRONMENT.put(THERMOSTAT_HOME, getThermostatHome());
+        DEFAULT_ENVIRONMENT.put(USER_THERMOSTAT_HOME, getUserThermostatHome());
+        DEFAULT_ENV_WITH_LANG_C = new HashMap<>(DEFAULT_ENVIRONMENT);
+        DEFAULT_ENV_WITH_LANG_C.put("LANG", "C");
     }
-    
-    public static final String ITEST_USER_HOME_PROP = "com.redhat.thermostat.itest.thermostatUserHome";
-    public static final String ITEST_THERMOSTAT_HOME_PROP = "com.redhat.thermostat.itest.thermostatHome";
-
-    private static final String AGENT_VERBOSE_MODE_PROP = "thermostat.agent.verbose";
-    private static final String THERMOSTAT_HOME = "THERMOSTAT_HOME";
-    private static final String USER_THERMOSTAT_HOME = "USER_THERMOSTAT_HOME";
-
-    public static final String[] DEFAULT_ENVIRONMENT = new String[] {
-        THERMOSTAT_HOME + "=" + IntegrationTest.getThermostatHome(),
-        USER_THERMOSTAT_HOME + "=" + IntegrationTest.getUserThermostatHome(),
-    };
-    
-    public static final String[] DEFAULT_ENV_WITH_LANG_C = new String [] {
-        THERMOSTAT_HOME + "=" + IntegrationTest.getThermostatHome(),
-        USER_THERMOSTAT_HOME + "=" + IntegrationTest.getUserThermostatHome(),
-        "LANG=C"
-    };
     
     public static class SpawnResult {
         final Process process;
@@ -288,24 +287,13 @@ public class IntegrationTest {
     
     private static Spawn runScript(boolean localeDependent, String script, String[] args) throws IOException {
         ExpectJ expect = new ExpectJ(TIMEOUT_IN_SECONDS);
-        String toExecute = convertArgsToString(args);
         Executor exec = null;
         if (localeDependent) {
-            exec = new LocaleExecutor(script, toExecute);
+            exec = new LocaleExecutor(script, args);
         } else {
-            exec = new SimpleExecutor(script, toExecute);
+            exec = new SimpleExecutor(script, args);
         }
         return expect.spawn(exec);
-    }
-    
-    private static String convertArgsToString(String[] args) {
-    	StringBuilder result = new StringBuilder();
-        if (args != null) {
-            for (String arg : args) {
-                result.append(" ").append(arg);
-            }
-        }
-        return result.toString();
     }
 
     public static SpawnResult spawnThermostatAndGetProcess(String... args)
@@ -325,13 +313,11 @@ public class IntegrationTest {
     }
 
     private static SpawnResult runCommandAndGetProcess(String script, String[] args, Map<String, String> props) throws IOException {
-        String toExecute = convertArgsToString(args);
-
         final Process[] process = new Process[1];
 
         ExpectJ expect = new ExpectJ(TIMEOUT_IN_SECONDS);
 
-        Spawn spawn = expect.spawn(new PropertiesExecutor(script, toExecute,
+        Spawn spawn = expect.spawn(new PropertiesExecutor(script, args,
                 props) {
             @Override
             public Process execute() throws IOException {

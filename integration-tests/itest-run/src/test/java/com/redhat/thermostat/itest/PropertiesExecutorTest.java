@@ -39,12 +39,15 @@ package com.redhat.thermostat.itest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Test;
 
 public class PropertiesExecutorTest {
+    
+    private static final String FAKE_BIN_ROOT = "";
     
     @Test
     public void testExecutorEmptyProps() {
@@ -68,9 +71,9 @@ public class PropertiesExecutorTest {
     }
     
     private PropertiesExecutor getPropertiesExecutor(Map<String, String> props) {
-        String[] emptyEnv = new String[] {};
-        PropertiesExecutor executor = new PropertiesExecutor("thermostat", "bar baz", props, emptyEnv);
-        assertEquals(0, executor.getEnv().length);
+        String[] args = new String[] { "bar",  "baz" };
+        PropertiesExecutor executor = new PropertiesExecutor(FAKE_BIN_ROOT, "thermostat", args, props, Collections.<String, String>emptyMap());
+        assertEquals(0, executor.getEnv().keySet().size());
         return executor;
     }
 }

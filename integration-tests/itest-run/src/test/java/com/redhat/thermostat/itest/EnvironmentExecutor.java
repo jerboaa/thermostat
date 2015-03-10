@@ -37,6 +37,11 @@
 package com.redhat.thermostat.itest;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import expectj.Executor;
 
@@ -47,40 +52,84 @@ import expectj.Executor;
  */
 class EnvironmentExecutor implements Executor {
 
-    private final String[] env;
-    private final String args;
+    private final Map<String, String> env;
+    private final String[] args;
     private final String script;
+    private final String binRoot;
 
     /**
      * 
      * @param script The script name (e.g. "thermostat")
-     * @param args The space separated list of arguments
-     * @param env List of environment variables in key=value pair format.
+     * @param args The arguments and options to the script
+     * @param env The environment variables in key value format
      */
-    public EnvironmentExecutor(String script, String args, String[] env) {
+    public EnvironmentExecutor(String script, String[] args, Map<String, String> env) {
+        this(IntegrationTest.getSystemBinRoot(), script, args, env);
+    }
+    
+    // Enable testing without invoking static initializer of IntegrationTest
+    EnvironmentExecutor(String binRoot, String script, String[] args, Map<String, String> env) {
         this.args = args;
         this.env = env;
         this.script = script;
+        this.binRoot = binRoot;
     }
 
     @Override
     public Process execute() throws IOException {
-        String command = buildCommand();
-        Process p = Runtime.getRuntime().exec(command, env);
-        return p;
+        List<String> commands = buildCommmands();
+        ProcessBuilder builder = new ProcessBuilder(commands);
+        updateEnvironment(getBuilderEnvironment(builder));
+        return startProcess(builder);
     }
 
-    @Override
-    public String toString() {
-        return script + " " + args;
+    List<String> buildCommmands() {
+        List<String> commands = new ArrayList<>(1 + args.length);
+        String command = buildScriptPath();
+        commands.add(command);
+        commands.addAll(Arrays.asList(args));
+        return commands;
     }
-    
-    private String buildCommand() {
-        return IntegrationTest.getSystemBinRoot() + "/" + script + " " + args;
+
+    private String buildScriptPath() {
+        return binRoot + "/" + script;
+    }
+
+    // for testing
+    protected void updateEnvironment(Map<String, String> toUpdate) {
+        for (Entry<String, String> entry : env.entrySet()) {
+            toUpdate.put(entry.getKey(), entry.getValue());
+        }
     }
     
     // for testing
-    String[] getEnv() {
+    protected Map<String, String> getBuilderEnvironment(ProcessBuilder builder) {
+        return builder.environment();
+    }
+    
+    // for testing
+    protected Process startProcess(ProcessBuilder builder) throws IOException {
+        return builder.start();
+    }
+    
+    
+    // for testing
+    Map<String, String> getEnv() {
         return env;
+    }
+    
+    @Override
+    public String toString() {
+        return script + convertArgsToString(args);
+    }
+    
+    private static String convertArgsToString(String[] args) {
+        StringBuilder result = new StringBuilder();
+        if (args != null) {
+            for (String arg : args) {
+                result.append(" ").append(arg);
+            }
+        }
+        return result.toString();
     }
 }

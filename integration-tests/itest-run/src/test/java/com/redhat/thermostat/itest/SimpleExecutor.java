@@ -38,7 +38,7 @@ package com.redhat.thermostat.itest;
 
 class SimpleExecutor extends EnvironmentExecutor {
 
-    public SimpleExecutor(String script, String args) {
+    public SimpleExecutor(String script, String[] args) {
         super(script, args, IntegrationTest.DEFAULT_ENVIRONMENT);
     }
     

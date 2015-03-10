@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.itest;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 class PropertiesExecutor extends EnvironmentExecutor {
@@ -43,25 +45,25 @@ class PropertiesExecutor extends EnvironmentExecutor {
     private static final String ARG_TEMPLATE = "-J-D%s=%s";
     
     // main constructor
-    public PropertiesExecutor(String script, String args, Map<String, String> props) {
+    public PropertiesExecutor(String script, String []args, Map<String, String> props) {
         super(script, prependProperties(args, props), IntegrationTest.DEFAULT_ENVIRONMENT);
     }
     
     // Test-only
-    PropertiesExecutor(String script, String args, Map<String, String> props, String[] env) {
-        super(script, prependProperties(args, props), env);
+    PropertiesExecutor(String binRoot, String script, String[] args, Map<String, String> props, Map<String, String> env) {
+        super(binRoot, script, prependProperties(args, props), env);
     }
     
-    static private String prependProperties(String args, Map<String, String> props) {
-        String retval = "";
+    static private String[] prependProperties(String[] args, Map<String, String> props) {
+        List<String> newArgs = new ArrayList<>();
+        // prepend property args
         for (String key: props.keySet()) {
-            retval = retval + String.format(ARG_TEMPLATE, key, props.get(key)) + " ";
+            newArgs.add(String.format(ARG_TEMPLATE, key, props.get(key)));
         }
-        retval = retval.trim();
-        if (retval.length() == 0) {
-            return args;
-        } else {
-            return retval + " " + args;
+        // Append existing args.
+        for (String arg: args) {
+            newArgs.add(arg);
         }
+        return newArgs.toArray(new String[]{});
     }
 }
