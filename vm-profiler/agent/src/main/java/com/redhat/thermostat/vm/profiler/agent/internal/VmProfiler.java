@@ -182,14 +182,14 @@ public class VmProfiler {
         remote.stopProfiling(pid);
 
         String profilingDataFile = remote.getProfilingDataFile(pid);
-        upload(uploader, clock.getRealTimeMillis(), new File(profilingDataFile));
+        uploadAndDelete(uploader, clock.getRealTimeMillis(), new File(profilingDataFile));
     }
 
     private void findAndUploadProfilingResultsStoredOnDisk(final int pid, ProfileUploader uploader) throws ProfilerException {
         long timeStamp = clock.getRealTimeMillis();
         // look for latest profiling data that it might have emitted on shutdown
         File file = findProfilingResultFile(pid);
-        upload(uploader, timeStamp, file);
+        uploadAndDelete(uploader, timeStamp, file);
     }
 
     private File findProfilingResultFile(final int pid) {
@@ -208,9 +208,14 @@ public class VmProfiler {
         return filesSortedByTimeStamp.get(0);
     }
 
-    private void upload(ProfileUploader uploader, long timeStamp, File file) throws ProfilerException {
+    private void uploadAndDelete(ProfileUploader uploader, long timeStamp, final File file) throws ProfilerException {
         try {
-            uploader.upload(clock.getRealTimeMillis(), file);
+            uploader.upload(clock.getRealTimeMillis(), file, new Runnable() {
+                @Override
+                public void run() {
+                    file.delete();
+                }
+            });
         } catch (IOException e) {
             throw new ProfilerException("Unable to save profiling data into storage", e);
         }

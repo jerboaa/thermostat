@@ -40,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -109,7 +110,7 @@ public class HeapDumpReceiverTest {
         verify(jmxDumper).dumpHeap(eq(42), filename.capture());
         verify(histogramLoader).load(filename.getValue());
         ArgumentCaptor<HeapInfo> heapInfo = ArgumentCaptor.forClass(HeapInfo.class);
-        verify(heapDAO).putHeapInfo(heapInfo.capture(), eq(new File(filename.getValue())), same(expectedHistogramData));
+        verify(heapDAO).putHeapInfo(heapInfo.capture(), eq(new File(filename.getValue())), same(expectedHistogramData), isA(Runnable.class));
         assertEquals("vmId", heapInfo.getValue().getVmId());
     }
 

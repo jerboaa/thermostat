@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.vm.profiler.agent.internal;
 
+import static org.junit.Assert.assertFalse;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -51,6 +54,7 @@ import java.util.Properties;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.vm.profiler.agent.internal.VmProfiler.ProfileUploaderCreator;
@@ -191,7 +195,7 @@ public class VmProfilerTest {
         verify(dao).addStatus(new ProfileStatusChange(AGENT_ID, VM_ID, TIMESTAMP, false));
 
         verify(remote).stopProfiling(PID);
-        verify(uploader).upload(TIMESTAMP, new File(FILE));
+        verify(uploader).upload(eq(TIMESTAMP), eq(new File(FILE)), isA(Runnable.class));
         verifyNoMoreInteractions(uploader);
     }
 
@@ -208,9 +212,11 @@ public class VmProfilerTest {
         profiler.vmStopped(VM_ID, PID);
 
         verify(remote, never()).stopProfiling(PID);
-        verify(uploader).upload(TIMESTAMP, profilingResults);
+        ArgumentCaptor<Runnable> cleanupCaptor = ArgumentCaptor.forClass(Runnable.class);
+        verify(uploader).upload(eq(TIMESTAMP), eq(profilingResults), cleanupCaptor.capture());
         verify(dao).addStatus(new ProfileStatusChange(AGENT_ID, VM_ID, TIMESTAMP, false));
 
-        profilingResults.delete();
+        cleanupCaptor.getValue().run();
+        assertFalse(profilingResults.exists());
     }
 }

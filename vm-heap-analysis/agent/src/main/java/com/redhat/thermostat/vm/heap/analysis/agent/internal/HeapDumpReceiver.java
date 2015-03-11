@@ -86,9 +86,14 @@ public class HeapDumpReceiver implements RequestReceiver {
         String strPid = request.getParameter("vmPid");
         try {
             int vmPid = Integer.parseInt(strPid);
-            File heapDumpFile = dumpHeap(vmPid);
+            final File heapDumpFile = dumpHeap(vmPid);
             ObjectHistogram histogram = loadHistogram(heapDumpFile.getAbsolutePath());
-            saveHeapDumpInfo(vmId, heapDumpFile, histogram);
+            saveHeapDumpInfo(vmId, heapDumpFile, histogram, new Runnable() {
+                @Override
+                public void run() {
+                    heapDumpFile.delete();
+                }
+            });
         } catch (IOException e) {
             log.log(Level.SEVERE, "Unexpected IO problem while writing heap dump", e);
             return new Response(ResponseType.ERROR);
@@ -128,10 +133,10 @@ public class HeapDumpReceiver implements RequestReceiver {
         return histogramLoader.load(heapDumpFilename);
     }
 
-    private void saveHeapDumpInfo(String vmId, File tempFile, ObjectHistogram histogram) throws IOException {
+    private void saveHeapDumpInfo(String vmId, File heapDumpFile, ObjectHistogram histogram, Runnable whenDone) throws IOException {
         String wId = writerId.getWriterID();
         HeapInfo heapInfo = new HeapInfo(wId, vmId, System.currentTimeMillis());
-        heapDao.putHeapInfo(heapInfo, tempFile, histogram);
+        heapDao.putHeapInfo(heapInfo, heapDumpFile, histogram, whenDone);
     }
 
 }

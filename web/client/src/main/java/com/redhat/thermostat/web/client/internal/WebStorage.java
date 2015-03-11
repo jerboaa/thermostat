@@ -104,12 +104,14 @@ import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.IllegalDescriptorException;
 import com.redhat.thermostat.storage.core.IllegalPatchException;
 import com.redhat.thermostat.storage.core.PreparedStatement;
+import com.redhat.thermostat.storage.core.SaveFileListener;
 import com.redhat.thermostat.storage.core.SecureStorage;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.StorageException;
+import com.redhat.thermostat.storage.core.SaveFileListener.EventType;
 import com.redhat.thermostat.storage.model.AggregateResult;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.web.common.PreparedStatementResponseCode;
@@ -736,7 +738,24 @@ public class WebStorage implements Storage, SecureStorage {
     }
 
     @Override
-    public void saveFile(String name, InputStream in) throws StorageException {
+    public void saveFile(String filename, InputStream data, SaveFileListener listener) {
+        Objects.requireNonNull(listener);
+        StorageException exceptionIfAny = null;
+
+        try {
+            doSave(filename, data);
+        } catch (StorageException e) {
+            exceptionIfAny = e;
+        }
+
+        if (exceptionIfAny != null) {
+            listener.notify(EventType.EXCEPTION_OCCURRED, exceptionIfAny);
+        } else {
+            listener.notify(EventType.SAVE_COMPLETE, null);
+        }
+    }
+
+    private void doSave(String name, InputStream in) throws StorageException {
         InputStreamBody body = new InputStreamBody(in, name);
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
         HttpEntity mpEntity = builder.addPart("file", body).build();

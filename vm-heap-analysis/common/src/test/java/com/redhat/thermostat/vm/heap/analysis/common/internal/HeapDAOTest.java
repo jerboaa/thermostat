@@ -42,6 +42,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -63,11 +64,14 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.CloseOnSave;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
+import com.redhat.thermostat.storage.core.SaveFileListener;
+import com.redhat.thermostat.storage.core.SaveFileListener.EventType;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
@@ -230,21 +234,24 @@ public class HeapDAOTest {
         @SuppressWarnings("unchecked")
         PreparedStatement<HeapInfo> add = mock(PreparedStatement.class);
         when(storage.prepareStatement(anyDescriptor())).thenReturn(add);
-        
-        dao.putHeapInfo(heapInfo, heapDumpData, histogram);
+        Runnable cleanup = mock(Runnable.class);
+        dao.putHeapInfo(heapInfo, heapDumpData, histogram, cleanup);
 
         doAddHeapInfoVerifications(storage, add, heapInfo);
 
         ArgumentCaptor<InputStream> data = ArgumentCaptor.forClass(InputStream.class);
-        verify(storage).saveFile(eq("heapdump-test-vm1-12345"), data.capture());
+        ArgumentCaptor<SaveFileListener> saveListener = ArgumentCaptor.forClass(SaveFileListener.class);
+        verify(storage).saveFile(eq("heapdump-test-vm1-12345"), data.capture(), saveListener.capture());
         InputStream in = data.getValue();
         assertEquals(1, in.read());
         assertEquals(2, in.read());
         assertEquals(3, in.read());
         assertEquals(-1, in.read());
+        saveListener.getValue().notify(EventType.SAVE_COMPLETE, null);
+        verify(cleanup).run();
         assertEquals("test-vm1-12345", heapInfo.getHeapId());
         ArgumentCaptor<InputStream> histoStream = ArgumentCaptor.forClass(InputStream.class);
-        verify(storage).saveFile(eq("histogram-test-vm1-12345"), histoStream.capture());
+        verify(storage).saveFile(eq("histogram-test-vm1-12345"), histoStream.capture(), isA(CloseOnSave.class));
         InputStream histoActual = histoStream.getValue();
         int expected;
         int actual;
@@ -262,11 +269,11 @@ public class HeapDAOTest {
         PreparedStatement<HeapInfo> add = mock(PreparedStatement.class);
         when(storage.prepareStatement(anyDescriptor())).thenReturn(add);
         
-        dao.putHeapInfo(heapInfo, null, null);
+        dao.putHeapInfo(heapInfo, null, null, null);
 
         doAddHeapInfoVerifications(storage, add, heapInfo);
 
-        verify(storage, never()).saveFile(anyString(), any(InputStream.class));
+        verify(storage, never()).saveFile(anyString(), any(InputStream.class), isA(SaveFileListener.class));
         assertEquals("test-vm1-12345", heapInfo.getHeapId());
     }
 

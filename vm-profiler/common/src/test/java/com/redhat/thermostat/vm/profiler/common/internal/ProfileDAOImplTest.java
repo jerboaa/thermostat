@@ -36,27 +36,68 @@
 
 package com.redhat.thermostat.vm.profiler.common.internal;
 
+import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isA;
+import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
+import com.redhat.thermostat.storage.core.SaveFileListener;
+import com.redhat.thermostat.storage.core.SaveFileListener.EventType;
+import com.redhat.thermostat.storage.core.PreparedStatement;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.vm.profiler.common.ProfileInfo;
 
 public class ProfileDAOImplTest {
+
+    private static final String AGENT_ID = "some-agent";
+    private static final String VM_ID = "some-vm";
+    private static final long TIMESTAMP = 123;
+    private static final String PROFILE_ID = "some-profile";
 
     private Storage storage;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
+        PreparedStatement statement = mock(PreparedStatement.class);
+
         storage = mock(Storage.class);
+        when(storage.prepareStatement(isA(StatementDescriptor.class))).thenReturn(statement);
     }
+
     @Test
     public void registersCategories() throws Exception {
         new ProfileDAOImpl(storage);
 
         verify(storage).registerCategory(ProfileDAOImpl.PROFILE_INFO_CATEGORY);
         verify(storage).registerCategory(ProfileDAOImpl.PROFILE_STATUS_CATEGORY);
+    }
+
+    @Test
+    public void testRunnableIsInvokedOnSaveFile() {
+        ProfileDAOImpl dao = new ProfileDAOImpl(storage);
+        ProfileInfo info = new ProfileInfo(AGENT_ID, VM_ID, TIMESTAMP, PROFILE_ID);
+        InputStream data = new ByteArrayInputStream(new byte[0]);
+        Runnable cleanup = mock(Runnable.class);
+        ArgumentCaptor<SaveFileListener> listenerCaptor = ArgumentCaptor.forClass(SaveFileListener.class);
+
+        dao.saveProfileData(info, data, cleanup);
+
+        verify(storage).saveFile(eq(info.getProfileId()), same(data), listenerCaptor.capture());
+
+        SaveFileListener listener = listenerCaptor.getValue();
+        listener.notify(EventType.SAVE_COMPLETE, null);
+
+        verify(cleanup).run();
     }
 }

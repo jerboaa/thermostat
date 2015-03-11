@@ -56,7 +56,7 @@ public interface HeapDAO {
 
     public static final Category<HeapInfo> heapInfoCategory = new Category<>("vm-heap-info", HeapInfo.class, Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, heapIdKey, heapDumpIdKey, histogramIdKey);
 
-    void putHeapInfo(HeapInfo heapInfo, File heapDumpFile, ObjectHistogram histogramData) throws IOException;
+    void putHeapInfo(HeapInfo heapInfo, File heapDumpFile, ObjectHistogram histogramData, Runnable whenDone) throws IOException;
 
     Collection<HeapInfo> getAllHeapInfo(VmRef vm);
 

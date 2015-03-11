@@ -34,30 +34,31 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.profiler.common;
+package com.redhat.thermostat.storage.core;
 
-import java.io.InputStream;
-import java.util.List;
+import java.io.Closeable;
+import java.io.IOException;
 
-import com.redhat.thermostat.annotations.Service;
-import com.redhat.thermostat.common.model.Range;
-import com.redhat.thermostat.storage.core.VmRef;
+public final class CloseOnSave implements SaveFileListener {
 
-@Service
-public interface ProfileDAO {
+    private final Closeable toClose;
 
-    void saveProfileData(ProfileInfo info, InputStream data, Runnable whenDone);
+    public CloseOnSave(Closeable toClose) {
+        this.toClose = toClose;
+    }
 
-    List<ProfileInfo> getAllProfileInfo(VmRef vm, Range<Long> timeRange);
+    @Override
+    public void notify(EventType type, Object additionalArguments) {
+        if (type == EventType.EXCEPTION_OCCURRED) {
+            StorageException cause = (StorageException) additionalArguments;
+            cause.printStackTrace();
+        }
 
-    InputStream loadProfileDataById(VmRef vm, String profileId);
-
-    /** @return {@code null} if no data is available */
-    InputStream loadLatestProfileData(VmRef vm);
-
-    void addStatus(ProfileStatusChange change);
-
-    /** @return {@code null} if no data is available */
-    ProfileStatusChange getLatestStatus(VmRef vm);
+        try {
+            toClose.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
 }

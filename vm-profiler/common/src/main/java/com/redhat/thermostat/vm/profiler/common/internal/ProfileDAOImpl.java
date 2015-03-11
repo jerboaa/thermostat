@@ -48,9 +48,11 @@ import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
+import com.redhat.thermostat.storage.core.SaveFileListener;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.core.VmTimeIntervalPojoListGetter;
 import com.redhat.thermostat.storage.model.BasePojo;
@@ -124,9 +126,27 @@ public class ProfileDAOImpl implements ProfileDAO {
     }
 
     @Override
-    public void saveProfileData(ProfileInfo info, InputStream data) {
-        storage.saveFile(info.getProfileId(), data);
-        addProfileInfoToStorage(info);
+    public void saveProfileData(final ProfileInfo info, final InputStream data, final Runnable whenDone) {
+        storage.saveFile(info.getProfileId(), data, new SaveFileListener() {
+
+            @Override
+            public void notify(EventType type, Object additionalArguments) {
+                switch (type) {
+                case EXCEPTION_OCCURRED:
+                    StorageException cause = (StorageException) additionalArguments;
+                    cause.printStackTrace();
+                    whenDone.run();
+                    break;
+                case SAVE_COMPLETE:
+                    addProfileInfoToStorage(info);
+                    whenDone.run();
+                    break;
+                default:
+                    logger.log(Level.WARNING, "Unknown saveFile event: " + type);
+                }
+            }
+        });
+
     }
 
     private void addProfileInfoToStorage(ProfileInfo info) {

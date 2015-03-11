@@ -544,17 +544,13 @@ public class QueuedStorage implements Storage {
     }
 
     @Override
-    public void saveFile(final String filename, final InputStream data) {
-
+    public void saveFile(final String filename, final InputStream data, final SaveFileListener listener) {
         fileExecutor.execute(new Runnable() {
-            
             @Override
             public void run() {
-                delegate.saveFile(filename, data);
+                delegate.saveFile(filename, data, listener);
             }
-
         });
-
     }
 
     @Override

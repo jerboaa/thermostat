@@ -34,30 +34,24 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.profiler.common;
+package com.redhat.thermostat.storage.core;
 
-import java.io.InputStream;
-import java.util.List;
+public interface SaveFileListener {
 
-import com.redhat.thermostat.annotations.Service;
-import com.redhat.thermostat.common.model.Range;
-import com.redhat.thermostat.storage.core.VmRef;
+    public enum EventType {
+        /**
+         * File saved successfully. It is safe to dispose the data source at this
+         * point.
+         */
+        SAVE_COMPLETE,
 
-@Service
-public interface ProfileDAO {
+        /**
+         * {@code additionalArguments} represents the actual exception (an
+         * instance of StorageException).  It is safe to dispose the data source at this point.
+         */
+        EXCEPTION_OCCURRED,
+    }
 
-    void saveProfileData(ProfileInfo info, InputStream data, Runnable whenDone);
-
-    List<ProfileInfo> getAllProfileInfo(VmRef vm, Range<Long> timeRange);
-
-    InputStream loadProfileDataById(VmRef vm, String profileId);
-
-    /** @return {@code null} if no data is available */
-    InputStream loadLatestProfileData(VmRef vm);
-
-    void addStatus(ProfileStatusChange change);
-
-    /** @return {@code null} if no data is available */
-    ProfileStatusChange getLatestStatus(VmRef vm);
+    public void notify(EventType type, Object additionalArguments);
 
 }

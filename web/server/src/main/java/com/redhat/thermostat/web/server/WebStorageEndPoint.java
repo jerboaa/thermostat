@@ -77,6 +77,7 @@ import com.redhat.thermostat.shared.config.internal.CommonPathsImpl;
 import com.redhat.thermostat.storage.core.Categories;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.CategoryAdapter;
+import com.redhat.thermostat.storage.core.CloseOnSave;
 import com.redhat.thermostat.storage.core.Connection;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DataModifyingStatement;
@@ -489,7 +490,7 @@ public class WebStorageEndPoint extends HttpServlet {
                         return;
                     }
                     InputStream in = item.getInputStream();
-                    storage.saveFile(name, in);
+                    storage.saveFile(name, in, new CloseOnSave(in));
                 }
             }
         } catch (FileUploadException ex) {

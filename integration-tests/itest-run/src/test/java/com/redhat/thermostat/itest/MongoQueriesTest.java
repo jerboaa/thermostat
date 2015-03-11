@@ -500,7 +500,7 @@ public class MongoQueriesTest extends IntegrationTest {
         mongoStorage.getConnection().removeListener(listener);
         
         byte[] data = "Hello World".getBytes();
-        mongoStorage.saveFile("test", new ByteArrayInputStream(data));
+        mongoStorage.saveFile("test", new ByteArrayInputStream(data), new DoNothing());
         // Note: On the server side, the file is saved into mongodb
         // via GridFS.  The save operation returns before write is
         // complete, and there is no callback mechanism to find out

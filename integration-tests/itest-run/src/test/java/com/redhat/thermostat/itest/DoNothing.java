@@ -34,30 +34,13 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.profiler.common;
+package com.redhat.thermostat.itest;
 
-import java.io.InputStream;
-import java.util.List;
+import com.redhat.thermostat.storage.core.SaveFileListener;
 
-import com.redhat.thermostat.annotations.Service;
-import com.redhat.thermostat.common.model.Range;
-import com.redhat.thermostat.storage.core.VmRef;
-
-@Service
-public interface ProfileDAO {
-
-    void saveProfileData(ProfileInfo info, InputStream data, Runnable whenDone);
-
-    List<ProfileInfo> getAllProfileInfo(VmRef vm, Range<Long> timeRange);
-
-    InputStream loadProfileDataById(VmRef vm, String profileId);
-
-    /** @return {@code null} if no data is available */
-    InputStream loadLatestProfileData(VmRef vm);
-
-    void addStatus(ProfileStatusChange change);
-
-    /** @return {@code null} if no data is available */
-    ProfileStatusChange getLatestStatus(VmRef vm);
-
+class DoNothing implements SaveFileListener {
+    @Override
+    public void notify(EventType type, Object additionalArguments) {
+        // look at the name of this class...
+    }
 }

@@ -39,6 +39,7 @@ package com.redhat.thermostat.vm.profiler.agent.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -74,12 +75,14 @@ public class ProfileUploaderTest {
     public void uploadFile() throws Exception {
         byte[] data = "Test Profile Data".getBytes(StandardCharsets.UTF_8);
         ByteArrayInputStream input = new ByteArrayInputStream(data);
-
+        Runnable afterUpload = mock(Runnable.class);
         ArgumentCaptor<ProfileInfo> profileInfoCaptor = ArgumentCaptor.forClass(ProfileInfo.class);
 
-        uploader.upload(TIME, input);
+        uploader.upload(TIME, input, afterUpload);
 
-        verify(dao).saveProfileData(profileInfoCaptor.capture(), eq(input));
+        // instead of verifying that afterUploader is invoked, just check that
+        // it is passed to the component responsible for running it
+        verify(dao).saveProfileData(profileInfoCaptor.capture(), eq(input), same(afterUpload));
         ProfileInfo profileInfo = profileInfoCaptor.getValue();
         assertEquals(AGENT_ID, profileInfo.getAgentId());
         assertEquals(VM_ID, profileInfo.getVmId());

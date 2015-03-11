@@ -97,16 +97,21 @@ public interface Storage {
      * Save the contents of the input stream as the given name.
      *
      * @param filename
-     *            the name to save this data stream as. This must be unique
+     *            The name to save this data stream as. This must be unique
      *            across all machines and processes using the storage or it will
      *            overwrite data.
      * @param data
-     *            the data to save
-     *
-     * @throws StorageException
-     *            If the save operation fails
+     *            The data to save.
+     * @param listener
+     *            The listener is notified upon various events related to the
+     *            saving of the file. The types of events are defined by
+     *            {@link SaveFileListener.EventTypes} Callers are responsible
+     *            for handling events appropriately via this listener, including
+     *            closing the InputStream when receiving an event indicating
+     *            that Storage is no longer using it (such as SAVE_COMPLETE or
+     *            EXCEPTION_OCCURRED).
      */
-    void saveFile(String filename, InputStream data);
+    void saveFile(String filename, InputStream data, SaveFileListener listener);
 
     /**
      * Load the file with the given name and return the data as an InputStream.

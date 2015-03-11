@@ -1111,7 +1111,7 @@ public class WebAppTest extends IntegrationTest {
         Storage webStorage = getAndConnectStorage(TEST_USER, TEST_PASSWORD, roleNames);
         
         byte[] data = "Hello World".getBytes();
-        webStorage.saveFile("test", new ByteArrayInputStream(data));
+        webStorage.saveFile("test", new ByteArrayInputStream(data), new DoNothing());
         // Note: On the server side, the file is saved into mongodb
         // via GridFS.  The save operation returns before write is
         // complete, and there is no callback mechanism to find out

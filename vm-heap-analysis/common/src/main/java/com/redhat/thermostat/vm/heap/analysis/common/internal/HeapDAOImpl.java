@@ -38,8 +38,10 @@ package com.redhat.thermostat.vm.heap.analysis.common.internal;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -51,13 +53,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.CloseOnSave;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
+import com.redhat.thermostat.storage.core.SaveFileListener;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
@@ -102,7 +107,7 @@ public class HeapDAOImpl implements HeapDAO {
     }
 
     @Override
-    public void putHeapInfo(HeapInfo heapInfo, File heapDumpData, ObjectHistogram histogramData) throws IOException {
+    public void putHeapInfo(HeapInfo heapInfo, final File heapDumpData, ObjectHistogram histogramData, Runnable heapDumpCleanup) throws IOException {
         String heapId = heapInfo.getAgentId() + "-" + heapInfo.getVmId() + "-" + heapInfo.getTimeStamp();
         System.err.println("assigning heapId: " + heapId);
         heapInfo.setHeapId(heapId);
@@ -117,7 +122,7 @@ public class HeapDAOImpl implements HeapDAO {
         addHeapInfo(heapInfo);
 
         if (heapDumpData != null) {
-            storage.saveFile(heapDumpId, new FileInputStream(heapDumpData));
+            uploadHeapDump(heapDumpData, heapDumpId, heapDumpCleanup);
         }
         if (histogramData != null) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -125,7 +130,7 @@ public class HeapDAOImpl implements HeapDAO {
                 ObjectOutputStream oos = new ObjectOutputStream(baos);
                 oos.writeObject(histogramData);
                 ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-                storage.saveFile(histogramId, bais);
+                storage.saveFile(histogramId, bais, new CloseOnSave(bais));
             } catch (IOException e) {
                 e.printStackTrace();
                 log.log(Level.SEVERE, "Unexpected error while writing histogram", e);
@@ -150,6 +155,34 @@ public class HeapDAOImpl implements HeapDAO {
         } catch (StatementExecutionException e) {
             log.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
         }
+    }
+
+    private void uploadHeapDump(final File heapDumpData, String heapDumpId, final Runnable heapDumpCleanup)
+            throws FileNotFoundException {
+        final InputStream heapDumpStream = new FileInputStream(heapDumpData);
+        storage.saveFile(heapDumpId, heapDumpStream, new SaveFileListener() {
+
+            @Override
+            public void notify(EventType type, Object additionalArguments) {
+                try {
+                    switch (type) {
+                    case EXCEPTION_OCCURRED:
+                        StorageException cause = (StorageException) additionalArguments;
+                        log.log(Level.SEVERE, "Error saving heap dump", cause);
+                        break;
+                    case SAVE_COMPLETE:
+                        break;
+                    default:
+                        log.log(Level.WARNING, "Unknown saveFile event: " + type);
+                    }
+                    heapDumpStream.close();
+                    heapDumpCleanup.run();
+                } catch (IOException e) {
+                    log.log(Level.WARNING, "Exception when saving file", e);
+                }
+
+            }
+        });
     }
 
     @Override

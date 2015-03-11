@@ -46,7 +46,9 @@ import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Matchers.same;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -78,6 +80,7 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
+import com.mongodb.MongoException;
 import com.mongodb.MongoURI;
 import com.mongodb.WriteResult;
 import com.mongodb.gridfs.GridFS;
@@ -92,6 +95,7 @@ import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.AggregateQuery.AggregateFunction;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
+import com.redhat.thermostat.storage.core.SaveFileListener.EventType;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Key;
@@ -99,9 +103,11 @@ import com.redhat.thermostat.storage.core.Persist;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Replace;
+import com.redhat.thermostat.storage.core.SaveFileListener;
 import com.redhat.thermostat.storage.core.SchemaInfo;
 import com.redhat.thermostat.storage.core.Statement;
 import com.redhat.thermostat.storage.core.StorageCredentials;
+import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.core.experimental.AggregateQuery2;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
@@ -452,19 +458,50 @@ public class MongoStorageTest {
         assertNull(cursor.next());
     }
 
+    @Test (expected=NullPointerException.class)
+    public void verifySaveFileNullListenerThrowsException() throws Exception{
+        InputStream dataStream = new ByteArrayInputStream(new byte[0]);
+        MongoStorage storage = makeStorage();
+        storage.saveFile("test", dataStream, null);
+    }
+
     @Test
     public void verifySaveFile() throws Exception {
-        GridFSInputFile gridFSFile = mock(GridFSInputFile.class);
-        GridFS gridFS = mock(GridFS.class);
-        when(gridFS.createFile(any(InputStream.class), anyString())).thenReturn(gridFSFile);
-        PowerMockito.whenNew(GridFS.class).withArguments(any()).thenReturn(gridFS);
-        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
-        MongoStorage storage = makeStorage();
         byte[] data = new byte[] { 1, 2, 3 };
         InputStream dataStream = new ByteArrayInputStream(data);
-        storage.saveFile("test", dataStream);
-        verify(gridFS).createFile(same(dataStream), eq("test"));
+
+        GridFSInputFile gridFSFile = mock(GridFSInputFile.class);
+        GridFS gridFS = mock(GridFS.class);
+        when(gridFS.createFile(same(dataStream), eq("test"))).thenReturn(gridFSFile);
+        PowerMockito.whenNew(GridFS.class).withArguments(any()).thenReturn(gridFS);
+        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
+        SaveFileListener saveFileListener = mock(SaveFileListener.class);
+
+        MongoStorage storage = makeStorage();
+        storage.saveFile("test", dataStream, saveFileListener);
+
         verify(gridFSFile).save();
+        verify(saveFileListener).notify(EventType.SAVE_COMPLETE, null);
+    }
+
+    @Test
+    public void verifySaveFileErrorIsPassedToListener() throws Exception {
+        byte[] data = new byte[] { 1, 2, 3 };
+        InputStream dataStream = new ByteArrayInputStream(data);
+
+        GridFSInputFile gridFSFile = mock(GridFSInputFile.class);
+        doThrow(new MongoException("test")).when(gridFSFile).save();
+        GridFS gridFS = mock(GridFS.class);
+        when(gridFS.createFile(same(dataStream), eq("test"))).thenReturn(gridFSFile);
+        PowerMockito.whenNew(GridFS.class).withArguments(any()).thenReturn(gridFS);
+        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
+        SaveFileListener saveFileListener = mock(SaveFileListener.class);
+
+        MongoStorage storage = makeStorage();
+        storage.saveFile("test", dataStream, saveFileListener);
+
+        verify(gridFSFile).save();
+        verify(saveFileListener).notify(eq(EventType.EXCEPTION_OCCURRED), isA(StorageException.class));
     }
 
     @Test

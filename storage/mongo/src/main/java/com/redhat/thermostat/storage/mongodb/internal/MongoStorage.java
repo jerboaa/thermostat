@@ -72,6 +72,8 @@ import com.redhat.thermostat.storage.core.PreparedStatementFactory;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Replace;
+import com.redhat.thermostat.storage.core.SaveFileListener;
+import com.redhat.thermostat.storage.core.SaveFileListener.EventType;
 import com.redhat.thermostat.storage.core.SchemaInfo;
 import com.redhat.thermostat.storage.core.SchemaInfoInserter;
 import com.redhat.thermostat.storage.core.Statement;
@@ -617,13 +619,15 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
     }
 
     @Override
-    public void saveFile(String filename, InputStream data) {
+    public void saveFile(String filename, InputStream data, SaveFileListener listener) {
+        Objects.requireNonNull(listener);
         try {
             GridFS gridFS = new GridFS(db);
             GridFSInputFile inputFile = gridFS.createFile(data, filename);
             inputFile.save();
+            listener.notify(EventType.SAVE_COMPLETE, null);
         } catch (MongoException me) {
-            throw new StorageException(me);
+            listener.notify(EventType.EXCEPTION_OCCURRED, new StorageException(me));
         }
     }
 

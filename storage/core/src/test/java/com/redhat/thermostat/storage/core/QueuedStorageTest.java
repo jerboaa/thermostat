@@ -48,6 +48,7 @@ import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -250,14 +251,15 @@ public class QueuedStorageTest {
     @Test
     public void testSaveFile() {
         InputStream stream = mock(InputStream.class);
+        SaveFileListener listener = mock(SaveFileListener.class);
 
-        queuedStorage.saveFile("fluff", stream);
+        queuedStorage.saveFile("fluff", stream, listener);
 
         Runnable task = fileExecutor.getTask();
         assertNotNull(task);
         verifyZeroInteractions(delegateStorage);
         task.run();
-        verify(delegateStorage).saveFile(eq("fluff"), same(stream));
+        verify(delegateStorage).saveFile(eq("fluff"), same(stream), same(listener));
 
         assertNull(executor.getTask());
     }
@@ -601,10 +603,9 @@ public class QueuedStorageTest {
         }
 
         @Override
-        public void saveFile(String filename, InputStream data) {
+        public void saveFile(String filename, InputStream data, SaveFileListener listener) {
             // not implemented
             throw new AssertionError();
-
         }
 
         @Override

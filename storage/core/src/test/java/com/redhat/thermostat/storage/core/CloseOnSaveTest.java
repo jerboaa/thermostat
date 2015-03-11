@@ -34,30 +34,41 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.profiler.common;
+package com.redhat.thermostat.storage.core;
 
-import java.io.InputStream;
-import java.util.List;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
-import com.redhat.thermostat.annotations.Service;
-import com.redhat.thermostat.common.model.Range;
-import com.redhat.thermostat.storage.core.VmRef;
+import java.io.Closeable;
+import java.io.IOException;
 
-@Service
-public interface ProfileDAO {
+import org.junit.Before;
+import org.junit.Test;
 
-    void saveProfileData(ProfileInfo info, InputStream data, Runnable whenDone);
+import com.redhat.thermostat.storage.core.SaveFileListener.EventType;
 
-    List<ProfileInfo> getAllProfileInfo(VmRef vm, Range<Long> timeRange);
+public class CloseOnSaveTest {
 
-    InputStream loadProfileDataById(VmRef vm, String profileId);
+    private Closeable closeable;
 
-    /** @return {@code null} if no data is available */
-    InputStream loadLatestProfileData(VmRef vm);
+    @Before
+    public void setUp() {
+        closeable = mock(Closeable.class);
+    }
 
-    void addStatus(ProfileStatusChange change);
+    @Test
+    public void closeableIsClosedOnSuccess() throws Exception {
+        CloseOnSave closeOnSave = new CloseOnSave(closeable);
+        closeOnSave.notify(EventType.SAVE_COMPLETE, null);
 
-    /** @return {@code null} if no data is available */
-    ProfileStatusChange getLatestStatus(VmRef vm);
+        verify(closeable).close();
+    }
 
+    @Test
+    public void closeableIsClosedOnError() throws Exception {
+        CloseOnSave closeOnSave = new CloseOnSave(closeable);
+        closeOnSave.notify(EventType.EXCEPTION_OCCURRED, new StorageException("ignore"));
+
+        verify(closeable).close();
+    }
 }

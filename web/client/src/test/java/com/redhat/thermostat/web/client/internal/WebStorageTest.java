@@ -106,6 +106,8 @@ import com.redhat.thermostat.storage.core.IllegalDescriptorException;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedParameters;
 import com.redhat.thermostat.storage.core.PreparedStatement;
+import com.redhat.thermostat.storage.core.SaveFileListener;
+import com.redhat.thermostat.storage.core.SaveFileListener.EventType;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.StorageCredentials;
@@ -788,13 +790,22 @@ public class WebStorageTest {
         }
     }
 
+    @Test (expected=NullPointerException.class)
+    public void testSaveFileThrowsExceptionOnNullListener() throws Exception {
+        String data = "Hello World";
+        ByteArrayInputStream in = new ByteArrayInputStream(data.getBytes());
+
+        storage.saveFile("fluff", in, null);
+    }
+
     @Test
     public void testSaveFile() {
         String data = "Hello World";
         ByteArrayInputStream in = new ByteArrayInputStream(data.getBytes());
 
+        SaveFileListener saveListener = mock(SaveFileListener.class);
         prepareServer();
-        storage.saveFile("fluff", in);
+        storage.saveFile("fluff", in, saveListener);
 
         assertEquals("chunked", headers.get("Transfer-Encoding"));
         String contentType = headers.get("Content-Type");
@@ -808,7 +819,8 @@ public class WebStorageTest {
         assertEquals("", lines[4].trim());
         assertEquals("Hello World", lines[5].trim());
         assertEquals("--" + boundary + "--", lines[6].trim());
-        
+
+        verify(saveListener).notify(EventType.SAVE_COMPLETE, null);
     }
 
     @Test

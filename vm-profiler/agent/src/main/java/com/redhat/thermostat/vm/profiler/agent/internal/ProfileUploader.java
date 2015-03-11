@@ -57,14 +57,15 @@ public class ProfileUploader {
         this.vmId = vmId;
     }
 
-    public void upload(long timeStamp, File data) throws IOException {
-        // FIXME resource leak: file is never closed
-        upload(timeStamp, new FileInputStream(data));
+    public void upload(long timeStamp, final File data, final Runnable cleanupData) throws IOException {
+        try (final InputStream stream = new FileInputStream(data)) {
+            upload(timeStamp, stream, cleanupData);
+        }
     }
 
-    public void upload(long timeStamp, InputStream data) throws IOException {
+    public void upload(long timeStamp, InputStream data, Runnable whenDone) throws IOException {
         String id = UUID.randomUUID().toString();
         ProfileInfo info = new ProfileInfo(agentId, vmId, timeStamp, id);
-        dao.saveProfileData(info, data);
+        dao.saveProfileData(info, data, whenDone);
     }
 }
