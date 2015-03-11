@@ -36,66 +36,18 @@
 
 package com.redhat.thermostat.backend;
 
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
-import com.redhat.thermostat.common.Version;
-
 /**
- * A backend that reads data from /proc for the host.
- * <p>
- * Register this as a {@link Backend}.
+ * An action to be performed at a regular interval as part of a
+ * {@link VmPollingBackend} implementation.
  */
-public abstract class HostProcReadingBackend extends BaseBackend {
+public interface VmPollingAction {
 
-    static final long PROC_CHECK_INTERVAL = 1000; // TODO make this configurable.
-
-    private ScheduledExecutorService executor;
-    private boolean started;
-
-    protected HostProcReadingBackend(String name, String description, String vendor,
-            Version version,
-            ScheduledExecutorService executor) {
-        super(name, description, vendor,
-              version.getVersionNumber(), true);
-        this.executor = executor;
-    }
-
-    @Override
-    public boolean activate() {
-        if (!started) {
-            executor.scheduleAtFixedRate(new Runnable() {
-                @Override
-                public void run() {
-                    readAndProcessProcData();
-                }
-            }, 0, PROC_CHECK_INTERVAL, TimeUnit.MILLISECONDS);
-
-            started = true;
-        }
-        return started;
-    }
-
-    @Override
-    public boolean deactivate() {
-        if (started) {
-            executor.shutdown();
-
-            started = false;
-        }
-        return !started;
-    }
-
-    @Override
-    public boolean isActive() {
-        return started;
-    }
-
-    @Override
-    public void setObserveNewJvm(boolean newValue) {
-        throw new IllegalArgumentException("This backend does not observe jvms!");
-    }
-
-    protected abstract void readAndProcessProcData();
+    /**
+     * Run the action.
+     * 
+     * @param vmId a String representation of the VmID on which to take action.
+     * @param pid the process ID of the JVM instance on which to take action.
+     */
+    public void run(String vmId, int pid);
 
 }

@@ -34,49 +34,17 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.host.memory.agent.internal;
+package com.redhat.thermostat.backend;
 
-import java.util.concurrent.ScheduledExecutorService;
+/**
+ * An action to be performed at a regular interval as part of a
+ * {@link HostPollingBackend} implementation.
+ */
+public interface HostPollingAction {
 
-import com.redhat.thermostat.agent.utils.ProcDataSource;
-import com.redhat.thermostat.backend.HostPollingAction;
-import com.redhat.thermostat.backend.HostPollingBackend;
-import com.redhat.thermostat.common.Version;
-import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
-import com.redhat.thermostat.storage.core.WriterID;
-
-public class HostMemoryBackend extends HostPollingBackend {
-
-    public HostMemoryBackend(ScheduledExecutorService executor, MemoryStatDAO memoryStatDAO, Version version, final WriterID writerId) {
-        super("Host Memory Backend",
-                "Gathers memory statistics about a host",
-                "Red Hat, Inc.",
-                version, executor);
-        registerAction(new MemoryProcBackendAction(writerId, memoryStatDAO));
-    }
-
-    private static class MemoryProcBackendAction implements HostPollingAction {
-
-        private MemoryStatBuilder builder;
-        private MemoryStatDAO dao;
-
-        MemoryProcBackendAction(final WriterID id, MemoryStatDAO dao) {
-            ProcDataSource source = new ProcDataSource();
-            builder = new MemoryStatBuilder(source, id);
-            this.dao = dao;
-        }
-
-        @Override
-        public void run() {
-            dao.putMemoryStat(builder.build());
-        }
-
-    }
-
-    @Override
-    public int getOrderValue() {
-        return ORDER_MEMORY_GROUP;
-    }
+    /**
+     * Run the action.
+     */
+    public void run();
 
 }
-

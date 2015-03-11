@@ -45,7 +45,8 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.agent.utils.ProcDataSource;
 import com.redhat.thermostat.agent.utils.SysConf;
-import com.redhat.thermostat.backend.VmProcReadingBackend;
+import com.redhat.thermostat.backend.VmPollingAction;
+import com.redhat.thermostat.backend.VmPollingBackend;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.Version;
@@ -54,12 +55,11 @@ import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
 
-public class VmCpuBackend extends VmProcReadingBackend {
+public class VmCpuBackend extends VmPollingBackend {
 
     private static final Logger LOGGER = LoggingUtils.getLogger(VmCpuBackend.class);
 
-    private final VmCpuStatDAO vmCpuStats;
-    private VmCpuStatBuilder vmCpuStatBuilder;
+    private VmCpuBackendAction action;
 
     public VmCpuBackend(ScheduledExecutorService executor, VmCpuStatDAO vmCpuStatDao, Version version,
             VmStatusListenerRegistrar registrar, WriterID writerId) {
@@ -67,33 +67,9 @@ public class VmCpuBackend extends VmProcReadingBackend {
                 "Gathers CPU statistics about a JVM",
                 "Red Hat, Inc.",
                 version, executor, registrar);
-
-        this.vmCpuStats = vmCpuStatDao;
-
-        Clock clock = new SystemClock();
-        long ticksPerSecond = SysConf.getClockTicksPerSecond();
-        ProcDataSource source = new ProcDataSource();
-        ProcessStatusInfoBuilder builder = new ProcessStatusInfoBuilder(new ProcDataSource());
-        int numCpus = getCpuCount(source);
-        vmCpuStatBuilder = new VmCpuStatBuilder(clock, numCpus, ticksPerSecond,
-                                                builder, writerId);
-    }
-
-    private int getCpuCount(ProcDataSource dataSource) {
-        final String KEY_PROCESSOR_ID = "processor";
-        int cpuCount = 0;
-        try (BufferedReader bufferedReader = new BufferedReader(dataSource.getCpuInfoReader())) {
-            String line = null;
-            while ((line = bufferedReader.readLine()) != null) {
-                if (line.startsWith(KEY_PROCESSOR_ID)) {
-                    cpuCount++;
-                }
-            }
-        } catch (IOException ioe) {
-            LOGGER.log(Level.WARNING, "Unable to read cpu info");
-        }
-        
-        return cpuCount;
+        VmCpuBackendAction action = new VmCpuBackendAction(writerId, vmCpuStatDao);
+        this.action = action;
+        registerAction(action);
     }
 
     @Override
@@ -101,28 +77,64 @@ public class VmCpuBackend extends VmProcReadingBackend {
         return ORDER_CPU_GROUP + 50;
     }
 
-    @Override
-    public void readAndProcessProcData(String vmId, int pid) {
-        if (vmCpuStatBuilder.knowsAbout(pid)) {
-            VmCpuStat dataBuilt = vmCpuStatBuilder.build(vmId, pid);
-            if (dataBuilt != null) {
-                vmCpuStats.putVmCpuStat(dataBuilt);
+    private static class VmCpuBackendAction implements VmPollingAction {
+
+        private VmCpuStatBuilder builder;
+        private VmCpuStatDAO dao;
+
+        private VmCpuBackendAction(final WriterID id, VmCpuStatDAO dao) {
+            Clock clock = new SystemClock();
+            long ticksPerSecond = SysConf.getClockTicksPerSecond();
+            ProcDataSource source = new ProcDataSource();
+            int numCpus = getCpuCount(source);
+            ProcessStatusInfoBuilder PSIBuilder = new ProcessStatusInfoBuilder(source);
+            builder = new VmCpuStatBuilder(clock, numCpus, ticksPerSecond, PSIBuilder, id);
+            this.dao = dao;
+        }
+
+        @Override
+        public void run(String vmId, int pid) {
+            if (builder.knowsAbout(pid)) {
+                VmCpuStat dataBuilt = builder.build(vmId, pid);
+                if (dataBuilt != null) {
+                    dao.putVmCpuStat(dataBuilt);
+                }
+            } else {
+                builder.learnAbout(pid);
             }
-        } else {
-            vmCpuStatBuilder.learnAbout(pid);
+        }
+
+        private int getCpuCount(ProcDataSource dataSource) {
+            final String KEY_PROCESSOR_ID = "processor";
+            int cpuCount = 0;
+            try (BufferedReader bufferedReader = new BufferedReader(dataSource.getCpuInfoReader())) {
+                String line = null;
+                while ((line = bufferedReader.readLine()) != null) {
+                    if (line.startsWith(KEY_PROCESSOR_ID)) {
+                        cpuCount++;
+                    }
+                }
+            } catch (IOException ioe) {
+                LOGGER.log(Level.WARNING, "Unable to read cpu info");
+            }
+            
+            return cpuCount;
         }
     }
 
     @Override
-    protected void vmStopped(String vmId, int pid) {
-        vmCpuStatBuilder.forgetAbout(pid);
+    public void vmStatusChanged(Status newStatus, String vmId, int pid) {
+        super.vmStatusChanged(newStatus, vmId, pid);
+        if (Status.VM_STOPPED.equals(newStatus)) {
+            action.builder.forgetAbout(pid);
+        }
     }
 
     /*
      * For testing purposes only.
      */
     void setVmCpuStatBuilder(VmCpuStatBuilder vmCpuStatBuilder) {
-        this.vmCpuStatBuilder = vmCpuStatBuilder;
+        action.builder = vmCpuStatBuilder;
     }
 
 }

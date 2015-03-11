@@ -40,17 +40,15 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import com.redhat.thermostat.agent.utils.ProcDataSource;
 import com.redhat.thermostat.agent.utils.SysConf;
-import com.redhat.thermostat.backend.HostProcReadingBackend;
+import com.redhat.thermostat.backend.HostPollingAction;
+import com.redhat.thermostat.backend.HostPollingBackend;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
 import com.redhat.thermostat.storage.core.WriterID;
 
-public class HostCpuBackend extends HostProcReadingBackend {
-
-    private final CpuStatBuilder cpuStatBuilder;
-    private CpuStatDAO cpuStats;
+public class HostCpuBackend extends HostPollingBackend {
 
     public HostCpuBackend(ScheduledExecutorService executor,
             CpuStatDAO cpuStatDAO, Version version, final WriterID writerId) {
@@ -58,21 +56,31 @@ public class HostCpuBackend extends HostProcReadingBackend {
                 "Gathers CPU statistics about a host",
                 "Red Hat, Inc.",
                 version, executor);
-
-        this.cpuStats = cpuStatDAO;
-        Clock clock = new SystemClock();
-        long ticksPerSecond = SysConf.getClockTicksPerSecond();
-        ProcDataSource source = new ProcDataSource();
-        cpuStatBuilder = new CpuStatBuilder(clock, source, ticksPerSecond, writerId);
+        registerAction(new CpuProcBackendAction(writerId, cpuStatDAO));
     }
 
-    @Override
-    public void readAndProcessProcData() {
-        if (!cpuStatBuilder.isInitialized()) {
-            cpuStatBuilder.initialize();
-        } else {
-            cpuStats.putCpuStat(cpuStatBuilder.build());
+    private static class CpuProcBackendAction implements HostPollingAction {
+
+        private CpuStatBuilder builder;
+        private CpuStatDAO dao;
+
+        CpuProcBackendAction(final WriterID id, CpuStatDAO dao) {
+            Clock clock = new SystemClock();
+            long ticksPerSecond = SysConf.getClockTicksPerSecond();
+            ProcDataSource source = new ProcDataSource();
+            builder = new CpuStatBuilder(clock, source, ticksPerSecond, id);
+            this.dao = dao;
         }
+
+        @Override
+        public void run() {
+            if (!builder.isInitialized()) {
+                builder.initialize();
+            } else {
+                dao.putCpuStat(builder.build());
+            }
+        }
+        
     }
 
     @Override

@@ -38,9 +38,10 @@ package com.redhat.thermostat.backend;
 
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -50,74 +51,66 @@ import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 /**
- * A backend that reads data from /proc for the host.
- * <p>
- * Register this as a {@link Backend} *and* as a {@link VmStatusListener}
+ * Convenience {@link Backend} class for implementations that will take some
+ * action for each monitored JVM process on a regular interval.  Simply
+ * extend this class, implement any missing methods, and register one or
+ * more {@link VmPollingAction} implementations during instantiation.
  */
-public abstract class VmProcReadingBackend extends BaseBackend implements VmStatusListener {
+public abstract class VmPollingBackend extends PollingBackend implements VmStatusListener {
 
-    private static final Logger logger = LoggingUtils.getLogger(VmProcReadingBackend.class);
-
-    static final long PROC_CHECK_INTERVAL = 1000; // TODO make this configurable.
-
-    private final ScheduledExecutorService executor;
-    private final VmStatusListenerRegistrar registrar;
-
+    private final Set<VmPollingAction> actions;
     private final Map<Integer, String> pidsToMonitor = new ConcurrentHashMap<>();
-    private boolean started;
+    private final VmStatusListenerRegistrar registrar;
+    private static final Logger logger = LoggingUtils.getLogger(VmPollingBackend.class);
 
-    public VmProcReadingBackend(String name, String description, String vendor,
-            Version version,
-            ScheduledExecutorService executor,
+    public VmPollingBackend(String name, String description,
+            String vendor, Version version, ScheduledExecutorService executor,
             VmStatusListenerRegistrar registrar) {
-
-        super(name, description, vendor,
-                version.getVersionNumber(), true);
-
-        this.executor = executor;
+        super(name, description, vendor, version, executor);
         this.registrar = registrar;
+        actions = new CopyOnWriteArraySet<>();
     }
 
     @Override
-    public boolean activate() {
-        if (!started) {
-            registrar.register(this);
+    final void preActivate() {
+        registrar.register(this);
+    }
 
-            executor.scheduleAtFixedRate(new Runnable() {
-                @Override
-                public void run() {
-                    for (Entry<Integer, String> entry : pidsToMonitor.entrySet()) {
-                        int pid = entry.getKey();
-                        String vmId = entry.getValue();
-                        readAndProcessProcData(vmId, pid);
-                    }
-                }
-            }, 0, PROC_CHECK_INTERVAL, TimeUnit.MILLISECONDS);
+    @Override
+    final void postDeactivate() {
+        registrar.unregister(this);
+    }
 
-            started = true;
+    @Override
+    final void doScheduledActions() {
+        for (Entry<Integer, String> entry : pidsToMonitor.entrySet()) {
+            int pid = entry.getKey();
+            String vmId = entry.getValue();
+            for (VmPollingAction action : actions) {
+                action.run(vmId, pid);
+            }
         }
-        return started;
     }
 
-    @Override
-    public boolean deactivate() {
-        if (started) {
-            executor.shutdown();
-            registrar.unregister(this);
-
-            started = false;
-        }
-        return !started;
-    }
-
-    @Override
-    public boolean isActive() {
-        return started;
-    }
-
-    /*
-     * Methods implementing VmStatusListener
+    /**
+     * Register an action to be performed at each polling interval.  It is
+     * recommended that implementations register all such actions during
+     * instantiation.
      */
+    protected final void registerAction(VmPollingAction action) {
+        actions.add(action);
+    }
+
+    /**
+     * Unregister an action so that it will no longer be performed at each
+     * polling interval.  If no such action has been registered, this
+     * method has no effect.  Depending on thread timing issues, the action
+     * may be performed once even after this method has been called.
+     */
+    protected final void unregisterAction(VmPollingAction action) {
+        actions.remove(action);
+    }
+
     @Override
     public void vmStatusChanged(Status newStatus, String vmId, int pid) {
         switch (newStatus) {
@@ -126,24 +119,13 @@ public abstract class VmProcReadingBackend extends BaseBackend implements VmStat
         case VM_ACTIVE:
             if (getObserveNewJvm()) {
                 pidsToMonitor.put(pid, vmId);
-                vmStarted(vmId, pid);
             } else {
                 logger.log(Level.FINE, "skipping new vm " + pid);
             }
             break;
         case VM_STOPPED:
             pidsToMonitor.remove(pid);
-            vmStopped(vmId, pid);
             break;
         }
     }
-
-    protected abstract void readAndProcessProcData(String vmId, int pid);
-
-    /** A VM is now active. Either it started now, or it started before this backend did. */
-    protected void vmStarted(String vmId, int pid) { /* do nothing */ }
-
-    /** A VM is now inactive. Either it stopped, or this backend is asked to stop. */
-    protected void vmStopped(String vmId, int pid) { /* do nothing */ }
-
 }

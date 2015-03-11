@@ -40,7 +40,8 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.agent.utils.ProcDataSource;
-import com.redhat.thermostat.backend.VmProcReadingBackend;
+import com.redhat.thermostat.backend.VmPollingAction;
+import com.redhat.thermostat.backend.VmPollingBackend;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.storage.core.WriterID;
@@ -48,10 +49,7 @@ import com.redhat.thermostat.vm.io.common.Constants;
 import com.redhat.thermostat.vm.io.common.VmIoStat;
 import com.redhat.thermostat.vm.io.common.VmIoStatDAO;
 
-public class VmIoBackend extends VmProcReadingBackend {
-
-    private final VmIoStatDAO vmIoStats;
-    private VmIoStatBuilder vmIoStatBuilder;
+public class VmIoBackend extends VmPollingBackend {
 
     public VmIoBackend(Clock clock, ScheduledExecutorService executor, Version version,
             VmIoStatDAO vmIoStatDao,
@@ -70,16 +68,28 @@ public class VmIoBackend extends VmProcReadingBackend {
               "Red Hat, Inc.",
               version, executor, registrar);
 
-        this.vmIoStats = vmIoStatDao;
-        this.vmIoStatBuilder = vmIoStatBuilder;
+        VmIoBackendAction action = new VmIoBackendAction(vmIoStatDao, vmIoStatBuilder);
+        registerAction(action);
     }
 
-    @Override
-    public void readAndProcessProcData(String vmId, int pid) {
-        VmIoStat dataBuilt = vmIoStatBuilder.build(vmId, pid);
-        if (dataBuilt != null) {
-            vmIoStats.putVmIoStat(dataBuilt);
+    private static class VmIoBackendAction implements VmPollingAction {
+
+        private VmIoStatDAO dao;
+        private VmIoStatBuilder builder;
+
+        private VmIoBackendAction(VmIoStatDAO dao, VmIoStatBuilder builder) {
+            this.dao = dao;
+            this.builder = builder;
         }
+
+        @Override
+        public void run(String vmId, int pid) {
+            VmIoStat dataBuilt = builder.build(vmId, pid);
+            if (dataBuilt != null) {
+                dao.putVmIoStat(dataBuilt);
+            }
+        }
+        
     }
 
     @Override
