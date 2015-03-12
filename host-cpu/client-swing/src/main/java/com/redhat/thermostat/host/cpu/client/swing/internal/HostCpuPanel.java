@@ -64,6 +64,7 @@ import org.jfree.data.time.TimeSeriesCollection;
 import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.LabelField;
+import com.redhat.thermostat.client.swing.components.LegendLabel;
 import com.redhat.thermostat.client.swing.components.RecentTimeSeriesChartPanel;
 import com.redhat.thermostat.client.swing.components.SectionHeader;
 import com.redhat.thermostat.client.swing.components.ValueField;
@@ -150,7 +151,7 @@ public class HostCpuPanel extends HostCpuView implements SwingComponent {
 
                 updateColors();
 
-                JLabel label = createLabelWithLegend(theName, color);
+                JLabel label = new LegendLabel(name, color);
                 labels.put(theName, label);
 
                 legendPanel.add(label);
@@ -305,9 +306,5 @@ public class HostCpuPanel extends HostCpuView implements SwingComponent {
         }
     }
 
-    private JLabel createLabelWithLegend(String text, Color color) {
-        String hexColor = "#" + Integer.toHexString(color.getRGB() & 0x00ffffff);
-        return new JLabel("<html> <font color='" + hexColor + "'>\u2588</font> " + text + "</html>");
-    }
 }
 

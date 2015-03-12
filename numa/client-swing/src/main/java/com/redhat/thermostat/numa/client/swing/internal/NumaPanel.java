@@ -67,6 +67,7 @@ import org.jfree.data.time.TimeSeriesCollection;
 
 import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.client.swing.components.LegendCheckBox;
 import com.redhat.thermostat.client.swing.components.RecentTimeSeriesChartPanel;
 import com.redhat.thermostat.client.swing.components.SectionHeader;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
@@ -119,7 +120,7 @@ public class NumaPanel extends NumaView implements SwingComponent {
                 colors.put(tag, ChartColors.getColor(colorIndex));
                 TimeSeries series = new TimeSeries(tag);
                 dataset.put(tag, series);
-                JCheckBox newCheckBox = new JCheckBox(createLabelWithLegend(name, colors.get(tag)));
+                JCheckBox newCheckBox = new LegendCheckBox(name, colors.get(tag));
                 newCheckBox.setActionCommand(tag);
                 newCheckBox.setSelected(true);
                 newCheckBox.addActionListener(numaCheckboxListener);
@@ -131,11 +132,6 @@ public class NumaPanel extends NumaView implements SwingComponent {
             }
         });
 
-    }
-
-    private String createLabelWithLegend(LocalizedString text, Color color) {
-        String hexColor = "#" + Integer.toHexString(color.getRGB() & 0x00ffffff);
-        return "<html> <font color='" + hexColor + "'>\u2588</font> " + text.getContents() + "</html>";
     }
 
     @Override

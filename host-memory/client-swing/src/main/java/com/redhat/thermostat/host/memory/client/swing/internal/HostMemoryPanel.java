@@ -36,10 +36,10 @@
 
 package com.redhat.thermostat.host.memory.client.swing.internal;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
-import java.awt.BorderLayout;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -47,12 +47,12 @@ import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
+import javax.swing.Box;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
-import javax.swing.Box;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
@@ -66,6 +66,7 @@ import org.jfree.data.time.TimeSeriesCollection;
 import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.LabelField;
+import com.redhat.thermostat.client.swing.components.LegendCheckBox;
 import com.redhat.thermostat.client.swing.components.RecentTimeSeriesChartPanel;
 import com.redhat.thermostat.client.swing.components.SectionHeader;
 import com.redhat.thermostat.client.swing.components.ValueField;
@@ -132,7 +133,7 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
                 colors.put(tag, ChartColors.getColor(colorIndex));
                 TimeSeries series = new TimeSeries(tag);
                 dataset.put(tag, series);
-                JCheckBox newCheckBox = new JCheckBox(createLabelWithLegend(name, colors.get(tag)));
+                JCheckBox newCheckBox = new LegendCheckBox(name, colors.get(tag));
                 newCheckBox.setActionCommand(tag);
                 newCheckBox.setSelected(true);
                 newCheckBox.addActionListener(memoryCheckboxListener);
@@ -144,11 +145,6 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
             }
         });
 
-    }
-
-    private String createLabelWithLegend(LocalizedString text, Color color) {
-        String hexColor = "#" + Integer.toHexString(color.getRGB() & 0x00ffffff);
-        return "<html> <font color='" + hexColor + "'>\u2588</font> " + text.getContents() + "</html>";
     }
 
     @Override
