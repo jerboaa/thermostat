@@ -36,17 +36,21 @@
 
 package com.redhat.thermostat.vm.io.client.swing.internal;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.time.FixedMillisecond;
 import org.jfree.data.time.RegularTimePeriod;
 import org.jfree.data.time.TimeSeries;
@@ -55,15 +59,18 @@ import org.jfree.data.time.TimeSeriesCollection;
 import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
+import com.redhat.thermostat.client.swing.components.LegendLabel;
 import com.redhat.thermostat.client.swing.components.experimental.SingleValueChartPanel;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
+import com.redhat.thermostat.client.ui.ChartColors;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.model.Range;
+import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.storage.model.DiscreteTimeData;
 import com.redhat.thermostat.vm.io.client.core.LocaleResources;
 import com.redhat.thermostat.vm.io.client.core.VmIoView;
+import com.redhat.thermostat.vm.io.common.VmIoStat;
 
 public class VmIoPanel extends VmIoView implements SwingComponent {
 
@@ -72,24 +79,31 @@ public class VmIoPanel extends VmIoView implements SwingComponent {
     private static final int DEFAULT_DURATION_VALUE = 10;
     private static final TimeUnit DEFAULT_DURATION_UNIT = TimeUnit.MINUTES;
 
+    private static final int INDEX_CHARACTERS_READ = 0;
+    private static final int INDEX_CHARACTERS_WRITTEN = 1;
+    private static final int INDEX_READ_SYSCALLS = 2;
+    private static final int INDEX_WRITE_SYSCALLS = 3;
+    private static final int INDEX_LAST = 4;
+
     private Duration duration;
 
     private HeaderPanel visiblePanel;
 
-    private final TimeSeriesCollection data = new TimeSeriesCollection();
-    private final TimeSeries ioTimeSeries = new TimeSeries("io-stats");
+    private final TimeSeriesCollection vmIoData = new TimeSeriesCollection();
+    private final TimeSeries[] datasets = new TimeSeries[INDEX_LAST];
 
     private SingleValueChartPanel chartPanel;
+    private JPanel legendPanel;
 
     private ActionNotifier<UserAction> userActionNotifier = new ActionNotifier<UserAction>(this);
 
     public VmIoPanel() {
         super();
-        data.addSeries(ioTimeSeries);
 
         duration = new Duration(DEFAULT_DURATION_VALUE, DEFAULT_DURATION_UNIT);
 
         initializePanel();
+        initializeDataAndComponents();
 
         new ComponentVisibilityNotifier().initialize(visiblePanel, notifier);
     }
@@ -103,18 +117,26 @@ public class VmIoPanel extends VmIoView implements SwingComponent {
         visiblePanel = new HeaderPanel();
         visiblePanel.setHeader(translator.localize(LocaleResources.VM_IO_TITLE));
 
+        JPanel mainPanel = new JPanel(new BorderLayout());
+
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 null,
                 translator.localize(LocaleResources.VM_IO_CHART_TIME_LABEL).getContents(),
-                translator.localize(LocaleResources.VM_IO_CHART_CHARACTERS_READ_LABEL).getContents(),
-                data,
+                null,
+                vmIoData,
                 false, false, false);
 
         chart.getXYPlot().getRangeAxis().setLowerBound(0.0);
 
-        chartPanel = new SingleValueChartPanel(chart, duration);
+        XYItemRenderer renderer = chart.getXYPlot().getRenderer();
+        for (int i = 0; i < INDEX_LAST; i++) {
+            renderer.setSeriesPaint(i, ChartColors.getColor(i));
+        }
 
-        visiblePanel.setContent(chartPanel);
+        chartPanel = new SingleValueChartPanel(chart, duration);
+        mainPanel.add(chartPanel, BorderLayout.CENTER);
+
+        visiblePanel.setContent(mainPanel);
 
         chartPanel.addPropertyChangeListener(SingleValueChartPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {
             @Override
@@ -123,6 +145,32 @@ public class VmIoPanel extends VmIoView implements SwingComponent {
                 userActionNotifier.fireAction(UserAction.USER_CHANGED_TIME_RANGE);
             }
         });
+
+        legendPanel = new JPanel();
+        mainPanel.add(legendPanel, BorderLayout.PAGE_END);
+    }
+
+    private void initializeDataAndComponents() {
+        LocalizedString[] names = new LocalizedString[INDEX_LAST];
+        names[INDEX_CHARACTERS_READ] = translator.localize(LocaleResources.VM_IO_CHART_CHARACTERS_READ_LABEL);
+        names[INDEX_CHARACTERS_WRITTEN] = translator.localize(LocaleResources.VM_IO_CHART_CHARACTERS_WRITTEN_LABEL);
+        names[INDEX_READ_SYSCALLS] = translator.localize(LocaleResources.VM_IO_CHART_READ_SYSCALLS_LABEL);
+        names[INDEX_WRITE_SYSCALLS] = translator.localize(LocaleResources.VM_IO_CHART_WRITE_SYSCALLS_LABEL);
+
+        for (int i = 0; i < INDEX_LAST; i++) {
+            LocalizedString localizedName = names[i];
+            String theName = localizedName.getContents();
+            TimeSeries series = new TimeSeries(theName);
+            Color color = ChartColors.getColor(i);
+
+            datasets[i] = series;
+            vmIoData.addSeries(series);
+
+            JLabel label = new LegendLabel(localizedName, color);
+
+            legendPanel.add(label);
+            legendPanel.revalidate();
+        }
     }
 
     @Override
@@ -151,18 +199,22 @@ public class VmIoPanel extends VmIoView implements SwingComponent {
     }
 
     @Override
-    public void addData(List<DiscreteTimeData<? extends Number>> data) {
-        final List<DiscreteTimeData<? extends Number>> copy = new ArrayList<>(data);
+    public void addData(final List<VmIoStat> data) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                for (DiscreteTimeData<? extends Number> data: copy) {
-                    RegularTimePeriod period = new FixedMillisecond(data.getTimeInMillis());
-                    if (ioTimeSeries.getDataItem(period) == null) {
-                        ioTimeSeries.add(period, data.getData(), false);
-                    }
+                for (VmIoStat stat: data) {
+                    RegularTimePeriod period = new FixedMillisecond(stat.getTimeStamp());
+
+                    datasets[INDEX_CHARACTERS_READ].add(period, stat.getCharactersRead(), false);
+                    datasets[INDEX_CHARACTERS_WRITTEN].add(period, stat.getCharactersWritten(), false);
+                    datasets[INDEX_READ_SYSCALLS].add(period, stat.getReadSyscalls(), false);
+                    datasets[INDEX_WRITE_SYSCALLS].add(period, stat.getWriteSyscalls(), false);
                 }
-                ioTimeSeries.fireSeriesChanged();
+
+                for (int i = 0; i < INDEX_LAST; i++) {
+                    datasets[i].fireSeriesChanged();
+                }
             }
         });
     }
@@ -172,7 +224,9 @@ public class VmIoPanel extends VmIoView implements SwingComponent {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                ioTimeSeries.clear();
+                for (int i = 0; i < INDEX_LAST; i++) {
+                    datasets[i].clear();
+                }
             }
         });
     }

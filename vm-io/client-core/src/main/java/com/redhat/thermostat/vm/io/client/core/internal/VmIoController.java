@@ -55,7 +55,6 @@ import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.model.DiscreteTimeData;
 import com.redhat.thermostat.vm.io.client.core.LocaleResources;
 import com.redhat.thermostat.vm.io.client.core.VmIoView;
 import com.redhat.thermostat.vm.io.client.core.VmIoViewProvider;
@@ -136,7 +135,7 @@ public class VmIoController implements InformationServiceController<VmRef> {
     }
 
     private void updateData() {
-        final List<DiscreteTimeData<? extends Number>> data = new ArrayList<>();
+        final List<VmIoStat> data = new ArrayList<>();
 
         VmIoStat oldest = dao.getOldest(ref);
         VmIoStat newest = dao.getNewest(ref);
@@ -147,15 +146,13 @@ public class VmIoController implements InformationServiceController<VmRef> {
             @Override
             public List<VmIoStat> getStats(final VmRef ref, final long since, final long to) {
                 return dao.getVmIoStats(ref, since, to);
-
            }
         };
 
         TimeRangeController.SingleArgRunnable<VmIoStat> runnable = new TimeRangeController.SingleArgRunnable<VmIoStat>() {
             @Override
             public void run(VmIoStat ioData) {
-                // FIXME display characters written too!
-                data.add(new DiscreteTimeData<>(ioData.getTimeStamp(), ioData.getCharactersRead()));
+                data.add(ioData);
             }
         };
 

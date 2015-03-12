@@ -39,8 +39,11 @@ package com.redhat.thermostat.storage.model;
 import java.util.Comparator;
 
 public final class TimeStampedPojoComparator<T extends TimeStampedPojo> implements Comparator<T> {
+
+    @Override
     public int compare(T o1, T o2) {
         return Long.compare(o1.getTimeStamp(), o2.getTimeStamp());
     }
+
 }
 
