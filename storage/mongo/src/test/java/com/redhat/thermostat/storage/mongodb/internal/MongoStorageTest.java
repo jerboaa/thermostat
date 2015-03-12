@@ -42,7 +42,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -118,6 +117,8 @@ import com.redhat.thermostat.storage.model.HostInfo;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.storage.query.ExpressionFactory;
+import java.util.NoSuchElementException;
+import static org.junit.Assert.fail;
 
 //There is a bug (resolved as wontfix) in powermock which results in
 //java.lang.LinkageError if javax.management.* classes aren't ignored by
@@ -455,7 +456,12 @@ public class MongoStorageTest {
         assertEquals("test4", obj2.getKey4());
 
         assertFalse(cursor.hasNext());
-        assertNull(cursor.next());
+        try {
+            cursor.next();
+            fail("Cursor should throw a NoSuchElementException!");
+        } catch (NoSuchElementException e) {
+            // pass
+        }
     }
 
     @Test (expected=NullPointerException.class)

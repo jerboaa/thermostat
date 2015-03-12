@@ -39,7 +39,6 @@ package com.redhat.thermostat.itest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -113,6 +112,7 @@ import com.redhat.thermostat.web.server.auth.Roles;
 
 import expectj.Spawn;
 import expectj.TimeoutException;
+import java.util.NoSuchElementException;
 
 /**
  * This test class starts up a mongod instance and a web storage instance
@@ -780,7 +780,12 @@ public class WebAppTest extends IntegrationTest {
         
         Cursor<CpuStat> cursor = query.executeQuery();
         assertFalse(cursor.hasNext());
-        assertNull(cursor.next());
+        try {
+            cursor.next();
+            fail("Cursor should throw a NoSuchElementException!");
+        } catch (NoSuchElementException e) {
+            // pass
+        }
 
         webStorage.getConnection().disconnect();
     }

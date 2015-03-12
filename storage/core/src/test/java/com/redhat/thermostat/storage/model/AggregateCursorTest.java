@@ -38,7 +38,6 @@ package com.redhat.thermostat.storage.model;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
@@ -46,6 +45,8 @@ import org.junit.Test;
 
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.experimental.BatchCursor;
+import java.util.NoSuchElementException;
+import static org.junit.Assert.fail;
 
 public class AggregateCursorTest {
 
@@ -57,7 +58,12 @@ public class AggregateCursorTest {
         AggregateTest actual = cursor.next();
         assertSame(t, actual);
         assertFalse(cursor.hasNext());
-        assertNull(cursor.next());
+        try {
+            cursor.next();
+            fail("Cursor should throw a NoSuchElementException!");
+        } catch (NoSuchElementException e) {
+            // pass
+        }
     }
 
     /**

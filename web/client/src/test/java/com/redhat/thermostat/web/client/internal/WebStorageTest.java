@@ -43,7 +43,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -53,7 +52,6 @@ import static org.mockito.Mockito.when;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -128,6 +126,8 @@ import com.redhat.thermostat.web.common.typeadapters.SharedStateIdTypeAdapterFac
 import com.redhat.thermostat.web.common.typeadapters.WebPreparedStatementResponseTypeAdapterFactory;
 import com.redhat.thermostat.web.common.typeadapters.WebPreparedStatementTypeAdapterFactory;
 import com.redhat.thermostat.web.common.typeadapters.WebQueryResponseTypeAdapterFactory;
+import java.util.NoSuchElementException;
+import static org.junit.Assert.fail;
 
 public class WebStorageTest {
 
@@ -486,7 +486,12 @@ public class WebStorageTest {
         fakeQueryResponse.setHasMoreBatches(false);
         Cursor<TestObj> results = doBasicPrepareAndExecuteQueryTest(fakeQueryResponse);
         assertFalse(results.hasNext());
-        assertNull(results.next());
+        try {
+            results.next();
+            fail("Cursor should throw a NoSuchElementException!");
+        } catch (NoSuchElementException e) {
+            // pass
+        }
     }
     
     /**

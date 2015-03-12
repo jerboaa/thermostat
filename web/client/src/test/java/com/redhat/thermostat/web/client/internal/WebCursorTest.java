@@ -40,7 +40,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -56,6 +55,8 @@ import com.redhat.thermostat.storage.core.experimental.BatchCursor;
 import com.redhat.thermostat.web.common.PreparedStatementResponseCode;
 import com.redhat.thermostat.web.common.WebPreparedStatement;
 import com.redhat.thermostat.web.common.WebQueryResponse;
+import java.util.NoSuchElementException;
+import static org.junit.Assert.fail;
 
 public class WebCursorTest {
 
@@ -95,7 +96,12 @@ public class WebCursorTest {
         boolean hasMoreBatches = false;
         TestObj[] dataBatch = new TestObj[] { };
         WebCursor<TestObj> cursor = new WebCursor<>(storage, dataBatch, hasMoreBatches, cursorId, fakeType, stmt);
-        assertNull(cursor.next());
+        try {
+            cursor.next();
+            fail("Cursor should throw a NoSuchElementException!");
+        } catch (NoSuchElementException e) {
+            // pass
+        }
         
         // test empty results but more batches
         hasMoreBatches = true;

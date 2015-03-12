@@ -48,6 +48,7 @@ import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.web.common.PreparedStatementResponseCode;
 import com.redhat.thermostat.web.common.WebPreparedStatement;
 import com.redhat.thermostat.web.common.WebQueryResponse;
+import java.util.NoSuchElementException;
 
 class WebCursor<T extends Pojo> extends BasicBatchCursor<T> {
     
@@ -80,11 +81,7 @@ class WebCursor<T extends Pojo> extends BasicBatchCursor<T> {
     @Override
     public T next() {
         if (batchIndex >= dataBatch.length && !hasMoreBatches) {
-            // FIXME: Thermostat 2.0: Change to throwing NoSuchElementException
-            String warning = "No next element but next() is being called. " +
-                             "This will throw NoSuchElementException in the next release!";
-            logger.log(Level.WARNING, warning);
-            return null;
+            throw new NoSuchElementException();
         }
         T result = null;
         // Check if we have still results left in batch,

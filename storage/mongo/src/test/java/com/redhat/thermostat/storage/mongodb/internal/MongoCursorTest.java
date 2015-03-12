@@ -38,9 +38,7 @@ package com.redhat.thermostat.storage.mongodb.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.mock;
@@ -59,6 +57,8 @@ import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Persist;
 import com.redhat.thermostat.storage.core.experimental.BatchCursor;
 import com.redhat.thermostat.storage.model.BasePojo;
+import java.util.NoSuchElementException;
+import static org.junit.Assert.fail;
 
 public class MongoCursorTest {
 
@@ -148,7 +148,12 @@ public class MongoCursorTest {
         assertEquals("test4", obj2.getKey4());
 
         assertFalse(cursor.hasNext());
-        assertNull(cursor.next());
+        try {
+            cursor.next();
+            fail("Cursor should throw a NoSuchElementException!");
+        } catch (NoSuchElementException e) {
+            // pass
+        }
     }
     
     @Test

@@ -36,11 +36,11 @@
 
 package com.redhat.thermostat.storage.model;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.experimental.BasicBatchCursor;
+import java.util.NoSuchElementException;
 
 /**
  * A cursor which returns true on {@link #hasNext()} once and only once.
@@ -70,11 +70,7 @@ class AggregateCursor<T extends Pojo> extends BasicBatchCursor<T> {
             available = false;
             return result;
         } else {
-            // FIXME: Thermostat 2.0: Change to throwing NoSuchElementException
-            String warning = "No next element but next() is being called. " +
-                             "This will throw NoSuchElementException in the next release!";
-            logger.log(Level.WARNING, warning);
-            return null;
+            throw new NoSuchElementException();
         }
     }
 
