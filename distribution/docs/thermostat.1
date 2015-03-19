@@ -1,0 +1,120 @@
+.\" man page for thermostat
+
+.TH THERMOSTAT 1
+
+.\"
+.\" File Name macro.
+.\"
+.de FN
+\fI\|\\$1\|\fP
+..
+
+.SH NAME
+thermostat \- A monitoring and serviceability tool for OpenJDK
+
+.SH SYNOPSIS
+.B "thermostat"
+[
+.I global_options
+]
+.I "command"
+[
+.I command_options
+]
+[
+.I command_arguments
+]
+.br
+.B "thermostat"
+.B "help"
+.br
+.B "thermostat"
+.B "help"
+.I "command"
+
+.SH DESCRIPTION
+Thermostat is an instrumentation tool for the Hotspot JVM, with support for
+monitoring multiple JVM instances on multiple hosts, optionally in a cloud
+environment. The name Thermostat is intended as a play on words: Thermostat is
+to Hotspot much as IcedTea is to Java.
+.br
+Some goals of Thermostat are:
+.IP \[bu] 2
+We want a tool that allows users of IcedTea/OpenJDK to monitor running JVMs, especially remote JVMs.
+.IP \[bu]
+Both high level (uptime, cpu and memory usage) and low level (including hotspot's perf data) information should be available through the tool.
+.IP \[bu]
+The tool should be usable in a production environment, with minimal overhead.
+
+.SH OPTIONS
+.SS "Global Options"
+  --print-osgi-info     Print debug information related to the OSGi framework's
+                        boot/shutdown process.
+  --ignore-bundle-versions
+                        Ignore exact bundle versions and use whatever version is
+                        available.
+  --boot-delegation     Boot delegation string passed on to the OSGi framework.
+.SS "Command Options and Command Arguments"
+Please see 
+.B "thermostat help"
+.I "command"
+for options and arguments for a
+.I command.
+
+.SH "COMMAND OVERVIEW"
+.SS "thermostat help"
+  show help for a given command or help overview
+.SS "thermostat storage <--start|--stop|--status> [--dryRun] [-q] [-l <level>]"
+  control Thermostat mongodb storage
+.SS "thermostat agent [-d <url>] [-s] [-l <level>]"
+  starts the Thermostat agent
+.SS "thermostat gui [-l <level>]"
+  starts the graphical user interface client
+.SS "thermostat shell"
+  starts the Thermostat interactive shell
+.SS "thermostat web-storage-service"
+  starts mongodb storage, an embedded servlet container and an agent
+
+.SH "COMMAND REFERENCE"
+Please see "\fBthermostat help\fP \fIcommand\fP" for detailed options and arguments of each command.
+"\fBthermostat help\fP", without a specific command argument, lists all available commands.
+
+.SH "FILES"
+.PD 0
+.TP
+.FN THERMOSTAT_HOME/etc/db.properties
+System configuration for mongodb storage
+.TP
+.FN USER_THERMOSTAT_HOME/etc/db.properties
+User specific configuration for mongodb storage. Overrides system configuration.
+.TP
+.FN THERMOSTAT_HOME/etc/agent.properties
+System configuration for agent
+.TP
+.FN USER_THERMOSTAT_HOME/etc/agent.properties
+User specific configuration for agent. Overrides system configuration.
+.TP
+.FN USER_THERMOSTAT_HOME/etc/agent.auth
+User specific storage connection credentials configuration for agent.
+.TP
+.FN THERMOSTAT_HOME/etc/ssl.properties
+System configuration for TLS
+.TP
+.FN USER_THERMOSTAT_HOME/etc/ssl.properties
+User specific configuration for TLS.
+
+.SH "BUGS REPORTS"
+If you think you've found a bug in thermostat please make sure that it really is a bug, and that it appears in the latest version of thermostat.
+The latest version is always  available from
+.UR "http://icedtea.classpath.org/hg/thermostat/"
+.BR "http://icedtea.classpath.org/hg/thermostat/".
+You can file thermostat bugs at:
+.UR "http://icedtea.classpath.org/bugzilla/"
+.BR "http://icedtea.classpath.org/bugzilla/"
+
+.SH "SEE ALSO"
+.UR "http://icedtea.classpath.org/thermostat/"
+.BR "http://icedtea.classpath.org/thermostat/"
+.br
+.UR "http://icedtea.classpath.org/wiki/Thermostat/UserGuide"
+.BR "http://icedtea.classpath.org/wiki/Thermostat/UserGuide"

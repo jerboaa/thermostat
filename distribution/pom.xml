@@ -192,6 +192,13 @@
                   <targetPath>tools</targetPath>
                   <filtering>true</filtering>
                 </resource>
+                <resource>
+                  <directory>docs</directory>
+                  <targetPath>docs</targetPath>
+                  <includes>
+                    <include>thermostat.1</include>
+                  </includes>
+                </resource>
               </resources>
             </configuration>
           </execution>
