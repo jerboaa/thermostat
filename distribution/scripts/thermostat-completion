@@ -1,0 +1,17 @@
+#/bin/bash
+_thermostat() 
+{
+    local cur prev opts base
+    local thermostat_install_dir
+    thermostat_install_dir="${thermostat.home}"
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+    # Thermostat Options
+    opts="$(${thermostat_install_dir}/bin/thermostat help | cut -d " " -f 2 | tr '\n' ' ' | cut -d " " -f 3-)"
+
+    COMPREPLY=($(compgen -W "${opts}" -- ${cur}))  
+    return 0
+}
+complete -F _thermostat thermostat
