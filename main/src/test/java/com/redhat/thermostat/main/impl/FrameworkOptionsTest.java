@@ -51,7 +51,6 @@ public class FrameworkOptionsTest {
     public void canGetPrintOsgiInfo() {
         String[] args = new String[] { "--print-osgi-info", "help" };
         FrameworkOptions opts = new FrameworkOptions(args);
-        assertFalse(opts.cleanOsgiCache());
         assertNull(opts.bootDelegationValue());
         assertFalse(opts.ignoreBundleVersions());
         assertTrue(opts.printOsgiInfo());
@@ -63,20 +62,7 @@ public class FrameworkOptionsTest {
     public void canGetBootDelegation() {
         String[] args = new String[] { "--boot-delegation=foo", "help" };
         FrameworkOptions opts = new FrameworkOptions(args);
-        assertFalse(opts.cleanOsgiCache());
         assertEquals("foo", opts.bootDelegationValue());
-        assertFalse(opts.ignoreBundleVersions());
-        assertFalse(opts.printOsgiInfo());
-        assertEquals(Arrays.asList("help"),
-                Arrays.asList(opts.getOtherOptions()));
-    }
-
-    @Test
-    public void canGetCleanOsgiCache() {
-        String[] args = new String[] { "--clean-osgi-cache", "help" };
-        FrameworkOptions opts = new FrameworkOptions(args);
-        assertTrue(opts.cleanOsgiCache());
-        assertNull(opts.bootDelegationValue());
         assertFalse(opts.ignoreBundleVersions());
         assertFalse(opts.printOsgiInfo());
         assertEquals(Arrays.asList("help"),
@@ -87,7 +73,6 @@ public class FrameworkOptionsTest {
     public void canGetIgnoreBundleVersion() {
         String[] args = new String[] { "--ignore-bundle-versions", "help" };
         FrameworkOptions opts = new FrameworkOptions(args);
-        assertFalse(opts.cleanOsgiCache());
         assertNull(opts.bootDelegationValue());
         assertTrue(opts.ignoreBundleVersions());
         assertFalse(opts.printOsgiInfo());

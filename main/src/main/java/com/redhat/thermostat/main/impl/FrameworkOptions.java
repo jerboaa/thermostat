@@ -64,10 +64,7 @@ public class FrameworkOptions {
          * Boot delegation string passed on to the OSGi framework.
          */
         BOOT_DELEGATION("--boot-delegation"),
-        /**
-         * Clean the OSGi framework's cache before booting.
-         */
-        CLEAN_OSGI_CACHE("--clean-osgi-cache"), ;
+        ;
 
         private final String optString;
 
@@ -115,11 +112,6 @@ public class FrameworkOptions {
                 globalOptions.put(Option.BOOT_DELEGATION, bootDelegation);
                 iter.remove();
             }
-            if (Option.CLEAN_OSGI_CACHE.getOptString().equals(arg)) {
-                globalOptions.put(Option.CLEAN_OSGI_CACHE,
-                        Boolean.TRUE.toString());
-                iter.remove();
-            }
         }
         return toProcess.toArray(new String[] {});
     }
@@ -138,10 +130,6 @@ public class FrameworkOptions {
 
     public String bootDelegationValue() {
         return globalOptions.get(Option.BOOT_DELEGATION);
-    }
-
-    public boolean cleanOsgiCache() {
-        return globalOptions.containsKey(Option.CLEAN_OSGI_CACHE);
     }
 
 }
