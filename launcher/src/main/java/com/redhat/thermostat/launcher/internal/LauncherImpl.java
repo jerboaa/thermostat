@@ -91,7 +91,7 @@ public class LauncherImpl implements Launcher {
     private static final String SETUP_SCRIPT_NAME = "thermostat-setup";
 
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
-    private Logger logger;
+    private static final Logger logger = LoggingUtils.getLogger(LauncherImpl.class);
 
     private final AtomicInteger usageCount = new AtomicInteger(0);
     private final BundleContext context;
@@ -130,7 +130,10 @@ public class LauncherImpl implements Launcher {
         this.paths = Objects.requireNonNull(paths);
 
         loggingInitializer.initialize();
-        logger = LoggingUtils.getLogger(LauncherImpl.class);
+        // We log this in the constructor so as to not log it multiple times when a command invokes
+        // run() multiple times. This works since it is a singleton service.
+        logger.log(Level.CONFIG, "THERMOSTAT_HOME=" + paths.getSystemThermostatHome().getAbsolutePath());
+        logger.log(Level.CONFIG, "USER_THERMOSTAT_HOME=" + paths.getUserThermostatHome().getAbsolutePath());
     }
 
     @Override

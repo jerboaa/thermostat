@@ -197,6 +197,8 @@ public class ActivatorTest {
         assertNotNull(action);
         Keyring keyringService = mock(Keyring.class);
         CommonPaths paths = mock(CommonPaths.class);
+        when(paths.getSystemThermostatHome()).thenReturn(mock(File.class));
+        when(paths.getUserThermostatHome()).thenReturn(mock(File.class));
         when(paths.getSystemLibRoot()).thenReturn(new File(""));
         when(paths.getSystemPluginRoot()).thenReturn(new File(""));
         when(paths.getUserPluginRoot()).thenReturn(new File(""));

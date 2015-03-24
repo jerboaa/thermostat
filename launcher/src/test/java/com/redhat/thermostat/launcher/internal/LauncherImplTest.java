@@ -37,6 +37,7 @@
 package com.redhat.thermostat.launcher.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.anyString;
@@ -50,7 +51,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.concurrent.ExecutorService;
+import java.util.logging.Handler;
 import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 import org.apache.commons.cli.Option;
@@ -96,7 +99,7 @@ public class LauncherImplTest {
     private static final String name3 = "test3";
     private static final String name4 = "test4";
     private static SecurityManager secMan;
-      
+    
     @BeforeClass
     public static void beforeClassSetUp() {
         // Launcher calls System.exit(). This causes issues for unit testing.
@@ -273,6 +276,8 @@ public class LauncherImplTest {
         when(paths.getUserSetupCompleteStampFile()).thenReturn(setupFile);
         ClientPreferences prefs = new ClientPreferences(paths);
 
+        when(paths.getSystemThermostatHome()).thenReturn(mock(File.class));
+        when(paths.getUserThermostatHome()).thenReturn(mock(File.class));
         launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext),
                 environment, dbServiceFactory, version, prefs, keyring, paths, loggingInitializer);
     }
@@ -558,6 +563,44 @@ public class LauncherImplTest {
         assertEquals(expectedVersionInfo, ctxFactory.getOutput());
         assertTrue(timerFactory.isShutdown());
     }
+    
+    /**
+     * Tests if USER_THERMOSTAT_HOME and THERMOSTAT_HOME gets logged correctly
+     * on instantiation.
+     */
+    @Test
+    public void verifyLogsUserHomeThermostatHomeOnInstantiation() {
+        Logger logger = Logger.getLogger("com.redhat.thermostat");
+        logger.setLevel(Level.ALL);
+        assertTrue(logger.getLevel() == Level.ALL);
+        TestLogHandler handler = new TestLogHandler();
+        logger.addHandler(handler);
+        ClientPreferences prefs = mock(ClientPreferences.class);
+        Keyring keyring = mock(Keyring.class);
+        CommonPaths logPaths = mock(CommonPaths.class);
+        when(logPaths.getUserThermostatHome()).thenReturn(mock(File.class));
+        when(logPaths.getSystemThermostatHome()).thenReturn(mock(File.class));
+        
+        try {
+            assertFalse(handler.loggedThermostatHome);
+            assertFalse(handler.loggedUserHome);
+            // this should trigger logging
+            new LauncherImpl(bundleContext, ctxFactory, registry,
+                    infos, new CommandSource(bundleContext),
+                    environment, dbServiceFactory,
+                    version, prefs, keyring, logPaths,
+                    loggingInitializer);
+            assertTrue(handler.loggedThermostatHome);
+            assertTrue(handler.loggedUserHome);
+            verify(logPaths).getUserThermostatHome();
+            verify(logPaths).getSystemThermostatHome();
+        } finally {
+            // clean-up in order to avoid logs for other tests.
+            logger.removeHandler(handler);
+            handler = null;
+            logger.setLevel(Level.INFO);
+        }
+    }
 
     @Test
     public void verifyListenersAdded() {
@@ -637,6 +680,35 @@ public class LauncherImplTest {
 
         ctxFactory.getCommandRegistry().registerCommand(cmdName, mockCmd);
         runAndVerifyCommand(new String[] { cmdName }, expected, isInShell);
-    }   
+    }
+    
+    private static class TestLogHandler extends Handler {
+        
+        private boolean loggedThermostatHome;
+        private boolean loggedUserHome;
+        
+        @Override
+        public void close() throws SecurityException {
+            // nothing
+        }
+
+        @Override
+        public void flush() {
+            // nothing
+        }
+
+        @Override
+        public void publish(LogRecord record) {
+            String logMessage = record.getMessage();
+            System.out.println(logMessage);
+            if (record.getLevel() == Level.CONFIG && logMessage.startsWith("THERMOSTAT_HOME")) {
+                loggedThermostatHome = true;
+            }
+            if (record.getLevel() == Level.CONFIG && logMessage.startsWith("USER_THERMOSTAT_HOME")) {
+                loggedUserHome = true;
+            }
+        }
+        
+    }
 }
 
