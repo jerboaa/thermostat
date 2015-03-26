@@ -41,11 +41,16 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
 import com.redhat.thermostat.vm.profiler.common.ProfileInfo;
 
 public class ProfileUploader {
+
+    private static final Logger logger = LoggingUtils.getLogger(ProfileUploader.class);
 
     private final ProfileDAO dao;
     private final String agentId;
@@ -58,14 +63,25 @@ public class ProfileUploader {
     }
 
     public void upload(long timeStamp, final File data, final Runnable cleanupData) throws IOException {
-        try (final InputStream stream = new FileInputStream(data)) {
-            upload(timeStamp, stream, cleanupData);
-        }
+        InputStream stream = new FileInputStream(data);
+        upload(timeStamp, stream, cleanupData);
     }
 
-    public void upload(long timeStamp, InputStream data, Runnable whenDone) throws IOException {
+    public void upload(final long timeStamp, final InputStream data, final Runnable cleanup) throws IOException {
+        Runnable wrappedCleanup = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    data.close();
+                } catch (IOException e) {
+                    logger.log(Level.FINE, "Unable to close stream", e);
+                }
+                cleanup.run();
+            }
+        };
+
         String id = UUID.randomUUID().toString();
         ProfileInfo info = new ProfileInfo(agentId, vmId, timeStamp, id);
-        dao.saveProfileData(info, data, whenDone);
+        dao.saveProfileData(info, data, wrappedCleanup);
     }
 }

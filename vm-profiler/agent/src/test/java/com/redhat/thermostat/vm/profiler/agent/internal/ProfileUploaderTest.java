@@ -38,6 +38,7 @@ package com.redhat.thermostat.vm.profiler.agent.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
@@ -64,6 +65,9 @@ public class ProfileUploaderTest {
 
     private ProfileUploader uploader;
 
+    private boolean okayToCloseStream = false;
+    private boolean streamIsClosed = false;
+
     @Before
     public void setUp() {
         dao = mock(ProfileDAO.class);
@@ -74,19 +78,36 @@ public class ProfileUploaderTest {
     @Test
     public void uploadFile() throws Exception {
         byte[] data = "Test Profile Data".getBytes(StandardCharsets.UTF_8);
-        ByteArrayInputStream input = new ByteArrayInputStream(data);
+        okayToCloseStream = false;
+        ByteArrayInputStream input = new ByteArrayInputStream(data) {
+            @Override
+            public void close() throws java.io.IOException {
+                if (!okayToCloseStream) {
+                    throw new AssertionError("Closing stream before upload is done!");
+                }
+
+                super.close();
+
+                streamIsClosed = true;
+            }
+        };
         Runnable afterUpload = mock(Runnable.class);
         ArgumentCaptor<ProfileInfo> profileInfoCaptor = ArgumentCaptor.forClass(ProfileInfo.class);
+        ArgumentCaptor<Runnable> cleanupActions = ArgumentCaptor.forClass(Runnable.class);
 
         uploader.upload(TIME, input, afterUpload);
 
-        // instead of verifying that afterUploader is invoked, just check that
-        // it is passed to the component responsible for running it
-        verify(dao).saveProfileData(profileInfoCaptor.capture(), eq(input), same(afterUpload));
+        verify(dao).saveProfileData(profileInfoCaptor.capture(), eq(input), cleanupActions.capture());
+
         ProfileInfo profileInfo = profileInfoCaptor.getValue();
         assertEquals(AGENT_ID, profileInfo.getAgentId());
         assertEquals(VM_ID, profileInfo.getVmId());
         assertEquals(TIME, profileInfo.getTimeStamp());
         assertNotNull(profileInfo.getProfileId());
+
+        okayToCloseStream = true;
+        cleanupActions.getValue().run();
+        assertTrue(streamIsClosed);
+        verify(afterUpload).run();
     }
 }
