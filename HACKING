@@ -119,6 +119,8 @@ A command's description is displayed as a long help message. Make it
 fully describe the command, including its actions and side-effects.
 Describe all options. Use full sentences, each ending with a period.
 
+Don't forget to update the man page (`distribution/docs/thermostat.1`)
+when changing an existing command.
 
 Commits
 -------
