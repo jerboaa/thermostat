@@ -300,13 +300,19 @@ public class LauncherImplTest {
 
     @Test
     public void testMainNoArgs() {
-        String expected = "list of commands:\n\n"
-                        + " help          print help information\n"
-                        + " basic         nothing that means anything\n"
-                        + " test1         description 1\n"
-                        + " test2         description 2\n"
-                        + " test3         description 3\n"
-                        + " test4         description 4\n";
+        String expected = "list of global options:\n\n"
+                + " --version                display the version of the current thermostat installation\n"
+                + " --print-osgi-info        print debug information related to the OSGi framework's boot/shutdown process\n"
+                + " --ignore-bundle-versions ignore exact bundle versions and use whatever version is available\n"
+                + " --boot-delegation        boot delegation string passed on to the OSGi framework\n"
+                + "\n"
+                + "list of commands:\n\n"
+                + " help          print help information\n"
+                + " basic         nothing that means anything\n"
+                + " test1         description 1\n"
+                + " test2         description 2\n"
+                + " test3         description 3\n"
+                + " test4         description 4\n";
         runAndVerifyCommand(new String[0], expected, false);
     }
 

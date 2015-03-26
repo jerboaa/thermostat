@@ -43,44 +43,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.redhat.thermostat.launcher.FrameworkOptions;
+
 /**
  * Thermostat options for the OSGi framework and relevant debug output.
  *
  */
-public class FrameworkOptions {
+public class FrameworkOptionsProcessor {
 
-    public enum Option {
-
-        /**
-         * Print debug information related to the OSGi framework's boot/shutdown
-         * process.
-         */
-        PRINT_OSGI_INFO("--print-osgi-info"),
-        /**
-         * Ignore exact bundle versions and use whatever version is available.
-         */
-        IGNORE_BUNDLE_VERSIONS("--ignore-bundle-versions"),
-        /**
-         * Boot delegation string passed on to the OSGi framework.
-         */
-        BOOT_DELEGATION("--boot-delegation"),
-        ;
-
-        private final String optString;
-
-        private Option(String optString) {
-            this.optString = optString;
-        }
-
-        public String getOptString() {
-            return optString;
-        }
-    }
-
-    private final Map<Option, String> globalOptions;
+    private final Map<FrameworkOptions, String> globalOptions;
     private final String[] otherOptions;
 
-    public FrameworkOptions(String[] args) {
+    public FrameworkOptionsProcessor(String[] args) {
         this.globalOptions = new HashMap<>();
         this.otherOptions = processGlobalOptions(args);
     }
@@ -90,18 +64,18 @@ public class FrameworkOptions {
         Iterator<String> iter = toProcess.iterator();
         while (iter.hasNext()) {
             String arg = iter.next();
-            if (Option.PRINT_OSGI_INFO.getOptString().equals(arg)) {
-                globalOptions.put(Option.PRINT_OSGI_INFO,
+            if (FrameworkOptions.PRINT_OSGI_INFO.getOptString().equals(arg)) {
+                globalOptions.put(FrameworkOptions.PRINT_OSGI_INFO,
                         Boolean.TRUE.toString());
                 iter.remove();
             }
-            if (Option.IGNORE_BUNDLE_VERSIONS.getOptString().equals(arg)) {
-                globalOptions.put(Option.IGNORE_BUNDLE_VERSIONS,
+            if (FrameworkOptions.IGNORE_BUNDLE_VERSIONS.getOptString().equals(arg)) {
+                globalOptions.put(FrameworkOptions.IGNORE_BUNDLE_VERSIONS,
                         Boolean.TRUE.toString());
                 iter.remove();
             }
-            if (arg.startsWith(Option.BOOT_DELEGATION.getOptString() + "=")) {
-                int startIndex = (Option.BOOT_DELEGATION.getOptString() + "=")
+            if (arg.startsWith(FrameworkOptions.BOOT_DELEGATION.getOptString() + "=")) {
+                int startIndex = (FrameworkOptions.BOOT_DELEGATION.getOptString() + "=")
                         .length();
                 String bootDelegation = arg.substring(startIndex);
                 if ("".equals(bootDelegation)) {
@@ -109,7 +83,7 @@ public class FrameworkOptions {
                             "Unexpected string used with boot delegation: '"
                                     + bootDelegation + "'");
                 }
-                globalOptions.put(Option.BOOT_DELEGATION, bootDelegation);
+                globalOptions.put(FrameworkOptions.BOOT_DELEGATION, bootDelegation);
                 iter.remove();
             }
         }
@@ -121,15 +95,15 @@ public class FrameworkOptions {
     }
 
     public boolean printOsgiInfo() {
-        return globalOptions.containsKey(Option.PRINT_OSGI_INFO);
+        return globalOptions.containsKey(FrameworkOptions.PRINT_OSGI_INFO);
     }
 
     public boolean ignoreBundleVersions() {
-        return globalOptions.containsKey(Option.IGNORE_BUNDLE_VERSIONS);
+        return globalOptions.containsKey(FrameworkOptions.IGNORE_BUNDLE_VERSIONS);
     }
 
     public String bootDelegationValue() {
-        return globalOptions.get(Option.BOOT_DELEGATION);
+        return globalOptions.get(FrameworkOptions.BOOT_DELEGATION);
     }
 
 }

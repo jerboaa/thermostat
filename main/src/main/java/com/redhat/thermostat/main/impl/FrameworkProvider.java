@@ -69,15 +69,15 @@ public class FrameworkProvider {
     private static final String BUNDLELIST = "bundles";
 
     private final CommonPaths paths;
-    private final FrameworkOptions frameworkOptions;
+    private final FrameworkOptionsProcessor frameworkOptionsProcessor;
     
     // The framework cache location; Must not be shared between apps!
     private Path osgiCacheStorage;
     
 
-    public FrameworkProvider(CommonPaths paths, FrameworkOptions options) {
+    public FrameworkProvider(CommonPaths paths, FrameworkOptionsProcessor options) {
         this.paths = paths;
-        this.frameworkOptions = options;
+        this.frameworkOptionsProcessor = options;
     }
 
     // This is our ticket into OSGi land. Unfortunately, we to use a bit of reflection here.
@@ -126,7 +126,7 @@ public class FrameworkProvider {
     private void prepareFramework(final Framework framework) throws BundleException, IOException {
         framework.init();
         framework.start();
-        if (frameworkOptions.printOsgiInfo()) {
+        if (frameworkOptionsProcessor.printOsgiInfo()) {
             System.out.println(DEBUG_PREFIX + "OSGi framework has started.");
         }
 
@@ -136,11 +136,11 @@ public class FrameworkProvider {
                 try {
                     framework.stop();
                     framework.waitForStop(0);
-                    if (frameworkOptions.printOsgiInfo()) {
+                    if (frameworkOptionsProcessor.printOsgiInfo()) {
                         System.out.println(DEBUG_PREFIX + "OSGi framework has shut down.");
                     }
                     recursivelyDeleteDirectory(osgiCacheStorage.toFile());
-                    if (frameworkOptions.printOsgiInfo()) {
+                    if (frameworkOptionsProcessor.printOsgiInfo()) {
                         System.out.println(DEBUG_PREFIX + "Removed OSGi cache directory: "
                                 + osgiCacheStorage.toFile().getAbsolutePath());
                     }
@@ -181,7 +181,7 @@ public class FrameworkProvider {
         // 
         // This fixes Thermostat BZ 1110.
         osgiCacheStorage = Files.createTempDirectory(osgiCacheDir.toPath(), null);
-        if (frameworkOptions.printOsgiInfo()) {
+        if (frameworkOptionsProcessor.printOsgiInfo()) {
             System.out.println(DEBUG_PREFIX + "OSGi cache location: "
                     + osgiCacheStorage.toFile().getAbsolutePath());
         }
@@ -192,11 +192,11 @@ public class FrameworkProvider {
         String extraPackages = getOSGiPublicPackages();
         bundleConfigurations.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, extraPackages);
         bundleConfigurations.put(Constants.FRAMEWORK_STORAGE, osgiCacheStorage.toFile().getAbsolutePath());
-        if (frameworkOptions.bootDelegationValue() != null) {
-            if (frameworkOptions.printOsgiInfo()) {
-                System.out.println("Boot delegation: " + frameworkOptions.bootDelegationValue());
+        if (frameworkOptionsProcessor.bootDelegationValue() != null) {
+            if (frameworkOptionsProcessor.printOsgiInfo()) {
+                System.out.println("Boot delegation: " + frameworkOptionsProcessor.bootDelegationValue());
             }
-            bundleConfigurations.put(Constants.FRAMEWORK_BOOTDELEGATION, frameworkOptions.bootDelegationValue());
+            bundleConfigurations.put(Constants.FRAMEWORK_BOOTDELEGATION, frameworkOptionsProcessor.bootDelegationValue());
         }
         Iterator<FrameworkFactory> factories = loader.iterator();
         if (factories.hasNext()) {
@@ -227,17 +227,17 @@ public class FrameworkProvider {
                 locations.add(location);
             }
         }
-        BundleManager.preLoadBundles(framework, locations, frameworkOptions.printOsgiInfo());
+        BundleManager.preLoadBundles(framework, locations, frameworkOptionsProcessor.printOsgiInfo());
     }
 
     private void setLoaderVerbosity(Framework framework) throws InterruptedException {
         Object loader = getService(framework, BundleManager.class.getName());
-        callVoidReflectedMethod(loader, "setPrintOSGiInfo", frameworkOptions.printOsgiInfo());
+        callVoidReflectedMethod(loader, "setPrintOSGiInfo", frameworkOptionsProcessor.printOsgiInfo());
     }
 
     private void setIgnoreBundleVersions(Framework framework) throws InterruptedException {
         Object loader = getService(framework, BundleManager.class.getName());
-        callVoidReflectedMethod(loader, "setIgnoreBundleVersions", frameworkOptions.ignoreBundleVersions());
+        callVoidReflectedMethod(loader, "setIgnoreBundleVersions", frameworkOptionsProcessor.ignoreBundleVersions());
     }
 
     private void runLauncher(Framework framework, String[] args) throws InterruptedException {

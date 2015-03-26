@@ -34,48 +34,37 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.launcher.internal;
+package com.redhat.thermostat.launcher;
 
-import com.redhat.thermostat.shared.locale.Translate;
-
-public enum LocaleResources {
-
-    MISSING_LAUNCHER,
-
-    CANNOT_GET_COMMAND_INFO,
-    UNKNOWN_COMMAND,
-    COMMAND_COULD_NOT_LOAD_BUNDLES,
-    COMMAND_DESCRIBED_BUT_NOT_AVAILALBE,
-    COMMAND_AVAILABLE_INSIDE_SHELL,
-    COMMAND_AVAILABLE_INSIDE_SHELL_ONLY,
-    COMMAND_AVAILABLE_OUTSIDE_SHELL,
-    COMMAND_AVAILABLE_OUTSIDE_SHELL_ONLY,
-
-    COMMAND_HELP_COMMAND_LIST_HEADER,
-    COMMAND_HELP_COMMAND_OPTION_HEADER,
-
-    COMMAND_SHELL_IO_EXCEPTION,
-
-    OPTION_DB_URL_DESC,
-    OPTION_LOG_LEVEL_DESC,
-    OPTION_HELP_DESC,
-
-    MISSING_OPTION,
-    MISSING_OPTIONS,
-    PARSE_EXCEPTION_MESSAGE,
-
-    LAUNCHER_USER_AUTH_PROMPT_ERROR,
-    LAUNCHER_MALFORMED_URL,
-    LAUNCHER_CONNECTION_ERROR,
-    LAUNCHER_FIRST_LAUNCH_MSG,
-
-    INVALID_DB_URL,
+public enum FrameworkOptions {
+    /**
+     * Print debug information related to the OSGi framework's boot/shutdown
+     * process.
+     */
+    PRINT_OSGI_INFO("--print-osgi-info", "print debug information related to the OSGi framework's boot/shutdown process"),
+    /**
+     * Ignore exact bundle versions and use whatever version is available.
+     */
+    IGNORE_BUNDLE_VERSIONS("--ignore-bundle-versions", "ignore exact bundle versions and use whatever version is available"),
+    /**
+     * Boot delegation string passed on to the OSGi framework.
+     */
+    BOOT_DELEGATION("--boot-delegation", "boot delegation string passed on to the OSGi framework"),
     ;
 
-    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.launcher.internal.strings";
+    private final String optString;
+    private final String description;
 
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+    private FrameworkOptions(String optString, String description) {
+        this.optString = optString;
+        this.description = description;
+    }
+
+    public String getOptString() {
+        return optString;
+    }
+
+    public String getDescription() {
+        return description;
     }
 }
-

@@ -120,9 +120,15 @@ public class HelpCommandTest {
 
         Arguments args = mock(Arguments.class);
         cmd.run(ctxFactory.createContext(args));
-        String expected = "list of commands:\n\n"
-                        + " test1         test command 1\n"
-                        + " test2longname test command 2\n";
+        String expected = "list of global options:\n\n"
+                + " --version                display the version of the current thermostat installation\n"
+                + " --print-osgi-info        print debug information related to the OSGi framework's boot/shutdown process\n"
+                + " --ignore-bundle-versions ignore exact bundle versions and use whatever version is available\n"
+                + " --boot-delegation        boot delegation string passed on to the OSGi framework\n"
+                + "\n"
+                + "list of commands:\n\n"
+                + " test1         test command 1\n"
+                + " test2longname test command 2\n";
         String actual = ctxFactory.getOutput();
         assertEquals(expected, actual);
     }
@@ -190,7 +196,13 @@ public class HelpCommandTest {
         cmd.run(ctxFactory.createContext(args));
 
         String actual = ctxFactory.getOutput();
-        String expected = "list of commands:\n\n"
+        String expected = "list of global options:\n\n"
+                + " --version                display the version of the current thermostat installation\n"
+                + " --print-osgi-info        print debug information related to the OSGi framework's boot/shutdown process\n"
+                + " --ignore-bundle-versions ignore exact bundle versions and use whatever version is available\n"
+                + " --boot-delegation        boot delegation string passed on to the OSGi framework\n"
+                + "\n"
+                + "list of commands:\n\n"
                 + " help          show help\n"
                 + " test1         test command 1\n"
                 + " test2         test command 2\n"
@@ -236,11 +248,51 @@ public class HelpCommandTest {
         cmd.run(ctxFactory.createContext(args));
 
         String actual = ctxFactory.getOutput();
-        String expected = "list of commands:\n\n"
+        String expected = "list of global options:\n\n"
+                + " --version                display the version of the current thermostat installation\n"
+                + " --print-osgi-info        print debug information related to the OSGi framework's boot/shutdown process\n"
+                + " --ignore-bundle-versions ignore exact bundle versions and use whatever version is available\n"
+                + " --boot-delegation        boot delegation string passed on to the OSGi framework\n"
+                + "\n"
+                + "list of commands:\n\n"
                 + " help          show help\n"
                 + " test1         test command 1\n"
                 + " test2         test command 2\n"
                 + " test4         test command 4\n";
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void verifyHelpFiltersOptions() {
+        CommandInfo helpInfo = mock(CommandInfo.class);
+        when(helpInfo.getName()).thenReturn("help");
+        when(helpInfo.getSummary()).thenReturn("show help");
+        when(helpInfo.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI, Environment.SHELL));
+
+        CommandInfo info1 = mock(CommandInfo.class);
+        when(info1.getName()).thenReturn("test1");
+        when(info1.getSummary()).thenReturn("test command 1");
+        when(info1.getEnvironments()).thenReturn(EnumSet.of(Environment.CLI, Environment.SHELL));
+
+        CommandInfo info2 = mock(CommandInfo.class);
+        when(info2.getName()).thenReturn("test2");
+        when(info2.getSummary()).thenReturn("test command 2");
+        when(info2.getEnvironments()).thenReturn(EnumSet.of(Environment.SHELL));
+
+        when(infos.getCommandInfos()).thenReturn(Arrays.asList(info2, helpInfo, info1));
+
+        HelpCommand cmd = new HelpCommand();
+        cmd.setEnvironment(Environment.SHELL);
+        cmd.setCommandInfoSource(infos);
+        Arguments args = mock(Arguments.class);
+        when(args.getNonOptionArguments()).thenReturn(new ArrayList<String>());
+        cmd.run(ctxFactory.createContext(args));
+
+        String actual = ctxFactory.getOutput();
+        String expected = "list of commands:\n\n"
+                + " help          show help\n"
+                + " test1         test command 1\n"
+                + " test2         test command 2\n";
         assertEquals(expected, actual);
     }
 

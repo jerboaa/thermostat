@@ -204,7 +204,7 @@ public class FrameworkProviderTest {
 
     @Test
     public void testStartRunsOSGiFramework() throws Exception {
-        FrameworkOptions opts = new FrameworkOptions(new String[] {});
+        FrameworkOptionsProcessor opts = new FrameworkOptionsProcessor(new String[] {});
         FrameworkProvider provider = new FrameworkProvider(paths, opts);
 
         provider.start(new String[] {});
@@ -215,7 +215,7 @@ public class FrameworkProviderTest {
 
     @Test
     public void testStartRunsLauncher() throws Exception {
-        FrameworkOptions opts = new FrameworkOptions(new String[] {});
+        FrameworkOptionsProcessor opts = new FrameworkOptionsProcessor(new String[] {});
         FrameworkProvider provider = new FrameworkProvider(paths, opts);
 
         provider.start(new String[] {});
@@ -225,7 +225,7 @@ public class FrameworkProviderTest {
 
     @Test
     public void testPrintOSGiInfoParameterIsPassedToBundleManager() {
-        FrameworkOptions opts = mock(FrameworkOptions.class);
+        FrameworkOptionsProcessor opts = mock(FrameworkOptionsProcessor.class);
         when(opts.printOsgiInfo()).thenReturn(true);
         FrameworkProvider provider = new FrameworkProvider(paths, opts);
 
@@ -236,7 +236,7 @@ public class FrameworkProviderTest {
 
     @Test
     public void testIgnoreBundleVersionsParameterIsPassedToBundleManager() {
-        FrameworkOptions opts = mock(FrameworkOptions.class);
+        FrameworkOptionsProcessor opts = mock(FrameworkOptionsProcessor.class);
         when(opts.ignoreBundleVersions()).thenReturn(true);
         FrameworkProvider provider = new FrameworkProvider(paths, opts);
 
@@ -247,7 +247,7 @@ public class FrameworkProviderTest {
 
     @Test
     public void testNullBootDelegationIsNotSetInConfiguration() {
-        FrameworkOptions opts = mock(FrameworkOptions.class);
+        FrameworkOptionsProcessor opts = mock(FrameworkOptionsProcessor.class);
         when(opts.bootDelegationValue()).thenReturn(null);
         FrameworkProvider provider = new FrameworkProvider(paths, opts);
 
@@ -259,7 +259,7 @@ public class FrameworkProviderTest {
 
     @Test
     public void testPackagesListedInBootDelegationArePassedToFramework() {
-        FrameworkOptions opts = mock(FrameworkOptions.class);
+        FrameworkOptionsProcessor opts = mock(FrameworkOptionsProcessor.class);
         when(opts.bootDelegationValue()).thenReturn("foo");
         FrameworkProvider provider = new FrameworkProvider(paths, opts);
 

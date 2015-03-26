@@ -48,10 +48,12 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
+import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.TableRenderer;
+import com.redhat.thermostat.launcher.FrameworkOptions;
 import com.redhat.thermostat.shared.locale.Translate;
 
 public class HelpCommand extends AbstractCommand  {
@@ -86,6 +88,12 @@ public class HelpCommand extends AbstractCommand  {
         }
 
         if (nonParsed.isEmpty()) {
+            if (currentEnvironment == Environment.CLI) {
+                //CLI only since the framework will already be
+                //started for a command invoked via shell
+                printOptionSummaries(ctx);
+            }
+
             printCommandSummaries(ctx);
         } else {
             printCommandUsage(ctx, nonParsed.get(0));
@@ -111,6 +119,22 @@ public class HelpCommand extends AbstractCommand  {
             printCommandSummary(renderer, info);
         }
         renderer.render(ctx.getConsole().getOutput());
+    }
+
+    private void printOptionSummaries(CommandContext ctx) {
+        ctx.getConsole().getOutput().print(translator.localize(LocaleResources.COMMAND_HELP_COMMAND_OPTION_HEADER).getContents());
+
+        TableRenderer renderer = new TableRenderer(2, COMMANDS_COLUMNS_WIDTH);
+
+        renderer.printLine(" " + Version.VERSION_OPTION, "display the version of the current thermostat installation");
+
+        for (FrameworkOptions opt : FrameworkOptions.values()) {
+            renderer.printLine(" " + opt.getOptString(), opt.getDescription());
+        }
+
+        renderer.render(ctx.getConsole().getOutput());
+
+        ctx.getConsole().getOutput().println();
     }
 
     private void printCommandSummary(TableRenderer renderer, CommandInfo info) {

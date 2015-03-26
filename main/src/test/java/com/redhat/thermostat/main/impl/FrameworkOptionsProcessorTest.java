@@ -45,12 +45,12 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
-public class FrameworkOptionsTest {
+public class FrameworkOptionsProcessorTest {
 
     @Test
     public void canGetPrintOsgiInfo() {
         String[] args = new String[] { "--print-osgi-info", "help" };
-        FrameworkOptions opts = new FrameworkOptions(args);
+        FrameworkOptionsProcessor opts = new FrameworkOptionsProcessor(args);
         assertNull(opts.bootDelegationValue());
         assertFalse(opts.ignoreBundleVersions());
         assertTrue(opts.printOsgiInfo());
@@ -61,7 +61,7 @@ public class FrameworkOptionsTest {
     @Test
     public void canGetBootDelegation() {
         String[] args = new String[] { "--boot-delegation=foo", "help" };
-        FrameworkOptions opts = new FrameworkOptions(args);
+        FrameworkOptionsProcessor opts = new FrameworkOptionsProcessor(args);
         assertEquals("foo", opts.bootDelegationValue());
         assertFalse(opts.ignoreBundleVersions());
         assertFalse(opts.printOsgiInfo());
@@ -72,7 +72,7 @@ public class FrameworkOptionsTest {
     @Test
     public void canGetIgnoreBundleVersion() {
         String[] args = new String[] { "--ignore-bundle-versions", "help" };
-        FrameworkOptions opts = new FrameworkOptions(args);
+        FrameworkOptionsProcessor opts = new FrameworkOptionsProcessor(args);
         assertNull(opts.bootDelegationValue());
         assertTrue(opts.ignoreBundleVersions());
         assertFalse(opts.printOsgiInfo());
@@ -85,6 +85,6 @@ public class FrameworkOptionsTest {
         String[] args = new String[] { "--boot-delegation=", "help" };
         // This is expected to fail since the boot delegation value is an empty
         // string.
-        new FrameworkOptions(args);
+        new FrameworkOptionsProcessor(args);
     }
 }

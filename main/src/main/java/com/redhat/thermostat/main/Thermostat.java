@@ -36,12 +36,7 @@
 
 package com.redhat.thermostat.main;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-
-import com.redhat.thermostat.main.impl.FrameworkOptions;
+import com.redhat.thermostat.main.impl.FrameworkOptionsProcessor;
 import com.redhat.thermostat.main.impl.FrameworkProvider;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.internal.CommonPathsImpl;
@@ -59,14 +54,14 @@ public class Thermostat {
     }
 
     public void start(CommonPaths paths, String[] args) {
-        FrameworkOptions frameworkOptions = new FrameworkOptions(args);
+        FrameworkOptionsProcessor frameworkOptions = new FrameworkOptionsProcessor(args);
 
         FrameworkProvider frameworkProvider = createFrameworkProvider(paths, frameworkOptions);
         frameworkProvider.start(frameworkOptions.getOtherOptions());
     }
 
     /* allow overriding for unit testing */
-    protected FrameworkProvider createFrameworkProvider(CommonPaths paths, FrameworkOptions options) {
+    protected FrameworkProvider createFrameworkProvider(CommonPaths paths, FrameworkOptionsProcessor options) {
         return new FrameworkProvider(paths, options);
     }
 }

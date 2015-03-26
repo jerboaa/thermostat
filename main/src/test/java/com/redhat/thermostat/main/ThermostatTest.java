@@ -49,7 +49,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.main.impl.FrameworkOptions;
+import com.redhat.thermostat.main.impl.FrameworkOptionsProcessor;
 import com.redhat.thermostat.main.impl.FrameworkProvider;
 import com.redhat.thermostat.shared.config.CommonPaths;
 
@@ -57,7 +57,7 @@ public class ThermostatTest {
 
     private FrameworkProvider provider;
     private CommonPaths paths;
-    private ArgumentCaptor<FrameworkOptions> optsCaptor;
+    private ArgumentCaptor<FrameworkOptionsProcessor> optsCaptor;
     private Thermostat thermostat;
 
     @Before
@@ -66,7 +66,7 @@ public class ThermostatTest {
         paths = mock(CommonPaths.class);
         
 
-        optsCaptor = ArgumentCaptor.forClass(FrameworkOptions.class);
+        optsCaptor = ArgumentCaptor.forClass(FrameworkOptionsProcessor.class);
 
         thermostat = mock(Thermostat.class);
 
@@ -83,7 +83,7 @@ public class ThermostatTest {
         thermostat.start(paths, args);
 
         verify(provider).start(eq(new String[]{}));
-        FrameworkOptions opts = optsCaptor.getValue();
+        FrameworkOptionsProcessor opts = optsCaptor.getValue();
         assertEquals(false, opts.printOsgiInfo());
     }
 
@@ -93,7 +93,7 @@ public class ThermostatTest {
         thermostat.start(paths, args);
 
         verify(provider).start(eq(new String[]{}));
-        FrameworkOptions opts = optsCaptor.getValue();
+        FrameworkOptionsProcessor opts = optsCaptor.getValue();
         assertEquals(true, opts.printOsgiInfo());
     }
 
@@ -103,7 +103,7 @@ public class ThermostatTest {
         thermostat.start(paths, args);
 
         verify(provider).start(eq(new String[]{}));
-        FrameworkOptions opts = optsCaptor.getValue();
+        FrameworkOptionsProcessor opts = optsCaptor.getValue();
         assertEquals(false, opts.ignoreBundleVersions());
     }
 
@@ -113,7 +113,7 @@ public class ThermostatTest {
         thermostat.start(paths, args);
 
         verify(provider).start(eq(new String[]{}));
-        FrameworkOptions opts = optsCaptor.getValue();
+        FrameworkOptionsProcessor opts = optsCaptor.getValue();
         assertEquals(true, opts.ignoreBundleVersions());
     }
 
@@ -123,7 +123,7 @@ public class ThermostatTest {
         thermostat.start(paths, args);
 
         verify(provider).start(eq(new String[]{}));
-        FrameworkOptions opts = optsCaptor.getValue();
+        FrameworkOptionsProcessor opts = optsCaptor.getValue();
         assertNull(opts.bootDelegationValue());
     }
 
@@ -133,7 +133,7 @@ public class ThermostatTest {
         thermostat.start(paths, args);
 
         verify(provider).start(eq(new String[]{}));
-        FrameworkOptions opts = optsCaptor.getValue();
+        FrameworkOptionsProcessor opts = optsCaptor.getValue();
         assertEquals("foo", opts.bootDelegationValue());
     }
 
