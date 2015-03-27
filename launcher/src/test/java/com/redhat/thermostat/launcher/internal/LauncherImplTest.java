@@ -301,10 +301,7 @@ public class LauncherImplTest {
     @Test
     public void testMainNoArgs() {
         String expected = "list of global options:\n\n"
-                + " --version                display the version of the current thermostat installation\n"
-                + " --print-osgi-info        print debug information related to the OSGi framework's boot/shutdown process\n"
-                + " --ignore-bundle-versions ignore exact bundle versions and use whatever version is available\n"
-                + " --boot-delegation        boot delegation string passed on to the OSGi framework\n"
+                + HelpCommandTest.GLOBAL_OPTIONS
                 + "\n"
                 + "list of commands:\n\n"
                 + " help          print help information\n"

@@ -56,6 +56,12 @@ import com.redhat.thermostat.test.TestCommandContextFactory;
 
 public class HelpCommandTest {
 
+    static final String GLOBAL_OPTIONS = ""
+            + " --version                display the version of the current thermostat installation\n"
+            + " --print-osgi-info        print debug information related to the OSGi framework's boot/shutdown process\n"
+            + " --ignore-bundle-versions ignore exact bundle versions and use whatever version is available\n"
+            + " --boot-delegation        boot delegation string passed on to the OSGi framework\n";
+
     private TestCommandContextFactory  ctxFactory;
     private CommandInfoSource infos;
 
@@ -121,10 +127,7 @@ public class HelpCommandTest {
         Arguments args = mock(Arguments.class);
         cmd.run(ctxFactory.createContext(args));
         String expected = "list of global options:\n\n"
-                + " --version                display the version of the current thermostat installation\n"
-                + " --print-osgi-info        print debug information related to the OSGi framework's boot/shutdown process\n"
-                + " --ignore-bundle-versions ignore exact bundle versions and use whatever version is available\n"
-                + " --boot-delegation        boot delegation string passed on to the OSGi framework\n"
+                + GLOBAL_OPTIONS
                 + "\n"
                 + "list of commands:\n\n"
                 + " test1         test command 1\n"
@@ -197,10 +200,7 @@ public class HelpCommandTest {
 
         String actual = ctxFactory.getOutput();
         String expected = "list of global options:\n\n"
-                + " --version                display the version of the current thermostat installation\n"
-                + " --print-osgi-info        print debug information related to the OSGi framework's boot/shutdown process\n"
-                + " --ignore-bundle-versions ignore exact bundle versions and use whatever version is available\n"
-                + " --boot-delegation        boot delegation string passed on to the OSGi framework\n"
+                + GLOBAL_OPTIONS
                 + "\n"
                 + "list of commands:\n\n"
                 + " help          show help\n"
@@ -249,10 +249,7 @@ public class HelpCommandTest {
 
         String actual = ctxFactory.getOutput();
         String expected = "list of global options:\n\n"
-                + " --version                display the version of the current thermostat installation\n"
-                + " --print-osgi-info        print debug information related to the OSGi framework's boot/shutdown process\n"
-                + " --ignore-bundle-versions ignore exact bundle versions and use whatever version is available\n"
-                + " --boot-delegation        boot delegation string passed on to the OSGi framework\n"
+                + GLOBAL_OPTIONS
                 + "\n"
                 + "list of commands:\n\n"
                 + " help          show help\n"
