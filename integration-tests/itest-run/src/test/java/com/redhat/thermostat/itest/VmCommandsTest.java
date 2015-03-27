@@ -94,6 +94,16 @@ public class VmCommandsTest extends IntegrationTest {
     }
 
     @Test
+    public void testGc() throws Exception {
+        Spawn gcCommand = commandAgainstMongo("gc");
+        // TODO include required options to test meaningfully
+        gcCommand.expectClose();
+
+        assertCommandIsFound(gcCommand.getCurrentStandardOutContents(), gcCommand.getCurrentStandardErrContents());
+        assertNoExceptions(gcCommand.getCurrentStandardOutContents(), gcCommand.getCurrentStandardErrContents());
+    }
+
+    @Test
     public void testVmInfo() throws Exception {
         Spawn vmInfo = commandAgainstMongo("vm-info");
         // TODO include required options to test meaningfully
