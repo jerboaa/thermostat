@@ -37,38 +37,45 @@
 package com.redhat.thermostat.common.utils;
 
 import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
 
-public class DescriptorConverterTest {
+public class MethodDescriptorConverterTest {
 
     @Test
-    public void testConverter() {
-        check("boolean", "Z");
-        check("boolean[]", "[Z");
-        check("char", "C");
-        check("char[]", "[C");
-        check("int[]", "[I");
-        check("int[][]", "[[I");
-        check("double[][][]", "[[[D");
+    public void verifyMethodDescriptors() {
+        check("void ???()", "()V");
+        check("int ???()", "()I");
+        check("int[] ???()", "()[I");
+        check("long ???()", "()J");
+        check("double ???()", "()D");
+        check("java.lang.Object ???()", "()Ljava/lang/Object;");
+        check("java.lang.Object[] ???()", "()[Ljava/lang/Object;");
 
-        check("java.lang.String", "java.lang.String");
-        check("java.util.ArrayList", "java.util.ArrayList");
-        check("java.util.HashMap$Entry", "java.util.HashMap$Entry");
+        check("void ???(java.lang.Object[])", "([Ljava/lang/Object;)V");
 
-        // this isn't, strictly speaking, the format of an internal descriptor:
-        check("java.lang.Object[]", "[Ljava.lang.Object;");
-        // this is:
-        check("java.lang.Object[]", "[Ljava/lang/Object;");
-        check("java.lang.Object[]", "[Ljava.lang.Object;");
-        check("java.lang.String[]", "[Ljava.lang.String;");
-        check("java.util.HashMap$Entry[]", "[Ljava.util.HashMap$Entry;");
-
-        check("<methodKlass>", "<methodKlass>");
+        check("java.lang.Object ???(int, double, java.lang.Thread)", "(IDLjava/lang/Thread;)Ljava/lang/Object;");
+        check("java.lang.Object ???(java.lang.Object, java.lang.String[], java.lang.Thread)", "(Ljava.lang.Object;[Ljava.lang.String;Ljava/lang/Thread;)Ljava/lang/Object;");
+        check("java.lang.Object[] ???(int[], double, java.lang.Thread[])", "([ID[Ljava/lang/Thread;)[Ljava/lang/Object;");
     }
 
     private static void check(String expected, String input) {
-        String result = DescriptorConverter.toJavaType(input);
+        String result = MethodDescriptorConverter.toJavaType(input);
         assertEquals(expected, result);
     }
-}
 
+    @Test
+    public void verifyMethodNameAndDescriptors() {
+        check("int[] foo()", "foo", "()[I");
+        check("java.lang.Object[] foo()", "foo", "()[Ljava/lang/Object;");
+
+        check("java.lang.Object foo(int, double, java.lang.Thread)", "foo", "(IDLjava/lang/Thread;)Ljava/lang/Object;");
+        check("java.lang.Object[] foo(int[], double, java.lang.Thread[])", "foo", "([ID[Ljava/lang/Thread;)[Ljava/lang/Object;");
+    }
+
+    private static void check(String expected, String methodName, String descriptor) {
+        String result = MethodDescriptorConverter.toJavaType(methodName, descriptor);
+        assertEquals(expected, result);
+    }
+
+}

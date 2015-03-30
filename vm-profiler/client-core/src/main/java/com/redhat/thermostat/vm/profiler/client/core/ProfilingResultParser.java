@@ -45,6 +45,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
@@ -52,6 +53,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.common.utils.MethodDescriptorConverter;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult.MethodInfo;
 
 public class ProfilingResultParser {
@@ -89,7 +91,9 @@ public class ProfilingResultParser {
         }
 
         for (Entry<String, Long> entry : results.entrySet()) {
-            MethodInfo method = new MethodInfo(entry.getKey(), entry.getValue(), (entry.getValue() * 1.0 / totalTime) * 100);
+            String methodNameAndDescriptor = entry.getKey();
+            String methodName = prettify(methodNameAndDescriptor);
+            MethodInfo method = new MethodInfo(methodName, entry.getValue(), (entry.getValue() * 1.0 / totalTime) * 100);
             info.add(method);
         }
 
@@ -101,6 +105,16 @@ public class ProfilingResultParser {
         });
 
         return new ProfilingResult(info);
+    }
+
+    private String prettify(String name) {
+        int startDescriptor = name.indexOf('(');
+        if (startDescriptor == -1) {
+            // handle malformed method descriptor by returning it as it is
+            return name;
+        }
+        String methodClassName = name.substring(0, startDescriptor);
+        return MethodDescriptorConverter.toJavaType(methodClassName, name.substring(startDescriptor));
     }
 
 }

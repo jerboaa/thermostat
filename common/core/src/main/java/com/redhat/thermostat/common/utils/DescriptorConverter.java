@@ -42,6 +42,8 @@ import java.util.Map;
 /**
  * The JVM uses internal names for classes and fields (like "<code>[I</code>").
  * This class helps to decode them.
+ *
+ * @see MethodDescriptorConverter
  */
 public class DescriptorConverter {
 
@@ -59,6 +61,10 @@ public class DescriptorConverter {
     }
 
     public static String toJavaType(String fieldDescriptor) {
+        return toJavaType(fieldDescriptor, lookupTable);
+    }
+
+    static String toJavaType(String fieldDescriptor, Map<Character, String> lookupTable) {
         StringBuilder result = new StringBuilder();
 
         int arrayDimensions = 0;
@@ -74,7 +80,9 @@ public class DescriptorConverter {
         if (lookupTable.get(indicator) != null) {
             result.append(lookupTable.get(indicator));
         } else if (indicator == 'L') {
-            result.append(fieldDescriptor.substring(lastLocation + 1, fieldDescriptor.length() - 1));
+            String internalClassName = fieldDescriptor.substring(lastLocation + 1, fieldDescriptor.length() - 1);
+            String commonClassName = internalClassName.replace('/', '.');
+            result.append(commonClassName);
         } else {
             result.append(fieldDescriptor);
         }
