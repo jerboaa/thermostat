@@ -44,6 +44,8 @@ import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.client.core.progress.ProgressHandle;
+import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.core.views.UIComponent;
@@ -79,12 +81,13 @@ public class VmProfileController implements InformationServiceController<VmRef> 
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private ApplicationService service;
-    private ProfileDAO profileDao;
-    private AgentInfoDAO agentInfoDao;
-    private VmInfoDAO vmInfoDao;
-    private RequestQueue queue;
-    private VmRef vm;
+    private final ApplicationService service;
+    private final ProgressNotifier notifier;
+    private final ProfileDAO profileDao;
+    private final AgentInfoDAO agentInfoDao;
+    private final VmInfoDAO vmInfoDao;
+    private final RequestQueue queue;
+    private final VmRef vm;
 
     private VmProfileView view;
 
@@ -96,18 +99,22 @@ public class VmProfileController implements InformationServiceController<VmRef> 
 
     private ProfileStatusChange previousStatus;
 
-    public VmProfileController(ApplicationService service,
+    private ProgressHandle progressDisplay;
+
+
+    public VmProfileController(ApplicationService service, ProgressNotifier notifier,
             AgentInfoDAO agentInfoDao, VmInfoDAO vmInfoDao, ProfileDAO dao,
             RequestQueue queue,
             VmRef vm) {
-        this(service, agentInfoDao, vmInfoDao, dao, queue, new SystemClock(), new SwingVmProfileView(), vm);
+        this(service, notifier, agentInfoDao, vmInfoDao, dao, queue, new SystemClock(), new SwingVmProfileView(), vm);
     }
 
-    VmProfileController(ApplicationService service,
+    VmProfileController(ApplicationService service, ProgressNotifier notifier,
             AgentInfoDAO agentInfoDao, VmInfoDAO vmInfoDao, ProfileDAO dao,
             RequestQueue queue, Clock clock,
             final VmProfileView view, VmRef vm) {
         this.service = service;
+        this.notifier = notifier;
         this.agentInfoDao = agentInfoDao;
         this.vmInfoDao = vmInfoDao;
         this.profileDao = dao;
@@ -137,6 +144,7 @@ public class VmProfileController implements InformationServiceController<VmRef> 
                 switch (actionEvent.getActionId()) {
                     case HIDDEN:
                         updater.stop();
+                        hideProgressNotificationIfVisible();
                         break;
                     case VISIBLE:
                         updater.start();
@@ -167,6 +175,7 @@ public class VmProfileController implements InformationServiceController<VmRef> 
             }
 
         });
+
     }
 
     private void startProfiling(final VmProfileView view) {
@@ -178,10 +187,9 @@ public class VmProfileController implements InformationServiceController<VmRef> 
     }
 
     private void disableViewControlsAndSendRequest(VmProfileView view, boolean start) {
+        showProgressNotification(start);
         // disable the UI until we get a update in storage
-        view.enableStartProfiling(false);
-        view.enableStopProfiling(false);
-
+        disableViewControls();
         sendProfilingRequest(start);
     }
 
@@ -199,6 +207,7 @@ public class VmProfileController implements InformationServiceController<VmRef> 
                 default:
                     // FIXME show message to user
 
+                    hideProgressNotificationIfVisible();
                     profilingStartOrStopRequested = false;
                     break;
                 }
@@ -224,28 +233,51 @@ public class VmProfileController implements InformationServiceController<VmRef> 
         }
 
         if (!isAlive()) {
-            view.enableStartProfiling(false);
-            view.enableStopProfiling(false);
+            disableViewControls();
             view.setProfilingStatus(message, currentlyActive);
         } else if (profilingStartOrStopRequested) {
             boolean statusChanged = (previousStatus == null && currentStatus != null)
                     || (currentStatus != null && !(currentStatus.equals(previousStatus)));
             if (statusChanged) {
-                view.enableStartProfiling(!currentlyActive);
-                view.enableStopProfiling(currentlyActive);
-
+                enableViewControlsFor(currentlyActive);
                 view.setProfilingStatus(message, currentlyActive);
-
                 profilingStartOrStopRequested = false;
+                hideProgressNotificationIfVisible();
             }
         } else {
-            view.enableStartProfiling(!currentlyActive);
-            view.enableStopProfiling(currentlyActive);
-
+            enableViewControlsFor(currentlyActive);
             view.setProfilingStatus(message, currentlyActive);
         }
 
         previousStatus = currentStatus;
+    }
+
+    private void disableViewControls() {
+        view.enableStartProfiling(false);
+        view.enableStopProfiling(false);
+    }
+
+    private void enableViewControlsFor(boolean currentlyActive) {
+        view.enableStartProfiling(!currentlyActive);
+        view.enableStopProfiling(currentlyActive);
+    }
+
+    private void showProgressNotification(boolean start) {
+        if (start) {
+            progressDisplay = new ProgressHandle(translator.localize(LocaleResources.STARTING_PROFILING));
+        } else {
+            progressDisplay = new ProgressHandle(translator.localize(LocaleResources.STOPPING_PROFILING));
+        }
+        progressDisplay.setIndeterminate(true);
+        notifier.register(progressDisplay);
+        progressDisplay.start();
+    }
+
+    private void hideProgressNotificationIfVisible() {
+        if (progressDisplay != null) {
+            progressDisplay.stop();
+            progressDisplay = null;
+        }
     }
 
     private boolean isAlive() {

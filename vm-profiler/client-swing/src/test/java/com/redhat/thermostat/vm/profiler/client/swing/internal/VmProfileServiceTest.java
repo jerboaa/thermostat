@@ -50,7 +50,7 @@ public class VmProfileServiceTest {
     public void worksWithDeadAndAliveVms() throws Exception {
         VmRef vm = mock(VmRef.class);
 
-        VmProfileService service = new VmProfileService(null, null, null, null, null);
+        VmProfileService service = new VmProfileService(null, null, null, null, null, null);
         Filter<VmRef> filter = service.getFilter();
 
         assertTrue(filter.matches(vm));

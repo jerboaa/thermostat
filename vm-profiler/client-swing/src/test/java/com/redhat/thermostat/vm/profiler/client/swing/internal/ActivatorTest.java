@@ -43,6 +43,7 @@ import org.junit.Test;
 
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.client.core.InformationService;
+import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
@@ -57,6 +58,9 @@ public class ActivatorTest {
 
         ApplicationService appService = mock(ApplicationService.class);
         bundleContext.registerService(ApplicationService.class, appService, null);
+
+        ProgressNotifier notifier = mock(ProgressNotifier.class);
+        bundleContext.registerService(ProgressNotifier.class, notifier, null);
 
         AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
         bundleContext.registerService(AgentInfoDAO.class, agentInfoDao, null);

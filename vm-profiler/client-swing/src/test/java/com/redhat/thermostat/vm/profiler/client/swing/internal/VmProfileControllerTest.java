@@ -56,6 +56,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.client.command.RequestQueue;
+import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
@@ -94,6 +95,7 @@ public class VmProfileControllerTest {
 
     private Timer timer;
     private ApplicationService appService;
+    private ProgressNotifier notifier;
     private AgentInfoDAO agentInfoDao;
     private VmInfoDAO vmInfoDao;
     private ProfileDAO profileDao;
@@ -115,6 +117,8 @@ public class VmProfileControllerTest {
 
         appService = mock(ApplicationService.class);
         when(appService.getTimerFactory()).thenReturn(timerFactory);
+
+        notifier = mock(ProgressNotifier.class);
 
         agentInfoDao = mock(AgentInfoDAO.class);
         vmInfoDao = mock(VmInfoDAO.class);
@@ -318,7 +322,7 @@ public class VmProfileControllerTest {
     }
 
     private VmProfileController createController() {
-        return new VmProfileController(appService, agentInfoDao, vmInfoDao, profileDao, queue, clock, view, vm);
+        return new VmProfileController(appService, notifier, agentInfoDao, vmInfoDao, profileDao, queue, clock, view, vm);
     }
 
     private void assertRequestEquals(Request actual, Request expected) {

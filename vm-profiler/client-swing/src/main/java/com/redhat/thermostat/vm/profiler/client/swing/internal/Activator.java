@@ -45,6 +45,7 @@ import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.client.core.InformationService;
+import com.redhat.thermostat.client.core.progress.ProgressNotifier;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
@@ -63,6 +64,7 @@ public class Activator implements BundleActivator {
 
         Class<?>[] deps = new Class<?>[] {
                 ApplicationService.class,
+                ProgressNotifier.class,
                 AgentInfoDAO.class,
                 VmInfoDAO.class,
                 ProfileDAO.class,
@@ -73,12 +75,13 @@ public class Activator implements BundleActivator {
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
                 ApplicationService service = (ApplicationService) services.get(ApplicationService.class.getName());
+                ProgressNotifier notifier = (ProgressNotifier) services.get(ProgressNotifier.class.getName());
                 AgentInfoDAO agentInfoDao = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
                 VmInfoDAO vmInfoDao = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
                 ProfileDAO profileDao = (ProfileDAO) services.get(ProfileDAO.class.getName());
                 RequestQueue queue = (RequestQueue) services.get(RequestQueue.class.getName());
 
-                InformationService<VmRef> profileService = new VmProfileService(service, agentInfoDao, vmInfoDao, profileDao, queue);
+                InformationService<VmRef> profileService = new VmProfileService(service, notifier, agentInfoDao, vmInfoDao, profileDao, queue);
 
                 Hashtable<String,String> properties = new Hashtable<>();
                 properties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
