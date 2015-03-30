@@ -38,7 +38,7 @@ package com.redhat.thermostat.main.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
@@ -48,11 +48,19 @@ import org.junit.Test;
 public class FrameworkOptionsProcessorTest {
 
     @Test
+    public void verifyDefaults() {
+        String[] args = new String[] { "help" };
+        FrameworkOptionsProcessor opts = new FrameworkOptionsProcessor(args);
+        assertFalse(opts.printOsgiInfo());
+        assertFalse(opts.ignoreBundleVersions());
+        assertTrue(opts.bootDelegationValue().contains("com.redhat.thermostat.vm.profiler"));
+        assertEquals(Arrays.asList("help"), Arrays.asList(opts.getOtherOptions()));
+    }
+
+    @Test
     public void canGetPrintOsgiInfo() {
         String[] args = new String[] { "--print-osgi-info", "help" };
         FrameworkOptionsProcessor opts = new FrameworkOptionsProcessor(args);
-        assertNull(opts.bootDelegationValue());
-        assertFalse(opts.ignoreBundleVersions());
         assertTrue(opts.printOsgiInfo());
         assertEquals(Arrays.asList("help"),
                 Arrays.asList(opts.getOtherOptions()));
@@ -63,8 +71,6 @@ public class FrameworkOptionsProcessorTest {
         String[] args = new String[] { "--boot-delegation=foo", "help" };
         FrameworkOptionsProcessor opts = new FrameworkOptionsProcessor(args);
         assertEquals("foo", opts.bootDelegationValue());
-        assertFalse(opts.ignoreBundleVersions());
-        assertFalse(opts.printOsgiInfo());
         assertEquals(Arrays.asList("help"),
                 Arrays.asList(opts.getOtherOptions()));
     }
@@ -73,9 +79,7 @@ public class FrameworkOptionsProcessorTest {
     public void canGetIgnoreBundleVersion() {
         String[] args = new String[] { "--ignore-bundle-versions", "help" };
         FrameworkOptionsProcessor opts = new FrameworkOptionsProcessor(args);
-        assertNull(opts.bootDelegationValue());
         assertTrue(opts.ignoreBundleVersions());
-        assertFalse(opts.printOsgiInfo());
         assertEquals(Arrays.asList("help"),
                 Arrays.asList(opts.getOtherOptions()));
     }

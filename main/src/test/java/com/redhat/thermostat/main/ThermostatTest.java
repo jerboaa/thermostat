@@ -118,16 +118,6 @@ public class ThermostatTest {
     }
 
     @Test
-    public void verifyNoBootDelegationArgIsPassedAsNull() {
-        String[] args = {};
-        thermostat.start(paths, args);
-
-        verify(provider).start(eq(new String[]{}));
-        FrameworkOptionsProcessor opts = optsCaptor.getValue();
-        assertNull(opts.bootDelegationValue());
-    }
-
-    @Test
     public void verifyBootDelegationIsPassedAlong() {
         String[] args = {"--boot-delegation=foo"};
         thermostat.start(paths, args);

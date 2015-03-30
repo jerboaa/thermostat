@@ -56,7 +56,17 @@ public class FrameworkOptionsProcessor {
 
     public FrameworkOptionsProcessor(String[] args) {
         this.globalOptions = new HashMap<>();
+        initializeDefaultGlobalOptions();
         this.otherOptions = processGlobalOptions(args);
+    }
+
+    private void initializeDefaultGlobalOptions() {
+        // set up default boot delegation to allow the vm-profiler to work
+        // correctly by default
+        globalOptions.put(FrameworkOptions.BOOT_DELEGATION,
+                "com.redhat.thermostat.vm.profiler.agent.jvm," +
+                "org.objectweb.asm," +
+                "org.objectweb.asm.commons");
     }
 
     private String[] processGlobalOptions(String[] args) {

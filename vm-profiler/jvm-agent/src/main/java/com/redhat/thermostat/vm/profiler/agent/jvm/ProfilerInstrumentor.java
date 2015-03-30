@@ -59,7 +59,7 @@ public abstract class ProfilerInstrumentor implements ClassFileTransformer {
         ignorePackageRegexps.add(Pattern.compile("com\\.redhat\\.thermostat\\.vm\\.profiler\\.agent\\.jvm\\..*"));
 
         // our dependencies
-        ignorePackageRegexps.add(Pattern.compile("org.objectweb.asm\\..*"));
+        ignorePackageRegexps.add(Pattern.compile("org\\.objectweb\\.asm\\..*"));
     }
 
     @Override
