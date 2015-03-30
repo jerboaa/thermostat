@@ -36,46 +36,30 @@
 
 package com.redhat.thermostat.common.utils;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
+import static org.junit.Assert.assertEquals;
 
-public class StringUtils {
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
-    private StringUtils() {
-        /* should not be instantiated */
+import org.junit.Test;
+
+public class StringUtilsTest {
+
+    @Test
+    public void testJoining() {
+        assertEquals("", StringUtils.join("", list()));
+        assertEquals("a", StringUtils.join("-", list("a")));
+        assertEquals("a, b", StringUtils.join(", ", list("a", "b")));
+        assertEquals("a:b", StringUtils.join(":", list("a", "b")));
+        assertEquals("a:b:", StringUtils.join(":", list("a", "b", "")));
     }
 
-    public static InputStream toInputStream(String toConvert) {
-        try {
-            return new ByteArrayInputStream(toConvert.getBytes("UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException("UTF-8 not supported");
+    static List<String> list(String... items) {
+        if (items == null) {
+            return new ArrayList<String>();
+        } else {
+            return Arrays.asList(items);
         }
-    }
-
-    public static String quote(String toQuote) {
-        return "\"" + toQuote + "\"";
-    }
-
-    public static String repeat(String text, int times) {
-        StringBuilder builder = new StringBuilder(text.length() * times);
-        for (int i = 0; i < times; i++) {
-            builder.append(text);
-        }
-        return builder.toString();
-    }
-
-    public static String join(String delimiter, Iterable<? extends CharSequence> items) {
-        StringBuilder result = new StringBuilder();
-        for (CharSequence item : items) {
-            if (result.length() != 0) {
-                result.append(delimiter);
-            }
-            result.append(item);
-        }
-
-        return result.toString();
     }
 }
-
