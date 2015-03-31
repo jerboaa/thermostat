@@ -44,6 +44,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import com.redhat.thermostat.storage.core.Add;
+import com.redhat.thermostat.storage.core.AggregateQuery;
 import com.redhat.thermostat.storage.core.BackingStorage;
 import com.redhat.thermostat.storage.core.DataModifyingStatement;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
@@ -55,7 +56,6 @@ import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.Statement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Update;
-import com.redhat.thermostat.storage.core.experimental.AggregateQuery2;
 import com.redhat.thermostat.storage.model.Pojo;
 
 class SemanticsEnabledDescriptorParser<T extends Pojo> extends
@@ -117,8 +117,8 @@ class SemanticsEnabledDescriptorParser<T extends Pojo> extends
                 String msg = "SET not allowed for QUERY/QUERY-COUNT";
                 throw new DescriptorParsingException(msg);
             }
-            if (stmt instanceof AggregateQuery2) {
-                AggregateQuery2<T> aggQuery = (AggregateQuery2<T>)stmt;
+            if (stmt instanceof AggregateQuery) {
+                AggregateQuery<T> aggQuery = (AggregateQuery<T>)stmt;
                 switch (aggQuery.getAggregateFunction()) {
                 case COUNT:
                     // count queries need a sane key param if present
@@ -142,13 +142,13 @@ class SemanticsEnabledDescriptorParser<T extends Pojo> extends
         }
     }
 
-    private void performKeyParamChecksAllowNull(AggregateQuery2<T> aggQuery) throws DescriptorParsingException {
+    private void performKeyParamChecksAllowNull(AggregateQuery<T> aggQuery) throws DescriptorParsingException {
         if (aggQuery.getAggregateKey() != null) {
             performKeyParamChecks(aggQuery);
         }
     }
 
-    private void performKeyParamChecks(AggregateQuery2<T> aggQuery) throws DescriptorParsingException {
+    private void performKeyParamChecks(AggregateQuery<T> aggQuery) throws DescriptorParsingException {
         Key<?> optionalKey = aggQuery.getAggregateKey();
         if (optionalKey == null) {
             throw new DescriptorParsingException("Aggregate key for " 

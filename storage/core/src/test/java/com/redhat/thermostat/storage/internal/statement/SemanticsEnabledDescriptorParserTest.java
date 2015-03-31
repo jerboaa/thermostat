@@ -49,6 +49,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.storage.core.Add;
+import com.redhat.thermostat.storage.core.AggregateQuery;
 import com.redhat.thermostat.storage.core.AggregateQuery.AggregateFunction;
 import com.redhat.thermostat.storage.core.BackingStorage;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
@@ -59,7 +60,6 @@ import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Update;
-import com.redhat.thermostat.storage.core.experimental.AggregateQuery2;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 
@@ -81,7 +81,7 @@ public class SemanticsEnabledDescriptorParserTest {
 
     private BackingStorage storage;
     private Query<AgentInformation> mockQuery;
-    private AggregateQuery2<AgentInformation> aggQuery;
+    private AggregateQuery<AgentInformation> aggQuery;
     private SemanticsEnabledDescriptorParser<AgentInformation> parser;
     private Add<AgentInformation> mockAdd;
     private Update<AgentInformation> mockUpdate;
@@ -93,7 +93,7 @@ public class SemanticsEnabledDescriptorParserTest {
     public void setup() {
         storage = mock(BackingStorage.class);
         mockQuery = mock(Query.class);
-        aggQuery = mock(AggregateQuery2.class);
+        aggQuery = mock(AggregateQuery.class);
         // setup for QUERY/QUERY-COUNT/QUERY-DISTINCT
         when(storage.createQuery(eq(AgentInfoDAO.CATEGORY))).thenReturn(mockQuery);
         when(storage.createAggregateQuery(eq(AggregateFunction.COUNT), (eq(AgentInfoDAO.CATEGORY)))).thenReturn(aggQuery);

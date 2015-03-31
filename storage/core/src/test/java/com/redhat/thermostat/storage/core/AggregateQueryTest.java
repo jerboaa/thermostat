@@ -34,46 +34,60 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.core.experimental;
+package com.redhat.thermostat.storage.core;
 
-import java.util.Objects;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+
+import org.junit.Test;
 
 import com.redhat.thermostat.storage.core.AggregateQuery;
+import com.redhat.thermostat.storage.core.AggregateQuery.AggregateFunction;
+import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.storage.core.Statement;
+import com.redhat.thermostat.storage.model.AggregateCount;
 
-/**
- * Successor of {@link AggregateQuery} with improved support for agregating on
- * a key value.
- * 
- * @param <T>
- */
-// FIXME: Thermostat 2.0 Merge into AggregateQuery
-public abstract class AggregateQuery2<T extends Pojo> extends AggregateQuery<T> {
+public class AggregateQueryTest {
 
-    // optional Key to aggregate values for
-    private Key<?> aggregateKey;
+    @Test
+    public void testSetAggregateKey() {
+        @SuppressWarnings("unchecked")
+        Query<AggregateCount> query = mock(Query.class);
+        TestAggregateQuery aggregate = new TestAggregateQuery(AggregateFunction.COUNT, query);
+        assertNull(aggregate.getAggregateKey());
+        try {
+            aggregate.setAggregateKey(null);
+            fail("Expected NPE.");
+        } catch (NullPointerException e) {
+            // pass
+        }
+        @SuppressWarnings("rawtypes")
+        Key<?> fooKey = new Key("foo");
+        aggregate.setAggregateKey(fooKey);
+        assertEquals(fooKey, aggregate.getAggregateKey());
+    }
     
-    public AggregateQuery2(AggregateFunction function, Query<T> queryToAggregate) {
-        super(function, queryToAggregate);
-    }
+    private static class TestAggregateQuery extends AggregateQuery<AggregateCount> {
 
-    /**
-     * 
-     * @return An optional {@link Key} to aggregate values for. May be
-     *         {@code null};
-     */
-    public Key<?> getAggregateKey() {
-        return aggregateKey;
-    }
+        public TestAggregateQuery(
+                AggregateFunction function,
+                Query<AggregateCount> queryToAggregate) {
+            super(function, queryToAggregate);
+        }
 
-    /**
-     * Sets an optional {@link Key} to aggregate values for.
-     * @param aggregateKey Must not be {@code null}.
-     * @throws NullPointerException If the aggregate key was {@code null}
-     */
-    public void setAggregateKey(Key<?> aggregateKey) {
-        this.aggregateKey = Objects.requireNonNull(aggregateKey);
+        @Override
+        public Cursor<AggregateCount> execute() {
+            throw new AssertionError("not implemented");
+        }
+
+        @Override
+        public Statement<AggregateCount> getRawDuplicate() {
+            throw new AssertionError("not implemented");
+        }
+        
     }
 }

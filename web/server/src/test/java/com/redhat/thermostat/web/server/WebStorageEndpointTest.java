@@ -105,6 +105,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.redhat.thermostat.storage.core.Add;
+import com.redhat.thermostat.storage.core.AggregateQuery;
 import com.redhat.thermostat.storage.core.AggregateQuery.AggregateFunction;
 import com.redhat.thermostat.storage.core.BackingStorage;
 import com.redhat.thermostat.storage.core.Categories;
@@ -123,7 +124,6 @@ import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
 import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
-import com.redhat.thermostat.storage.core.experimental.AggregateQuery2;
 import com.redhat.thermostat.storage.core.experimental.BatchCursor;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.model.AggregateCount;
@@ -815,7 +815,7 @@ public class WebStorageEndpointTest {
         AggregateCount count = new AggregateCount();
         count.setCount(500);
         // prepare-statement does this under the hood
-        AggregateQuery2<AggregateCount> mockMongoQuery = mock(AggregateQuery2.class);
+        AggregateQuery<AggregateCount> mockMongoQuery = mock(AggregateQuery.class);
         Category<AggregateCount> adapted = new CategoryAdapter(category).getAdapted(AggregateCount.class);
         SharedStateId catId = registerCategoryAndGetId(adapted, "no-matter", "no-matter");
         when(mockStorage.createAggregateQuery(eq(AggregateFunction.COUNT), eq(adapted))).thenReturn(mockMongoQuery);

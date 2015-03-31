@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.storage.core;
 
+import java.util.Objects;
+
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.Expression;
 
@@ -57,6 +59,8 @@ public abstract class AggregateQuery<T extends Pojo> implements Query<T> {
     
     protected final Query<T> queryToAggregate;
     private final AggregateFunction function;
+    // optional Key to aggregate values for
+    private Key<?> aggregateKey;
     
     public AggregateQuery(AggregateFunction function, Query<T> queryToAggregate) {
         this.function = function;
@@ -90,6 +94,24 @@ public abstract class AggregateQuery<T extends Pojo> implements Query<T> {
      */
     public AggregateFunction getAggregateFunction() {
         return this.function;
+    }
+    
+    /**
+     * 
+     * @return An optional {@link Key} to aggregate values for. May be
+     *         {@code null};
+     */
+    public Key<?> getAggregateKey() {
+        return aggregateKey;
+    }
+
+    /**
+     * Sets an optional {@link Key} to aggregate values for.
+     * @param aggregateKey Must not be {@code null}.
+     * @throws NullPointerException If the aggregate key was {@code null}
+     */
+    public void setAggregateKey(Key<?> aggregateKey) {
+        this.aggregateKey = Objects.requireNonNull(aggregateKey);
     }
     
 }

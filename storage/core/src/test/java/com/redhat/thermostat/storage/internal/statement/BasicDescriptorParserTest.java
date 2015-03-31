@@ -71,7 +71,6 @@ import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Update;
-import com.redhat.thermostat.storage.core.experimental.AggregateQuery2;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.AggregateCount;
@@ -196,7 +195,7 @@ public class BasicDescriptorParserTest {
     
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private void runAggregateCountTest(String descriptorFormat, AggregateFunction function) throws DescriptorParsingException {
-        AggregateQuery2<AggregateCount> query = mock(AggregateQuery2.class);
+        AggregateQuery<AggregateCount> query = mock(AggregateQuery.class);
         ArgumentCaptor<Category> captor = ArgumentCaptor.forClass(Category.class);
         when(storage.createAggregateQuery(eq(function), captor.capture())).thenReturn(query);
         // first adapt from the target category in order to be able to produce the
@@ -233,7 +232,7 @@ public class BasicDescriptorParserTest {
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private void runParamAggregateAssertedValueTest(String aggregateDescFormat, AggregateFunction function) throws DescriptorParsingException {
-        AggregateQuery2<AggregateCount> query = mock(AggregateQuery2.class);
+        AggregateQuery<AggregateCount> query = mock(AggregateQuery.class);
         ArgumentCaptor<Category> captor = ArgumentCaptor.forClass(Category.class);
         when(storage.createAggregateQuery(eq(function), captor.capture())).thenReturn(query);
         // first adapt from the target category in order to be able to produce the
@@ -2027,7 +2026,7 @@ public class BasicDescriptorParserTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testCompatibilityNonAggregateQuery() throws DescriptorParsingException {
-        when(storage.createAggregateQuery(any(AggregateFunction.class), any(Category.class))).thenReturn(mock(Query.class));
+        when(storage.createAggregateQuery(any(AggregateFunction.class), any(Category.class))).thenReturn(mock(AggregateQuery.class));
         String descString = "QUERY-COUNT(foo) " + AgentInfoDAO.CATEGORY.getName();
         StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(AgentInfoDAO.CATEGORY, descString);
         parser = new BasicDescriptorParser<>(storage, desc);

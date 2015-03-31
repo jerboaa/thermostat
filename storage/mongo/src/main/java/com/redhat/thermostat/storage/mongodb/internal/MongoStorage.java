@@ -81,7 +81,6 @@ import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.core.Update;
-import com.redhat.thermostat.storage.core.experimental.AggregateQuery2;
 import com.redhat.thermostat.storage.core.experimental.BatchCursor;
 import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.AggregateResult;
@@ -96,7 +95,7 @@ import com.redhat.thermostat.storage.query.Expression;
  */
 public class MongoStorage implements BackingStorage, SchemaInfoInserter {
     
-    private class MongoDistinctQuery<T extends Pojo> extends AggregateQuery2<T> {
+    private class MongoDistinctQuery<T extends Pojo> extends AggregateQuery<T> {
 
         private final Category<T> category;
         
@@ -122,7 +121,7 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
         
     }
     
-    private class MongoCountQuery<T extends Pojo> extends AggregateQuery2<T> {
+    private class MongoCountQuery<T extends Pojo> extends AggregateQuery<T> {
         
         private final Category<T> category;
         

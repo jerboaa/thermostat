@@ -39,13 +39,13 @@ package com.redhat.thermostat.storage.internal.statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.Add;
+import com.redhat.thermostat.storage.core.AggregateQuery;
 import com.redhat.thermostat.storage.core.AggregateQuery.AggregateFunction;
 import com.redhat.thermostat.storage.core.BackingStorage;
 import com.redhat.thermostat.storage.core.Category;
@@ -58,7 +58,6 @@ import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Update;
-import com.redhat.thermostat.storage.core.experimental.AggregateQuery2;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.BinaryComparisonOperator;
 import com.redhat.thermostat.storage.query.BinaryLogicalOperator;
@@ -800,16 +799,7 @@ class BasicDescriptorParser<T extends Pojo> implements StatementDescriptorParser
     
     private ParsedStatementImpl<T> createAggregatePreparedStatement(final AggregateFunction function, final Matcher matcher) {
         // create aggregate query
-        Query<T> query = storage.createAggregateQuery(function, desc.getCategory());
-        if (!(query instanceof AggregateQuery2)) {
-            // FIXME: Thermostat 2.0 BackingStorage.createAggregateQuery() should
-            //        return a merged version of AggregateQuery (i.e. AggregateQuery2).
-            //        Thus, this check can go away then.
-            //        For 1.2 we have this in order to be API backwards compatible.
-            logger.log(Level.WARNING, "Expected AggregateQuery2. This will no longer work for Thermostat 2.0. Stmt was: " + desc);
-            return new ParsedStatementImpl<>(query);
-        }
-        AggregateQuery2<T> aggregateQuery = (AggregateQuery2<T>)query;
+        AggregateQuery<T> aggregateQuery = storage.createAggregateQuery(function, desc.getCategory());
         // We'll always have a match for at least one group. That group
         // will be the keyName to use (if any). For old query descriptors
         // the keyName may be null
