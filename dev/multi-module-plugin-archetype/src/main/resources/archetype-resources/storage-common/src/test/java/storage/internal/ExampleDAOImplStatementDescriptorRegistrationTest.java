@@ -37,7 +37,7 @@
 package ${package}.storage.internal;
 
 import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorMetadataFactory;
+import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 import org.junit.Test;
 import java.util.Set;
 import static org.junit.Assert.assertEquals;
@@ -57,7 +57,7 @@ public class ExampleDAOImplStatementDescriptorRegistrationTest {
 
     @Test
     public void registersAllQueries() {
-        ExampleDAOImplStatementDescriptorRegistration reg = new ExampleDAOImplStatementDescriptorRegistration();
+        StatementDescriptorRegistration reg = new ExampleDAOImplStatementDescriptorRegistration();
         Set<String> descriptors = reg.getStatementDescriptors();
         assertEquals("More descriptors than expected", 2, descriptors.size());
         assertFalse("One of the descriptors is null", descriptors.contains(null));
@@ -65,17 +65,11 @@ public class ExampleDAOImplStatementDescriptorRegistrationTest {
 
     @Test
     public void descriptorRegistrationContainsCorrectDescriptors() {
-        ExampleDAOImplStatementDescriptorRegistration reg = new ExampleDAOImplStatementDescriptorRegistration();
+        StatementDescriptorRegistration reg = new ExampleDAOImplStatementDescriptorRegistration();
         Set<String> descriptors = reg.getStatementDescriptors();
         assertTrue("Expected Query Descriptor", descriptors.contains(QUERY_DESCRIPTOR));
         assertTrue("Expected Replace Descriptor", descriptors.contains(REPLACE_DESCRIPTOR));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void unknownDescriptorThrowsException() {
-        StatementDescriptorMetadataFactory factory = new ExampleDAOImplStatementDescriptorRegistration();
-        factory.getDescriptorMetadata("QUERY foo-bar WHERE 'a' = 'b'", null);
-        fail("should have thrown exception");
-    }
 }
 
