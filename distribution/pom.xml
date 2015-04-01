@@ -199,6 +199,11 @@
                     <include>thermostat.1</include>
                   </includes>
                 </resource>
+                <resource>
+                  <directory>bash-completion</directory>
+                  <targetPath>bash-completion</targetPath>
+                  <filtering>true</filtering>
+                </resource>
               </resources>
             </configuration>
           </execution>
