@@ -34,11 +34,11 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.core.experimental;
+package com.redhat.thermostat.storage.core;
 
 import com.redhat.thermostat.storage.model.Pojo;
 
-public abstract class BasicBatchCursor<T extends Pojo> implements BatchCursor<T> {
+public abstract class BasicBatchCursor<T extends Pojo> implements Cursor<T> {
 
     private Integer batchSize;
     
@@ -52,6 +52,6 @@ public abstract class BasicBatchCursor<T extends Pojo> implements BatchCursor<T>
     
     @Override
     public int getBatchSize() {
-        return this.batchSize == null ? BatchCursor.DEFAULT_BATCH_SIZE : this.batchSize;
+        return this.batchSize == null ? Cursor.DEFAULT_BATCH_SIZE : this.batchSize;
     }
 }

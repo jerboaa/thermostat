@@ -40,13 +40,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.util.NoSuchElementException;
 
 import org.junit.Test;
 
 import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.experimental.BatchCursor;
-import java.util.NoSuchElementException;
-import static org.junit.Assert.fail;
 
 public class AggregateCursorTest {
 
@@ -74,9 +74,8 @@ public class AggregateCursorTest {
     public void testCursorBatchSize() {
         AggregateTest t = new AggregateTest();
         Cursor<AggregateTest> cursor = t.getCursor();
-        BatchCursor<AggregateTest> advCursor = (BatchCursor<AggregateTest>)cursor;
-        advCursor.setBatchSize(500);
-        assertEquals(500, advCursor.getBatchSize());
+        cursor.setBatchSize(500);
+        assertEquals(500, cursor.getBatchSize());
     }
     
     private static class AggregateTest implements AggregateResult {

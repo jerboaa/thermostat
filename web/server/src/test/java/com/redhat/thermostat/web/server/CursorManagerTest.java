@@ -54,7 +54,7 @@ import java.util.TimerTask;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.storage.core.experimental.BatchCursor;
+import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.web.server.CursorManager.CursorHolder;
 import com.redhat.thermostat.web.server.CursorManager.CursorSweeper;
 import com.redhat.thermostat.web.server.CursorManager.CursorTimer;
@@ -106,12 +106,12 @@ public class CursorManagerTest {
     @Test
     public void testPutNoHasMoreCursor() {
         CursorManager manager = new CursorManager(mock(TimerRegistry.class));
-        int id = manager.put(mock(BatchCursor.class));
+        int id = manager.put(mock(Cursor.class));
         assertEquals(CursorManager.CURSOR_NOT_STORED, id);
     }
     
-    private BatchCursor<?> getHasMoreBatchCursor() {
-        BatchCursor<?> c = mock(BatchCursor.class);
+    private Cursor<?> getHasMoreBatchCursor() {
+        Cursor<?> c = mock(Cursor.class);
         when(c.hasNext()).thenReturn(true);
         return c;
     }
@@ -119,7 +119,7 @@ public class CursorManagerTest {
     @Test
     public void testGetInvalidId() {
         CursorManager manager = new CursorManager(mock(TimerRegistry.class));
-        BatchCursor<?> c = manager.get(CursorManager.CURSOR_NOT_STORED);
+        Cursor<?> c = manager.get(CursorManager.CURSOR_NOT_STORED);
         assertNull(c);
     }
     
@@ -133,11 +133,11 @@ public class CursorManagerTest {
         CursorManager manager = new CursorManager(mock(TimerRegistry.class));
         int num = (int)(Math.random() * 300);
         addCursors(num, manager);
-        BatchCursor<?> cursor = getHasMoreBatchCursor();
+        Cursor<?> cursor = getHasMoreBatchCursor();
         int interestingId = manager.put(cursor);
         num = (int)(Math.random() * 40);
         addCursors(num, manager);
-        BatchCursor<?> actual = manager.get(interestingId);
+        Cursor<?> actual = manager.get(interestingId);
         assertSame(actual, cursor);
     }
     
@@ -146,10 +146,10 @@ public class CursorManagerTest {
         Map<Integer, CursorHolder> cursors = new HashMap<>();
         long expiredTime = System.currentTimeMillis() - ( 5 * 60 * 1000);
         long notExpiredTime = System.currentTimeMillis();
-        cursors.put(3, new CursorHolder(mock(BatchCursor.class), expiredTime));
-        cursors.put(4, new CursorHolder(mock(BatchCursor.class), expiredTime));
-        cursors.put(5, new CursorHolder(mock(BatchCursor.class), notExpiredTime));
-        cursors.put(7, new CursorHolder(mock(BatchCursor.class), expiredTime));
+        cursors.put(3, new CursorHolder(mock(Cursor.class), expiredTime));
+        cursors.put(4, new CursorHolder(mock(Cursor.class), expiredTime));
+        cursors.put(5, new CursorHolder(mock(Cursor.class), notExpiredTime));
+        cursors.put(7, new CursorHolder(mock(Cursor.class), expiredTime));
         CursorManager manager = new CursorManager(mock(TimerRegistry.class), cursors);
         manager.expireCursors(); // should remove old cursors
         assertEquals(1, cursors.keySet().size());
@@ -159,9 +159,9 @@ public class CursorManagerTest {
     @Test
     public void testRemoveCursor() {
         Map<Integer, CursorHolder> cursors = new HashMap<>();
-        cursors.put(3, new CursorHolder(mock(BatchCursor.class), 3));
-        cursors.put(4, new CursorHolder(mock(BatchCursor.class), 4));
-        cursors.put(5, new CursorHolder(mock(BatchCursor.class), 5));
+        cursors.put(3, new CursorHolder(mock(Cursor.class), 3));
+        cursors.put(4, new CursorHolder(mock(Cursor.class), 4));
+        cursors.put(5, new CursorHolder(mock(Cursor.class), 5));
         CursorManager manager = new CursorManager(mock(TimerRegistry.class), cursors);
         manager.removeCursor(3);
         assertEquals(2, cursors.keySet().size());
@@ -175,9 +175,9 @@ public class CursorManagerTest {
         Map<Integer, CursorHolder> cursors = new HashMap<>();
         long expiredTime = System.currentTimeMillis() - ( 5 * 60 * 1000);
         long notExpiredTime = System.currentTimeMillis();
-        cursors.put(4, new CursorHolder(mock(BatchCursor.class), expiredTime));
-        cursors.put(5, new CursorHolder(mock(BatchCursor.class), notExpiredTime));
-        cursors.put(7, new CursorHolder(mock(BatchCursor.class), expiredTime));
+        cursors.put(4, new CursorHolder(mock(Cursor.class), expiredTime));
+        cursors.put(5, new CursorHolder(mock(Cursor.class), notExpiredTime));
+        cursors.put(7, new CursorHolder(mock(Cursor.class), expiredTime));
         CursorManager manager = new CursorManager(mock(TimerRegistry.class), cursors);
         // refresh 4's timestamp so that it's now no longer expired
         manager.updateCursorTimeStamp(4);
@@ -231,7 +231,7 @@ public class CursorManagerTest {
     @Test
     public void testUpdateTimeStamp() {
         long now = System.currentTimeMillis();
-        CursorHolder holder = new CursorHolder(mock(BatchCursor.class), now);
+        CursorHolder holder = new CursorHolder(mock(Cursor.class), now);
         sleep(10);
         holder.updateTimestamp();
         assertTrue(now != holder.getLastUpdated());
@@ -240,7 +240,7 @@ public class CursorManagerTest {
     @Test
     public void testCheckIsCursorExpired() {
         long now = System.currentTimeMillis();
-        CursorHolder holder = new CursorHolder(mock(BatchCursor.class), now);
+        CursorHolder holder = new CursorHolder(mock(Cursor.class), now);
         sleep(10);
         long laterTime = System.currentTimeMillis();
         assertFalse("cursor still valid. timeout == 20ms, but only 10ms old.",
@@ -251,7 +251,7 @@ public class CursorManagerTest {
     @Test
     public void testGetCursor() {
         long now = System.currentTimeMillis();
-        BatchCursor<?> cursor = mock(BatchCursor.class);
+        Cursor<?> cursor = mock(Cursor.class);
         CursorHolder holder = new CursorHolder(cursor, now);
         assertSame(cursor, holder.getCursor());
     }

@@ -123,7 +123,6 @@ import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
-import com.redhat.thermostat.storage.core.experimental.BatchCursor;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.BasePojo;
@@ -538,10 +537,10 @@ public class WebStorageEndpointTest {
         
         private final Gson gson;
         private final Query<TestClass> mockMongoQuery;
-        private final BatchCursor<TestClass> cursor;
+        private final Cursor<TestClass> cursor;
         private final SharedStateId stmtId;
         
-        private TrustedPreparedQueryTestResult(Gson gson, Query<TestClass> mockMongoQuery, BatchCursor<TestClass> cursor, SharedStateId stmtId) {
+        private TrustedPreparedQueryTestResult(Gson gson, Query<TestClass> mockMongoQuery, Cursor<TestClass> cursor, SharedStateId stmtId) {
             this.cursor = cursor;
             this.gson = gson;
             this.mockMongoQuery = mockMongoQuery;
@@ -561,7 +560,7 @@ public class WebStorageEndpointTest {
         Query<TestClass> mockMongoQuery = mock(Query.class);
         when(mockStorage.createQuery(eq(category))).thenReturn(mockMongoQuery);
 
-        BatchCursor<TestClass> cursor = mock(BatchCursor.class);
+        Cursor<TestClass> cursor = mock(Cursor.class);
         WebStorageEndPoint.DEFAULT_QUERY_BATCH_SIZE = 2;
         // Assuming: moreBatches == true then we have
         // WebStorageEndpoint.getBatchFromCursor() method calls hasNext() twice,

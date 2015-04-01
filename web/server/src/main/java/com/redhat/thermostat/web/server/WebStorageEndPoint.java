@@ -74,6 +74,7 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.config.internal.CommonPathsImpl;
+import com.redhat.thermostat.storage.core.BasicBatchCursor;
 import com.redhat.thermostat.storage.core.Categories;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.CategoryAdapter;
@@ -93,7 +94,6 @@ import com.redhat.thermostat.storage.core.Statement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageCredentials;
-import com.redhat.thermostat.storage.core.experimental.BatchCursor;
 import com.redhat.thermostat.storage.model.AggregateResult;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.query.BinaryLogicalExpression;
@@ -125,7 +125,7 @@ import com.redhat.thermostat.web.server.containers.ServletContainerInfoFactory;
 public class WebStorageEndPoint extends HttpServlet {
 
     // This is an ugly hack in order to allow for testing of batched querying.
-    static int DEFAULT_QUERY_BATCH_SIZE = BatchCursor.DEFAULT_BATCH_SIZE;
+    static int DEFAULT_QUERY_BATCH_SIZE = Cursor.DEFAULT_BATCH_SIZE;
     
     static final String CMDC_AUTHORIZATION_GRANT_ROLE_PREFIX = "thermostat-cmdc-grant-";
     static final String FILES_READ_GRANT_ROLE_PREFIX = "thermostat-files-grant-read-filename-";
@@ -136,7 +136,6 @@ public class WebStorageEndPoint extends HttpServlet {
     static final String CATEGORY_MANAGER_KEY = "category-manager";
     static final String PREPARED_STMT_MANAGER_KEY = "prepared-stmt-manager";
     static final String SERVER_TOKEN_KEY = "server-token";
-    private static final int UNKNOWN_CURSOR_ID = -0xdeadbeef;
 
     // our strings can contain non-ASCII characters. Use UTF-8
     // see also PR 1344
@@ -649,41 +648,28 @@ public class WebStorageEndPoint extends HttpServlet {
         
         UserPrincipal userPrincipal = getUserPrincipal(req);
         targetQuery = getQueryForPrincipal(userPrincipal, targetQuery, desc);
-        // While the signature still says the retval of query execute is
-        // cursor, we return an instance of AdvancedCursor instead for new code.
-        // This is the case for MongoStorage. However, in order to work
-        // around potential third-party implementations perform the check
-        // and fall back to legacy behaviour.
         Cursor<T> cursor = targetQuery.execute();
         List<T> resultsList = null;
-        if (cursor instanceof BatchCursor) {
-            BatchCursor<T> batchCursor = (BatchCursor<T>)cursor;
-            resultsList = getBatchFromCursor(batchCursor, DEFAULT_QUERY_BATCH_SIZE);
-            assert(resultsList.size() <= DEFAULT_QUERY_BATCH_SIZE);
-            CursorManager cursorManager = null;
-            HttpSession userSession = req.getSession();
-            synchronized(userSession) {
-                cursorManager = (CursorManager)userSession.getAttribute(CURSOR_MANAGER_KEY);
-                if (cursorManager == null) {
-                    // Not yet set for this user, create a new cursor manager
-                    // and start the sweeper timer so as to prevent memory
-                    // leaks due to cursors kept as a reference in cursor manager
-                    cursorManager = new CursorManager(timerRegistry);
-                    cursorManager.startSweeperTimer();
-                    userSession.setAttribute(CURSOR_MANAGER_KEY, cursorManager);
-                }
+        resultsList = getBatchFromCursor(cursor, DEFAULT_QUERY_BATCH_SIZE);
+        assert(resultsList.size() <= DEFAULT_QUERY_BATCH_SIZE);
+        CursorManager cursorManager = null;
+        HttpSession userSession = req.getSession();
+        synchronized(userSession) {
+            cursorManager = (CursorManager)userSession.getAttribute(CURSOR_MANAGER_KEY);
+            if (cursorManager == null) {
+                // Not yet set for this user, create a new cursor manager
+                // and start the sweeper timer so as to prevent memory
+                // leaks due to cursors kept as a reference in cursor manager
+                cursorManager = new CursorManager(timerRegistry);
+                cursorManager.startSweeperTimer();
+                userSession.setAttribute(CURSOR_MANAGER_KEY, cursorManager);
             }
-            // Only record cursor if there are more results to return than the
-            // first batch size.
-            int cursorId = cursorManager.put(batchCursor);
-            response.setCursorId(cursorId);
-            response.setHasMoreBatches(batchCursor.hasNext());
-        } else {
-            // fallback to old behaviour
-            resultsList = getLegacyResultList(cursor);
-            response.setHasMoreBatches(false); // only one batch
-            response.setCursorId(UNKNOWN_CURSOR_ID);
         }
+        // Only record cursor if there are more results to return than the
+        // first batch size.
+        int cursorId = cursorManager.put(cursor);
+        response.setCursorId(cursorId);
+        response.setHasMoreBatches(cursor.hasNext());
         writeQueryResponse(resp, response, resultsList, targetStmtHolder);
     }
     
@@ -756,7 +742,7 @@ public class WebStorageEndPoint extends HttpServlet {
             throw new IllegalStateException("[get-more] No cursor manager available in session for " + req.getRemoteUser());
         }
         @SuppressWarnings("unchecked")
-        BatchCursor<T> batchCursor = (BatchCursor<T>)cursorManager.get(cursorId);
+        Cursor<T> batchCursor = (Cursor<T>)cursorManager.get(cursorId);
         
         PreparedStatementManager prepStmtManager = getPreparedStmtManager();
         PreparedStatementHolder<T> targetStmtHolder = prepStmtManager.getStatementHolder(id);
@@ -810,19 +796,9 @@ public class WebStorageEndPoint extends HttpServlet {
     
     // Fetches the first batch of results. Number of results are determined
     // by the default batch size in AdvancedCursor
-    private <T extends Pojo> List<T> getBatchFromCursor(final BatchCursor<T> cursor, final int batchSize) {
+    private <T extends Pojo> List<T> getBatchFromCursor(final Cursor<T> cursor, final int batchSize) {
         ArrayList<T> resultList = new ArrayList<>(batchSize);
         for (int i = 0; i < batchSize && cursor.hasNext(); i++) {
-            resultList.add(cursor.next());
-        }
-        return resultList;
-    }
-    
-    // Fetches all results imposing no bound on the result set if the underlying
-    // query was unbounded.
-    private <T extends Pojo> ArrayList<T> getLegacyResultList(Cursor<T> cursor) {
-        ArrayList<T> resultList = new ArrayList<>();
-        while (cursor.hasNext()) {
             resultList.add(cursor.next());
         }
         return resultList;
@@ -1059,7 +1035,7 @@ public class WebStorageEndPoint extends HttpServlet {
     }
     
     private <T extends Pojo> Cursor<T> getEmptyCursor() {
-        final Cursor<T> empty = new Cursor<T>() {
+        final Cursor<T> empty = new BasicBatchCursor<T>() {
 
             @Override
             public boolean hasNext() {

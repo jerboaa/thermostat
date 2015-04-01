@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.core.experimental;
+package com.redhat.thermostat.storage.core;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -42,6 +42,7 @@ import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.storage.core.BasicBatchCursor;
 import com.redhat.thermostat.storage.model.Pojo;
 
 public class BasicBatchCursorTest {
@@ -63,15 +64,15 @@ public class BasicBatchCursorTest {
             // pass
             assertEquals("Batch size must be > 0", e.getMessage());
         }
-        cursor.setBatchSize(BatchCursor.DEFAULT_BATCH_SIZE);
-        assertEquals(BatchCursor.DEFAULT_BATCH_SIZE, cursor.getBatchSize());
+        cursor.setBatchSize(Cursor.DEFAULT_BATCH_SIZE);
+        assertEquals(Cursor.DEFAULT_BATCH_SIZE, cursor.getBatchSize());
     }
     
     @Test
     public void testGetBatchSize() {
         BasicBatchCursor<TestPojo> cursor = new BasicBatchCursorImpl<>();
         assertNotNull("should always return default if never set", cursor.getBatchSize());
-        assertEquals(BatchCursor.DEFAULT_BATCH_SIZE, cursor.getBatchSize());
+        assertEquals(Cursor.DEFAULT_BATCH_SIZE, cursor.getBatchSize());
         cursor.setBatchSize(3);
         assertEquals(3, cursor.getBatchSize());
     }

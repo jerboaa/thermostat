@@ -43,11 +43,12 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
 import java.io.BufferedReader;
@@ -66,6 +67,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
@@ -110,7 +112,6 @@ import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.StorageException;
-import com.redhat.thermostat.storage.core.experimental.BatchCursor;
 import com.redhat.thermostat.storage.model.AggregateResult;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.test.FreePortFinder;
@@ -126,8 +127,6 @@ import com.redhat.thermostat.web.common.typeadapters.SharedStateIdTypeAdapterFac
 import com.redhat.thermostat.web.common.typeadapters.WebPreparedStatementResponseTypeAdapterFactory;
 import com.redhat.thermostat.web.common.typeadapters.WebPreparedStatementTypeAdapterFactory;
 import com.redhat.thermostat.web.common.typeadapters.WebQueryResponseTypeAdapterFactory;
-import java.util.NoSuchElementException;
-import static org.junit.Assert.fail;
 
 public class WebStorageTest {
 
@@ -554,16 +553,14 @@ public class WebStorageTest {
         assertEquals("cursor-id", cursorIdArray[0]);
         assertEquals("444", cursorIdArray[1]);
         assertEquals("batch-size", batchSizeArray[0]);
-        assertEquals(Integer.toString(BatchCursor.DEFAULT_BATCH_SIZE), batchSizeArray[1]);
+        assertEquals(Integer.toString(Cursor.DEFAULT_BATCH_SIZE), batchSizeArray[1]);
 
         assertEquals("get-more-result", returnedGetMore.getProperty1());
         
         
         // Do it again, this time with a non-default batch size: 5
         
-        assertTrue(results instanceof BatchCursor);
-        BatchCursor<TestObj> advCursor = (BatchCursor<TestObj>)results;
-        advCursor.setBatchSize(5);
+        results.setBatchSize(5);
         
         WebQueryResponse<TestObj> getMoreResults2 = new WebQueryResponse<>();
         getMoreResults2.setResponseCode(PreparedStatementResponseCode.QUERY_SUCCESS);
@@ -571,7 +568,7 @@ public class WebStorageTest {
         getMoreResults2.setHasMoreBatches(false); // no more batches this time
         getMoreResults2.setResultList(new TestObj[] { more });
         prepareServer(gson.toJson(getMoreResults2));
-        advCursor.next();
+        results.next();
         
         path = requestURI.substring(requestURI.lastIndexOf('/'));
         assertEquals("/get-more", path);
@@ -668,7 +665,6 @@ public class WebStorageTest {
         }
         assertNotNull(results);
         assertTrue(results instanceof WebCursor);
-        assertTrue("Expected WebCursor to be an AdvancedCursor", results instanceof BatchCursor);
         assertTrue(results.hasNext());
         assertEquals("fluffor1", results.next().getProperty1());
         assertTrue(results.hasNext());

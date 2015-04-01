@@ -42,9 +42,10 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.BasicBatchCursor;
 import com.redhat.thermostat.storage.core.StorageException;
-import com.redhat.thermostat.storage.core.experimental.BasicBatchCursor;
 import com.redhat.thermostat.storage.model.Pojo;
+
 import java.util.NoSuchElementException;
 
 class MongoCursor<T extends Pojo> extends BasicBatchCursor<T> {

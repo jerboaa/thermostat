@@ -39,11 +39,14 @@ package com.redhat.thermostat.storage.mongodb.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.util.NoSuchElementException;
 
 import org.junit.After;
 import org.junit.Before;
@@ -53,12 +56,10 @@ import org.mockito.Mockito;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Persist;
-import com.redhat.thermostat.storage.core.experimental.BatchCursor;
 import com.redhat.thermostat.storage.model.BasePojo;
-import java.util.NoSuchElementException;
-import static org.junit.Assert.fail;
 
 public class MongoCursorTest {
 
@@ -108,7 +109,7 @@ public class MongoCursorTest {
     }
 
     private DBCursor dbCursor;
-    private BatchCursor<TestClass> cursor;
+    private Cursor<TestClass> cursor;
 
     @Before
     public void setUp() {
@@ -121,7 +122,7 @@ public class MongoCursorTest {
         value2.put("key4", "test4");
 
         dbCursor = mock(DBCursor.class);
-        when(dbCursor.batchSize(BatchCursor.DEFAULT_BATCH_SIZE)).thenReturn(dbCursor);
+        when(dbCursor.batchSize(Cursor.DEFAULT_BATCH_SIZE)).thenReturn(dbCursor);
         when(dbCursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
         when(dbCursor.next()).thenReturn(value1).thenReturn(value2).thenReturn(null);
         when(dbCursor.sort(any(DBObject.class))).thenReturn(dbCursor);
@@ -159,7 +160,7 @@ public class MongoCursorTest {
     @Test
     public void testBatchSize() {
         DBCursor mongoCursor = mock(DBCursor.class);
-        BatchCursor<TestClass> mC = new MongoCursor<>(mongoCursor, TestClass.class);
+        Cursor<TestClass> mC = new MongoCursor<>(mongoCursor, TestClass.class);
         try {
             mC.setBatchSize(-1);
             fail("expected IAE for batch size of -1");

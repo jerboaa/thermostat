@@ -47,6 +47,35 @@ import com.redhat.thermostat.storage.model.Pojo;
  */
 public interface Cursor<T extends Pojo> {
 
+    public static final int DEFAULT_BATCH_SIZE = 100;
+
+    /**
+     * <p>
+     * Sets the configured batch size when retrieving more elements from the
+     * database. That is, no more elements will be loaded into memory than the
+     * configured batch size. Note that the new batch size will only take effect
+     * once the current batch is exhausted.
+     * </p>
+     * <p>
+     * The default batch size is 100.
+     * </p>
+     * 
+     * @param n
+     *            The number of results to fetch from storage in a single batch.
+     * @return A cursor with the configured batch size.
+     * @throws IllegalArgumentException
+     *             If {@code n} is < 1
+     */
+    void setBatchSize(int n) throws IllegalArgumentException;
+
+    /**
+     * 
+     * @return The configured batch size set via {@link setBatchSize} or
+     *         {@link BatchCursor#DEFAULT_BATCH_SIZE} if it was never set
+     *         explicitly.
+     */
+    int getBatchSize();
+    
     /**
      * @return {@code true} if there are more elements, {@code false} otherwise.
      * 

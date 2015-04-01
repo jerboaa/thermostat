@@ -40,23 +40,23 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Type;
+import java.util.NoSuchElementException;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.StorageException;
-import com.redhat.thermostat.storage.core.experimental.BatchCursor;
 import com.redhat.thermostat.web.common.PreparedStatementResponseCode;
 import com.redhat.thermostat.web.common.WebPreparedStatement;
 import com.redhat.thermostat.web.common.WebQueryResponse;
-import java.util.NoSuchElementException;
-import static org.junit.Assert.fail;
 
 public class WebCursorTest {
 
@@ -117,7 +117,7 @@ public class WebCursorTest {
         assertNull(second.getResultList());
         // be sure to return a bad result should storage.getMore() be called
         // more than once
-        when(storage.getMore(cursorId, fakeType, BatchCursor.DEFAULT_BATCH_SIZE, stmt)).thenReturn(response).thenReturn(second);
+        when(storage.getMore(cursorId, fakeType, Cursor.DEFAULT_BATCH_SIZE, stmt)).thenReturn(response).thenReturn(second);
         TestObj actual = cursor.next();
         assertEquals("next-test", actual.getProperty1());
         
@@ -143,7 +143,7 @@ public class WebCursorTest {
         response.setResponseCode(PreparedStatementResponseCode.GET_MORE_NULL_CURSOR);
         response.setCursorId(cursorId);
         response.setHasMoreBatches(false);
-        when(storage.getMore(cursorId, fakeType, BatchCursor.DEFAULT_BATCH_SIZE, stmt)).thenReturn(response);
+        when(storage.getMore(cursorId, fakeType, Cursor.DEFAULT_BATCH_SIZE, stmt)).thenReturn(response);
         try {
             cursor.next();
             fail("Expected StorageException to be thrown");
@@ -168,7 +168,7 @@ public class WebCursorTest {
         response.setResponseCode(PreparedStatementResponseCode.QUERY_FAILURE);
         response.setCursorId(cursorId);
         response.setHasMoreBatches(false);
-        when(storage.getMore(cursorId, fakeType, BatchCursor.DEFAULT_BATCH_SIZE, stmt)).thenReturn(response);
+        when(storage.getMore(cursorId, fakeType, Cursor.DEFAULT_BATCH_SIZE, stmt)).thenReturn(response);
         try {
             cursor.next();
             fail("Expected StorageException to be thrown");

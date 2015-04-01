@@ -42,12 +42,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.BasicBatchCursor;
 import com.redhat.thermostat.storage.core.StorageException;
-import com.redhat.thermostat.storage.core.experimental.BasicBatchCursor;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.web.common.PreparedStatementResponseCode;
 import com.redhat.thermostat.web.common.WebPreparedStatement;
 import com.redhat.thermostat.web.common.WebQueryResponse;
+
 import java.util.NoSuchElementException;
 
 class WebCursor<T extends Pojo> extends BasicBatchCursor<T> {

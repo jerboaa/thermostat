@@ -39,7 +39,8 @@ package com.redhat.thermostat.storage.model;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.experimental.BasicBatchCursor;
+import com.redhat.thermostat.storage.core.BasicBatchCursor;
+
 import java.util.NoSuchElementException;
 
 /**

@@ -44,7 +44,7 @@ import java.util.Map.Entry;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import com.redhat.thermostat.storage.core.experimental.BatchCursor;
+import com.redhat.thermostat.storage.core.Cursor;
 
 /**
  * Manages (query) cursors for a single user.
@@ -82,7 +82,7 @@ final class CursorManager {
      * @return The cursor ID or {@link CursorManager#CURSOR_NOT_STORED} if the
      *         passed in cursor has no more elements.
      */
-    synchronized int put(final BatchCursor<?> cursor) {
+    synchronized int put(final Cursor<?> cursor) {
         int cursorId = CURSOR_NOT_STORED;
         if (cursor.hasNext()) {
             // Be sure we don't overflow. For a long running web storage we
@@ -100,7 +100,7 @@ final class CursorManager {
         return cursorId;
     }
     
-    synchronized BatchCursor<?> get(int cursorId) {
+    synchronized Cursor<?> get(int cursorId) {
         CursorHolder holder = cursors.get(cursorId);
         if (holder == null) {
             return null;
@@ -152,10 +152,10 @@ final class CursorManager {
         // The time out in minutes
         static final int TIMEOUT = 3 * MINUTES;
         
-        private final BatchCursor<?> cursor;
+        private final Cursor<?> cursor;
         private long lastUpdated;
         
-        CursorHolder(BatchCursor<?> cursor, long lastUpdated) {
+        CursorHolder(Cursor<?> cursor, long lastUpdated) {
             this.cursor = cursor;
             this.lastUpdated = lastUpdated;
         }
@@ -168,7 +168,7 @@ final class CursorManager {
             return checkIsCursorExpired(currentTime, TIMEOUT);
         }
         
-        BatchCursor<?> getCursor() {
+        Cursor<?> getCursor() {
             return cursor;
         }
         

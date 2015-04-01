@@ -41,7 +41,6 @@ import java.util.Objects;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Persist;
-import com.redhat.thermostat.storage.core.experimental.BatchCursor;
 
 /**
  * Model class for aggregate counts.
@@ -78,7 +77,7 @@ public class AggregateCount implements AggregateResult {
     
     @SuppressWarnings("unchecked")
     public <T extends Pojo> Cursor<T> getCursor() {
-        return (BatchCursor<T>) new AggregateCursor<>(this);
+        return (Cursor<T>)new AggregateCursor<>(this);
     }
 
 }

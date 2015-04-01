@@ -81,7 +81,6 @@ import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.core.Update;
-import com.redhat.thermostat.storage.core.experimental.BatchCursor;
 import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.AggregateResult;
 import com.redhat.thermostat.storage.model.DistinctResult;
@@ -595,8 +594,8 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
                 dbCursor = coll.find();
             }
             dbCursor = applySortAndLimit(mongoQuery, dbCursor);
-            BatchCursor<T> mongoCursor = new MongoCursor<T>(dbCursor, resultClass);
-            mongoCursor.setBatchSize(BatchCursor.DEFAULT_BATCH_SIZE);
+            Cursor<T> mongoCursor = new MongoCursor<T>(dbCursor, resultClass);
+            mongoCursor.setBatchSize(Cursor.DEFAULT_BATCH_SIZE);
             return mongoCursor;
         } catch (MongoException me) {
             throw new StorageException(me);
