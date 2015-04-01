@@ -39,9 +39,7 @@ package com.redhat.thermostat.vm.gc.common.internal;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.VmLatestPojoListGetter;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 
@@ -64,12 +62,6 @@ public class VmGcStatDAOImplStatementDescriptorRegistration implements
         descs.add(VmGcStatDAOImpl.DESC_ADD_VM_GC_STAT);
         descs.add(VmGcStatDAOImpl.DESC_QUERY_DISTINCT_COLLECTORS);
         return descs;
-    }
-
-    @Override
-    public DescriptorMetadata getDescriptorMetadata(String descriptor,
-            PreparedParameter[] params) {
-        throw new AssertionError("Should not be used");
     }
 
 }

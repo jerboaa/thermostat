@@ -39,8 +39,6 @@ package com.redhat.thermostat.vm.heap.analysis.common.internal;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.redhat.thermostat.storage.core.PreparedParameter;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 
 /**
@@ -59,14 +57,6 @@ public class HeapDAOImplStatementDescriptorRegistration implements
         descs.add(HeapDAOImpl.DESC_ADD_VM_HEAP_INFO);
         return descs;
     }
-
-    @Override
-    public DescriptorMetadata getDescriptorMetadata(String descriptor,
-            PreparedParameter[] params) {
-        throw new AssertionError("Should not be used");
-    }
-    
-    
 
 }
 

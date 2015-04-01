@@ -39,11 +39,9 @@ package com.redhat.thermostat.vm.classstat.common.internal;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.VmBoundaryPojoGetter;
 import com.redhat.thermostat.storage.core.VmLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.VmTimeIntervalPojoListGetter;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
 
@@ -73,12 +71,6 @@ public class VmClassStatDAOImplStatementDescriptorRegistration implements
         descs.add(OLDEST_STAT);
         descs.add(VmClassStatDAOImpl.DESC_ADD_VM_CLASS_STAT);
         return descs;
-    }
-
-    @Override
-    public DescriptorMetadata getDescriptorMetadata(String descriptor,
-            PreparedParameter[] params) {
-        throw new AssertionError("Should not be used");
     }
 
 }

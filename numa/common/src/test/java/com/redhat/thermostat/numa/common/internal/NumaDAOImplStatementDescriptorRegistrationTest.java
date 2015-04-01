@@ -40,9 +40,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -52,11 +49,6 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.numa.common.NumaDAO;
-import com.redhat.thermostat.storage.core.HostLatestPojoListGetter;
-import com.redhat.thermostat.storage.core.PreparedParameter;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorMetadataFactory;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 import com.redhat.thermostat.storage.internal.dao.DAOImplStatementDescriptorRegistration;
 

@@ -38,8 +38,6 @@ package com.redhat.thermostat.itest;
 
 import java.util.Set;
 
-import com.redhat.thermostat.storage.core.PreparedParameter;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 
 public class WebAppTestStatementDescriptorRegistration implements
@@ -48,12 +46,6 @@ public class WebAppTestStatementDescriptorRegistration implements
     @Override
     public Set<String> getStatementDescriptors() {
         return WebAppTest.TRUSTED_DESCRIPTORS;
-    }
-
-    @Override
-    public DescriptorMetadata getDescriptorMetadata(String descriptor,
-            PreparedParameter[] params) {
-        throw new AssertionError("Should not be used");
     }
 
 }

@@ -43,8 +43,6 @@ import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
 import com.redhat.thermostat.storage.core.HostBoundaryPojoGetter;
 import com.redhat.thermostat.storage.core.HostLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.HostTimeIntervalPojoListGetter;
-import com.redhat.thermostat.storage.core.PreparedParameter;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 
 /**
@@ -76,12 +74,6 @@ public class CpuStatDAOImplStatementDescriptorRegistration implements
         descs.add(LATEST_STAT);
         descs.add(OLDEST_STAT);
         return descs;
-    }
-
-    @Override
-    public DescriptorMetadata getDescriptorMetadata(String descriptor,
-            PreparedParameter[] params) {
-        throw new AssertionError("Should not be used");
     }
 
 }

@@ -49,13 +49,11 @@ import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.PreparedParameter;
 import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 import com.redhat.thermostat.storage.model.AggregateCount;
 
@@ -411,11 +409,6 @@ public class StorageProfileCommand implements Command, CategoryRegistration, Sta
     @Override
     public boolean isStorageRequired() {
         return true;
-    }
-
-    @Override
-    public DescriptorMetadata getDescriptorMetadata(String descriptor, PreparedParameter[] params) {
-        return new DescriptorMetadata();
     }
 
     @Override

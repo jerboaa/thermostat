@@ -43,8 +43,6 @@ import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
 import com.redhat.thermostat.storage.core.HostBoundaryPojoGetter;
 import com.redhat.thermostat.storage.core.HostLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.HostTimeIntervalPojoListGetter;
-import com.redhat.thermostat.storage.core.PreparedParameter;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 
 /**
@@ -73,12 +71,6 @@ public class MemoryStatDAOImplStatementDescriptorRegistration implements
         descs.add(oldestStatDescriptor);
         descs.add(MemoryStatDAOImpl.DESC_ADD_MEMORY_STAT);
         return descs;
-    }
-
-    @Override
-    public DescriptorMetadata getDescriptorMetadata(String descriptor,
-            PreparedParameter[] params) {
-        throw new AssertionError("Should not be used");
     }
 
 }

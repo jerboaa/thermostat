@@ -40,7 +40,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.redhat.thermostat.storage.core.PreparedParameter;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 
 /**
@@ -80,12 +79,6 @@ public class DAOImplStatementDescriptorRegistration implements
         daoDescs.add(SchemaInfoDAOImpl.QUERY_ALL_COLLECTIONS);
 
         return daoDescs;
-    }
-
-    @Override
-    public DescriptorMetadata getDescriptorMetadata(String descriptor,
-            PreparedParameter[] params) {
-        throw new AssertionError("Should not be used");
     }
 
 }

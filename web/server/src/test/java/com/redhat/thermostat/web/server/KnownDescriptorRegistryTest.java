@@ -48,8 +48,6 @@ import java.util.TreeSet;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.core.PreparedParameter;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 
 public class KnownDescriptorRegistryTest {
@@ -146,12 +144,6 @@ public class KnownDescriptorRegistryTest {
         @Override
         public Set<String> getStatementDescriptors() {
             return descs;
-        }
-
-        @Override
-        public DescriptorMetadata getDescriptorMetadata(String descriptor,
-                PreparedParameter[] params) {
-            throw new AssertionError("should not be used");
         }
         
     }

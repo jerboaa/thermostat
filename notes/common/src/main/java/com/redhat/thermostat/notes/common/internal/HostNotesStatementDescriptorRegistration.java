@@ -39,8 +39,6 @@ package com.redhat.thermostat.notes.common.internal;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.redhat.thermostat.storage.core.PreparedParameter;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 
 /**
@@ -57,12 +55,6 @@ public class HostNotesStatementDescriptorRegistration implements StatementDescri
         descs.add(HostNoteDAOImpl.REMOVE_HOST_NOTE_BY_ID);
         descs.add(HostNoteDAOImpl.UPDATE_HOST_NOTE);
         return descs;
-    }
-
-    @Override
-    public DescriptorMetadata getDescriptorMetadata(String descriptor, PreparedParameter[] params) {
-        String agentId;
-        throw new AssertionError("Should not be used");
     }
 
 }

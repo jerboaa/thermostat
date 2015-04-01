@@ -36,11 +36,10 @@
 
 package com.redhat.thermostat.thread.dao.impl;
 
-import com.redhat.thermostat.storage.core.PreparedParameter;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
-import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 import java.util.HashSet;
 import java.util.Set;
+
+import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 
 /**
  * Registers prepared queries issued by this maven module via
@@ -71,12 +70,6 @@ public class ThreadDaoImplStatementDescriptorRegistration implements
     @Override
     public Set<String> getStatementDescriptors() {
         return descs;
-    }
-
-    @Override
-    public DescriptorMetadata getDescriptorMetadata(String descriptor,
-            PreparedParameter[] params) {
-        throw new AssertionError("Should not be used");
     }
 
 }

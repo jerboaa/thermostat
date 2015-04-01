@@ -122,7 +122,6 @@ import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.auth.CategoryRegistration;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 import com.redhat.thermostat.storage.core.experimental.BatchCursor;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
@@ -1755,12 +1754,6 @@ public class WebStorageEndpointTest {
         private TestStatementDescriptorRegistration(Set<String> descriptorSet) {
             assertEquals(1, descriptorSet.size());
             this.descriptorSet = descriptorSet;
-        }
-        
-        @Override
-        public DescriptorMetadata getDescriptorMetadata(String descriptor,
-                PreparedParameter[] params) {
-            throw new AssertionError("should not be used");
         }
 
         @Override

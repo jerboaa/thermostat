@@ -43,8 +43,6 @@ import com.redhat.thermostat.numa.common.NumaDAO;
 import com.redhat.thermostat.storage.core.HostBoundaryPojoGetter;
 import com.redhat.thermostat.storage.core.HostLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.HostTimeIntervalPojoListGetter;
-import com.redhat.thermostat.storage.core.PreparedParameter;
-import com.redhat.thermostat.storage.core.auth.DescriptorMetadata;
 import com.redhat.thermostat.storage.core.auth.StatementDescriptorRegistration;
 
 /**
@@ -85,12 +83,6 @@ public class NumaDAOImplStatementDescriptorRegistration implements
     @Override
     public Set<String> getStatementDescriptors() {
         return descs;
-    }
-
-    @Override
-    public DescriptorMetadata getDescriptorMetadata(String descriptor,
-            PreparedParameter[] params) {
-        throw new AssertionError("Should not be used");
     }
 
 }
