@@ -5,7 +5,8 @@
   <commands>
     <command>
       <name>example-command</name>
-      <description>Show the message for a given agent</description>
+      <summary>show the message for a given agent</summary>
+      <description>Show the message for a given agent.</description>
       <options>
         <option>
           <long>hostId</long>

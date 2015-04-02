@@ -5,7 +5,8 @@
   <commands>
     <command>
       <name>example-command</name>
-      <description>Simple Hello World plugin</description>
+      <summary>hello world plugin</summary>
+      <description>Simple plugin printing "Hello World".</description>
       <environments>
         <environment>cli</environment>
         <environment>shell</environment>
