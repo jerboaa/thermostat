@@ -145,19 +145,8 @@
               <outputDirectory>${project.build.directory}</outputDirectory>
               <resources>
                 <resource>
-                  <directory>desktop</directory>
-                  <targetPath />
-                  <filtering>true</filtering>
-                </resource>
-                <resource>
                   <directory>scripts</directory>
                   <targetPath>image/bin</targetPath>
-                  <filtering>true</filtering>
-                </resource>
-                <!-- systemd service unit files -->
-                <resource>
-                  <directory>systemd</directory>
-                  <targetPath/>
                   <filtering>true</filtering>
                 </resource>
                 <resource>
@@ -192,16 +181,25 @@
                   <targetPath>tools</targetPath>
                   <filtering>true</filtering>
                 </resource>
+                <!-- downstream packaging related files and directories below -->
                 <resource>
-                  <directory>docs</directory>
-                  <targetPath>docs</targetPath>
-                  <includes>
-                    <include>thermostat.1</include>
-                  </includes>
+                  <directory>packaging/shared/desktop</directory>
+                  <targetPath>packaging/desktop</targetPath>
+                  <filtering>true</filtering>
+                </resource>
+                <!-- systemd service unit files -->
+                <resource>
+                  <directory>packaging/shared/systemd</directory>
+                  <targetPath>packaging/systemd</targetPath>
+                  <filtering>true</filtering>
                 </resource>
                 <resource>
-                  <directory>bash-completion</directory>
-                  <targetPath>bash-completion</targetPath>
+                  <directory>packaging/shared/man</directory>
+                  <targetPath>packaging/man</targetPath>
+                </resource>
+                <resource>
+                  <directory>packaging/shared/bash-completion</directory>
+                  <targetPath>packaging/bash-completion</targetPath>
                   <filtering>true</filtering>
                 </resource>
               </resources>
@@ -217,8 +215,8 @@
               <outputDirectory>${project.build.directory}</outputDirectory>
               <resources>
                 <resource>
-                  <directory>icons</directory>
-                  <targetPath />
+                  <directory>packaging/shared/icons</directory>
+                  <targetPath>packaging/icons</targetPath>
                   <filtering>false</filtering>
                 </resource>
               </resources>
