@@ -170,6 +170,7 @@ public class VmIoPanel extends VmIoView implements SwingComponent {
 
             legendPanel.add(label);
             legendPanel.revalidate();
+            legendPanel.repaint();
         }
     }
 

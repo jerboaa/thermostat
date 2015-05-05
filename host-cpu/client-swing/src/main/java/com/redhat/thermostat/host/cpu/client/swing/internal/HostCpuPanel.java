@@ -156,6 +156,7 @@ public class HostCpuPanel extends HostCpuView implements SwingComponent {
 
                 legendPanel.add(label);
                 legendPanel.revalidate();
+                legendPanel.repaint();
             }
         });
     }

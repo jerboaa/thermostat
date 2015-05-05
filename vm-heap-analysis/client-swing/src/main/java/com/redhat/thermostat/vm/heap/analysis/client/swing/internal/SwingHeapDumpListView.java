@@ -124,6 +124,7 @@ public class SwingHeapDumpListView extends HeapDumpListView implements SwingComp
                     table.add(item);
                 }
                 container.revalidate();
+                container.repaint();
             }
         });
     }

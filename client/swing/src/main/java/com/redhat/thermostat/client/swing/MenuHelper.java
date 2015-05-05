@@ -104,6 +104,7 @@ public class MenuHelper {
                     parent.add(new Menu(menu));
 
                     menuBar.revalidate();
+                    menuBar.repaint();
                 }
             });
         } catch (InvocationTargetException ite) {
@@ -135,6 +136,7 @@ public class MenuHelper {
                     Menu parent = findMenuParent(menuBar, path, false);
                     parent.remove(path[path.length - 1].getContents());
                     menuBar.revalidate();
+                    menuBar.repaint();
                 }
             });
         } catch (InterruptedException ie) {

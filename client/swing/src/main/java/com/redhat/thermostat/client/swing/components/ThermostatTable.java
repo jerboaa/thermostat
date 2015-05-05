@@ -85,6 +85,7 @@ public class ThermostatTable extends JTable {
     public void repackCells() {
         resizer.resize();
         revalidate();
+        repaint();
     }
     
     public JScrollPane wrap() {

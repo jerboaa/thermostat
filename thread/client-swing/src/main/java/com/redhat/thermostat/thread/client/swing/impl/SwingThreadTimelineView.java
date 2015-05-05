@@ -120,6 +120,7 @@ public class SwingThreadTimelineView extends ThreadTimelineView implements Swing
                 contentPane.removeAll();
                 contentPane.initComponents();
                 contentPane.revalidate();
+                contentPane.repaint();
             }
         });
     }
@@ -146,6 +147,7 @@ public class SwingThreadTimelineView extends ThreadTimelineView implements Swing
                     }
                 }
                 timelineContainer.revalidate();
+                timelineContainer.repaint();
             }
         });
     }

@@ -166,6 +166,7 @@ public class Accordion<H, C> extends JPanel {
             
             Accordion.this.contentPane.add(pane);
             Accordion.this.contentPane.revalidate();
+            Accordion.this.contentPane.repaint();
         }
 
         @Override
@@ -187,6 +188,7 @@ public class Accordion<H, C> extends JPanel {
             
             content.add(contentUnit);
             content.revalidate();
+            content.repaint();
             
             Map<C, AccordionComponent> componentsMap = components.get(header);
             if (componentsMap == null) {
@@ -212,10 +214,12 @@ public class Accordion<H, C> extends JPanel {
             JComponent content = pane.getContent();
             content.remove(contentUnit.getUiComponent());
             content.revalidate();
+            content.repaint();
 
             componentFactory.removeComponent(contentUnit, header, component);
             
             Accordion.this.contentPane.revalidate();
+            Accordion.this.contentPane.repaint();
         }
 
         @Override
@@ -234,6 +238,7 @@ public class Accordion<H, C> extends JPanel {
             }
             
             Accordion.this.contentPane.revalidate();
+            Accordion.this.contentPane.repaint();
         }
     }
     

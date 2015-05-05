@@ -207,6 +207,7 @@ public class NotesView implements UIComponent, SwingComponent {
                 }
                 tagToPanel.clear();
                 notesAndToolsContainer.revalidate();
+                notesAndToolsContainer.repaint();
             }
         });
     }
@@ -219,6 +220,7 @@ public class NotesView implements UIComponent, SwingComponent {
                 tagToPanel.put(note.getId(), widget);
                 notesContainer.add(widget);
                 notesAndToolsContainer.revalidate();
+                notesAndToolsContainer.repaint();
             }
         });
     }

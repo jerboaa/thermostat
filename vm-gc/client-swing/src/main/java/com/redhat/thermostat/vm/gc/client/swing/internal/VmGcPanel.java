@@ -282,6 +282,7 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
                 chartPanelContainer.add(subPanel, gcPanelConstraints);
                 gcPanelConstraints.gridy++;
                 containerPanel.revalidate();
+                containerPanel.repaint();
             }
         });
     }
@@ -298,6 +299,7 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
                 chartPanelContainer.remove(subPanel);
                 gcPanelConstraints.gridy--;
                 containerPanel.revalidate();
+                containerPanel.repaint();
             }
         });
     }

@@ -295,6 +295,7 @@ public class HeapSwingView extends HeapView implements SwingComponent {
 
                 visiblePane.add(heapDetailPanel);
                 visiblePane.revalidate();
+                visiblePane.repaint();
             }
         });
     }
@@ -308,6 +309,7 @@ public class HeapSwingView extends HeapView implements SwingComponent {
                 public void run() {
                     heapDetailPanel.setBottom(view.getUiComponent());
                     visiblePane.revalidate();
+                    visiblePane.repaint();
                 }
             });
         }

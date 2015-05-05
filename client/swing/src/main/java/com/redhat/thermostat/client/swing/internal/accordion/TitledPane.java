@@ -239,6 +239,7 @@ public class TitledPane extends JPanel implements AccordionComponent {
                     remove(content);
                 }
                 revalidate();
+                repaint();
                 firePropertyChange(EXPANDED_PROPERTY, oldExpaned, expanded);
             }
         }
@@ -267,6 +268,7 @@ public class TitledPane extends JPanel implements AccordionComponent {
         remove(content);
         expanded = false;
         revalidate();
+        repaint();
     }
     
     public void setContent(JComponent content) {

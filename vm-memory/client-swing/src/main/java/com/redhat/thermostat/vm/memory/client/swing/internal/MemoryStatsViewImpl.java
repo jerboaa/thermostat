@@ -188,6 +188,7 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
 
                 updateRegion(region);
                 graphPanel.revalidate();
+                graphPanel.repaint();
             }
         });
     }

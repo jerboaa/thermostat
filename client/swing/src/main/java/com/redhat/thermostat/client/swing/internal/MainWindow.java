@@ -467,6 +467,7 @@ public class MainWindow extends JFrame implements MainView {
                     Component toAdd = swingComp.getUiComponent();
                     contentArea.add(toAdd);
                     contentArea.revalidate();
+                    contentArea.repaint();
                 }
             });
         } else {
