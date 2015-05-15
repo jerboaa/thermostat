@@ -58,6 +58,7 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
+import org.jfree.data.RangeType;
 import org.jfree.data.time.FixedMillisecond;
 import org.jfree.data.time.RegularTimePeriod;
 import org.jfree.data.time.TimeSeries;
@@ -311,6 +312,7 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
 
         NumberAxis rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();
         rangeAxis.setAutoRangeMinimumSize(100);
+        rangeAxis.setRangeType(RangeType.POSITIVE);
 
         return chart;
     }
