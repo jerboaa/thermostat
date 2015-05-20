@@ -220,13 +220,13 @@
               <goal>exploded</goal>
             </goals>
             <configuration>
-              <!-- web.xml contains properties, which we'd like to have interpolated -->
               <webResources>
                 <resource>
                   <filtering>true</filtering>
                   <directory>src/main/webapp</directory>
                   <includes>
                     <include>**/web.xml</include>
+                    <include>**/web.auth</include>
                   </includes>
                 </resource>
               </webResources>
@@ -249,6 +249,7 @@
                   <directory>src/main/webapp</directory>
                   <includes>
                     <include>**/web.xml</include>
+                    <include>**/web.auth</include>
                   </includes>
                 </resource>
               </webResources>

@@ -122,7 +122,6 @@ exitFail() {
   # in this script already, but failed somewhere
   # down the line.
   removeTempStampFile
-  cleanupSedFiles
   echo 'Thermostat setup failed!' 1>&2
   stty "$tty_flags"
   exit 1
@@ -137,18 +136,10 @@ removeTempStampFile() {
   fi
 }
 
-cleanupSedFiles() {
-  if [ ! -z "$SED_FILES_DIR" ] && 
-     [ -e $SED_FILES_DIR ]; then
-    rm -rf "$SED_FILES_DIR"
-  fi
-}
-
 exitSuccess() {
   # Remove temporary unlock file and create the actual setup-complete
   # file.
   removeTempStampFile
-  cleanupSedFiles
   echo $SETUP_UNLOCK_CONTENT_REGULAR > "$SETUP_COMPLETE_FILE"
   echo -e "\nThermostat setup complete!\n"
   echo -e "Be sure to configure thermostat-users.properties and"
@@ -166,7 +157,7 @@ exitSuccessNotWritable() {
   # web.xml might not have been properly set up.
   echo $SETUP_UNLOCK_CONTENT_READ_ONLY_WEBXML > "$SETUP_COMPLETE_FILE"
   echo "Thermostat setup complete!"
-  echo -e "\nBe sure to configure $TH_WEB_INF as mentioned above."
+  echo -e "\nBe sure to configure $TH_WEB_AUTH as mentioned above."
   echo -e "\nThen, make sure to configure thermostat-users.properties and"
   echo -e "thermostat-roles.properties before you attempt connections"
   echo -e "with agent(s) and/or client(s)."
@@ -206,166 +197,32 @@ runSetup() {
     default_webapp="$THERMOSTAT_HOME/webapp"
     THERMOSTAT_WEBAPP_LOCATION="$(readlink -f $default_webapp)"
   fi
-  TH_WEB_INF="$THERMOSTAT_WEBAPP_LOCATION/WEB-INF/web.xml"
+  TH_WEB_AUTH="$THERMOSTAT_WEBAPP_LOCATION/WEB-INF/web.auth"
   
-  if [ ! -e $TH_WEB_INF ]; then
-    echo "File not found: $TH_WEB_INF" 1>&2
+  if [ ! -e $TH_WEB_AUTH ]; then
+    echo "File not found: $TH_WEB_AUTH" 1>&2
     exitFail
   fi
 
-  # We use this var for cleaning up after sed has run and
-  # the script exits.
-  SED_FILES_DIR="$(mktemp -d)"
-  setSedExprs "storage.username" "$USERNAME"
-  writeSedFiles "$SED_FILES_DIR" "storage.username"
-  SED_CMD_USER1="sed -i -f $SED_FILE_UNCOMMENTED $TH_WEB_INF"
-  SED_CMD_USER2="sed -i -f $SED_FILE_COMMENTED $TH_WEB_INF"
-
-  setSedExprs "storage.password" "$PASSWORD"
-  writeSedFiles "$SED_FILES_DIR" "storage.password"
-  SED_CMD_PWD1="sed -i -f $SED_FILE_UNCOMMENTED $TH_WEB_INF"
-  SED_CMD_PWD2="sed -i -f $SED_FILE_COMMENTED $TH_WEB_INF"
-
-  if [ ! -w $TH_WEB_INF ]; then
-    local sed_one_line_user="$SED_CMD_USER1 && $SED_CMD_USER2"
-    local sed_one_line_pwd="$SED_CMD_PWD1 && $SED_CMD_PWD2"
-    echo -e "\n\nWARNING: $(readlink -f $TH_WEB_INF) is NOT writable.\n"
-    echo -e "You have the following options:\n"
-    echo -e "  1. Run the following command(s) as root:"
-    echo -e "     #> $sed_one_line_user"
-    echo -e "     #> $sed_one_line_pwd"
-    echo -e "     #> rm -r $SED_FILES_DIR"
-    echo -e "  2. Modify the file manually and add the following"
-    echo -e "     credentials config snippet (in 'servlet'):"
-    echo -e "     <init-param>"
-    echo -e "       <param-name>storage.username</param-name>"
-    echo -e "       <param-value>$USERNAME</param-value>"
-    echo -e "     </init-param>"
-    echo -e "     <init-param>"
-    echo -e "       <param-name>storage.password</param-name>"
-    echo -e "       <param-value>$PASSWORD</param-value>"
-    echo -e "     </init-param>"
-    echo -e "     The file in which you need to put this snippet"
-    echo -e "     is:"
-    echo -e "     $TH_WEB_INF"
-    exitSuccessNotWritable
-  else
-    # Run the sed command(s)
-    local sedSuccess=0
-    $SED_CMD_USER1 && $SED_CMD_USER2
-    sedSuccess=$(( $sedSuccess + $? ))
-    $SED_CMD_PWD1 && $SED_CMD_PWD2
-    sedSuccess=$(( $sedSuccess + $? ))
-    if [ $sedSuccess -eq 0 ]; then
-      exitSuccess
-    else
-      echo "Automatic substitution of file $TH_WEB_INF failed!" 1>&2
-      exitFail
-    fi
+  if [ ! -w $TH_WEB_AUTH ]; then
+    echo -e "\n\n$(readlink -f $TH_WEB_AUTH) is NOT writable."
+    mkdir -p "$USER_THERMOSTAT_HOME/etc/"
+    TH_WEB_AUTH="$USER_THERMOSTAT_HOME/etc/web.auth"
+    echo -e "Writing to $TH_WEB_AUTH\n"
   fi
-}
-
-writeSedFiles() {
-  local tmpDir="$1"
-  local paramName="$2"
-  SED_FILE_UNCOMMENTED="$tmpDir/uncommented-${paramName}.sed"
-  SED_FILE_COMMENTED="$tmpDir/commented-${paramName}.sed"
-  echo "$SED_EXPR_COMMENTED" > $SED_FILE_COMMENTED
-  echo "$SED_EXPR_UNCOMMENTED" > $SED_FILE_UNCOMMENTED
-}
-
-setSedExprs() {
-  local paramName=$1
-  local paramVal=$2
-  setSedExprUnCommented "$paramName" "$paramVal"
-  setSedExprCommented "$paramName" "$paramVal"
-}
-
-setSedExprCommented() {
-  local paramName=$1
-  local paramVal=$2
-  SED_EXPR_COMMENTED="
-  # Finds pattern A and replaces it with B.
-  #
-  # Pattern A is something like the following:
-  #   <!--
-  #   <init-param>
-  #     <param-name>storage.username</param-name>
-  #     <param-value>something</param-value>
-  #   </init-param>
-  #   -->
-  #
-  # Replacement (B) would then be:
-  #
-  # <init-param>
-  #   <param-name>storage.username</param-name>
-  #   <param-value>foo-bar</param-value>
-  # </init-param>
-  #
-  # In essence it removes the comments and sets
-  # the param value we want.
-  #
-  /<[!]--/ {
-    N
-    /<init-param>/ {
-      N
-      /<param-name>$paramName<[/]param-name>/ {
-        N
-        /<param-value>.*<[/]param-value>/ {
-          N
-          /<[/]init-param>/ {
-            N
-            /-->/ {
-              N
-              # Do the substitution with all matching lines in
-              # current buffer
-              s%.*<[!]--\n.*<init-param>\n.*<param-name>$paramName<[/]param-name>\n.*<param-value>.*<[/]param-value>.*<[/]init-param>.*-->%<init-param>\n<param-name>$paramName</param-name>\n<param-value>$paramVal</param-value>\n</init-param>%
-            }
-          }
-        }
-      }
-    }
-  }"
-}
-
-setSedExprUnCommented() {
-  paramName=$1
-  paramVal=$2
-  SED_EXPR_UNCOMMENTED="
-  # Finds pattern C and replaces it with D.
-  #
-  # Pattern C is something like the following:
-  #   <init-param>
-  #     <param-name>storage.username</param-name>
-  #     <param-value>something</param-value>
-  #   </init-param>
-  #
-  # Replacement (D) would then be:
-  #
-  # <init-param>
-  #   <param-name>storage.username</param-name>
-  #   <param-value>foo-bar</param-value>
-  # </init-param>
-  #
-  # I.e. it changes the username to what we'd
-  # like it to be. If that section is already
-  # in place (not commented out)
-  #
-  /<init-param>/ {
-    N
-    /<param-name>$paramName<[/]param-name>/ {
-      N
-      /<param-value>.*<[/]param-value>/ {
-        N
-        /<[/]init-param>/ {
-          N
-          # Do the substitution with all matching lines in
-          # current buffer
-          s%.*<init-param>\n.*<param-name>$paramName<[/]param-name>\n.*<param-value>.*<[/]param-value>.*<[/]init-param>%<init-param>\n<param-name>$paramName</param-name>\n<param-value>$paramVal</param-value>\n</init-param>%
-        }
-      }
-    }
-  }"
+  local success=0
+  echo "storage.username = $USERNAME" > "$TH_WEB_AUTH"
+  success=$(( $sedSuccess + $? ))
+  echo "storage.password = $PASSWORD" >> "$TH_WEB_AUTH"
+  success=$(( $sedSuccess + $? ))
+  chmod 640 "$TH_WEB_AUTH"
+  success=$(( $sedSuccess + $? ))
+  if [ $success -eq 0 ]; then
+    exitSuccess
+  else
+    echo "Automatic substitution of file $TH_WEB_AUTH failed!" 1>&2
+    exitFail
+  fi
 }
 
 readUsername() {

@@ -1,0 +1,11 @@
+# Credentials to use for connecting to the backing storage
+# (currently mongodb). Uncomment the following two blocks in
+# order to use this username/password for the connection.
+
+# Username to use for connecting to the backing storage
+# implementation
+${web.war.backingstorage.username.snippet}
+
+# Password to use for connecting to the backing storage
+# implementation
+${web.war.backingstorage.password.snippet}

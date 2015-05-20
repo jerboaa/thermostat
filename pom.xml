@@ -125,17 +125,11 @@
         <mongodb.dev.password> mongodevpassword </mongodb.dev.password>
         <!-- used in web.xml of the war artifact -->
         <web.war.backingstorage.username.snippet>
-            &lt;init-param&gt;
-              &lt;param-name>storage.username&lt;/param-name&gt;
-              &lt;param-value>${mongodb.dev.username}&lt;/param-value&gt;
-            &lt;/init-param&gt;
+storage.username=${mongodb.dev.username}
         </web.war.backingstorage.username.snippet>
         <!-- used in web.xml of the war artifact -->
         <web.war.backingstorage.password.snippet>
-            &lt;init-param&gt;
-              &lt;param-name>storage.password&lt;/param-name&gt;
-              &lt;param-value>${mongodb.dev.password}&lt;/param-value&gt;
-            &lt;/init-param&gt;
+storage.password=${mongodb.dev.password}
         </web.war.backingstorage.password.snippet>
         <!--
              Used in thermostat-users.properties. We define two users.
@@ -302,21 +296,11 @@ password=${agent.dev.password}
 
     <!-- used in web.xml of the war artifact -->
     <web.war.backingstorage.username.snippet>
-        &lt;!--
-        &lt;init-param&gt;
-          &lt;param-name>storage.username&lt;/param-name&gt;
-          &lt;param-value>thermostat-mongodb-user&lt;/param-value&gt;
-        &lt;/init-param&gt;
-        --&gt;
+#storage.username=thermostat-mongodb-user
     </web.war.backingstorage.username.snippet>
     <!-- used in web.xml of the war artifact -->
     <web.war.backingstorage.password.snippet>
-        &lt;!--
-        &lt;init-param&gt;
-          &lt;param-name>storage.password&lt;/param-name&gt;
-          &lt;param-value>supersecrit&lt;/param-value&gt;
-        &lt;/init-param&gt;
-        --&gt;
+#storage.password=supersecrit
     </web.war.backingstorage.password.snippet>
     <!--
          Used in thermostat-users.properties and

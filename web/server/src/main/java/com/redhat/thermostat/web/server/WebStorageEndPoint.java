@@ -37,6 +37,7 @@
 package com.redhat.thermostat.web.server;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -148,8 +149,6 @@ public class WebStorageEndPoint extends HttpServlet {
     private CommonPaths paths;
 
     public static final String STORAGE_ENDPOINT = "storage.endpoint";
-    public static final String STORAGE_USERNAME = "storage.username";
-    public static final String STORAGE_PASSWORD = "storage.password";
     public static final String STORAGE_CLASS = "storage.class";
     
     // read-only set of all known statement descriptors we trust and allow
@@ -244,24 +243,26 @@ public class WebStorageEndPoint extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
         if (storage == null) {
+            StorageCredentials creds = null;
+            final String CREDENTIALS_FILE = "web.auth";
+            // this assumes this is always an exploded war
+            File systemFile = new File(getServletContext().getRealPath("/WEB-INF/" + CREDENTIALS_FILE));
+            if (systemFile.exists() && systemFile.canRead()) {
+                logger.log(Level.CONFIG, "Loading authentication data from WEB-INF/" + CREDENTIALS_FILE);
+                try (InputStream in = new FileInputStream(systemFile)) {
+                    creds = new FileBasedStorageCredentials(in);
+                }
+            } else {
+                File userCredentials = new File(paths.getUserConfigurationDirectory(), CREDENTIALS_FILE);
+                logger.log(Level.CONFIG, "Loading authentication data from " + userCredentials);
+                if (userCredentials.isFile() && userCredentials.canRead()) {
+                    creds = new FileBasedStorageCredentials(userCredentials);
+                } else {
+                    logger.warning("Unable to read database credentials from " + userCredentials);
+                }
+            }
             String storageClass = getServletConfig().getInitParameter(STORAGE_CLASS);
             String storageEndpoint = getServletConfig().getInitParameter(STORAGE_ENDPOINT);
-            final String username = getServletConfig().getInitParameter(STORAGE_USERNAME);
-            // FIXME Password as string?  bad.
-            final String password = getServletConfig().getInitParameter(STORAGE_PASSWORD);
-            StorageCredentials creds = new StorageCredentials() {
-
-                @Override
-                public String getUsername() {
-                    return username;
-                }
-
-                @Override
-                public char[] getPassword() {
-                    return password == null ? null : password.toCharArray();
-                }
-                
-            };
             storage = StorageFactory.getStorage(storageClass, storageEndpoint, paths, creds);
         }
         String uri = req.getRequestURI();
