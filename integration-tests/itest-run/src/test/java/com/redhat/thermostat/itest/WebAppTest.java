@@ -47,6 +47,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -57,10 +58,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.jetty.server.Server;
@@ -110,9 +113,9 @@ import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
 import com.redhat.thermostat.web.client.internal.WebStorage;
 import com.redhat.thermostat.web.server.auth.Roles;
 
+import expectj.ExpectJ;
 import expectj.Spawn;
 import expectj.TimeoutException;
-import java.util.NoSuchElementException;
 
 /**
  * This test class starts up a mongod instance and a web storage instance
@@ -240,6 +243,7 @@ public class WebAppTest extends IntegrationTest {
     private static final double EQUALS_DELTA = 0.00000000000001;
     private static final String THERMOSTAT_USERS_FILE = getConfigurationDir() + "/thermostat-users.properties";
     private static final String THERMOSTAT_ROLES_FILE = getConfigurationDir() + "/thermostat-roles.properties";
+    private static final String THERMOSTAT_WEB_AUTH_FILE = getThermostatHome() + "/webapp/WEB-INF/web.auth";
     private static final String VM_ID1 = "vmId1";
     private static final String VM_ID2 = "vmId2";
     private static final String VM_ID3 = "vmId3";
@@ -248,25 +252,41 @@ public class WebAppTest extends IntegrationTest {
     private static int port;
     private static Path backupUsers;
     private static Path backupRoles;
+    private static Path backupWebAuth;
 
     @BeforeClass
     public static void setUpOnce() throws Exception {
-        
-        // This starts storage with the permit localhost exception option.
-        // It's important to start storage with that exception. Otherwise the
-        // mongodb user creds setup will fail.
-        createFakeSetupCompleteFile();
-        startStorage();
-        
-        setupMongodbUser();
+        clearStorageDataDirectory();
 
         backupUsers = Files.createTempFile("itest-backup-thermostat-users", "");
         backupRoles = Files.createTempFile("itest-backup-thermostat-roles", "");
+        backupWebAuth = Files.createTempFile("itest-backup-webapp-auth", "");
         backupRoles.toFile().deleteOnExit();
         backupUsers.toFile().deleteOnExit();
+        backupWebAuth.toFile().deleteOnExit();
         Files.copy(new File(THERMOSTAT_USERS_FILE).toPath(), backupUsers, StandardCopyOption.REPLACE_EXISTING);
         Files.copy(new File(THERMOSTAT_ROLES_FILE).toPath(), backupRoles, StandardCopyOption.REPLACE_EXISTING);
+        Files.copy(new File(THERMOSTAT_WEB_AUTH_FILE).toPath(), backupWebAuth, StandardCopyOption.REPLACE_EXISTING);
 
+        createFakeSetupCompleteFile();
+        createFakeUserSetupDoneFile();
+
+        setupMongodbUser();
+
+        startStorage();
+
+        ExpectJ mongo = new ExpectJ(TIMEOUT_IN_SECONDS);
+        Spawn mongoSpawn = mongo.spawn("mongo 127.0.0.1:27518");
+        mongoSpawn.send("use thermostat\n");
+        mongoSpawn.expect("switched to db thermostat");
+        mongoSpawn.send(String.format("db.auth(\"%s\", \"%s\")\n", getMongodbUsername(), getMongodbPassword()));
+        mongoSpawn.expect("1");
+        mongoSpawn.send("db[\"fake\"].insert({foo:\"bar\", baz: 1})\n");
+        mongoSpawn.send("db[\"fake\"].findOne()\n");
+        mongoSpawn.send("show collections\n");
+        mongoSpawn.send("show users\n");
+
+        createWebAuthFile();
 
         // start the server, deploy the war
         port = FreePortFinder.findFreePort(new TryPort() {
@@ -282,56 +302,115 @@ public class WebAppTest extends IntegrationTest {
 
     @AfterClass
     public static void tearDownOnce() throws Exception {
-        deleteCpuData();
-    
-        server.stop();
-        server.join();
+        try {
+            deleteCpuData();
         
-        stopStorage();
-        removeSetupCompleteStampFiles();
-    
-        Files.copy(backupUsers, new File(THERMOSTAT_USERS_FILE).toPath(), StandardCopyOption.REPLACE_EXISTING);
-        Files.copy(backupRoles, new File(THERMOSTAT_ROLES_FILE).toPath(), StandardCopyOption.REPLACE_EXISTING);
+            server.stop();
+            server.join();
+
+            stopStorage();
+            removeSetupCompleteStampFiles();
+        } catch (Exception e) {
+            System.out.println("AN ERROR OCCURRED!");
+            e.printStackTrace();
+            throw e;
+        } finally {
+            Files.copy(backupUsers, new File(THERMOSTAT_USERS_FILE).toPath(), StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(backupRoles, new File(THERMOSTAT_ROLES_FILE).toPath(), StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(backupWebAuth, new File(THERMOSTAT_WEB_AUTH_FILE).toPath(), StandardCopyOption.REPLACE_EXISTING);
+            System.out.println("RESTORED web.auth!");
+        }
     }
 
     // PRE: storage started with --permitLocalhostException
     private static void setupMongodbUser() throws Exception {
-        // The actual setup is only required for devel builds.
-        // Release builds won't have a web.xml with actual username/passwords
-        // in it, so starting backing storage (i.e. mongodb) with the 
-        // --permitLocalhostException option is sufficient.
+        // The actual setup is only required for devel builds. Release builds
+        // won't have users or roles configured, so starting backing storage
+        // (i.e. mongodb) with the --permitLocalhostException option is
+        // sufficient.
+
         if (isDevelopmentBuild()) {
-            
-            // Remove the mongodb-user-added.stamp file,
-            // but keep the main setup file around so as to be able to
-            // actually launch thermostat.
-            removeSetupCompleteStampFiles();
-            createFakeSetupCompleteFile();
-            
             String mongodbUsername = getMongodbUsername();
             String mongodbPassword = getMongodbPassword();
-            String creds = String.format("%s\n%s\n", mongodbUsername,
-                                                     mongodbPassword);
-            String[] addUserArgs = new String[] {
-                    "add-mongodb-user",
-                    "-d", "mongodb://127.0.0.1:27518"
-            };
-            
-            // This should be an equivalent of:
-            // $ echo -e "mongodbUsername\nmongodbPassword\n" | \
-            //   thermostat add-mongodb-user -d mongodb://127.0.0.1:27518
-            Spawn addUser = spawnThermostat(addUserArgs);
-            addUser.send(creds);
+
+            final String HOST = "127.0.0.1";
+            final String PORT = "27518";
+
             try {
-                addUser.expect("mongodb user setup complete");
+                System.out.println("THERMOSTAT_HOME: " + getThermostatHome());
+                System.out.println("USER_THERMOSTAT_HOME: " + getUserThermostatHome());
+
+                // create directories that we use later down to store stuff in
+                // things fail silently if the directories do not exist
+                new File(getUserThermostatHome() + "/data/db").mkdirs();
+                new File(getUserThermostatHome() + "/logs/").mkdirs();
+                new File(getUserThermostatHome() + "/run/").mkdirs();
+                new File(getUserThermostatHome() + "/etc/").mkdirs();
+                new File(getUserThermostatHome() + "/cache/").mkdirs();
+
+                ExpectJ mongod = new ExpectJ(TIMEOUT_IN_SECONDS);
+                final String MONGOD_COMMAND = "mongod "
+                        + "--quiet "
+                        + "--fork "
+                        + "--noauth "
+                        + "--nohttpinterface "
+                        + "--bind_ip " + HOST + " "
+                        + "--port " + PORT + " "
+                        + "--dbpath " + getUserThermostatHome() + "/data/db "
+                        + "--logpath " + getUserThermostatHome() + "/logs/db.log "
+                        + "--pidfilepath " + getUserThermostatHome() + "/run/db.pid";
+                System.out.println(MONGOD_COMMAND);
+                Spawn mongodSpawn = mongod.spawn(MONGOD_COMMAND);
+                mongodSpawn.expectClose(TIMEOUT_IN_SECONDS);
+
+                System.out.println("Started mongod");
+                TimeUnit.SECONDS.sleep(5);
+
+                ExpectJ mongo = new ExpectJ(TIMEOUT_IN_SECONDS);
+                Spawn mongoSpawn = mongo.spawn("mongo " + HOST + ":" + PORT);
+                mongoSpawn.send("use thermostat\n");
+                mongoSpawn.send(String.format("db.addUser({ user: \"%s\", pwd: \"%s\", roles: [ \"readWrite\" ] })\n",
+                        mongodbUsername, mongodbPassword));
+                mongoSpawn.send("quit()\n");
+                mongoSpawn.expectClose();
+
+                mongo = new ExpectJ(TIMEOUT_IN_SECONDS);
+                mongoSpawn = mongo.spawn("mongo " + HOST + ":" + PORT);
+                mongoSpawn.send("use thermostat\n");
+                mongoSpawn.expect("switched to db thermostat");
+                mongoSpawn.send(String.format("db.auth(\"%s\", \"%s\")\n", mongodbUsername, mongodbPassword));
+                mongoSpawn.expect("1");
+
+                // now insert some fake data and display some information that
+                // might be useful for post-mortem analysis if this test fails
+                mongoSpawn.send("db[\"fake\"].insert({foo:\"bar\", baz: 1})\n");
+                mongoSpawn.send("db[\"fake\"].findOne()\n");
+                mongoSpawn.send("show collections\n");
+                mongoSpawn.send("show users\n");
+
+                mongoSpawn.send("use admin\n");
+                mongoSpawn.expect("switched to db admin");
+                mongoSpawn.send("db.shutdownServer()\n");
+                mongoSpawn.send("quit()\n");
+                mongoSpawn.expectClose();
+
             } catch (TimeoutException | IOException e) {
-                // failed to set up mongodb user, stop storage and bail.
-                stopStorage();
                 throw e;
             }
-            addUser.expectClose();
         } else {
             System.out.println("Not a development build. Skipping mongodb setup.");
+        }
+    }
+
+    private static void createWebAuthFile() throws IOException {
+        if (isDevelopmentBuild()) {
+            System.out.println("WRITING auth file: " + getMongodbUsername() + "/" + getMongodbPassword());
+            List<String> lines = new ArrayList<String>();
+            lines.add("storage.username = " + getMongodbUsername());
+            lines.add("storage.password = " + getMongodbPassword());
+            Files.write(new File(THERMOSTAT_WEB_AUTH_FILE).toPath(), lines, StandardCharsets.UTF_8);
+        } else {
+            throw new AssertionError("testing a build !");
         }
     }
 
@@ -366,12 +445,12 @@ public class WebAppTest extends IntegrationTest {
 
             @Override
             public String getUsername() {
-                return null;
+                return getMongodbUsername();
             }
 
             @Override
             public char[] getPassword() {
-                return null;
+                return getMongodbPassword().toCharArray();
             }
             
         };

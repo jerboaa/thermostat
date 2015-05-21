@@ -146,6 +146,21 @@ public class IntegrationTest {
         }
     }
     
+    protected static void createFakeUserSetupDoneFile() {
+        String userHome = getUserThermostatHome();
+        File fUserHome = new File(userHome);
+        fUserHome.mkdir();
+        File dataDir = new File(fUserHome, "data");
+        dataDir.mkdir();
+
+        File mongodbUserDoneFile = new File(dataDir, "mongodb-user-done.stamp");
+        try {
+            // creates the file only if not yet existing
+            mongodbUserDoneFile.createNewFile();
+        } catch (IOException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
 
     /**
      * Utility method for removing stamp files which may get created by certain
@@ -245,8 +260,6 @@ public class IntegrationTest {
     }
     
     public static Spawn startStorage() throws Exception {
-        clearStorageDataDirectory();
-
         Spawn storage = spawnThermostat("storage", "--start", "--permitLocalhostException");
         try {
             storage.expect("pid:");

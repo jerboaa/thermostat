@@ -51,6 +51,7 @@ public class StorageConnectionTest extends IntegrationTest {
 
     // @BeforeClass // reinstate once we actually need storage running (see ignored tests)
     public static void setUpOnce() throws Exception {
+        clearStorageDataDirectory();
         startStorage();
     }
 

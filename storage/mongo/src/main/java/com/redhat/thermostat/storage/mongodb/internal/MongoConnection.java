@@ -115,7 +115,7 @@ class MongoConnection extends Connection {
 
     private void authenticate(String username, char[] password) {
         if (! db.authenticate(username, password)) {
-            throw new MongoException("Invalid username/password");
+            throw new MongoException("Invalid username/password: " + username + "/" + new String(password));
         }
     }
 

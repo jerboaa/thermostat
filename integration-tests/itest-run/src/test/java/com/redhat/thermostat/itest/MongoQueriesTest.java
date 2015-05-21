@@ -68,9 +68,9 @@ import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.core.Query.SortDirection;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.StorageCredentials;
 import com.redhat.thermostat.storage.mongodb.internal.MongoStorage;
 import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.storage.query.ExpressionFactory;
@@ -123,6 +123,7 @@ public class MongoQueriesTest extends IntegrationTest {
     @BeforeClass
     public static void setUpOnce() throws Exception {
         createFakeSetupCompleteFile();
+        clearStorageDataDirectory();
         startStorage();
 
         addCpuData(4);

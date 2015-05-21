@@ -59,8 +59,9 @@ public class StorageTest extends IntegrationTest {
 
     @Test
     public void startAndStopStorage() throws Exception {
-        Spawn storage;
+        clearStorageDataDirectory();
 
+        Spawn storage;
         storage = startStorage();
 
         storage = spawnThermostat("storage", "--status");

@@ -703,18 +703,6 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
                     categoryInfo, true, false);
         
     }
-    
-    /*
-     * Used by add-user command.
-     * 
-     * Pre: must be connected to storage already
-     */
-    void addUser(String username, char[] password) {
-        // only create user if not already existing
-        if (!db.authenticate(username, password)) {
-            db.addUser(username, password);
-        }
-    }
 
 }
 

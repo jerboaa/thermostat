@@ -283,15 +283,40 @@ setupMongodbUser() {
   echo -e "connections.\n"
   readUsername "$defaultName"
   readPassword
-  setupCmdName="add-mongodb-user -s"
-  output="$(echo -e $USERNAME\\n$PASSWORD\\n | $THERMOSTAT $setupCmdName 2>&1)"
-  # The above should have created the mongodb stamp file
-  monogdbSetupStampFile="$USER_THERMOSTAT_HOME/data/mongodb-user-done.stamp"
-  if [ ! -e "$monogdbSetupStampFile" ] ||
-    ! echo $output | grep -s "setup complete" > /dev/null; then
+  mkdir -p "$USER_THERMOSTAT_HOME"/data/db/
+  mkdir -p "$USER_THERMOSTAT_HOME"/logs/
+  mkdir -p "$USER_THERMOSTAT_HOME"/run/
+  mkdir -p "$USER_THERMOSTAT_HOME"/etc/
+  mkdir -p "$USER_THERMOSTAT_HOME"/cache/
+  mongod --nojournal \
+         --quiet \
+         --fork \
+         --noauth \
+         --nohttpinterface \
+         --bind_ip 127.0.0.1 \
+         --port 27518 \
+         --dbpath "$USER_THERMOSTAT_HOME"/data/db \
+         --logpath "$USER_THERMOSTAT_HOME"/logs/db.log \
+         --pidfilepath "$USER_THERMOSTAT_HOME"/run/db.pid
+  MONGOD_RETVAL="$?"
+  if [ "$MONGOD_RETVAL" -ne 0 ] ; then
     echo -e "\nMongodb user setup failed." 1>&2
     exitFail
   fi
+  sleep 5
+  mongo 127.0.0.1:27518 << EOF
+use thermostat
+db.addUser({ user: "$USERNAME", pwd: "$PASSWORD", roles: [ "readWrite" ] })
+use admin
+db.shutdownServer()
+quit()
+EOF
+  MONGO_SETUP_RETVAL="$?"
+  if [ "$MONGO_SETUP_RETVAL" -ne 0 ] ; then
+    echo -e "\nMongodb user setup failed." 1>&2
+    exitFail
+  fi
+  touch "$USER_THERMOSTAT_HOME"/data/mongodb-user-done.stamp
 }
 
 doProceedLoop() {

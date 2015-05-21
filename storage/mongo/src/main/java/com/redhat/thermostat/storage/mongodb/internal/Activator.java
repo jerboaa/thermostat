@@ -40,8 +40,6 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.common.cli.CommandRegistry;
-import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 import com.redhat.thermostat.storage.core.StorageProvider;
 import com.redhat.thermostat.storage.mongodb.MongoStorageProvider;
 
@@ -49,20 +47,16 @@ public class Activator implements BundleActivator {
 
     @SuppressWarnings("rawtypes")
     private ServiceRegistration reg;
-    private CommandRegistry cmdReg;
     
     @Override
     public void start(BundleContext context) throws Exception {
         StorageProvider prov = new MongoStorageProvider();
         reg = context.registerService(StorageProvider.class.getName(), prov, null);
-        cmdReg = new CommandRegistryImpl(context);
-        cmdReg.registerCommand(AddUserCommandDispatcher.COMMAND_NAME, new AddUserCommandDispatcher(context));
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
         reg.unregister();
-        cmdReg.unregisterCommands();
     }
 
 }

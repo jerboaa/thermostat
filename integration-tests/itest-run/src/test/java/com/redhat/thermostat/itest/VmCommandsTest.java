@@ -54,6 +54,7 @@ public class VmCommandsTest extends IntegrationTest {
     @BeforeClass
     public static void setUpOnce() throws Exception {
         createFakeSetupCompleteFile();
+        clearStorageDataDirectory();
         startStorage();
 
         // TODO insert actual data into the database and test that
