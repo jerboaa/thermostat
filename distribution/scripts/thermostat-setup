@@ -184,20 +184,7 @@ unlockThermostat() {
 runSetup() {
   unlockThermostat
   setupMongodbUser
-  # Location of the exploded web archive. We need this
-  # in order to be able to inject mongodb user credentials
-  # in there. Allow THERMOSTAT_WEBAPP_LOCATION to be set
-  # as env variable. This allows for running setup on
-  # packaged thermostat.
-  if [ "x$THERMOSTAT_WEBAPP_LOCATION" = "x" ]; then
-    # Expecting an upstream build where THERMOSTAT_HOME is
-    # distribution/target/image. The web archive gets copied
-    # as an exploded archive to the webapp subdir of the
-    # image.
-    default_webapp="$THERMOSTAT_HOME/webapp"
-    THERMOSTAT_WEBAPP_LOCATION="$(readlink -f $default_webapp)"
-  fi
-  TH_WEB_AUTH="$THERMOSTAT_WEBAPP_LOCATION/WEB-INF/web.auth"
+  TH_WEB_AUTH="$THERMOSTAT_HOME/etc/web.auth"
   
   if [ ! -e $TH_WEB_AUTH ]; then
     echo "File not found: $TH_WEB_AUTH" 1>&2

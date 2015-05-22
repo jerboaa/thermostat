@@ -266,6 +266,13 @@ public class WebStorageEndpointTest {
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
+                File webAuthFile = new File(configDirectory, "web.auth");
+                // only creates file if it doesn't exist yet
+                try {
+                    webAuthFile.createNewFile();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
 
             @Override

@@ -141,6 +141,7 @@ public class WebStorageEndPoint extends HttpServlet {
     // our strings can contain non-ASCII characters. Use UTF-8
     // see also PR 1344
     private static final String RESPONSE_JSON_CONTENT_TYPE = "application/json; charset=UTF-8";
+    private static final String CREDENTIALS_FILE = "web.auth";
 
     private static final Logger logger = LoggingUtils.getLogger(WebStorageEndPoint.class);
 
@@ -243,23 +244,11 @@ public class WebStorageEndPoint extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
         if (storage == null) {
-            StorageCredentials creds = null;
-            final String CREDENTIALS_FILE = "web.auth";
-            // this assumes this is always an exploded war
-            File systemFile = new File(getServletContext().getRealPath("/WEB-INF/" + CREDENTIALS_FILE));
-            if (systemFile.exists() && systemFile.canRead()) {
-                logger.log(Level.CONFIG, "Loading authentication data from WEB-INF/" + CREDENTIALS_FILE);
-                try (InputStream in = new FileInputStream(systemFile)) {
-                    creds = new FileBasedStorageCredentials(in);
-                }
-            } else {
-                File userCredentials = new File(paths.getUserConfigurationDirectory(), CREDENTIALS_FILE);
-                logger.log(Level.CONFIG, "Loading authentication data from " + userCredentials);
-                if (userCredentials.isFile() && userCredentials.canRead()) {
-                    creds = new FileBasedStorageCredentials(userCredentials);
-                } else {
-                    logger.warning("Unable to read database credentials from " + userCredentials);
-                }
+            StorageCredentials creds = getStorageCredentials(paths);
+            // if creds are null there is no point to continue, fail prominently.
+            if (creds == null) {
+                String errorMsg = "No backing storage credentials file (" + CREDENTIALS_FILE + ") available";
+                throw new InvalidConfigurationException(errorMsg);
             }
             String storageClass = getServletConfig().getInitParameter(STORAGE_CLASS);
             String storageEndpoint = getServletConfig().getInitParameter(STORAGE_ENDPOINT);
@@ -291,6 +280,34 @@ public class WebStorageEndPoint extends HttpServlet {
         } else if (cmd.equals("get-more")) {
             getMore(req, resp);
         }
+    }
+    
+    // package private for testing
+    StorageCredentials getStorageCredentials(CommonPaths commonPaths) throws IOException {
+        File systemFile = getStorageCredentialsFile(commonPaths.getSystemConfigurationDirectory());
+        if (systemFile.exists() && systemFile.canRead()) {
+            logger.log(Level.CONFIG, "Loading authentication data from " + systemFile);
+            return createStorageCredentials(systemFile);
+        } else {
+            File userCredentials = getStorageCredentialsFile(commonPaths.getUserConfigurationDirectory());
+            logger.log(Level.CONFIG, "Loading authentication data from " + userCredentials);
+            if (userCredentials.isFile() && userCredentials.canRead()) {
+                return createStorageCredentials(userCredentials);
+            } else {
+                logger.warning("Unable to read database credentials from " + userCredentials);
+                return null;
+            }
+        }
+    }
+    
+    // package private for testing
+    File getStorageCredentialsFile(File parent) {
+        return new File(parent, CREDENTIALS_FILE);
+    }
+    
+    // package private for testing
+    StorageCredentials createStorageCredentials(File underlyingFile) {
+        return new FileBasedStorageCredentials(underlyingFile);
     }
 
     // Side effect: sets this.paths

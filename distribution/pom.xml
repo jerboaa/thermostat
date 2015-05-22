@@ -157,6 +157,7 @@
                     <include>agent.properties</include>
                     <include>web-storage-service.properties</include>
                     <include>agent.auth</include>
+                    <include>web.auth</include>
                     <include>ssl.properties</include>
                     <include>thermostat-users.properties</include>
                     <include>thermostat-roles.properties</include>

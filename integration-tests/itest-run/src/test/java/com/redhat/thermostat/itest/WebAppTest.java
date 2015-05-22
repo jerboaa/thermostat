@@ -243,7 +243,7 @@ public class WebAppTest extends IntegrationTest {
     private static final double EQUALS_DELTA = 0.00000000000001;
     private static final String THERMOSTAT_USERS_FILE = getConfigurationDir() + "/thermostat-users.properties";
     private static final String THERMOSTAT_ROLES_FILE = getConfigurationDir() + "/thermostat-roles.properties";
-    private static final String THERMOSTAT_WEB_AUTH_FILE = getThermostatHome() + "/webapp/WEB-INF/web.auth";
+    private static final String THERMOSTAT_WEB_AUTH_FILE = getConfigurationDir() + "/web.auth";
     private static final String VM_ID1 = "vmId1";
     private static final String VM_ID2 = "vmId2";
     private static final String VM_ID3 = "vmId3";

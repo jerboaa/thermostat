@@ -66,10 +66,6 @@ public class FileBasedStorageCredentials implements StorageCredentials {
 
     }
 
-    public FileBasedStorageCredentials(InputStream in) throws IOException {
-        initialize(in);
-    }
-
     private void initialize(InputStream in) throws IOException {
         props = new Properties();
         props.load(in);
