@@ -270,34 +270,24 @@ setupMongodbUser() {
   echo -e "connections.\n"
   readUsername "$defaultName"
   readPassword
-  mkdir -p "$USER_THERMOSTAT_HOME"/data/db/
-  mkdir -p "$USER_THERMOSTAT_HOME"/logs/
-  mkdir -p "$USER_THERMOSTAT_HOME"/run/
-  mkdir -p "$USER_THERMOSTAT_HOME"/etc/
-  mkdir -p "$USER_THERMOSTAT_HOME"/cache/
-  mongod --nojournal \
-         --quiet \
-         --fork \
-         --noauth \
-         --nohttpinterface \
-         --bind_ip 127.0.0.1 \
-         --port 27518 \
-         --dbpath "$USER_THERMOSTAT_HOME"/data/db \
-         --logpath "$USER_THERMOSTAT_HOME"/logs/db.log \
-         --pidfilepath "$USER_THERMOSTAT_HOME"/run/db.pid
+  $THERMOSTAT_HOME/bin/thermostat storage --start --permitLocalhostException
   MONGOD_RETVAL="$?"
   if [ "$MONGOD_RETVAL" -ne 0 ] ; then
-    echo -e "\nMongodb user setup failed." 1>&2
+    echo -e "\nMongodb user setup failed. Error starting storage." 1>&2
     exitFail
   fi
-  sleep 5
+  sleep 3
   mongo 127.0.0.1:27518 << EOF
 use thermostat
 db.addUser({ user: "$USERNAME", pwd: "$PASSWORD", roles: [ "readWrite" ] })
-use admin
-db.shutdownServer()
 quit()
 EOF
+  MONGO_SETUP_RETVAL="$?"
+  if [ "$MONGO_SETUP_RETVAL" -ne 0 ] ; then
+    echo -e "\nMongodb user setup failed." 1>&2
+    exitFail
+  fi
+  $THERMOSTAT_HOME/bin/thermostat storage --stop
   MONGO_SETUP_RETVAL="$?"
   if [ "$MONGO_SETUP_RETVAL" -ne 0 ] ; then
     echo -e "\nMongodb user setup failed." 1>&2

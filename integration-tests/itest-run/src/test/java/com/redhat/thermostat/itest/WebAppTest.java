@@ -305,21 +305,33 @@ public class WebAppTest extends IntegrationTest {
     public static void tearDownOnce() throws Exception {
         try {
             deleteCpuData();
-        
-            server.stop();
-            server.join();
-
-            stopStorage();
-            removeSetupCompleteStampFiles();
         } catch (Exception e) {
-            System.out.println("AN ERROR OCCURRED!");
+            System.out.println("AN ERROR OCCURRED DELETING CPU DATA!");
             e.printStackTrace();
             throw e;
         } finally {
-            Files.copy(backupUsers, new File(THERMOSTAT_USERS_FILE).toPath(), StandardCopyOption.REPLACE_EXISTING);
-            Files.copy(backupRoles, new File(THERMOSTAT_ROLES_FILE).toPath(), StandardCopyOption.REPLACE_EXISTING);
-            Files.copy(backupWebAuth, new File(THERMOSTAT_WEB_AUTH_FILE).toPath(), StandardCopyOption.REPLACE_EXISTING);
-            System.out.println("RESTORED web.auth!");
+            try {
+                server.stop();
+                server.join();
+            } catch (Exception e) {
+                System.out.println("AN ERROR OCCURRED STOPPING JETTY!");
+                e.printStackTrace();
+                throw e;
+            } finally {
+                try {
+                    stopStorage();
+                } catch (Exception e) {
+                    System.out.println("AN ERROR OCCURRED STOPPING STORAGE!");
+                    e.printStackTrace();
+                    throw e;
+                } finally {
+                    removeSetupCompleteStampFiles();
+                    Files.copy(backupUsers, new File(THERMOSTAT_USERS_FILE).toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    Files.copy(backupRoles, new File(THERMOSTAT_ROLES_FILE).toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    Files.copy(backupWebAuth, new File(THERMOSTAT_WEB_AUTH_FILE).toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    System.out.println("RESTORED backed-up files!");
+                }
+            }
         }
     }
     
@@ -356,31 +368,11 @@ public class WebAppTest extends IntegrationTest {
                 System.out.println("THERMOSTAT_HOME: " + getThermostatHome());
                 System.out.println("USER_THERMOSTAT_HOME: " + getUserThermostatHome());
 
-                // create directories that we use later down to store stuff in
-                // things fail silently if the directories do not exist
-                new File(getUserThermostatHome() + "/data/db").mkdirs();
-                new File(getUserThermostatHome() + "/logs/").mkdirs();
-                new File(getUserThermostatHome() + "/run/").mkdirs();
-                new File(getUserThermostatHome() + "/etc/").mkdirs();
-                new File(getUserThermostatHome() + "/cache/").mkdirs();
-
-                ExpectJ mongod = new ExpectJ(TIMEOUT_IN_SECONDS);
-                final String MONGOD_COMMAND = "mongod "
-                        + "--quiet "
-                        + "--fork "
-                        + "--noauth "
-                        + "--nohttpinterface "
-                        + "--bind_ip " + HOST + " "
-                        + "--port " + PORT + " "
-                        + "--dbpath " + getUserThermostatHome() + "/data/db "
-                        + "--logpath " + getUserThermostatHome() + "/logs/db.log "
-                        + "--pidfilepath " + getUserThermostatHome() + "/run/db.pid";
-                System.out.println(MONGOD_COMMAND);
-                Spawn mongodSpawn = mongod.spawn(MONGOD_COMMAND);
-                mongodSpawn.expectClose(TIMEOUT_IN_SECONDS);
+                // start mongod
+                startStorage();
 
                 System.out.println("Started mongod");
-                TimeUnit.SECONDS.sleep(5);
+                TimeUnit.SECONDS.sleep(3);
 
                 ExpectJ mongo = new ExpectJ(TIMEOUT_IN_SECONDS);
                 Spawn mongoSpawn = mongo.spawn("mongo " + HOST + ":" + PORT);
@@ -403,15 +395,11 @@ public class WebAppTest extends IntegrationTest {
                 mongoSpawn.send("db[\"fake\"].findOne()\n");
                 mongoSpawn.send("show collections\n");
                 mongoSpawn.send("show users\n");
-
-                mongoSpawn.send("use admin\n");
-                mongoSpawn.expect("switched to db admin");
-                mongoSpawn.send("db.shutdownServer()\n");
-                mongoSpawn.send("quit()\n");
-                mongoSpawn.expectClose();
-
+                
             } catch (TimeoutException | IOException e) {
                 throw e;
+            } finally {
+                stopStorage();
             }
         } else {
             System.out.println("Not a development build. Skipping mongodb setup.");
