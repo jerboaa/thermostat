@@ -41,6 +41,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -77,8 +79,8 @@ import org.junit.Test;
 import com.redhat.thermostat.common.ApplicationInfo;
 import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
 import com.redhat.thermostat.host.cpu.common.model.CpuStat;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.SSLConfiguration;
-import com.redhat.thermostat.shared.config.internal.CommonPathsImpl;
 import com.redhat.thermostat.shared.config.internal.SSLConfigurationImpl;
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.BackingStorage;
@@ -521,7 +523,10 @@ public class WebAppTest extends IntegrationTest {
             }
             
         };
-        SSLConfiguration sslConf = new SSLConfigurationImpl(new CommonPathsImpl());
+        CommonPaths paths = mock(CommonPaths.class);
+        when(paths.getSystemConfigurationDirectory()).thenReturn(new File(getConfigurationDir()));
+        when(paths.getUserConfigurationDirectory()).thenReturn(new File(getUserThermostatHome(), "etc"));
+        SSLConfiguration sslConf = new SSLConfigurationImpl(paths);
         Storage storage = new WebStorage(url, creds, sslConf);
         if (listener != null) {
             storage.getConnection().addListener(listener);
