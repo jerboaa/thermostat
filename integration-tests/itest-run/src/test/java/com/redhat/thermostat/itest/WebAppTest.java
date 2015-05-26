@@ -103,6 +103,7 @@ import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.HostInfo;
+import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.storage.mongodb.internal.MongoStorage;
 import com.redhat.thermostat.storage.query.Expression;
 import com.redhat.thermostat.storage.query.ExpressionFactory;
@@ -240,8 +241,6 @@ public class WebAppTest extends IntegrationTest {
 
     private static final String TEST_USER = "testuser";
     private static final String TEST_PASSWORD = "testpassword";
-    private static final String PREP_USER = "prepuser";
-    private static final String PREP_PASSWORD = "preppassword";
     private static final double EQUALS_DELTA = 0.00000000000001;
     private static final String THERMOSTAT_USERS_FILE = getConfigurationDir() + "/thermostat-users.properties";
     private static final String THERMOSTAT_ROLES_FILE = getConfigurationDir() + "/thermostat-roles.properties";
@@ -321,6 +320,21 @@ public class WebAppTest extends IntegrationTest {
             Files.copy(backupRoles, new File(THERMOSTAT_ROLES_FILE).toPath(), StandardCopyOption.REPLACE_EXISTING);
             Files.copy(backupWebAuth, new File(THERMOSTAT_WEB_AUTH_FILE).toPath(), StandardCopyOption.REPLACE_EXISTING);
             System.out.println("RESTORED web.auth!");
+        }
+    }
+    
+    private static long countAllData(BackingStorage storage, Category<AggregateCount> cat) {
+        try {
+            String countAllDataDesc = "QUERY-COUNT " + cat.getName();
+            StatementDescriptor<AggregateCount> desc = new StatementDescriptor<>(cat, countAllDataDesc);
+            PreparedStatement<AggregateCount> statement = storage.prepareStatement(desc);
+            Cursor<AggregateCount> cursor = statement.executeQuery();
+            assert cursor.hasNext();
+            AggregateCount aggregate = cursor.next();
+            long count = aggregate.getCount();
+            return count;
+        } catch (StatementExecutionException | DescriptorParsingException e) {
+            throw new AssertionError(e);
         }
     }
 
@@ -602,7 +616,7 @@ public class WebAppTest extends IntegrationTest {
 
     private static void addCpuData(int numberOfItems) throws IOException {
         BackingStorage storage = getAndConnectBackingStorage();
-        storage.registerCategory(CpuStatDAO.cpuStatCategory);
+        Category<AggregateCount> cat = registerCatoriesForWrite(storage, CpuStatDAO.cpuStatCategory);
 
         for (int i = 0; i < numberOfItems; i++) {
             CpuStat pojo = new CpuStat("test-agent-id", i, new double[] {i, i*2});
@@ -612,13 +626,33 @@ public class WebAppTest extends IntegrationTest {
             add.set(Key.TIMESTAMP.getName(), pojo.getTimeStamp());
             add.apply();
         }
-
+        waitForDataCount(numberOfItems, storage, cat);
         storage.getConnection().disconnect();
+    }
+    
+    private static void waitForDataCount(int expectedCount, BackingStorage storage, Category<AggregateCount> cat) {
+        long count = countAllData(storage, cat);
+        int currCount = 0;
+        final int MAX_CYCLES = 5;
+        while (count != expectedCount && currCount < MAX_CYCLES) {
+            try {
+                Thread.sleep(250);
+            } catch (InterruptedException ignored) {}
+            count = countAllData(storage, cat);
+        }
+        
+    }
+
+    private static <T extends Pojo> Category<AggregateCount> registerCatoriesForWrite(BackingStorage storage, Category<T> cat) {
+        storage.registerCategory(cat);
+        Category<AggregateCount> adaptedCategory = new CategoryAdapter<T, AggregateCount>(cat).getAdapted(AggregateCount.class);
+        storage.registerCategory(adaptedCategory);
+        return adaptedCategory;
     }
     
     private static void addHostInfoData(int numberOfItems) throws IOException {
         BackingStorage storage = getAndConnectBackingStorage();
-        storage.registerCategory(HostInfoDAO.hostInfoCategory);
+        Category<AggregateCount> cat = registerCatoriesForWrite(storage, HostInfoDAO.hostInfoCategory);
 
         for (int i = 0; i < numberOfItems; i++) {
             HostInfo hostInfo = new HostInfo("test-host-agent-id", "foo " + i, "linux " + i, "kernel", "t8", i, i * 1000);
@@ -632,13 +666,13 @@ public class WebAppTest extends IntegrationTest {
             add.set(HostInfoDAO.osNameKey.getName(), hostInfo.getOsName());
             add.apply();
         }
-
+        waitForDataCount(numberOfItems, storage, cat);
         storage.getConnection().disconnect();
     }
     
     private static void addAgentConfigData(List<AgentInformation> items) throws IOException {
         BackingStorage storage = getAndConnectBackingStorage();
-        storage.registerCategory(AgentInfoDAO.CATEGORY);
+        Category<AggregateCount> cat = registerCatoriesForWrite(storage, AgentInfoDAO.CATEGORY);
 
         for (AgentInformation info: items) {
             Add<AgentInformation> add = storage.createAdd(AgentInfoDAO.CATEGORY);
@@ -649,7 +683,7 @@ public class WebAppTest extends IntegrationTest {
             add.set(AgentInfoDAO.STOP_TIME_KEY.getName(), info.getStopTime());
             add.apply();
         }
-
+        waitForDataCount(items.size(), storage, cat);
         storage.getConnection().disconnect();
     }
 
@@ -661,22 +695,23 @@ public class WebAppTest extends IntegrationTest {
         doDeleteData(HostInfoDAO.hostInfoCategory, "test-host-agent-id");
     }
     
-    private static void doDeleteData(Category<?> category, String agentId) throws IOException {
-        String[] roleNames = new String[] {
-                Roles.REGISTER_CATEGORY,
-                Roles.ACCESS_REALM,
-                Roles.LOGIN,
-                Roles.PURGE
-        };
-        Storage storage = getAndConnectStorage(PREP_USER, PREP_PASSWORD, roleNames);
-        storage.registerCategory(category);
+    private static <T extends Pojo> void doDeleteData(Category<T> category, String agentId) throws IOException {
+        BackingStorage storage = getAndConnectBackingStorage();
+        Category<AggregateCount> cat = registerCatoriesForWrite(storage, category);
+        // FIXME: The method signature suggests it deletes data for the given agent
+        //        in the given category. But it actually deletes any records in
+        //        any category matching the agentId parameter. This should get
+        //        changed from purge to a remove operation.
         storage.purge(agentId);
+        waitForDataCount(0, storage, cat);
         storage.getConnection().disconnect();
     }
     
     private static void deleteAgentConfigData(List<AgentInformation> items) throws IOException {
         BackingStorage storage = getAndConnectBackingStorage();
-        storage.registerCategory(AgentInfoDAO.CATEGORY);
+        Category<AggregateCount> cat = registerCatoriesForWrite(storage, AgentInfoDAO.CATEGORY);
+        
+        long countPriorRemove = countAllData(storage, cat);
         ExpressionFactory factory = new ExpressionFactory();
         Remove<AgentInformation> remove = storage.createRemove(AgentInfoDAO.CATEGORY);
         Set<String> agentIds = new HashSet<>();
@@ -686,6 +721,7 @@ public class WebAppTest extends IntegrationTest {
         Expression expression = factory.in(Key.AGENT_ID, agentIds, String.class);
         remove.where(expression);
         remove.apply();
+        waitForDataCount((int)(countPriorRemove - items.size()), storage, cat);
 
         storage.getConnection().disconnect();
     }
