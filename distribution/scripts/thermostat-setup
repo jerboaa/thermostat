@@ -279,7 +279,14 @@ setupMongodbUser() {
   sleep 3
   mongo 127.0.0.1:27518 << EOF
 use thermostat
-db.addUser({ user: "$USERNAME", pwd: "$PASSWORD", roles: [ "readWrite" ] })
+var v = db.version();
+var minorMicro = v.substr(v.indexOf('.') + 1)
+var minorVersion = minorMicro.substr(0, minorMicro.indexOf('.'))
+if ( minorVersion <= 4 ) {
+  db.addUser({ user: "$USERNAME", pwd: "$PASSWORD", roles: [ "readWrite" ] })
+} else {
+  db.createUser({ user: "$USERNAME", pwd: "$PASSWORD", roles: [ "readWrite" ] })
+}
 quit()
 EOF
   MONGO_SETUP_RETVAL="$?"
