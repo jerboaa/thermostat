@@ -77,7 +77,7 @@ function cleanup() {
   if [ "x$KEEPTEMP" != "x--keepTemp" ]; then
     cleanup_tempdirs $TMP_DIR \
           $PLUGIN_INSTALL_LOCATION \
-          $THERMOSTAT_HOME/webapp/WEB-INF/lib/"$ARTIFACT_ID"-storage-common-0.0.1-SNAPSHOT.jar
+          $THERMOSTAT_HOME/webapp/WEB-INF/lib/"$ARTIFACT_ID"-storage-common*.jar
   fi
 }
 
@@ -96,13 +96,32 @@ END
 }
 
 function exit_if_bad_return_value() {
-  RVAL=$1
-  if [ $RVAL -ne 0 ]; then
+  local rval=""
+  local debugFile=""
+  local errorMsg=""
+
+  # Check if we got passed a third argument which is a file with
+  # details about the failure that happened.
+  if [ $# -eq 3 ]; then
+    rval=$1
+    debugFile=$2
+    errorMsg=$3
+  else
+    rval=$1
+    debugFile=""
+    errorMsg=$2
+  fi
+
+  if [ $rval -ne 0 ]; then
+    # Only print debug info if we actually have one
+    if [ "_$debugFile" != "_" ]; then
+      echo "------------------- Debug info start ---------------------"
+      cat "$debugFile"
+      echo "-------------------  Debug info end  ---------------------"
+    fi
     cleanup
-    shift
-    echo $@
+    echo "$errorMsg"
     output_fail_information
-    exit $RVAL
+    exit $rval
   fi
 }
-

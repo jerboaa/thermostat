@@ -53,6 +53,8 @@ check_usage $@
 
 WSS_PID="$TMP_DIR/web-storage-service.pid"
 WSS_OUTPUT="$TMP_DIR/wss_output.txt"
+EXAMPLE_CMD_OUTPUT="$TMP_DIR/example_cmd_output.txt"
+
 
 function launch_and_wait_for_web_storage() {
   $THERMOSTAT_EXE -Tbg $WSS_PID web-storage-service > $WSS_OUTPUT 2>&1
@@ -124,7 +126,7 @@ $THERMOSTAT_HOME/bin/thermostat-devsetup
 exit_if_bad_return_value $? "Error configuring Thermostat (devsetup)"
 
 launch_and_wait_for_web_storage
-exit_if_bad_return_value $? "Web Storage Service not coming up"
+exit_if_bad_return_value $? "$WSS_OUTPUT" "Web Storage Service not coming up"
 
 # Why head -n4? Output looks like the following:
 #
@@ -142,8 +144,10 @@ $THERMOSTAT_EXE help | grep example-command
 exit_if_bad_return_value $? "Plugin command not appearing in Thermostat help"
 
 # verify "example-command" works as expected
-echo -e "client-tester\ntester" | $THERMOSTAT_EXE example-command -a $AGENT_ID | grep 'Message: Hello World!'
-exit_if_bad_return_value $? "Plugin command not working"
+example_cmd="echo -e \"client-tester\ntester\" | $THERMOSTAT_EXE example-command -a $AGENT_ID | grep 'Message: Hello World!'"
+echo $example_cmd >> $EXAMPLE_CMD_OUTPUT 2>&1
+$example_cmd >> $EXAMPLE_CMD_OUTPUT 2>&1
+exit_if_bad_return_value $? "$EXAMPLE_CMD_OUTPUT" "Plugin command not working"
 
 kill_and_wait_for_webstorage
 

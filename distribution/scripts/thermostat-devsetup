@@ -54,10 +54,11 @@ fi
 
 # Call the setup script
 $THERMOSTAT_SETUP < $DEV_INPUT
+retval=$?
 
-if [ $? -ne 0 ]; then
+if [ $retval -ne 0 ]; then
   echo "Development setup failed." 1>&2
-  exit $?
+  exit $retval
 fi
 
 # Copy the agent.auth file into USER_THERMOSTAT_HOME
