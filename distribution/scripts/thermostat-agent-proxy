@@ -36,8 +36,6 @@
 #
 #####################################################################
 #
-# Some necessary variables.
-JAVA_DIR="@java.dir@"
 JAVA="@java.home@/bin/java"
 
 if [ "$#" -lt 2 ]; then

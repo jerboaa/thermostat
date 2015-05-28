@@ -229,7 +229,6 @@ password=${agent.dev.password}
     <thermostat.system.group>thermostat</thermostat.system.group>
     <!-- directory into which the exploded web archive should be deployed to -->
     <thermostat.web.deploy.dir>${thermostat.build.directory}/${project.build.finalName}</thermostat.web.deploy.dir>
-    <java.dir>/usr/share/java</java.dir>
 
     <junit.version>4.10</junit.version>
     <mockito.version>1.9.5</mockito.version>
