@@ -380,12 +380,16 @@ public class WebAppTest extends IntegrationTest {
                 mongoSpawn.send("var v = db.version()\n");
                 mongoSpawn.send("var minorMicro = v.substr(v.indexOf('.') + 1)\n");
                 mongoSpawn.send("var minorVersion = minorMicro.substr(0, minorMicro.indexOf('.'))\n");
+                mongoSpawn.send("if ( minorVersion <= 2 ) {");
+                mongoSpawn.send(String.format("db.addUser(\"%s\", \"%s\")", mongodbUsername, mongodbPassword));
+                mongoSpawn.send("} else {");
                 mongoSpawn.send("if ( minorVersion <= 4 ) {");
                 mongoSpawn.send(String.format("db.addUser({ user: \"%s\", pwd: \"%s\", roles: [ \"readWrite\" ] })",
                         mongodbUsername, mongodbPassword));
                 mongoSpawn.send("} else {");
                 mongoSpawn.send(String.format("db.createUser({ user: \"%s\", pwd: \"%s\", roles: [ \"readWrite\" ] })",
                         mongodbUsername, mongodbPassword));
+                mongoSpawn.send("}\n");
                 mongoSpawn.send("}\n");
                 mongoSpawn.send("quit()\n");
                 mongoSpawn.expectClose();

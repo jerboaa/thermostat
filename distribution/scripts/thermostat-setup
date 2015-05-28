@@ -282,10 +282,16 @@ use thermostat
 var v = db.version();
 var minorMicro = v.substr(v.indexOf('.') + 1)
 var minorVersion = minorMicro.substr(0, minorMicro.indexOf('.'))
-if ( minorVersion <= 4 ) {
-  db.addUser({ user: "$USERNAME", pwd: "$PASSWORD", roles: [ "readWrite" ] })
+if ( minorVersion <= 2 ) {
+    // mongodb version 2.2 and below don't have the third argument.
+    // this should create the user as read + write.
+    db.addUser("$USERNAME","$PASSWORD")
 } else {
-  db.createUser({ user: "$USERNAME", pwd: "$PASSWORD", roles: [ "readWrite" ] })
+  if ( minorVersion <= 4 ) {
+    db.addUser({ user: "$USERNAME", pwd: "$PASSWORD", roles: [ "readWrite" ] })
+  } else {
+    db.createUser({ user: "$USERNAME", pwd: "$PASSWORD", roles: [ "readWrite" ] })
+  }
 }
 quit()
 EOF
