@@ -249,10 +249,11 @@ public class MongoProcessRunner {
     List<String> getStartupCommand(String dbVersion) throws IOException, InvalidConfigurationException {
         List<String> commands = new ArrayList<>(Arrays.asList(MONGO_BASIC_ARGS));
         
+        commands.add(configuration.getBindIP());
+
         if (dbVersion.compareTo(NO_JOURNAL_FIRST_VERSION) >= 0) {
             commands.add(1, NO_JOURNAL_ARGUMENT);
         }
-        commands.add(configuration.getBindIP());
 
         commands.add("--dbpath");
         commands.add(configuration.getDBPath().getCanonicalPath());

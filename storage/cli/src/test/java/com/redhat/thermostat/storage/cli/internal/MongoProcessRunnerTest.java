@@ -37,7 +37,10 @@
 package com.redhat.thermostat.storage.cli.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -60,9 +63,14 @@ public class MongoProcessRunnerTest {
 
     private MongoProcessRunner runner;
     private DBStartupConfiguration config;
+
     private static final String NO_JOURNAL_MONGODB_VERSION = "2.0.0";
     private static final String JOURNAL_MONGODB_VERSION = "1.8.0";
     private static final String NO_LOCALHOST_EXCPTN_VERSION = "2.2.0";
+
+    private static final String OLDEST_MONGODB_VERSION = "1.8.0";
+    private static final String LATEST_MONGODB_VERSION = "2.6.0";
+
     private static final String BIND_IP = "127.0.0.1";
     private static final long PORT = 12456;
     
@@ -85,45 +93,50 @@ public class MongoProcessRunnerTest {
         runner = null;
         config = null;
     }
-    
+
     @Test
-    public void testCommandArgumentsWithJournalVersion() throws Exception {
-        String[] expected = { "mongod", "--nojournal", "--quiet", "--fork",
+    public void testCommandArgumentsWithOldestMongodbVersion() throws Exception {
+        String[] expected = { "mongod", "--quiet", "--fork",
                 "--auth", "--nohttpinterface", "--bind_ip", config.getBindIP(),
                 "--dbpath", config.getDBPath().getCanonicalPath(), "--logpath",
                 config.getLogFile().getCanonicalPath(), "--pidfilepath",
                 config.getPidFile().getCanonicalPath(), "--port",
                 Long.toString(config.getPort()) };
-        List<String> cmds = runner.getStartupCommand(NO_JOURNAL_MONGODB_VERSION);
+        List<String> cmds = runner.getStartupCommand(OLDEST_MONGODB_VERSION);
+        String[] actual = cmds.toArray(new String[0]);
+        verifyEquals(expected, actual);
+    }
+
+    @Test
+    public void testCommandArgumentsWithLatestMongodbVersion() throws Exception {
+        String[] expected = { "mongod", "--nojournal", "--quiet", "--fork",
+                "--auth", "--nohttpinterface", "--bind_ip", config.getBindIP(),
+                "--dbpath", config.getDBPath().getCanonicalPath(), "--logpath",
+                config.getLogFile().getCanonicalPath(), "--pidfilepath",
+                config.getPidFile().getCanonicalPath(), "--port",
+                Long.toString(config.getPort()), "--setParameter", "enableLocalhostAuthBypass=0"};
+        List<String> cmds = runner.getStartupCommand(LATEST_MONGODB_VERSION);
         String[] actual = cmds.toArray(new String[0]);
         verifyEquals(expected, actual);
     }
     
     @Test
+    public void testCommandArgumentsWithJournalVersion() throws Exception {
+        List<String> cmds = runner.getStartupCommand(NO_JOURNAL_MONGODB_VERSION);
+        assertTrue(cmds.contains("--nojournal"));
+    }
+
+    @Test
     public void testCommandArgumentsWithNoJournalVersion() throws Exception {
-        String[] expected = { "mongod", "--quiet", "--fork", "--auth",
-                "--nohttpinterface", "--bind_ip", config.getBindIP(),
-                "--dbpath", config.getDBPath().getCanonicalPath(), "--logpath",
-                config.getLogFile().getCanonicalPath(), "--pidfilepath",
-                config.getPidFile().getCanonicalPath(), "--port",
-                Long.toString(config.getPort()) };
         List<String> cmds = runner.getStartupCommand(JOURNAL_MONGODB_VERSION);
-        String[] actual = cmds.toArray(new String[0]);
-        verifyEquals(expected, actual);
+        assertFalse(cmds.contains("--nojournal"));
     }
     
     @Test
     public void testLocalhostExcptn() throws Exception {
-        String[] expected = { "mongod", "--nojournal", "--quiet", "--fork", "--auth",
-                "--nohttpinterface", "--bind_ip", config.getBindIP(),
-                "--dbpath", config.getDBPath().getCanonicalPath(), "--logpath",
-                config.getLogFile().getCanonicalPath(), "--pidfilepath",
-                config.getPidFile().getCanonicalPath(), "--port",
-                Long.toString(config.getPort()),
-                "--setParameter", "enableLocalhostAuthBypass=0"};
-        
+        String[] expected = new String[] { "--setParameter", "enableLocalhostAuthBypass=0"};
         List<String> cmds = runner.getStartupCommand(MongoProcessRunner.LOCALHOST_EXPTN_FIRST_VERSION);
-        String[] actual = cmds.toArray(new String[0]);
+        String[] actual = cmds.subList(cmds.size() - 2, cmds.size()).toArray(new String[0]);
         verifyEquals(expected, actual);
     }
     
@@ -137,30 +150,14 @@ public class MongoProcessRunnerTest {
     @Test
     public void testLocalhostExcptnDisabled() throws Exception {
         runner = new MongoProcessRunner(config, false, true);
-        String[] expected = { "mongod", "--nojournal", "--quiet", "--fork", "--auth",
-                "--nohttpinterface", "--bind_ip", config.getBindIP(),
-                "--dbpath", config.getDBPath().getCanonicalPath(), "--logpath",
-                config.getLogFile().getCanonicalPath(), "--pidfilepath",
-                config.getPidFile().getCanonicalPath(), "--port",
-                Long.toString(config.getPort())};
-        
         List<String> cmds = runner.getStartupCommand(MongoProcessRunner.LOCALHOST_EXPTN_FIRST_VERSION);
-        String[] actual = cmds.toArray(new String[0]);
-        verifyEquals(expected, actual);
+        assertFalse(cmds.contains("enableLocalhostAuthBypass=0"));
     }
     
     @Test
     public void testLocalhostExcptnNotSupported() throws Exception {
-        String[] expected = { "mongod", "--nojournal", "--quiet", "--fork", "--auth",
-                "--nohttpinterface", "--bind_ip", config.getBindIP(),
-                "--dbpath", config.getDBPath().getCanonicalPath(), "--logpath",
-                config.getLogFile().getCanonicalPath(), "--pidfilepath",
-                config.getPidFile().getCanonicalPath(), "--port",
-                Long.toString(config.getPort())};
-        
         List<String> cmds = runner.getStartupCommand(NO_LOCALHOST_EXCPTN_VERSION);
-        String[] actual = cmds.toArray(new String[0]);
-        verifyEquals(expected, actual);
+        assertFalse(cmds.contains("enableLocalhostAuthBypass=0"));
     }
     
     @Test
