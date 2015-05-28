@@ -34,41 +34,35 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.killvm.common;
+package com.redhat.thermostat.storage.core;
 
-import java.net.InetSocketAddress;
+/**
+ *
+ */
+public class AgentId {
+    String uuid;
 
-import com.redhat.thermostat.client.command.RequestQueue;
-import com.redhat.thermostat.common.command.Request;
-import com.redhat.thermostat.common.command.RequestResponseListener;
-import com.redhat.thermostat.storage.core.AgentId;
-import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-
-public class KillVMRequest {
-    private static final String RECEIVER = "com.redhat.thermostat.killvm.agent.internal.KillVmReceiver";
-    private static final String CMD_CHANNEL_ACTION_NAME = "killvm";
-
-    private RequestQueue queue;
-
-    public KillVMRequest(RequestQueue queue) {
-        this.queue = queue;
+    public AgentId(String id) {
+        this.uuid = id;
     }
 
-    public void sendKillVMRequestToAgent(AgentId agentId, int pid, AgentInfoDAO agentInfoDAO, RequestResponseListener
-            listener) {
-        InetSocketAddress target = agentInfoDAO.getAgentInformation(agentId).getRequestQueueAddress();
-
-        Request murderer = getKillRequest(target);
-        murderer.setParameter(Request.ACTION, CMD_CHANNEL_ACTION_NAME);
-        murderer.setParameter("vm-pid", String.valueOf(pid));
-        murderer.setReceiver(RECEIVER);
-        murderer.addListener(listener);
-
-        queue.putRequest(murderer);
+    public String get() {
+        return uuid;
     }
 
-    // for testing
-    Request getKillRequest(InetSocketAddress target) {
-        return new Request(Request.RequestType.NO_RESPONSE_EXPECTED, target);
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        AgentId agentId = (AgentId) o;
+
+        return uuid.equals(agentId.uuid);
+
+    }
+
+    @Override
+    public int hashCode() {
+        return uuid.hashCode();
     }
 }

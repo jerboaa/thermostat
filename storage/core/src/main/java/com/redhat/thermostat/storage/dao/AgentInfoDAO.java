@@ -39,6 +39,7 @@ package com.redhat.thermostat.storage.dao;
 import java.util.List;
 
 import com.redhat.thermostat.annotations.Service;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Countable;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -88,7 +89,19 @@ public interface AgentInfoDAO extends Countable {
      * indicated by {@code agentRef}. {@code null} if no information about the
      * agent could be located.
      */
+    
+    @Deprecated
     AgentInformation getAgentInformation(HostRef agentRef);
+
+    /**
+     * Get information about a specific agent.
+     *
+     * @return a {@link AgentInformation} describing information about the agent
+     * indicated by {@code agentId}. {@code null} if no information about the
+     * agent could be located.
+     */
+
+    AgentInformation getAgentInformation(AgentId agentId);
 
     /**
      * Publish information about agent into the storage.

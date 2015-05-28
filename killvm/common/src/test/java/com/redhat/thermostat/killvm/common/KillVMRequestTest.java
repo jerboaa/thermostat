@@ -49,7 +49,7 @@ import org.junit.Test;
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
-import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
@@ -59,6 +59,8 @@ public class KillVMRequestTest {
     private AgentInfoDAO agentDAO;
     private RequestQueue queue;
     private VmRef vm;
+    private AgentId agentId;
+    private AgentInformation info;
 
     private KillVMRequest killVMRequest;
     private Request request;
@@ -68,19 +70,18 @@ public class KillVMRequestTest {
     public void setup() {
         agentDAO = mock(AgentInfoDAO.class);
         vm = mock(VmRef.class);
+        agentId = mock(AgentId.class);
 
         request = mock(Request.class);
 
         listener = mock(RequestResponseListener.class);
 
-        HostRef ref = mock(HostRef.class);
-        when(vm.getHostRef()).thenReturn(ref);
         when(vm.getPid()).thenReturn(123456);
 
-        AgentInformation info = mock(AgentInformation.class);
+        info = mock(AgentInformation.class);
         when(info.getRequestQueueAddress()).thenReturn(new InetSocketAddress("0.0.42.42", 42));
 
-        when(agentDAO.getAgentInformation(ref)).thenReturn(info);
+        when(agentDAO.getAgentInformation(agentId)).thenReturn(info);
 
         queue = mock(RequestQueue.class);
     }
@@ -103,9 +104,10 @@ public class KillVMRequestTest {
             }
         };
 
-        killVMRequest.sendKillVMRequestToAgent(vm, agentDAO, listener);
-        verify(vm).getHostRef();
+        killVMRequest.sendKillVMRequestToAgent(agentId, vm.getPid(), agentDAO, listener);
         verify(vm).getPid();
+        verify(agentDAO).getAgentInformation(agentId);
+        verify(info).getRequestQueueAddress();
 
         assertTrue(results[0]);
         assertTrue(results[1]);

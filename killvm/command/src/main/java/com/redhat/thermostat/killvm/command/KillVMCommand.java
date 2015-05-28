@@ -44,23 +44,19 @@ import com.redhat.thermostat.killvm.command.internal.ShellVMKilledListener;
 import com.redhat.thermostat.killvm.command.locale.LocaleResources;
 import com.redhat.thermostat.killvm.common.KillVMRequest;
 import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.dao.DAOException;
-import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
 
 public class KillVMCommand extends AbstractCommand {
 
-    private static final String RECEIVER = "com.redhat.thermostat.killvm.agent.internal.KillVmReceiver";
-    private static final String CMD_CHANNEL_ACTION_NAME = "killvm";
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private final ShellVMKilledListener listener;
 
-    private HostInfoDAO hostInfoDAO;
     private VmInfoDAO vmInfoDAO;
     private AgentInfoDAO agentInfoDAO;
     private KillVMRequest request;
@@ -72,33 +68,28 @@ public class KillVMCommand extends AbstractCommand {
     @Override
     public void run(CommandContext ctx) throws CommandException {
         requireNonNull(vmInfoDAO, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
-        requireNonNull(hostInfoDAO, translator.localize(LocaleResources.HOST_SERVICE_UNAVAILABLE));
         requireNonNull(agentInfoDAO, translator.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE));
         requireNonNull(request, translator.localize(LocaleResources.REQUEST_SERVICE_UNAVAILABLE));
 
         listener.setOut(ctx.getConsole().getOutput());
         listener.setErr(ctx.getConsole().getError());
 
-        HostVMArguments args = new HostVMArguments(ctx.getArguments(), true, true);
+        HostVMArguments args = new HostVMArguments(ctx.getArguments(), false, true);
 
         attemptToKillVM(args.getVM());
     }
 
     private void attemptToKillVM(VmRef vmRef) throws CommandException {
-        try {
-            VmInfo result = vmInfoDAO.getVmInfo(vmRef);
-            sendKillRequest(vmRef.getHostRef(), result.getVmPid());
-        } catch (DAOException e) {
-            //FIXME: VmInfoDaoImpl currently throws DAOException when VM is not found
-            //This should be changed when VmInfoDAOImpl gets fixed
+        VmId id = new VmId(vmRef.getVmId());
+        VmInfo result = vmInfoDAO.getVmInfo(id);
+        if (result == null) {
             throw new CommandException(translator.localize(LocaleResources.VM_NOT_FOUND, vmRef.getVmId()));
         }
-
+        sendKillRequest(new AgentId(result.getAgentId()), result.getVmPid());
     }
 
-    private void sendKillRequest(HostRef ref, int vmPid) throws CommandException {
-        VmRef vmRef = new VmRef(ref, "dummy", vmPid, "dummy");
-        request.sendKillVMRequestToAgent(vmRef, agentInfoDAO, listener);
+    private void sendKillRequest(AgentId agentId, int pid) throws CommandException {
+        request.sendKillVMRequestToAgent(agentId, pid, agentInfoDAO, listener);
 
         waitForListenerResponse();
     }
@@ -109,10 +100,6 @@ public class KillVMCommand extends AbstractCommand {
         } catch (InterruptedException e) {
             throw new CommandException(translator.localize(LocaleResources.KILL_INTERRUPTED));
         }
-    }
-
-    public void setHostInfoDAO(HostInfoDAO hostInfoDAO) {
-        this.hostInfoDAO = hostInfoDAO;
     }
 
     public void setVmInfoDAO(VmInfoDAO vmInfoDAO) {

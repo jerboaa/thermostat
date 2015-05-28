@@ -50,10 +50,9 @@ import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.killvm.command.internal.ShellVMKilledListener;
 import com.redhat.thermostat.killvm.common.KillVMRequest;
-import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.dao.DAOException;
-import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.test.TestCommandContextFactory;
@@ -63,7 +62,6 @@ public class KillVmCommandTest {
     private TestCommandContextFactory cmdCtxFactory;
     private KillVMCommand cmd;
 
-    private HostInfoDAO hostInfoDAO;
     private VmInfoDAO vmInfoDAO;
     private AgentInfoDAO agentInfoDAO;
 
@@ -74,7 +72,6 @@ public class KillVmCommandTest {
     public void setup() {
         cmdCtxFactory = new TestCommandContextFactory();
 
-        hostInfoDAO = mock(HostInfoDAO.class);
         vmInfoDAO = mock(VmInfoDAO.class);
         agentInfoDAO = mock(AgentInfoDAO.class);
 
@@ -87,27 +84,27 @@ public class KillVmCommandTest {
     @Test
     public void testKillLiveVM() throws CommandException, InterruptedException {
         String vmId = "liveVM";
-        String hostId = "hostId";
 
         VmInfo vmInfo = mock(VmInfo.class);
-        when(vmInfoDAO.getVmInfo(any(VmRef.class))).thenReturn(vmInfo);
+        when(vmInfoDAO.getVmInfo(any(VmId.class))).thenReturn(vmInfo);
 
-        CommandContext ctx = createContext(vmId, hostId);
+        CommandContext ctx = createContext(vmId);
 
         setServices();
         cmd.run(ctx);
 
-        verify(request).sendKillVMRequestToAgent(any(VmRef.class), any(AgentInfoDAO.class), any(RequestResponseListener.class));
+        verify(request).sendKillVMRequestToAgent(any(AgentId.class), any(int.class), any(AgentInfoDAO.class), any
+                (RequestResponseListener
+                .class));
     }
 
     @Test(expected = CommandException.class)
     public void testKillNonexistentVM() throws CommandException {
         String vmId = "nonexistentVM";
-        String hostId = "hostId";
 
-        when(vmInfoDAO.getVmInfo(any(VmRef.class))).thenThrow(DAOException.class);
+        when(vmInfoDAO.getVmInfo(any(VmId.class))).thenReturn(null);
 
-        CommandContext ctx = createContext(vmId, hostId);
+        CommandContext ctx = createContext(vmId);
         setServices();
 
         cmd.run(ctx);
@@ -116,32 +113,20 @@ public class KillVmCommandTest {
     @Test(expected = CommandException.class)
     public void testNoVMArgument() throws CommandException {
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("hostId", "hostId");
         CommandContext ctx = cmdCtxFactory.createContext(args);
         setServices();
         cmd.run(ctx);
     }
 
-    @Test(expected =  CommandException.class)
-    public void testNoHostArgument() throws CommandException {
-        SimpleArguments args = new SimpleArguments();
-        args.addArgument("vmId", "vmId");
-        CommandContext ctx = cmdCtxFactory.createContext(args);
-
-        cmd.run(ctx);
-    }
-
-    public CommandContext createContext(String vmId, String hostId) {
+    public CommandContext createContext(String vmId) {
         SimpleArguments args = new SimpleArguments();
         args.addArgument("vmId", vmId);
-        args.addArgument("hostId", hostId);
         return cmdCtxFactory.createContext(args);
     }
 
     private void setServices() {
         cmd.setVmInfoDAO(vmInfoDAO);
         cmd.setAgentInfoDAO(agentInfoDAO);
-        cmd.setHostInfoDAO(hostInfoDAO);
         cmd.setKillVMRequest(request);
 
     }

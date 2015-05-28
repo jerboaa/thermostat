@@ -49,6 +49,7 @@ import org.mockito.stubbing.Answer;
 import com.redhat.thermostat.common.Filter;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.killvm.common.KillVMRequest;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Ref;
 import com.redhat.thermostat.storage.core.VmRef;
@@ -115,6 +116,14 @@ public class KillVMActionTest {
         AgentInfoDAO agentDao = mock(AgentInfoDAO.class);
         VmInfoDAO vmInfoDao = mock(VmInfoDAO.class);
 
+        HostRef hostRef = mock(HostRef.class);
+        when(ref.getHostRef()).thenReturn(hostRef);
+
+        AgentId agentId = new AgentId("a1b2c3");
+        when(hostRef.getAgentId()).thenReturn(agentId.get());
+
+        int pid = 0;
+
         RequestResponseListener agentResponseListener = mock(RequestResponseListener.class);
 
         KillVMRequest request = mock(KillVMRequest.class);
@@ -128,7 +137,7 @@ public class KillVMActionTest {
                 complete[0] = true;
                 return null;
             }
-        }).when(request).sendKillVMRequestToAgent(ref, agentDao, agentResponseListener);
+        }).when(request).sendKillVMRequestToAgent(agentId, pid, agentDao, agentResponseListener);
 
         action.execute(ref);
 

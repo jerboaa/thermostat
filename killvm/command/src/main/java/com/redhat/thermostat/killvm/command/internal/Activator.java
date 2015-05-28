@@ -44,12 +44,11 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.client.command.RequestQueue;
-import com.redhat.thermostat.killvm.common.KillVMRequest;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.killvm.command.KillVMCommand;
+import com.redhat.thermostat.killvm.common.KillVMRequest;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
-import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 
 public class Activator implements BundleActivator {
@@ -61,7 +60,6 @@ public class Activator implements BundleActivator {
     @Override
     public void start(final BundleContext context) throws Exception {
         Class<?>[] serviceDeps = new Class<?>[] {
-                HostInfoDAO.class,
                 AgentInfoDAO.class,
                 VmInfoDAO.class,
                 KillVMRequest.class,
@@ -71,13 +69,11 @@ public class Activator implements BundleActivator {
         serviceTracker = new MultipleServiceTracker(context, serviceDeps, new MultipleServiceTracker.Action() {
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
-                HostInfoDAO hostDAO = (HostInfoDAO) services.get(HostInfoDAO.class.getName());
                 AgentInfoDAO agentDao = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
                 VmInfoDAO vmDao = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
                 KillVMRequest request= (KillVMRequest) services.get(KillVMRequest.class.getName());
 
                 command.setAgentInfoDAO(agentDao);
-                command.setHostInfoDAO(hostDAO);
                 command.setVmInfoDAO(vmDao);
                 command.setKillVMRequest(request);
             }
@@ -85,7 +81,6 @@ public class Activator implements BundleActivator {
             @Override
             public void dependenciesUnavailable() {
                 command.setAgentInfoDAO(null);
-                command.setHostInfoDAO(null);
                 command.setVmInfoDAO(null);
                 command.setKillVMRequest(null);
             }

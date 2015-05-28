@@ -52,13 +52,6 @@
           <required>true</required>
           <description>the ID of the VM</description>
         </option>
-        <option>
-          <long>hostId</long>
-          <short>h</short>
-          <argument>host</argument>
-          <required>true</required>
-          <description>the ID of the Host</description>
-        </option>
       </options>
       <environments>
         <environment>cli</environment>

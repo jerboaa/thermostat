@@ -43,6 +43,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.Cursor;
@@ -195,6 +196,32 @@ public class AgentInfoDAOImpl extends BaseCountable implements AgentInfoDAO {
             return null;
         }
         
+        AgentInformation result = null;
+        if (agentCursor.hasNext()) {
+            result = agentCursor.next();
+        }
+        return result;
+    }
+
+    @Override
+    public AgentInformation getAgentInformation(AgentId agentId) {
+        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(CATEGORY, QUERY_AGENT_INFO);
+        PreparedStatement<AgentInformation> prepared;
+        Cursor<AgentInformation> agentCursor;
+        try {
+            prepared = storage.prepareStatement(desc);
+            prepared.setString(0, agentId.get());
+            agentCursor = prepared.executeQuery();
+        } catch (DescriptorParsingException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
+            return null;
+        } catch (StatementExecutionException e) {
+            // should not happen, but if it *does* happen, at least log it
+            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
+            return null;
+        }
+
         AgentInformation result = null;
         if (agentCursor.hasNext()) {
             result = agentCursor.next();

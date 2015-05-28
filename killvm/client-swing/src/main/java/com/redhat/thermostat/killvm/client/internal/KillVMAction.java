@@ -49,6 +49,7 @@ import com.redhat.thermostat.killvm.client.locale.LocaleResources;
 import com.redhat.thermostat.killvm.common.KillVMRequest;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Ref;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
@@ -95,7 +96,8 @@ public class KillVMAction implements ReferenceContextAction {
         }
         VmRef reference = (VmRef) ref;
 
-        request.sendKillVMRequestToAgent(reference, agentDao, listener);
+        request.sendKillVMRequestToAgent(new AgentId(reference.getHostRef().getAgentId()), reference.getPid(),
+                agentDao, listener);
     }
 
     @Override
