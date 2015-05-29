@@ -260,8 +260,8 @@ password=${agent.dev.password}
     <commons-fileupload.version>1.2.2</commons-fileupload.version>
 
     <jline.version>2.9</jline.version>
-    <lucene.version>4.7.0_1</lucene.version>
-    <lucene.osgi-version>4.7.0.1</lucene.osgi-version>
+    <lucene.version>5.1.0_1</lucene.version>
+    <lucene.osgi-version>5.1.0.1</lucene.osgi-version>
     <lucene-analysis.bundle.symbolic-name>org.apache.servicemix.bundles.lucene-analyzers-common</lucene-analysis.bundle.symbolic-name>
     <lucene-core.bundle.symbolic-name>org.apache.servicemix.bundles.lucene</lucene-core.bundle.symbolic-name>
     <!--

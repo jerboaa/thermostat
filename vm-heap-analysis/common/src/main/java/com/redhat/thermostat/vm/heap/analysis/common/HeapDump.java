@@ -66,7 +66,6 @@ import org.apache.lucene.search.WildcardQuery;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.store.RAMDirectory;
-import org.apache.lucene.util.Version;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
@@ -141,7 +140,7 @@ public class HeapDump {
 
         Enumeration<JavaHeapObject> thingos = snapshot.getThings();
         Directory dir = new RAMDirectory();
-        IndexWriterConfig indexWriterConfig = new IndexWriterConfig(Version.LUCENE_47, new SimpleAnalyzer(Version.LUCENE_47));
+        IndexWriterConfig indexWriterConfig = new IndexWriterConfig(new SimpleAnalyzer());
         IndexWriter writer = new IndexWriter(dir, indexWriterConfig);
         while (thingos.hasMoreElements()) {
             JavaHeapObject thingo = thingos.nextElement();
