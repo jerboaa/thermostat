@@ -352,87 +352,72 @@ public class WebAppTest extends IntegrationTest {
 
     // PRE: storage started with --permitLocalhostException
     private static void setupMongodbUser() throws Exception {
-        // The actual setup is only required for devel builds. Release builds
-        // won't have users or roles configured, so starting backing storage
-        // (i.e. mongodb) with the --permitLocalhostException option is
-        // sufficient.
+        String mongodbUsername = getMongodbUsername();
+        String mongodbPassword = getMongodbPassword();
 
-        if (isDevelopmentBuild()) {
-            String mongodbUsername = getMongodbUsername();
-            String mongodbPassword = getMongodbPassword();
+        final String HOST = "127.0.0.1";
+        final String PORT = "27518";
 
-            final String HOST = "127.0.0.1";
-            final String PORT = "27518";
+        try {
+            System.out.println("THERMOSTAT_HOME: " + getThermostatHome());
+            System.out.println("USER_THERMOSTAT_HOME: " + getUserThermostatHome());
 
-            try {
-                System.out.println("THERMOSTAT_HOME: " + getThermostatHome());
-                System.out.println("USER_THERMOSTAT_HOME: " + getUserThermostatHome());
+            // start mongod
+            startStorage();
 
-                // start mongod
-                startStorage();
+            System.out.println("Started mongod");
+            TimeUnit.SECONDS.sleep(3);
 
-                System.out.println("Started mongod");
-                TimeUnit.SECONDS.sleep(3);
+            ExpectJ mongo = new ExpectJ(TIMEOUT_IN_SECONDS);
+            Spawn mongoSpawn = mongo.spawn("mongo " + HOST + ":" + PORT);
+            mongoSpawn.send("use thermostat\n");
+            mongoSpawn.send("var v = db.version()\n");
+            mongoSpawn.send("var minorMicro = v.substr(v.indexOf('.') + 1)\n");
+            mongoSpawn.send("var minorVersion = minorMicro.substr(0, minorMicro.indexOf('.'))\n");
+            mongoSpawn.send("if ( minorVersion <= 2 ) {");
+            mongoSpawn.send(String.format("db.addUser(\"%s\", \"%s\")", mongodbUsername, mongodbPassword));
+            mongoSpawn.send("} else {");
+            mongoSpawn.send("if ( minorVersion <= 4 ) {");
+            mongoSpawn.send(String.format("db.addUser({ user: \"%s\", pwd: \"%s\", roles: [ \"readWrite\" ] })",
+                    mongodbUsername, mongodbPassword));
+            mongoSpawn.send("} else {");
+            mongoSpawn.send(String.format("db.createUser({ user: \"%s\", pwd: \"%s\", roles: [ \"readWrite\" ] })",
+                    mongodbUsername, mongodbPassword));
+            mongoSpawn.send("}\n");
+            mongoSpawn.send("}\n");
+            mongoSpawn.send("quit()\n");
+            mongoSpawn.expectClose();
 
-                ExpectJ mongo = new ExpectJ(TIMEOUT_IN_SECONDS);
-                Spawn mongoSpawn = mongo.spawn("mongo " + HOST + ":" + PORT);
-                mongoSpawn.send("use thermostat\n");
-                mongoSpawn.send("var v = db.version()\n");
-                mongoSpawn.send("var minorMicro = v.substr(v.indexOf('.') + 1)\n");
-                mongoSpawn.send("var minorVersion = minorMicro.substr(0, minorMicro.indexOf('.'))\n");
-                mongoSpawn.send("if ( minorVersion <= 2 ) {");
-                mongoSpawn.send(String.format("db.addUser(\"%s\", \"%s\")", mongodbUsername, mongodbPassword));
-                mongoSpawn.send("} else {");
-                mongoSpawn.send("if ( minorVersion <= 4 ) {");
-                mongoSpawn.send(String.format("db.addUser({ user: \"%s\", pwd: \"%s\", roles: [ \"readWrite\" ] })",
-                        mongodbUsername, mongodbPassword));
-                mongoSpawn.send("} else {");
-                mongoSpawn.send(String.format("db.createUser({ user: \"%s\", pwd: \"%s\", roles: [ \"readWrite\" ] })",
-                        mongodbUsername, mongodbPassword));
-                mongoSpawn.send("}\n");
-                mongoSpawn.send("}\n");
-                mongoSpawn.send("quit()\n");
-                mongoSpawn.expectClose();
+            mongo = new ExpectJ(TIMEOUT_IN_SECONDS);
+            mongoSpawn = mongo.spawn("mongo " + HOST + ":" + PORT);
+            mongoSpawn.send("use thermostat\n");
+            mongoSpawn.expect("switched to db thermostat");
+            mongoSpawn.send(String.format("db.auth(\"%s\", \"%s\")\n", mongodbUsername, mongodbPassword));
+            mongoSpawn.expect("1");
 
-                mongo = new ExpectJ(TIMEOUT_IN_SECONDS);
-                mongoSpawn = mongo.spawn("mongo " + HOST + ":" + PORT);
-                mongoSpawn.send("use thermostat\n");
-                mongoSpawn.expect("switched to db thermostat");
-                mongoSpawn.send(String.format("db.auth(\"%s\", \"%s\")\n", mongodbUsername, mongodbPassword));
-                mongoSpawn.expect("1");
-
-                // now insert some fake data and display some information that
-                // might be useful for post-mortem analysis if this test fails
-                mongoSpawn.send("db[\"fake\"].insert({foo:\"bar\", baz: 1})\n");
-                mongoSpawn.send("db[\"fake\"].findOne()\n");
-                mongoSpawn.send("show collections\n");
-                mongoSpawn.send("show users\n");
-                
-            } catch (TimeoutException | IOException e) {
-                throw e;
-            } finally {
-                stopStorage();
-            }
-        } else {
-            System.out.println("Not a development build. Skipping mongodb setup.");
+            // now insert some fake data and display some information that
+            // might be useful for post-mortem analysis if this test fails
+            mongoSpawn.send("db[\"fake\"].insert({foo:\"bar\", baz: 1})\n");
+            mongoSpawn.send("db[\"fake\"].findOne()\n");
+            mongoSpawn.send("show collections\n");
+            mongoSpawn.send("show users\n");
+            
+        } catch (TimeoutException | IOException e) {
+            throw e;
+        } finally {
+            stopStorage();
         }
     }
 
     private static void createWebAuthFile() throws IOException {
-        if (isDevelopmentBuild()) {
-            System.out.println("WRITING auth file: " + getMongodbUsername() + "/" + getMongodbPassword());
-            List<String> lines = new ArrayList<String>();
-            lines.add("storage.username = " + getMongodbUsername());
-            lines.add("storage.password = " + getMongodbPassword());
-            Files.write(new File(THERMOSTAT_WEB_AUTH_FILE).toPath(), lines, StandardCharsets.UTF_8);
-        } else {
-            throw new AssertionError("testing a build !");
-        }
+        System.out.println("WRITING auth file: " + getMongodbUsername() + "/" + getMongodbPassword());
+        List<String> lines = new ArrayList<String>();
+        lines.add("storage.username = " + getMongodbUsername());
+        lines.add("storage.password = " + getMongodbPassword());
+        Files.write(new File(THERMOSTAT_WEB_AUTH_FILE).toPath(), lines, StandardCharsets.UTF_8);
     }
 
     private static String getMongodbUsername() {
-        assertTrue(isDevelopmentBuild());
-        
         // Define this default in order for IDE based runs to require fewer
         // properties to be set.
         String defaultDevUser = "mongodevuser";
@@ -441,8 +426,6 @@ public class WebAppTest extends IntegrationTest {
     }
 
     private static String getMongodbPassword() {
-        assertTrue(isDevelopmentBuild());
-        
         // Define this default in order for IDE based runs to require fewer
         // properties to be set.
         String defaultDevPassword = "mongodevpassword";
