@@ -53,6 +53,7 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.config.internal.CommonPathsImpl;
+import com.redhat.thermostat.web.server.ConfigurationFinder;
 import com.redhat.thermostat.web.server.auth.BasicRole;
 import com.redhat.thermostat.web.server.auth.RolePrincipal;
 
@@ -75,12 +76,16 @@ class RolesAmender {
         // this is the default configuration supplied with thermostat
         // it should not be overriden by editing this configuraton file
         // see javadocs of PropertiesUsernameRolesLoginModule
-        this((new CommonPathsImpl().getSystemConfigurationDirectory() + File.separator + DEFAULT_ROLES_FILE), users);
+        this(new ConfigurationFinder(new CommonPathsImpl()).getConfiguration(DEFAULT_ROLES_FILE), users);
     }
     
     RolesAmender(String rolesFile, Set<Object> users) {
+        this(new File(rolesFile), users);
+    }
+
+    RolesAmender(File rolesFile, Set<Object> users) {
         this.users = Objects.requireNonNull(users);
-        loadRoles(new File(rolesFile));
+        loadRoles(rolesFile);
     }
     
     /**

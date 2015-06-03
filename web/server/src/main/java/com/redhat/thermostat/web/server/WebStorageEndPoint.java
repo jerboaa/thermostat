@@ -148,6 +148,7 @@ public class WebStorageEndPoint extends HttpServlet {
     private Storage storage;
     private Gson gson;
     private CommonPaths paths;
+    private ConfigurationFinder finder;
 
     public static final String STORAGE_ENDPOINT = "storage.endpoint";
     public static final String STORAGE_CLASS = "storage.class";
@@ -167,8 +168,10 @@ public class WebStorageEndPoint extends HttpServlet {
     }
     
     // Package private for testing
-    WebStorageEndPoint(TimerRegistry timerRegistry) {
+    WebStorageEndPoint(TimerRegistry timerRegistry, CommonPaths paths, ConfigurationFinder finder) {
         this.timerRegistry = timerRegistry;
+        this.paths = paths;
+        this.finder = finder;
     }
 
     @Override
@@ -244,7 +247,7 @@ public class WebStorageEndPoint extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
         if (storage == null) {
-            StorageCredentials creds = getStorageCredentials(paths);
+            StorageCredentials creds = getStorageCredentials();
             // if creds are null there is no point to continue, fail prominently.
             if (creds == null) {
                 String errorMsg = "No backing storage credentials file (" + CREDENTIALS_FILE + ") available";
@@ -283,26 +286,15 @@ public class WebStorageEndPoint extends HttpServlet {
     }
     
     // package private for testing
-    StorageCredentials getStorageCredentials(CommonPaths commonPaths) throws IOException {
-        File systemFile = getStorageCredentialsFile(commonPaths.getSystemConfigurationDirectory());
-        if (systemFile.exists() && systemFile.canRead()) {
-            logger.log(Level.CONFIG, "Loading authentication data from " + systemFile);
-            return createStorageCredentials(systemFile);
+    StorageCredentials getStorageCredentials() throws IOException {
+        File credentialsFile = finder.getConfiguration(CREDENTIALS_FILE);
+        if (credentialsFile != null) {
+            logger.log(Level.CONFIG, "Loading authentication data from " + credentialsFile);
+            return createStorageCredentials(credentialsFile);
         } else {
-            File userCredentials = getStorageCredentialsFile(commonPaths.getUserConfigurationDirectory());
-            logger.log(Level.CONFIG, "Loading authentication data from " + userCredentials);
-            if (userCredentials.isFile() && userCredentials.canRead()) {
-                return createStorageCredentials(userCredentials);
-            } else {
-                logger.warning("Unable to read database credentials from " + userCredentials);
-                return null;
-            }
+            logger.warning("Unable to read database credentials.");
+            return null;
         }
-    }
-    
-    // package private for testing
-    File getStorageCredentialsFile(File parent) {
-        return new File(parent, CREDENTIALS_FILE);
     }
     
     // package private for testing
@@ -312,15 +304,23 @@ public class WebStorageEndPoint extends HttpServlet {
 
     // Side effect: sets this.paths
     private void sanityCheckNecessaryFiles() {
-        try {
-            // Throws config exception if basic sanity checks for
-            // THERMOSTAT_HOME don't pass.
-            paths = new CommonPathsImpl();
-        } catch (InvalidConfigurationException e) {
-            logger.log(Level.SEVERE, e.getMessage());
-            throw new RuntimeException(e);
+        if (paths == null) { // for unit tests, we inject this instance
+            try {
+                // Throws config exception if basic sanity checks for
+                // THERMOSTAT_HOME don't pass.
+                paths = new CommonPathsImpl();
+            } catch (InvalidConfigurationException e) {
+                logger.log(Level.SEVERE, e.getMessage());
+                throw new RuntimeException(e);
+            }
         }
+
+        if (finder == null) { // for unit tests, we inject this instance
+            finder = new ConfigurationFinder(paths);
+        }
+
         File thermostatHomeFile = getThermostatHome();
+
         String notReadableMsg = " is not readable or does not exist!";
         // we need to be able to read ssl config for backing storage
         // paths got set in isThermostatHomeSet()
@@ -331,7 +331,7 @@ public class WebStorageEndPoint extends HttpServlet {
             logger.log(Level.SEVERE, msg);
             throw new RuntimeException(msg);
         }
-        // Thermost home looks OK and seems usable
+        // Thermostat home looks OK and seems usable
         logger.log(Level.FINEST, "THERMOSTAT_HOME == "
                 + thermostatHomeFile.getAbsolutePath());
     }

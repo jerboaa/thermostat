@@ -48,6 +48,7 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.config.internal.CommonPathsImpl;
+import com.redhat.thermostat.web.server.ConfigurationFinder;
 
 /**
  * 
@@ -63,11 +64,15 @@ class PropertiesUserValidator implements UserValidator {
     PropertiesUserValidator() {
         // this is the default configuration. it should be overriden through different means
         // see javadoc of PropertiesUsernameRolesLoginModule
-        this((new CommonPathsImpl().getSystemConfigurationDirectory() + File.separator + DEFAULT_USERS_FILE));
+        this(new ConfigurationFinder(new CommonPathsImpl()).getConfiguration(DEFAULT_USERS_FILE));
     }
     
     PropertiesUserValidator(String usersFile) {
-        loadUsers(new File(usersFile));
+        this(new File(usersFile));
+    }
+
+    PropertiesUserValidator(File file) {
+        loadUsers(file);
     }
 
     @Override

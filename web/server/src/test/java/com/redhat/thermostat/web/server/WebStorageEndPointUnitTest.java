@@ -248,116 +248,24 @@ public class WebStorageEndPointUnitTest {
     @Test
     public void testShutDownCancelsTimers() {
         TimerRegistry registry = mock(TimerRegistry.class);
-        WebStorageEndPoint endpoint = new WebStorageEndPoint(registry);
+        WebStorageEndPoint endpoint = new WebStorageEndPoint(registry, null, null);
         endpoint.destroy();
         verify(registry).shutDown();
     }
     
     /**
-     * Storage credentials should be read from USER_THERMOSTAT_HOME if
-     * relevant credentials file is not readable or does not exist in
-     * THERMOSTAT_HOME.
-     * 
-     * Only the user file is readable.
-     * 
-     * @throws IOException 
-     */
-    @Test
-    public void canGetUserStorageCredentials() throws IOException {
-        StorageCredsTestSetupResult setupResult = setupForStorageCredentialsTest(false, true);
-        WebStorageEndPoint endPoint = setupResult.endpoint;
-        CommonPaths paths = setupResult.commonPaths;
-        StorageCredentials creds = endPoint.getStorageCredentials(paths);
-        assertNotNull(creds);
-        assertTrue(creds instanceof TestStorageCredentials);
-        TestStorageCredentials testCreds = (TestStorageCredentials)creds;
-        assertTrue(setupResult.userCredsFile == testCreds.underlyingFile);
-    }
-    
-    /**
-     * If Storage credentials file exists and is readable it should
-     * get used over USER_THERMOSTAT_HOME's version. In this test *both*
-     * files are present and readable.
-     * 
-     * @throws IOException 
-     */
-    @Test
-    public void canGetSystemStorageCredentialsBothReadable() throws IOException {
-        StorageCredsTestSetupResult setupResult = setupForStorageCredentialsTest(true, true);
-        WebStorageEndPoint endPoint = setupResult.endpoint;
-        CommonPaths paths = setupResult.commonPaths;
-        StorageCredentials creds = endPoint.getStorageCredentials(paths);
-        assertNotNull(creds);
-        assertTrue(creds instanceof TestStorageCredentials);
-        TestStorageCredentials testCreds = (TestStorageCredentials)creds;
-        assertTrue(setupResult.systemCredsFile == testCreds.underlyingFile);
-    }
-    
-    /**
-     * If Storage credentials file exists and is readable it should
-     * get used over USER_THERMOSTAT_HOME's version. In this test only the
-     * system version is readable.
-     * 
-     * @throws IOException 
-     */
-    @Test
-    public void canGetSystemStorageCredentialsOnlySystemReadable() throws IOException {
-        StorageCredsTestSetupResult setupResult = setupForStorageCredentialsTest(true, false);
-        WebStorageEndPoint endPoint = setupResult.endpoint;
-        CommonPaths paths = setupResult.commonPaths;
-        StorageCredentials creds = endPoint.getStorageCredentials(paths);
-        assertNotNull(creds);
-        assertTrue(creds instanceof TestStorageCredentials);
-        TestStorageCredentials testCreds = (TestStorageCredentials)creds;
-        assertTrue(setupResult.systemCredsFile == testCreds.underlyingFile);
-    }
-    
-    private StorageCredsTestSetupResult setupForStorageCredentialsTest(boolean systemCanRead, boolean userCanRead) {
-        final File systemCredsFile = mock(File.class);
-        when(systemCredsFile.canRead()).thenReturn(systemCanRead);
-        when(systemCredsFile.exists()).thenReturn(true);
-        when(systemCredsFile.getPath()).thenReturn("system_creds_file");
-        final File systemCredsDirectory = mock(File.class);
-        final File userCredsDirectory = mock(File.class);
-        final File userCredsFile = mock(File.class);
-        when(userCredsFile.canRead()).thenReturn(userCanRead);
-        when(userCredsFile.isFile()).thenReturn(true);
-        when(userCredsFile.getPath()).thenReturn("user_creds_file");
-        CommonPaths paths = mock(CommonPaths.class);
-        when(paths.getSystemConfigurationDirectory()).thenReturn(systemCredsDirectory);
-        when(paths.getUserConfigurationDirectory()).thenReturn(userCredsDirectory);
-        @SuppressWarnings("serial")
-        WebStorageEndPoint endpoint = new WebStorageEndPoint() {
-            @Override
-            File getStorageCredentialsFile(File parent) {
-                // intentionally compare exact instances
-                if (systemCredsDirectory == parent) {
-                    return systemCredsFile;
-                }
-                // intentionally compare exact instances
-                if (userCredsDirectory == parent) {
-                    return userCredsFile;
-                }
-                return null;
-            }
-            
-            @Override
-            StorageCredentials createStorageCredentials(File underlyingFile) {
-                return new TestStorageCredentials(underlyingFile);
-            }
-        };
-        return new StorageCredsTestSetupResult(endpoint, paths, systemCredsFile, userCredsFile);
-    }
-    
-    /**
-     * If neither storage credentials exist (none in USER_THERMOSTAT_HOME *and*
-     * in THERMOSTAT_HOME) then null is expected to get returned.
-     * @throws IOException 
+     * If storage credentials are not found then null is expected to get returned.
      */
     @Test
     public void storageCredentialsNull() throws IOException {
-        StorageCredsTestSetupResult setupResult = setupForStorageCredentialsTest(false, false);
-        StorageCredentials creds = setupResult.endpoint.getStorageCredentials(setupResult.commonPaths);
+        CommonPaths paths = mock(CommonPaths.class);
+        TimerRegistry registry = mock(TimerRegistry.class);
+        ConfigurationFinder finder = mock(ConfigurationFinder.class);
+        when(finder.getConfiguration("web.auth")).thenReturn(null);
+
+        WebStorageEndPoint endpoint = new WebStorageEndPoint(registry, paths, finder);
+        StorageCredentials creds = endpoint.getStorageCredentials();
+
         assertNull(creds);
     }
     
@@ -385,44 +293,6 @@ public class WebStorageEndPointUnitTest {
             this.etcDir = etcFile;
             this.sslProperties = sslProperties;
         }
-    }
-    
-    private static class StorageCredsTestSetupResult {
-        private WebStorageEndPoint endpoint;
-        private CommonPaths commonPaths;
-        private File systemCredsFile;
-        private File userCredsFile;
-        
-        private StorageCredsTestSetupResult(WebStorageEndPoint endpoint,
-                                            CommonPaths commonPaths,
-                                            File systemCredsFile,
-                                            File userCredsFile) {
-            this.endpoint = endpoint;
-            this.commonPaths = commonPaths;
-            this.systemCredsFile = systemCredsFile;
-            this.userCredsFile = userCredsFile;
-        }
-        
-    }
-    
-    private static class TestStorageCredentials implements StorageCredentials {
-
-        private File underlyingFile;
-        
-        private TestStorageCredentials(File underlyingFile) {
-            this.underlyingFile = underlyingFile;
-        }
-        
-        @Override
-        public String getUsername() {
-            throw new AssertionError("not implemented");
-        }
-
-        @Override
-        public char[] getPassword() {
-            throw new AssertionError("not implemented");
-        }
-        
     }
     
 }
