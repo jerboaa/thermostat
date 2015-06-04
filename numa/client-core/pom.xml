@@ -41,7 +41,7 @@
   <parent>
     <artifactId>thermostat-numa</artifactId>
     <groupId>com.redhat.thermostat</groupId>
-    <version>1.99.2-SNAPSHOT</version>
+    <version>1.99.3-SNAPSHOT</version>
   </parent>
   <artifactId>thermostat-numa-client-core</artifactId>
   <packaging>bundle</packaging>
