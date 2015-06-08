@@ -37,6 +37,7 @@
 package com.redhat.thermostat.storage.core.experimental.statement;
 
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
+import com.redhat.thermostat.storage.core.Id;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.internal.statement.StatementDescriptorTester;
 import java.util.ArrayList;

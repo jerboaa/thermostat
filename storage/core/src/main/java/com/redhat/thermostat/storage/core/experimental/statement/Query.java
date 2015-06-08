@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.storage.core.experimental.statement;
 
+import com.redhat.thermostat.storage.core.Id;
 import com.redhat.thermostat.storage.model.Pojo;
 import java.util.ArrayList;
 import java.util.Collections;

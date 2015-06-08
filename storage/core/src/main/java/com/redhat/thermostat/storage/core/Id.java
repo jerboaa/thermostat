@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.core.experimental.statement;
+package com.redhat.thermostat.storage.core;
 
 import java.util.UUID;
 

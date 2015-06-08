@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.thread.model;
 
-import com.redhat.thermostat.storage.core.experimental.statement.Id;
+import com.redhat.thermostat.storage.core.Id;
 
 /**
  *

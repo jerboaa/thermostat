@@ -49,7 +49,7 @@ import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.core.experimental.statement.BeanAdapter;
 import com.redhat.thermostat.storage.core.experimental.statement.BeanAdapterBuilder;
-import com.redhat.thermostat.storage.core.experimental.statement.Id;
+import com.redhat.thermostat.storage.core.Id;
 import com.redhat.thermostat.storage.core.experimental.statement.Query;
 import com.redhat.thermostat.storage.core.experimental.statement.QueryValues;
 import com.redhat.thermostat.storage.core.experimental.statement.ResultHandler;

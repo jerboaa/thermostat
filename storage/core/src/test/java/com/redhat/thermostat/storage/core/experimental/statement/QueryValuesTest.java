@@ -44,6 +44,8 @@ import org.junit.Test;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.redhat.thermostat.storage.core.Id;
+
 public class QueryValuesTest {
 
     private Query query;
