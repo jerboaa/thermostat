@@ -277,25 +277,13 @@ setupMongodbUser() {
     exitFail
   fi
   sleep 3
-  mongo 127.0.0.1:27518 << EOF
-use thermostat
-var v = db.version();
-var minorMicro = v.substr(v.indexOf('.') + 1)
-var minorVersion = minorMicro.substr(0, minorMicro.indexOf('.'))
-if ( minorVersion <= 2 ) {
-    // mongodb version 2.2 and below don't have the third argument.
-    // this should create the user as read + write.
-    db.addUser("$USERNAME","$PASSWORD")
-} else {
-  if ( minorVersion <= 4 ) {
-    db.addUser({ user: "$USERNAME", pwd: "$PASSWORD", roles: [ "readWrite" ] })
-  } else {
-    db.createUser({ user: "$USERNAME", pwd: "$PASSWORD", roles: [ "readWrite" ] })
-  }
-}
-quit()
-EOF
+  mkdir -p $USER_THERMOSTAT_HOME
+  touch $USER_THERMOSTAT_HOME/creds.js
+  chmod u=rw $USER_THERMOSTAT_HOME/creds.js
+  sed -e s/'\$USERNAME'/"$USERNAME"/g -e s/'\$PASSWORD'/"$PASSWORD"/g $THERMOSTAT_HOME/lib/create-user.js > $USER_THERMOSTAT_HOME/creds.js
+  mongo 127.0.0.1:27518/thermostat $USER_THERMOSTAT_HOME/creds.js
   MONGO_SETUP_RETVAL="$?"
+  rm $USER_THERMOSTAT_HOME/creds.js
   if [ "$MONGO_SETUP_RETVAL" -ne 0 ] ; then
     echo -e "\nMongodb user setup failed." 1>&2
     exitFail

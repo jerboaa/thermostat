@@ -150,6 +150,14 @@
                   <filtering>true</filtering>
                 </resource>
                 <resource>
+                  <directory>lib</directory>
+                  <targetPath>image/lib</targetPath>
+                  <filtering>true</filtering>
+                  <includes>
+                    <include>create-user.js</include>
+                  </includes>
+                </resource>
+                <resource>
                   <directory>config</directory>
                   <targetPath>image/etc</targetPath>
                   <filtering>true</filtering>

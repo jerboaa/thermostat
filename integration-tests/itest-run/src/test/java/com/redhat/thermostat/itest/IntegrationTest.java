@@ -42,12 +42,16 @@ import static org.junit.Assert.assertFalse;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 import com.redhat.thermostat.common.utils.StreamUtils;
@@ -115,11 +119,12 @@ public class IntegrationTest {
 
     private static final String THERMOSTAT_SCRIPT = "thermostat";
     
-    private static void createUserThermostatHomeAndEtc() {
+    private static File createUserThermostatHomeAndEtc() {
         File userThHome = new File(getUserThermostatHome());
         userThHome.mkdir();
         File etcThHome = new File(userThHome, "etc");
         etcThHome.mkdir();
+        return etcThHome;
     }
     
     /**
@@ -198,6 +203,20 @@ public class IntegrationTest {
         return testProperties;
     }
 
+    static protected void createAgentAuthFile(String userName, String password) throws IOException {
+        File etcHome = createUserThermostatHomeAndEtc();
+
+        List<String> lines = new ArrayList<>();
+        lines.add("username=" + userName);
+        lines.add("password=" + password);
+        Files.write(new File(etcHome, "agent.auth").toPath(), lines, StandardCharsets.UTF_8,
+                StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+    }
+
+    protected void deleteAgentAuthFile() throws IOException {
+        Files.delete(new File(new File(getUserThermostatHome(), "etc"), "agent.auth").toPath());
+    }
+
     /* This is a mirror of paths from c.r.t.shared.Configuration */
 
     public static String getThermostatHome() {
@@ -255,12 +274,44 @@ public class IntegrationTest {
         }
     }
 
+    /** pre-conditions:
+     *    storage must *NOT* be running.
+     *    No users set up
+     */
+    public static void addUserToStorage(String username, String password) throws Exception {
+        startStorage("--permitLocalhostException");
+
+        TimeUnit.SECONDS.sleep(3);
+
+        try {
+            ExpectJ mongo = new ExpectJ(TIMEOUT_IN_SECONDS);
+            Spawn mongoSpawn = mongo.spawn("mongo 127.0.0.1:27518/thermostat");
+            File createUser = new File(new File(getThermostatHome(), "lib"), "create-user.js");
+            String contents = new String(Files.readAllBytes(createUser.toPath()), StandardCharsets.UTF_8);
+            contents = contents.replaceAll("\\$USERNAME", username);
+            contents = contents.replaceAll("\\$PASSWORD", password);
+            mongoSpawn.send(contents);
+            mongoSpawn.send("quit();\n");
+            mongoSpawn.expectClose();
+
+            TimeUnit.SECONDS.sleep(3);
+
+        } finally {
+            stopStorage();
+        }
+    }
+
     public static Spawn spawnThermostat(String... args) throws IOException {
         return spawnThermostat(false, args);
     }
     
-    public static Spawn startStorage() throws Exception {
-        Spawn storage = spawnThermostat("storage", "--start", "--permitLocalhostException");
+    public static Spawn startStorage(String... extraArgs) throws Exception {
+        List<String> args = new ArrayList<>(Arrays.asList(new String[] { "storage", "--start", }));
+        if (extraArgs != null) {
+            args.addAll(Arrays.asList(extraArgs));
+        }
+
+        Spawn storage = spawnThermostat(args.toArray(new String[0]));
         try {
             storage.expect("pid:");
         } catch (IOException e) {

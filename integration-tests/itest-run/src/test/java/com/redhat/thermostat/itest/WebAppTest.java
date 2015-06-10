@@ -272,7 +272,7 @@ public class WebAppTest extends IntegrationTest {
         createFakeSetupCompleteFile();
         createFakeUserSetupDoneFile();
 
-        setupMongodbUser();
+        addUserToStorage(getMongodbUsername(), getMongodbPassword());
 
         startStorage();
 
@@ -285,7 +285,6 @@ public class WebAppTest extends IntegrationTest {
         mongoSpawn.send("db[\"fake\"].insert({foo:\"bar\", baz: 1})\n");
         mongoSpawn.send("db[\"fake\"].findOne()\n");
         mongoSpawn.send("show collections\n");
-        mongoSpawn.send("show users\n");
 
         createWebAuthFile();
 
@@ -330,6 +329,7 @@ public class WebAppTest extends IntegrationTest {
                     Files.copy(backupRoles, new File(THERMOSTAT_ROLES_FILE).toPath(), StandardCopyOption.REPLACE_EXISTING);
                     Files.copy(backupWebAuth, new File(THERMOSTAT_WEB_AUTH_FILE).toPath(), StandardCopyOption.REPLACE_EXISTING);
                     System.out.println("RESTORED backed-up files!");
+                    clearStorageDataDirectory();
                 }
             }
         }
@@ -347,65 +347,6 @@ public class WebAppTest extends IntegrationTest {
             return count;
         } catch (StatementExecutionException | DescriptorParsingException e) {
             throw new AssertionError(e);
-        }
-    }
-
-    // PRE: storage started with --permitLocalhostException
-    private static void setupMongodbUser() throws Exception {
-        String mongodbUsername = getMongodbUsername();
-        String mongodbPassword = getMongodbPassword();
-
-        final String HOST = "127.0.0.1";
-        final String PORT = "27518";
-
-        try {
-            System.out.println("THERMOSTAT_HOME: " + getThermostatHome());
-            System.out.println("USER_THERMOSTAT_HOME: " + getUserThermostatHome());
-
-            // start mongod
-            startStorage();
-
-            System.out.println("Started mongod");
-            TimeUnit.SECONDS.sleep(3);
-
-            ExpectJ mongo = new ExpectJ(TIMEOUT_IN_SECONDS);
-            Spawn mongoSpawn = mongo.spawn("mongo " + HOST + ":" + PORT);
-            mongoSpawn.send("use thermostat\n");
-            mongoSpawn.send("var v = db.version()\n");
-            mongoSpawn.send("var minorMicro = v.substr(v.indexOf('.') + 1)\n");
-            mongoSpawn.send("var minorVersion = minorMicro.substr(0, minorMicro.indexOf('.'))\n");
-            mongoSpawn.send("if ( minorVersion <= 2 ) {");
-            mongoSpawn.send(String.format("db.addUser(\"%s\", \"%s\")", mongodbUsername, mongodbPassword));
-            mongoSpawn.send("} else {");
-            mongoSpawn.send("if ( minorVersion <= 4 ) {");
-            mongoSpawn.send(String.format("db.addUser({ user: \"%s\", pwd: \"%s\", roles: [ \"readWrite\" ] })",
-                    mongodbUsername, mongodbPassword));
-            mongoSpawn.send("} else {");
-            mongoSpawn.send(String.format("db.createUser({ user: \"%s\", pwd: \"%s\", roles: [ \"readWrite\" ] })",
-                    mongodbUsername, mongodbPassword));
-            mongoSpawn.send("}\n");
-            mongoSpawn.send("}\n");
-            mongoSpawn.send("quit()\n");
-            mongoSpawn.expectClose();
-
-            mongo = new ExpectJ(TIMEOUT_IN_SECONDS);
-            mongoSpawn = mongo.spawn("mongo " + HOST + ":" + PORT);
-            mongoSpawn.send("use thermostat\n");
-            mongoSpawn.expect("switched to db thermostat");
-            mongoSpawn.send(String.format("db.auth(\"%s\", \"%s\")\n", mongodbUsername, mongodbPassword));
-            mongoSpawn.expect("1");
-
-            // now insert some fake data and display some information that
-            // might be useful for post-mortem analysis if this test fails
-            mongoSpawn.send("db[\"fake\"].insert({foo:\"bar\", baz: 1})\n");
-            mongoSpawn.send("db[\"fake\"].findOne()\n");
-            mongoSpawn.send("show collections\n");
-            mongoSpawn.send("show users\n");
-            
-        } catch (TimeoutException | IOException e) {
-            throw e;
-        } finally {
-            stopStorage();
         }
     }
 

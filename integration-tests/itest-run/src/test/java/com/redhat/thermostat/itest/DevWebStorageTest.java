@@ -45,6 +45,7 @@ import java.nio.file.NoSuchFileException;
 import java.util.Map;
 
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import expectj.Spawn;
@@ -52,11 +53,19 @@ import expectj.Spawn;
 public class DevWebStorageTest extends IntegrationTest {
     
     private static final String THERMOSTAT_DEV_SETUP_SCRIPT = "thermostat-devsetup";
+
+    @Before
+    public void setUp() throws Exception {
+        clearStorageDataDirectory();
+    }
+
     
     @After
     public void tearDown() throws IOException {
         removeSetupCompleteStampFiles();
         removeAgentAuthFile();
+
+        clearStorageDataDirectory();
     }
     
     private static void removeAgentAuthFile() throws IOException {
