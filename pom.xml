@@ -96,6 +96,25 @@
         <surefire-argline>-XX:-UseSplitVerifier -XX:MaxPermSize=300m</surefire-argline>
       </properties>
     </profile>
+    <profile>
+      <!-- Temporary workaround for PR2282: Caciocavallo tests fail with JDK 8 u40 -->
+      <id>java-8-skip-cacio-tests</id>
+      <activation>
+        <jdk>1.8</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <excludedGroups>com.redhat.thermostat.annotations.internal.CacioTest</excludedGroups>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+
+    </profile>
     <!-- Development settings for web.xml. Release builds should
          have the "environment.type=release" property. -->
     <profile>

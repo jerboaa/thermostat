@@ -43,7 +43,11 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import com.redhat.thermostat.annotations.internal.CacioTest;
+
+@Category(CacioTest.class)
 public class FontAwesomeIconTest {
 
     @Test

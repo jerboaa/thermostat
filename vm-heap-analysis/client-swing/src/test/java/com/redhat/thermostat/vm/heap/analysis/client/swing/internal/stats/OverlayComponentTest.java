@@ -60,10 +60,13 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
+import com.redhat.thermostat.annotations.internal.CacioTest;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
 
+@Category(CacioTest.class)
 @RunWith(CacioFESTRunner.class)
 public class OverlayComponentTest {
 

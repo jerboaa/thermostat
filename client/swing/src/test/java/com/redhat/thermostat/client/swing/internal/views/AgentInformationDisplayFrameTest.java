@@ -66,12 +66,13 @@ import org.junit.runner.RunWith;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import com.redhat.thermostat.annotations.internal.CacioTest;
 import com.redhat.thermostat.client.core.views.AgentInformationDisplayView;
 import com.redhat.thermostat.client.core.views.AgentInformationDisplayView.ConfigurationAction;
-import com.redhat.thermostat.client.swing.internal.views.AgentInformationDisplayFrame;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 
+@Category(CacioTest.class)
 @RunWith(CacioFESTRunner.class)
 public class AgentInformationDisplayFrameTest {
 

@@ -34,53 +34,11 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.classstat.client.swing;
+package com.redhat.thermostat.annotations.internal;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.JPanel;
-
-import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
-
-import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
-import org.fest.swing.edt.GuiActionRunner;
-import org.fest.swing.edt.GuiTask;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-
-import com.redhat.thermostat.annotations.internal.CacioTest;
-import com.redhat.thermostat.storage.model.DiscreteTimeData;
-
-@Category(CacioTest.class)
-@RunWith(CacioFESTRunner.class)
-public class VmClassStatPanelTest {
-
-    @BeforeClass
-    public static void setUpOnce() {
-        FailOnThreadViolationRepaintManager.install();
-    }
-
-    @Test
-    public void testAddDataTwice() {
-        GuiActionRunner.execute(new GuiTask() {
-            @Override
-            protected void executeInEDT() throws Throwable {
-                VmClassStatPanel panel = new VmClassStatPanel();
-                List<DiscreteTimeData<Long>> data = new ArrayList<>();
-                panel.addClassCount(data);
-                int numComponents = ((JPanel)panel.getUiComponent()).getComponentCount();
-                assertTrue(numComponents > 0);
-                panel.addClassCount(data);
-                assertEquals(numComponents, ((JPanel)panel.getUiComponent()).getComponentCount());
-            }
-        });
-    }
-
+/**
+ * Temporary workaround for PR2282: Caciocavallo tests fail with JDK 8 u40
+ * Use this annotation on test classes to exclude them from being run by the maven-surefire-plugin
+ */
+public interface CacioTest {
 }
-

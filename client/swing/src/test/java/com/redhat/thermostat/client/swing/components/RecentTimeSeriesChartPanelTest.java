@@ -41,6 +41,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.concurrent.TimeUnit;
 import javax.swing.JFrame;
 
+import com.redhat.thermostat.annotations.internal.CacioTest;
 import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 import org.fest.swing.annotation.GUITest;
@@ -55,8 +56,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
+@Category(CacioTest.class)
 @RunWith(CacioFESTRunner.class)
 public class RecentTimeSeriesChartPanelTest {
 
