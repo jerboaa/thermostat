@@ -52,6 +52,7 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.common.utils.LoggedExternalProcess;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.common.utils.StringUtils;
 import com.redhat.thermostat.service.process.UnixProcessUtilities;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.locale.LocalizedString;
@@ -179,6 +180,8 @@ public class MongoProcessRunner {
         List<String> commands = null;
         commands = getStartupCommand(dbVersion);
         
+        logger.log(Level.FINEST, "Executing mongo: " + StringUtils.join(" ", commands));
+
         display(translator.localize(LocaleResources.STARTING_STORAGE_SERVER));
         
         LoggedExternalProcess process = new LoggedExternalProcess(commands);

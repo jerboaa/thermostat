@@ -265,9 +265,9 @@ password=${agent.dev.password}
          See the main thermostat bash script where this property is
          used. -->
     <jcommon.version>1.0.17</jcommon.version>
-    <mongo-driver.version>2.11.4</mongo-driver.version>
+    <mongo-driver.version>2.13.2</mongo-driver.version>
     <!-- the OSGi Bundle-Version; should match the manifest in the jar -->
-    <mongo-driver.osgi-version>2.11.4.RELEASE</mongo-driver.osgi-version>
+    <mongo-driver.osgi-version>2.13.2.RELEASE</mongo-driver.osgi-version>
     <commons-beanutils.version>1.8.3</commons-beanutils.version>
     <commons-cli.version>1.2</commons-cli.version>
     <commons-io.version>2.4</commons-io.version>
