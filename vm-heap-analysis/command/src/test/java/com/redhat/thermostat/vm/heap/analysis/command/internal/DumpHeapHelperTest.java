@@ -56,8 +56,8 @@ import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
-import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
@@ -68,7 +68,9 @@ public class DumpHeapHelperTest {
     private VmInfoDAO vmInfoDAO;
     private AgentInfoDAO agentInfoDao;
     private DumpHeapHelper cmd;
-    private VmRef vmRef;
+    private VmId vmId;
+    private AgentId agentId;
+    private AgentInformation agentInfo;
     private RequestQueue reqQueue;
     private Runnable heapDumpCompleteAction;
     private Runnable heapDumpFailedAction;
@@ -77,23 +79,24 @@ public class DumpHeapHelperTest {
     public void setUp() {
         reqQueue = mock(RequestQueue.class);
 
-        HostRef host = mock(HostRef.class);
-
-        AgentInformation agentInfo = mock(AgentInformation.class);
-        when(agentInfo.getRequestQueueAddress()).thenReturn(new InetSocketAddress("test", 123));
-
         agentInfoDao = mock(AgentInfoDAO.class);
-        when(agentInfoDao.getAgentInformation(host)).thenReturn(agentInfo);
 
         cmd = new DumpHeapHelper();
-        vmRef = mock(VmRef.class);
-        when(vmRef.getVmId()).thenReturn("vmId");
-        when(vmRef.getHostRef()).thenReturn(host);
-        
+
+        agentInfo = mock(AgentInformation.class);
+        when(agentInfo.getRequestQueueAddress()).thenReturn(new InetSocketAddress("test", 123));
+
+        agentId = mock(AgentId.class);
+        when(agentInfoDao.getAgentInformation(agentId)).thenReturn(agentInfo);
+
+        vmId = mock(VmId.class);
+        when(vmId.get()).thenReturn("vmId");
+
         VmInfo vmInfo = mock(VmInfo.class);
         when(vmInfo.getVmPid()).thenReturn(123);
+
         vmInfoDAO = mock(VmInfoDAO.class);
-        when(vmInfoDAO.getVmInfo(vmRef)).thenReturn(vmInfo);
+        when(vmInfoDAO.getVmInfo(vmId)).thenReturn(vmInfo);
         
         heapDumpCompleteAction = mock(Runnable.class);
         heapDumpFailedAction = mock(Runnable.class);
@@ -102,15 +105,14 @@ public class DumpHeapHelperTest {
     @After
     public void tearDown() {
         heapDumpCompleteAction = null;
-        vmRef = null;
+        vmId = null;
         cmd = null;
         reqQueue = null;
     }
 
     @Test
     public void testExecute() {
-
-        cmd.execute(vmInfoDAO, agentInfoDao, vmRef, reqQueue, heapDumpCompleteAction, heapDumpFailedAction);
+        cmd.execute(vmInfoDAO, agentInfoDao, agentId, vmId, reqQueue, heapDumpCompleteAction, heapDumpFailedAction);
 
         ArgumentCaptor<Request> reqArg = ArgumentCaptor.forClass(Request.class);
         verify(reqQueue).putRequest(reqArg.capture());
@@ -133,7 +135,7 @@ public class DumpHeapHelperTest {
     @Test
     public void testExecuteFailure() {
 
-        cmd.execute(vmInfoDAO, agentInfoDao, vmRef, reqQueue, heapDumpCompleteAction, heapDumpFailedAction);
+        cmd.execute(vmInfoDAO, agentInfoDao, agentId, vmId, reqQueue, heapDumpCompleteAction, heapDumpFailedAction);
 
         ArgumentCaptor<Request> reqArg = ArgumentCaptor.forClass(Request.class);
         verify(reqQueue).putRequest(reqArg.capture());

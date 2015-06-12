@@ -36,28 +36,64 @@
 
 package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
+import java.util.Map;
+
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
+import com.redhat.thermostat.client.command.RequestQueue;
+import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 
 public class Activator implements BundleActivator {
 
     private CommandRegistry reg;
+    private MultipleServiceTracker serviceTracker;
+    private DumpHeapCommand dumpHeapCommand = new DumpHeapCommand();
 
     @Override
     public void start(final BundleContext context) throws Exception {
         reg = new CommandRegistryImpl(context);
 
-        registerCommand("dump-heap", new DumpHeapCommand());
+        registerCommand("dump-heap", dumpHeapCommand);
         registerCommand("list-heap-dumps", new ListHeapDumpsCommand());
         registerCommand("save-heap-dump-to-file", new SaveHeapDumpToFileCommand());
         registerCommand("show-heap-histogram", new ShowHeapHistogramCommand());
         registerCommand("find-objects", new FindObjectsCommand());
         registerCommand("object-info", new ObjectInfoCommand());
         registerCommand("find-root", new FindRootCommand());
+
+        Class<?>[] serviceDeps = new Class<?>[] {
+                AgentInfoDAO.class,
+                VmInfoDAO.class,
+                RequestQueue.class,
+        };
+
+        serviceTracker = new MultipleServiceTracker(context, serviceDeps, new MultipleServiceTracker.Action() {
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                VmInfoDAO vmDao = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
+                AgentInfoDAO agentDao = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
+                RequestQueue queue = (RequestQueue) services.get(RequestQueue.class.getName());
+
+                dumpHeapCommand.setAgentInfoDAO(agentDao);
+                dumpHeapCommand.setVmInfoDAO(vmDao);
+                dumpHeapCommand.setRequestQueue(queue);
+            }
+
+            @Override
+            public void dependenciesUnavailable() {
+                dumpHeapCommand.setAgentInfoDAO(null);
+                dumpHeapCommand.setVmInfoDAO(null);
+                dumpHeapCommand.setRequestQueue(null);
+            }
+        });
+
+        serviceTracker.open();
     }
 
     private void registerCommand(String name, Command command) {
@@ -66,6 +102,7 @@ public class Activator implements BundleActivator {
 
     @Override
     public void stop(BundleContext context) throws Exception {
+        serviceTracker.close();
         reg.unregisterCommands();
     }
     

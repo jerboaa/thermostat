@@ -93,9 +93,7 @@ public class KillVmCommandTest {
         setServices();
         cmd.run(ctx);
 
-        verify(request).sendKillVMRequestToAgent(any(AgentId.class), any(int.class), any(AgentInfoDAO.class), any
-                (RequestResponseListener
-                .class));
+        verify(request).sendKillVMRequestToAgent(any(AgentId.class), any(int.class), any(AgentInfoDAO.class), any(RequestResponseListener.class));
     }
 
     @Test(expected = CommandException.class)
