@@ -36,38 +36,46 @@
 
 package com.redhat.thermostat.storage.core;
 
-import java.util.Objects;
-import java.util.UUID;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-/**
- *
- */
-public class Id {
-    private String id;
+import org.junit.Before;
+import org.junit.Test;
 
-    public Id() {
-        id = UUID.randomUUID().toString();
+public class IdTest {
+
+    protected Id fooId1;
+    protected Id fooId2;
+    protected Id barId;
+
+    protected Id createId(String id) { return new Id(id); }
+
+    @Before
+    public void setup() {
+        fooId1 = createId("foo");
+        fooId2 = createId("foo");
+        barId = createId("bar");
     }
 
-    public Id(String id) {
-        this.id = Objects.requireNonNull(id);
+    @Test
+    public void testEquals() {
+        assertTrue(fooId1.equals(fooId1));
+        assertTrue(fooId1.equals(fooId2));
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Id other = (Id) o;
-        return Objects.equals(this.id, other.get());
+    @Test
+    public void testNotEquals() {
+        assertFalse(fooId1.equals(null));
+        assertFalse(fooId1.equals(barId));
     }
 
-    public String get() {
-        return id;
+    @Test
+    public void testEqualsHaveIdenticalHashcode() {
+        assertEquals(fooId1, fooId2);
+
+        assertEquals(fooId1.hashCode(), fooId1.hashCode());
+        assertEquals(fooId1.hashCode(), fooId2.hashCode());
     }
 
-    @Override
-    public int hashCode() {
-        return id != null ? id.hashCode() : 0;
-    }
 }

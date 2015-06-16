@@ -85,7 +85,8 @@ public class KillVmCommandTest {
     public void testKillLiveVM() throws CommandException, InterruptedException {
         String vmId = "liveVM";
 
-        VmInfo vmInfo = mock(VmInfo.class);
+        VmInfo vmInfo = new VmInfo("myAgent", vmId, 123, 0, 0, null, null, null, null, null, null, null, null, null,
+                null, null,0, "myUsername");
         when(vmInfoDAO.getVmInfo(any(VmId.class))).thenReturn(vmInfo);
 
         CommandContext ctx = createContext(vmId);
