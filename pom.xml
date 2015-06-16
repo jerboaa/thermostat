@@ -142,14 +142,6 @@
         <agent.dev.password> tester </agent.dev.password>
         <mongodb.dev.username> mongodevuser </mongodb.dev.username>
         <mongodb.dev.password> mongodevpassword </mongodb.dev.password>
-        <!-- used in web.xml of the war artifact -->
-        <web.war.backingstorage.username.snippet>
-storage.username=${mongodb.dev.username}
-        </web.war.backingstorage.username.snippet>
-        <!-- used in web.xml of the war artifact -->
-        <web.war.backingstorage.password.snippet>
-storage.password=${mongodb.dev.password}
-        </web.war.backingstorage.password.snippet>
         <!--
              Used in thermostat-users.properties. We define two users.
              One client user and one agent user.
@@ -313,14 +305,6 @@ password=${agent.dev.password}
          to change to a newer version, unless you abolutely have to. -->
     <javax.servlet.version>2.5</javax.servlet.version>
 
-    <!-- used in web.xml of the war artifact -->
-    <web.war.backingstorage.username.snippet>
-#storage.username=thermostat-mongodb-user
-    </web.war.backingstorage.username.snippet>
-    <!-- used in web.xml of the war artifact -->
-    <web.war.backingstorage.password.snippet>
-#storage.password=supersecrit
-    </web.war.backingstorage.password.snippet>
     <!--
          Used in thermostat-users.properties and
          thermostat-roles.properties respectively. We don't define

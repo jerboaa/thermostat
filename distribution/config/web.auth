@@ -4,8 +4,8 @@
 
 # Username to use for connecting to the backing storage
 # implementation
-${web.war.backingstorage.username.snippet}
+# storage.username=username
 
 # Password to use for connecting to the backing storage
 # implementation
-${web.war.backingstorage.password.snippet}
+# storage.password=password
