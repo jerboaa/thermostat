@@ -186,11 +186,6 @@ runSetup() {
   setupMongodbUser
   TH_WEB_AUTH="$THERMOSTAT_HOME/etc/web.auth"
   
-  if [ ! -e $TH_WEB_AUTH ]; then
-    echo "File not found: $TH_WEB_AUTH" 1>&2
-    exitFail
-  fi
-
   if [ ! -w $TH_WEB_AUTH ]; then
     echo -e "\n\n$(readlink -f $TH_WEB_AUTH) is NOT writable."
     mkdir -p "$USER_THERMOSTAT_HOME/etc/"
