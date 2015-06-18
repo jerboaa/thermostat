@@ -66,7 +66,13 @@ public class DistributionInformation {
     // package-private for testing
     static DistributionInformation get(EtcOsRelease etcOsRelease, LsbRelease lsbRelease) {
         try {
-            return etcOsRelease.getDistributionInformation();
+            DistributionInformation etcOsDistroInfo = etcOsRelease.getDistributionInformation();
+            // if both name and version are unknown defer to lsb fallback
+            if (!DistributionInformation.UNKNOWN_NAME.equals(etcOsDistroInfo.getName()) &&
+                !DistributionInformation.UNKNOWN_VERSION.equals(etcOsDistroInfo.getVersion())) {
+                return etcOsDistroInfo;
+            }
+            logger.log(Level.FINE, "/etc/os-release existing, but does not contain useful info");
         } catch (IOException e) {
             // Log only at level FINE, since we have the LSB fallback
             logger.log(Level.FINE, "unable to use os-release", e);

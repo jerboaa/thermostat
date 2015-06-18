@@ -37,7 +37,10 @@
 package com.redhat.thermostat.backend.system;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.util.logging.Handler;
 import java.util.logging.Logger;
 
@@ -114,6 +117,23 @@ public class DistributionInformationTest {
         assertNotNull(info);
         assertEquals(DistributionInformation.UNKNOWN_NAME, info.getName());
         assertEquals(DistributionInformation.UNKNOWN_VERSION, info.getVersion());
+    }
+    
+    @Test
+    public void verifyFallbackToLsbWhenEtcOsReturnsUnknown() throws IOException {
+        EtcOsRelease mockEtcOsRelease = mock(EtcOsRelease.class);
+        DistributionInformation mockDistro = mock(DistributionInformation.class);
+        when(mockEtcOsRelease.getDistributionInformation()).thenReturn(mockDistro);
+        when(mockDistro.getName()).thenReturn(DistributionInformation.UNKNOWN_NAME);
+        when(mockDistro.getVersion()).thenReturn(DistributionInformation.UNKNOWN_VERSION);
+        
+        LsbRelease mockLsbRelease = mock(LsbRelease.class);
+        DistributionInformation mockLsbDistro = mock(DistributionInformation.class);
+        when(mockLsbRelease.getDistributionInformation()).thenReturn(mockLsbDistro);
+        
+        DistributionInformation info = DistributionInformation.get(mockEtcOsRelease, mockLsbRelease);
+        assertSame("Expected lsb info to be used since etc returns unknown",
+                   mockLsbDistro, info);
     }
 
     private void assertTestHandlerRegistered() {

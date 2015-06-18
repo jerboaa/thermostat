@@ -87,6 +87,23 @@ public class EtcOsReleaseTest {
         assertEquals("12.1 (Asparagus)", info.getVersion());
     }
     
+    /**
+     * DistributionInformation falls back on LSB when /etc/os-release contains
+     * inconclusive content (empty in this case). It should not return some
+     * info as "Linux".
+     * 
+     * @throws IOException
+     */
+    @Test
+    public void testEmpty() throws IOException {
+        String output = "";
+        BufferedReader reader = new BufferedReader(new StringReader(output));
+        
+        DistributionInformation info = new EtcOsRelease().getFromOsRelease(reader);
+        assertEquals(DistributionInformation.UNKNOWN_NAME, info.getName());
+        assertEquals(DistributionInformation.UNKNOWN_VERSION, info.getVersion());
+    }
+    
     @Test
     public void getDistributionInformationThrowsIOExceptionIfFileNotThere() {
         EtcOsRelease etcOsRelease = new EtcOsRelease(NOT_EXISTING_OS_RELEASE_FILE);
