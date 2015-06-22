@@ -44,27 +44,35 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.util.Map;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import expectj.Spawn;
 
-public class DevWebStorageTest extends IntegrationTest {
+public class DevWebStorageTest extends WebStorageUsingIntegrationTest {
     
     private static final String THERMOSTAT_DEV_SETUP_SCRIPT = "thermostat-devsetup";
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeClass
+    public static void setUp() throws IOException {
         clearStorageDataDirectory();
+        backupOriginalCredentialsFiles();
+        try {
+            runThermostatDevSetup();
+        } catch (Exception e) {
+            e.printStackTrace();
+            restoreBackedUpCredentialsFiles();
+        }
     }
 
     
-    @After
-    public void tearDown() throws IOException {
+    @AfterClass
+    public static void tearDown() throws IOException {
         removeSetupCompleteStampFiles();
         removeAgentAuthFile();
 
+        restoreBackedUpCredentialsFiles();
         clearStorageDataDirectory();
     }
     
@@ -77,35 +85,17 @@ public class DevWebStorageTest extends IntegrationTest {
         }
     }
 
+    /**
+     * Singleton sanity check test whether web-storage-service works OK.
+     * 
+     * @throws Exception
+     */
     @Test
     public void canRunWebStorageService() throws Exception {
-        if (isDevelopmentBuild()) {
-            // test setup
-            removeSetupCompleteStampFiles();
-            
-            // run the test methods
-            runThermostatSetup();
-            runWebStorageTest();
-        }
-        // otherwise service is not build so don't run the
-        // test.
-    }
-
-    private void runThermostatSetup() throws Exception {
-        Spawn setup = spawnScript(THERMOSTAT_DEV_SETUP_SCRIPT, new String[] {});
-        setup.expectClose();
-        String stdout = setup.getCurrentStandardOutContents();
-        // cp -v of thermostat-devsetup should produce this
-        assertTrue("was agent.auth copied?", stdout.contains("distribution/target/user-home/etc/agent.auth"));
-        assertTrue(stdout.contains("Thermostat setup complete!"));
-        assertTrue(stdout.contains("mongodevuser"));
-    }
-
-    private void runWebStorageTest() throws Exception {
         Map<String, String> testProperties = getVerboseModeProperties();
         SpawnResult spawnResult = spawnThermostatWithPropertiesSetAndGetProcess(testProperties, "web-storage-service");
         Spawn service = spawnResult.spawn;
-
+        
         try {
             service.expect("Agent started.");
         } finally {
@@ -119,7 +109,19 @@ public class DevWebStorageTest extends IntegrationTest {
                 // ignore if second try of stopping storage failed.
             }
         }
-
+        
         service.expectClose();
+    }
+
+    /*
+     * This overwrites stock thermostat-users/roles.properties files. Therefore
+     * we back them up before we run the test.
+     */
+    private static void runThermostatDevSetup() throws Exception {
+        Spawn setup = spawnScript(THERMOSTAT_DEV_SETUP_SCRIPT, new String[] {});
+        setup.expectClose();
+        String stdout = setup.getCurrentStandardOutContents();
+        assertTrue(stdout.contains("Thermostat setup complete!"));
+        assertTrue(stdout.contains("mongodevuser"));
     }
 }

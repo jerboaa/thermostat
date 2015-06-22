@@ -395,11 +395,6 @@ public class IntegrationTest {
 
     }
 
-    protected static boolean isDevelopmentBuild() {
-        boolean isDevelBuild = Boolean.getBoolean("devel.build");
-        return isDevelBuild;
-    }
-
     /**
      * Kill the process and all its children, recursively. Sends SIGTERM.
      */

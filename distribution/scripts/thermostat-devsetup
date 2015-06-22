@@ -61,5 +61,10 @@ if [ $retval -ne 0 ]; then
   exit $retval
 fi
 
-# Copy the agent.auth file into USER_THERMOSTAT_HOME
-cp -v $THERMOSTAT_HOME/etc/agent.auth $USER_THERMOSTAT_HOME/etc/agent.auth
+# Use example users/roles files:
+#  thermostat-users-example.properties
+#  thermostat-roles-example.properties
+cp -v $THERMOSTAT_HOME/etc/examples/thermostat-users-example.properties $THERMOSTAT_HOME/etc/thermostat-users.properties
+cp -v $THERMOSTAT_HOME/etc/examples/thermostat-roles-example.properties $THERMOSTAT_HOME/etc/thermostat-roles.properties
+# Use the agent-tester user as defined in thermostat-users-example.properties
+echo -e 'username=agent-tester\npassword=tester' > $USER_THERMOSTAT_HOME/etc/agent.auth

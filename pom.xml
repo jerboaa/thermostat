@@ -113,88 +113,6 @@
           </plugin>
         </plugins>
       </build>
-
-    </profile>
-    <!-- Development settings for web.xml. Release builds should
-         have the "environment.type=release" property. -->
-    <profile>
-      <id>dev-build</id>
-      <activation>
-        <property>
-          <name>environment.type</name>
-          <value>!release</value>
-        </property>
-      </activation>
-      <properties>
-        <!--
-             The devel.build property is used in the WebAppTest integration
-             test. For this test to work for devel builds, we need
-             to perform actual setup of the below mongodb credentials.
-             Why? Because the snippet for a devel build has the
-             storage username/password NOT commented out in the
-             web.xml of the web archive. That results in MongoConnection
-             of WebAppTest use non-null creds. If those are used mongodb
-             connections would fail with auth-fail if the creds are not
-             set up.
-        -->
-        <devel.build>true</devel.build>
-        <agent.dev.username> agent-tester </agent.dev.username>
-        <agent.dev.password> tester </agent.dev.password>
-        <mongodb.dev.username> mongodevuser </mongodb.dev.username>
-        <mongodb.dev.password> mongodevpassword </mongodb.dev.password>
-        <!--
-             Used in thermostat-users.properties. We define two users.
-             One client user and one agent user.
-        -->
-        <dev.users.snippet>
-${agent.dev.username}=${agent.dev.password}
-client-tester=tester
-        </dev.users.snippet>
-        <dev.roles.snippet>
-# Roles for our two dev users
-${agent.dev.username}=thermostat-agent, thermostat-grant-write-files-all-agent
-# client-tester needs thermostat-purge role for clean-data command to work
-client-tester=thermostat-grant-read-all-client, thermostat-cmdc, thermostat-purge
-# Agent recursive role
-thermostat-agent = thermostat-cmdc-verify, \
-                   thermostat-login, \
-                   thermostat-prepare-statement, \
-                   thermostat-purge, \
-                   thermostat-register-category, \
-                   thermostat-realm, \
-                   thermostat-save-file, \
-                   thermostat-write
-# Grant agent to write any file
-thermostat-grant-write-files-all-agent = thermostat-files-grant-write-filename-ALL
-                   
-# Client recursive role (granting a client to read all data + all files)
-thermostat-grant-read-all-client = thermostat-agents-grant-read-agentId-ALL, \
-                    thermostat-cmdc-generate, \
-                    thermostat-hosts-grant-read-hostname-ALL, \
-                    thermostat-load-file, \
-                    thermostat-login, \
-                    thermostat-prepare-statement, \
-                    thermostat-query, \
-                    thermostat-realm, \
-                    thermostat-register-category, \
-                    thermostat-vms-grant-read-username-ALL, \
-                    thermostat-vms-grant-read-vmId-ALL, \
-                    thermostat-files-grant-read-filename-ALL, \
-                    thermostat-write
-# Grants all command channel operations
-thermostat-cmdc = thermostat-cmdc-grant-garbage-collect, \
-                  thermostat-cmdc-grant-dump-heap, \
-                  thermostat-cmdc-grant-thread-harvester, \
-                  thermostat-cmdc-grant-killvm, \
-                  thermostat-cmdc-grant-profile-vm, \
-                  thermostat-cmdc-grant-ping, \
-                  thermostat-cmdc-grant-jmx-toggle-notifications
-        </dev.roles.snippet>
-        <agent.auth.snippet>
-username=${agent.dev.username}
-password=${agent.dev.password}
-        </agent.auth.snippet>
-      </properties>
     </profile>
     <profile>
       <id>skip-license-check-on-skip-tests</id>
@@ -305,18 +223,11 @@ password=${agent.dev.password}
          to change to a newer version, unless you abolutely have to. -->
     <javax.servlet.version>2.5</javax.servlet.version>
 
-    <!--
-         Used in thermostat-users.properties and
-         thermostat-roles.properties respectively. We don't define
-         users or roles for release builds. Hence, those
-         empty property definitions.
-    -->
-    <dev.users.snippet /> <!-- intentionally empty -->
-    <dev.roles.snippet /> <!-- intentionally empty -->
-    <agent.auth.snippet /> <!-- intentionally empty -->
     <!-- see web/common/pom.xml for an example as to how this is used -->
     <surefire-perftests-exclusion>com.redhat.thermostat.testutils.PerformanceTest</surefire-perftests-exclusion>
     <surefire-argline /> <!-- intentionally empty -->
+    <mongodb.dev.username> mongodevuser </mongodb.dev.username>
+    <mongodb.dev.password> mongodevpassword </mongodb.dev.password>
   </properties>
 
   <modules>
@@ -354,9 +265,6 @@ password=${agent.dev.password}
     <module>thermostat-plugin-validator</module>
     <module>validate-command</module>
     <module>config</module>
-    <!-- pom-only artifact for reducing duplication
-         of deps across dev/release build profiles -->
-    <module>build-deps</module>
     <!-- development related modules -->
     <module>integration-tests</module>
     <module>dev</module>

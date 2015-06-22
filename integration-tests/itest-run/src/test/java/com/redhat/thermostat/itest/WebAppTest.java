@@ -51,8 +51,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -65,7 +63,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.jetty.server.Server;
@@ -118,7 +115,6 @@ import com.redhat.thermostat.web.server.auth.Roles;
 
 import expectj.ExpectJ;
 import expectj.Spawn;
-import expectj.TimeoutException;
 
 /**
  * This test class starts up a mongod instance and a web storage instance
@@ -136,7 +132,7 @@ import expectj.TimeoutException;
  * Please don't introduce any more sporadic test failures to this
  * integration test!!!
  */
-public class WebAppTest extends IntegrationTest {
+public class WebAppTest extends WebStorageUsingIntegrationTest {
 
     /*
      * Registry of descriptors this test needs to allow in order to avoid
@@ -242,32 +238,20 @@ public class WebAppTest extends IntegrationTest {
     private static final String TEST_USER = "testuser";
     private static final String TEST_PASSWORD = "testpassword";
     private static final double EQUALS_DELTA = 0.00000000000001;
-    private static final String THERMOSTAT_USERS_FILE = getConfigurationDir() + "/thermostat-users.properties";
-    private static final String THERMOSTAT_ROLES_FILE = getConfigurationDir() + "/thermostat-roles.properties";
-    private static final String THERMOSTAT_WEB_AUTH_FILE = getConfigurationDir() + "/web.auth";
+    
     private static final String VM_ID1 = "vmId1";
     private static final String VM_ID2 = "vmId2";
     private static final String VM_ID3 = "vmId3";
 
     private static Server server;
     private static int port;
-    private static Path backupUsers;
-    private static Path backupRoles;
-    private static Path backupWebAuth;
+    
 
     @BeforeClass
     public static void setUpOnce() throws Exception {
         clearStorageDataDirectory();
 
-        backupUsers = Files.createTempFile("itest-backup-thermostat-users", "");
-        backupRoles = Files.createTempFile("itest-backup-thermostat-roles", "");
-        backupWebAuth = Files.createTempFile("itest-backup-webapp-auth", "");
-        backupRoles.toFile().deleteOnExit();
-        backupUsers.toFile().deleteOnExit();
-        backupWebAuth.toFile().deleteOnExit();
-        Files.copy(new File(THERMOSTAT_USERS_FILE).toPath(), backupUsers, StandardCopyOption.REPLACE_EXISTING);
-        Files.copy(new File(THERMOSTAT_ROLES_FILE).toPath(), backupRoles, StandardCopyOption.REPLACE_EXISTING);
-        Files.copy(new File(THERMOSTAT_WEB_AUTH_FILE).toPath(), backupWebAuth, StandardCopyOption.REPLACE_EXISTING);
+        backupOriginalCredentialsFiles();
 
         createFakeSetupCompleteFile();
         createFakeUserSetupDoneFile();
@@ -325,9 +309,7 @@ public class WebAppTest extends IntegrationTest {
                     throw e;
                 } finally {
                     removeSetupCompleteStampFiles();
-                    Files.copy(backupUsers, new File(THERMOSTAT_USERS_FILE).toPath(), StandardCopyOption.REPLACE_EXISTING);
-                    Files.copy(backupRoles, new File(THERMOSTAT_ROLES_FILE).toPath(), StandardCopyOption.REPLACE_EXISTING);
-                    Files.copy(backupWebAuth, new File(THERMOSTAT_WEB_AUTH_FILE).toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    restoreBackedUpCredentialsFiles();
                     System.out.println("RESTORED backed-up files!");
                     clearStorageDataDirectory();
                 }

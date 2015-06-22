@@ -6,4 +6,3 @@
 #
 #username=thermostat
 #password=thermostat
-${agent.auth.snippet}
