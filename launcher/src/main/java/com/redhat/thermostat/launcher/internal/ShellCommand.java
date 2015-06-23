@@ -37,17 +37,14 @@
 package com.redhat.thermostat.launcher.internal;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
-import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import jline.Terminal;
 import jline.TerminalFactory;
 import jline.console.ConsoleReader;
-import jline.console.completer.FileNameCompleter;
 import jline.console.history.FileHistory;
 import jline.console.history.History;
 import jline.console.history.PersistentHistory;
@@ -67,11 +64,6 @@ import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.DbService;
-import jline.console.completer.AggregateCompleter;
-import jline.console.completer.ArgumentCompleter;
-import jline.console.completer.Completer;
-import jline.console.completer.StringsCompleter;
-import org.apache.commons.cli.Option;
 
 public class ShellCommand extends AbstractCommand {
 
@@ -159,7 +151,7 @@ public class ShellCommand extends AbstractCommand {
     private void shellMainLoop(CommandContext ctx, History history, Terminal term) throws IOException, CommandException {
         ConsoleReader reader = new ConsoleReader(ctx.getConsole().getInput(), ctx.getConsole().getOutput(), term);
         if (reader.getCompleters().isEmpty() && commandInfoSource != null) {
-            setupTabCompletion(reader);
+            TabCompletion.setupTabCompletion(reader, commandInfoSource);
         }
         if (history != null) {
             reader.setHistory(history);
@@ -222,39 +214,6 @@ public class ShellCommand extends AbstractCommand {
 
     public void setCommandInfoSource(final CommandInfoSource source) {
         this.commandInfoSource = source;
-    }
-
-    private void setupTabCompletion(ConsoleReader reader) {
-        Collection<Completer> commands = new ArrayList<>();
-        Collection<String> options = new ArrayList<>();
-        Collection<Completer> completers = new ArrayList<>();
-        for (CommandInfo info : commandInfoSource.getCommandInfos()) {
-
-            if (info.getEnvironments().contains(Environment.SHELL)) {
-                commands.clear();
-                options.clear();
-                commands.add(new StringsCompleter(info.getName()));
-                for (Option option : (Collection<Option>) info.getOptions().getOptions()) {
-                    if (option.getLongOpt() != null) {
-                        options.add("--" + option.getLongOpt());
-                    }
-                    if (option.getOpt() != null) {
-                        options.add("-" + option.getOpt());
-                    }
-                }
-
-                if (info.needsFileTabCompletions()) {
-                    AggregateCompleter optionsAndFiles = new AggregateCompleter(new StringsCompleter(options), new FileNameCompleter());
-                    commands.add(optionsAndFiles);
-                } else {
-                    commands.add(new StringsCompleter(options));
-                }
-
-                completers.add(new ArgumentCompleter(new ArrayList<>(commands)));
-            }
-        }
-        AggregateCompleter aggregateCompleter = new AggregateCompleter(completers);
-        reader.addCompleter(aggregateCompleter);
     }
 
 }

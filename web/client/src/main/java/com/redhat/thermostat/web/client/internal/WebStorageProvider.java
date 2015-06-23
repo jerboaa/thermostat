@@ -56,7 +56,7 @@ public class WebStorageProvider implements StorageProvider {
     @Override
     public Storage createStorage() {
         WebStorage storage = new WebStorage(url, creds, sslConf);
-        if (LoggingUtils.getEffectiveLogLevel(LoggingUtils.getLogger(WebStorageProvider.class)).intValue() <= LoggingUtils.PERFLOG.intValue()) {
+        if (LoggingUtils.getEffectiveLogLevel(LoggingUtils.getLogger(WebStorageProvider.class)).intValue() <= LoggingUtils.LogLevel.PERFLOG.getLevel().intValue()) {
             PerformanceLogFormatterBuilder builder = PerformanceLogFormatterBuilder.create();
             PerformanceLogFormatter lf = builder.setLoggedTimeUnit(TimeUnit.MICROSECONDS)
                                               .build();
