@@ -38,18 +38,17 @@ package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
 import java.util.concurrent.Semaphore;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.ServiceReference;
-
 import com.redhat.thermostat.client.cli.HostVMArguments;
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.vm.heap.analysis.command.locale.LocaleResources;
 
 
@@ -57,24 +56,35 @@ public class DumpHeapCommand extends AbstractCommand {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private BundleContext context;
     private final DumpHeapHelper implementation;
 
+    private VmInfoDAO vmInfoDAO;
+    private AgentInfoDAO agentInfoDAO;
+    private RequestQueue queue;
+
     public DumpHeapCommand() {
-        this(FrameworkUtil.getBundle(DumpHeapCommand.class).getBundleContext(), new DumpHeapHelper());
+        this(new DumpHeapHelper());
     }
 
-    DumpHeapCommand(BundleContext context, DumpHeapHelper impl) {
-        this.context = context;
+    DumpHeapCommand(DumpHeapHelper impl) {
         this.implementation = impl;
     }
 
     @Override
     public void run(final CommandContext ctx) throws CommandException {
-        final HostVMArguments args = new HostVMArguments(ctx.getArguments());
+        requireNonNull(vmInfoDAO, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
+        requireNonNull(agentInfoDAO, translator.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE));
+        requireNonNull(queue, translator.localize(LocaleResources.REQUEST_QUEUE_UNAVAILABLE));
+
+        final HostVMArguments args = new HostVMArguments(ctx.getArguments(), false, true);
+
+        VmId vmId = new VmId(args.getVM().getVmId());
+        final VmInfo vmInfo = vmInfoDAO.getVmInfo(vmId);
+        final AgentId agentId = new AgentId(vmInfo.getAgentId());
 
         final CommandException[] ex = new CommandException[1];
         final Semaphore s = new Semaphore(0);
+
         Runnable successHandler = new Runnable() {
             @Override
             public void run() {
@@ -82,32 +92,16 @@ public class DumpHeapCommand extends AbstractCommand {
                 s.release();
             }
         };
+
         Runnable errorHandler = new Runnable() {
             public void run() {
                 ex[0] = new CommandException(translator.localize(
-                        LocaleResources.HEAP_DUMP_ERROR, args.getHost()
-                                .getStringID(), args.getVM().getVmId()));
+                        LocaleResources.HEAP_DUMP_ERROR, vmInfo.getAgentId(), vmInfo.getVmId()));
                 s.release();
             }
         };
 
-        ServiceReference vmInfoRef = context.getServiceReference(VmInfoDAO.class.getName());
-        requireNonNull(vmInfoRef, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
-        VmInfoDAO vmInfoDAO = (VmInfoDAO) context.getService(vmInfoRef);
-        
-        ServiceReference agentInfoRef = context.getServiceReference(AgentInfoDAO.class.getName());
-        requireNonNull(agentInfoRef, translator.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE));
-        AgentInfoDAO agentInfoDAO = (AgentInfoDAO) context.getService(agentInfoRef);
-        
-        ServiceReference requestQueueRef = context.getServiceReference(RequestQueue.class.getName());
-        requireNonNull(requestQueueRef, translator.localize(LocaleResources.REQUEST_QUEUE_UNAVAILABLE));
-        RequestQueue queue = (RequestQueue) context.getService(requestQueueRef);
-        
-        implementation.execute(vmInfoDAO, agentInfoDAO, args.getVM(), queue, successHandler, errorHandler);
-        
-        context.ungetService(vmInfoRef);
-        context.ungetService(agentInfoRef);
-        context.ungetService(requestQueueRef);
+        implementation.execute(vmInfoDAO, agentInfoDAO, agentId, vmId, queue, successHandler, errorHandler);
         
         try {
             s.acquire();
@@ -118,6 +112,18 @@ public class DumpHeapCommand extends AbstractCommand {
         if (ex[0] != null) {
             throw ex[0];
         }
+    }
+
+    public void setVmInfoDAO(VmInfoDAO vmInfoDAO) {
+        this.vmInfoDAO = vmInfoDAO;
+    }
+
+    public void setAgentInfoDAO(AgentInfoDAO agentInfoDAO) {
+        this.agentInfoDAO = agentInfoDAO;
+    }
+
+    public void setRequestQueue(RequestQueue queue) {
+        this.queue = queue;
     }
 
 }

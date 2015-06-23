@@ -177,7 +177,7 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
                 } catch (ConnectionException e) {
                     logger.log(Level.SEVERE, "Could not connect to storage (" + e.getMessage() + ")");
                     // log stack trace as info only
-                    logger.log(Level.INFO, "Could nto connect to storage", e);
+                    logger.log(Level.INFO, "Could not connect to storage", e);
                     shutdown(ExitStatus.EXIT_ERROR);
                 }
                 

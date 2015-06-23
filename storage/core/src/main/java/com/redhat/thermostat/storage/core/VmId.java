@@ -37,16 +37,12 @@
 package com.redhat.thermostat.storage.core;
 
 /**
+ * This class uniquely identifies a Java Virtual Machine
  *
  */
-public class VmId {
-    String uuid;
+public class VmId extends Id {
 
     public VmId(String id) {
-        this.uuid = id;
-    }
-
-    public String get() {
-        return uuid;
+        super(id);
     }
 }

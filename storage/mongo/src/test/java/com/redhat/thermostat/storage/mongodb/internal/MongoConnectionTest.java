@@ -261,14 +261,6 @@ public class MongoConnectionTest {
         }
         assertEquals(23452, addr.getPort());
         assertEquals("127.0.1.1", addr.getHost());
-
-        connection = new MongoConnection("fluff://willnotwork.com:23452", creds, sslConf);
-        try {
-            connection.getServerAddress();
-            fail("should not have been able to parse address");
-        } catch (UnknownHostException e) {
-            // pass
-        }
     }
 
     @PrepareForTest({ MongoConnection.class })

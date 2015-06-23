@@ -566,7 +566,7 @@ public class ShellCommandTest {
         createTempFile(filename + "12345678");
 
         TestCommandContextFactory ctxFactory = new TestCommandContextFactory(bundleContext);
-        ctxFactory.setInput("validate --dbUrl -a -l -d " + dir.getAbsolutePath() + File.separator + "testFil\t\nexit\n");
+        ctxFactory.setInput("validate --dbUrl -d " + dir.getAbsolutePath() + File.separator + "testFil\t\nexit\n");
         Arguments args = new SimpleArguments();
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);

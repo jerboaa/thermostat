@@ -48,7 +48,6 @@ import java.util.concurrent.CountDownLatch;
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
 import org.fest.swing.annotation.GUITest;
-import org.fest.swing.core.Robot;
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
 import org.fest.swing.edt.GuiActionRunner;
 import org.fest.swing.edt.GuiTask;
@@ -65,8 +64,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
+import com.redhat.thermostat.annotations.internal.CacioTest;
 import com.redhat.thermostat.client.swing.components.OverlayPanel;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
@@ -79,6 +80,7 @@ import com.redhat.thermostat.vm.heap.analysis.common.DumpFile;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
 import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 
+@Category(CacioTest.class)
 @RunWith(CacioFESTRunner.class)
 public class HeapSwingViewTest {
 

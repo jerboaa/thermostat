@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2012-2014 Red Hat, Inc.
+# Copyright 2012-2015 Red Hat, Inc.
 #
 # This file is part of Thermostat.
 #
@@ -35,35 +35,44 @@
 # to do so, delete this exception statement from your version.
 #
 #####################################################################
-#
-JAVA="@java.home@/bin/java"
 
-if [ x"$THERMOSTAT_INSTALL_DIR" = x ] ; then
-  THERMOSTAT_INSTALL_DIR="@thermostat.home@"
-fi
-# Not always are installation directory and thermostat home one and
-# the same location.
-if [ x"$THERMOSTAT_HOME" = x ] ; then
-  THERMOSTAT_HOME=${THERMOSTAT_INSTALL_DIR}
+if [ x"${THERMOSTAT_HOME}" = x ]; then
+  THERMOSTAT_HOME="@thermostat.home@"
   export THERMOSTAT_HOME
 fi
-THERMOSTAT_LIBS="${THERMOSTAT_HOME}/libs"
+if [ x"${USER_THERMOSTAT_HOME}" = x ]; then
+  USER_THERMOSTAT_HOME="@user.thermostat.home@"
+  export USER_THERMOSTAT_HOME
+fi
 
-# need tools from the JVM
-TOOLS_JAR="@java.home@/../lib/tools.jar"
+# Source system thermostat profile
+. ${THERMOSTAT_HOME}/etc/thermostatrc 
+# Source user thermostat profile (if any)
+if [ -f ${USER_THERMOSTAT_HOME}/etc/thermostatrc ]; then
+  . ${USER_THERMOSTAT_HOME}/etc/thermostatrc
+fi
+
+# NOTE: The following variables come from the system/user
+#       profiles (if any)
+#
+# THERMOSTAT_EXT_BOOT_CLASSPATH
+# THERMOSTAT_EXT_JAVA_OPTS
+# THERMOSTAT_EXT_OPTS
+
+JAVA="@java.home@/bin/java"
+THERMOSTAT_LIBS="${THERMOSTAT_HOME}/libs"
 
 # This is the minimal boot classpath thermostat needs. Other dependencies
 # will get started by the OSGi framework once that's up.
-SERVICE_CLASSPATH="${THERMOSTAT_LIBS}/org.apache.felix.framework-@felix.framework.version@.jar"
-SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-launcher-@project.version@.jar"
-SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-main-@project.version@.jar"
-SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-shared-config-@project.version@.jar"
-# FIXME: Remove once jfreechart is a real OSGi bundle upstream
-SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_LIBS}/jfreechart-@jfreechart.version@.jar"
-SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_LIBS}/jcommon-@jcommon.version@.jar"
-# Needed to parse web.xml files without network connection See PR 2029.
-SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERMOSTAT_HOME}/plugins/embedded-web-endpoint/jetty-schemas-@jetty-schemas.version@.jar"
-SERVICE_CLASSPATH="${TOOLS_JAR}:${SERVICE_CLASSPATH}"
+BOOT_CLASSPATH="${THERMOSTAT_LIBS}/org.apache.felix.framework-@felix.framework.version@.jar"
+BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-launcher-@project.version@.jar"
+BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-main-@project.version@.jar"
+BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_LIBS}/thermostat-shared-config-@project.version@.jar"
+
+# Append extra class path entries coming from the profiles
+if [ ! -z ${THERMOSTAT_EXT_BOOT_CLASSPATH} ]; then
+  BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_EXT_BOOT_CLASSPATH}"
+fi
 
 THERMOSTAT_MAIN="com.redhat.thermostat.main.Thermostat"
 
@@ -106,19 +115,23 @@ do
 done
 
 # Finally run thermostat (optionally in the background)
-if [ $RUN_IN_BG -eq 1 ]; then
+if [ ${RUN_IN_BG} -eq 1 ]; then
     # The thermostat-agent-sysd script uses this.
-    if [ x"$PID_FILE" = "x" ]; then
+    if [ x"${PID_FILE}" = "x" ]; then
         usage 
     else
-        ${JAVA} "${JAVA_ARGS[@]}" -cp ${SERVICE_CLASSPATH} ${THERMOSTAT_MAIN} "${ARGS[@]}" &
+        ${JAVA} ${THERMOSTAT_EXT_JAVA_OPTS} "${JAVA_ARGS[@]}" \
+                -cp ${BOOT_CLASSPATH} \
+                ${THERMOSTAT_MAIN} ${THERMOSTAT_EXT_OPTS} "${ARGS[@]}" &
         retval=$?
-        echo $! > $PID_FILE
-        retval=$(( $retval + $? ))
+        echo $! > ${PID_FILE}
+        retval=$(( ${retval} + $? ))
     fi
 else
-    ${JAVA} "${JAVA_ARGS[@]}" -cp ${SERVICE_CLASSPATH} ${THERMOSTAT_MAIN} "${ARGS[@]}"
+    ${JAVA} ${THERMOSTAT_EXT_JAVA_OPTS} "${JAVA_ARGS[@]}" \
+            -cp ${BOOT_CLASSPATH} \
+            ${THERMOSTAT_MAIN} ${THERMOSTAT_EXT_OPTS} "${ARGS[@]}"
     retval=$?
 fi
-exit $retval
+exit ${retval}
 

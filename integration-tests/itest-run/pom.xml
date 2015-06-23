@@ -87,7 +87,6 @@
         <configuration>
           <argLine>
             -Djava.security.auth.login.config=${thermostat.home}/etc/thermostat_jaas.conf
-            -Ddevel.build=${devel.build}
             ${coverageAgent}
           </argLine>
           <skip>true</skip>

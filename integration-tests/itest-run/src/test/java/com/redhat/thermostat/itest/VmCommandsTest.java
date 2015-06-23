@@ -51,10 +51,16 @@ import expectj.Spawn;
 /** Integration tests for the various vm commands */
 public class VmCommandsTest extends IntegrationTest {
 
+    private static final String USERNAME = "foo";
+    private static final String PASSWORD = "bar";
+
     @BeforeClass
     public static void setUpOnce() throws Exception {
         createFakeSetupCompleteFile();
         clearStorageDataDirectory();
+        addUserToStorage(USERNAME, PASSWORD);
+        createAgentAuthFile(USERNAME, PASSWORD);
+
         startStorage();
 
         // TODO insert actual data into the database and test that
@@ -152,7 +158,7 @@ public class VmCommandsTest extends IntegrationTest {
 
         shell.expect(SHELL_DISCONNECT_PROMPT);
         shell.send("list-vms -d " + storageURL + "\n");
-        handleAuthPrompt(shell, storageURL, "", "");
+        handleAuthPrompt(shell, storageURL, USERNAME, PASSWORD);
 
         shell.expect(SHELL_CONNECT_PROMPT);
 

@@ -39,7 +39,11 @@ package com.redhat.thermostat.vm.jmx.client.swing.internal;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import com.redhat.thermostat.annotations.internal.CacioTest;
+
+@Category(CacioTest.class)
 public class JmxNotificationsSwingViewProviderTest {
 
     @Test

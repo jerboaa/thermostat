@@ -34,43 +34,10 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.core.experimental.statement;
+package com.redhat.thermostat.storage.core;
 
-import java.util.UUID;
-
-/**
- *
- */
-public class Id {
-    private String id;
-
-    public Id() {
-        id = UUID.randomUUID().toString();
-    }
-
-    public Id(String id) {
-        this.id = id;
-    }
+public class AgentIdTest extends IdTest {
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Id sessionID = (Id) o;
-
-        if (id != null ? !id.equals(sessionID.id) : sessionID.id != null)
-            return false;
-
-        return true;
-    }
-
-    public String get() {
-        return id;
-    }
-
-    @Override
-    public int hashCode() {
-        return id != null ? id.hashCode() : 0;
-    }
+    protected AgentId createId(String id) { return new AgentId(id); }
 }

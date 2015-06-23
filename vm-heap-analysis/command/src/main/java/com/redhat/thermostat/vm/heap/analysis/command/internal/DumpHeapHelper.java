@@ -44,8 +44,8 @@ import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
-import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
@@ -82,24 +82,22 @@ public class DumpHeapHelper {
 
     }
 
-    public void execute(VmInfoDAO vmInfoDAO, AgentInfoDAO agentInfoDAO, VmRef reference,
-            RequestQueue queue, Runnable heapDumpSuccessAction,
-            Runnable heapDumpFailureAction) {
+    public void execute(VmInfoDAO vmInfoDAO, AgentInfoDAO agentInfoDAO, AgentId agentId, VmId vmId,
+                        RequestQueue queue, Runnable heapDumpSuccessAction,
+                        Runnable heapDumpFailureAction) {
         // Get PID
-        VmInfo info = vmInfoDAO.getVmInfo(reference);
+        VmInfo info = vmInfoDAO.getVmInfo(vmId);
         int pid = info.getVmPid();
         
-        HostRef targetHostRef = reference.getHostRef();
-        InetSocketAddress target = agentInfoDAO.getAgentInformation(targetHostRef).getRequestQueueAddress();
+        InetSocketAddress target = agentInfoDAO.getAgentInformation(agentId).getRequestQueueAddress();
         Request req = new Request(RequestType.RESPONSE_EXPECTED, target);
         req.setReceiver(RECEIVER_CLASS_NAME);
         req.setParameter(Request.ACTION, CMD_CHANNEL_ACTION_NAME);
-        req.setParameter(VM_ID_PARAM, reference.getVmId());
+        req.setParameter(VM_ID_PARAM, vmId.get());
         req.setParameter(VM_PID_PARAM, String.valueOf(pid));
         req.addListener(new HeapDumpListener(heapDumpSuccessAction, heapDumpFailureAction));
 
         queue.putRequest(req);
-
     }
 
 }

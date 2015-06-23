@@ -96,6 +96,9 @@ import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
  */
 public class MongoQueriesTest extends IntegrationTest {
 
+    static final String USERNAME = "foobar";
+    static final String PASSWORD = "baz";
+
     private static class CountdownConnectionListener implements ConnectionListener {
 
         private final ConnectionStatus target;
@@ -122,8 +125,10 @@ public class MongoQueriesTest extends IntegrationTest {
 
     @BeforeClass
     public static void setUpOnce() throws Exception {
-        createFakeSetupCompleteFile();
         clearStorageDataDirectory();
+        createFakeSetupCompleteFile();
+        addUserToStorage(USERNAME, PASSWORD);
+
         startStorage();
 
         addCpuData(4);
@@ -135,6 +140,7 @@ public class MongoQueriesTest extends IntegrationTest {
 
         stopStorage();
         removeSetupCompleteStampFiles();
+        clearStorageDataDirectory();
     }
 
     /*
@@ -144,17 +150,15 @@ public class MongoQueriesTest extends IntegrationTest {
     private static BackingStorage getAndConnectStorage(ConnectionListener listener) {
         final String url = "mongodb://127.0.0.1:27518";
         StorageCredentials creds = new StorageCredentials() {
-
             @Override
             public String getUsername() {
-                return null;
+                return USERNAME;
             }
 
             @Override
             public char[] getPassword() {
-                return null;
+                return PASSWORD.toCharArray();
             }
-            
         };
         CommonPaths paths = mock(CommonPaths.class);
         File tmpFile = new File("/tmp");

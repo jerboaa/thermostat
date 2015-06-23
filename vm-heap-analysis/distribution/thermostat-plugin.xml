@@ -46,13 +46,6 @@
       <description>Trigger a heap dump on the VM.</description>
       <options>
         <option>
-          <long>hostId</long>
-          <short>a</short>
-          <argument>host</argument>
-          <required>true</required>
-          <description>the ID of the host to monitor</description>
-        </option>
-        <option>
           <long>vmId</long>
           <short>v</short>
           <argument>vm</argument>

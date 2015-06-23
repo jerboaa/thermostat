@@ -40,7 +40,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 import com.redhat.thermostat.itest.CliTest;
-import com.redhat.thermostat.itest.PluginTest;
 import com.redhat.thermostat.itest.StorageConnectionTest;
 import com.redhat.thermostat.itest.StorageTest;
 import com.redhat.thermostat.itest.UserPluginsTest;
@@ -69,6 +68,7 @@ import com.redhat.thermostat.itest.VmCommandsTest;
  *   $ mvn clean package 
  *   $ java -Dcom.redhat.thermostat.itest.thermostatHome=/path/to/thermostat/install \
  *            -Dcom.redhat.thermostat.itest.thermostatUserHome=$(echo ~/.thermostat) \
+ *            -Dthermostat.agent.verbose=true \
  *            -cp $(ls integration-tests/standalone/target/thermostat-integration-tests-standalone-*.jar)
  *            com.redhat.thermostat.itest.standalone.ItestRunner
  * </pre>

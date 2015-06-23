@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.thread.client.swing.impl;
 
+import com.redhat.thermostat.annotations.internal.CacioTest;
 import com.redhat.thermostat.client.swing.UIDefaults;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
@@ -61,6 +62,7 @@ import org.junit.runner.RunWith;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@Category(CacioTest.class)
 @RunWith(CacioFESTRunner.class)
 public class SwingThreadViewTest {
 

@@ -86,7 +86,7 @@ public class ServiceCommand extends AbstractCommand implements ActionListener<Ap
         ServiceReference launcherRef = context.getServiceReference(Launcher.class);
         requireNonNull(launcherRef, translator.localize(LocaleResources.LAUNCHER_UNAVAILABLE));
         launcher = (Launcher) context.getService(launcherRef);
-        String[] storageStartArgs = new String[] { "storage", "--start", "--permitLocalhostException"};
+        String[] storageStartArgs = new String[] { "storage", "--start" };
         launcher.run(storageStartArgs, listeners, false);
         agentBarrier.acquireUninterruptibly();
         

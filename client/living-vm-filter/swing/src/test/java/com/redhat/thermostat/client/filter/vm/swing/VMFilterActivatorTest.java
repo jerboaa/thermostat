@@ -41,9 +41,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import com.redhat.thermostat.annotations.internal.CacioTest;
 import com.redhat.thermostat.client.filter.host.swing.DeadHostIconDecorator;
-import com.redhat.thermostat.client.filter.host.swing.HostIconDecorator;
 import com.redhat.thermostat.client.filter.host.swing.HostInfoLabelDecorator;
 import com.redhat.thermostat.client.swing.UIDefaults;
 import com.redhat.thermostat.client.ui.ReferenceFieldIconDecorator;
@@ -53,6 +54,7 @@ import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
+@Category(CacioTest.class)
 public class VMFilterActivatorTest {
     
     @Test

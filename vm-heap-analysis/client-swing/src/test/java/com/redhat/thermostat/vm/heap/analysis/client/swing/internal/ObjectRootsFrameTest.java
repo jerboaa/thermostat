@@ -60,16 +60,18 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.annotations.internal.CacioTest;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapObjectUI;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectRootsView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectRootsView.Action;
-import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.ObjectRootsFrame;
 
+@Category(CacioTest.class)
 @RunWith(CacioFESTRunner.class)
 public class ObjectRootsFrameTest {
 

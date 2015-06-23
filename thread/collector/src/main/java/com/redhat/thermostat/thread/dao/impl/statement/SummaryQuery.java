@@ -37,7 +37,7 @@
 package com.redhat.thermostat.thread.dao.impl.statement;
 
 import com.redhat.thermostat.storage.core.experimental.statement.FieldDescriptor;
-import com.redhat.thermostat.storage.core.experimental.statement.Id;
+import com.redhat.thermostat.storage.core.Id;
 import com.redhat.thermostat.storage.core.experimental.statement.LimitCriterion;
 import com.redhat.thermostat.storage.core.experimental.statement.Query;
 import com.redhat.thermostat.storage.core.experimental.statement.SortCriterion;

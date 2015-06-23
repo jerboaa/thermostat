@@ -51,10 +51,13 @@ import org.fest.swing.edt.GuiActionRunner;
 import org.fest.swing.edt.GuiTask;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
+import com.redhat.thermostat.annotations.internal.CacioTest;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
 
+@Category(CacioTest.class)
 @RunWith(CacioFESTRunner.class)
 public class VmClassStatPanelTest {
 

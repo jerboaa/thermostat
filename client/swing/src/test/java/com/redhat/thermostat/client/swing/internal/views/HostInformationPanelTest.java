@@ -48,13 +48,16 @@ import org.fest.swing.annotation.GUITest;
 import org.fest.swing.edt.GuiActionRunner;
 import org.fest.swing.edt.GuiQuery;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
+import com.redhat.thermostat.annotations.internal.CacioTest;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.swing.FrameWithPanelTest;
 import com.redhat.thermostat.client.swing.TabbedPaneMatcher;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 
+@Category(CacioTest.class)
 @RunWith(CacioFESTRunner.class)
 public class HostInformationPanelTest extends FrameWithPanelTest<HostInformationPanel> {
 

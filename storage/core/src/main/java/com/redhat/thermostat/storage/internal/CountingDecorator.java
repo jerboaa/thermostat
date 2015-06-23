@@ -97,7 +97,7 @@ public class CountingDecorator implements ExecutorService {
             
         });
         String msg = String.format(QUEUE_SIZE_FORMAT, queueLength.get());
-        logger.log(LoggingUtils.PERFLOG, perfLogFormatter.format(logTag, msg));
+        logger.log(LoggingUtils.LogLevel.PERFLOG.getLevel(), perfLogFormatter.format(logTag, msg));
     }
 
     @Override

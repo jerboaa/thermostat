@@ -51,8 +51,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -65,7 +63,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.jetty.server.Server;
@@ -118,7 +115,6 @@ import com.redhat.thermostat.web.server.auth.Roles;
 
 import expectj.ExpectJ;
 import expectj.Spawn;
-import expectj.TimeoutException;
 
 /**
  * This test class starts up a mongod instance and a web storage instance
@@ -136,7 +132,7 @@ import expectj.TimeoutException;
  * Please don't introduce any more sporadic test failures to this
  * integration test!!!
  */
-public class WebAppTest extends IntegrationTest {
+public class WebAppTest extends WebStorageUsingIntegrationTest {
 
     /*
      * Registry of descriptors this test needs to allow in order to avoid
@@ -242,37 +238,25 @@ public class WebAppTest extends IntegrationTest {
     private static final String TEST_USER = "testuser";
     private static final String TEST_PASSWORD = "testpassword";
     private static final double EQUALS_DELTA = 0.00000000000001;
-    private static final String THERMOSTAT_USERS_FILE = getConfigurationDir() + "/thermostat-users.properties";
-    private static final String THERMOSTAT_ROLES_FILE = getConfigurationDir() + "/thermostat-roles.properties";
-    private static final String THERMOSTAT_WEB_AUTH_FILE = getConfigurationDir() + "/web.auth";
+    
     private static final String VM_ID1 = "vmId1";
     private static final String VM_ID2 = "vmId2";
     private static final String VM_ID3 = "vmId3";
 
     private static Server server;
     private static int port;
-    private static Path backupUsers;
-    private static Path backupRoles;
-    private static Path backupWebAuth;
+    
 
     @BeforeClass
     public static void setUpOnce() throws Exception {
         clearStorageDataDirectory();
 
-        backupUsers = Files.createTempFile("itest-backup-thermostat-users", "");
-        backupRoles = Files.createTempFile("itest-backup-thermostat-roles", "");
-        backupWebAuth = Files.createTempFile("itest-backup-webapp-auth", "");
-        backupRoles.toFile().deleteOnExit();
-        backupUsers.toFile().deleteOnExit();
-        backupWebAuth.toFile().deleteOnExit();
-        Files.copy(new File(THERMOSTAT_USERS_FILE).toPath(), backupUsers, StandardCopyOption.REPLACE_EXISTING);
-        Files.copy(new File(THERMOSTAT_ROLES_FILE).toPath(), backupRoles, StandardCopyOption.REPLACE_EXISTING);
-        Files.copy(new File(THERMOSTAT_WEB_AUTH_FILE).toPath(), backupWebAuth, StandardCopyOption.REPLACE_EXISTING);
+        backupOriginalCredentialsFiles();
 
         createFakeSetupCompleteFile();
         createFakeUserSetupDoneFile();
 
-        setupMongodbUser();
+        addUserToStorage(getMongodbUsername(), getMongodbPassword());
 
         startStorage();
 
@@ -285,7 +269,6 @@ public class WebAppTest extends IntegrationTest {
         mongoSpawn.send("db[\"fake\"].insert({foo:\"bar\", baz: 1})\n");
         mongoSpawn.send("db[\"fake\"].findOne()\n");
         mongoSpawn.send("show collections\n");
-        mongoSpawn.send("show users\n");
 
         createWebAuthFile();
 
@@ -326,10 +309,9 @@ public class WebAppTest extends IntegrationTest {
                     throw e;
                 } finally {
                     removeSetupCompleteStampFiles();
-                    Files.copy(backupUsers, new File(THERMOSTAT_USERS_FILE).toPath(), StandardCopyOption.REPLACE_EXISTING);
-                    Files.copy(backupRoles, new File(THERMOSTAT_ROLES_FILE).toPath(), StandardCopyOption.REPLACE_EXISTING);
-                    Files.copy(backupWebAuth, new File(THERMOSTAT_WEB_AUTH_FILE).toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    restoreBackedUpCredentialsFiles();
                     System.out.println("RESTORED backed-up files!");
+                    clearStorageDataDirectory();
                 }
             }
         }
@@ -347,65 +329,6 @@ public class WebAppTest extends IntegrationTest {
             return count;
         } catch (StatementExecutionException | DescriptorParsingException e) {
             throw new AssertionError(e);
-        }
-    }
-
-    // PRE: storage started with --permitLocalhostException
-    private static void setupMongodbUser() throws Exception {
-        String mongodbUsername = getMongodbUsername();
-        String mongodbPassword = getMongodbPassword();
-
-        final String HOST = "127.0.0.1";
-        final String PORT = "27518";
-
-        try {
-            System.out.println("THERMOSTAT_HOME: " + getThermostatHome());
-            System.out.println("USER_THERMOSTAT_HOME: " + getUserThermostatHome());
-
-            // start mongod
-            startStorage();
-
-            System.out.println("Started mongod");
-            TimeUnit.SECONDS.sleep(3);
-
-            ExpectJ mongo = new ExpectJ(TIMEOUT_IN_SECONDS);
-            Spawn mongoSpawn = mongo.spawn("mongo " + HOST + ":" + PORT);
-            mongoSpawn.send("use thermostat\n");
-            mongoSpawn.send("var v = db.version()\n");
-            mongoSpawn.send("var minorMicro = v.substr(v.indexOf('.') + 1)\n");
-            mongoSpawn.send("var minorVersion = minorMicro.substr(0, minorMicro.indexOf('.'))\n");
-            mongoSpawn.send("if ( minorVersion <= 2 ) {");
-            mongoSpawn.send(String.format("db.addUser(\"%s\", \"%s\")", mongodbUsername, mongodbPassword));
-            mongoSpawn.send("} else {");
-            mongoSpawn.send("if ( minorVersion <= 4 ) {");
-            mongoSpawn.send(String.format("db.addUser({ user: \"%s\", pwd: \"%s\", roles: [ \"readWrite\" ] })",
-                    mongodbUsername, mongodbPassword));
-            mongoSpawn.send("} else {");
-            mongoSpawn.send(String.format("db.createUser({ user: \"%s\", pwd: \"%s\", roles: [ \"readWrite\" ] })",
-                    mongodbUsername, mongodbPassword));
-            mongoSpawn.send("}\n");
-            mongoSpawn.send("}\n");
-            mongoSpawn.send("quit()\n");
-            mongoSpawn.expectClose();
-
-            mongo = new ExpectJ(TIMEOUT_IN_SECONDS);
-            mongoSpawn = mongo.spawn("mongo " + HOST + ":" + PORT);
-            mongoSpawn.send("use thermostat\n");
-            mongoSpawn.expect("switched to db thermostat");
-            mongoSpawn.send(String.format("db.auth(\"%s\", \"%s\")\n", mongodbUsername, mongodbPassword));
-            mongoSpawn.expect("1");
-
-            // now insert some fake data and display some information that
-            // might be useful for post-mortem analysis if this test fails
-            mongoSpawn.send("db[\"fake\"].insert({foo:\"bar\", baz: 1})\n");
-            mongoSpawn.send("db[\"fake\"].findOne()\n");
-            mongoSpawn.send("show collections\n");
-            mongoSpawn.send("show users\n");
-            
-        } catch (TimeoutException | IOException e) {
-            throw e;
-        } finally {
-            stopStorage();
         }
     }
 

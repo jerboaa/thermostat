@@ -45,6 +45,7 @@ import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -55,11 +56,12 @@ import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.test.TestCommandContextFactory;
-import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.vm.heap.analysis.command.locale.LocaleResources;
 
 public class DumpHeapCommandTest {
@@ -68,14 +70,13 @@ public class DumpHeapCommandTest {
             .createLocalizer();
 
     @Test
-    public void verifyAcuallyCallsWorker() throws CommandException {
+    public void verifyActuallyCallsWorker() throws CommandException {
         VmInfoDAO vmInfoDao = mock(VmInfoDAO.class);
         AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
         RequestQueue queue = mock(RequestQueue.class);
-        StubBundleContext context = new StubBundleContext();
-        context.registerService(VmInfoDAO.class, vmInfoDao, null);
-        context.registerService(AgentInfoDAO.class, agentInfoDao, null);
-        context.registerService(RequestQueue.class, queue, null);
+        VmInfo vmInfo = new VmInfo("myAgent", "foo", 123, 0, 0, null, null, null, null, null, null, null, null, null,
+                null, null,0, "myUsername");
+        when(vmInfoDao.getVmInfo(new VmId("foo"))).thenReturn(vmInfo);
 
         DumpHeapHelper impl = mock(DumpHeapHelper.class);
         final ArgumentCaptor<Runnable> successHandler = ArgumentCaptor
@@ -87,36 +88,39 @@ public class DumpHeapCommandTest {
                 successHandler.getValue().run();
                 return null;
             }
-        }).when(impl).execute(eq(vmInfoDao), eq(agentInfoDao), any(VmRef.class), eq(queue),
+        }).when(impl).execute(eq(vmInfoDao), eq(agentInfoDao), any(AgentId.class), any(VmId.class), eq(queue),
                 successHandler.capture(), any(Runnable.class));
 
-        DumpHeapCommand command = new DumpHeapCommand(context, impl);
+        DumpHeapCommand command = new DumpHeapCommand(impl);
+
+        command.setVmInfoDAO(vmInfoDao);
+        command.setAgentInfoDAO(agentInfoDao);
+        command.setRequestQueue(queue);
 
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("hostId", "foo");
-        args.addArgument("vmId", "bar");
+        args.addArgument("vmId", "foo");
 
         command.run(factory.createContext(args));
 
-        verify(impl).execute(eq(vmInfoDao), eq(agentInfoDao), isA(VmRef.class), eq(queue),
+        verify(impl).execute(eq(vmInfoDao), eq(agentInfoDao), isA(AgentId.class), isA(VmId.class), eq(queue),
                 any(Runnable.class), any(Runnable.class));
         assertEquals("Done\n", factory.getOutput());
     }
 
     @Test
-    public void verifyNeedsHostAndVmId() throws CommandException {
+    public void verifyNeedsVmId() throws CommandException {
         VmInfoDAO vmInfoDao = mock(VmInfoDAO.class);
         AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
         RequestQueue queue = mock(RequestQueue.class);
-        StubBundleContext context = new StubBundleContext();
-        context.registerService(VmInfoDAO.class, vmInfoDao, null);
-        context.registerService(AgentInfoDAO.class, agentInfoDao, null);
-        context.registerService(RequestQueue.class, queue, null);
 
         DumpHeapHelper impl = mock(DumpHeapHelper.class);
-        DumpHeapCommand command = new DumpHeapCommand(context, impl);
+        DumpHeapCommand command = new DumpHeapCommand(impl);
+
+        command.setVmInfoDAO(vmInfoDao);
+        command.setAgentInfoDAO(agentInfoDao);
+        command.setRequestQueue(queue);
 
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
@@ -126,7 +130,7 @@ public class DumpHeapCommandTest {
             command.run(factory.createContext(args));
             assertTrue("should not reach here", false);
         } catch (CommandException ce) {
-            assertEquals("a hostId is required", ce.getMessage());
+            assertEquals("a vmId is required", ce.getMessage());
         }
     }
 
@@ -134,17 +138,16 @@ public class DumpHeapCommandTest {
     public void verifyFailsIfAgentDaoIsNotAvailable() {
         VmInfoDAO vmInfoDao = mock(VmInfoDAO.class);
         RequestQueue queue = mock(RequestQueue.class);
-        StubBundleContext context = new StubBundleContext();
-        context.registerService(VmInfoDAO.class, vmInfoDao, null);
-        context.registerService(RequestQueue.class, queue, null);
 
         DumpHeapHelper impl = mock(DumpHeapHelper.class);
-        DumpHeapCommand command = new DumpHeapCommand(context, impl);
+        DumpHeapCommand command = new DumpHeapCommand(impl);
+
+        command.setVmInfoDAO(vmInfoDao);
+        command.setRequestQueue(queue);
 
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("hostId", "foo");
         args.addArgument("vmId", "bar");
 
         try {
@@ -159,17 +162,16 @@ public class DumpHeapCommandTest {
     public void verifyFailsIfRequestQueueIsNotAvailable() {
         VmInfoDAO vmInfoDao = mock(VmInfoDAO.class);
         AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
-        StubBundleContext context = new StubBundleContext();
-        context.registerService(VmInfoDAO.class, vmInfoDao, null);
-        context.registerService(AgentInfoDAO.class, agentInfoDao, null);
 
         DumpHeapHelper impl = mock(DumpHeapHelper.class);
-        DumpHeapCommand command = new DumpHeapCommand(context, impl);
+        DumpHeapCommand command = new DumpHeapCommand(impl);
+
+        command.setVmInfoDAO(vmInfoDao);
+        command.setAgentInfoDAO(agentInfoDao);
 
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("hostId", "foo");
         args.addArgument("vmId", "bar");
         args.addArgument("vmPid", "123");
 
@@ -185,17 +187,16 @@ public class DumpHeapCommandTest {
     public void verifyFailsIfVmDaoIsNotAvailable() {
         AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
         RequestQueue queue = mock(RequestQueue.class);
-        StubBundleContext context = new StubBundleContext();
-        context.registerService(AgentInfoDAO.class, agentInfoDao, null);
-        context.registerService(RequestQueue.class, queue, null);
 
         DumpHeapHelper impl = mock(DumpHeapHelper.class);
-        DumpHeapCommand command = new DumpHeapCommand(context, impl);
+        DumpHeapCommand command = new DumpHeapCommand(impl);
+
+        command.setAgentInfoDAO(agentInfoDao);
+        command.setRequestQueue(queue);
 
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("hostId", "foo");
         args.addArgument("vmId", "bar");
 
         try {
@@ -208,41 +209,52 @@ public class DumpHeapCommandTest {
 
     @Test
     public void verifyErrorMessage() {
-        final String HOST_ID = "myHost";
+        final String AGENT_ID = "myAgent";
         final String VM_ID = "myVm";
         VmInfoDAO vmInfoDao = mock(VmInfoDAO.class);
         AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
         RequestQueue queue = mock(RequestQueue.class);
-        StubBundleContext context = new StubBundleContext();
-        context.registerService(VmInfoDAO.class, vmInfoDao, null);
-        context.registerService(AgentInfoDAO.class, agentInfoDao, null);
-        context.registerService(RequestQueue.class, queue, null);
+        VmInfo vmInfo = new VmInfo(AGENT_ID, VM_ID, 123, 0, 0, null, null, null, null, null, null, null, null,
+                null, null, null, 0, null);
+        VmId vmId = new VmId(VM_ID);
+        AgentId agentId = new AgentId(AGENT_ID);
+
+        when(vmInfoDao.getVmInfo(vmId)).thenReturn(vmInfo);
 
         DumpHeapHelper impl = mock(DumpHeapHelper.class);
-        DumpHeapCommand command = new DumpHeapCommand(context, impl);
+        DumpHeapCommand command = new DumpHeapCommand(impl);
+
+        final ArgumentCaptor<Runnable> errorHandler = ArgumentCaptor.forClass(Runnable.class);
+
+        doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                errorHandler.getValue().run();
+                return null;
+            }
+        }).when(impl).execute(eq(vmInfoDao),
+                              eq(agentInfoDao),
+                              eq(agentId),
+                              eq(vmId),
+                              eq(queue),
+                              any(Runnable.class),
+                              errorHandler.capture());
+
+        command.setVmInfoDAO(vmInfoDao);
+        command.setAgentInfoDAO(agentInfoDao);
+        command.setRequestQueue(queue);
+
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("hostId", HOST_ID);
         args.addArgument("vmId", VM_ID);
-
-        doAnswer(new Answer<Object>() {
-
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                Runnable failRunnable = (Runnable) invocation.getArguments()[5];
-                failRunnable.run();
-                return null;
-            }
-        }).when(impl).execute(any(VmInfoDAO.class), any(AgentInfoDAO.class), any(VmRef.class), 
-                any(RequestQueue.class), any(Runnable.class), any(Runnable.class));
 
         try {
             command.run(factory.createContext(args));
             fail("CommandException expected");
         } catch (CommandException e) {
             assertEquals(TRANSLATOR.localize(LocaleResources.HEAP_DUMP_ERROR,
-                    HOST_ID, VM_ID).getContents(), e.getMessage());
+                    AGENT_ID, VM_ID).getContents(), e.getMessage());
         }
     }
 

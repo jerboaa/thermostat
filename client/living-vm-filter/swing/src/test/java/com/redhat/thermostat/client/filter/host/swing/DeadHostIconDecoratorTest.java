@@ -43,13 +43,16 @@ import static org.mockito.Mockito.when;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import com.redhat.thermostat.annotations.internal.CacioTest;
 import com.redhat.thermostat.client.swing.UIDefaults;
 import com.redhat.thermostat.client.ui.PlatformIcon;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 
+@Category(CacioTest.class)
 public class DeadHostIconDecoratorTest {
 
     private DeadHostIconDecorator decorator;

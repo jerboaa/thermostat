@@ -85,7 +85,8 @@ public class KillVmCommandTest {
     public void testKillLiveVM() throws CommandException, InterruptedException {
         String vmId = "liveVM";
 
-        VmInfo vmInfo = mock(VmInfo.class);
+        VmInfo vmInfo = new VmInfo("myAgent", vmId, 123, 0, 0, null, null, null, null, null, null, null, null, null,
+                null, null,0, "myUsername");
         when(vmInfoDAO.getVmInfo(any(VmId.class))).thenReturn(vmInfo);
 
         CommandContext ctx = createContext(vmId);
@@ -93,9 +94,7 @@ public class KillVmCommandTest {
         setServices();
         cmd.run(ctx);
 
-        verify(request).sendKillVMRequestToAgent(any(AgentId.class), any(int.class), any(AgentInfoDAO.class), any
-                (RequestResponseListener
-                .class));
+        verify(request).sendKillVMRequestToAgent(any(AgentId.class), any(int.class), any(AgentInfoDAO.class), any(RequestResponseListener.class));
     }
 
     @Test(expected = CommandException.class)

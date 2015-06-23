@@ -37,32 +37,12 @@
 package com.redhat.thermostat.storage.core;
 
 /**
+ * This class uniquely identifies a Thermostat agent
  *
  */
-public class AgentId {
-    String uuid;
+public class AgentId extends Id {
 
     public AgentId(String id) {
-        this.uuid = id;
-    }
-
-    public String get() {
-        return uuid;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        AgentId agentId = (AgentId) o;
-
-        return uuid.equals(agentId.uuid);
-
-    }
-
-    @Override
-    public int hashCode() {
-        return uuid.hashCode();
+        super(id);
     }
 }

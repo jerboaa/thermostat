@@ -287,7 +287,7 @@ public class QueuedStorage implements Storage {
             Cursor<T> result = queryDelegate.execute();
             long end = System.nanoTime();
             String msg = String.format(TimedStatement.DB_READ_FORMAT, descriptor);
-            logger.log(LoggingUtils.PERFLOG, perfLogFormatter.format(LogTag.STORAGE_BACKING_PROXIED, msg, (end - start)));
+            logger.log(LoggingUtils.LogLevel.PERFLOG.getLevel(), perfLogFormatter.format(LogTag.STORAGE_BACKING_PROXIED, msg, (end - start)));
             return result;
         }
         
@@ -316,7 +316,7 @@ public class QueuedStorage implements Storage {
                     int retval = write.doApply();
                     long end = System.nanoTime();
                     String msg = String.format(TimedStatement.DB_WRITE_FORMAT, retval, descriptor);
-                    logger.log(LoggingUtils.PERFLOG, perfLogFormatter.format(LogTag.STORAGE_BACKING_PROXIED, msg, (end - start)));
+                    logger.log(LoggingUtils.LogLevel.PERFLOG.getLevel(), perfLogFormatter.format(LogTag.STORAGE_BACKING_PROXIED, msg, (end - start)));
                 }
                 
             });
@@ -379,7 +379,7 @@ public class QueuedStorage implements Storage {
             Cursor<T> result = stmtDelegate.executeQuery();
             long end = System.nanoTime();
             String msg = String.format(DB_READ_FORMAT, descriptor);
-            logger.log(LoggingUtils.PERFLOG, perfLogFormatter.format(LogTag.STORAGE_FRONT_END, msg, (end - start)));
+            logger.log(LoggingUtils.LogLevel.PERFLOG.getLevel(), perfLogFormatter.format(LogTag.STORAGE_FRONT_END, msg, (end - start)));
             return result;
         }
         
@@ -395,7 +395,7 @@ public class QueuedStorage implements Storage {
                         int retval = d.doExecute();
                         long end = System.nanoTime();
                         String msg = String.format(DB_WRITE_FORMAT, retval, descriptor);
-                        logger.log(LoggingUtils.PERFLOG, perfLogFormatter.format(LogTag.STORAGE_FRONT_END, msg, (end - start)));
+                        logger.log(LoggingUtils.LogLevel.PERFLOG.getLevel(), perfLogFormatter.format(LogTag.STORAGE_FRONT_END, msg, (end - start)));
                     } catch (StatementExecutionException e) {
                         // There isn't much we can do in case of invalid
                         // patch or the likes. Log it and move on.
@@ -510,7 +510,7 @@ public class QueuedStorage implements Storage {
         this.delegate = delegate;
         this.fileExecutor = fileExecutor;
         this.isBackingStorageInProxy = !(delegate instanceof SecureStorage) && Boolean.getBoolean(Constants.IS_PROXIED_STORAGE);
-        this.isTimedStatements = LoggingUtils.getEffectiveLogLevel(logger).intValue() <= LoggingUtils.PERFLOG.intValue();
+        this.isTimedStatements = LoggingUtils.getEffectiveLogLevel(logger).intValue() <= LoggingUtils.LogLevel.PERFLOG.getLevel().intValue();
         // set up queue counting executor if so requested
         if (isTimedStatements) {
             LogTag logTag = (isBackingStorageInProxy ? LogTag.STORAGE_BACKING_PROXIED : LogTag.STORAGE_FRONT_END);

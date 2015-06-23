@@ -38,6 +38,8 @@ package com.redhat.thermostat.storage.core.experimental.statement;
 
 import java.util.Objects;
 
+import com.redhat.thermostat.storage.core.Id;
+
 /**
  *
  */

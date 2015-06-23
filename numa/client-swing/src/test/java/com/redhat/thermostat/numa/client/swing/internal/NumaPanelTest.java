@@ -46,12 +46,15 @@ import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 import org.fest.swing.fixture.Containers;
 import org.fest.swing.fixture.FrameFixture;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
+import com.redhat.thermostat.annotations.internal.CacioTest;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 
+@Category(CacioTest.class)
 @RunWith(CacioFESTRunner.class)
 public class NumaPanelTest {
 

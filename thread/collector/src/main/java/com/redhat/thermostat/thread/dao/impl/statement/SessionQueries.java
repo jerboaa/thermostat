@@ -36,8 +36,13 @@
 
 package com.redhat.thermostat.thread.dao.impl.statement;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import com.redhat.thermostat.storage.core.Id;
 import com.redhat.thermostat.storage.core.experimental.statement.FieldDescriptor;
-import com.redhat.thermostat.storage.core.experimental.statement.Id;
 import com.redhat.thermostat.storage.core.experimental.statement.LimitCriterion;
 import com.redhat.thermostat.storage.core.experimental.statement.Query;
 import com.redhat.thermostat.storage.core.experimental.statement.SortCriterion;
@@ -45,10 +50,6 @@ import com.redhat.thermostat.storage.core.experimental.statement.StatementUtils;
 import com.redhat.thermostat.storage.core.experimental.statement.TypeMapper;
 import com.redhat.thermostat.storage.core.experimental.statement.WhereCriterion;
 import com.redhat.thermostat.thread.model.ThreadSession;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 /**
  *

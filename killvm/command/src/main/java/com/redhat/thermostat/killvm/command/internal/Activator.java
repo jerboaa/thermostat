@@ -71,7 +71,7 @@ public class Activator implements BundleActivator {
             public void dependenciesAvailable(Map<String, Object> services) {
                 AgentInfoDAO agentDao = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
                 VmInfoDAO vmDao = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
-                KillVMRequest request= (KillVMRequest) services.get(KillVMRequest.class.getName());
+                KillVMRequest request = (KillVMRequest) services.get(KillVMRequest.class.getName());
 
                 command.setAgentInfoDAO(agentDao);
                 command.setVmInfoDAO(vmDao);

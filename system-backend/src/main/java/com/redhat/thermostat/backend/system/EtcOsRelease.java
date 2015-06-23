@@ -44,6 +44,7 @@ import java.nio.charset.StandardCharsets;
 
 public class EtcOsRelease implements DistributionInformationSource {
 
+    private static final String EMPTY_STRING = "";
     private static final String OS_RELEASE = "/etc/os-release";
     private final String osReleaseFile;
     
@@ -72,10 +73,15 @@ public class EtcOsRelease implements DistributionInformationSource {
     }
 
     public DistributionInformation getFromOsRelease(BufferedReader reader) throws IOException {
-        String name = "Linux";
         String version = DistributionInformation.UNKNOWN_VERSION;
+        String name = DistributionInformation.UNKNOWN_NAME;
         String line = null;
         while ((line = reader.readLine()) != null) {
+            // skip whitespace only lines
+            line = line.trim();
+            if (line.equals(EMPTY_STRING)) {
+                continue;
+            }
             if (line.matches("^NAME *=.*")) {
                 name = readShellVariable(line);
             }

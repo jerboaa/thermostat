@@ -63,7 +63,7 @@ public class MongoStorageProvider implements StorageProvider {
     @Override
     public Storage createStorage() {
         MongoStorage storage = new MongoStorage(url, creds, sslConf);
-        if (LoggingUtils.getEffectiveLogLevel(LoggingUtils.getLogger(MongoStorageProvider.class)).intValue() <= LoggingUtils.PERFLOG.intValue()) {
+        if (LoggingUtils.getEffectiveLogLevel(LoggingUtils.getLogger(MongoStorageProvider.class)).intValue() <= LoggingUtils.LogLevel.PERFLOG.getLevel().intValue()) {
             PerformanceLogFormatterBuilder builder = PerformanceLogFormatterBuilder.create();
             PerformanceLogFormatter lf = builder.setLoggedTimeUnit(TimeUnit.NANOSECONDS)
                                               .build();

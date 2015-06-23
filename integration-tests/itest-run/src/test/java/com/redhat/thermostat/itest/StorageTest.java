@@ -81,6 +81,10 @@ public class StorageTest extends IntegrationTest {
 
     @Test
     public void testServiceStartAndKilling() throws Exception {
+        clearStorageDataDirectory();
+        addUserToStorage("foo", "bar");
+        createAgentAuthFile("foo", "bar");
+
         Map<String, String> testProperties = getVerboseModeProperties();
         SpawnResult spawnResult = spawnThermostatWithPropertiesSetAndGetProcess(testProperties, "service");
         Spawn service = spawnResult.spawn;
@@ -101,6 +105,7 @@ public class StorageTest extends IntegrationTest {
         service.stop();
         service.expectClose();
 
+        deleteAgentAuthFile();
     }
 
 }

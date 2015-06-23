@@ -55,13 +55,13 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
+import com.redhat.thermostat.annotations.internal.CacioTest;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
-import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.common.ActionNotifier;
 
 @GUITest
-@Category(GUITest.class)
+@Category(CacioTest.class)
 @RunWith(CacioFESTRunner.class)
 public class ComponentVisibilityNotifierTest {
 
