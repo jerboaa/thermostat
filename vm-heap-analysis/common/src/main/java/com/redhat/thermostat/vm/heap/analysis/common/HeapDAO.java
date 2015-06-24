@@ -42,8 +42,10 @@ import java.io.InputStream;
 import java.util.Collection;
 
 import com.redhat.thermostat.annotations.Service;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 
@@ -58,7 +60,10 @@ public interface HeapDAO {
 
     void putHeapInfo(HeapInfo heapInfo, File heapDumpFile, ObjectHistogram histogramData, Runnable whenDone) throws IOException;
 
+    @Deprecated
     Collection<HeapInfo> getAllHeapInfo(VmRef vm);
+
+    Collection<HeapInfo> getAllHeapInfo(AgentId agentId, VmId vmId);
 
     InputStream getHeapDumpData(HeapInfo heapInfo);
 

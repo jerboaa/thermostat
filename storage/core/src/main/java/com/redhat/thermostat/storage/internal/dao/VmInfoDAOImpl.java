@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.storage.internal.dao;
 
-import com.redhat.thermostat.storage.core.VmId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -45,6 +44,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.Cursor;
@@ -55,6 +55,7 @@ import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.DAOException;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
@@ -194,12 +195,63 @@ public class VmInfoDAOImpl extends BaseCountable implements VmInfoDAO {
 
     @Override
     public Collection<VmRef> getVMs(HostRef host) {
+        AgentId agentId = new AgentId(host.getAgentId());
+
+        Collection<VmInfo> vmInfos = getAllVmInfosForHost(agentId);
+        if(vmInfos.equals(Collections.emptyList())) {
+            return Collections.emptyList();
+        }
+
+        return buildVMsFromQuery(vmInfos, host);
+    }
+
+    @Deprecated
+    private Collection<VmRef> buildVMsFromQuery(Collection<VmInfo> vmInfos, HostRef host) {
+        List<VmRef> vmRefs = new ArrayList<VmRef>();
+        for(VmInfo vmInfo : vmInfos) {
+            VmRef vm = buildVmRefFromChunk(vmInfo, host);
+            vmRefs.add(vm);
+        }
+
+        return vmRefs;
+    }
+
+    @Deprecated
+    private VmRef buildVmRefFromChunk(VmInfo vmInfo, HostRef host) {
+        String id = vmInfo.getVmId();
+        Integer pid = vmInfo.getVmPid();
+        // TODO can we do better than the main class?
+        String mainClass = vmInfo.getMainClass();
+        VmRef ref = new VmRef(host, id, pid, mainClass);
+        return ref;
+    }
+
+    @Override
+    public Collection<VmId> getVmIds(AgentId agentId) {
+        Collection<VmInfo> vmInfos = getAllVmInfosForHost(agentId);
+        if(vmInfos.equals(Collections.emptyList())) {
+            return Collections.emptyList();
+        }
+
+        return buildVmIdsFromQuery(vmInfos);
+    }
+
+    private Collection<VmId> buildVmIdsFromQuery(Collection<VmInfo> vmInfos) {
+        List<VmId> vmIds = new ArrayList<VmId>();
+        for(VmInfo vmInfo : vmInfos) {
+            vmIds.add(new VmId(vmInfo.getVmId()));
+        }
+
+        return vmIds;
+    }
+
+    private Collection<VmInfo> getAllVmInfosForHost(AgentId agentId) {
         StatementDescriptor<VmInfo> desc = new StatementDescriptor<>(vmInfoCategory, QUERY_ALL_VMS_FOR_HOST);
         PreparedStatement<VmInfo> stmt;
         Cursor<VmInfo> cursor;
         try {
             stmt = storage.prepareStatement(desc);
-            stmt.setString(0, host.getAgentId());
+            stmt.setString(0, agentId.get());
             cursor = stmt.executeQuery();
         } catch (DescriptorParsingException e) {
             // should not happen, but if it *does* happen, at least log it
@@ -210,27 +262,13 @@ public class VmInfoDAOImpl extends BaseCountable implements VmInfoDAO {
             logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
             return Collections.emptyList();
         }
-        return buildVMsFromQuery(cursor, host);
-    }
 
-    private Collection<VmRef> buildVMsFromQuery(Cursor<VmInfo> cursor, HostRef host) {
-        List<VmRef> vmRefs = new ArrayList<VmRef>();
-        while (cursor.hasNext()) {
-            VmInfo vmInfo = cursor.next();
-            VmRef vm = buildVmRefFromChunk(vmInfo, host);
-            vmRefs.add(vm);
+        List<VmInfo> vmInfos = new ArrayList<VmInfo>();
+        while(cursor.hasNext()) {
+            vmInfos.add(cursor.next());
         }
 
-        return vmRefs;
-    }
-
-    private VmRef buildVmRefFromChunk(VmInfo vmInfo, HostRef host) {
-        String id = vmInfo.getVmId();
-        Integer pid = vmInfo.getVmPid();
-        // TODO can we do better than the main class?
-        String mainClass = vmInfo.getMainClass();
-        VmRef ref = new VmRef(host, id, pid, mainClass);
-        return ref;
+        return vmInfos;
     }
 
     @Override

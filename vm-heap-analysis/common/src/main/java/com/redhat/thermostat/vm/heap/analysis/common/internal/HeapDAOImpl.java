@@ -38,7 +38,6 @@ package com.redhat.thermostat.vm.heap.analysis.common.internal;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -53,6 +52,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.CloseOnSave;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
@@ -63,6 +63,7 @@ import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageException;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
@@ -187,13 +188,18 @@ public class HeapDAOImpl implements HeapDAO {
 
     @Override
     public Collection<HeapInfo> getAllHeapInfo(VmRef vm) {
+        return getAllHeapInfo(new AgentId(vm.getHostRef().getAgentId()), new VmId(vm.getVmId()));
+    }
+
+    @Override
+    public Collection<HeapInfo> getAllHeapInfo(AgentId agentId, VmId vmId) {
         StatementDescriptor<HeapInfo> desc = new StatementDescriptor<>(heapInfoCategory, QUERY_ALL_HEAPS);
         PreparedStatement<HeapInfo> stmt;
         Cursor<HeapInfo> cursor;
         try {
             stmt = storage.prepareStatement(desc);
-            stmt.setString(0, vm.getHostRef().getAgentId());
-            stmt.setString(1, vm.getVmId());
+            stmt.setString(0, agentId.get());
+            stmt.setString(1, vmId.get());
             cursor = stmt.executeQuery();
         } catch (DescriptorParsingException e) {
             // should not happen, but if it *does* happen, at least log it
@@ -204,7 +210,7 @@ public class HeapDAOImpl implements HeapDAO {
             log.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
             return Collections.emptyList();
         }
-        
+
         Collection<HeapInfo> heapInfos = new ArrayList<>();
         while (cursor.hasNext()) {
             heapInfos.add(cursor.next());

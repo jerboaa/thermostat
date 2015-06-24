@@ -44,6 +44,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.Cursor;
@@ -155,15 +156,38 @@ public class HostInfoDAOImpl extends BaseCountable implements HostInfoDAO {
 
     @Override
     public Collection<HostRef> getHosts() {
+        List<HostRef> result = new ArrayList<>();
+        for(HostInfo hostInfo : getHostInfos()) {
+            result.add(toHostRef(hostInfo));
+        }
+
+        return result;
+    }
+
+    @Override
+    public Collection<AgentId> getAgentIds() {
+        List<AgentId> result = new ArrayList<>();
+        for(HostInfo hostInfo : getHostInfos()) {
+            result.add(toAgentId(hostInfo));
+        }
+
+        return result;
+    }
+
+    private AgentId toAgentId(HostInfo hostInfo) {
+        return new AgentId(hostInfo.getAgentId());
+    }
+
+    private Collection<HostInfo> getHostInfos() {
         Cursor<HostInfo> cursor = getAllHostInfoCursor();
         if (cursor == null) {
             return Collections.emptyList();
         }
-        List<HostRef> result = new ArrayList<>();
+        List<HostInfo> result = new ArrayList<>();
         while (cursor.hasNext()) {
-            HostInfo hostInfo = cursor.next();
-            result.add(toHostRef(hostInfo));
+            result.add(cursor.next());
         }
+
         return result;
     }
 

@@ -46,6 +46,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -53,6 +54,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -61,6 +63,7 @@ import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.DAOException;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
@@ -168,6 +171,30 @@ public class VmInfoDAOTest {
     }
 
     @Test
+    public void testGetVMsDescriptorException() throws DescriptorParsingException {
+        Storage storage = mock(Storage.class);
+        VmInfoDAO vmInfoDao = new VmInfoDAOImpl(storage);
+        HostRef host = new HostRef("123", "fluffhost");
+
+        when(storage.prepareStatement(anyDescriptor())).thenThrow(new DescriptorParsingException("testException"));
+
+        Collection<VmRef> vmRefs = vmInfoDao.getVMs(host);
+        assertEquals(Collections.emptyList(), vmRefs);
+    }
+
+    @Test
+    public void testGetVmIdsDescriptorException() throws DescriptorParsingException {
+        Storage storage = mock(Storage.class);
+        VmInfoDAO vmInfoDao = new VmInfoDAOImpl(storage);
+        AgentId agentId = new AgentId("agentId");
+
+        when(storage.prepareStatement(anyDescriptor())).thenThrow(new DescriptorParsingException("testException"));
+
+        Collection<VmId> vmIds = vmInfoDao.getVmIds(agentId);
+        assertEquals(Collections.emptyList(), vmIds);
+    }
+
+    @Test
     public void testGetVmInfo() throws DescriptorParsingException, StatementExecutionException {
         Storage storage = mock(Storage.class);
         @SuppressWarnings("unchecked")
@@ -234,14 +261,25 @@ public class VmInfoDAOTest {
     }
 
     @Test
-    public void testSingleVM() throws DescriptorParsingException, StatementExecutionException {
+    public void testGetVMsWithSingleVM() throws DescriptorParsingException, StatementExecutionException {
         Storage storage = setupStorageForSingleVM();
         VmInfoDAO dao = new VmInfoDAOImpl(storage);
         HostRef host = new HostRef("123", "fluffhost");
 
         Collection<VmRef> vms = dao.getVMs(host);
 
-        assertCollection(vms, new VmRef(host, "vmId", 123, "mainClass1"));
+        assertVmRefCollection(vms, new VmRef(host, "vmId", 123, "mainClass1"));
+    }
+
+    @Test
+    public void testgetVmIdsWithSingleVM() throws DescriptorParsingException, StatementExecutionException {
+        Storage storage = setupStorageForSingleVM();
+        VmInfoDAO dao = new VmInfoDAOImpl(storage);
+        AgentId agentId = new AgentId("123");
+
+        Collection<VmId> vmIds = dao.getVmIds(agentId);
+
+        assertVmIdCollection(vmIds, new VmId("vmId"));
     }
 
     private Storage setupStorageForSingleVM() throws DescriptorParsingException, StatementExecutionException {
@@ -265,15 +303,25 @@ public class VmInfoDAOTest {
   }
 
     @Test
-    public void testMultiVMs() throws DescriptorParsingException, StatementExecutionException {
+    public void testGetVMsWithMultiVMs() throws DescriptorParsingException, StatementExecutionException {
         Storage storage = setupStorageForMultiVM();
         VmInfoDAO dao = new VmInfoDAOImpl(storage);
-
         HostRef host = new HostRef("456", "fluffhost");
 
         Collection<VmRef> vms = dao.getVMs(host);
 
-        assertCollection(vms, new VmRef(host, "vmId1", 123, "mainClass1"), new VmRef(host, "vmId2", 456, "mainClass2"));
+        assertVmRefCollection(vms, new VmRef(host, "vmId1", 123, "mainClass1"), new VmRef(host, "vmId2", 456, "mainClass2"));
+    }
+
+    @Test
+    public void testGetVmIdsWithMultiVMs() throws DescriptorParsingException, StatementExecutionException {
+        Storage storage = setupStorageForMultiVM();
+        VmInfoDAO dao = new VmInfoDAOImpl(storage);
+        AgentId agentId = new AgentId("456");
+
+        Collection<VmId> vmIds = dao.getVmIds(agentId);
+
+        assertVmIdCollection(vmIds, new VmId("vmId1"), new VmId("vmId2"));
     }
 
     private Storage setupStorageForMultiVM() throws DescriptorParsingException, StatementExecutionException {
@@ -300,10 +348,17 @@ public class VmInfoDAOTest {
       return storage;
   }
 
-    private void assertCollection(Collection<VmRef> vms, VmRef... expectedVMs) {
+    private void assertVmRefCollection(Collection<VmRef> vms, VmRef... expectedVMs) {
         assertEquals(expectedVMs.length, vms.size());
         for (VmRef expectedVM : expectedVMs) {
             assertTrue(vms.contains(expectedVM));
+        }
+    }
+
+    private void assertVmIdCollection(Collection<VmId> vms, VmId... expectedVmIds) {
+        assertEquals(expectedVmIds.length, vms.size());
+        for (VmId expectedVmId : expectedVmIds) {
+            assertTrue(vms.contains(expectedVmId));
         }
     }
 

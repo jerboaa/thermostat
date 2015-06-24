@@ -52,6 +52,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -159,6 +160,19 @@ public class HostInfoDAOTest {
 
         assertEquals(1, hosts.size());
         assertTrue(hosts.contains(new HostRef("123", "fluffhost1")));
+    }
+
+    @Test
+    public void testGetAgentIdsSingleHost() throws DescriptorParsingException, StatementExecutionException {
+
+        Storage storage = setupStorageForSingleHost();
+        AgentInfoDAO agentInfo = mock(AgentInfoDAO.class);
+
+        HostInfoDAO hostsDAO = new HostInfoDAOImpl(storage, agentInfo);
+        Collection<AgentId> agentIds = hostsDAO.getAgentIds();
+
+        assertEquals(1, agentIds.size());
+        assertTrue(agentIds.contains(new AgentId("123")));
     }
 
     private Storage setupStorageForSingleHost() throws DescriptorParsingException, StatementExecutionException {

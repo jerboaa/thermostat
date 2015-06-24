@@ -36,14 +36,15 @@
 
 package com.redhat.thermostat.storage.dao;
 
-import com.redhat.thermostat.storage.core.VmId;
 import java.util.Collection;
 
 import com.redhat.thermostat.annotations.Service;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Countable;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.storage.model.VmInfo.KeyValuePair;
@@ -80,7 +81,22 @@ public interface VmInfoDAO extends Countable {
 
     VmInfo getVmInfo(VmRef ref);
 
+    /**
+     *
+     * @param host The host to get the VM(s) for.
+     * @return A collection of the VM(s) as VmRef(s).
+     *
+     * @deprecated use {@link #getVmIds(AgentId)}
+     */
+    @Deprecated
     Collection<VmRef> getVMs(HostRef host);
+
+    /**
+     *
+     * @param agentId The id of host to get the VM(s) for.
+     * @return A collection of the VmId(s).
+     */
+    Collection<VmId> getVmIds(AgentId agentId);
 
     void putVmInfo(VmInfo info);
 

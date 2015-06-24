@@ -44,21 +44,24 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 
-import com.redhat.thermostat.client.cli.HostVMArguments;
 import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.vm.heap.analysis.command.locale.LocaleResources;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 
 public class ListHeapDumpsCommand extends AbstractCommand {
+
+    static final String HOST_ID_ARGUMENT = "hostId";
+    static final String VM_ID_ARGUMENT = "vmId";
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
@@ -82,8 +85,6 @@ public class ListHeapDumpsCommand extends AbstractCommand {
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
-        HostVMArguments args = new HostVMArguments(ctx.getArguments(), false, false);
-
         TableRenderer renderer = new TableRenderer(4);
 
         renderer.printLine(COLUMN_NAMES);
@@ -100,11 +101,29 @@ public class ListHeapDumpsCommand extends AbstractCommand {
         requireNonNull(heapDAORef, translator.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
         HeapDAO heapDAO = (HeapDAO) context.getService(heapDAORef);
 
-        Collection<HostRef> hosts = args.getHost() != null ? Arrays.asList(args.getHost()) : hostDAO.getHosts();
-        for (HostRef hostRef : hosts) {
-            Collection<VmRef> vms = args.getVM() != null ? Arrays.asList(args.getVM()) : vmDAO.getVMs(hostRef);
-            for (VmRef vmRef : vms) {
-                printDumpsForVm(heapDAO, hostRef, vmRef, renderer);
+        String stringVmId = ctx.getArguments().getArgument(VM_ID_ARGUMENT);
+        String stringAgentId = null;
+
+        VmId vmId = null;
+        AgentId agentId = null;
+
+        if (stringVmId != null) {
+            vmId = new VmId(stringVmId);
+            final VmInfo vmInfo = vmDAO.getVmInfo(vmId);
+
+            stringAgentId = vmInfo.getAgentId();
+        } else {
+            stringAgentId = ctx.getArguments().getArgument(HOST_ID_ARGUMENT);
+        }
+
+        if (stringAgentId != null)
+            agentId = new AgentId(stringAgentId);
+
+        Collection<AgentId> hosts = stringAgentId != null ? Arrays.asList(agentId) : hostDAO.getAgentIds();
+        for (AgentId host : hosts) {
+            Collection<VmId> vms = stringVmId != null ? Arrays.asList(vmId) : vmDAO.getVmIds(host);
+            for (VmId vm : vms) {
+                printDumpsForVm(heapDAO, host, vm, renderer);
             }
         }
 
@@ -115,11 +134,11 @@ public class ListHeapDumpsCommand extends AbstractCommand {
         renderer.render(ctx.getConsole().getOutput());
     }
 
-    private void printDumpsForVm(HeapDAO heapDAO, HostRef hostRef, VmRef vmRef, TableRenderer renderer) {
-        Collection<HeapInfo> infos = heapDAO.getAllHeapInfo(vmRef);
+    private void printDumpsForVm(HeapDAO heapDAO, AgentId agentId, VmId vmId, TableRenderer renderer) {
+        Collection<HeapInfo> infos = heapDAO.getAllHeapInfo(agentId, vmId);
         for (HeapInfo info : infos) {
-            renderer.printLine(hostRef.getAgentId(),
-                               vmRef.getVmId(),
+            renderer.printLine(agentId.get(),
+                               vmId.get(),
                                info.getHeapId(),
                                new Date(info.getTimeStamp()).toString());
         }
