@@ -43,6 +43,8 @@ import static jline.console.completer.ArgumentCompleter.WhitespaceArgumentDelimi
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -58,6 +60,7 @@ public class TreeCompleter implements Completer {
 
     private Node currentNode;
     private ArgumentList list;
+    private boolean alphabeticalSortingEnabled = false;
 
     public static final int NOT_FOUND = -1;
     private static final String EMPTY_SPACE = " ";
@@ -91,6 +94,21 @@ public class TreeCompleter implements Completer {
     public TreeCompleter() {
         delimiter = new WhitespaceArgumentDelimiter();
         branches = new ArrayList<>();
+    }
+
+    /**
+     * Sets whether the completions returned by the completer will be alphabetical
+     * @param completeAlphabetically true will result in alphabetically sorted completions
+     */
+    public void setAlphabeticalCompletions(boolean completeAlphabetically) {
+        alphabeticalSortingEnabled = completeAlphabetically;
+    }
+
+    /**
+     * @return whether the completer will be alphabetically sorted
+     */
+    public boolean isAlphabeticalSortingEnabled() {
+        return alphabeticalSortingEnabled;
     }
 
     /**
@@ -133,7 +151,20 @@ public class TreeCompleter implements Completer {
             }
         }
 
+        if (alphabeticalSortingEnabled) {
+            inplaceSortAlphabetically(candidates);
+        }
+
         return position;
+    }
+
+    private void inplaceSortAlphabetically(List<CharSequence> candidates) {
+        Collections.sort(candidates, new Comparator<CharSequence>() {
+            @Override
+            public int compare(final CharSequence t0, final CharSequence t1) {
+                return t0.toString().compareTo(t1.toString());
+            }
+        });
     }
 
     private int getInlinedCursorPosition(final Completer completer, final List<CharSequence> candidates) {

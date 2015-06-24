@@ -60,6 +60,8 @@ public class TabCompletion {
         }
 
         TreeCompleter treeCompleter = new TreeCompleter();
+        treeCompleter.setAlphabeticalCompletions(true);
+
         for (CommandInfo info : commandInfoSource.getCommandInfos()) {
 
             if (info.getEnvironments().contains(Environment.SHELL)) {

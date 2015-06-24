@@ -333,6 +333,81 @@ public class TreeCompleterTest {
         assertTrue(convertedCandidates.isEmpty());
     }
 
+    @Test
+    public void testAlphabeticalOrder() {
+        tree.setAlphabeticalCompletions(true);
+
+        List<String> output = completeBuffer("");
+
+        assertEquals(4, output.size());
+        assertTrue(output.get(0).equals("anotherCommand"));
+        assertTrue(output.get(1).equals("command1"));
+        assertTrue(output.get(2).equals("command2"));
+        assertTrue(output.get(3).equals("otherCommand"));
+    }
+
+    @Test
+    public void testAlphabeticalOrderForOptions() {
+        tree.setAlphabeticalCompletions(true);
+
+        List<String> output = completeBuffer("otherCommand list ");
+
+        assertEquals(5 ,output.size());
+        assertTrue(output.get(0).equals("assemblies"));
+        assertTrue(output.get(1).equals("bolts"));
+        assertTrue(output.get(2).equals("degreesOfFreedom"));
+        assertTrue(output.get(3).equals("parts"));
+        assertTrue(output.get(4).equals("tools"));
+    }
+
+    @Test
+    public void testAlphabeticalOrderNotSetToTrue() {
+        tree.setAlphabeticalCompletions(false);
+
+        List<String> output = completeBuffer("");
+
+        assertEquals(4 ,output.size());
+        assertFalse(output.get(0).equals("anotherCommand"));
+        assertFalse(output.get(1).equals("command1"));
+        assertFalse(output.get(2).equals("command2"));
+        assertFalse(output.get(3).equals("otherCommand"));
+    }
+
+    @Test
+    public void testAlphabeticalOrderForInlineOptions() {
+        tree.setAlphabeticalCompletions(true);
+
+        List<String> output = completeBuffer("anotherCommand grab dri");
+
+        assertEquals(12 ,output.size());
+        assertTrue(output.get(0).equals("drink-apple-juice"));
+        assertTrue(output.get(1).equals("drink-apple-soda"));
+        assertTrue(output.get(2).equals("drink-banana-juice"));
+        assertTrue(output.get(3).equals("drink-coke"));
+        assertTrue(output.get(4).equals("drink-fanta"));
+        assertTrue(output.get(5).equals("drink-grape-soda"));
+        assertTrue(output.get(6).equals("drink-orange-juice"));
+        assertTrue(output.get(7).equals("drink-pepsi"));
+        assertTrue(output.get(8).equals("drink-pepsi-diet"));
+        assertTrue(output.get(9).equals("drink-pepsi-lime"));
+        assertTrue(output.get(10).equals("drink-pepsi-vanilla"));
+        assertTrue(output.get(11).equals("drink-pepsi-zero"));
+    }
+
+    @Test
+    public void testAlphabeticalOrderForFurtherInlinedOptions() {
+        tree.setAlphabeticalCompletions(true);
+
+        List<String> output = completeBuffer("anotherCommand grab drink-pep");
+
+        assertEquals(5 ,output.size());
+        assertTrue(output.get(0).equals("drink-pepsi"));
+        assertTrue(output.get(1).equals("drink-pepsi-diet"));
+        assertTrue(output.get(2).equals("drink-pepsi-lime"));
+        assertTrue(output.get(3).equals("drink-pepsi-vanilla"));
+        assertTrue(output.get(4).equals("drink-pepsi-zero"));
+    }
+
     private List<String> completeBuffer(String buffer) {
         return completeBuffer(buffer, buffer.length());
     }
@@ -469,6 +544,35 @@ public class TreeCompleterTest {
                 list.addBranch(twentyFifthToSeventyFifthPart);
             }
             anotherCommand.addBranch(list);
+
+            TreeCompleter.Node grab = createStringNode("grab");
+            {
+                TreeCompleter.Node pepsi = createStringNode("drink-pepsi");
+                TreeCompleter.Node coke = createStringNode("drink-coke");
+                TreeCompleter.Node fanta = createStringNode("drink-fanta");
+                TreeCompleter.Node apple = createStringNode("drink-apple-juice");
+                TreeCompleter.Node banana = createStringNode("drink-banana-juice");
+                TreeCompleter.Node orange = createStringNode("drink-orange-juice");
+                TreeCompleter.Node appleSoda = createStringNode("drink-apple-soda");
+                TreeCompleter.Node grapeSoda = createStringNode("drink-grape-soda");
+                TreeCompleter.Node pepsiZero = createStringNode("drink-pepsi-zero");
+                TreeCompleter.Node pepsiDiet = createStringNode("drink-pepsi-diet");
+                TreeCompleter.Node pepsiVanilla = createStringNode("drink-pepsi-vanilla");
+                TreeCompleter.Node pepsiLime = createStringNode("drink-pepsi-lime");
+                grab.addBranch(pepsi);
+                grab.addBranch(coke);
+                grab.addBranch(fanta);
+                grab.addBranch(apple);
+                grab.addBranch(banana);
+                grab.addBranch(orange);
+                grab.addBranch(appleSoda);
+                grab.addBranch(grapeSoda);
+                grab.addBranch(pepsiZero);
+                grab.addBranch(pepsiDiet);
+                grab.addBranch(pepsiVanilla);
+                grab.addBranch(pepsiLime);
+            }
+            anotherCommand.addBranch(grab);
         }
 
         commands.add(command1);
