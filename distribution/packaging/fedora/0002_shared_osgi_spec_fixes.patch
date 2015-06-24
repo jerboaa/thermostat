@@ -1,0 +1,1850 @@
+diff --git a/agent/cli/pom.xml b/agent/cli/pom.xml
+--- a/agent/cli/pom.xml
++++ b/agent/cli/pom.xml
+@@ -97,8 +97,8 @@
+       <version>${project.version}</version>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/agent/command/pom.xml b/agent/command/pom.xml
+--- a/agent/command/pom.xml
++++ b/agent/command/pom.xml
+@@ -76,8 +76,8 @@
+       <artifactId>netty</artifactId>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+ 
+     <dependency>
+diff --git a/agent/core/pom.xml b/agent/core/pom.xml
+--- a/agent/core/pom.xml
++++ b/agent/core/pom.xml
+@@ -88,8 +88,8 @@
+       <version>${project.version}</version>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+   </dependencies>
+ 
+diff --git a/client/cli/pom.xml b/client/cli/pom.xml
+--- a/client/cli/pom.xml
++++ b/client/cli/pom.xml
+@@ -101,14 +101,8 @@
+       <version>${project.version}</version>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/client/command/pom.xml b/client/command/pom.xml
+--- a/client/command/pom.xml
++++ b/client/command/pom.xml
+@@ -76,9 +76,8 @@
+       <artifactId>netty</artifactId>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+ 
+     <dependency>
+diff --git a/client/core/pom.xml b/client/core/pom.xml
+--- a/client/core/pom.xml
++++ b/client/core/pom.xml
+@@ -96,14 +96,8 @@
+     </dependency>
+     
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+   </dependencies>
+ 
+diff --git a/client/living-vm-filter/core/pom.xml b/client/living-vm-filter/core/pom.xml
+--- a/client/living-vm-filter/core/pom.xml
++++ b/client/living-vm-filter/core/pom.xml
+@@ -90,15 +90,8 @@
+     </dependency>
+ 
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+ 
+     <dependency>
+diff --git a/client/living-vm-filter/swing/pom.xml b/client/living-vm-filter/swing/pom.xml
+--- a/client/living-vm-filter/swing/pom.xml
++++ b/client/living-vm-filter/swing/pom.xml
+@@ -92,15 +92,8 @@
+     </dependency>
+ 
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+ 
+     <dependency>
+diff --git a/client/swing/pom.xml b/client/swing/pom.xml
+--- a/client/swing/pom.xml
++++ b/client/swing/pom.xml
+@@ -110,14 +110,8 @@
+     </dependency>
+     
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/common/core/pom.xml b/common/core/pom.xml
+--- a/common/core/pom.xml
++++ b/common/core/pom.xml
+@@ -145,16 +145,6 @@
+       <artifactId>commons-cli</artifactId>
+     </dependency>
+     
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+     
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/config/pom.xml b/config/pom.xml
+--- a/config/pom.xml
++++ b/config/pom.xml
+@@ -91,14 +91,8 @@
+     </dependency>
+     
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+ 
+     <dependency>
+diff --git a/dev/multi-module-plugin-archetype/src/main/resources/META-INF/maven/archetype-metadata.xml b/dev/multi-module-plugin-archetype/src/main/resources/META-INF/maven/archetype-metadata.xml
+--- a/dev/multi-module-plugin-archetype/src/main/resources/META-INF/maven/archetype-metadata.xml
++++ b/dev/multi-module-plugin-archetype/src/main/resources/META-INF/maven/archetype-metadata.xml
+@@ -85,11 +85,8 @@
+     <requiredProperty key="gson-version">
+       <defaultValue>${gson.version}</defaultValue>
+     </requiredProperty>
+-     <requiredProperty key="osgi-compendium-osgi-version">
+-      <defaultValue>${osgi.compendium.osgi-version}</defaultValue>
+-    </requiredProperty>
+-     <requiredProperty key="osgi-compendium-bundle-symbolic-name">
+-      <defaultValue>${osgi.compendium.bundle.symbolic-name}</defaultValue>
++     <requiredProperty key="felix.framework.version">
++      <defaultValue>${felix.framework.version}</defaultValue>
+     </requiredProperty>
+   </requiredProperties>
+   <fileSets>
+diff --git a/dev/multi-module-plugin-archetype/src/main/resources/archetype-resources/agent/pom.xml b/dev/multi-module-plugin-archetype/src/main/resources/archetype-resources/agent/pom.xml
+--- a/dev/multi-module-plugin-archetype/src/main/resources/archetype-resources/agent/pom.xml
++++ b/dev/multi-module-plugin-archetype/src/main/resources/archetype-resources/agent/pom.xml
+@@ -52,8 +52,8 @@
+   <dependencies>
+         
+       <dependency>
+-          <groupId>org.osgi</groupId>
+-          <artifactId>org.osgi.core</artifactId>
++          <groupId>org.apache.felix</groupId>
++          <artifactId>org.apache.felix.framework</artifactId>
+           <scope>provided</scope>
+       </dependency>
+ 
+diff --git a/dev/multi-module-plugin-archetype/src/main/resources/archetype-resources/client-cli/pom.xml b/dev/multi-module-plugin-archetype/src/main/resources/archetype-resources/client-cli/pom.xml
+--- a/dev/multi-module-plugin-archetype/src/main/resources/archetype-resources/client-cli/pom.xml
++++ b/dev/multi-module-plugin-archetype/src/main/resources/archetype-resources/client-cli/pom.xml
+@@ -16,8 +16,8 @@
+   <dependencies>
+       
+       <dependency>
+-          <groupId>org.osgi</groupId>
+-          <artifactId>org.osgi.core</artifactId>
++          <groupId>org.apache.felix</groupId>
++          <artifactId>org.apache.felix.framework</artifactId>
+           <scope>provided</scope>
+       </dependency>
+ 
+diff --git a/dev/multi-module-plugin-archetype/src/main/resources/archetype-resources/pom.xml b/dev/multi-module-plugin-archetype/src/main/resources/archetype-resources/pom.xml
+--- a/dev/multi-module-plugin-archetype/src/main/resources/archetype-resources/pom.xml
++++ b/dev/multi-module-plugin-archetype/src/main/resources/archetype-resources/pom.xml
+@@ -107,13 +107,13 @@
+         <artifactId>junit</artifactId>
+         <version>${symbol_dollar}{junit.version}</version>
+       </dependency>
++
++      <dependency>
++        <groupId>org.apache.felix</groupId>
++        <artifactId>org.apache.felix.framework</artifactId>
++        <version>${symbol_dollar}{felix.framework.version}</version>
++      </dependency>
+       
+-      <dependency>
+-        <groupId>org.osgi</groupId>
+-        <artifactId>org.osgi.core</artifactId>
+-        <version>${symbol_dollar}{osgi.core.version}</version>
+-      </dependency>
+-    
+       <!-- thermostat dependencies -->
+ 
+       <dependency>
+diff --git a/dev/multi-module-plugin-archetype/src/main/resources/archetype-resources/storage-common/pom.xml b/dev/multi-module-plugin-archetype/src/main/resources/archetype-resources/storage-common/pom.xml
+--- a/dev/multi-module-plugin-archetype/src/main/resources/archetype-resources/storage-common/pom.xml
++++ b/dev/multi-module-plugin-archetype/src/main/resources/archetype-resources/storage-common/pom.xml
+@@ -61,8 +61,8 @@
+       </dependency>
+         
+       <dependency>
+-          <groupId>org.osgi</groupId>
+-          <artifactId>org.osgi.core</artifactId>
++          <groupId>org.apache.felix</groupId>
++          <artifactId>org.apache.felix.framework</artifactId>
+           <scope>provided</scope>
+       </dependency>
+ 
+diff --git a/host-cpu/agent/pom.xml b/host-cpu/agent/pom.xml
+--- a/host-cpu/agent/pom.xml
++++ b/host-cpu/agent/pom.xml
+@@ -80,14 +80,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/host-cpu/client-core/pom.xml b/host-cpu/client-core/pom.xml
+--- a/host-cpu/client-core/pom.xml
++++ b/host-cpu/client-core/pom.xml
+@@ -99,14 +99,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/host-cpu/client-swing/pom.xml b/host-cpu/client-swing/pom.xml
+--- a/host-cpu/client-swing/pom.xml
++++ b/host-cpu/client-swing/pom.xml
+@@ -87,14 +87,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>org.jfree</groupId>
+diff --git a/host-cpu/common/pom.xml b/host-cpu/common/pom.xml
+--- a/host-cpu/common/pom.xml
++++ b/host-cpu/common/pom.xml
+@@ -99,14 +99,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/host-memory/agent/pom.xml b/host-memory/agent/pom.xml
+--- a/host-memory/agent/pom.xml
++++ b/host-memory/agent/pom.xml
+@@ -80,14 +80,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/host-memory/client-core/pom.xml b/host-memory/client-core/pom.xml
+--- a/host-memory/client-core/pom.xml
++++ b/host-memory/client-core/pom.xml
+@@ -99,14 +99,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/host-memory/client-swing/pom.xml b/host-memory/client-swing/pom.xml
+--- a/host-memory/client-swing/pom.xml
++++ b/host-memory/client-swing/pom.xml
+@@ -87,14 +87,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>org.jfree</groupId>
+diff --git a/host-memory/common/pom.xml b/host-memory/common/pom.xml
+--- a/host-memory/common/pom.xml
++++ b/host-memory/common/pom.xml
+@@ -99,14 +99,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/host-overview/client-core/pom.xml b/host-overview/client-core/pom.xml
+--- a/host-overview/client-core/pom.xml
++++ b/host-overview/client-core/pom.xml
+@@ -99,14 +99,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/host-overview/client-swing/pom.xml b/host-overview/client-swing/pom.xml
+--- a/host-overview/client-swing/pom.xml
++++ b/host-overview/client-swing/pom.xml
+@@ -87,14 +87,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>org.jfree</groupId>
+diff --git a/keyring/pom.xml b/keyring/pom.xml
+--- a/keyring/pom.xml
++++ b/keyring/pom.xml
+@@ -146,14 +146,8 @@
+     </dependency>
+     
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+ 
+     <dependency>
+diff --git a/killvm/agent/pom.xml b/killvm/agent/pom.xml
+--- a/killvm/agent/pom.xml
++++ b/killvm/agent/pom.xml
+@@ -103,8 +103,8 @@
+       <version>${project.version}</version>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+   </dependencies>
+ 
+diff --git a/killvm/client-swing/pom.xml b/killvm/client-swing/pom.xml
+--- a/killvm/client-swing/pom.xml
++++ b/killvm/client-swing/pom.xml
+@@ -100,14 +100,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/killvm/command/pom.xml b/killvm/command/pom.xml
+--- a/killvm/command/pom.xml
++++ b/killvm/command/pom.xml
+@@ -87,9 +87,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/killvm/common/pom.xml b/killvm/common/pom.xml
+--- a/killvm/common/pom.xml
++++ b/killvm/common/pom.xml
+@@ -88,16 +88,6 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+       <groupId>org.apache.felix</groupId>
+       <artifactId>org.apache.felix.framework</artifactId>
+       <version>4.2.0</version>
+@@ -120,4 +110,4 @@
+     </dependency>
+   </dependencies>
+ 
+-</project>
+\ No newline at end of file
++</project>
+diff --git a/laf-utils/pom.xml b/laf-utils/pom.xml
+--- a/laf-utils/pom.xml
++++ b/laf-utils/pom.xml
+@@ -137,14 +137,8 @@
+     </dependency>
+     
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/notes/client-swing/pom.xml b/notes/client-swing/pom.xml
+--- a/notes/client-swing/pom.xml
++++ b/notes/client-swing/pom.xml
+@@ -87,14 +87,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>org.jfree</groupId>
+diff --git a/notes/common/pom.xml b/notes/common/pom.xml
+--- a/notes/common/pom.xml
++++ b/notes/common/pom.xml
+@@ -82,14 +82,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/numa/agent/pom.xml b/numa/agent/pom.xml
+--- a/numa/agent/pom.xml
++++ b/numa/agent/pom.xml
+@@ -80,9 +80,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/numa/client-core/pom.xml b/numa/client-core/pom.xml
+--- a/numa/client-core/pom.xml
++++ b/numa/client-core/pom.xml
+@@ -83,14 +83,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/numa/client-swing/pom.xml b/numa/client-swing/pom.xml
+--- a/numa/client-swing/pom.xml
++++ b/numa/client-swing/pom.xml
+@@ -87,14 +87,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>org.jfree</groupId>
+diff --git a/numa/common/pom.xml b/numa/common/pom.xml
+--- a/numa/common/pom.xml
++++ b/numa/common/pom.xml
+@@ -82,14 +82,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/pom.xml b/pom.xml
+--- a/pom.xml
++++ b/pom.xml
+@@ -195,14 +195,26 @@
+     <lucene-analysis.bundle.symbolic-name>org.apache.servicemix.bundles.lucene-analyzers-common</lucene-analysis.bundle.symbolic-name>
+     <lucene-core.bundle.symbolic-name>org.apache.servicemix.bundles.lucene</lucene-core.bundle.symbolic-name>
+     <!--
+-         felix 4.0 is compliant with osgi 4.3
+-         for osgi clients, 4.3 is backwards compatible with 4.2
++	 Since we use felix framework at runtime, try to avoid introducing an
++         extra dependency for OSGi API-only (e.g. org.osgi:org.osgi.core) in order to
++         make packaging Thermostat easier. While org.osgi:org.osgi.core v4.3.x would
++         satisfy OSGi 4.3 spec API, org.apache.felix:org.osgi.core v1.4 is OSGi 4.2 spec
++         only at this point. 
++
++ 	 Felix framework 4.2 is an implementation of the 4.3 OSGi
++         spec: https://cwiki.apache.org/confluence/display/FELIX/Apache+Felix+Framework+OSGi+R4.3+CT+Results
++        
++         Note that between OSGi spec 4.2 and 4.3 generics (a.k.a type parameters)
++         have been introduced. Howerver, felix's API-only package, 
++         org.apache.felix:org.osgi.core, is OSGi spec 4.2 and we use OSGi spec 4.3
++         specific code in thermostat.
++         
++         We should be careful not to introduce felix specific API, though.
+     -->
+-    <osgi.core.version>4.3.1</osgi.core.version>
++    <felix.framework.version>4.2.0</felix.framework.version>
+     <osgi.compendium.version>4.3.1</osgi.compendium.version>
+     <osgi.compendium.osgi-version>4.3.1.201210102024</osgi.compendium.osgi-version>
+     <osgi.compendium.bundle.symbolic-name>osgi.cmpn</osgi.compendium.bundle.symbolic-name>
+-    <felix.framework.version>4.2.0</felix.framework.version>
+ 
+     <netty.version>3.2.4.Final</netty.version>
+     <httpcomponents.core.version>4.3.2</httpcomponents.core.version>
+@@ -558,16 +570,6 @@
+       </dependency>
+ 
+       <dependency>
+-        <groupId>org.osgi</groupId>
+-        <artifactId>org.osgi.core</artifactId>
+-        <version>${osgi.core.version}</version>
+-      </dependency>
+-      <dependency>
+-        <groupId>org.osgi</groupId>
+-        <artifactId>org.osgi.compendium</artifactId>
+-        <version>${osgi.compendium.version}</version>
+-      </dependency>
+-      <dependency>
+         <groupId>org.apache.felix</groupId>
+         <artifactId>org.apache.felix.framework</artifactId>
+         <version>${felix.framework.version}</version>
+diff --git a/storage/cli/pom.xml b/storage/cli/pom.xml
+--- a/storage/cli/pom.xml
++++ b/storage/cli/pom.xml
+@@ -67,8 +67,8 @@
+       <version>${project.version}</version>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/system-backend/pom.xml b/system-backend/pom.xml
+--- a/system-backend/pom.xml
++++ b/system-backend/pom.xml
+@@ -87,14 +87,8 @@
+     </dependency>
+     
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+ 
+   </dependencies>
+diff --git a/thread/client-common/pom.xml b/thread/client-common/pom.xml
+--- a/thread/client-common/pom.xml
++++ b/thread/client-common/pom.xml
+@@ -73,14 +73,8 @@
+     </dependency>
+     
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     
+     <dependency>
+diff --git a/thread/client-controllers/pom.xml b/thread/client-controllers/pom.xml
+--- a/thread/client-controllers/pom.xml
++++ b/thread/client-controllers/pom.xml
+@@ -74,14 +74,8 @@
+     </dependency>
+ 
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     
+     <dependency>
+diff --git a/thread/client-swing/pom.xml b/thread/client-swing/pom.xml
+--- a/thread/client-swing/pom.xml
++++ b/thread/client-swing/pom.xml
+@@ -68,14 +68,8 @@
+     </dependency>
+     
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     
+     <dependency>
+diff --git a/thread/collector/pom.xml b/thread/collector/pom.xml
+--- a/thread/collector/pom.xml
++++ b/thread/collector/pom.xml
+@@ -85,14 +85,8 @@
+     </dependency>
+ 
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+   </dependencies>
+ 
+diff --git a/thread/harvester/pom.xml b/thread/harvester/pom.xml
+--- a/thread/harvester/pom.xml
++++ b/thread/harvester/pom.xml
+@@ -74,14 +74,8 @@
+     </dependency>
+     
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+ 
+     <dependency>
+diff --git a/unix-process-handler/pom.xml b/unix-process-handler/pom.xml
+--- a/unix-process-handler/pom.xml
++++ b/unix-process-handler/pom.xml
+@@ -77,14 +77,8 @@
+     </dependency>
+ 
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     
+     <dependency>
+diff --git a/vm-classstat/agent/pom.xml b/vm-classstat/agent/pom.xml
+--- a/vm-classstat/agent/pom.xml
++++ b/vm-classstat/agent/pom.xml
+@@ -80,14 +80,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/vm-classstat/client-core/pom.xml b/vm-classstat/client-core/pom.xml
+--- a/vm-classstat/client-core/pom.xml
++++ b/vm-classstat/client-core/pom.xml
+@@ -99,14 +99,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/vm-classstat/client-swing/pom.xml b/vm-classstat/client-swing/pom.xml
+--- a/vm-classstat/client-swing/pom.xml
++++ b/vm-classstat/client-swing/pom.xml
+@@ -87,14 +87,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>org.jfree</groupId>
+diff --git a/vm-classstat/common/pom.xml b/vm-classstat/common/pom.xml
+--- a/vm-classstat/common/pom.xml
++++ b/vm-classstat/common/pom.xml
+@@ -99,14 +99,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/vm-cpu/agent/pom.xml b/vm-cpu/agent/pom.xml
+--- a/vm-cpu/agent/pom.xml
++++ b/vm-cpu/agent/pom.xml
+@@ -80,14 +80,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/vm-cpu/client-cli/pom.xml b/vm-cpu/client-cli/pom.xml
+--- a/vm-cpu/client-cli/pom.xml
++++ b/vm-cpu/client-cli/pom.xml
+@@ -80,14 +80,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/vm-cpu/client-core/pom.xml b/vm-cpu/client-core/pom.xml
+--- a/vm-cpu/client-core/pom.xml
++++ b/vm-cpu/client-core/pom.xml
+@@ -99,14 +99,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/vm-cpu/client-swing/pom.xml b/vm-cpu/client-swing/pom.xml
+--- a/vm-cpu/client-swing/pom.xml
++++ b/vm-cpu/client-swing/pom.xml
+@@ -87,14 +87,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>org.jfree</groupId>
+diff --git a/vm-cpu/common/pom.xml b/vm-cpu/common/pom.xml
+--- a/vm-cpu/common/pom.xml
++++ b/vm-cpu/common/pom.xml
+@@ -99,14 +99,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/vm-gc/agent/pom.xml b/vm-gc/agent/pom.xml
+--- a/vm-gc/agent/pom.xml
++++ b/vm-gc/agent/pom.xml
+@@ -80,14 +80,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/vm-gc/client-core/pom.xml b/vm-gc/client-core/pom.xml
+--- a/vm-gc/client-core/pom.xml
++++ b/vm-gc/client-core/pom.xml
+@@ -99,14 +99,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/vm-gc/client-swing/pom.xml b/vm-gc/client-swing/pom.xml
+--- a/vm-gc/client-swing/pom.xml
++++ b/vm-gc/client-swing/pom.xml
+@@ -87,14 +87,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>org.jfree</groupId>
+diff --git a/vm-gc/command/pom.xml b/vm-gc/command/pom.xml
+--- a/vm-gc/command/pom.xml
++++ b/vm-gc/command/pom.xml
+@@ -67,15 +67,10 @@
+       <version>${project.version}</version>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
++
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+       <artifactId>thermostat-common-test</artifactId>
+diff --git a/vm-gc/common/pom.xml b/vm-gc/common/pom.xml
+--- a/vm-gc/common/pom.xml
++++ b/vm-gc/common/pom.xml
+@@ -99,14 +99,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/vm-gc/remote-collector-client-common/pom.xml b/vm-gc/remote-collector-client-common/pom.xml
+--- a/vm-gc/remote-collector-client-common/pom.xml
++++ b/vm-gc/remote-collector-client-common/pom.xml
+@@ -68,14 +68,8 @@
+     </dependency>
+     
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     
+     <dependency>
+diff --git a/vm-gc/remote-collector-client-swing/pom.xml b/vm-gc/remote-collector-client-swing/pom.xml
+--- a/vm-gc/remote-collector-client-swing/pom.xml
++++ b/vm-gc/remote-collector-client-swing/pom.xml
+@@ -68,14 +68,8 @@
+     </dependency>
+     
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     
+     <dependency>
+diff --git a/vm-gc/remote-collector-command/pom.xml b/vm-gc/remote-collector-command/pom.xml
+--- a/vm-gc/remote-collector-command/pom.xml
++++ b/vm-gc/remote-collector-command/pom.xml
+@@ -68,14 +68,8 @@
+     </dependency>
+     
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     
+     <dependency>
+diff --git a/vm-gc/remote-collector-common/pom.xml b/vm-gc/remote-collector-common/pom.xml
+--- a/vm-gc/remote-collector-common/pom.xml
++++ b/vm-gc/remote-collector-common/pom.xml
+@@ -68,14 +68,8 @@
+     </dependency>
+     
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     
+     <dependency>
+diff --git a/vm-heap-analysis/agent/pom.xml b/vm-heap-analysis/agent/pom.xml
+--- a/vm-heap-analysis/agent/pom.xml
++++ b/vm-heap-analysis/agent/pom.xml
+@@ -72,14 +72,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+ 
+     <dependency>
+diff --git a/vm-heap-analysis/client-core/pom.xml b/vm-heap-analysis/client-core/pom.xml
+--- a/vm-heap-analysis/client-core/pom.xml
++++ b/vm-heap-analysis/client-core/pom.xml
+@@ -94,14 +94,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     
+     <dependency>
+diff --git a/vm-heap-analysis/client-swing/pom.xml b/vm-heap-analysis/client-swing/pom.xml
+--- a/vm-heap-analysis/client-swing/pom.xml
++++ b/vm-heap-analysis/client-swing/pom.xml
+@@ -91,14 +91,8 @@
+     </dependency>
+     
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     
+     <dependency>
+diff --git a/vm-heap-analysis/command/pom.xml b/vm-heap-analysis/command/pom.xml
+--- a/vm-heap-analysis/command/pom.xml
++++ b/vm-heap-analysis/command/pom.xml
+@@ -93,14 +93,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     
+     <dependency>
+diff --git a/vm-heap-analysis/common/pom.xml b/vm-heap-analysis/common/pom.xml
+--- a/vm-heap-analysis/common/pom.xml
++++ b/vm-heap-analysis/common/pom.xml
+@@ -93,14 +93,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     
+     <dependency>
+diff --git a/vm-io/agent/pom.xml b/vm-io/agent/pom.xml
+--- a/vm-io/agent/pom.xml
++++ b/vm-io/agent/pom.xml
+@@ -80,13 +80,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+       <scope>provided</scope>
+     </dependency>
+     <dependency>
+diff --git a/vm-io/client-cli/pom.xml b/vm-io/client-cli/pom.xml
+--- a/vm-io/client-cli/pom.xml
++++ b/vm-io/client-cli/pom.xml
+@@ -80,13 +80,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+       <scope>provided</scope>
+     </dependency>
+     <dependency>
+diff --git a/vm-io/client-core/pom.xml b/vm-io/client-core/pom.xml
+--- a/vm-io/client-core/pom.xml
++++ b/vm-io/client-core/pom.xml
+@@ -98,13 +98,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+       <scope>provided</scope>
+     </dependency>
+     <dependency>
+diff --git a/vm-io/client-swing/pom.xml b/vm-io/client-swing/pom.xml
+--- a/vm-io/client-swing/pom.xml
++++ b/vm-io/client-swing/pom.xml
+@@ -87,13 +87,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+       <scope>provided</scope>
+     </dependency>
+     <dependency>
+diff --git a/vm-io/common/pom.xml b/vm-io/common/pom.xml
+--- a/vm-io/common/pom.xml
++++ b/vm-io/common/pom.xml
+@@ -98,13 +98,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+       <scope>provided</scope>
+     </dependency>
+     <dependency>
+diff --git a/vm-jmx/agent/pom.xml b/vm-jmx/agent/pom.xml
+--- a/vm-jmx/agent/pom.xml
++++ b/vm-jmx/agent/pom.xml
+@@ -86,14 +86,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/vm-jmx/client-core/pom.xml b/vm-jmx/client-core/pom.xml
+--- a/vm-jmx/client-core/pom.xml
++++ b/vm-jmx/client-core/pom.xml
+@@ -88,14 +88,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/vm-jmx/client-swing/pom.xml b/vm-jmx/client-swing/pom.xml
+--- a/vm-jmx/client-swing/pom.xml
++++ b/vm-jmx/client-swing/pom.xml
+@@ -96,14 +96,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/vm-jmx/common/pom.xml b/vm-jmx/common/pom.xml
+--- a/vm-jmx/common/pom.xml
++++ b/vm-jmx/common/pom.xml
+@@ -88,14 +88,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/vm-memory/agent/pom.xml b/vm-memory/agent/pom.xml
+--- a/vm-memory/agent/pom.xml
++++ b/vm-memory/agent/pom.xml
+@@ -80,14 +80,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/vm-memory/client-cli/pom.xml b/vm-memory/client-cli/pom.xml
+--- a/vm-memory/client-cli/pom.xml
++++ b/vm-memory/client-cli/pom.xml
+@@ -80,14 +80,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/vm-memory/client-core/pom.xml b/vm-memory/client-core/pom.xml
+--- a/vm-memory/client-core/pom.xml
++++ b/vm-memory/client-core/pom.xml
+@@ -84,14 +84,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>org.jfree</groupId>
+diff --git a/vm-memory/client-swing/pom.xml b/vm-memory/client-swing/pom.xml
+--- a/vm-memory/client-swing/pom.xml
++++ b/vm-memory/client-swing/pom.xml
+@@ -90,14 +90,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>org.jfree</groupId>
+diff --git a/vm-memory/common/pom.xml b/vm-memory/common/pom.xml
+--- a/vm-memory/common/pom.xml
++++ b/vm-memory/common/pom.xml
+@@ -99,14 +99,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/vm-overview/client-core/pom.xml b/vm-overview/client-core/pom.xml
+--- a/vm-overview/client-core/pom.xml
++++ b/vm-overview/client-core/pom.xml
+@@ -83,14 +83,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/vm-overview/client-swing/pom.xml b/vm-overview/client-swing/pom.xml
+--- a/vm-overview/client-swing/pom.xml
++++ b/vm-overview/client-swing/pom.xml
+@@ -87,14 +87,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>org.jfree</groupId>
+diff --git a/vm-profiler/agent/pom.xml b/vm-profiler/agent/pom.xml
+--- a/vm-profiler/agent/pom.xml
++++ b/vm-profiler/agent/pom.xml
+@@ -96,14 +96,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/vm-profiler/client-cli/pom.xml b/vm-profiler/client-cli/pom.xml
+--- a/vm-profiler/client-cli/pom.xml
++++ b/vm-profiler/client-cli/pom.xml
+@@ -80,14 +80,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/vm-profiler/client-core/pom.xml b/vm-profiler/client-core/pom.xml
+--- a/vm-profiler/client-core/pom.xml
++++ b/vm-profiler/client-core/pom.xml
+@@ -98,14 +98,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/vm-profiler/client-swing/pom.xml b/vm-profiler/client-swing/pom.xml
+--- a/vm-profiler/client-swing/pom.xml
++++ b/vm-profiler/client-swing/pom.xml
+@@ -87,14 +87,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>org.jfree</groupId>
+diff --git a/vm-profiler/common/pom.xml b/vm-profiler/common/pom.xml
+--- a/vm-profiler/common/pom.xml
++++ b/vm-profiler/common/pom.xml
+@@ -98,14 +98,8 @@
+       <scope>test</scope>
+     </dependency>
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>com.redhat.thermostat</groupId>
+diff --git a/web/client/pom.xml b/web/client/pom.xml
+--- a/web/client/pom.xml
++++ b/web/client/pom.xml
+@@ -64,9 +64,8 @@
+     </dependency>
+ 
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+ 
+     <dependency>
+@@ -96,10 +95,6 @@
+     <!-- httpclient 4.3 needs this bundle, but does only
+          specify it's dep on it with scope provided -->
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.compendium</artifactId>
+-    </dependency>
+-    <dependency>
+       <groupId>org.apache.httpcomponents</groupId>
+       <artifactId>httpcore-osgi</artifactId>
+       <version>${httpcomponents.core.version}</version>
+diff --git a/web/endpoint-plugin/web-service/pom.xml b/web/endpoint-plugin/web-service/pom.xml
+--- a/web/endpoint-plugin/web-service/pom.xml
++++ b/web/endpoint-plugin/web-service/pom.xml
+@@ -54,9 +54,8 @@
+   <dependencies>
+     <!-- Plain OSGi -->
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+ 
+     <!-- The war which we are going to deploy in embedded jetty -->
+diff --git a/web/server/pom.xml b/web/server/pom.xml
+--- a/web/server/pom.xml
++++ b/web/server/pom.xml
+@@ -131,9 +131,8 @@
+     </dependency>
+ 
+     <dependency>
+-      <groupId>org.osgi</groupId>
+-      <artifactId>org.osgi.core</artifactId>
+-      <scope>provided</scope>
++      <groupId>org.apache.felix</groupId>
++      <artifactId>org.apache.felix.framework</artifactId>
+     </dependency>
+ 
+     <dependency>

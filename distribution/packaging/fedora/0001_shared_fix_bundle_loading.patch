@@ -1,0 +1,332 @@
+diff --git a/dev/multi-module-plugin-archetype/src/main/resources/archetype-resources/distribution/thermostat-plugin.xml b/dev/multi-module-plugin-archetype/src/main/resources/archetype-resources/distribution/thermostat-plugin.xml
+--- a/dev/multi-module-plugin-archetype/src/main/resources/archetype-resources/distribution/thermostat-plugin.xml
++++ b/dev/multi-module-plugin-archetype/src/main/resources/archetype-resources/distribution/thermostat-plugin.xml
+@@ -40,7 +40,7 @@
+         <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${symbol_dollar}{commons-logging.version}</version></bundle>
+         <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${symbol_dollar}{httpcomponents.core.version}</version></bundle>
+         <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${symbol_dollar}{httpcomponents.client.version}</version></bundle>
+-        <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
++        <bundle><symbolic-name>org.apache.httpcomponents.httpmime</symbolic-name><version>${httpcomponents.mime.version}</version></bundle>
+         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${symbol_dollar}{gson.version}</version></bundle>
+       </bundles>
+     </command>
+diff --git a/dev/schema-info-command/distribution/thermostat-plugin.xml b/dev/schema-info-command/distribution/thermostat-plugin.xml
+--- a/dev/schema-info-command/distribution/thermostat-plugin.xml
++++ b/dev/schema-info-command/distribution/thermostat-plugin.xml
+@@ -63,7 +63,7 @@
+         <bundle><symbolic-name>com.redhat.thermostat.web.client</symbolic-name><version>${project.version}</version></bundle>
+         <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
+         <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
+-        <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
++        <bundle><symbolic-name>org.apache.httpcomponents.httpmime</symbolic-name><version>${httpcomponents.mime.version}</version></bundle>
+         <bundle><symbolic-name>org.mongodb.mongo-java-driver</symbolic-name><version>${mongo-driver.osgi-version}</version></bundle>
+       </bundles>
+     </command>
+diff --git a/distribution/config/commands/agent-info.properties b/distribution/config/commands/agent-info.properties
+--- a/distribution/config/commands/agent-info.properties
++++ b/distribution/config/commands/agent-info.properties
+@@ -4,7 +4,7 @@
+           com.redhat.thermostat.web.client=${project.version}, \
+           org.apache.httpcomponents.httpcore=${httpcomponents.core.version}, \
+           org.apache.httpcomponents.httpclient=${httpcomponents.client.version}, \
+-          ${osgi.compendium.bundle.symbolic-name}=${osgi.compendium.osgi-version}, \
++          org.apache.httpcomponents.httpmime=${httpcomponents.mime.version}, \
+           com.google.gson=${gson.version}, \
+           org.mongodb.mongo-java-driver=${mongo-driver.osgi-version}, \
+           org.apache.commons.beanutils=${commons-beanutils.version}, \
+diff --git a/distribution/config/commands/agent.properties b/distribution/config/commands/agent.properties
+--- a/distribution/config/commands/agent.properties
++++ b/distribution/config/commands/agent.properties
+@@ -3,7 +3,7 @@
+           com.redhat.thermostat.web.client=${project.version}, \
+           org.apache.httpcomponents.httpcore=${httpcomponents.core.version}, \
+           org.apache.httpcomponents.httpclient=${httpcomponents.client.version}, \
+-          ${osgi.compendium.bundle.symbolic-name}=${osgi.compendium.osgi-version}, \
++          org.apache.httpcomponents.httpmime=${httpcomponents.mime.version}, \
+           com.google.gson=${gson.version}, \
+           com.redhat.thermostat.process=${project.version}, \
+           com.redhat.thermostat.common.core=${project.version}, \
+diff --git a/distribution/config/commands/clean-data.properties b/distribution/config/commands/clean-data.properties
+--- a/distribution/config/commands/clean-data.properties
++++ b/distribution/config/commands/clean-data.properties
+@@ -4,7 +4,7 @@
+           com.redhat.thermostat.web.client=${project.version}, \
+           org.apache.httpcomponents.httpcore=${httpcomponents.core.version}, \
+           org.apache.httpcomponents.httpclient=${httpcomponents.client.version}, \
+-          ${osgi.compendium.bundle.symbolic-name}=${osgi.compendium.osgi-version}, \
++          org.apache.httpcomponents.httpmime=${httpcomponents.mime.version}, \
+           com.google.gson=${gson.version}, \
+           org.mongodb.mongo-java-driver=${mongo-driver.osgi-version}, \
+           org.apache.commons.beanutils=${commons-beanutils.version}, \
+diff --git a/distribution/config/commands/connect.properties b/distribution/config/commands/connect.properties
+--- a/distribution/config/commands/connect.properties
++++ b/distribution/config/commands/connect.properties
+@@ -10,7 +10,7 @@
+           org.apache.commons.logging=${commons-logging.version}, \
+           org.apache.httpcomponents.httpcore=${httpcomponents.core.version}, \
+           org.apache.httpcomponents.httpclient=${httpcomponents.client.version}, \
+-          ${osgi.compendium.bundle.symbolic-name}=${osgi.compendium.osgi-version}, \
++          org.apache.httpcomponents.httpmime=${httpcomponents.mime.version}, \
+           com.google.gson=${gson.version}
+ 
+ summary = persistently connect to storage
+diff --git a/distribution/config/commands/gui.properties b/distribution/config/commands/gui.properties
+--- a/distribution/config/commands/gui.properties
++++ b/distribution/config/commands/gui.properties
+@@ -19,8 +19,10 @@
+           com.redhat.thermostat.process=${project.version}, \
+           org.apache.httpcomponents.httpcore=${httpcomponents.core.version}, \
+           org.apache.httpcomponents.httpclient=${httpcomponents.client.version}, \
+-          ${osgi.compendium.bundle.symbolic-name}=${osgi.compendium.osgi-version}, \
+-          org.jboss.netty=${netty.version}
++          org.apache.httpcomponents.httpmime=${httpcomponents.mime.version}, \
++          org.jboss.netty=${netty.version}, \
++          org.jfree.jcommon=${jcommon.osgi.version} , \
++          org.jfree.jfreechart=${jfreechart.osgi.version}
+ 
+ summary = launch the GUI client
+ 
+diff --git a/distribution/config/commands/list-agents.properties b/distribution/config/commands/list-agents.properties
+--- a/distribution/config/commands/list-agents.properties
++++ b/distribution/config/commands/list-agents.properties
+@@ -4,7 +4,7 @@
+           com.redhat.thermostat.web.client=${project.version}, \
+           org.apache.httpcomponents.httpcore=${httpcomponents.core.version}, \
+           org.apache.httpcomponents.httpclient=${httpcomponents.client.version}, \
+-          ${osgi.compendium.bundle.symbolic-name}=${osgi.compendium.osgi-version}, \
++          org.apache.httpcomponents.httpmime=${httpcomponents.mime.version}, \
+           com.google.gson=${gson.version}, \
+           org.mongodb.mongo-java-driver=${mongo-driver.osgi-version}, \
+           org.apache.commons.beanutils=${commons-beanutils.version}, \
+diff --git a/distribution/config/commands/list-vms.properties b/distribution/config/commands/list-vms.properties
+--- a/distribution/config/commands/list-vms.properties
++++ b/distribution/config/commands/list-vms.properties
+@@ -4,7 +4,7 @@
+           com.redhat.thermostat.web.client=${project.version}, \
+           org.apache.httpcomponents.httpcore=${httpcomponents.core.version}, \
+           org.apache.httpcomponents.httpclient=${httpcomponents.client.version}, \
+-          ${osgi.compendium.bundle.symbolic-name}=${osgi.compendium.osgi-version}, \
++          org.apache.httpcomponents.httpmime=${httpcomponents.mime.version}, \
+           com.google.gson=${gson.version}, \
+           org.mongodb.mongo-java-driver=${mongo-driver.osgi-version}, \
+           org.apache.commons.beanutils=${commons-beanutils.version}, \
+diff --git a/distribution/config/commands/ping.properties b/distribution/config/commands/ping.properties
+--- a/distribution/config/commands/ping.properties
++++ b/distribution/config/commands/ping.properties
+@@ -5,7 +5,7 @@
+           com.redhat.thermostat.web.client=${project.version}, \
+           org.apache.httpcomponents.httpcore=${httpcomponents.core.version}, \
+           org.apache.httpcomponents.httpclient=${httpcomponents.client.version}, \
+-          ${osgi.compendium.bundle.symbolic-name}=${osgi.compendium.osgi-version}, \
++          org.apache.httpcomponents.httpmime=${httpcomponents.mime.version}, \
+           com.google.gson=${gson.version}, \
+           org.mongodb.mongo-java-driver=${mongo-driver.osgi-version}, \
+           org.apache.commons.beanutils=${commons-beanutils.version}, \
+diff --git a/distribution/config/commands/vm-info.properties b/distribution/config/commands/vm-info.properties
+--- a/distribution/config/commands/vm-info.properties
++++ b/distribution/config/commands/vm-info.properties
+@@ -4,7 +4,7 @@
+           com.redhat.thermostat.web.client=${project.version}, \
+           org.apache.httpcomponents.httpcore=${httpcomponents.core.version}, \
+           org.apache.httpcomponents.httpclient=${httpcomponents.client.version}, \
+-          ${osgi.compendium.bundle.symbolic-name}=${osgi.compendium.osgi-version}, \
++          org.apache.httpcomponents.httpmime=${httpcomponents.mime.version}, \
+           com.google.gson=${gson.version}, \
+           org.mongodb.mongo-java-driver=${mongo-driver.osgi-version}, \
+           org.apache.commons.beanutils=${commons-beanutils.version}, \
+diff --git a/distribution/config/commands/vm-stat.properties b/distribution/config/commands/vm-stat.properties
+--- a/distribution/config/commands/vm-stat.properties
++++ b/distribution/config/commands/vm-stat.properties
+@@ -5,13 +5,15 @@
+           com.redhat.thermostat.client.core=${project.version}, \
+           org.apache.httpcomponents.httpcore=${httpcomponents.core.version}, \
+           org.apache.httpcomponents.httpclient=${httpcomponents.client.version}, \
+-          ${osgi.compendium.bundle.symbolic-name}=${osgi.compendium.osgi-version}, \
++          org.apache.httpcomponents.httpmime=${httpcomponents.mime.version}, \
+           com.google.gson=${gson.version}, \
+           org.mongodb.mongo-java-driver=${mongo-driver.osgi-version}, \
+           org.apache.commons.beanutils=${commons-beanutils.version}, \
+           org.apache.commons.codec=${commons-codec.osgi-version}, \
+           org.apache.commons.collections=${commons-collections.version}, \
+-          org.apache.commons.logging=${commons-logging.version}
++          org.apache.commons.logging=${commons-logging.version}, \
++          org.jfree.jcommon=${jcommon.osgi.version}, \
++          org.jfree.jfreechart=${jfreechart.osgi.version}
+ 
+ summary = show various statistics about a VM
+ 
+diff --git a/killvm/distribution/thermostat-plugin.xml b/killvm/distribution/thermostat-plugin.xml
+--- a/killvm/distribution/thermostat-plugin.xml
++++ b/killvm/distribution/thermostat-plugin.xml
+@@ -74,7 +74,7 @@
+         <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
+         <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
+         <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
+-        <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
++        <bundle><symbolic-name>org.apache.httpcomponents.httpmime</symbolic-name><version>${httpcomponents.mime.version}</version></bundle>
+         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
+         <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
+       </bundles>
+diff --git a/main/src/main/resources/com/redhat/thermostat/main/impl/bootstrapbundles.properties b/main/src/main/resources/com/redhat/thermostat/main/impl/bootstrapbundles.properties
+--- a/main/src/main/resources/com/redhat/thermostat/main/impl/bootstrapbundles.properties
++++ b/main/src/main/resources/com/redhat/thermostat/main/impl/bootstrapbundles.properties
+@@ -5,4 +5,5 @@
+         thermostat-plugin-validator-${project.version}.jar, \
+         thermostat-launcher-${project.version}.jar, \
+         jline-${jline.version}.jar, \
+-        commons-cli-${commons-cli.version}.jar
++        commons-cli-${commons-cli.version}.jar, \
++        jansi-${jansi.version}.jar
+diff --git a/storage-profile/distribution/thermostat-plugin.xml b/storage-profile/distribution/thermostat-plugin.xml
+--- a/storage-profile/distribution/thermostat-plugin.xml
++++ b/storage-profile/distribution/thermostat-plugin.xml
+@@ -70,9 +70,9 @@
+         <bundle><symbolic-name>com.redhat.thermostat.storage.mongodb</symbolic-name><version>${project.version}</version></bundle>
+         <bundle><symbolic-name>com.redhat.thermostat.web.common</symbolic-name><version>${project.version}</version></bundle>
+         <bundle><symbolic-name>com.redhat.thermostat.web.client</symbolic-name><version>${project.version}</version></bundle>
+-        <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
+         <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
+         <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
++        <bundle><symbolic-name>org.apache.httpcomponents.httpmime</symbolic-name><version>${httpcomponents.mime.version}</version></bundle>
+         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
+         <bundle><symbolic-name>org.mongodb.mongo-java-driver</symbolic-name><version>${mongo-driver.osgi-version}</version></bundle>
+         <bundle><symbolic-name>org.apache.commons.beanutils</symbolic-name><version>${commons-beanutils.version}</version></bundle>
+diff --git a/vm-gc/distribution/thermostat-plugin.xml b/vm-gc/distribution/thermostat-plugin.xml
+--- a/vm-gc/distribution/thermostat-plugin.xml
++++ b/vm-gc/distribution/thermostat-plugin.xml
+@@ -76,7 +76,7 @@
+         <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
+         <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
+         <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
+-        <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
++        <bundle><symbolic-name>org.apache.httpcomponents.httpmime</symbolic-name><version>${httpcomponents.mime.version}</version></bundle>
+         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
+         <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
+       </bundles>
+@@ -122,7 +122,7 @@
+         <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
+         <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
+         <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
+-        <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
++        <bundle><symbolic-name>org.apache.httpcomponents.httpmime</symbolic-name><version>${httpcomponents.mime.version}</version></bundle>
+         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
+         <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
+       </bundles>
+diff --git a/vm-heap-analysis/distribution/thermostat-plugin.xml b/vm-heap-analysis/distribution/thermostat-plugin.xml
+--- a/vm-heap-analysis/distribution/thermostat-plugin.xml
++++ b/vm-heap-analysis/distribution/thermostat-plugin.xml
+@@ -80,9 +80,11 @@
+         <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
+         <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
+         <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
+-        <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
++        <bundle><symbolic-name>org.apache.httpcomponents.httpmime</symbolic-name><version>${httpcomponents.mime.version}</version></bundle>
+         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
+         <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
++        <bundle><symbolic-name>org.jfree.jcommon</symbolic-name><version>${jcommon.osgi.version}</version></bundle>
++        <bundle><symbolic-name>org.jfree.jfreechart</symbolic-name><version>${jfreechart.osgi.version}</version></bundle>
+         <bundle><symbolic-name>${lucene-core.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+         <bundle><symbolic-name>${lucene-analysis.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+       </bundles>
+@@ -137,9 +139,11 @@
+         <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
+         <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
+         <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
+-        <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
++        <bundle><symbolic-name>org.apache.httpcomponents.httpmime</symbolic-name><version>${httpcomponents.mime.version}</version></bundle>
+         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
+         <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
++        <bundle><symbolic-name>org.jfree.jcommon</symbolic-name><version>${jcommon.osgi.version}</version></bundle>
++        <bundle><symbolic-name>org.jfree.jfreechart</symbolic-name><version>${jfreechart.osgi.version}</version></bundle>
+         <bundle><symbolic-name>${lucene-core.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+         <bundle><symbolic-name>${lucene-analysis.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+       </bundles>
+@@ -197,9 +201,11 @@
+         <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
+         <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
+         <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
+-        <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
++        <bundle><symbolic-name>org.apache.httpcomponents.httpmime</symbolic-name><version>${httpcomponents.mime.version}</version></bundle>
+         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
+         <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
++        <bundle><symbolic-name>org.jfree.jcommon</symbolic-name><version>${jcommon.osgi.version}</version></bundle>
++        <bundle><symbolic-name>org.jfree.jfreechart</symbolic-name><version>${jfreechart.osgi.version}</version></bundle>
+         <bundle><symbolic-name>${lucene-core.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+         <bundle><symbolic-name>${lucene-analysis.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+       </bundles>
+@@ -251,9 +257,11 @@
+         <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
+         <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
+         <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
+-        <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
++        <bundle><symbolic-name>org.apache.httpcomponents.httpmime</symbolic-name><version>${httpcomponents.mime.version}</version></bundle>
+         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
+         <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
++        <bundle><symbolic-name>org.jfree.jcommon</symbolic-name><version>${jcommon.osgi.version}</version></bundle>
++        <bundle><symbolic-name>org.jfree.jfreechart</symbolic-name><version>${jfreechart.osgi.version}</version></bundle>
+         <bundle><symbolic-name>${lucene-core.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+         <bundle><symbolic-name>${lucene-analysis.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+       </bundles>
+@@ -305,9 +313,11 @@
+         <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
+         <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
+         <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
+-        <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
++        <bundle><symbolic-name>org.apache.httpcomponents.httpmime</symbolic-name><version>${httpcomponents.mime.version}</version></bundle>
+         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
+         <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
++        <bundle><symbolic-name>org.jfree.jcommon</symbolic-name><version>${jcommon.osgi.version}</version></bundle>
++        <bundle><symbolic-name>org.jfree.jfreechart</symbolic-name><version>${jfreechart.osgi.version}</version></bundle>
+         <bundle><symbolic-name>${lucene-core.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+         <bundle><symbolic-name>${lucene-analysis.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+       </bundles>
+@@ -359,9 +369,11 @@
+         <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
+         <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
+         <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
+-        <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
++        <bundle><symbolic-name>org.apache.httpcomponents.httpmime</symbolic-name><version>${httpcomponents.mime.version}</version></bundle>
+         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
+         <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
++        <bundle><symbolic-name>org.jfree.jcommon</symbolic-name><version>${jcommon.osgi.version}</version></bundle>
++        <bundle><symbolic-name>org.jfree.jfreechart</symbolic-name><version>${jfreechart.osgi.version}</version></bundle>
+         <bundle><symbolic-name>${lucene-core.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+         <bundle><symbolic-name>${lucene-analysis.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+       </bundles>
+@@ -407,9 +419,11 @@
+         <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
+         <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
+         <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
+-        <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
++        <bundle><symbolic-name>org.apache.httpcomponents.httpmime</symbolic-name><version>${httpcomponents.mime.version}</version></bundle>
+         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
+         <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
++        <bundle><symbolic-name>org.jfree.jcommon</symbolic-name><version>${jcommon.osgi.version}</version></bundle>
++        <bundle><symbolic-name>org.jfree.jfreechart</symbolic-name><version>${jfreechart.osgi.version}</version></bundle>
+         <bundle><symbolic-name>${lucene-core.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+         <bundle><symbolic-name>${lucene-analysis.bundle.symbolic-name}</symbolic-name><version>${lucene.osgi-version}</version></bundle>
+       </bundles>
+diff --git a/vm-profiler/distribution/thermostat-plugin.xml b/vm-profiler/distribution/thermostat-plugin.xml
+--- a/vm-profiler/distribution/thermostat-plugin.xml
++++ b/vm-profiler/distribution/thermostat-plugin.xml
+@@ -95,7 +95,7 @@
+                 <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
+                 <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
+                 <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
+-                <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
++                <bundle><symbolic-name>org.apache.httpcomponents.httpmime</symbolic-name><version>${httpcomponents.mime.version}</version></bundle>
+             </bundles>
+         </command>
+     </commands>
+diff --git a/web/endpoint-plugin/distribution/thermostat-plugin.xml b/web/endpoint-plugin/distribution/thermostat-plugin.xml
+--- a/web/endpoint-plugin/distribution/thermostat-plugin.xml
++++ b/web/endpoint-plugin/distribution/thermostat-plugin.xml
+@@ -73,7 +73,7 @@
+         <bundle><symbolic-name>com.redhat.thermostat.web.client</symbolic-name><version>${project.version}</version></bundle>
+         <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
+         <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
+-        <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
++        <bundle><symbolic-name>org.apache.httpcomponents.httpmime</symbolic-name><version>${httpcomponents.httpmime.version}</version></bundle>
+         <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
+         <bundle><symbolic-name>com.redhat.thermostat.process</symbolic-name><version>${project.version}</version></bundle>
+         <bundle><symbolic-name>com.redhat.thermostat.agent.cli</symbolic-name><version>${project.version}</version></bundle>

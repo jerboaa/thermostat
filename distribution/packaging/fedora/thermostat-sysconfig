@@ -1,0 +1,10 @@
+# This file is "sourced" for systemd services only
+#
+# If thermostat {storage,agent} is run via systemd,
+# data directories are in __thermostat_home__
+#
+# Do not change this unless you know what you are doing
+THERMOSTAT_HOME=__thermostat_home__
+USER_THERMOSTAT_HOME=__thermostat_user_home__
+# any value vor this env var will do
+THERMOSTAT_SYSTEM_USER=true
