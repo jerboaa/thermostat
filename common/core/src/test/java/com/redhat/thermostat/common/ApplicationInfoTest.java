@@ -36,14 +36,17 @@
 
 package com.redhat.thermostat.common;
 
-import com.redhat.thermostat.common.locale.LocaleResources;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
+import java.net.URI;
 import java.util.Locale;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import com.redhat.thermostat.common.locale.LocaleResources;
 
 public class ApplicationInfoTest {
 
@@ -62,9 +65,27 @@ public class ApplicationInfoTest {
     }
 
     @Test
+    public void testEmail() {
+        ApplicationInfo appInfo = new ApplicationInfo();
+        assertEquals("thermostat@icedtea.classpath.org", appInfo.getEmail());
+    }
+
+    @Test
+    public void testWebsite() {
+        ApplicationInfo appInfo = new ApplicationInfo();
+        assertEquals("http://icedtea.classpath.org/thermostat/", appInfo.getWebsite());
+    }
+
+    @Test
+    public void testUserGuideIsValidURI() throws Exception {
+        ApplicationInfo appInfo = new ApplicationInfo();
+        new URI(appInfo.getUserGuide());
+    }
+
+    @Test
     public void testGetBugReportsAddress() {
         ApplicationInfo appInfo = new ApplicationInfo();
-        assertEquals(appInfo.getBugReportsAddress(), "http://icedtea.classpath.org/bugzilla/enter_bug.cgi?product=Thermostat");
+        assertEquals("http://icedtea.classpath.org/bugzilla/enter_bug.cgi?product=Thermostat", appInfo.getBugReportsAddress());
     }
 
     @After

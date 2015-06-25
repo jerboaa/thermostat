@@ -147,6 +147,7 @@
     <thermostat.email>thermostat@icedtea.classpath.org</thermostat.email>
     <thermostat.url>http://icedtea.classpath.org/thermostat/</thermostat.url>
     <thermostat.bug.url>http://icedtea.classpath.org/bugzilla/enter_bug.cgi?product=Thermostat</thermostat.bug.url>
+    <thermostat.user.guide>http://icedtea.classpath.org/wiki/Thermostat/UserGuide</thermostat.user.guide>
 
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <thermostat.build.directory>target</thermostat.build.directory>

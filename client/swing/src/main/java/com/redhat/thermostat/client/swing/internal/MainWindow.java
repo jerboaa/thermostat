@@ -40,6 +40,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.InputEvent;
@@ -263,6 +264,16 @@ public class MainWindow extends JFrame implements MainView {
         JMenu helpMenu = new JMenu(translator.localize(LocaleResources.MENU_HELP).getContents());
         helpMenu.getPopupMenu().setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
         mainMenuBar.add(helpMenu);
+
+        JMenuItem helpUserGuideMenu = new JMenuItem(translator.localize(LocaleResources.MENU_HELP_USER_GUIDE).getContents());
+        helpUserGuideMenu.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                fireViewAction(Action.SHOW_USER_GUIDE);
+            }
+        });
+        helpUserGuideMenu.setName("showUserGuide");
+        helpMenu.add(helpUserGuideMenu);
 
         JMenuItem helpAboutMenu = new JMenuItem(translator.localize(LocaleResources.MENU_HELP_ABOUT).getContents());
         helpAboutMenu.addActionListener(new java.awt.event.ActionListener() {

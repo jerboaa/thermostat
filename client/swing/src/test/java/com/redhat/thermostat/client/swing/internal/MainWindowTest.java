@@ -169,6 +169,18 @@ public class MainWindowTest {
 
     @Category(GUITest.class)
     @Test
+    public void verifyUserGuideMenuItemTriggersEvent() {
+        frameFixture.show();
+        JMenuItemFixture menuItem = frameFixture.menuItem("showUserGuide");
+        menuItem.click();
+        frameFixture.close();
+        frameFixture.requireNotVisible();
+
+        verify(l).actionPerformed(new ActionEvent<MainView.Action>(window, MainView.Action.SHOW_USER_GUIDE));
+    }
+
+    @Category(GUITest.class)
+    @Test
     public void addRemoveMenu() {
         final LocalizedString PARENT_NAME = new LocalizedString("File");
         final LocalizedString MENU_NAME = new LocalizedString("Test2");

@@ -55,6 +55,7 @@ public interface MainView {
         HIDDEN,
         SHOW_AGENT_CONFIG,
         SHOW_CLIENT_CONFIG,
+        SHOW_USER_GUIDE,
         SHOW_ABOUT_DIALOG,
         SHUTDOWN,
     }

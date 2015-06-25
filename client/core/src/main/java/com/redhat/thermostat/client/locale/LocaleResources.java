@@ -63,6 +63,7 @@ public enum LocaleResources {
     MENU_VIEW,
     MENU_VIEW_AGENTS,
     MENU_HELP,
+    MENU_HELP_USER_GUIDE,
     MENU_HELP_ABOUT,
 
     SECONDS,

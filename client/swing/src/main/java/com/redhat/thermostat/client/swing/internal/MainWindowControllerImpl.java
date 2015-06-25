@@ -36,6 +36,10 @@
 
 package com.redhat.thermostat.client.swing.internal;
 
+import java.awt.Desktop;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -125,7 +129,9 @@ public class MainWindowControllerImpl implements MainWindowController {
     private InformationServiceTracker infoServiceTracker;
     private ContextActionServiceTracker contextActionTracker;
     private MultipleServiceTracker depTracker;
-    
+
+    private UriOpener uriOpener;
+
     private CountDownLatch shutdown;
     private CountDownLatch initViewLatch = new CountDownLatch(1);
 
@@ -180,13 +186,14 @@ public class MainWindowControllerImpl implements MainWindowController {
     
     public MainWindowControllerImpl(BundleContext context, ApplicationService appSvc,
             CountDownLatch shutdown) {
-        this(context, appSvc, new MainWindow(), new RegistryFactory(context), shutdown);
+        this(context, appSvc, new MainWindow(), new RegistryFactory(context), shutdown, new UriOpener());
     }
 
     MainWindowControllerImpl(final BundleContext context, ApplicationService appSvc,
             final MainView view,
             RegistryFactory registryFactory,
-            final CountDownLatch shutdown)
+            final CountDownLatch shutdown,
+            final UriOpener uriOpener)
     {
         this.appSvc = appSvc;
         this.view = view;
@@ -210,6 +217,8 @@ public class MainWindowControllerImpl implements MainWindowController {
         this.contextActionTracker.open();
         
         this.shutdown = shutdown;
+
+        this.uriOpener = uriOpener;
 
         Class<?>[] deps = new Class<?>[] {
                 Keyring.class,
@@ -342,6 +351,9 @@ public class MainWindowControllerImpl implements MainWindowController {
                 case SHOW_CLIENT_CONFIG:
                     showConfigureClientPreferences();
                     break;
+                case SHOW_USER_GUIDE:
+                    showUserGuide();
+                    break;
                 case SHOW_ABOUT_DIALOG:
                     showAboutDialog();
                     break;
@@ -431,6 +443,16 @@ public class MainWindowControllerImpl implements MainWindowController {
         view.showMainWindow();
     }
 
+    private void showUserGuide() {
+        try {
+            uriOpener.open(new URI(new ApplicationInfo().getUserGuide()));
+        } catch (IOException e) {
+            logger.warning("Unable to show URL");
+        } catch (URISyntaxException e) {
+            throw new AssertionError("User Guide URL has syntax errors");
+        }
+    }
+
     private void showAboutDialog() {
         AboutDialog aboutDialog = new AboutDialog(appInfo);
         aboutDialog.setModal(true);
@@ -513,5 +535,10 @@ public class MainWindowControllerImpl implements MainWindowController {
         return new VmInformationController(vmInfoServices, ref, vmInfoViewProvider);
     }
 
+    static class UriOpener {
+        public void open(URI uri) throws IOException {
+            Desktop.getDesktop().browse(uri);
+        }
+    }
 }
 

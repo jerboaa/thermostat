@@ -38,11 +38,13 @@ package com.redhat.thermostat.client.swing.internal;
 
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.net.URI;
 import java.util.concurrent.CountDownLatch;
 
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
@@ -62,12 +64,12 @@ import com.redhat.thermostat.client.core.views.VersionAndInfoView;
 import com.redhat.thermostat.client.core.views.VersionAndInfoViewProvider;
 import com.redhat.thermostat.client.core.views.VmInformationView;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
+import com.redhat.thermostat.client.swing.internal.MainWindowControllerImpl.UriOpener;
 import com.redhat.thermostat.client.swing.internal.registry.decorator.DecoratorRegistryController;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.ContextActionController;
 import com.redhat.thermostat.client.swing.internal.vmlist.controller.HostTreeController;
 import com.redhat.thermostat.client.ui.MenuAction;
 import com.redhat.thermostat.client.ui.MenuRegistry;
-import com.redhat.thermostat.client.ui.ReferenceContextAction;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
@@ -95,6 +97,8 @@ public class MainWindowControllerImplTest {
     private MainView view;
 
     private Timer mainWindowTimer;
+
+    private UriOpener uriOpener;
 
     private HostInfoDAO mockHostsDAO;
     private VmInfoDAO mockVmsDAO;
@@ -125,6 +129,8 @@ public class MainWindowControllerImplTest {
     @Before
     public void setUp() throws Exception {
         context = new StubBundleContext();
+
+        uriOpener = mock(UriOpener.class);
                 
         // Setup timers
         mainWindowTimer = mock(Timer.class);
@@ -211,7 +217,7 @@ public class MainWindowControllerImplTest {
         ArgumentCaptor<ActionListener> grabInfoRegistry = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(vmInfoRegistry).addActionListener(grabInfoRegistry.capture());
 
-        controller = new MainWindowControllerImpl(context, appSvc, view, registryFactory, shutdown);
+        controller = new MainWindowControllerImpl(context, appSvc, view, registryFactory, shutdown, uriOpener);
         
         l = grabListener.getValue();
     }
@@ -235,11 +241,18 @@ public class MainWindowControllerImplTest {
         verify(decoratorController, times(1)).start();
         verify(decoratorController, times(1)).stop();
     }
-    
+
     @Test
     public void verifyShowMainWindowActuallyCallsView() {
         controller.showMainMainWindow();
         verify(view).showMainWindow();
+    }
+
+    @Test
+    public void verifyShowUserGuideEvent() throws Exception {
+        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.SHOW_USER_GUIDE));
+
+        verify(uriOpener).open(isA(URI.class));
     }
 
 //    @Test
