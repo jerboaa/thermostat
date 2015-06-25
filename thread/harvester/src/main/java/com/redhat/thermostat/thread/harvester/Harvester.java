@@ -37,6 +37,7 @@
 package com.redhat.thermostat.thread.harvester;
 
 import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnectionException;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -114,11 +115,11 @@ class Harvester {
     private synchronized boolean connect() {
         try {
             connection = connectionPool.acquire(pid);
-        } catch (Exception ex) {
+        } catch (MXBeanConnectionException ex) {
             logger.log(Level.SEVERE, "can't connect", ex);
             return false;
         }
-        
+
         setConnected(true);
         return true;
     }
@@ -154,7 +155,7 @@ class Harvester {
 
         try {
             connectionPool.release(pid, connection);
-        } catch (Exception ex) {
+        } catch (MXBeanConnectionException ex) {
             logger.log(Level.SEVERE, "can't disconnect", ex);
             return false;
         }

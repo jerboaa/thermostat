@@ -44,8 +44,8 @@ import com.redhat.thermostat.annotations.Service;
 @Service
 public interface MXBeanConnectionPool {
 
-    MXBeanConnection acquire(int pid) throws Exception;
+    MXBeanConnection acquire(int pid) throws MXBeanConnectionException;
 
-    void release(int pid, MXBeanConnection connection) throws Exception;
+    void release(int pid, MXBeanConnection connection) throws MXBeanConnectionException;
 }
 

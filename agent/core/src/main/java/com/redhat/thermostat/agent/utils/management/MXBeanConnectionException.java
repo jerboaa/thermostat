@@ -34,49 +34,23 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.utils.management.internal;
+package com.redhat.thermostat.agent.utils.management;
 
-import java.io.File;
-import java.io.IOException;
+public class MXBeanConnectionException extends Exception {
 
-import javax.management.MBeanServerConnection;
-import javax.management.remote.JMXConnector;
-import javax.management.remote.JMXConnectorFactory;
-import javax.management.remote.JMXServiceURL;
+    public MXBeanConnectionException() {
+        super();
+    }
 
-class MXBeanConnector {
-    
-    private final JMXConnectionCreator jmxCreator;
-    private final String serviceURL;
-    
-    public MXBeanConnector(int pid, String user, File binPath) throws IOException {
-        this(new AgentProxyClient(pid, user, binPath), new JMXConnectionCreator());
+    public MXBeanConnectionException(String message) {
+        super(message);
     }
-    
-    MXBeanConnector(AgentProxyClient client, JMXConnectionCreator jmxCreator) throws IOException {
-        this.jmxCreator = jmxCreator;
-        this.serviceURL = client.getJMXServiceURL();
+
+    public MXBeanConnectionException(Throwable cause) {
+        super(cause);
     }
-    
-    public synchronized MXBeanConnectionImpl connect() throws IOException {
-        JMXServiceURL url = new JMXServiceURL(serviceURL);
-        JMXConnector connection = jmxCreator.create(url);
-        MBeanServerConnection mbsc = null;
-        try {
-            mbsc = connection.getMBeanServerConnection();
-            
-        } catch (IOException e) {
-            connection.close();
-            throw e;
-        }
-        
-        return new MXBeanConnectionImpl(connection, mbsc);
-    }
-    
-    static class JMXConnectionCreator {
-        JMXConnector create(JMXServiceURL url) throws IOException {
-            return JMXConnectorFactory.connect(url);
-        }
+
+    public MXBeanConnectionException(String message, Throwable cause) {
+        super(message, cause);
     }
 }
-

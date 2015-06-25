@@ -44,7 +44,6 @@ import java.io.InputStreamReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 class AgentProxyClient {
@@ -68,7 +67,7 @@ class AgentProxyClient {
         this.username = user;
     }
 
-    String getJMXServiceURL() throws IOException, ApplicationException {
+    String getJMXServiceURL() throws IOException {
         // Start the agent proxy
         Process proxy = null;
         Thread errReaderThread = null;
@@ -128,13 +127,13 @@ class AgentProxyClient {
         }
     }
 
-    private Process startProcess() throws IOException, ApplicationException {
+    private Process startProcess() throws IOException {
         String serverPath = binPath + File.separator + SERVER_NAME;
         return procCreator.createAndRunProcess(new String[] { serverPath, String.valueOf(pid), username });
     }
     
     static class ProcessCreator {
-        Process createAndRunProcess(String[] args) throws IOException, ApplicationException {
+        Process createAndRunProcess(String[] args) throws IOException {
             ProcessBuilder process = new ProcessBuilder(args);
             return process.start();
         }

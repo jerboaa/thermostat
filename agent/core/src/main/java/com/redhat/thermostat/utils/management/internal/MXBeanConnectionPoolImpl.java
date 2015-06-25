@@ -43,10 +43,10 @@ import java.util.Map;
 
 import com.redhat.thermostat.agent.utils.ProcDataSource;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnectionException;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.agent.utils.username.UserNameUtil;
 import com.redhat.thermostat.common.Pair;
-import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.utils.management.internal.ProcessUserInfoBuilder.ProcessUserInfo;
 
 public class MXBeanConnectionPoolImpl implements MXBeanConnectionPool {
@@ -69,18 +69,22 @@ public class MXBeanConnectionPoolImpl implements MXBeanConnectionPool {
     }
 
     @Override
-    public synchronized MXBeanConnection acquire(int pid) throws Exception {
+    public synchronized MXBeanConnection acquire(int pid) throws MXBeanConnectionException {
         Pair<Integer, MXBeanConnectionImpl> data = pool.get(pid);
         if (data == null) {
             MXBeanConnector connector = null;
             ProcessUserInfo info = userInfoBuilder.build(pid);
             String username = info.getUsername();
             if (username == null) {
-                throw new IOException("Unable to determine owner of " + pid);
+                throw new MXBeanConnectionException("Unable to determine owner of " + pid);
             }
-            connector = creator.create(pid, username, binPath);
-            MXBeanConnectionImpl connection = connector.connect();
-            data = new Pair<Integer, MXBeanConnectionImpl>(1, connection);
+            try {
+                connector = creator.create(pid, username, binPath);
+                MXBeanConnectionImpl connection = connector.connect();
+                data = new Pair<Integer, MXBeanConnectionImpl>(1, connection);
+            } catch (IOException e) {
+                throw new MXBeanConnectionException(e);
+            }
         } else {
             data = new Pair<>(data.getFirst() + 1, data.getSecond());
         }
@@ -89,13 +93,17 @@ public class MXBeanConnectionPoolImpl implements MXBeanConnectionPool {
     }
 
     @Override
-    public synchronized void release(int pid, MXBeanConnection toRelese) throws Exception {
+    public synchronized void release(int pid, MXBeanConnection toRelease) throws MXBeanConnectionException {
         Pair<Integer, MXBeanConnectionImpl> data = pool.get(pid);
         MXBeanConnectionImpl connection = data.getSecond();
         int usageCount = data.getFirst();
         usageCount--;
         if (usageCount == 0) {
-            connection.close();
+            try {
+                connection.close();
+            } catch (IOException e) {
+                throw new MXBeanConnectionException(e);
+            }
             pool.remove(pid);
         } else {
             data = new Pair<>(usageCount, connection);
@@ -104,7 +112,7 @@ public class MXBeanConnectionPoolImpl implements MXBeanConnectionPool {
     }
     
     static class ConnectorCreator {
-        public MXBeanConnector create(int pid, String user, File binPath) throws IOException, ApplicationException {
+        public MXBeanConnector create(int pid, String user, File binPath) throws IOException {
             MXBeanConnector connector = new MXBeanConnector(pid, user, binPath);
             return connector;
         }

@@ -56,6 +56,7 @@ import javax.management.ReflectionException;
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.agent.command.RequestReceiver;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnectionException;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.backend.BaseBackend;
 import com.redhat.thermostat.common.Clock;
@@ -190,7 +191,7 @@ public class JmxBackend extends BaseBackend {
 
         try {
             pool.release(pid, connection);
-        } catch (Exception e) {
+        } catch (MXBeanConnectionException e) {
             logger.warning("Unable to release mx bean connection");
         }
     }

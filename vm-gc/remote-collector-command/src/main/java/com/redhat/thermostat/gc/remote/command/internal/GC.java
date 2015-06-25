@@ -42,8 +42,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.utils.management.MXBeanConnection;
+import com.redhat.thermostat.agent.utils.management.MXBeanConnectionException;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+
+import javax.management.MalformedObjectNameException;
 
 public class GC {
 
@@ -66,15 +69,14 @@ public class GC {
             try {
                 MemoryMXBean bean = connection.createProxy(ManagementFactory.MEMORY_MXBEAN_NAME, MemoryMXBean.class);
                 bean.gc();
-
-            } catch (Exception ex) {
+            } catch (MalformedObjectNameException ex) {
                 exceptionInGc = ex;
                 logger.log(Level.SEVERE, "can't get MXBeanConnection connection", ex);
             } finally {
                 pool.release(vmId, connection);
             }
-        } catch (Exception ioe) {
-            exceptionInGc = ioe;
+        } catch (MXBeanConnectionException ex) {
+            exceptionInGc = ex;
         }
 
         if (exceptionInGc != null) {
