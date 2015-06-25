@@ -46,6 +46,7 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 
@@ -54,6 +55,7 @@ import jline.TerminalFactory.Flavor;
 import jline.TerminalFactory.Type;
 import jline.UnixTerminal;
 import jline.console.history.PersistentHistory;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.junit.After;
@@ -69,6 +71,7 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.config.experimental.ConfigurationInfoSource;
+import com.redhat.thermostat.common.utils.StringUtils;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 
@@ -76,7 +79,8 @@ public class ShellCommandTest {
 
     static private final String VERSION = "Thermostat some version";
     static private final String VERSION_OUTPUT = VERSION + "\n";
-
+    static private final String USER_GUIDE_OUTPUT = "Please see the User Guide at http://icedtea.classpath.org/wiki/Thermostat/UserGuide\n";
+    static private final String INTRO = VERSION_OUTPUT + USER_GUIDE_OUTPUT;
     static private final String PROMPT = "Thermostat " + ShellPrompt.DEFAULT_DISCONNECTED_TOKEN + " > ";
 
     private ShellCommand cmd;
@@ -149,7 +153,7 @@ public class ShellCommandTest {
         Arguments args = new SimpleArguments();
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
-        assertEquals(VERSION_OUTPUT + PROMPT + "quit\n", ctxFactory.getOutput());
+        assertEquals(INTRO + PROMPT + "quit\n", ctxFactory.getOutput());
         assertEquals("", ctxFactory.getError());
     }
 
@@ -160,7 +164,7 @@ public class ShellCommandTest {
         Arguments args = new SimpleArguments();
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
-        assertEquals(VERSION_OUTPUT + PROMPT + "q\n", ctxFactory.getOutput());
+        assertEquals(INTRO + PROMPT + "q\n", ctxFactory.getOutput());
         assertEquals("", ctxFactory.getError());
     }
 
@@ -171,7 +175,7 @@ public class ShellCommandTest {
         Arguments args = new SimpleArguments();
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
-        assertEquals(VERSION_OUTPUT + PROMPT, ctxFactory.getOutput());
+        assertEquals(INTRO + PROMPT, ctxFactory.getOutput());
         assertEquals("", ctxFactory.getError());
     }
 
@@ -182,7 +186,7 @@ public class ShellCommandTest {
         Arguments args = new SimpleArguments();
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
-        assertEquals(VERSION_OUTPUT + PROMPT + "\n" + PROMPT + "exit\n", ctxFactory.getOutput());
+        assertEquals(INTRO + PROMPT + "\n" + PROMPT + "exit\n", ctxFactory.getOutput());
     }
 
     @Test
@@ -206,7 +210,7 @@ public class ShellCommandTest {
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
 
-        assertEquals(VERSION_OUTPUT + PROMPT + "old-history-value\n" + PROMPT + "exit\n", ctxFactory.getOutput());
+        assertEquals(INTRO + PROMPT + "old-history-value\n" + PROMPT + "exit\n", ctxFactory.getOutput());
         assertEquals("", ctxFactory.getError());
 
         verify(launcher).run(new String[] {"old-history-value"}, true);
@@ -232,7 +236,7 @@ public class ShellCommandTest {
         verify(mockHistory).add("add-to-history");
         verify(mockHistory).flush();
 
-        assertEquals(VERSION_OUTPUT + PROMPT + "add-to-history\n" + PROMPT + "exit\n", ctxFactory.getOutput());
+        assertEquals(INTRO + PROMPT + "add-to-history\n" + PROMPT + "exit\n", ctxFactory.getOutput());
         assertEquals("", ctxFactory.getError());
     }
 
@@ -274,16 +278,21 @@ public class ShellCommandTest {
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
 
-        String tabOutput = getTabOutput(ctxFactory);
+        String tabOutput = getTabOutput(getOutputWithoutIntro(ctxFactory));
 
         assertTrue(tabOutput.contains("test1"));
         assertTrue(tabOutput.contains("test2longname"));
         assertEquals("", ctxFactory.getError());
     }
 
-    private String getTabOutput(final TestCommandContextFactory ctxFactory) {
+    private String getOutputWithoutIntro(final TestCommandContextFactory ctxFactory) {
         String[] allOutput = ctxFactory.getOutput().split("\n");
+        String[] outputWithoutIntro = Arrays.copyOfRange(allOutput, 2, allOutput.length);
+        return StringUtils.join("\n", Arrays.asList(outputWithoutIntro));
+    }
 
+    private String getTabOutput(final String outputToProcess) {
+        String[] allOutput = outputToProcess.split("\n");
         String tabOutput = "";
         for (String output : allOutput) {
             if (!output.startsWith("Thermostat")) {
@@ -306,7 +315,7 @@ public class ShellCommandTest {
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
 
-        String tabOutput = getTabOutput(ctxFactory);
+        String tabOutput = getTabOutput(getOutputWithoutIntro(ctxFactory));
         assertTrue(tabOutput.contains("test1"));
         assertTrue(tabOutput.contains("test2longname"));
         assertEquals("", ctxFactory.getError());
@@ -325,9 +334,10 @@ public class ShellCommandTest {
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
 
-        String tabOutput = getTabOutput(ctxFactory);
+        String usefulOutput = getOutputWithoutIntro(ctxFactory);
+        String tabOutput = getTabOutput(usefulOutput);
         assertTrue(tabOutput.length() == 0);
-        assertEquals(PROMPT + "q", ctxFactory.getOutput().split("\n")[2]);
+        assertEquals(PROMPT + "q", usefulOutput.split("\n")[1]);
         assertEquals("", ctxFactory.getError());
     }
 
@@ -344,7 +354,7 @@ public class ShellCommandTest {
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
 
-        String tabOutput = getTabOutput(ctxFactory);
+        String tabOutput = getTabOutput(getOutputWithoutIntro(ctxFactory));
         assertTrue(tabOutput.contains("--Add"));
         assertTrue(tabOutput.contains("--remove"));
         assertTrue(tabOutput.contains("--test"));
@@ -368,11 +378,10 @@ public class ShellCommandTest {
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
 
-        String tabOutput = getTabOutput(ctxFactory);
+        String tabOutput = getTabOutput(getOutputWithoutIntro(ctxFactory));
         assertTrue(tabOutput.contains("--copy"));
         assertTrue(tabOutput.contains("--copy&paste"));
         assertEquals("", ctxFactory.getError());
-
     }
 
     @Test
@@ -388,9 +397,10 @@ public class ShellCommandTest {
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
 
-        String tabOutput = getTabOutput(ctxFactory);
+        String usefulOutput = getOutputWithoutIntro(ctxFactory);
+        String tabOutput = getTabOutput(usefulOutput);
         assertTrue(tabOutput.length() == 0);
-        assertEquals(PROMPT + "exit", ctxFactory.getOutput().split("\n")[2]);
+        assertEquals(PROMPT + "exit", usefulOutput.split("\n")[1]);
         assertEquals("", ctxFactory.getError());
 
     }
@@ -408,9 +418,10 @@ public class ShellCommandTest {
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
 
-        String tabOutput = getTabOutput(ctxFactory);
+        String usefulOutput = getOutputWithoutIntro(ctxFactory);
+        String tabOutput = getTabOutput(usefulOutput);
         assertTrue(tabOutput.length() == 0);
-        assertEquals(PROMPT + "exit", ctxFactory.getOutput().split("\n")[2]);
+        assertEquals(PROMPT + "exit", usefulOutput.split("\n")[1]);
         assertEquals("", ctxFactory.getError());
 
     }
@@ -428,7 +439,7 @@ public class ShellCommandTest {
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
 
-        String tabOutput = getTabOutput(ctxFactory);
+        String tabOutput = getTabOutput(getOutputWithoutIntro(ctxFactory));
         assertTrue(tabOutput.contains("--Paste"));
         assertTrue(tabOutput.contains("--copy"));
         assertTrue(tabOutput.contains("--copy&paste"));
@@ -454,7 +465,7 @@ public class ShellCommandTest {
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
 
-        String tabOutput = getTabOutput(ctxFactory);
+        String tabOutput = getTabOutput(getOutputWithoutIntro(ctxFactory));
         String inline = getTabbedInline(ctxFactory, input);
 
         assertEquals(0, tabOutput.length());
@@ -477,7 +488,7 @@ public class ShellCommandTest {
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
 
-        String tabOutput = getTabOutput(ctxFactory);
+        String tabOutput = getTabOutput(getOutputWithoutIntro(ctxFactory));
         String inline = getTabbedInline(ctxFactory, input);
 
         assertTrue(tabOutput.length() != 0);
@@ -500,7 +511,7 @@ public class ShellCommandTest {
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
 
-        String tabOutput = getTabOutput(ctxFactory);
+        String tabOutput = getTabOutput(getOutputWithoutIntro(ctxFactory));
         String inline = getTabbedInline(ctxFactory, input);
 
         assertEquals(0, tabOutput.length());
@@ -523,7 +534,7 @@ public class ShellCommandTest {
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
 
-        String tabOutput = getTabOutput(ctxFactory);
+        String tabOutput = getTabOutput(getOutputWithoutIntro(ctxFactory));
         String inline = getTabbedInline(ctxFactory, input);
 
         assertTrue(tabOutput.contains("--copy"));
@@ -549,7 +560,7 @@ public class ShellCommandTest {
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
 
-        String tabOutput = getTabOutput(ctxFactory);
+        String tabOutput = getTabOutput(getOutputWithoutIntro(ctxFactory));
         assertTrue(tabOutput.contains(filename));
         assertEquals("", ctxFactory.getError());
     }
@@ -571,7 +582,7 @@ public class ShellCommandTest {
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
 
-        String tabOutput = getTabOutput(ctxFactory);
+        String tabOutput = getTabOutput(getOutputWithoutIntro(ctxFactory));
         assertTrue(tabOutput.contains(filename));
         assertEquals("", ctxFactory.getError());
     }
@@ -593,7 +604,7 @@ public class ShellCommandTest {
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
 
-        String tabOutput = getTabOutput(ctxFactory);
+        String tabOutput = getTabOutput(getOutputWithoutIntro(ctxFactory));
         assertFalse(tabOutput.contains(filename));
         assertEquals("", tabOutput);
         assertEquals("", ctxFactory.getError());
@@ -619,7 +630,7 @@ public class ShellCommandTest {
         cmd.run(ctx);
 
         String inline = getTabbedInline(ctxFactory, input);
-        String tabOutput = getTabOutput(ctxFactory);
+        String tabOutput = getTabOutput(getOutputWithoutIntro(ctxFactory));
 
         setupCommandInfoSource();
         assertEquals(0, tabOutput.length());
@@ -651,7 +662,7 @@ public class ShellCommandTest {
         cmd.run(ctx);
 
         String inline = getTabbedInline(ctxFactory, input);
-        String tabOutput = getTabOutput(ctxFactory);
+        String tabOutput = getTabOutput(getOutputWithoutIntro(ctxFactory));
 
         assertTrue(tabOutput.contains(filename));
         assertFalse(inline.contains(filename));
@@ -684,7 +695,7 @@ public class ShellCommandTest {
         cmd.run(ctx);
 
         String inline = getTabbedInline(ctxFactory, input);
-        String tabOutput = getTabOutput(ctxFactory);
+        String tabOutput = getTabOutput(getOutputWithoutIntro(ctxFactory));
 
         assertTrue(tabOutput.contains(filename));
         assertFalse(inline.contains(filename));

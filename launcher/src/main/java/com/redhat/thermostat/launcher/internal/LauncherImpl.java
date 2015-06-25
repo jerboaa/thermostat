@@ -54,6 +54,7 @@ import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.ApplicationInfo;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.Version;
@@ -186,8 +187,9 @@ public class LauncherImpl implements Launcher {
     }
 
     private void printSetupHelpMessage() {
+        String userGuideUrl = new ApplicationInfo().getUserGuide();
         String msg = t.localize(LocaleResources.LAUNCHER_FIRST_LAUNCH_MSG, 
-                                SETUP_SCRIPT_NAME).getContents();
+                                SETUP_SCRIPT_NAME, userGuideUrl).getContents();
         printAndLogLine(msg);
     }
     

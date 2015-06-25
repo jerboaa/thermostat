@@ -52,6 +52,7 @@ import jline.console.history.PersistentHistory;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
+import com.redhat.thermostat.common.ApplicationInfo;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
@@ -125,6 +126,9 @@ public class ShellCommand extends AbstractCommand {
 
         try {
             ctx.getConsole().getOutput().println(version.getVersionInfo());
+            String userGuideUrl = new ApplicationInfo().getUserGuide();
+            String userGuideMessage = t.localize(LocaleResources.COMMAND_SHELL_USER_GUIDE, userGuideUrl).getContents();
+            ctx.getConsole().getOutput().println(userGuideMessage);
             shellMainLoop(ctx, history, term);
         } catch (IOException ex) {
             throw new CommandException(t.localize(LocaleResources.COMMAND_SHELL_IO_EXCEPTION), ex);
