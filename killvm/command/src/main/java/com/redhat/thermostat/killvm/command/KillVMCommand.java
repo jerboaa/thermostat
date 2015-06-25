@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.killvm.command;
 
-import com.redhat.thermostat.client.cli.HostVMArguments;
 import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -46,12 +45,13 @@ import com.redhat.thermostat.killvm.common.KillVMRequest;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.VmId;
-import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
 
 public class KillVMCommand extends AbstractCommand {
+
+    static final String VM_ID_ARGUMENT = "vmId";
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
@@ -74,16 +74,17 @@ public class KillVMCommand extends AbstractCommand {
         listener.setOut(ctx.getConsole().getOutput());
         listener.setErr(ctx.getConsole().getError());
 
-        HostVMArguments args = new HostVMArguments(ctx.getArguments(), false, true);
+        String vmId = ctx.getArguments().getArgument(VM_ID_ARGUMENT);
+        if (vmId == null)
+            throw new CommandException(translator.localize(LocaleResources.VMID_REQUIRED));
 
-        attemptToKillVM(args.getVM());
+        attemptToKillVM(new VmId(vmId));
     }
 
-    private void attemptToKillVM(VmRef vmRef) throws CommandException {
-        VmId id = new VmId(vmRef.getVmId());
-        VmInfo result = vmInfoDAO.getVmInfo(id);
+    private void attemptToKillVM(VmId vmId) throws CommandException {
+        VmInfo result = vmInfoDAO.getVmInfo(vmId);
         if (result == null) {
-            throw new CommandException(translator.localize(LocaleResources.VM_NOT_FOUND, vmRef.getVmId()));
+            throw new CommandException(translator.localize(LocaleResources.VM_NOT_FOUND, vmId.get()));
         }
         sendKillRequest(new AgentId(result.getAgentId()), result.getVmPid());
     }

@@ -45,7 +45,8 @@ public enum LocaleResources {
     AGENT_SERVICE_UNAVAILABLE,
     REQUEST_SERVICE_UNAVAILABLE,
     KILL_INTERRUPTED,
-    VM_NOT_FOUND;
+    VM_NOT_FOUND,
+    VMID_REQUIRED;
 
     public static final String RESOURCE_BUNDLE =
             "com.redhat.thermostat.killvm.command.locale.strings";
