@@ -83,7 +83,7 @@ public class HeapDumperTest {
         verifyNoMoreInteractions(launcher);
 
         String[] args = captor.getValue();
-        assertArrayEquals(new String[] { "dump-heap", "--hostId", TEST_HOST_ID, "--vmId", String.valueOf(TEST_VM_ID) }, args);
+        assertArrayEquals(new String[] { "dump-heap", "--vmId", String.valueOf(TEST_VM_ID) }, args);
     }
 
 }

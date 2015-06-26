@@ -61,7 +61,7 @@ public class HeapDumper {
     public void dump() throws CommandException {
         ServiceReference launcherRef = context.getServiceReference(Launcher.class.getName());
         Launcher launcher = (Launcher) context.getService(launcherRef);
-        launcher.run(new String[] { "dump-heap", "--hostId", ref.getHostRef().getStringID(), "--vmId", ref.getVmId() }, true);
+        launcher.run(new String[] { "dump-heap", "--vmId", ref.getVmId() }, true);
     }
 
 }

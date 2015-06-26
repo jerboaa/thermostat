@@ -69,6 +69,12 @@ public class DumpHeapCommandTest {
     private static final Translate<LocaleResources> TRANSLATOR = LocaleResources
             .createLocalizer();
 
+    /**
+     * The GUI heap dump relies on this command with particular input. Any changes to DumpHeapCommand
+     * should also be checked against the HeapDumper.
+     *
+     * See com.redhat.thermostat.vm.heap.analysis.client.core.internal.HeapDumper.dump()
+     */
     @Test
     public void verifyActuallyCallsWorker() throws CommandException {
         VmInfoDAO vmInfoDao = mock(VmInfoDAO.class);
