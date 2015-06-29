@@ -45,6 +45,7 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.common.cli.AbstractCommand;
+import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.TableRenderer;
@@ -59,9 +60,6 @@ import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 
 public class ListHeapDumpsCommand extends AbstractCommand {
-
-    static final String HOST_ID_ARGUMENT = "hostId";
-    static final String VM_ID_ARGUMENT = "vmId";
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
@@ -101,7 +99,7 @@ public class ListHeapDumpsCommand extends AbstractCommand {
         requireNonNull(heapDAORef, translator.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
         HeapDAO heapDAO = (HeapDAO) context.getService(heapDAORef);
 
-        String stringVmId = ctx.getArguments().getArgument(VM_ID_ARGUMENT);
+        String stringVmId = ctx.getArguments().getArgument(Arguments.VM_ID_ARGUMENT);
         String stringAgentId = null;
 
         VmId vmId = null;
@@ -113,7 +111,7 @@ public class ListHeapDumpsCommand extends AbstractCommand {
 
             stringAgentId = vmInfo.getAgentId();
         } else {
-            stringAgentId = ctx.getArguments().getArgument(HOST_ID_ARGUMENT);
+            stringAgentId = ctx.getArguments().getArgument(Arguments.HOST_ID_ARGUMENT);
         }
 
         if (stringAgentId != null)
