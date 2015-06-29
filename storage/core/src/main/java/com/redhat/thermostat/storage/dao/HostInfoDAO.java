@@ -39,7 +39,6 @@ package com.redhat.thermostat.storage.dao;
 import java.util.Collection;
 
 import com.redhat.thermostat.annotations.Service;
-import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Countable;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -74,21 +73,20 @@ public interface HostInfoDAO extends Countable {
      * 
      * @return A collection of hosts (HostRefs), which may be empty.
      *
-     * @deprecated use {@link #getAgentIds()} instead.
+     * @deprecated use {@link com.redhat.thermostat.storage.dao.AgentInfoDAO#getAgentIds()}
+     * instead.
      */
     @Deprecated
     Collection<HostRef> getHosts();
-
-    /**
-     *
-     * @return The a collection of hosts (AgentIds), which may be empty.
-     */
-    Collection<AgentId> getAgentIds();
     
     /**
      * 
      * @return A collection of alive hosts which may be empty.
+     *
+     * @deprecated use {@link com.redhat.thermostat.storage.dao.AgentInfoDAO#getAliveAgentIds()}
+     * instead.
      */
+    @Deprecated
     Collection<HostRef> getAliveHosts();
     
     /**

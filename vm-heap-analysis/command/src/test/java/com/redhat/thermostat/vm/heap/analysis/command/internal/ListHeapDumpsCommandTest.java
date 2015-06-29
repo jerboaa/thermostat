@@ -54,7 +54,7 @@ import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.VmId;
-import com.redhat.thermostat.storage.dao.HostInfoDAO;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.test.TestCommandContextFactory;
@@ -86,20 +86,20 @@ public class ListHeapDumpsCommandTest {
         try {
             command.run(factory.createContext(new SimpleArguments()));
             fail();
-        } catch (CommandException hostDaoNotAvailableException) {
-            assertEquals("Unable to access host information (HostInfoDAO unavailable)",
-                    hostDaoNotAvailableException.getMessage());
+        } catch (CommandException agentDaoNotAvailableException) {
+            assertEquals("Unable to access agent information (AgentInfoDAO unavailable)",
+                    agentDaoNotAvailableException.getMessage());
         }
     }
 
     @Test
     public void verifyWorksWithoutAnyInformation() throws CommandException {
-        HostInfoDAO hostInfo = mock(HostInfoDAO.class);
+        AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
         VmInfoDAO vmInfo = mock(VmInfoDAO.class);
         HeapDAO heapDao = mock(HeapDAO.class);
 
         StubBundleContext context = new StubBundleContext();
-        context.registerService(HostInfoDAO.class, hostInfo, null);
+        context.registerService(AgentInfoDAO.class, agentInfoDAO, null);
         context.registerService(VmInfoDAO.class, vmInfo, null);
         context.registerService(HeapDAO.class, heapDao, null);
 
@@ -125,13 +125,13 @@ public class ListHeapDumpsCommandTest {
         VmInfoDAO vmInfoDAO = mock(VmInfoDAO.class);
         when(vmInfoDAO.getVmIds(agentId)).thenReturn(Arrays.asList(vmId));
 
-        HostInfoDAO hostInfo = mock(HostInfoDAO.class);
-        when(hostInfo.getAgentIds()).thenReturn(Arrays.asList(agentId));
+        AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
+        when(agentInfoDAO.getAgentIds()).thenReturn(Arrays.asList(agentId));
 
         when(heapDao.getAllHeapInfo(agentId, vmId)).thenReturn(Arrays.asList(heapInfo));
 
         StubBundleContext context = new StubBundleContext();
-        context.registerService(HostInfoDAO.class, hostInfo, null);
+        context.registerService(AgentInfoDAO.class, agentInfoDAO, null);
         context.registerService(VmInfoDAO.class, vmInfoDAO, null);
         context.registerService(HeapDAO.class, heapDao, null);
 
@@ -164,14 +164,14 @@ public class ListHeapDumpsCommandTest {
         VmInfoDAO vmInfo = mock(VmInfoDAO.class);
         when(vmInfo.getVmIds(agentId1)).thenReturn(Arrays.asList(vmId1)).thenReturn(Arrays.asList(vmId2));
 
-        HostInfoDAO hostInfo = mock(HostInfoDAO.class);
-        when(hostInfo.getAgentIds()).thenReturn(Arrays.asList(agentId1, agentId2));
+        AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
+        when(agentInfoDAO.getAgentIds()).thenReturn(Arrays.asList(agentId1, agentId2));
 
         when(heapDao.getAllHeapInfo(agentId1, vmId1)).thenReturn(Arrays.asList(heapInfo));
         when(heapDao.getAllHeapInfo(agentId2, vmId2)).thenReturn(Arrays.asList(heapInfo));
 
         StubBundleContext context = new StubBundleContext();
-        context.registerService(HostInfoDAO.class, hostInfo, null);
+        context.registerService(AgentInfoDAO.class, agentInfoDAO, null);
         context.registerService(VmInfoDAO.class, vmInfo, null);
         context.registerService(HeapDAO.class, heapDao, null);
 
@@ -210,13 +210,13 @@ public class ListHeapDumpsCommandTest {
                 null, null,0, "myUsername");
         when(vmInfoDAO.getVmInfo(vmId1)).thenReturn(vmInfo1);
 
-        HostInfoDAO hostInfo = mock(HostInfoDAO.class);
-        when(hostInfo.getAgentIds()).thenReturn(Arrays.asList(agentId1, agentId2));
+        AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
+        when(agentInfoDAO.getAgentIds()).thenReturn(Arrays.asList(agentId1, agentId2));
 
         when(heapDao.getAllHeapInfo(agentId1, vmId1)).thenReturn(Arrays.asList(heapInfo));
 
         StubBundleContext context = new StubBundleContext();
-        context.registerService(HostInfoDAO.class, hostInfo, null);
+        context.registerService(AgentInfoDAO.class, agentInfoDAO, null);
         context.registerService(VmInfoDAO.class, vmInfoDAO, null);
         context.registerService(HeapDAO.class, heapDao, null);
 

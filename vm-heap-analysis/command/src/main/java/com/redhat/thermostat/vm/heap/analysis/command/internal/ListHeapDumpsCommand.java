@@ -51,7 +51,7 @@ import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.VmId;
-import com.redhat.thermostat.storage.dao.HostInfoDAO;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.vm.heap.analysis.command.locale.LocaleResources;
@@ -89,9 +89,9 @@ public class ListHeapDumpsCommand extends AbstractCommand {
 
         renderer.printLine(COLUMN_NAMES);
 
-        ServiceReference hostDAORef = context.getServiceReference(HostInfoDAO.class.getName());
-        requireNonNull(hostDAORef, translator.localize(LocaleResources.HOST_SERVICE_UNAVAILABLE));
-        HostInfoDAO hostDAO = (HostInfoDAO) context.getService(hostDAORef);
+        ServiceReference agentDAORef = context.getServiceReference(AgentInfoDAO.class.getName());
+        requireNonNull(agentDAORef, translator.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE));
+        AgentInfoDAO agentDAO = (AgentInfoDAO) context.getService(agentDAORef);
 
         ServiceReference vmDAORef = context.getServiceReference(VmInfoDAO.class.getName());
         requireNonNull(vmDAORef, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
@@ -119,7 +119,7 @@ public class ListHeapDumpsCommand extends AbstractCommand {
         if (stringAgentId != null)
             agentId = new AgentId(stringAgentId);
 
-        Collection<AgentId> hosts = stringAgentId != null ? Arrays.asList(agentId) : hostDAO.getAgentIds();
+        Collection<AgentId> hosts = stringAgentId != null ? Arrays.asList(agentId) : agentDAO.getAgentIds();
         for (AgentId host : hosts) {
             Collection<VmId> vms = stringVmId != null ? Arrays.asList(vmId) : vmDAO.getVmIds(host);
             for (VmId vm : vms) {
@@ -129,7 +129,7 @@ public class ListHeapDumpsCommand extends AbstractCommand {
 
         context.ungetService(heapDAORef);
         context.ungetService(vmDAORef);
-        context.ungetService(hostDAORef);
+        context.ungetService(agentDAORef);
 
         renderer.render(ctx.getConsole().getOutput());
     }

@@ -46,6 +46,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.Before;
@@ -53,6 +54,8 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
+import com.redhat.thermostat.common.Pair;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
@@ -331,5 +334,154 @@ public class AgentInfoDAOTest {
         verify(remove).execute();
     }
 
+    @Test
+    public void testGetAgentIdsSingleAgent() throws DescriptorParsingException,
+            StatementExecutionException {
+
+        Pair<Storage, PreparedStatement<AgentInformation>> setup = setupStorageForSingleAgent();
+        Storage storage = setup.getFirst();
+        PreparedStatement<AgentInformation> stmt = setup.getSecond();
+
+        AgentInfoDAO agentInfoDAO = new AgentInfoDAOImpl(storage);
+        Collection<AgentId> agentIds = agentInfoDAO.getAgentIds();
+
+        assertEquals(1, agentIds.size());
+        assertTrue(agentIds.contains(new AgentId("1234")));
+        verify(stmt).executeQuery();
+    }
+
+    @Test
+    public void testGetAgentIds3Agents() throws DescriptorParsingException,
+            StatementExecutionException {
+
+        Pair<Storage, PreparedStatement<AgentInformation>> setup = setupStorageFor3Agents();
+        Storage storage = setup.getFirst();
+        PreparedStatement<AgentInformation> stmt = setup.getSecond();
+
+        AgentInfoDAO agentInfoDAO = new AgentInfoDAOImpl(storage);
+        Collection<AgentId> agentIds = agentInfoDAO.getAgentIds();
+
+        assertEquals(3, agentIds.size());
+        assertTrue(agentIds.contains(new AgentId("1234")));
+        assertTrue(agentIds.contains(new AgentId("4567")));
+        assertTrue(agentIds.contains(new AgentId("8910")));
+        verify(storage).prepareStatement(anyDescriptor());
+        verify(stmt).executeQuery();
+    }
+
+    @Test
+    public void getAliveAgentIdsSingle() throws DescriptorParsingException,
+            StatementExecutionException {
+
+        Pair<Storage, PreparedStatement<AgentInformation>> setup = setupStorageForSingleAgent();
+        Storage storage = setup.getFirst();
+        PreparedStatement<AgentInformation> stmt = setup.getSecond();
+
+        AgentInfoDAO agentInfoDAO = new AgentInfoDAOImpl(storage);
+        Collection<AgentId> agentIds = agentInfoDAO.getAliveAgentIds();
+
+        assertEquals(1, agentIds.size());
+        assertTrue(agentIds.contains(new AgentId("1234")));
+        verify(storage).prepareStatement(anyDescriptor());
+        verify(stmt).setBoolean(0, true);
+        verify(stmt).executeQuery();
+    }
+
+    @Test
+    public void getAliveAgentIds3() throws DescriptorParsingException, StatementExecutionException {
+        Pair<Storage, PreparedStatement<AgentInformation>> setup = setupStorageFor3Agents();
+        Storage storage = setup.getFirst();
+        PreparedStatement<AgentInformation> stmt = setup.getSecond();
+
+        AgentInfoDAO agentInfoDAO = new AgentInfoDAOImpl(storage);
+        Collection<AgentId> agentIds = agentInfoDAO.getAliveAgentIds();
+
+        assertEquals(3, agentIds.size());
+        assertTrue(agentIds.contains(new AgentId("1234")));
+        assertTrue(agentIds.contains(new AgentId("4567")));
+        assertTrue(agentIds.contains(new AgentId("8910")));
+        verify(storage).prepareStatement(anyDescriptor());
+        verify(stmt).setBoolean(0, true);
+        verify(stmt).executeQuery();
+    }
+
+    @Test
+    public void getAliveAgentIdsDescriptorException() throws DescriptorParsingException {
+        Collection<AgentId> agentIds = Collections.emptyList();
+        Storage storage = mock(Storage.class);
+        AgentInfoDAO agentInfoDAO = new AgentInfoDAOImpl(storage);
+
+        when(storage.prepareStatement(anyDescriptor())).thenThrow(new DescriptorParsingException
+                ("testException"));
+
+        agentIds = agentInfoDAO.getAgentIds();
+
+        assertEquals(0, agentIds.size());
+    }
+
+    @Test
+    public void getAliveAgentIdsStatementException() throws DescriptorParsingException,
+            StatementExecutionException {
+
+        Collection<AgentId> agentIds = Collections.emptyList();
+        Storage storage = mock(Storage.class);
+        AgentInfoDAO agentInfoDAO = new AgentInfoDAOImpl(storage);
+
+        @SuppressWarnings("unchecked")
+        PreparedStatement<AgentInformation> stmt = (PreparedStatement<AgentInformation>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
+
+        StatementExecutionException testException = new StatementExecutionException(new Throwable
+                ("testException"));
+        when(stmt.executeQuery()).thenThrow(testException);
+
+        agentIds = agentInfoDAO.getAliveAgentIds();
+
+        assertEquals(0, agentIds.size());
+    }
+
+    private Pair<Storage, PreparedStatement<AgentInformation>> setupStorageForSingleAgent()
+            throws DescriptorParsingException, StatementExecutionException {
+
+        @SuppressWarnings("unchecked")
+        Cursor<AgentInformation> agentCursor = (Cursor<AgentInformation>) mock(Cursor.class);
+        when(agentCursor.hasNext()).thenReturn(true).thenReturn(false);
+        when(agentCursor.next()).thenReturn(agentInfo1);
+
+        Storage storage = mock(Storage.class);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<AgentInformation> stmt = (PreparedStatement<AgentInformation>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(agentCursor);
+        return new Pair<>(storage, stmt);
+    }
+
+    private Pair<Storage, PreparedStatement<AgentInformation>> setupStorageFor3Agents()
+            throws DescriptorParsingException, StatementExecutionException {
+
+        AgentInformation agentInfo2 = new AgentInformation("4567");
+        agentInfo2.setAlive(true);
+        agentInfo2.setConfigListenAddress("foobar:666");
+        agentInfo2.setStartTime(100);
+        agentInfo2.setStopTime(10);
+
+        AgentInformation agentInfo3 = new AgentInformation("8910");
+        agentInfo3.setAlive(true);
+        agentInfo3.setConfigListenAddress("foobar:666");
+        agentInfo3.setStartTime(100);
+        agentInfo3.setStopTime(10);
+
+        @SuppressWarnings("unchecked")
+        Cursor<AgentInformation> agentCursor = (Cursor<AgentInformation>) mock(Cursor.class);
+        when(agentCursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(true).thenReturn(false);
+        when(agentCursor.next()).thenReturn(agentInfo1).thenReturn(agentInfo2).thenReturn(agentInfo3);
+
+        Storage storage = mock(Storage.class);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<AgentInformation> stmt = (PreparedStatement<AgentInformation>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(agentCursor);
+        return new Pair<>(storage, stmt);
+    }
 }
 

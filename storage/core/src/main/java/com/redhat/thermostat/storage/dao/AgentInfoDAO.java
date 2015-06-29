@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.storage.dao;
 
+import java.util.Collection;
 import java.util.List;
 
 import com.redhat.thermostat.annotations.Service;
@@ -102,6 +103,18 @@ public interface AgentInfoDAO extends Countable {
      */
 
     AgentInformation getAgentInformation(AgentId agentId);
+
+    /**
+     *
+     * @return A collection of AgentIds, which may be empty.
+     */
+    Collection<AgentId> getAgentIds();
+
+    /**
+     *
+     * @return A collection of alive AgentIds which may be empty.
+     */
+    Collection<AgentId> getAliveAgentIds();
 
     /**
      * Publish information about agent into the storage.
