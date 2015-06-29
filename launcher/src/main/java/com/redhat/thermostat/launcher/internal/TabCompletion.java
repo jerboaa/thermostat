@@ -42,8 +42,11 @@ import java.util.List;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import jline.console.ConsoleReader;
+import jline.console.completer.Completer;
 import jline.console.completer.FileNameCompleter;
+import jline.console.completer.StringsCompleter;
 import org.apache.commons.cli.Option;
+import org.osgi.framework.BundleContext;
 
 import static com.redhat.thermostat.launcher.internal.TreeCompleter.createStringNode;
 
@@ -52,7 +55,7 @@ public class TabCompletion {
     private static final String LONG_OPTION_PREFIX = "--";
     private static final String SHORT_OPTION_PREFIX = "-";
 
-    public static void setupTabCompletion(ConsoleReader reader, CommandInfoSource commandInfoSource) {
+    public static void setupTabCompletion(ConsoleReader reader, CommandInfoSource commandInfoSource, BundleContext context, StorageState storageState) {
         List<String> logLevels = new ArrayList<>();
 
         for (LoggingUtils.LogLevel level : LoggingUtils.LogLevel.values()) {
@@ -70,7 +73,9 @@ public class TabCompletion {
 
                 for (Option option : (Collection<Option>) info.getOptions().getOptions()) {
                     if (option.getLongOpt().equals("logLevel")) {
-                        setupLogLevelCompletion(logLevels, command, option);
+                        setupCompletion(command, option, new StringsCompleter(logLevels));
+                    } else if (option.getLongOpt().equals("vmId")) {
+                        setupCompletion(command, option, new IdCompleter(new VmIdsFinder(context), storageState));
                     } else {
                         setupDefaultCompletion(command, option);
                     }
@@ -90,37 +95,39 @@ public class TabCompletion {
     }
 
     private static void setupDefaultCompletion(final TreeCompleter.Node command, final Option option) {
-        if (option.getLongOpt() != null) {
-            String optionLongName = LONG_OPTION_PREFIX + option.getLongOpt();
-            TreeCompleter.Node defaultNode = createStringNode(optionLongName);
-            defaultNode.setRestartNode(command);
-            command.addBranch(defaultNode);
-        }
-        if (option.getOpt() != null) {
-            String optionShortName = SHORT_OPTION_PREFIX + option.getOpt();
+        setupDefaultCompletion(command, option.getLongOpt(), LONG_OPTION_PREFIX);
+        setupDefaultCompletion(command, option.getOpt(), SHORT_OPTION_PREFIX);
+    }
+
+    private static void setupDefaultCompletion(final TreeCompleter.Node command, final String option, final String prefix) {
+        if (option != null) {
+            String optionShortName = prefix + option;
             TreeCompleter.Node defaultNode = createStringNode(optionShortName);
             defaultNode.setRestartNode(command);
             command.addBranch(defaultNode);
         }
     }
 
-    private static void setupLogLevelCompletion( final List<String> logLevels, final TreeCompleter.Node command, final Option option) {
-        if (option.getLongOpt() != null) {
-            String optionLongName = LONG_OPTION_PREFIX + option.getLongOpt();
-            TreeCompleter.Node logLevelOption = createStringNode(optionLongName);
-            TreeCompleter.Node logLevelChoices = createStringNode(logLevels);
-            logLevelChoices.setRestartNode(command);
-            logLevelOption.addBranch(logLevelChoices);
-            command.addBranch(logLevelOption);
+    private static void setupCompletion(final TreeCompleter.Node command, final Option option, Completer completer) {
+        setupCompletion(command, completer, option.getLongOpt(), LONG_OPTION_PREFIX);
+        setupCompletion(command, completer, option.getOpt(), SHORT_OPTION_PREFIX);
+    }
+
+    private static void setupCompletion(final TreeCompleter.Node command, final Completer completer, final String option, final String prefix) {
+        if (option != null) {
+            final String optionName = prefix + option;
+            TreeCompleter.Node nodeOption = setupCompletionNode(command, optionName, completer);
+            command.addBranch(nodeOption);
         }
-        if (option.getOpt() != null) {
-            String optionShortName = SHORT_OPTION_PREFIX + option.getOpt();
-            TreeCompleter.Node logLevelOption = createStringNode(optionShortName);
-            TreeCompleter.Node logLevelChoices = createStringNode(logLevels);
-            logLevelChoices.setRestartNode(command);
-            logLevelOption.addBranch(logLevelChoices);
-            command.addBranch(logLevelOption);
-        }
+    }
+
+    private static TreeCompleter.Node setupCompletionNode(final TreeCompleter.Node command, final String optionName, Completer completer) {
+        TreeCompleter.Node option = createStringNode(optionName);
+        TreeCompleter.Node choices = new TreeCompleter.Node(completer);
+        option.addBranch(choices);
+        option.setRestartNode(command);
+        choices.setRestartNode(command);
+        return option;
     }
 
 }

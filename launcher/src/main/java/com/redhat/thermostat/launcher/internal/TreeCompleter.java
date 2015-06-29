@@ -261,8 +261,20 @@ public class TreeCompleter implements Completer {
             if (node.getBranches().isEmpty()) {
                 return getChildNodesFromRestartNode(node);
             }
+            List<CharSequence> candidates = getAllCandidates(node.getBranches());
+            if (candidates.isEmpty()) {
+                return  getChildNodesFromRestartNode(node);
+            }
             return node.getBranches();
         }
+    }
+
+    private List<CharSequence> getAllCandidates(final List<Node> nodes) {
+        List<CharSequence> candidates = new LinkedList<>();
+        for (Node node : nodes) {
+            node.completer.complete("", 0, candidates);
+        }
+        return candidates;
     }
 
     /**

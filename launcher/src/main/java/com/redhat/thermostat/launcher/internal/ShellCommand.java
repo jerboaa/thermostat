@@ -42,6 +42,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.storage.core.Storage;
 import jline.Terminal;
 import jline.TerminalFactory;
 import jline.console.ConsoleReader;
@@ -80,6 +81,7 @@ public class ShellCommand extends AbstractCommand {
 
     private final ShellPrompt shellPrompt;
     private CommandInfoSource commandInfoSource;
+    private final StorageState storageState = new StorageState();
 
     static class HistoryProvider {
 
@@ -155,7 +157,7 @@ public class ShellCommand extends AbstractCommand {
     private void shellMainLoop(CommandContext ctx, History history, Terminal term) throws IOException, CommandException {
         ConsoleReader reader = new ConsoleReader(ctx.getConsole().getInput(), ctx.getConsole().getOutput(), term);
         if (reader.getCompleters().isEmpty() && commandInfoSource != null) {
-            TabCompletion.setupTabCompletion(reader, commandInfoSource);
+            TabCompletion.setupTabCompletion(reader, commandInfoSource, bundleContext, storageState);
         }
         if (history != null) {
             reader.setHistory(history);
@@ -210,10 +212,12 @@ public class ShellCommand extends AbstractCommand {
 
     public void dbServiceAvailable(DbService dbService) {
         this.shellPrompt.storageConnected(dbService);
+        storageState.setStorageConnected(true);
     }
 
     public void dbServiceUnavailable() {
         this.shellPrompt.storageDisconnected();
+        storageState.setStorageConnected(false);
     }
 
     public void setCommandInfoSource(final CommandInfoSource source) {
