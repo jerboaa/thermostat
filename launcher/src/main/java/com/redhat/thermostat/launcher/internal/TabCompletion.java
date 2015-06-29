@@ -76,6 +76,8 @@ public class TabCompletion {
                         setupCompletion(command, option, new StringsCompleter(logLevels));
                     } else if (option.getLongOpt().equals("vmId")) {
                         setupCompletion(command, option, new IdCompleter(new VmIdsFinder(context), storageState));
+                    } else if (option.getLongOpt().equals("agentId")) {
+                        setupCompletion(command, option, new IdCompleter(new AgentIdsFinder(context), storageState));
                     } else {
                         setupDefaultCompletion(command, option);
                     }
