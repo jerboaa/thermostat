@@ -46,6 +46,13 @@ import java.util.jar.JarFile;
 /**
  * This is an {@link Instrumentation} agent that sets up the classpath with jars
  * supplied as agent parameters and then invokes {@link Main}.
+ * <p>
+ * Agent jars (including this one) are loaded into the system classpath by
+ * default. The class that records profiling events has to have a single
+ * instance JVM-wide, otherwise we will miss events being recorded or won't be
+ * able to query them from a different instance of the "singleton". To ensure a
+ * single instance across all classloaders, we add the jars to bootstrap
+ * classpath and then use that instance explicitly (via reflection).
  */
 public class ProfilerAgent {
 
@@ -61,10 +68,8 @@ public class ProfilerAgent {
 
         System.out.println("AGENT: loaded");
 
-        // This is the saner approach, but for now we are brute-forcing a
-        // hardcoded path using a manifest entry
-        // String jars = args;
-        // addJarsToClassPath(jars, instrumentation);
+        String jars = args;
+        addJarsToClassPath(jars, instrumentation);
 
         invokeMain(instrumentation);
     }
@@ -77,13 +82,14 @@ public class ProfilerAgent {
             JarFile jarFile = null;
             try {
                 jarFile = new JarFile(jarPath);
-                // FIXME needs to be bootclassloader if it is to be visible everywhere
+                // This needs to be bootclassloader if it is to be loaded and visible everywhere
+                // without hitting recursive classloading.
                 if (addToBoot) {
                     instrumentation.appendToBootstrapClassLoaderSearch(jarFile);
                 } else {
                     instrumentation.appendToSystemClassLoaderSearch(jarFile);
                 }
-                System.out.println("AGENT: Added" + jarPath + " to " + (addToBoot ? "bootstrap" : "system") + " classpath");
+                System.out.println("AGENT: Added '" + jarPath + "' to " + (addToBoot ? "bootstrap" : "system") + " classpath");
             } catch (IOException e) {
                 throw new AssertionError(jarFile + " not found!");
             }

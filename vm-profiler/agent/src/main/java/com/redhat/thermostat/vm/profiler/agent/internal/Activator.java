@@ -36,8 +36,11 @@
 
 package com.redhat.thermostat.vm.profiler.agent.internal;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -46,6 +49,8 @@ import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
 import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
 
@@ -55,10 +60,8 @@ public class Activator implements BundleActivator {
 
     @Override
     public void start(final BundleContext context) throws Exception {
-        final Properties configuration = new Properties();
-        configuration.load(this.getClass().getResourceAsStream("settings.properties"));
-
         Class<?>[] deps = new Class<?>[] {
+                CommonPaths.class,
                 MXBeanConnectionPool.class,
                 ProfileDAO.class,
                 WriterID.class,
@@ -82,10 +85,19 @@ public class Activator implements BundleActivator {
 
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
+                CommonPaths path = get(CommonPaths.class, services);
                 MXBeanConnectionPool pool = get(MXBeanConnectionPool.class, services);
                 WriterID writerIdProvider = get(WriterID.class, services);
                 ProfileDAO dao = get(ProfileDAO.class, services);
                 String writerId = writerIdProvider.getWriterID();
+
+                final Properties configuration = new Properties();
+                try {
+                    configuration.load(this.getClass().getResourceAsStream("settings.properties"));
+                    prefixJarsWithThermostatHome(path, configuration);
+                } catch (IOException e) {
+                    throw new AssertionError("Missing resource:", e);
+                }
 
                 VmProfiler profiler = new VmProfiler(writerId, configuration, dao, pool);
                 profileRequestHandler = new ProfilerRequestReceiver(profiler);
@@ -97,6 +109,17 @@ public class Activator implements BundleActivator {
                 vmStatusRegistrar = new VmStatusListenerRegistrar(context);
                 vmStatusRegistrar.register(livenessListener);
             }
+
+            private void prefixJarsWithThermostatHome(CommonPaths path, final Properties configuration) {
+                for (String name : configuration.stringPropertyNames()) {
+                    String currentValue = configuration.getProperty(name);
+                    if (currentValue.endsWith(".jar")) {
+                        configuration.setProperty(name,
+                                path.getSystemThermostatHome().getAbsolutePath() + File.separator + currentValue);
+                    }
+                }
+            }
+
             private <T> T get(Class<T> klass, Map<String, Object> services) {
                 return (T) services.get(klass.getName());
             }

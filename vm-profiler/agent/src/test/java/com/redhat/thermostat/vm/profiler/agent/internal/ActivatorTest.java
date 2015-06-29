@@ -39,12 +39,16 @@ package com.redhat.thermostat.vm.profiler.agent.internal;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.io.File;
 
 import org.junit.Test;
 
 import com.redhat.thermostat.agent.VmStatusListener;
 import com.redhat.thermostat.agent.command.RequestReceiver;
 import com.redhat.thermostat.agent.utils.management.MXBeanConnectionPool;
+import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.storage.core.WriterID;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
@@ -53,11 +57,16 @@ public class ActivatorTest {
 
     @Test
     public void requestHandlerIsRegistered() throws Exception {
+        File homeFile = mock(File.class);
+        when(homeFile.getAbsolutePath()).thenReturn("${thermostat.home}");
+        CommonPaths paths = mock(CommonPaths.class);
+        when(paths.getSystemThermostatHome()).thenReturn(homeFile);
         MXBeanConnectionPool pool = mock(MXBeanConnectionPool.class);
         WriterID writerService = mock(WriterID.class);
         ProfileDAO dao = mock(ProfileDAO.class);
 
         StubBundleContext context = new StubBundleContext();
+        context.registerService(CommonPaths.class, paths, null);
         context.registerService(MXBeanConnectionPool.class, pool, null);
         context.registerService(ProfileDAO.class, dao, null);
         context.registerService(WriterID.class, writerService, null);

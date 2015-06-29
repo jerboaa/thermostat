@@ -139,9 +139,7 @@ public class VmProfiler {
         }
 
         if (!vmsWithAgentLoaded.contains((Integer)pid)) {
-            // TODO make this adjustable at run-time
-            // eg: asmJarPath + ":" + agentJarPath;
-            String jarsToLoad = "";
+            String jarsToLoad = asmJarPath + ":" + agentJarPath;
             logger.info("Asking " + pid + " to load agent '" + agentJarPath + "' with arguments '" + jarsToLoad + "'");
 
             remote.loadAgentIntoPid(pid, agentJarPath, jarsToLoad);

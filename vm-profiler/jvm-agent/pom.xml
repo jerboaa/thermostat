@@ -63,9 +63,6 @@
         <configuration>
           <archive>
             <manifestFile>src/main/resources/META-INF/MANIFEST.MF</manifestFile>
-            <manifestEntries>
-              <Boot-Class-Path>${thermostat.vm.profiler.dir}asm-all-${asm.version}.jar ${thermostat.vm.profiler.dir}thermostat-vm-profiler-jvm-agent-${project.version}.jar</Boot-Class-Path>
-            </manifestEntries>
           </archive>
         </configuration>
       </plugin>

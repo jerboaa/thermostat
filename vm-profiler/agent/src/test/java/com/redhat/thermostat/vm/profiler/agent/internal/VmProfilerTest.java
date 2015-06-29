@@ -69,6 +69,7 @@ public class VmProfilerTest {
 
     private static final String AGENT_JAR = "foo";
     private static final String ASM_JAR = "bar";
+    private static final String AGENT_OPTIONS = ASM_JAR + ":" + AGENT_JAR;
     private static final long TIMESTAMP = 1_000_000_000;
 
     private VmProfiler profiler;
@@ -124,7 +125,7 @@ public class VmProfilerTest {
         profiler.vmStarted(VM_ID, PID);
         profiler.startProfiling(VM_ID);
 
-        verify(remote).loadAgentIntoPid(PID, AGENT_JAR, "");
+        verify(remote).loadAgentIntoPid(PID, AGENT_JAR, AGENT_OPTIONS);
         verify(remote).startProfiling(PID);
         verify(dao).addStatus(new ProfileStatusChange(AGENT_ID, VM_ID, TIMESTAMP, true));
         verifyNoMoreInteractions(remote);
@@ -140,7 +141,7 @@ public class VmProfilerTest {
         profiler.stopProfiling(VM_ID);
         profiler.startProfiling(VM_ID);
 
-        verify(remote, times(1)).loadAgentIntoPid(PID, AGENT_JAR, "");
+        verify(remote, times(1)).loadAgentIntoPid(PID, AGENT_JAR, AGENT_OPTIONS);
         verify(remote, times(2)).startProfiling(PID);
     }
 
@@ -157,7 +158,7 @@ public class VmProfilerTest {
         profiler.vmStarted(VM_ID, PID);
         profiler.startProfiling(VM_ID);
 
-        verify(remote, times(2)).loadAgentIntoPid(PID, AGENT_JAR, "");
+        verify(remote, times(2)).loadAgentIntoPid(PID, AGENT_JAR, AGENT_OPTIONS);
         verify(remote, times(2)).startProfiling(PID);
     }
 
