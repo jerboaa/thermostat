@@ -59,6 +59,8 @@ import com.redhat.thermostat.shared.locale.Translate;
  * properties file that sets an appropriate value for ".level"
  */
 public final class LoggingUtils {
+    
+    private static final String JUL_CONFIG_PROP_FILE = "java.util.logging.config.file";
 
     public enum LogLevel {
         /*
@@ -189,7 +191,10 @@ public final class LoggingUtils {
             // Set basic logger configs. Note that this does NOT add handlers.
             // It also resets() handlers. I.e. removes any existing handlers
             // for the root logger.
-            LogManager.getLogManager().readConfiguration(fis);
+            // Only erase any log config if no log config property file is set
+            if (null == System.getProperty(JUL_CONFIG_PROP_FILE)) {
+                LogManager.getLogManager().readConfiguration(fis);
+            }
         } catch (SecurityException | IOException e) {
             throw new InvalidConfigurationException(t.localize(LocaleResources.LOGGING_PROPERTIES_ISSUE), e);
         }

@@ -174,6 +174,7 @@
                     <include>devsetup.input</include>
                     <include>db.properties</include>
                     <include>logging.properties</include>
+                    <include>bash-complete-logging.properties</include>
                     <include>osgi-export.properties</include>
                     <include>commands/*.properties</include>
                   </includes>
