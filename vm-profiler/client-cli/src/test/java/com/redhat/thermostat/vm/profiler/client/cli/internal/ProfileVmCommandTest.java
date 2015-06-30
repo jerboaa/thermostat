@@ -48,6 +48,7 @@ import org.junit.Test;
 
 import com.redhat.thermostat.client.cli.internal.LocaleResources;
 import com.redhat.thermostat.client.command.RequestQueue;
+import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
@@ -101,8 +102,8 @@ public class ProfileVmCommandTest {
     @Test (expected=CommandException.class)
     public void needsSubCommand() throws Exception {
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("hostId", AGENT_ID);
-        args.addArgument("vmId", VM_ID);
+        args.addArgument(Arguments.HOST_ID_ARGUMENT, AGENT_ID);
+        args.addArgument(Arguments.VM_ID_ARGUMENT, VM_ID);
         CommandContext ctx = cmdCtxFactory.createContext(args);
 
         cmd.run(ctx);
@@ -114,8 +115,8 @@ public class ProfileVmCommandTest {
         when(agentsDao.getAgentInformation(AGENT)).thenReturn(agentInfo);
 
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("hostId", AGENT_ID);
-        args.addArgument("vmId", VM_ID);
+        args.addArgument(Arguments.HOST_ID_ARGUMENT, AGENT_ID);
+        args.addArgument(Arguments.VM_ID_ARGUMENT, VM_ID);
         args.addNonOptionArgument("status");
         CommandContext ctx = cmdCtxFactory.createContext(args);
 
@@ -133,8 +134,8 @@ public class ProfileVmCommandTest {
         when(profileDao.getLatestStatus(VM)).thenReturn(status);
 
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("hostId", AGENT_ID);
-        args.addArgument("vmId", VM_ID);
+        args.addArgument(Arguments.HOST_ID_ARGUMENT, AGENT_ID);
+        args.addArgument(Arguments.VM_ID_ARGUMENT, VM_ID);
         args.addNonOptionArgument("status");
         CommandContext ctx = cmdCtxFactory.createContext(args);
 
@@ -149,8 +150,8 @@ public class ProfileVmCommandTest {
         when(agentsDao.getAgentInformation(AGENT)).thenReturn(agentInfo);
 
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("hostId", AGENT_ID);
-        args.addArgument("vmId", VM_ID);
+        args.addArgument(Arguments.HOST_ID_ARGUMENT, AGENT_ID);
+        args.addArgument(Arguments.VM_ID_ARGUMENT, VM_ID);
         args.addNonOptionArgument("show");
         CommandContext ctx = cmdCtxFactory.createContext(args);
 
@@ -169,8 +170,8 @@ public class ProfileVmCommandTest {
         when(profileDao.loadLatestProfileData(VM)).thenReturn(in);
 
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("hostId", AGENT_ID);
-        args.addArgument("vmId", VM_ID);
+        args.addArgument(Arguments.HOST_ID_ARGUMENT, AGENT_ID);
+        args.addArgument(Arguments.VM_ID_ARGUMENT, VM_ID);
         args.addNonOptionArgument("show");
         CommandContext ctx = cmdCtxFactory.createContext(args);
 

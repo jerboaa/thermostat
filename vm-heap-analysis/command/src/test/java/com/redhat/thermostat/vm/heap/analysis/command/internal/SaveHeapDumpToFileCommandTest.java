@@ -50,6 +50,7 @@ import java.nio.charset.Charset;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
@@ -77,8 +78,8 @@ public class SaveHeapDumpToFileCommandTest {
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("hostId", "host-id");
-        args.addArgument("vmId", "1");
+        args.addArgument(Arguments.HOST_ID_ARGUMENT, "host-id");
+        args.addArgument(Arguments.VM_ID_ARGUMENT, "1");
         args.addArgument("file", "heap-id-1");
 
         HeapDAO heapDAO = mock(HeapDAO.class);
@@ -93,8 +94,8 @@ public class SaveHeapDumpToFileCommandTest {
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("hostId", "host-id");
-        args.addArgument("vmId", "1");
+        args.addArgument(Arguments.HOST_ID_ARGUMENT, "host-id");
+        args.addArgument(Arguments.VM_ID_ARGUMENT, "1");
         args.addArgument("heapId", "heap-id-1");
 
         HeapDAO heapDAO = mock(HeapDAO.class);
@@ -139,8 +140,8 @@ public class SaveHeapDumpToFileCommandTest {
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("hostId", "host-id");
-        args.addArgument("vmId", "1");
+        args.addArgument(Arguments.HOST_ID_ARGUMENT, "host-id");
+        args.addArgument(Arguments.VM_ID_ARGUMENT, "1");
         args.addArgument("heapId", "heap-id-1");
         args.addArgument("file", "heap-id-1");
 

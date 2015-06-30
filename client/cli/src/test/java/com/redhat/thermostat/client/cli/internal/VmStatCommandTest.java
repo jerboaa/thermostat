@@ -62,6 +62,7 @@ import org.junit.Test;
 import com.redhat.thermostat.client.cli.VMStatPrintDelegate;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
+import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.storage.core.VmRef;
@@ -329,8 +330,8 @@ public class VmStatCommandTest {
 
     private SimpleArguments setupArguments() {
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("vmId", "234");
-        args.addArgument("hostId", "123");
+        args.addArgument(Arguments.VM_ID_ARGUMENT, "234");
+        args.addArgument(Arguments.HOST_ID_ARGUMENT, "123");
         args.addArgument("since", "all");
         return args;
     }

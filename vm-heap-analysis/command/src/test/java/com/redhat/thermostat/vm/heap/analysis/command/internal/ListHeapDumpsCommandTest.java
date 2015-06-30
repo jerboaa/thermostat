@@ -49,6 +49,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
@@ -179,7 +180,7 @@ public class ListHeapDumpsCommandTest {
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("hostId", "host1");
+        args.addArgument(Arguments.HOST_ID_ARGUMENT, "host1");
 
         command.run(factory.createContext(args));
 
@@ -224,8 +225,8 @@ public class ListHeapDumpsCommandTest {
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("hostId", "host1");
-        args.addArgument("vmId", "1"); // vm id must be an int for the arg parser to work
+        args.addArgument(Arguments.HOST_ID_ARGUMENT, "host1");
+        args.addArgument(Arguments.VM_ID_ARGUMENT, "1"); // vm id must be an int for the arg parser to work
 
         command.run(factory.createContext(args));
 

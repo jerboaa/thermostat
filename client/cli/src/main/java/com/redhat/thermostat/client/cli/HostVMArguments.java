@@ -45,9 +45,6 @@ import com.redhat.thermostat.storage.core.VmRef;
 
 public class HostVMArguments {
 
-    static final String HOST_ID_ARGUMENT = "hostId";
-    static final String VM_ID_ARGUMENT = "vmId";
-
     private static final Translate<LocaleResources> tr = LocaleResources.createLocalizer();
 
     private HostRef host;
@@ -58,8 +55,8 @@ public class HostVMArguments {
     }
 
     public HostVMArguments(Arguments args, boolean hostRequired, boolean vmRequired) throws CommandException {
-        String hostId = args.getArgument(HOST_ID_ARGUMENT);
-        String vmId = args.getArgument(VM_ID_ARGUMENT);
+        String hostId = args.getArgument(Arguments.HOST_ID_ARGUMENT);
+        String vmId = args.getArgument(Arguments.VM_ID_ARGUMENT);
         if (hostRequired && hostId == null) {
             throw new CommandException(tr.localize(LocaleResources.HOSTID_REQUIRED_MESSAGE));
         } else if (hostId == null) {

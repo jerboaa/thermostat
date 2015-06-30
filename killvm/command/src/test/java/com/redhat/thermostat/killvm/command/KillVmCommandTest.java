@@ -44,6 +44,7 @@ import static org.mockito.Mockito.when;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
@@ -119,7 +120,7 @@ public class KillVmCommandTest {
 
     public CommandContext createContext(String vmId) {
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("vmId", vmId);
+        args.addArgument(Arguments.VM_ID_ARGUMENT, vmId);
         return cmdCtxFactory.createContext(args);
     }
 

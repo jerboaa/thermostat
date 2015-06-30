@@ -64,7 +64,7 @@ public class ShowGcNameCommandTest {
     @Before
     public void setup() {
         args = mock(Arguments.class);
-        when(args.getArgument("vmId")).thenReturn(VM_ID);
+        when(args.getArgument(Arguments.VM_ID_ARGUMENT)).thenReturn(VM_ID);
     }
     
     @Test

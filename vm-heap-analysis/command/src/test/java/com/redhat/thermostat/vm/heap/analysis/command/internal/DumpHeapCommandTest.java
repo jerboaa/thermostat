@@ -53,6 +53,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import com.redhat.thermostat.client.command.RequestQueue;
+import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.shared.locale.Translate;
@@ -106,7 +107,7 @@ public class DumpHeapCommandTest {
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("vmId", "foo");
+        args.addArgument(Arguments.VM_ID_ARGUMENT, "foo");
 
         command.run(factory.createContext(args));
 
@@ -154,7 +155,7 @@ public class DumpHeapCommandTest {
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("vmId", "bar");
+        args.addArgument(Arguments.VM_ID_ARGUMENT, "bar");
 
         try {
             command.run(factory.createContext(args));
@@ -178,7 +179,7 @@ public class DumpHeapCommandTest {
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("vmId", "bar");
+        args.addArgument(Arguments.VM_ID_ARGUMENT, "bar");
         args.addArgument("vmPid", "123");
 
         try {
@@ -203,7 +204,7 @@ public class DumpHeapCommandTest {
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("vmId", "bar");
+        args.addArgument(Arguments.VM_ID_ARGUMENT, "bar");
 
         try {
             command.run(factory.createContext(args));
@@ -253,7 +254,7 @@ public class DumpHeapCommandTest {
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("vmId", VM_ID);
+        args.addArgument(Arguments.VM_ID_ARGUMENT, VM_ID);
 
         try {
             command.run(factory.createContext(args));
