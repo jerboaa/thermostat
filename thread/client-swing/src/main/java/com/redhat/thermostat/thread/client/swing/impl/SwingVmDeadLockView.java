@@ -36,21 +36,38 @@
 
 package com.redhat.thermostat.thread.client.swing.impl;
 
+import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.FontMetrics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
+import com.mxgraph.layout.mxCircleLayout;
+import com.mxgraph.layout.mxEdgeLabelLayout;
+import com.mxgraph.layout.mxGraphLayout;
+import com.mxgraph.model.mxCell;
+import com.mxgraph.swing.mxGraphComponent;
+import com.mxgraph.util.mxConstants;
+import com.mxgraph.view.mxGraph;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
 import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.thread.client.common.DeadlockParser;
+import com.redhat.thermostat.thread.client.common.DeadlockParser.Information;
 import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
 import com.redhat.thermostat.thread.client.common.view.VmDeadLockView;
 
@@ -58,7 +75,13 @@ public class SwingVmDeadLockView extends VmDeadLockView implements SwingComponen
 
     private static final Translate<LocaleResources> translate = LocaleResources.createLocalizer();
 
+    private static final int TAB_VISUALIZATION_INDEX = 0;
+    private static final int TAB_RAW_INDEX = 1;
+
     private final JPanel actualComponent = new JPanel();
+
+    private final JTabbedPane tabbedPane = new JTabbedPane();
+    private final JPanel graphical = new JPanel();
     private final JTextArea description = new JTextArea();
 
     public SwingVmDeadLockView() {
@@ -83,20 +106,161 @@ public class SwingVmDeadLockView extends VmDeadLockView implements SwingComponen
         c.weightx = 1;
         c.weighty = 1;
 
+        actualComponent.add(tabbedPane, c);
+
         JScrollPane scrollPane = new JScrollPane(description);
-        actualComponent.add(scrollPane, c);
+
+        graphical.setLayout(new BorderLayout());
+
+        final String GRAPHICAL_TAB_TITLE = translate.localize(LocaleResources.DEADLOCK_GRAPHICAL_TAB_TITLE).getContents();
+        tabbedPane.insertTab(GRAPHICAL_TAB_TITLE, null, graphical, null, TAB_VISUALIZATION_INDEX);
+        final String RAW_TAB_TITLE = translate.localize(LocaleResources.DEADLOCK_RAW_TAB_TITLE).getContents();
+        tabbedPane.insertTab(RAW_TAB_TITLE, null, scrollPane, null, TAB_RAW_INDEX);
 
         new ComponentVisibilityNotifier().initialize(actualComponent, notifier);
     }
 
     @Override
-    public void setDeadLockInformation(final String info) {
+    public void setDeadLockInformation(final Information parsed, final String rawText) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                description.setText(info);
+
+                graphical.removeAll();
+
+                if (parsed != null) {
+                    FontMetrics metrics = graphical.getGraphics().getFontMetrics();
+                    graphical.add(createGraph(parsed, metrics), BorderLayout.CENTER);
+                }
+
+                description.setText(rawText);
             }
         });
+    }
+
+    private mxGraphComponent createGraph(Information info, FontMetrics fontMetrics) {
+
+        final mxGraph graph = new mxGraph() {
+
+            /* Show tooltips for vertices and edges */
+            @Override
+            public String getToolTipForCell(Object source) {
+                mxCell cell = ((mxCell) source);
+
+                if (cell.getValue() instanceof GraphItem) {
+                    return ((GraphItem) cell.getValue()).getTooltip();
+                } else {
+                    return super.getToolTipForCell(cell);
+                }
+            }
+
+
+            /* Prevent modifying the contents of edges or vertices */
+            @Override
+            public boolean isCellEditable(Object cell) {
+                return false;
+            }
+
+            /* Prevent moving edges away from the vertices */
+            @Override
+            public boolean isCellSelectable(Object cell) {
+                return !model.isEdge(cell);
+            }
+
+        };
+
+        Object parent = graph.getDefaultParent();
+
+        addDeadlockToGraph(info, graph, parent, fontMetrics);
+
+        graph.setAutoSizeCells(true);
+        graph.setCellsResizable(true);
+
+        final mxGraphComponent graphComponent = new mxGraphComponent(graph);
+        graphComponent.setTextAntiAlias(true);
+        graphComponent.setToolTips(true);
+        graphComponent.setConnectable(false);
+
+        Map<String, Object> style = graph.getStylesheet().getDefaultVertexStyle();
+        style.put(mxConstants.STYLE_LABEL_POSITION, mxConstants.ALIGN_CENTER);
+        graph.getStylesheet().setDefaultVertexStyle(style);
+
+        mxGraphLayout layout = new mxCircleLayout(graph);
+        layout.execute(graph.getDefaultParent());
+
+        layout = new mxEdgeLabelLayout(graph);
+        layout.execute(graph.getDefaultParent());
+
+        return graphComponent;
+    }
+
+    private static void addDeadlockToGraph(Information info, mxGraph graph, Object parent, FontMetrics metrics) {
+        graph.getModel().beginUpdate(); // batch updates
+        try {
+            Map<String, Object> idToCell = new HashMap<>();
+            Map<String, String> idToLabel = new HashMap<>();
+
+            for (DeadlockParser.Thread thread : info.threads) {
+                String label = getThreadLabel(thread);
+                String tooltip = getThreadTooltip(thread);
+                idToLabel.put(thread.id, label);
+                GraphItem node = new GraphItem(label, tooltip);
+                final int PADDING = 20;
+                int width = metrics.stringWidth(label) + PADDING;
+                int height = metrics.getHeight() + PADDING;
+                Object threadNode = graph.insertVertex(parent, thread.id, node, 0, 0, width, height);
+                idToCell.put(thread.id, threadNode);
+            }
+
+            for (DeadlockParser.Thread thread : info.threads) {
+                String label = translate.localize(LocaleResources.DEADLOCK_WAITING_ON).getContents();
+                String tooltip = getEdgeTooltip(thread, idToLabel);
+                GraphItem edge = new GraphItem(label, tooltip);
+                graph.insertEdge(parent, thread.waitingOn.name, edge, idToCell.get(thread.id), idToCell.get(thread.waitingOn.ownerId));
+            }
+
+        }  finally {
+           graph.getModel().endUpdate();
+        }
+    }
+
+    private static String getThreadLabel(DeadlockParser.Thread thread) {
+        return translate.localize(LocaleResources.DEADLOCK_THREAD_NAME, thread.name, thread.id).getContents();
+    }
+
+    private static String getThreadTooltip(DeadlockParser.Thread thread) {
+        return translate.localize(
+                LocaleResources.DEADLOCK_THREAD_TOOLTIP,
+                htmlEscape(thread.waitingOn.name),
+                stackTraceToHtmlString(thread.stackTrace))
+            .getContents();
+    }
+
+    private static String stackTraceToHtmlString(List<String> items) {
+        StringBuilder result = new StringBuilder();
+        for (String item : items) {
+            result.append(htmlEscape(item)).append("<br/>");
+        }
+        return result.toString();
+    }
+
+    private static String htmlEscape(String in) {
+        // https://www.owasp.org/index.php/XSS_(Cross_Site_Scripting)_Prevention_Cheat_Sheet#RULE_.231_-_HTML_Escape_Before_Inserting_Untrusted_Data_into_HTML_Element_Content
+        in = in.replaceAll("&", "&amp;");
+        in = in.replaceAll("<", "&lt;");
+        in = in.replaceAll(">", "&gt;");
+        in = in.replaceAll("\"", "&quot;");
+        in = in.replaceAll("'", "&#x27;");
+        in = in.replaceAll("/", "&#x2F;");
+        return in;
+    }
+
+    private static String getEdgeTooltip(DeadlockParser.Thread thread, Map<String, String> idToLabel) {
+        return translate.localize(
+                LocaleResources.DEADLOCK_EDGE_TOOLTIP,
+                idToLabel.get(thread.id),
+                idToLabel.get(thread.waitingOn.ownerId))
+            .getContents();
     }
 
     @Override
@@ -104,5 +268,41 @@ public class SwingVmDeadLockView extends VmDeadLockView implements SwingComponen
         return actualComponent;
     }
 
-}
+    static class GraphItem implements Serializable {
 
+        private final String label;
+        private final String tooltip;
+
+        public GraphItem(String label, String tooltip) {
+            this.label = label;
+            this.tooltip = tooltip;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(label, tooltip);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            GraphItem other = (GraphItem) obj;
+            return Objects.equals(label, other.label) && Objects.equals(tooltip, other.tooltip);
+        }
+
+        @Override
+        public String toString() {
+            return label;
+        }
+
+        public String getTooltip() {
+            return tooltip;
+        }
+    }
+
+}

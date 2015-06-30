@@ -36,10 +36,11 @@
 
 package com.redhat.thermostat.thread.client.controller.impl;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-
-import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.common.ActionEvent;
@@ -47,6 +48,9 @@ import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.thread.client.common.DeadlockParser;
+import com.redhat.thermostat.thread.client.common.DeadlockParser.Information;
+import com.redhat.thermostat.thread.client.common.DeadlockParser.ParseException;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.client.common.view.VmDeadLockView;
 import com.redhat.thermostat.thread.client.common.view.VmDeadLockView.VmDeadLockViewAction;
@@ -56,11 +60,14 @@ public class VmDeadLockController {
 
     private static final Translate<LocaleResources> translate = LocaleResources.createLocalizer();
 
+    private static final String NO_DEADLOCK = translate.localize(LocaleResources.NO_DEADLOCK_DETECTED).getContents();
+
     private VmDeadLockView view;
     private ThreadCollector collector;
     private Timer timer;
 
     private final AtomicReference<String> descriptionRef =  new AtomicReference<>("");
+    private String previousDeadlockData = null;
 
     public VmDeadLockController(VmDeadLockView view, ThreadCollector collector, Timer timer) {
         this.view = view;
@@ -75,7 +82,7 @@ public class VmDeadLockController {
                 switch (actionEvent.getActionId()) {
                 case CHECK_FOR_DEADLOCK:
                     checkForDeadLock();
-                    updateView();
+                    updateViewIfNeeded();
                     break;
                 default:
                     break;
@@ -87,7 +94,7 @@ public class VmDeadLockController {
             @Override
             public void run() {
                 checkStorageForDeadLockData();
-                updateView();
+                updateViewIfNeeded();
             }
         });
         timer.setDelay(5);
@@ -128,14 +135,29 @@ public class VmDeadLockController {
 
         String description = data.getDeadLockDescription();
         if (description.equals(VmDeadLockData.NO_DEADLOCK)) {
-            description = translate.localize(LocaleResources.NO_DEADLOCK_DETECTED).getContents();
+            description = NO_DEADLOCK;
         }
         this.descriptionRef.set(description);
 
     }
 
-    private void updateView() {
-        view.setDeadLockInformation(descriptionRef.get());
+    private void updateViewIfNeeded() {
+        String rawDeadlockData = descriptionRef.get();
+
+        if (!rawDeadlockData.equals(previousDeadlockData)) {
+            Information parsed = null;
+
+            if (!rawDeadlockData.equals(NO_DEADLOCK)) {
+                try {
+                    parsed = new DeadlockParser().parse(new BufferedReader(new StringReader(rawDeadlockData)));
+                } catch (IOException | ParseException e) {
+                    // TODO log this message
+                }
+            }
+
+            view.setDeadLockInformation(parsed, rawDeadlockData);
+            previousDeadlockData = rawDeadlockData;
+        }
     }
 
 }

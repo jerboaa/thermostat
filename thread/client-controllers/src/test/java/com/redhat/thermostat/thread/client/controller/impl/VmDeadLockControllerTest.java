@@ -106,7 +106,7 @@ public class VmDeadLockControllerTest {
         listener.actionPerformed(new ActionEvent<VmDeadLockViewAction>(view, VmDeadLockViewAction.CHECK_FOR_DEADLOCK));
 
         verify(collector).requestDeadLockCheck();
-        verify(view).setDeadLockInformation(DESCRIPTION);
+        verify(view).setDeadLockInformation(null, DESCRIPTION);
     }
 
     @Test
@@ -126,7 +126,7 @@ public class VmDeadLockControllerTest {
         listener.actionPerformed(new ActionEvent<VmDeadLockViewAction>(view, VmDeadLockViewAction.CHECK_FOR_DEADLOCK));
 
         verify(collector).requestDeadLockCheck();
-        verify(view).setDeadLockInformation("No Deadlocks Detected.");
+        verify(view).setDeadLockInformation(null, "No Deadlocks Detected.");
     }
 
     @Test
@@ -176,7 +176,7 @@ public class VmDeadLockControllerTest {
 
         action.run();
 
-        verify(view).setDeadLockInformation("No Deadlocks Detected.");
+        verify(view).setDeadLockInformation(null, "No Deadlocks Detected.");
     }
 
     @Test

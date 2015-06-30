@@ -77,6 +77,11 @@
       <artifactId>org.osgi.compendium</artifactId>
       <scope>provided</scope>
     </dependency>
+
+    <dependency>
+      <groupId>org.tinyjee.jgraphx</groupId>
+      <artifactId>jgraphx</artifactId>
+    </dependency>
     
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
@@ -120,6 +125,7 @@
                 com.redhat.thermostat.thread.client.swing.experimental.components,
                 com.redhat.thermostat.thread.client.swing.experimental.utils,
             </Private-Package>
+            <Embed-Dependency>jgraphx;scope=compile|runtime</Embed-Dependency>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
           </instructions>

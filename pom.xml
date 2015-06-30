@@ -177,6 +177,7 @@
          See the main thermostat bash script where this property is
          used. -->
     <jcommon.version>1.0.17</jcommon.version>
+    <jgraphx.version>2.3.0.5</jgraphx.version>
     <mongo-driver.version>2.13.2</mongo-driver.version>
     <!-- the OSGi Bundle-Version; should match the manifest in the jar -->
     <mongo-driver.osgi-version>2.13.2.RELEASE</mongo-driver.osgi-version>
@@ -516,6 +517,11 @@
         <groupId>org.jfree</groupId>
         <artifactId>jfreechart</artifactId>
         <version>${jfreechart.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.tinyjee.jgraphx</groupId>
+        <artifactId>jgraphx</artifactId>
+        <version>${jgraphx.version}</version>
       </dependency>
       <dependency>
         <groupId>org.mongodb</groupId>

@@ -39,6 +39,7 @@ package com.redhat.thermostat.thread.client.common.view;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.thread.client.common.DeadlockParser.Information;
 
 public abstract class VmDeadLockView extends BasicView {
 
@@ -61,6 +62,7 @@ public abstract class VmDeadLockView extends BasicView {
         deadLockNotifier.removeActionListener(listener);
     }
 
-    public abstract void setDeadLockInformation(String info);
+    public abstract void setDeadLockInformation(Information parsed, String rawText);
+
 }
 
