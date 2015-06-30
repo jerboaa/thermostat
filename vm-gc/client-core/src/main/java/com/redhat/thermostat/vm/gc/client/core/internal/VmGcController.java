@@ -56,9 +56,15 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
+import com.redhat.thermostat.common.command.Request;
+import com.redhat.thermostat.common.command.RequestResponseListener;
+import com.redhat.thermostat.common.command.Response;
+import com.redhat.thermostat.gc.remote.common.GCRequest;
+import com.redhat.thermostat.gc.remote.common.command.GCAction;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.model.IntervalTimeData;
 import com.redhat.thermostat.storage.model.TimeStampedPojoComparator;
 import com.redhat.thermostat.vm.gc.client.core.VmGcView;
@@ -82,6 +88,7 @@ public class VmGcController implements InformationServiceController<VmRef> {
 
     private final VmGcStatDAO gcDao;
     private final VmMemoryStatDAO memDao;
+    private final AgentInfoDAO agentDAO;
 
     private final Set<String> addedCollectors = new TreeSet<>();
     // the last value seen for each collector
@@ -91,13 +98,14 @@ public class VmGcController implements InformationServiceController<VmRef> {
 
     private long lastSeenTimeStamp;
 
-    public VmGcController(ApplicationService appSvc, VmMemoryStatDAO vmMemoryStatDao, VmGcStatDAO vmGcStatDao, VmRef ref, VmGcViewProvider provider) {
+    public VmGcController(ApplicationService appSvc, VmMemoryStatDAO vmMemoryStatDao, VmGcStatDAO vmGcStatDao, AgentInfoDAO agentInfoDAO, VmRef ref, VmGcViewProvider provider, final GCRequest gcRequest) {
         this.ref = ref;
         this.view = provider.createView();
         this.timer = appSvc.getTimerFactory().createTimer();
 
         gcDao = vmGcStatDao;
         memDao = vmMemoryStatDao;
+        agentDAO = agentInfoDAO;
 
         view.addActionListener(new ActionListener<VmGcView.Action>() {
             @Override
@@ -127,6 +135,24 @@ public class VmGcController implements InformationServiceController<VmRef> {
                     default:
                         throw new AssertionError("Unhandled action type");
                 }
+            }
+        });
+
+        view.addGCActionListener(new ActionListener<GCAction>() {
+            @Override
+            public void actionPerformed(ActionEvent<GCAction> actionEvent) {
+                RequestResponseListener listener = new RequestResponseListener() {
+                    @Override
+                    public void fireComplete(Request request, Response response) {
+                        if (response.getType() == Response.ResponseType.ERROR) {
+                            view.displayWarning(translator.localize(
+                                    LocaleResources.ERROR_PERFORMING_GC,
+                                    VmGcController.this.ref.getHostRef().getAgentId(),
+                                    VmGcController.this.ref.getVmId()));
+                        }
+                    }
+                };
+                gcRequest.sendGCRequestToAgent(VmGcController.this.ref, agentDAO, listener);
             }
         });
 

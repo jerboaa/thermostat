@@ -41,6 +41,8 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
+import com.redhat.thermostat.gc.remote.common.GCRequest;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import org.junit.Test;
 
 import com.redhat.thermostat.client.core.InformationService;
@@ -73,11 +75,15 @@ public class ActivatorTest {
         StubBundleContext context = new StubBundleContext();
         VmMemoryStatDAO vmMemoryStatDAO = mock(VmMemoryStatDAO.class);
         VmGcStatDAO vmGcStatDAO = mock(VmGcStatDAO.class);
+        AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
+        GCRequest gcRequest = mock(GCRequest.class);
         ApplicationService appSvc = mock(ApplicationService.class);
         VmGcViewProvider viewProvider = mock(VmGcViewProvider.class);
 
         context.registerService(VmMemoryStatDAO.class, vmMemoryStatDAO, null);
         context.registerService(VmGcStatDAO.class, vmGcStatDAO, null);
+        context.registerService(AgentInfoDAO.class, agentInfoDAO, null);
+        context.registerService(GCRequest.class, gcRequest, null);
         context.registerService(ApplicationService.class, appSvc, null);
         context.registerService(VmGcViewProvider.class, viewProvider, null);
 
@@ -90,7 +96,7 @@ public class ActivatorTest {
         activator.stop(context);
 
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(4, context.getAllServices().size());
+        assertEquals(6, context.getAllServices().size());
     }
 
 }

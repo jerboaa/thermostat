@@ -56,6 +56,8 @@ public enum LocaleResources {
     VM_GC_COLLECTOR_CHART_REAL_TIME_LABEL,
     VM_GC_COLLECTOR_CHART_GC_TIME_LABEL,
     VM_GC_CONFIGURED_COLLECTOR,
+
+    ERROR_PERFORMING_GC,
     ;
 
     static final String RESOURCE_BUNDLE =

@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.vm.gc.client.core.internal;
 
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Matchers.isNotNull;
@@ -51,6 +50,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import com.redhat.thermostat.gc.remote.common.GCRequest;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.model.AgentInformation;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -106,11 +109,16 @@ public class VmGcControllerTest {
         gen.setCollector("collector1");
         VmMemoryStat memoryStat = new VmMemoryStat("foo-agent", 1, "vmId", new Generation[] { gen });
 
+        AgentInformation agentInfo = new AgentInformation("foo");
+
         // Setup DAO
         VmGcStatDAO vmGcStatDAO = mock(VmGcStatDAO.class);
         when(vmGcStatDAO.getLatestVmGcStats(isA(VmRef.class), isA(Long.class))).thenReturn(stats);
         VmMemoryStatDAO vmMemoryStatDAO = mock(VmMemoryStatDAO.class);
         when(vmMemoryStatDAO.getNewestMemoryStat(isA(VmRef.class))).thenReturn(memoryStat);
+        AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
+        when(agentInfoDAO.getAgentInformation(isA(HostRef.class))).thenReturn(agentInfo);
+
         // the following set should map to Concurrent Collector
         Set<String> cms = new HashSet<>();
         cms.add("CMS");
@@ -128,10 +136,12 @@ public class VmGcControllerTest {
         VmGcViewProvider viewProvider = mock(VmGcViewProvider.class);
         when(viewProvider.createView()).thenReturn(view);
 
+        GCRequest gcRequest = mock(GCRequest.class);
+
         // Now start the controller
         VmRef ref = mock(VmRef.class);
 
-        new VmGcController(appSvc, vmMemoryStatDAO, vmGcStatDAO, ref, viewProvider);
+        new VmGcController(appSvc, vmMemoryStatDAO, vmGcStatDAO, agentInfoDAO, ref, viewProvider, gcRequest);
 
         // Extract relevant objects
         viewListener = viewArgumentCaptor.getValue();

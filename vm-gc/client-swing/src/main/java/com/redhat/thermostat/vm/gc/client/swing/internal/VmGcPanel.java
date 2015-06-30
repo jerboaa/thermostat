@@ -52,9 +52,13 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import com.redhat.thermostat.gc.remote.client.common.RequestGCAction;
+import com.redhat.thermostat.gc.remote.client.swing.ToolbarGCButton;
+import com.redhat.thermostat.gc.remote.common.command.GCAction;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.DateAxis;
@@ -104,6 +108,9 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
     private JLabel gcAlgoLabelDescr;
     private JLabel commonNameLabel;
 
+    private ToolbarGCButton toolbarGCButton;
+    private RequestGCAction requestGCAction;
+
     private ActionNotifier<UserAction> userActionNotifier = new ActionNotifier<>(this);
 
     private final Map<String, SampledDataset> dataset = new HashMap<>();
@@ -123,6 +130,11 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
         gcPanelConstraints.fill = GridBagConstraints.BOTH;
         gcPanelConstraints.weightx = 1;
         gcPanelConstraints.weighty = 1;
+
+        requestGCAction = new RequestGCAction();
+        toolbarGCButton = new ToolbarGCButton(requestGCAction);
+        toolbarGCButton.setName("gcButton");
+        visiblePanel.addToolBarButton(toolbarGCButton);
 
         new ComponentVisibilityNotifier().initialize(visiblePanel, notifier);
     }
@@ -350,6 +362,21 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
     }
 
     @Override
+    public void setEnableGCAction(final boolean enable) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                toolbarGCButton.setEnabled(enable);
+            }
+        });
+    }
+
+    @Override
+    public void addGCActionListener(ActionListener<GCAction> listener) {
+        requestGCAction.addActionListener(listener);
+    }
+
+    @Override
     public Duration getUserDesiredDuration() {
         //Return the greatest duration of all controllers
         long timestamp = 0l;
@@ -363,6 +390,11 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
             }
         }
         return maxDuration;
+    }
+
+    @Override
+    public void displayWarning(LocalizedString string) {
+        JOptionPane.showMessageDialog(visiblePanel, string.getContents(), "Warning", JOptionPane.WARNING_MESSAGE);
     }
 }
 
