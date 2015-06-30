@@ -40,16 +40,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
-import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.common.LogFormatter;
 import com.redhat.thermostat.common.locale.LocaleResources;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.config.InvalidConfigurationException;
+import com.redhat.thermostat.shared.config.LogFormatter;
 import com.redhat.thermostat.shared.locale.Translate;
 
 /**
@@ -98,11 +97,11 @@ public final class LoggingUtils {
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     private static final Logger root;
 
-    private static final ConsoleHandler handler;
-
     private static final String HANDLER_PROP = ROOTNAME + ".handlers";
     private static final String LOG_LEVEL_PROP = ROOTNAME + ".level";
     private static final String DEFAULT_LOG_HANDLER = "java.util.logging.ConsoleHandler";
+    private static final String DEFAULT_LOG_HANDLER_FORMATTER = LogFormatter.class.getName();
+    private static final String DEFAULT_LOG_HANDLER_FORMATTER_PROP = DEFAULT_LOG_HANDLER + ".formatter";
     private static final Level DEFAULT_LOG_LEVEL = Level.INFO;
 
     static {
@@ -113,13 +112,6 @@ public final class LoggingUtils {
             // This is workaround for http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4462908
             handler.setLevel(Level.ALL);
         }
-
-        handler = new ConsoleHandler();
-        handler.setFormatter(new LogFormatter());
-        // This is workaround for http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4462908
-        handler.setLevel(Level.ALL);
-
-        enableConsoleLogging();
     }
 
     private LoggingUtils() {
@@ -142,18 +134,6 @@ public final class LoggingUtils {
         Logger logger = Logger.getLogger(klass.getPackage().getName());
         logger.setLevel(null); // Will inherit from root logger
         return logger;
-    }
-
-    /**
-     * Ensures log messages are written to the console as well
-     */
-    public static void enableConsoleLogging() {
-        root.removeHandler(handler);
-        root.addHandler(handler);
-    }
-
-    public static void disableConsoleLogging() {
-        root.removeHandler(handler);
     }
 
     public static void loadGlobalLoggingConfig(CommonPaths paths) throws InvalidConfigurationException {
@@ -231,6 +211,9 @@ public final class LoggingUtils {
         Properties defaultProps = new Properties();
         defaultProps.put(HANDLER_PROP, DEFAULT_LOG_HANDLER);
         defaultProps.put(LOG_LEVEL_PROP, DEFAULT_LOG_LEVEL);
+        // ensure console handler formats with our formatter if not overruled
+        // by config.
+        defaultProps.put(DEFAULT_LOG_HANDLER_FORMATTER_PROP, DEFAULT_LOG_HANDLER_FORMATTER);
         return defaultProps;
     }
 
