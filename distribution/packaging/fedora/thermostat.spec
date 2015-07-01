@@ -28,6 +28,10 @@
 # bootstrap bundle properties file refers to the jar
 # with version suffix. See 0001_shared_fix_bundle_loading.patch
 %global jansi_version              1.11
+# thread plugin needs jgraphx. See gui.properties hunk in
+# 0001_shared_fix_bundle_loading.patch We pass in
+# jgraphx.osgi.version via the command line.
+%global jgraphx_bundle_version     3.1.2
 
 # Base path to the JDK which will be used in boot scripts
 %global jdk_base /etc/alternatives/java_sdk_openjdk
@@ -88,7 +92,7 @@ Name:       %{?scl_prefix}thermostat
 Version:    %{major}.%{minor}.%{patchlevel}
 # If building from snapshot out of hg, uncomment and adjust below value as appropriate
 #Release:    0.1.20131122hg%{hgrev}%{?dist}
-Release:    1%{?dist}
+Release:    2%{?dist}
 Summary:    A monitoring and serviceability tool for OpenJDK
 License:    GPLv2+ with exceptions and OFL
 URL:        http://icedtea.classpath.org/thermostat/
@@ -164,6 +168,8 @@ BuildRequires: mvn(org.eclipse.jetty:jetty-server)
 BuildRequires: mvn(org.eclipse.jetty:jetty-jaas)
 BuildRequires: mvn(org.eclipse.jetty:jetty-webapp)
 BuildRequires: mvn(org.eclipse.jetty.toolchain:jetty-schemas)
+# The thread plugin needs this for visualizing thread deadlocks
+BuildRequires: mvn(com.mxgraph:jgraphx)
 
 ###################################################
 # The following BRs are specified via osgi's
@@ -185,6 +191,7 @@ BuildRequires: osgi(org.apache.httpcomponents.httpcore) = %{hc_core_bundle_versi
 # httpmime comes from httpcomponents-client just like httpclient itself
 BuildRequires: osgi(org.apache.httpcomponents.httpclient) = %{hc_client_bundle_version}
 BuildRequires: osgi(org.apache.httpcomponents.httpmime) = %{hc_client_bundle_version}
+BuildRequires: osgi(com.mxgraph) = %{jgraphx_bundle_version}
 
 Requires: javapackages-tools
 Requires: java-devel >= 1:1.8.0
@@ -275,6 +282,11 @@ security.
 %pom_add_dep "org.apache.lucene:lucene-analyzers:5.2.0" vm-heap-analysis/distribution
 %pom_add_dep "org.apache.lucene:lucene-core:5.2.0" vm-heap-analysis/common
 %pom_add_dep "org.apache.lucene:lucene-core:5.2.0" vm-heap-analysis/distribution
+# Fix up artifact names for jgraphx
+%pom_remove_dep "org.tinyjee.jgraphx:jgraphx"
+%pom_add_dep "com.mxgraph:jgraphx:3.1.2.0"
+%pom_remove_dep "org.tinyjee.jgraphx:jgraphx" thread/client-swing
+%pom_add_dep "com.mxgraph:jgraphx:3.1.2.0" thread/client-swing
 #  httpclient
 %pom_remove_dep org.apache.httpcomponents:httpclient-osgi web/client
 %pom_add_dep org.apache.httpcomponents:httpclient:4.4.0 web/client
@@ -359,6 +371,8 @@ security.
 %mvn_package "com.redhat.thermostat:thermostat-web-endpoint-plugin" webapp
 %mvn_package "com.redhat.thermostat:thermostat-web-endpoint:pom:" webapp
 %mvn_package "com.redhat.thermostat:thermostat-web-endpoint-distribution:pom:" webapp
+# Do not embed jgraphx dependency in thread client.
+%pom_xpath_remove "pom:project/pom:build/pom:plugins/pom:plugin[pom:artifactId='maven-bundle-plugin']/pom:configuration/pom:instructions/pom:Embed-Dependency" thread/client-swing
 
 %build
 export CFLAGS="$RPM_OPT_FLAGS" LDFLAGS="$RPM_LD_FLAGS"
@@ -439,7 +453,8 @@ popd
                  -Dlucene-core.bundle.symbolic-name=org.apache.lucene.core \
                  -Dlucene-analysis.bundle.symbolic-name=org.apache.lucene.analysis \
                  -Dosgi.compendium.bundle.symbolic-name=org.osgi.compendium \
-                 -Dosgi.compendium.osgi-version=4.1.0
+                 -Dosgi.compendium.osgi-version=4.1.0 \
+                 -Djgraphx.osgi.version=%{jgraphx_bundle_version}
 
 # Make path to java so that it keeps working after updates.
 # We require java >= 1.7.0
@@ -686,6 +701,7 @@ fi
 %config(noreplace) %{_sysconfdir}/%{pkg_name}/agent.properties
 %config(noreplace) %{_sysconfdir}/%{pkg_name}/db.properties
 %config(noreplace) %{_sysconfdir}/%{pkg_name}/logging.properties
+%config %{_sysconfdir}/%{pkg_name}/bash-complete-logging.properties
 %config(noreplace) %{_sysconfdir}/%{pkg_name}/plugins.d
 %config(noreplace) %{_sysconfdir}/%{pkg_name}/ssl.properties
 %config %{_sysconfdir}/%{pkg_name}/commands
@@ -754,5 +770,9 @@ fi
 %{_datadir}/%{pkg_name}/plugins/embedded-web-endpoint
 
 %changelog
+* Wed Jul 01 2015 Severin Gehwolf <sgehwolf@redhat.com> - __MAJOR__.__MINOR__.__PATCHLEVEL__-2
+- Add jgraphx dependency.
+- List bash-complete-logging.properties in files section.
+
 * Wed Jun 24 2015 Severin Gehwolf <sgehwolf@redhat.com> - __MAJOR__.__MINOR__.__PATCHLEVEL__-1
 - Update to upstream __MAJOR__.__MINOR__.__PATCHLEVEL__ release.

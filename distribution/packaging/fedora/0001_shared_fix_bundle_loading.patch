@@ -73,7 +73,7 @@ diff --git a/distribution/config/commands/connect.properties b/distribution/conf
 diff --git a/distribution/config/commands/gui.properties b/distribution/config/commands/gui.properties
 --- a/distribution/config/commands/gui.properties
 +++ b/distribution/config/commands/gui.properties
-@@ -19,8 +19,10 @@
+@@ -19,8 +19,11 @@
            com.redhat.thermostat.process=${project.version}, \
            org.apache.httpcomponents.httpcore=${httpcomponents.core.version}, \
            org.apache.httpcomponents.httpclient=${httpcomponents.client.version}, \
@@ -81,8 +81,9 @@ diff --git a/distribution/config/commands/gui.properties b/distribution/config/c
 -          org.jboss.netty=${netty.version}
 +          org.apache.httpcomponents.httpmime=${httpcomponents.mime.version}, \
 +          org.jboss.netty=${netty.version}, \
-+          org.jfree.jcommon=${jcommon.osgi.version} , \
-+          org.jfree.jfreechart=${jfreechart.osgi.version}
++          org.jfree.jcommon=${jcommon.osgi.version}, \
++          org.jfree.jfreechart=${jfreechart.osgi.version}, \
++          com.mxgraph=${jgraphx.osgi.version}
  
  summary = launch the GUI client
  
