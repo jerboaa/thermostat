@@ -49,6 +49,8 @@ import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.swing.components.experimental.SingleValueChartPanel;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.data.RangeType;
 import org.jfree.data.time.FixedMillisecond;
 import org.jfree.data.time.RegularTimePeriod;
 import org.jfree.data.time.TimeSeries;
@@ -110,7 +112,9 @@ public class VmCpuPanel extends VmCpuView implements SwingComponent {
                 data,
                 false, false, false);
 
-        chart.getXYPlot().getRangeAxis().setLowerBound(0.0);
+        NumberAxis rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();
+        rangeAxis.setLowerBound(0.0);
+        rangeAxis.setRangeType(RangeType.POSITIVE);
 
         chartPanel = new SingleValueChartPanel(chart, duration);
 
