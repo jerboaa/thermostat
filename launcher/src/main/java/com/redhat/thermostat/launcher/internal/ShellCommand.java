@@ -193,7 +193,7 @@ public class ShellCommand extends AbstractCommand {
     }
 
     private void launchCommand(String line) throws CommandException {
-        String[] parsed = line.split(" +");
+        String[] parsed = new ShellArgsParser(line).parse();
         ServiceReference launcherRef = bundleContext.getServiceReference(Launcher.class.getName());
         if (launcherRef != null) {
             Launcher launcher = (Launcher) bundleContext.getService(launcherRef);
