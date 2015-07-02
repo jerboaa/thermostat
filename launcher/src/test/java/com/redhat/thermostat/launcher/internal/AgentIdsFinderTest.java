@@ -36,36 +36,53 @@
 
 package com.redhat.thermostat.launcher.internal;
 
+import static junit.framework.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
+import com.redhat.thermostat.testutils.StubBundleContext;
+import org.junit.Test;
 
-public class AgentIdsFinder implements IdFinder {
+public class AgentIdsFinderTest {
 
-    private BundleContext context;
+    @Test
+    public void testFindIds() {
+        StubBundleContext context = new StubBundleContext();
+        AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
+        context.registerService(AgentInfoDAO.class, agentInfoDAO, null);
+        AgentIdsFinder agentIdsFinder = new AgentIdsFinder(context);
 
-    public AgentIdsFinder(BundleContext context) {
-        this.context = context;
-    }
+        String id1 = "012345-56789";
+        String id2 = "111111-22222";
+        String id3 = "98765-543210";
+        String id4 = "abcdef-01234564-848156";
+        AgentInformation agentInfo1 = mock(AgentInformation.class);
+        agentInfo1.setAgentId(id1);
+        AgentInformation agentInfo2 = mock(AgentInformation.class);
+        agentInfo2.setAgentId(id2);
+        AgentInformation agentInfo3 = mock(AgentInformation.class);
+        agentInfo3.setAgentId(id3);
+        AgentInformation agentInfo4 = mock(AgentInformation.class);
+        agentInfo4.setAgentId(id4);
 
-    @Override
-    public List<String> findIds() {
-        List<String> agentIds = new ArrayList<>();
-        ServiceReference agentInfoDAORef = context.getServiceReference(AgentInfoDAO.class.getName());
-        AgentInfoDAO agentInfoDAO = (AgentInfoDAO) context.getService(agentInfoDAORef);
+        Collection<AgentInformation> collection = new ArrayList<>();
+        collection.add(agentInfo1);
+        collection.add(agentInfo2);
+        collection.add(agentInfo3);
+        collection.add(agentInfo4);
+        when(agentInfoDAO.getAllAgentInformation()).thenReturn((List<AgentInformation>) collection);
 
-        Collection<AgentInformation> agentInfos = agentInfoDAO.getAllAgentInformation();
-        context.ungetService(agentInfoDAORef);
-
-        for (AgentInformation agentInfo : agentInfos) {
-            agentIds.add(agentInfo.getAgentId());
-        }
-
-        return agentIds;
+        List<String> result = agentIdsFinder.findIds();
+        assertEquals(4, result.size());
+        assertEquals(id1, result.get(0));
+        assertEquals(id2, result.get(1));
+        assertEquals(id3, result.get(2));
+        assertEquals(id4, result.get(3));
     }
 }
