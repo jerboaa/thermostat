@@ -60,7 +60,6 @@ class ShellArgsParser {
     private final String input;
     private int pos = NOT_YET_PARSED;
     private char c;
-    private int quoteCount = 0;
     private final Issues issues = new Issues();
 
     ShellArgsParser(String input) {
@@ -103,6 +102,7 @@ class ShellArgsParser {
         StringBuilder sb = new StringBuilder();
         boolean closed = false;
         int startPos = pos;
+        char openingQuote = c;
         while (ready()) {
             readChar();
             if (isEscapedQuote()) {
@@ -110,7 +110,7 @@ class ShellArgsParser {
                 sb.append(c);
                 continue;
             }
-            if (isQuote()) {
+            if (c == openingQuote) {
                 if (ready()) {
                     readChar();
                     if (!ready()) {
@@ -172,11 +172,11 @@ class ShellArgsParser {
     }
 
     private boolean isEscapedQuote() {
-        return c == '\\' && lookahead() == '"';
+        return c == '\\' && (lookahead() == '"' || lookahead() == '\'');
     }
 
     private boolean isQuote() {
-        return c == '"';
+        return c == '"' || c == '\'';
     }
 
     private boolean isWhitespace() {

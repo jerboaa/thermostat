@@ -38,7 +38,6 @@ package com.redhat.thermostat.launcher.internal;
 
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -135,8 +134,20 @@ public class ShellArgsParserTest {
     }
 
     @Test
+    public void testSingleQuotedArg() {
+        assertResult("'foo'", "foo");
+        assertNoIssues();
+    }
+
+    @Test
     public void testQuotedString() {
         assertResult("\"foo bar\"", "foo bar");
+        assertNoIssues();
+    }
+
+    @Test
+    public void testSingleQuotedString() {
+        assertResult("'foo bar'", "foo bar");
         assertNoIssues();
     }
 
@@ -147,8 +158,20 @@ public class ShellArgsParserTest {
     }
 
     @Test
+    public void testSingleQuotedArgFirst() {
+        assertResult("'foo bar' baz", "foo bar", "baz");
+        assertNoIssues();
+    }
+
+    @Test
     public void testSingleStartingQuote() {
         assertResult("\"foo", "foo");
+        assertIssues(new ShellArgsParser.Issue(0, ShellArgsParser.Issue.Type.UNMATCHED_QUOTE));
+    }
+
+    @Test
+    public void testSingleStartingSingleQuote() {
+        assertResult("'foo", "foo");
         assertIssues(new ShellArgsParser.Issue(0, ShellArgsParser.Issue.Type.UNMATCHED_QUOTE));
     }
 
@@ -159,8 +182,20 @@ public class ShellArgsParserTest {
     }
 
     @Test
+    public void testSingleEndingSingleQuote() {
+        assertResult("foo'", "foo'");
+        assertIssues(new ShellArgsParser.Issue(3, ShellArgsParser.Issue.Type.UNEXPECTED_QUOTE));
+    }
+
+    @Test
     public void testSingleMiddleQuote() {
         assertResult("foo \" bar", "foo", " bar");
+        assertIssues(new ShellArgsParser.Issue(4, ShellArgsParser.Issue.Type.UNMATCHED_QUOTE));
+    }
+
+    @Test
+    public void testSingleMiddleSingleQuote() {
+        assertResult("foo ' bar", "foo", " bar");
         assertIssues(new ShellArgsParser.Issue(4, ShellArgsParser.Issue.Type.UNMATCHED_QUOTE));
     }
 
@@ -171,8 +206,20 @@ public class ShellArgsParserTest {
     }
 
     @Test
+    public void testOneSingleQuoteMark() {
+        assertResult("'", "");
+        assertIssues(new ShellArgsParser.Issue(0, ShellArgsParser.Issue.Type.UNMATCHED_QUOTE));
+    }
+
+    @Test
     public void testThreeQuoteMarks() {
         assertResult("\"\"\"", "");
+        assertIssues(new ShellArgsParser.Issue(2, ShellArgsParser.Issue.Type.UNMATCHED_QUOTE));
+    }
+
+    @Test
+    public void testThreeSingleQuoteMarks() {
+        assertResult("'''", "");
         assertIssues(new ShellArgsParser.Issue(2, ShellArgsParser.Issue.Type.UNMATCHED_QUOTE));
     }
 
@@ -183,9 +230,21 @@ public class ShellArgsParserTest {
     }
 
     @Test
+    public void testFourSingleQuoteMarks() {
+        assertResult("''''", "", "");
+        assertIssues(new ShellArgsParser.Issue(2, ShellArgsParser.Issue.Type.EXPECTED_WHITESPACE));
+    }
+
+    @Test
     public void testAdjacentQuotes() {
         assertResult("\"f\"\"b\"", "f", "b");
-        assertIssues(new ShellArgsParser.Issue(3 , ShellArgsParser.Issue.Type.EXPECTED_WHITESPACE));
+        assertIssues(new ShellArgsParser.Issue(3, ShellArgsParser.Issue.Type.EXPECTED_WHITESPACE));
+    }
+
+    @Test
+    public void testAdjacentSingleQuotes() {
+        assertResult("'f''b'", "f", "b");
+        assertIssues(new ShellArgsParser.Issue(3, ShellArgsParser.Issue.Type.EXPECTED_WHITESPACE));
     }
 
     @Test
@@ -196,8 +255,21 @@ public class ShellArgsParserTest {
     }
 
     @Test
+    public void testSingleQuoteAdjacentToWord() {
+        assertResult("foo'bar'", "foo'bar'");
+        assertIssues(new ShellArgsParser.Issue(3, ShellArgsParser.Issue.Type.UNEXPECTED_QUOTE),
+                new ShellArgsParser.Issue(7, ShellArgsParser.Issue.Type.UNEXPECTED_QUOTE));
+    }
+
+    @Test
     public void testSingleEscapedQuote() {
         assertResult("foo\\\"", "foo\"");
+        assertNoIssues();
+    }
+
+    @Test
+    public void testSingleEscapedSingleQuote() {
+        assertResult("foo\\'", "foo'");
         assertNoIssues();
     }
 
@@ -214,8 +286,44 @@ public class ShellArgsParserTest {
     }
 
     @Test
+    public void testSingleQuoteContainingEscapedSingleQuoteLiteral() {
+        assertResult("'foo \\' bar'", "foo ' bar");
+        assertNoIssues();
+    }
+
+    @Test
+    public void testQuoteContainingEscapedSingleQuoteLiteral2() {
+        assertResult("\"foo \\\"\"", "foo \"");
+        assertNoIssues();
+    }
+
+    @Test
+    public void testQuoteContainingEscapedSingleSingleQuoteLiteral2() {
+        assertResult("'foo \\''", "foo '");
+        assertNoIssues();
+    }
+
+    @Test
+    public void testEscapedQuoteInsideSingleQuotes() {
+        assertResult("'foo \\\" bar'", "foo \" bar");
+        assertNoIssues();
+    }
+
+    @Test
+    public void testEscapedSingleQuoteInsideQuotes() {
+        assertResult("\"foo \\' bar\"", "foo ' bar");
+        assertNoIssues();
+    }
+
+    @Test
     public void testQuotedEmptyString() {
         assertResult("\"\"", "");
+        assertNoIssues();
+    }
+
+    @Test
+    public void testSingleQuotedEmptyString() {
+        assertResult("''", "");
         assertNoIssues();
     }
 
@@ -223,6 +331,42 @@ public class ShellArgsParserTest {
     public void testQuotedSpacesString() {
         assertResult("\" \"", " ");
         assertNoIssues();
+    }
+
+    @Test
+    public void testSingleQuotedSpacesString() {
+        assertResult("' '", " ");
+        assertNoIssues();
+    }
+
+    @Test
+    public void testSingleAndDoubleQuotes() {
+        assertResult("\"foo\" 'bar'", "foo", "bar");
+        assertNoIssues();
+    }
+
+    @Test
+    public void testSingleQuotesWithinDoubleQuotes() {
+        assertResult("\"some 'quoted' args\"", "some 'quoted' args");
+        assertNoIssues();
+    }
+
+    @Test
+    public void testDoubleQuotesWithinSingleQuotes() {
+        assertResult("'some \"quoted\" args'", "some \"quoted\" args");
+        assertNoIssues();
+    }
+
+    @Test
+    public void testSingleAndDoubleQuotesAdjacent() {
+        assertResult("\"foo\"'bar'", "foo", "bar");
+        assertIssues(new ShellArgsParser.Issue(5, ShellArgsParser.Issue.Type.EXPECTED_WHITESPACE));
+    }
+
+    @Test
+    public void testMismatchedQuotes() {
+        assertResult("\"foo'", "foo'");
+        assertIssues(new ShellArgsParser.Issue(0, ShellArgsParser.Issue.Type.UNMATCHED_QUOTE));
     }
 
     @Test
