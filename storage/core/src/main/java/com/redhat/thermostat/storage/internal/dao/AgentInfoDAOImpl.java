@@ -233,24 +233,20 @@ public class AgentInfoDAOImpl extends BaseCountable implements AgentInfoDAO {
 
     @Override
     public Set<AgentId> getAgentIds() {
-        Set<AgentId> agentIds = new HashSet<>();
-        List<AgentInformation> agentInfos = getAllAgentInformation();
-        for (AgentInformation agentInfo : agentInfos) {
-            agentIds.add(toAgentId(agentInfo));
-        }
-
-        return agentIds;
+        return mapToIds(getAllAgentInformation());
     }
 
     @Override
     public Set<AgentId> getAliveAgentIds() {
-        Set<AgentId> agentIds = new HashSet<>();
-        List<AgentInformation> agentInfos = getAliveAgents();
-        for (AgentInformation agentInfo : agentInfos) {
-            agentIds.add(toAgentId(agentInfo));
-        }
+        return mapToIds(getAliveAgents());
+    }
 
-        return agentIds;
+    private Set<AgentId> mapToIds(Iterable<AgentInformation> agentInformations) {
+        Set<AgentId> result = new HashSet<>();
+        for (AgentInformation agentInformation : agentInformations) {
+            result.add(toAgentId(agentInformation));
+        }
+        return result;
     }
 
     private AgentId toAgentId(AgentInformation agentInfo) {
