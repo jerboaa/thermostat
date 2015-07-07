@@ -49,6 +49,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -190,8 +191,8 @@ public class VmInfoDAOTest {
 
         when(storage.prepareStatement(anyDescriptor())).thenThrow(new DescriptorParsingException("testException"));
 
-        Collection<VmId> vmIds = vmInfoDao.getVmIds(agentId);
-        assertEquals(Collections.emptyList(), vmIds);
+        Set<VmId> vmIds = vmInfoDao.getVmIds(agentId);
+        assertEquals(Collections.emptySet(), vmIds);
     }
 
     @Test
@@ -277,7 +278,7 @@ public class VmInfoDAOTest {
         VmInfoDAO dao = new VmInfoDAOImpl(storage);
         AgentId agentId = new AgentId("123");
 
-        Collection<VmId> vmIds = dao.getVmIds(agentId);
+        Set<VmId> vmIds = dao.getVmIds(agentId);
 
         assertVmIdCollection(vmIds, new VmId("vmId"));
     }
@@ -319,7 +320,7 @@ public class VmInfoDAOTest {
         VmInfoDAO dao = new VmInfoDAOImpl(storage);
         AgentId agentId = new AgentId("456");
 
-        Collection<VmId> vmIds = dao.getVmIds(agentId);
+        Set<VmId> vmIds = dao.getVmIds(agentId);
 
         assertVmIdCollection(vmIds, new VmId("vmId1"), new VmId("vmId2"));
     }

@@ -126,7 +126,7 @@ public class ListHeapDumpsCommandTest {
         HeapDAO heapDao = mock(HeapDAO.class);
 
         VmInfoDAO vmInfoDAO = mock(VmInfoDAO.class);
-        when(vmInfoDAO.getVmIds(agentId)).thenReturn(Arrays.asList(vmId));
+        when(vmInfoDAO.getVmIds(agentId)).thenReturn(Collections.singleton(vmId));
 
         AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
         when(agentInfoDAO.getAgentIds()).thenReturn(Collections.singleton(agentId));
@@ -165,7 +165,7 @@ public class ListHeapDumpsCommandTest {
         HeapDAO heapDao = mock(HeapDAO.class);
 
         VmInfoDAO vmInfo = mock(VmInfoDAO.class);
-        when(vmInfo.getVmIds(agentId1)).thenReturn(Arrays.asList(vmId1)).thenReturn(Arrays.asList(vmId2));
+        when(vmInfo.getVmIds(agentId1)).thenReturn(Collections.singleton(vmId1)).thenReturn(Collections.singleton(vmId2));
 
         AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
         when(agentInfoDAO.getAgentIds()).thenReturn(new HashSet<>(Arrays.asList(agentId1, agentId2)));

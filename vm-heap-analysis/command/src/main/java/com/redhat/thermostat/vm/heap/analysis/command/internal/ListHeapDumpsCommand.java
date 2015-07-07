@@ -121,7 +121,7 @@ public class ListHeapDumpsCommand extends AbstractCommand {
 
         Set<AgentId> hosts = stringAgentId != null ? Collections.singleton(agentId) : agentDAO.getAgentIds();
         for (AgentId host : hosts) {
-            Collection<VmId> vms = stringVmId != null ? Arrays.asList(vmId) : vmDAO.getVmIds(host);
+            Set<VmId> vms = stringVmId != null ? Collections.singleton(vmId) : vmDAO.getVmIds(host);
             for (VmId vm : vms) {
                 printDumpsForVm(heapDAO, host, vm, renderer);
             }

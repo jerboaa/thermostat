@@ -39,7 +39,9 @@ package com.redhat.thermostat.storage.internal.dao;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -227,18 +229,10 @@ public class VmInfoDAOImpl extends BaseCountable implements VmInfoDAO {
     }
 
     @Override
-    public Collection<VmId> getVmIds(AgentId agentId) {
+    public Set<VmId> getVmIds(AgentId agentId) {
+        Set<VmId> vmIds = new HashSet<>();
         Collection<VmInfo> vmInfos = getAllVmInfosForHost(agentId);
-        if(vmInfos.equals(Collections.emptyList())) {
-            return Collections.emptyList();
-        }
-
-        return buildVmIdsFromQuery(vmInfos);
-    }
-
-    private Collection<VmId> buildVmIdsFromQuery(Collection<VmInfo> vmInfos) {
-        List<VmId> vmIds = new ArrayList<VmId>();
-        for(VmInfo vmInfo : vmInfos) {
+        for (VmInfo vmInfo : vmInfos) {
             vmIds.add(new VmId(vmInfo.getVmId()));
         }
 

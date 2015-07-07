@@ -37,6 +37,7 @@
 package com.redhat.thermostat.storage.dao;
 
 import java.util.Collection;
+import java.util.Set;
 
 import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.storage.core.AgentId;
@@ -94,9 +95,9 @@ public interface VmInfoDAO extends Countable {
     /**
      *
      * @param agentId The id of host to get the VM(s) for.
-     * @return A collection of the VmId(s).
+     * @return A set of the VmId(s).
      */
-    Collection<VmId> getVmIds(AgentId agentId);
+    Set<VmId> getVmIds(AgentId agentId);
 
     void putVmInfo(VmInfo info);
 
