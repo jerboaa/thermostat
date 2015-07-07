@@ -43,6 +43,8 @@ import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.TimeZone;
 
 import org.junit.AfterClass;
@@ -127,7 +129,7 @@ public class ListHeapDumpsCommandTest {
         when(vmInfoDAO.getVmIds(agentId)).thenReturn(Arrays.asList(vmId));
 
         AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
-        when(agentInfoDAO.getAgentIds()).thenReturn(Arrays.asList(agentId));
+        when(agentInfoDAO.getAgentIds()).thenReturn(Collections.singleton(agentId));
 
         when(heapDao.getAllHeapInfo(agentId, vmId)).thenReturn(Arrays.asList(heapInfo));
 
@@ -166,7 +168,7 @@ public class ListHeapDumpsCommandTest {
         when(vmInfo.getVmIds(agentId1)).thenReturn(Arrays.asList(vmId1)).thenReturn(Arrays.asList(vmId2));
 
         AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
-        when(agentInfoDAO.getAgentIds()).thenReturn(Arrays.asList(agentId1, agentId2));
+        when(agentInfoDAO.getAgentIds()).thenReturn(new HashSet<>(Arrays.asList(agentId1, agentId2)));
 
         when(heapDao.getAllHeapInfo(agentId1, vmId1)).thenReturn(Arrays.asList(heapInfo));
         when(heapDao.getAllHeapInfo(agentId2, vmId2)).thenReturn(Arrays.asList(heapInfo));
@@ -212,7 +214,7 @@ public class ListHeapDumpsCommandTest {
         when(vmInfoDAO.getVmInfo(vmId1)).thenReturn(vmInfo1);
 
         AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
-        when(agentInfoDAO.getAgentIds()).thenReturn(Arrays.asList(agentId1, agentId2));
+        when(agentInfoDAO.getAgentIds()).thenReturn(new HashSet<>(Arrays.asList(agentId1, agentId2)));
 
         when(heapDao.getAllHeapInfo(agentId1, vmId1)).thenReturn(Arrays.asList(heapInfo));
 

@@ -38,7 +38,9 @@ package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.Set;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
@@ -117,7 +119,7 @@ public class ListHeapDumpsCommand extends AbstractCommand {
         if (stringAgentId != null)
             agentId = new AgentId(stringAgentId);
 
-        Collection<AgentId> hosts = stringAgentId != null ? Arrays.asList(agentId) : agentDAO.getAgentIds();
+        Set<AgentId> hosts = stringAgentId != null ? Collections.singleton(agentId) : agentDAO.getAgentIds();
         for (AgentId host : hosts) {
             Collection<VmId> vms = stringVmId != null ? Arrays.asList(vmId) : vmDAO.getVmIds(host);
             for (VmId vm : vms) {

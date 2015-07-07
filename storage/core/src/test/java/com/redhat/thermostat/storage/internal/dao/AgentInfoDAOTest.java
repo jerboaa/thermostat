@@ -46,8 +46,8 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -343,7 +343,7 @@ public class AgentInfoDAOTest {
         PreparedStatement<AgentInformation> stmt = setup.getSecond();
 
         AgentInfoDAO agentInfoDAO = new AgentInfoDAOImpl(storage);
-        Collection<AgentId> agentIds = agentInfoDAO.getAgentIds();
+        Set<AgentId> agentIds = agentInfoDAO.getAgentIds();
 
         assertEquals(1, agentIds.size());
         assertTrue(agentIds.contains(new AgentId("1234")));
@@ -359,7 +359,7 @@ public class AgentInfoDAOTest {
         PreparedStatement<AgentInformation> stmt = setup.getSecond();
 
         AgentInfoDAO agentInfoDAO = new AgentInfoDAOImpl(storage);
-        Collection<AgentId> agentIds = agentInfoDAO.getAgentIds();
+        Set<AgentId> agentIds = agentInfoDAO.getAgentIds();
 
         assertEquals(3, agentIds.size());
         assertTrue(agentIds.contains(new AgentId("1234")));
@@ -394,7 +394,7 @@ public class AgentInfoDAOTest {
         PreparedStatement<AgentInformation> stmt = setup.getSecond();
 
         AgentInfoDAO agentInfoDAO = new AgentInfoDAOImpl(storage);
-        Collection<AgentId> agentIds = agentInfoDAO.getAliveAgentIds();
+        Set<AgentId> agentIds = agentInfoDAO.getAliveAgentIds();
 
         assertEquals(3, agentIds.size());
         assertTrue(agentIds.contains(new AgentId("1234")));
@@ -407,14 +407,13 @@ public class AgentInfoDAOTest {
 
     @Test
     public void getAliveAgentIdsDescriptorException() throws DescriptorParsingException {
-        Collection<AgentId> agentIds = Collections.emptyList();
         Storage storage = mock(Storage.class);
         AgentInfoDAO agentInfoDAO = new AgentInfoDAOImpl(storage);
 
         when(storage.prepareStatement(anyDescriptor())).thenThrow(new DescriptorParsingException
                 ("testException"));
 
-        agentIds = agentInfoDAO.getAgentIds();
+        Set<AgentId> agentIds = agentInfoDAO.getAgentIds();
 
         assertEquals(0, agentIds.size());
     }
@@ -422,8 +421,6 @@ public class AgentInfoDAOTest {
     @Test
     public void getAliveAgentIdsStatementException() throws DescriptorParsingException,
             StatementExecutionException {
-
-        Collection<AgentId> agentIds = Collections.emptyList();
         Storage storage = mock(Storage.class);
         AgentInfoDAO agentInfoDAO = new AgentInfoDAOImpl(storage);
 
@@ -435,7 +432,7 @@ public class AgentInfoDAOTest {
                 ("testException"));
         when(stmt.executeQuery()).thenThrow(testException);
 
-        agentIds = agentInfoDAO.getAliveAgentIds();
+        Set<AgentId> agentIds = agentInfoDAO.getAliveAgentIds();
 
         assertEquals(0, agentIds.size());
     }

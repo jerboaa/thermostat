@@ -37,9 +37,10 @@
 package com.redhat.thermostat.storage.internal.dao;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -231,8 +232,8 @@ public class AgentInfoDAOImpl extends BaseCountable implements AgentInfoDAO {
     }
 
     @Override
-    public Collection<AgentId> getAgentIds() {
-        List<AgentId> agentIds = new ArrayList<>();
+    public Set<AgentId> getAgentIds() {
+        Set<AgentId> agentIds = new HashSet<>();
         List<AgentInformation> agentInfos = getAllAgentInformation();
         for (AgentInformation agentInfo : agentInfos) {
             agentIds.add(toAgentId(agentInfo));
@@ -242,8 +243,8 @@ public class AgentInfoDAOImpl extends BaseCountable implements AgentInfoDAO {
     }
 
     @Override
-    public Collection<AgentId> getAliveAgentIds() {
-        List<AgentId> agentIds = new ArrayList<>();
+    public Set<AgentId> getAliveAgentIds() {
+        Set<AgentId> agentIds = new HashSet<>();
         List<AgentInformation> agentInfos = getAliveAgents();
         for (AgentInformation agentInfo : agentInfos) {
             agentIds.add(toAgentId(agentInfo));
