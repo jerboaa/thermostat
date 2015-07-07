@@ -71,6 +71,9 @@ public enum LocaleResources {
     LAUNCHER_FIRST_LAUNCH_MSG,
 
     INVALID_DB_URL,
+    PARSE_ISSUES_CALLED_BEFORE_PARSE,
+    PARSER_ERROR,
+    PARSER_WARNING,
     ;
 
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.launcher.internal.strings";

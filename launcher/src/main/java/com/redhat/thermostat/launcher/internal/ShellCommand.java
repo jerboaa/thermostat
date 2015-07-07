@@ -193,7 +193,21 @@ public class ShellCommand extends AbstractCommand {
     }
 
     private void launchCommand(String line) throws CommandException {
-        String[] parsed = new ShellArgsParser(line).parse();
+        ShellArgsParser parser = new ShellArgsParser(line);
+        String[] parsed = parser.parse();
+        ShellArgsParser.Issues issues = parser.getParseIssues();
+        if (!issues.getAllIssues().isEmpty()) {
+            ShellArgsParser.IssuesFormatter issuesFormatter = new ShellArgsParser.IssuesFormatter();
+            if (!issues.getWarnings().isEmpty()) {
+                String formattedIssues = issuesFormatter.format(issues.getWarnings());
+                logger.warning(t.localize(LocaleResources.PARSER_WARNING, formattedIssues).getContents());
+            }
+            if (!issues.getErrors().isEmpty()) {
+                String formattedIssues = issuesFormatter.format(issues.getErrors());
+                logger.warning(t.localize(LocaleResources.PARSER_ERROR, formattedIssues).getContents());
+                return;
+            }
+        }
         ServiceReference launcherRef = bundleContext.getServiceReference(Launcher.class.getName());
         if (launcherRef != null) {
             Launcher launcher = (Launcher) bundleContext.getService(launcherRef);

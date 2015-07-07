@@ -36,8 +36,13 @@
 
 package com.redhat.thermostat.launcher.internal;
 
+import com.redhat.thermostat.shared.locale.Translate;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Parser for thermostat shell command line input. Splits lines on whitespaces to chunk commands and arguments,
@@ -49,23 +54,27 @@ import java.util.List;
  */
 class ShellArgsParser {
 
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+
+    private static final int NOT_YET_PARSED = -1;
     private final String input;
-    private int pos = 0;
+    private int pos = NOT_YET_PARSED;
     private char c;
+    private int quoteCount = 0;
+    private final Issues issues = new Issues();
 
     ShellArgsParser(String input) {
         this.input = input;
-        if (input.length() > 0) {
-            c = input.charAt(pos);
-        }
     }
 
     String[] parse() {
         if (input.isEmpty()) {
+            ++pos;
             return new String[]{};
         }
+        readChar();
         List<String> result = new ArrayList<>();
-        while (ready()) {
+        do {
             if (isWhitespace()) {
                 whitespace();
             } else if (isQuote()) {
@@ -73,8 +82,15 @@ class ShellArgsParser {
             } else {
                 result.add(word());
             }
-        }
+        } while (!finished());
         return result.toArray(new String[result.size()]);
+    }
+
+    Issues getParseIssues() {
+        if (pos == NOT_YET_PARSED) {
+            throw new IllegalStateException(translator.localize(LocaleResources.PARSE_ISSUES_CALLED_BEFORE_PARSE).getContents());
+        }
+        return issues;
     }
 
     private void whitespace() {
@@ -85,6 +101,8 @@ class ShellArgsParser {
 
     private String quote() {
         StringBuilder sb = new StringBuilder();
+        boolean closed = false;
+        int startPos = pos;
         while (ready()) {
             readChar();
             if (isEscapedQuote()) {
@@ -93,9 +111,25 @@ class ShellArgsParser {
                 continue;
             }
             if (isQuote()) {
+                if (ready()) {
+                    readChar();
+                    if (!ready()) {
+                        if (isQuote()) {
+                            issues.addIssue(new Issue(pos, Issue.Type.UNMATCHED_QUOTE));
+                        }
+                    } else {
+                        if (!isWhitespace()) {
+                            issues.addIssue(new Issue(pos, Issue.Type.EXPECTED_WHITESPACE));
+                        }
+                    }
+                }
+                closed = true;
                 break;
             }
             sb.append(c);
+        }
+        if (!closed) {
+            issues.addIssue(new Issue(startPos, Issue.Type.UNMATCHED_QUOTE));
         }
         return sb.toString();
     }
@@ -113,12 +147,19 @@ class ShellArgsParser {
             if (!isWhitespace()) {
                 sb.append(c);
             }
+            if (isQuote()) {
+                issues.addIssue(new Issue(pos, Issue.Type.UNEXPECTED_QUOTE));
+            }
         }
         return sb.toString();
     }
 
     private boolean ready() {
         return pos < input.length() - 1;
+    }
+
+    private boolean finished() {
+        return pos == (input.length() - 1);
     }
 
     private char readChar() {
@@ -140,6 +181,114 @@ class ShellArgsParser {
 
     private boolean isWhitespace() {
         return Character.isWhitespace(c);
+    }
+
+    static class Issues {
+        private final List<Issue> issues = new ArrayList<>();
+
+        void addIssue(Issue issue) {
+            this.issues.add(requireNonNull(issue));
+        }
+
+        List<Issue> getAllIssues() {
+            return Collections.unmodifiableList(issues);
+        }
+
+        List<Issue> getWarnings() {
+            return Collections.unmodifiableList(filterIssuesBySeverity(getAllIssues(), Issue.Type.Severity.WARN));
+        }
+
+        List<Issue> getErrors() {
+            return Collections.unmodifiableList(filterIssuesBySeverity(getAllIssues(), Issue.Type.Severity.ERROR));
+        }
+
+        private static List<Issue> filterIssuesBySeverity(Iterable<Issue> issues, Issue.Type.Severity severity) {
+            List<Issue> results = new ArrayList<>();
+            for (Issue issue : issues) {
+                if (issue.getType().getSeverity().equals(severity)) {
+                    results.add(issue);
+                }
+            }
+            return results;
+        }
+    }
+
+    static class Issue {
+        private final int columnNumber;
+        private final Type type;
+
+        Issue(int columnNumber, Type type) {
+            this.columnNumber = columnNumber;
+            this.type = requireNonNull(type);
+        }
+
+        int getColumnNumber() {
+            return columnNumber;
+        }
+
+        Type getType() {
+            return type;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            Issue issue = (Issue) o;
+
+            if (columnNumber != issue.columnNumber) return false;
+            return type == issue.type;
+
+        }
+
+        @Override
+        public int hashCode() {
+            int result = columnNumber;
+            result = 31 * result + type.hashCode();
+            return result;
+        }
+
+        @Override
+        public String toString() {
+            return type.getSeverity() + " : " + type.toString() + " col " + Integer.toString(columnNumber);
+        }
+
+        enum Type {
+            UNMATCHED_QUOTE(Severity.ERROR),
+            UNEXPECTED_QUOTE(Severity.ERROR),
+            EXPECTED_WHITESPACE(Severity.WARN),
+            ;
+
+            private final Severity severity;
+
+            Type(Severity severity) {
+                this.severity = requireNonNull(severity);
+            }
+
+            public Severity getSeverity() {
+                return severity;
+            }
+
+            enum Severity {
+                WARN,
+                ERROR,
+            }
+        }
+    }
+
+    static class IssuesFormatter {
+        String format(Issues issues) {
+            return format(issues.getAllIssues());
+        }
+
+        String format(Iterable<Issue> issues) {
+            StringBuilder sb = new StringBuilder();
+            for (Issue issue : issues) {
+                sb.append(issue.toString()).append(System.lineSeparator());
+            }
+            return sb.toString();
+        }
     }
 
 }
