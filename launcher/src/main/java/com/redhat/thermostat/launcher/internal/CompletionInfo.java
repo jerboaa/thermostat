@@ -36,9 +36,30 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import java.util.List;
+public class CompletionInfo {
 
-public interface IdFinder {
+    private String actualCompletion;
+    private String userVisibleText;
 
-    public List<CompletionInfo> findIds();
+    public CompletionInfo (String actualCompletion, String userVisibleText) {
+        this.actualCompletion = actualCompletion;
+        this.userVisibleText = userVisibleText;
+    }
+
+    public CompletionInfo (String actualCompletion) {
+        this.actualCompletion = actualCompletion;
+        this.userVisibleText = "";
+    }
+
+    public String getActualCompletion() {
+        return actualCompletion;
+    }
+
+    public String getUserVisibleText() {
+        return userVisibleText;
+    }
+
+    public String getCompletionWithUserVisibleText() {
+        return actualCompletion + userVisibleText;
+    }
 }

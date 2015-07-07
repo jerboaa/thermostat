@@ -54,14 +54,50 @@ public class IdCompleter implements Completer {
 
     @Override
     public int complete(final String buffer, final int cursor, final List<CharSequence> candidates) {
-        List<String> ids = new ArrayList<>();
+        List<CompletionInfo> ids;
+        List<String> completions = new ArrayList<>();
 
         if (storageState.isStorageConnected()) {
             ids = finder.findIds();
+            ids = filterIdsWithBuffer(ids, buffer);
+
+            //If there is only one it will be completed on the prompt line.
+            //Then any additional information is unwanted there.
+            if (ids.size() == 1) {
+                completions = getCompletions(ids);
+            } else {
+                completions = getCompletionsWithUserVisibleText(ids);
+            }
         }
 
-        StringsCompleter idsCompleter = new StringsCompleter(ids);
+        StringsCompleter idsCompleter = new StringsCompleter(completions);
         return idsCompleter.complete(buffer, cursor, candidates);
+    }
+
+    private List<CompletionInfo> filterIdsWithBuffer(final List<CompletionInfo> ids, String buffer) {
+        List<CompletionInfo> result = new ArrayList<>();
+        for (CompletionInfo id : ids) {
+            if (buffer == null || id.getActualCompletion().startsWith(buffer)) {
+                result.add(id);
+            }
+        }
+        return result;
+    }
+
+    private List<String> getCompletions(final List<CompletionInfo> vmIds) {
+        List<String> result = new ArrayList<>();
+        for (CompletionInfo vmId : vmIds) {
+            result.add(vmId.getActualCompletion());
+        }
+        return result;
+    }
+
+    private List<String> getCompletionsWithUserVisibleText(final List<CompletionInfo> vmIds) {
+        List<String> result = new ArrayList<>();
+        for (CompletionInfo vmId : vmIds) {
+            result.add(vmId.getCompletionWithUserVisibleText());
+        }
+        return result;
     }
 
 }

@@ -54,8 +54,8 @@ public class AgentIdsFinder implements IdFinder {
     }
 
     @Override
-    public List<String> findIds() {
-        List<String> agentIds = new ArrayList<>();
+    public List<CompletionInfo> findIds() {
+        List<CompletionInfo> agentIds = new ArrayList<>();
         ServiceReference agentInfoDAORef = context.getServiceReference(AgentInfoDAO.class.getName());
         AgentInfoDAO agentInfoDAO = (AgentInfoDAO) context.getService(agentInfoDAORef);
 
@@ -63,7 +63,7 @@ public class AgentIdsFinder implements IdFinder {
         context.ungetService(agentInfoDAORef);
 
         for (AgentInformation agentInfo : agentInfos) {
-            agentIds.add(agentInfo.getAgentId());
+            agentIds.add(new CompletionInfo(agentInfo.getAgentId()));
         }
 
         return agentIds;

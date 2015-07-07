@@ -78,11 +78,11 @@ public class AgentIdsFinderTest {
         collection.add(agentInfo4);
         when(agentInfoDAO.getAllAgentInformation()).thenReturn((List<AgentInformation>) collection);
 
-        List<String> result = agentIdsFinder.findIds();
+        List<CompletionInfo> result = agentIdsFinder.findIds();
         assertEquals(4, result.size());
-        assertEquals(id1, result.get(0));
-        assertEquals(id2, result.get(1));
-        assertEquals(id3, result.get(2));
-        assertEquals(id4, result.get(3));
+        assertEquals(id1, result.get(0).getActualCompletion());
+        assertEquals(id2, result.get(1).getActualCompletion());
+        assertEquals(id3, result.get(2).getActualCompletion());
+        assertEquals(id4, result.get(3).getActualCompletion());
     }
 }

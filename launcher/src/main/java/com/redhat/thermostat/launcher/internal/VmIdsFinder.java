@@ -42,8 +42,10 @@ import java.util.List;
 
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.VmInfo;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -57,8 +59,8 @@ public class VmIdsFinder implements IdFinder {
     }
 
     @Override
-    public List<String> findIds() {
-        List<String> vmIds = new ArrayList<>();
+    public List<CompletionInfo> findIds() {
+        List<CompletionInfo> vmIds = new ArrayList<>();
         ServiceReference hostsDAORef = context.getServiceReference(HostInfoDAO.class.getName());
         HostInfoDAO hostsDAO = (HostInfoDAO) context.getService(hostsDAORef);
 
@@ -68,15 +70,27 @@ public class VmIdsFinder implements IdFinder {
         ServiceReference vmsDAORef = context.getServiceReference(VmInfoDAO.class.getName());
         VmInfoDAO vmsDAO = (VmInfoDAO) context.getService(vmsDAORef);
 
+        ServiceReference agentInfoDAORef = context.getServiceReference(AgentInfoDAO.class.getName());
+        AgentInfoDAO agentInfoDAO = (AgentInfoDAO) context.getService(agentInfoDAORef);
+
+        context.ungetService(agentInfoDAORef);
+
         for (HostRef host : hosts) {
+            AgentInformation agentInfo = agentInfoDAO.getAgentInformation(host);
+            if (agentInfo != null) {
                 Collection<VmRef> vms = vmsDAO.getVMs(host);
                 for (VmRef vm : vms) {
                     VmInfo info = vmsDAO.getVmInfo(vm);
-                    vmIds.add(info.getVmId());
+                    vmIds.add(new CompletionInfo(info.getVmId(), getUserVisibleText(info, agentInfo)));
                 }
+            }
         }
 
         context.ungetService(vmsDAORef);
         return vmIds;
+    }
+
+    private String getUserVisibleText(VmInfo info, AgentInformation agentInfo) {
+        return "[" + info.getMainClass() + "](" + info.isAlive(agentInfo).toString() + ")";
     }
 }

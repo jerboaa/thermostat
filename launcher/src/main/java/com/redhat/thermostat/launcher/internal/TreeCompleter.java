@@ -184,7 +184,8 @@ public class TreeCompleter implements Completer {
                 //inline completion detected
                 break;
             }
-            final int branchIndex = getBranchIndex(arg, getPossibleMatches(resultNode));
+
+            final int branchIndex = getBranchIndex(resultNode, arg);
             if (branchIndex != NOT_FOUND) {
                 resultNode = findBranches(resultNode).get(branchIndex);
             }
@@ -229,29 +230,20 @@ public class TreeCompleter implements Completer {
         return completers;
     }
 
-    private List<CharSequence> findCompletions(final Completer branchCompleter) {
+    private List<CharSequence> findCompletions(final Completer branchCompleter, String argument) {
         final List<CharSequence> candidates = new LinkedList<>();
-        branchCompleter.complete(null, 0, candidates);
+        branchCompleter.complete(argument, argument.length() - 1, candidates);
         return candidates;
     }
 
-    private int getBranchIndex(final String argument, final List<List<CharSequence>> listOfPossibleMatches) {
-        for (final List<CharSequence> possibleMatches : listOfPossibleMatches) {
-            for (final CharSequence word : possibleMatches) {
-                if (word.toString().trim().equals(argument.trim())) {
-                    return listOfPossibleMatches.indexOf(possibleMatches);
-                }
+    private int getBranchIndex(final Node node, String argument) {
+        for (final Node branch : findBranches(node)) {
+            List<CharSequence> match = findCompletions(branch.getCompleter(), argument);
+            if (!match.isEmpty()) {
+                return findBranches(node).indexOf(branch);
             }
         }
         return NOT_FOUND;
-    }
-
-    private List<List<CharSequence>> getPossibleMatches(final Node node) {
-        final List<List<CharSequence>> possibleMatches = new LinkedList<>();
-        for (final Node branch : findBranches(node)) {
-            possibleMatches.add(findCompletions(branch.getCompleter()));
-        }
-        return possibleMatches;
     }
 
     private List<Node> findBranches(final Node node) {
