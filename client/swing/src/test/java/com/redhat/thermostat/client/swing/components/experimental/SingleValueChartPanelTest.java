@@ -43,6 +43,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.concurrent.TimeUnit;
 import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.annotations.internal.CacioTest;
 import com.redhat.thermostat.client.core.experimental.Duration;
@@ -160,6 +161,37 @@ public class SingleValueChartPanelTest {
         long time = TimeUnit.MILLISECONDS.convert(20, TimeUnit.MINUTES);
         singleValueChartPanel.setTimeRangeToShow(20, TimeUnit.MINUTES);
         assertEquals(time, (long) chart.getXYPlot().getDomainAxis().getRange().getLength());
+    }
+
+    @GUITest
+    @Test
+    public void testMultipleChartTimeRangeToShow() {
+        final JFreeChart chart2 = ChartFactory.createTimeSeriesChart(
+                null,
+                "Time Label",
+                "Value Label",
+                dataset,
+                false, false, false);
+        final JFreeChart chart3 = ChartFactory.createTimeSeriesChart(
+                null,
+                "Time Label",
+                "Value Label",
+                dataset,
+                false, false, false);
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                singleValueChartPanel.addChart(chart2);
+                singleValueChartPanel.addChart(chart3);
+            }
+        });
+
+        long time = TimeUnit.MILLISECONDS.convert(20, TimeUnit.MINUTES);
+        singleValueChartPanel.setTimeRangeToShow(20, TimeUnit.MINUTES);
+
+        assertEquals(time, (long) chart.getXYPlot().getDomainAxis().getRange().getLength());
+        assertEquals(time, (long) chart2.getXYPlot().getDomainAxis().getRange().getLength());
+        assertEquals(time, (long) chart3.getXYPlot().getDomainAxis().getRange().getLength());
     }
 
     @GUITest

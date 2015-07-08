@@ -40,8 +40,11 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
@@ -64,16 +67,46 @@ public class SingleValueChartPanel extends JPanel {
 
     private static final int MINIMUM_DRAW_SIZE = 100;
 
-    private ChartPanel chartPanel;
+    private JPanel chartsPanel;
+    private List<ChartPanel> charts;
 
     private RecentTimeControlPanel recentTimeControlPanel;
     private JTextComponent label;
 
-    public SingleValueChartPanel(JFreeChart chart, Duration duration) {
+    private Duration initialDuration;
+
+    public SingleValueChartPanel(JFreeChart chart, Duration initialDuration) {
+        this(initialDuration);
+
+        addChart(chart);
+    }
+
+    public SingleValueChartPanel(Duration initialDuration) {
+        this.initialDuration = initialDuration;
+        this.chartsPanel = new JPanel();
+        this.charts = new ArrayList<>();
+
+        chartsPanel.setLayout(new BoxLayout(chartsPanel, BoxLayout.Y_AXIS));
 
         this.setLayout(new BorderLayout());
 
-        // instead of just disabling display of tooltips, disable their generation too
+        recentTimeControlPanel = new RecentTimeControlPanel(initialDuration);
+        recentTimeControlPanel.addPropertyChangeListener(RecentTimeControlPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {
+            @Override
+            public void propertyChange(final PropertyChangeEvent evt) {
+                Duration d = (Duration) evt.getNewValue();
+                SingleValueChartPanel.this.firePropertyChange(RecentTimeControlPanel.PROPERTY_VISIBLE_TIME_RANGE, null, d);
+            }
+        });
+
+        add(chartsPanel, BorderLayout.CENTER);
+        add(recentTimeControlPanel, BorderLayout.SOUTH);
+
+        revalidate();
+    }
+
+    public void addChart(JFreeChart chart) {
+        // jfreechart still generates tooltips when disabled, prevent generation as well
         if (chart.getPlot() instanceof XYPlot) {
             chart.getXYPlot().getRenderer().setBaseToolTipGenerator(null);
         }
@@ -81,13 +114,13 @@ public class SingleValueChartPanel extends JPanel {
         chart.getXYPlot().getRangeAxis().setAutoRange(true);
 
         chart.getXYPlot().getDomainAxis().setAutoRange(true);
-        chart.getXYPlot().getDomainAxis().setFixedAutoRange(duration.unit.toMillis(duration.value));
+        chart.getXYPlot().getDomainAxis().setFixedAutoRange(initialDuration.unit.toMillis(initialDuration.value));
 
         chart.getPlot().setBackgroundPaint(WHITE);
         chart.getPlot().setBackgroundImageAlpha(TRANSPARENT);
         chart.getPlot().setOutlinePaint(BLACK);
 
-        chartPanel = new ChartPanel(chart);
+        ChartPanel chartPanel = new ChartPanel(chart);
 
         chartPanel.setDisplayToolTips(false);
         chartPanel.setDoubleBuffered(true);
@@ -105,25 +138,20 @@ public class SingleValueChartPanel extends JPanel {
         chartPanel.setMinimumDrawWidth(MINIMUM_DRAW_SIZE);
         chartPanel.setMaximumDrawWidth(Integer.MAX_VALUE);
 
-        recentTimeControlPanel = new RecentTimeControlPanel(duration);
-        recentTimeControlPanel.addPropertyChangeListener(RecentTimeControlPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {
-            @Override
-            public void propertyChange(final PropertyChangeEvent evt) {
-                Duration d = (Duration) evt.getNewValue();
-                SingleValueChartPanel.this.firePropertyChange(RecentTimeControlPanel.PROPERTY_VISIBLE_TIME_RANGE, null, d);
-            }
-        });
-        add(chartPanel, BorderLayout.CENTER);
-        add(recentTimeControlPanel, BorderLayout.SOUTH);
+        chartsPanel.add(chartPanel);
+        chartsPanel.revalidate();
+        charts.add(chartPanel);
 
     }
 
     public void setTimeRangeToShow(int timeValue, TimeUnit timeUnit) {
-        XYPlot plot = chartPanel.getChart().getXYPlot();
+        for (ChartPanel cp : charts) {
+            XYPlot plot = cp.getChart().getXYPlot();
 
-        // Don't drop old data; just dont' show it.
-        plot.getDomainAxis().setAutoRange(true);
-        plot.getDomainAxis().setFixedAutoRange(timeUnit.toMillis(timeValue));
+            // Don't drop old data; just dont' show it.
+            plot.getDomainAxis().setAutoRange(true);
+            plot.getDomainAxis().setFixedAutoRange(timeUnit.toMillis(timeValue));
+        }
     }
 
     public void setDataInformationLabel(final String text) {
