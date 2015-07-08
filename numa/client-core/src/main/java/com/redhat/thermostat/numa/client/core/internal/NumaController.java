@@ -37,25 +37,24 @@
 package com.redhat.thermostat.numa.client.core.internal;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.client.core.experimental.TimeRangeController;
-import com.redhat.thermostat.client.core.views.BasicView.Action;
+import com.redhat.thermostat.client.core.experimental.Duration;
+import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
-import com.redhat.thermostat.common.Timer.SchedulingType;
-import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.numa.client.core.NumaView;
-import com.redhat.thermostat.numa.client.core.NumaView.GraphVisibilityChangeListener;
 import com.redhat.thermostat.numa.client.core.NumaViewProvider;
 import com.redhat.thermostat.numa.client.locale.LocaleResources;
 import com.redhat.thermostat.numa.common.NumaDAO;
+import com.redhat.thermostat.numa.common.NumaNodeStat;
 import com.redhat.thermostat.numa.common.NumaStat;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
@@ -69,36 +68,56 @@ public class NumaController implements InformationServiceController<HostRef> {
     private final NumaView view;
 
     private final NumaDAO numaDAO;
-    private final HostRef ref;
+    private final int numberOfNumaNodes;
 
-    private final Timer backgroundUpdateTimer;
-    private final GraphVisibilityChangeListener listener = new ShowHideGraph();
+    private final HostRef hostRef;
 
-    private TimeRangeController<NumaStat, HostRef> timeRangeController;
+    private long lastSeenTimestamp;
+    private NumaStat lastSeenStat;
 
-    private int numberOfNumaNodes;
-
-    public NumaController(ApplicationService appSvc, NumaDAO numaDAO, final HostRef ref, NumaViewProvider provider) {
-        this.ref = ref;
+    public NumaController(ApplicationService appSvc, NumaDAO numaDAO, HostRef hostRef, NumaViewProvider provider) {
+        this.hostRef = hostRef;
         this.numaDAO = numaDAO;
-
-        numberOfNumaNodes = numaDAO.getNumberOfNumaNodes(ref);
 
         view = provider.createView();
 
-        for (int i = 0; i < numberOfNumaNodes; i++) {
-            view.addNumaChart("node" + i, translator.localize(LocaleResources.NUMA_NODE, String.valueOf(i)));
+        numberOfNumaNodes = numaDAO.getNumberOfNumaNodes(hostRef);
+
+
+        if (numberOfNumaNodes > 0) {
+            setupTimer(appSvc.getTimerFactory().createTimer());
         }
-        view.addGraphVisibilityListener(listener);
-        view.addActionListener(new ActionListener<NumaView.Action>() {
+    }
+
+    private void setupTimer(final Timer timer) {
+        for (int i = 0; i < numberOfNumaNodes; i++) {
+            view.addChart(translator.localize(LocaleResources.NUMA_NODE, String.valueOf(i)).getContents());
+        }
+
+        Duration userDuration = view.getUserDesiredDuration(); //Has default of 10 minutes
+        lastSeenTimestamp = System.currentTimeMillis() - userDuration.unit.toMillis(userDuration.value);
+
+        timer.setAction(new Runnable() {
             @Override
-            public void actionPerformed(ActionEvent<Action> actionEvent) {
+            public void run() {
+                update();
+            }
+        });
+
+        timer.setSchedulingType(Timer.SchedulingType.FIXED_RATE);
+        timer.setTimeUnit(TimeUnit.SECONDS);
+        timer.setInitialDelay(0);
+        timer.setDelay(5);
+
+        view.addActionListener(new com.redhat.thermostat.common.ActionListener<NumaView.Action>() {
+            @Override
+            public void actionPerformed(com.redhat.thermostat.common.ActionEvent<BasicView.Action> actionEvent) {
                 switch (actionEvent.getActionId()) {
                     case HIDDEN:
-                        stopBackgroundUpdates();
+                        timer.stop();
                         break;
                     case VISIBLE:
-                        startBackgroundUpdates();
+                        timer.start();
                         break;
                     default:
                         assert false; // Cannot happen: null is caught in ActionEvent constructor, everything else by javac.
@@ -106,88 +125,88 @@ public class NumaController implements InformationServiceController<HostRef> {
             }
         });
 
-        timeRangeController = new TimeRangeController<>();
+        view.addUserActionListener(new ActionListener<NumaView.UserAction>() {
 
-        backgroundUpdateTimer = appSvc.getTimerFactory().createTimer();
-        backgroundUpdateTimer.setAction(new Runnable() {
             @Override
-            public void run() {
-                doNumaChartUpdate();
+            public void actionPerformed(ActionEvent<NumaView.UserAction> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                    case USER_CHANGED_TIME_RANGE:
+                        Duration duration = view.getUserDesiredDuration();
+                        lastSeenTimestamp = System.currentTimeMillis() - duration.unit.toMillis(duration.value);
+                        view.setVisibleDataRange(duration.value, duration.unit);
+                        break;
+                    default:
+                        throw new AssertionError("Unhandled action type");
+                }
             }
         });
-        backgroundUpdateTimer.setSchedulingType(SchedulingType.FIXED_RATE);
-        backgroundUpdateTimer.setTimeUnit(TimeUnit.SECONDS);
-        backgroundUpdateTimer.setInitialDelay(0);
-        backgroundUpdateTimer.setDelay(5);
     }
 
-    private void startBackgroundUpdates() {
-        for (int i = 0; i < numberOfNumaNodes; i++) {
-            view.showNumaChart("node" + i);
+    private void update() {
+        List<NumaStat> numaStats = numaDAO.getLatestNumaStats(hostRef, lastSeenTimestamp); //Sorted by timestamp already
+        Map<String, List<DiscreteTimeData<Double>[]>> viewData = getData(numaStats);
+
+        for (Map.Entry<String, List<DiscreteTimeData<Double>[]>> entry : viewData.entrySet()) {
+            view.addData(entry.getKey(), entry.getValue());
         }
 
-        backgroundUpdateTimer.start();
+        lastSeenTimestamp = System.currentTimeMillis();
     }
 
-    private void stopBackgroundUpdates() {
-        backgroundUpdateTimer.stop();
+    private Map<String, List<DiscreteTimeData<Double>[]>> getData(List<NumaStat> numaStats) {
+        Map<String, List<DiscreteTimeData<Double>[]>> map = new HashMap<>();
         for (int i = 0; i < numberOfNumaNodes; i++) {
-            view.hideNumaChart("node" + i);
+            map.put(translator.localize(LocaleResources.NUMA_NODE, String.valueOf(i)).getContents(), new ArrayList<DiscreteTimeData<Double>[]>());
+        }
+
+        if (lastSeenStat != null && lastSeenStat.getTimeStamp() < numaStats.get(0).getTimeStamp()) {
+            buildData(map, lastSeenStat, numaStats.get(0));
+        }
+
+        for (int i = 1; i < numaStats.size(); i++) {
+            NumaStat first = numaStats.get(i - 1);
+            NumaStat second = numaStats.get(i);
+
+            buildData(map, first, second);
+        }
+
+        lastSeenStat = numaStats.get(numaStats.size() - 1);
+
+        return map;
+    }
+
+    private void buildData(Map<String, List<DiscreteTimeData<Double>[]>> map, NumaStat first, NumaStat second) {
+        for (int j = 0; j < numberOfNumaNodes; j++) {
+            DiscreteTimeData<Double>[] data = buildStat(j, first, second);
+            map.get(translator.localize(LocaleResources.NUMA_NODE, String.valueOf(j)).getContents()).add(data);
         }
     }
 
+    private DiscreteTimeData<Double>[] buildStat(int node, NumaStat first, NumaStat second) {
+        NumaNodeStat[] firstStat = first.getNodeStats();
+        NumaNodeStat[] secondStat = second.getNodeStats();
+
+        DiscreteTimeData<Double>[] data = new DiscreteTimeData[3];
+
+        //Hits
+        data[0] = new DiscreteTimeData<>(second.getTimeStamp(),
+                (double)(secondStat[node].getNumaHit() - firstStat[node].getNumaHit()) /
+                        (second.getTimeStamp() - first.getTimeStamp()));
+        //Misses
+        data[1] = new DiscreteTimeData<>(second.getTimeStamp(),
+                (double)(secondStat[node].getNumaMiss() - firstStat[node].getNumaMiss()) /
+                        (second.getTimeStamp() - first.getTimeStamp()));
+        //Foreign hits
+        data[2] = new DiscreteTimeData<>(second.getTimeStamp(),
+                (double)(secondStat[node].getNumaForeign() - firstStat[node].getNumaForeign()) /
+                        (second.getTimeStamp() - first.getTimeStamp()));
+
+        return data;
+    }
+
+    @Override
     public UIComponent getView() {
         return view;
-    }
-
-    private void doNumaChartUpdate() {
-        final List<NumaStat> stats = new ArrayList<>();
-
-        NumaStat oldest = numaDAO.getOldest(ref);
-        NumaStat latest = numaDAO.getNewest(ref);
-
-        Range<Long> newAvailableRange = new Range<>(oldest.getTimeStamp(), latest.getTimeStamp());
-
-        TimeRangeController.StatsSupplier<NumaStat, HostRef> statsSupplier = new TimeRangeController.StatsSupplier<NumaStat, HostRef>() {
-            @Override
-            public List<NumaStat> getStats(HostRef ref, long since, long to) {
-                return numaDAO.getNumaStats(ref, since, to);
-            }
-        };
-
-        TimeRangeController.SingleArgRunnable<NumaStat> statCollector = new TimeRangeController.SingleArgRunnable<NumaStat>() {
-            @Override
-            public void run(NumaStat arg) {
-                stats.add(arg);
-            }
-        };
-
-        timeRangeController.update(view.getUserDesiredDuration(), newAvailableRange, statsSupplier, ref, statCollector);
-
-        for (int i = 0; i < numberOfNumaNodes; i++) {
-            List<DiscreteTimeData<? extends Number>> numaHitRatio = new LinkedList<>();
-
-            for (NumaStat stat : stats) {
-                long timeStamp = stat.getTimeStamp();
-                long numaHitVal = stat.getNodeStats()[i].getNumaHit();
-                long numaMissVal = stat.getNodeStats()[i].getNumaMiss();
-                double hitRatio = 100 * numaHitVal / (numaHitVal + numaMissVal);
-                numaHitRatio.add(new DiscreteTimeData<>(timeStamp, hitRatio));
-            }
-
-            view.addNumaData("node" + i, numaHitRatio);
-        }
-    }
-
-    private class ShowHideGraph implements GraphVisibilityChangeListener {
-        @Override
-        public void show(String tag) {
-            view.showNumaChart(tag);
-        }
-        @Override
-        public void hide(String tag) {
-            view.hideNumaChart(tag);
-        }
     }
 
     @Override
@@ -195,4 +214,3 @@ public class NumaController implements InformationServiceController<HostRef> {
         return translator.localize(LocaleResources.NUMA_TAB);
     }
 }
-

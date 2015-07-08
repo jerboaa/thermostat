@@ -39,7 +39,9 @@ package com.redhat.thermostat.numa.client.core.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doNothing;
@@ -66,7 +68,6 @@ import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.numa.client.core.NumaView;
-import com.redhat.thermostat.numa.client.core.NumaView.GraphVisibilityChangeListener;
 import com.redhat.thermostat.numa.client.core.NumaViewProvider;
 import com.redhat.thermostat.numa.common.NumaDAO;
 import com.redhat.thermostat.numa.common.NumaNodeStat;
@@ -80,7 +81,6 @@ public class NumaControllerTest {
     private NumaController numaController;
     private Timer timer;
     private NumaView view;
-    private ArgumentCaptor<GraphVisibilityChangeListener> graphVisibilityListener;
     @SuppressWarnings("rawtypes")
     private ArgumentCaptor<ActionListener> actionListener;
     private ArgumentCaptor<Runnable> timerAction;
@@ -99,17 +99,13 @@ public class NumaControllerTest {
         NumaDAO numaDAO = mock(NumaDAO.class);
 
         List<NumaStat> stats = createTestData();
-        when(numaDAO.getNumaStats(eq(hostRef), anyLong(), anyLong())).thenReturn(stats);
-        when(numaDAO.getOldest(eq(hostRef))).thenReturn(stats.get(0));
-        when(numaDAO.getNewest(eq(hostRef))).thenReturn(stats.get(stats.size() - 1));
+        when(numaDAO.getLatestNumaStats(eq(hostRef), anyLong())).thenReturn(stats);
 
         when(numaDAO.getNumberOfNumaNodes(hostRef)).thenReturn(3);
         NumaViewProvider numaViewProvider = mock(NumaViewProvider.class);
         view = mock(NumaView.class);
         when(view.getUserDesiredDuration()).thenReturn(new Duration(10, TimeUnit.MINUTES));
-        graphVisibilityListener = ArgumentCaptor.forClass(GraphVisibilityChangeListener.class);
         actionListener = ArgumentCaptor.forClass(ActionListener.class);
-        doNothing().when(view).addGraphVisibilityListener(graphVisibilityListener.capture());
         doNothing().when(view).addActionListener(actionListener.capture());
         when(numaViewProvider.createView()).thenReturn(view);
         numaController = new NumaController(appSvc, numaDAO, hostRef, numaViewProvider);
@@ -119,26 +115,32 @@ public class NumaControllerTest {
         NumaNodeStat nodeStat11 = new NumaNodeStat();
         nodeStat11.setNumaHit(100);
         nodeStat11.setNumaMiss(0);
+        nodeStat11.setNumaForeign(0);
         NumaNodeStat nodeStat12 = new NumaNodeStat();
         nodeStat12.setNumaHit(50);
         nodeStat12.setNumaMiss(50);
+        nodeStat12.setNumaForeign(10);
         NumaNodeStat nodeStat13 = new NumaNodeStat();
         nodeStat13.setNumaHit(70);
         nodeStat13.setNumaMiss(30);
+        nodeStat13.setNumaForeign(0);
         NumaStat stat1 = new NumaStat("fluff");
-        stat1.setTimeStamp(123);
+        stat1.setTimeStamp(100);
         stat1.setNodeStats(new NumaNodeStat[] {nodeStat11, nodeStat12, nodeStat13 });
         NumaNodeStat nodeStat21 = new NumaNodeStat();
-        nodeStat21.setNumaHit(90);
+        nodeStat21.setNumaHit(110);
         nodeStat21.setNumaMiss(10);
+        nodeStat21.setNumaForeign(50);
         NumaNodeStat nodeStat22 = new NumaNodeStat();
         nodeStat22.setNumaHit(60);
-        nodeStat22.setNumaMiss(40);
+        nodeStat22.setNumaMiss(55);
+        nodeStat22.setNumaForeign(15);
         NumaNodeStat nodeStat23 = new NumaNodeStat();
         nodeStat23.setNumaHit(80);
-        nodeStat23.setNumaMiss(20);
+        nodeStat23.setNumaMiss(40);
+        nodeStat23.setNumaForeign(5);
         NumaStat stat2 = new NumaStat("fluff");
-        stat2.setTimeStamp(234);
+        stat2.setTimeStamp(200);
         stat2.setNodeStats(new NumaNodeStat[] {nodeStat21, nodeStat22, nodeStat23 });
         List<NumaStat> stats = Arrays.asList(stat1, stat2);
         return stats;
@@ -147,7 +149,6 @@ public class NumaControllerTest {
     @After
     public void tearDown() {
         timer = null;
-        graphVisibilityListener = null;
         view = null;
         numaController = null;
     }
@@ -164,32 +165,18 @@ public class NumaControllerTest {
 
     @Test
     public void verifyNumCharts() {
-        verify(view).addNumaChart(eq("node0"), isA(LocalizedString.class));
-        verify(view).addNumaChart(eq("node1"), isA(LocalizedString.class));
-        verify(view).addNumaChart(eq("node2"), isA(LocalizedString.class));
-    }
-
-    @Test
-    public void verifyGraphVisibility() {
-        graphVisibilityListener.getValue().show("node0");
-        verify(view).showNumaChart("node0");
-        graphVisibilityListener.getValue().hide("node1");
-        verify(view).hideNumaChart("node1");
+        verify(view).addChart(eq("Node 0"));
+        verify(view).addChart(eq("Node 1"));
+        verify(view).addChart(eq("Node 2"));
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
     public void verifyViewActions() {
         actionListener.getValue().actionPerformed(new ActionEvent(view, NumaView.Action.VISIBLE));
-        verify(view).showNumaChart("node0");
-        verify(view).showNumaChart("node1");
-        verify(view).showNumaChart("node2");
         verify(timer).start();
 
         actionListener.getValue().actionPerformed(new ActionEvent(view, NumaView.Action.HIDDEN));
-        verify(view).hideNumaChart("node0");
-        verify(view).hideNumaChart("node1");
-        verify(view).hideNumaChart("node2");
         verify(timer).stop();
 
         // Can't test the default branch.
@@ -200,27 +187,28 @@ public class NumaControllerTest {
     public void verifyTimerAction() {
         timerAction.getValue().run();
         ArgumentCaptor<List> dataCaptor = ArgumentCaptor.forClass(List.class);
-        verify(view).addNumaData(eq("node0"), dataCaptor.capture());
-        verify(view).addNumaData(eq("node1"), dataCaptor.capture());
-        verify(view).addNumaData(eq("node2"), dataCaptor.capture());
+        verify(view).addData(eq("Node 0"), dataCaptor.capture());
+        verify(view).addData(eq("Node 1"), dataCaptor.capture());
+        verify(view).addData(eq("Node 2"), dataCaptor.capture());
 
         List list1 = dataCaptor.getAllValues().get(0);
-        DiscreteTimeData<Double> data11 = (DiscreteTimeData<Double>) list1.get(0);
-        assertEquals(100.0, data11.getData(), 0.0);
-        DiscreteTimeData<Double> data12 = (DiscreteTimeData<Double>) list1.get(1);
-        assertEquals(90., data12.getData(), 0.0);
+        DiscreteTimeData<Double>[] data1 = (DiscreteTimeData<Double>[]) list1.get(0);
+        assertEquals((Double)0.1, data1[0].getData());
+        assertEquals((Double)0.1, data1[1].getData());
+        assertEquals((Double)0.5, data1[2].getData());
 
         List list2 = dataCaptor.getAllValues().get(1);
-        DiscreteTimeData<Double> data21 = (DiscreteTimeData<Double>) list2.get(0);
-        assertEquals(50.0, data21.getData(), 0.0);
-        DiscreteTimeData<Double> data22 = (DiscreteTimeData<Double>) list2.get(1);
-        assertEquals(60.0, data22.getData(), 0.0);
+        DiscreteTimeData<Double>[] data2 = (DiscreteTimeData<Double>[]) list2.get(0);
+        assertEquals((Double)0.1, data2[0].getData());
+        assertEquals((Double)0.05, data2[1].getData());
+        assertEquals((Double)0.05, data2[2].getData());
 
         List list3 = dataCaptor.getAllValues().get(2);
-        DiscreteTimeData<Double> data31 = (DiscreteTimeData<Double>) list3.get(0);
-        assertEquals(70.0, data31.getData(), 0.0);
-        DiscreteTimeData<Double> data32 = (DiscreteTimeData<Double>) list3.get(1);
-        assertEquals(80.0, data32.getData(), 0.0);
+        DiscreteTimeData<Double>[] data3 = (DiscreteTimeData<Double>[]) list3.get(0);
+        assertEquals((Double)0.1, data3[0].getData());
+        assertEquals((Double)0.1, data3[1].getData());
+        assertEquals((Double)0.05, data3[2].getData());
+
     }
 
     @Test

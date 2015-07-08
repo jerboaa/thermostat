@@ -44,4 +44,3 @@ public interface NumaViewProvider extends ViewProvider {
     public NumaView createView();
 
 }
-

@@ -37,37 +37,30 @@
 package com.redhat.thermostat.numa.client.core;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.shared.locale.LocalizedString;
+import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
 
 public abstract class NumaView extends BasicView implements UIComponent {
 
-    public interface GraphVisibilityChangeListener {
-        public void show(String tag);
-
-        public void hide(String tag);
+    public enum UserAction {
+        USER_CHANGED_TIME_RANGE;
     }
 
-    public abstract void addNumaChart(String tag, LocalizedString name);
+    public abstract void addUserActionListener(ActionListener<UserAction> listener);
 
-    public abstract void removeNumaChart(String tag);
+    public abstract void removeUserActionListener(ActionListener<UserAction> listener);
 
-    public abstract void showNumaChart(String tag);
-
-    public abstract void hideNumaChart(String tag);
-
-    public abstract void addNumaData(String tag, List<DiscreteTimeData<? extends Number>> data);
-
-    public abstract void clearNumaData(String tag);
-
-    public abstract void addGraphVisibilityListener(GraphVisibilityChangeListener listener);
-
-    public abstract void removeGraphVisibilityListener(GraphVisibilityChangeListener listener);
+    public abstract void addChart(String tag);
 
     public abstract Duration getUserDesiredDuration();
-}
 
+    public abstract void setVisibleDataRange(int time, TimeUnit unit);
+
+    public abstract void addData(String tag, List<DiscreteTimeData<Double>[]> viewData);
+
+}

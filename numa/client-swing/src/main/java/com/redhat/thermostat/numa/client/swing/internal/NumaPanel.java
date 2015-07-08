@@ -36,73 +36,67 @@
 
 package com.redhat.thermostat.numa.client.swing.internal;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.FlowLayout;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
-import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.Alignment;
-import javax.swing.JCheckBox;
-import javax.swing.JLabel;
+import javax.swing.BorderFactory;
 import javax.swing.JPanel;
-import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.SwingUtilities;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.axis.NumberTickUnit;
-import org.jfree.chart.renderer.xy.XYItemRenderer;
-import org.jfree.data.RangeType;
-import org.jfree.data.time.FixedMillisecond;
-import org.jfree.data.time.RegularTimePeriod;
+import org.jfree.chart.axis.DateAxis;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.time.Millisecond;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
 import com.redhat.thermostat.client.core.experimental.Duration;
 import com.redhat.thermostat.client.swing.SwingComponent;
-import com.redhat.thermostat.client.swing.components.LegendCheckBox;
-import com.redhat.thermostat.client.swing.components.RecentTimeSeriesChartPanel;
-import com.redhat.thermostat.client.swing.components.SectionHeader;
+import com.redhat.thermostat.client.swing.components.HeaderPanel;
+import com.redhat.thermostat.client.swing.components.experimental.SingleValueChartPanel;
 import com.redhat.thermostat.client.swing.experimental.ComponentVisibilityNotifier;
-import com.redhat.thermostat.client.ui.ChartColors;
-import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.numa.client.core.NumaView;
 import com.redhat.thermostat.numa.client.locale.LocaleResources;
-import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
-import com.redhat.thermostat.swing.components.experimental.WrapLayout;
 
 public class NumaPanel extends NumaView implements SwingComponent {
-
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private JPanel visiblePanel;
+    private static final Logger logger = LoggingUtils.getLogger(NumaPanel.class);
 
-    private final NumaCheckboxListener numaCheckboxListener = new NumaCheckboxListener();
+    private static final Color WHITE = new Color(255,255,255,0);
+    private static final Color BLACK = new Color(0,0,0,0);
+    private static final float TRANSPARENT = 0.0f;
 
-    private final JPanel numaCheckBoxPanel = new JPanel(new WrapLayout(FlowLayout.LEADING));
-    private final CopyOnWriteArrayList<GraphVisibilityChangeListener> listeners = new CopyOnWriteArrayList<>();
-    private final TimeSeriesCollection numaCollection = new TimeSeriesCollection();
-    private final Map<String, TimeSeries> dataset = new HashMap<>();
-    private final Map<String, JCheckBox> checkBoxes = new HashMap<>();
-    private final Map<String, Color> colors = new HashMap<>();
+    private HeaderPanel visiblePanel = new HeaderPanel();
 
-    private JFreeChart chart;
-    private RecentTimeSeriesChartController chartController;
+    private Map<String, TimeSeriesCollection> collections = new HashMap<>();
+    private Map<String, JFreeChart> charts = new HashMap<>();
+
+    private SingleValueChartPanel chartPanel;
+    private Duration duration;
+
+    private ActionNotifier<UserAction> userActionNotifier = new ActionNotifier<>(this);
 
     public NumaPanel() {
         super();
-        initializePanel();
 
+        initializePanel();
         new ComponentVisibilityNotifier().initialize(visiblePanel, notifier);
     }
 
@@ -111,223 +105,107 @@ public class NumaPanel extends NumaView implements SwingComponent {
         return visiblePanel;
     }
 
-    @Override
-    public void addNumaChart(final String tag, final LocalizedString name) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                int colorIndex = colors.size();
-                colors.put(tag, ChartColors.getColor(colorIndex));
-                TimeSeries series = new TimeSeries(tag);
-                dataset.put(tag, series);
-                JCheckBox newCheckBox = new LegendCheckBox(name, colors.get(tag));
-                newCheckBox.setActionCommand(tag);
-                newCheckBox.setSelected(true);
-                newCheckBox.addActionListener(numaCheckboxListener);
-                newCheckBox.setOpaque(false);
-                checkBoxes.put(tag, newCheckBox);
-                numaCheckBoxPanel.add(newCheckBox);
-
-                updateColors();
-            }
-        });
-
-    }
-
-    @Override
-    public void removeNumaChart(final String tag) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                TimeSeries series = dataset.remove(tag);
-                numaCollection.removeSeries(series);
-                JCheckBox box = checkBoxes.remove(tag);
-                numaCheckBoxPanel.remove(box);
-
-                updateColors();
-            }
-        });
-    }
-
-    @Override
-    public void showNumaChart(final String tag) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                TimeSeries series = dataset.get(tag);
-                numaCollection.addSeries(series);
-
-                updateColors();
-            }
-        });
-    }
-
-    @Override
-    public void hideNumaChart(final String tag) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                TimeSeries series = dataset.get(tag);
-                numaCollection.removeSeries(series);
-
-                updateColors();
-            }
-        });
-    }
-
-    @Override
-    public void addNumaData(final String tag, List<DiscreteTimeData<? extends Number>> data) {
-        final List<DiscreteTimeData<? extends Number>> copy = new ArrayList<>(data);
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                final TimeSeries series = dataset.get(tag);
-                for (DiscreteTimeData<? extends Number> timeData: copy) {
-                    RegularTimePeriod period = new FixedMillisecond(timeData.getTimeInMillis());
-                    if (series.getDataItem(period) == null) {
-                        Double data = (Double) timeData.getData();
-                        series.add(new FixedMillisecond(timeData.getTimeInMillis()), data, false);
-                    }
-                }
-                series.fireSeriesChanged();
-            }
-        });
-    }
-
-    @Override
-    public void clearNumaData(final String tag) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                TimeSeries series = dataset.get(tag);
-                series.clear();
-            }
-        });
-    }
-
-    @Override
-    public void addGraphVisibilityListener(GraphVisibilityChangeListener listener) {
-        listeners.add(listener);
-    }
-
-    @Override
-    public void removeGraphVisibilityListener(GraphVisibilityChangeListener listener) {
-        listeners.remove(listener);
-    }
-
-    @Override
-    public Duration getUserDesiredDuration() {
-        if (chartController == null) {
-            return new Duration(10, TimeUnit.MINUTES);
-        }
-        return new Duration(chartController.getTimeValue(), chartController.getTimeUnit());
-    }
-
-    @Override
-    public void addActionListener(ActionListener<Action> listener) {
-        notifier.addActionListener(listener);
-    }
-
-    @Override
-    public void removeActionListener(ActionListener<Action> listener) {
-        notifier.removeActionListener(listener);
-    }
-
     private void initializePanel() {
-        visiblePanel = new JPanel();
-        visiblePanel.setOpaque(false);
-
-        chart = createNumaChart();
-
-        chartController = new RecentTimeSeriesChartController(chart);
-        JPanel chartPanel = new RecentTimeSeriesChartPanel(chartController);
-        chartPanel.setOpaque(false);
-
-        JLabel lblNuma = new SectionHeader(translator.localize(LocaleResources.NUMA_SECTION_OVERVIEW));
-
-        numaCheckBoxPanel.setOpaque(false);
-
-        GroupLayout groupLayout = new GroupLayout(visiblePanel);
-        groupLayout.setHorizontalGroup(
-            groupLayout.createParallelGroup(Alignment.LEADING)
-                .addGroup(groupLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-                        .addComponent(chartPanel, GroupLayout.DEFAULT_SIZE, 883, Short.MAX_VALUE)
-                        .addComponent(lblNuma)
-                        .addComponent(numaCheckBoxPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE))
-                    .addContainerGap())
-        );
-        groupLayout.setVerticalGroup(
-            groupLayout.createParallelGroup(Alignment.LEADING)
-                .addGroup(groupLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .addComponent(lblNuma)
-                    .addPreferredGap(ComponentPlacement.RELATED)
-                    .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(chartPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, Short.MAX_VALUE)
-                    .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(numaCheckBoxPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap())
-        );
-        visiblePanel.setLayout(groupLayout);
+        visiblePanel.setContent(createChartPanel());
+        visiblePanel.setHeader(translator.localize(LocaleResources.NUMA_SECTION_OVERVIEW));
     }
 
-    private JFreeChart createNumaChart() {
-        JFreeChart chart = ChartFactory.createTimeSeriesChart(
-                null, // Title
-                translator.localize(LocaleResources.NUMA_CHART_TIME_LABEL).getContents(), // x-axis Label
-                translator.localize(LocaleResources.NUMA_CHART_NUM_HITS_LABEL).getContents(), // y-axis Label
-                numaCollection, // Dataset
-                false, // Show Legend
-                false, // Use tooltips
-                false // Configure chart to generate URLs?
-                );
+    private JPanel createChartPanel() {
+        JPanel detailsPanel = new JPanel();
+        detailsPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        detailsPanel.setLayout(new BorderLayout());
 
-        chart.getPlot().setBackgroundPaint( new Color(255,255,255,0) );
-        chart.getPlot().setBackgroundImageAlpha(0.0f);
-        chart.getPlot().setOutlinePaint(new Color(0,0,0,0));
 
-        NumberAxis rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();
-        rangeAxis.setAutoRangeMinimumSize(100);
-        rangeAxis.setAutoRangeIncludesZero(true);
-        rangeAxis.setRangeType(RangeType.POSITIVE);
-        rangeAxis.setTickUnit(new NumberTickUnit(10.0));
+        duration = new Duration(10, TimeUnit.MINUTES);
+        chartPanel = new SingleValueChartPanel(duration);
+
+        chartPanel.addPropertyChangeListener(SingleValueChartPanel.PROPERTY_VISIBLE_TIME_RANGE, new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                duration = (Duration) evt.getNewValue();
+                userActionNotifier.fireAction(UserAction.USER_CHANGED_TIME_RANGE);
+            }
+        });
+
+        detailsPanel.add(chartPanel, BorderLayout.CENTER);
+
+        return detailsPanel;
+    }
+
+    private JFreeChart createChart(String name, TimeSeriesCollection collection) {
+        JFreeChart chart = ChartFactory.createXYLineChart(
+                name,
+                "",
+                translator.localize(LocaleResources.NUMA_CHART_Y_AXIS_LABEL).getContents(),
+                collection,
+                PlotOrientation.VERTICAL,
+                true,
+                false,
+                false);
+
+        chart.getPlot().setBackgroundPaint(WHITE);
+        chart.getPlot().setBackgroundImageAlpha(TRANSPARENT);
+        chart.getPlot().setOutlinePaint(BLACK);
+
+        chart.getXYPlot().setDomainAxis(new DateAxis(translator.localize(LocaleResources.NUMA_CHART_X_AXIS_LABEL).getContents()));
+        chart.getXYPlot().getRangeAxis().setLowerBound(0.0);
+
+        charts.put(name, chart);
 
         return chart;
     }
 
-    private void fireShowHideHandlers(boolean show, String tag) {
-        for (GraphVisibilityChangeListener listener: listeners) {
-            if (show) {
-                listener.show(tag);
-            } else {
-                listener.hide(tag);
+    @Override
+    public void addUserActionListener(ActionListener<UserAction> listener) {
+        userActionNotifier.addActionListener(listener);
+    }
+
+    @Override
+    public void removeUserActionListener(ActionListener<UserAction> listener) {
+        userActionNotifier.removeActionListener(listener);
+    }
+
+    @Override
+    public void addChart(String tag) {
+        logger.fine("NUMA: Adding chart: " + tag);
+        TimeSeriesCollection collection = new TimeSeriesCollection();
+
+        collection.addSeries(new TimeSeries(translator.localize(LocaleResources.NUMA_HITS).getContents()));
+        collection.addSeries(new TimeSeries(translator.localize(LocaleResources.NUMA_MISSES).getContents()));
+        collection.addSeries(new TimeSeries(translator.localize(LocaleResources.NUMA_FOREIGN_HITS).getContents()));
+
+        collections.put(tag, collection);
+
+        chartPanel.addChart(createChart(tag, collection));
+        chartPanel.revalidate();
+        chartPanel.repaint();
+    }
+
+    @Override
+    public Duration getUserDesiredDuration() {
+        return duration;
+    }
+
+    @Override
+    public void setVisibleDataRange(int time, TimeUnit unit) {
+        chartPanel.setTimeRangeToShow(time, unit);
+    }
+
+    public void addData(final String tag, final List<DiscreteTimeData<Double>[]> data) {
+        final List<DiscreteTimeData<Double>[]> copy = new ArrayList<>(data);
+        final TimeSeriesCollection collection = collections.get(tag);
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                for (DiscreteTimeData<Double>[] d : copy) {
+                    for (int j = 0; j < 3; j++) {
+                        if (null == collection.getSeries(j).getDataItem(new Millisecond(new Date(d[j].getTimeInMillis())))) {
+                            collection.getSeries(j).add(new Millisecond(new Date(d[j].getTimeInMillis())), d[j].getData());
+                        }
+                    }
+                }
             }
-        }
+        });
     }
 
-    /**
-     * Adding or removing series to the series collection may change the order
-     * of existing items. Plus the paint for the index is now out-of-date. So
-     * let's walk through all the series and set the right paint for those.
-     */
-    private void updateColors() {
-        XYItemRenderer itemRenderer = chart.getXYPlot().getRenderer();
-        for (int i = 0; i < numaCollection.getSeriesCount(); i++) {
-            String tag = (String) numaCollection.getSeriesKey(i);
-            Color color = colors.get(tag);
-            itemRenderer.setSeriesPaint(i, color);
-        }
-    }
-
-    private class NumaCheckboxListener implements java.awt.event.ActionListener {
-        @Override
-        public void actionPerformed(java.awt.event.ActionEvent e) {
-            JCheckBox source = (JCheckBox) e.getSource();
-            fireShowHideHandlers(source.isSelected(), source.getActionCommand());
-        }
-
-    }
 }
-
