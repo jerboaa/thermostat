@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.storage.core;
 
+import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import com.redhat.thermostat.storage.model.Pojo;
@@ -45,7 +46,7 @@ import com.redhat.thermostat.storage.model.Pojo;
  * 
  * @see PreparedStatement#executeQuery()
  */
-public interface Cursor<T extends Pojo> {
+public interface Cursor<T extends Pojo> extends Iterator<T> {
 
     public static final int DEFAULT_BATCH_SIZE = 100;
 

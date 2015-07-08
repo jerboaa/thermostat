@@ -54,4 +54,10 @@ public abstract class BasicBatchCursor<T extends Pojo> implements Cursor<T> {
     public int getBatchSize() {
         return this.batchSize == null ? Cursor.DEFAULT_BATCH_SIZE : this.batchSize;
     }
+
+    @Override
+    public void remove() {
+        throw new UnsupportedOperationException();
+    }
+
 }
