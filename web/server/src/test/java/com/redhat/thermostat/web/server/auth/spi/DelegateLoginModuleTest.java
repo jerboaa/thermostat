@@ -101,18 +101,14 @@ public class DelegateLoginModuleTest {
         assertEquals(this.subject, subject);
         Set<Principal> principals = subject.getPrincipals();
         assertEquals(2, principals.size());
-        Iterator<Principal> it = principals.iterator();
-        while (it.hasNext()) {
-            Principal p = it.next();
+        for (Principal p : principals) {
             if (p.getName().equals("testUser")) {
                 // user principal
                 assertTrue(p instanceof UserPrincipal);
-                UserPrincipal uPrincipal = (UserPrincipal)p;
+                UserPrincipal uPrincipal = (UserPrincipal) p;
                 assertNotNull("Should now be a thermostat UserPrincipal containing roles", uPrincipal.getRoles());
                 assertEquals(1, uPrincipal.getRoles().size());
-                Iterator<BasicRole> iter = uPrincipal.getRoles().iterator();
-                while (iter.hasNext()) {
-                    BasicRole role = iter.next();
+                for (BasicRole role : uPrincipal.getRoles()) {
                     assertEquals("testRole", role.getName());
                 }
             }

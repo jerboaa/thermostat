@@ -59,6 +59,8 @@ import com.redhat.thermostat.storage.model.DistinctResult;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
 
+import static com.redhat.thermostat.common.utils.IteratorUtils.head;
+
 public class VmGcStatDAOImpl implements VmGcStatDAO {
     
     private static Logger logger = LoggingUtils.getLogger(VmGcStatDAOImpl.class);
@@ -132,12 +134,10 @@ public class VmGcStatDAOImpl implements VmGcStatDAO {
             prepared.setString(0, ref.getVmId());
             Cursor<DistinctResult> cursor = prepared.executeQuery();
             // DistinctResult comes as a single value if any
-            if (cursor.hasNext()) {
-                DistinctResult result = cursor.next();
+            DistinctResult distinctResult = head(cursor);
+            if (distinctResult != null) {
                 Set<String> collNames = new HashSet<>();
-                for (String col: result.getValues()) {
-                    collNames.add(col);
-                }
+                Collections.addAll(collNames, distinctResult.getValues());
                 return collNames;
             } else {
                 // Something wrong with the query?

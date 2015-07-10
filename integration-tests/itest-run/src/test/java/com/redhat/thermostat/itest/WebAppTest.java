@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.itest;
 
+import static com.redhat.thermostat.common.utils.IteratorUtils.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -65,6 +66,7 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.redhat.thermostat.common.utils.IteratorUtils;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.util.component.LifeCycle.Listener;
@@ -743,11 +745,7 @@ public class WebAppTest extends WebStorageUsingIntegrationTest {
             PreparedStatement<AgentInformation> query = webStorage.prepareStatement(queryDesc);
             Cursor<AgentInformation> cursor = query.executeQuery();
             assertTrue(cursor.hasNext());
-            List<AgentInformation> actual = new ArrayList<>();
-            while (cursor.hasNext()) {
-                AgentInformation info = cursor.next();
-                actual.add(info);
-            }
+            List<AgentInformation> actual = asList(cursor);
             assertEquals(2, actual.size());
             assertFalse("Returned agentIds should be different!", actual.get(0).getAgentId().equals(actual.get(1).getAgentId()));
             for (AgentInformation info: actual) {

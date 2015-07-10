@@ -39,7 +39,6 @@ package com.redhat.thermostat.web.server.auth.spi;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;

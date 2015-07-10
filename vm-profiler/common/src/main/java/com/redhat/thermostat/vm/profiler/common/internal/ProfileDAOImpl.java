@@ -60,6 +60,8 @@ import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
 import com.redhat.thermostat.vm.profiler.common.ProfileInfo;
 import com.redhat.thermostat.vm.profiler.common.ProfileStatusChange;
 
+import static com.redhat.thermostat.common.utils.IteratorUtils.head;
+
 public class ProfileDAOImpl implements ProfileDAO {
 
     private static final Logger logger = LoggingUtils.getLogger(ProfileDAOImpl.class);
@@ -221,16 +223,14 @@ public class ProfileDAOImpl implements ProfileDAO {
             prepared.setString(0, vm.getHostRef().getAgentId());
             prepared.setString(1, vm.getVmId());
             Cursor<T> cursor = prepared.executeQuery();
-            if (!cursor.hasNext()) {
-                return null;
-            }
-            return cursor.next();
+            return head(cursor);
         } catch (DescriptorParsingException e) {
             logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
+            return null;
         } catch (StatementExecutionException e) {
             logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+            return null;
         }
-        return null;
     }
 
 }

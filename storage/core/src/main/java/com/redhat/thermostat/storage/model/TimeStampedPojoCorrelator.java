@@ -42,6 +42,8 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
+import static com.redhat.thermostat.common.utils.IteratorUtils.head;
+
 public class TimeStampedPojoCorrelator implements Iterable<TimeStampedPojoCorrelator.Correlation> {
 
     public static class Correlation {
@@ -114,7 +116,7 @@ public class TimeStampedPojoCorrelator implements Iterable<TimeStampedPojoCorrel
                 if (current[i] != null && current[i].getTimeStamp() == minTimestamp) {
                     next[i] = current[i];
                     Iterator<TimeStampedPojo> iterator = seriesIterators.get(i);
-                    current[i] = iterator.hasNext() ? iterator.next() : null;
+                    current[i] = head(iterator);
                 } else {
                     next[i] = last != null ? last.get(i) : null;
                 }

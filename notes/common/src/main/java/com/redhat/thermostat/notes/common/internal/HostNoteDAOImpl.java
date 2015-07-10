@@ -55,6 +55,9 @@ import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 
+import static com.redhat.thermostat.common.utils.IteratorUtils.asList;
+import static com.redhat.thermostat.common.utils.IteratorUtils.head;
+
 public class HostNoteDAOImpl implements HostNoteDAO {
 
     static final Key<String> KEY_CONTENT = new Key<>("content");
@@ -129,11 +132,7 @@ public class HostNoteDAOImpl implements HostNoteDAO {
             stmt = storage.prepareStatement(desc);
             stmt.setString(0, host.getAgentId());
             cursor = stmt.executeQuery();
-            List<HostNote> results = new ArrayList<>();
-            while (cursor.hasNext()) {
-                results.add(cursor.next());
-            }
-            return results;
+            return asList(cursor);
         } catch (DescriptorParsingException e) {
             // should not happen, but if it *does* happen, at least log it
             logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
@@ -155,10 +154,7 @@ public class HostNoteDAOImpl implements HostNoteDAO {
             stmt.setString(0, host.getAgentId());
             stmt.setString(1, id);
             cursor = stmt.executeQuery();
-            if (cursor.hasNext()) {
-                return cursor.next();
-            }
-            return null;
+            return head(cursor);
         } catch (DescriptorParsingException e) {
             // should not happen, but if it *does* happen, at least log it
             logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);

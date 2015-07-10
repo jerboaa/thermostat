@@ -70,6 +70,9 @@ import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
 import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
 import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 
+import static com.redhat.thermostat.common.utils.IteratorUtils.asList;
+import static com.redhat.thermostat.common.utils.IteratorUtils.head;
+
 public class HeapDAOImpl implements HeapDAO {
 
     private static final Logger log = LoggingUtils.getLogger(HeapDAOImpl.class);
@@ -211,11 +214,7 @@ public class HeapDAOImpl implements HeapDAO {
             return Collections.emptyList();
         }
 
-        Collection<HeapInfo> heapInfos = new ArrayList<>();
-        while (cursor.hasNext()) {
-            heapInfos.add(cursor.next());
-        }
-        return heapInfos;
+        return asList(cursor);
     }
 
     @Override
@@ -265,11 +264,7 @@ public class HeapDAOImpl implements HeapDAO {
             return null;
         }
         
-        HeapInfo result = null;
-        if (cursor.hasNext()) {
-            result = cursor.next();
-        }
-        return result;
+        return head(cursor);
     }
 
     @Override

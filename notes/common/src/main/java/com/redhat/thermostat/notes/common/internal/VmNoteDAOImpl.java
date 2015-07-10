@@ -55,6 +55,9 @@ import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
 
+import static com.redhat.thermostat.common.utils.IteratorUtils.asList;
+import static com.redhat.thermostat.common.utils.IteratorUtils.head;
+
 class VmNoteDAOImpl implements VmNoteDAO {
 
     static final Key<String> KEY_CONTENT = new Key<>("content");
@@ -136,11 +139,7 @@ class VmNoteDAOImpl implements VmNoteDAO {
             stmt.setString(0, vm.getHostRef().getAgentId());
             stmt.setString(1, vm.getVmId());
             cursor = stmt.executeQuery();
-            List<VmNote> results = new ArrayList<>();
-            while (cursor.hasNext()) {
-                results.add(cursor.next());
-            }
-            return results;
+            return asList(cursor);
         } catch (DescriptorParsingException e) {
             // should not happen, but if it *does* happen, at least log it
             logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
@@ -163,10 +162,7 @@ class VmNoteDAOImpl implements VmNoteDAO {
             stmt.setString(1, vm.getVmId());
             stmt.setString(2, id);
             cursor = stmt.executeQuery();
-            if (cursor.hasNext()) {
-                return cursor.next();
-            }
-            return null;
+            return head(cursor);
         } catch (DescriptorParsingException e) {
             // should not happen, but if it *does* happen, at least log it
             logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);

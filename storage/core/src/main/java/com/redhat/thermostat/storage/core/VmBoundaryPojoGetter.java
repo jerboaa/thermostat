@@ -42,6 +42,8 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
+import static com.redhat.thermostat.common.utils.IteratorUtils.head;
+
 public class VmBoundaryPojoGetter <T extends TimeStampedPojo> {
 
     // QUERY %s WHERE 'agentId' = ?s AND \
@@ -94,15 +96,14 @@ public class VmBoundaryPojoGetter <T extends TimeStampedPojo> {
             prepared.setString(0, ref.getHostRef().getAgentId());
             prepared.setString(1, ref.getVmId());
             Cursor<T> cursor = prepared.executeQuery();
-            if (cursor.hasNext()) {
-                return cursor.next();
-            }
+            return head(cursor);
         } catch (DescriptorParsingException e) {
             logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
+            return null;
         } catch (StatementExecutionException e) {
             logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+            return null;
         }
-        return null;
     }
 
     //Package private for testing

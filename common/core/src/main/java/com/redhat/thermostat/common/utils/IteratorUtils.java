@@ -34,40 +34,43 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.core;
+package com.redhat.thermostat.common.utils;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.model.TimeStampedPojo;
+public final class IteratorUtils {
 
-import static com.redhat.thermostat.common.utils.IteratorUtils.asList;
+    private IteratorUtils() {}
 
-class AbstractGetter<T extends TimeStampedPojo> {
-
-    private static final Logger logger = LoggingUtils.getLogger(AbstractGetter.class);
-
-    List<T> getLatestOrEmpty(PreparedStatement<T> query) {
-        if (query == null) {
-            return Collections.emptyList();
+    /**
+     * Consumes and returns the first element in an iterator, or returns null if there are none.
+     * @param iterator the iterator
+     * @param <T> the type parameter of the iterator
+     * @return the first element, or null if there are none
+     */
+    public static <T> T head(Iterator<T> iterator) {
+        if (iterator.hasNext()) {
+            return iterator.next();
+        } else {
+            return null;
         }
-        return getLatest(query);
     }
 
-    List<T> getLatest(PreparedStatement<T> query) {
-        Cursor<T> cursor;
-        try {
-            cursor = query.executeQuery();
-        } catch (StatementExecutionException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Executing query '" + query + "' failed!", e);
-            return Collections.emptyList();
+    /**
+     * Returns a List view of an Iterator. Note that the iterator is consumed in the process, so only the list
+     * returned by this method should be used after this method is called.
+     * @param iterator the iterator
+     * @param <T> the type parameter of the iterator
+     * @return a list containing all the elements previously in the iterator
+     */
+    public static <T> List<T> asList(Iterator<T> iterator) {
+        List<T> result = new ArrayList<>();
+        while (iterator.hasNext()) {
+            result.add(iterator.next());
         }
-        return asList(cursor);
+        return result;
     }
 
 }

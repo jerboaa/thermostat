@@ -69,6 +69,8 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static com.redhat.thermostat.common.utils.IteratorUtils.head;
+
 public class ThreadDaoImpl implements ThreadDao {
     
     private static final Logger logger = LoggingUtils.getLogger(ThreadDaoImpl.class);
@@ -347,12 +349,7 @@ public class ThreadDaoImpl implements ThreadDao {
             return null;
         }
 
-        T result = null;
-        if (cursor.hasNext()) {
-            result = cursor.next();
-        }
-
-        return result;
+        return head(cursor);
     }
 }
 

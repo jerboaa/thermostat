@@ -57,6 +57,8 @@ import com.sun.tools.hat.internal.model.JavaHeapObject;
 import com.sun.tools.hat.internal.model.Root;
 import com.sun.tools.hat.internal.model.Snapshot;
 
+import static com.redhat.thermostat.common.utils.IteratorUtils.asList;
+
 public class FindRootCommand extends AbstractCommand {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
@@ -117,8 +119,7 @@ public class FindRootCommand extends AbstractCommand {
         out.println(root.getDescription() + " -> " + PrintObjectUtils.objectToString(last));
         // Print reference 'tree'.
         int indentation = 0;
-        while (i.hasNext()) {
-            JavaHeapObject next = i.next();
+        for (JavaHeapObject next : asList(i)) {
             printIndentation(out, indentation);
             out.print("\u2514");
             out.print(last.describeReferenceTo(next, snapshot));

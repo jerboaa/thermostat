@@ -56,6 +56,10 @@ import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 
+import javax.xml.parsers.ParserConfigurationException;
+
+import static com.redhat.thermostat.common.utils.IteratorUtils.head;
+
 public class NumaDAOImpl implements NumaDAO {
 
     private static final Logger logger = LoggingUtils.getLogger(NumaDAOImpl.class);
@@ -161,9 +165,10 @@ public class NumaDAOImpl implements NumaDAO {
             logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
             return 0;
         }
-        
-        if (cursor.hasNext()) {
-            return cursor.next().getNumNumaNodes();
+
+        NumaHostInfo numaHostInfo = head(cursor);
+        if (numaHostInfo != null) {
+            return numaHostInfo.getNumNumaNodes();
         } else {
             return 0;
         }

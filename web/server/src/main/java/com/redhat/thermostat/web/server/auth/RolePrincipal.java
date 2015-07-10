@@ -44,6 +44,8 @@ import java.util.Iterator;
 import java.util.Objects;
 import java.util.Vector;
 
+import static com.redhat.thermostat.common.utils.IteratorUtils.asList;
+
 /**
  * Class representing a simple thermostat role. Roles can be nested.
  * 
@@ -99,24 +101,23 @@ public class RolePrincipal extends BasicRole {
             return true;
         }
         // recursive case
-        Iterator<Group> it = roles.iterator();
         boolean isMember = false;
-        while (it.hasNext() && !isMember) {
-            Group group = it.next();
+        for (Group group : roles) {
             isMember = isMember || group.isMember(member);
+            if (!isMember) {
+                break;
+            }
         }
         return isMember;
     }
 
     @Override
     public Enumeration<? extends Principal> members() {
-        Iterator<Group> it = roles.iterator();
-        Vector<Principal> vector = new Vector<Principal>();
-        while (it.hasNext()) {
-            vector.add(it.next());
+        Vector<Principal> vector = new Vector<>();
+        for (Group group : roles) {
+            vector.add(group);
         }
         return vector.elements();
     }
 
 }
-

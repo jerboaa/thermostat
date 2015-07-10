@@ -57,6 +57,9 @@ import com.redhat.thermostat.vm.jmx.common.JmxNotification;
 import com.redhat.thermostat.vm.jmx.common.JmxNotificationDAO;
 import com.redhat.thermostat.vm.jmx.common.JmxNotificationStatus;
 
+import static com.redhat.thermostat.common.utils.IteratorUtils.asList;
+import static com.redhat.thermostat.common.utils.IteratorUtils.head;
+
 public class JmxNotificationDAOImpl implements JmxNotificationDAO {
 
     private static final Key<Boolean> NOTIFICATIONS_ENABLED = new Key<>("enabled");
@@ -166,12 +169,7 @@ public class JmxNotificationDAOImpl implements JmxNotificationDAO {
             return null;
         }
         
-        JmxNotificationStatus result = null;
-        if (cursor.hasNext()) {
-            result = cursor.next();
-        }
-
-        return result;
+        return head(cursor);
     }
 
     @Override
@@ -215,12 +213,7 @@ public class JmxNotificationDAOImpl implements JmxNotificationDAO {
             return Collections.emptyList();
         }
 
-        List<JmxNotification> results = new ArrayList<>();
-        while (cursor.hasNext()) {
-            results.add(cursor.next());
-        }
-
-        return results;
+        return asList(cursor);
     }
 
 }

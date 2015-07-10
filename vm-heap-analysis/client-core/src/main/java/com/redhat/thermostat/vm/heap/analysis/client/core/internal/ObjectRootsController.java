@@ -55,6 +55,8 @@ import com.redhat.thermostat.vm.heap.analysis.command.HeapPath;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 
+import static com.redhat.thermostat.common.utils.IteratorUtils.head;
+
 public class ObjectRootsController {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
@@ -133,9 +135,8 @@ public class ObjectRootsController {
     public void show() {
         Collection<HeapPath<JavaHeapObject>> paths = rootFinder.findShortestPathsToRoot(heapObject, false);
         Iterator<HeapPath<JavaHeapObject>> iter = paths.iterator();
-        if (iter.hasNext()) {
-            HeapPath<JavaHeapObject> pathToRoot = iter.next();
-
+        HeapPath<JavaHeapObject> pathToRoot = head(iter);
+        if (pathToRoot != null) {
             List<HeapObjectUI> path = new ArrayList<>();
             for (JavaHeapObject heapObj : pathToRoot) {
                 path.add(new HeapObjectUI(heapObj.getIdString(), PrintObjectUtils.objectToString(heapObj)));
