@@ -94,6 +94,27 @@ public class UserPrincipalTest {
         p.setRoles(roles);
         assertEquals(1, p.getRoles().size());
     }
+
+    @Test
+    public void setRolesDefensiveCopy() {
+        UserPrincipal p = new UserPrincipal("testuser");
+        Set<BasicRole> roles = new HashSet<>();
+        BasicRole fooRole = mock(BasicRole.class);
+        roles.add(fooRole);
+        p.setRoles(roles);
+        BasicRole barRole = mock(BasicRole.class);
+        roles.add(barRole);
+        assertFalse(p.getRoles().contains(barRole));
+    }
+
+    @Test
+    public void getRolesDoesntLeak() {
+        UserPrincipal p = new UserPrincipal("testuser");
+        Set<BasicRole> roles = p.getRoles();
+        BasicRole fooRole = mock(BasicRole.class);
+        roles.add(fooRole);
+        assertFalse(p.getRoles().contains(fooRole));
+    }
     
     @Test
     public void testEquals() {

@@ -49,7 +49,7 @@ import com.redhat.thermostat.web.server.auth.FilterResult.ResultType;
 /**
  * Filters based on granted VM IDs.
  * 
- * @see also {@link Roles#GRANT_VMS_READ_BY_VM_ID_ALL}
+ * @see Roles#GRANT_VMS_READ_BY_VM_ID_ALL
  */
 class VmIdFilter<T extends Pojo> extends AbstractFilter<T> {
     

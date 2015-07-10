@@ -49,7 +49,7 @@ import com.redhat.thermostat.web.server.auth.FilterResult.ResultType;
  * 
  * Filters based on granted host names.
  * 
- * @see also {@link Roles#GRANT_HOSTS_READ_ALL}
+ * @see Roles#GRANT_HOSTS_READ_ALL
  */
 class HostnameFilter<T extends Pojo> extends AbstractFilter<T> {
     

@@ -121,5 +121,17 @@ public abstract class AbstractLoginModule implements LoginModule {
             throw new LoginException(e.getMessage());
         } 
     }
+
+    protected final void debugLog(Level level, String message) {
+        if (debug) {
+            logger.log(level, message);
+        }
+    }
+
+    protected final void debugLog(Level level, String message, Exception ex) {
+        if (debug) {
+            logger.log(level, message, ex);
+        }
+    }
 }
 

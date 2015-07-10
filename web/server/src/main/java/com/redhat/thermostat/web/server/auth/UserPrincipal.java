@@ -39,6 +39,7 @@ package com.redhat.thermostat.web.server.auth;
 import java.io.Serializable;
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -57,10 +58,9 @@ public class UserPrincipal implements Serializable, Principal {
     
     private static final RolePrincipal GRANT_READ_ALL = new RolePrincipal(Roles.GRANT_READ_ALL);
     
-    private static final Set<BasicRole> EMPTY_SET = new HashSet<>(0);
     private static final long serialVersionUID = 2646753284881445421L;
     // The set of roles this user is a member of (they may be nested)
-    private Set<BasicRole> roles;
+    private final Set<BasicRole> roles = new HashSet<>();
     // The name of this principal
     private String name;
     
@@ -80,31 +80,25 @@ public class UserPrincipal implements Serializable, Principal {
      *         if this user has no role memberships.
      */
     public final Set<BasicRole> getRoles() {
-        if (roles == null) {
-            return EMPTY_SET;
-        }
-        return roles;
+        return new HashSet<>(roles);
     }
 
     /**
      * Sets the set of roles which this principal is a member of.
      * 
-     * @param roles
+     * @param roles the set of roles
      * @throws NullPointerException If the given role set was null.
      */
     public void setRoles(Set<BasicRole> roles) {
-        this.roles = Objects.requireNonNull(roles);
+        this.roles.addAll(Objects.requireNonNull(roles));
     }
     
     /**
      * Prepare a read filter for this user which can be applied prior executing
      * trusted prepared queries.
      * 
-     * @param desc
-     *            The descriptor for which to get the filter.
-     * @param metaData
-     *            Metadata for the provided descriptor.
-     * 
+     * @param desc the descriptor for which to get the filter.
+     *
      * @return An {@link FilterResult} which can be used to make a decision on
      *         which records to return.
      */
@@ -167,13 +161,7 @@ public class UserPrincipal implements Serializable, Principal {
             return false;
         }
         String otherName = ((Principal) other).getName();
-        boolean equals = false;
-        if (name == null) {
-            equals = otherName == null;
-        } else {
-            equals = name.equals(otherName);
-        }
-        return equals;
+        return Objects.equals(name, otherName);
     }
     
     @Override

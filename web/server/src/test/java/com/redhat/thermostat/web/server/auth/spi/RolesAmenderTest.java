@@ -40,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
 
 import java.net.URL;
 import java.security.Principal;
@@ -47,7 +48,6 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -83,16 +83,24 @@ public class RolesAmenderTest {
         rolesAmender = null;
         validFile = null;
     }
-    
+
+    @Test
+    public void testGetRolesDoesntLeak() {
+        rolesAmender = new RolesAmender(validFile, validUsers);
+        Set<BasicRole> roles = rolesAmender.getRoles("foo");
+        assertEquals(roles, Collections.emptySet());
+        BasicRole fooRole = mock(BasicRole.class);
+        roles.add(fooRole);
+        assertEquals(rolesAmender.getRoles("foo"), Collections.emptySet());
+    }
+
     @Test
     public void canParseRoles() {
         rolesAmender = new RolesAmender(validFile, validUsers);
         Set<BasicRole> roles = rolesAmender.getRoles("user1");
         assertEquals(2, roles.size());
         Map<String, Boolean> userRolesMap = new HashMap<>();
-        Iterator<BasicRole> it = roles.iterator();
-        while (it.hasNext()) {
-            BasicRole role = it.next();
+        for (BasicRole role : roles) {
             // don't expect role nesting
             assertTrue(role instanceof RolePrincipal);
             assertFalse(role.members().hasMoreElements());
@@ -103,9 +111,7 @@ public class RolesAmenderTest {
         roles = rolesAmender.getRoles("user2");
         // new-role, role1, other-role
         assertEquals(3, roles.size());
-        it = roles.iterator();
-        while (it.hasNext()) {
-            BasicRole role = it.next();
+        for (BasicRole role : roles) {
             assertTrue(role instanceof RolePrincipal);
             if (role.getName().equals("role1")) {
                 // nested role
@@ -114,7 +120,7 @@ public class RolesAmenderTest {
                 Enumeration members = role.members();
                 while (members.hasMoreElements()) {
                     count++;
-                    assertEquals("other-role", ((Principal)members.nextElement()).getName());
+                    assertEquals("other-role", ((Principal) members.nextElement()).getName());
                 }
                 assertEquals(1, count);
             }
@@ -136,9 +142,7 @@ public class RolesAmenderTest {
         Set<BasicRole> roles = rolesAmender.getRoles("user2");
         // new-role, role1, other-role
         assertEquals(3, roles.size());
-        Iterator<BasicRole> it = roles.iterator();
-        while (it.hasNext()) {
-            BasicRole role = it.next();
+        for (BasicRole role : roles) {
             assertTrue(role instanceof RolePrincipal);
             if (role.getName().equals("role1")) {
                 // nested role
@@ -147,7 +151,7 @@ public class RolesAmenderTest {
                 Enumeration members = role.members();
                 while (members.hasMoreElements()) {
                     count++;
-                    assertEquals("other-role", ((Principal)members.nextElement()).getName());
+                    assertEquals("other-role", ((Principal) members.nextElement()).getName());
                 }
                 assertEquals(1, count);
             }

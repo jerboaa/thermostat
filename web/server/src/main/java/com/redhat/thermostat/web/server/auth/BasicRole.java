@@ -39,6 +39,7 @@ package com.redhat.thermostat.web.server.auth;
 import java.io.Serializable;
 import java.security.Principal;
 import java.security.acl.Group;
+import java.util.Objects;
 
 /**
  * Base class for all thermostat roles.
@@ -69,13 +70,7 @@ public abstract class BasicRole implements Group, Serializable {
             return false;
         }
         String otherName = ((Principal) other).getName();
-        boolean equals = false;
-        if (name == null) {
-            equals = otherName == null;
-        } else {
-            equals = name.equals(otherName);
-        }
-        return equals;
+        return Objects.equals(name, otherName);
     }
     
     @Override

@@ -44,7 +44,7 @@ package com.redhat.thermostat.web.server;
  */
 interface StoppableTimer {
     
-    public static final String NAME_PREFIX = "thermostat-timer-";
+    String NAME_PREFIX = "thermostat-timer-";
     
     /**
      * Stops this timer and the associated thread.

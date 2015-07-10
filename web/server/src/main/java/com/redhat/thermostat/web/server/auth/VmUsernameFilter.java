@@ -49,7 +49,7 @@ import com.redhat.thermostat.web.server.auth.FilterResult.ResultType;
  * Filters based on the granted VM usernames. I.e. the Unix username the
  * individual VM runs as.
  * 
- * @see also {@link Roles#GRANT_VMS_READ_BY_USERNAME_ALL}
+ * @see Roles#GRANT_VMS_READ_BY_USERNAME_ALL
  */
 class VmUsernameFilter<T extends Pojo> extends AbstractFilter<T> {
 

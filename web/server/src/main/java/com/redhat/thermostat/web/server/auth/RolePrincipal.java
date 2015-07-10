@@ -53,7 +53,7 @@ public class RolePrincipal extends BasicRole {
 
     private static final long serialVersionUID = -7366668253791828610L;
     // the set of nested roles if any
-    private final HashSet<Group> roles;
+    private final HashSet<Group> roles = new HashSet<>();
 
     /**
      * Creates a role principal with the specified role name containing no roles
@@ -64,7 +64,6 @@ public class RolePrincipal extends BasicRole {
      */
     public RolePrincipal(String roleName) {
         super(Objects.requireNonNull(roleName));
-        this.roles = new HashSet<>();
     }
 
     /**

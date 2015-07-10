@@ -40,7 +40,7 @@ final class KnownDescriptorRegistryFactory {
     
     private static KnownDescriptorRegistry reg;
     
-    final static KnownDescriptorRegistry getInstance() {
+    static KnownDescriptorRegistry getInstance() {
         if (reg == null) {
             return new KnownDescriptorRegistry();
         } else {
@@ -48,7 +48,7 @@ final class KnownDescriptorRegistryFactory {
         }
     }
     
-    final static void setKnownDescriptorRegistry(KnownDescriptorRegistry reg) {
+    static void setKnownDescriptorRegistry(KnownDescriptorRegistry reg) {
         KnownDescriptorRegistryFactory.reg = reg;
     }
 

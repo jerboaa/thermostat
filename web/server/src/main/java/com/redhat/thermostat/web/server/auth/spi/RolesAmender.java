@@ -39,10 +39,10 @@ package com.redhat.thermostat.web.server.auth.spi;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
@@ -66,7 +66,6 @@ class RolesAmender {
     private static final Logger logger = LoggingUtils.getLogger(RolesAmender.class);
     private static final String DEFAULT_ROLES_FILE = "thermostat-roles.properties";
     private static final String ROLE_SEPARATOR = ",";
-    private static final Set<BasicRole> EMPTY_SET = new HashSet<>(0);
     // A username => roles mapping
     private Map<String, Set<BasicRole>> rolesMap;
     // The set of all users we know about
@@ -91,7 +90,7 @@ class RolesAmender {
     /**
      * Gets the set of roles for a specific username.
      * 
-     * @param username
+     * @param username the username whose roles to get
      * @return The role-set for the given user or an empty set if this user is
      *         not a member of any role. 
      * @throws IllegalStateException If the roles database was null.
@@ -103,7 +102,7 @@ class RolesAmender {
         Set<BasicRole> roles = rolesMap.get(username);
         if (roles == null) {
             // username not in list of roles, default to empty set for her
-            return EMPTY_SET;
+            return new HashSet<>();
         }
         return roles;
     }
@@ -131,12 +130,10 @@ class RolesAmender {
     private void prepareRolesMap(Properties rawRoles) {
         rolesMap = new HashMap<>();
         Map<String, RolesInfo> rolesSoFar = new HashMap<>();
-        Iterator<Object> it = users.iterator();
-        while (it.hasNext()) {
+        for (Object user : users) {
             // users came from props, this should be a safe cast to string
-            String username = (String)it.next();
-            String rolesRaw = null;
-            rolesRaw = rawRoles.getProperty(username);
+            String username = (String) user;
+            String rolesRaw = rawRoles.getProperty(username);
             if (rolesRaw == null) {
                 // Since the list of usernames is not necessarily a subset of
                 // lines listed in roles for the case where there are just users
@@ -147,7 +144,7 @@ class RolesAmender {
             rolesRaw = rolesRaw.trim();
             String[] roles = rolesRaw.split(ROLE_SEPARATOR);
             Set<BasicRole> uRoles = new HashSet<>();
-            for (String tmp: roles) {
+            for (String tmp : roles) {
                 String role = tmp.trim();
                 if (role.equals("")) {
                     // skip empty role names
@@ -206,12 +203,10 @@ class RolesAmender {
      * Add roles to users which are member of a recursive role
      */
     private void expandRoles(RolesInfo recRole) {
-        Iterator<String> memberUsersIterator = recRole.getMemberUsers().iterator();
-        while (memberUsersIterator.hasNext()) {
+        for (String s : recRole.getMemberUsers()) {
             @SuppressWarnings("unchecked") // we've added them so safe
-            Enumeration<BasicRole> members = (Enumeration<BasicRole>)recRole.getRole().members();
-            String username = memberUsersIterator.next();
-            Set<BasicRole> userRoles = rolesMap.get(username);
+            Enumeration<BasicRole> members = (Enumeration<BasicRole>) recRole.getRole().members();
+            Set<BasicRole> userRoles = rolesMap.get(s);
             while (members.hasMoreElements()) {
                 BasicRole r = members.nextElement();
                 userRoles.add(r);

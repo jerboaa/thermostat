@@ -39,7 +39,6 @@ package com.redhat.thermostat.web.server.auth.spi;
 import java.security.Principal;
 import java.security.acl.Group;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -99,9 +98,7 @@ public final class DelegateLoginModule extends AbstractLoginModule {
          */
         try {
             this.delegateContext = new LoginContext(configName, subject, callbackHandler);
-            if (debug) {
-                logger.log(Level.FINEST, "successfully created delegate login context");
-            }
+            debugLog(Level.FINEST, "successfully created delegate login context");
         } catch (LoginException e) {
             // This only happens if there is no "ThermostatJAASDelegate" config
             // and also no configuration with the name "other", which is likely
@@ -116,23 +113,17 @@ public final class DelegateLoginModule extends AbstractLoginModule {
 
     @Override
     public boolean login() throws LoginException {
-        boolean loginOk = false;
         try {
             username = super.getUsernameFromCallBack();
             delegateContext.login();
-            loginOk = true;
-            if (debug) {
-                logger.log(Level.FINEST, "Login succeeded for " + username + " using the delegate.");
-            }
+            debugLog(Level.FINEST, "Login succeeded for " + username + " using the delegate.");
         } catch (LoginException e) {
-            if (debug) {
-                // This only shows up if debug is turned on
-                // since it's just a plain login failure.
-                logger.log(Level.FINEST, "Login failed", e);
-            }
+            // This only shows up if debug is turned on
+            // since it's just a plain login failure.
+            debugLog(Level.FINEST, "Login failed", e);
             throw e;
         }
-        return loginOk;
+        return true;
     }
 
     @Override
@@ -147,10 +138,8 @@ public final class DelegateLoginModule extends AbstractLoginModule {
         Set<Principal> wrappedPrincipals = new HashSet<>(size);
         // the user principal is not in the roles set
         Set<BasicRole> roles = new HashSet<>(size -1);
-        Iterator<Principal> it = principals.iterator();
         UserPrincipal userPrincipal = null;
-        while (it.hasNext()) {
-            Principal p = it.next();
+        for (Principal p : principals) {
             if (p.getName().equals(username)) {
                 // add our user principal
                 if (userPrincipal != null) {
@@ -181,11 +170,11 @@ public final class DelegateLoginModule extends AbstractLoginModule {
         // Finally, inform the user principal about the roles it is a member of.
         // We need this in order to be able to do something (filtering/authorization)
         // with these roles from the web storage servlet.
-        userPrincipal.setRoles(roles);
-        
-        if (debug) {
-            logger.log(Level.FINEST, "Committed changes for '" + username + "'");
+        if (userPrincipal != null) {
+            userPrincipal.setRoles(roles);
         }
+
+        debugLog(Level.FINEST, "Committed changes for '" + username + "'");
         return true;
     }
 
@@ -196,9 +185,7 @@ public final class DelegateLoginModule extends AbstractLoginModule {
             Set<Principal> principals = subject.getPrincipals();
             principals.clear();
         }
-        if (debug) {
-            logger.log(Level.FINEST, "Login aborted!");
-        }
+        debugLog(Level.FINEST, "Login aborted!");
         return true;
     }
 
@@ -208,14 +195,10 @@ public final class DelegateLoginModule extends AbstractLoginModule {
             delegateContext.logout();
             Set<Principal> principals = subject.getPrincipals();
             principals.clear();
-            if (debug) {
-                logger.log(Level.FINEST, "Logged out successfully!");
-            }
+            debugLog(Level.FINEST, "Logged out successfully!");
             return true;
         } catch (LoginException e) {
-            if (debug) {
-                logger.log(Level.FINEST, "Logout failed!" + e.getMessage());
-            }
+            debugLog(Level.FINEST, "Logout failed!" + e.getMessage());
             return false;
         }
     }

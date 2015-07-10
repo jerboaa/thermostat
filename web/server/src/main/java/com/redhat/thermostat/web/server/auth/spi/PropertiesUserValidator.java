@@ -87,7 +87,6 @@ class PropertiesUserValidator implements UserValidator {
         }
         // We have an entry in our user db for the requested username.
         char refPassWd[] = tmp.toCharArray();
-        tmp = null;
         try {
             validate(password, refPassWd);
         } finally {

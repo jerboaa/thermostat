@@ -49,7 +49,7 @@ import com.redhat.thermostat.web.server.auth.FilterResult.ResultType;
 /**
  * Filters queries based on granted agent IDs.
  * 
- * @see also {@link Roles#GRANT_AGENTS_READ_ALL}
+ * @see Roles#GRANT_AGENTS_READ_ALL
  */
 class AgentIdFilter<T extends Pojo> extends AbstractFilter<T> {
     

@@ -133,10 +133,10 @@ class TokenManager {
     
     // package private for testing
     String convertBytesToHexString(byte[] shaBytes) {
-        StringBuffer hexString = new StringBuffer();
+        StringBuilder hexString = new StringBuilder();
 
-        for (int i = 0; i < shaBytes.length; i++) {
-            String hex = Integer.toHexString(0xff & shaBytes[i]);
+        for (byte shaByte : shaBytes) {
+            String hex = Integer.toHexString(0xff & shaByte);
             if (hex.length() == 1) {
                 hexString.append('0');
             }
