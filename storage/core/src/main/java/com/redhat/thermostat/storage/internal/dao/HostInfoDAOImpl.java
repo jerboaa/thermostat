@@ -44,6 +44,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.CategoryAdapter;
 import com.redhat.thermostat.storage.core.Cursor;
@@ -104,16 +105,17 @@ public class HostInfoDAOImpl extends BaseCountable implements HostInfoDAO {
 
     @Override
     public HostInfo getHostInfo(HostRef ref) {
-        return getHostInfo(ref.getAgentId());
+        return getHostInfo(new AgentId(ref.getAgentId()));
     }
 
-    private HostInfo getHostInfo(String agentId) {
+    @Override
+    public HostInfo getHostInfo(final AgentId agentId) {
         StatementDescriptor<HostInfo> desc = new StatementDescriptor<>(hostInfoCategory, QUERY_HOST_INFO);
         PreparedStatement<HostInfo> prepared;
         Cursor<HostInfo> cursor;
         try {
             prepared = storage.prepareStatement(desc);
-            prepared.setString(0, agentId);
+            prepared.setString(0, agentId.get());
             cursor = prepared.executeQuery();
         } catch (DescriptorParsingException e) {
             // should not happen, but if it *does* happen, at least log it
@@ -124,7 +126,7 @@ public class HostInfoDAOImpl extends BaseCountable implements HostInfoDAO {
             logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
             return null;
         }
-        
+
         HostInfo result = null;
         if (cursor.hasNext()) {
             result = cursor.next();
@@ -198,7 +200,7 @@ public class HostInfoDAOImpl extends BaseCountable implements HostInfoDAO {
         List<HostRef> hosts = new ArrayList<>();
         List<AgentInformation> agentInfos = agentInfoDao.getAliveAgents();
         for (AgentInformation agentInfo : agentInfos) {
-            HostInfo hostInfo = getHostInfo(agentInfo.getAgentId());
+            HostInfo hostInfo = getHostInfo(new AgentId(agentInfo.getAgentId()));
             // getHostInfo may return null if user is not allowed to
             // see the given host by ACL.
             if (hostInfo != null) {
@@ -226,6 +228,12 @@ public class HostInfoDAOImpl extends BaseCountable implements HostInfoDAO {
     @Override
     public boolean isAlive(HostRef ref) {
         AgentInformation info = agentInfoDao.getAgentInformation(ref);
+        return (info != null && info.isAlive());
+    }
+
+    @Override
+    public boolean isAlive(final AgentId agentId) {
+        AgentInformation info = agentInfoDao.getAgentInformation(agentId);
         return (info != null && info.isAlive());
     }
 }

@@ -39,6 +39,7 @@ package com.redhat.thermostat.storage.dao;
 import java.util.Collection;
 
 import com.redhat.thermostat.annotations.Service;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Countable;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -65,7 +66,16 @@ public interface HostInfoDAO extends Countable {
      * @return The corresponding HostInfo object. May return null if the user
      *         is not permitted to retrieve this HostInfo.
      */
+    @Deprecated
     HostInfo getHostInfo(HostRef ref);
+
+    /**
+     *
+     * @param agentId The Agent Id for which to get the HostInfo object for.
+     * @return The corresponding HostInfo object. May return null if the user
+     *         is not permitted to retrieve this HostInfo.
+     */
+    HostInfo getHostInfo(AgentId agentId);
 
     void putHostInfo(HostInfo info);
 
@@ -93,6 +103,13 @@ public interface HostInfoDAO extends Countable {
      * 
      * @return if this host is alive.
      */
+    @Deprecated
     boolean isAlive(HostRef ref);
+
+    /**
+     *
+     * @return if this host is alive.
+     */
+    boolean isAlive(AgentId agentId);
 }
 

@@ -48,6 +48,7 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.Collection;
 
+import com.redhat.thermostat.storage.core.AgentId;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -136,13 +137,36 @@ public class HostInfoDAOTest {
         AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
 
         HostInfo result = new HostInfoDAOImpl(storage, agentInfoDao).getHostInfo(new HostRef("some uid", HOST_NAME));
-        
+
         verify(storage).prepareStatement(anyDescriptor());
         verify(prepared).setString(0, "some uid");
         verify(prepared).executeQuery();
         assertSame(result, info);
     }
-    
+
+    @Test
+    public void testGetHostInfoUsingAgentId() throws DescriptorParsingException, StatementExecutionException {
+        Storage storage = mock(Storage.class);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<HostInfo> prepared = (PreparedStatement<HostInfo>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(prepared);
+
+        HostInfo info = new HostInfo("foo-agent", HOST_NAME, OS_NAME, OS_KERNEL, CPU_MODEL, CPU_NUM, MEMORY_TOTAL);
+        @SuppressWarnings("unchecked")
+        Cursor<HostInfo> cursor = (Cursor<HostInfo>) mock(Cursor.class);
+        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
+        when(cursor.next()).thenReturn(info).thenReturn(null);
+        when(prepared.executeQuery()).thenReturn(cursor);
+        AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
+
+        HostInfo result = new HostInfoDAOImpl(storage, agentInfoDao).getHostInfo(new AgentId("some uid"));
+
+        verify(storage).prepareStatement(anyDescriptor());
+        verify(prepared).setString(0, "some uid");
+        verify(prepared).executeQuery();
+        assertSame(result, info);
+    }
+
     @SuppressWarnings("unchecked")
     private StatementDescriptor<HostInfo> anyDescriptor() {
         return (StatementDescriptor<HostInfo>) any(StatementDescriptor.class);
@@ -283,7 +307,7 @@ public class HostInfoDAOTest {
         verify(stmt).setString(0, "123");
         verify(stmt).executeQuery();
     }
-    
+
     @Test
     public void getAliveHostsEmptyDueToHostInfoBeingNull() throws DescriptorParsingException, StatementExecutionException {
         Triple<Storage, AgentInfoDAO, PreparedStatement<HostInfo>> setup = setupForNullHostInfo();
