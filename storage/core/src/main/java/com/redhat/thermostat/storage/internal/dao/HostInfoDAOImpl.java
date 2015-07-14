@@ -231,10 +231,5 @@ public class HostInfoDAOImpl extends BaseCountable implements HostInfoDAO {
         return (info != null && info.isAlive());
     }
 
-    @Override
-    public boolean isAlive(final AgentId agentId) {
-        AgentInformation info = agentInfoDao.getAgentInformation(agentId);
-        return (info != null && info.isAlive());
-    }
 }
 

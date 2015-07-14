@@ -132,5 +132,10 @@ public interface AgentInfoDAO extends Countable {
      */
     void removeAgentInformation(AgentInformation agentInfo);
 
+    /**
+     *
+     * @return true if this agent is alive.
+     */
+    boolean isAlive(AgentId agentId);
 }
 

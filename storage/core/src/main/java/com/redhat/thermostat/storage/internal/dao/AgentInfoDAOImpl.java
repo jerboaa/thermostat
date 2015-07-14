@@ -288,6 +288,12 @@ public class AgentInfoDAOImpl extends BaseCountable implements AgentInfoDAO {
     }
 
     @Override
+    public boolean isAlive(final AgentId agentId) {
+        AgentInformation info = getAgentInformation(agentId);
+        return (info != null && info.isAlive());
+    }
+
+    @Override
     public void updateAgentInformation(AgentInformation agentInfo) {
         StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(CATEGORY, DESC_UPDATE_AGENT_INFO);
         PreparedStatement<AgentInformation> prepared;

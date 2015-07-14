@@ -102,14 +102,11 @@ public interface HostInfoDAO extends Countable {
     /**
      * 
      * @return if this host is alive.
+     * @deprecated use {@link com.redhat.thermostat.storage.dao.AgentInfoDAO#isAlive(AgentId)}
+     * instead.
      */
     @Deprecated
     boolean isAlive(HostRef ref);
 
-    /**
-     *
-     * @return if this host is alive.
-     */
-    boolean isAlive(AgentId agentId);
 }
 
