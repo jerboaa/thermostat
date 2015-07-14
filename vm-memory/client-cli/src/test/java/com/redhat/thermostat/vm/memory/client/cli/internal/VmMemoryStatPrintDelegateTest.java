@@ -49,7 +49,9 @@ import org.junit.Test;
 
 import com.redhat.thermostat.client.cli.VMStatPrintDelegate;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
@@ -62,6 +64,8 @@ public class VmMemoryStatPrintDelegateTest {
     private VmMemoryStatDAO vmMemoryStatDAO;
     private VMStatPrintDelegate delegate;
     private VmRef vm;
+    private AgentId agentId;
+    private VmId vmId;
     private List<VmMemoryStat> memoryStats;
 
     @Before
@@ -76,9 +80,10 @@ public class VmMemoryStatPrintDelegateTest {
     }
 
     private void setupDAOs() {
-        String vmId = "vmId";
+        vmId = new VmId("vmId");
+        agentId = new AgentId("agentId");
         HostRef host = new HostRef("123", "dummy");
-        vm = new VmRef(host, vmId, 234, "dummy");
+        vm = new VmRef(host, vmId.get(), 234, "dummy");
 
         VmMemoryStat.Space space1_1_1 = newSpace("space1", 123456, 12345, 1, 0);
         VmMemoryStat.Space space1_1_2 = newSpace("space2", 123456, 12345, 1, 0);
@@ -92,7 +97,7 @@ public class VmMemoryStatPrintDelegateTest {
 
         VmMemoryStat.Generation[] gens1 = new VmMemoryStat.Generation[] { gen1_1, gen1_2 };
 
-        VmMemoryStat memStat1 = new VmMemoryStat("foo-agent", 1, vmId, gens1);
+        VmMemoryStat memStat1 = new VmMemoryStat("foo-agent", 1, vmId.get(), gens1);
 
         VmMemoryStat.Space space2_1_1 = newSpace("space1", 123456, 12345, 2, 0);
         VmMemoryStat.Space space2_1_2 = newSpace("space2", 123456, 12345, 2, 0);
@@ -106,7 +111,7 @@ public class VmMemoryStatPrintDelegateTest {
 
         VmMemoryStat.Generation[] gens2 = new VmMemoryStat.Generation[] { gen2_1, gen2_2 };
 
-        VmMemoryStat memStat2 = new VmMemoryStat("foo-agent", 2, vmId, gens2);
+        VmMemoryStat memStat2 = new VmMemoryStat("foo-agent", 2, vmId.get(), gens2);
 
         VmMemoryStat.Space space3_1_1 = newSpace("space1", 123456, 12345, 4, 0);
         VmMemoryStat.Space space3_1_2 = newSpace("space2", 123456, 12345, 5, 0);
@@ -120,12 +125,12 @@ public class VmMemoryStatPrintDelegateTest {
 
         VmMemoryStat.Generation[] gens3 = new VmMemoryStat.Generation[] { gen3_1, gen3_2 };
 
-        VmMemoryStat memStat3 = new VmMemoryStat("foo-agent", 3, vmId, gens3);
+        VmMemoryStat memStat3 = new VmMemoryStat("foo-agent", 3, vmId.get(), gens3);
 
         vmMemoryStatDAO = mock(VmMemoryStatDAO.class);
         memoryStats = Arrays.asList(memStat1, memStat2, memStat3);
-        when(vmMemoryStatDAO.getLatestVmMemoryStats(vm, Long.MIN_VALUE))
-            .thenReturn(memoryStats);
+        when(vmMemoryStatDAO.getLatestVmMemoryStats(vm, Long.MIN_VALUE)).thenReturn(memoryStats);
+        when(vmMemoryStatDAO.getLatestVmMemoryStats(agentId, vmId, Long.MIN_VALUE)).thenReturn(memoryStats);
     }
 
     private Space newSpace(String name, long maxCapacity, long capacity, long used, int index) {
@@ -148,8 +153,14 @@ public class VmMemoryStatPrintDelegateTest {
     }
 
     @Test
-    public void testGetLatestStats() {
+    public void testVmRefGetLatestStats() {
         List<? extends TimeStampedPojo> stats = delegate.getLatestStats(vm, Long.MIN_VALUE);
+        assertEquals(memoryStats, stats);
+    }
+
+    @Test
+    public void testGetLatestStats() {
+        List<? extends TimeStampedPojo> stats = delegate.getLatestStats(agentId, vmId, Long.MIN_VALUE);
         assertEquals(memoryStats, stats);
     }
     

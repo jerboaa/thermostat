@@ -52,7 +52,8 @@ import com.redhat.thermostat.client.cli.VMStatPrintDelegate;
 import com.redhat.thermostat.common.OrderedComparator;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 import com.redhat.thermostat.storage.model.TimeStampedPojoComparator;
 import com.redhat.thermostat.storage.model.TimeStampedPojoCorrelator;
@@ -63,7 +64,8 @@ class VMStatPrinter {
 
     private static final String TIME = translator.localize(LocaleResources.COLUMN_HEADER_TIME).getContents();
 
-    private VmRef vm;
+    private AgentId agentId;
+    private VmId vmId;
     private List<VMStatPrintDelegate> delegates;
     private PrintStream out;
     private TimeStampedPojoCorrelator correlator;
@@ -71,8 +73,10 @@ class VMStatPrinter {
     private int numCols;
     private Map<VMStatPrintDelegate, DelegateInfo> delegateInfo;
 
-    VMStatPrinter(VmRef vm, List<VMStatPrintDelegate> delegates, PrintStream out, long sinceTimestamp) {
-        this.vm = vm;
+    VMStatPrinter(AgentId agentId, VmId vmId, List<VMStatPrintDelegate> delegates, PrintStream out, long
+            sinceTimestamp) {
+        this.agentId = agentId;
+        this.vmId = vmId;
         this.delegates = delegates;
         this.out = out;
         int numDelegates = delegates.size();
@@ -98,7 +102,7 @@ class VMStatPrinter {
         List<VMStatPrintDelegate> delegatesCopy = new ArrayList<>(delegates);
         for (VMStatPrintDelegate delegate : delegatesCopy) {
             long timeStamp = delegateInfo.get(delegate).lastTimeStamp;
-            List<? extends TimeStampedPojo> latestStats = delegate.getLatestStats(vm, timeStamp);
+            List<? extends TimeStampedPojo> latestStats = delegate.getLatestStats(agentId, vmId, timeStamp);
             if (latestStats == null || latestStats.isEmpty()) {
                 // Skipping delegate
                 delegates.remove(delegate);
@@ -128,7 +132,7 @@ class VMStatPrinter {
         List<List<? extends TimeStampedPojo>> allStats = new ArrayList<>();
         for (VMStatPrintDelegate delegate : delegates) {
             DelegateInfo info = delegateInfo.get(delegate);
-            List<? extends TimeStampedPojo> latestStats = delegate.getLatestStats(vm, info.lastTimeStamp);
+            List<? extends TimeStampedPojo> latestStats = delegate.getLatestStats(agentId, vmId, info.lastTimeStamp);
             allStats.add(latestStats);
             info.lastTimeStamp = getLatestTimeStamp(info.lastTimeStamp, latestStats);
         }

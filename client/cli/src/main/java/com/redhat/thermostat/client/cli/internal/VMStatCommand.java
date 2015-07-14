@@ -50,17 +50,20 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
-import com.redhat.thermostat.client.cli.HostVMArguments;
 import com.redhat.thermostat.client.cli.VMStatPrintDelegate;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.cli.AbstractCommand;
+import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.CommandLineArgumentParseException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.storage.core.VmId;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.VmInfo;
 
 public class VMStatCommand extends AbstractCommand {
 
@@ -69,6 +72,8 @@ public class VMStatCommand extends AbstractCommand {
 
     private List<VMStatPrintDelegate> delegates;
     private BundleContext context;
+
+    private VmInfoDAO vmInfoDAO;
 
     public VMStatCommand() {
         this(FrameworkUtil.getBundle(VMStatCommand.class).getBundleContext());
@@ -96,11 +101,25 @@ public class VMStatCommand extends AbstractCommand {
 
     @Override
     public void run(final CommandContext ctx) throws CommandException {
+        requireNonNull(vmInfoDAO, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
+
         long currentTime = System.currentTimeMillis();
         long defaultSinceTime = currentTime - TimeUnit.MINUTES.toMillis(10);
 
-        HostVMArguments hostVMArgs = new HostVMArguments(ctx.getArguments());
-        VmRef vm = hostVMArgs.getVM();
+        String agentIdArg = ctx.getArguments().getArgument(Arguments.HOST_ID_ARGUMENT);
+        if (agentIdArg == null) {
+            throw new CommandException(translator.localize(LocaleResources.HOSTID_REQUIRED));
+        }
+
+        String vmIdArg = ctx.getArguments().getArgument(Arguments.VM_ID_ARGUMENT);
+        if (vmIdArg == null) {
+            throw new CommandException(translator.localize(LocaleResources.VMID_REQUIRED));
+        }
+
+        VmId vmId = new VmId(vmIdArg);
+
+        final VmInfo vmInfo = vmInfoDAO.getVmInfo(vmId);
+        AgentId agentId = new AgentId(vmInfo.getAgentId());
 
         long sinceTimestamp;
 
@@ -112,7 +131,8 @@ public class VMStatCommand extends AbstractCommand {
         }
 
         // Pass a copy of the delegates list to the printer
-        final VMStatPrinter statPrinter = new VMStatPrinter(vm, new ArrayList<>(delegates), ctx.getConsole().getOutput(), sinceTimestamp);
+        final VMStatPrinter statPrinter = new VMStatPrinter(agentId, vmId, new ArrayList<>(delegates), ctx.getConsole()
+                .getOutput(), sinceTimestamp);
         statPrinter.printStats();
 
         boolean continuous = ctx.getArguments().hasArgument("continuous");
@@ -158,6 +178,10 @@ public class VMStatCommand extends AbstractCommand {
         }
 
         context.ungetService(ref);
+    }
+
+    public void setVmInfoDAO(VmInfoDAO vmInfoDAO) {
+        this.vmInfoDAO = vmInfoDAO;
     }
 
 }

@@ -49,12 +49,16 @@ import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class Activator implements BundleActivator {
 
     private CommandRegistry reg = null;
     private MultipleServiceTracker connectTracker;
+
+    private MultipleServiceTracker vmStatTracker;
+    private final VMStatCommand vmStatCommand = new VMStatCommand();
 
     private MultipleServiceTracker listAgentTracker;
     private final ListAgentsCommand listAgentsCommand = new ListAgentsCommand();
@@ -68,7 +72,7 @@ public class Activator implements BundleActivator {
 
         reg.registerCommand("list-vms", new ListVMsCommand());
         reg.registerCommand("vm-info", new VMInfoCommand());
-        reg.registerCommand("vm-stat", new VMStatCommand());
+        reg.registerCommand("vm-stat", vmStatCommand);
         reg.registerCommand("disconnect", new DisconnectCommand());
         reg.registerCommand("clean-data", new CleanDataCommand(context));
 
@@ -93,6 +97,24 @@ public class Activator implements BundleActivator {
             
         });
         connectTracker.open();
+
+        Class<?>[] vmStatClasses = new Class<?>[] {
+                VmInfoDAO.class,
+        };
+
+        vmStatTracker = new MultipleServiceTracker(context, vmStatClasses, new Action() {
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                VmInfoDAO vmInfoDAO = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
+                vmStatCommand.setVmInfoDAO(vmInfoDAO);
+            }
+
+            @Override
+            public void dependenciesUnavailable() {
+                vmStatCommand.setVmInfoDAO(null);
+            }
+        });
+        vmStatTracker.open();
 
         Class<?>[] listAgentClasses = new Class[] {
                 AgentInfoDAO.class,

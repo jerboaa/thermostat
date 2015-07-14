@@ -51,7 +51,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 import com.redhat.thermostat.vm.io.common.VmIoStat;
@@ -64,6 +66,8 @@ public class VmIoStatPrintDelegateTest {
     private VmIoStatDAO vmIoStatDAO;
     private VmIoStatPrintDelegate delegate;
     private VmRef vm;
+    private AgentId agentId;
+    private VmId vmId;
     private List<VmIoStat> cpuStats;
 
     @BeforeClass
@@ -90,18 +94,26 @@ public class VmIoStatPrintDelegateTest {
 
     private void setupDAOs() {
         vmIoStatDAO = mock(VmIoStatDAO.class);
-        String vmId = "vmId";
+        vmId = new VmId("vmId");
+        agentId = new AgentId("agentId");
         HostRef host = new HostRef("123", "dummy");
-        vm = new VmRef(host, vmId, 234, "dummy");
-        VmIoStat ioStat1 = new VmIoStat("foo-agent", vmId, 2, 65, 123, 123, 123);
-        VmIoStat ioStat2 = new VmIoStat("foo-agent", vmId, 3, 70, 78, 89, 90);
+        vm = new VmRef(host, vmId.get(), 234, "dummy");
+        VmIoStat ioStat1 = new VmIoStat("foo-agent", vmId.get(), 2, 65, 123, 123, 123);
+        VmIoStat ioStat2 = new VmIoStat("foo-agent", vmId.get(), 3, 70, 78, 89, 90);
         cpuStats = Arrays.asList(ioStat1, ioStat2);
         when(vmIoStatDAO.getLatestVmIoStats(vm, Long.MIN_VALUE)).thenReturn(cpuStats);
+        when(vmIoStatDAO.getLatestVmIoStats(agentId, vmId, Long.MIN_VALUE)).thenReturn(cpuStats);
+    }
+
+    @Test
+    public void testVmRefGetLatestStats() {
+        List<? extends TimeStampedPojo> stats = delegate.getLatestStats(vm, Long.MIN_VALUE);
+        assertEquals(cpuStats, stats);
     }
 
     @Test
     public void testGetLatestStats() {
-        List<? extends TimeStampedPojo> stats = delegate.getLatestStats(vm, Long.MIN_VALUE);
+        List<? extends TimeStampedPojo> stats = delegate.getLatestStats(agentId, vmId, Long.MIN_VALUE);
         assertEquals(cpuStats, stats);
     }
 

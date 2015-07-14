@@ -67,18 +67,29 @@ public class VmLatestPojoListGetter<T extends TimeStampedPojo> extends AbstractG
         this.queryLatest = String.format(VM_LATEST_QUERY_FORMAT, cat.getName());
     }
 
+    @Deprecated
     public List<T> getLatest(VmRef vmRef, long since) {
         PreparedStatement<T> query = buildQuery(vmRef, since);
         return getLatestOrEmpty(query);
     }
 
+    public List<T> getLatest(AgentId agentId, VmId vmId, long since) {
+        PreparedStatement<T> query = buildQuery(agentId, vmId, since);
+        return getLatestOrEmpty(query);
+    }
+
+    @Deprecated
     protected PreparedStatement<T> buildQuery(VmRef vmRef, long since) {
+        return buildQuery(new AgentId(vmRef.getHostRef().getAgentId()), new VmId(vmRef.getVmId()), since);
+    }
+
+    protected PreparedStatement<T> buildQuery(AgentId agentId, VmId vmId, long since) {
         StatementDescriptor<T> desc = new StatementDescriptor<>(cat, queryLatest);
         PreparedStatement<T> stmt = null;
         try {
             stmt = storage.prepareStatement(desc);
-            stmt.setString(0, vmRef.getHostRef().getAgentId());
-            stmt.setString(1, vmRef.getVmId());
+            stmt.setString(0, agentId.get());
+            stmt.setString(1, vmId.get());
             stmt.setLong(2, since);
         } catch (DescriptorParsingException e) {
             // should not happen, but if it *does* happen, at least log it

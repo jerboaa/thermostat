@@ -70,7 +70,7 @@ public class AgentInfoCommand extends AbstractCommand {
 
         String agentId = ctx.getArguments().getArgument("agentId");
         if (agentId == null) {
-            throw new CommandLineArgumentParseException(translator.localize(LocaleResources.AGENT_ID_REQUIRED_MESSAGE));
+            throw new CommandLineArgumentParseException(translator.localize(LocaleResources.AGENTID_REQUIRED));
         }
 
         displayAgentInfo(ctx.getConsole().getOutput(), agentId);

@@ -40,6 +40,8 @@ import java.util.List;
 
 import com.redhat.thermostat.annotations.ExtensionPoint;
 import com.redhat.thermostat.common.Ordered;
+import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
@@ -56,13 +58,26 @@ public interface VMStatPrintDelegate extends Ordered {
      * @param ref - the VM whose statistics to return
      * @param timeStampSince - the earliest time stamp to return statistics for
      * @return a list of statistics newer than the time stamp
+     *
+     * @deprecated use {@link #getLatestStats(AgentId, VmId, long)} instead.
      */
+    @Deprecated
     public List<? extends TimeStampedPojo> getLatestStats(VmRef ref, long timeStampSince);
+
+    /**
+     * Returns statistics gathered by this plug-in newer than the specified
+     * time stamp.
+     * @param agentId - the ID of the monitoring agent
+     * @param vmId - the ID of the vm whose statistics to return
+     * @param timeStampSince - the earliest time stamp to return statistics for
+     * @return a list of statistics newer than the time stamp
+     */
+    public List<? extends TimeStampedPojo> getLatestStats(AgentId agentId, VmId vmId, long timeStampSince);
     
     /**
      * Returns header names for columns this plug-in wishes to add to the 
      * vm-stat command.
-     * @param stat - the first stat returned by {@link #getLatestStats(VmRef, long)}
+     * @param stat - the first stat returned by {@link #getLatestStats(AgentId, VmId, long)}
      * @return a list of column headers to append to vm-stat output
      */
     public List<String> getHeaders(TimeStampedPojo stat);

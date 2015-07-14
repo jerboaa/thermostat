@@ -48,12 +48,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -62,6 +62,7 @@ import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;
@@ -75,6 +76,8 @@ public class VmMemoryStatDAOTest {
 
     private Storage storage;
     private VmRef vmRef;
+    private AgentId agentId;
+    private VmId vmId;
 
     private PreparedStatement<VmMemoryStat> stmt;
     private Cursor<VmMemoryStat> cursor;
@@ -89,6 +92,9 @@ public class VmMemoryStatDAOTest {
         when(vmRef.getHostRef()).thenReturn(hostRef);
         when(vmRef.getVmId()).thenReturn(VM_ID);
 
+        agentId = new AgentId(AGENT_ID);
+        vmId = new VmId(VM_ID);
+
         storage = mock(Storage.class);
         stmt = (PreparedStatement<VmMemoryStat>) mock(PreparedStatement.class);
         when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
@@ -102,14 +108,6 @@ public class VmMemoryStatDAOTest {
     @SuppressWarnings("unchecked")
     private StatementDescriptor<VmMemoryStat> anyDescriptor() {
         return (StatementDescriptor<VmMemoryStat>) any(StatementDescriptor.class);
-    }
-
-    @After
-    public void tearDown() {
-        stmt = null;
-        vmRef = null;
-        cursor = null;
-        storage = null;
     }
     
     @Test
@@ -146,13 +144,26 @@ public class VmMemoryStatDAOTest {
     }
 
     @Test
-    public void testGetLatestSince() throws DescriptorParsingException, StatementExecutionException {
+    public void testVmRefGetLatestSince() throws DescriptorParsingException, StatementExecutionException {
         VmMemoryStatDAO impl = new VmMemoryStatDAOImpl(storage);
         impl.getLatestVmMemoryStats(vmRef, 123L);
 
         verify(storage).prepareStatement(anyDescriptor());
         verify(stmt).setString(0, vmRef.getHostRef().getAgentId());
         verify(stmt).setString(1, vmRef.getVmId());
+        verify(stmt).setLong(2, 123L);
+        verify(stmt).executeQuery();
+        verifyNoMoreInteractions(stmt);
+    }
+
+    @Test
+    public void testGetLatestSince() throws DescriptorParsingException, StatementExecutionException {
+        VmMemoryStatDAO impl = new VmMemoryStatDAOImpl(storage);
+        impl.getLatestVmMemoryStats(agentId, vmId, 123L);
+
+        verify(storage).prepareStatement(anyDescriptor());
+        verify(stmt).setString(0, agentId.get());
+        verify(stmt).setString(1, vmId.get());
         verify(stmt).setLong(2, 123L);
         verify(stmt).executeQuery();
         verifyNoMoreInteractions(stmt);

@@ -41,6 +41,8 @@ import java.util.List;
 
 import com.redhat.thermostat.client.cli.VMStatPrintDelegate;
 import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 import com.redhat.thermostat.vm.io.common.Constants;
@@ -62,9 +64,15 @@ public class VmIoStatPrintDelegate implements VMStatPrintDelegate {
         this.ioStatDAO = ioStatDAO;
     }
 
+    @Deprecated
     @Override
     public List<? extends TimeStampedPojo> getLatestStats(VmRef ref, long timestamp) {
         return ioStatDAO.getLatestVmIoStats(ref, timestamp);
+    }
+
+    @Override
+    public List<? extends TimeStampedPojo> getLatestStats(AgentId agentId, VmId vmId, long timestamp) {
+        return ioStatDAO.getLatestVmIoStats(agentId, vmId, timestamp);
     }
 
     @Override

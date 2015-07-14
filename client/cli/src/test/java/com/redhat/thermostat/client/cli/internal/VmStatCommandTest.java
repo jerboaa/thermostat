@@ -65,8 +65,11 @@ import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
-import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.storage.core.VmId;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
+import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.redhat.thermostat.test.TestTimerFactory;
 import com.redhat.thermostat.testutils.StubBundleContext;
@@ -94,9 +97,21 @@ public class VmStatCommandTest {
     private TestCommandContextFactory cmdCtxFactory;
     private TestTimerFactory timerFactory;
     private ApplicationService appSvc;
+    private VmInfo vmInfo;
+    private StubBundleContext context;
+    private VMStatCommand cmd;
 
     @Before
     public void setUp() {
+        vmInfo = new VmInfo("123", "vmId", 234, 0, 0, null, null, null, null, null, null, null,
+                null, null, null, null, 0, "myUsername");
+        context = new StubBundleContext();
+        cmd = new VMStatCommand(context);
+
+        VmInfoDAO vmInfoDAO = mock(VmInfoDAO.class);
+        cmd.setVmInfoDAO(vmInfoDAO);
+        when(vmInfoDAO.getVmInfo(any(VmId.class))).thenReturn(vmInfo);
+
         delegates = new VMStatPrintDelegate[2];
         final String[][] headers = {
                 { "FIRST", "SECOND", "THIRD" }, 
@@ -133,7 +148,7 @@ public class VmStatCommandTest {
         }
         
         // Need this syntax due to generics
-        doReturn(stats).when(delegate).getLatestStats(any(VmRef.class), eq(Long.MIN_VALUE));
+        doReturn(stats).when(delegate).getLatestStats(any(AgentId.class), any(VmId.class), eq(Long.MIN_VALUE));
         when(delegate.getHeaders(stats.get(0))).thenReturn(Arrays.asList(headers));
         for (int i = 0; i < data.length; i++) {
             List<String> row = Arrays.asList(data[i]);
@@ -155,11 +170,8 @@ public class VmStatCommandTest {
 
     @Test
     public void testOutput() throws CommandException {
-        StubBundleContext context = new StubBundleContext();
         context.registerService(VMStatPrintDelegate.class.getName(), delegates[0], null);
         context.registerService(VMStatPrintDelegate.class.getName(), delegates[1], null);
-        
-        VMStatCommand cmd = new VMStatCommand(context);
         
         cmd.run(cmdCtxFactory.createContext(setupArguments()));
         String expected = "TIME        FIRST SECOND THIRD FOURTH FIFTH\n"
@@ -171,9 +183,6 @@ public class VmStatCommandTest {
 
     @Test
     public void testNoDelegates() throws CommandException {
-        StubBundleContext context = new StubBundleContext();
-        VMStatCommand cmd = new VMStatCommand(context);
-        
         cmd.run(cmdCtxFactory.createContext(setupArguments()));
         String expected = "TIME\n";
         assertEquals(expected, cmdCtxFactory.getOutput());
@@ -185,7 +194,6 @@ public class VmStatCommandTest {
                 { "16", "17", "18" },
                 { "19", "20" }
         };
-        StubBundleContext context = new StubBundleContext();
         context.registerService(ApplicationService.class.getName(), appSvc, null);
         context.registerService(VMStatPrintDelegate.class.getName(), delegates[0], null);
         context.registerService(VMStatPrintDelegate.class.getName(), delegates[1], null);
@@ -197,13 +205,11 @@ public class VmStatCommandTest {
         List<TimeStampedPojo> stats = new ArrayList<>();
         stats.add(stat);
         
-        doReturn(stats).when(delegates[0]).getLatestStats(any(VmRef.class), eq(2000L));
-        doReturn(stats).when(delegates[1]).getLatestStats(any(VmRef.class), eq(2000L));
+        doReturn(stats).when(delegates[0]).getLatestStats(any(AgentId.class), any(VmId.class), eq(2000L));
+        doReturn(stats).when(delegates[1]).getLatestStats(any(AgentId.class), any(VmId.class), eq(2000L));
         doReturn(Arrays.asList(data[0])).when(delegates[0]).getStatRow(eq(stat));
         doReturn(Arrays.asList(data[1])).when(delegates[1]).getStatRow(eq(stat));
-        
-        final VMStatCommand cmd = new VMStatCommand(context);
-        
+
         Thread t = new Thread() {
             public void run() {
                 SimpleArguments args = setupArguments();
@@ -254,15 +260,12 @@ public class VmStatCommandTest {
     public void testNoStats() throws CommandException {
         // Fail stats != null check
         VMStatPrintDelegate badDelegate = mock(VMStatPrintDelegate.class);
-        when(badDelegate.getLatestStats(any(VmRef.class), anyLong())).thenReturn(null);
-        
-        StubBundleContext context = new StubBundleContext();
+        when(badDelegate.getLatestStats(any(AgentId.class), any(VmId.class), anyLong())).thenReturn(null);
+
         context.registerService(VMStatPrintDelegate.class, delegates[0], null);
         context.registerService(VMStatPrintDelegate.class, badDelegate, null);
         context.registerService(VMStatPrintDelegate.class, delegates[1], null);
-        
-        VMStatCommand cmd = new VMStatCommand(context);
-        
+
         cmd.run(cmdCtxFactory.createContext(setupArguments()));
         String expected = "TIME        FIRST SECOND THIRD FOURTH FIFTH\n"
                 + "12:00:00 AM 1     2      3     4      5\n"
@@ -270,22 +273,20 @@ public class VmStatCommandTest {
                 + "12:00:02 AM 11    12     13    14     15\n";
         assertEquals(expected, cmdCtxFactory.getOutput());
     }
-    
+
     @Test
     public void testNoHeaders() throws CommandException {
         // Pass stats check, but fail headers check
         VMStatPrintDelegate badDelegate = mock(VMStatPrintDelegate.class);
         TimeStampedPojo stat = mock(TimeStampedPojo.class);
-        doReturn(Arrays.asList(stat)).when(badDelegate).getLatestStats(any(VmRef.class), anyLong());
+        doReturn(Arrays.asList(stat)).when(badDelegate).getLatestStats(any(AgentId.class),
+                any(VmId.class), anyLong());
         when(badDelegate.getHeaders(any(TimeStampedPojo.class))).thenReturn(null);
-        
-        StubBundleContext context = new StubBundleContext();
+
         context.registerService(VMStatPrintDelegate.class, delegates[0], null);
         context.registerService(VMStatPrintDelegate.class, badDelegate, null);
         context.registerService(VMStatPrintDelegate.class, delegates[1], null);
-        
-        VMStatCommand cmd = new VMStatCommand(context);
-        
+
         cmd.run(cmdCtxFactory.createContext(setupArguments()));
         String expected = "TIME        FIRST SECOND THIRD FOURTH FIFTH\n"
                 + "12:00:00 AM 1     2      3     4      5\n"
@@ -293,7 +294,7 @@ public class VmStatCommandTest {
                 + "12:00:02 AM 11    12     13    14     15\n";
         assertEquals(expected, cmdCtxFactory.getOutput());
     }
-    
+
     @Test
     public void testUnevenStat() throws CommandException {
         // Fewer stats than other delegates
@@ -302,16 +303,14 @@ public class VmStatCommandTest {
         when(stat1.getTimeStamp()).thenReturn(1000L);
         TimeStampedPojo stat2 = mock(TimeStampedPojo.class);
         when(stat2.getTimeStamp()).thenReturn(2000L);
-        doReturn(Arrays.asList(stat1, stat2)).when(badDelegate).getLatestStats(any(VmRef.class), anyLong());
+        doReturn(Arrays.asList(stat1, stat2)).when(badDelegate).getLatestStats(any(AgentId.class),
+                any(VmId.class), anyLong());
         when(badDelegate.getHeaders(any(TimeStampedPojo.class))).thenReturn(Arrays.asList("BAD"));
         when(badDelegate.getStatRow(any(TimeStampedPojo.class))).thenReturn(Arrays.asList("0"));
         
-        StubBundleContext context = new StubBundleContext();
         context.registerService(VMStatPrintDelegate.class, delegates[0], null);
         context.registerService(VMStatPrintDelegate.class, badDelegate, null);
         context.registerService(VMStatPrintDelegate.class, delegates[1], null);
-        
-        VMStatCommand cmd = new VMStatCommand(context);
         
         cmd.run(cmdCtxFactory.createContext(setupArguments()));
         String expected = "TIME        FIRST SECOND THIRD BAD FOURTH FIFTH\n"

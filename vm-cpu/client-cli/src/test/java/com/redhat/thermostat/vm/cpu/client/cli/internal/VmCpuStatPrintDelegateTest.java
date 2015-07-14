@@ -51,7 +51,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
@@ -64,6 +66,8 @@ public class VmCpuStatPrintDelegateTest {
     private VmCpuStatDAO vmCpuStatDAO;
     private VmCpuStatPrintDelegate delegate;
     private VmRef vm;
+    private AgentId agentId;
+    private VmId vmId;
     private List<VmCpuStat> cpuStats;
 
     @BeforeClass
@@ -90,18 +94,26 @@ public class VmCpuStatPrintDelegateTest {
 
     private void setupDAOs() {
         vmCpuStatDAO = mock(VmCpuStatDAO.class);
-        String vmId = "vmId";
+        vmId = new VmId("vmId");
+        agentId = new AgentId("agentId");
         HostRef host = new HostRef("123", "dummy");
-        vm = new VmRef(host, vmId, 234, "dummy");
-        VmCpuStat cpustat1 = new VmCpuStat("foo-agent", 2, vmId, 65);
-        VmCpuStat cpustat2 = new VmCpuStat("foo-agent", 3, vmId, 70);
+        vm = new VmRef(host, vmId.get(), 234, "dummy");
+        VmCpuStat cpustat1 = new VmCpuStat("foo-agent", 2, vmId.get(), 65);
+        VmCpuStat cpustat2 = new VmCpuStat("foo-agent", 3, vmId.get(), 70);
         cpuStats = Arrays.asList(cpustat1, cpustat2);
         when(vmCpuStatDAO.getLatestVmCpuStats(vm, Long.MIN_VALUE)).thenReturn(cpuStats);
+        when(vmCpuStatDAO.getLatestVmCpuStats(agentId, vmId, Long.MIN_VALUE)).thenReturn(cpuStats);
     }
     
     @Test
-    public void testGetLatestStats() {
+    public void testVmRefGetLatestStats() {
         List<? extends TimeStampedPojo> stats = delegate.getLatestStats(vm, Long.MIN_VALUE);
+        assertEquals(cpuStats, stats);
+    }
+
+    @Test
+    public void testGetLatestStats() {
+        List<? extends TimeStampedPojo> stats = delegate.getLatestStats(agentId, vmId, Long.MIN_VALUE);
         assertEquals(cpuStats, stats);
     }
     

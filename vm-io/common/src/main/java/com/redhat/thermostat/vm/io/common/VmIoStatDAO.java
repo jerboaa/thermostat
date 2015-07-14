@@ -39,6 +39,8 @@ package com.redhat.thermostat.vm.io.common;
 import java.util.List;
 
 import com.redhat.thermostat.annotations.Service;
+import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
 
 @Service
@@ -48,7 +50,10 @@ public interface VmIoStatDAO {
 
     public VmIoStat getNewest(VmRef ref);
 
+    @Deprecated
     public List<VmIoStat> getLatestVmIoStats(VmRef ref, long since);
+
+    public List<VmIoStat> getLatestVmIoStats(AgentId agentId, VmId vmId, long since);
 
     public List<VmIoStat> getVmIoStats(VmRef ref, long since, long to);
 

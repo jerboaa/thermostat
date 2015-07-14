@@ -52,6 +52,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.common.Pair;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -60,6 +62,7 @@ import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.testutils.StatementDescriptorTester;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
@@ -112,18 +115,10 @@ public class VmCpuStatDAOTest {
     }
 
     @Test
-    public void testGetLatestCpuStatsBasic() throws DescriptorParsingException, StatementExecutionException {
-
-        @SuppressWarnings("unchecked")
-        Cursor<VmCpuStat> cursor = (Cursor<VmCpuStat>) mock(Cursor.class);
-        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(cursor.next()).thenReturn(cpuStat);
-
-        Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<VmCpuStat> stmt = (PreparedStatement<VmCpuStat>) mock(PreparedStatement.class);
-        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
-        when(stmt.executeQuery()).thenReturn(cursor);
+    public void testVmRefGetLatestCpuStatsBasic() throws DescriptorParsingException, StatementExecutionException {
+        Pair<Storage, PreparedStatement<VmCpuStat>> setup = setupGetLatest();
+        Storage storage = setup.getFirst();
+        PreparedStatement<VmCpuStat> stmt = setup.getSecond();
 
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
@@ -147,6 +142,49 @@ public class VmCpuStatDAOTest {
         assertEquals(TIMESTAMP, (Long) stat.getTimeStamp());
         assertEquals(CPU_LOAD, stat.getCpuLoad(), 0.001);
         assertEquals(VM_ID, stat.getVmId());
+    }
+
+    @Test
+    public void testGetLatestCpuStatsBasic() throws DescriptorParsingException, StatementExecutionException {
+        Pair<Storage, PreparedStatement<VmCpuStat>> setup = setupGetLatest();
+        Storage storage = setup.getFirst();
+        PreparedStatement<VmCpuStat> stmt = setup.getSecond();
+
+        AgentId agentId = new AgentId("system");
+        VmId vmId = new VmId(VM_ID);
+
+        VmCpuStatDAO dao = new VmCpuStatDAOImpl(storage);
+        List<VmCpuStat> vmCpuStats = dao.getLatestVmCpuStats(agentId, vmId, Long.MIN_VALUE);
+
+        verify(storage).prepareStatement(anyDescriptor());
+        verify(stmt).setString(0, "system");
+        verify(stmt).setString(1, VM_ID);
+        verify(stmt).setLong(2, Long.MIN_VALUE);
+        verify(stmt).executeQuery();
+        verifyNoMoreInteractions(stmt);
+
+        assertEquals(1, vmCpuStats.size());
+        VmCpuStat stat = vmCpuStats.get(0);
+        assertEquals(TIMESTAMP, (Long) stat.getTimeStamp());
+        assertEquals(CPU_LOAD, stat.getCpuLoad(), 0.001);
+        assertEquals(VM_ID, stat.getVmId());
+    }
+
+    private Pair<Storage, PreparedStatement<VmCpuStat>> setupGetLatest() throws
+            DescriptorParsingException, StatementExecutionException {
+
+        @SuppressWarnings("unchecked")
+        Cursor<VmCpuStat> cursor = (Cursor<VmCpuStat>) mock(Cursor.class);
+        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
+        when(cursor.next()).thenReturn(cpuStat);
+
+        Storage storage = mock(Storage.class);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<VmCpuStat> stmt = (PreparedStatement<VmCpuStat>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(cursor);
+
+        return new Pair<>(storage, stmt);
     }
 
     @SuppressWarnings("unchecked")

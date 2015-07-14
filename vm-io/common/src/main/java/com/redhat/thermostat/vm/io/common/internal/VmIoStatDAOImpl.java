@@ -42,6 +42,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
@@ -50,6 +51,7 @@ import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmBoundaryPojoGetter;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.core.VmTimeIntervalPojoListGetter;
@@ -95,6 +97,11 @@ public class VmIoStatDAOImpl implements VmIoStatDAO {
     @Override
     public List<VmIoStat> getLatestVmIoStats(VmRef ref, long since) {
         return latestGetter.getLatest(ref, since);
+    }
+
+    @Override
+    public List<VmIoStat> getLatestVmIoStats(AgentId agentId, VmId vmId, long since) {
+        return latestGetter.getLatest(agentId, vmId, since);
     }
 
     @Override

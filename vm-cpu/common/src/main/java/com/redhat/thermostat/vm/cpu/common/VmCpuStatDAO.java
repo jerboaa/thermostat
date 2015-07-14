@@ -40,9 +40,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.redhat.thermostat.annotations.Service;
-import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.VmId;
+import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
 
 @Service
@@ -57,7 +59,10 @@ public interface VmCpuStatDAO {
 
     public abstract VmCpuStat getNewest(VmRef ref);
 
+    @Deprecated
     public abstract List<VmCpuStat> getLatestVmCpuStats(VmRef ref, long since);
+
+    public abstract List<VmCpuStat> getLatestVmCpuStats(AgentId agentId, VmId vmId, long since);
 
     public abstract List<VmCpuStat> getVmCpuStats(VmRef ref, long since, long to);
 

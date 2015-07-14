@@ -137,7 +137,7 @@ public class DumpHeapCommandTest {
             command.run(factory.createContext(args));
             assertTrue("should not reach here", false);
         } catch (CommandException ce) {
-            assertEquals("a vmId is required", ce.getMessage());
+            assertEquals("A vmId is required", ce.getMessage());
         }
     }
 

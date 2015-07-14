@@ -58,14 +58,14 @@ public class HostVMArguments {
         String hostId = args.getArgument(Arguments.HOST_ID_ARGUMENT);
         String vmId = args.getArgument(Arguments.VM_ID_ARGUMENT);
         if (hostRequired && hostId == null) {
-            throw new CommandException(tr.localize(LocaleResources.HOSTID_REQUIRED_MESSAGE));
+            throw new CommandException(tr.localize(LocaleResources.HOSTID_REQUIRED));
         } else if (hostId == null) {
             host = null;
         } else {
             host = new HostRef(hostId, "dummy");
         }
         if (vmId == null && vmRequired) {
-            throw new CommandException(tr.localize(LocaleResources.VMID_REQUIRED_MESSAGE));
+            throw new CommandException(tr.localize(LocaleResources.VMID_REQUIRED));
         } else if (vmId == null) {
             vm = null;
         } else {

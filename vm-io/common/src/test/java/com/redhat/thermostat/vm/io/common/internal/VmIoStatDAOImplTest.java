@@ -52,6 +52,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.common.Pair;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -60,6 +62,7 @@ import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.testutils.StatementDescriptorTester;
 import com.redhat.thermostat.vm.io.common.VmIoStat;
@@ -124,17 +127,10 @@ public class VmIoStatDAOImplTest {
     }
 
     @Test
-    public void testGetLatestIoStatsBasic() throws DescriptorParsingException, StatementExecutionException {
-        @SuppressWarnings("unchecked")
-        Cursor<VmIoStat> cursor = (Cursor<VmIoStat>) mock(Cursor.class);
-        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(cursor.next()).thenReturn(ioStat);
-
-        Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<VmIoStat> stmt = (PreparedStatement<VmIoStat>) mock(PreparedStatement.class);
-        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
-        when(stmt.executeQuery()).thenReturn(cursor);
+    public void testVmRefGetLatestIoStatsBasic() throws DescriptorParsingException, StatementExecutionException {
+        Pair<Storage, PreparedStatement<VmIoStat>> setup = setupGetLatest();
+        Storage storage = setup.getFirst();
+        PreparedStatement<VmIoStat> stmt = setup.getSecond();
 
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
@@ -161,6 +157,52 @@ public class VmIoStatDAOImplTest {
         assertEquals(SOME_CHARACTERS_WRITTEN, stat.getCharactersWritten());
         assertEquals(SOME_READ_SYSCALLS, stat.getReadSyscalls());
         assertEquals(SOME_WRITE_SYSCALLS, stat.getWriteSyscalls());
+    }
+
+    @Test
+    public void testGetLatestIoStatsBasic() throws DescriptorParsingException, StatementExecutionException {
+        Pair<Storage, PreparedStatement<VmIoStat>> setup = setupGetLatest();
+        Storage storage = setup.getFirst();
+        PreparedStatement<VmIoStat> stmt = setup.getSecond();
+
+        AgentId agentId = new AgentId("system");
+        VmId vmId = new VmId(SOME_VM_ID);
+
+        VmIoStatDAO dao = new VmIoStatDAOImpl(storage);
+        List<VmIoStat> vmIoStats = dao.getLatestVmIoStats(agentId, vmId, Long.MIN_VALUE);
+
+        verify(storage).prepareStatement(anyDescriptor());
+        verify(stmt).setString(0, "system");
+        verify(stmt).setString(1, SOME_VM_ID);
+        verify(stmt).setLong(2, Long.MIN_VALUE);
+        verify(stmt).executeQuery();
+        verifyNoMoreInteractions(stmt);
+
+        assertEquals(1, vmIoStats.size());
+        VmIoStat stat = vmIoStats.get(0);
+        assertEquals(SOME_TIMESTAMP, stat.getTimeStamp());
+        assertEquals(SOME_VM_ID, stat.getVmId());
+        assertEquals(SOME_CHARACTERS_READ, stat.getCharactersRead());
+        assertEquals(SOME_CHARACTERS_WRITTEN, stat.getCharactersWritten());
+        assertEquals(SOME_READ_SYSCALLS, stat.getReadSyscalls());
+        assertEquals(SOME_WRITE_SYSCALLS, stat.getWriteSyscalls());
+    }
+
+    private Pair<Storage, PreparedStatement<VmIoStat>> setupGetLatest() throws
+            DescriptorParsingException, StatementExecutionException {
+
+        @SuppressWarnings("unchecked")
+        Cursor<VmIoStat> cursor = (Cursor<VmIoStat>) mock(Cursor.class);
+        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
+        when(cursor.next()).thenReturn(ioStat);
+
+        Storage storage = mock(Storage.class);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<VmIoStat> stmt = (PreparedStatement<VmIoStat>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(stmt);
+        when(stmt.executeQuery()).thenReturn(cursor);
+
+        return new Pair<>(storage, stmt);
     }
 
     @SuppressWarnings("unchecked")

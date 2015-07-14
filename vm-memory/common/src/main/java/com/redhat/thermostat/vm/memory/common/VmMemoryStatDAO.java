@@ -40,8 +40,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.redhat.thermostat.annotations.Service;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Generation;
@@ -59,7 +61,10 @@ public interface VmMemoryStatDAO {
 
     public VmMemoryStat getOldestMemoryStat(VmRef ref);
 
+    @Deprecated
     public List<VmMemoryStat> getLatestVmMemoryStats(VmRef vm, long since);
+
+    public List<VmMemoryStat> getLatestVmMemoryStats(AgentId agentId, VmId vmId, long since);
 
     public List<VmMemoryStat> getVmMemoryStats(VmRef vm, long since, long to);
 
