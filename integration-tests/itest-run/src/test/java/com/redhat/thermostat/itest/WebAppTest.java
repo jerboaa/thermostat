@@ -66,7 +66,6 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.redhat.thermostat.common.utils.IteratorUtils;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.util.component.LifeCycle.Listener;
@@ -296,8 +295,12 @@ public class WebAppTest extends WebStorageUsingIntegrationTest {
             throw e;
         } finally {
             try {
-                server.stop();
-                server.join();
+                // Avoid NPEs during teardown when server failed to
+                // start for some reason.
+                if (server != null) {
+                    server.stop();
+                    server.join();
+                }
             } catch (Exception e) {
                 System.out.println("AN ERROR OCCURRED STOPPING JETTY!");
                 e.printStackTrace();
