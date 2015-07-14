@@ -43,6 +43,7 @@ import java.util.Set;
 import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
 
@@ -68,8 +69,22 @@ public interface VmGcStatDAO {
      *            The idendifier of the JVM for which to get the collector names
      *            for.
      * @return A set of distinct collector names.
+     *
+     * @deprecated use {@link #getDistinctCollectorNames(VmId)}
      */
+    @Deprecated
     public Set<String> getDistinctCollectorNames(VmRef ref);
+
+    /**
+     * Find the set of distinct collector names for this JVM. For each JVM there
+     * are potentially multiple collectors recorded in storage.
+     *
+     * @param vmId
+     *            The idendifier of the JVM for which to get the collector names
+     *            for.
+     * @return A set of distinct collector names.
+     */
+    public Set<String> getDistinctCollectorNames(VmId vmId);
     
     public void putVmGcStat(VmGcStat stat);
 }

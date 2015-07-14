@@ -41,14 +41,13 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.client.cli.HostVMArguments;
 import com.redhat.thermostat.common.cli.AbstractCommand;
+import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.VmId;
-import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.vm.gc.command.locale.LocaleResources;
@@ -76,12 +75,16 @@ public class ShowGcNameCommand extends AbstractCommand {
         
         requireNonNull(vmInfoDao, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
         requireNonNull(gcDao, translator.localize(LocaleResources.GC_STAT_DAO_SERVICE_UNAVAILABLE));
-        
-        HostVMArguments args = new HostVMArguments(ctx.getArguments(), false, true);
-        VmInfo vmInfo = checkVmExists(args.getVM().getVmId(), translator.localize(LocaleResources.VM_NOT_FOUND, args.getVM().getVmId()));
+
+        String vmIdArg = ctx.getArguments().getArgument(Arguments.VM_ID_ARGUMENT);
+        if (vmIdArg == null)
+            throw new CommandException(translator.localize(LocaleResources.VMID_REQUIRED));
+
+        VmId vmId = new VmId(vmIdArg);
+        VmInfo vmInfo = checkVmExists(vmId, translator.localize(LocaleResources.VM_NOT_FOUND, vmId.get()));
         
         PrintStream out = ctx.getConsole().getOutput();
-        CollectorCommonName commonName = getCommonName(args.getVM());
+        CollectorCommonName commonName = getCommonName(vmId);
         String msg = translator.localize(LocaleResources.GC_COMMON_NAME_SUCCESS_MSG,
                                       vmInfo.getVmId(),
                                       vmInfo.getMainClass(),
@@ -115,8 +118,8 @@ public class ShowGcNameCommand extends AbstractCommand {
      * @return A non-null VmInfo.
      * @throws CommandException If the VM could not be found in storage.
      */
-    private VmInfo checkVmExists(String vmId, LocalizedString errorMsg) throws CommandException {
-        VmInfo vmInfo = vmInfoDao.getVmInfo(new VmId(vmId));
+    private VmInfo checkVmExists(VmId vmId, LocalizedString errorMsg) throws CommandException {
+        VmInfo vmInfo = vmInfoDao.getVmInfo(vmId);
         if (vmInfo == null) {
             throw new CommandException(errorMsg);
         }
@@ -125,11 +128,11 @@ public class ShowGcNameCommand extends AbstractCommand {
     
     /**
      * Finds the common name of the GC algorithm used for a given VM.
-     * @param vmInfo The info for the VM in question.
+     * @param vmId The id for the VM in question.
      * @return A common name of the GC algorithm or {@code CollectorCommonName#UNKNOWN_COLLECTOR}.
      */
-    private CollectorCommonName getCommonName(VmRef vmRef) {
-        Set<String> distinctCollectors = gcDao.getDistinctCollectorNames(vmRef);
+    private CollectorCommonName getCommonName(VmId vmId) {
+        Set<String> distinctCollectors = gcDao.getDistinctCollectorNames(vmId);
         CollectorCommonName commonName = CollectorCommonName.UNKNOWN_COLLECTOR;
         if (distinctCollectors.size() > 0) {
             commonName = mapper.mapToCommonName(distinctCollectors);

@@ -63,12 +63,25 @@ import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.DistinctResult;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
 
 public class VmGcStatDAOTest {
+
+    static class Triple<S, T, U> {
+        final S first;
+        final T second;
+        final U third;
+
+        public Triple(S first, T second, U third) {
+            this.first = first;
+            this.second = second;
+            this.third = third;
+        }
+    }
 
     private static final String VM_ID = "VM321";
     private static final Long TIMESTAMP = 456L;
@@ -172,10 +185,42 @@ public class VmGcStatDAOTest {
         verify(add).execute();
         verifyNoMoreInteractions(add);
     }
-    
+
+    @Test
+    public void testVmRefDistinctCollectorsSuccess() throws DescriptorParsingException,
+            StatementExecutionException {
+
+        Triple<Cursor<DistinctResult>, DistinctResult, Set<String>> setup =
+                setupTestDistinctCollectorsSuccess();
+        Cursor<DistinctResult> c = setup.first;
+        DistinctResult result = setup.second;
+        Set<String> mockResults = setup.third;
+
+        Set<String> actual = doVmRefDistinctCollectorsTest(c);
+        assertNotNull(result);
+        assertEquals(2, actual.size());
+        assertEquals(mockResults, actual);
+    }
+
     @Test
     public void testDistinctCollectorsSuccess() throws DescriptorParsingException,
             StatementExecutionException {
+
+        Triple<Cursor<DistinctResult>, DistinctResult, Set<String>> setup =
+                setupTestDistinctCollectorsSuccess();
+        Cursor<DistinctResult> c = setup.first;
+        DistinctResult result = setup.second;
+        Set<String> mockResults = setup.third;
+        
+        Set<String> actual = doDistinctCollectorsTest(c);
+        assertNotNull(result);
+        assertEquals(2, actual.size());
+        assertEquals(mockResults, actual);
+    }
+
+    private Triple<Cursor<DistinctResult>, DistinctResult, Set<String>> setupTestDistinctCollectorsSuccess()
+            throws DescriptorParsingException {
+
         Set<String> mockResults = new HashSet<>();
         mockResults.add("MSC");
         mockResults.add("PCopy");
@@ -186,36 +231,41 @@ public class VmGcStatDAOTest {
         Cursor<DistinctResult> c = mock(Cursor.class);
         when(c.hasNext()).thenReturn(true);
         when(c.next()).thenReturn(result);
-        
-        Set<String> actual = doDistinctCollectorsTest(c);
-        assertNotNull(result);
-        assertEquals(2, actual.size());
-        assertEquals(mockResults, actual);
+
+        return new Triple<>(c, result, mockResults);
     }
     
+    @Test
+    public void testVmRefDistinctCollectorsQueryFailure() throws DescriptorParsingException,
+            StatementExecutionException {
+        @SuppressWarnings("unchecked")
+        Cursor<DistinctResult> c = mock(Cursor.class);
+        when(c.hasNext()).thenReturn(false);
+        
+        Set<String> result = doVmRefDistinctCollectorsTest(c);
+        assertEquals("expected empty set", 0, result.size());
+    }
+
     @Test
     public void testDistinctCollectorsQueryFailure() throws DescriptorParsingException,
             StatementExecutionException {
         @SuppressWarnings("unchecked")
         Cursor<DistinctResult> c = mock(Cursor.class);
         when(c.hasNext()).thenReturn(false);
-        
+
         Set<String> result = doDistinctCollectorsTest(c);
         assertEquals("expected empty set", 0, result.size());
     }
 
-    private Set<String> doDistinctCollectorsTest(Cursor<DistinctResult> c)
+    private Set<String> doVmRefDistinctCollectorsTest(Cursor<DistinctResult> c)
             throws DescriptorParsingException, StatementExecutionException {
-        Storage storage = mock(Storage.class);
-        CategoryAdapter<VmGcStat, DistinctResult> catAdapter = new CategoryAdapter<>(VmGcStatDAO.vmGcStatCategory);
-        Category<DistinctResult> adaptedCategory = catAdapter.getAdapted(DistinctResult.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<DistinctResult> query = mock(PreparedStatement.class);
-        StatementDescriptor<DistinctResult> desc = new StatementDescriptor<>(adaptedCategory, VmGcStatDAOImpl.DESC_QUERY_DISTINCT_COLLECTORS);
-        
-        when(storage.prepareStatement(eq(desc))).thenReturn(query);
-        when(query.executeQuery()).thenReturn(c);
-        
+
+        Triple<Storage, PreparedStatement<DistinctResult>, StatementDescriptor<DistinctResult>>
+                setup = setupDoDistinctCollectorsTest(c);
+        Storage storage = setup.first;
+        PreparedStatement<DistinctResult> query = setup.second;
+        StatementDescriptor<DistinctResult> desc = setup.third;
+
         VmGcStatDAO dao = new VmGcStatDAOImpl(storage);
         Set<String> result = dao.getDistinctCollectorNames(new VmRef(null, VM_ID, -1, "foo-vmref"));
         
@@ -224,6 +274,42 @@ public class VmGcStatDAOTest {
         verify(query).executeQuery();
         verifyNoMoreInteractions(query);
         return result;
+    }
+
+    private Set<String> doDistinctCollectorsTest(Cursor<DistinctResult> c)
+            throws DescriptorParsingException, StatementExecutionException {
+
+        Triple<Storage, PreparedStatement<DistinctResult>, StatementDescriptor<DistinctResult>>
+                setup = setupDoDistinctCollectorsTest(c);
+        Storage storage = setup.first;
+        PreparedStatement<DistinctResult> query = setup.second;
+        StatementDescriptor<DistinctResult> desc = setup.third;
+
+        VmGcStatDAO dao = new VmGcStatDAOImpl(storage);
+        Set<String> result = dao.getDistinctCollectorNames(new VmId(VM_ID));
+
+        verify(storage).prepareStatement(eq(desc));
+        verify(query).setString(0, VM_ID);
+        verify(query).executeQuery();
+        verifyNoMoreInteractions(query);
+        return result;
+    }
+
+    private Triple<Storage, PreparedStatement<DistinctResult>, StatementDescriptor<DistinctResult>> setupDoDistinctCollectorsTest
+            (Cursor<DistinctResult> c)
+            throws DescriptorParsingException, StatementExecutionException {
+
+        Storage storage = mock(Storage.class);
+        CategoryAdapter<VmGcStat, DistinctResult> catAdapter = new CategoryAdapter<>(VmGcStatDAO.vmGcStatCategory);
+        Category<DistinctResult> adaptedCategory = catAdapter.getAdapted(DistinctResult.class);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<DistinctResult> query = mock(PreparedStatement.class);
+        StatementDescriptor<DistinctResult> desc = new StatementDescriptor<>(adaptedCategory, VmGcStatDAOImpl.DESC_QUERY_DISTINCT_COLLECTORS);
+
+        when(storage.prepareStatement(eq(desc))).thenReturn(query);
+        when(query.executeQuery()).thenReturn(c);
+
+        return new Triple<>(storage, query, desc);
     }
 }
 

@@ -37,7 +37,6 @@
 package com.redhat.thermostat.vm.gc.command.internal;
 
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -50,7 +49,6 @@ import org.mockito.internal.util.collections.Sets;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.storage.core.VmId;
-import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.test.TestCommandContextFactory;
@@ -64,7 +62,6 @@ public class ShowGcNameCommandTest {
     @Before
     public void setup() {
         args = mock(Arguments.class);
-        when(args.getArgument(Arguments.VM_ID_ARGUMENT)).thenReturn(VM_ID);
     }
     
     @Test
@@ -90,9 +87,10 @@ public class ShowGcNameCommandTest {
     
     @Test
     public void commandFailsWhenVmIdNotFound() {
+        when(args.getArgument(Arguments.VM_ID_ARGUMENT)).thenReturn(VM_ID);
         ShowGcNameCommand command = new ShowGcNameCommand();
         VmInfoDAO dao = mock(VmInfoDAO.class);
-        when(dao.getVmInfo(any(VmId.class))).thenReturn(null);
+        when(dao.getVmInfo(new VmId(VM_ID))).thenReturn(null);
         command.setVmInfo(dao);
         command.setVmGcStat(mock(VmGcStatDAO.class));
         try {
@@ -100,6 +98,19 @@ public class ShowGcNameCommandTest {
         } catch (CommandException e) {
             assertTrue(e.getMessage().startsWith("VM with ID:"));
             assertTrue(e.getMessage().endsWith("not found"));
+        }
+    }
+
+    @Test
+    public void commandFailsWhenVmIdIsNull() {
+        when(args.getArgument(Arguments.VM_ID_ARGUMENT)).thenReturn(null);
+        ShowGcNameCommand command = new ShowGcNameCommand();
+        command.setVmInfo(mock(VmInfoDAO.class));
+        command.setVmGcStat(mock(VmGcStatDAO.class));
+        try {
+            command.run(new TestCommandContextFactory().createContext(args));
+        } catch (CommandException e) {
+            assertTrue(e.getMessage().equals("A vmId is required"));
         }
     }
     
@@ -120,16 +131,17 @@ public class ShowGcNameCommandTest {
     }
     
     private void doSuccessTest(Set<String> collectorMapping, String expectedCollectorName) throws CommandException {
+        when(args.getArgument(Arguments.VM_ID_ARGUMENT)).thenReturn(VM_ID);
         ShowGcNameCommand command = new ShowGcNameCommand();
         VmInfoDAO dao = mock(VmInfoDAO.class);
         VmInfo fooVmInfo = mock(VmInfo.class);
         when(fooVmInfo.getVmId()).thenReturn(VM_ID);
         String mainClass = "com.example.app.Main";
         when(fooVmInfo.getMainClass()).thenReturn(mainClass);
-        when(dao.getVmInfo(any(VmId.class))).thenReturn(fooVmInfo);
+        when(dao.getVmInfo(new VmId(VM_ID))).thenReturn(fooVmInfo);
         command.setVmInfo(dao);
         VmGcStatDAO gcStat = mock(VmGcStatDAO.class);
-        when(gcStat.getDistinctCollectorNames(any(VmRef.class))).thenReturn(collectorMapping);
+        when(gcStat.getDistinctCollectorNames(new VmId(VM_ID))).thenReturn(collectorMapping);
         command.setVmGcStat(gcStat);
         TestCommandContextFactory testContextFactory = new TestCommandContextFactory();
         command.run(testContextFactory.createContext(args));

@@ -53,6 +53,7 @@ import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.DistinctResult;
@@ -127,11 +128,16 @@ public class VmGcStatDAOImpl implements VmGcStatDAO {
 
     @Override
     public Set<String> getDistinctCollectorNames(VmRef ref) {
+        return getDistinctCollectorNames(new VmId(ref.getVmId()));
+    }
+
+    @Override
+    public Set<String> getDistinctCollectorNames(VmId vmId) {
         StatementDescriptor<DistinctResult> desc = new StatementDescriptor<>(aggregateCategory, DESC_QUERY_DISTINCT_COLLECTORS);
         PreparedStatement<DistinctResult> prepared;
         try {
             prepared = storage.prepareStatement(desc);
-            prepared.setString(0, ref.getVmId());
+            prepared.setString(0, vmId.get());
             Cursor<DistinctResult> cursor = prepared.executeQuery();
             // DistinctResult comes as a single value if any
             DistinctResult distinctResult = head(cursor);
