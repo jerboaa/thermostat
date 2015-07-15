@@ -39,6 +39,7 @@ package com.redhat.thermostat.client.cli.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.eq;
@@ -321,6 +322,17 @@ public class VmStatCommandTest {
     }
 
     @Test
+    public void testNoVmId() {
+        SimpleArguments args = new SimpleArguments();
+        try {
+            cmd.run(cmdCtxFactory.createContext(args));
+            fail("A CommandException should have been thrown.");
+        } catch (CommandException e) {
+            assertEquals("A vmId is required", e.getMessage());
+        }
+    }
+
+    @Test
     public void testStorageRequired() {
         StubBundleContext context = new StubBundleContext();
         VMStatCommand cmd = new VMStatCommand(context);
@@ -330,7 +342,6 @@ public class VmStatCommandTest {
     private SimpleArguments setupArguments() {
         SimpleArguments args = new SimpleArguments();
         args.addArgument(Arguments.VM_ID_ARGUMENT, "234");
-        args.addArgument(Arguments.HOST_ID_ARGUMENT, "123");
         args.addArgument("since", "all");
         return args;
     }

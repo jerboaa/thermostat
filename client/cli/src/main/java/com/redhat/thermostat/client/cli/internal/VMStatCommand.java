@@ -106,11 +106,6 @@ public class VMStatCommand extends AbstractCommand {
         long currentTime = System.currentTimeMillis();
         long defaultSinceTime = currentTime - TimeUnit.MINUTES.toMillis(10);
 
-        String agentIdArg = ctx.getArguments().getArgument(Arguments.HOST_ID_ARGUMENT);
-        if (agentIdArg == null) {
-            throw new CommandException(translator.localize(LocaleResources.HOSTID_REQUIRED));
-        }
-
         String vmIdArg = ctx.getArguments().getArgument(Arguments.VM_ID_ARGUMENT);
         if (vmIdArg == null) {
             throw new CommandException(translator.localize(LocaleResources.VMID_REQUIRED));
