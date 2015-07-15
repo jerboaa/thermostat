@@ -110,21 +110,29 @@ public class SwingHeapDumpListView extends HeapDumpListView implements SwingComp
     }
     
     @Override
-    public void setDumps(final List<HeapDump> dumps) {
-        
-        final List<HeapDump> _dumps = new ArrayList<>(dumps);
-        Collections.sort(_dumps, new DumpsComparator());
+    public void setDumps(List<HeapDump> dumps) {
+        setDumps(dumps, null);
+    }
+    
+    // package-private for testing
+    void setDumps(final List<HeapDump> dumps, final Runnable callback) {
+        final List<HeapDump> dumpsSortedByTimestamp = new ArrayList<>(dumps);
+        Collections.sort(dumpsSortedByTimestamp, new DumpsComparator());
         
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                table.setName("_heapdump_table_list");
                 table.clear();
-                for (final HeapDump  dump : dumps) {
+                for (final HeapDump  dump : dumpsSortedByTimestamp) {
                     final HeapDumpItem item = new HeapDumpItem(dump);
                     table.add(item);
                 }
                 container.revalidate();
                 container.repaint();
+                if (callback != null) {
+                    callback.run();
+                }
             }
         });
     }

@@ -37,15 +37,24 @@
 package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.JFrame;
-import javax.swing.JPanel;
+
+import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
 import org.fest.swing.annotation.GUITest;
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
@@ -67,8 +76,6 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListView;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
-
-import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
 @Category(CacioTest.class)
 @RunWith(CacioFESTRunner.class)
@@ -139,11 +146,7 @@ public class HeapDumpListViewTest {
 
     @GUITest
     @Test
-    public void testDu1mpSelectFired() {
-        final boolean [] result = new boolean[1];
-        final JPanel[] selectedHeap = new JPanel[1];
-
-
+    public void testDumpSelectFired() {
         HeapDump dump1 = mock(HeapDump.class);
         when(dump1.toString()).thenReturn("dump1");
 
@@ -152,14 +155,84 @@ public class HeapDumpListViewTest {
 
         view.setDumps(dumps);
 
-        JPanelFixture item = frameFixture.panel("dump1_panel");
-
         JLabelFixture label = frameFixture.label("dump1_label");
         label.click();
 
         JButtonFixture button = frameFixture.button("dump1_button");
 
         assertTrue(button.target.isVisible());
+    }
+    
+    @GUITest
+    @Test
+    public void testDumpDetailsSorted() {
+        HeapDump dump1 = mock(HeapDump.class);
+        when(dump1.toString()).thenReturn("dump1");
+        when(dump1.getTimestamp()).thenReturn(100L);
+        HeapDump dump2 = mock(HeapDump.class);
+        when(dump2.toString()).thenReturn("dump2");
+        when(dump2.getTimestamp()).thenReturn(1000L);
+
+        // Add dumps in ascending order so that it will get reversed when
+        // sorting.
+        List<HeapDump> dumps = new ArrayList<>();
+        dumps.add(dump1);
+        dumps.add(dump2);
+
+        final CountDownLatch latch = new CountDownLatch(1);
+        Runnable callBack = new Runnable() {
+            
+            @Override
+            public void run() {
+                latch.countDown();
+            }
+        };
+        // Call with callback so as to avoid races
+        view.setDumps(dumps, callBack);
+        boolean latchExpired = false;
+        try {
+            latchExpired = !(latch.await(500, TimeUnit.MILLISECONDS));
+        } catch (InterruptedException e) {
+            // ignored
+        }
+        assertFalse("Timeout waiting for invokelater task to execute", latchExpired);
+
+        JPanelFixture table = frameFixture.panel("_heapdump_table_list");
+        
+        ByteArrayOutputStream baOut = new ByteArrayOutputStream();
+        // List the component so as to be able to make assertions about its
+        // content.
+        table.target.list(new PrintStream(baOut));
+        
+        ByteArrayInputStream baIn = new ByteArrayInputStream(baOut.toByteArray());
+        Scanner scanner = new Scanner(baIn);
+        int lineIdx = 0;
+        int dump1Order = -1;
+        int dump2Order = -1;
+        while (scanner.hasNextLine()) {
+            String line = scanner.nextLine();
+            if (line.contains("dump1_label")) {
+                if (dump1Order == -1) {
+                    dump1Order = lineIdx;
+                } else {
+                    fail("Did not expect dump1_label to be found twice");
+                }
+            }
+            if (line.contains("dump2_label")) {
+                if (dump2Order == -1) {
+                    dump2Order = lineIdx;
+                } else {
+                    fail("Did not expect dump2_label to be found twice");
+                }
+            }
+            lineIdx++;
+        }
+        scanner.close();
+        assertTrue("dump1_label not found", dump1Order != -1);
+        assertTrue("dump2_label not found", dump2Order != -1);
+        String failMsg = "Expected dump2 to be first in list. got (dump1 = " + 
+                        dump1Order + ") <= (dump2 = " + dump2Order + ")";
+        assertTrue(failMsg, dump1Order > dump2Order);
     }
 
     @GUITest
