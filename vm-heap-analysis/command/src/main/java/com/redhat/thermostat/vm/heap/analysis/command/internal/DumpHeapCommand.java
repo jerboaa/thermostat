@@ -38,9 +38,9 @@ package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
 import java.util.concurrent.Semaphore;
 
-import com.redhat.thermostat.client.cli.HostVMArguments;
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.cli.AbstractCommand;
+import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.shared.locale.Translate;
@@ -76,9 +76,11 @@ public class DumpHeapCommand extends AbstractCommand {
         requireNonNull(agentInfoDAO, translator.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE));
         requireNonNull(queue, translator.localize(LocaleResources.REQUEST_QUEUE_UNAVAILABLE));
 
-        final HostVMArguments args = new HostVMArguments(ctx.getArguments(), false, true);
+        String vmIdArg = ctx.getArguments().getArgument(Arguments.VM_ID_ARGUMENT);
+        if (vmIdArg == null)
+            throw new CommandException(translator.localize(LocaleResources.VMID_REQUIRED));
 
-        VmId vmId = new VmId(args.getVM().getVmId());
+        VmId vmId = new VmId(vmIdArg);
         final VmInfo vmInfo = vmInfoDAO.getVmInfo(vmId);
         final AgentId agentId = new AgentId(vmInfo.getAgentId());
 
