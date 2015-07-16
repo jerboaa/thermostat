@@ -42,7 +42,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -57,13 +56,13 @@ public class IteratorUtilsTest {
 
     @Test
     public void testHeadOfEmpty() {
-        String head = IteratorUtils.head(IteratorUtilsTest.<String>emptyIterator());
+        String head = IteratorUtils.head(Collections.<String>emptyIterator());
         assertThat(head, is(equalTo(null)));
     }
 
     @Test
     public void testAsListOfEmpty() {
-        List<String> result = IteratorUtils.asList(IteratorUtilsTest.<String>emptyIterator());
+        List<String> result = IteratorUtils.asList(Collections.<String>emptyIterator());
         assertEquals(result, Collections.emptyList());
     }
 
@@ -103,25 +102,6 @@ public class IteratorUtilsTest {
         assertThat(res2, is(BAR));
         assertThat(res3, is(BAZ));
         assertThat(it.hasNext(), is(false));
-    }
-
-    private static <T> Iterator<T> emptyIterator() {
-        return new Iterator<T>() {
-            @Override
-            public boolean hasNext() {
-                return false;
-            }
-
-            @Override
-            public T next() {
-                throw new NoSuchElementException();
-            }
-
-            @Override
-            public void remove() {
-                throw new UnsupportedOperationException();
-            }
-        };
     }
 
     private static <T> Iterator<T> varargsIterator(T ... args) {
