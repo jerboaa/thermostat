@@ -97,11 +97,13 @@ public class IteratorUtilsTest {
         String res1 = IteratorUtils.head(it);
         String res2 = IteratorUtils.head(it);
         String res3 = IteratorUtils.head(it);
+        String res4 = IteratorUtils.head(it);
 
         assertThat(res1, is(FOO));
         assertThat(res2, is(BAR));
         assertThat(res3, is(BAZ));
         assertThat(it.hasNext(), is(false));
+        assertThat(res4, is(equalTo(null)));
     }
 
     private static <T> Iterator<T> varargsIterator(T ... args) {
