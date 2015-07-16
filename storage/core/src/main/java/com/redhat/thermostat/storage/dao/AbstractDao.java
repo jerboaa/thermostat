@@ -114,6 +114,11 @@ public abstract class AbstractDao {
             public T next() {
                 return null;
             }
+
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
         };
     }
 }
