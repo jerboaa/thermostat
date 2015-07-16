@@ -34,54 +34,40 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.internal.dao;
+package com.redhat.thermostat.storage.dao;
 
-import java.util.logging.Logger;
-
-import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.dao.AbstractDao;
-import com.redhat.thermostat.storage.dao.QueryResult;
-import com.redhat.thermostat.storage.dao.SimpleDaoQuery;
-import com.redhat.thermostat.storage.model.AggregateCount;
-import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.storage.model.VmInfo;
+import org.junit.Test;
 
-import static com.redhat.thermostat.storage.internal.dao.LoggingUtil.logDescriptorParsingException;
-import static com.redhat.thermostat.storage.internal.dao.LoggingUtil.logStatementExecutionException;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-class BaseCountable extends AbstractDao {
-    
-    private static final int ERROR_COUNT_RESULT = -1;
-    private static final Logger logger = LoggingUtils.getLogger(BaseCountable.class);
+public class AbstractDaoStatementTest {
 
-    /**
-     * Performs an aggregate count query as described by the given descriptor.
-     * 
-     * @param storage the storage to use for preparing the descriptor.
-     * @param category the query category.
-     * @param descriptor the query descriptor.
-     * @return -1 if execution failed for some reason, the actual count of the
-     *         query results if successful.
-     */
-    protected long getCount(Storage storage, Category<AggregateCount> category, String descriptor) {
-        QueryResult<AggregateCount> result = executeQuery(new SimpleDaoQuery<>(storage, category, descriptor));
-        AggregateCount count = result.head();
-        if (count == null || result.hasExceptions()) {
-            return ERROR_COUNT_RESULT;
-        } else {
-            return count.getCount();
-        }
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testExecute() throws StatementExecutionException, DescriptorParsingException {
+        PreparedStatement<VmInfo> preparedStatement = (PreparedStatement<VmInfo>) mock(PreparedStatement.class);
+        Storage storage = mock(Storage.class);
+        Category<VmInfo> category = VmInfoDAO.vmInfoCategory;
+        String descriptor = "descriptor";
+        Cursor<VmInfo> cursor = (Cursor<VmInfo>) mock(Cursor.class);
+        when(preparedStatement.executeQuery()).thenReturn(cursor);
+        DaoStatement<VmInfo> abstractDaoQuery = new SimpleDaoStatement<>(storage, category, descriptor);
+        abstractDaoQuery.execute(preparedStatement);
+        verify(preparedStatement).execute();
+        verify(preparedStatement, never()).executeQuery();
     }
 
-    @Override
-    protected Logger getLogger() {
-        return logger;
-    }
 }
-

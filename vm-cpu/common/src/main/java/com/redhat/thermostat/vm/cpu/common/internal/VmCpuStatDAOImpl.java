@@ -53,10 +53,13 @@ import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.core.VmTimeIntervalPojoListGetter;
+import com.redhat.thermostat.storage.dao.AbstractDao;
+import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
+import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
 
-public class VmCpuStatDAOImpl implements VmCpuStatDAO {
+public class VmCpuStatDAOImpl extends AbstractDao implements VmCpuStatDAO {
     
     private static final Logger logger = LoggingUtils.getLogger(VmCpuStatDAOImpl.class);
     // ADD vm-cpu-stats SET 'agentId' = ?s , \
@@ -108,21 +111,23 @@ public class VmCpuStatDAOImpl implements VmCpuStatDAO {
     }
 
     @Override
-    public void putVmCpuStat(VmCpuStat stat) {
-        StatementDescriptor<VmCpuStat> desc = new StatementDescriptor<>(vmCpuStatCategory, DESC_ADD_VM_CPU_STAT);
-        PreparedStatement<VmCpuStat> prepared;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, stat.getAgentId());
-            prepared.setString(1, stat.getVmId());
-            prepared.setLong(2, stat.getTimeStamp());
-            prepared.setDouble(3, stat.getCpuLoad());
-            prepared.execute();
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-        }
+    public void putVmCpuStat(final VmCpuStat stat) {
+        executeStatement(new AbstractDaoStatement<VmCpuStat>(storage, vmCpuStatCategory, DESC_ADD_VM_CPU_STAT) {
+            @Override
+            public PreparedStatement<VmCpuStat> customize(PreparedStatement<VmCpuStat> preparedStatement) {
+                preparedStatement.setString(0, stat.getAgentId());
+                preparedStatement.setString(1, stat.getVmId());
+                preparedStatement.setLong(2, stat.getTimeStamp());
+                preparedStatement.setDouble(3, stat.getCpuLoad());
+                return preparedStatement;
+            }
+        });
     }
+
+    @Override
+    protected Logger getLogger() {
+        return logger;
+    }
+
 }
 

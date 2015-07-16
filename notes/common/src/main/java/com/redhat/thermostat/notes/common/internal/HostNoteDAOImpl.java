@@ -36,29 +36,23 @@
 
 package com.redhat.thermostat.notes.common.internal;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.notes.common.HostNote;
 import com.redhat.thermostat.notes.common.HostNoteDAO;
 import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.dao.AbstractDao;
+import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
+import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
 
-import static com.redhat.thermostat.common.utils.IteratorUtils.asList;
-import static com.redhat.thermostat.common.utils.IteratorUtils.head;
-
-public class HostNoteDAOImpl implements HostNoteDAO {
+public class HostNoteDAOImpl extends AbstractDao implements HostNoteDAO {
 
     static final Key<String> KEY_CONTENT = new Key<>("content");
     static final Key<String> KEY_ID = new Key<>("id");
@@ -104,88 +98,55 @@ public class HostNoteDAOImpl implements HostNoteDAO {
     }
 
     @Override
-    public void add(HostNote vmNote) {
-        StatementDescriptor<HostNote> desc = new StatementDescriptor<>(hostNotesCategory, ADD_HOST_NOTE);
-        PreparedStatement<HostNote> stmt;
-        try {
-            stmt = storage.prepareStatement(desc);
-            stmt.setString(0, vmNote.getAgentId());
-            stmt.setString(1, vmNote.getId());
-            stmt.setLong(2, vmNote.getTimeStamp());
-            stmt.setString(3, vmNote.getContent());
-            stmt.execute();
-        } catch (DescriptorParsingException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
-        }
+    public void add(final HostNote vmNote) {
+        executeStatement(new AbstractDaoStatement<HostNote>(storage, hostNotesCategory, ADD_HOST_NOTE) {
+            @Override
+            public PreparedStatement<HostNote> customize(PreparedStatement<HostNote> preparedStatement) {
+                preparedStatement.setString(0, vmNote.getAgentId());
+                preparedStatement.setString(1, vmNote.getId());
+                preparedStatement.setLong(2, vmNote.getTimeStamp());
+                preparedStatement.setString(3, vmNote.getContent());
+                return preparedStatement;
+            }
+        });
     }
 
     @Override
-    public List<HostNote> getFor(HostRef host) {
-        StatementDescriptor<HostNote> desc = new StatementDescriptor<>(hostNotesCategory, QUERY_HOST_NOTES_BY_VM_ID);
-        PreparedStatement<HostNote> stmt;
-        Cursor<HostNote> cursor;
-        try {
-            stmt = storage.prepareStatement(desc);
-            stmt.setString(0, host.getAgentId());
-            cursor = stmt.executeQuery();
-            return asList(cursor);
-        } catch (DescriptorParsingException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
-            return null;
-        } catch (StatementExecutionException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
-            return null;
-        }
+    public List<HostNote> getFor(final HostRef host) {
+        return executeQuery(new AbstractDaoQuery<HostNote>(storage, hostNotesCategory, QUERY_HOST_NOTES_BY_VM_ID) {
+            @Override
+            public PreparedStatement<HostNote> customize(PreparedStatement<HostNote> preparedStatement) {
+                preparedStatement.setString(0, host.getAgentId());
+                return preparedStatement;
+            }
+        }).asList();
     }
 
     @Override
-    public HostNote getById(HostRef host, String id) {
-        StatementDescriptor<HostNote> desc = new StatementDescriptor<>(hostNotesCategory, QUERY_HOST_NOTE_BY_ID);
-        PreparedStatement<HostNote> stmt;
-        Cursor<HostNote> cursor;
-        try {
-            stmt = storage.prepareStatement(desc);
-            stmt.setString(0, host.getAgentId());
-            stmt.setString(1, id);
-            cursor = stmt.executeQuery();
-            return head(cursor);
-        } catch (DescriptorParsingException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
-            return null;
-        } catch (StatementExecutionException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
-            return null;
-        }
+    public HostNote getById(final HostRef host, final String id) {
+        return executeQuery(new AbstractDaoQuery<HostNote>(storage, hostNotesCategory, QUERY_HOST_NOTE_BY_ID) {
+            @Override
+            public PreparedStatement<HostNote> customize(PreparedStatement<HostNote> preparedStatement) {
+                preparedStatement.setString(0, host.getAgentId());
+                preparedStatement.setString(1, id);
+                return preparedStatement;
+            }
+        }).head();
     }
 
     @Override
-    public void update(HostNote note) {
+    public void update(final HostNote note) {
         Objects.requireNonNull(note.getId());
-
-        StatementDescriptor<HostNote> desc = new StatementDescriptor<>(hostNotesCategory, UPDATE_HOST_NOTE);
-        PreparedStatement<HostNote> stmt;
-        try {
-            stmt = storage.prepareStatement(desc);
-            stmt.setLong(0, note.getTimeStamp());
-            stmt.setString(1, note.getContent());
-            stmt.setString(2, note.getAgentId());
-            stmt.setString(3, note.getId());
-            stmt.execute();
-        } catch (DescriptorParsingException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
-        }
+        executeStatement(new AbstractDaoStatement<HostNote>(storage, hostNotesCategory, UPDATE_HOST_NOTE) {
+            @Override
+            public PreparedStatement<HostNote> customize(PreparedStatement<HostNote> preparedStatement) {
+                preparedStatement.setLong(0, note.getTimeStamp());
+                preparedStatement.setString(1, note.getContent());
+                preparedStatement.setString(2, note.getAgentId());
+                preparedStatement.setString(3, note.getId());
+                return preparedStatement;
+            }
+        });
     }
 
     @Override
@@ -198,21 +159,20 @@ public class HostNoteDAOImpl implements HostNoteDAO {
         remove(note.getAgentId(), note.getId());
     }
 
-    private void remove(String agentId, String noteId) {
-        StatementDescriptor<HostNote> desc = new StatementDescriptor<>(hostNotesCategory, REMOVE_HOST_NOTE_BY_ID);
-        PreparedStatement<HostNote> stmt;
-        try {
-            stmt = storage.prepareStatement(desc);
-            stmt.setString(0, agentId);
-            stmt.setString(1, noteId);
-            stmt.execute();
-        } catch (DescriptorParsingException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
-        }
+    private void remove(final String agentId, final String noteId) {
+        executeStatement(new AbstractDaoStatement<HostNote>(storage, hostNotesCategory, REMOVE_HOST_NOTE_BY_ID) {
+            @Override
+            public PreparedStatement<HostNote> customize(PreparedStatement<HostNote> preparedStatement) {
+                preparedStatement.setString(0, agentId);
+                preparedStatement.setString(1, noteId);
+                return preparedStatement;
+            }
+        });
+    }
+
+    @Override
+    public Logger getLogger() {
+        return logger;
     }
 
 }

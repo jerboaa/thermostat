@@ -45,37 +45,31 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.CloseOnSave;
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.SaveFileListener;
-import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.AbstractDao;
+import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
+import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
 import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
 import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 
-import static com.redhat.thermostat.common.utils.IteratorUtils.asList;
-import static com.redhat.thermostat.common.utils.IteratorUtils.head;
+public class HeapDAOImpl extends AbstractDao implements HeapDAO {
 
-public class HeapDAOImpl implements HeapDAO {
-
-    private static final Logger log = LoggingUtils.getLogger(HeapDAOImpl.class);
+    private static final Logger logger = LoggingUtils.getLogger(HeapDAOImpl.class);
     
     // Query descriptors
     
@@ -137,28 +131,24 @@ public class HeapDAOImpl implements HeapDAO {
                 storage.saveFile(histogramId, bais, new CloseOnSave(bais));
             } catch (IOException e) {
                 e.printStackTrace();
-                log.log(Level.SEVERE, "Unexpected error while writing histogram", e);
+                logger.log(Level.SEVERE, "Unexpected error while writing histogram", e);
             }
         }
     }
 
-    private void addHeapInfo(HeapInfo heapInfo) {
-        StatementDescriptor<HeapInfo> desc = new StatementDescriptor<>(heapInfoCategory, DESC_ADD_VM_HEAP_INFO);
-        PreparedStatement<HeapInfo> prepared;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, heapInfo.getAgentId());
-            prepared.setString(1, heapInfo.getVmId());
-            prepared.setLong(2, heapInfo.getTimeStamp());
-            prepared.setString(3, heapInfo.getHeapId());
-            prepared.setString(4, heapInfo.getHeapDumpId());
-            prepared.setString(5, heapInfo.getHistogramId());
-            prepared.execute();
-        } catch (DescriptorParsingException e) {
-            log.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            log.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-        }
+    private void addHeapInfo(final HeapInfo heapInfo) {
+        executeStatement(new AbstractDaoStatement<HeapInfo>(storage, heapInfoCategory, DESC_ADD_VM_HEAP_INFO) {
+            @Override
+            public PreparedStatement<HeapInfo> customize(PreparedStatement<HeapInfo> preparedStatement) {
+                preparedStatement.setString(0, heapInfo.getAgentId());
+                preparedStatement.setString(1, heapInfo.getVmId());
+                preparedStatement.setLong(2, heapInfo.getTimeStamp());
+                preparedStatement.setString(3, heapInfo.getHeapId());
+                preparedStatement.setString(4, heapInfo.getHeapDumpId());
+                preparedStatement.setString(5, heapInfo.getHistogramId());
+                return preparedStatement;
+            }
+        });
     }
 
     private void uploadHeapDump(final File heapDumpData, String heapDumpId, final Runnable heapDumpCleanup)
@@ -172,17 +162,17 @@ public class HeapDAOImpl implements HeapDAO {
                     switch (type) {
                     case EXCEPTION_OCCURRED:
                         StorageException cause = (StorageException) additionalArguments;
-                        log.log(Level.SEVERE, "Error saving heap dump", cause);
+                        logger.log(Level.SEVERE, "Error saving heap dump", cause);
                         break;
                     case SAVE_COMPLETE:
                         break;
                     default:
-                        log.log(Level.WARNING, "Unknown saveFile event: " + type);
+                        logger.log(Level.WARNING, "Unknown saveFile event: " + type);
                     }
                     heapDumpStream.close();
                     heapDumpCleanup.run();
                 } catch (IOException e) {
-                    log.log(Level.WARNING, "Exception when saving file", e);
+                    logger.log(Level.WARNING, "Exception when saving file", e);
                 }
 
             }
@@ -195,26 +185,15 @@ public class HeapDAOImpl implements HeapDAO {
     }
 
     @Override
-    public Collection<HeapInfo> getAllHeapInfo(AgentId agentId, VmId vmId) {
-        StatementDescriptor<HeapInfo> desc = new StatementDescriptor<>(heapInfoCategory, QUERY_ALL_HEAPS);
-        PreparedStatement<HeapInfo> stmt;
-        Cursor<HeapInfo> cursor;
-        try {
-            stmt = storage.prepareStatement(desc);
-            stmt.setString(0, agentId.get());
-            stmt.setString(1, vmId.get());
-            cursor = stmt.executeQuery();
-        } catch (DescriptorParsingException e) {
-            // should not happen, but if it *does* happen, at least log it
-            log.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
-            return Collections.emptyList();
-        } catch (StatementExecutionException e) {
-            // should not happen, but if it *does* happen, at least log it
-            log.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
-            return Collections.emptyList();
-        }
-
-        return asList(cursor);
+    public Collection<HeapInfo> getAllHeapInfo(final AgentId agentId, final VmId vmId) {
+        return executeQuery(new AbstractDaoQuery<HeapInfo>(storage, heapInfoCategory, QUERY_ALL_HEAPS) {
+            @Override
+            public PreparedStatement<HeapInfo> customize(PreparedStatement<HeapInfo> preparedStatement) {
+                preparedStatement.setString(0, agentId.get());
+                preparedStatement.setString(1, vmId.get());
+                return preparedStatement;
+            }
+        }).asList();
     }
 
     @Override
@@ -224,47 +203,32 @@ public class HeapDAOImpl implements HeapDAO {
 
     @Override
     public ObjectHistogram getHistogram(HeapInfo heapInfo) {
-        
         try (InputStream in = storage.loadFile(heapInfo.getHistogramId())) {
             ObjectInputStream ois = new ObjectInputStream(in);
             return (ObjectHistogram) ois.readObject();
         } catch (IOException | ClassNotFoundException e) {
-            log.log(Level.SEVERE, "Unexpected error while reading histogram", e);
+            logger.log(Level.SEVERE, "Unexpected error while reading histogram", e);
             return null;
         }
     }
 
     @Override
-    public HeapInfo getHeapInfo(String heapId) {
-        StatementDescriptor<HeapInfo> desc = new StatementDescriptor<>(heapInfoCategory, QUERY_HEAP_INFO);
-        PreparedStatement<HeapInfo> stmt; 
-        Cursor<HeapInfo> cursor;
+    public HeapInfo getHeapInfo(final String heapId) {
         try {
-            stmt = storage.prepareStatement(desc);
-            stmt.setString(0, heapId);
-            cursor = stmt.executeQuery();
+            return executeQuery(new AbstractDaoQuery<HeapInfo>(storage, heapInfoCategory, QUERY_HEAP_INFO) {
+                @Override
+                public PreparedStatement<HeapInfo> customize(PreparedStatement<HeapInfo> preparedStatement) {
+                    preparedStatement.setString(0, heapId);
+                    return preparedStatement;
+                }
+            }).head();
         } catch (IllegalArgumentException iae) {
-            /*
-             * if the heap id is not found, we get a nice
-             * IllegalArgumentException but check if the illegal argument
-             * exception is caused by that before propagating it.
-             */
             if (!iae.getMessage().contains("invalid ObjectId")) {
                 // FIXME Is this needed?
                 throw iae;
             }
             return null;
-        } catch (DescriptorParsingException e) {
-            // should not happen, but if it *does* happen, at least log it
-            log.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
-            return null;
-        } catch (StatementExecutionException e) {
-            // should not happen, but if it *does* happen, at least log it
-            log.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
-            return null;
         }
-        
-        return head(cursor);
     }
 
     @Override
@@ -272,5 +236,9 @@ public class HeapDAOImpl implements HeapDAO {
         return new HeapDump(heapInfo, this);
     }
 
+    @Override
+    protected Logger getLogger() {
+        return logger;
+    }
 }
 

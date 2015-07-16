@@ -37,24 +37,22 @@
 package com.redhat.thermostat.vm.classstat.common.internal;
 
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmBoundaryPojoGetter;
 import com.redhat.thermostat.storage.core.VmLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.core.VmTimeIntervalPojoListGetter;
+import com.redhat.thermostat.storage.dao.AbstractDao;
+import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
 import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
 import com.redhat.thermostat.vm.classstat.common.model.VmClassStat;
 
-class VmClassStatDAOImpl implements VmClassStatDAO {
+class VmClassStatDAOImpl extends AbstractDao implements VmClassStatDAO {
     
     private static final Logger logger = LoggingUtils.getLogger(VmClassStatDAOImpl.class);
     // ADD vm-class-stats SET 'agentId' = ?s , \
@@ -91,21 +89,17 @@ class VmClassStatDAOImpl implements VmClassStatDAO {
     }
 
     @Override
-    public void putVmClassStat(VmClassStat stat) {
-        StatementDescriptor<VmClassStat> desc = new StatementDescriptor<>(vmClassStatsCategory, DESC_ADD_VM_CLASS_STAT);
-        PreparedStatement<VmClassStat> prepared;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, stat.getAgentId());
-            prepared.setString(1, stat.getVmId());
-            prepared.setLong(2, stat.getTimeStamp());
-            prepared.setLong(3, stat.getLoadedClasses());
-            prepared.execute();
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-        }
+    public void putVmClassStat(final VmClassStat stat) {
+        executeStatement(new AbstractDaoStatement<VmClassStat>(storage, vmClassStatsCategory, DESC_ADD_VM_CLASS_STAT) {
+            @Override
+            public PreparedStatement<VmClassStat> customize(PreparedStatement<VmClassStat> preparedStatement) {
+                preparedStatement.setString(0, stat.getAgentId());
+                preparedStatement.setString(1, stat.getVmId());
+                preparedStatement.setLong(2, stat.getTimeStamp());
+                preparedStatement.setLong(3, stat.getLoadedClasses());
+                return preparedStatement;
+            }
+        });
     }
 
     @Override
@@ -118,5 +112,9 @@ class VmClassStatDAOImpl implements VmClassStatDAO {
         return boundaryGetter.getNewestStat(ref);
     }
 
+    @Override
+    protected Logger getLogger() {
+        return logger;
+    }
 }
 

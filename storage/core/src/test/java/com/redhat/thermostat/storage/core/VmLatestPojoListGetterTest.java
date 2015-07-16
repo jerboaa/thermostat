@@ -112,87 +112,9 @@ public class VmLatestPojoListGetterTest {
         assertEquals(expected, actualDesc);
     }
 
-    @Test
-    public void testVmRefBuildQuery() throws DescriptorParsingException {
-        Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<TestPojo> query = (PreparedStatement<TestPojo>) mock(PreparedStatement.class);
-        when(storage.prepareStatement(anyDescriptor())).thenReturn(query);
-
-        VmLatestPojoListGetter<TestPojo> getter = new VmLatestPojoListGetter<>(storage, cat);
-        query = getter.buildQuery(vmRef, 123l);
-
-        assertNotNull(query);
-        verify(storage).prepareStatement(anyDescriptor());
-        verify(query).setString(0, AGENT_ID);
-        verify(query).setString(1, VM_ID);
-        verify(query).setLong(2, 123l);
-        verifyNoMoreInteractions(query);
-    }
-
-    @Test
-    public void testBuildQuery() throws DescriptorParsingException {
-        Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<TestPojo> query = (PreparedStatement<TestPojo>) mock(PreparedStatement.class);
-        when(storage.prepareStatement(anyDescriptor())).thenReturn(query);
-
-        VmLatestPojoListGetter<TestPojo> getter = new VmLatestPojoListGetter<>(storage, cat);
-        query = getter.buildQuery(agentId, vmId, 123l);
-
-        assertNotNull(query);
-        verify(storage).prepareStatement(anyDescriptor());
-        verify(query).setString(0, AGENT_ID);
-        verify(query).setString(1, VM_ID);
-        verify(query).setLong(2, 123l);
-        verifyNoMoreInteractions(query);
-    }
-
     @SuppressWarnings("unchecked")
     private StatementDescriptor<TestPojo> anyDescriptor() {
         return (StatementDescriptor<TestPojo>) any(StatementDescriptor.class);
-    }
-
-    @Test
-    public void testVmRefBuildQueryPopulatesUpdateTimes() throws DescriptorParsingException {
-        Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<TestPojo> ignored = (PreparedStatement<TestPojo>) mock(PreparedStatement.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<TestPojo> query = (PreparedStatement<TestPojo>) mock(PreparedStatement.class);
-        when(storage.prepareStatement(anyDescriptor())).thenReturn(ignored).thenReturn(query);
-
-        VmLatestPojoListGetter<TestPojo> getter = new VmLatestPojoListGetter<>(storage, cat);
-        getter.buildQuery(vmRef, Long.MIN_VALUE); // Ignore first return value.
-        query = getter.buildQuery(vmRef, Long.MIN_VALUE);
-
-        assertNotNull(query);
-        verify(storage, times(2)).prepareStatement(anyDescriptor());
-        verify(query).setString(0, AGENT_ID);
-        verify(query).setString(1, VM_ID);
-        verify(query).setLong(2, Long.MIN_VALUE);
-        verifyNoMoreInteractions(query);
-    }
-
-    @Test
-    public void testBuildQueryPopulatesUpdateTimes() throws DescriptorParsingException {
-        Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<TestPojo> ignored = (PreparedStatement<TestPojo>) mock(PreparedStatement.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<TestPojo> query = (PreparedStatement<TestPojo>) mock(PreparedStatement.class);
-        when(storage.prepareStatement(anyDescriptor())).thenReturn(ignored).thenReturn(query);
-
-        VmLatestPojoListGetter<TestPojo> getter = new VmLatestPojoListGetter<>(storage, cat);
-        getter.buildQuery(agentId, vmId, Long.MIN_VALUE); // Ignore first return value.
-        query = getter.buildQuery(agentId, vmId, Long.MIN_VALUE);
-
-        assertNotNull(query);
-        verify(storage, times(2)).prepareStatement(anyDescriptor());
-        verify(query).setString(0, AGENT_ID);
-        verify(query).setString(1, VM_ID);
-        verify(query).setLong(2, Long.MIN_VALUE);
-        verifyNoMoreInteractions(query);
     }
 
     @Test

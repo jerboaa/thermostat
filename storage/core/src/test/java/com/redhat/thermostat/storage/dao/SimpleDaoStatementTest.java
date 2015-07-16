@@ -34,37 +34,34 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.internal.dao;
+package com.redhat.thermostat.storage.dao;
 
-import java.util.List;
-import java.util.logging.Logger;
-
-import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.SchemaInfo;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.dao.AbstractDao;
-import com.redhat.thermostat.storage.dao.SchemaInfoDAO;
-import com.redhat.thermostat.storage.dao.SimpleDaoQuery;
-import com.redhat.thermostat.storage.model.SchemaInformation;
+import com.redhat.thermostat.storage.dao.SimpleDaoStatement;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.VmInfo;
+import org.junit.Test;
 
-public class SchemaInfoDAOImpl extends AbstractDao implements SchemaInfoDAO {
-    private static final Logger logger = LoggingUtils.getLogger(SchemaInfoDAOImpl.class);
-    static final String QUERY_ALL_COLLECTIONS = "QUERY "
-            + SchemaInfo.CATEGORY.getName();      
-    private final Storage storage;
-    
-    public SchemaInfoDAOImpl(Storage storage) {
-        this.storage = storage;
-        storage.registerCategory(SchemaInfo.CATEGORY);
-    }
-    
-    @Override
-    public List<SchemaInformation> getSchemaInfos() {
-        return executeQuery(new SimpleDaoQuery<>(storage, SchemaInfo.CATEGORY, QUERY_ALL_COLLECTIONS)).asList();
-    }
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyZeroInteractions;
 
-    @Override
-    protected Logger getLogger() {
-        return logger;
+public class SimpleDaoStatementTest {
+
+    @Test
+    public void testNoCustomizationDone() {
+        Storage storage = mock(Storage.class);
+        Category<VmInfo> category = VmInfoDAO.vmInfoCategory;
+        String descriptor = "descriptor";
+        SimpleDaoStatement<VmInfo> simpleDaoStatement = new SimpleDaoStatement<>(storage, category, descriptor);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<VmInfo> preparedStatement = (PreparedStatement<VmInfo>) mock(PreparedStatement.class);
+        PreparedStatement<VmInfo> customized = simpleDaoStatement.customize(preparedStatement);
+        assertThat(customized, is(equalTo(preparedStatement)));
+        verifyZeroInteractions(preparedStatement);
     }
 }

@@ -37,26 +37,24 @@
 package com.redhat.thermostat.vm.memory.common.internal;
 
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.AgentId;
-import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmBoundaryPojoGetter;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.core.VmTimeIntervalPojoListGetter;
+import com.redhat.thermostat.storage.dao.AbstractDao;
+import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;
 
-class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
+class VmMemoryStatDAOImpl extends AbstractDao implements VmMemoryStatDAO {
 
     private static final Logger logger = LoggingUtils.getLogger(VmMemoryStatDAOImpl.class);
 
@@ -94,21 +92,17 @@ class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
     }
 
     @Override
-    public void putVmMemoryStat(VmMemoryStat stat) {
-        StatementDescriptor<VmMemoryStat> desc = new StatementDescriptor<>(vmMemoryStatsCategory, DESC_ADD_VM_MEMORY_STAT);
-        PreparedStatement<VmMemoryStat> prepared;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, stat.getAgentId());
-            prepared.setString(1, stat.getVmId());
-            prepared.setLong(2, stat.getTimeStamp());
-            prepared.setPojoList(3, stat.getGenerations());
-            prepared.execute();
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-        }
+    public void putVmMemoryStat(final VmMemoryStat stat) {
+        executeStatement(new AbstractDaoStatement<VmMemoryStat>(storage, vmMemoryStatsCategory, DESC_ADD_VM_MEMORY_STAT) {
+            @Override
+            public PreparedStatement<VmMemoryStat> customize(PreparedStatement<VmMemoryStat> preparedStatement) {
+                preparedStatement.setString(0, stat.getAgentId());
+                preparedStatement.setString(1, stat.getVmId());
+                preparedStatement.setLong(2, stat.getTimeStamp());
+                preparedStatement.setPojoList(3, stat.getGenerations());
+                return preparedStatement;
+            }
+        });
     }
 
     @Override
@@ -124,6 +118,11 @@ class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
     @Override
     public List<VmMemoryStat> getVmMemoryStats(VmRef ref, long since, long to) {
         return intervalGetter.getLatest(ref, since, to);
+    }
+
+    @Override
+    protected Logger getLogger() {
+        return logger;
     }
 }
 

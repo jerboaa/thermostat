@@ -36,25 +36,21 @@
 
 package com.redhat.thermostat.storage.internal.dao;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.dao.AbstractDao;
+import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
+import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
 
-public class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
+public class NetworkInterfaceInfoDAOImpl extends AbstractDao implements NetworkInterfaceInfoDAO {
 
     private static final Logger logger = LoggingUtils.getLogger(NetworkInterfaceInfoDAOImpl.class);
     static final String QUERY_NETWORK_INFO = "QUERY "
@@ -84,53 +80,39 @@ public class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
     }
 
     @Override
-    public List<NetworkInterfaceInfo> getNetworkInterfaces(HostRef ref) {
-        StatementDescriptor<NetworkInterfaceInfo> desc = new StatementDescriptor<>(networkInfoCategory, QUERY_NETWORK_INFO);
-        PreparedStatement<NetworkInterfaceInfo> stmt;
-        Cursor<NetworkInterfaceInfo> cursor;
-        try {
-            stmt = storage.prepareStatement(desc);
-            stmt.setString(0, ref.getAgentId());
-            cursor = stmt.executeQuery();
-        } catch (DescriptorParsingException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
-            return Collections.emptyList();
-        } catch (StatementExecutionException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
-            return Collections.emptyList();
-        }
-
-        List<NetworkInterfaceInfo> result = new ArrayList<>();
-        while (cursor.hasNext()) {
-            NetworkInterfaceInfo stat = cursor.next();
-            result.add(stat);
-        }
-        return result;
+    public List<NetworkInterfaceInfo> getNetworkInterfaces(final HostRef ref) {
+        return executeQuery(
+                new AbstractDaoQuery<NetworkInterfaceInfo>(storage, networkInfoCategory, QUERY_NETWORK_INFO) {
+                    @Override
+                    public PreparedStatement<NetworkInterfaceInfo> customize(PreparedStatement<NetworkInterfaceInfo> preparedStatement) {
+                        preparedStatement.setString(0, ref.getAgentId());
+                        return preparedStatement;
+                    }
+                }).asList();
     }
 
     @Override
-    public void putNetworkInterfaceInfo(NetworkInterfaceInfo info) {
-        StatementDescriptor<NetworkInterfaceInfo> desc = new StatementDescriptor<>(networkInfoCategory, DESC_REPLACE_NETWORK_INFO);
-        PreparedStatement<NetworkInterfaceInfo> prepared;
-        try {
-            prepared = storage.prepareStatement(desc);
-            // SET params.
-            prepared.setString(0, info.getAgentId());
-            prepared.setString(1, info.getInterfaceName());
-            prepared.setString(2, info.getIp4Addr());
-            prepared.setString(3, info.getIp6Addr());
-            // WHERE params.
-            prepared.setString(4, info.getAgentId());
-            prepared.setString(5, info.getInterfaceName());
-            prepared.execute();
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-        }
+    public void putNetworkInterfaceInfo(final NetworkInterfaceInfo info) {
+        executeStatement(
+                new AbstractDaoStatement<NetworkInterfaceInfo>(storage, networkInfoCategory, DESC_REPLACE_NETWORK_INFO) {
+                    @Override
+                    public PreparedStatement<NetworkInterfaceInfo> customize(PreparedStatement<NetworkInterfaceInfo> preparedStatement) {
+                        // SET params.
+                        preparedStatement.setString(0, info.getAgentId());
+                        preparedStatement.setString(1, info.getInterfaceName());
+                        preparedStatement.setString(2, info.getIp4Addr());
+                        preparedStatement.setString(3, info.getIp6Addr());
+                        // WHERE params.
+                        preparedStatement.setString(4, info.getAgentId());
+                        preparedStatement.setString(5, info.getInterfaceName());
+                        return preparedStatement;
+                    }
+                });
     }
 
+    @Override
+    protected Logger getLogger() {
+        return logger;
+    }
 }
 

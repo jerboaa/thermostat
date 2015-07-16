@@ -34,57 +34,43 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.core;
+package com.redhat.thermostat.storage.dao;
 
-import java.util.List;
-import java.util.logging.Logger;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
+import com.redhat.thermostat.storage.core.PreparedStatement;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
+import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.model.VmInfo;
+import org.junit.Test;
 
-import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.dao.AbstractDao;
-import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
-import com.redhat.thermostat.storage.model.TimeStampedPojo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-/**
- * @see HostTimeIntervalPojoListGetter
- */
-public class HostLatestPojoListGetter<T extends TimeStampedPojo> extends AbstractDao {
+public class AbstractDaoQueryTest {
 
-    public static final String HOST_LATEST_QUERY_FORMAT = "QUERY %s WHERE '"
-            + Key.AGENT_ID.getName() + "' = ?s AND '"
-            + Key.TIMESTAMP.getName() + "' > ?l SORT '"
-            + Key.TIMESTAMP.getName() + "' DSC";
-
-    private static final Logger logger = LoggingUtils.getLogger(HostLatestPojoListGetter.class);
-    
-    private final Storage storage;
-    private final Category<T> cat;
-    private final String queryLatest;
-
-    public HostLatestPojoListGetter(Storage storage, Category<T> cat) {
-        this.storage = storage;
-        this.cat = cat;
-        this.queryLatest = String.format(HOST_LATEST_QUERY_FORMAT, cat.getName());
-    }
-
-    public List<T> getLatest(final HostRef hostRef, final long since) {
-        return executeQuery(new AbstractDaoQuery<T>(storage, cat, queryLatest) {
+    @Test @SuppressWarnings("unchecked")
+    public void testExecute() throws StatementExecutionException, DescriptorParsingException {
+        PreparedStatement<VmInfo> preparedStatement = (PreparedStatement<VmInfo>) mock(PreparedStatement.class);
+        Storage storage = mock(Storage.class);
+        Category<VmInfo> category = VmInfoDAO.vmInfoCategory;
+        String descriptor = "descriptor";
+        Cursor<VmInfo> cursor = (Cursor<VmInfo>) mock(Cursor.class);
+        when(preparedStatement.executeQuery()).thenReturn(cursor);
+        AbstractDaoQuery<VmInfo> abstractDaoQuery = new AbstractDaoQuery<VmInfo>(storage, category, descriptor) {
             @Override
-            public PreparedStatement<T> customize(PreparedStatement<T> preparedStatement) {
-                preparedStatement.setString(0, hostRef.getAgentId());
-                preparedStatement.setLong(1, since);
+            public PreparedStatement<VmInfo> customize(PreparedStatement<VmInfo> preparedStatement) {
                 return preparedStatement;
             }
-        }).asList();
-    }
-
-    // package private for testing
-    String getQueryLatestDesc() {
-        return queryLatest;
-    }
-
-    @Override
-    protected Logger getLogger() {
-        return logger;
+        };
+        Cursor<VmInfo> c = abstractDaoQuery.execute(preparedStatement);
+        assertThat(c, is(cursor));
+        verify(preparedStatement).executeQuery();
+        verify(preparedStatement, never()).execute();
     }
 }
-

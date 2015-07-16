@@ -40,29 +40,25 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.CategoryAdapter;
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.AbstractDao;
+import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
+import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
 import com.redhat.thermostat.storage.model.DistinctResult;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
 
-import static com.redhat.thermostat.common.utils.IteratorUtils.head;
-
-public class VmGcStatDAOImpl implements VmGcStatDAO {
+public class VmGcStatDAOImpl extends AbstractDao implements VmGcStatDAO {
     
     private static Logger logger = LoggingUtils.getLogger(VmGcStatDAOImpl.class);
     // ADD vm-gc-stats SET 'agentId' = ?s , \
@@ -107,23 +103,19 @@ public class VmGcStatDAOImpl implements VmGcStatDAO {
     }
 
     @Override
-    public void putVmGcStat(VmGcStat stat) {
-        StatementDescriptor<VmGcStat> desc = new StatementDescriptor<>(vmGcStatCategory, DESC_ADD_VM_GC_STAT);
-        PreparedStatement<VmGcStat> prepared;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, stat.getAgentId());
-            prepared.setString(1, stat.getVmId());
-            prepared.setLong(2, stat.getTimeStamp());
-            prepared.setString(3, stat.getCollectorName());
-            prepared.setLong(4, stat.getRunCount());
-            prepared.setLong(5, stat.getWallTime());
-            prepared.execute();
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-        }
+    public void putVmGcStat(final VmGcStat stat) {
+        executeStatement(new AbstractDaoStatement<VmGcStat>(storage, vmGcStatCategory, DESC_ADD_VM_GC_STAT) {
+            @Override
+            public PreparedStatement<VmGcStat> customize(PreparedStatement<VmGcStat> preparedStatement) {
+                preparedStatement.setString(0, stat.getAgentId());
+                preparedStatement.setString(1, stat.getVmId());
+                preparedStatement.setLong(2, stat.getTimeStamp());
+                preparedStatement.setString(3, stat.getCollectorName());
+                preparedStatement.setLong(4, stat.getRunCount());
+                preparedStatement.setLong(5, stat.getWallTime());
+                return preparedStatement;
+            }
+        });
     }
 
     @Override
@@ -132,31 +124,24 @@ public class VmGcStatDAOImpl implements VmGcStatDAO {
     }
 
     @Override
-    public Set<String> getDistinctCollectorNames(VmId vmId) {
-        StatementDescriptor<DistinctResult> desc = new StatementDescriptor<>(aggregateCategory, DESC_QUERY_DISTINCT_COLLECTORS);
-        PreparedStatement<DistinctResult> prepared;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, vmId.get());
-            Cursor<DistinctResult> cursor = prepared.executeQuery();
-            // DistinctResult comes as a single value if any
-            DistinctResult distinctResult = head(cursor);
-            if (distinctResult != null) {
-                Set<String> collNames = new HashSet<>();
-                Collections.addAll(collNames, distinctResult.getValues());
-                return collNames;
-            } else {
-                // Something wrong with the query?
-                logger.log(Level.FINE, "Query '" + desc + "' returned no result!");
-                return Collections.emptySet();
+    public Set<String> getDistinctCollectorNames(final VmId vmId) {
+        DistinctResult distinctResult = executeQuery(new AbstractDaoQuery<DistinctResult>(storage, aggregateCategory, DESC_QUERY_DISTINCT_COLLECTORS) {
+            @Override
+            public PreparedStatement<DistinctResult> customize(PreparedStatement<DistinctResult> preparedStatement) {
+                preparedStatement.setString(0, vmId.get());
+                return preparedStatement;
             }
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+        }).head();
+        Set<String> collNames = new HashSet<>();
+        if (distinctResult != null) {
+            Collections.addAll(collNames, distinctResult.getValues());
         }
-        return Collections.emptySet();
+        return collNames;
     }
 
+    @Override
+    public Logger getLogger() {
+        return logger;
+    }
 }
 

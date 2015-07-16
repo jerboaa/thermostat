@@ -44,25 +44,22 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.SaveFileListener;
-import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.core.VmTimeIntervalPojoListGetter;
+import com.redhat.thermostat.storage.dao.AbstractDao;
+import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
+import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
 import com.redhat.thermostat.storage.model.BasePojo;
 import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
 import com.redhat.thermostat.vm.profiler.common.ProfileInfo;
 import com.redhat.thermostat.vm.profiler.common.ProfileStatusChange;
 
-import static com.redhat.thermostat.common.utils.IteratorUtils.head;
-
-public class ProfileDAOImpl implements ProfileDAO {
+public class ProfileDAOImpl extends AbstractDao implements ProfileDAO {
 
     private static final Logger logger = LoggingUtils.getLogger(ProfileDAOImpl.class);
 
@@ -151,21 +148,17 @@ public class ProfileDAOImpl implements ProfileDAO {
 
     }
 
-    private void addProfileInfoToStorage(ProfileInfo info) {
-        StatementDescriptor<ProfileInfo> desc = new StatementDescriptor<>(PROFILE_INFO_CATEGORY, PROFILE_INFO_DESC_ADD);
-        PreparedStatement<ProfileInfo> prepared;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, info.getAgentId());
-            prepared.setString(1, info.getVmId());
-            prepared.setLong(2, info.getTimeStamp());
-            prepared.setString(3, info.getProfileId());
-            prepared.execute();
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-        }
+    private void addProfileInfoToStorage(final ProfileInfo info) {
+        executeStatement(new AbstractDaoStatement<ProfileInfo>(storage, PROFILE_INFO_CATEGORY, PROFILE_INFO_DESC_ADD) {
+            @Override
+            public PreparedStatement<ProfileInfo> customize(PreparedStatement<ProfileInfo> preparedStatement) {
+                preparedStatement.setString(0, info.getAgentId());
+                preparedStatement.setString(1, info.getVmId());
+                preparedStatement.setLong(2, info.getTimeStamp());
+                preparedStatement.setString(3, info.getProfileId());
+                return preparedStatement;
+            }
+        });
     }
 
     @Override
@@ -193,21 +186,17 @@ public class ProfileDAOImpl implements ProfileDAO {
     }
 
     @Override
-    public void addStatus(ProfileStatusChange status) {
-        StatementDescriptor<ProfileStatusChange> desc = new StatementDescriptor<>(PROFILE_STATUS_CATEGORY, PROFILE_STATUS_DESC_ADD);
-        PreparedStatement<ProfileStatusChange> prepared;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, status.getAgentId());
-            prepared.setString(1, status.getVmId());
-            prepared.setLong(2, status.getTimeStamp());
-            prepared.setBoolean(3, status.isStarted());
-            prepared.execute();
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-        }
+    public void addStatus(final ProfileStatusChange status) {
+        executeStatement(new AbstractDaoStatement<ProfileStatusChange>(storage, PROFILE_STATUS_CATEGORY, PROFILE_STATUS_DESC_ADD) {
+            @Override
+            public PreparedStatement<ProfileStatusChange> customize(PreparedStatement<ProfileStatusChange> preparedStatement) {
+                preparedStatement.setString(0, status.getAgentId());
+                preparedStatement.setString(1, status.getVmId());
+                preparedStatement.setLong(2, status.getTimeStamp());
+                preparedStatement.setBoolean(3, status.isStarted());
+                return preparedStatement;
+            }
+        });
     }
 
     @Override
@@ -215,22 +204,19 @@ public class ProfileDAOImpl implements ProfileDAO {
         return loadLatest(vm, PROFILE_STATUS_CATEGORY, PROFILE_STATUS_DESC_QUERY_LATEST);
     }
 
-    private <T extends BasePojo> T loadLatest(VmRef vm, Category<T> category, String queryDesc) {
-        StatementDescriptor<T> desc = new StatementDescriptor<>(category, queryDesc);
-        PreparedStatement<T> prepared;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, vm.getHostRef().getAgentId());
-            prepared.setString(1, vm.getVmId());
-            Cursor<T> cursor = prepared.executeQuery();
-            return head(cursor);
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-            return null;
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-            return null;
-        }
+    private <T extends BasePojo> T loadLatest(final VmRef vm, Category<T> category, String queryDesc) {
+        return executeQuery(new AbstractDaoQuery<T>(storage, category, queryDesc) {
+            @Override
+            public PreparedStatement<T> customize(PreparedStatement<T> preparedStatement) {
+                preparedStatement.setString(0, vm.getHostRef().getAgentId());
+                preparedStatement.setString(1, vm.getVmId());
+                return preparedStatement;
+            }
+        }).head();
     }
 
+    @Override
+    protected Logger getLogger() {
+        return logger;
+    }
 }

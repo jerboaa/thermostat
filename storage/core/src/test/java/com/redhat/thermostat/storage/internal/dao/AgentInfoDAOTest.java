@@ -47,6 +47,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.junit.Before;
@@ -170,10 +171,11 @@ public class AgentInfoDAOTest {
             throws DescriptorParsingException, StatementExecutionException {
         AggregateCount count = new AggregateCount();
         count.setCount(2);
-        
+
         @SuppressWarnings("unchecked")
-        Cursor<AggregateCount> countCursor = (Cursor<AggregateCount>) mock(Cursor.class);
-        when(countCursor.next()).thenReturn(count);
+        Cursor<AggregateCount> c = (Cursor<AggregateCount>) mock(Cursor.class);
+        when(c.hasNext()).thenReturn(true).thenReturn(false);
+        when(c.next()).thenReturn(count).thenThrow(new NoSuchElementException());
 
         Storage storage = mock(Storage.class);
         @SuppressWarnings("unchecked")
@@ -181,7 +183,7 @@ public class AgentInfoDAOTest {
         @SuppressWarnings("unchecked")
         StatementDescriptor<AggregateCount> desc = any(StatementDescriptor.class);
         when(storage.prepareStatement(desc)).thenReturn(stmt);
-        when(stmt.executeQuery()).thenReturn(countCursor);
+        when(stmt.executeQuery()).thenReturn(c);
         AgentInfoDAOImpl dao = new AgentInfoDAOImpl(storage);
 
         assertEquals(2, dao.getCount());
@@ -480,5 +482,6 @@ public class AgentInfoDAOTest {
         when(stmt.executeQuery()).thenReturn(agentCursor);
         return new Pair<>(storage, stmt);
     }
+
 }
 

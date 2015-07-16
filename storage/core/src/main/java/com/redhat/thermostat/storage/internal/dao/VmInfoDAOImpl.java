@@ -42,23 +42,21 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.CategoryAdapter;
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
+import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
 import com.redhat.thermostat.storage.dao.DAOException;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.AggregateCount;
@@ -136,63 +134,34 @@ public class VmInfoDAOImpl extends BaseCountable implements VmInfoDAO {
     }
 
     @Override
-    public VmInfo getVmInfo(VmId id) {
-
-        VmInfo result = null;
-
-        StatementDescriptor<VmInfo> desc = new StatementDescriptor<>(vmInfoCategory, QUERY_VM_FROM_ID);
-        PreparedStatement<VmInfo> stmt;
-
-        Cursor<VmInfo> cursor;
-        try {
-            stmt = storage.prepareStatement(desc);
-            stmt.setString(0, id.get());
-
-            cursor = stmt.executeQuery();
-            if (cursor.hasNext()) {
-                result = cursor.next();
-            }
-
-        } catch (DescriptorParsingException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
-
-        } catch (StatementExecutionException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
-        }
-        return result;
+    public VmInfo getVmInfo(final VmId id) {
+        return executeQuery(
+                new AbstractDaoQuery<VmInfo>(storage, vmInfoCategory, QUERY_VM_FROM_ID) {
+                    @Override
+                    public PreparedStatement<VmInfo> customize(PreparedStatement<VmInfo> preparedStatement) {
+                        preparedStatement.setString(0, id.get());
+                        return preparedStatement;
+                    }
+                }).head();
     }
 
     @Override
-    public VmInfo getVmInfo(VmRef ref) {
-        StatementDescriptor<VmInfo> desc = new StatementDescriptor<>(vmInfoCategory, QUERY_VM_INFO);
-        PreparedStatement<VmInfo> stmt;
-        Cursor<VmInfo> cursor;
-        try {
-            stmt = storage.prepareStatement(desc);
-            stmt.setString(0, ref.getHostRef().getAgentId());
-            stmt.setString(1, ref.getVmId());
-            cursor = stmt.executeQuery();
-        } catch (DescriptorParsingException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
-            return null;
-        } catch (StatementExecutionException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
-            return null;
-        }
-        
-        VmInfo result;
-        if (cursor.hasNext()) {
-            result = cursor.next();
-        }
-        else {
+    public VmInfo getVmInfo(final VmRef ref) {
+        VmInfo vmInfo = executeQuery(
+                new AbstractDaoQuery<VmInfo>(storage, vmInfoCategory, QUERY_VM_INFO) {
+                    @Override
+                    public PreparedStatement<VmInfo> customize(PreparedStatement<VmInfo> preparedStatement) {
+                        preparedStatement.setString(0, ref.getHostRef().getAgentId());
+                        preparedStatement.setString(1, ref.getVmId());
+                        return preparedStatement;
+                    }
+                }).head();
+        if (vmInfo != null) {
+            return vmInfo;
+        } else {
             // FIXME this is inconsistent with null returned elsewhere
             throw new DAOException("Unknown VM: host:" + ref.getHostRef().getAgentId() + ";vm:" + ref.getVmId());
         }
-        return result;
     }
 
     @Override
@@ -200,7 +169,7 @@ public class VmInfoDAOImpl extends BaseCountable implements VmInfoDAO {
         AgentId agentId = new AgentId(host.getAgentId());
 
         Collection<VmInfo> vmInfos = getAllVmInfosForHost(agentId);
-        if(vmInfos.equals(Collections.emptyList())) {
+        if (vmInfos.equals(Collections.emptyList())) {
             return Collections.emptyList();
         }
 
@@ -209,8 +178,8 @@ public class VmInfoDAOImpl extends BaseCountable implements VmInfoDAO {
 
     @Deprecated
     private Collection<VmRef> buildVMsFromQuery(Collection<VmInfo> vmInfos, HostRef host) {
-        List<VmRef> vmRefs = new ArrayList<VmRef>();
-        for(VmInfo vmInfo : vmInfos) {
+        List<VmRef> vmRefs = new ArrayList<>();
+        for (VmInfo vmInfo : vmInfos) {
             VmRef vm = buildVmRefFromChunk(vmInfo, host);
             vmRefs.add(vm);
         }
@@ -224,8 +193,7 @@ public class VmInfoDAOImpl extends BaseCountable implements VmInfoDAO {
         Integer pid = vmInfo.getVmPid();
         // TODO can we do better than the main class?
         String mainClass = vmInfo.getMainClass();
-        VmRef ref = new VmRef(host, id, pid, mainClass);
-        return ref;
+        return new VmRef(host, id, pid, mainClass);
     }
 
     @Override
@@ -239,87 +207,67 @@ public class VmInfoDAOImpl extends BaseCountable implements VmInfoDAO {
         return vmIds;
     }
 
-    private Collection<VmInfo> getAllVmInfosForHost(AgentId agentId) {
-        StatementDescriptor<VmInfo> desc = new StatementDescriptor<>(vmInfoCategory, QUERY_ALL_VMS_FOR_HOST);
-        PreparedStatement<VmInfo> stmt;
-        Cursor<VmInfo> cursor;
-        try {
-            stmt = storage.prepareStatement(desc);
-            stmt.setString(0, agentId.get());
-            cursor = stmt.executeQuery();
-        } catch (DescriptorParsingException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
-            return Collections.emptyList();
-        } catch (StatementExecutionException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
-            return Collections.emptyList();
-        }
-
-        List<VmInfo> vmInfos = new ArrayList<VmInfo>();
-        while(cursor.hasNext()) {
-            vmInfos.add(cursor.next());
-        }
-
-        return vmInfos;
+    private Collection<VmInfo> getAllVmInfosForHost(final AgentId agentId) {
+        return executeQuery(
+                new AbstractDaoQuery<VmInfo>(storage, vmInfoCategory, QUERY_ALL_VMS_FOR_HOST) {
+                    @Override
+                    public PreparedStatement<VmInfo> customize(PreparedStatement<VmInfo> preparedStatement) {
+                        preparedStatement.setString(0, agentId.get());
+                        return preparedStatement;
+                    }
+                }).asList();
     }
 
     @Override
     public long getCount() {
-        StatementDescriptor<AggregateCount> desc = new StatementDescriptor<>(
-                aggregateCategory, AGGREGATE_COUNT_ALL_VMS);
-        long count = getCount(desc, storage);
-        return count;
+        return getCount(storage, aggregateCategory, AGGREGATE_COUNT_ALL_VMS);
     }
 
     @Override
-    public void putVmInfo(VmInfo info) {
-        StatementDescriptor<VmInfo> desc = new StatementDescriptor<>(vmInfoCategory, DESC_ADD_VM_INFO);
-        PreparedStatement<VmInfo> prepared;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, info.getAgentId());
-            prepared.setString(1, info.getVmId());
-            prepared.setInt(2, info.getVmPid());
-            prepared.setLong(3, info.getStartTimeStamp());
-            prepared.setLong(4, info.getStopTimeStamp());
-            prepared.setString(5, info.getJavaVersion());
-            prepared.setString(6, info.getJavaHome());
-            prepared.setString(7, info.getMainClass());
-            prepared.setString(8, info.getJavaCommandLine());
-            prepared.setString(9, info.getVmName());
-            prepared.setString(10, info.getVmArguments());
-            prepared.setString(11, info.getVmInfo());
-            prepared.setString(12, info.getVmVersion());
-            prepared.setPojoList(13, info.getPropertiesAsArray());
-            prepared.setPojoList(14, info.getEnvironmentAsArray());
-            prepared.setStringList(15, info.getLoadedNativeLibraries());
-            prepared.setLong(16, info.getUid());
-            prepared.setString(17, info.getUsername());
-            prepared.execute();
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-        }
+    public void putVmInfo(final VmInfo info) {
+        executeStatement(
+                new AbstractDaoStatement<VmInfo>(storage, vmInfoCategory, DESC_ADD_VM_INFO) {
+                    @Override
+                    public PreparedStatement<VmInfo> customize(PreparedStatement<VmInfo> preparedStatement) {
+                        preparedStatement.setString(0, info.getAgentId());
+                        preparedStatement.setString(1, info.getVmId());
+                        preparedStatement.setInt(2, info.getVmPid());
+                        preparedStatement.setLong(3, info.getStartTimeStamp());
+                        preparedStatement.setLong(4, info.getStopTimeStamp());
+                        preparedStatement.setString(5, info.getJavaVersion());
+                        preparedStatement.setString(6, info.getJavaHome());
+                        preparedStatement.setString(7, info.getMainClass());
+                        preparedStatement.setString(8, info.getJavaCommandLine());
+                        preparedStatement.setString(9, info.getVmName());
+                        preparedStatement.setString(10, info.getVmArguments());
+                        preparedStatement.setString(11, info.getVmInfo());
+                        preparedStatement.setString(12, info.getVmVersion());
+                        preparedStatement.setPojoList(13, info.getPropertiesAsArray());
+                        preparedStatement.setPojoList(14, info.getEnvironmentAsArray());
+                        preparedStatement.setStringList(15, info.getLoadedNativeLibraries());
+                        preparedStatement.setLong(16, info.getUid());
+                        preparedStatement.setString(17, info.getUsername());
+                        return preparedStatement;
+                    }
+                });
     }
 
     @Override
-    public void putVmStoppedTime(String vmId, long timestamp) {
-        StatementDescriptor<VmInfo> desc = new StatementDescriptor<>(vmInfoCategory, DESC_UPDATE_VM_STOP_TIME);
-        PreparedStatement<VmInfo> prepared;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setLong(0, timestamp);
-            prepared.setString(1, vmId);
-            prepared.execute();
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-        }
+    public void putVmStoppedTime(final String vmId, final long timestamp) {
+        executeStatement(
+                new AbstractDaoStatement<VmInfo>(storage, vmInfoCategory, DESC_UPDATE_VM_STOP_TIME) {
+                    @Override
+                    public PreparedStatement<VmInfo> customize(PreparedStatement<VmInfo> preparedStatement) {
+                        preparedStatement.setLong(0, timestamp);
+                        preparedStatement.setString(1, vmId);
+                        return preparedStatement;
+                    }
+                });
     }
 
+    @Override
+    protected Logger getLogger() {
+        return logger;
+    }
 }
 

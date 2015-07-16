@@ -49,6 +49,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.junit.Before;
@@ -368,10 +369,11 @@ public class VmInfoDAOTest {
             throws DescriptorParsingException, StatementExecutionException {
         AggregateCount count = new AggregateCount();
         count.setCount(2);
-        
+
         @SuppressWarnings("unchecked")
-        Cursor<AggregateCount> countCursor = (Cursor<AggregateCount>) mock(Cursor.class);
-        when(countCursor.next()).thenReturn(count);
+        Cursor<AggregateCount> c = (Cursor<AggregateCount>) mock(Cursor.class);
+        when(c.hasNext()).thenReturn(true).thenReturn(false);
+        when(c.next()).thenReturn(count).thenThrow(new NoSuchElementException());
 
         Storage storage = mock(Storage.class);
         @SuppressWarnings("unchecked")
@@ -379,7 +381,7 @@ public class VmInfoDAOTest {
         @SuppressWarnings("unchecked")
         StatementDescriptor<AggregateCount> desc = any(StatementDescriptor.class);
         when(storage.prepareStatement(desc)).thenReturn(stmt);
-        when(stmt.executeQuery()).thenReturn(countCursor);
+        when(stmt.executeQuery()).thenReturn(c);
         VmInfoDAOImpl dao = new VmInfoDAOImpl(storage);
 
         assertEquals(2, dao.getCount());
@@ -450,5 +452,6 @@ public class VmInfoDAOTest {
         verify(update).execute();
         verifyNoMoreInteractions(update);
     }
+
 }
 

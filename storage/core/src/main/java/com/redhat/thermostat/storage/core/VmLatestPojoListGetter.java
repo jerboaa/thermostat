@@ -37,10 +37,11 @@
 package com.redhat.thermostat.storage.core;
 
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.dao.AbstractDao;
+import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
 /**
@@ -48,7 +49,7 @@ import com.redhat.thermostat.storage.model.TimeStampedPojo;
  *
  * @see VmTimeIntervalPojoListGetter
  */
-public class VmLatestPojoListGetter<T extends TimeStampedPojo> extends AbstractGetter<T> {
+public class VmLatestPojoListGetter<T extends TimeStampedPojo> extends AbstractDao {
     
     public static final String VM_LATEST_QUERY_FORMAT = "QUERY %s WHERE '"
             + Key.AGENT_ID.getName() + "' = ?s AND '"
@@ -69,38 +70,29 @@ public class VmLatestPojoListGetter<T extends TimeStampedPojo> extends AbstractG
 
     @Deprecated
     public List<T> getLatest(VmRef vmRef, long since) {
-        PreparedStatement<T> query = buildQuery(vmRef, since);
-        return getLatestOrEmpty(query);
+        return getLatest(new AgentId(vmRef.getHostRef().getAgentId()), new VmId(vmRef.getVmId()), since);
     }
 
-    public List<T> getLatest(AgentId agentId, VmId vmId, long since) {
-        PreparedStatement<T> query = buildQuery(agentId, vmId, since);
-        return getLatestOrEmpty(query);
-    }
-
-    @Deprecated
-    protected PreparedStatement<T> buildQuery(VmRef vmRef, long since) {
-        return buildQuery(new AgentId(vmRef.getHostRef().getAgentId()), new VmId(vmRef.getVmId()), since);
-    }
-
-    protected PreparedStatement<T> buildQuery(AgentId agentId, VmId vmId, long since) {
-        StatementDescriptor<T> desc = new StatementDescriptor<>(cat, queryLatest);
-        PreparedStatement<T> stmt = null;
-        try {
-            stmt = storage.prepareStatement(desc);
-            stmt.setString(0, agentId.get());
-            stmt.setString(1, vmId.get());
-            stmt.setLong(2, since);
-        } catch (DescriptorParsingException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
-        }
-        return stmt;
+    public List<T> getLatest(final AgentId agentId, final VmId vmId, final long since) {
+        return executeQuery(new AbstractDaoQuery<T>(storage, cat, queryLatest) {
+            @Override
+            public PreparedStatement<T> customize(PreparedStatement<T> preparedStatement) {
+                preparedStatement.setString(0, agentId.get());
+                preparedStatement.setString(1, vmId.get());
+                preparedStatement.setLong(2, since);
+                return preparedStatement;
+            }
+        }).asList();
     }
     
     // package private for tests
     String getQueryLatestDesc() {
         return queryLatest;
+    }
+
+    @Override
+    public Logger getLogger() {
+        return logger;
     }
 
 }

@@ -38,25 +38,22 @@ package com.redhat.thermostat.storage.internal.dao;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.CategoryAdapter;
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
+import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
+import com.redhat.thermostat.storage.dao.SimpleDaoQuery;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.HostInfo;
@@ -65,7 +62,7 @@ public class HostInfoDAOImpl extends BaseCountable implements HostInfoDAO {
     
     private static final Logger logger = LoggingUtils.getLogger(HostInfoDAOImpl.class);
     static final String QUERY_HOST_INFO = "QUERY "
-            + hostInfoCategory.getName() + " WHERE '" 
+            + hostInfoCategory.getName() + " WHERE '"
             + Key.AGENT_ID.getName() + "' = ?s LIMIT 1";
     static final String QUERY_ALL_HOSTS = "QUERY " + hostInfoCategory.getName();
     // We can use hostInfoCategory.getName() here since this query
@@ -110,49 +107,30 @@ public class HostInfoDAOImpl extends BaseCountable implements HostInfoDAO {
 
     @Override
     public HostInfo getHostInfo(final AgentId agentId) {
-        StatementDescriptor<HostInfo> desc = new StatementDescriptor<>(hostInfoCategory, QUERY_HOST_INFO);
-        PreparedStatement<HostInfo> prepared;
-        Cursor<HostInfo> cursor;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, agentId.get());
-            cursor = prepared.executeQuery();
-        } catch (DescriptorParsingException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
-            return null;
-        } catch (StatementExecutionException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
-            return null;
-        }
-
-        HostInfo result = null;
-        if (cursor.hasNext()) {
-            result = cursor.next();
-        }
-        return result;
+        return executeQuery(new AbstractDaoQuery<HostInfo>(storage, hostInfoCategory, QUERY_HOST_INFO) {
+            @Override
+            public PreparedStatement<HostInfo> customize(PreparedStatement<HostInfo> preparedStatement) {
+                preparedStatement.setString(0, agentId.get());
+                return preparedStatement;
+            }
+        }).head();
     }
 
     @Override
-    public void putHostInfo(HostInfo info) {
-        StatementDescriptor<HostInfo> desc = new StatementDescriptor<>(hostInfoCategory, DESC_ADD_HOST_INFO);
-        PreparedStatement<HostInfo> prepared;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, info.getAgentId());
-            prepared.setString(1, info.getHostname());
-            prepared.setString(2, info.getOsName());
-            prepared.setString(3, info.getOsKernel());
-            prepared.setString(4, info.getCpuModel());
-            prepared.setInt(5, info.getCpuCount());
-            prepared.setLong(6, info.getTotalMemory());
-            prepared.execute();
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-        }
+    public void putHostInfo(final HostInfo info) {
+        executeStatement(new AbstractDaoStatement<HostInfo>(storage, hostInfoCategory, DESC_ADD_HOST_INFO) {
+            @Override
+            public PreparedStatement<HostInfo> customize(PreparedStatement<HostInfo> preparedStatement) {
+                preparedStatement.setString(0, info.getAgentId());
+                preparedStatement.setString(1, info.getHostname());
+                preparedStatement.setString(2, info.getOsName());
+                preparedStatement.setString(3, info.getOsKernel());
+                preparedStatement.setString(4, info.getCpuModel());
+                preparedStatement.setInt(5, info.getCpuCount());
+                preparedStatement.setLong(6, info.getTotalMemory());
+                return preparedStatement;
+            }
+        });
     }
 
     @Override
@@ -166,33 +144,7 @@ public class HostInfoDAOImpl extends BaseCountable implements HostInfoDAO {
     }
 
     private Collection<HostInfo> getHostInfos() {
-        Cursor<HostInfo> cursor = getAllHostInfoCursor();
-        if (cursor == null) {
-            return Collections.emptyList();
-        }
-        List<HostInfo> result = new ArrayList<>();
-        while (cursor.hasNext()) {
-            result.add(cursor.next());
-        }
-
-        return result;
-    }
-
-    private Cursor<HostInfo> getAllHostInfoCursor() {
-        StatementDescriptor<HostInfo> desc = new StatementDescriptor<>(hostInfoCategory, QUERY_ALL_HOSTS);
-        PreparedStatement<HostInfo> prepared;
-        try {
-            prepared = storage.prepareStatement(desc);
-            return prepared.executeQuery();
-        } catch (DescriptorParsingException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
-            return null;
-        } catch (StatementExecutionException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
-            return null;
-        }
+        return executeQuery(new SimpleDaoQuery<>(storage, hostInfoCategory, QUERY_ALL_HOSTS)).asList();
     }
 
     @Override
@@ -219,16 +171,18 @@ public class HostInfoDAOImpl extends BaseCountable implements HostInfoDAO {
 
     @Override
     public long getCount() {
-        StatementDescriptor<AggregateCount> desc = new StatementDescriptor<>(
-                aggregateCategory, AGGREGATE_COUNT_ALL_HOSTS);
-        long count = getCount(desc, storage);
-        return count;
+        return getCount(storage, aggregateCategory, AGGREGATE_COUNT_ALL_HOSTS);
     }
     
     @Override
     public boolean isAlive(HostRef ref) {
         AgentInformation info = agentInfoDao.getAgentInformation(ref);
         return (info != null && info.isAlive());
+    }
+
+    @Override
+    protected Logger getLogger() {
+        return logger;
     }
 
 }

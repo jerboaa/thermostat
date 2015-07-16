@@ -37,25 +37,22 @@
 package com.redhat.thermostat.host.memory.common.internal;
 
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
 import com.redhat.thermostat.host.memory.common.model.MemoryStat;
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostBoundaryPojoGetter;
 import com.redhat.thermostat.storage.core.HostLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.HostTimeIntervalPojoListGetter;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.dao.AbstractDao;
+import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
 
-public class MemoryStatDAOImpl implements MemoryStatDAO {
+public class MemoryStatDAOImpl extends AbstractDao implements MemoryStatDAO {
 
     private static final Logger logger = LoggingUtils.getLogger(MemoryStatDAOImpl.class);
     // ADD memory-stats SET 'agentId' = ?s , \
@@ -113,27 +110,27 @@ public class MemoryStatDAOImpl implements MemoryStatDAO {
     }
 
     @Override
-    public void putMemoryStat(MemoryStat stat) {
-        StatementDescriptor<MemoryStat> desc = new StatementDescriptor<>(memoryStatCategory, DESC_ADD_MEMORY_STAT);
-        PreparedStatement<MemoryStat> prepared;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, stat.getAgentId());
-            prepared.setLong(1, stat.getTimeStamp());
-            prepared.setLong(2, stat.getTotal());
-            prepared.setLong(3, stat.getFree());
-            prepared.setLong(4, stat.getBuffers());
-            prepared.setLong(5, stat.getCached());
-            prepared.setLong(6, stat.getSwapTotal());
-            prepared.setLong(7, stat.getSwapFree());
-            prepared.setLong(8, stat.getCommitLimit());
-            prepared.execute();
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-        }
+    public void putMemoryStat(final MemoryStat stat) {
+        executeStatement(new AbstractDaoStatement<MemoryStat>(storage, memoryStatCategory, DESC_ADD_MEMORY_STAT) {
+            @Override
+            public PreparedStatement<MemoryStat> customize(PreparedStatement<MemoryStat> preparedStatement) {
+                preparedStatement.setString(0, stat.getAgentId());
+                preparedStatement.setLong(1, stat.getTimeStamp());
+                preparedStatement.setLong(2, stat.getTotal());
+                preparedStatement.setLong(3, stat.getFree());
+                preparedStatement.setLong(4, stat.getBuffers());
+                preparedStatement.setLong(5, stat.getCached());
+                preparedStatement.setLong(6, stat.getSwapTotal());
+                preparedStatement.setLong(7, stat.getSwapFree());
+                preparedStatement.setLong(8, stat.getCommitLimit());
+                return preparedStatement;
+            }
+        });
     }
 
+    @Override
+    protected Logger getLogger() {
+        return logger;
+    }
 }
 

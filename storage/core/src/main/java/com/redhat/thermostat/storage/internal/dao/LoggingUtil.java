@@ -36,52 +36,28 @@
 
 package com.redhat.thermostat.storage.internal.dao;
 
-import java.util.logging.Logger;
-
-import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.DescriptorParsingException;
-import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.dao.AbstractDao;
-import com.redhat.thermostat.storage.dao.QueryResult;
-import com.redhat.thermostat.storage.dao.SimpleDaoQuery;
-import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.Pojo;
 
-import static com.redhat.thermostat.storage.internal.dao.LoggingUtil.logDescriptorParsingException;
-import static com.redhat.thermostat.storage.internal.dao.LoggingUtil.logStatementExecutionException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-class BaseCountable extends AbstractDao {
-    
-    private static final int ERROR_COUNT_RESULT = -1;
-    private static final Logger logger = LoggingUtils.getLogger(BaseCountable.class);
+public final class LoggingUtil {
 
-    /**
-     * Performs an aggregate count query as described by the given descriptor.
-     * 
-     * @param storage the storage to use for preparing the descriptor.
-     * @param category the query category.
-     * @param descriptor the query descriptor.
-     * @return -1 if execution failed for some reason, the actual count of the
-     *         query results if successful.
-     */
-    protected long getCount(Storage storage, Category<AggregateCount> category, String descriptor) {
-        QueryResult<AggregateCount> result = executeQuery(new SimpleDaoQuery<>(storage, category, descriptor));
-        AggregateCount count = result.head();
-        if (count == null || result.hasExceptions()) {
-            return ERROR_COUNT_RESULT;
-        } else {
-            return count.getCount();
-        }
+    private LoggingUtil() {}
+
+    public static <T extends Pojo> void logDescriptorParsingException(Logger logger, StatementDescriptor<T> desc, DescriptorParsingException e) {
+        logQueryStatementException(logger, Level.SEVERE, desc, e);
     }
 
-    @Override
-    protected Logger getLogger() {
-        return logger;
+    public static <T extends Pojo> void logStatementExecutionException(Logger logger, StatementDescriptor<T> desc, StatementExecutionException e) {
+        logQueryStatementException(logger, Level.SEVERE, desc, e);
     }
+
+    static <T extends Pojo> void logQueryStatementException(Logger logger, Level level, StatementDescriptor<T> desc, Exception e) {
+        logger.log(level, "Executing query/statement '" + desc + "' failed!", e);
+    }
+
 }
-

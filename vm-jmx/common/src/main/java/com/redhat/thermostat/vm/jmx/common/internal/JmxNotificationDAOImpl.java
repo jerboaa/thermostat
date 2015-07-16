@@ -36,31 +36,25 @@
 
 package com.redhat.thermostat.vm.jmx.common.internal;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.AbstractDao;
+import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
+import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
 import com.redhat.thermostat.vm.jmx.common.JmxNotification;
 import com.redhat.thermostat.vm.jmx.common.JmxNotificationDAO;
 import com.redhat.thermostat.vm.jmx.common.JmxNotificationStatus;
 
-import static com.redhat.thermostat.common.utils.IteratorUtils.asList;
-import static com.redhat.thermostat.common.utils.IteratorUtils.head;
-
-public class JmxNotificationDAOImpl implements JmxNotificationDAO {
+public class JmxNotificationDAOImpl extends AbstractDao implements JmxNotificationDAO {
 
     private static final Key<Boolean> NOTIFICATIONS_ENABLED = new Key<>("enabled");
     private static final Logger logger = LoggingUtils.getLogger(JmxNotificationDAOImpl.class);
@@ -82,7 +76,7 @@ public class JmxNotificationDAOImpl implements JmxNotificationDAO {
                             SOURCE_BACKEND,
                             SOURCE_DETAILS,
                             CONTENTS),
-                    Arrays.<Key<?>>asList(Key.TIMESTAMP));
+                    Collections.<Key<?>>singletonList(Key.TIMESTAMP));
     
     // Query descriptors
             
@@ -131,90 +125,63 @@ public class JmxNotificationDAOImpl implements JmxNotificationDAO {
     }
 
     @Override
-    public void addNotificationStatus(JmxNotificationStatus status) {
-        StatementDescriptor<JmxNotificationStatus> desc = new StatementDescriptor<>(NOTIFICATION_STATUS, DESC_ADD_NOTIFICATION_STATUS);
-        PreparedStatement<JmxNotificationStatus> prepared;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, status.getAgentId());
-            prepared.setString(1, status.getVmId());
-            prepared.setLong(2, status.getTimeStamp());
-            prepared.setBoolean(3, status.isEnabled());
-            prepared.execute();
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-        }
+    public void addNotificationStatus(final JmxNotificationStatus status) {
+        executeStatement(new AbstractDaoStatement<JmxNotificationStatus>(storage, NOTIFICATION_STATUS, DESC_ADD_NOTIFICATION_STATUS) {
+            @Override
+            public PreparedStatement<JmxNotificationStatus> customize(PreparedStatement<JmxNotificationStatus> preparedStatement) {
+                preparedStatement.setString(0, status.getAgentId());
+                preparedStatement.setString(1, status.getVmId());
+                preparedStatement.setLong(2, status.getTimeStamp());
+                preparedStatement.setBoolean(3, status.isEnabled());
+                return preparedStatement;
+            }
+        });
     }
 
     @Override
-    public JmxNotificationStatus getLatestNotificationStatus(VmRef statusFor) {
-        StatementDescriptor<JmxNotificationStatus> desc = new StatementDescriptor<>(NOTIFICATION_STATUS, 
-                QUERY_LATEST_NOTIFICATION_STATUS);
-        PreparedStatement<JmxNotificationStatus> stmt;
-        Cursor<JmxNotificationStatus> cursor;
-        try {
-            stmt = storage.prepareStatement(desc);
-            stmt.setString(0, statusFor.getHostRef().getAgentId());
-            stmt.setString(1, statusFor.getVmId());
-            cursor = stmt.executeQuery();
-        } catch (DescriptorParsingException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
-            return null;
-        } catch (StatementExecutionException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
-            return null;
-        }
-        
-        return head(cursor);
+    public JmxNotificationStatus getLatestNotificationStatus(final VmRef statusFor) {
+        return executeQuery(new AbstractDaoQuery<JmxNotificationStatus>(storage, NOTIFICATION_STATUS, QUERY_LATEST_NOTIFICATION_STATUS) {
+            @Override
+            public PreparedStatement<JmxNotificationStatus> customize(PreparedStatement<JmxNotificationStatus> preparedStatement) {
+                preparedStatement.setString(0, statusFor.getHostRef().getAgentId());
+                preparedStatement.setString(1, statusFor.getVmId());
+                return preparedStatement;
+            }
+        }).head();
     }
 
     @Override
-    public void addNotification(JmxNotification notification) {
-        StatementDescriptor<JmxNotification> desc = new StatementDescriptor<>(NOTIFICATIONS, DESC_ADD_NOTIFICATION);
-        PreparedStatement<JmxNotification> prepared;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, notification.getAgentId());
-            prepared.setString(1, notification.getVmId());
-            prepared.setLong(2, notification.getTimeStamp());
-            prepared.setString(3, notification.getContents());
-            prepared.setString(4, notification.getSourceDetails());
-            prepared.setString(5, notification.getSourceBackend());
-            prepared.execute();
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-        }
+    public void addNotification(final JmxNotification notification) {
+        executeStatement(new AbstractDaoStatement<JmxNotification>(storage, NOTIFICATIONS, DESC_ADD_NOTIFICATION) {
+            @Override
+            public PreparedStatement<JmxNotification> customize(PreparedStatement<JmxNotification> preparedStatement) {
+                preparedStatement.setString(0, notification.getAgentId());
+                preparedStatement.setString(1, notification.getVmId());
+                preparedStatement.setLong(2, notification.getTimeStamp());
+                preparedStatement.setString(3, notification.getContents());
+                preparedStatement.setString(4, notification.getSourceDetails());
+                preparedStatement.setString(5, notification.getSourceBackend());
+                return preparedStatement;
+            }
+        });
     }
 
     @Override
-    public List<JmxNotification> getNotifications(VmRef notificationsFor, long timeStampSince) {
-        StatementDescriptor<JmxNotification> desc = new StatementDescriptor<>(NOTIFICATIONS, QUERY_NOTIFICATIONS);
-        PreparedStatement<JmxNotification> stmt;
-        Cursor<JmxNotification> cursor;
-        try {
-            stmt = storage.prepareStatement(desc);
-            stmt.setString(0, notificationsFor.getHostRef().getAgentId());
-            stmt.setString(1, notificationsFor.getVmId());
-            stmt.setLong(2, timeStampSince);
-            cursor = stmt.executeQuery();
-        } catch (DescriptorParsingException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
-            return Collections.emptyList();
-        } catch (StatementExecutionException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
-            return Collections.emptyList();
-        }
-
-        return asList(cursor);
+    public List<JmxNotification> getNotifications(final VmRef notificationsFor, final long timeStampSince) {
+        return executeQuery(new AbstractDaoQuery<JmxNotification>(storage, NOTIFICATIONS, QUERY_NOTIFICATIONS) {
+            @Override
+            public PreparedStatement<JmxNotification> customize(PreparedStatement<JmxNotification> preparedStatement) {
+                preparedStatement.setString(0, notificationsFor.getHostRef().getAgentId());
+                preparedStatement.setString(1, notificationsFor.getVmId());
+                preparedStatement.setLong(2, timeStampSince);
+                return preparedStatement;
+            }
+        }).asList();
     }
 
+    @Override
+    protected Logger getLogger() {
+        return logger;
+    }
 }
 

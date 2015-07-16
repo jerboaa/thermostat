@@ -70,7 +70,7 @@ public class BaseCountableTest {
         c.setCount(3);
         Cursor<AggregateCount> cursor = c.getCursor();
         when(prepared.executeQuery()).thenReturn(cursor);
-        long count = countable.getCount(desc, storage);
+        long count = countable.getCount(storage, mockCategory, strDesc);
         assertEquals(3, count);
     }
     
@@ -83,7 +83,7 @@ public class BaseCountableTest {
         String strDesc = "QUERY-COUNT vm-info";
         StatementDescriptor<AggregateCount> desc = new StatementDescriptor<>(mockCategory, strDesc);
         doThrow(DescriptorParsingException.class).when(storage).prepareStatement(eq(desc));
-        long count = countable.getCount(desc, storage);
+        long count = countable.getCount(storage, mockCategory, strDesc);
         assertEquals(-1, count);
     }
     
@@ -99,7 +99,7 @@ public class BaseCountableTest {
         PreparedStatement<AggregateCount> prepared = (PreparedStatement<AggregateCount>)mock(PreparedStatement.class);
         when(storage.prepareStatement(eq(desc))).thenReturn(prepared);
         doThrow(StatementExecutionException.class).when(prepared).executeQuery();
-        long count = countable.getCount(desc, storage);
+        long count = countable.getCount(storage, mockCategory, strDesc);
         assertEquals(-1, count);
     }
 }

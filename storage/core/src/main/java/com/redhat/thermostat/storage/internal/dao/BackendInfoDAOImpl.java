@@ -39,23 +39,21 @@ package com.redhat.thermostat.storage.internal.dao;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.OrderedComparator;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.dao.AbstractDao;
+import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
+import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.storage.model.BackendInformation;
 
-public class BackendInfoDAOImpl implements BackendInfoDAO {
+public class BackendInfoDAOImpl extends AbstractDao implements BackendInfoDAO {
     
     private static final Logger logger = LoggingUtils.getLogger(BackendInfoDAOImpl.class);
     static final String QUERY_BACKEND_INFO = "QUERY "
@@ -89,71 +87,53 @@ public class BackendInfoDAOImpl implements BackendInfoDAO {
     }
 
     @Override
-    public List<BackendInformation> getBackendInformation(HostRef host) {
-        StatementDescriptor<BackendInformation> desc = new StatementDescriptor<>(CATEGORY, QUERY_BACKEND_INFO);
-        PreparedStatement<BackendInformation> prepared;
-        Cursor<BackendInformation> cursor;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, host.getAgentId());
-            cursor = prepared.executeQuery();
-        } catch (DescriptorParsingException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
-            return Collections.emptyList();
-        } catch (StatementExecutionException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
-            return Collections.emptyList();
-        }
-        
-        List<BackendInformation> results = new ArrayList<>();
-        while (cursor.hasNext()) {
-            BackendInformation backendInfo = cursor.next();
-            results.add(backendInfo);
-        }
-        
-        // Sort before returning
-        Collections.sort(results, new OrderedComparator<>());
-        
-        return results;
+    public List<BackendInformation> getBackendInformation(final HostRef host) {
+        List<BackendInformation> result = executeQuery(
+                new AbstractDaoQuery<BackendInformation>(storage, CATEGORY, QUERY_BACKEND_INFO) {
+                    @Override
+                    public PreparedStatement<BackendInformation> customize(PreparedStatement<BackendInformation> preparedStatement) {
+                        preparedStatement.setString(0, host.getAgentId());
+                        return preparedStatement;
+                    }
+                }).asList();
+        List<BackendInformation> sorted = new ArrayList<>(result);
+        Collections.sort(sorted, new OrderedComparator<>());
+        return sorted;
     }
 
     @Override
-    public void addBackendInformation(BackendInformation info) {
-        StatementDescriptor<BackendInformation> desc = new StatementDescriptor<>(CATEGORY, DESC_ADD_BACKEND_INFO);
-        PreparedStatement<BackendInformation> prepared;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, info.getAgentId());
-            prepared.setString(1, info.getName());
-            prepared.setString(2, info.getDescription());
-            prepared.setBoolean(3, info.isObserveNewJvm());
-            prepared.setIntList(4, info.getPids());
-            prepared.setBoolean(5, info.isActive());
-            prepared.setInt(6, info.getOrderValue());
-            prepared.execute();
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-        }
+    public void addBackendInformation(final BackendInformation info) {
+        executeStatement(
+                new AbstractDaoStatement<BackendInformation>(storage, CATEGORY, DESC_ADD_BACKEND_INFO) {
+                    @Override
+                    public PreparedStatement<BackendInformation> customize(PreparedStatement<BackendInformation> preparedStatement) {
+                        preparedStatement.setString(0, info.getAgentId());
+                        preparedStatement.setString(1, info.getName());
+                        preparedStatement.setString(2, info.getDescription());
+                        preparedStatement.setBoolean(3, info.isObserveNewJvm());
+                        preparedStatement.setIntList(4, info.getPids());
+                        preparedStatement.setBoolean(5, info.isActive());
+                        preparedStatement.setInt(6, info.getOrderValue());
+                        return preparedStatement;
+                    }
+                });
     }
 
     @Override
-    public void removeBackendInformation(BackendInformation info) {
-        StatementDescriptor<BackendInformation> desc = new StatementDescriptor<>(CATEGORY, DESC_REMOVE_BACKEND_INFO);
-        PreparedStatement<BackendInformation> prepared;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, info.getName());
-            prepared.execute();
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-        }
+    public void removeBackendInformation(final BackendInformation info) {
+        executeStatement(
+                new AbstractDaoStatement<BackendInformation>(storage, CATEGORY, DESC_REMOVE_BACKEND_INFO) {
+                    @Override
+                    public PreparedStatement<BackendInformation> customize(PreparedStatement<BackendInformation> preparedStatement) {
+                        preparedStatement.setString(0, info.getName());
+                        return preparedStatement;
+                    }
+                });
     }
-    
+
+    @Override
+    protected Logger getLogger() {
+        return logger;
+    }
 }
 

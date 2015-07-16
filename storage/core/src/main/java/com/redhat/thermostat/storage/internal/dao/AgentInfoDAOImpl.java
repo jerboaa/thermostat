@@ -36,27 +36,23 @@
 
 package com.redhat.thermostat.storage.internal.dao;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.CategoryAdapter;
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
+import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.SimpleDaoQuery;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.AggregateCount;
 
@@ -74,9 +70,9 @@ public class AgentInfoDAOImpl extends BaseCountable implements AgentInfoDAO {
     static final String AGGREGATE_COUNT_ALL_AGENTS = "QUERY-COUNT "
             + CATEGORY.getName();
     static final String QUERY_ALIVE_AGENTS = "QUERY "
-            + CATEGORY.getName() + " WHERE '" 
+            + CATEGORY.getName() + " WHERE '"
             + ALIVE_KEY.getName() + "' = ?b";
-    
+
     // ADD agent-config SET
     //                     'agentId' = ?s , \
     //                     'startTime' = ?l , \
@@ -104,14 +100,13 @@ public class AgentInfoDAOImpl extends BaseCountable implements AgentInfoDAO {
             "'" + ALIVE_KEY.getName() + "' = ?b , " +
             "'" + CONFIG_LISTEN_ADDRESS.getName() + "' = ?s " +
             "WHERE '" + Key.AGENT_ID.getName() + "' = ?s";
-                             
-    
+
+
     private final Storage storage;
     private final Category<AggregateCount> aggregateCategory;
 
     public AgentInfoDAOImpl(Storage storage) {
         this.storage = storage;
-        // prepare adapted category and register it.
         CategoryAdapter<AgentInformation, AggregateCount> adapter = new CategoryAdapter<>(CATEGORY);
         this.aggregateCategory = adapter.getAdapted(AggregateCount.class);
         storage.registerCategory(CATEGORY);
@@ -120,115 +115,48 @@ public class AgentInfoDAOImpl extends BaseCountable implements AgentInfoDAO {
 
     @Override
     public long getCount() {
-        StatementDescriptor<AggregateCount> desc = new StatementDescriptor<>(
-                aggregateCategory, AGGREGATE_COUNT_ALL_AGENTS);
-        long count = getCount(desc, storage);
-        return count;
+        return getCount(storage, aggregateCategory, AGGREGATE_COUNT_ALL_AGENTS);
     }
 
     @Override
     public List<AgentInformation> getAllAgentInformation() {
-        Cursor<AgentInformation> agentCursor;
-        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(CATEGORY, QUERY_ALL_AGENTS);
-        PreparedStatement<AgentInformation> prepared = null;
-        try {
-            prepared = storage.prepareStatement(desc);
-            agentCursor =  prepared.executeQuery();
-        } catch (DescriptorParsingException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
-            return Collections.emptyList();
-        } catch (StatementExecutionException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
-            return Collections.emptyList();
-        }
-        List<AgentInformation> results = new ArrayList<>();
-
-        while (agentCursor.hasNext()) {
-            AgentInformation agentInfo = agentCursor.next();
-            results.add(agentInfo);
-        }
-        return results;
+        return executeQuery(new SimpleDaoQuery<>(storage, CATEGORY, QUERY_ALL_AGENTS)).asList();
     }
 
     @Override
     public List<AgentInformation> getAliveAgents() {
-        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(CATEGORY, QUERY_ALIVE_AGENTS);
-        PreparedStatement<AgentInformation> prepared = null;
-        Cursor<AgentInformation> agentCursor = null;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setBoolean(0, true);
-            agentCursor = prepared.executeQuery();
-        } catch (DescriptorParsingException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
-            return Collections.emptyList();
-        } catch (StatementExecutionException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
-            return Collections.emptyList();
-        }
-        List<AgentInformation> results = new ArrayList<>();
-
-        while (agentCursor.hasNext()) {
-            AgentInformation agentInfo = agentCursor.next();
-            results.add(agentInfo);
-        }
-        return results;
+        return executeQuery(
+                new AbstractDaoQuery<AgentInformation>(storage, CATEGORY, QUERY_ALIVE_AGENTS) {
+                    @Override
+                    public PreparedStatement<AgentInformation> customize(PreparedStatement<AgentInformation> preparedStatement) {
+                        preparedStatement.setBoolean(0, true);
+                        return preparedStatement;
+                    }
+                }).asList();
     }
 
     @Override
-    public AgentInformation getAgentInformation(HostRef agentRef) {
-        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(CATEGORY, QUERY_AGENT_INFO);
-        PreparedStatement<AgentInformation> prepared;
-        Cursor<AgentInformation> agentCursor;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, agentRef.getAgentId());
-            agentCursor = prepared.executeQuery();
-        } catch (DescriptorParsingException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
-            return null;
-        } catch (StatementExecutionException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
-            return null;
-        }
-        
-        AgentInformation result = null;
-        if (agentCursor.hasNext()) {
-            result = agentCursor.next();
-        }
-        return result;
+    public AgentInformation getAgentInformation(final HostRef agentRef) {
+        return executeQuery(
+                new AbstractDaoQuery<AgentInformation>(storage, CATEGORY, QUERY_AGENT_INFO) {
+                    @Override
+                    public PreparedStatement<AgentInformation> customize(PreparedStatement<AgentInformation> preparedStatement) {
+                        preparedStatement.setString(0, agentRef.getAgentId());
+                        return preparedStatement;
+                    }
+                }).head();
     }
 
     @Override
-    public AgentInformation getAgentInformation(AgentId agentId) {
-        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(CATEGORY, QUERY_AGENT_INFO);
-        PreparedStatement<AgentInformation> prepared;
-        Cursor<AgentInformation> agentCursor;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, agentId.get());
-            agentCursor = prepared.executeQuery();
-        } catch (DescriptorParsingException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
-            return null;
-        } catch (StatementExecutionException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
-            return null;
-        }
-
-        AgentInformation result = null;
-        if (agentCursor.hasNext()) {
-            result = agentCursor.next();
-        }
-        return result;
+    public AgentInformation getAgentInformation(final AgentId agentId) {
+        return executeQuery(
+                new AbstractDaoQuery<AgentInformation>(storage, CATEGORY, QUERY_AGENT_INFO) {
+                    @Override
+                    public PreparedStatement<AgentInformation> customize(PreparedStatement<AgentInformation> preparedStatement) {
+                        preparedStatement.setString(0, agentId.get());
+                        return preparedStatement;
+                    }
+                }).head();
     }
 
     @Override
@@ -254,37 +182,29 @@ public class AgentInfoDAOImpl extends BaseCountable implements AgentInfoDAO {
     }
 
     @Override
-    public void addAgentInformation(AgentInformation agentInfo) {
-        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(CATEGORY, DESC_ADD_AGENT_INFO);
-        PreparedStatement<AgentInformation> prepared;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, agentInfo.getAgentId());
-            prepared.setLong(1, agentInfo.getStartTime());
-            prepared.setLong(2, agentInfo.getStopTime());
-            prepared.setBoolean(3, agentInfo.isAlive());
-            prepared.setString(4, agentInfo.getConfigListenAddress());
-            prepared.execute();
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-        }
+    public void addAgentInformation(final AgentInformation agentInfo) {
+        executeStatement(new AbstractDaoStatement<AgentInformation>(storage, CATEGORY, DESC_ADD_AGENT_INFO) {
+            @Override
+            public PreparedStatement<AgentInformation> customize(PreparedStatement<AgentInformation> preparedStatement) {
+                preparedStatement.setString(0, agentInfo.getAgentId());
+                preparedStatement.setLong(1, agentInfo.getStartTime());
+                preparedStatement.setLong(2, agentInfo.getStopTime());
+                preparedStatement.setBoolean(3, agentInfo.isAlive());
+                preparedStatement.setString(4, agentInfo.getConfigListenAddress());
+                return preparedStatement;
+            }
+        });
     }
 
     @Override
-    public void removeAgentInformation(AgentInformation agentInfo) {
-        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(CATEGORY, DESC_REMOVE_AGENT_INFO);
-        PreparedStatement<AgentInformation> prepared;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, agentInfo.getAgentId());
-            prepared.execute();
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-        }
+    public void removeAgentInformation(final AgentInformation agentInfo) {
+        executeStatement(new AbstractDaoStatement<AgentInformation>(storage, CATEGORY, DESC_REMOVE_AGENT_INFO) {
+            @Override
+            public PreparedStatement<AgentInformation> customize(PreparedStatement<AgentInformation> preparedStatement) {
+                preparedStatement.setString(0, agentInfo.getAgentId());
+                return preparedStatement;
+            }
+        });
     }
 
     @Override
@@ -294,23 +214,23 @@ public class AgentInfoDAOImpl extends BaseCountable implements AgentInfoDAO {
     }
 
     @Override
-    public void updateAgentInformation(AgentInformation agentInfo) {
-        StatementDescriptor<AgentInformation> desc = new StatementDescriptor<>(CATEGORY, DESC_UPDATE_AGENT_INFO);
-        PreparedStatement<AgentInformation> prepared;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setLong(0, agentInfo.getStartTime());
-            prepared.setLong(1, agentInfo.getStopTime());
-            prepared.setBoolean(2, agentInfo.isAlive());
-            prepared.setString(3, agentInfo.getConfigListenAddress());
-            prepared.setString(4, agentInfo.getAgentId());
-            prepared.execute();
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-        }
+    public void updateAgentInformation(final AgentInformation agentInfo) {
+        executeStatement(new AbstractDaoStatement<AgentInformation>(storage, CATEGORY, DESC_UPDATE_AGENT_INFO) {
+            @Override
+            public PreparedStatement<AgentInformation> customize(PreparedStatement<AgentInformation> preparedStatement) {
+                preparedStatement.setLong(0, agentInfo.getStartTime());
+                preparedStatement.setLong(1, agentInfo.getStopTime());
+                preparedStatement.setBoolean(2, agentInfo.isAlive());
+                preparedStatement.setString(3, agentInfo.getConfigListenAddress());
+                preparedStatement.setString(4, agentInfo.getAgentId());
+                return preparedStatement;
+            }
+        });
     }
 
+    @Override
+    protected Logger getLogger() {
+        return logger;
+    }
 }
 

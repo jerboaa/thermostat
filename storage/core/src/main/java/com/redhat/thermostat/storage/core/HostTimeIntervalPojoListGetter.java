@@ -37,16 +37,17 @@
 package com.redhat.thermostat.storage.core;
 
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.dao.AbstractDao;
+import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
 /**
  * @see HostLatestPojoListGetter
  */
-public class HostTimeIntervalPojoListGetter<T extends TimeStampedPojo> extends AbstractGetter<T> {
+public class HostTimeIntervalPojoListGetter<T extends TimeStampedPojo> extends AbstractDao {
 
     public static final String HOST_INTERVAL_QUERY_FORMAT = "QUERY %s WHERE '"
             + Key.AGENT_ID.getName() + "' = ?s AND '"
@@ -66,29 +67,26 @@ public class HostTimeIntervalPojoListGetter<T extends TimeStampedPojo> extends A
         this.query = String.format(HOST_INTERVAL_QUERY_FORMAT, cat.getName());
     }
 
-    public List<T> getLatest(HostRef hostRef, long since, long to) {
-        PreparedStatement<T> query = buildQuery(hostRef, since, to);
-        return getLatestOrEmpty(query);
+    public List<T> getLatest(final HostRef hostRef, final long since, final long to) {
+        return executeQuery(new AbstractDaoQuery<T>(storage, cat, query) {
+            @Override
+            public PreparedStatement<T> customize(PreparedStatement<T> preparedStatement) {
+                preparedStatement.setString(0, hostRef.getAgentId());
+                preparedStatement.setLong(1, since);
+                preparedStatement.setLong(2, to);
+                return preparedStatement;
+            }
+        }).asList();
     }
 
-    PreparedStatement<T> buildQuery(HostRef hostRef, long since, long to) {
-        StatementDescriptor<T> desc = new StatementDescriptor<>(cat, query);
-        PreparedStatement<T> stmt = null;
-        try {
-            stmt = storage.prepareStatement(desc);
-            stmt.setString(0, hostRef.getAgentId());
-            stmt.setLong(1, since);
-            stmt.setLong(2, to);
-        } catch (DescriptorParsingException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
-        }
-        return stmt;
-    }
-    
     // package private for testing
     String getQueryLatestDesc() {
         return query;
+    }
+
+    @Override
+    protected Logger getLogger() {
+        return logger;
     }
 }
 

@@ -1,4 +1,4 @@
-/*
+package com.redhat.thermostat.storage.dao;/*
  * Copyright 2012-2015 Red Hat, Inc.
  *
  * This file is part of Thermostat.
@@ -34,40 +34,16 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.core;
+import com.redhat.thermostat.storage.core.PreparedStatement;
+import com.redhat.thermostat.storage.core.StatementDescriptor;
+import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.model.Pojo;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+public interface DaoOperation<T extends Pojo> {
 
-import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.model.TimeStampedPojo;
+    PreparedStatement<T> customize(PreparedStatement<T> preparedStatement);
 
-import static com.redhat.thermostat.common.utils.IteratorUtils.asList;
+    Storage getStorage();
 
-class AbstractGetter<T extends TimeStampedPojo> {
-
-    private static final Logger logger = LoggingUtils.getLogger(AbstractGetter.class);
-
-    List<T> getLatestOrEmpty(PreparedStatement<T> query) {
-        if (query == null) {
-            return Collections.emptyList();
-        }
-        return getLatest(query);
-    }
-
-    List<T> getLatest(PreparedStatement<T> query) {
-        Cursor<T> cursor;
-        try {
-            cursor = query.executeQuery();
-        } catch (StatementExecutionException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Executing query '" + query + "' failed!", e);
-            return Collections.emptyList();
-        }
-        return asList(cursor);
-    }
-
+    StatementDescriptor<T> getStatementDescriptor();
 }

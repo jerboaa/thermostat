@@ -36,15 +36,14 @@
 
 package com.redhat.thermostat.storage.core;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.dao.AbstractDao;
+import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
-import static com.redhat.thermostat.common.utils.IteratorUtils.head;
-
-public class VmBoundaryPojoGetter <T extends TimeStampedPojo> {
+public class VmBoundaryPojoGetter<T extends TimeStampedPojo> extends AbstractDao {
 
     // QUERY %s WHERE 'agentId' = ?s AND \
     //                        'vmId' = ?s \
@@ -89,21 +88,14 @@ public class VmBoundaryPojoGetter <T extends TimeStampedPojo> {
     }
 
     private T runAgentAndVmIdQuery(final VmRef ref, final String descriptor) {
-        StatementDescriptor<T> desc = new StatementDescriptor<>(cat, descriptor);
-        PreparedStatement<T> prepared;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, ref.getHostRef().getAgentId());
-            prepared.setString(1, ref.getVmId());
-            Cursor<T> cursor = prepared.executeQuery();
-            return head(cursor);
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-            return null;
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-            return null;
-        }
+        return executeQuery(new AbstractDaoQuery<T>(storage, cat, descriptor) {
+            @Override
+            public PreparedStatement<T> customize(PreparedStatement<T> preparedStatement) {
+                preparedStatement.setString(0, ref.getHostRef().getAgentId());
+                preparedStatement.setString(1, ref.getVmId());
+                return preparedStatement;
+            }
+        }).head();
     }
 
     //Package private for testing
@@ -115,4 +107,10 @@ public class VmBoundaryPojoGetter <T extends TimeStampedPojo> {
     String getOldestQueryDesc() {
         return queryOldest;
     }
+
+    @Override
+    protected Logger getLogger() {
+        return logger;
+    }
+
 }

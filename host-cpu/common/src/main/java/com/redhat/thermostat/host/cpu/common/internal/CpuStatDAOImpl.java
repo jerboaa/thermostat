@@ -53,8 +53,11 @@ import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.StatementDescriptor;
 import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.dao.AbstractDao;
+import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
+import com.redhat.thermostat.storage.model.Pojo;
 
-class CpuStatDAOImpl implements CpuStatDAO {
+class CpuStatDAOImpl extends AbstractDao implements CpuStatDAO {
 
     private static final Logger logger = LoggingUtils.getLogger(CpuStatDAOImpl.class);
     // ADD cpu-stats SET 'agentId' = ?s , \
@@ -85,20 +88,16 @@ class CpuStatDAOImpl implements CpuStatDAO {
     }
 
     @Override
-    public void putCpuStat(CpuStat stat) {
-        StatementDescriptor<CpuStat> desc = new StatementDescriptor<>(cpuStatCategory, DESC_ADD_CPU_STAT);
-        PreparedStatement<CpuStat> prepared;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, stat.getAgentId());
-            prepared.setDoubleList(1, stat.getPerProcessorUsage());
-            prepared.setLong(2, stat.getTimeStamp());
-            prepared.execute();
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-        }
+    public void putCpuStat(final CpuStat stat) {
+        executeStatement(new AbstractDaoStatement<CpuStat>(storage, cpuStatCategory, DESC_ADD_CPU_STAT) {
+            @Override
+            public PreparedStatement<CpuStat> customize(PreparedStatement<CpuStat> preparedStatement) {
+                preparedStatement.setString(0, stat.getAgentId());
+                preparedStatement.setDoubleList(1, stat.getPerProcessorUsage());
+                preparedStatement.setLong(2, stat.getTimeStamp());
+                return preparedStatement;
+            }
+        });
     }
 
     @Override
@@ -115,5 +114,11 @@ class CpuStatDAOImpl implements CpuStatDAO {
     public CpuStat getNewest(HostRef ref) {
         return boundaryGetter.getNewestStat(ref);
     }
+
+    @Override
+    public Logger getLogger() {
+        return logger;
+    }
+
 }
 

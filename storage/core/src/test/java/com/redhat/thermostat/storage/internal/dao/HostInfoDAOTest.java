@@ -47,6 +47,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.NoSuchElementException;
 
 import com.redhat.thermostat.storage.core.AgentId;
 import org.junit.Test;
@@ -66,7 +67,6 @@ import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.HostInfo;
-
 
 public class HostInfoDAOTest {
 
@@ -276,8 +276,9 @@ public class HostInfoDAOTest {
         count.setCount(2);
 
         @SuppressWarnings("unchecked")
-        Cursor<AggregateCount> countCursor = (Cursor<AggregateCount>) mock(Cursor.class);
-        when(countCursor.next()).thenReturn(count);
+        Cursor<AggregateCount> c = (Cursor<AggregateCount>) mock(Cursor.class);
+        when(c.hasNext()).thenReturn(true).thenReturn(false);
+        when(c.next()).thenReturn(count).thenThrow(new NoSuchElementException());
 
         Storage storage = mock(Storage.class);
         @SuppressWarnings("unchecked")
@@ -285,7 +286,7 @@ public class HostInfoDAOTest {
         @SuppressWarnings("unchecked")
         StatementDescriptor<AggregateCount> desc = any(StatementDescriptor.class);
         when(storage.prepareStatement(desc)).thenReturn(stmt);
-        when(stmt.executeQuery()).thenReturn(countCursor);
+        when(stmt.executeQuery()).thenReturn(c);
         HostInfoDAOImpl dao = new HostInfoDAOImpl(storage, null);
 
         assertEquals(2, dao.getCount());
@@ -468,5 +469,6 @@ public class HostInfoDAOTest {
 
         return new Triple<>(storage, agentDao, stmt);
     }
+
 }
 

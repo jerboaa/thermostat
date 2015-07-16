@@ -49,6 +49,7 @@ import static org.mockito.Mockito.when;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.junit.Test;
@@ -224,13 +225,13 @@ public class VmGcStatDAOTest {
         Set<String> mockResults = new HashSet<>();
         mockResults.add("MSC");
         mockResults.add("PCopy");
-        String[] vals = mockResults.toArray(new String[0]);
+        String[] vals = mockResults.toArray(new String[mockResults.size()]);
         DistinctResult result = new DistinctResult();
         result.setValues(vals);
         @SuppressWarnings("unchecked")
         Cursor<DistinctResult> c = mock(Cursor.class);
-        when(c.hasNext()).thenReturn(true);
-        when(c.next()).thenReturn(result);
+        when(c.hasNext()).thenReturn(true).thenReturn(false);
+        when(c.next()).thenReturn(result).thenThrow(new NoSuchElementException());
 
         return new Triple<>(c, result, mockResults);
     }
@@ -311,5 +312,6 @@ public class VmGcStatDAOTest {
 
         return new Triple<>(storage, query, desc);
     }
+
 }
 

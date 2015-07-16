@@ -115,46 +115,9 @@ public class HostLatestPojoListGetterTest {
         assertEquals(expected, actualDesc);
     }
 
-    @Test
-    public void testBuildQuery() throws DescriptorParsingException {
-        Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<TestPojo> query = (PreparedStatement<TestPojo>) mock(PreparedStatement.class);
-        when(storage.prepareStatement(anyDescriptor())).thenReturn(query);
-
-        HostLatestPojoListGetter<TestPojo> getter = new HostLatestPojoListGetter<>(storage, cat);
-        query = getter.buildQuery(ref, 123);
-
-        assertNotNull(query);
-        verify(query).setString(0, ref.getAgentId());
-        verify(query).setLong(1, 123L);
-        verifyNoMoreInteractions(query);
-    }
-
     @SuppressWarnings("unchecked")
     private StatementDescriptor<TestPojo> anyDescriptor() {
         return (StatementDescriptor<TestPojo>) any(StatementDescriptor.class);
-    }
-
-    @Test
-    public void testBuildQueryPopulatesUpdateTimes() throws DescriptorParsingException {
-        Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<TestPojo> ignored = (PreparedStatement<TestPojo>) mock(PreparedStatement.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<TestPojo> query = (PreparedStatement<TestPojo>) mock(PreparedStatement.class);
-        when(storage.prepareStatement(anyDescriptor())).thenReturn(ignored).thenReturn(query);
-
-        HostLatestPojoListGetter<TestPojo> getter = new HostLatestPojoListGetter<>(storage, cat);
-        ignored = getter.buildQuery(ref,Long.MIN_VALUE); // Ignore first return value.
-
-        query = getter.buildQuery(ref, Long.MIN_VALUE);
-
-        assertNotNull(query);
-        verify(storage, times(2)).prepareStatement(anyDescriptor());
-        verify(query).setString(0, ref.getAgentId());
-        verify(query).setLong(1, Long.MIN_VALUE);
-        verifyNoMoreInteractions(query);
     }
 
     @Test

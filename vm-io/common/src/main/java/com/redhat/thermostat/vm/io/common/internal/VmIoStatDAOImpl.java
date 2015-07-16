@@ -37,28 +37,27 @@
 package com.redhat.thermostat.vm.io.common.internal;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmBoundaryPojoGetter;
 import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.core.VmTimeIntervalPojoListGetter;
+import com.redhat.thermostat.storage.dao.AbstractDao;
+import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
 import com.redhat.thermostat.vm.io.common.VmIoStat;
 import com.redhat.thermostat.vm.io.common.VmIoStatDAO;
 
-public class VmIoStatDAOImpl implements VmIoStatDAO {
+public class VmIoStatDAOImpl extends AbstractDao implements VmIoStatDAO {
 
     private static final Logger logger = LoggingUtils.getLogger(VmIoStatDAOImpl.class);
 
@@ -70,7 +69,7 @@ public class VmIoStatDAOImpl implements VmIoStatDAO {
     static final Category<VmIoStat> CATEGORY = new Category<>("vm-io-stats", VmIoStat.class,
             Arrays.<Key<?>>asList(Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP,
                     KEY_CHARACTERS_READ, KEY_CHARACTERS_WRITTEN, KEY_READ_SYSCALLS, KEY_WRITE_SYSCALLS),
-            Arrays.<Key<?>>asList(Key.TIMESTAMP));
+            Collections.<Key<?>>singletonList(Key.TIMESTAMP));
 
     static final String DESC_ADD_VM_IO_STAT = "ADD " + CATEGORY.getName() +
             " SET '" + Key.AGENT_ID.getName() + "' = ?s , " +
@@ -120,24 +119,25 @@ public class VmIoStatDAOImpl implements VmIoStatDAO {
     }
 
     @Override
-    public void putVmIoStat(VmIoStat stat) {
-        StatementDescriptor<VmIoStat> desc = new StatementDescriptor<>(CATEGORY, DESC_ADD_VM_IO_STAT);
-        PreparedStatement<VmIoStat> prepared;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, stat.getAgentId());
-            prepared.setString(1, stat.getVmId());
-            prepared.setLong(2, stat.getTimeStamp());
-            prepared.setLong(3, stat.getCharactersRead());
-            prepared.setLong(4, stat.getCharactersWritten());
-            prepared.setLong(5, stat.getReadSyscalls());
-            prepared.setLong(6, stat.getWriteSyscalls());
-            prepared.execute();
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-        }
+    public void putVmIoStat(final VmIoStat stat) {
+        executeStatement(new AbstractDaoStatement<VmIoStat>(storage, CATEGORY, DESC_ADD_VM_IO_STAT) {
+            @Override
+            public PreparedStatement<VmIoStat> customize(PreparedStatement<VmIoStat> preparedStatement) {
+                preparedStatement.setString(0, stat.getAgentId());
+                preparedStatement.setString(1, stat.getVmId());
+                preparedStatement.setLong(2, stat.getTimeStamp());
+                preparedStatement.setLong(3, stat.getCharactersRead());
+                preparedStatement.setLong(4, stat.getCharactersWritten());
+                preparedStatement.setLong(5, stat.getReadSyscalls());
+                preparedStatement.setLong(6, stat.getWriteSyscalls());
+                return preparedStatement;
+            }
+        });
+    }
+
+    @Override
+    protected Logger getLogger() {
+        return logger;
     }
 }
 

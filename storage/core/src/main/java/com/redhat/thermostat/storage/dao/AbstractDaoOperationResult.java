@@ -34,57 +34,37 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.core;
+package com.redhat.thermostat.storage.dao;
 
+import com.redhat.thermostat.storage.model.Pojo;
+
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.logging.Logger;
 
-import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.dao.AbstractDao;
-import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
-import com.redhat.thermostat.storage.model.TimeStampedPojo;
+public abstract class AbstractDaoOperationResult<T extends Pojo> implements DaoOperationResult<T> {
 
-/**
- * @see HostTimeIntervalPojoListGetter
- */
-public class HostLatestPojoListGetter<T extends TimeStampedPojo> extends AbstractDao {
+    private final List<Exception> exceptions = new ArrayList<>();
 
-    public static final String HOST_LATEST_QUERY_FORMAT = "QUERY %s WHERE '"
-            + Key.AGENT_ID.getName() + "' = ?s AND '"
-            + Key.TIMESTAMP.getName() + "' > ?l SORT '"
-            + Key.TIMESTAMP.getName() + "' DSC";
-
-    private static final Logger logger = LoggingUtils.getLogger(HostLatestPojoListGetter.class);
-    
-    private final Storage storage;
-    private final Category<T> cat;
-    private final String queryLatest;
-
-    public HostLatestPojoListGetter(Storage storage, Category<T> cat) {
-        this.storage = storage;
-        this.cat = cat;
-        this.queryLatest = String.format(HOST_LATEST_QUERY_FORMAT, cat.getName());
-    }
-
-    public List<T> getLatest(final HostRef hostRef, final long since) {
-        return executeQuery(new AbstractDaoQuery<T>(storage, cat, queryLatest) {
-            @Override
-            public PreparedStatement<T> customize(PreparedStatement<T> preparedStatement) {
-                preparedStatement.setString(0, hostRef.getAgentId());
-                preparedStatement.setLong(1, since);
-                return preparedStatement;
-            }
-        }).asList();
-    }
-
-    // package private for testing
-    String getQueryLatestDesc() {
-        return queryLatest;
+    @Override
+    public void addException(Exception e) {
+        exceptions.add(e);
     }
 
     @Override
-    protected Logger getLogger() {
-        return logger;
+    public void addExceptions(Iterable<Exception> exceptions) {
+        for (Exception e : exceptions) {
+            addException(e);
+        }
+    }
+
+    @Override
+    public boolean hasExceptions() {
+        return !exceptions.isEmpty();
+    }
+
+    @Override
+    public List<Exception> getExceptions() {
+        return Collections.unmodifiableList(exceptions);
     }
 }
-

@@ -37,30 +37,24 @@
 package com.redhat.thermostat.numa.common.internal;
 
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.numa.common.NumaDAO;
 import com.redhat.thermostat.numa.common.NumaHostInfo;
 import com.redhat.thermostat.numa.common.NumaStat;
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.HostBoundaryPojoGetter;
 import com.redhat.thermostat.storage.core.HostLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.HostTimeIntervalPojoListGetter;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.dao.AbstractDao;
+import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
+import com.redhat.thermostat.storage.dao.AbstractDaoStatement;
 
-import javax.xml.parsers.ParserConfigurationException;
-
-import static com.redhat.thermostat.common.utils.IteratorUtils.head;
-
-public class NumaDAOImpl implements NumaDAO {
+public class NumaDAOImpl extends AbstractDao implements NumaDAO {
 
     private static final Logger logger = LoggingUtils.getLogger(NumaDAOImpl.class);
 
@@ -95,20 +89,16 @@ public class NumaDAOImpl implements NumaDAO {
     }
 
     @Override
-    public void putNumaStat(NumaStat stat) {
-        StatementDescriptor<NumaStat> desc = new StatementDescriptor<>(numaStatCategory, DESC_ADD_NUMA_STAT);
-        PreparedStatement<NumaStat> prepared;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, stat.getAgentId());
-            prepared.setLong(1, stat.getTimeStamp());
-            prepared.setPojoList(2, stat.getNodeStats());
-            prepared.execute();
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
-        }
+    public void putNumaStat(final NumaStat stat) {
+        executeStatement(new AbstractDaoStatement<NumaStat>(storage, numaStatCategory, DESC_ADD_NUMA_STAT) {
+            @Override
+            public PreparedStatement<NumaStat> customize(PreparedStatement<NumaStat> preparedStatement) {
+                preparedStatement.setString(0, stat.getAgentId());
+                preparedStatement.setLong(1, stat.getTimeStamp());
+                preparedStatement.setPojoList(2, stat.getNodeStats());
+                return preparedStatement;
+            }
+        });
     }
 
     @Override
@@ -132,46 +122,36 @@ public class NumaDAOImpl implements NumaDAO {
     }
 
     @Override
-    public void putNumberOfNumaNodes(NumaHostInfo numaHostInfo) {
-        StatementDescriptor<NumaHostInfo> desc = new StatementDescriptor<>(numaHostCategory, DESC_ADD_NUMA_HOST_INFO);
-        PreparedStatement<NumaHostInfo> prepared;
-        try {
-            prepared = storage.prepareStatement(desc);
-            prepared.setString(0, numaHostInfo.getAgentId());
-            prepared.setInt(1, numaHostInfo.getNumNumaNodes());
-            prepared.execute();
-        } catch (DescriptorParsingException e) {
-            logger.log(Level.SEVERE, "Preparing stmt '" + desc + "' failed!", e);
-        } catch (StatementExecutionException e) {
-            logger.log(Level.SEVERE, "Executing stmt '" + desc + "' failed!", e);
+    public void putNumberOfNumaNodes(final NumaHostInfo numaHostInfo) {
+        executeStatement(new AbstractDaoStatement<NumaHostInfo>(storage, numaHostCategory, DESC_ADD_NUMA_HOST_INFO) {
+            @Override
+            public PreparedStatement<NumaHostInfo> customize(PreparedStatement<NumaHostInfo> preparedStatement) {
+                preparedStatement.setString(0, numaHostInfo.getAgentId());
+                preparedStatement.setInt(1, numaHostInfo.getNumNumaNodes());
+                return preparedStatement;
+            }
+        });
+    }
+
+    @Override
+    public int getNumberOfNumaNodes(final HostRef ref) {
+        NumaHostInfo numaHostInfo = executeQuery(new AbstractDaoQuery<NumaHostInfo>(storage, numaHostCategory, QUERY_NUMA_INFO) {
+            @Override
+            public PreparedStatement<NumaHostInfo> customize(PreparedStatement<NumaHostInfo> preparedStatement) {
+                preparedStatement.setString(0, ref.getAgentId());
+                return preparedStatement;
+            }
+        }).head();
+        if (numaHostInfo == null) {
+            return 0;
+        } else {
+            return numaHostInfo.getNumNumaNodes();
         }
     }
 
     @Override
-    public int getNumberOfNumaNodes(HostRef ref) {
-        StatementDescriptor<NumaHostInfo> desc = new StatementDescriptor<>(numaHostCategory, QUERY_NUMA_INFO);
-        PreparedStatement<NumaHostInfo> stmt;
-        Cursor<NumaHostInfo> cursor;
-        try {
-            stmt = storage.prepareStatement(desc);
-            stmt.setString(0, ref.getAgentId());
-            cursor = stmt.executeQuery();
-        } catch (DescriptorParsingException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
-            return 0;
-        } catch (StatementExecutionException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Executing query '" + desc + "' failed!", e);
-            return 0;
-        }
-
-        NumaHostInfo numaHostInfo = head(cursor);
-        if (numaHostInfo != null) {
-            return numaHostInfo.getNumNumaNodes();
-        } else {
-            return 0;
-        }
+    protected Logger getLogger() {
+        return logger;
     }
 }
 

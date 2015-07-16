@@ -34,57 +34,40 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.core;
+package com.redhat.thermostat.storage.dao;
 
+import com.redhat.thermostat.common.utils.IteratorUtils;
+import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.model.Pojo;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Logger;
 
-import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.dao.AbstractDao;
-import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
-import com.redhat.thermostat.storage.model.TimeStampedPojo;
+public class QueryResult<T extends Pojo> extends AbstractDaoOperationResult<T> {
 
-/**
- * @see HostTimeIntervalPojoListGetter
- */
-public class HostLatestPojoListGetter<T extends TimeStampedPojo> extends AbstractDao {
+    private final List<T> contents;
 
-    public static final String HOST_LATEST_QUERY_FORMAT = "QUERY %s WHERE '"
-            + Key.AGENT_ID.getName() + "' = ?s AND '"
-            + Key.TIMESTAMP.getName() + "' > ?l SORT '"
-            + Key.TIMESTAMP.getName() + "' DSC";
-
-    private static final Logger logger = LoggingUtils.getLogger(HostLatestPojoListGetter.class);
-    
-    private final Storage storage;
-    private final Category<T> cat;
-    private final String queryLatest;
-
-    public HostLatestPojoListGetter(Storage storage, Category<T> cat) {
-        this.storage = storage;
-        this.cat = cat;
-        this.queryLatest = String.format(HOST_LATEST_QUERY_FORMAT, cat.getName());
+    public QueryResult(Cursor<T> cursor) {
+        contents = IteratorUtils.asList(cursor);
     }
 
-    public List<T> getLatest(final HostRef hostRef, final long since) {
-        return executeQuery(new AbstractDaoQuery<T>(storage, cat, queryLatest) {
-            @Override
-            public PreparedStatement<T> customize(PreparedStatement<T> preparedStatement) {
-                preparedStatement.setString(0, hostRef.getAgentId());
-                preparedStatement.setLong(1, since);
-                return preparedStatement;
-            }
-        }).asList();
+    public List<T> asList() {
+        return contents;
     }
 
-    // package private for testing
-    String getQueryLatestDesc() {
-        return queryLatest;
+    public T head() {
+        if (contents.isEmpty()) {
+            return null;
+        } else {
+            return contents.get(0);
+        }
     }
 
     @Override
-    protected Logger getLogger() {
-        return logger;
+    public Iterator<T> iterator() {
+        return contents.iterator();
     }
-}
 
+}

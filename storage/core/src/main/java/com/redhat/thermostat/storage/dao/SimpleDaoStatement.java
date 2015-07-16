@@ -34,54 +34,22 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.internal.dao;
+package com.redhat.thermostat.storage.dao;
 
-import java.util.logging.Logger;
-
-import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.PreparedStatement;
-import com.redhat.thermostat.storage.core.StatementDescriptor;
-import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.dao.AbstractDao;
-import com.redhat.thermostat.storage.dao.QueryResult;
-import com.redhat.thermostat.storage.dao.SimpleDaoQuery;
-import com.redhat.thermostat.storage.model.AggregateCount;
 import com.redhat.thermostat.storage.model.Pojo;
 
-import static com.redhat.thermostat.storage.internal.dao.LoggingUtil.logDescriptorParsingException;
-import static com.redhat.thermostat.storage.internal.dao.LoggingUtil.logStatementExecutionException;
+public class SimpleDaoStatement<T extends Pojo> extends AbstractDaoStatement<T> {
 
-class BaseCountable extends AbstractDao {
-    
-    private static final int ERROR_COUNT_RESULT = -1;
-    private static final Logger logger = LoggingUtils.getLogger(BaseCountable.class);
-
-    /**
-     * Performs an aggregate count query as described by the given descriptor.
-     * 
-     * @param storage the storage to use for preparing the descriptor.
-     * @param category the query category.
-     * @param descriptor the query descriptor.
-     * @return -1 if execution failed for some reason, the actual count of the
-     *         query results if successful.
-     */
-    protected long getCount(Storage storage, Category<AggregateCount> category, String descriptor) {
-        QueryResult<AggregateCount> result = executeQuery(new SimpleDaoQuery<>(storage, category, descriptor));
-        AggregateCount count = result.head();
-        if (count == null || result.hasExceptions()) {
-            return ERROR_COUNT_RESULT;
-        } else {
-            return count.getCount();
-        }
+    public SimpleDaoStatement(Storage storage, Category<T> category, String descriptor) {
+        super(storage, category, descriptor);
     }
 
     @Override
-    protected Logger getLogger() {
-        return logger;
+    public PreparedStatement<T> customize(PreparedStatement<T> preparedStatement) {
+        return preparedStatement;
     }
-}
 
+}

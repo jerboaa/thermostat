@@ -107,50 +107,9 @@ public class VmTimeIntervalPojoListGetterTest {
         assertEquals(expected, actualDesc);
     }
 
-    @Test
-    public void testBuildQuery() throws DescriptorParsingException {
-        Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<TestPojo> query = (PreparedStatement<TestPojo>) mock(PreparedStatement.class);
-        when(storage.prepareStatement(anyDescriptor())).thenReturn(query);
-
-        VmTimeIntervalPojoListGetter<TestPojo> getter = new VmTimeIntervalPojoListGetter<>(storage, cat);
-        query = getter.buildQuery(vmRef, 0l, 10l);
-
-        assertNotNull(query);
-        verify(storage).prepareStatement(anyDescriptor());
-        verify(query).setString(0, AGENT_ID);
-        verify(query).setString(1, VM_ID);
-        verify(query).setLong(2, 0l);
-        verify(query).setLong(3, 10l);
-        verifyNoMoreInteractions(query);
-    }
-
     @SuppressWarnings("unchecked")
     private StatementDescriptor<TestPojo> anyDescriptor() {
         return (StatementDescriptor<TestPojo>) any(StatementDescriptor.class);
-    }
-
-    @Test
-    public void testBuildQueryPopulatesUpdateTimes() throws DescriptorParsingException {
-        Storage storage = mock(Storage.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<TestPojo> ignored = (PreparedStatement<TestPojo>) mock(PreparedStatement.class);
-        @SuppressWarnings("unchecked")
-        PreparedStatement<TestPojo> query = (PreparedStatement<TestPojo>) mock(PreparedStatement.class);
-        when(storage.prepareStatement(anyDescriptor())).thenReturn(ignored).thenReturn(query);
-
-        VmTimeIntervalPojoListGetter<TestPojo> getter = new VmTimeIntervalPojoListGetter<>(storage, cat);
-        getter.buildQuery(vmRef, Long.MIN_VALUE, 100l); // Ignore first return value.
-        query = getter.buildQuery(vmRef, Long.MIN_VALUE, 100l);
-
-        assertNotNull(query);
-        verify(storage, times(2)).prepareStatement(anyDescriptor());
-        verify(query).setString(0, AGENT_ID);
-        verify(query).setString(1, VM_ID);
-        verify(query).setLong(2, Long.MIN_VALUE);
-        verify(query).setLong(3, 100l);
-        verifyNoMoreInteractions(query);
     }
 
     @Test

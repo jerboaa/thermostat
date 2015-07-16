@@ -37,10 +37,11 @@
 package com.redhat.thermostat.storage.core;
 
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.dao.AbstractDao;
+import com.redhat.thermostat.storage.dao.AbstractDaoQuery;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
 /**
@@ -49,7 +50,7 @@ import com.redhat.thermostat.storage.model.TimeStampedPojo;
  *
  * @see VmLatestPojoListGetter
  */
-public class VmTimeIntervalPojoListGetter <T extends TimeStampedPojo> extends AbstractGetter<T> {
+public class VmTimeIntervalPojoListGetter <T extends TimeStampedPojo> extends AbstractDao {
 
     // The query for VmTimeIntervalPojoListGetter should query for since <= timestamp < to
     // in order not to miss data for multiple consecutive queries of the form [a, b), [b, c), ...
@@ -74,29 +75,26 @@ public class VmTimeIntervalPojoListGetter <T extends TimeStampedPojo> extends Ab
         this.query = String.format(VM_INTERVAL_QUERY_FORMAT, cat.getName());
     }
 
-    public List<T> getLatest(VmRef vmRef, long since, long to) {
-        PreparedStatement<T> query = buildQuery(vmRef, since, to);
-        return getLatestOrEmpty(query);
-    }
-
-    protected PreparedStatement<T> buildQuery(VmRef vmRef, long since, long to) {
-        StatementDescriptor<T> desc = new StatementDescriptor<>(cat, query);
-        PreparedStatement<T> stmt = null;
-        try {
-            stmt = storage.prepareStatement(desc);
-            stmt.setString(0, vmRef.getHostRef().getAgentId());
-            stmt.setString(1, vmRef.getVmId());
-            stmt.setLong(2, since);
-            stmt.setLong(3, to);
-        } catch (DescriptorParsingException e) {
-            // should not happen, but if it *does* happen, at least log it
-            logger.log(Level.SEVERE, "Preparing query '" + desc + "' failed!", e);
-        }
-        return stmt;
+    public List<T> getLatest(final VmRef vmRef, final long since, final long to) {
+        return executeQuery(new AbstractDaoQuery<T>(storage, cat, query) {
+            @Override
+            public PreparedStatement<T> customize(PreparedStatement<T> preparedStatement) {
+                preparedStatement.setString(0, vmRef.getHostRef().getAgentId());
+                preparedStatement.setString(1, vmRef.getVmId());
+                preparedStatement.setLong(2, since);
+                preparedStatement.setLong(3, to);
+                return preparedStatement;
+            }
+        }).asList();
     }
 
     // package private for tests
     String getQueryLatestDesc() {
         return query;
+    }
+
+    @Override
+    protected Logger getLogger() {
+        return logger;
     }
 }
