@@ -47,6 +47,7 @@ import com.redhat.thermostat.client.swing.components.ThermostatTabbedPane;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramView;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapTreeMapView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectDetailsView;
 
 public class HeapDetailsSwing extends HeapDumpDetailsView implements SwingComponent {
@@ -116,5 +117,15 @@ public class HeapDetailsSwing extends HeapDumpDetailsView implements SwingCompon
         }
     }
 
-}
+    @Override
+    public void addSubView(final LocalizedString title, final HeapTreeMapView view) {
+        verifyIsSwingComponent(view);
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                tabPane.insertTab(title.getContents(), null, ((SwingComponent)view).getUiComponent(), null, 0);
+            }
+        });
+    }
 
+}

@@ -57,6 +57,7 @@ import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsViewPro
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumperService;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramViewProvider;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapTreeMapViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectDetailsViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectRootsViewProvider;
@@ -78,6 +79,7 @@ public class Activator implements BundleActivator {
             HeapViewProvider.class,
             HeapDumpDetailsViewProvider.class,
             HeapHistogramViewProvider.class,
+            HeapTreeMapViewProvider.class,
             ObjectDetailsViewProvider.class,
             ObjectRootsViewProvider.class,
             HeapDumpListViewProvider.class,
@@ -106,6 +108,8 @@ public class Activator implements BundleActivator {
                 Objects.requireNonNull(detailsViewProvider);
                 HeapHistogramViewProvider histogramViewProvider = (HeapHistogramViewProvider) services
                         .get(HeapHistogramViewProvider.class.getName());
+                HeapTreeMapViewProvider treeMapViewProvider = (HeapTreeMapViewProvider) services
+                        .get(HeapTreeMapViewProvider.class.getName());
                 Objects.requireNonNull(histogramViewProvider);
                 ObjectDetailsViewProvider objectDetailsViewProvider = (ObjectDetailsViewProvider) services
                         .get(ObjectDetailsViewProvider.class.getName());
@@ -119,7 +123,7 @@ public class Activator implements BundleActivator {
                 
                 HeapDumperService service = new HeapDumperServiceImpl(appSvc,
                         vmInfoDao, vmMemoryStatDao, heapDao, viewProvider,
-                        detailsViewProvider, histogramViewProvider,
+                        detailsViewProvider, histogramViewProvider, treeMapViewProvider,
                         objectDetailsViewProvider, objectRootsViewProvider,
                         heapDumpListViewProvider, notifier);
                 Dictionary<String, String> properties = new Hashtable<>();
@@ -141,4 +145,3 @@ public class Activator implements BundleActivator {
         tracker.close();
     }
 }
-

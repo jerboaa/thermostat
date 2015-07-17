@@ -77,7 +77,8 @@ public enum LocaleResources {
     PROCESS_EXITED,
     
     DUMPS_LIST,
-    LIST_DUMPS_ACTION,
+    LIST_DUMPS_ACTION, 
+    HEAP_DUMP_SECTION_TREEMAP,
 
     ;
 
@@ -87,4 +88,3 @@ public enum LocaleResources {
         return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
     }
 }
-

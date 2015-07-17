@@ -36,15 +36,13 @@
 
 package com.redhat.thermostat.vm.heap.analysis.client.core;
 
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.shared.locale.LocalizedString;
+import com.redhat.thermostat.annotations.ExtensionPoint;
+import com.redhat.thermostat.client.core.views.ViewProvider;
 
-public abstract class HeapDumpDetailsView extends BasicView implements UIComponent {
+@ExtensionPoint
+public interface HeapTreeMapViewProvider extends ViewProvider {
 
-    public abstract void addSubView(LocalizedString title, HeapHistogramView child);
-    public abstract void addSubView(LocalizedString title, ObjectDetailsView child);
-    public abstract void addSubView(LocalizedString title, HeapTreeMapView child);
-    public abstract void removeSubView(LocalizedString title);
+    @Override
+    public HeapTreeMapView createView();
 }
 

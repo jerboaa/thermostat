@@ -51,6 +51,7 @@ import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramViewProvider;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapTreeMapViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectDetailsViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectRootsViewProvider;
@@ -86,6 +87,7 @@ public class ActivatorTest {
         HeapViewProvider viewProvider = mock(HeapViewProvider.class);
         HeapDumpDetailsViewProvider detailsViewProvider = mock(HeapDumpDetailsViewProvider.class);
         HeapHistogramViewProvider histogramViewProvider = mock(HeapHistogramViewProvider.class);
+        HeapTreeMapViewProvider treeMapViewProvider = mock(HeapTreeMapViewProvider.class);
         ObjectDetailsViewProvider objectDetailsViewProvider = mock(ObjectDetailsViewProvider.class);
         ObjectRootsViewProvider objectRootsViewProvider = mock(ObjectRootsViewProvider.class);
         HeapDumpListViewProvider heapDumpListViewProvider = mock(HeapDumpListViewProvider.class);
@@ -99,6 +101,7 @@ public class ActivatorTest {
         context.registerService(HeapViewProvider.class, viewProvider, null);
         context.registerService(HeapDumpDetailsViewProvider.class, detailsViewProvider, null);
         context.registerService(HeapHistogramViewProvider.class, histogramViewProvider, null);
+        context.registerService(HeapTreeMapViewProvider.class, treeMapViewProvider, null);
         context.registerService(ObjectDetailsViewProvider.class, objectDetailsViewProvider, null);
         context.registerService(ObjectRootsViewProvider.class, objectRootsViewProvider, null);
         context.registerService(HeapDumpListViewProvider.class, heapDumpListViewProvider, null);
@@ -113,7 +116,7 @@ public class ActivatorTest {
         activator.stop(context);
 
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(11, context.getAllServices().size());
+        assertEquals(12, context.getAllServices().size());
     }
 
 }

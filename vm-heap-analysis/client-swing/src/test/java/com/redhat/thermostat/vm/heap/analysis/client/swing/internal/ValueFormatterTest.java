@@ -34,17 +34,25 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.heap.analysis.client.core;
+package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
 
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.shared.locale.LocalizedString;
+import static org.junit.Assert.assertEquals;
 
-public abstract class HeapDumpDetailsView extends BasicView implements UIComponent {
+import org.junit.Test;
 
-    public abstract void addSubView(LocalizedString title, HeapHistogramView child);
-    public abstract void addSubView(LocalizedString title, ObjectDetailsView child);
-    public abstract void addSubView(LocalizedString title, HeapTreeMapView child);
-    public abstract void removeSubView(LocalizedString title);
+public class ValueFormatterTest {
+
+    private ValueFormatter formatter;
+
+    @Test
+    public final void getFormattedWeight() {
+        formatter = new ValueFormatter(2);
+        assertEquals("2.00 Bytes", formatter.format());
+
+        formatter = new ValueFormatter(2222);
+        assertEquals("2.22 KBytes", formatter.format());
+
+        formatter = new ValueFormatter(2222222);
+        assertEquals("2.22 MBytes", formatter.format());
+    }
 }
-

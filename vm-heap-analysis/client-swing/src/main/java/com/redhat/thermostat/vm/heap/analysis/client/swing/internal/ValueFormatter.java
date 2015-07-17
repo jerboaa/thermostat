@@ -34,17 +34,39 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.heap.analysis.client.core;
+package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
 
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.shared.locale.LocalizedString;
-
-public abstract class HeapDumpDetailsView extends BasicView implements UIComponent {
-
-    public abstract void addSubView(LocalizedString title, HeapHistogramView child);
-    public abstract void addSubView(LocalizedString title, ObjectDetailsView child);
-    public abstract void addSubView(LocalizedString title, HeapTreeMapView child);
-    public abstract void removeSubView(LocalizedString title);
+public class ValueFormatter {
+    
+    private double value;
+    
+    public ValueFormatter(double val) {
+        this.value = val;
+    }
+    
+    /**
+     * This method returns the node value calculating it in bytes, KB or MB. 
+     * 
+     * i.e. if node's weight = 200 it returns: "200 bytes" <br>
+     * if weight = 20152: "20.15 KB"  <br>
+     * if weight = 2015248: "2.01 MB"  <br>
+     * 
+     * Note that float values are approximated to the second decimal digit.
+     */
+    public String format() {
+        int KB = 1000;
+        int MB = 1000000;
+        String unit = "Bytes";
+        
+        if (value >= KB && value < MB) {
+            value /= KB;
+            unit = "KBytes";
+        } else if (value >= MB) {
+            value /= MB;
+            unit = "MBytes";
+        }
+        // show 2 decimal digits 
+        String formattedValue = String.format("%.2f", value);
+        return formattedValue + " " + unit;
+    }
 }
-

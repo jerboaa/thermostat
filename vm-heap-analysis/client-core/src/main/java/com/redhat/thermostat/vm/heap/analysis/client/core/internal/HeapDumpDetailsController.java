@@ -49,6 +49,8 @@ import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramViewProvider;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapTreeMapView;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapTreeMapViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectDetailsView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectDetailsViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectRootsViewProvider;
@@ -66,12 +68,14 @@ public class HeapDumpDetailsController {
     private HeapDumpDetailsView view;
     private HeapDump heapDump;
     private HeapHistogramViewProvider histogramViewProvider;
+    private HeapTreeMapViewProvider treeMapViewProvider;
     private ObjectDetailsViewProvider objectDetailsViewProvider;
     private ObjectRootsViewProvider objectRootsViewProvider;
 
-    public HeapDumpDetailsController(ApplicationService appService, HeapDumpDetailsViewProvider viewProvider, HeapHistogramViewProvider histogramProvider, ObjectDetailsViewProvider objectDetailsProvider, ObjectRootsViewProvider objectRootsProvider) {
+    public HeapDumpDetailsController(ApplicationService appService, HeapDumpDetailsViewProvider viewProvider, HeapHistogramViewProvider histogramProvider, HeapTreeMapViewProvider treeMapProvider, ObjectDetailsViewProvider objectDetailsProvider, ObjectRootsViewProvider objectRootsProvider) {
         this.appService = appService;
         this.histogramViewProvider = histogramProvider;
+        this.treeMapViewProvider = treeMapProvider;
         this.objectDetailsViewProvider = objectDetailsProvider;
         this.objectRootsViewProvider = objectRootsProvider;
         view = viewProvider.createView();
@@ -84,6 +88,11 @@ public class HeapDumpDetailsController {
             heapHistogramView.display(heapDump.getHistogram());
             LocalizedString title = translator.localize(LocaleResources.HEAP_DUMP_SECTION_HISTOGRAM);
             view.addSubView(title, heapHistogramView);
+            
+            HeapTreeMapView heapTreeMapView = treeMapViewProvider.createView();
+            heapTreeMapView.display(heapDump.getHistogram());
+            LocalizedString titleTreeMap = translator.localize(LocaleResources.HEAP_DUMP_SECTION_TREEMAP);
+            view.addSubView(titleTreeMap, heapTreeMapView);
         } catch (IOException e) {
             log.log(Level.SEVERE, "unexpected error while reading heap dump", e);
         }
@@ -101,4 +110,3 @@ public class HeapDumpDetailsController {
     }
 
 }
-

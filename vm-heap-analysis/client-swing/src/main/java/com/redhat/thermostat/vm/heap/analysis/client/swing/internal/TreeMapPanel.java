@@ -34,17 +34,42 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.heap.analysis.client.core;
+package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
 
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.shared.locale.LocalizedString;
+import java.awt.Component;
 
-public abstract class HeapDumpDetailsView extends BasicView implements UIComponent {
+import javax.swing.BoxLayout;
+import javax.swing.JPanel;
 
-    public abstract void addSubView(LocalizedString title, HeapHistogramView child);
-    public abstract void addSubView(LocalizedString title, ObjectDetailsView child);
-    public abstract void addSubView(LocalizedString title, HeapTreeMapView child);
-    public abstract void removeSubView(LocalizedString title);
+import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapTreeMapView;
+import com.redhat.thermostat.vm.heap.analysis.client.locale.LocaleResources;
+import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
+
+@SuppressWarnings("serial")
+public class TreeMapPanel extends HeapTreeMapView implements SwingComponent {
+    
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+
+    private final JPanel panel;
+
+    private TreeMapComponent treeMap;
+    
+    public TreeMapPanel() {
+        panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
+    }
+
+    @Override
+    public void display(ObjectHistogram histogram) {
+        treeMap = new TreeMapComponent(histogram);
+        panel.add(treeMap);
+    }
+
+    @Override
+    public Component getUiComponent() {
+        return panel;
+    }
+
 }
-

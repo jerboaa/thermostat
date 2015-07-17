@@ -36,8 +36,8 @@
 
 package com.redhat.thermostat.vm.heap.analysis.client.core.internal;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.isA;
@@ -49,8 +49,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -85,6 +83,8 @@ import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsViewPro
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramViewProvider;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapTreeMapView;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapTreeMapViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapView.DumpDisabledReason;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapView.HeapDumperAction;
@@ -125,6 +125,7 @@ public class HeapDumpControllerTest {
     private HeapViewProvider viewProvider;
     private HeapDumpDetailsViewProvider detailsViewProvider;
     private HeapHistogramViewProvider histogramProvider;
+    private HeapTreeMapViewProvider treeMapProvider;
     private ObjectDetailsViewProvider objectDetailsProvider;
     private ObjectRootsViewProvider objectRootsProvider;
 
@@ -173,6 +174,10 @@ public class HeapDumpControllerTest {
         histogramProvider = mock(HeapHistogramViewProvider.class);
         when(histogramProvider.createView()).thenReturn(histogramView);
 
+        HeapTreeMapView treeMapView = mock(HeapTreeMapView.class);
+        treeMapProvider = mock(HeapTreeMapViewProvider.class);
+        when(treeMapProvider.createView()).thenReturn(treeMapView);
+
         ObjectDetailsView objectView = mock(ObjectDetailsView.class);
         objectDetailsProvider = mock(ObjectDetailsViewProvider.class);
         when(objectDetailsProvider.createView()).thenReturn(objectView);
@@ -209,7 +214,7 @@ public class HeapDumpControllerTest {
         when(ref.getHostRef()).thenReturn(hostRef);
 
         controller = new HeapDumpController(vmDao, vmInfoDao, heapDao, ref, appService,
-                viewProvider, detailsViewProvider, histogramProvider,
+                viewProvider, detailsViewProvider, histogramProvider, treeMapProvider,
                 objectDetailsProvider, objectRootsProvider, heapDumpListViewProvider,
                 heapDumper, notifier);
     }
@@ -222,6 +227,7 @@ public class HeapDumpControllerTest {
         viewProvider = null;
         detailsViewProvider = null;
         histogramProvider = null;
+        treeMapProvider = null;
         objectDetailsProvider = null;
         objectRootsProvider = null;
         appService = null;
@@ -294,7 +300,7 @@ public class HeapDumpControllerTest {
         when(appService.getApplicationCache()).thenReturn(cache);
         VmRef ref = mock(VmRef.class);
         controller = new HeapDumpController(vmDao, vmInfoDao, heapDao, ref, appService,
-                viewProvider, detailsViewProvider, histogramProvider,
+                viewProvider, detailsViewProvider, histogramProvider, treeMapProvider,
                 objectDetailsProvider, objectRootsProvider, heapDumpListViewProvider,
                 heapDumper, notifier);
         
@@ -320,7 +326,7 @@ public class HeapDumpControllerTest {
         when(appService.getApplicationCache()).thenReturn(cache);
         VmRef ref = mock(VmRef.class);
         controller = new HeapDumpController(vmDao, vmInfoDao, heapDao, ref, appService,
-                viewProvider, detailsViewProvider, histogramProvider,
+                viewProvider, detailsViewProvider, histogramProvider, treeMapProvider,
                 objectDetailsProvider, objectRootsProvider, heapDumpListViewProvider,
                 heapDumper, notifier);
         
@@ -341,7 +347,7 @@ public class HeapDumpControllerTest {
         when(vmInfoDao.getVmInfo(ref)).thenReturn(vmInfo);
 
         controller = new HeapDumpController(vmDao, vmInfoDao, heapDao, ref, appService,
-                viewProvider, detailsViewProvider, histogramProvider,
+                viewProvider, detailsViewProvider, histogramProvider, treeMapProvider,
                 objectDetailsProvider, objectRootsProvider, heapDumpListViewProvider,
                 heapDumper, notifier);
 
@@ -563,4 +569,3 @@ public class HeapDumpControllerTest {
     }
 
 }
-

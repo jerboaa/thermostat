@@ -69,6 +69,7 @@ import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramViewProvider;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapTreeMapViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapView.DumpDisabledReason;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapView.HeapDumperAction;
@@ -102,6 +103,7 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
     private ApplicationService appService;
     private HeapDumpDetailsViewProvider detailsViewProvider;
     private HeapHistogramViewProvider histogramViewProvider;
+    private HeapTreeMapViewProvider treeMapViewProvider;
     private ObjectDetailsViewProvider objectDetailsViewProvider;
     private ObjectRootsViewProvider objectRootsViewProvider;
     private HeapDumpListViewProvider heapDumpListViewProvider;
@@ -114,13 +116,14 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
                               final ApplicationService appService, HeapViewProvider viewProvider,
                               HeapDumpDetailsViewProvider detailsViewProvider,
                               HeapHistogramViewProvider histogramProvider,
+                              HeapTreeMapViewProvider treeMapProvider,
                               ObjectDetailsViewProvider objectDetailsProvider,
                               ObjectRootsViewProvider objectRootsProvider,
                               HeapDumpListViewProvider heapDumpListViewProvider,
                               ProgressNotifier notifier)
     {
         this(vmMemoryStatDao, vmInfoDao, heapDao, ref, appService, viewProvider,
-             detailsViewProvider, histogramProvider, objectDetailsProvider,
+             detailsViewProvider, histogramProvider, treeMapProvider, objectDetailsProvider,
              objectRootsProvider, heapDumpListViewProvider, new HeapDumper(ref),
              notifier);
     }
@@ -132,6 +135,7 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
                        HeapViewProvider viewProvider,
                        HeapDumpDetailsViewProvider detailsViewProvider,
                        HeapHistogramViewProvider histogramProvider,
+                       HeapTreeMapViewProvider treeMapProvider,
                        ObjectDetailsViewProvider objectDetailsProvider,
                        ObjectRootsViewProvider objectRootsProvider,
                        HeapDumpListViewProvider heapDumpListViewProvider,
@@ -142,6 +146,7 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
         this.objectDetailsViewProvider = objectDetailsProvider;
         this.objectRootsViewProvider = objectRootsProvider;
         this.histogramViewProvider = histogramProvider;
+        this.treeMapViewProvider = treeMapProvider;
         this.detailsViewProvider = detailsViewProvider;
         this.appService = appService;
         this.ref = ref;
@@ -357,6 +362,7 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
         HeapDumpDetailsController controller =
                 new HeapDumpDetailsController(appService, detailsViewProvider,
                                               histogramViewProvider,
+                                              treeMapViewProvider,
                                               objectDetailsViewProvider,
                                               objectRootsViewProvider);
         controller.setDump(dump);
@@ -431,4 +437,3 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
         }
     }
 }
-

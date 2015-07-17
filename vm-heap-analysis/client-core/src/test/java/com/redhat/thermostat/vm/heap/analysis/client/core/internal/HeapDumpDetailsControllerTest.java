@@ -54,6 +54,8 @@ import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramViewProvider;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapTreeMapView;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapTreeMapViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectDetailsView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectDetailsViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectRootsView;
@@ -66,6 +68,7 @@ public class HeapDumpDetailsControllerTest {
     private HeapDumpDetailsView view;
     private HeapDumpDetailsViewProvider viewProvider;
     private HeapHistogramViewProvider histogramProvider;
+    private HeapTreeMapViewProvider treeMapProvider;
     private ObjectDetailsViewProvider objectDetailsProvider;
     private ObjectRootsViewProvider objectRootsProvider;
 
@@ -78,6 +81,10 @@ public class HeapDumpDetailsControllerTest {
         HeapHistogramView histogramView = mock(HeapHistogramView.class);
         histogramProvider = mock(HeapHistogramViewProvider.class);
         when(histogramProvider.createView()).thenReturn(histogramView);
+
+        HeapTreeMapView treeMapView = mock(HeapTreeMapView.class);
+        treeMapProvider = mock(HeapTreeMapViewProvider.class);
+        when(treeMapProvider.createView()).thenReturn(treeMapView);
 
         ObjectDetailsView objectView = mock(ObjectDetailsView.class);
         objectDetailsProvider = mock(ObjectDetailsViewProvider.class);
@@ -106,7 +113,7 @@ public class HeapDumpDetailsControllerTest {
         when(dump.getHistogram()).thenReturn(histogram);
 
         HeapDumpDetailsController controller = new HeapDumpDetailsController(
-                appService, viewProvider, histogramProvider,
+                appService, viewProvider, histogramProvider, treeMapProvider,
                 objectDetailsProvider, objectRootsProvider);
         controller.setDump(dump);
 
@@ -118,4 +125,3 @@ public class HeapDumpDetailsControllerTest {
     }
 
 }
-

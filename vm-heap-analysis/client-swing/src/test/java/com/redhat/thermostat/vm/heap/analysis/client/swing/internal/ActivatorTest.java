@@ -45,15 +45,10 @@ import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpListViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramViewProvider;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapTreeMapViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectDetailsViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectRootsViewProvider;
-import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.Activator;
-import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.SwingHeapDumpDetailsViewProvider;
-import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.SwingHeapHistogramViewProvider;
-import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.SwingHeapViewProvider;
-import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.SwingObjectDetailsViewProvider;
-import com.redhat.thermostat.vm.heap.analysis.client.swing.internal.SwingObjectRootsViewProvider;
 
 public class ActivatorTest {
 
@@ -65,11 +60,12 @@ public class ActivatorTest {
         assertTrue(ctx.isServiceRegistered(HeapViewProvider.class.getName(), SwingHeapViewProvider.class));
         assertTrue(ctx.isServiceRegistered(HeapDumpDetailsViewProvider.class.getName(), SwingHeapDumpDetailsViewProvider.class));
         assertTrue(ctx.isServiceRegistered(HeapHistogramViewProvider.class.getName(), SwingHeapHistogramViewProvider.class));
+        assertTrue(ctx.isServiceRegistered(HeapTreeMapViewProvider.class.getName(), SwingHeapTreeMapViewProvider.class));
         assertTrue(ctx.isServiceRegistered(ObjectDetailsViewProvider.class.getName(), SwingObjectDetailsViewProvider.class));
         assertTrue(ctx.isServiceRegistered(ObjectRootsViewProvider.class.getName(), SwingObjectRootsViewProvider.class));
         assertTrue(ctx.isServiceRegistered(HeapDumpListViewProvider.class.getName(), SwingHeapDumpListViewProvider.class));
 
-        assertEquals(6, ctx.getAllServices().size());
+        assertEquals(7, ctx.getAllServices().size());
     }
 }
 

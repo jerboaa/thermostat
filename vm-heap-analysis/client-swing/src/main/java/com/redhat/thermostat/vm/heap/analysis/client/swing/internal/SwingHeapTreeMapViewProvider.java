@@ -34,17 +34,16 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.heap.analysis.client.core;
+package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
 
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.shared.locale.LocalizedString;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapTreeMapView;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapTreeMapViewProvider;
 
-public abstract class HeapDumpDetailsView extends BasicView implements UIComponent {
+public class SwingHeapTreeMapViewProvider implements HeapTreeMapViewProvider {
 
-    public abstract void addSubView(LocalizedString title, HeapHistogramView child);
-    public abstract void addSubView(LocalizedString title, ObjectDetailsView child);
-    public abstract void addSubView(LocalizedString title, HeapTreeMapView child);
-    public abstract void removeSubView(LocalizedString title);
+    @Override
+    public HeapTreeMapView createView() {
+        return new TreeMapPanel();
+    }
+
 }
-
