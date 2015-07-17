@@ -112,8 +112,6 @@ public enum LocaleResources {
     AFFIRMATIVE_RESPONSES,
 
     VM_STAT_INVALID_SINCE_ARGUMENT,
-
-    ENCOUNTERED_NULL_AGENT,
     ;
 
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.client.cli.strings";

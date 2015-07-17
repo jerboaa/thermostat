@@ -40,6 +40,7 @@ import java.io.PrintStream;
 
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.shared.locale.Translate;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.VmInfo;
@@ -62,10 +63,6 @@ class VMListFormatter {
 
     private final TableRenderer tableRenderer = new TableRenderer(NUM_COLUMNS);
 
-    void addVM(VmRef vm, AgentInformation agentInfo, VmInfo info) {
-        printVM(vm, agentInfo, info);
-    }
-
     void addHeader() {
         printLine(HOST_ID, HOST, VM_ID, VM_PID, VM_STATUS, VM_NAME);
     }
@@ -74,13 +71,16 @@ class VMListFormatter {
         tableRenderer.render(out);
     }
 
-    private void printVM(VmRef vm, AgentInformation agentInfo, VmInfo info) {
-        printLine(vm.getHostRef().getAgentId(),
-                  vm.getHostRef().getHostName(),
-                  vm.getVmId(),
-                  vm.getPid().toString(),
-                  getAliveStatus(info.isAlive(agentInfo)),
-                  vm.getName());
+    void addVM(String hostname, String vmId, AgentInformation agentInfo, VmInfo vmInfo) {
+        AgentId agentId = new AgentId(agentInfo.getAgentId());
+        String vmName = vmInfo.getMainClass();
+        Integer pid = vmInfo.getVmPid();
+        printLine(agentId.get(),
+                  hostname,
+                  vmId,
+                  pid.toString(),
+                  getAliveStatus(vmInfo.isAlive(agentInfo)),
+                  vmName);
     }
 
     private void printLine(String hostId, String host, String vmId, String pid, String status, String vmName) {

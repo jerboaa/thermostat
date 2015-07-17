@@ -36,8 +36,12 @@
 
 package com.redhat.thermostat.client.cli.internal;
 
-import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 
+import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.storage.core.VmId;
+import com.redhat.thermostat.storage.model.HostInfo;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
@@ -46,8 +50,6 @@ import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
@@ -70,13 +72,11 @@ public class ListVMsCommand extends AbstractCommand {
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
+        String agentIdArg = ctx.getArguments().getArgument("agentId");
 
         ServiceReference hostsDAORef = context.getServiceReference(HostInfoDAO.class.getName());
         requireNonNull(hostsDAORef, translator.localize(LocaleResources.HOST_SERVICE_UNAVAILABLE));
         HostInfoDAO hostsDAO = (HostInfoDAO) context.getService(hostsDAORef);
-
-        Collection<HostRef> hosts = hostsDAO.getHosts();
-        context.ungetService(hostsDAORef);
 
         ServiceReference agentInfoDAORef = context.getServiceReference(AgentInfoDAO.class.getName());
         AgentInfoDAO agentInfoDAO = (AgentInfoDAO) context.getService(agentInfoDAORef);
@@ -87,22 +87,39 @@ public class ListVMsCommand extends AbstractCommand {
 
         VMListFormatter formatter = new VMListFormatter();
         formatter.addHeader();
-        for (HostRef host : hosts) {
-            AgentInformation agentInfo = agentInfoDAO.getAgentInformation(host);
+        if (agentIdArg == null) {
+            List<AgentInformation> agentInfos = agentInfoDAO.getAllAgentInformation();
+            for (AgentInformation agentInfo : agentInfos) {
+                addVMsToFormatter(hostsDAO, vmsDAO, formatter, agentInfo, ctx);
+            }
+        } else {
+            AgentId agentId = new AgentId(agentIdArg);
+            AgentInformation agentInfo = agentInfoDAO.getAgentInformation(agentId);
+
             if (agentInfo != null) {
-                Collection<VmRef> vms = vmsDAO.getVMs(host);
-                for (VmRef vm : vms) {
-                    VmInfo info = vmsDAO.getVmInfo(vm);
-                    formatter.addVM(vm, agentInfo, info);
-                }
+                addVMsToFormatter(hostsDAO, vmsDAO, formatter, agentInfo, ctx);
             } else {
-                ctx.getConsole().getError().println(translator.localize(LocaleResources.ENCOUNTERED_NULL_AGENT, host.getName()));
+                throw new CommandException(translator.localize(LocaleResources.AGENT_NOT_FOUND, agentId.get()));
             }
         }
         formatter.format(ctx.getConsole().getOutput());
         context.ungetService(vmsDAORef);
+        context.ungetService(hostsDAORef);
+
     }
 
+    private void addVMsToFormatter(final HostInfoDAO hostsDAO, final VmInfoDAO vmsDAO, final VMListFormatter formatter, final AgentInformation agentInfo, final CommandContext ctx) {
+        Set<VmId> vmIds = vmsDAO.getVmIds(new AgentId(agentInfo.getAgentId()));
+        for (VmId vmId : vmIds) {
+            addVMToFormatter(hostsDAO, vmsDAO, formatter, agentInfo, vmId);
+        }
+    }
 
+    private void addVMToFormatter(final HostInfoDAO hostsDAO, final VmInfoDAO vmsDAO, final VMListFormatter formatter,  final AgentInformation agentInfo, final VmId vmId) {
+        VmInfo vmInfo = vmsDAO.getVmInfo(vmId);
+        AgentId agentId = new AgentId(agentInfo.getAgentId());
+        HostInfo hostInfo = hostsDAO.getHostInfo(agentId);
+        formatter.addVM(hostInfo.getHostname(), vmId.get(), agentInfo, vmInfo);
+    }
 }
 
