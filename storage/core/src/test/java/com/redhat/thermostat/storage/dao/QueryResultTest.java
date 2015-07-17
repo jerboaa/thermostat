@@ -136,6 +136,11 @@ public class QueryResultTest {
             public VmInfo next() {
                 return it.next();
             }
+
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
         };
         return new QueryResult<>(cursor);
     }
