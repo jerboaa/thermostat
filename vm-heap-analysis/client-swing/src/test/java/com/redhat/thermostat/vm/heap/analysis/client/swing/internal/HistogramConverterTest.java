@@ -37,22 +37,18 @@
 package com.redhat.thermostat.vm.heap.analysis.client.swing.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-
-import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.vm.heap.analysis.common.HistogramRecord;
 import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 
-
 public class HistogramConverterTest {
     
-    List<HistogramRecord> histrogramRecords;
     ObjectHistogram histrogram;
 
     @Before
@@ -120,36 +116,54 @@ public class HistogramConverterTest {
     public final void testconvertToTreeMap() {
         TreeMapNode tree = HistogramConverter.convertToTreeMap(histrogram);
 
+
         //tree node is the root element, which has an empty label by default
         assertEquals(tree.getLabel(), "");
-     
         assertTrue(tree.getChildren().size() == 2);
-        
-        TreeMapNode java = tree.getChildren().get(1);
-        //java subtree collapses into java node
-        assertEquals(java.getLabel(), "java.lang.Object");
-        
-        TreeMapNode com = tree.getChildren().get(0);
-        assertEquals(com.getLabel(), "com"); 
+
+
+        TreeMapNode com = tree.searchNodeByLabel("com");
+        assertNotNull(com);
+        assertEquals(com.getParent(), tree);
+
+        TreeMapNode java = tree.searchNodeByLabel("java.lang.Object");
+        assertNotNull(java);
+        assertEquals(java.getParent(), tree);
         
         // com node has 2 children
         assertTrue(com.getChildren().size() == 2);
         
-        TreeMapNode example2 = com.getChildren().get(1); 
+        TreeMapNode example1 = com.searchNodeByLabel("example1");
+        assertNotNull(example1);
+        assertEquals(example1.getParent(), com);
+
         //example2 subtree has been collapsed in example2 node
-        assertEquals(example2.getLabel(), "example2.package1.Class4");
+        TreeMapNode example2 = com.searchNodeByLabel("example2.package1.Class4"); 
+        assertNotNull(example2);
+        assertEquals(example2.getParent(), com);
+
         
-        TreeMapNode example1 = com.getChildren().get(0);
         assertTrue(example1.getChildren().size() == 2);
 
-        TreeMapNode package2 = example1.getChildren().get(0);
         //class3 node has been collapsed in package2 node
-        assertEquals(package2.getLabel(), "package2.Class3");
+        TreeMapNode package2 = example1.searchNodeByLabel("package2.Class3");
+        assertNotNull(package2);
+        assertEquals(package2.getParent(), example1);
         
-        TreeMapNode package1 = example1.getChildren().get(1);
+        
+        TreeMapNode package1 = example1.searchNodeByLabel("package1");
+        assertNotNull(package1);
+        assertEquals(package1.getParent(), example1);
+        
         assertTrue(package1.getChildren().size() == 2);
         
-        assertEquals(package1.getChildren().get(0).getLabel(), "Class2");
-        assertEquals(package1.getChildren().get(1).getLabel(), "Class1");
+        TreeMapNode class1 = package1.searchNodeByLabel("Class1");
+        assertNotNull(class1);
+        assertTrue(class1.getChildren().isEmpty());
+        
+        TreeMapNode class2 = package1.searchNodeByLabel("Class2");
+        assertNotNull(class2);
+        assertTrue(class2.getChildren().isEmpty());        
     }
+
 }
