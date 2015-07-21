@@ -210,11 +210,11 @@
       <description>List all heap dumps.</description>
       <options>
         <option>
-          <long>hostId</long>
+          <long>agentId</long>
           <short>a</short>
-          <argument>host</argument>
+          <argument>agent</argument>
           <required>false</required>
-          <description>the ID of the host to monitor</description>
+          <description>the ID of the agent to monitor</description>
         </option>
         <option>
           <long>vmId</long>

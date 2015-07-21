@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -66,7 +65,7 @@ public class ListHeapDumpsCommand extends AbstractCommand {
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private static final String[] COLUMN_NAMES = {
-        translator.localize(LocaleResources.HEADER_HOST_ID).getContents(),
+        translator.localize(LocaleResources.HEADER_AGENT_ID).getContents(),
         translator.localize(LocaleResources.HEADER_VM_ID).getContents(),
         translator.localize(LocaleResources.HEADER_HEAP_ID).getContents(),
         translator.localize(LocaleResources.HEADER_TIMESTAMP).getContents(),
@@ -113,7 +112,7 @@ public class ListHeapDumpsCommand extends AbstractCommand {
 
             stringAgentId = vmInfo.getAgentId();
         } else {
-            stringAgentId = ctx.getArguments().getArgument(Arguments.HOST_ID_ARGUMENT);
+            stringAgentId = ctx.getArguments().getArgument(Arguments.AGENT_ID_ARGUMENT);
         }
 
         if (stringAgentId != null)

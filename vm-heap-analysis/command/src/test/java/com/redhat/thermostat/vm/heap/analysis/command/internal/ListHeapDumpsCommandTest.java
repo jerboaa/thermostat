@@ -109,7 +109,7 @@ public class ListHeapDumpsCommandTest {
         Command command = new ListHeapDumpsCommand(context);
         TestCommandContextFactory factory = new TestCommandContextFactory();
         command.run(factory.createContext(new SimpleArguments()));
-        assertEquals("HOST ID VM ID HEAP ID TIMESTAMP\n", factory.getOutput());
+        assertEquals("AGENT ID VM ID HEAP ID TIMESTAMP\n", factory.getOutput());
     }
 
     @Test
@@ -142,8 +142,8 @@ public class ListHeapDumpsCommandTest {
         TestCommandContextFactory factory = new TestCommandContextFactory();
         command.run(factory.createContext(new SimpleArguments()));
 
-        String expected = "HOST ID VM ID HEAP ID TIMESTAMP\n" +
-                          "host-id 1     0001    Thu Jun 07 15:32:00 UTC 2012\n";
+        String expected = "AGENT ID VM ID HEAP ID TIMESTAMP\n" +
+                          "host-id  1     0001    Thu Jun 07 15:32:00 UTC 2012\n";
 
         assertEquals(expected, factory.getOutput());
     }
@@ -182,12 +182,12 @@ public class ListHeapDumpsCommandTest {
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
         SimpleArguments args = new SimpleArguments();
-        args.addArgument(Arguments.HOST_ID_ARGUMENT, "host1");
+        args.addArgument(Arguments.AGENT_ID_ARGUMENT, "host1");
 
         command.run(factory.createContext(args));
 
-        String expected = "HOST ID VM ID HEAP ID TIMESTAMP\n" +
-                          "host1   1     0001    Thu Jun 07 15:32:00 UTC 2012\n";
+        String expected = "AGENT ID VM ID HEAP ID TIMESTAMP\n" +
+                          "host1    1     0001    Thu Jun 07 15:32:00 UTC 2012\n";
 
         assertEquals(expected, factory.getOutput());
     }
@@ -227,13 +227,13 @@ public class ListHeapDumpsCommandTest {
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
         SimpleArguments args = new SimpleArguments();
-        args.addArgument(Arguments.HOST_ID_ARGUMENT, "host1");
+        args.addArgument(Arguments.AGENT_ID_ARGUMENT, "host1");
         args.addArgument(Arguments.VM_ID_ARGUMENT, "1"); // vm id must be an int for the arg parser to work
 
         command.run(factory.createContext(args));
 
-        String expected = "HOST ID VM ID HEAP ID TIMESTAMP\n" +
-                          "host1   1     0001    Thu Jun 07 15:32:00 UTC 2012\n";
+        String expected = "AGENT ID VM ID HEAP ID TIMESTAMP\n" +
+                          "host1    1     0001    Thu Jun 07 15:32:00 UTC 2012\n";
 
         assertEquals(expected, factory.getOutput());
     }

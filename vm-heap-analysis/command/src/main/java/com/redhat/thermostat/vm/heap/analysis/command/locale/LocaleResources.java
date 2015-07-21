@@ -46,7 +46,7 @@ public enum LocaleResources {
     REQUEST_QUEUE_UNAVAILABLE,
     
     HEADER_TIMESTAMP,
-    HEADER_HOST_ID,
+    HEADER_AGENT_ID,
     HEADER_VM_ID,
     HEADER_HEAP_ID,
     HEADER_OBJECT_ID,

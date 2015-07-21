@@ -39,8 +39,10 @@ package com.redhat.thermostat.common.cli;
 import java.util.List;
 
 public interface Arguments {
+    @Deprecated
     static public final String HOST_ID_ARGUMENT = "hostId";
     static public final String VM_ID_ARGUMENT = "vmId";
+    static public final String AGENT_ID_ARGUMENT = "agentId";
 
     List<String> getNonOptionArguments();
     boolean hasArgument(String name);
