@@ -52,6 +52,7 @@ import com.redhat.thermostat.client.filter.host.swing.DeadHostIconDecorator;
 import com.redhat.thermostat.client.filter.host.swing.HostIconDecorator;
 import com.redhat.thermostat.client.filter.host.swing.HostInfoLabelDecorator;
 import com.redhat.thermostat.client.filter.host.swing.HostVmMainLabelDecorator;
+import com.redhat.thermostat.client.filter.host.swing.ThermostatVmMainLabelDecorator;
 import com.redhat.thermostat.client.swing.ReferenceFieldDecoratorLayout;
 import com.redhat.thermostat.client.swing.UIDefaults;
 import com.redhat.thermostat.client.ui.ReferenceFieldIconDecorator;
@@ -163,6 +164,17 @@ public class VMFilterActivator implements BundleActivator {
                 
                 registration = context.registerService(ReferenceFieldLabelDecorator.class.getName(),
                                                        mainDecorator, decoratorProperties);
+                
+                ThermostatVmMainLabelDecorator thermostatDecorator = new ThermostatVmMainLabelDecorator(vmDao);
+                decoratorProperties = new Hashtable<>();
+                decoratorProperties.put(ReferenceFieldLabelDecorator.ID,
+                        ReferenceFieldDecoratorLayout.LABEL_MAIN.name());
+                
+                registration = context.registerService(ReferenceFieldLabelDecorator.class.getName(),
+                        thermostatDecorator, decoratorProperties);
+                
+                registeredServices.add(registration);
+
             }
         });
         tracker.open();
