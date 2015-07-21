@@ -55,7 +55,7 @@ public class ProfileResultFormatter {
     private TableRenderer renderer = new TableRenderer(NUM_COLUMNS);
 
     public void addHeader() {
-        printLine(HEADER_PERCENTAGE, HEADER_TIME, HEADER_NAME);
+        renderer.printHeader(HEADER_PERCENTAGE, HEADER_TIME, HEADER_NAME);
     }
 
     public void addMethodInfo(MethodInfo methodInfo) {

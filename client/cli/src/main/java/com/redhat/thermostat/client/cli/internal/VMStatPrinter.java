@@ -198,7 +198,7 @@ class VMStatPrinter {
     }
 
     private void printHeaders(TableRenderer table, List<String> headers) {
-        table.printLine(headers.toArray(new String[headers.size()]));
+        table.printHeader(headers.toArray(new String[headers.size()]));
     }
 
     private void correlate(List<List<? extends TimeStampedPojo>> allStats) {

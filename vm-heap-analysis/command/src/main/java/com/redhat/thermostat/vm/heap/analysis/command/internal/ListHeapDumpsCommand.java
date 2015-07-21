@@ -86,7 +86,7 @@ public class ListHeapDumpsCommand extends AbstractCommand {
     public void run(CommandContext ctx) throws CommandException {
         TableRenderer renderer = new TableRenderer(4);
 
-        renderer.printLine(COLUMN_NAMES);
+        renderer.printHeader(COLUMN_NAMES);
 
         ServiceReference agentDAORef = context.getServiceReference(AgentInfoDAO.class.getName());
         requireNonNull(agentDAORef, translator.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE));

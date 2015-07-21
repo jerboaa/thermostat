@@ -113,7 +113,7 @@ public class FindObjectsCommand extends AbstractCommand {
         int limit = parseLimit(limitArg);
         Collection<String> results = heapDump.searchObjects(searchTerm, limit);
         TableRenderer table = new TableRenderer(2);
-        table.printLine(HEADER_OBJECT_ID, HEADER_TYPE);
+        table.printHeader(HEADER_OBJECT_ID, HEADER_TYPE);
         for (String objectId : results) {
             JavaHeapObject obj = heapDump.findObject(objectId);
             String id = obj.getIdString();

@@ -39,11 +39,15 @@ package com.redhat.thermostat.common.cli;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class TableRenderer {
 
     private List<String[]> lines;
+    private String[] header;
+    private List<Integer> columnSortingQueue = new ArrayList<>();
     private int[] maxColumnWidths;
     private int lastPrintedLine = -1;
 
@@ -62,10 +66,19 @@ public class TableRenderer {
     }
 
     public void printLine(String... line) {
+        checkLine(line);
+        lines.add(line);
+    }
+
+    public void printHeader(String... line) {
+        checkLine(line);
+        this.header = line;
+    }
+
+    private void checkLine(final String[] line) {
         if (line.length != numColumns) {
             throw new IllegalArgumentException("Invalid number of columns: " + line.length + ", expected: " + numColumns);
         }
-        lines.add(line);
         for (int i = 0; i < numColumns; i++) {
             maxColumnWidths[i] = Math.max(Math.max(maxColumnWidths[i], line[i].length()), minWidth);
         }
@@ -77,10 +90,38 @@ public class TableRenderer {
     }
 
     public void render(PrintStream out) {
+        if (lastPrintedLine == -1 && header != null) {
+            renderLine(out, header);
+        }
+        sortLines();
         for (int i = lastPrintedLine + 1; i < lines.size(); i++) {
             String[] line = lines.get(i);
             renderLine(out, line);
             lastPrintedLine = i;
+        }
+    }
+
+    private void sortLines() {
+        Collections.sort(lines, new Comparator<String[]>() {
+            @Override
+            public int compare(final String[] lines1, final String[] lines2) {
+                int comparison = 0;
+                for (Integer column : columnSortingQueue) {
+                    comparison = lines1[column].compareTo(lines2[column]);
+                    if (comparison != 0) {
+                        break;
+                    }
+                }
+                return comparison;
+            }
+        });
+    }
+
+    public void sortByColumn(int column) {
+        if (column < numColumns) {
+            columnSortingQueue.add(column);
+        } else {
+            throw new IllegalArgumentException("Invalid number of columns: " + column + ", expected: " + numColumns);
         }
     }
 

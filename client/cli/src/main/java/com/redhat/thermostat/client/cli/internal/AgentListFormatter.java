@@ -58,7 +58,7 @@ public class AgentListFormatter{
     private final TableRenderer tableRenderer = new TableRenderer(NUM_COLUMNS);
 
     void addHeader() {
-        printLine(AGENT_ID, CONFIG_LISTEN_ADDRESS, START_TIME, STOP_TIME);
+        tableRenderer.printHeader(AGENT_ID, CONFIG_LISTEN_ADDRESS, START_TIME, STOP_TIME);
     }
 
     void addAgent(AgentInformation info) {

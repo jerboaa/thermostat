@@ -41,7 +41,6 @@ import java.io.PrintStream;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.shared.locale.Translate;
 import com.redhat.thermostat.storage.core.AgentId;
-import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.VmInfo;
 
@@ -61,10 +60,15 @@ class VMListFormatter {
     private static final String STATUS_EXITED = translator.localize(LocaleResources.VM_STATUS_EXITED).getContents();
     private static final String STATUS_UNKNOWN = translator.localize(LocaleResources.VM_STATUS_UNKNOWN).getContents();
 
+    VMListFormatter() {
+        tableRenderer.sortByColumn(0);
+        tableRenderer.sortByColumn(2);
+    }
+
     private final TableRenderer tableRenderer = new TableRenderer(NUM_COLUMNS);
 
     void addHeader() {
-        printLine(HOST_ID, HOST, VM_ID, VM_PID, VM_STATUS, VM_NAME);
+        tableRenderer.printHeader(HOST_ID, HOST, VM_ID, VM_PID, VM_STATUS, VM_NAME);
     }
 
     void format(PrintStream out) {
