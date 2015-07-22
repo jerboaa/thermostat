@@ -53,30 +53,26 @@ public class ThermostatVmMainLabelDecorator implements ReferenceFieldLabelDecora
     @Override
     public String getLabel(String originalLabel, Ref reference) {
 
-        if (!(reference instanceof VmRef)) {
-            return reference.getName();
+        if (!(reference instanceof VmRef) || 
+                !reference.getName().contains("thermostat")) {
+            return originalLabel;
         }
         return processLabel(dao.getVmInfo((VmRef) reference));
     }
 
     @Override
     public int getOrderValue() {
-        return ORDER_FIRST;
+        return ORDER_FIRST + 1;
     }
 
     /**
-     * This method returns a short version for the VmInfo object command line if
-     * it belongs to a Thermostat class, otherwise it returns its main class.
-     * @param info the vm info object from which take information
+     * This method returns a short version for the VmInfo object command line.
+     * @param info the vm info object from which take information.
      * @return the resulting string 
      */
     private String processLabel(VmInfo info) {
-        if (info.getMainClass().contains("thermostat")) {
-            String[]  s = info.getJavaCommandLine().split("\\."); //escaped dot
-            return s[s.length - 1];
-        } else {
-            return info.getMainClass();
-        }
+        String[]  s = info.getJavaCommandLine().split("\\."); //escaped dot
+        return s[s.length - 1];
     }
 }
 

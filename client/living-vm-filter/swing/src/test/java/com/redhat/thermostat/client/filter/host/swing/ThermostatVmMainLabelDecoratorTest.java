@@ -72,6 +72,7 @@ public class ThermostatVmMainLabelDecoratorTest {
     public void getLabelTest1() {
         
         when(dao.getVmInfo(vmRef)).thenReturn(info);
+        when(vmRef.getName()).thenReturn("com.redhat.thermostat.main.Thermostat");
         when(info.getMainClass()).thenReturn("com.redhat.thermostat.main.Thermostat");
         when(info.getJavaCommandLine()).thenReturn("com.redhat.thermostat.main.Thermostat service");
         
@@ -88,12 +89,13 @@ public class ThermostatVmMainLabelDecoratorTest {
     public void getLabelTest2() {
         
         when(dao.getVmInfo(vmRef)).thenReturn(info);
+        when(vmRef.getName()).thenReturn("/opt/eclipse//plugin/org.eclipse.equinox.laucher.jar");
         when(info.getMainClass()).thenReturn("/opt/eclipse//plugin/org.eclipse.equinox.laucher.jar");
         when(info.getJavaCommandLine()).thenReturn("-os linux");
 
         decorator = new ThermostatVmMainLabelDecorator(dao);
         String result = decorator.getLabel("originalLabel", vmRef);
-        assertTrue(result.equals("/opt/eclipse//plugin/org.eclipse.equinox.laucher.jar"));
+        assertTrue(result.equals("originalLabel"));
     }
     
     
@@ -108,7 +110,7 @@ public class ThermostatVmMainLabelDecoratorTest {
         when(hostRef.getName()).thenReturn("localhost.localdomain");
 
         decorator = new ThermostatVmMainLabelDecorator(dao);
-        String result = decorator.getLabel("originalLabel", hostRef);
+        String result = decorator.getLabel("localhost.localdomain", hostRef);
         assertTrue(result.equals("localhost.localdomain"));
     }
 
