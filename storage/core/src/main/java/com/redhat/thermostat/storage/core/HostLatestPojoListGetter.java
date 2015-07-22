@@ -55,7 +55,7 @@ public class HostLatestPojoListGetter<T extends TimeStampedPojo> extends Abstrac
             + Key.TIMESTAMP.getName() + "' DSC";
 
     private static final Logger logger = LoggingUtils.getLogger(HostLatestPojoListGetter.class);
-    
+
     private final Storage storage;
     private final Category<T> cat;
     private final String queryLatest;
@@ -66,11 +66,19 @@ public class HostLatestPojoListGetter<T extends TimeStampedPojo> extends Abstrac
         this.queryLatest = String.format(HOST_LATEST_QUERY_FORMAT, cat.getName());
     }
 
+    /**
+     * @deprecated use {@link #getLatest(AgentId, long)}
+     */
+    @Deprecated
     public List<T> getLatest(final HostRef hostRef, final long since) {
+        return getLatest(new AgentId(hostRef.getAgentId()), since);
+    }
+
+    public List<T> getLatest(final AgentId agentId, final long since) {
         return executeQuery(new AbstractDaoQuery<T>(storage, cat, queryLatest) {
             @Override
             public PreparedStatement<T> customize(PreparedStatement<T> preparedStatement) {
-                preparedStatement.setString(0, hostRef.getAgentId());
+                preparedStatement.setString(0, agentId.get());
                 preparedStatement.setLong(1, since);
                 return preparedStatement;
             }

@@ -60,7 +60,7 @@ public class HostLatestPojoListGetterTest {
     private static final String CATEGORY_NAME = "hostcategory";
     // Make this one static so we don't get IllegalStateException from trying
     // to make category of same name while running tests in same classloader.
-    private static final Category<TestPojo> cat =  new Category<>(CATEGORY_NAME, TestPojo.class);
+    private static final Category<TestPojo> cat = new Category<>(CATEGORY_NAME, TestPojo.class);
 
     private static long t1 = 1;
     private static long t2 = 5;
@@ -79,14 +79,16 @@ public class HostLatestPojoListGetterTest {
     private static Double load15_3 = 13.0;
 
     private HostRef ref;
+    private AgentId agentId;
     private TestPojo result1, result2, result3;
 
     @Before
     public void setUp() {
-        final double[] d1 = new double[] { load5_1, load10_1, load15_1 };
-        final double[] d2 = new double[] { load5_2, load10_2, load15_2 };
-        final double[] d3 = new double[] { load5_3, load10_3, load15_3 };
+        final double[] d1 = new double[]{load5_1, load10_1, load15_1};
+        final double[] d2 = new double[]{load5_2, load10_2, load15_2};
+        final double[] d3 = new double[]{load5_3, load10_3, load15_3};
         ref = new HostRef(AGENT_ID, HOSTNAME);
+        agentId = new AgentId(AGENT_ID);
         result1 = mock(TestPojo.class);
         when(result1.getTimeStamp()).thenReturn(t1);
         when(result1.getData()).thenReturn(d1);
@@ -97,21 +99,21 @@ public class HostLatestPojoListGetterTest {
         when(result3.getTimeStamp()).thenReturn(t3);
         when(result3.getData()).thenReturn(d3);
     }
-    
+
     @Test
     public void verifyQueryDescriptorFormat() {
         String expected = "QUERY %s WHERE 'agentId' = ?s AND " +
-         "'timeStamp' > ?l SORT 'timeStamp' DSC";
+                "'timeStamp' > ?l SORT 'timeStamp' DSC";
         assertEquals(expected, HostLatestPojoListGetter.HOST_LATEST_QUERY_FORMAT);
     }
-    
+
     @Test
     public void verifyQueryDescriptorIsSane() {
         Storage storage = mock(Storage.class);
         HostLatestPojoListGetter<TestPojo> getter = new HostLatestPojoListGetter<>(storage, cat);
         String actualDesc = getter.getQueryLatestDesc();
         String expected = "QUERY hostcategory WHERE 'agentId' = ?s AND " +
-         "'timeStamp' > ?l SORT 'timeStamp' DSC";
+                "'timeStamp' > ?l SORT 'timeStamp' DSC";
         assertEquals(expected, actualDesc);
     }
 
@@ -121,7 +123,7 @@ public class HostLatestPojoListGetterTest {
     }
 
     @Test
-    public void testGetLatest() throws DescriptorParsingException, StatementExecutionException {
+    public void testHostRefGetLatest() throws DescriptorParsingException, StatementExecutionException {
         @SuppressWarnings("unchecked")
         Cursor<TestPojo> cursor = mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
@@ -141,10 +143,37 @@ public class HostLatestPojoListGetterTest {
         assertEquals(2, stats.size());
         TestPojo stat1 = stats.get(0);
         assertEquals(t1, stat1.getTimeStamp());
-        assertArrayEquals(new double[] {load5_1, load10_1, load15_1}, stat1.getData(), 0.001);
+        assertArrayEquals(new double[]{load5_1, load10_1, load15_1}, stat1.getData(), 0.001);
         TestPojo stat2 = stats.get(1);
         assertEquals(t2, stat2.getTimeStamp());
-        assertArrayEquals(new double[] {load5_2, load10_2, load15_2}, stat2.getData(), 0.001);
+        assertArrayEquals(new double[]{load5_2, load10_2, load15_2}, stat2.getData(), 0.001);
+    }
+
+    @Test
+    public void testGetLatest() throws DescriptorParsingException, StatementExecutionException {
+        @SuppressWarnings("unchecked")
+        Cursor<TestPojo> cursor = mock(Cursor.class);
+        when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
+        when(cursor.next()).thenReturn(result1).thenReturn(result2).thenReturn(null);
+
+        Storage storage = mock(Storage.class);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<TestPojo> query = (PreparedStatement<TestPojo>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(query);
+        when(query.executeQuery()).thenReturn(cursor);
+
+        HostLatestPojoListGetter<TestPojo> getter = new HostLatestPojoListGetter<>(storage, cat);
+
+        List<TestPojo> stats = getter.getLatest(agentId, Long.MIN_VALUE);
+
+        assertNotNull(stats);
+        assertEquals(2, stats.size());
+        TestPojo stat1 = stats.get(0);
+        assertEquals(t1, stat1.getTimeStamp());
+        assertArrayEquals(new double[]{load5_1, load10_1, load15_1}, stat1.getData(), 0.001);
+        TestPojo stat2 = stats.get(1);
+        assertEquals(t2, stat2.getTimeStamp());
+        assertArrayEquals(new double[]{load5_2, load10_2, load15_2}, stat2.getData(), 0.001);
     }
 
     @After
@@ -154,11 +183,11 @@ public class HostLatestPojoListGetterTest {
         result2 = null;
         result3 = null;
     }
-    
+
     private static interface TestPojo extends TimeStampedPojo {
-        
+
         double[] getData();
-        
+
     }
 
 }

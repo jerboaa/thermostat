@@ -56,7 +56,7 @@ public class HostTimeIntervalPojoListGetter<T extends TimeStampedPojo> extends A
             + Key.TIMESTAMP.getName() + "' DSC";
 
     private static final Logger logger = LoggingUtils.getLogger(HostTimeIntervalPojoListGetter.class);
-    
+
     private final Storage storage;
     private final Category<T> cat;
     private final String query;
@@ -67,11 +67,19 @@ public class HostTimeIntervalPojoListGetter<T extends TimeStampedPojo> extends A
         this.query = String.format(HOST_INTERVAL_QUERY_FORMAT, cat.getName());
     }
 
+    /**
+     * @deprecated use {@link #getLatest(AgentId, long, long)}
+     */
+    @Deprecated
     public List<T> getLatest(final HostRef hostRef, final long since, final long to) {
+        return getLatest(new AgentId(hostRef.getAgentId()), since, to);
+    }
+
+    public List<T> getLatest(final AgentId agentId, final long since, final long to) {
         return executeQuery(new AbstractDaoQuery<T>(storage, cat, query) {
             @Override
             public PreparedStatement<T> customize(PreparedStatement<T> preparedStatement) {
-                preparedStatement.setString(0, hostRef.getAgentId());
+                preparedStatement.setString(0, agentId.get());
                 preparedStatement.setLong(1, since);
                 preparedStatement.setLong(2, to);
                 return preparedStatement;

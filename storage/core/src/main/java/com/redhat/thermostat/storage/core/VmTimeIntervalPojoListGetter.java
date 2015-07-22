@@ -50,7 +50,7 @@ import com.redhat.thermostat.storage.model.TimeStampedPojo;
  *
  * @see VmLatestPojoListGetter
  */
-public class VmTimeIntervalPojoListGetter <T extends TimeStampedPojo> extends AbstractDao {
+public class VmTimeIntervalPojoListGetter<T extends TimeStampedPojo> extends AbstractDao {
 
     // The query for VmTimeIntervalPojoListGetter should query for since <= timestamp < to
     // in order not to miss data for multiple consecutive queries of the form [a, b), [b, c), ...
@@ -58,7 +58,7 @@ public class VmTimeIntervalPojoListGetter <T extends TimeStampedPojo> extends Ab
     // result in missed data at the endpoints (b, ...)
     public static final String VM_INTERVAL_QUERY_FORMAT = "QUERY %s WHERE '"
             + Key.AGENT_ID.getName() + "' = ?s AND '"
-            + Key.VM_ID.getName() + "' = ?s AND '" 
+            + Key.VM_ID.getName() + "' = ?s AND '"
             + Key.TIMESTAMP.getName() + "' >= ?l AND '"
             + Key.TIMESTAMP.getName() + "' < ?l SORT '"
             + Key.TIMESTAMP.getName() + "' DSC";
@@ -75,12 +75,20 @@ public class VmTimeIntervalPojoListGetter <T extends TimeStampedPojo> extends Ab
         this.query = String.format(VM_INTERVAL_QUERY_FORMAT, cat.getName());
     }
 
+    /**
+     * @deprecated use {@link #getLatest(AgentId, VmId, long, long)}
+     */
+    @Deprecated
     public List<T> getLatest(final VmRef vmRef, final long since, final long to) {
+        return getLatest(new AgentId(vmRef.getHostRef().getAgentId()), new VmId(vmRef.getVmId()), since, to);
+    }
+
+    public List<T> getLatest(final AgentId agentId, final VmId vmId, final long since, final long to) {
         return executeQuery(new AbstractDaoQuery<T>(storage, cat, query) {
             @Override
             public PreparedStatement<T> customize(PreparedStatement<T> preparedStatement) {
-                preparedStatement.setString(0, vmRef.getHostRef().getAgentId());
-                preparedStatement.setString(1, vmRef.getVmId());
+                preparedStatement.setString(0, agentId.get());
+                preparedStatement.setString(1, vmId.get());
                 preparedStatement.setLong(2, since);
                 preparedStatement.setLong(3, to);
                 return preparedStatement;

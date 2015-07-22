@@ -61,7 +61,7 @@ public class VmTimeIntervalPojoListGetterTest {
     private static final String CATEGORY_NAME = "vm-timeinterval-category";
     // Make this one static so we don't get IllegalStateException from trying
     // to make category of same name while running tests in same classloader.
-    private static final Category<TestPojo> cat =  new Category<>(CATEGORY_NAME, TestPojo.class);
+    private static final Category<TestPojo> cat = new Category<>(CATEGORY_NAME, TestPojo.class);
 
     private static long t1 = 1;
     private static long t2 = 5;
@@ -73,12 +73,16 @@ public class VmTimeIntervalPojoListGetterTest {
 
     private HostRef hostRef;
     private VmRef vmRef;
+    private AgentId agentId;
+    private VmId vmId;
     private TestPojo result1, result2, result3;
 
     @Before
     public void setUp() {
         hostRef = new HostRef(AGENT_ID, HOSTNAME);
         vmRef = new VmRef(hostRef, VM_ID, VM_PID, MAIN_CLASS);
+        agentId = new AgentId(AGENT_ID);
+        vmId = new VmId(VM_ID);
         result1 = mock(TestPojo.class);
         when(result1.getTimeStamp()).thenReturn(t1);
         when(result1.getData()).thenReturn(lc1);
@@ -113,7 +117,7 @@ public class VmTimeIntervalPojoListGetterTest {
     }
 
     @Test
-    public void testGetInterval() throws DescriptorParsingException, StatementExecutionException {
+    public void testVmRefGetInterval() throws DescriptorParsingException, StatementExecutionException {
         @SuppressWarnings("unchecked")
         Cursor<TestPojo> cursor = mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
@@ -128,6 +132,41 @@ public class VmTimeIntervalPojoListGetterTest {
         VmTimeIntervalPojoListGetter<TestPojo> getter = new VmTimeIntervalPojoListGetter<>(storage, cat);
 
         List<TestPojo> stats = getter.getLatest(vmRef, t1, t2);
+
+        verify(storage).prepareStatement(anyDescriptor());
+        verify(query).setString(0, AGENT_ID);
+        verify(query).setString(1, VM_ID);
+        verify(query).setLong(2, t1);
+        verify(query).setLong(3, t2);
+        verify(query).executeQuery();
+        verifyNoMoreInteractions(query);
+
+        assertNotNull(stats);
+        assertEquals(2, stats.size());
+        TestPojo stat1 = stats.get(0);
+        assertEquals(t1, stat1.getTimeStamp());
+        assertEquals(lc1, stat1.getData());
+        TestPojo stat2 = stats.get(1);
+        assertEquals(t2, stat2.getTimeStamp());
+        assertEquals(lc2, stat2.getData());
+    }
+
+    @Test
+    public void testGetInterval() throws DescriptorParsingException, StatementExecutionException {
+        @SuppressWarnings("unchecked")
+        Cursor<TestPojo> cursor = mock(Cursor.class);
+        when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
+        when(cursor.next()).thenReturn(result1).thenReturn(result2).thenReturn(null);
+
+        Storage storage = mock(Storage.class);
+        @SuppressWarnings("unchecked")
+        PreparedStatement<TestPojo> query = (PreparedStatement<TestPojo>) mock(PreparedStatement.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(query);
+        when(query.executeQuery()).thenReturn(cursor);
+
+        VmTimeIntervalPojoListGetter<TestPojo> getter = new VmTimeIntervalPojoListGetter<>(storage, cat);
+
+        List<TestPojo> stats = getter.getLatest(agentId, vmId, t1, t2);
 
         verify(storage).prepareStatement(anyDescriptor());
         verify(query).setString(0, AGENT_ID);

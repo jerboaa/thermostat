@@ -52,7 +52,7 @@ public class HostBoundaryPojoGetterTest {
     private static final String CATEGORY_NAME = "host-boundary-category";
     // Make this one static so we don't get IllegalStateException from trying
     // to make category of same name while running tests in same classloader.
-    private static final Category<TestPojo> cat =  new Category<>(CATEGORY_NAME, TestPojo.class);
+    private static final Category<TestPojo> cat = new Category<>(CATEGORY_NAME, TestPojo.class);
 
     private static long t1 = 1;
     private static long t2 = 5;
@@ -61,11 +61,13 @@ public class HostBoundaryPojoGetterTest {
     private static long lc2 = 20;
 
     private HostRef hostRef;
+    private AgentId agentId;
     private TestPojo result1, result2;
 
     @Before
     public void setUp() {
         hostRef = new HostRef(AGENT_ID, HOSTNAME);
+        agentId = new AgentId(AGENT_ID);
         result1 = mock(TestPojo.class);
         when(result1.getTimeStamp()).thenReturn(t1);
         when(result1.getData()).thenReturn(lc1);
@@ -108,7 +110,7 @@ public class HostBoundaryPojoGetterTest {
     }
 
     @Test
-    public void testGetOldest() throws DescriptorParsingException, StatementExecutionException {
+    public void testHostRefGetOldest() throws DescriptorParsingException, StatementExecutionException {
         Cursor<TestPojo> cursor = mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(result1).thenReturn(null);
@@ -128,7 +130,27 @@ public class HostBoundaryPojoGetterTest {
     }
 
     @Test
-    public void testGetLatest() throws DescriptorParsingException, StatementExecutionException {
+    public void testGetOldest() throws DescriptorParsingException, StatementExecutionException {
+        Cursor<TestPojo> cursor = mock(Cursor.class);
+        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
+        when(cursor.next()).thenReturn(result1).thenReturn(null);
+
+        PreparedStatement<TestPojo> query = (PreparedStatement<TestPojo>) mock(PreparedStatement.class);
+        when(query.executeQuery()).thenReturn(cursor);
+
+        Storage storage = mock(Storage.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(query);
+
+        HostBoundaryPojoGetter<TestPojo> getter = new HostBoundaryPojoGetter<>(storage, cat);
+
+        TestPojo oldest = getter.getOldestStat(agentId);
+
+        assertEquals(t1, oldest.getTimeStamp());
+        assertEquals(lc1, oldest.getData());
+    }
+
+    @Test
+    public void testHostRefGetLatest() throws DescriptorParsingException, StatementExecutionException {
         Cursor<TestPojo> cursor = mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(result2).thenReturn(null);
@@ -142,6 +164,26 @@ public class HostBoundaryPojoGetterTest {
         HostBoundaryPojoGetter<TestPojo> getter = new HostBoundaryPojoGetter<>(storage, cat);
 
         TestPojo newest = getter.getNewestStat(hostRef);
+
+        assertEquals(t2, newest.getTimeStamp());
+        assertEquals(lc2, newest.getData());
+    }
+
+    @Test
+    public void testGetLatest() throws DescriptorParsingException, StatementExecutionException {
+        Cursor<TestPojo> cursor = mock(Cursor.class);
+        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
+        when(cursor.next()).thenReturn(result2).thenReturn(null);
+
+        PreparedStatement<TestPojo> query = (PreparedStatement<TestPojo>) mock(PreparedStatement.class);
+        when(query.executeQuery()).thenReturn(cursor);
+
+        Storage storage = mock(Storage.class);
+        when(storage.prepareStatement(anyDescriptor())).thenReturn(query);
+
+        HostBoundaryPojoGetter<TestPojo> getter = new HostBoundaryPojoGetter<>(storage, cat);
+
+        TestPojo newest = getter.getNewestStat(agentId);
 
         assertEquals(t2, newest.getTimeStamp());
         assertEquals(lc2, newest.getData());

@@ -72,22 +72,38 @@ public class HostBoundaryPojoGetter<T extends TimeStampedPojo> extends AbstractD
         this.storage = storage;
         this.cat = cat;
         this.queryNewest = String.format(DESC_NEWEST_HOST_STAT, cat.getName());
-        this.queryOldest= String.format(DESC_OLDEST_HOST_STAT, cat.getName());
+        this.queryOldest = String.format(DESC_OLDEST_HOST_STAT, cat.getName());
     }
 
+    /**
+     * @deprecated use {@link #getNewestStat(AgentId)}
+     */
+    @Deprecated
     public T getNewestStat(HostRef ref) {
-        return runAgentIdQuery(ref, queryNewest);
+        return runAgentIdQuery(ref.getAgentId(), queryNewest);
     }
 
+    public T getNewestStat(AgentId agentId) {
+        return runAgentIdQuery(agentId.get(), queryNewest);
+    }
+
+    /**
+     * @deprecated use {@link #getOldestStat(AgentId)}
+     */
+    @Deprecated
     public T getOldestStat(HostRef ref) {
-        return runAgentIdQuery(ref, queryOldest);
+        return runAgentIdQuery(ref.getAgentId(), queryOldest);
     }
 
-    private T runAgentIdQuery(final HostRef ref, final String descriptor) {
+    public T getOldestStat(AgentId agentId) {
+        return runAgentIdQuery(agentId.get(), queryOldest);
+    }
+
+    private T runAgentIdQuery(final String agentId, final String descriptor) {
         return executeQuery(new AbstractDaoQuery<T>(storage, cat, descriptor) {
             @Override
             public PreparedStatement<T> customize(PreparedStatement<T> preparedStatement) {
-                preparedStatement.setString(0, ref.getAgentId());
+                preparedStatement.setString(0, agentId);
                 return preparedStatement;
             }
         }).head();
