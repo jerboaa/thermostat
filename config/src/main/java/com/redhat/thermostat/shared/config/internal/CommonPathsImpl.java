@@ -107,16 +107,28 @@ public class CommonPathsImpl implements CommonPaths {
 
     private CommonPathsImpl(File defaultPrefix) {
         CommonPathsImpl.defaultSystemUserPrefix = defaultPrefix;
+
+        // When THERMOSTAT_HOME is fetched from env, write back the results to
+        // System properties too so other parts of thermostat (specially the web
+        // bits) make use of the right THERMOSTAT_HOME
+        boolean homeFetchedFromEnv = false;
+
         // allow this to be specified also as a property, especially for
         // tests, this overrides the env setting
         String home = System.getProperty(THERMOSTAT_HOME);
         if (home == null) {
+            homeFetchedFromEnv = true;
             home = System.getenv(THERMOSTAT_HOME);
         }
 
         if (home == null) {
             throw new InvalidConfigurationException(t.localize(LocaleResources.SYSHOME_NO_HOME));
         }
+
+        if (homeFetchedFromEnv) {
+            System.setProperty(THERMOSTAT_HOME, home);
+        }
+
         this.systemHome = new File(home);
         if (!systemHome.exists()) {
             throw new InvalidConfigurationException(t.localize(LocaleResources.SYSHOME_DOESNT_EXIST, home));

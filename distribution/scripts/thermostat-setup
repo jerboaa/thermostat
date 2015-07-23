@@ -96,9 +96,12 @@ EOF
 }
 
 setThermostatEnvironment() {
+  # Source thermostat-functions from same directory as this script
+  . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"/thermostat-functions
+
   # Thermostat home
   if [ "x$THERMOSTAT_HOME" = "x" ] ; then
-    THERMOSTAT_HOME="@thermostat.home@"
+    THERMOSTAT_HOME=$(_find_thermostat_home)
   fi
   export THERMOSTAT_HOME
   # Thermostat user home

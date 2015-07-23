@@ -36,8 +36,11 @@
 #
 #####################################################################
 
+# Source thermostat-functions from same directory as this script
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"/thermostat-functions
+
 if [ x"${THERMOSTAT_HOME}" = x ]; then
-  THERMOSTAT_HOME="@thermostat.home@"
+  THERMOSTAT_HOME=$(_find_thermostat_home)
   export THERMOSTAT_HOME
 fi
 if [ x"${USER_THERMOSTAT_HOME}" = x ]; then

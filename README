@@ -101,13 +101,14 @@ Thermostat consists of:
    The resulting Thermostat system can now be found under the directory
    distribution/target/image.
 
-   Please note that the resulting build is non-relocatable. If you move it to
-   some other directory, it will not work. Use the thermostat.home maven
-   property to set that at build time:
+   If you want to install thermostat to a system location, use the
+   thermostat.home maven property to set that at build time:
 
    mvn -Dthermostat.home=/path/to/install/thermostat
 
-   You will have to move the resulting build to the path manually.
+   You will have to move the resulting build to the path manually. This property
+   sets up mostly distribution related files (for services) that need the full
+   path to Thermostat. It is not required to run thermostat normally.
            
 --------------------------------------------------------------------------------
 3. RUNNING THERMOSTAT

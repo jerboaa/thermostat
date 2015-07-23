@@ -85,7 +85,12 @@
     <role-name>thermostat-realm</role-name>
   </security-role>
   
-  <!-- THERMOSTAT_HOME is set via the listener below -->
+  <!--
+    The system property THERMOSTAT_HOME is set via the listener below.
+    This hard-coded value is only used if this war is deployed into a web
+    server. It is ignored if the thermostat command is used to run this war
+    inside an embedded server.
+  -->
   <context-param>
     <param-name>THERMOSTAT_HOME</param-name>
     <param-value>${thermostat.home}</param-value>

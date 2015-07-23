@@ -44,7 +44,8 @@ import com.redhat.thermostat.common.Constants;
 /**
  * Sets the THERMOSTAT_HOME system property as 
  * configured via said context-param in web.xml.
- *
+ * <p>
+ * Does not set THERMOSTAT_HOME if the system property is already defined.
  */
 public class PropertySettingServletContextListener implements
         ServletContextListener {
@@ -54,7 +55,9 @@ public class PropertySettingServletContextListener implements
     @Override
     public void contextInitialized(ServletContextEvent sce) {
         String thermostatHome = sce.getServletContext().getInitParameter(PROPERTY_NAME);
-        System.setProperty(PROPERTY_NAME, thermostatHome);
+        if (System.getProperty(PROPERTY_NAME) == null) {
+            System.setProperty(PROPERTY_NAME, thermostatHome);
+        }
         System.setProperty(Constants.IS_PROXIED_STORAGE, Boolean.TRUE.toString());
     }
 
