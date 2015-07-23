@@ -555,7 +555,7 @@ public class MongoStorage implements BackingStorage, SchemaInfoInserter {
             if ( !isSchemaInfo && !db.collectionExists(name)) {
                 coll = db.createCollection(name, new BasicDBObject("capped", false));
                 for (Key<?> key: category.getIndexedKeys()) {
-                    coll.ensureIndex(key.getName());
+                    coll.createIndex(key.getName());
                 }
             } else {
                 coll = db.getCollection(name);

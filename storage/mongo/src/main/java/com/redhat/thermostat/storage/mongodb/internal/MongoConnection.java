@@ -50,6 +50,7 @@ import com.mongodb.DB;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientOptions.Builder;
+import com.mongodb.MongoCredential;
 import com.mongodb.MongoException;
 import com.mongodb.ServerAddress;
 import com.redhat.thermostat.common.ssl.SSLContextFactory;
@@ -84,7 +85,6 @@ class MongoConnection extends Connection {
     public void connect() {
         try {
             createConnection();
-            authenticateIfNecessary();
             /* the mongo java driver does not ensure this connection is actually working */
             testConnection();
             connected = true;
@@ -96,27 +96,6 @@ class MongoConnection extends Connection {
             throw new ConnectionException(e.getMessage(), e);
         }
         fireChanged(ConnectionStatus.CONNECTED);
-    }
-
-    private void authenticateIfNecessary() {
-        String username = creds.getUsername();
-        setUsername(username);
-        char[] password = creds.getPassword();
-        try {
-            if (username != null && password != null) {
-                authenticate(username, password);
-            }
-        } finally {
-            if (password != null) {
-                Arrays.fill(password, '\0');
-            }
-        }
-    }
-
-    private void authenticate(String username, char[] password) {
-        if (! db.authenticate(username, password)) {
-            throw new MongoException("Invalid username/password: " + username + "/" + new String(password));
-        }
     }
 
     @Override
@@ -136,17 +115,27 @@ class MongoConnection extends Connection {
 
     // package visibility for testing purposes.
     void createConnection() throws MongoException, InvalidConfigurationException, UnknownHostException {
-        if (sslConf.enableForBackingStorage()) {
-            logger.log(Level.FINE, "Using SSL socket for mongodb:// protocol");
-            this.m = getSSLMongo();
-        } else {
-            logger.log(Level.FINE, "Using plain socket for mongodb://");
-            this.m = new MongoClient(getServerAddress());
+        String username = creds.getUsername();
+        setUsername(username);
+        char[] password = creds.getPassword();
+        try {
+            if (sslConf.enableForBackingStorage()) {
+                logger.log(Level.FINE, "Using SSL socket for mongodb:// protocol");
+                this.m = getSSLMongo(username, password);
+            } else {
+                logger.log(Level.FINE, "Using plain socket for mongodb://");
+                MongoCredential creds = MongoCredential.createCredential(username, THERMOSTAT_DB_NAME, password);
+                this.m = new MongoClient(getServerAddress(), Arrays.asList(creds));
+            }
+            this.db = m.getDB(THERMOSTAT_DB_NAME);
+        } finally {
+            if (password != null) {
+                Arrays.fill(password, '\0');
+            }
         }
-        this.db = m.getDB(THERMOSTAT_DB_NAME);
     }
 
-    MongoClient getSSLMongo() throws UnknownHostException, MongoException {
+    MongoClient getSSLMongo(String username, char[] password) throws UnknownHostException, MongoException {
         Builder builder = new MongoClientOptions.Builder();
         SSLContext ctxt = null;
         try {
@@ -165,7 +154,8 @@ class MongoConnection extends Connection {
         logger.log(Level.FINE, "factory is: " + factory.getClass().getName());
         builder.socketFactory(factory);
         MongoClientOptions opts = builder.build();
-        MongoClient client = new MongoClient(getServerAddress(), opts);
+        MongoCredential creds = MongoCredential.createCredential(username, THERMOSTAT_DB_NAME, password);
+        MongoClient client = new MongoClient(getServerAddress(), Arrays.asList(creds), opts);
         return client;
     }
 
