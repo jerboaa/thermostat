@@ -36,17 +36,8 @@
 #
 #####################################################################
 
-# Source thermostat-functions from same directory as this script
-. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"/thermostat-functions
-
-if [ x"${THERMOSTAT_HOME}" = x ]; then
-  THERMOSTAT_HOME=$(_find_thermostat_home)
-  export THERMOSTAT_HOME
-fi
-if [ x"${USER_THERMOSTAT_HOME}" = x ]; then
-  USER_THERMOSTAT_HOME="@user.thermostat.home@"
-  export USER_THERMOSTAT_HOME
-fi
+# Source thermostat-common from same directory as this script
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"/thermostat-common
 
 # Source system thermostat profile
 . ${THERMOSTAT_HOME}/etc/thermostatrc 
@@ -62,9 +53,6 @@ fi
 # THERMOSTAT_EXT_JAVA_OPTS
 # THERMOSTAT_EXT_OPTS
 
-JAVA="@java.home@/bin/java"
-THERMOSTAT_LIBS="${THERMOSTAT_HOME}/libs"
-
 # This is the minimal boot classpath thermostat needs. Other dependencies
 # will get started by the OSGi framework once that's up.
 BOOT_CLASSPATH="${THERMOSTAT_LIBS}/org.apache.felix.framework-@felix.framework.version@.jar"
@@ -77,7 +65,6 @@ if [ ! -z ${THERMOSTAT_EXT_BOOT_CLASSPATH} ]; then
   BOOT_CLASSPATH="${BOOT_CLASSPATH}:${THERMOSTAT_EXT_BOOT_CLASSPATH}"
 fi
 
-THERMOSTAT_MAIN="com.redhat.thermostat.main.Thermostat"
 
 function usage() {
     echo "$0 [-J<java-opt>] [-Tbg PIDFILE] [THERMOSTAT_ARGS]" >&2

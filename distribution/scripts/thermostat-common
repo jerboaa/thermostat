@@ -49,3 +49,23 @@ _find_thermostat_home() {
   DIR="$(cd -P "$(dirname "$SOURCE")" && cd .. && pwd)"
   echo "$DIR"
 }
+
+# Thermostat home
+if [[ "${THERMOSTAT_HOME}" = "" ]]; then
+  THERMOSTAT_HOME="$(_find_thermostat_home)"
+fi
+export THERMOSTAT_HOME
+
+# Thermostat user home
+if [[ "${USER_THERMOSTAT_HOME}" = "" ]]; then
+  USER_THERMOSTAT_HOME="${HOME}/.thermostat"
+fi
+export USER_THERMOSTAT_HOME
+
+THERMOSTAT="${THERMOSTAT_HOME}/bin/thermostat"
+THERMOSTAT_LIBS="${THERMOSTAT_HOME}/libs"
+
+THERMOSTAT_MAIN="com.redhat.thermostat.main.Thermostat"
+
+JAVA="@java.home@/bin/java"
+

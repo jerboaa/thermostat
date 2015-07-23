@@ -38,19 +38,14 @@
 #
 # Some necessary variables.
 
-# Source thermostat-functions from same directory as this script
-. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"/thermostat-functions
-
-if [ x"$THERMOSTAT_HOME" = x ] ; then
-  THERMOSTAT_HOME=$(_find_thermostat_home)
-fi
-export THERMOSTAT_HOME
+# Source thermostat-common from same directory as this script
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"/thermostat-common
 
 if [ x"$THERMOSTAT_DEBUG_ADDRESS" = x ] ; then
   THERMOSTAT_DEBUG_ADDRESS=1080
 fi
 export THERMOSTAT_DEBUG_ADDRESS
 
-$THERMOSTAT_HOME/bin/thermostat "$@" --print-osgi-info -J-Dsun.awt.disablegrab=true -J-Xdebug -J-Xrunjdwp:transport=dt_socket,server=y,address=$THERMOSTAT_DEBUG_ADDRESS
+$THERMOSTAT "$@" --print-osgi-info -J-Dsun.awt.disablegrab=true -J-Xdebug -J-Xrunjdwp:transport=dt_socket,server=y,address=$THERMOSTAT_DEBUG_ADDRESS
 exit $?
 

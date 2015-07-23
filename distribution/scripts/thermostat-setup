@@ -96,20 +96,8 @@ EOF
 }
 
 setThermostatEnvironment() {
-  # Source thermostat-functions from same directory as this script
-  . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"/thermostat-functions
-
-  # Thermostat home
-  if [ "x$THERMOSTAT_HOME" = "x" ] ; then
-    THERMOSTAT_HOME=$(_find_thermostat_home)
-  fi
-  export THERMOSTAT_HOME
-  # Thermostat user home
-  if [ "x$USER_THERMOSTAT_HOME" = "x" ]; then
-    USER_THERMOSTAT_HOME="$HOME/.thermostat"
-  fi
-  export USER_THERMOSTAT_HOME
-  THERMOSTAT="$THERMOSTAT_HOME/bin/thermostat"
+  # Source thermostat-common from same directory as this script
+  . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"/thermostat-common
 }
 
 setStampCompleteVars() {
@@ -268,7 +256,7 @@ setupMongodbUser() {
   echo -e "connections.\n"
   readUsername "$defaultName"
   readPassword
-  $THERMOSTAT_HOME/bin/thermostat storage --start --permitLocalhostException
+  $THERMOSTAT storage --start --permitLocalhostException
   MONGOD_RETVAL="$?"
   if [ "$MONGOD_RETVAL" -ne 0 ] ; then
     echo -e "\nMongodb user setup failed. Error starting storage." 1>&2
@@ -286,7 +274,7 @@ setupMongodbUser() {
     echo -e "\nMongodb user setup failed." 1>&2
     exitFail
   fi
-  $THERMOSTAT_HOME/bin/thermostat storage --stop
+  $THERMOSTAT storage --stop
   MONGO_SETUP_RETVAL="$?"
   if [ "$MONGO_SETUP_RETVAL" -ne 0 ] ; then
     echo -e "\nMongodb user setup failed." 1>&2

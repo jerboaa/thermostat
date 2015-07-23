@@ -43,17 +43,11 @@
 # file devsetup.input and then copies an appropriate agent.auth
 # file into the right place.
 
-# Source thermostat-functions from same directory as this script
-. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"/thermostat-functions
+# Source thermostat-common from same directory as this script
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"/thermostat-common
 
-if [ "x$THERMOSTAT_HOME" == "x" ]; then
-  THERMOSTAT_HOME=$(_find_thermostat_home)
-fi
 THERMOSTAT_SETUP="$THERMOSTAT_HOME/bin/thermostat-setup"
 DEV_INPUT="$THERMOSTAT_HOME/etc/devsetup.input"
-if [ "x$USER_THERMOSTAT_HOME" == "x" ]; then
-  USER_THERMOSTAT_HOME="$HOME/.thermostat"
-fi
 
 # Call the setup script
 $THERMOSTAT_SETUP < $DEV_INPUT

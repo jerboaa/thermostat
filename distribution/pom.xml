@@ -256,7 +256,7 @@
             <configuration>
               <target>
                 <chmod file="${project.build.directory}/image/bin/*" perm="755" />
-                <chmod file="${project.build.directory}/image/bin/thermostat-functions" perm="644" />
+                <chmod file="${project.build.directory}/image/bin/thermostat-common" perm="644" />
                 <chmod file="${project.build.directory}/tools/*" perm="755" />
               </target>
             </configuration>

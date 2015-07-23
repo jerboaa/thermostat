@@ -36,24 +36,12 @@
 #
 #####################################################################
 #
-JAVA="@java.home@/bin/java"
-
 if [ "$#" -lt 2 ]; then
   echo "usage: $0 <pidOfTargetJvm> <userNameOfJvmOwner>" >&2
 fi
 
-# Source thermostat-functions from same directory as this script
-. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"/thermostat-functions
-
-if [ x"$THERMOSTAT_INSTALL_DIR" = x ] ; then
-  THERMOSTAT_INSTALL_DIR=$(_find_thermostat_home)
-fi
-# Not always are installation directory and thermostat home one and
-# the same location.
-if [ x"$THERMOSTAT_HOME" = x ] ; then
-  THERMOSTAT_HOME=${THERMOSTAT_INSTALL_DIR}
-fi
-THERMOSTAT_LIBS="${THERMOSTAT_HOME}/libs"
+# Source thermostat-common from same directory as this script
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"/thermostat-common
 
 # Need tools from the JVM
 TOOLS_JAR="@java.home@/../lib/tools.jar"
