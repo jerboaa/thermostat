@@ -148,6 +148,11 @@ public class ProfileDAOImplTest {
                     return null;
                 }
             }
+
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException("remove");
+            }
         };
         when(statement.executeQuery()).thenReturn(cursor);
 
@@ -188,6 +193,11 @@ public class ProfileDAOImplTest {
                 } else {
                     return null;
                 }
+            }
+
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException("remove");
             }
         };
         when(statement.executeQuery()).thenReturn(cursor);
