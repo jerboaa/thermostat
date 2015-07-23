@@ -37,18 +37,24 @@
 package com.redhat.thermostat.vm.profiler.common.internal;
 
 import java.io.InputStream;
+import java.util.Currency;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.model.Range;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.AgentId;
 import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.DescriptorParsingException;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.PreparedStatement;
 import com.redhat.thermostat.storage.core.SaveFileListener;
+import com.redhat.thermostat.storage.core.StatementExecutionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageException;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.core.VmTimeIntervalPojoListGetter;
 import com.redhat.thermostat.storage.dao.AbstractDao;
@@ -173,7 +179,12 @@ public class ProfileDAOImpl extends AbstractDao implements ProfileDAO {
 
     @Override
     public InputStream loadLatestProfileData(VmRef vm) {
-        ProfileInfo info = loadLatest(vm, PROFILE_INFO_CATEGORY, PROFILE_INFO_DESC_QUERY_LATEST);
+        return loadLatestProfileData(new AgentId(vm.getHostRef().getAgentId()), new VmId(vm.getVmId()));
+    }
+
+    @Override
+    public InputStream loadLatestProfileData(AgentId agentId, VmId vmId) {
+        ProfileInfo info = loadLatest(agentId, vmId, PROFILE_INFO_CATEGORY, PROFILE_INFO_DESC_QUERY_LATEST);
         if (info == null) {
             return null;
         }
@@ -201,16 +212,21 @@ public class ProfileDAOImpl extends AbstractDao implements ProfileDAO {
 
     @Override
     public ProfileStatusChange getLatestStatus(VmRef vm) {
-        return loadLatest(vm, PROFILE_STATUS_CATEGORY, PROFILE_STATUS_DESC_QUERY_LATEST);
+        return getLatestStatus(new AgentId(vm.getHostRef().getAgentId()), new VmId(vm.getVmId()));
     }
 
-    private <T extends BasePojo> T loadLatest(final VmRef vm, Category<T> category, String queryDesc) {
+    @Override
+    public ProfileStatusChange getLatestStatus(AgentId agentId, VmId vmId) {
+        return loadLatest(agentId, vmId, PROFILE_STATUS_CATEGORY, PROFILE_STATUS_DESC_QUERY_LATEST);
+    }
+
+    private <T extends BasePojo> T loadLatest(final AgentId agentId, final VmId vmId, Category<T> category, String queryDesc) {
         return executeQuery(new AbstractDaoQuery<T>(storage, category, queryDesc) {
             @Override
-            public PreparedStatement<T> customize(PreparedStatement<T> preparedStatement) {
-                preparedStatement.setString(0, vm.getHostRef().getAgentId());
-                preparedStatement.setString(1, vm.getVmId());
-                return preparedStatement;
+            public PreparedStatement<T> customize(PreparedStatement<T> prepared) {
+                prepared.setString(0, agentId.get());
+                prepared.setString(1, vmId.get());
+                return prepared;
             }
         }).head();
     }

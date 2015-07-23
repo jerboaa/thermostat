@@ -41,6 +41,8 @@ import java.util.List;
 
 import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.common.model.Range;
+import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.core.VmRef;
 
 @Service
@@ -52,12 +54,27 @@ public interface ProfileDAO {
 
     InputStream loadProfileDataById(VmRef vm, String profileId);
 
-    /** @return {@code null} if no data is available */
+    /** @return {@code null} if no data is available
+     *
+     * @deprecated use {@link #loadLatestProfileData(AgentId, VmId)} instead.
+     */
+    @Deprecated
     InputStream loadLatestProfileData(VmRef vm);
+
+    /** @return {@code null} if no data is available */
+    InputStream loadLatestProfileData(AgentId agentId, VmId vmId);
 
     void addStatus(ProfileStatusChange change);
 
-    /** @return {@code null} if no data is available */
+    /** @return {@code null} if no data is available
+     *
+     * @deprecated use {@link #getLatestStatus(AgentId, VmId)} instead.
+     */
+    @Deprecated
     ProfileStatusChange getLatestStatus(VmRef vm);
+
+    /** @return {@code null} if no data is available */
+    ProfileStatusChange getLatestStatus(AgentId agentId, VmId vmId);
+
 
 }

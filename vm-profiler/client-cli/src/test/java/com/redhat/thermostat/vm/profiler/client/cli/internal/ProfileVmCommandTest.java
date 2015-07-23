@@ -53,11 +53,12 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.redhat.thermostat.vm.profiler.common.ProfileDAO;
 import com.redhat.thermostat.vm.profiler.common.ProfileStatusChange;
@@ -70,16 +71,15 @@ public class ProfileVmCommandTest {
     private static final String VM_ID = "some-vm";
     private static final long SOME_TIMESTAMP = 99;
 
-    /* taken from HostVMArguments: */
-    private static final HostRef AGENT = new HostRef(AGENT_ID, "dummy");
-    private static final VmRef VM = new VmRef(AGENT, VM_ID, -1, "dummy");
-
     private TestCommandContextFactory cmdCtxFactory;
 
     private AgentInfoDAO agentsDao;
     private VmInfoDAO vmsDao;
     private RequestQueue queue;
     private ProfileDAO profileDao;
+    private AgentId agentId;
+    private VmId vmId;
+    private VmInfo vmInfo;
 
     private ProfileVmCommand cmd;
 
@@ -91,6 +91,11 @@ public class ProfileVmCommandTest {
         vmsDao = mock(VmInfoDAO.class);
         queue = mock(RequestQueue.class);
         profileDao = mock(ProfileDAO.class);
+        agentId = new AgentId(AGENT_ID);
+        vmId = new VmId(VM_ID);
+        vmInfo = new VmInfo(AGENT_ID, VM_ID, 123, 0, 0, null, null, null, null, null, null, null, null, null,
+                null, null,0, "myUsername");
+        when(vmsDao.getVmInfo(vmId)).thenReturn(vmInfo);
 
         cmd = new ProfileVmCommand();
         cmd.setAgentInfoDAO(agentsDao);
@@ -112,10 +117,9 @@ public class ProfileVmCommandTest {
     @Test
     public void statusSubCommandShowsNotProfilingWhenNoInformationAvailable() throws Exception {
         AgentInformation agentInfo = mock(AgentInformation.class);
-        when(agentsDao.getAgentInformation(AGENT)).thenReturn(agentInfo);
+        when(agentsDao.getAgentInformation(agentId)).thenReturn(agentInfo);
 
         SimpleArguments args = new SimpleArguments();
-        args.addArgument(Arguments.HOST_ID_ARGUMENT, AGENT_ID);
         args.addArgument(Arguments.VM_ID_ARGUMENT, VM_ID);
         args.addNonOptionArgument("status");
         CommandContext ctx = cmdCtxFactory.createContext(args);
@@ -128,13 +132,12 @@ public class ProfileVmCommandTest {
     @Test
     public void statusSubCommandShowsCurrentProfilingStatus() throws Exception {
         AgentInformation agentInfo = mock(AgentInformation.class);
-        when(agentsDao.getAgentInformation(AGENT)).thenReturn(agentInfo);
+        when(agentsDao.getAgentInformation(agentId)).thenReturn(agentInfo);
 
         ProfileStatusChange status = new ProfileStatusChange(AGENT_ID, VM_ID, SOME_TIMESTAMP, true);
-        when(profileDao.getLatestStatus(VM)).thenReturn(status);
+        when(profileDao.getLatestStatus(agentId, vmId)).thenReturn(status);
 
         SimpleArguments args = new SimpleArguments();
-        args.addArgument(Arguments.HOST_ID_ARGUMENT, AGENT_ID);
         args.addArgument(Arguments.VM_ID_ARGUMENT, VM_ID);
         args.addNonOptionArgument("status");
         CommandContext ctx = cmdCtxFactory.createContext(args);
@@ -147,10 +150,9 @@ public class ProfileVmCommandTest {
     @Test
     public void showSubCommandFailsWhenNoDataToDisplay() throws Exception {
         AgentInformation agentInfo = mock(AgentInformation.class);
-        when(agentsDao.getAgentInformation(AGENT)).thenReturn(agentInfo);
+        when(agentsDao.getAgentInformation(agentId)).thenReturn(agentInfo);
 
         SimpleArguments args = new SimpleArguments();
-        args.addArgument(Arguments.HOST_ID_ARGUMENT, AGENT_ID);
         args.addArgument(Arguments.VM_ID_ARGUMENT, VM_ID);
         args.addNonOptionArgument("show");
         CommandContext ctx = cmdCtxFactory.createContext(args);
@@ -163,14 +165,13 @@ public class ProfileVmCommandTest {
     @Test
     public void showSubCommandDisplaysData() throws Exception {
         AgentInformation agentInfo = mock(AgentInformation.class);
-        when(agentsDao.getAgentInformation(AGENT)).thenReturn(agentInfo);
+        when(agentsDao.getAgentInformation(agentId)).thenReturn(agentInfo);
 
         String data = "1000000 foo\n3000000 bar";
         ByteArrayInputStream in = new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8));
-        when(profileDao.loadLatestProfileData(VM)).thenReturn(in);
+        when(profileDao.loadLatestProfileData(agentId, vmId)).thenReturn(in);
 
         SimpleArguments args = new SimpleArguments();
-        args.addArgument(Arguments.HOST_ID_ARGUMENT, AGENT_ID);
         args.addArgument(Arguments.VM_ID_ARGUMENT, VM_ID);
         args.addNonOptionArgument("show");
         CommandContext ctx = cmdCtxFactory.createContext(args);

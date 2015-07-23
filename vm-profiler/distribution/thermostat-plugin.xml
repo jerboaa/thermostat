@@ -58,13 +58,6 @@
             </arguments>
             <options>
               <option>
-                <long>hostId</long>
-                <short>a</short>
-                <argument>host</argument>
-                <required>true</required>
-                <description>the ID of the host</description>
-              </option>
-              <option>
                 <long>vmId</long>
                 <short>v</short>
                 <argument>vm</argument>

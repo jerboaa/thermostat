@@ -44,8 +44,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
-import com.redhat.thermostat.client.cli.HostVMArguments;
 import com.redhat.thermostat.client.command.RequestQueue;
+import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Console;
@@ -54,10 +54,12 @@ import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.shared.locale.Translate;
-import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.core.AgentId;
+import com.redhat.thermostat.storage.core.VmId;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResult.MethodInfo;
 import com.redhat.thermostat.vm.profiler.client.core.ProfilingResultParser;
@@ -77,10 +79,16 @@ public class ProfileVmCommand extends AbstractCommand {
     @Override
     public void run(CommandContext ctx) throws CommandException {
 
-        HostVMArguments args = new HostVMArguments(ctx.getArguments(), true, true);
-
         AgentInfoDAO agentInfoDAO = getService(AgentInfoDAO.class);
         VmInfoDAO vmInfoDAO = getService(VmInfoDAO.class);
+
+        String vmIdArg = ctx.getArguments().getArgument(Arguments.VM_ID_ARGUMENT);
+        if (vmIdArg == null)
+            throw new CommandException(translator.localize(LocaleResources.VMID_REQUIRED));
+
+        VmId vmId = new VmId(vmIdArg);
+        final VmInfo vmInfo = vmInfoDAO.getVmInfo(vmId);
+        final AgentId agentId = new AgentId(vmInfo.getAgentId());
 
         requireNonNull(agentInfoDAO, translator.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE));
         requireNonNull(vmInfoDAO, translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
@@ -88,9 +96,9 @@ public class ProfileVmCommand extends AbstractCommand {
         RequestQueue requestQueue = getService(RequestQueue.class);
         requireNonNull(requestQueue, translator.localize(LocaleResources.QUEUE_SERVICE_UNAVAILABLE));
 
-        AgentInformation agentInfo = agentInfoDAO.getAgentInformation(args.getHost());
+        AgentInformation agentInfo = agentInfoDAO.getAgentInformation(agentId);
         if (agentInfo == null) {
-            throw new CommandException(translator.localize(LocaleResources.AGENT_NOT_FOUND, args.getHost().getAgentId()));
+            throw new CommandException(translator.localize(LocaleResources.AGENT_NOT_FOUND, agentId.get()));
         }
 
         InetSocketAddress target = agentInfo.getRequestQueueAddress();
@@ -104,16 +112,16 @@ public class ProfileVmCommand extends AbstractCommand {
 
         switch (command) {
         case START_ARGUMENT:
-            sendStartProfilingRequest(ctx.getConsole(), requestQueue, target, args.getVM().getVmId());
+            sendStartProfilingRequest(ctx.getConsole(), requestQueue, target, vmId.get());
             break;
         case STOP_ARGUMENT:
-            sendStopProfilingRequest(ctx.getConsole(), requestQueue, target, args.getVM().getVmId());
+            sendStopProfilingRequest(ctx.getConsole(), requestQueue, target, vmId.get());
             break;
         case STATUS_ARGUMENT:
-            showProfilingStatus(ctx.getConsole(), args.getVM());
+            showProfilingStatus(ctx.getConsole(), agentId, vmId);
             break;
         case SHOW_ARGUMENT:
-            showProfilingResults(ctx.getConsole(), args.getVM());
+            showProfilingResults(ctx.getConsole(), agentId, vmId);
             break;
         default:
             throw new CommandException(translator.localize(LocaleResources.UNKNOWN_COMMAND, command));
@@ -175,9 +183,9 @@ public class ProfileVmCommand extends AbstractCommand {
 
     }
 
-    private void showProfilingStatus(Console console, VmRef vm) {
+    private void showProfilingStatus(Console console, AgentId agentId, VmId vmId) {
         ProfileDAO dao = getService(ProfileDAO.class);
-        ProfileStatusChange latest = dao.getLatestStatus(vm);
+        ProfileStatusChange latest = dao.getLatestStatus(agentId, vmId);
         boolean profiling = false;
         if (latest != null) {
             profiling = latest.isStarted();
@@ -191,9 +199,9 @@ public class ProfileVmCommand extends AbstractCommand {
         console.getOutput().println(message);
     }
 
-    private void showProfilingResults(Console console, VmRef vm) {
+    private void showProfilingResults(Console console, AgentId agentId, VmId vmId) {
         ProfileDAO dao = getService(ProfileDAO.class);
-        InputStream data = dao.loadLatestProfileData(vm);
+        InputStream data = dao.loadLatestProfileData(agentId, vmId);
         if (data == null) {
             console.getError().println(translator.localize(LocaleResources.PROFILING_DATA_NOT_AVAILABLE).getContents());
             return;
