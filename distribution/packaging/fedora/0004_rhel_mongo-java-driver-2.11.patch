@@ -1,0 +1,208 @@
+diff --git a/storage/mongo/src/main/java/com/redhat/thermostat/storage/mongodb/internal/MongoConnection.java b/storage/mongo/src/main/java/com/redhat/thermostat/storage/mongodb/internal/MongoConnection.java
+--- a/storage/mongo/src/main/java/com/redhat/thermostat/storage/mongodb/internal/MongoConnection.java
++++ b/storage/mongo/src/main/java/com/redhat/thermostat/storage/mongodb/internal/MongoConnection.java
+@@ -50,7 +50,6 @@
+ import com.mongodb.MongoClient;
+ import com.mongodb.MongoClientOptions;
+ import com.mongodb.MongoClientOptions.Builder;
+-import com.mongodb.MongoCredential;
+ import com.mongodb.MongoException;
+ import com.mongodb.ServerAddress;
+ import com.redhat.thermostat.common.ssl.SSLContextFactory;
+@@ -85,6 +84,7 @@
+     public void connect() {
+         try {
+             createConnection();
++            authenticateIfNecessary();
+             /* the mongo java driver does not ensure this connection is actually working */
+             testConnection();
+             connected = true;
+@@ -98,6 +98,27 @@
+         fireChanged(ConnectionStatus.CONNECTED);
+     }
+ 
++    private void authenticateIfNecessary() {
++        String username = creds.getUsername();
++        setUsername(username);
++        char[] password = creds.getPassword();
++        try {
++            if (username != null && password != null) {
++                authenticate(username, password);
++            }
++        } finally {
++            if (password != null) {
++                Arrays.fill(password, '\0');
++            }
++        }
++    }
++
++    private void authenticate(String username, char[] password) {
++        if (! db.authenticate(username, password)) {
++            throw new MongoException("Invalid username/password: " + username + "/" + new String(password));
++        }
++    }
++
+     @Override
+     public void disconnect() {
+         connected = false;
+@@ -115,27 +136,17 @@
+ 
+     // package visibility for testing purposes.
+     void createConnection() throws MongoException, InvalidConfigurationException, UnknownHostException {
+-        String username = creds.getUsername();
+-        setUsername(username);
+-        char[] password = creds.getPassword();
+-        try {
+-            if (sslConf.enableForBackingStorage()) {
+-                logger.log(Level.FINE, "Using SSL socket for mongodb:// protocol");
+-                this.m = getSSLMongo(username, password);
+-            } else {
+-                logger.log(Level.FINE, "Using plain socket for mongodb://");
+-                MongoCredential creds = MongoCredential.createCredential(username, THERMOSTAT_DB_NAME, password);
+-                this.m = new MongoClient(getServerAddress(), Arrays.asList(creds));
+-            }
+-            this.db = m.getDB(THERMOSTAT_DB_NAME);
+-        } finally {
+-            if (password != null) {
+-                Arrays.fill(password, '\0');
+-            }
++        if (sslConf.enableForBackingStorage()) {
++            logger.log(Level.FINE, "Using SSL socket for mongodb:// protocol");
++            this.m = getSSLMongo();
++        } else {
++            logger.log(Level.FINE, "Using plain socket for mongodb://");
++            this.m = new MongoClient(getServerAddress());
+         }
++        this.db = m.getDB(THERMOSTAT_DB_NAME);
+     }
+ 
+-    MongoClient getSSLMongo(String username, char[] password) throws UnknownHostException, MongoException {
++    MongoClient getSSLMongo() throws UnknownHostException, MongoException {
+         Builder builder = new MongoClientOptions.Builder();
+         SSLContext ctxt = null;
+         try {
+@@ -154,8 +165,7 @@
+         logger.log(Level.FINE, "factory is: " + factory.getClass().getName());
+         builder.socketFactory(factory);
+         MongoClientOptions opts = builder.build();
+-        MongoCredential creds = MongoCredential.createCredential(username, THERMOSTAT_DB_NAME, password);
+-        MongoClient client = new MongoClient(getServerAddress(), Arrays.asList(creds), opts);
++        MongoClient client = new MongoClient(getServerAddress(), opts);
+         return client;
+     }
+ 
+diff --git a/storage/mongo/src/main/java/com/redhat/thermostat/storage/mongodb/internal/MongoStorage.java b/storage/mongo/src/main/java/com/redhat/thermostat/storage/mongodb/internal/MongoStorage.java
+--- a/storage/mongo/src/main/java/com/redhat/thermostat/storage/mongodb/internal/MongoStorage.java
++++ b/storage/mongo/src/main/java/com/redhat/thermostat/storage/mongodb/internal/MongoStorage.java
+@@ -555,7 +555,7 @@
+             if ( !isSchemaInfo && !db.collectionExists(name)) {
+                 coll = db.createCollection(name, new BasicDBObject("capped", false));
+                 for (Key<?> key: category.getIndexedKeys()) {
+-                    coll.createIndex(key.getName());
++                    coll.ensureIndex(key.getName());
+                 }
+             } else {
+                 coll = db.getCollection(name);
+diff --git a/storage/mongo/src/test/java/com/redhat/thermostat/storage/mongodb/internal/MongoConnectionTest.java b/storage/mongo/src/test/java/com/redhat/thermostat/storage/mongodb/internal/MongoConnectionTest.java
+--- a/storage/mongo/src/test/java/com/redhat/thermostat/storage/mongodb/internal/MongoConnectionTest.java
++++ b/storage/mongo/src/test/java/com/redhat/thermostat/storage/mongodb/internal/MongoConnectionTest.java
+@@ -36,6 +36,7 @@
+ 
+ package com.redhat.thermostat.storage.mongodb.internal;
+ 
++import static org.junit.Assert.assertArrayEquals;
+ import static org.junit.Assert.assertEquals;
+ import static org.junit.Assert.assertTrue;
+ import static org.junit.Assert.fail;
+@@ -52,7 +53,6 @@
+ 
+ import java.io.IOException;
+ import java.net.UnknownHostException;
+-import java.util.List;
+ 
+ import javax.net.SocketFactory;
+ import javax.net.ssl.SSLContext;
+@@ -105,8 +105,6 @@
+         when(mockSSLConf.enableForBackingStorage()).thenReturn(false);
+ 
+         StorageCredentials creds = mock(StorageCredentials.class);
+-        when(creds.getUsername()).thenReturn("foo-user");
+-        when(creds.getPassword()).thenReturn("foo-password".toCharArray());
+ 
+         conn = new MongoConnection("mongodb://127.0.0.1:27518", creds, mockSSLConf);
+         listener = mock(ConnectionListener.class);
+@@ -146,7 +144,7 @@
+     @Test
+     public void testConnectIOException() throws Exception {
+         IOException fakeException = new IOException();
+-        PowerMockito.whenNew(MongoClient.class).withParameterTypes(ServerAddress.class, List.class).withArguments(any(ServerAddress.class), any(List.class)).thenThrow(fakeException);
++        PowerMockito.whenNew(MongoClient.class).withParameterTypes(ServerAddress.class).withArguments(any(ServerAddress.class)).thenThrow(fakeException);
+         boolean exceptionThrown = false;
+         try {
+             conn.connect();
+@@ -164,7 +162,7 @@
+     @Test
+     public void testConnectMongoException() throws Exception {
+         MongoException fakeException = new MongoException("fluff");
+-        PowerMockito.whenNew(MongoClient.class).withParameterTypes(ServerAddress.class, List.class).withArguments(any(ServerAddress.class), any(List.class)).thenThrow(fakeException);
++        PowerMockito.whenNew(MongoClient.class).withParameterTypes(ServerAddress.class).withArguments(any(ServerAddress.class)).thenThrow(fakeException);
+         boolean exceptionThrown = false;
+         try {
+             conn.connect();
+@@ -220,8 +218,8 @@
+         MongoClient mockMongo = mock(MongoClient.class);
+         ArgumentCaptor<MongoClientOptions> mongoOptCaptor = ArgumentCaptor.forClass(MongoClientOptions.class);
+         whenNew(MongoClient.class).withParameterTypes(ServerAddress.class,
+-                List.class, MongoClientOptions.class).withArguments(any(ServerAddress.class),
+-                any(List.class), mongoOptCaptor.capture()).thenReturn(mockMongo);
++                MongoClientOptions.class).withArguments(any(ServerAddress.class),
++                mongoOptCaptor.capture()).thenReturn(mockMongo);
+         DB mockDb = mock(DB.class);
+         when(mockMongo.getDB(eq(MongoConnection.THERMOSTAT_DB_NAME))).thenReturn(mockDb);
+         DBCollection mockCollection = mock(DBCollection.class);
+@@ -245,12 +243,9 @@
+         doCallRealMethod().when(connection).connect();
+         doCallRealMethod().when(connection).createConnection();
+         connection.sslConf = mock(SSLConfiguration.class);
+-        StorageCredentials c = mock(StorageCredentials.class);
+-        when(c.getUsername()).thenReturn("foo-user");
+-        when(c.getPassword()).thenReturn("foo-bar".toCharArray());
+-        connection.creds = c;
++        connection.creds = mock(StorageCredentials.class);
+         connection.connect();
+-        verify(connection, Mockito.times(0)).getSSLMongo(any(String.class), any(char[].class));
++        verify(connection, Mockito.times(0)).getSSLMongo();
+     }
+     
+     @Test
+@@ -275,6 +270,7 @@
+ 
+         DB db = mock(DB.class);
+         setupDatabaseMocks(db, mock(MongoClient.class));
++        when(db.authenticate(any(String.class), any(char[].class))).thenReturn(true);
+ 
+         StorageCredentials creds = mock(StorageCredentials.class);
+         when(creds.getUsername()).thenReturn(expected);
+@@ -294,10 +290,11 @@
+ 
+         DB db = mock(DB.class);
+         setupDatabaseMocks(db, mock(MongoClient.class));
++        when(db.authenticate(any(String.class), any(char[].class))).thenReturn(false);
+ 
+         StorageCredentials creds = mock(StorageCredentials.class);
+-        // null username is not permitted, provoking connection exception.
+-        when(creds.getUsername()).thenReturn(null);
++        when(creds.getUsername()).thenReturn("username");
++        when(creds.getPassword()).thenReturn(new char[] { 'p' });
+ 
+         conn = new MongoConnection("mongodb://127.0.0.1:27518", creds, mockSSLConf);
+         try {
+@@ -325,7 +322,7 @@
+         when(db.getCollection("agent-config")).thenReturn(collection);
+ 
+         when(m.getDB(MongoConnection.THERMOSTAT_DB_NAME)).thenReturn(db);
+-        PowerMockito.whenNew(MongoClient.class).withParameterTypes(ServerAddress.class, List.class).withArguments(any(ServerAddress.class), any(List.class)).thenReturn(m);
++        PowerMockito.whenNew(MongoClient.class).withParameterTypes(ServerAddress.class).withArguments(any(ServerAddress.class)).thenReturn(m);
+     }
+ }
+ 

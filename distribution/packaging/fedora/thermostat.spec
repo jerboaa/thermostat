@@ -1,29 +1,80 @@
+# Do not repack jars
+%global __jar_repack 0
+
 # Upstream Thermostat version triplet
 %global major        __MAJOR__
 %global minor        __MINOR__
 %global patchlevel   __PATCHLEVEL__
 
+%if 0%{?rhel}
+
+%if 0%{?rhel} <= 6
+  %global is_rhel_6 1
+  %global with_systemd 0
+%else
+  %global is_rhel_6 0
+  %global with_systemd 1
+%endif
+
+%else
+
+%global is_rhel_6 0
+%global with_systemd 1
+
+%endif
+
 # Thermostat requires exact versions for bundle dependencies.
 # We use those versions to pass to the maven build in order for
 # it to set it in relevant files.
 
-# Real OSGi Bundle-Version is 3.6.6.Final
-%global netty_bundle_version       3.9.3
-%global jcommon_bundle_version     1.0.23
-%global jfreechart_bundle_version  1.0.19
-# apache-commons-beanutils
-%global beanutils_bundle_version   1.9.2
-# apache-commons-codec
-%global codec_bundle_version       1.10.0
+%if 0%{?fedora} >= 22
+
+  #########################################
+  # Fedora 23 and up
+  #########################################
+
+  # Real OSGi Bundle-Version is 3.9.3.Final
+  %global netty_bundle_version       3.9.3
+  %global jcommon_bundle_version     1.0.23
+  %global jfreechart_bundle_version  1.0.19
+  # apache-commons-beanutils
+  %global beanutils_bundle_version   1.9.2
+  # apache-commons-codec
+  %global codec_bundle_version       1.10.0
+  # apache-commons-logging
+  %global logging_bundle_version     1.2.0
+  %global hc_core_bundle_version     4.4.1
+  %global hc_client_bundle_version   4.5.0
+  %global gson_bundle_version        2.3.1
+  # Real OSGi Bundle-Version is 2.13.2.RELEASE
+  %global mongo_bundle_version       2.13.2
+
+%else
+
+  #########################################
+  # EL 6 + 7
+  #########################################
+  # Real OSGi Bundle-Version is 3.6.3.Final
+  %global netty_bundle_version       3.6.3
+  %global jcommon_bundle_version     1.0.18
+  %global jfreechart_bundle_version  1.0.14
+  # apache-commons-beanutils
+  %global beanutils_bundle_version   1.8.3
+  # apache-commons-codec
+  %global codec_bundle_version       1.8.0
+  # apache-commons-logging
+  %global logging_bundle_version     1.1.2
+  %global hc_core_bundle_version     4.3.3
+  %global hc_client_bundle_version   4.3.6
+  %global gson_bundle_version        2.2.2
+  # Real OSGi Bundle-Version is 2.11.4.RELEASE
+  %global mongo_bundle_version       2.11.4
+
+%endif
+
 # apache-commons-collections
 %global collections_bundle_version 3.2.1
-# apache-commons-logging
-%global logging_bundle_version     1.2.0
-# Real OSGi Bundle-Version is 2.13.2.RELEASE
-%global mongo_bundle_version       2.13.2
-%global hc_core_bundle_version     4.4.1
-%global hc_client_bundle_version   4.5.0
-%global gson_bundle_version        2.3.1
+
 # Jansi is used as bootstrap bundle and the
 # bootstrap bundle properties file refers to the jar
 # with version suffix. See 0001_shared_fix_bundle_loading.patch
@@ -34,16 +85,20 @@
 %global jgraphx_bundle_version     3.1.2
 
 # Base path to the JDK which will be used in boot scripts
-%global jdk_base /etc/alternatives/java_sdk_openjdk
+%if 0%{?fedora} >= 22
+  %global jdk_base /etc/alternatives/java_sdk_openjdk
+%else
+  %if 0%{?is_rhel_6}
+    %global jdk_base /usr/lib/jvm/java-1.7.0-openjdk.x86_64
+  %else
+    %global jdk_base /usr/lib/jvm/java-1.7.0-openjdk
+  %endif
+%endif 
 
 %{?scl:%scl_package thermostat}
 %{!?scl:%global pkg_name %{name}}
 
 # Global directory definitions
-%global system_datadir %{_localstatedir}/lib/%{pkg_name}
-%global system_cachedir %{_localstatedir}/cache/%{pkg_name}
-%global system_logdir %{_localstatedir}/log/%{pkg_name}
-%global system_statedir %{_localstatedir}/run/%{pkg_name}
 # _root_<foo> don't seem to be defined in non-SCL context.
 # Define some vars we use instead in order for the build to work
 # for SCL/non-SCL contexts.
@@ -51,16 +106,42 @@
   %global system_confdir %{_root_sysconfdir}
   %global system_root_datadir %{_root_datadir}
   %global system_tmpfilesdir %{_root_exec_prefix}/lib/tmpfiles.d
+  %global system_datadir %{_root_localstatedir}/lib/%{pkg_name}
+  %global system_datadir %{_root_localstatedir}/lib/%{pkg_name}
+  %global system_cachedir %{_root_localstatedir}/cache/%{pkg_name}
+  %global system_logdir %{_root_localstatedir}/log/%{pkg_name}
+  %global system_statedir %{_root_localstatedir}/run/%{pkg_name}
+  %global system_sbindir %{_root_sbindir}
+%if 0%{?is_rhel_6}
+  %global system_initrddir %{_root_sysconfdir}/rc.d/init.d/
+%endif
 }
 # not SCL
 %{!?scl:
   %global system_confdir %{_sysconfdir}
   %global system_root_datadir %{_datadir}
   %global system_tmpfilesdir %{_tmpfilesdir}
+  %global system_datadir %{_localstatedir}/lib/%{pkg_name}
+  %global system_cachedir %{_localstatedir}/cache/%{pkg_name}
+  %global system_logdir %{_localstatedir}/log/%{pkg_name}
+  %global system_statedir %{_localstatedir}/run/%{pkg_name}
 }
 # system java dir definition (non-scl)
 %global system_javadir %{system_root_datadir}/java
-%global scl_javadir %{_javadir}
+%global scl_javadir    %{_javadir}
+
+# Some Maven coordinates mismatch due to compat versioning.
+%{!?scl:
+%global object_web_asm_maven_coords org.ow2.asm:asm-all
+%global netty_maven_coords io.netty:netty:%{netty_bundle_version}
+}
+%{?scl:
+# objectweb-asm is objectweb-asm5 in SCL
+%global object_web_asm_maven_coords org.ow2.asm:asm-all:5
+# netty coordinates are org.jboss.netty:netty in SCL
+%global netty_maven_coords org.jboss.netty:netty
+}
+
 
 # THERMOSTAT_HOME and USER_THERMOSTAT_HOME variables. Note that
 # we use USER_THERMOSTAT_HOME only for systemd related setup.
@@ -84,6 +165,26 @@
 }
 # The port tomcat will be listening on
 %global thermostat_catalina_port 8999
+%global thermostat_tomcat_service_name %{?scl_prefix}%{pkg_name}-tomcat
+
+# Don't generate native library provides for JNI libs. Those aren't
+# SCL-ized and might conflict with base RHEL. See RHBZ#1045552
+%{?scl:
+  %if 0%{?is_rhel_6}
+    %filter_from_provides /lib.*\.so(.*)$/d
+    %filter_setup
+  %else
+    %global __provides_exclude_from ^%{_libdir}/thermostat/.*|%{thermostat_home}/libs/native/.*$
+    # Exclude generation of osgi() style provides, since they are not
+    # SCL-namespaced and may conflict with base RHEL packages.
+    %global __provides_exclude ^osgi(.*)$
+  %endif
+}
+
+%if 0%{?rhel}
+  # Use java common's requires/provides generator
+  %{?java_common_find_provides_and_requires}
+%endif
 
 # Uncomment to build from snapshot out of hg.  See also Release and Source0
 #%%global hgrev b7c6db90e034
@@ -92,7 +193,7 @@ Name:       %{?scl_prefix}thermostat
 Version:    %{major}.%{minor}.%{patchlevel}
 # If building from snapshot out of hg, uncomment and adjust below value as appropriate
 #Release:    0.1.20131122hg%{hgrev}%{?dist}
-Release:    2%{?dist}
+Release:    3%{?dist}
 Summary:    A monitoring and serviceability tool for OpenJDK
 License:    GPLv2+ with exceptions and OFL
 URL:        http://icedtea.classpath.org/thermostat/
@@ -105,11 +206,13 @@ Source0:    http://icedtea.classpath.org/download/%{pkg_name}/%{pkg_name}-%{vers
 #wget -O thermostat-%{major}.%{minor}-%{hgrev}.tar.bz2 http://icedtea.classpath.org/hg/release/%{pkg_name}-%{major}.${minor}/archive/%{hgrev}.tar.bz2
 #Source0:    thermostat-%{major}.%{minor}-%{hgrev}.tar.bz2
 # This is _NOT_ suitable for upstream at this point.
-# It's very Fedora specific.
+# It's very Fedora/SCL specific.
 Source1:    thermostat-sysconfig
-# SCL only sources
 Source3:    scl-thermostat-tomcat-service-sysconfig
 Source4:    fedora-thermostatrc
+Source5:    scl-tomcat-initd.sh
+Source6:    scl-tomcat-systemd.service
+
 # This is _NOT_ suitable for upstream at this point.
 # jfreechart isn't a bundle upstream. Also some httpclient* related bundles
 # include transitive deps upstream, which isn't the case in Fedora (i.e. is
@@ -120,56 +223,85 @@ Patch1:     0001_shared_fix_bundle_loading.patch
 # For now _NOT_ suitable for upstream until felix ships an API only package which
 # is 4.3 OSGi spec.
 Patch2:     0002_shared_osgi_spec_fixes.patch
+# This is _NOT_ suitable for upstream at this point. It's a simple revert of the
+# upgrade to Lucene 5 patch:
+# http://icedtea.classpath.org/hg/thermostat/rev/79df35f1ff13
+# Note: SCL-ized stack uses lucene 4.8 vs 5 in HEAD
+Patch3:     0003_rhel_lucene_4.patch
+# This is _NOT_ suitable for upstream at this point. It's a simple revert of
+# http://icedtea.classpath.org/hg/thermostat/rev/ab54f7b97515
+# which introduces code unavailable in older (2.11) release.
+Patch4:     0004_rhel_mongo-java-driver-2.11.patch
 
 # FIXME: Self-BR in order for xmvn-subst to work for symlinking
 # thermostat deps.
 #BuildRequires: thermostat-webapp = %{version}
-# BRs for core thermostat
+# RHEL 6 does not have virtual provides java-devel >= 1.7
+%if 0%{?is_rhel_6}
+BuildRequires: java-1.7.0-openjdk-devel
+%else
 BuildRequires: java-devel >= 1:1.7.0
-BuildRequires: javapackages-tools
-BuildRequires: maven-local
-BuildRequires: maven-dependency-plugin
-BuildRequires: maven-surefire-plugin
-BuildRequires: maven-war-plugin
-BuildRequires: maven-clean-plugin
-BuildRequires: maven-assembly-plugin
-BuildRequires: maven-plugin-bundle
-BuildRequires: maven-javadoc-plugin
-BuildRequires: maven-archetype-packaging
-BuildRequires: mvn(org.apache.maven.plugins:maven-archetype-plugin)
+%endif
+BuildRequires: %{?scl_prefix_java_common}javapackages-tools
+BuildRequires: %{?scl_prefix_java_common}maven-local
+BuildRequires: %{?scl_prefix_maven}maven-dependency-plugin
+BuildRequires: %{?scl_prefix_maven}maven-surefire-plugin
+BuildRequires: %{?scl_prefix_maven}maven-war-plugin
+BuildRequires: %{?scl_prefix_maven}maven-clean-plugin
+BuildRequires: %{?scl_prefix_maven}maven-assembly-plugin
+BuildRequires: %{?scl_prefix_maven}maven-plugin-bundle
+BuildRequires: %{?scl_prefix_maven}maven-javadoc-plugin
+# Archetype maven plugins not available in SCL
+%{!?scl:
+BuildRequires: %{?scl_prefix_maven}maven-archetype-packaging
+BuildRequires: %{?scl_prefix_maven}mvn(org.apache.maven.plugins:maven-archetype-plugin)
+}
+%if 0%{?is_rhel_6}
+BuildRequires: gnome-keyring-devel
+%else
 BuildRequires: libgnome-keyring-devel
+%endif
 # laf-utils JNI need pkconfig files for gtk2+
 BuildRequires: gtk2-devel
-BuildRequires: mvn(org.apache.felix:org.apache.felix.framework)
-BuildRequires: mvn(org.fusesource:fusesource-pom:pom:)
-BuildRequires: mvn(org.apache.commons:commons-cli)
+BuildRequires: %{?scl_prefix_java_common}mvn(org.apache.felix:org.apache.felix.framework)
+BuildRequires: %{?scl_prefix_maven}mvn(org.fusesource:fusesource-pom:pom:)
+BuildRequires: %{?scl_prefix_java_common}mvn(org.apache.commons:commons-cli)
 # jline 2.10 is known to work
-BuildRequires: mvn(jline:jline) >= 2.10
-BuildRequires: mvn(org.fusesource.jansi:jansi)
-BuildRequires: mvn(org.apache.lucene:lucene-core) >= 4.7.0
-BuildRequires: mvn(org.apache.lucene:lucene-analyzers) >= 4.7.0
-BuildRequires: mvn(com.google.code.gson:gson)
-BuildRequires: mvn(org.jfree:jfreechart)
-BuildRequires: mvn(org.jfree:jcommon)
-BuildRequires: mvn(org.apache.commons:commons-beanutils)
-BuildRequires: mvn(org.mongodb:mongo-java-driver)
+BuildRequires: %{?scl_prefix}mvn(jline:jline) >= 2.10
+BuildRequires: %{?scl_prefix_java_common}mvn(org.fusesource.jansi:jansi)
+BuildRequires: %{?scl_prefix_java_common}mvn(org.apache.lucene:lucene-core) >= 4.7.0
+BuildRequires: %{?scl_prefix_java_common}mvn(org.apache.lucene:lucene-analyzers) >= 4.7.0
+BuildRequires: %{?scl_prefix_java_common}mvn(com.google.code.gson:gson)
+BuildRequires: %{?scl_prefix}mvn(org.jfree:jfreechart)
+BuildRequires: %{?scl_prefix}mvn(org.jfree:jcommon)
+BuildRequires: %{?scl_prefix_java_common}mvn(org.apache.commons:commons-beanutils)
+# FIXME: switch back to mongodb prefix once 2.13.2 is available in
+# the mongodb collection.
+BuildRequires: %{?scl_prefix_mongodb}mvn(org.mongodb:mongo-java-driver)
 # Change to netty 4 once RHBZ#1053619 is
 # resolved.
 # The version number in mvn() means it's a compat package.
-BuildRequires: mvn(io.netty:netty:%{netty_bundle_version})
+BuildRequires: %{?scl_prefix}mvn(%{netty_maven_coords})
 
 # BRs for webapp sub-package
+%if 0%{?is_rhel_6}
+BuildRequires: tomcat6
+%else
 BuildRequires: tomcat
-BuildRequires: mvn(javax.servlet:servlet-api) >= 2.5
-BuildRequires: mvn(org.apache.commons:commons-fileupload)
+%endif
+BuildRequires: %{?scl_prefix_java_common}mvn(javax.servlet:servlet-api) >= 2.5
+BuildRequires: %{?scl_prefix}mvn(commons-fileupload:commons-fileupload)
 
 # thermostat web-storage-service BRs
-BuildRequires: mvn(org.eclipse.jetty:jetty-server)
-BuildRequires: mvn(org.eclipse.jetty:jetty-jaas)
-BuildRequires: mvn(org.eclipse.jetty:jetty-webapp)
+BuildRequires: %{?scl_prefix_java_common}mvn(org.eclipse.jetty:jetty-server)
+BuildRequires: %{?scl_prefix_java_common}mvn(org.eclipse.jetty:jetty-jaas)
+BuildRequires: %{?scl_prefix_java_common}mvn(org.eclipse.jetty:jetty-webapp)
+# FIXME: jetty-schemas not available in SCLs
+%if 0%{?fedora}
 BuildRequires: mvn(org.eclipse.jetty.toolchain:jetty-schemas)
+%endif
 # The thread plugin needs this for visualizing thread deadlocks
-BuildRequires: mvn(com.mxgraph:jgraphx)
+BuildRequires: %{?scl_prefix}mvn(com.mxgraph:jgraphx)
 
 ###################################################
 # The following BRs are specified via osgi's
@@ -178,51 +310,72 @@ BuildRequires: mvn(com.mxgraph:jgraphx)
 # a chance of working at runtime.
 ###################################################
 # 1.0.14-7 has OSGi metadata and itext dep fix
-BuildRequires: osgi(org.jfree.jfreechart) = %{jfreechart_bundle_version}
+BuildRequires: %{?scl_prefix}osgi(org.jfree.jfreechart) = %{jfreechart_bundle_version}
 # 1.0.17-4 has OSGi metadata
-BuildRequires: osgi(org.jfree.jcommon) = %{jcommon_bundle_version}
-BuildRequires: osgi(org.apache.commons.logging) = %{logging_bundle_version}
-BuildRequires: osgi(org.apache.commons.beanutils) = %{beanutils_bundle_version}
-BuildRequires: osgi(org.apache.commons.codec) = %{codec_bundle_version}
-BuildRequires: osgi(org.mongodb.mongo-java-driver) = %{mongo_bundle_version}
-BuildRequires: osgi(org.jboss.netty) = %{netty_bundle_version}
-BuildRequires: osgi(com.google.gson) = %{gson_bundle_version}
-BuildRequires: osgi(org.apache.httpcomponents.httpcore) = %{hc_core_bundle_version}
+BuildRequires: %{?scl_prefix}osgi(org.jfree.jcommon) = %{jcommon_bundle_version}
+BuildRequires: %{?scl_prefix_java_common}osgi(org.apache.commons.logging) = %{logging_bundle_version}
+BuildRequires: %{?scl_prefix_java_common}osgi(org.apache.commons.beanutils) = %{beanutils_bundle_version}
+BuildRequires: %{?scl_prefix_java_common}osgi(org.apache.commons.codec) = %{codec_bundle_version}
+# FIXME: switch back to mongodb prefix once 2.13.2 is available in
+# the mongodb collection.
+BuildRequires: %{?scl_prefix_mongodb}osgi(org.mongodb.mongo-java-driver) = %{mongo_bundle_version}
+# Netty osgi provides are not there in SCL
+%{!?scl:
+BuildRequires: %{?scl_prefix}osgi(org.jboss.netty) = %{netty_bundle_version}
+}
+BuildRequires: %{?scl_prefix_java_common}osgi(com.google.gson) = %{gson_bundle_version}
+BuildRequires: %{?scl_prefix_java_common}osgi(org.apache.httpcomponents.httpcore) = %{hc_core_bundle_version}
 # httpmime comes from httpcomponents-client just like httpclient itself
-BuildRequires: osgi(org.apache.httpcomponents.httpclient) = %{hc_client_bundle_version}
-BuildRequires: osgi(org.apache.httpcomponents.httpmime) = %{hc_client_bundle_version}
-BuildRequires: osgi(com.mxgraph) = %{jgraphx_bundle_version}
+BuildRequires: %{?scl_prefix_java_common}osgi(org.apache.httpcomponents.httpclient) = %{hc_client_bundle_version}
+BuildRequires: %{?scl_prefix_java_common}osgi(org.apache.httpcomponents.httpmime) = %{hc_client_bundle_version}
+BuildRequires: %{?scl_prefix}osgi(com.mxgraph) = %{jgraphx_bundle_version}
+BuildRequires: %{?scl_prefix_java_common}mvn(%{object_web_asm_maven_coords}) >= 5
 
+%{?!scl:
 Requires: javapackages-tools
 Requires: java-devel >= 1:1.8.0
+}
+%{?scl:
+Requires: %{?scl_prefix}runtime
+Requires: java-1.7.0-openjdk-devel
+}
 # Only require mongodb-server on arches where it's available
 %ifarch %{arm} %{ix86} x86_64
-Requires: mongodb-server
+Requires: %{?scl_prefix_mongodb}mongodb-server
 # Fedora's thermostat-setup uses mongo directly
-Requires: mongodb
+Requires: %{?scl_prefix_mongodb}mongodb
 %endif
+%if 0%{?is_rhel_6}
+Requires: gnome-keyring
+%else
 Requires: libgnome-keyring
+%endif
+%if 0%{?is_rhel_6}
+Requires(post): /sbin/chkconfig
+Requires(preun): /sbin/chkconfig
+%else
 Requires(post): systemd
 Requires(preun): systemd
 Requires(postun): systemd
-###################################################
-# The following Rs are specified via osgi's
-# symbolic name. This is to ensure exact versions
-# as specified in thermostat's bundle list has
-# a chance of working at runtime.
-###################################################
-Requires: osgi(org.jfree.jfreechart) >= %{jfreechart_bundle_version}
-Requires: osgi(org.jfree.jcommon) >= %{jcommon_bundle_version}
-Requires: osgi(org.apache.commons.logging) >= %{logging_bundle_version}
-Requires: osgi(org.apache.commons.beanutils) >= %{beanutils_bundle_version}
-Requires: osgi(org.apache.commons.codec) >= %{codec_bundle_version}
-Requires: osgi(org.mongodb.mongo-java-driver) >= %{mongo_bundle_version}
-Requires: osgi(org.jboss.netty) = %{netty_bundle_version}
-Requires: osgi(com.google.gson) >= %{gson_bundle_version}
-Requires: osgi(org.apache.httpcomponents.httpcore) >= %{hc_core_bundle_version}
+%endif
+# Sanity requires for needed OSGi bundles.
+Requires: %{?scl_prefix}osgi(org.jfree.jfreechart) >= %{jfreechart_bundle_version}
+Requires: %{?scl_prefix}osgi(org.jfree.jcommon) >= %{jcommon_bundle_version}
+Requires: %{?scl_prefix_java_common}osgi(org.apache.commons.logging) >= %{logging_bundle_version}
+Requires: %{?scl_prefix_java_common}osgi(org.apache.commons.beanutils) >= %{beanutils_bundle_version}
+Requires: %{?scl_prefix_java_common}osgi(org.apache.commons.codec) >= %{codec_bundle_version}
+# FIXME: switch back to mongodb prefix once 2.13.2 is available in
+# the mongodb collection.
+Requires: %{?scl_prefix_mongodb}osgi(org.mongodb.mongo-java-driver) >= %{mongo_bundle_version}
+# Netty osgi provides is not there in SCL
+%{!?scl:
+Requires: %{?scl_prefix}osgi(org.jboss.netty) = %{netty_bundle_version}
+}
+Requires: %{?scl_prefix_java_common}osgi(com.google.gson) >= %{gson_bundle_version}
+Requires: %{?scl_prefix_java_common}osgi(org.apache.httpcomponents.httpcore) >= %{hc_core_bundle_version}
 # httpmime comes from httpcomponents-client just like httpclient itself
-Requires: osgi(org.apache.httpcomponents.httpclient) >= %{hc_client_bundle_version}
-Requires: osgi(org.apache.httpcomponents.httpmime) >= %{hc_client_bundle_version}
+Requires: %{?scl_prefix_java_common}osgi(org.apache.httpcomponents.httpclient) >= %{hc_client_bundle_version}
+Requires: %{?scl_prefix_java_common}osgi(org.apache.httpcomponents.httpmime) >= %{hc_client_bundle_version}
 
 # This module has been removed to fix CVE-2014-8120
 Obsoletes: %{?scl_prefix}mvn(com.redhat.thermostat:thermostat-agent-proxy-common) <= %{version}
@@ -241,7 +394,12 @@ which is included out of the box.
 %package javadoc
 Summary:    Javadocs for %{pkg_name}
 Group:      Documentation
+%{!?scl:
 Requires:   javapackages-tools
+}
+%{?scl:
+Requires:   %scl_runtime
+}
 
 BuildArch:  noarch
 
@@ -251,11 +409,13 @@ This package contains the API documentation for %{pkg_name}
 %package webapp
 Summary:    Web storage endpoint for Thermostat
 BuildArch:  noarch
-# Not sure if we need this, but better be safe than sorry.
-# This version will allow custom catalina-base/systemd stuff as
-# we do it.
-Requires:   tomcat >= 7.0.42-3
+%if 0%{?is_rhel_6}
+Requires:   tomcat6
+%else
+Requires:   tomcat >= 7.0.54
+%endif
 Requires:   %{name} = %{version}-%{release}
+Requires:   %{?scl_prefix}apache-commons-fileupload
 
 %description webapp
 This package contains the exploded web archive. This web application
@@ -263,6 +423,7 @@ contains the server-side parts for deploying thermostat with improved
 security.
 
 %prep
+%{?scl:scl enable %{scl} %{scl_maven} %{scl_java_common} %{scl_mongodb} - << "EOF"}
 # When Source0 is released version. 
 %setup -q -n %{pkg_name}-%{version}
 # When Source0 is a snapshot from HEAD.
@@ -271,6 +432,12 @@ security.
 #%%setup -q -n %%{pkg_name}-%%{major}-%%{minor}-%%{hgrev}
 %patch1 -p1
 %patch2 -p1
+# Lucene 4, mongo-java-driver patches only applicable for SCL
+%{?scl:
+%patch3 -p1
+%patch4 -p1
+}
+
 
 # Fix up artifact names which have different name upstream
 #  lucene
@@ -329,9 +496,9 @@ security.
 %pom_remove_plugin org.eclipse.m2e:lifecycle-mapping
 
 # Disable test modules
-%pom_disable_module testutils storage
 %pom_disable_module test common
 %pom_disable_module integration-tests
+%pom_disable_module testutils storage
 %pom_remove_dep com.redhat.thermostat:thermostat-storage-testutils vm-cpu/common
 %pom_remove_dep com.redhat.thermostat:thermostat-storage-testutils vm-profiler/common
 %pom_remove_dep com.redhat.thermostat:thermostat-storage-testutils thread/collector
@@ -339,6 +506,12 @@ security.
 %pom_disable_module ide-launcher dev
 %pom_disable_module schema-info-command dev
 %pom_disable_module perflog-analyzer dev
+# SCL would need maven archetype packaging plugin for this to work. For now package in
+# Fedora only.
+%{?scl:
+%pom_disable_module archetype-ext dev
+%pom_disable_module multi-module-plugin-archetype dev
+}
 %pom_remove_dep com.redhat.thermostat:thermostat-schema-info-distribution distribution
 
 # Remove system scope and systempath from tools jar dependency.
@@ -350,6 +523,10 @@ security.
 # available manually
 %pom_remove_dep "com.redhat.thermostat:thermostat-web-war" web/endpoint-plugin/web-service
 
+# jetty-schemas is not available in SCLs
+%{?scl:
+%pom_remove_dep org.eclipse.jetty.toolchain:jetty-schemas web/endpoint-plugin/distribution
+}
 # Skip automatic installation of zip artifacts. We only use it for our build
 # to assemble plug-ins.
 %mvn_package com.redhat.thermostat::zip: __noinstall
@@ -373,8 +550,10 @@ security.
 %mvn_package "com.redhat.thermostat:thermostat-web-endpoint-distribution:pom:" webapp
 # Do not embed jgraphx dependency in thread client.
 %pom_xpath_remove "pom:project/pom:build/pom:plugins/pom:plugin[pom:artifactId='maven-bundle-plugin']/pom:configuration/pom:instructions/pom:Embed-Dependency" thread/client-swing
+%{?scl:EOF}
 
 %build
+%{?scl:scl enable %{scl} %{scl_maven} %{scl_java_common} %{scl_mongodb} - << "EOF"}
 export CFLAGS="$RPM_OPT_FLAGS" LDFLAGS="$RPM_LD_FLAGS"
 # Set JAVA_HOME. make uses this
 . /usr/share/java-utils/java-functions
@@ -431,7 +610,7 @@ popd
 
 # This is roughly equivalent to:
 #   mvn 
-#     -Dthermostat.home=%{_datarootdir}/%{pkg_name} \
+#     -Dthermostat.home=... \
 #    install javadoc:aggregate
 # Everything after '--' is passed to plain xmvn/mvn
 %mvn_build -f -- -Dthermostat.home=%{thermostat_home} \
@@ -458,26 +637,30 @@ popd
 
 # Make path to java so that it keeps working after updates.
 # We require java >= 1.7.0
-sed -i 's|^JAVA=.*|JAVA="%{jdk_base}/bin/java"|' distribution/target/image/bin/thermostat
-sed -i 's|^JAVA=.*|JAVA="%{jdk_base}/bin/java"|' distribution/target/image/bin/thermostat-agent-proxy
-# Fix path to tools.jar
-sed -i 's|^TOOLS_JAR=.*|TOOLS_JAR="%{jdk_base}/lib/tools.jar"|' distribution/target/image/etc/thermostatrc
+sed -i 's|^JAVA=.*|JAVA="%{jdk_base}/bin/java"|' distribution/target/image/bin/thermostat-common
+# Fix path to tools.jar, replace system thermostatrc
+sed 's|__TOOLS_PATH__|%{jdk_base}/lib/tools.jar"|' %{SOURCE4} > distribution/target/image/etc/thermostatrc
 sed -i 's|^TOOLS_JAR=.*|TOOLS_JAR="%{jdk_base}/lib/tools.jar"|' distribution/target/image/bin/thermostat-agent-proxy
+%{?scl:EOF}
 
 
 %install
+%{?scl:scl enable %{scl} %{scl_maven} %{scl_java_common} %{scl_mongodb} - << "EOF"}
 #######################################################
 # Thermostat core
 #######################################################
 mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{_sysconfdir}/%{pkg_name}
 mkdir -p %{buildroot}%{system_confdir}/sysconfig
-mkdir -p %{buildroot}%{_datarootdir}/java/%{?scl_prefix}%{pkg_name}
 # JNI things live there
 mkdir -p %{buildroot}%{_libdir}/%{pkg_name}
 mkdir -p %{buildroot}%{_jnidir}
-# Systemd files live there
+# Systemd/initrd files live there
+%if 0%{?is_rhel_6}
+mkdir -p %{buildroot}%{system_initrddir}
+%else
 mkdir -p %{buildroot}%{_unitdir}
+%endif
 # Thermostat icon lives there
 mkdir -p %{buildroot}%{_datarootdir}/icons/hicolor/scalable/apps
 # Thermostat desktop lives there
@@ -509,14 +692,23 @@ chmod +x native/*.so
 mv native/* %{buildroot}%{_libdir}/%{pkg_name}
 popd
 
-# Install systemd unit files
-pushd distribution/packaging/shared/systemd
-  sed -i 's/User=thermostat/User=root/g' thermostat-agent.service
-  sed -i 's/Group=thermostat/Group=root/g' thermostat-agent.service
-  # FIXME: install or not-to-install agent service running as root?
-  #        Currently: Don't install.
-  cp -a thermostat-storage.service %{buildroot}%{_unitdir}/
-popd
+# Install systemd unit/init script files for storage
+%if 0%{?is_rhel_6}
+  # FIXME: No way to run thermostat storage via init.d script.
+%else
+  pushd distribution/packaging/shared/systemd
+    sed -i 's/User=thermostat/User=root/g' thermostat-agent.service
+    sed -i 's/Group=thermostat/Group=root/g' thermostat-agent.service
+    # FIXME: install or not-to-install agent service running as root?
+    #        Currently: Don't install.
+    %{?scl:
+    sed -i 's#ExecStart=.*#ExecStart=/usr/bin/scl enable $THERMOSTAT1_SCLS_ENABLED -- %{thermostat_home}/bin/thermostat storage --start#g' thermostat-storage.service
+    sed -i 's#ExecStop=.*#ExecStop=/usr/bin/scl enable $THERMOSTAT1_SCLS_ENABLED -- %{thermostat_home}/bin/thermostat storage --stop#g' thermostat-storage.service
+    sed -i 's#EnvironmentFile=.*#EnvironmentFile=%{_sysconfdir}/sysconfig/%{pkg_name}#g' thermostat-storage.service
+    }
+    cp -a thermostat-storage.service %{buildroot}%{_unitdir}/%{?scl_prefix}%{pkg_name}-storage.service
+  popd
+%endif
 
 # Install tmpfiles.d config file for /var/run/%{pkg_name}
 mkdir -p %{buildroot}%{system_tmpfilesdir}
@@ -531,8 +723,6 @@ rm distribution/target/image/etc/devsetup.input
 mv distribution/target/image/webapp webstorage-webapp
 # Move everything else into $THERMOSTAT_HOME
 cp -a distribution/target/image %{buildroot}%{thermostat_home}
-# Replace with distro's version of system thermostatrc
-cp %{SOURCE4} %{buildroot}%{thermostat_home}/etc/thermostatrc
 
 # Replace jars with symlinks to installed libs
 pushd %{buildroot}%{thermostat_home}/libs
@@ -587,6 +777,8 @@ cp thermostat_sysconfig.env %{buildroot}%{system_confdir}/sysconfig/%{pkg_name}
 # Set up directory structure for running thermostat storage/
 # thermostat agend via systemd
 %{__install} -d -m 0775 %{buildroot}%{system_datadir}
+# Create a setup-complete.stamp file so as to prevent the launcher hook from
+# successfully running the thermostat1-thermostat-storage service.
 echo "setup-complete.stamp for thermostat-storage systemd service" > %{buildroot}%{system_datadir}/setup-complete.stamp
 %{__install} -d -m 0775 %{buildroot}%{system_cachedir}
 %{__install} -d -m 0775 %{buildroot}%{system_logdir}
@@ -621,8 +813,36 @@ popd
 # symlinked. This allows us to deploy the thermostat webapp
 # nicely configured without any configuration required prior
 # starting tomcat via systemd.
-sed 's#__jaas_config__#%{_sysconfdir}/%{pkg_name}/%{pkg_name}_jaas.conf#g' %{SOURCE3} > tomcat_service_thermostat.txt
-cp tomcat_service_thermostat.txt %{buildroot}%{system_confdir}/sysconfig/tomcat@%{pkg_name}
+sed 's#__catalina_base__#%{thermostat_catalina_base}#g' %{SOURCE3} > tomcat_service_thermostat.txt
+sed -i 's#__jaas_config__#%{_sysconfdir}/%{pkg_name}/%{pkg_name}_jaas.conf#g' tomcat_service_thermostat.txt
+%{?scl:
+  # install the init script on RHEL 6
+  %if 0%{?is_rhel_6}
+    sed 's#__service_name__#%{thermostat_tomcat_service_name}#g' %{SOURCE5} > tomcat_initd.sh
+    cp tomcat_initd.sh %{buildroot}%{system_initrddir}/%{thermostat_tomcat_service_name}
+    cp tomcat_service_thermostat.txt %{buildroot}%{system_confdir}/sysconfig/%{thermostat_tomcat_service_name}
+  %else
+    # RHEL 7
+
+cat <<SYSTEMD_TOMCAT_ENV >systemd_tomcat_env_thermostat.txt
+# This file is sourced via the thermostat tomcat systemd service.
+SERVICE_NAME=%{thermostat_tomcat_service_name}
+SYSTEMD_TOMCAT_ENV
+
+    cp systemd_tomcat_env_thermostat.txt %{buildroot}%{system_confdir}/sysconfig/%{thermostat_tomcat_service_name}
+    # Install file twice, since RHEL 7.0 and RHEL 7.1 have different tomcat versions.
+    # The first file is used by thermostat1-thermostat-tomcat's service. The second one is
+    # used by "tomcat@thermostat".
+    cp tomcat_service_thermostat.txt %{buildroot}%{system_confdir}/sysconfig/%{thermostat_tomcat_service_name}
+    cp tomcat_service_thermostat.txt %{buildroot}%{system_confdir}/sysconfig/tomcat@%{pkg_name}
+    sed "s#__service_file_name__#%{thermostat_tomcat_service_name}#g" %{SOURCE6} > systemd_tomcat_thermostat.service
+    sed -i "s#__service_file_path__#%{system_confdir}/sysconfig#g" systemd_tomcat_thermostat.service
+    cp systemd_tomcat_thermostat.service %{buildroot}%{_unitdir}/%{thermostat_tomcat_service_name}.service
+  %endif
+}
+%{!?scl:
+  cp tomcat_service_thermostat.txt %{buildroot}%{system_confdir}/sysconfig/tomcat@%{pkg_name}
+}
 # Create a symlinked CATALINA_BASE in order to make tomcat deploy
 # the scl-ized tomcat web-app. We use our own copy of conf/server.xml in order
 # to not port-conflict with system tomcat. See RHBZ#1054396
@@ -645,34 +865,49 @@ pushd %{buildroot}/%{thermostat_catalina_base}/conf
   sed -i -e 's/<Connector port="8080"/<Connector port="%{thermostat_catalina_port}"/g' \
          -e 's/prefix="localhost_access_log."/prefix="localhost_thermostat_access_log."/g' server.xml
 popd
+%{?scl:
+# Make tomcat with custom catalina base happy (not complain about this dir missing)
+mkdir -p %{buildroot}/%{_root_localstatedir}/log/%{thermostat_tomcat_service_name}
+}
+%{?scl:EOF}
 
 %check
 # Perform some sanity checks on paths to JAVA/TOOLS_JAR
 # in important boot scripts. See RHBZ#1052992 and
 # RHBZ#1053123
-TOOLS_JAR="$(grep -E THERMOSTAT_EXT_BOOT_CLASSPATH='.*tools.jar' %{buildroot}/etc/thermostat/thermostatrc | cut -d= -f2 | cut -d\" -f2)"
+TOOLS_JAR="$(grep -E THERMOSTAT_EXT_BOOT_CLASSPATH='.*tools.jar' %{buildroot}/%{_sysconfdir}/%{pkg_name}/thermostatrc | cut -d= -f2 | cut -d\" -f2)"
 test "${TOOLS_JAR}" = "%{jdk_base}/lib/tools.jar"
 TOOLS_JAR="$(grep 'TOOLS_JAR=' %{buildroot}/%{thermostat_home}/bin/thermostat-agent-proxy | cut -d= -f2 | cut -d\" -f2)"
 test "${TOOLS_JAR}" = "%{jdk_base}/lib/tools.jar"
-JAVA="$(grep 'JAVA=' %{buildroot}/%{thermostat_home}/bin/thermostat | cut -d= -f2 | cut -d\" -f2)"
-test "${JAVA}" = "%{jdk_base}/bin/java"
-JAVA="$(grep 'JAVA=' %{buildroot}/%{thermostat_home}/bin/thermostat-agent-proxy | cut -d= -f2 | cut -d\" -f2)"
+JAVA="$(grep 'JAVA=' %{buildroot}/%{thermostat_home}/bin/thermostat-common | cut -d= -f2 | cut -d\" -f2)"
 test "${JAVA}" = "%{jdk_base}/bin/java"
 
 %pre
+%{?scl:
+  __bin_dir=%{system_sbindir}
+}
+%{!?scl:
+  __bin_dir=%{_sbindir}
+}
 # add the thermostat user and group
-%{_sbindir}/groupadd -r thermostat 2>/dev/null || :
-%{_sbindir}/useradd -c "Thermostat system user" -g thermostat \
+${__bin_dir}/groupadd -r thermostat 2>/dev/null || :
+${__bin_dir}/useradd -c "Thermostat system user" -g thermostat \
     -s /sbin/nologin -r -d %{thermostat_home} thermostat 2>/dev/null || :
 
 %post
 # Install but don't activate
-%systemd_post %{pkg_name}-storage.service
+%systemd_post %{?scl_prefix}%{pkg_name}-storage.service
 # Required for icon cache (i.e. Thermostat icon)
 /bin/touch --no-create %{_datadir}/icons/hicolor &>/dev/null || :
 
+%post webapp
+# install but don't activate
+%if 0%{?is_rhel_6}
+  /sbin/chkconfig --add %{thermostat_tomcat_service_name}
+%endif
+
 %preun
-%systemd_preun %{pkg_name}-storage.service
+%systemd_preun %{?scl_prefix}%{pkg_name}-storage.service
 
 %postun
 # Required for icon cache (i.e. Thermostat icon)
@@ -680,7 +915,7 @@ if [ $1 -eq 0 ] ; then
     /bin/touch --no-create %{_datadir}/icons/hicolor &> /dev/null
     /usr/bin/gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 fi
-%systemd_postun %{pkg_name}-storage.service
+%systemd_postun %{?scl_prefix}%{pkg_name}-storage.service
 
 %posttrans
 # Required for icon cache (i.e. Thermostat icon)
@@ -688,8 +923,14 @@ fi
 
 %files -f .mfiles
 %doc LICENSE
+# %license macro not available in RHEL 6
+%if 0%{?is_rhel_6}
+%doc COPYING
+%doc OFL.txt
+%else
 %license COPYING
 %license OFL.txt
+%endif
 %doc README
 %doc README.api
 # Own appropriate files in /etc/ part of them belong to the
@@ -731,6 +972,7 @@ fi
 %{_datadir}/%{pkg_name}/plugins/vm-memory
 %{_datadir}/%{pkg_name}/plugins/vm-overview
 %{_datadir}/%{pkg_name}/plugins/vm-profiler
+%{_datadir}/%{pkg_name}/plugins/vm-find
 %{_datadir}/%{pkg_name}/cache
 %{_datadir}/%{pkg_name}/data
 %{_datadir}/%{pkg_name}/logs
@@ -739,7 +981,9 @@ fi
 %{_jnidir}/thermostat-*.jar
 %{_bindir}/thermostat
 %{_bindir}/thermostat-setup
-%{_unitdir}/%{pkg_name}-storage.service
+%if 0%{?with_systemd}
+%{_unitdir}/%{?scl_prefix}%{pkg_name}-storage.service
+%endif
 %{system_tmpfilesdir}/%{pkg_name}.conf
 # To these directories get written to when thermostat storage/agent
 # run as systemd services
@@ -752,8 +996,17 @@ fi
 
 %files javadoc -f .mfiles-javadoc
 %doc LICENSE
+# license macro not available in RHEL 6
+%if 0%{?is_rhel_6}
+%doc COPYING
+%doc OFL.txt
+%else
 %license COPYING
 %license OFL.txt
+%endif
+%{?scl:
+  %{_datarootdir}/javadoc/%{pkg_name}
+}
 
 %files webapp -f .mfiles-webapp
 %{thermostat_catalina_base}
@@ -765,11 +1018,30 @@ fi
 %attr(0640,root,tomcat) %config(noreplace) %{_sysconfdir}/%{pkg_name}/web.auth
 # We need an extra file in order to make thermostat-webapp work with
 # our custom CATALINA_BASE. This sets the JAAS-config option.
-%config(noreplace) %{system_confdir}/sysconfig/tomcat@%{pkg_name}
+%{?scl:
+%if 0%{?is_rhel_6}
+  %config(noreplace) %{system_confdir}/sysconfig/%{thermostat_tomcat_service_name}
+  # thermostat tomcat init script
+  %attr(0755,root,root) %{system_initrddir}/%{thermostat_tomcat_service_name}
+  %attr(0770,tomcat,tomcat) %dir %{_root_localstatedir}/log/%{thermostat_tomcat_service_name}
+%else
+  %config(noreplace) %{system_confdir}/sysconfig/%{thermostat_tomcat_service_name}
+  %{_unitdir}/%{?scl_prefix}%{pkg_name}-tomcat.service
+  %attr(0770,tomcat,tomcat) %dir %{_root_localstatedir}/log/%{thermostat_tomcat_service_name}
+  # File used by RHEL-7.1's tomcat@thermostat service.
+  %config(noreplace) %{system_confdir}/sysconfig/tomcat@%{pkg_name}
+%endif
+}
+%{!?scl:
+  %config(noreplace) %{system_confdir}/sysconfig/tomcat@%{pkg_name}
+}
 %{_datadir}/%{pkg_name}/webapp
 %{_datadir}/%{pkg_name}/plugins/embedded-web-endpoint
 
 %changelog
+* Fri Jul 24 2015 Severin Gehwolf <sgehwolf@redhat.com> - __MAJOR__.__MINOR__.__PATCHLEVEL__-3
+- Merge in EL 6/ EL 7 pieces.
+
 * Wed Jul 01 2015 Severin Gehwolf <sgehwolf@redhat.com> - __MAJOR__.__MINOR__.__PATCHLEVEL__-2
 - Add jgraphx dependency.
 - List bash-complete-logging.properties in files section.

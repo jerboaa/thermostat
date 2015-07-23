@@ -1,0 +1,21 @@
+# Thermostat tomcat systemd service file for RHEL 7.0.
+#
+# Please start tomcat via "service tomcat@thermostat start" or
+# "systemctl start tomcat@thermostat" instead if you are using
+# RHEL-7.1.
+[Unit]
+Description=Apache Tomcat for Thermostat Container
+After=syslog.target network.target
+
+[Service]
+Type=forking
+# Provides the SERVICE_NAME to tomcat-sysd
+EnvironmentFile=__service_file_path__/__service_file_name__
+ExecStart=/usr/sbin/tomcat-sysd start
+ExecStop=/usr/sbin/tomcat-sysd stop
+SuccessExitStatus=143
+User=tomcat
+Group=tomcat
+
+[Install]
+WantedBy=multi-user.target
