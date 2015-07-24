@@ -42,7 +42,6 @@ import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.core.BasicBatchCursor;
 import com.redhat.thermostat.storage.model.Pojo;
 
 public class BasicBatchCursorTest {
@@ -71,8 +70,7 @@ public class BasicBatchCursorTest {
     @Test
     public void testGetBatchSize() {
         BasicBatchCursor<TestPojo> cursor = new BasicBatchCursorImpl<>();
-        assertNotNull("should always return default if never set", cursor.getBatchSize());
-        assertEquals(Cursor.DEFAULT_BATCH_SIZE, cursor.getBatchSize());
+        assertEquals("should always return default if never set", Cursor.DEFAULT_BATCH_SIZE, cursor.getBatchSize());
         cursor.setBatchSize(3);
         assertEquals(3, cursor.getBatchSize());
     }

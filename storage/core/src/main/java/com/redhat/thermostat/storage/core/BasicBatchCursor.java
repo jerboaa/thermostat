@@ -40,7 +40,7 @@ import com.redhat.thermostat.storage.model.Pojo;
 
 public abstract class BasicBatchCursor<T extends Pojo> implements Cursor<T> {
 
-    private Integer batchSize;
+    private int batchSize = Cursor.DEFAULT_BATCH_SIZE;
     
     @Override
     public void setBatchSize(int n) throws IllegalArgumentException {
@@ -52,7 +52,7 @@ public abstract class BasicBatchCursor<T extends Pojo> implements Cursor<T> {
     
     @Override
     public int getBatchSize() {
-        return this.batchSize == null ? Cursor.DEFAULT_BATCH_SIZE : this.batchSize;
+        return this.batchSize;
     }
 
     @Override
