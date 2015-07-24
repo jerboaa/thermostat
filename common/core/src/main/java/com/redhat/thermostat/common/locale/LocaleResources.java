@@ -51,8 +51,6 @@ public enum LocaleResources {
     USERNAME_PROMPT,
     PASSWORD_PROMPT,
 
-    LOGGING_PROPERTIES_ISSUE,
-
     INVALID_IPPORT,
     ;
 

@@ -111,13 +111,13 @@ public class LauncherImpl implements Launcher {
     public LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory, BundleManager registry,
             CommandInfoSource infoSource, CurrentEnvironment env, ClientPreferences prefs, Keyring keyring, CommonPaths paths) {
         this(context, cmdCtxFactory, registry, infoSource, new CommandSource(context), env,
-                new DbServiceFactory(), new Version(), prefs, keyring, paths, new LoggingInitializer(paths));
+                new DbServiceFactory(), new Version(), prefs, keyring, paths);
     }
 
     LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory, BundleManager registry,
             CommandInfoSource commandInfoSource, CommandSource commandSource,
             CurrentEnvironment currentEnvironment, DbServiceFactory dbServiceFactory, Version version,
-            ClientPreferences prefs, Keyring keyring, CommonPaths paths, LoggingInitializer loggingInitializer) {
+            ClientPreferences prefs, Keyring keyring, CommonPaths paths) {
         this.context = context;
         this.cmdCtxFactory = cmdCtxFactory;
         this.registry = registry;
@@ -130,7 +130,6 @@ public class LauncherImpl implements Launcher {
         this.keyring = keyring;
         this.paths = Objects.requireNonNull(paths);
 
-        loggingInitializer.initialize();
         // We log this in the constructor so as to not log it multiple times when a command invokes
         // run() multiple times. This works since it is a singleton service.
         logger.log(Level.CONFIG, "THERMOSTAT_HOME=" + paths.getSystemThermostatHome().getAbsolutePath());
@@ -400,28 +399,6 @@ public class LauncherImpl implements Launcher {
             return false;
         } else {
             return args[0].equals(Version.VERSION_OPTION);
-        }
-    }
-
-    static class LoggingInitializer {
-
-        private CommonPaths paths;
-
-        LoggingInitializer(CommonPaths paths) {
-            this.paths = paths;
-        }
-
-        public void initialize() {
-            try {
-                LoggingUtils.loadGlobalLoggingConfig(paths);
-            } catch (InvalidConfigurationException e) {
-                System.err.println("WARNING: Could not read global Thermostat logging configuration.");
-            }
-            try {
-                LoggingUtils.loadUserLoggingConfig(paths);
-            } catch (InvalidConfigurationException e) {
-                // We intentionally ignore this.
-            }
         }
     }
 }

@@ -62,7 +62,7 @@ fi
 # Start server
 # Drop permissions, if root
 if [ "$(/bin/id -u)" -eq 0 ]; then
-  /bin/su "$2" -c "${JAVA} -cp ${SERVICE_CLASSPATH} ${DEBUG_OPTS} ${AGENT_PROXY_CLASS} $1"
+  /bin/su "$2" -c "${JAVA} -cp ${SERVICE_CLASSPATH} ${LOGGING_ARG} ${DEBUG_OPTS} ${AGENT_PROXY_CLASS} $1"
 else
-  ${JAVA} -cp ${SERVICE_CLASSPATH} ${DEBUG_OPTS} ${AGENT_PROXY_CLASS} $1
+  ${JAVA} -cp ${SERVICE_CLASSPATH} ${DEBUG_OPTS} ${LOGGING_ARG} ${AGENT_PROXY_CLASS} $1
 fi

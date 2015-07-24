@@ -69,3 +69,13 @@ THERMOSTAT_MAIN="com.redhat.thermostat.main.Thermostat"
 
 JAVA="@java.home@/bin/java"
 
+SYSTEM_LOG_CONFIG_FILE="${THERMOSTAT_HOME}/etc/logging.properties"
+if [ -f "${SYSTEM_LOG_CONFIG_FILE}" ] ; then
+  LOGGING_ARG="-Djava.util.logging.config.file=${SYSTEM_LOG_CONFIG_FILE}"
+fi
+
+USER_LOG_CONFIG_FILE="${USER_THERMOSTAT_HOME}/etc/logging.properties"
+if [ -f "${USER_LOG_CONFIG_FILE}" ] ; then
+  LOGGING_ARG="-Djava.util.logging.config.file=${USER_LOG_CONFIG_FILE}"
+fi
+

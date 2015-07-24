@@ -82,7 +82,6 @@ import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.launcher.BundleInformation;
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.internal.DisallowSystemExitSecurityManager.ExitException;
-import com.redhat.thermostat.launcher.internal.LauncherImpl.LoggingInitializer;
 import com.redhat.thermostat.shared.config.CommonPaths;
 import com.redhat.thermostat.shared.locale.LocalizedString;
 import com.redhat.thermostat.storage.core.DbService;
@@ -138,7 +137,6 @@ public class LauncherImplTest {
     private TestTimerFactory timerFactory;
     private BundleManager registry;
     private Version version;
-    private LoggingInitializer loggingInitializer;
     private DbServiceFactory dbServiceFactory;
     private CommandInfoSource infos;
     private ActionNotifier<ApplicationState> notifier;
@@ -262,7 +260,6 @@ public class LauncherImplTest {
         bundleContext.registerService(ApplicationService.class, appSvc, null);
 
         environment = mock(CurrentEnvironment.class);
-        loggingInitializer = mock(LoggingInitializer.class);
         dbServiceFactory = mock(DbServiceFactory.class);
         version = mock(Version.class);
 
@@ -279,7 +276,7 @@ public class LauncherImplTest {
         when(paths.getSystemThermostatHome()).thenReturn(mock(File.class));
         when(paths.getUserThermostatHome()).thenReturn(mock(File.class));
         launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext),
-                environment, dbServiceFactory, version, prefs, keyring, paths, loggingInitializer);
+                environment, dbServiceFactory, version, prefs, keyring, paths);
     }
 
     private void setupCommandContextFactory() {
@@ -492,7 +489,7 @@ public class LauncherImplTest {
         when(prefs.getUserName()).thenReturn("user");
 
         LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext),
-                environment, dbServiceFactory, version, prefs, keyring, paths, loggingInitializer);
+                environment, dbServiceFactory, version, prefs, keyring, paths);
 
         DbService dbService = mock(DbService.class);
         ArgumentCaptor<String> dbUrlCaptor = ArgumentCaptor.forClass(String.class);
@@ -510,7 +507,7 @@ public class LauncherImplTest {
         String dbUrl = "mongo://fluff:12345";
         when(prefs.getConnectionUrl()).thenReturn(dbUrl);
         LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext),
-                environment, dbServiceFactory, version, prefs, keyring, paths, loggingInitializer);
+                environment, dbServiceFactory, version, prefs, keyring, paths);
 
         DbService dbService = mock(DbService.class);
         ArgumentCaptor<String> dbUrlCaptor = ArgumentCaptor.forClass(String.class);
@@ -533,7 +530,7 @@ public class LauncherImplTest {
         Keyring keyring = mock(Keyring.class);
         when(keyring.getPassword(dbUrl, user)).thenReturn(password);
         LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry, infos, new CommandSource(bundleContext),
-                environment, dbServiceFactory, version, prefs, keyring, paths, loggingInitializer);
+                environment, dbServiceFactory, version, prefs, keyring, paths);
 
         Command mockCmd = mock(Command.class);
         when(mockCmd.isStorageRequired()).thenReturn(true);
@@ -591,8 +588,7 @@ public class LauncherImplTest {
             new LauncherImpl(bundleContext, ctxFactory, registry,
                     infos, new CommandSource(bundleContext),
                     environment, dbServiceFactory,
-                    version, prefs, keyring, logPaths,
-                    loggingInitializer);
+                    version, prefs, keyring, logPaths);
             assertTrue(handler.loggedThermostatHome);
             assertTrue(handler.loggedUserHome);
             verify(logPaths).getUserThermostatHome();
@@ -614,13 +610,6 @@ public class LauncherImplTest {
 
         wrappedRun(launcher, args, false, listeners);
         verify(notifier).addActionListener(listener);
-    }
-
-    @Test
-    public void verifyLoggingIsInitialized() {
-        wrappedRun(launcher, new String[] { "test1" }, false);
-
-        verify(loggingInitializer).initialize();
     }
 
     @Test
