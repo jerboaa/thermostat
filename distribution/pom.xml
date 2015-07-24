@@ -286,6 +286,23 @@
           </execution>
         </executions>
       </plugin>
+      <!-- test bash completions -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>1.2.1</version>
+        <executions>
+          <execution>
+            <phase>integration-test</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <executable>${project.basedir}/tools/verify-bash-completion.sh</executable>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
