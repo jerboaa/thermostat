@@ -106,7 +106,7 @@ public class BundleManagerImpl extends BundleManager {
                                 String name = mf.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
                                 String version = mf.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
                                 if (name == null || version == null) {
-                                    logger.config("file " + file.toString() + " is missing osgi metadata; wont be usable for dependencies");
+                                    logger.finer("file " + file.toString() + " is missing osgi metadata; wont be usable for dependencies");
                                 } else {
                                     BundleInformation info = new BundleInformation(name, version);
                                     Path old = known.get(info);

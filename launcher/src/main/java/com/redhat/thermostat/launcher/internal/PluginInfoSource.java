@@ -147,7 +147,7 @@ public class PluginInfoSource implements CommandInfoSource, ConfigurationInfoSou
         for (CommandExtensions extension : pluginConfig.getExtendedCommands()) {
             String commandName = extension.getCommandName();
             List<BundleInformation> bundles = extension.getBundles();
-            logger.config("plugin at " + pluginDir + " needs " +
+            logger.finest("plugin at " + pluginDir + " needs " +
                     bundles.size() + " bundles for comamnd '" + commandName + "'");
 
             List<BundleInformation> bundlePaths = additionalBundlesForExistingCommands.get(commandName);
@@ -162,7 +162,7 @@ public class PluginInfoSource implements CommandInfoSource, ConfigurationInfoSou
 
         for (NewCommand command : pluginConfig.getNewCommands()) {
             String commandName = command.getCommandName();
-            logger.config("plugin at " + pluginDir + " contributes new command '" + commandName + "'");
+            logger.finest("plugin at " + pluginDir + " contributes new command '" + commandName + "'");
 
             if (allNewCommands.containsKey(commandName)) {
                 throw new IllegalStateException("multiple plugins are providing the command " + commandName);
