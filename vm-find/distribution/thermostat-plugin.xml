@@ -1,0 +1,213 @@
+<?xml version="1.0"?>
+<!--
+
+ Copyright 2012-2015 Red Hat, Inc.
+
+ This file is part of Thermostat.
+
+ Thermostat is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published
+ by the Free Software Foundation; either version 2, or (at your
+ option) any later version.
+
+ Thermostat is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with Thermostat; see the file COPYING.  If not see
+ <http://www.gnu.org/licenses/>.
+
+ Linking this code with other modules is making a combined work
+ based on this code.  Thus, the terms and conditions of the GNU
+ General Public License cover the whole combination.
+
+ As a special exception, the copyright holders of this code give
+ you permission to link this code with independent modules to
+ produce an executable, regardless of the license terms of these
+ independent modules, and to copy and distribute the resulting
+ executable under terms of your choice, provided that you also
+ meet, for each linked independent module, the terms and conditions
+ of the license of that module.  An independent module is a module
+ which is not derived from or based on this code.  If you modify
+ this code, you may extend this exception to your version of the
+ library, but you are not obligated to do so.  If you do not wish
+ to do so, delete this exception statement from your version.
+
+-->
+<plugin xmlns="http://icedtea.classpath.org/thermostat/plugins/v1.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://icedtea.classpath.org/thermostat/plugins/v1.0 thermostat-plugin.xsd">
+  <commands>
+    <command>
+      <name>find-vm</name>
+      <summary>find a VM or set of VMs given a list of criteria</summary>
+      <description>
+        Search for VMs matching the specified criteria and print information about them.
+        By default, only the VMs' VmIds are printed, as these are globally unique identifiers, and so are useful
+        for passing to other commands ex. kill-vm. In this case, no table header is printed, and the list of VmIds
+        is printed with a newline separating each ID. If a non-default set of print options is specified then a
+        table header will be printed labelling each column of the output.
+
+        At least one filtering criteria option must be specified. These are any of the options switches listed
+        which do not begin with "--show" and which take an argument.
+      </description>
+      <options>
+        <option>
+          <long>agentId</long>
+          <short>a</short>
+          <argument>id</argument>
+          <required>false</required>
+          <description>specify the agent to query. If none specified, then all living agents are queried</description>
+        </option>
+
+        <!-- Display Options -->
+        <option>
+          <long>show-vm-ids</long>
+          <description>enable display of VM ID (globally unique)</description>
+        </option>
+        <option>
+          <long>show-mainclasses</long>
+          <description>enable display of mainclass</description>
+        </option>
+        <option>
+          <long>show-vmnames</long>
+          <description>enable display of VM names</description>
+        </option>
+        <option>
+          <long>show-javaversions</long>
+          <description>enable display of Java versions</description>
+        </option>
+        <option>
+          <long>show-vmversions</long>
+          <description>enable display of VM versions</description>
+        </option>
+        <option>
+          <long>show-pids</long>
+          <description>enable display of PID (local to each host)</description>
+        </option>
+        <option>
+          <long>show-usernames</long>
+          <description>enable display of username which VM runs as</description>
+        </option>
+        <option>
+          <long>show-hostnames</long>
+          <description>enable display of hostname</description>
+        </option>
+        <option>
+          <long>show-osnames</long>
+          <description>enable display of host OS name</description>
+        </option>
+        <option>
+          <long>show-oskernels</long>
+          <description>enable display of kernel name</description>
+        </option>
+        <option>
+          <long>show-all</long>
+          <description>Enable display of all fields in output table</description>
+        </option>
+
+        <!-- VM Criteria -->
+        <option>
+          <long>javaversion</long>
+          <short>v</short>
+          <argument>version</argument>
+          <required>false</required>
+          <description>the Java version of the VM. Must be exact match</description>
+        </option>
+        <option>
+          <long>mainclass</long>
+          <short>m</short>
+          <argument>nameOrRegex</argument>
+          <required>false</required>
+          <description>the main class the VM is running. Can be fully qualified name, substring, or regular expression</description>
+        </option>
+        <option>
+          <long>vmname</long>
+          <short>n</short>
+          <argument>name</argument>
+          <required>false</required>
+          <description>the name of the VM. Must be exact match</description>
+        </option>
+        <option>
+          <long>vmargs</long>
+          <short>g</short>
+          <argument>vmArg</argument>
+          <required>false</required>
+          <description>the arguments passed to the VM when it was started. Can be exact match, substring, or comma-separated list of substrings</description>
+        </option>
+        <option>
+          <long>vmversion</long>
+          <short>V</short>
+          <argument>version</argument>
+          <required>false</required>
+          <description>the version of the VM. Must be exact match</description>
+        </option>
+        <option>
+          <long>username</long>
+          <short>u</short>
+          <argument>username</argument>
+          <required>false</required>
+          <description>the username the VM runs as. Must be exact match</description>
+        </option>
+        <option>
+          <long>javahome</long>
+          <short>H</short>
+          <argument>homeDirectoryPatch</argument>
+          <required>false</required>
+          <description>the home directory path of the VM. Must be exact match when treated as paths (ie trailing directory separators will match)</description>
+        </option>
+
+        <!-- Host Criteria -->
+        <option>
+          <long>hostname</long>
+          <short>h</short>
+          <argument>hostname</argument>
+          <required>false</required>
+          <description>the name of the host on which the VM is running. Must be exact match</description>
+        </option>
+        <option>
+          <long>oskernel</long>
+          <short>k</short>
+          <argument>oskernel</argument>
+          <required>false</required>
+          <description>the name of the kernel being run by the host on which the VM is running. Must be exact match or substring</description>
+        </option>
+        <option>
+          <long>osname</long>
+          <short>o</short>
+          <argument>osname</argument>
+          <required>false</required>
+          <description>the name of the OS being run by the host on which the VM is running. Must be exact match or substring</description>
+        </option>
+      </options>
+      <environments>
+        <environment>cli</environment>
+        <environment>shell</environment>
+      </environments>
+      <bundles>
+        <bundle><symbolic-name>com.redhat.thermostat.vm.find.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.storage.core</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>org.mongodb.mongo-java-driver</symbolic-name><version>${mongo-driver.osgi-version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.common.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.core</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.command</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.client.cli</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.storage.mongodb</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.web.common</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>com.redhat.thermostat.web.client</symbolic-name><version>${project.version}</version></bundle>
+        <bundle><symbolic-name>org.mongodb.mongo-java-driver</symbolic-name><version>${mongo-driver.osgi-version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.beanutils</symbolic-name><version>${commons-beanutils.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.codec</symbolic-name><version>${commons-codec.osgi-version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.collections</symbolic-name><version>${commons-collections.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.commons.logging</symbolic-name><version>${commons-logging.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpcore</symbolic-name><version>${httpcomponents.core.version}</version></bundle>
+        <bundle><symbolic-name>org.apache.httpcomponents.httpclient</symbolic-name><version>${httpcomponents.client.version}</version></bundle>
+        <bundle><symbolic-name>${osgi.compendium.bundle.symbolic-name}</symbolic-name><version>${osgi.compendium.osgi-version}</version></bundle>
+        <bundle><symbolic-name>com.google.gson</symbolic-name><version>${gson.version}</version></bundle>
+        <bundle><symbolic-name>org.jboss.netty</symbolic-name><version>${netty.version}</version></bundle>
+      </bundles>
+    </command>
+  </commands>
+</plugin>

@@ -84,7 +84,7 @@
       <properties>
         <!-- define it empty so as to NOT exclude the PerformanceTests
              categorized tests. -->
-        <surefire-perftests-exclusion />
+        <surefire-perftests-exclusion/>
       </properties>
     </profile>
     <profile>
@@ -227,7 +227,7 @@
 
     <!-- see web/common/pom.xml for an example as to how this is used -->
     <surefire-perftests-exclusion>com.redhat.thermostat.testutils.PerformanceTest</surefire-perftests-exclusion>
-    <surefire-argline /> <!-- intentionally empty -->
+    <surefire-argline/> <!-- intentionally empty -->
     <mongodb.dev.username> mongodevuser </mongodb.dev.username>
     <mongodb.dev.password> mongodevpassword </mongodb.dev.password>
   </properties>
@@ -254,6 +254,7 @@
     <module>host-memory</module>
     <module>vm-overview</module>
     <module>vm-cpu</module>
+    <module>vm-find</module>
     <module>vm-gc</module>
     <module>vm-classstat</module>
     <module>vm-memory</module>
@@ -372,7 +373,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore></ignore>
+                    <ignore/>
                   </action>
                 </pluginExecution>
                 <pluginExecution>
@@ -389,7 +390,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore></ignore>
+                    <ignore/>
                   </action>
                 </pluginExecution>
               </pluginExecutions>
@@ -591,4 +592,3 @@
   </scm>
 
 </project>
-
